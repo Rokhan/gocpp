@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::gover
+namespace golang::internal::gover
 {
     struct Version
     {

@@ -15,8 +15,9 @@
 #include "golang/math/log.h"
 #include "golang/math/rand/rand.h"
 
-namespace golang::rand
+namespace golang::math::rand
 {
+    namespace math = golang::math;
     namespace rec
     {
     }

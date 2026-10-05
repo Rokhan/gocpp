@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::utf16
+namespace golang::unicode::utf16
 {
     const char replacementChar = '\uFFFD';
     const char maxRune = '\U0010FFFF';

@@ -13,13 +13,17 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/internal/bytealg/equal_generic.h"
+#include "golang/reflect/map.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
 
 namespace golang::reflect
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace bytealg = golang::internal::bytealg;
     namespace rec
     {
+        using abi::rec::Pointers;
     }
 
     // During deepValueEqual, must keep track of checks that are
@@ -92,10 +96,10 @@ namespace golang::reflect
                 switch(conditionId)
                 {
                     case 0:
-                        if(rec::typ(gocpp::recv(v1))->PtrBytes == 0)
+                        if(! rec::Pointers(gocpp::recv(rec::typ(gocpp::recv(v1)))))
                         {
                             // not-in-heap pointers can't be cyclic.
-                            // At least, all of our current uses of runtime/internal/sys.NotInHeap
+                            // At least, all of our current uses of internal/runtime/sys.NotInHeap
                             // have that property. The runtime ones aren't cyclic (and we don't use
                             // DeepEqual on them anyway), and the cgo-generated ones are
                             // all empty structs.

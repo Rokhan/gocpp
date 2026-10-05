@@ -11,7 +11,7 @@
 
 #include "golang/encoding/binary/binary.h"
 
-namespace golang::binary
+namespace golang::encoding::binary
 {
     struct nativeEndian
     {
@@ -29,6 +29,7 @@ namespace golang::binary
     };
 
     std::ostream& operator<<(std::ostream& os, const struct nativeEndian& value);
+    // NativeEndian is the native-endian implementation of [ByteOrder] and [AppendByteOrder].
     extern nativeEndian NativeEndian;
 
     namespace rec

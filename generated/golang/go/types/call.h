@@ -10,33 +10,34 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     extern gocpp::array<gocpp::string, 8> cgoPrefixes;
 }
 
 #include "golang/go/ast/ast.h"
-#include "golang/go/internal/typeparams/typeparams.h"
 #include "golang/go/token/position.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/expr.h"
-#include "golang/go/types/object.h"
+#include "golang/go/types/index.h"
 #include "golang/go/types/operand.h"
 #include "golang/go/types/signature.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace token = golang::go::token;
 
     namespace rec
     {
-        std::tuple<gocpp::slice<golang::types::Type>, gocpp::slice<ast::Expr>> funcInst(Checker* check, target* T, token::Pos pos, operand* x, typeparams::IndexExpr* ix, bool infer);
-        Signature* instantiateSignature(Checker* check, token::Pos pos, ast::Expr expr, Signature* typ, gocpp::slice<golang::types::Type> targs, gocpp::slice<ast::Expr> xlist);
+        gocpp::slice<golang::go::types::Type> funcInst(Checker* check, target* T, token::Pos pos, operand* x, indexedExpr* ix, bool infer);
+        golang::go::types::Signature* instantiateSignature(Checker* check, token::Pos pos, ast::Expr expr, golang::go::types::Signature* typ, gocpp::slice<golang::go::types::Type> targs, gocpp::slice<ast::Expr> xlist);
         exprKind callExpr(Checker* check, operand* x, ast::CallExpr* call);
         gocpp::slice<operand*> exprList(Checker* check, gocpp::slice<ast::Expr> elist);
-        std::tuple<gocpp::slice<operand*>, gocpp::slice<gocpp::slice<golang::types::Type>>, gocpp::slice<gocpp::slice<ast::Expr>>> genericExprList(Checker* check, gocpp::slice<ast::Expr> elist);
-        Signature* arguments(Checker* check, ast::CallExpr* call, Signature* sig, gocpp::slice<golang::types::Type> targs, gocpp::slice<ast::Expr> xlist, gocpp::slice<operand*> args, gocpp::slice<gocpp::slice<golang::types::Type>> atargs, gocpp::slice<gocpp::slice<ast::Expr>> atxlist);
-        void selector(Checker* check, operand* x, ast::SelectorExpr* e, TypeName* def, bool wantType);
+        std::tuple<gocpp::slice<operand*>, gocpp::slice<gocpp::slice<golang::go::types::Type>>> genericExprList(Checker* check, gocpp::slice<ast::Expr> elist);
+        golang::go::types::Signature* arguments(Checker* check, ast::CallExpr* call, golang::go::types::Signature* sig, gocpp::slice<golang::go::types::Type> targs, gocpp::slice<ast::Expr> xlist, gocpp::slice<operand*> args, gocpp::slice<gocpp::slice<golang::go::types::Type>> atargs);
+        void selector(Checker* check, operand* x, ast::SelectorExpr* e, bool wantType);
         bool use(Checker* check, gocpp::slice<ast::Expr> args);
         
         template<typename... Args>

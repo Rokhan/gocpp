@@ -9,12 +9,32 @@
 #include "golang/golang.org/x/tools/internal/gcimporter/exportdata.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/bufio/bufio.fwd.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
-    std::tuple<gocpp::string, int64_t, gocpp::error> readGopackHeader(bufio::Reader* r);
-    std::tuple<gocpp::string, int64_t, gocpp::error> FindExportData(bufio::Reader* r);
+    std::tuple<gocpp::string, gocpp::string, gocpp::error> FindPkg(gocpp::string path, gocpp::string srcDir);
+    extern gocpp::array<gocpp::string, 2> pkgExts;
+    std::tuple<gocpp::string, gocpp::error> lookupGorootExport(gocpp::string pkgDir);
+}
+#include "golang/bufio/bufio.fwd.h"
+#include "golang/sync/map.fwd.h"
+#include "golang/sync/once.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace bufio = golang::bufio;
+}
+#include "golang/sync/map.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace sync = golang::sync;
+    std::tuple<int64_t, gocpp::error> FindExportData(bufio::Reader* r);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadUnified(bufio::Reader* r);
+    std::tuple<int, gocpp::error> FindPackageDefinition(bufio::Reader* r);
+    std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> ReadObjectHeaders(bufio::Reader* r);
+    std::tuple<int, gocpp::error> ReadExportDataHeader(bufio::Reader* r);
+    extern sync::Map exportMap;
 
     namespace rec
     {

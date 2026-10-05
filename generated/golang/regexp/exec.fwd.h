@@ -8,15 +8,9 @@ namespace golang::regexp
 {
     struct queue;
     struct entry;
-    using lazyFlag = uint64_t;
-    struct onePassMachine;
-}
-#include "golang/regexp/regexp.fwd.h"
-#include "golang/regexp/syntax/prog.fwd.h"
-
-namespace golang::regexp
-{
     struct thread;
     struct machine;
     struct inputs;
+    using lazyFlag = uint64_t;
+    struct onePassMachine;
 }

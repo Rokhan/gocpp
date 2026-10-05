@@ -23,8 +23,8 @@ namespace golang::hash
     // Hash is the common interface implemented by all hash functions.
     //
     // Hash implementations in the standard library (e.g. [hash/crc32] and
-    // [crypto/sha256]) implement the [encoding.BinaryMarshaler] and
-    // [encoding.BinaryUnmarshaler] interfaces. Marshaling a hash implementation
+    // [crypto/sha256]) implement the [encoding.BinaryMarshaler], [encoding.BinaryAppender],
+    // [encoding.BinaryUnmarshaler] and [Cloner] interfaces. Marshaling a hash implementation
     // allows its internal state to be saved and used for additional processing
     // later, without having to re-write the data previously written to the hash.
     // The hash state may contain portions of the input in its original form,
@@ -351,6 +351,209 @@ namespace golang::hash
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash64& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // A Cloner is a hash function whose state can be cloned, returning a value with
+    // equivalent and independent state.
+    //
+    // All [Hash] implementations in the standard library implement this interface,
+    // unless GOFIPS140=v1.0.0 is set.
+    //
+    // If a hash can only determine at runtime if it can be cloned (e.g. if it wraps
+    // another hash), Clone may return an error wrapping [errors.ErrUnsupported].
+    // Otherwise, Clone must always return a nil error.
+    
+    template<typename T>
+    Cloner::Cloner(T& ref)
+    {
+        mValue.reset(new ClonerImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    Cloner::Cloner(const T& ref)
+    {
+        mValue.reset(new ClonerImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    Cloner::Cloner(T* ptr)
+    {
+        mValue.reset(new ClonerImpl<T, gocpp::ptr<T>>(ptr));
+    }
+
+    std::ostream& Cloner::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
+
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<Cloner, gocpp::error> Cloner::ClonerImpl<T, TStore, TInterface>::vClone()
+    {
+        return rec::Clone(gocpp::PtrRecv<T, false>(value.get()));
+    }
+
+    inline Cloner::ICloner* Cloner::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Cloner'");
+    }
+
+    namespace rec
+    {
+        std::tuple<Cloner, gocpp::error> Clone(const gocpp::PtrRecv<struct Cloner, false>& self)
+        {
+            return self.ptr->value()->vClone();
+        }
+
+        std::tuple<Cloner, gocpp::error> Clone(const gocpp::ObjRecv<struct Cloner>& self)
+        {
+            return self.obj.value()->vClone();
+        }
+
+        int BlockSize(const gocpp::PtrRecv<struct Cloner, false>& self)
+        {
+            return self.ptr->value()->vBlockSize();
+        }
+
+        int BlockSize(const gocpp::ObjRecv<struct Cloner>& self)
+        {
+            return self.obj.value()->vBlockSize();
+        }
+
+        void Reset(const gocpp::PtrRecv<struct Cloner, false>& self)
+        {
+            return self.ptr->value()->vReset();
+        }
+
+        void Reset(const gocpp::ObjRecv<struct Cloner>& self)
+        {
+            return self.obj.value()->vReset();
+        }
+
+        int Size(const gocpp::PtrRecv<struct Cloner, false>& self)
+        {
+            return self.ptr->value()->vSize();
+        }
+
+        int Size(const gocpp::ObjRecv<struct Cloner>& self)
+        {
+            return self.obj.value()->vSize();
+        }
+
+        gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<struct Cloner, false>& self, gocpp::slice<unsigned char> b)
+        {
+            return self.ptr->value()->vSum(b);
+        }
+
+        gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<struct Cloner>& self, gocpp::slice<unsigned char> b)
+        {
+            return self.obj.value()->vSum(b);
+        }
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Cloner, false>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.ptr->value()->vWrite(p);
+        }
+
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Cloner>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.obj.value()->vWrite(p);
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Cloner& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // XOF (extendable output function) is a hash function with arbitrary or unlimited output length.
+    
+    template<typename T>
+    XOF::XOF(T& ref)
+    {
+        mValue.reset(new XOFImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    XOF::XOF(const T& ref)
+    {
+        mValue.reset(new XOFImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    XOF::XOF(T* ptr)
+    {
+        mValue.reset(new XOFImpl<T, gocpp::ptr<T>>(ptr));
+    }
+
+    std::ostream& XOF::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
+
+    template<typename T, typename TStore, typename TInterface>
+    void XOF::XOFImpl<T, TStore, TInterface>::vReset()
+    {
+        return rec::Reset(gocpp::PtrRecv<T, false>(value.get()));
+    }
+    template<typename T, typename TStore, typename TInterface>
+    int XOF::XOFImpl<T, TStore, TInterface>::vBlockSize()
+    {
+        return rec::BlockSize(gocpp::PtrRecv<T, false>(value.get()));
+    }
+
+    inline XOF::IXOF* XOF::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'XOF'");
+    }
+
+    namespace rec
+    {
+        void Reset(const gocpp::PtrRecv<struct XOF, false>& self)
+        {
+            return self.ptr->value()->vReset();
+        }
+
+        void Reset(const gocpp::ObjRecv<struct XOF>& self)
+        {
+            return self.obj.value()->vReset();
+        }
+
+        int BlockSize(const gocpp::PtrRecv<struct XOF, false>& self)
+        {
+            return self.ptr->value()->vBlockSize();
+        }
+
+        int BlockSize(const gocpp::ObjRecv<struct XOF>& self)
+        {
+            return self.obj.value()->vBlockSize();
+        }
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct XOF, false>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.ptr->value()->vWrite(p);
+        }
+
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct XOF>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.obj.value()->vWrite(p);
+        }
+
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct XOF, false>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.ptr->value()->vRead(p);
+        }
+
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct XOF>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.obj.value()->vRead(p);
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct XOF& value)
     {
         return value.PrintTo(os);
     }

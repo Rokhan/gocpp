@@ -11,7 +11,7 @@
 #include "golang/math/rand/rng.h"
 #include "gocpp/support.h"
 
-namespace golang::rand
+namespace golang::math::rand
 {
     namespace rec
     {

@@ -12,15 +12,16 @@
 
 namespace golang::runtime
 {
+    void sync_atomic_StoreUintptr(uintptr_t* ptr, uintptr_t go_new);
+    uintptr_t sync_atomic_SwapUintptr(uintptr_t* ptr, uintptr_t go_new);
+    bool sync_atomic_CompareAndSwapUintptr(uintptr_t* ptr, uintptr_t old, uintptr_t go_new);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     void atomicwb(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new);
     void atomicstorep(gocpp::unsafe_pointer ptr, gocpp::unsafe_pointer go_new);
     void atomic_storePointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new);
     bool atomic_casPointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
-    void sync_atomic_StoreUintptr(uintptr_t* ptr, uintptr_t go_new);
     void sync_atomic_StorePointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new);
-    uintptr_t sync_atomic_SwapUintptr(uintptr_t* ptr, uintptr_t go_new);
     gocpp::unsafe_pointer sync_atomic_SwapPointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new);
-    bool sync_atomic_CompareAndSwapUintptr(uintptr_t* ptr, uintptr_t old, uintptr_t go_new);
     bool sync_atomic_CompareAndSwapPointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
 
     namespace rec

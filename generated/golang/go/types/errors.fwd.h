@@ -4,19 +4,19 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct errorDesc;
+    struct error_;
     const gocpp::string invalidArg = "invalid argument: "_s;
     const gocpp::string invalidOp = "invalid operation: "_s;
+    struct posSpan;
 }
 #include "golang/go/token/position.fwd.h"
-#include "golang/internal/types/errors/codes.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    struct error_;
+    namespace token = golang::go::token;
     struct positioner;
-    struct posSpan;
     using atPos = token::Pos;
 }

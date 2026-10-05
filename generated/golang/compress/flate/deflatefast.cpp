@@ -12,41 +12,264 @@
 #include "gocpp/support.h"
 
 #include "golang/compress/flate/deflate.h"
+#include "golang/compress/flate/level1.h"
+#include "golang/compress/flate/level2.h"
+#include "golang/compress/flate/level3.h"
+#include "golang/compress/flate/level4.h"
+#include "golang/compress/flate/level5.h"
+#include "golang/compress/flate/level6.h"
+#include "golang/compress/flate/load_store.h"
 #include "golang/compress/flate/token.h"
-#include "golang/math/const.h"
+#include "golang/math/bits/bits.h"
 
-namespace golang::flate
+namespace golang::compress::flate
 {
+    namespace bits = golang::math::bits;
     namespace rec
     {
     }
 
-    uint32_t load32(gocpp::slice<unsigned char> b, int32_t i)
+    // fastEnc is the interface implemented by the level 1-6 fast encoders.
+    
+    template<typename T>
+    fastEnc::fastEnc(T& ref)
     {
-        // Help the compiler eliminate bounds checks on the next line.
-        b = b.make_slice(i, i + 4, len(b));
-        return uint32_t(b[0]) | (uint32_t(b[1]) << 8) | (uint32_t(b[2]) << 16) | (uint32_t(b[3]) << 24);
+        mValue.reset(new fastEncImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
-    uint64_t load64(gocpp::slice<unsigned char> b, int32_t i)
+    template<typename T>
+    fastEnc::fastEnc(const T& ref)
     {
-        // Help the compiler eliminate bounds checks on the next line.
-        b = b.make_slice(i, i + 8, len(b));
-        return uint64_t(b[0]) | (uint64_t(b[1]) << 8) | (uint64_t(b[2]) << 16) | (uint64_t(b[3]) << 24) |
-                (uint64_t(b[4]) << 32) | (uint64_t(b[5]) << 40) | (uint64_t(b[6]) << 48) | (uint64_t(b[7]) << 56);
+        mValue.reset(new fastEncImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
-    uint32_t hash(uint32_t u)
+    template<typename T>
+    fastEnc::fastEnc(T* ptr)
     {
-        return (u * 0x1e35a7bd) >> tableShift;
+        mValue.reset(new fastEncImpl<T, gocpp::ptr<T>>(ptr));
     }
 
+    std::ostream& fastEnc::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
+
+    template<typename T, typename TStore, typename TInterface>
+    void fastEnc::fastEncImpl<T, TStore, TInterface>::vencode(tokens* dst, gocpp::slice<unsigned char> src)
+    {
+        return rec::encode(gocpp::PtrRecv<T, false>(value.get()), dst, src);
+    }
+    template<typename T, typename TStore, typename TInterface>
+    void fastEnc::fastEncImpl<T, TStore, TInterface>::vreset()
+    {
+        return rec::reset(gocpp::PtrRecv<T, false>(value.get()));
+    }
+
+    inline fastEnc::IfastEnc* fastEnc::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'fastEnc'");
+    }
+
+    namespace rec
+    {
+        void encode(const gocpp::PtrRecv<struct fastEnc, false>& self, tokens* dst, gocpp::slice<unsigned char> src)
+        {
+            return self.ptr->value()->vencode(dst, src);
+        }
+
+        void encode(const gocpp::ObjRecv<struct fastEnc>& self, tokens* dst, gocpp::slice<unsigned char> src)
+        {
+            return self.obj.value()->vencode(dst, src);
+        }
+
+        void reset(const gocpp::PtrRecv<struct fastEnc, false>& self)
+        {
+            return self.ptr->value()->vreset();
+        }
+
+        void reset(const gocpp::ObjRecv<struct fastEnc>& self)
+        {
+            return self.obj.value()->vreset();
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct fastEnc& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // newFastEnc returns a fastEnc encoder for the given compression level (1-6).
+    fastEnc newFastEnc(int level)
+    {
+        //Go switch emulation
+        {
+            auto condition = level;
+            int conditionId = -1;
+            if(condition == 1) { conditionId = 0; }
+            else if(condition == 2) { conditionId = 1; }
+            else if(condition == 3) { conditionId = 2; }
+            else if(condition == 4) { conditionId = 3; }
+            else if(condition == 5) { conditionId = 4; }
+            else if(condition == 6) { conditionId = 5; }
+            switch(conditionId)
+            {
+                case 0:
+                    return gocpp::InitPtr<fastEncL1>([=](auto& x) {
+                        x.fastGen = gocpp::Init<fastGen>([=](auto& x) {
+                            x.cur = maxStoreBlockSize;
+                        });
+                    });
+                    break;
+                case 1:
+                    return gocpp::InitPtr<fastEncL2>([=](auto& x) {
+                        x.fastGen = gocpp::Init<fastGen>([=](auto& x) {
+                            x.cur = maxStoreBlockSize;
+                        });
+                    });
+                    break;
+                case 2:
+                    return gocpp::InitPtr<fastEncL3>([=](auto& x) {
+                        x.fastGen = gocpp::Init<fastGen>([=](auto& x) {
+                            x.cur = maxStoreBlockSize;
+                        });
+                    });
+                    break;
+                case 3:
+                    return gocpp::InitPtr<fastEncL4>([=](auto& x) {
+                        x.fastGen = gocpp::Init<fastGen>([=](auto& x) {
+                            x.cur = maxStoreBlockSize;
+                        });
+                    });
+                    break;
+                case 4:
+                    return gocpp::InitPtr<fastEncL5>([=](auto& x) {
+                        x.fastGen = gocpp::Init<fastGen>([=](auto& x) {
+                            x.cur = maxStoreBlockSize;
+                        });
+                    });
+                    break;
+                case 5:
+                    return gocpp::InitPtr<fastEncL6>([=](auto& x) {
+                        x.fastGen = gocpp::Init<fastGen>([=](auto& x) {
+                            x.cur = maxStoreBlockSize;
+                        });
+                    });
+                    break;
+                default:
+                    gocpp::panic("invalid level specified"_s);
+                    break;
+            }
+        }
+    }
+
+    // fastGen maintains the table for matches,
+    // and the previous byte block for level 1 and up.
+    // This is the generic implementation.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    fastGen::operator T()
+    {
+        T result;
+        result.hist = this->hist;
+        result.cur = this->cur;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool fastGen::operator==(const T& ref) const
+    {
+        if (hist != ref.hist) return false;
+        if (cur != ref.cur) return false;
+        return true;
+    }
+
+    std::ostream& fastGen::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << hist;
+        os << " " << cur;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct fastGen& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // addBlock appends src to the history and returns the offset where src starts in e.hist.
+    int32_t rec::addBlock(fastGen* e, gocpp::slice<unsigned char> src)
+    {
+        // check if we have space already
+        if(len(e->hist) + len(src) > cap(e->hist))
+        {
+            if(cap(e->hist) == 0)
+            {
+                e->hist = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, allocHistory);
+            }
+            else
+            {
+                if(cap(e->hist) < maxMatchOffset * 2)
+                {
+                    gocpp::panic("unexpected buffer size"_s);
+                }
+                // Move down
+                auto offset = int32_t(len(e->hist)) - maxMatchOffset;
+                copy(e->hist.make_slice(0, maxMatchOffset), e->hist.make_slice(offset, offset + maxMatchOffset));
+                e->cur += offset;
+                e->hist = e->hist.make_slice(0, maxMatchOffset);
+            }
+        }
+        auto s = int32_t(len(e->hist));
+        e->hist = append(e->hist, src);
+        return s;
+    }
+
+    // matchLenLimited returns the match length between offsets s and t in src.
+    // The maximum length returned is maxMatchLength - 4.
+    // It is assumed that s > t, that t >= 0 and s < len(src).
+    int32_t rec::matchLenLimited(fastGen* e, int s, int t, gocpp::slice<unsigned char> src)
+    {
+        auto a = src.make_slice(s, gocpp::min(s + maxMatchLength - 4, len(src)));
+        auto b = src.make_slice(t);
+        return int32_t(matchLen(a, b));
+    }
+
+    // matchLenLong returns the match length between offsets s and t in src.
+    // It is assumed that s > t, that t >= 0 and s < len(src).
+    int32_t rec::matchLenLong(fastGen* e, int s, int t, gocpp::slice<unsigned char> src)
+    {
+        return int32_t(matchLen(src.make_slice(s), src.make_slice(t)));
+    }
+
+    // reset resets the encoding table to prepare for a new compression stream.
+    void rec::reset(fastGen* e)
+    {
+        if(cap(e->hist) < allocHistory)
+        {
+            e->hist = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, allocHistory);
+        }
+        // We offset current position so everything will be out of reach.
+        // If we are above the buffer reset it will be cleared anyway since len(hist) == 0.
+        if(e->cur <= bufferReset)
+        {
+            e->cur += maxMatchOffset + int32_t(len(e->hist));
+        }
+        e->hist = e->hist.make_slice(0, 0);
+    }
+
+    fastGen* rec::getFastGen(fastGen* f)
+    {
+        return f;
+    }
+
+    // tableEntry stores the offset of a hash match in the input history.
     
     template<typename T> requires gocpp::GoStruct<T>
     tableEntry::operator T()
     {
         T result;
-        result.val = this->val;
         result.offset = this->offset;
         return result;
     }
@@ -54,7 +277,6 @@ namespace golang::flate
     template<typename T> requires gocpp::GoStruct<T>
     bool tableEntry::operator==(const T& ref) const
     {
-        if (val != ref.val) return false;
         if (offset != ref.offset) return false;
         return true;
     }
@@ -62,8 +284,7 @@ namespace golang::flate
     std::ostream& tableEntry::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << val;
-        os << " " << offset;
+        os << "" << offset;
         os << '}';
         return os;
     }
@@ -73,329 +294,107 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    // deflateFast maintains the table for matches,
-    // and the previous byte block for cross block matching.
+    // tableEntryPrev stores the current and previous offsets for a hash entry.
     
     template<typename T> requires gocpp::GoStruct<T>
-    deflateFast::operator T()
+    tableEntryPrev::operator T()
     {
         T result;
-        result.table = this->table;
-        result.prev = this->prev;
         result.cur = this->cur;
+        result.prev = this->prev;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool deflateFast::operator==(const T& ref) const
+    bool tableEntryPrev::operator==(const T& ref) const
     {
-        if (table != ref.table) return false;
-        if (prev != ref.prev) return false;
         if (cur != ref.cur) return false;
+        if (prev != ref.prev) return false;
         return true;
     }
 
-    std::ostream& deflateFast::PrintTo(std::ostream& os) const
+    std::ostream& tableEntryPrev::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << table;
+        os << "" << cur;
         os << " " << prev;
-        os << " " << cur;
         os << '}';
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct deflateFast& value)
+    std::ostream& operator<<(std::ostream& os, const struct tableEntryPrev& value)
     {
         return value.PrintTo(os);
     }
 
-    deflateFast* newDeflateFast()
+    // hashLen returns a hash of the first n bytes of u, using b output bits.
+    // It expects 3 <= n <= 8; other values are treated as n == 4.
+    // The bit length b must be <= 32.
+    // b and n should be constants in speed-critical use.
+    uint32_t hashLen(uint64_t u, uint8_t b, uint8_t n)
     {
-        return gocpp::InitPtr<deflateFast>([=](auto& x) {
-            x.cur = maxStoreBlockSize;
-            x.prev = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, maxStoreBlockSize);
-        });
-    }
-
-    // encode encodes a block given in src and appends tokens
-    // to dst and returns the result.
-    gocpp::slice<token> rec::encode(deflateFast* e, gocpp::slice<token> dst, gocpp::slice<unsigned char> src)
-    {
-        // Ensure that e.cur doesn't wrap.
-        if(e->cur >= bufferReset)
+        //Go switch emulation
         {
-            rec::shiftOffsets(gocpp::recv(e));
-        }
-
-        // This check isn't in the Snappy implementation, but there, the caller
-        // instead of the callee handles this case.
-        if(len(src) < minNonLiteralBlockSize)
-        {
-            e->cur += maxStoreBlockSize;
-            e->prev = e->prev.make_slice(0, 0);
-            return emitLiteral(dst, src);
-        }
-
-        // sLimit is when to stop looking for offset/length copies. The inputMargin
-        // lets us use a fast path for emitLiteral in the main loop, while we are
-        // looking for copies.
-        auto sLimit = int32_t(len(src) - inputMargin);
-
-        // nextEmit is where in src the next emitLiteral should start from.
-        auto nextEmit = int32_t(0);
-        auto s = int32_t(0);
-        auto cv = load32(src, s);
-        auto nextHash = hash(cv);
-
-        for(; ; )
-        {
-            // Copied from the C++ snappy implementation:
-            // Heuristic match skipping: If 32 bytes are scanned with no matches
-            // found, start looking only at every other byte. If 32 more bytes are
-            // scanned (or skipped), look at every third byte, etc.. When a match
-            // is found, immediately go back to looking at every byte. This is a
-            // small loss (~5% performance, ~0.1% density) for compressible data
-            // due to more bookkeeping, but for non-compressible data (such as
-            // JPEG) it's a huge win since the compressor quickly "realizes" the
-            // data is incompressible and doesn't bother looking for matches
-            // everywhere.
-            // The "skip" variable keeps track of how many bytes there are since
-            // the last match; dividing it by 32 (ie. right-shifting by five) gives
-            // the number of bytes to move ahead for each iteration.
-            auto skip = int32_t(32);
-
-            auto nextS = s;
-            tableEntry candidate = {};
-            for(; ; )
+            auto condition = n;
+            int conditionId = -1;
+            if(condition == 3) { conditionId = 0; }
+            else if(condition == 5) { conditionId = 1; }
+            else if(condition == 6) { conditionId = 2; }
+            else if(condition == 7) { conditionId = 3; }
+            else if(condition == 8) { conditionId = 4; }
+            switch(conditionId)
             {
-                s = nextS;
-                auto bytesBetweenHashLookups = skip >> 5;
-                nextS = s + bytesBetweenHashLookups;
-                skip += bytesBetweenHashLookups;
-                if(nextS > sLimit)
-                {
-                    goto emitRemainder;
-                }
-                candidate = e->table[nextHash & tableMask];
-                auto now = load32(src, nextS);
-                e->table[nextHash & tableMask] = gocpp::Init<tableEntry>([=](auto& x) {
-                    x.offset = s + e->cur;
-                    x.val = cv;
-                });
-                nextHash = hash(now);
-
-                auto offset = s - (candidate.offset - e->cur);
-                if(offset > maxMatchOffset || cv != candidate.val)
-                {
-                    // Out of range or not matched.
-                    cv = now;
-                    continue;
-                }
-                break;
-            }
-
-            // A 4-byte match has been found. We'll later see if more than 4 bytes
-            // match. But, prior to the match, src[nextEmit:s] are unmatched. Emit
-            // them as literal bytes.
-            dst = emitLiteral(dst, src.make_slice(nextEmit, s));
-
-            // Call emitCopy, and then see if another emitCopy could be our next
-            // move. Repeat until we find no match for the input immediately after
-            // what was consumed by the last emitCopy call.
-            // If we exit this loop normally then we need to call emitLiteral next,
-            // though we don't yet know how big the literal will be. We handle that
-            // by proceeding to the next iteration of the main loop. We also can
-            // exit this loop via goto if we get close to exhausting the input.
-            for(; ; )
-            {
-                // Invariant: we have a 4-byte match at s, and no need to emit any
-                // literal bytes prior to s.
-                // Extend the 4-byte match as long as possible.
-                s += 4;
-                auto t = candidate.offset - e->cur + 4;
-                auto l = rec::matchLen(gocpp::recv(e), s, t, src);
-
-                // matchToken is flate's equivalent of Snappy's emitCopy. (length,offset)
-                dst = append(dst, matchToken(uint32_t(l + 4 - baseMatchLength), uint32_t(s - t - baseMatchOffset)));
-                s += l;
-                nextEmit = s;
-                if(s >= sLimit)
-                {
-                    goto emitRemainder;
-                }
-
-                // We could immediately start working at s now, but to improve
-                // compression we first update the hash table at s-1 and at s. If
-                // another emitCopy is not our next move, also calculate nextHash
-                // at s+1. At least on GOARCH=amd64, these three hash calculations
-                // are faster as one load64 call (with some shifts) instead of
-                // three load32 calls.
-                auto x = load64(src, s - 1);
-                auto prevHash = hash(uint32_t(x));
-                e->table[prevHash & tableMask] = gocpp::Init<tableEntry>([=](auto& y) {
-                    y.offset = e->cur + s - 1;
-                    y.val = uint32_t(x);
-                });
-                x >>= 8;
-                auto currHash = hash(uint32_t(x));
-                candidate = e->table[currHash & tableMask];
-                e->table[currHash & tableMask] = gocpp::Init<tableEntry>([=](auto& y) {
-                    y.offset = e->cur + s;
-                    y.val = uint32_t(x);
-                });
-
-                auto offset = s - (candidate.offset - e->cur);
-                if(offset > maxMatchOffset || uint32_t(x) != candidate.val)
-                {
-                    cv = uint32_t(x >> 8);
-                    nextHash = hash(cv);
-                    s++;
+                case 0:
+                    return (uint32_t(u << 8) * prime3bytes) >> (32 - b);
                     break;
-                }
+                case 1:
+                    return uint32_t(((u << (64 - 40)) * prime5bytes) >> (64 - b));
+                    break;
+                case 2:
+                    return uint32_t(((u << (64 - 48)) * prime6bytes) >> (64 - b));
+                    break;
+                case 3:
+                    return uint32_t(((u << (64 - 56)) * prime7bytes) >> (64 - b));
+                    break;
+                case 4:
+                    return uint32_t((u * prime8bytes) >> (64 - b));
+                    break;
+                default:
+                    return (uint32_t(u) * prime4bytes) >> (32 - b);
+                    break;
             }
         }
-
-        emitRemainder:
-        if(int(nextEmit) < len(src))
-        {
-            dst = emitLiteral(dst, src.make_slice(nextEmit));
-        }
-        e->cur += int32_t(len(src));
-        e->prev = e->prev.make_slice(0, len(src));
-        copy(e->prev, src);
-        return dst;
     }
 
-    gocpp::slice<token> emitLiteral(gocpp::slice<token> dst, gocpp::slice<unsigned char> lit)
+    // matchLen returns the maximum common prefix length of a and b.
+    // a must be the shortest of the two.
+    int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     {
-        for(auto [gocpp_ignored, v] : lit)
+        int n;
+        auto left = len(a);
+        for(; left >= 8; )
         {
-            dst = append(dst, literalToken(uint32_t(v)));
-        }
-        return dst;
-    }
-
-    // matchLen returns the match length between src[s:] and src[t:].
-    // t can be negative to indicate the match is starting in e.prev.
-    // We assume that src[s-4:s] and src[t-4:t] already match.
-    int32_t rec::matchLen(deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src)
-    {
-        auto s1 = int(s) + maxMatchLength - 4;
-        if(s1 > len(src))
-        {
-            s1 = len(src);
-        }
-
-        // If we are inside the current block
-        if(t >= 0)
-        {
-            auto b = src.make_slice(t);
-            auto a = src.make_slice(s, s1);
-            b = b.make_slice(0, len(a));
-            // Extend the match to be as long as possible.
-            for(auto [i, gocpp_ignored] : a)
+            auto diff = loadLE64(a, n) ^ loadLE64(b, n);
+            if(diff != 0)
             {
-                if(a[i] != b[i])
-                {
-                    return int32_t(i);
-                }
+                return n + (bits::TrailingZeros64(diff) >> 3);
             }
-            return int32_t(len(a));
+            n += 8;
+            left -= 8;
         }
 
-        // We found a match in the previous block.
-        auto tp = int32_t(len(e->prev)) + t;
-        if(tp < 0)
-        {
-            return 0;
-        }
-
-        // Extend the match to be as long as possible.
-        auto a = src.make_slice(s, s1);
-        auto b = e->prev.make_slice(tp);
-        if(len(b) > len(a))
-        {
-            b = b.make_slice(0, len(a));
-        }
-        a = a.make_slice(0, len(b));
-        for(auto [i, gocpp_ignored] : b)
-        {
-            if(a[i] != b[i])
-            {
-                return int32_t(i);
-            }
-        }
-
-        // If we reached our limit, we matched everything we are
-        // allowed to in the previous block and we return.
-        auto n = int32_t(len(b));
-        if(int(s + n) == s1)
-        {
-            return n;
-        }
-
-        // Continue looking for more matches in the current block.
-        a = src.make_slice(s + n, s1);
-        b = src.make_slice(0, len(a));
+        a = a.make_slice(n);
+        b = b.make_slice(n);
+        b = b.make_slice(0, len(a));
         for(auto [i, gocpp_ignored] : a)
         {
             if(a[i] != b[i])
             {
-                return int32_t(i) + n;
+                break;
             }
+            n++;
         }
-        return int32_t(len(a)) + n;
-    }
-
-    // Reset resets the encoding history.
-    // This ensures that no matches are made to the previous block.
-    void rec::reset(deflateFast* e)
-    {
-        e->prev = e->prev.make_slice(0, 0);
-        // Bump the offset, so all matches will fail distance check.
-        // Nothing should be >= e.cur in the table.
-        e->cur += maxMatchOffset;
-
-        // Protect against e.cur wraparound.
-        if(e->cur >= bufferReset)
-        {
-            rec::shiftOffsets(gocpp::recv(e));
-        }
-    }
-
-    // shiftOffsets will shift down all match offset.
-    // This is only called in rare situations to prevent integer overflow.
-    //
-    // See https://golang.org/issue/18636 and https://github.com/golang/go/issues/34121.
-    void rec::shiftOffsets(deflateFast* e)
-    {
-        if(len(e->prev) == 0)
-        {
-            // We have no history; just clear the table.
-            for(auto [i, gocpp_ignored] : e->table.make_slice(0))
-            {
-                e->table[i] = tableEntry {};
-            }
-            e->cur = maxMatchOffset + 1;
-            return;
-        }
-
-        // Shift down everything in the table that isn't already too far away.
-        for(auto [i, gocpp_ignored] : e->table.make_slice(0))
-        {
-            auto v = e->table[i].offset - e->cur + maxMatchOffset + 1;
-            if(v < 0)
-            {
-                // We want to reset e.cur to maxMatchOffset + 1, so we need to shift
-                // all table entries down by (e.cur - (maxMatchOffset + 1)).
-                // Because we ignore matches > maxMatchOffset, we can cap
-                // any negative offsets at 0.
-                v = 0;
-            }
-            e->table[i].offset = v;
-        }
-        e->cur = maxMatchOffset + 1;
+        return n;
     }
 
 }

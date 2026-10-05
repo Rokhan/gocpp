@@ -15,8 +15,9 @@
 #include "golang/go/types/typeterm.h"
 #include "golang/strings/builder.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace strings = golang::strings;
     namespace rec
     {
         using strings::rec::String;
@@ -30,9 +31,9 @@ namespace golang::types
     // normal form.
     // allTermlist represents the set of all types.
     // It is in normal form.
-    golang::types::termlist allTermlist = golang::types::termlist {new types::term{}};
+    termlist allTermlist = termlist {new types::term{}};
     // String prints the termlist exactly (without normalization).
-    gocpp::string rec::String(golang::types::termlist xl)
+    gocpp::string rec::String(termlist xl)
     {
         if(len(xl) == 0)
         {
@@ -51,7 +52,7 @@ namespace golang::types
     }
 
     // isEmpty reports whether the termlist xl represents the empty set of types.
-    bool rec::isEmpty(golang::types::termlist xl)
+    bool rec::isEmpty(termlist xl)
     {
         // If there's a non-nil term, the entire list is not empty.
         // If the termlist is in normal form, this requires at most
@@ -67,7 +68,7 @@ namespace golang::types
     }
 
     // isAll reports whether the termlist xl represents the set of all types.
-    bool rec::isAll(golang::types::termlist xl)
+    bool rec::isAll(termlist xl)
     {
         // If there's a 𝓤 term, the entire list is 𝓤.
         // If the termlist is in normal form, this requires at most
@@ -83,7 +84,7 @@ namespace golang::types
     }
 
     // norm returns the normal form of xl.
-    golang::types::termlist rec::norm(golang::types::termlist xl)
+    termlist rec::norm(termlist xl)
     {
         // Quadratic algorithm, but good enough for now.
         // TODO(gri) fix asymptotic performance
@@ -125,13 +126,13 @@ namespace golang::types
     }
 
     // union returns the union xl ∪ yl.
-    golang::types::termlist rec::go_union(golang::types::termlist xl, golang::types::termlist yl)
+    termlist rec::go_union(termlist xl, termlist yl)
     {
         return rec::norm(gocpp::recv(append(xl, yl)));
     }
 
     // intersect returns the intersection xl ∩ yl.
-    golang::types::termlist rec::intersect(golang::types::termlist xl, golang::types::termlist yl)
+    termlist rec::intersect(termlist xl, termlist yl)
     {
         if(rec::isEmpty(gocpp::recv(xl)) || rec::isEmpty(gocpp::recv(yl)))
         {
@@ -155,14 +156,14 @@ namespace golang::types
     }
 
     // equal reports whether xl and yl represent the same type set.
-    bool rec::equal(golang::types::termlist xl, golang::types::termlist yl)
+    bool rec::equal(termlist xl, termlist yl)
     {
         // TODO(gri) this should be more efficient
         return rec::subsetOf(gocpp::recv(xl), yl) && rec::subsetOf(gocpp::recv(yl), xl);
     }
 
     // includes reports whether t ∈ xl.
-    bool rec::includes(golang::types::termlist xl, golang::types::Type t)
+    bool rec::includes(termlist xl, golang::go::types::Type t)
     {
         for(auto [gocpp_ignored, x] : xl)
         {
@@ -175,7 +176,7 @@ namespace golang::types
     }
 
     // supersetOf reports whether y ⊆ xl.
-    bool rec::supersetOf(golang::types::termlist xl, term* y)
+    bool rec::supersetOf(termlist xl, golang::go::types::term* y)
     {
         for(auto [gocpp_ignored, x] : xl)
         {
@@ -188,7 +189,7 @@ namespace golang::types
     }
 
     // subsetOf reports whether xl ⊆ yl.
-    bool rec::subsetOf(golang::types::termlist xl, golang::types::termlist yl)
+    bool rec::subsetOf(termlist xl, termlist yl)
     {
         if(rec::isEmpty(gocpp::recv(yl)))
         {

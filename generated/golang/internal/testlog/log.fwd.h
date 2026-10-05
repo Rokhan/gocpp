@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::testlog
+namespace golang::internal::testlog
 {
     struct Interface;
 }

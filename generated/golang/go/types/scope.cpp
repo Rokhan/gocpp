@@ -13,26 +13,29 @@
 
 #include "golang/fmt/print.h"
 #include "golang/go/token/position.h"
-#include "golang/go/types/errors.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/package.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/universe.h"
-#include "golang/go/types/util.h"
 #include "golang/io/io.h"
-#include "golang/sort/sort.h"
+#include "golang/slices/sort.h"
 #include "golang/strings/builder.h"
 #include "golang/strings/strings.h"
 #include "golang/sync/once.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace slices = golang::slices;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
+    namespace token = golang::go::token;
     namespace rec
     {
         using strings::rec::String;
         using strings::rec::Write;
         using sync::rec::Do;
-        using token::rec::IsValid;
     }
 
     // A Scope maintains a set of objects and links to its containing
@@ -91,9 +94,9 @@ namespace golang::types
 
     // NewScope returns a new, empty scope contained in the given parent
     // scope, if any. The comment is for debugging only.
-    golang::types::Scope* NewScope(golang::types::Scope* parent, token::Pos pos, token::Pos end, gocpp::string comment)
+    golang::go::types::Scope* NewScope(golang::go::types::Scope* parent, token::Pos pos, token::Pos end, gocpp::string comment)
     {
-        auto s = new golang::types::Scope {parent, nullptr, 0, nullptr, pos, end, comment, false};
+        auto s = new golang::go::types::Scope {parent, nullptr, 0, nullptr, pos, end, comment, false};
         // don't add children to Universe scope!
         if(parent != nullptr && parent != Universe)
         {
@@ -104,19 +107,19 @@ namespace golang::types
     }
 
     // Parent returns the scope's containing (parent) scope.
-    golang::types::Scope* rec::Parent(golang::types::Scope* s)
+    golang::go::types::Scope* rec::Parent(golang::go::types::Scope* s)
     {
         return s->parent;
     }
 
     // Len returns the number of scope elements.
-    int rec::Len(golang::types::Scope* s)
+    int rec::Len(golang::go::types::Scope* s)
     {
         return len(s->elems);
     }
 
     // Names returns the scope's element names in sorted order.
-    gocpp::slice<gocpp::string> rec::Names(golang::types::Scope* s)
+    gocpp::slice<gocpp::string> rec::Names(golang::go::types::Scope* s)
     {
         auto names = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), len(s->elems));
         auto i = 0;
@@ -125,49 +128,43 @@ namespace golang::types
             names[i] = name;
             i++;
         }
-        sort::Strings(names);
+        slices::Sort(names);
         return names;
     }
 
     // NumChildren returns the number of scopes nested in s.
-    int rec::NumChildren(golang::types::Scope* s)
+    int rec::NumChildren(golang::go::types::Scope* s)
     {
         return len(s->children);
     }
 
     // Child returns the i'th child scope for 0 <= i < NumChildren().
-    golang::types::Scope* rec::Child(golang::types::Scope* s, int i)
+    golang::go::types::Scope* rec::Child(golang::go::types::Scope* s, int i)
     {
         return s->children[i];
     }
 
     // Lookup returns the object in scope s with the given name if such an
     // object exists; otherwise the result is nil.
-    Object rec::Lookup(golang::types::Scope* s, gocpp::string name)
+    Object rec::Lookup(golang::go::types::Scope* s, gocpp::string name)
     {
-        return types::resolve(name, s->elems[name]);
+        return resolve(name, s->elems[name]);
     }
 
-    // LookupParent follows the parent chain of scopes starting with s until
-    // it finds a scope where Lookup(name) returns a non-nil object, and then
-    // returns that scope and object. If a valid position pos is provided,
-    // only objects that were declared at or before pos are considered.
-    // If no such scope and object exists, the result is (nil, nil).
-    //
-    // Note that obj.Parent() may be different from the returned scope if the
-    // object was inserted into the scope and already had a parent at that
-    // time (see Insert). This can only happen for dot-imported objects
-    // whose scope is the scope of the package that exported them.
-    std::tuple<golang::types::Scope*, Object> rec::LookupParent(golang::types::Scope* s, gocpp::string name, token::Pos pos)
+    // lookupIgnoringCase returns the objects in scope s whose names match
+    // the given name ignoring case. If exported is set, only exported names
+    // are returned.
+    gocpp::slice<Object> rec::lookupIgnoringCase(golang::go::types::Scope* s, gocpp::string name, bool exported)
     {
-        for(; s != nullptr; s = s->parent)
+        gocpp::slice<Object> matches = {};
+        for(auto [gocpp_ignored, n] : rec::Names(gocpp::recv(s)))
         {
-            if(auto obj = rec::Lookup(gocpp::recv(s), name); obj != nullptr && (! rec::IsValid(gocpp::recv(pos)) || cmpPos(rec::scopePos(gocpp::recv(obj)), pos) <= 0))
+            if((! exported || isExported(n)) && strings::EqualFold(n, name))
             {
-                return {s, obj};
+                matches = append(matches, rec::Lookup(gocpp::recv(s), n));
             }
         }
-        return {nullptr, nullptr};
+        return matches;
     }
 
     // Insert attempts to insert an object obj into scope s.
@@ -175,7 +172,7 @@ namespace golang::types
     // the same name, Insert leaves s unchanged and returns alt.
     // Otherwise it inserts obj, sets the object's parent scope
     // if not already set, and returns nil.
-    Object rec::Insert(golang::types::Scope* s, Object obj)
+    Object rec::Insert(golang::go::types::Scope* s, Object obj)
     {
         auto name = rec::Name(gocpp::recv(obj));
         if(auto alt = rec::Lookup(gocpp::recv(s), name); alt != nullptr)
@@ -183,6 +180,11 @@ namespace golang::types
             return alt;
         }
         rec::insert(gocpp::recv(s), name, obj);
+        // TODO(gri) Can we always set the parent to s (or is there
+        // a need to keep the original parent or some race condition)?
+        // If we can, than we may not need environment.lookupScope
+        // which is only there so that we get the correct scope for
+        // marking "used" dot-imported packages.
         if(rec::Parent(gocpp::recv(obj)) == nullptr)
         {
             rec::setParent(gocpp::recv(obj), s);
@@ -197,7 +199,7 @@ namespace golang::types
     // InsertLazy leaves s unchanged and returns false. Otherwise it
     // records the binding and returns true. The object's parent scope
     // will be set to s after resolve is called.
-    bool rec::_InsertLazy(golang::types::Scope* s, gocpp::string name, std::function<Object ()> resolve)
+    bool rec::_InsertLazy(golang::go::types::Scope* s, gocpp::string name, std::function<Object ()> resolve)
     {
         if(s->elems[name] != nullptr)
         {
@@ -210,7 +212,7 @@ namespace golang::types
         return true;
     }
 
-    void rec::insert(golang::types::Scope* s, gocpp::string name, Object obj)
+    void rec::insert(golang::go::types::Scope* s, gocpp::string name, Object obj)
     {
         if(s->elems == nullptr)
         {
@@ -219,109 +221,12 @@ namespace golang::types
         s->elems[name] = obj;
     }
 
-    // Squash merges s with its parent scope p by adding all
-    // objects of s to p, adding all children of s to the
-    // children of p, and removing s from p's children.
-    // The function f is called for each object obj in s which
-    // has an object alt in p. s should be discarded after
-    // having been squashed.
-    void rec::squash(golang::types::Scope* s, std::function<void (Object obj, Object alt)> err)
-    {
-        auto p = s->parent;
-        assert(p != nullptr);
-        for(auto [name, obj] : s->elems)
-        {
-            obj = types::resolve(name, obj);
-            rec::setParent(gocpp::recv(obj), nullptr);
-            if(auto alt = rec::Insert(gocpp::recv(p), obj); alt != nullptr)
-            {
-                err(obj, alt);
-            }
-        }
-
-        // index of s in p.children
-        auto j = - 1;
-        for(auto [i, ch] : p->children)
-        {
-            if(ch == s)
-            {
-                j = i;
-                break;
-            }
-        }
-        assert(j >= 0);
-        auto k = len(p->children) - 1;
-        p->children[j] = p->children[k];
-        p->children = p->children.make_slice(0, k);
-
-        p->children = append(p->children, s->children);
-
-        s->children = nullptr;
-        s->elems = nullptr;
-    }
-
-    // Pos and End describe the scope's source code extent [pos, end).
-    // The results are guaranteed to be valid only if the type-checked
-    // AST has complete position information. The extent is undefined
-    // for Universe and package scopes.
-    token::Pos rec::Pos(golang::types::Scope* s)
-    {
-        return s->pos;
-    }
-
-    token::Pos rec::End(golang::types::Scope* s)
-    {
-        return s->end;
-    }
-
-    // Contains reports whether pos is within the scope's extent.
-    // The result is guaranteed to be valid only if the type-checked
-    // AST has complete position information.
-    bool rec::Contains(golang::types::Scope* s, token::Pos pos)
-    {
-        return cmpPos(s->pos, pos) <= 0 && cmpPos(pos, s->end) < 0;
-    }
-
-    // Innermost returns the innermost (child) scope containing
-    // pos. If pos is not within any scope, the result is nil.
-    // The result is also nil for the Universe scope.
-    // The result is guaranteed to be valid only if the type-checked
-    // AST has complete position information.
-    golang::types::Scope* rec::Innermost(golang::types::Scope* s, token::Pos pos)
-    {
-        // Package scopes do not have extents since they may be
-        // discontiguous, so iterate over the package's files.
-        if(s->parent == Universe)
-        {
-            for(auto [gocpp_ignored, s] : s->children)
-            {
-                if(auto inner = rec::Innermost(gocpp::recv(s), pos); inner != nullptr)
-                {
-                    return inner;
-                }
-            }
-        }
-
-        if(rec::Contains(gocpp::recv(s), pos))
-        {
-            for(auto [gocpp_ignored, s] : s->children)
-            {
-                if(rec::Contains(gocpp::recv(s), pos))
-                {
-                    return rec::Innermost(gocpp::recv(s), pos);
-                }
-            }
-            return s;
-        }
-        return nullptr;
-    }
-
     // WriteTo writes a string representation of the scope to w,
     // with the scope elements sorted by name.
     // The level of indentation is controlled by n >= 0, with
     // n == 0 for no indentation.
     // If recurse is set, it also writes nested (children) scopes.
-    void rec::WriteTo(golang::types::Scope* s, io::Writer w, int n, bool recurse)
+    void rec::WriteTo(golang::go::types::Scope* s, io::Writer w, int n, bool recurse)
     {
         auto ind = ".  "_s;
         auto indn = strings::Repeat(ind, n);
@@ -346,7 +251,7 @@ namespace golang::types
     }
 
     // String returns a string representation of the scope, for debugging.
-    gocpp::string rec::String(golang::types::Scope* s)
+    gocpp::string rec::String(golang::go::types::Scope* s)
     {
         strings::Builder buf = {};
         rec::WriteTo(gocpp::recv(s), & buf, 0, false);
@@ -426,7 +331,7 @@ namespace golang::types
 
     // stub implementations so *lazyObject implements Object and we can
     // store them directly into Scope.elems.
-    golang::types::Scope* rec::Parent(lazyObject*)
+    golang::go::types::Scope* rec::Parent(lazyObject*)
     {
         gocpp::panic("unreachable"_s);
     }
@@ -446,7 +351,7 @@ namespace golang::types
         gocpp::panic("unreachable"_s);
     }
 
-    golang::types::Type rec::Type(lazyObject*)
+    golang::go::types::Type rec::Type(lazyObject*)
     {
         gocpp::panic("unreachable"_s);
     }
@@ -471,12 +376,7 @@ namespace golang::types
         gocpp::panic("unreachable"_s);
     }
 
-    golang::types::color rec::color(lazyObject*)
-    {
-        gocpp::panic("unreachable"_s);
-    }
-
-    void rec::setType(lazyObject*, golang::types::Type)
+    void rec::setType(lazyObject*, golang::go::types::Type)
     {
         gocpp::panic("unreachable"_s);
     }
@@ -486,17 +386,12 @@ namespace golang::types
         gocpp::panic("unreachable"_s);
     }
 
-    void rec::setColor(lazyObject*, golang::types::color color)
+    void rec::setParent(lazyObject*, golang::go::types::Scope*)
     {
         gocpp::panic("unreachable"_s);
     }
 
-    void rec::setParent(lazyObject*, golang::types::Scope*)
-    {
-        gocpp::panic("unreachable"_s);
-    }
-
-    bool rec::sameId(lazyObject*, Package* pkg, gocpp::string name)
+    bool rec::sameId(lazyObject*, Package*, gocpp::string, bool)
     {
         gocpp::panic("unreachable"_s);
     }
@@ -506,7 +401,7 @@ namespace golang::types
         gocpp::panic("unreachable"_s);
     }
 
-    void rec::setScopePos(lazyObject*, token::Pos pos)
+    void rec::setScopePos(lazyObject*, token::Pos)
     {
         gocpp::panic("unreachable"_s);
     }

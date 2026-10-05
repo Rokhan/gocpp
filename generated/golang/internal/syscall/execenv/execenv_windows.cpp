@@ -17,8 +17,11 @@
 #include "golang/syscall/security_windows.h"
 #include "golang/syscall/syscall_windows.h"
 
-namespace golang::execenv
+namespace golang::internal::syscall::execenv
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace syscall = golang::syscall;
+    namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
     }

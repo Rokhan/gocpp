@@ -13,10 +13,11 @@
 
 #include "golang/internal/poll/fd.h"
 #include "golang/internal/poll/fd_windows.h"
-#include "golang/sync/atomic/doc.h"
+#include "golang/sync/atomic/doc_64.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
+    namespace atomic = golang::sync::atomic;
     namespace rec
     {
     }
@@ -141,7 +142,8 @@ namespace golang::poll
 
     // lock adds a reference to mu and locks mu.
     // It reports whether mu is available for reading or writing.
-    bool rec::rwlock(fdMutex* mu, bool read)
+    // If wait is false, lock fails immediately if mu is not available.
+    bool rec::rwlock(fdMutex* mu, bool read, bool wait)
     {
         uint64_t mutexBit = {};
         uint64_t mutexWait = {};
@@ -181,6 +183,10 @@ namespace golang::poll
             else
             {
                 // Wait for lock.
+                if(! wait)
+                {
+                    return false;
+                }
                 go_new = old + mutexWait;
                 if(go_new & mutexMask == 0)
                 {
@@ -279,7 +285,7 @@ namespace golang::poll
     // It returns an error when fd cannot be used for reading.
     gocpp::error rec::readLock(FD* fd)
     {
-        if(! rec::rwlock(gocpp::recv(fd->fdmu), true))
+        if(! rec::rwlock(gocpp::recv(fd->fdmu), readlock, waitLock))
         {
             return errClosing(fd->isFile);
         }
@@ -291,7 +297,7 @@ namespace golang::poll
     // is no remaining reference.
     void rec::readUnlock(FD* fd)
     {
-        if(rec::rwunlock(gocpp::recv(fd->fdmu), true))
+        if(rec::rwunlock(gocpp::recv(fd->fdmu), readlock))
         {
             rec::destroy(gocpp::recv(fd));
         }
@@ -301,7 +307,7 @@ namespace golang::poll
     // It returns an error when fd cannot be used for writing.
     gocpp::error rec::writeLock(FD* fd)
     {
-        if(! rec::rwlock(gocpp::recv(fd->fdmu), false))
+        if(! rec::rwlock(gocpp::recv(fd->fdmu), poll::writeLock, waitLock))
         {
             return errClosing(fd->isFile);
         }
@@ -313,10 +319,75 @@ namespace golang::poll
     // is no remaining reference.
     void rec::writeUnlock(FD* fd)
     {
-        if(rec::rwunlock(gocpp::recv(fd->fdmu), false))
+        if(rec::rwunlock(gocpp::recv(fd->fdmu), poll::writeLock))
         {
             rec::destroy(gocpp::recv(fd));
         }
+    }
+
+    // readWriteLock adds a reference to fd and locks fd for reading and writing.
+    // It returns an error when fd cannot be used for reading and writing.
+    gocpp::error rec::readWriteLock(FD* fd)
+    {
+        if(! rec::rwlock(gocpp::recv(fd->fdmu), readlock, waitLock))
+        {
+            return errClosing(fd->isFile);
+        }
+        if(! rec::rwlock(gocpp::recv(fd->fdmu), poll::writeLock, waitLock))
+        {
+            if(rec::rwunlock(gocpp::recv(fd->fdmu), readlock))
+            {
+                rec::destroy(gocpp::recv(fd));
+            }
+            return errClosing(fd->isFile);
+        }
+        return nullptr;
+    }
+
+    // tryReadWriteLock tries to add a reference to fd and lock fd for reading and writing.
+    // It returns (false, nil) when fd is not available for reading and writing but is not closing.
+    // It returns (false, errClosing) when fd is closing.
+    std::tuple<bool, gocpp::error> rec::tryReadWriteLock(FD* fd)
+    {
+        if(! rec::rwlock(gocpp::recv(fd->fdmu), readlock, tryLock))
+        {
+            if(rec::closing(gocpp::recv(fd)))
+            {
+                return {false, errClosing(fd->isFile)};
+            }
+            return {false, nullptr};
+        }
+        if(! rec::rwlock(gocpp::recv(fd->fdmu), poll::writeLock, tryLock))
+        {
+            if(rec::rwunlock(gocpp::recv(fd->fdmu), readlock))
+            {
+                rec::destroy(gocpp::recv(fd));
+            }
+            if(rec::closing(gocpp::recv(fd)))
+            {
+                return {false, errClosing(fd->isFile)};
+            }
+            return {false, nullptr};
+        }
+        return {true, nullptr};
+    }
+
+    // readWriteUnlock removes a reference from fd and unlocks fd for reading and writing.
+    // It also closes fd when the state of fd is set to closed and there
+    // is no remaining reference.
+    void rec::readWriteUnlock(FD* fd)
+    {
+        rec::rwunlock(gocpp::recv(fd->fdmu), readlock);
+        if(rec::rwunlock(gocpp::recv(fd->fdmu), poll::writeLock))
+        {
+            rec::destroy(gocpp::recv(fd));
+        }
+    }
+
+    // closing returns true if fd is closing.
+    bool rec::closing(FD* fd)
+    {
+        return atomic::LoadUint64(& fd->fdmu.state) & mutexClosed != 0;
     }
 
 }

@@ -14,14 +14,19 @@ namespace golang::os
     const int go_SEEK_END = 2;
     struct LinkError;
     struct noReadFrom;
+    struct fileWithoutReadFrom;
     struct noWriteTo;
+    struct fileWithoutWriteTo;
     using dirFS = gocpp::string;
 }
-#include "golang/os/types.fwd.h"
+#include "golang/syscall/net.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::os
 {
+    namespace syscall = golang::syscall;
     // Flags to OpenFile wrapping those of the underlying system. Not all
     // flags may be implemented on a given system.
     // Exactly one of O_RDONLY, O_WRONLY, or O_RDWR must be specified.
@@ -34,6 +39,4 @@ namespace golang::os
     const int O_EXCL = syscall::O_EXCL;
     const int O_SYNC = syscall::O_SYNC;
     const int O_TRUNC = syscall::O_TRUNC;
-    struct fileWithoutReadFrom;
-    struct fileWithoutWriteTo;
 }

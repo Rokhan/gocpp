@@ -14,8 +14,10 @@
 #include "golang/internal/abi/abi_amd64.h"
 #include "golang/internal/goarch/goarch.h"
 
-namespace golang::abi
+namespace golang::internal::abi
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
     }
@@ -128,7 +130,9 @@ namespace golang::abi
     //go:nosplit
     bool rec::Get(gocpp::array_ptr<IntArgRegBitmap> b, int i)
     {
-        return b[i / 8] & (uint8_t(1) << (i % 8)) != 0;
+        // Compute p=&b[i/8], but without a bounds check. We don't have the stack for it.
+        auto p = (unsigned char*)(gocpp::unsafe_pointer(uintptr_t(gocpp::unsafe_pointer(b)) + uintptr_t(i / 8)));
+        return *p & (uint8_t(1) << (i % 8)) != 0;
     }
 
 }

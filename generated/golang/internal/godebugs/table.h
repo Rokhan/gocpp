@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::godebugs
+namespace golang::internal::godebugs
 {
     struct Info
     {
@@ -19,6 +19,7 @@ namespace golang::godebugs
         int Changed{}; // minor version when default changed, if any; 21 means Go 1.21
         gocpp::string Old{}; // value that restores behavior prior to Changed
         bool Opaque{}; // setting does not export information to runtime/metrics using [internal/godebug.Setting.IncNonDefault]
+        bool Immutable{}; // setting cannot be changed after program start
 
         using isGoStruct = void;
 
@@ -32,7 +33,40 @@ namespace golang::godebugs
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Info& value);
+    struct RemovedInfo
+    {
+        gocpp::string Name{}; // name of the removed GODEBUG setting.
+        int Removed{}; // minor version of Go, when the removal happened
+        std::function<bool (gocpp::string _1)> Old{}; // reports whether the GODEBUG value (argument) is an old (invalid) value
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct RemovedInfo& value);
+    bool zero(gocpp::string s);
+    bool one(gocpp::string s);
+    // All is the table of known settings, sorted by Name.
+    //
+    // Note: After adding entries to this table, run 'go generate runtime/metrics'
+    // to update the runtime/metrics doc comment.
+    // (Otherwise the runtime/metrics test will fail.)
+    //
+    // Note: After adding entries to this table, update the list in doc/godebug.md as well.
+    // (Otherwise the test in this package will fail.)
     extern gocpp::slice<Info> All;
+    // Removed contains all GODEBUGs that we have removed.
+    //
+    // Every removed GODEBUG must have a corresponding section in doc/godebug.md,
+    // since cmd/go links to that document when a removed GODEBUG is used.
+    extern gocpp::slice<RemovedInfo> Removed;
     Info* Lookup(gocpp::string name);
 
     namespace rec

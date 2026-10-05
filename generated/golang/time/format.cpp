@@ -12,12 +12,15 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
+#include "golang/internal/stringslite/strings.h"
 #include "golang/time/format_rfc3339.h"
 #include "golang/time/time.h"
 #include "golang/time/zoneinfo.h"
 
 namespace golang::time
 {
+    namespace errors = golang::errors;
+    namespace stringslite = golang::internal::stringslite;
     namespace rec
     {
     }
@@ -39,6 +42,16 @@ namespace golang::time
 
     // nextStdChunk finds the first occurrence of a std string in
     // layout and returns the text before, the std string, and the text after.
+    //
+    // nextStdChunk should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/searKing/golang/go
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname nextStdChunk
     std::tuple<gocpp::string, int, gocpp::string> nextStdChunk(gocpp::string layout)
     {
         gocpp::string prefix;
@@ -533,13 +546,13 @@ namespace golang::time
         return s;
     }
 
-    // GoString implements fmt.GoStringer and formats t to be printed in Go source
+    // GoString implements [fmt.GoStringer] and formats t to be printed in Go source
     // code.
     gocpp::string rec::GoString(Time t)
     {
-        auto abs = rec::abs(gocpp::recv(t));
-        auto [year, month, day, gocpp_id_1] = absDate(abs, true);
-        auto [hour, minute, second] = absClock(abs);
+        auto abs = rec::absSec(gocpp::recv(t));
+        auto [year, month, day] = rec::date(gocpp::recv(rec::days(gocpp::recv(abs))));
+        auto [hour, minute, second] = rec::clock(gocpp::recv(abs));
 
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len("time.Date(9999, time.September, 31, 23, 59, 59, 999999999, time.Local)"_s));
         buf = append(buf, "time.Date("_s);
@@ -609,9 +622,9 @@ namespace golang::time
 
     // Format returns a textual representation of the time value formatted according
     // to the layout defined by the argument. See the documentation for the
-    // constant called Layout to see how to represent the layout format.
+    // constant called [Layout] to see how to represent the layout format.
     //
-    // The executable example for Time.Format demonstrates the working
+    // The executable example for [Time.Format] demonstrates the working
     // of the layout string in detail and is a good reference.
     gocpp::string rec::Format(Time t, gocpp::string layout)
     {
@@ -631,7 +644,7 @@ namespace golang::time
         return gocpp::string(b);
     }
 
-    // AppendFormat is like Format but appends the textual
+    // AppendFormat is like [Time.Format] but appends the textual
     // representation to b and returns the extended buffer.
     gocpp::slice<unsigned char> rec::AppendFormat(Time t, gocpp::slice<unsigned char> b, gocpp::string layout)
     {
@@ -660,6 +673,8 @@ namespace golang::time
     gocpp::slice<unsigned char> rec::appendFormat(Time t, gocpp::slice<unsigned char> b, gocpp::string layout)
     {
         auto [name, offset, abs] = rec::locabs(gocpp::recv(t));
+        auto days = rec::days(gocpp::recv(abs));
+
         int year = - 1;
         golang::time::Month month = - 1;
         int day = - 1;
@@ -685,14 +700,17 @@ namespace golang::time
             // Compute year, month, day if needed.
             if(year < 0 && std & stdNeedDate != 0)
             {
-                std::tie(year, month, day, yday) = absDate(abs, true);
-                yday++;
+                std::tie(year, month, day) = rec::date(gocpp::recv(days));
+            }
+            if(yday < 0 && std & stdNeedYday != 0)
+            {
+                std::tie(std::ignore, yday) = rec::yearYday(gocpp::recv(days));
             }
 
             // Compute hour, minute, second if needed.
             if(hour < 0 && std & stdNeedClock != 0)
             {
-                std::tie(hour, min, sec) = absClock(abs);
+                std::tie(hour, min, sec) = rec::clock(gocpp::recv(abs));
             }
 
             //Go switch emulation
@@ -765,11 +783,11 @@ namespace golang::time
                         b = appendInt(b, int(month), 2);
                         break;
                     case 6:
-                        b = append(b, rec::String(gocpp::recv(absWeekday(abs))).make_slice(0, 3));
+                        b = append(b, rec::String(gocpp::recv(rec::weekday(gocpp::recv(days)))).make_slice(0, 3));
                         break;
                     case 7:
                     {
-                        auto s = rec::String(gocpp::recv(absWeekday(abs)));
+                        auto s = rec::String(gocpp::recv(rec::weekday(gocpp::recv(days))));
                         b = append(b, s);
                         break;
                     }
@@ -990,16 +1008,9 @@ namespace golang::time
     // The provided value and valueElem are cloned to avoid escaping their values.
     ParseError* newParseError(gocpp::string layout, gocpp::string value, gocpp::string layoutElem, gocpp::string valueElem, gocpp::string message)
     {
-        auto valueCopy = cloneString(value);
-        auto valueElemCopy = cloneString(valueElem);
+        auto valueCopy = stringslite::Clone(value);
+        auto valueElemCopy = stringslite::Clone(valueElem);
         return new ParseError {layout, valueCopy, layoutElem, valueElemCopy, message};
-    }
-
-    // cloneString returns a string copy of s.
-    // Do not use strings.Clone to avoid dependency on strings package.
-    gocpp::string cloneString(gocpp::string s)
-    {
-        return gocpp::string(gocpp::slice<unsigned char>(s));
     }
 
     gocpp::string quote(gocpp::string s)
@@ -1043,7 +1054,7 @@ namespace golang::time
                 {
                     buf = append(buf, '\\');
                 }
-                buf = append(buf, gocpp::string(c));
+                buf = append(buf, (unsigned char)(c));
             }
         }
         buf = append(buf, '"');
@@ -1151,11 +1162,11 @@ namespace golang::time
     }
 
     // Parse parses a formatted string and returns the time value it represents.
-    // See the documentation for the constant called Layout to see how to
+    // See the documentation for the constant called [Layout] to see how to
     // represent the format. The second argument must be parseable using
     // the format string (layout) provided as the first argument.
     //
-    // The example for Time.Format demonstrates the working of the layout string
+    // The example for [Time.Format] demonstrates the working of the layout string
     // in detail and is a good reference.
     //
     // When parsing (only), the input may contain a fractional second
@@ -1174,12 +1185,15 @@ namespace golang::time
     // For layouts specifying the two-digit year 06, a value NN >= 69 will be treated
     // as 19NN and a value NN < 69 will be treated as 20NN.
     //
+    // Timestamps representing leap seconds (second 60) cannot be parsed.
+    // These are not representable by [Time].
+    //
     // The remainder of this comment describes the handling of time zones.
     //
     // In the absence of a time zone indicator, Parse returns a time in UTC.
     //
     // When parsing a time with a zone offset like -0700, if the offset corresponds
-    // to a time zone used by the current location (Local), then Parse uses that
+    // to a time zone used by the current location ([Local]), then Parse uses that
     // location and zone in the returned time. Otherwise it records the time as
     // being in a fabricated location with time fixed at the given zone offset.
     //
@@ -1191,7 +1205,7 @@ namespace golang::time
     // This choice means that such a time can be parsed and reformatted with the
     // same layout losslessly, but the exact instant used in the representation will
     // differ by the actual zone offset. To avoid such problems, prefer time layouts
-    // that use a numeric zone offset, or use ParseInLocation.
+    // that use a numeric zone offset, or use [ParseInLocation].
     std::tuple<Time, gocpp::error> Parse(gocpp::string layout, gocpp::string value)
     {
         // Optimize for RFC3339 as it accounts for over half of all representations.
@@ -1295,9 +1309,9 @@ namespace golang::time
                 else if(condition == stdPM) { conditionId = 20; }
                 else if(condition == stdpm) { conditionId = 21; }
                 else if(condition == stdISO8601TZ) { conditionId = 22; }
-                else if(condition == stdISO8601ColonTZ) { conditionId = 23; }
-                else if(condition == stdISO8601SecondsTZ) { conditionId = 24; }
-                else if(condition == stdISO8601ShortTZ) { conditionId = 25; }
+                else if(condition == stdISO8601ShortTZ) { conditionId = 23; }
+                else if(condition == stdISO8601ColonTZ) { conditionId = 24; }
+                else if(condition == stdISO8601SecondsTZ) { conditionId = 25; }
                 else if(condition == stdISO8601ColonSecondsTZ) { conditionId = 26; }
                 else if(condition == stdNumTZ) { conditionId = 27; }
                 else if(condition == stdNumShortTZ) { conditionId = 28; }
@@ -1501,17 +1515,17 @@ namespace golang::time
                     case 24:
                     case 25:
                     case 26:
-                    case 27:
-                    case 28:
-                    case 29:
-                    case 30:
-                    case 31:
-                        if((std == stdISO8601TZ || std == stdISO8601ShortTZ || std == stdISO8601ColonTZ) && len(value) >= 1 && value[0] == 'Z')
+                        if(len(value) >= 1 && value[0] == 'Z')
                         {
                             value = value.make_slice(1);
                             z = time::UTC;
                             break;
                         }
+                    case 27:
+                    case 28:
+                    case 29:
+                    case 30:
+                    case 31:
                         gocpp::string sign = {};
                         gocpp::string hour = {};
                         gocpp::string min = {};
@@ -1581,10 +1595,25 @@ namespace golang::time
                         if(err == nullptr)
                         {
                             std::tie(mm, std::ignore, err) = getnum(min, true);
+                            if(err == nullptr)
+                            {
+                                std::tie(ss, std::ignore, err) = getnum(seconds, true);
+                            }
                         }
-                        if(err == nullptr)
+                        // The range test use > rather than >=,
+                        // as some people do write offsets of 24 hours
+                        // or 60 minutes or 60 seconds.
+                        if(hr > 24)
                         {
-                            std::tie(ss, std::ignore, err) = getnum(seconds, true);
+                            rangeErrString = "time zone offset hour"_s;
+                        }
+                        if(mm > 60)
+                        {
+                            rangeErrString = "time zone offset minute"_s;
+                        }
+                        if(ss > 60)
+                        {
+                            rangeErrString = "time zone offset second"_s;
                         }
                         // offset is in seconds
                         zoneOffset = (hr * 60 + mm) * 60 + ss;
@@ -1705,11 +1734,11 @@ namespace golang::time
             if(m == 0)
             {
                 m = (yday - 1) / 31 + 1;
-                if(int(daysBefore[m]) < yday)
+                if(daysBefore(Month(m + 1)) < yday)
                 {
                     m++;
                 }
-                d = yday - int(daysBefore[m - 1]);
+                d = yday - daysBefore(Month(m));
             }
             // If month, day already seen, yday's m, d must match.
             // Otherwise, set them from m, d.
@@ -1754,7 +1783,7 @@ namespace golang::time
 
             // Look for local zone with the given offset.
             // If that zone was in effect at the given time, use it.
-            auto [name, offset, gocpp_id_2, gocpp_id_3, gocpp_id_4] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t)));
+            auto [name, offset, gocpp_id_1, gocpp_id_2, gocpp_id_3] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t)));
             if(offset == zoneOffset && (zoneName == ""_s || name == zoneName))
             {
                 rec::setLoc(gocpp::recv(t), local);
@@ -1763,7 +1792,7 @@ namespace golang::time
 
             // Otherwise create fake zone to record offset.
             // avoid leaking the input value
-            auto zoneNameCopy = cloneString(zoneName);
+            auto zoneNameCopy = stringslite::Clone(zoneName);
             rec::setLoc(gocpp::recv(t), FixedZone(zoneNameCopy, zoneOffset));
             return {t, nullptr};
         }
@@ -1789,7 +1818,7 @@ namespace golang::time
                 offset *= 3600;
             }
             // avoid leaking the input value
-            auto zoneNameCopy = cloneString(zoneName);
+            auto zoneNameCopy = stringslite::Clone(zoneName);
             rec::setLoc(gocpp::recv(t), FixedZone(zoneNameCopy, offset));
             return {t, nullptr};
         }
@@ -2037,6 +2066,44 @@ namespace golang::time
         return {x, scale, s.make_slice(i)};
     }
 
+    // parseDurationError describes a problem parsing a duration string.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    parseDurationError::operator T()
+    {
+        T result;
+        result.message = this->message;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool parseDurationError::operator==(const T& ref) const
+    {
+        if (message != ref.message) return false;
+        if (value != ref.value) return false;
+        return true;
+    }
+
+    std::ostream& parseDurationError::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << message;
+        os << " " << value;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct parseDurationError& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    gocpp::string rec::Error(parseDurationError* e)
+    {
+        return "time: "_s + e->message + " "_s + quote(e->value);
+    }
+
     gocpp::map<gocpp::string, uint64_t> unitMap = gocpp::map<gocpp::string, uint64_t> {
         { "ns"_s, uint64_t(time::Nanosecond) },
         { "us"_s, uint64_t(Microsecond) },
@@ -2076,7 +2143,7 @@ namespace golang::time
         }
         if(s == ""_s)
         {
-            return {0, errors::New("time: invalid duration "_s + quote(orig))};
+            return {0, gocpp::error(new parseDurationError {"invalid duration"_s, orig})};
         }
         for(; s != ""_s; )
         {
@@ -2089,14 +2156,14 @@ namespace golang::time
             // The next character must be [0-9.]
             if(! (s[0] == '.' || '0' <= s[0] && s[0] <= '9'))
             {
-                return {0, errors::New("time: invalid duration "_s + quote(orig))};
+                return {0, gocpp::error(new parseDurationError {"invalid duration"_s, orig})};
             }
             // Consume [0-9]*
             auto pl = len(s);
             std::tie(v, s, err) = leadingInt(s);
             if(err != nullptr)
             {
-                return {0, errors::New("time: invalid duration "_s + quote(orig))};
+                return {0, gocpp::error(new parseDurationError {"invalid duration"_s, orig})};
             }
             // whether we consumed anything before a period
             auto pre = pl != len(s);
@@ -2113,7 +2180,7 @@ namespace golang::time
             if(! pre && ! post)
             {
                 // no digits (e.g. ".s" or "-.s")
-                return {0, errors::New("time: invalid duration "_s + quote(orig))};
+                return {0, gocpp::error(new parseDurationError {"invalid duration"_s, orig})};
             }
 
             // Consume unit.
@@ -2128,19 +2195,19 @@ namespace golang::time
             }
             if(i == 0)
             {
-                return {0, errors::New("time: missing unit in duration "_s + quote(orig))};
+                return {0, gocpp::error(new parseDurationError {"missing unit in duration"_s, orig})};
             }
             auto u = s.make_slice(0, i);
             s = s.make_slice(i);
             auto [unit, ok] = unitMap[u];
             if(! ok)
             {
-                return {0, errors::New("time: unknown unit "_s + quote(u) + " in duration "_s + quote(orig))};
+                return {0, gocpp::error(new parseDurationError {"unknown unit "_s + quote(u) + " in duration"_s, orig})};
             }
             if(v > (1 << 63) / unit)
             {
                 // overflow
-                return {0, errors::New("time: invalid duration "_s + quote(orig))};
+                return {0, gocpp::error(new parseDurationError {"invalid duration"_s, orig})};
             }
             v *= unit;
             if(f > 0)
@@ -2151,13 +2218,13 @@ namespace golang::time
                 if(v > (1 << 63))
                 {
                     // overflow
-                    return {0, errors::New("time: invalid duration "_s + quote(orig))};
+                    return {0, gocpp::error(new parseDurationError {"invalid duration"_s, orig})};
                 }
             }
             d += v;
             if(d > (1 << 63))
             {
-                return {0, errors::New("time: invalid duration "_s + quote(orig))};
+                return {0, gocpp::error(new parseDurationError {"invalid duration"_s, orig})};
             }
         }
         if(neg)
@@ -2166,7 +2233,7 @@ namespace golang::time
         }
         if(d > (1 << 63) - 1)
         {
-            return {0, errors::New("time: invalid duration "_s + quote(orig))};
+            return {0, gocpp::error(new parseDurationError {"invalid duration"_s, orig})};
         }
         return {Duration(d), nullptr};
     }

@@ -13,8 +13,9 @@
 
 #include "golang/fmt/print.h"
 
-namespace golang::wc
+namespace golang::golang_org::x::tour::wc
 {
+    namespace fmt = golang::fmt;
     namespace rec
     {
     }

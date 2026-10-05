@@ -10,8 +10,9 @@
 #include "gocpp/support.h"
 
 
-namespace golang::rand
+namespace golang::math::rand
 {
+    // rngCooked used for seeding. See gen_cooked.go for details.
     extern gocpp::array<int64_t, rngLen> rngCooked;
     struct rngSource
     {

@@ -12,8 +12,31 @@
 
 namespace golang::runtime
 {
+    unsigned char* getGCMask(_type* t);
+    // inProgress is a byte whose address is a sentinel indicating that
+    // some thread is currently building the GC bitmask for a type.
+    extern unsigned char inProgress;
+    unsigned char* getGCMaskOnDemand(_type* t);
+    struct bitCursor
+    {
+        unsigned char* ptr{}; // base of region
+        uintptr_t n{}; // cursor points to bit n of region
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct bitCursor& value);
     void reflectOffsLock();
     void reflectOffsUnlock();
+    gocpp::string pkgPath(golang::runtime::name n);
     void typelinksinit();
     struct _typePair
     {
@@ -47,29 +70,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
+    void buildGCMask(_type* t, bitCursor dst);
     bool typesEqual(_type* t, _type* v, gocpp::map<_typePair, gocpp_id_1> seen);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/internal/abi/type.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/symtab.fwd.h"
 
 namespace golang::runtime
 {
-    struct rtype
-    {
-        abi::Type* Type{}; // embedding is okay here (unlike reflect) because none of this is public
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
     struct reflectOffsStruct
     {
         mutex lock{};
@@ -91,19 +100,63 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct reflectOffsStruct& value);
     golang::runtime::name resolveNameOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::nameOff off);
     _type* resolveTypeOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::typeOff off);
-    gocpp::string pkgPath(golang::runtime::name n);
+    // moduleToTypelinks maps from moduledata to typelinks.
+    // We build this lazily as needed, since most programs do not need it.
+    extern gocpp::map<moduledata*, gocpp::slice<_type*>> moduleToTypelinks;
+    extern mutex moduleToTypelinksLock;
+    gocpp::slice<_type*> moduleTypelinks(moduledata* md);
+}
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/internal/abi/map.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+
+namespace golang::runtime
+{
+    // reflectOffs holds type offsets defined at run time by the reflect package.
+    //
+    // When a type is defined at run time, its *rtype data lives on the heap.
+    // There are a wide range of possible addresses the heap may use, that
+    // may not be representable as a 32-bit offset. Moreover the GC may
+    // one day start moving heap memory, in which case there is no stable
+    // offset that can be defined.
+    //
+    // To provide stable offsets, we add pin *rtype objects in a global map
+    // and treat the offset as an identifier. We use negative offsets that
+    // do not overlap with any compile-time module offsets.
+    //
+    // Entries are created by reflect.addReflectOff.
     extern reflectOffsStruct reflectOffs;
-    rtype toRType(abi::Type* t);
+    namespace abi = golang::internal::abi;
+    gocpp::string maps_typeString(abi::Type* typ);
+    struct rtype
+    {
+        abi::Type* Type{}; // embedding is okay here (unlike reflect) because none of this is public
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
+    golang::runtime::rtype toRType(abi::Type* t);
 
     namespace rec
     {
-        gocpp::string string(rtype t);
-        uncommontype* uncommon(rtype t);
-        gocpp::string name(rtype t);
-        gocpp::string pkgpath(rtype t);
-        golang::runtime::name nameOff(rtype t, golang::runtime::nameOff off);
-        _type* typeOff(rtype t, golang::runtime::typeOff off);
-        gocpp::unsafe_pointer textOff(rtype t, golang::runtime::textOff off);
+        gocpp::string string(golang::runtime::rtype t);
+        uncommontype* uncommon(golang::runtime::rtype t);
+        gocpp::string name(golang::runtime::rtype t);
+        gocpp::string pkgpath(golang::runtime::rtype t);
+        void write(bitCursor b, unsigned char* data, uintptr_t cnt);
+        bitCursor offset(bitCursor b, uintptr_t cnt);
+        golang::runtime::name nameOff(golang::runtime::rtype t, golang::runtime::nameOff off);
+        _type* typeOff(golang::runtime::rtype t, golang::runtime::typeOff off);
+        gocpp::unsafe_pointer textOff(golang::runtime::rtype t, golang::runtime::textOff off);
     }
 }
 

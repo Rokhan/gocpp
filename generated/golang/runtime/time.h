@@ -12,35 +12,106 @@
 
 namespace golang::runtime
 {
+    std::tuple<int64_t, int32_t, int64_t> time_runtimeNow();
+    int64_t crypto_internal_fips140deps_time_monoTime();
+    int64_t time_runtimeNano();
+    bool time_runtimeIsBubbled();
+    struct timerWhen
+    {
+        timer* timer{};
+        int64_t when{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct timerWhen& value);
     void timeSleep(int64_t ns);
-    void goroutineReady(go_any arg, uintptr_t seq);
+    void goroutineReady(go_any arg, uintptr_t _1, int64_t _2);
     int64_t timeSleepUntil();
     void badTimer();
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/chan.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    bool resetForSleep(g* gp, gocpp::unsafe_pointer _1);
+    void blockTimerChan(golang::runtime::hchan* c);
+    void unblockTimerChan(golang::runtime::hchan* c);
+}
+#include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
     struct timer
     {
-        // If this timer is on a heap, which P's heap it is on.
-        // puintptr rather than *p to match uintptr in the versions
-        // of this struct defined in other packages.
-        puintptr pp{};
+        // mu protects reads and writes to all fields, with exceptions noted below.
+        mutex mu{};
+        atomic::Uint8 astate{}; // atomic copy of state bits at last unlock
+        uint8_t state{}; // state bits
+        bool isChan{}; // timer has a channel; immutable; can be read without lock
+        bool isFake{}; // timer is using fake time; immutable; can be read without lock
+        uint32_t blocked{}; // number of goroutines blocked on timer's channel
+        uint32_t rand{}; // randomizes order of timers at same instant; only set when isFake
         // Timer wakes up at when, and then at when+period, ... (period > 0 only)
-        // each time calling f(arg, now) in the timer goroutine, so f must be
+        // each time calling f(arg, seq, delay) in the timer goroutine, so f must be
         // a well-behaved function and not block.
-        // when must be positive on an active timer.
+        // The arg and seq are client-specified opaque arguments passed back to f.
+        // When used from netpoll, arg and seq have meanings defined by netpoll
+        // and are completely opaque to this code; in that context, seq is a sequence
+        // number to recognize and squelch stale function invocations.
+        // When used from package time, arg is a channel (for After, NewTicker)
+        // or the function to call (for AfterFunc) and seq is unused (0).
+        // Package time does not know about seq, but if this is a channel timer (t.isChan == true),
+        // this file uses t.seq as a sequence number to recognize and squelch
+        // sends that correspond to an earlier (stale) timer configuration,
+        // similar to its use in netpoll. In this usage (that is, when t.isChan == true),
+        // writes to seq are protected by both t.mu and t.sendLock,
+        // so reads are allowed when holding either of the two mutexes.
+        // The delay argument is nanotime() - t.when, meaning the delay in ns between
+        // when the timer should have gone off and now. Normally that amount is
+        // small enough not to matter, but for channel timers that are fed lazily,
+        // the delay can be arbitrarily long; package time subtracts it out to make
+        // it look like the send happened earlier than it actually did.
+        // (No one looked at the channel since then, or the send would have
+        // not happened so late, so no one can tell the difference.)
         int64_t when{};
         int64_t period{};
-        std::function<void (go_any _1, uintptr_t _2)> f{};
+        std::function<void (go_any arg, uintptr_t seq, int64_t delay)> f{};
         go_any arg{};
         uintptr_t seq{};
-        // What to set the when field to in timerModifiedXX status.
-        int64_t nextwhen{};
-        // The status field holds one of the values below.
-        atomic::Uint32 status{};
+        // If non-nil, the timers containing t.
+        timers* ts{};
+        // sendLock protects sends on the timer's channel.
+        mutex sendLock{};
+        // isSending is used to handle races between running a
+        // channel timer and stopping or resetting the timer.
+        // It is used only for channel timers (t.isChan == true).
+        // It is not used for tickers.
+        // The value is incremented when about to send a value on the channel,
+        // and decremented after sending the value.
+        // The stop/reset code uses this to detect whether it
+        // stopped the channel send.
+        // isSending is incremented only when t.mu is held.
+        // isSending is decremented only when t.sendLock is held.
+        // isSending is read only when both t.mu and t.sendLock are held.
+        atomic::Int32 isSending{};
 
         using isGoStruct = void;
 
@@ -54,34 +125,106 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct timer& value);
-    bool resetForSleep(g* gp, gocpp::unsafe_pointer ut);
-    int dodeltimer(golang::runtime::p* pp, int i);
-    void dodeltimer0(golang::runtime::p* pp);
-    void cleantimers(golang::runtime::p* pp);
-    void adjusttimers(golang::runtime::p* pp, int64_t now);
-    int64_t nobarrierWakeTime(golang::runtime::p* pp);
-    int64_t runtimer(golang::runtime::p* pp, int64_t now);
-    void clearDeletedTimers(golang::runtime::p* pp);
-    void verifyTimerHeap(golang::runtime::p* pp);
-    void updateTimer0When(golang::runtime::p* pp);
-    void updateTimerModifiedEarliest(golang::runtime::p* pp, int64_t nextwhen);
-    void startTimer(timer* t);
-    bool stopTimer(timer* t);
-    bool resetTimer(timer* t, int64_t when);
-    void modTimer(timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
-    void addtimer(timer* t);
-    void doaddtimer(golang::runtime::p* pp, timer* t);
-    bool deltimer(timer* t);
-    bool modtimer(timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
-    bool resettimer(timer* t, int64_t when);
-    void moveTimers(golang::runtime::p* pp, gocpp::slice<timer*> timers);
-    void addAdjustedTimers(golang::runtime::p* pp, gocpp::slice<timer*> moved);
-    void runOneTimer(golang::runtime::p* pp, timer* t, int64_t now);
-    int siftupTimer(gocpp::slice<timer*> t, int i);
-    void siftdownTimer(gocpp::slice<timer*> t, int i);
+    struct timers
+    {
+        // mu protects timers; timers are per-P, but the scheduler can
+        // access the timers of another P, so we have to lock.
+        mutex mu{};
+        // heap is the set of timers, ordered by heap[i].when.
+        // Must hold lock to access.
+        gocpp::slice<timerWhen> heap{};
+        // len is an atomic copy of len(heap).
+        atomic::Uint32 len{};
+        // zombies is the number of timers in the heap
+        // that are marked for removal.
+        atomic::Int32 zombies{};
+        // raceCtx is the race context used while executing timer functions.
+        uintptr_t raceCtx{};
+        // minWhenHeap is the minimum heap[i].when value (= heap[0].when).
+        // The wakeTime method uses minWhenHeap and minWhenModified
+        // to determine the next wake time.
+        // If minWhenHeap = 0, it means there are no timers in the heap.
+        atomic::Int64 minWhenHeap{};
+        // minWhenModified is a lower bound on the minimum
+        // heap[i].when over timers with the timerModified bit set.
+        // If minWhenModified = 0, it means there are no timerModified timers in the heap.
+        atomic::Int64 minWhenModified{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct timers& value);
+    struct timeTimer
+    {
+        gocpp::unsafe_pointer c{}; // <-chan time.Time
+        bool init{};
+        timer timer{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct timeTimer& value);
+    timeTimer* newTimer(int64_t when, int64_t period, std::function<void (go_any arg, uintptr_t seq, int64_t delay)> f, go_any arg, golang::runtime::hchan* c);
+    bool stopTimer(timeTimer* t);
+    bool resetTimer(timeTimer* t, int64_t when, int64_t period);
+}
+
+#include "golang/runtime/chan.h"
+#include "golang/runtime/synctest.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {
+        void init(timer* t, std::function<void (go_any arg, uintptr_t seq, int64_t delay)> f, go_any arg);
+        bool less(timerWhen tw, timerWhen other);
+        void lock(timers* ts);
+        void unlock(timers* ts);
+        void trace(timer* t, gocpp::string op);
+        void trace1(timer* t, gocpp::string op);
+        void trace(timers* ts, gocpp::string op);
+        void lock(timer* t);
+        void unlock(timer* t);
+        golang::runtime::hchan* hchan(timer* t);
+        bool updateHeap(timer* t);
+        void addHeap(timers* ts, timer* t);
+        bool stop(timer* t);
+        void deleteMin(timers* ts);
+        bool modify(timer* t, int64_t when, int64_t period, std::function<void (go_any arg, uintptr_t seq, int64_t delay)> f, go_any arg, uintptr_t seq);
+        bool needsAdd(timer* t);
+        void maybeAdd(timer* t);
+        bool reset(timer* t, int64_t when, int64_t period);
+        void cleanHead(timers* ts);
+        void take(timers* ts, timers* src);
+        void adjust(timers* ts, int64_t now, bool force);
+        int64_t wakeTime(timers* ts);
+        std::tuple<int64_t, int64_t, bool> check(timers* ts, int64_t now, synctestBubble* bubble);
+        int64_t run(timers* ts, int64_t now, synctestBubble* bubble);
+        void unlockAndRun(timer* t, int64_t now, synctestBubble* bubble);
+        void verify(timers* ts);
+        void updateMinWhenHeap(timers* ts);
+        void updateMinWhenModified(timers* ts, int64_t when);
+        void siftUp(timers* ts, int i);
+        void siftDown(timers* ts, int i);
+        void initHeap(timers* ts);
+        void maybeRunChan(timer* t, golang::runtime::hchan* c);
     }
 }
 

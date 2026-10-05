@@ -15,6 +15,7 @@
 
 namespace golang::syscall
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
@@ -605,31 +606,64 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // _PROC_THREAD_ATTRIBUTE_LIST is a placeholder type to represent a the opaque PROC_THREAD_ATTRIBUTE_LIST.
+    //
+    // Manipulate this type only through [procThreadAttributeListContainer] to ensure proper handling of the
+    // underlying memory. See https://g.dev/issue/73170.
     
     template<typename T> requires gocpp::GoStruct<T>
     _PROC_THREAD_ATTRIBUTE_LIST::operator T()
     {
         T result;
-        result._1 = this->_1;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool _PROC_THREAD_ATTRIBUTE_LIST::operator==(const T& ref) const
     {
-        if (_1 != ref._1) return false;
         return true;
     }
 
     std::ostream& _PROC_THREAD_ATTRIBUTE_LIST::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _1;
         os << '}';
         return os;
     }
 
     std::ostream& operator<<(std::ostream& os, const struct _PROC_THREAD_ATTRIBUTE_LIST& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    procThreadAttributeListContainer::operator T()
+    {
+        T result;
+        result.data = this->data;
+        result.pointers = this->pointers;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool procThreadAttributeListContainer::operator==(const T& ref) const
+    {
+        if (data != ref.data) return false;
+        if (pointers != ref.pointers) return false;
+        return true;
+    }
+
+    std::ostream& procThreadAttributeListContainer::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << data;
+        os << " " << pointers;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct procThreadAttributeListContainer& value)
     {
         return value.PrintTo(os);
     }

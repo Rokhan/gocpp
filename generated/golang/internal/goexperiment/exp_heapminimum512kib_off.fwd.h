@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::goexperiment
+namespace golang::internal::goexperiment
 {
     const bool HeapMinimum512KiB = false;
     const long HeapMinimum512KiBInt = 0;

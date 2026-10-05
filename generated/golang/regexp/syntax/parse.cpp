@@ -16,14 +16,21 @@
 #include "golang/sort/search.h"
 #include "golang/sort/sort.h"
 #include "golang/strings/strings.h"
+#include "golang/sync/once.h"
 #include "golang/unicode/letter.h"
 #include "golang/unicode/tables.h"
 #include "golang/unicode/utf8/utf8.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
+    namespace sort = golang::sort;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
+        using sync::rec::Do;
     }
 
     // An Error describes a failure to parse a regular expression
@@ -60,7 +67,7 @@ namespace golang::syntax
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(golang::syntax::Error* e)
+    gocpp::string rec::Error(golang::regexp::syntax::Error* e)
     {
         return "error parsing regexp: "_s + rec::String(gocpp::recv(e->Code)) + ": `"_s + e->Expr + "`"_s;
     }
@@ -299,10 +306,7 @@ namespace golang::syntax
             }
         }
 
-        if(size < 1)
-        {
-            size = 1;
-        }
+        size = gocpp::max(1, size);
         p->size[re] = size;
         return size;
     }
@@ -496,18 +500,18 @@ namespace golang::syntax
                 // In Perl it is not allowed to stack repetition operators:
                 // a** is a syntax error, not a doubled star, and a++ means
                 // something else entirely, which we don't support!
-                return {""_s, gocpp::error(new golang::syntax::Error {ErrInvalidRepeatOp, lastRepeat.make_slice(0, len(lastRepeat) - len(after))})};
+                return {""_s, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidRepeatOp, lastRepeat.make_slice(0, len(lastRepeat) - len(after))})};
             }
         }
         auto n = len(p->stack);
         if(n == 0)
         {
-            return {""_s, gocpp::error(new golang::syntax::Error {ErrMissingRepeatArgument, before.make_slice(0, len(before) - len(after))})};
+            return {""_s, gocpp::error(new golang::regexp::syntax::Error {ErrMissingRepeatArgument, before.make_slice(0, len(before) - len(after))})};
         }
         auto sub = p->stack[n - 1];
         if(sub->Op >= opPseudo)
         {
-            return {""_s, gocpp::error(new golang::syntax::Error {ErrMissingRepeatArgument, before.make_slice(0, len(before) - len(after))})};
+            return {""_s, gocpp::error(new golang::regexp::syntax::Error {ErrMissingRepeatArgument, before.make_slice(0, len(before) - len(after))})};
         }
 
         auto re = rec::newRegexp(gocpp::recv(p), op);
@@ -521,7 +525,7 @@ namespace golang::syntax
 
         if(op == OpRepeat && (min >= 2 || max >= 2) && ! repeatIsValid(re, 1000))
         {
-            return {""_s, gocpp::error(new golang::syntax::Error {ErrInvalidRepeatSize, before.make_slice(0, len(before) - len(after))})};
+            return {""_s, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidRepeatSize, before.make_slice(0, len(before) - len(after))})};
         }
 
         return {after, nullptr};
@@ -750,7 +754,7 @@ namespace golang::syntax
             }
 
             // Found end of a run with common leading literal string:
-            // sub[start:i] all begin with str[0:len(str)], but sub[i]
+            // sub[start:i] all begin with str[:len(str)], but sub[i]
             // does not even begin with str[0].
             // Factor out common string and append factored expression to out.
             if(i == start)
@@ -1118,13 +1122,13 @@ namespace golang::syntax
                             break;
                         // ok
                         case 1:
-                            err = gocpp::InitPtr<golang::syntax::Error>([=](auto& x) {
+                            err = gocpp::InitPtr<golang::regexp::syntax::Error>([=](auto& x) {
                                 x.Code = ErrLarge;
                                 x.Expr = s;
                             });
                             break;
                         case 2:
-                            err = gocpp::InitPtr<golang::syntax::Error>([=](auto& x) {
+                            err = gocpp::InitPtr<golang::regexp::syntax::Error>([=](auto& x) {
                                 x.Code = ErrNestingDepth;
                                 x.Expr = s;
                             });
@@ -1208,10 +1212,7 @@ namespace golang::syntax
                             BigSwitch_break_1:
                                 break;
                             }
-                            if(err = rec::parseVerticalBar(gocpp::recv(p)); err != nullptr)
-                            {
-                                return {nullptr, err};
-                            }
+                            rec::parseVerticalBar(gocpp::recv(p));
                             t = t.make_slice(1);
                             break;
                         case 2:
@@ -1340,7 +1341,7 @@ namespace golang::syntax
                             if(min < 0 || min > 1000 || max > 1000 || max >= 0 && min > max)
                             {
                                 // Numbers were too big, or max is present and min > max.
-                                return {nullptr, gocpp::error(new golang::syntax::Error {ErrInvalidRepeatSize, before.make_slice(0, len(before) - len(after))})};
+                                return {nullptr, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidRepeatSize, before.make_slice(0, len(before) - len(after))})};
                             }
                             if(std::tie(after, err) = rec::repeat(gocpp::recv(p), op, min, max, before, after, lastRepeat); err != nullptr)
                             {
@@ -1387,7 +1388,7 @@ namespace golang::syntax
                                             break;
                                         case 3:
                                             // any byte; not supported
-                                            return {nullptr, gocpp::error(new golang::syntax::Error {ErrInvalidEscape, t.make_slice(0, 2)})};
+                                            return {nullptr, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidEscape, t.make_slice(0, 2)})};
                                             break;
                                         case 4:
                                             // \Q ... \E: the ... is always literals
@@ -1464,7 +1465,7 @@ namespace golang::syntax
             auto n = len(p.stack);
             if(n != 1)
             {
-                return {nullptr, gocpp::error(new golang::syntax::Error {ErrMissingParen, s})};
+                return {nullptr, gocpp::error(new golang::regexp::syntax::Error {ErrMissingParen, s})};
             }
             return {p.stack[0], nullptr};
         }
@@ -1575,7 +1576,7 @@ namespace golang::syntax
                 {
                     return {""_s, err};
                 }
-                return {""_s, gocpp::error(new golang::syntax::Error {ErrInvalidNamedCapture, s})};
+                return {""_s, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidNamedCapture, s})};
             }
 
             // "(?P<name>" or "(?<name>"
@@ -1588,7 +1589,7 @@ namespace golang::syntax
             }
             if(! isValidCaptureName(name))
             {
-                return {""_s, gocpp::error(new golang::syntax::Error {ErrInvalidNamedCapture, capture})};
+                return {""_s, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidNamedCapture, capture})};
             }
 
             // Like ordinary capture, but named.
@@ -1690,7 +1691,7 @@ namespace golang::syntax
             }
         }
 
-        return {""_s, gocpp::error(new golang::syntax::Error {ErrInvalidPerlOp, s.make_slice(0, len(s) - len(t))})};
+        return {""_s, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidPerlOp, s.make_slice(0, len(s) - len(t))})};
     }
 
     // isValidCaptureName reports whether name
@@ -1799,7 +1800,7 @@ namespace golang::syntax
     }
 
     // parseVerticalBar handles a | in the input.
-    gocpp::error rec::parseVerticalBar(parser* p)
+    void rec::parseVerticalBar(parser* p)
     {
         rec::concat(gocpp::recv(p));
 
@@ -1811,8 +1812,6 @@ namespace golang::syntax
         {
             rec::op(gocpp::recv(p), opVerticalBar);
         }
-
-        return nullptr;
     }
 
     // mergeCharClass makes dst = dst|src.
@@ -1923,14 +1922,14 @@ namespace golang::syntax
         auto n = len(p->stack);
         if(n < 2)
         {
-            return gocpp::error(new golang::syntax::Error {ErrUnexpectedParen, p->wholeRegexp});
+            return gocpp::error(new golang::regexp::syntax::Error {ErrUnexpectedParen, p->wholeRegexp});
         }
         auto re1 = p->stack[n - 1];
         auto re2 = p->stack[n - 2];
         p->stack = p->stack.make_slice(0, n - 2);
         if(re2->Op != opLeftParen)
         {
-            return gocpp::error(new golang::syntax::Error {ErrUnexpectedParen, p->wholeRegexp});
+            return gocpp::error(new golang::regexp::syntax::Error {ErrUnexpectedParen, p->wholeRegexp});
         }
         // Restore flags at time of paren.
         p->flags = re2->Flags;
@@ -1959,7 +1958,7 @@ namespace golang::syntax
         auto t = s.make_slice(1);
         if(t == ""_s)
         {
-            return {0, ""_s, gocpp::error(new golang::syntax::Error {ErrTrailingBackslash, ""_s})};
+            return {0, ""_s, gocpp::error(new golang::regexp::syntax::Error {ErrTrailingBackslash, ""_s})};
         }
         gocpp::rune c;
         std::tie(c, t, err) = nextRune(t);
@@ -2161,7 +2160,7 @@ namespace golang::syntax
                     break;
             }
         }
-        return {0, ""_s, gocpp::error(new golang::syntax::Error {ErrInvalidEscape, s.make_slice(0, len(s) - len(t))})};
+        return {0, ""_s, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidEscape, s.make_slice(0, len(s) - len(t))})};
     }
 
     // parseClassChar parses a character class character at the beginning of s
@@ -2173,7 +2172,7 @@ namespace golang::syntax
         gocpp::error err;
         if(s == ""_s)
         {
-            return {0, ""_s, gocpp::error(gocpp::InitPtr<golang::syntax::Error>([=](auto& x) {
+            return {0, ""_s, gocpp::error(gocpp::InitPtr<golang::regexp::syntax::Error>([=](auto& x) {
                 x.Code = ErrMissingBracket;
                 x.Expr = wholeClass;
             }))};
@@ -2264,7 +2263,7 @@ namespace golang::syntax
         auto g = posixGroup[name];
         if(g.sign == 0)
         {
-            return {nullptr, ""_s, gocpp::error(new golang::syntax::Error {ErrInvalidCharRange, name})};
+            return {nullptr, ""_s, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidCharRange, name})};
         }
         return {rec::appendGroup(gocpp::recv(p), r, g), s, nullptr};
     }
@@ -2312,24 +2311,207 @@ namespace golang::syntax
             x.Stride = 1;
         })};
     });
+    unicode::RangeTable* asciiTable = gocpp::InitPtr<unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<unicode::Range16> {gocpp::Init<>([](auto& x) {
+            x.Lo = 0;
+            x.Hi = 0x7F;
+            x.Stride = 1;
+        })};
+    });
+    unicode::RangeTable* asciiFoldTable = gocpp::InitPtr<unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<unicode::Range16> {
+            gocpp::Init<>([](auto& x) {
+            x.Lo = 0;
+            x.Hi = 0x7F;
+            x.Stride = 1;
+        }),
+            gocpp::Init<>([](auto& x) {
+            x.Lo = 0x017F;
+            x.Hi = 0x017F;
+            x.Stride = 1;
+        }),
+            gocpp::Init<>([](auto& x) {
+            x.Lo = 0x212A;
+            x.Hi = 0x212A;
+            x.Stride = 1;
+        })
+        };
+    });
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    aliasesStruct::operator T()
+    {
+        T result;
+        result.once = this->once;
+        result.categories = this->categories;
+        result.scripts = this->scripts;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool aliasesStruct::operator==(const T& ref) const
+    {
+        if (once != ref.once) return false;
+        if (categories != ref.categories) return false;
+        if (scripts != ref.scripts) return false;
+        return true;
+    }
+
+    std::ostream& aliasesStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << once;
+        os << " " << categories;
+        os << " " << scripts;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct aliasesStruct& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    // aliases is a lazily constructed copy of unicode.CategoryAliases and unicode.Scripts
+    // but with the keys passed through canonicalName, to support inexact matches.
+    aliasesStruct aliases;
+    // initAliases initializes categoryAliases by canonicalizing unicode.CategoryAliases.
+    void initAliases()
+    {
+        aliases.categories = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::string>>());
+        aliases.scripts = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::string>>());
+        for(auto [name, actual] : unicode::CategoryAliases)
+        {
+            aliases.categories[canonicalName(name)] = actual;
+        }
+        for(auto [name, gocpp_ignored] : unicode::Scripts)
+        {
+            aliases.scripts[canonicalName(name)] = name;
+        }
+    }
+
+    // canonicalName returns the canonical lookup string for name.
+    // The canonical name has a leading uppercase letter and then lowercase letters,
+    // and it omits all underscores, spaces, and hyphens.
+    // (We could have used all lowercase, but this way most package unicode
+    // map keys are already canonical.)
+    gocpp::string canonicalName(gocpp::string name)
+    {
+        gocpp::slice<unsigned char> b = {};
+        auto first = true;
+        for(auto [i, gocpp_ignored] : len(name))
+        {
+            auto c = name[i];
+            //Go switch emulation
+            {
+                int conditionId = -1;
+                if(c == '_' || c == '-' || c == ' ') { conditionId = 0; }
+                else if(first) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    case 0:
+                        c = ' ';
+                        break;
+                    case 1:
+                        if('a' <= c && c <= 'z')
+                        {
+                            c -= 'a' - 'A';
+                        }
+                        first = false;
+                        break;
+                    default:
+                        if('A' <= c && c <= 'Z')
+                        {
+                            c += 'a' - 'A';
+                        }
+                        break;
+                }
+            }
+            if(b == nullptr)
+            {
+                if(c == name[i] && c != ' ')
+                {
+                    // No changes so far, avoid allocating b.
+                    continue;
+                }
+                b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), i, len(name));
+                copy(b, name.make_slice(0, i));
+            }
+            if(c == ' ')
+            {
+                continue;
+            }
+            b = append(b, c);
+        }
+        if(b == nullptr)
+        {
+            return name;
+        }
+        return gocpp::string(b);
+    }
+
     // unicodeTable returns the unicode.RangeTable identified by name
     // and the table of additional fold-equivalent code points.
-    std::tuple<unicode::RangeTable*, unicode::RangeTable*> unicodeTable(gocpp::string name)
+    // If sign < 0, the result should be inverted.
+    std::tuple<unicode::RangeTable*, unicode::RangeTable*, int> unicodeTable(gocpp::string name)
     {
-        // Special case: "Any" means any.
-        if(name == "Any"_s)
+        unicode::RangeTable* tab;
+        unicode::RangeTable* fold;
+        int sign;
+        name = canonicalName(name);
+
+        // Special cases: Any, Assigned, and ASCII.
+        // Also LC is the only non-canonical Categories key, so handle it here.
+        //Go switch emulation
         {
-            return {anyTable, anyTable};
+            auto condition = name;
+            int conditionId = -1;
+            if(condition == "Any"_s) { conditionId = 0; }
+            else if(condition == "Assigned"_s) { conditionId = 1; }
+            else if(condition == "Ascii"_s) { conditionId = 2; }
+            else if(condition == "Lc"_s) { conditionId = 3; }
+            switch(conditionId)
+            {
+                case 0:
+                    return {anyTable, anyTable, + 1};
+                    break;
+                // invert Cn (unassigned)
+                case 1:
+                    return {unicode::Cn, unicode::Cn, - 1};
+                    break;
+                case 2:
+                    return {asciiTable, asciiFoldTable, + 1};
+                    break;
+                case 3:
+                    return {unicode::Categories["LC"_s], unicode::FoldCategory["LC"_s], + 1};
+                    break;
+            }
         }
         if(auto t = unicode::Categories[name]; t != nullptr)
         {
-            return {t, unicode::FoldCategory[name]};
+            return {t, unicode::FoldCategory[name], + 1};
         }
         if(auto t = unicode::Scripts[name]; t != nullptr)
         {
-            return {t, unicode::FoldScript[name]};
+            return {t, unicode::FoldScript[name], + 1};
         }
-        return {nullptr, nullptr};
+
+        // unicode.CategoryAliases makes liberal use of underscores in its names
+        // (they are defined that way by Unicode), but we want to match ignoring
+        // the underscores, so make our own map with canonical names.
+        rec::Do(gocpp::recv(aliases.once), initAliases);
+        if(auto actual = aliases.categories[name]; actual != ""_s)
+        {
+            auto t = unicode::Categories[actual];
+            return {t, unicode::FoldCategory[actual], + 1};
+        }
+        if(auto actual = aliases.scripts[name]; actual != ""_s)
+        {
+            auto t = unicode::Scripts[actual];
+            return {t, unicode::FoldScript[actual], + 1};
+        }
+        return {nullptr, nullptr, 0};
     }
 
     // parseUnicodeClass parses a leading Unicode character class like \p{Han}
@@ -2376,7 +2558,7 @@ namespace golang::syntax
                 {
                     return {out, rest, err};
                 }
-                return {nullptr, ""_s, gocpp::error(new golang::syntax::Error {ErrInvalidCharRange, s})};
+                return {nullptr, ""_s, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidCharRange, s})};
             }
             std::tie(seq, t) = std::tuple{s.make_slice(0, end + 1), s.make_slice(end + 1)};
             name = s.make_slice(3, end);
@@ -2393,10 +2575,14 @@ namespace golang::syntax
             name = name.make_slice(1);
         }
 
-        auto [tab, fold] = unicodeTable(name);
+        auto [tab, fold, tsign] = unicodeTable(name);
         if(tab == nullptr)
         {
-            return {nullptr, ""_s, gocpp::error(new golang::syntax::Error {ErrInvalidCharRange, seq})};
+            return {nullptr, ""_s, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidCharRange, seq})};
+        }
+        if(tsign < 0)
+        {
+            sign = - sign;
         }
 
         if(p->flags & FoldCase == 0 || fold == nullptr)
@@ -2468,7 +2654,7 @@ namespace golang::syntax
             if(t != ""_s && t[0] == '-' && p->flags & PerlX == 0 && ! first && (len(t) == 1 || t[1] != ']'))
             {
                 auto [gocpp_id_0, size] = utf8::DecodeRuneInString(t.make_slice(1));
-                return {""_s, gocpp::error(gocpp::InitPtr<golang::syntax::Error>([=](auto& x) {
+                return {""_s, gocpp::error(gocpp::InitPtr<golang::regexp::syntax::Error>([=](auto& x) {
                     x.Code = ErrInvalidCharRange;
                     x.Expr = t.make_slice(0, 1 + size);
                 }))};
@@ -2529,7 +2715,7 @@ namespace golang::syntax
                 if(hi < lo)
                 {
                     rng = rng.make_slice(0, len(rng) - len(t));
-                    return {""_s, gocpp::error(gocpp::InitPtr<golang::syntax::Error>([=](auto& x) {
+                    return {""_s, gocpp::error(gocpp::InitPtr<golang::regexp::syntax::Error>([=](auto& x) {
                         x.Code = ErrInvalidCharRange;
                         x.Expr = rng;
                     }))};
@@ -2918,7 +3104,7 @@ namespace golang::syntax
             auto [rune, size] = utf8::DecodeRuneInString(s);
             if(rune == utf8::RuneError && size == 1)
             {
-                return gocpp::error(gocpp::InitPtr<golang::syntax::Error>([=](auto& x) {
+                return gocpp::error(gocpp::InitPtr<golang::regexp::syntax::Error>([=](auto& x) {
                     x.Code = ErrInvalidUTF8;
                     x.Expr = s;
                 }));
@@ -2937,7 +3123,7 @@ namespace golang::syntax
         std::tie(c, size) = utf8::DecodeRuneInString(s);
         if(c == utf8::RuneError && size == 1)
         {
-            return {0, ""_s, gocpp::error(gocpp::InitPtr<golang::syntax::Error>([=](auto& x) {
+            return {0, ""_s, gocpp::error(gocpp::InitPtr<golang::regexp::syntax::Error>([=](auto& x) {
                 x.Code = ErrInvalidUTF8;
                 x.Expr = s;
             }))};

@@ -3,3 +3,10 @@
 
 #include "gocpp/support.fwd.h"
 
+#include "golang/go/types/type.fwd.h"
+#include "golang/go/types/typelists.fwd.h"
+
+namespace golang::go::types
+{
+    struct genericType;
+}

@@ -16,6 +16,8 @@
 
 namespace golang::main
 {
+    namespace fmt = golang::fmt;
+    namespace rand = golang::math::rand;
     namespace rec
     {
     }

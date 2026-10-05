@@ -16,6 +16,7 @@
 
 namespace golang::time
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
@@ -28,7 +29,7 @@ namespace golang::time
     {
         T result;
         result.C = this->C;
-        result.r = this->r;
+        result.initTicker = this->initTicker;
         return result;
     }
 
@@ -36,7 +37,7 @@ namespace golang::time
     bool Ticker::operator==(const T& ref) const
     {
         if (C != ref.C) return false;
-        if (r != ref.r) return false;
+        if (initTicker != ref.initTicker) return false;
         return true;
     }
 
@@ -44,7 +45,7 @@ namespace golang::time
     {
         os << '{';
         os << "" << C;
-        os << " " << r;
+        os << " " << initTicker;
         os << '}';
         return os;
     }
@@ -54,12 +55,21 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    // NewTicker returns a new Ticker containing a channel that will send
+    // NewTicker returns a new [Ticker] containing a channel that will send
     // the current time on the channel after each tick. The period of the
     // ticks is specified by the duration argument. The ticker will adjust
     // the time interval or drop ticks to make up for slow receivers.
     // The duration d must be greater than zero; if not, NewTicker will
-    // panic. Stop the ticker to release associated resources.
+    // panic.
+    //
+    // Before Go 1.23, the garbage collector did not recover
+    // tickers that had not yet expired or been stopped, so code often
+    // immediately deferred t.Stop after calling NewTicker, to make
+    // the ticker recoverable when it was no longer needed.
+    // As of Go 1.23, the garbage collector can recover unreferenced
+    // tickers, even if they haven't been stopped.
+    // The Stop method is no longer necessary to help the garbage collector.
+    // (Code may of course still want to call Stop to stop the ticker for other reasons.)
     Ticker* NewTicker(Duration d)
     {
         if(d <= 0)
@@ -70,25 +80,25 @@ namespace golang::time
         // If the client falls behind while reading, we drop ticks
         // on the floor until the client catches up.
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<Time>>(), 1);
-        auto t = gocpp::InitPtr<Ticker>([=](auto& x) {
-            x.C = c;
-            x.r = gocpp::Init<runtimeTimer>([=](auto& x) {
-                x.when = when(d);
-                x.period = int64_t(d);
-                x.f = sendTime;
-                x.arg = c;
-            });
-        });
-        startTimer(& t->r);
+        auto t = (Ticker*)(gocpp::unsafe_pointer(newTimer(when(d), int64_t(d), sendTime, c, syncTimer(c))));
+        t->C = c;
         return t;
     }
 
     // Stop turns off a ticker. After Stop, no more ticks will be sent.
-    // Stop does not close the channel, to prevent a concurrent goroutine
-    // reading from the channel from seeing an erroneous "tick".
+    // Stop does not close the channel, to permit calling [Ticker.Reset],
+    // and to prevent a concurrent goroutine reading from the channel
+    // from seeing an erroneous "tick".
     void rec::Stop(Ticker* t)
     {
-        stopTimer(& t->r);
+        if(! t->initTicker)
+        {
+            // This is misuse, and the same for time.Timer would panic,
+            // but this didn't always panic, and we keep it not panicking
+            // to avoid breaking old programs. See issue 21874.
+            return;
+        }
+        stopTimer((Timer*)(gocpp::unsafe_pointer(t)));
     }
 
     // Reset stops a ticker and resets its period to the specified duration.
@@ -100,18 +110,24 @@ namespace golang::time
         {
             gocpp::panic("non-positive interval for Ticker.Reset"_s);
         }
-        if(t->r.f == nullptr)
+        if(! t->initTicker)
         {
             gocpp::panic("time: Reset called on uninitialized Ticker"_s);
         }
-        modTimer(& t->r, when(d), int64_t(d), [&](auto x, auto y){ return rec::f(t->r, x, y); }, t->r.arg, t->r.seq);
+        resetTimer((Timer*)(gocpp::unsafe_pointer(t)), when(d), int64_t(d));
     }
 
-    // Tick is a convenience wrapper for NewTicker providing access to the ticking
-    // channel only. While Tick is useful for clients that have no need to shut down
-    // the Ticker, be aware that without a way to shut it down the underlying
-    // Ticker cannot be recovered by the garbage collector; it "leaks".
-    // Unlike NewTicker, Tick will return nil if d <= 0.
+    // Tick is a convenience wrapper for [NewTicker] providing access to the ticking
+    // channel only. Unlike NewTicker, Tick will return nil if d <= 0.
+    //
+    // Before Go 1.23, this documentation warned that the underlying
+    // [Ticker] would never be recovered by the garbage collector, and that
+    // if efficiency was a concern, code should use NewTicker instead and
+    // call [Ticker.Stop] when the ticker is no longer needed.
+    // As of Go 1.23, the garbage collector can recover unreferenced
+    // tickers, even if they haven't been stopped.
+    // The Stop method is no longer necessary to help the garbage collector.
+    // There is no longer any reason to prefer NewTicker when Tick will do.
     gocpp::channel<Time> Tick(Duration d)
     {
         if(d <= 0)

@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::fs
+namespace golang::io::fs
 {
     struct FS;
     struct File;
@@ -33,12 +33,13 @@ namespace golang::fs
     const FileMode ModeSticky = 1 << (32 - 1 - 11);
     const FileMode ModeIrregular = 1 << (32 - 1 - 12);
     const FileMode ModePerm = 0777;
+    // Mask for the type bits. For regular files, none will be set.
+    const fs::FileMode ModeType = ModeDir | ModeSymlink | ModeNamedPipe | ModeSocket | ModeDevice | ModeCharDevice | ModeIrregular;
 }
 #include "golang/time/time.fwd.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
+    namespace time = golang::time;
     struct FileInfo;
-    // Mask for the type bits. For regular files, none will be set.
-    const fs::FileMode ModeType = ModeDir | ModeSymlink | ModeNamedPipe | ModeSocket | ModeDevice | ModeCharDevice | ModeIrregular;
 }

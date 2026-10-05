@@ -13,17 +13,19 @@
 
 #include "golang/context/context.h"
 #include "golang/fmt/errors.h"
-#include "golang/golang.org/x/sync/errgroup/go120.h"
 #include "golang/sync/once.h"
 #include "golang/sync/waitgroup.h"
 
 // Package errgroup provides synchronization, error propagation, and Context
-// cancelation for groups of goroutines working on subtasks of a common task.
+// cancellation for groups of goroutines working on subtasks of a common task.
 //
 // [errgroup.Group] is related to [sync.WaitGroup] but adds handling of tasks
 // returning errors.
-namespace golang::errgroup
+namespace golang::golang_org::x::sync::errgroup
 {
+    namespace context = golang::context;
+    namespace fmt = golang::fmt;
+    namespace sync = golang::sync;
     namespace rec
     {
         using sync::rec::Add;
@@ -59,7 +61,7 @@ namespace golang::errgroup
     }
 
     // A Group is a collection of goroutines working on subtasks that are part of
-    // the same overall task.
+    // the same overall task. A Group should not be reused for different tasks.
     //
     // A zero Group is valid, has no limit on the number of active goroutines,
     // and does not cancel on error.
@@ -120,7 +122,7 @@ namespace golang::errgroup
     // first.
     std::tuple<Group*, context::Context> WithContext(context::Context ctx)
     {
-        auto [ctx_tmp, cancel] = withCancelCause(ctx);
+        auto [ctx_tmp, cancel] = context::WithCancelCause(ctx);
         auto& ctx = ctx_tmp;
         return {gocpp::InitPtr<Group>([=](auto& x) {
             x.cancel = cancel;
@@ -140,11 +142,14 @@ namespace golang::errgroup
     }
 
     // Go calls the given function in a new goroutine.
-    // It blocks until the new goroutine can be added without the number of
-    // active goroutines in the group exceeding the configured limit.
     //
-    // The first call to return a non-nil error cancels the group's context, if the
-    // group was created by calling WithContext. The error will be returned by Wait.
+    // The first call to Go must happen before a Wait.
+    // It blocks until the new goroutine can be added without the number of
+    // goroutines in the group exceeding the configured limit.
+    //
+    // The first goroutine in the group that returns a non-nil error will
+    // cancel the associated Context, if any. The error will be returned
+    // by Wait.
     void rec::Go(Group* g, std::function<gocpp::error ()> f)
     {
         if(g->sem != nullptr)
@@ -160,6 +165,17 @@ namespace golang::errgroup
             {
                 defer.push_back([=]{ rec::done(gocpp::recv(g)); });
 
+                // It is tempting to propagate panics from f()
+                // up to the goroutine that calls Wait, but
+                // it creates more problems than it solves:
+                // - it delays panics arbitrarily,
+                // making bugs harder to detect;
+                // - it turns f's panic stack into a mere value,
+                // hiding it from crash-monitoring tools;
+                // - it risks deadlocks that hide the panic entirely,
+                // if f's panic leaves the program in a state
+                // that prevents the Wait call from being reached.
+                // See #53757, #74275, #74304, #74306.
                 if(auto err = f(); err != nullptr)
                 {
                     rec::Do(gocpp::recv(g->errOnce), [=]() mutable -> void
@@ -195,7 +211,7 @@ namespace golang::errgroup
                 {
                     case 0:
                         break;
-                    // Note: this allows barging iff channels in general allow barging.
+                    // Note: this allows barging if and only if channels in general allow barging.
                     default:
                         return false;
                         break;
@@ -234,6 +250,7 @@ namespace golang::errgroup
 
     // SetLimit limits the number of active goroutines in this group to at most n.
     // A negative value indicates no limit.
+    // A limit of zero will prevent any new goroutines from being added.
     //
     // Any subsequent call to the Go method will block until it can add an active
     // goroutine without exceeding the configured limit.
@@ -246,9 +263,9 @@ namespace golang::errgroup
             g->sem = nullptr;
             return;
         }
-        if(len(g->sem) != 0)
+        if(auto active = len(g->sem); active != 0)
         {
-            gocpp::panic(mocklib::Errorf("errgroup: modify limit while %v goroutines in the group are still active"_s, len(g->sem)));
+            gocpp::panic(mocklib::Errorf("errgroup: modify limit while %v goroutines in the group are still active"_s, active));
         }
         g->sem = gocpp::make(gocpp::Tag<gocpp::channel<token>>(), n);
     }

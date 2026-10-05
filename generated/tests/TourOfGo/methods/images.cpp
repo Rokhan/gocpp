@@ -18,6 +18,8 @@
 
 namespace golang::main
 {
+    namespace fmt = golang::fmt;
+    namespace image = golang::image;
     namespace rec
     {
         using color::rec::RGBA;

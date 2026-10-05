@@ -12,6 +12,11 @@
 
 namespace golang::unicode
 {
+    // GraphicRanges defines the set of graphic characters according to Unicode.
+    extern gocpp::slice<RangeTable*> GraphicRanges;
+    // PrintRanges defines the set of printable characters according to Go.
+    // ASCII space, U+0020, is handled separately.
+    extern gocpp::slice<RangeTable*> PrintRanges;
     bool IsGraphic(gocpp::rune r);
     bool IsPrint(gocpp::rune r);
     bool IsControl(gocpp::rune r);
@@ -22,13 +27,10 @@ namespace golang::unicode
     bool IsSpace(gocpp::rune r);
     bool IsSymbol(gocpp::rune r);
 }
-#include "golang/unicode/tables.h"
 #include "golang/unicode/letter.fwd.h"
 
 namespace golang::unicode
 {
-    extern gocpp::slice<RangeTable*> GraphicRanges;
-    extern gocpp::slice<RangeTable*> PrintRanges;
     bool IsOneOf(gocpp::slice<RangeTable*> ranges, gocpp::rune r);
     bool In(gocpp::rune r, gocpp::slice<RangeTable*> ranges);
     

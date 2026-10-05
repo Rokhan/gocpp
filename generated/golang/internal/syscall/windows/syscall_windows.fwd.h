@@ -4,9 +4,10 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
     const long GAA_FLAG_INCLUDE_PREFIX = 0x00000010;
+    const long GAA_FLAG_INCLUDE_GATEWAYS = 0x0080;
     const long IF_TYPE_OTHER = 1;
     const long IF_TYPE_ETHERNET_CSMACD = 6;
     const long IF_TYPE_ISO88025_TOKENRING = 9;
@@ -16,11 +17,15 @@ namespace golang::windows
     const long IF_TYPE_IEEE80211 = 71;
     const long IF_TYPE_TUNNEL = 131;
     const long IF_TYPE_IEEE1394 = 144;
+    struct SocketAddress;
     struct IpAdapterUnicastAddress;
     struct IpAdapterAnycastAddress;
     struct IpAdapterMulticastAddress;
     struct IpAdapterDnsServerAdapter;
     struct IpAdapterPrefix;
+    struct IpAdapterWinsServerAddress;
+    struct IpAdapterGatewayAddress;
+    struct IpAdapterAddresses;
     struct SecurityAttributes;
     struct FILE_BASIC_INFO;
     const long IfOperStatusUp = 1;
@@ -34,6 +39,7 @@ namespace golang::windows
     const long TH32CS_SNAPMODULE = 0x08;
     const long TH32CS_SNAPMODULE32 = 0x10;
     const long MAX_MODULE_NAME32 = 255;
+    struct ModuleEntry32;
     const long WSA_FLAG_OVERLAPPED = 0x01;
     const long WSA_FLAG_NO_HANDLE_INHERIT = 0x80;
     const long MSG_PEEK = 0x2;
@@ -41,6 +47,7 @@ namespace golang::windows
     const long MSG_CTRUNC = 0x0200;
     const uintptr_t socket_error = uintptr_t(~ uint32_t(0));
     struct sendRecvMsgFuncStruct;
+    struct WSAMsg;
     const long ComputerNameNetBIOS = 0;
     const long ComputerNameDnsHostname = 1;
     const long ComputerNameDnsDomain = 2;
@@ -69,28 +76,60 @@ namespace golang::windows
     const long VOLUME_NAME_GUID = 0x1;
     const long VOLUME_NAME_NONE = 0x4;
     const long VOLUME_NAME_NT = 0x2;
+    struct FILE_ID_BOTH_DIR_INFO;
+    struct FILE_FULL_DIR_INFO;
+    struct RUNTIME_FUNCTION;
     struct SERVICE_STATUS;
     const long SERVICE_RUNNING = 4;
     const long SERVICE_QUERY_STATUS = 4;
+    const long PIPE_ACCESS_INBOUND = 0x00000001;
+    const long PIPE_ACCESS_OUTBOUND = 0x00000002;
+    const long PIPE_ACCESS_DUPLEX = 0x00000003;
+    const long PIPE_TYPE_BYTE = 0x00000000;
+    const long PIPE_TYPE_MESSAGE = 0x00000004;
+    const long PIPE_READMODE_BYTE = 0x00000000;
+    const long PIPE_READMODE_MESSAGE = 0x00000002;
+    using NTStatus = uint32_t;
+    const long FileModeInformation = 16;
+    struct FILE_MODE_INFORMATION;
+    // x/sys/windows/mkerrors.bash can generate a complete list of NTStatus codes.
+    //
+    // At the moment, we only need a couple, so just put them here manually.
+    // If this list starts getting long, we should consider generating the full set.
+    const NTStatus STATUS_OBJECT_NAME_COLLISION = 0xC0000035;
+    const NTStatus STATUS_FILE_IS_A_DIRECTORY = 0xC00000BA;
+    const NTStatus STATUS_DIRECTORY_NOT_EMPTY = 0xC0000101;
+    const NTStatus STATUS_NOT_A_DIRECTORY = 0xC0000103;
+    const NTStatus STATUS_CANNOT_DELETE = 0xC0000121;
+    const NTStatus STATUS_REPARSE_POINT_ENCOUNTERED = 0xC000050B;
+    const NTStatus STATUS_NOT_SUPPORTED = 0xC00000BB;
+    const NTStatus STATUS_INVALID_PARAMETER = 0xC000000D;
+    const NTStatus STATUS_INVALID_INFO_CLASS = 0xC0000003;
+    const NTStatus STATUS_ACCESS_DENIED = 0xC0000022;
 }
+#include "golang/syscall/dll_windows.fwd.h"
 #include "golang/syscall/syscall_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
+    namespace syscall = golang::syscall;
+    const syscall::Errno ERROR_INVALID_HANDLE = 6;
     const syscall::Errno ERROR_BAD_LENGTH = 24;
     const syscall::Errno ERROR_SHARING_VIOLATION = 32;
     const syscall::Errno ERROR_LOCK_VIOLATION = 33;
     const syscall::Errno ERROR_NOT_SUPPORTED = 50;
     const syscall::Errno ERROR_CALL_NOT_IMPLEMENTED = 120;
     const syscall::Errno ERROR_INVALID_NAME = 123;
+    const syscall::Errno ERROR_NEGATIVE_SEEK = 131;
     const syscall::Errno ERROR_LOCK_FAILED = 167;
+    const syscall::Errno ERROR_IO_INCOMPLETE = 996;
+    const syscall::Errno ERROR_NO_TOKEN = 1008;
     const syscall::Errno ERROR_NO_UNICODE_TRANSLATION = 1113;
-    struct SocketAddress;
-    struct IpAdapterAddresses;
-    struct ModuleEntry32;
+    const syscall::Errno ERROR_CANT_ACCESS_FILE = 1920;
+    const syscall::Errno WSAEINVAL = 10022;
     const syscall::Errno WSAEMSGSIZE = 10040;
-    struct WSAMsg;
-    struct FILE_ID_BOTH_DIR_INFO;
-    struct FILE_FULL_DIR_INFO;
+    const syscall::Errno WSAEAFNOSUPPORT = 10047;
 }

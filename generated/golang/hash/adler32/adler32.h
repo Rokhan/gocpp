@@ -10,26 +10,34 @@
 #include "gocpp/support.h"
 
 
-namespace golang::adler32
+namespace golang::hash::adler32
 {
-    gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
-    uint32_t readUint32(gocpp::slice<unsigned char> b);
     digest update(digest d, gocpp::slice<unsigned char> p);
     uint32_t Checksum(gocpp::slice<unsigned char> data);
 }
+#include "golang/hash/hash.fwd.h"
 #include "golang/hash/hash.h"
 
-namespace golang::adler32
+namespace golang::hash::adler32
 {
+    namespace hash = golang::hash;
     hash::Hash32 New();
+}
+
+#include "golang/hash/hash.h"
+
+namespace golang::hash::adler32
+{
 
     namespace rec
     {
         void Reset(digest* d);
         int Size(digest* d);
         int BlockSize(digest* d);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendBinary(digest* d, gocpp::slice<unsigned char> b);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(digest* d);
         gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b);
+        std::tuple<hash::Cloner, gocpp::error> Clone(digest* d);
         std::tuple<int, gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p);
         uint32_t Sum32(digest* d);
         gocpp::slice<unsigned char> Sum(digest* d, gocpp::slice<unsigned char> in);

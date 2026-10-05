@@ -6,19 +6,15 @@
 
 namespace golang::regexp
 {
+    struct Regexp;
     const gocpp::rune endOfText = - 1;
     struct inputString;
     struct inputBytes;
-    const long startSize = 10;
+    struct inputReader;
 }
-#include "golang/io/io.fwd.h"
 #include "golang/regexp/exec.fwd.h"
-#include "golang/regexp/onepass.fwd.h"
-#include "golang/regexp/syntax/prog.fwd.h"
 
 namespace golang::regexp
 {
-    struct Regexp;
     struct input;
-    struct inputReader;
 }

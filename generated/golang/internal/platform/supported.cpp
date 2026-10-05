@@ -13,7 +13,7 @@
 
 #include "golang/internal/platform/zosarch.h"
 
-namespace golang::platform
+namespace golang::internal::platform
 {
     namespace rec
     {
@@ -72,12 +72,11 @@ namespace golang::platform
             else if(condition == "darwin"_s) { conditionId = 1; }
             else if(condition == "freebsd"_s) { conditionId = 2; }
             else if(condition == "netbsd"_s) { conditionId = 3; }
-            else if(condition == "openbsd"_s) { conditionId = 4; }
-            else if(condition == "windows"_s) { conditionId = 5; }
+            else if(condition == "windows"_s) { conditionId = 4; }
             switch(conditionId)
             {
                 case 0:
-                    return goarch == "amd64"_s || goarch == "ppc64le"_s || goarch == "arm64"_s || goarch == "s390x"_s;
+                    return goarch == "amd64"_s || goarch == "arm64"_s || goarch == "loong64"_s || goarch == "ppc64le"_s || goarch == "riscv64"_s || goarch == "s390x"_s;
                     break;
                 case 1:
                     return goarch == "amd64"_s || goarch == "arm64"_s;
@@ -85,7 +84,6 @@ namespace golang::platform
                 case 2:
                 case 3:
                 case 4:
-                case 5:
                     return goarch == "amd64"_s;
                     break;
                 default:
@@ -152,13 +150,15 @@ namespace golang::platform
             if(condition == "darwin"_s) { conditionId = 0; }
             else if(condition == "freebsd"_s) { conditionId = 1; }
             else if(condition == "linux"_s) { conditionId = 2; }
-            else if(condition == "windows"_s) { conditionId = 3; }
+            else if(condition == "openbsd"_s) { conditionId = 3; }
+            else if(condition == "windows"_s) { conditionId = 4; }
             switch(conditionId)
             {
                 case 0:
                 case 1:
                 case 2:
                 case 3:
+                case 4:
                     return true;
                     break;
                 default:
@@ -178,10 +178,12 @@ namespace golang::platform
             int conditionId = -1;
             if(condition == "amd64"_s) { conditionId = 0; }
             else if(condition == "arm64"_s) { conditionId = 1; }
+            else if(condition == "loong64"_s) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
                 case 1:
+                case 2:
                     // TODO(#14565): support more architectures.
                     return FuzzSupported(goos, goarch);
                     break;
@@ -202,35 +204,25 @@ namespace golang::platform
             {
                 auto condition = goarch;
                 int conditionId = -1;
-                if(condition == "loong64"_s) { conditionId = 0; }
-                else if(condition == "mips"_s) { conditionId = 1; }
-                else if(condition == "mipsle"_s) { conditionId = 2; }
-                else if(condition == "mips64"_s) { conditionId = 3; }
-                else if(condition == "mips64le"_s) { conditionId = 4; }
-                else if(condition == "arm64"_s) { conditionId = 5; }
-                else if(condition == "ppc64"_s) { conditionId = 6; }
+                if(condition == "mips"_s) { conditionId = 0; }
+                else if(condition == "mipsle"_s) { conditionId = 1; }
+                else if(condition == "mips64"_s) { conditionId = 2; }
+                else if(condition == "mips64le"_s) { conditionId = 3; }
+                else if(condition == "ppc64"_s) { conditionId = 4; }
                 switch(conditionId)
                 {
                     case 0:
                     case 1:
                     case 2:
                     case 3:
-                    case 4:
                         // Internally linking cgo is incomplete on some architectures.
                         // https://go.dev/issue/14449
                         return true;
                         break;
-                    case 5:
-                        if(goos == "windows"_s)
-                        {
-                            // windows/arm64 internal linking is not implemented.
-                            return true;
-                        }
-                        break;
-                    case 6:
-                        // Big Endian PPC64 cgo internal linking is not implemented for aix or linux.
+                    case 4:
+                        // Big Endian PPC64 cgo internal linking is not implemented for aix.
                         // https://go.dev/issue/8912
-                        if(goos == "aix"_s || goos == "linux"_s)
+                        if(goos == "aix"_s)
                         {
                             return true;
                         }
@@ -350,9 +342,10 @@ namespace golang::platform
                                     else if(condition == "arm64"_s) { conditionId = 4; }
                                     else if(condition == "arm64be"_s) { conditionId = 5; }
                                     else if(condition == "loong64"_s) { conditionId = 6; }
-                                    else if(condition == "ppc64le"_s) { conditionId = 7; }
-                                    else if(condition == "riscv64"_s) { conditionId = 8; }
-                                    else if(condition == "s390x"_s) { conditionId = 9; }
+                                    else if(condition == "ppc64"_s) { conditionId = 7; }
+                                    else if(condition == "ppc64le"_s) { conditionId = 8; }
+                                    else if(condition == "riscv64"_s) { conditionId = 9; }
+                                    else if(condition == "s390x"_s) { conditionId = 10; }
                                     switch(conditionId)
                                     {
                                         case 0:
@@ -365,8 +358,7 @@ namespace golang::platform
                                         case 7:
                                         case 8:
                                         case 9:
-                                            // linux/ppc64 not supported because it does
-                                            // not support external linking mode yet.
+                                        case 10:
                                             return true;
                                             break;
                                         default:
@@ -399,19 +391,21 @@ namespace golang::platform
                         else if(condition == "linux/arm64"_s) { conditionId = 2; }
                         else if(condition == "linux/loong64"_s) { conditionId = 3; }
                         else if(condition == "linux/386"_s) { conditionId = 4; }
-                        else if(condition == "linux/ppc64le"_s) { conditionId = 5; }
-                        else if(condition == "linux/riscv64"_s) { conditionId = 6; }
-                        else if(condition == "linux/s390x"_s) { conditionId = 7; }
-                        else if(condition == "android/amd64"_s) { conditionId = 8; }
-                        else if(condition == "android/arm"_s) { conditionId = 9; }
-                        else if(condition == "android/arm64"_s) { conditionId = 10; }
-                        else if(condition == "android/386"_s) { conditionId = 11; }
-                        else if(condition == "freebsd/amd64"_s) { conditionId = 12; }
-                        else if(condition == "darwin/amd64"_s) { conditionId = 13; }
-                        else if(condition == "darwin/arm64"_s) { conditionId = 14; }
-                        else if(condition == "windows/amd64"_s) { conditionId = 15; }
-                        else if(condition == "windows/386"_s) { conditionId = 16; }
-                        else if(condition == "windows/arm64"_s) { conditionId = 17; }
+                        else if(condition == "linux/ppc64"_s) { conditionId = 5; }
+                        else if(condition == "linux/ppc64le"_s) { conditionId = 6; }
+                        else if(condition == "linux/riscv64"_s) { conditionId = 7; }
+                        else if(condition == "linux/s390x"_s) { conditionId = 8; }
+                        else if(condition == "android/amd64"_s) { conditionId = 9; }
+                        else if(condition == "android/arm"_s) { conditionId = 10; }
+                        else if(condition == "android/arm64"_s) { conditionId = 11; }
+                        else if(condition == "android/386"_s) { conditionId = 12; }
+                        else if(condition == "freebsd/amd64"_s) { conditionId = 13; }
+                        else if(condition == "darwin/amd64"_s) { conditionId = 14; }
+                        else if(condition == "darwin/arm64"_s) { conditionId = 15; }
+                        else if(condition == "windows/amd64"_s) { conditionId = 16; }
+                        else if(condition == "windows/386"_s) { conditionId = 17; }
+                        else if(condition == "windows/arm64"_s) { conditionId = 18; }
+                        else if(condition == "wasip1/wasm"_s) { conditionId = 19; }
                         switch(conditionId)
                         {
                             case 0:
@@ -432,6 +426,8 @@ namespace golang::platform
                             case 15:
                             case 16:
                             case 17:
+                            case 18:
+                            case 19:
                                 return true;
                                 break;
                         }
@@ -457,23 +453,24 @@ namespace golang::platform
                         else if(condition == "linux/arm"_s) { conditionId = 2; }
                         else if(condition == "linux/arm64"_s) { conditionId = 3; }
                         else if(condition == "linux/loong64"_s) { conditionId = 4; }
-                        else if(condition == "linux/ppc64le"_s) { conditionId = 5; }
-                        else if(condition == "linux/riscv64"_s) { conditionId = 6; }
-                        else if(condition == "linux/s390x"_s) { conditionId = 7; }
-                        else if(condition == "android/amd64"_s) { conditionId = 8; }
-                        else if(condition == "android/arm"_s) { conditionId = 9; }
-                        else if(condition == "android/arm64"_s) { conditionId = 10; }
-                        else if(condition == "android/386"_s) { conditionId = 11; }
-                        else if(condition == "freebsd/amd64"_s) { conditionId = 12; }
-                        else if(condition == "darwin/amd64"_s) { conditionId = 13; }
-                        else if(condition == "darwin/arm64"_s) { conditionId = 14; }
-                        else if(condition == "ios/amd64"_s) { conditionId = 15; }
-                        else if(condition == "ios/arm64"_s) { conditionId = 16; }
-                        else if(condition == "aix/ppc64"_s) { conditionId = 17; }
-                        else if(condition == "windows/386"_s) { conditionId = 18; }
-                        else if(condition == "windows/amd64"_s) { conditionId = 19; }
-                        else if(condition == "windows/arm"_s) { conditionId = 20; }
-                        else if(condition == "windows/arm64"_s) { conditionId = 21; }
+                        else if(condition == "linux/ppc64"_s) { conditionId = 5; }
+                        else if(condition == "linux/ppc64le"_s) { conditionId = 6; }
+                        else if(condition == "linux/riscv64"_s) { conditionId = 7; }
+                        else if(condition == "linux/s390x"_s) { conditionId = 8; }
+                        else if(condition == "android/amd64"_s) { conditionId = 9; }
+                        else if(condition == "android/arm"_s) { conditionId = 10; }
+                        else if(condition == "android/arm64"_s) { conditionId = 11; }
+                        else if(condition == "android/386"_s) { conditionId = 12; }
+                        else if(condition == "freebsd/amd64"_s) { conditionId = 13; }
+                        else if(condition == "darwin/amd64"_s) { conditionId = 14; }
+                        else if(condition == "darwin/arm64"_s) { conditionId = 15; }
+                        else if(condition == "ios/amd64"_s) { conditionId = 16; }
+                        else if(condition == "ios/arm64"_s) { conditionId = 17; }
+                        else if(condition == "aix/ppc64"_s) { conditionId = 18; }
+                        else if(condition == "openbsd/arm64"_s) { conditionId = 19; }
+                        else if(condition == "windows/386"_s) { conditionId = 20; }
+                        else if(condition == "windows/amd64"_s) { conditionId = 21; }
+                        else if(condition == "windows/arm64"_s) { conditionId = 22; }
                         switch(conditionId)
                         {
                             case 0:
@@ -498,6 +495,7 @@ namespace golang::platform
                             case 19:
                             case 20:
                             case 21:
+                            case 22:
                                 return true;
                                 break;
                         }
@@ -514,8 +512,9 @@ namespace golang::platform
                         else if(condition == "linux/amd64"_s) { conditionId = 1; }
                         else if(condition == "linux/arm"_s) { conditionId = 2; }
                         else if(condition == "linux/arm64"_s) { conditionId = 3; }
-                        else if(condition == "linux/ppc64le"_s) { conditionId = 4; }
-                        else if(condition == "linux/s390x"_s) { conditionId = 5; }
+                        else if(condition == "linux/ppc64"_s) { conditionId = 4; }
+                        else if(condition == "linux/ppc64le"_s) { conditionId = 5; }
+                        else if(condition == "linux/s390x"_s) { conditionId = 6; }
                         switch(conditionId)
                         {
                             case 0:
@@ -524,6 +523,7 @@ namespace golang::platform
                             case 3:
                             case 4:
                             case 5:
+                            case 6:
                                 return true;
                                 break;
                         }
@@ -541,13 +541,15 @@ namespace golang::platform
                         else if(condition == "linux/arm64"_s) { conditionId = 2; }
                         else if(condition == "linux/386"_s) { conditionId = 3; }
                         else if(condition == "linux/loong64"_s) { conditionId = 4; }
-                        else if(condition == "linux/s390x"_s) { conditionId = 5; }
-                        else if(condition == "linux/ppc64le"_s) { conditionId = 6; }
-                        else if(condition == "android/amd64"_s) { conditionId = 7; }
-                        else if(condition == "android/386"_s) { conditionId = 8; }
-                        else if(condition == "darwin/amd64"_s) { conditionId = 9; }
-                        else if(condition == "darwin/arm64"_s) { conditionId = 10; }
-                        else if(condition == "freebsd/amd64"_s) { conditionId = 11; }
+                        else if(condition == "linux/riscv64"_s) { conditionId = 5; }
+                        else if(condition == "linux/s390x"_s) { conditionId = 6; }
+                        else if(condition == "linux/ppc64"_s) { conditionId = 7; }
+                        else if(condition == "linux/ppc64le"_s) { conditionId = 8; }
+                        else if(condition == "android/amd64"_s) { conditionId = 9; }
+                        else if(condition == "android/386"_s) { conditionId = 10; }
+                        else if(condition == "darwin/amd64"_s) { conditionId = 11; }
+                        else if(condition == "darwin/arm64"_s) { conditionId = 12; }
+                        else if(condition == "freebsd/amd64"_s) { conditionId = 13; }
                         switch(conditionId)
                         {
                             case 0:
@@ -562,6 +564,8 @@ namespace golang::platform
                             case 9:
                             case 10:
                             case 11:
+                            case 12:
+                            case 13:
                                 return true;
                                 break;
                         }
@@ -587,11 +591,13 @@ namespace golang::platform
             else if(condition == "darwin/arm64"_s) { conditionId = 2; }
             else if(condition == "linux/amd64"_s) { conditionId = 3; }
             else if(condition == "linux/arm64"_s) { conditionId = 4; }
-            else if(condition == "linux/ppc64le"_s) { conditionId = 5; }
-            else if(condition == "windows/386"_s) { conditionId = 6; }
-            else if(condition == "windows/amd64"_s) { conditionId = 7; }
-            else if(condition == "windows/arm"_s) { conditionId = 8; }
-            else if(condition == "windows/arm64"_s) { conditionId = 9; }
+            else if(condition == "linux/loong64"_s) { conditionId = 5; }
+            else if(condition == "linux/ppc64"_s) { conditionId = 6; }
+            else if(condition == "linux/ppc64le"_s) { conditionId = 7; }
+            else if(condition == "linux/s390x"_s) { conditionId = 8; }
+            else if(condition == "windows/386"_s) { conditionId = 9; }
+            else if(condition == "windows/amd64"_s) { conditionId = 10; }
+            else if(condition == "windows/arm64"_s) { conditionId = 11; }
             switch(conditionId)
             {
                 case 0:
@@ -604,6 +610,8 @@ namespace golang::platform
                 case 7:
                 case 8:
                 case 9:
+                case 10:
+                case 11:
                     return true;
                     break;
             }
@@ -718,7 +726,7 @@ namespace golang::platform
         return distInfo[OSArch {goos, goarch}].FirstClass;
     }
 
-    // Broken reportsr whether goos/goarch is considered a broken port.
+    // Broken reports whether goos/goarch is considered a broken port.
     // (See https://go.dev/wiki/PortingPolicy#broken-ports.)
     bool Broken(gocpp::string goos, gocpp::string goarch)
     {

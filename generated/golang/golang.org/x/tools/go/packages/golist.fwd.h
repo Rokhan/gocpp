@@ -4,19 +4,9 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
 {
     struct goTooOldError;
-    struct jsonPackageError;
-}
-#include "golang/context/context.fwd.h"
-#include "golang/golang.org/x/tools/go/packages/external.fwd.h"
-#include "golang/golang.org/x/tools/go/packages/packages.fwd.h"
-#include "golang/golang.org/x/tools/internal/packagesinternal/packages.fwd.h"
-#include "golang/sync/once.fwd.h"
-
-namespace golang::packages
-{
     struct responseDeduper;
     struct golistState;
     struct jsonPackage;

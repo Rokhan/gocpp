@@ -10,16 +10,29 @@
 #include "gocpp/support.h"
 
 
-namespace golang::core
+namespace golang::golang_org::x::tools::internal::event::core
 {
-    extern gocpp::unsafe_pointer exporter;
     void SetExporter(Exporter e);
+}
+#include "golang/context/context.fwd.h"
+#include "golang/sync/atomic/type.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::event::core
+{
+    namespace context = golang::context;
 }
 #include "golang/context/context.h"
 #include "golang/golang.org/x/tools/internal/event/core/event.h"
 
-namespace golang::core
+namespace golang::golang_org::x::tools::internal::event::core
 {
+    namespace atomic = golang::sync::atomic;
+}
+#include "golang/sync/atomic/type.h"
+
+namespace golang::golang_org::x::tools::internal::event::core
+{
+    extern atomic::Pointer<Exporter> exporter;
     context::Context deliver(context::Context ctx, Exporter exporter, Event ev);
     context::Context Export(context::Context ctx, Event ev);
     std::tuple<context::Context, std::function<void ()>> ExportPair(context::Context ctx, Event begin, Event end);

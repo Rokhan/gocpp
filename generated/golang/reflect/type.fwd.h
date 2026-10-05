@@ -7,21 +7,26 @@
 namespace golang::reflect
 {
     using Kind = unsigned int;
+    struct common;
+    struct rtype;
     using ChanDir = int;
-    const int kindDirectIface = 1 << 5;
-    const int kindGCProg = 1 << 6;
-    const int kindMask = (1 << 5) - 1;
+    struct interfaceType;
+    struct ptrType;
+    struct sliceType;
+    struct structType;
+    struct Method;
     struct StructField;
     using StructTag = gocpp::string;
     struct fieldScan;
+    struct cacheKey;
     struct funcLookupCacheStruct;
     struct structLookupCacheStruct;
     struct structTypeUncommon;
+    struct gocpp_id_7;
     struct gocpp_id_9;
-    struct gocpp_id_11;
-    struct gocpp_id_12;
-    // See cmd/compile/internal/reflectdata/reflect.go for derivation of constant.
-    const long maxPtrmaskBytes = 2048;
+    struct gocpp_id_10;
+    struct layoutKey;
+    struct layoutType;
     struct bitVector;
     const golang::reflect::Kind Invalid = 0;
     const golang::reflect::Kind Bool = 1;
@@ -52,43 +57,27 @@ namespace golang::reflect
     const golang::reflect::Kind UnsafePointer = 26;
     const golang::reflect::ChanDir RecvDir = 1 << 0;
     const golang::reflect::ChanDir SendDir = 1 << 1;
+    // Ptr is the old name for the [Pointer] kind.
+    //
+    //go:fix inline
+    const Kind Ptr = reflect::Pointer;
+    const ChanDir BothDir = RecvDir | SendDir;
 }
-#include "golang/internal/abi/map.fwd.h"
+#include "golang/internal/abi/funcpc.fwd.h"
 #include "golang/internal/abi/type.fwd.h"
-#include "golang/reflect/abi.fwd.h"
-#include "golang/reflect/value.fwd.h"
-#include "golang/sync/pool.fwd.h"
+#include "golang/iter/iter.fwd.h"
 
 namespace golang::reflect
 {
+    namespace iter = golang::iter;
+    namespace abi = golang::internal::abi;
     struct Type;
     using uncommonType = abi::UncommonType;
-    struct common;
-    struct rtype;
     using aNameOff = abi::NameOff;
     using aTypeOff = abi::TypeOff;
     using aTextOff = abi::TextOff;
     using arrayType = abi::ArrayType;
     using chanType = abi::ChanType;
     using funcType = abi::FuncType;
-    struct interfaceType;
-    struct mapType;
-    struct ptrType;
-    struct sliceType;
     using structField = abi::StructField;
-    struct structType;
-    struct Method;
-    struct cacheKey;
-    // Make sure these routines stay in sync with ../runtime/map.go!
-    // These types exist only for GC, so we only fill out GC relevant info.
-    // Currently, that's just size and the GC program. We also fill in string
-    // for possible debugging use.
-    const uintptr_t bucketSize = abi::MapBucketCount;
-    const uintptr_t maxKeySize = abi::MapMaxKeyBytes;
-    const uintptr_t maxValSize = abi::MapMaxElemBytes;
-    struct layoutKey;
-    struct layoutType;
-    // Ptr is the old name for the [Pointer] kind.
-    const Kind Ptr = reflect::Pointer;
-    const ChanDir BothDir = RecvDir | SendDir;
 }

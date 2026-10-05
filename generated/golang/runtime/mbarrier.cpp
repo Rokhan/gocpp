@@ -16,9 +16,10 @@
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goexperiment/exp_cgocheck2_off.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/cgocheck.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
+#include "golang/runtime/mbitmap.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/msan0.h"
 #include "golang/runtime/race0.h"
@@ -28,9 +29,15 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace goarch = golang::internal::goarch;
+    namespace goexperiment = golang::internal::goexperiment;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using abi::rec::Get;
+        using abi::rec::Pointers;
     }
 
     // typedmemmove copies a value of type typ to dst from src.
@@ -39,6 +46,16 @@ namespace golang::runtime
     // TODO: Perfect for go:nosplitrec since we can't have a safe point
     // anywhere in the bulk barrier or memmove.
     //
+    // typedmemmove should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/RomiChan/protobuf
+    //   - github.com/segmentio/encoding
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname typedmemmove
     //go:nosplit
     void typedmemmove(abi::Type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
     {
@@ -46,7 +63,7 @@ namespace golang::runtime
         {
             return;
         }
-        if(writeBarrier.enabled && typ->PtrBytes != 0)
+        if(writeBarrier.enabled && rec::Pointers(gocpp::recv(typ)))
         {
             // This always copies a full value of type typ so it's safe
             // to pass typ along as an optimization. See the comment on
@@ -95,13 +112,25 @@ namespace golang::runtime
         bulkBarrierPreWrite(uintptr_t(dst), uintptr_t(src), typ->PtrBytes, typ);
     }
 
+    // reflect_typedmemmove is meant for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gitee.com/quant1x/gox
+    //   - github.com/goccy/json
+    //   - github.com/modern-go/reflect2
+    //   - github.com/ugorji/go/codec
+    //   - github.com/v2pro/plz
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname reflect_typedmemmove reflect.typedmemmove
     void reflect_typedmemmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
     {
         if(raceenabled)
         {
-            raceWriteObjectPC(typ, dst, getcallerpc(), abi::FuncPCABIInternal(reflect_typedmemmove));
-            raceReadObjectPC(typ, src, getcallerpc(), abi::FuncPCABIInternal(reflect_typedmemmove));
+            raceWriteObjectPC(typ, dst, sys::GetCallerPC(), abi::FuncPCABIInternal(reflect_typedmemmove));
+            raceReadObjectPC(typ, src, sys::GetCallerPC(), abi::FuncPCABIInternal(reflect_typedmemmove));
         }
         if(msanenabled)
         {
@@ -122,6 +151,12 @@ namespace golang::runtime
         reflect_typedmemmove(typ, dst, src);
     }
 
+    //go:linkname maps_typedmemmove internal/runtime/maps.typedmemmove
+    void maps_typedmemmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
+    {
+        typedmemmove(typ, dst, src);
+    }
+
     // reflectcallmove is invoked by reflectcall to copy the return values
     // out of the stack and into the heap, invoking the necessary write
     // barriers. dst, src, and size describe the return value area to
@@ -134,7 +169,7 @@ namespace golang::runtime
     //go:nosplit
     void reflectcallmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t size, abi::RegArgs* regs)
     {
-        if(writeBarrier.enabled && typ != nullptr && typ->PtrBytes != 0 && size >= goarch::PtrSize)
+        if(writeBarrier.enabled && typ != nullptr && rec::Pointers(gocpp::recv(typ)) && size >= goarch::PtrSize)
         {
             // Pass nil for the type. dst does not point to value of type typ,
             // but rather points into one, so applying the optimization is not
@@ -153,6 +188,15 @@ namespace golang::runtime
         }
     }
 
+    // typedslicecopy should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/segmentio/encoding
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname typedslicecopy
     //go:nosplit
     int typedslicecopy(_type* typ, gocpp::unsafe_pointer dstPtr, int dstLen, gocpp::unsafe_pointer srcPtr, int srcLen)
     {
@@ -172,7 +216,7 @@ namespace golang::runtime
         // code and needs its own instrumentation.
         if(raceenabled)
         {
-            auto callerpc = getcallerpc();
+            auto callerpc = sys::GetCallerPC();
             auto pc = abi::FuncPCABIInternal(slicecopy);
             racewriterangepc(dstPtr, uintptr_t(n) * typ->Size_, callerpc, pc);
             racereadrangepc(srcPtr, uintptr_t(n) * typ->Size_, callerpc, pc);
@@ -217,10 +261,22 @@ namespace golang::runtime
         return n;
     }
 
+    // reflect_typedslicecopy is meant for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gitee.com/quant1x/gox
+    //   - github.com/modern-go/reflect2
+    //   - github.com/RomiChan/protobuf
+    //   - github.com/segmentio/encoding
+    //   - github.com/v2pro/plz
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname reflect_typedslicecopy reflect.typedslicecopy
     int reflect_typedslicecopy(_type* elemType, golang::runtime::slice dst, golang::runtime::slice src)
     {
-        if(elemType->PtrBytes == 0)
+        if(! rec::Pointers(gocpp::recv(elemType)))
         {
             return slicecopy(dst.array, dst.len, src.array, src.len, elemType->Size_);
         }
@@ -240,7 +296,7 @@ namespace golang::runtime
     //go:nosplit
     void typedmemclr(_type* typ, gocpp::unsafe_pointer ptr)
     {
-        if(writeBarrier.enabled && typ->PtrBytes != 0)
+        if(writeBarrier.enabled && rec::Pointers(gocpp::recv(typ)))
         {
             // This always clears a whole value of type typ, so it's
             // safe to pass a type here and apply the optimization.
@@ -250,8 +306,22 @@ namespace golang::runtime
         memclrNoHeapPointers(ptr, typ->Size_);
     }
 
+    // reflect_typedmemclr is meant for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ugorji/go/codec
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname reflect_typedmemclr reflect.typedmemclr
     void reflect_typedmemclr(_type* typ, gocpp::unsafe_pointer ptr)
+    {
+        typedmemclr(typ, ptr);
+    }
+
+    //go:linkname maps_typedmemclr internal/runtime/maps.typedmemclr
+    void maps_typedmemclr(_type* typ, gocpp::unsafe_pointer ptr)
     {
         typedmemclr(typ, ptr);
     }
@@ -259,7 +329,7 @@ namespace golang::runtime
     //go:linkname reflect_typedmemclrpartial reflect.typedmemclrpartial
     void reflect_typedmemclrpartial(_type* typ, gocpp::unsafe_pointer ptr, uintptr_t off, uintptr_t size)
     {
-        if(writeBarrier.enabled && typ->PtrBytes != 0)
+        if(writeBarrier.enabled && rec::Pointers(gocpp::recv(typ)))
         {
             // Pass nil for the type. ptr does not point to value of type typ,
             // but rather points into one so it's not safe to apply the optimization.
@@ -274,7 +344,7 @@ namespace golang::runtime
     void reflect_typedarrayclear(_type* typ, gocpp::unsafe_pointer ptr, int len)
     {
         auto size = typ->Size_ * uintptr_t(len);
-        if(writeBarrier.enabled && typ->PtrBytes != 0)
+        if(writeBarrier.enabled && rec::Pointers(gocpp::recv(typ)))
         {
             // This always clears whole elements of an array, so it's
             // safe to pass a type here. See the comment on bulkBarrierPreWrite.
@@ -288,6 +358,15 @@ namespace golang::runtime
     // pointers, usually by checking typ.PtrBytes. However, ptr
     // does not have to point to the start of the allocation.
     //
+    // memclrHasPointers should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname memclrHasPointers
     //go:nosplit
     void memclrHasPointers(gocpp::unsafe_pointer ptr, uintptr_t n)
     {

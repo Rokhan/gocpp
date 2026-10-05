@@ -11,12 +11,12 @@
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct term
     {
         bool tilde{}; // valid if typ != nil
-        golang::types::Type typ{};
+        golang::go::types::Type typ{};
 
         using isGoStruct = void;
 
@@ -34,18 +34,18 @@ namespace golang::types
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        gocpp::string String(term* x);
-        bool equal(term* x, term* y);
-        std::tuple<term*, term*> go_union(term* x, term* y);
-        term* intersect(term* x, term* y);
-        bool includes(term* x, golang::types::Type t);
-        bool subsetOf(term* x, term* y);
-        bool disjoint(term* x, term* y);
+        gocpp::string String(golang::go::types::term* x);
+        bool equal(golang::go::types::term* x, golang::go::types::term* y);
+        std::tuple<golang::go::types::term*, golang::go::types::term*> go_union(golang::go::types::term* x, golang::go::types::term* y);
+        golang::go::types::term* intersect(golang::go::types::term* x, golang::go::types::term* y);
+        bool includes(golang::go::types::term* x, golang::go::types::Type t);
+        bool subsetOf(golang::go::types::term* x, golang::go::types::term* y);
+        bool disjoint(golang::go::types::term* x, golang::go::types::term* y);
     }
 }
 

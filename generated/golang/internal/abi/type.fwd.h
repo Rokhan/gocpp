@@ -4,14 +4,10 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::abi
+namespace golang::internal::abi
 {
     struct Type;
-    using Kind = unsigned int;
-    // TODO (khr, drchase) why aren't these in TFlag?  Investigate, fix if possible.
-    const int KindDirectIface = 1 << 5;
-    const int KindGCProg = 1 << 6;
-    const int KindMask = (1 << 5) - 1;
+    using Kind = uint8_t;
     using TFlag = uint8_t;
     using NameOff = int32_t;
     using TypeOff = int32_t;
@@ -24,40 +20,74 @@ namespace golang::abi
     struct ChanType;
     struct structTypeUncommon;
     struct InterfaceType;
-    struct MapType;
     struct SliceType;
     struct FuncType;
     struct PtrType;
     struct StructField;
     struct StructType;
     struct Name;
-    const golang::abi::Kind Invalid = 0;
-    const golang::abi::Kind Bool = 1;
-    const golang::abi::Kind Int = 2;
-    const golang::abi::Kind Int8 = 3;
-    const golang::abi::Kind Int16 = 4;
-    const golang::abi::Kind Int32 = 5;
-    const golang::abi::Kind Int64 = 6;
-    const golang::abi::Kind Uint = 7;
-    const golang::abi::Kind Uint8 = 8;
-    const golang::abi::Kind Uint16 = 9;
-    const golang::abi::Kind Uint32 = 10;
-    const golang::abi::Kind Uint64 = 11;
-    const golang::abi::Kind Uintptr = 12;
-    const golang::abi::Kind Float32 = 13;
-    const golang::abi::Kind Float64 = 14;
-    const golang::abi::Kind Complex64 = 15;
-    const golang::abi::Kind Complex128 = 16;
-    const golang::abi::Kind Array = 17;
-    const golang::abi::Kind Chan = 18;
-    const golang::abi::Kind Func = 19;
-    const golang::abi::Kind Interface = 20;
-    const golang::abi::Kind Map = 21;
-    const golang::abi::Kind Pointer = 22;
-    const golang::abi::Kind Slice = 23;
-    const golang::abi::Kind String = 24;
-    const golang::abi::Kind Struct = 25;
-    const golang::abi::Kind UnsafePointer = 26;
+    const long TraceArgsLimit = 10;
+    const long TraceArgsMaxDepth = 5;
+    // Populate the data.
+    // The data is a stream of bytes, which contains the offsets and sizes of the
+    // non-aggregate arguments or non-aggregate fields/elements of aggregate-typed
+    // arguments, along with special "operators". Specifically,
+    //   - for each non-aggregate arg/field/element, its offset from FP (1 byte) and
+    //     size (1 byte)
+    //   - special operators:
+    //   - 0xff - end of sequence
+    //   - 0xfe - print { (at the start of an aggregate-typed argument)
+    //   - 0xfd - print } (at the end of an aggregate-typed argument)
+    //   - 0xfc - print ... (more args/fields/elements)
+    //   - 0xfb - print _ (offset too large)
+    const long TraceArgsEndSeq = 0xff;
+    const long TraceArgsStartAgg = 0xfe;
+    const long TraceArgsEndAgg = 0xfd;
+    const long TraceArgsDotdotdot = 0xfc;
+    const long TraceArgsOffsetTooLarge = 0xfb;
+    const long TraceArgsSpecial = 0xf0;
+    // MaxPtrmaskBytes is the maximum length of a GC ptrmask bitmap,
+    // which holds 1-bit entries describing where pointers are in a given type.
+    // Above this length, the runtime computes the GC ptrmask bitmap as needed.
+    // The information is used by the runtime to initialize the heap bitmap.
+    //
+    // There is a bit of overhead to computing the GC ptrmask bitmap
+    // the first time. On the other hand building GC ptrmask bitmaps
+    // for all types at compile time takes space in the binary for
+    // large types that have a lot of pointers, such as large array types.
+    // Using 16 means that types that keep their pointers in the first
+    // 512 (on 32-bit) or 1024 (on 64-bit) bytes are computed at compile time,
+    // and types with more pointers are computed at run time.
+    // This tradeoff sounds reasonable, and 16 was the cutoff back when
+    // we used GC programs, but this has not been benchmarked.
+    const long MaxPtrmaskBytes = 16;
+    const golang::internal::abi::Kind Invalid = 0;
+    const golang::internal::abi::Kind Bool = 1;
+    const golang::internal::abi::Kind Int = 2;
+    const golang::internal::abi::Kind Int8 = 3;
+    const golang::internal::abi::Kind Int16 = 4;
+    const golang::internal::abi::Kind Int32 = 5;
+    const golang::internal::abi::Kind Int64 = 6;
+    const golang::internal::abi::Kind Uint = 7;
+    const golang::internal::abi::Kind Uint8 = 8;
+    const golang::internal::abi::Kind Uint16 = 9;
+    const golang::internal::abi::Kind Uint32 = 10;
+    const golang::internal::abi::Kind Uint64 = 11;
+    const golang::internal::abi::Kind Uintptr = 12;
+    const golang::internal::abi::Kind Float32 = 13;
+    const golang::internal::abi::Kind Float64 = 14;
+    const golang::internal::abi::Kind Complex64 = 15;
+    const golang::internal::abi::Kind Complex128 = 16;
+    const golang::internal::abi::Kind Array = 17;
+    const golang::internal::abi::Kind Chan = 18;
+    const golang::internal::abi::Kind Func = 19;
+    const golang::internal::abi::Kind Interface = 20;
+    const golang::internal::abi::Kind Map = 21;
+    const golang::internal::abi::Kind Pointer = 22;
+    const golang::internal::abi::Kind Slice = 23;
+    const golang::internal::abi::Kind String = 24;
+    const golang::internal::abi::Kind Struct = 25;
+    const golang::internal::abi::Kind UnsafePointer = 26;
     // TFlagUncommon means that there is a data with a type, UncommonType,
     // just beyond the shared-per-type common data.  That is, the data
     // for struct types will store their UncommonType at one offset, the
@@ -84,13 +114,27 @@ namespace golang::abi
     // TFlagRegularMemory means that equal and hash functions can treat
     // this type as a single region of t.size bytes.
     const TFlag TFlagRegularMemory = 1 << 3;
-    // TFlagUnrolledBitmap marks special types that are unrolled-bitmap
-    // versions of types with GC programs.
-    // These types need to be deallocated when the underlying object
-    // is freed.
-    const TFlag TFlagUnrolledBitmap = 1 << 4;
-    const golang::abi::ChanDir RecvDir = 1 << 0;
-    const golang::abi::ChanDir SendDir = 1 << 1;
-    const golang::abi::ChanDir InvalidDir = 0;
+    // TFlagGCMaskOnDemand means that the GC pointer bitmask will be
+    // computed on demand at runtime instead of being precomputed at
+    // compile time. If this flag is set, the GCData field effectively
+    // has type **byte instead of *byte. The runtime will store a
+    // pointer to the GC pointer bitmask in *GCData.
+    const TFlag TFlagGCMaskOnDemand = 1 << 4;
+    // TFlagDirectIface means that a value of this type is stored directly
+    // in the data field of an interface, instead of indirectly.
+    // This flag is just a cached computation of Size_ == PtrBytes == goarch.PtrSize.
+    const TFlag TFlagDirectIface = 1 << 5;
+    // Leaving this breadcrumb behind for dlv. It should not be used, and no
+    // Kind should be big enough to set this bit.
+    const golang::internal::abi::Kind KindDirectIface = 1 << 5;
+    const golang::internal::abi::ChanDir RecvDir = 1 << 0;
+    const golang::internal::abi::ChanDir SendDir = 1 << 1;
+    const golang::internal::abi::ChanDir InvalidDir = 0;
+    // maxLen is a (conservative) upper bound of the byte stream length. For
+    // each arg/component, it has no more than 2 bytes of data (size, offset),
+    // and no more than one {, }, ... at each level (it cannot have both the
+    // data and ... unless it is the last one, just be conservative). Plus 1
+    // for _endSeq.
+    const int TraceArgsMaxLen = (TraceArgsMaxDepth * 3 + 2) * TraceArgsLimit + 1;
     const abi::ChanDir BothDir = RecvDir | SendDir;
 }

@@ -27,10 +27,9 @@
 #include "golang/go/types/struct.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeparam.h"
-#include "golang/go/types/under.h"
 #include "golang/go/types/union.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     namespace rec
     {
@@ -62,7 +61,7 @@ namespace golang::types
     }
 
     template<typename T, typename TStore, typename TInterface>
-    int64_t Sizes::SizesImpl<T, TStore, TInterface>::vAlignof(golang::types::Type T)
+    int64_t Sizes::SizesImpl<T, TStore, TInterface>::vAlignof(golang::go::types::Type T)
     {
         return rec::Alignof(gocpp::PtrRecv<T, false>(value.get()), T);
     }
@@ -72,7 +71,7 @@ namespace golang::types
         return rec::Offsetsof(gocpp::PtrRecv<T, false>(value.get()), fields);
     }
     template<typename T, typename TStore, typename TInterface>
-    int64_t Sizes::SizesImpl<T, TStore, TInterface>::vSizeof(golang::types::Type T)
+    int64_t Sizes::SizesImpl<T, TStore, TInterface>::vSizeof(golang::go::types::Type T)
     {
         return rec::Sizeof(gocpp::PtrRecv<T, false>(value.get()), T);
     }
@@ -85,12 +84,12 @@ namespace golang::types
 
     namespace rec
     {
-        int64_t Alignof(const gocpp::PtrRecv<struct Sizes, false>& self, golang::types::Type T)
+        int64_t Alignof(const gocpp::PtrRecv<struct Sizes, false>& self, golang::go::types::Type T)
         {
             return self.ptr->value()->vAlignof(T);
         }
 
-        int64_t Alignof(const gocpp::ObjRecv<struct Sizes>& self, golang::types::Type T)
+        int64_t Alignof(const gocpp::ObjRecv<struct Sizes>& self, golang::go::types::Type T)
         {
             return self.obj.value()->vAlignof(T);
         }
@@ -105,12 +104,12 @@ namespace golang::types
             return self.obj.value()->vOffsetsof(fields);
         }
 
-        int64_t Sizeof(const gocpp::PtrRecv<struct Sizes, false>& self, golang::types::Type T)
+        int64_t Sizeof(const gocpp::PtrRecv<struct Sizes, false>& self, golang::go::types::Type T)
         {
             return self.ptr->value()->vSizeof(T);
         }
 
-        int64_t Sizeof(const gocpp::ObjRecv<struct Sizes>& self, golang::types::Type T)
+        int64_t Sizeof(const gocpp::ObjRecv<struct Sizes>& self, golang::go::types::Type T)
         {
             return self.obj.value()->vSizeof(T);
         }
@@ -171,7 +170,7 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
-    int64_t rec::Alignof(StdSizes* s, golang::types::Type T)
+    int64_t rec::Alignof(StdSizes* s, golang::go::types::Type T)
     {
         int64_t result;
         gocpp::Defer defer;
@@ -186,7 +185,7 @@ namespace golang::types
             // of alignment of the elements and fields, respectively.
             //Go type switch emulation
             {
-                const auto& gocpp_id_0 = gocpp::type_info(types::under(T));
+                const auto& gocpp_id_0 = gocpp::type_info(rec::Underlying(gocpp::recv(T)));
                 int conditionId = -1;
                 if(gocpp_id_0 == typeid(types::Array*)) { conditionId = 0; }
                 else if(gocpp_id_0 == typeid(types::Struct*)) { conditionId = 1; }
@@ -199,7 +198,7 @@ namespace golang::types
                 {
                     case 0:
                     {
-                        types::Array* t = gocpp::any_cast<types::Array*>(types::under(T));
+                        types::Array* t = gocpp::any_cast<types::Array*>(rec::Underlying(gocpp::recv(T)));
                         // spec: "For a variable x of array type: unsafe.Alignof(x)
                         // is the same as unsafe.Alignof(x[0]), but at least 1."
                         return rec::Alignof(gocpp::recv(s), t->elem);
@@ -207,7 +206,7 @@ namespace golang::types
                     }
                     case 1:
                     {
-                        types::Struct* t = gocpp::any_cast<types::Struct*>(types::under(T));
+                        types::Struct* t = gocpp::any_cast<types::Struct*>(rec::Underlying(gocpp::recv(T)));
                         if(len(t->fields) == 0 && _IsSyncAtomicAlign64(T))
                         {
                             // Special case: sync/atomic.align64 is an
@@ -235,7 +234,7 @@ namespace golang::types
                     case 2:
                     case 3:
                     {
-                        types::Slice* t = gocpp::any_cast<types::Slice*>(types::under(T));
+                        types::Slice* t = gocpp::any_cast<types::Slice*>(rec::Underlying(gocpp::recv(T)));
                         // Multiword data structures are effectively structs
                         // in which each element has size WordSize.
                         // Type parameters lead to variable sizes/alignments;
@@ -246,7 +245,7 @@ namespace golang::types
                     }
                     case 4:
                     {
-                        types::Basic* t = gocpp::any_cast<types::Basic*>(types::under(T));
+                        types::Basic* t = gocpp::any_cast<types::Basic*>(rec::Underlying(gocpp::recv(T)));
                         // Strings are like slices and interfaces.
                         if(rec::Info(gocpp::recv(t)) & IsString != 0)
                         {
@@ -257,8 +256,8 @@ namespace golang::types
                     case 5:
                     case 6:
                     {
-                        types::TypeParam* t = gocpp::any_cast<types::TypeParam*>(types::under(T));
-                        unreachable();
+                        types::TypeParam* t = gocpp::any_cast<types::TypeParam*>(rec::Underlying(gocpp::recv(T)));
+                        gocpp::panic("unreachable"_s);
                         break;
                     }
                 }
@@ -288,7 +287,7 @@ namespace golang::types
         }
     }
 
-    bool _IsSyncAtomicAlign64(golang::types::Type T)
+    bool _IsSyncAtomicAlign64(golang::go::types::Type T)
     {
         auto named = asNamed(T);
         if(named == nullptr)
@@ -299,7 +298,7 @@ namespace golang::types
         return rec::Name(gocpp::recv(obj)) == "align64"_s &&
                 rec::Pkg(gocpp::recv(obj)) != nullptr &&
                 (rec::Path(gocpp::recv(rec::Pkg(gocpp::recv(obj)))) == "sync/atomic"_s ||
-                    rec::Path(gocpp::recv(rec::Pkg(gocpp::recv(obj)))) == "runtime/internal/atomic"_s);
+                    rec::Path(gocpp::recv(rec::Pkg(gocpp::recv(obj)))) == "internal/runtime/atomic"_s);
     }
 
     gocpp::slice<int64_t> rec::Offsetsof(StdSizes* s, gocpp::slice<Var*> fields)
@@ -348,11 +347,11 @@ namespace golang::types
         x[Complex64] = 8;
         x[Complex128] = 16;
     });
-    int64_t rec::Sizeof(StdSizes* s, golang::types::Type T)
+    int64_t rec::Sizeof(StdSizes* s, golang::go::types::Type T)
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_1 = gocpp::type_info(types::under(T));
+            const auto& gocpp_id_1 = gocpp::type_info(rec::Underlying(gocpp::recv(T)));
             int conditionId = -1;
             if(gocpp_id_1 == typeid(types::Basic*)) { conditionId = 0; }
             else if(gocpp_id_1 == typeid(types::Array*)) { conditionId = 1; }
@@ -365,7 +364,7 @@ namespace golang::types
             {
                 case 0:
                 {
-                    types::Basic* t = gocpp::any_cast<types::Basic*>(types::under(T));
+                    types::Basic* t = gocpp::any_cast<types::Basic*>(rec::Underlying(gocpp::recv(T)));
                     assert(isTyped(T));
                     auto k = t->kind;
                     if(int(k) < len(basicSizes))
@@ -384,7 +383,7 @@ namespace golang::types
                 // may still overflow to < 0 which is ok
                 case 1:
                 {
-                    types::Array* t = gocpp::any_cast<types::Array*>(types::under(T));
+                    types::Array* t = gocpp::any_cast<types::Array*>(rec::Underlying(gocpp::recv(T)));
                     auto n = t->len;
                     if(n <= 0)
                     {
@@ -425,14 +424,14 @@ namespace golang::types
                 }
                 case 2:
                 {
-                    types::Slice* t = gocpp::any_cast<types::Slice*>(types::under(T));
+                    types::Slice* t = gocpp::any_cast<types::Slice*>(rec::Underlying(gocpp::recv(T)));
                     return s->WordSize * 3;
                     break;
                 }
                 // may overflow to < 0 which is ok
                 case 3:
                 {
-                    types::Struct* t = gocpp::any_cast<types::Struct*>(types::under(T));
+                    types::Struct* t = gocpp::any_cast<types::Struct*>(rec::Underlying(gocpp::recv(T)));
                     auto n = rec::NumFields(gocpp::recv(t));
                     if(n == 0)
                     {
@@ -451,7 +450,7 @@ namespace golang::types
                 }
                 case 4:
                 {
-                    types::Interface* t = gocpp::any_cast<types::Interface*>(types::under(T));
+                    types::Interface* t = gocpp::any_cast<types::Interface*>(rec::Underlying(gocpp::recv(T)));
                     // Type parameters lead to variable sizes/alignments;
                     // StdSizes.Sizeof won't be called for them.
                     assert(! isTypeParam(T));
@@ -461,8 +460,8 @@ namespace golang::types
                 case 5:
                 case 6:
                 {
-                    types::TypeParam* t = gocpp::any_cast<types::TypeParam*>(types::under(T));
-                    unreachable();
+                    types::TypeParam* t = gocpp::any_cast<types::TypeParam*>(rec::Underlying(gocpp::recv(T)));
+                    gocpp::panic("unreachable"_s);
                     break;
                 }
             }
@@ -526,7 +525,7 @@ namespace golang::types
 
     // stdSizes is used if Config.Sizes == nil.
     types::Sizes stdSizes = SizesFor("gc"_s, "amd64"_s);
-    int64_t rec::alignof(Config* conf, golang::types::Type T)
+    int64_t rec::go_alignof(Config* conf, golang::go::types::Type T)
     {
         auto f = [&](auto x){ return rec::Alignof(stdSizes, x); };
         if(conf->Sizes != nullptr)
@@ -566,12 +565,12 @@ namespace golang::types
     // must be structs (rather than pointers to structs).
     // If the offset is too large (because T is too large),
     // the result is negative.
-    int64_t rec::offsetof(Config* conf, golang::types::Type T, gocpp::slice<int> index)
+    int64_t rec::go_offsetof(Config* conf, golang::go::types::Type T, gocpp::slice<int> index)
     {
         int64_t offs = {};
         for(auto [gocpp_ignored, i] : index)
         {
-            auto s = gocpp::getValue<Struct*>(types::under(T));
+            auto s = gocpp::getValue<Struct*>(rec::Underlying(gocpp::recv(T)));
             auto d = rec::offsetsof(gocpp::recv(conf), s)[i];
             if(d < 0)
             {
@@ -589,7 +588,7 @@ namespace golang::types
 
     // sizeof returns the size of T.
     // If T is too large, the result is negative.
-    int64_t rec::go_sizeof(Config* conf, golang::types::Type T)
+    int64_t rec::go_sizeof(Config* conf, golang::go::types::Type T)
     {
         auto f = [&](auto x){ return rec::Sizeof(stdSizes, x); };
         if(conf->Sizes != nullptr)

@@ -13,8 +13,10 @@
 
 #include "golang/syscall/syscall_windows.h"
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace syscall = golang::syscall;
     namespace rec
     {
     }

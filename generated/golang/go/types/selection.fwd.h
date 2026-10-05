@@ -4,17 +4,11 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     using SelectionKind = int;
+    struct Selection;
     const SelectionKind FieldVal = 0;
     const SelectionKind MethodVal = 1;
     const SelectionKind MethodExpr = 2;
-}
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/type.fwd.h"
-
-namespace golang::types
-{
-    struct Selection;
 }

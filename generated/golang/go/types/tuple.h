@@ -11,7 +11,7 @@
 
 #include "golang/go/types/object.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Tuple
     {
@@ -47,14 +47,14 @@ namespace golang::types
 #include "golang/go/types/object.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
         int Len(Tuple* t);
         Var* At(Tuple* t, int i);
-        golang::types::Type Underlying(Tuple* t);
+        golang::go::types::Type Underlying(Tuple* t);
         gocpp::string String(Tuple* t);
     }
 }

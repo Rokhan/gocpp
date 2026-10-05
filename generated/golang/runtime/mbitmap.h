@@ -12,6 +12,9 @@
 
 namespace golang::runtime
 {
+    bool heapBitsInSpan(uintptr_t userSize);
+    gocpp::slice<uintptr_t> heapBitsSlice(uintptr_t spanBase, uintptr_t spanSize, uintptr_t elemsize);
+    std::tuple<uintptr_t, uintptr_t> spanHeapBitsRange(uintptr_t spanBase, uintptr_t spanSize, uintptr_t elemsize);
     unsigned char* addb(unsigned char* p, uintptr_t n);
     unsigned char* subtractb(unsigned char* p, uintptr_t n);
     unsigned char* add1(unsigned char* p);
@@ -40,8 +43,10 @@ namespace golang::runtime
     uintptr_t runGCProg(unsigned char* prog, unsigned char* dst);
     void dumpGCProg(unsigned char* p);
     gocpp::slice<unsigned char> reflect_gcbits(go_any x);
+    gocpp::slice<unsigned char> pointerMask(go_any ep);
     markBits markBitsForAddr(uintptr_t p);
     markBits markBitsForSpan(uintptr_t base);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
@@ -50,6 +55,44 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
+    struct typePointers
+    {
+        // elem is the address of the current array element of type typ being iterated over.
+        // Objects that are not arrays are treated as single-element arrays, in which case
+        // this value does not change.
+        uintptr_t elem{};
+        // addr is the address the iterator is currently working from and describes
+        // the address of the first word referenced by mask.
+        uintptr_t addr{};
+        // mask is a bitmask where each bit corresponds to pointer-words after addr.
+        // Bit 0 is the pointer-word at addr, Bit 1 is the next word, and so on.
+        // If a bit is 1, then there is a pointer at that word.
+        // nextFast and next mask out bits in this mask as their pointers are processed.
+        uintptr_t mask{};
+        // typ is a pointer to the type information for the heap object's type.
+        // This may be nil if the object is in a span where heapBitsInSpan(span.elemsize) is true.
+        _type* typ{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct typePointers& value);
+    uintptr_t heapSetTypeNoHeader(uintptr_t x, uintptr_t dataSize, _type* typ, mspan* span);
+    uintptr_t heapSetTypeSmallHeader(uintptr_t x, uintptr_t dataSize, _type* typ, _type** header, mspan* span);
+    uintptr_t heapSetTypeLarge(uintptr_t x, uintptr_t dataSize, _type* typ, mspan* span);
+    void doubleCheckHeapType(uintptr_t x, uintptr_t dataSize, _type* gctyp, _type** header, mspan* span);
+    void doubleCheckHeapPointers(uintptr_t x, uintptr_t dataSize, _type* typ, _type** header, mspan* span);
+    void doubleCheckHeapPointersInterior(uintptr_t x, uintptr_t interior, uintptr_t size, uintptr_t dataSize, _type* typ, _type** header, mspan* span);
+    void doubleCheckTypePointersOfType(mspan* s, _type* typ, uintptr_t addr, uintptr_t size);
+    bool isMarkedOrNotInHeap(gocpp::unsafe_pointer p);
     void badPointer(mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff);
     std::tuple<uintptr_t, mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff);
     void typeBitsBulkBarrier(_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size);
@@ -71,26 +114,45 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct debugPtrmaskStruct& value);
     bitvector progToPointerMask(unsigned char* prog, uintptr_t size);
-    mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog);
-    void dematerializeGCProg(mspan* s);
+}
+#include "golang/internal/abi/type.fwd.h"
+
+namespace golang::runtime
+{
+    void dumpTypePointers(typePointers tp);
     extern debugPtrmaskStruct debugPtrmask;
+    namespace abi = golang::internal::abi;
+    void bulkBarrierPreWrite(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ);
+    void bulkBarrierPreWriteSrcOnly(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ);
 }
 
+#include "golang/internal/abi/type.h"
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
 
     namespace rec
     {
+        typePointers typePointersOf(mspan* span, uintptr_t addr, uintptr_t size);
+        typePointers typePointersOfUnchecked(mspan* span, uintptr_t addr);
+        typePointers typePointersOfType(mspan* span, abi::Type* typ, uintptr_t addr);
+        std::tuple<typePointers, uintptr_t> nextFast(typePointers tp);
+        std::tuple<typePointers, uintptr_t> next(typePointers tp, uintptr_t limit);
+        typePointers fastForward(typePointers tp, uintptr_t n, uintptr_t limit);
+        uintptr_t objBase(mspan* span, uintptr_t addr);
+        void initHeapBits(mspan* s);
+        gocpp::slice<uintptr_t> heapBits(mspan* span);
+        uintptr_t heapBitsSmallForAddr(mspan* span, uintptr_t addr);
+        uintptr_t writeHeapBitsSmall(mspan* span, uintptr_t x, uintptr_t dataSize, _type* typ);
         markBits allocBitsForIndex(mspan* s, uintptr_t allocBitIndex);
         void refillAllocCache(mspan* s, uint16_t whichByte);
         uint16_t nextFreeIndex(mspan* s);
         bool isFree(mspan* s, uintptr_t index);
+        bool isFreeOrNewlyAllocated(mspan* s, uintptr_t index);
         uintptr_t divideByElemSize(mspan* s, uintptr_t n);
         uintptr_t objIndex(mspan* s, uintptr_t p);
-        markBits markBitsForIndex(mspan* s, uintptr_t objIndex);
-        markBits markBitsForBase(mspan* s);
         bool isMarked(markBits m);
         void setMarked(markBits m);
         void setMarkedNonAtomic(markBits m);

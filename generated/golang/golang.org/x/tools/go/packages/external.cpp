@@ -14,8 +14,8 @@
 #include "golang/bytes/buffer.h"
 #include "golang/bytes/reader.h"
 #include "golang/context/context.h"
-#include "golang/encoding/json/decode.h"
-#include "golang/encoding/json/encode.h"
+#include "golang/encoding/json/v2_decode.h"
+#include "golang/encoding/json/v2_encode.h"
 #include "golang/fmt/errors.h"
 #include "golang/fmt/print.h"
 #include "golang/golang.org/x/tools/go/packages/golist.h"
@@ -23,13 +23,21 @@
 #include "golang/io/io.h"
 #include "golang/os/env.h"
 #include "golang/os/exec/exec.h"
-#include "golang/os/exec/lp_windows.h"
+#include "golang/os/exec/lookpath.h"
 #include "golang/os/file.h"
 #include "golang/os/types.h"
+#include "golang/slices/slices.h"
 #include "golang/strings/strings.h"
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
 {
+    namespace bytes = golang::bytes;
+    namespace exec = golang::os::exec;
+    namespace fmt = golang::fmt;
+    namespace json = golang::encoding::json;
+    namespace os = golang::os;
+    namespace slices = golang::slices;
+    namespace strings = golang::strings;
     namespace rec
     {
         using bytes::rec::Bytes;
@@ -139,7 +147,7 @@ namespace golang::packages
     // driver is the type for functions that query the build system for the
     // packages named by the patterns.
     // findExternalDriver returns the file path of a tool that supplies
-    // the build system package structure, or "" if not found."
+    // the build system package structure, or "" if not found.
     // If GOPACKAGESDRIVER is set in the environment findExternalTool returns its
     // value, otherwise it searches for a binary named gopackagesdriver on the PATH.
     driver findExternalDriver(Config* cfg)
@@ -148,7 +156,7 @@ namespace golang::packages
         auto tool = ""_s;
         for(auto [gocpp_ignored, env] : cfg->Env)
         {
-            if(auto val = strings::TrimPrefix(env, toolPrefix); val != env)
+            if(auto [val, ok] = strings::CutPrefix(env, toolPrefix); ok)
             {
                 tool = val;
             }
@@ -166,7 +174,7 @@ namespace golang::packages
                 return nullptr;
             }
         }
-        return [=](Config* cfg, gocpp::slice<gocpp::string> words) mutable -> std::tuple<DriverResponse*, gocpp::error>
+        return [=](Config* cfg, gocpp::slice<gocpp::string> patterns) mutable -> std::tuple<DriverResponse*, gocpp::error>
         {
             auto [req, err] = json::Marshal(gocpp::Init<DriverRequest>([=](auto& x) {
                 x.Mode = cfg->Mode;
@@ -182,7 +190,7 @@ namespace golang::packages
 
             auto buf = new bytes::Buffer{};
             auto go_stderr = new bytes::Buffer{};
-            auto cmd = exec::CommandContext(cfg->Context, tool, words);
+            auto cmd = exec::CommandContext(cfg->Context, tool, patterns);
             cmd->Dir = cfg->Dir;
             // The cwd gets resolved to the real path. On Darwin, where
             // /tmp is a symlink, this breaks anything that expects the
@@ -194,7 +202,7 @@ namespace golang::packages
             // process we fix up all the paths returned by the go
             // command.
             // (See similar trick in Invocation.run in ../../internal/gocommand/invoke.go)
-            cmd->Env = append(slicesClip(cfg->Env), "PWD="_s + cfg->Dir);
+            cmd->Env = append(slices::Clip(cfg->Env), "PWD="_s + cfg->Dir);
             cmd->Stdin = bytes::NewReader(req);
             cmd->Stdout = buf;
             cmd->Stderr = go_stderr;
@@ -215,14 +223,6 @@ namespace golang::packages
             }
             return {& response, nullptr};
         };
-    }
-
-    // slicesClip removes unused capacity from the slice, returning s[:len(s):len(s)].
-    // TODO(adonovan): use go1.21 slices.Clip.
-    template<template<typename> class  S, typename E>
-    S<E> slicesClip(S<E> s)
-    {
-        return s.make_slice(0, len(s), len(s));
     }
 
 }

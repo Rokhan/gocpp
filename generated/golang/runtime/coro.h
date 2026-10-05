@@ -22,6 +22,10 @@ namespace golang::runtime
     {
         golang::runtime::guintptr gp{};
         std::function<void (coro* _1)> f{};
+        // State for validating thread-lock interactions.
+        m* mp{};
+        uint32_t lockedExt{}; // mp's external LockOSThread counter at coro creation time.
+        uint32_t lockedInt{}; // mp's internal lockOSThread counter at coro creation time.
 
         using isGoStruct = void;
 

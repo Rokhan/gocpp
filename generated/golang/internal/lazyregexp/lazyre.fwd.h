@@ -3,10 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/regexp/regexp.fwd.h"
-#include "golang/sync/once.fwd.h"
 
-namespace golang::lazyregexp
+namespace golang::internal::lazyregexp
 {
     struct Regexp;
 }

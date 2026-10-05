@@ -11,19 +11,20 @@
 #include "golang/go/types/validtype.h"
 #include "gocpp/support.h"
 
+#include "golang/go/token/position.h"
 #include "golang/go/types/alias.h"
+#include "golang/go/types/api.h"
 #include "golang/go/types/api_predicates.h"
 #include "golang/go/types/array.h"
 #include "golang/go/types/basic.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/interface.h"
-#include "golang/go/types/lookup.h"
 #include "golang/go/types/named.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/package.h"
-#include "golang/go/types/predicates.h"
 #include "golang/go/types/struct.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typelists.h"
@@ -32,8 +33,9 @@
 #include "golang/go/types/union.h"
 #include "golang/go/types/universe.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace token = golang::go::token;
     namespace rec
     {
     }
@@ -44,7 +46,7 @@ namespace golang::types
     // earlier, via the objDecl cycle detection mechanism.)
     void rec::validType(Checker* check, Named* typ)
     {
-        rec::validType0(gocpp::recv(check), typ, nullptr, nullptr);
+        rec::validType0(gocpp::recv(check), nopos, typ, nullptr, nullptr);
     }
 
     // validType0 checks if the given type is valid. If typ is a type parameter
@@ -57,194 +59,209 @@ namespace golang::types
     // of) F in S, leading to the nest S->F. If a type appears in its own nest
     // (say S->F->S) we have an invalid recursive type. The path list is the full
     // path of named types in a cycle, it is only needed for error reporting.
-    bool rec::validType0(Checker* check, golang::types::Type typ, gocpp::slice<Named*> nest, gocpp::slice<Named*> path)
+    bool rec::validType0(Checker* check, token::Pos pos, golang::go::types::Type typ, gocpp::slice<Named*> nest, gocpp::slice<Named*> path)
     {
-        //Go type switch emulation
+        gocpp::Defer defer;
+        try
         {
-            const auto& gocpp_id_0 = gocpp::type_info(Unalias(typ));
-            int conditionId = -1;
-            if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
-            else if(gocpp_id_0 == typeid(types::Array*)) { conditionId = 1; }
-            else if(gocpp_id_0 == typeid(types::Struct*)) { conditionId = 2; }
-            else if(gocpp_id_0 == typeid(types::Union*)) { conditionId = 3; }
-            else if(gocpp_id_0 == typeid(types::Interface*)) { conditionId = 4; }
-            else if(gocpp_id_0 == typeid(types::Named*)) { conditionId = 5; }
-            else if(gocpp_id_0 == typeid(types::TypeParam*)) { conditionId = 6; }
-            switch(conditionId)
+            typ = Unalias(typ);
+
+            if(check->conf->_Trace)
             {
-                case 0:
+                if(auto [t, gocpp_id_0] = gocpp::getValue<Named*>(typ); t != nullptr && t->obj != nullptr)
                 {
-                    untyped nil t = gocpp::any_cast<untyped nil>(Unalias(typ));
-                    // We should never see a nil type but be conservative and panic
-                    // only in debug mode.
-                    if(debug)
-                    {
-                        gocpp::panic("validType0(nil)"_s);
-                    }
-                    break;
+                    pos = t->obj->object.pos;
                 }
-
-                case 1:
+                check->indent++;
+                rec::trace(gocpp::recv(check), pos, "validType(%s) nest %v, path %v"_s, typ, pathString(makeObjList(nest)), pathString(makeObjList(path)));
+                defer.push_back([=]{ [=]() mutable -> void
                 {
-                    types::Array* t = gocpp::any_cast<types::Array*>(Unalias(typ));
-                    return rec::validType0(gocpp::recv(check), t->elem, nest, path);
-                    break;
-                }
+                    check->indent--;
+                }(); });
+            }
 
-                case 2:
+            //Go type switch emulation
+            {
+                const auto& gocpp_id_1 = gocpp::type_info(typ);
+                int conditionId = -1;
+                if(gocpp_id_1 == typeid(untyped nil)) { conditionId = 0; }
+                else if(gocpp_id_1 == typeid(types::Array*)) { conditionId = 1; }
+                else if(gocpp_id_1 == typeid(types::Struct*)) { conditionId = 2; }
+                else if(gocpp_id_1 == typeid(types::Union*)) { conditionId = 3; }
+                else if(gocpp_id_1 == typeid(types::Interface*)) { conditionId = 4; }
+                else if(gocpp_id_1 == typeid(types::Named*)) { conditionId = 5; }
+                else if(gocpp_id_1 == typeid(types::TypeParam*)) { conditionId = 6; }
+                switch(conditionId)
                 {
-                    types::Struct* t = gocpp::any_cast<types::Struct*>(Unalias(typ));
-                    for(auto [gocpp_ignored, f] : t->fields)
+                    case 0:
                     {
-                        if(! rec::validType0(gocpp::recv(check), f->object.typ, nest, path))
+                        untyped nil t = gocpp::any_cast<untyped nil>(typ);
+                        // We should never see a nil type but be conservative and panic
+                        // only in debug mode.
+                        if(debug)
                         {
-                            return false;
+                            gocpp::panic("validType0(nil)"_s);
                         }
-                    }
-                    break;
-                }
-
-                case 3:
-                {
-                    types::Union* t = gocpp::any_cast<types::Union*>(Unalias(typ));
-                    for(auto [gocpp_ignored, t] : t->terms)
-                    {
-                        if(! rec::validType0(gocpp::recv(check), t->typ, nest, path))
-                        {
-                            return false;
-                        }
-                    }
-                    break;
-                }
-
-                case 4:
-                {
-                    types::Interface* t = gocpp::any_cast<types::Interface*>(Unalias(typ));
-                    for(auto [gocpp_ignored, etyp] : t->embeddeds)
-                    {
-                        if(! rec::validType0(gocpp::recv(check), etyp, nest, path))
-                        {
-                            return false;
-                        }
-                    }
-                    break;
-                }
-
-                // t is valid
-                case 5:
-                {
-                    types::Named* t = gocpp::any_cast<types::Named*>(Unalias(typ));
-                    // Exit early if we already know t is valid.
-                    // This is purely an optimization but it prevents excessive computation
-                    // times in pathological cases such as testdata/fixedbugs/issue6977.go.
-                    // (Note: The valids map could also be allocated locally, once for each
-                    // validType call.)
-                    if(rec::lookup(gocpp::recv(check->valids), t) != nullptr)
-                    {
                         break;
                     }
-                    // Don't report a 2nd error if we already know the type is invalid
-                    // (e.g., if a cycle was detected earlier, via under).
-                    // Note: ensure that t.orig is fully resolved by calling Underlying().
-                    if(! types::isValid(rec::Underlying(gocpp::recv(t))))
-                    {
-                        return false;
-                    }
-                    // If the current type t is also found in nest, (the memory of) t is
-                    // embedded in itself, indicating an invalid recursive type.
-                    for(auto [gocpp_ignored, e] : nest)
-                    {
-                        if(Identical(e, t))
-                        {
-                            // We have a cycle. If t != t.Origin() then t is an instance of
-                            // the generic type t.Origin(). Because t is in the nest, t must
-                            // occur within the definition (RHS) of the generic type t.Origin(),
-                            // directly or indirectly, after expansion of the RHS.
-                            // Therefore t.Origin() must be invalid, no matter how it is
-                            // instantiated since the instantiation t of t.Origin() happens
-                            // inside t.Origin()'s RHS and thus is always the same and always
-                            // present.
-                            // Therefore we can mark the underlying of both t and t.Origin()
-                            // as invalid. If t is not an instance of a generic type, t and
-                            // t.Origin() are the same.
-                            // Furthermore, because we check all types in a package for validity
-                            // before type checking is complete, any exported type that is invalid
-                            // will have an invalid underlying type and we can't reach here with
-                            // such a type (invalid types are excluded above).
-                            // Thus, if we reach here with a type t, both t and t.Origin() (if
-                            // different in the first place) must be from the current package;
-                            // they cannot have been imported.
-                            // Therefore it is safe to change their underlying types; there is
-                            // no chance for a race condition (the types of the current package
-                            // are not yet available to other goroutines).
-                            assert(t->obj->object.pkg == check->pkg);
-                            assert(rec::Origin(gocpp::recv(t))->obj->object.pkg == check->pkg);
-                            t->underlying = Typ[Invalid];
-                            rec::Origin(gocpp::recv(t))->underlying = Typ[Invalid];
 
-                            // Find the starting point of the cycle and report it.
-                            // Because each type in nest must also appear in path (see invariant below),
-                            // type t must be in path since it was found in nest. But not every type in path
-                            // is in nest. Specifically t may appear in path with an earlier index than the
-                            // index of t in nest. Search again.
-                            for(auto [start, p] : path)
+                    case 1:
+                    {
+                        types::Array* t = gocpp::any_cast<types::Array*>(typ);
+                        return rec::validType0(gocpp::recv(check), pos, t->elem, nest, path);
+                        break;
+                    }
+
+                    case 2:
+                    {
+                        types::Struct* t = gocpp::any_cast<types::Struct*>(typ);
+                        for(auto [gocpp_ignored, f] : t->fields)
+                        {
+                            if(! rec::validType0(gocpp::recv(check), pos, f->object.typ, nest, path))
                             {
-                                if(Identical(p, t))
+                                return false;
+                            }
+                        }
+                        break;
+                    }
+
+                    case 3:
+                    {
+                        types::Union* t = gocpp::any_cast<types::Union*>(typ);
+                        for(auto [gocpp_ignored, t] : t->terms)
+                        {
+                            if(! rec::validType0(gocpp::recv(check), pos, t->typ, nest, path))
+                            {
+                                return false;
+                            }
+                        }
+                        break;
+                    }
+
+                    case 4:
+                    {
+                        types::Interface* t = gocpp::any_cast<types::Interface*>(typ);
+                        for(auto [gocpp_ignored, etyp] : t->embeddeds)
+                        {
+                            if(! rec::validType0(gocpp::recv(check), pos, etyp, nest, path))
+                            {
+                                return false;
+                            }
+                        }
+                        break;
+                    }
+
+                    case 5:
+                    {
+                        types::Named* t = gocpp::any_cast<types::Named*>(typ);
+                        // If the current type t is also found in nest, (the memory of) t is
+                        // embedded in itself, indicating an invalid recursive type.
+                        for(auto [gocpp_ignored, e] : nest)
+                        {
+                            if(Identical(e, t))
+                            {
+                                // We have a cycle. If t != t.Origin() then t is an instance of
+                                // the generic type t.Origin(). Because t is in the nest, t must
+                                // occur within the definition (RHS) of the generic type t.Origin(),
+                                // directly or indirectly, after expansion of the RHS.
+                                // Therefore t.Origin() must be invalid, no matter how it is
+                                // instantiated since the instantiation t of t.Origin() happens
+                                // inside t.Origin()'s RHS and thus is always the same and always
+                                // present.
+                                // Therefore we can mark the underlying of both t and t.Origin()
+                                // as invalid. If t is not an instance of a generic type, t and
+                                // t.Origin() are the same.
+                                // Furthermore, because we check all types in a package for validity
+                                // before type checking is complete, any exported type that is invalid
+                                // will have an invalid underlying type and we can't reach here with
+                                // such a type (invalid types are excluded above).
+                                // Thus, if we reach here with a type t, both t and t.Origin() (if
+                                // different in the first place) must be from the current package;
+                                // they cannot have been imported.
+                                // Therefore it is safe to change their underlying types; there is
+                                // no chance for a race condition (the types of the current package
+                                // are not yet available to other goroutines).
+                                assert(t->obj->object.pkg == check->pkg);
+                                assert(rec::Origin(gocpp::recv(t))->obj->object.pkg == check->pkg);
+
+                                // let t become invalid when it is unpacked
+                                rec::Origin(gocpp::recv(t))->fromRHS = Typ[Invalid];
+
+                                // Find the starting point of the cycle and report it.
+                                // Because each type in nest must also appear in path (see invariant below),
+                                // type t must be in path since it was found in nest. But not every type in path
+                                // is in nest. Specifically t may appear in path with an earlier index than the
+                                // index of t in nest. Search again.
+                                for(auto [start, p] : path)
                                 {
-                                    rec::cycleError(gocpp::recv(check), makeObjList(path.make_slice(start)));
-                                    return false;
+                                    if(Identical(p, t))
+                                    {
+                                        rec::cycleError(gocpp::recv(check), makeObjList(path.make_slice(start)), 0);
+                                        return false;
+                                    }
+                                }
+                                gocpp::panic("cycle start not found"_s);
+                            }
+                        }
+                        // No cycle was found. Check the RHS of t.
+                        // Every type added to nest is also added to path; thus every type that is in nest
+                        // must also be in path (invariant). But not every type in path is in nest, since
+                        // nest may be pruned (see below, *TypeParam case).
+                        rec::unpack(gocpp::recv(rec::Origin(gocpp::recv(t))));
+                        if(! rec::validType0(gocpp::recv(check), pos, rec::rhs(gocpp::recv(rec::Origin(gocpp::recv(t)))), append(nest, t), append(path, t)))
+                        {
+                            return false;
+                        }
+                        break;
+                    }
+
+                    // see TODO above
+                    // check.valids.add(t) // t is valid
+                    case 6:
+                    {
+                        types::TypeParam* t = gocpp::any_cast<types::TypeParam*>(typ);
+                        // A type parameter stands for the type (argument) it was instantiated with.
+                        // Check the corresponding type argument for validity if we are in an
+                        // instantiated type.
+                        if(auto d = len(nest) - 1; d >= 0)
+                        {
+                            // the type instance
+                            auto inst = nest[d];
+                            // Find the corresponding type argument for the type parameter
+                            // and proceed with checking that type argument.
+                            for(auto [i, tparam] : rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(inst)))))
+                            {
+                                // The type parameter and type argument lists should
+                                // match in length but be careful in case of errors.
+                                if(t == tparam && i < rec::Len(gocpp::recv(rec::TypeArgs(gocpp::recv(inst)))))
+                                {
+                                    auto targ = rec::At(gocpp::recv(rec::TypeArgs(gocpp::recv(inst))), i);
+                                    // The type argument must be valid in the enclosing
+                                    // type (where inst was instantiated), hence we must
+                                    // check targ's validity in the type nest excluding
+                                    // the current (instantiated) type (see the example
+                                    // at the end of this file).
+                                    // For error reporting we keep the full path.
+                                    auto res = rec::validType0(gocpp::recv(check), pos, targ, nest.make_slice(0, d), path);
+                                    // The check.validType0 call with nest[:d] may have
+                                    // overwritten the entry at the current depth d.
+                                    // Restore the entry (was issue go.dev/issue/66323).
+                                    nest[d] = inst;
+                                    return res;
                                 }
                             }
-                            gocpp::panic("cycle start not found"_s);
                         }
+                        break;
                     }
-                    // No cycle was found. Check the RHS of t.
-                    // Every type added to nest is also added to path; thus every type that is in nest
-                    // must also be in path (invariant). But not every type in path is in nest, since
-                    // nest may be pruned (see below, *TypeParam case).
-                    if(! rec::validType0(gocpp::recv(check), rec::Origin(gocpp::recv(t))->fromRHS, append(nest, t), append(path, t)))
-                    {
-                        return false;
-                    }
-                    rec::add(gocpp::recv(check->valids), t);
-                    break;
-                }
-
-                case 6:
-                {
-                    types::TypeParam* t = gocpp::any_cast<types::TypeParam*>(Unalias(typ));
-                    // A type parameter stands for the type (argument) it was instantiated with.
-                    // Check the corresponding type argument for validity if we are in an
-                    // instantiated type.
-                    if(len(nest) > 0)
-                    {
-                        // the type instance
-                        auto inst = nest[len(nest) - 1];
-                        // Find the corresponding type argument for the type parameter
-                        // and proceed with checking that type argument.
-                        for(auto [i, tparam] : rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(inst)))))
-                        {
-                            // The type parameter and type argument lists should
-                            // match in length but be careful in case of errors.
-                            if(t == tparam && i < rec::Len(gocpp::recv(rec::TypeArgs(gocpp::recv(inst)))))
-                            {
-                                auto targ = rec::At(gocpp::recv(rec::TypeArgs(gocpp::recv(inst))), i);
-                                // The type argument must be valid in the enclosing
-                                // type (where inst was instantiated), hence we must
-                                // check targ's validity in the type nest excluding
-                                // the current (instantiated) type (see the example
-                                // at the end of this file).
-                                // For error reporting we keep the full path.
-                                return rec::validType0(gocpp::recv(check), targ, nest.make_slice(0, len(nest) - 1), path);
-                            }
-                        }
-                    }
-                    break;
                 }
             }
-        }
 
-        return true;
+            return true;
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     // makeObjList returns the list of type name objects for the given

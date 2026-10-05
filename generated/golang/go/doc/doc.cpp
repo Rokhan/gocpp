@@ -13,8 +13,6 @@
 
 #include "golang/fmt/errors.h"
 #include "golang/go/ast/ast.h"
-#include "golang/go/ast/resolve.h"
-#include "golang/go/ast/scope.h"
 #include "golang/go/doc/comment/html.h"
 #include "golang/go/doc/comment/markdown.h"
 #include "golang/go/doc/comment/parse.h"
@@ -27,8 +25,13 @@
 #include "golang/strings/strings.h"
 
 // Package doc extracts source code documentation from a Go AST.
-namespace golang::doc
+namespace golang::go::doc
 {
+    namespace ast = golang::go::ast;
+    namespace comment = golang::go::doc::comment;
+    namespace fmt = golang::fmt;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::Pos;
@@ -349,6 +352,8 @@ namespace golang::doc
             rec::collectValues(gocpp::recv(p), t->Vars);
             rec::collectFuncs(gocpp::recv(p), t->Funcs);
             rec::collectFuncs(gocpp::recv(p), t->Methods);
+            rec::collectInterfaceMethods(gocpp::recv(p), t);
+            rec::collectStructFields(gocpp::recv(p), t);
         }
     }
 
@@ -373,10 +378,68 @@ namespace golang::doc
         }
     }
 
+    // collectInterfaceMethods adds methods of interface types within t to p.syms.
+    // Note that t.Methods will contain methods of non-interface types, but not interface types.
+    // Adding interface methods to t.Methods might make sense, but would cause us to
+    // include those methods in the documentation index. Adding interface methods to p.syms
+    // here allows us to linkify references like [io.Reader.Read] without making any other
+    // changes to the documentation formatting at this time.
+    //
+    // If we do start adding interface methods to t.Methods in the future,
+    // collectInterfaceMethods can be dropped as redundant with collectFuncs(t.Methods).
+    void rec::collectInterfaceMethods(Package* p, Type* t)
+    {
+        for(auto [gocpp_ignored, s] : t->Decl->Specs)
+        {
+            auto [spec, ok] = gocpp::getValue<ast::TypeSpec*>(s);
+            if(! ok)
+            {
+                continue;
+            }
+            auto [list, isStruct] = fields(spec->Type);
+            if(isStruct)
+            {
+                continue;
+            }
+            for(auto [gocpp_ignored, field] : list)
+            {
+                for(auto [gocpp_ignored, name] : field->Names)
+                {
+                    p->syms[t->Name + "."_s + name->Name] = true;
+                }
+            }
+        }
+    }
+
+    void rec::collectStructFields(Package* p, Type* t)
+    {
+        for(auto [gocpp_ignored, s] : t->Decl->Specs)
+        {
+            auto [spec, ok] = gocpp::getValue<ast::TypeSpec*>(s);
+            if(! ok)
+            {
+                continue;
+            }
+            auto [list, isStruct] = fields(spec->Type);
+            if(! isStruct)
+            {
+                continue;
+            }
+            for(auto [gocpp_ignored, field] : list)
+            {
+                for(auto [gocpp_ignored, name] : field->Names)
+                {
+                    p->syms[t->Name + "."_s + name->Name] = true;
+                }
+            }
+        }
+    }
+
     // NewFromFiles computes documentation for a package.
     //
     // The package is specified by a list of *ast.Files and corresponding
     // file set, which must not be nil.
+    //
     // NewFromFiles uses all provided files when computing documentation,
     // so it is the caller's responsibility to provide only the files that
     // match the desired build context. "go/build".Context.MatchFile can
@@ -431,62 +494,50 @@ namespace golang::doc
         }
 
         // Collect .go and _test.go files.
+        gocpp::string pkgName = {};
         auto goFiles = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, ast::File*>>());
         gocpp::slice<ast::File*> testGoFiles = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, ast::File*>>());
-        for(auto [i, gocpp_ignored] : files)
+        for(auto [i, file] : files)
         {
-            auto f = rec::File(gocpp::recv(fset), rec::Pos(gocpp::recv(files[i])));
+            auto f = rec::File(gocpp::recv(fset), rec::Pos(gocpp::recv(file)));
             if(f == nullptr)
             {
                 return {nullptr, mocklib::Errorf("file files[%d] is not found in the provided file set"_s, i)};
             }
             //Go switch emulation
             {
-                auto name = rec::Name(gocpp::recv(f));
+                auto filename = rec::Name(gocpp::recv(f));
                 int conditionId = -1;
-                if(strings::HasSuffix(name, ".go"_s) && ! strings::HasSuffix(name, "_test.go"_s)) { conditionId = 0; }
-                else if(strings::HasSuffix(name, "_test.go"_s)) { conditionId = 1; }
+                if(strings::HasSuffix(filename, "_test.go"_s)) { conditionId = 0; }
+                else if(strings::HasSuffix(filename, ".go"_s)) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
-                        goFiles[name] = files[i];
+                        testGoFiles = append(testGoFiles, file);
                         break;
                     case 1:
-                        testGoFiles = append(testGoFiles, files[i]);
+                        pkgName = file->Name->Name;
+                        goFiles[filename] = file;
                         break;
                     default:
-                        return {nullptr, mocklib::Errorf("file files[%d] filename %q does not have a .go extension"_s, i, name)};
+                        return {nullptr, mocklib::Errorf("file files[%d] filename %q does not have a .go extension"_s, i, filename)};
                         break;
                 }
             }
         }
 
-        // TODO(dmitshur,gri): A relatively high level call to ast.NewPackage with a simpleImporter
-        // ast.Importer implementation is made below. It might be possible to short-circuit and simplify.
         // Compute package documentation.
-        // Ignore errors that can happen due to unresolved identifiers.
-        auto [pkg, gocpp_id_0] = ast::NewPackage(fset, goFiles, simpleImporter, nullptr);
+        // Since this package doesn't need Package.{Scope,Imports}, or
+        // handle errors, and ast.File's Scope field is unset in files
+        // parsed with parser.SkipObjectResolution, we construct the
+        // Package directly instead of calling [ast.NewPackage].
+        auto pkg = gocpp::InitPtr<ast::Package>([=](auto& x) {
+            x.Name = pkgName;
+            x.Files = goFiles;
+        });
         auto p = New(pkg, importPath, mode);
         classifyExamples(p, Examples(testGoFiles));
         return {p, nullptr};
-    }
-
-    // simpleImporter returns a (dummy) package object named by the last path
-    // component of the provided package path (as is the convention for packages).
-    // This is sufficient to resolve package identifiers without doing an actual
-    // import. It never returns an error.
-    std::tuple<ast::Object*, gocpp::error> simpleImporter(gocpp::map<gocpp::string, ast::Object*> imports, gocpp::string path)
-    {
-        auto pkg = imports[path];
-        if(pkg == nullptr)
-        {
-            // note that strings.LastIndex returns -1 if there is no "/"
-            pkg = ast::NewObj(ast::Pkg, path.make_slice(strings::LastIndex(path, "/"_s) + 1));
-            // required by ast.NewPackage for dot-import
-            pkg->Data = ast::NewScope(nullptr);
-            imports[path] = pkg;
-        }
-        return {pkg, nullptr};
     }
 
     // lookupSym reports whether the package has a given symbol or method.

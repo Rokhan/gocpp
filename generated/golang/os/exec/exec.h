@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::exec
+namespace golang::os::exec
 {
     struct Error
     {
@@ -31,6 +31,10 @@ namespace golang::exec
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Error& value);
+    // ErrWaitDelay is returned by [Cmd.Wait] if the process exits with a
+    // successful status code but its output pipes are not closed before the
+    // command's WaitDelay expires.
+    extern gocpp::error ErrWaitDelay;
     struct wrappedError
     {
         gocpp::string prefix{};
@@ -48,6 +52,23 @@ namespace golang::exec
     };
 
     std::ostream& operator<<(std::ostream& os, const struct wrappedError& value);
+    struct gocpp_id_0
+    {
+        gocpp::string in{};
+        gocpp::string out{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     bool interfaceEqual(go_any a, go_any b);
     struct prefixSuffixSaver
     {
@@ -72,16 +93,38 @@ namespace golang::exec
     std::tuple<gocpp::slice<gocpp::string>, gocpp::error> dedupEnv(gocpp::slice<gocpp::string> env);
     std::tuple<gocpp::slice<gocpp::string>, gocpp::error> dedupEnvCase(bool caseInsensitive, bool nulOK, gocpp::slice<gocpp::string> env);
     gocpp::slice<gocpp::string> addCriticalEnv(gocpp::slice<gocpp::string> env);
+    // ErrDot indicates that a path lookup resolved to an executable
+    // in the current directory due to ‘.’ being in the path, either
+    // implicitly or explicitly. See the package documentation for details.
+    //
+    // Note that functions in this package do not return ErrDot directly.
+    // Code should use errors.Is(err, ErrDot), not err == ErrDot,
+    // to test whether a returned error err is due to this condition.
+    extern gocpp::error ErrDot;
+    gocpp::error validateLookPath(gocpp::string s);
+}
+#include "golang/internal/godebug/godebug.fwd.h"
+#include "golang/io/io.fwd.h"
+#include "golang/os/env.fwd.h"
+#include "golang/os/exec.fwd.h"
+#include "golang/os/exec_posix.fwd.h"
+#include "golang/os/file.fwd.h"
+#include "golang/os/file_windows.fwd.h"
+#include "golang/os/types.fwd.h"
+#include "golang/time/sleep.fwd.h"
+#include "golang/time/time.fwd.h"
+
+namespace golang::os::exec
+{
+    namespace io = golang::io;
+    namespace os = golang::os;
 }
 #include "golang/io/io.h"
-#include "golang/errors/errors.fwd.h"
-#include "golang/internal/godebug/godebug.fwd.h"
-#include "golang/os/exec_posix.fwd.h"
-#include "golang/time/sleep.fwd.h"
 
-namespace golang::exec
+namespace golang::os::exec
 {
-    extern gocpp::error ErrWaitDelay;
+    namespace time = golang::time;
+    namespace godebug = golang::internal::godebug;
     struct ctxResult
     {
         gocpp::error err{};
@@ -132,15 +175,19 @@ namespace golang::exec
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ExitError& value);
-    extern gocpp::error ErrDot;
 }
-#include "golang/context/context.h"
-#include "golang/time/time.h"
-#include "golang/os/exec.fwd.h"
-#include "golang/os/types.fwd.h"
+#include "golang/context/context.fwd.h"
 #include "golang/syscall/exec_windows.fwd.h"
+#include "golang/context/context.h"
 
-namespace golang::exec
+namespace golang::os::exec
+{
+    namespace syscall = golang::syscall;
+    namespace context = golang::context;
+}
+#include "golang/time/time.h"
+
+namespace golang::os::exec
 {
     struct Cmd
     {
@@ -161,10 +208,24 @@ namespace golang::exec
         // value in the slice for each duplicate key is used.
         // As a special case on Windows, SYSTEMROOT is always added if
         // missing and not explicitly set to the empty string.
+        // See also the Dir field, which may set PWD in the environment.
         gocpp::slice<gocpp::string> Env{};
         // Dir specifies the working directory of the command.
         // If Dir is the empty string, Run runs the command in the
         // calling process's current directory.
+        // On Unix systems, the value of Dir also determines the
+        // child process's PWD environment variable if not otherwise
+        // specified. A Unix process represents its working directory
+        // not by name but as an implicit reference to a node in the
+        // file tree. So, if the child process obtains its working
+        // directory by calling a function such as C's getcwd, which
+        // computes the canonical name by walking up the file tree, it
+        // will not recover the original value of Dir if that value
+        // was an alias involving symbolic links. However, if the
+        // child process calls Go's [os.Getwd] or GNU C's
+        // get_current_dir_name, and the value of PWD is an alias for
+        // the current directory, those functions will return the
+        // value of PWD, which matches the value of Dir.
         gocpp::string Dir{};
         // Stdin specifies the process's standard input.
         // If Stdin is nil, the process reads from the null device (os.DevNull).
@@ -176,6 +237,10 @@ namespace golang::exec
         // stops copying, either because it has reached the end of Stdin
         // (EOF or a read error), or because writing to the pipe returned an error,
         // or because a nonzero WaitDelay was set and expired.
+        // Regardless of WaitDelay, Wait can block until a Read from
+        // Stdin completes. If you need to use a blocking io.Reader,
+        // use the StdinPipe method to get a pipe, copy from the Reader
+        // to the pipe, and arrange to close the Reader after Wait returns.
         io::Reader Stdin{};
         // Stdout and Stderr specify the process's standard output and error.
         // If either is nil, Run connects the corresponding file descriptor
@@ -187,6 +252,11 @@ namespace golang::exec
         // corresponding Writer. In this case, Wait does not complete until the
         // goroutine reaches EOF or encounters an error or a nonzero WaitDelay
         // expires.
+        // Regardless of WaitDelay, Wait can block until a Write to
+        // Stdout or Stderr completes. If you need to use a blocking io.Writer,
+        // use the StdoutPipe or StderrPipe method to get a pipe,
+        // copy from the pipe to the Writer, and arrange to close the
+        // Writer after Wait returns.
         // If Stdout and Stderr are the same writer, and have a type that can
         // be compared with ==, at most one goroutine at a time will call Write.
         io::Writer Stdout{};
@@ -290,6 +360,15 @@ namespace golang::exec
         // See https://go.dev/blog/path-security
         // and https://go.dev/issue/43724 for more context.
         gocpp::error lookPathErr{};
+        // cachedLookExtensions caches the result of calling lookExtensions.
+        // It is set when Command is called with an absolute path, letting it do
+        // the work of resolving the extension, so Start doesn't need to do it again.
+        // This is only used on Windows.
+        gocpp_id_0 cachedLookExtensions{};
+        // startCalled records that Start was attempted, regardless of outcome.
+        // (Until go.dev/issue/77075 is resolved, we use atomic.SwapInt32,
+        // not atomic.Bool.Swap, to avoid triggering the copylocks vet check.)
+        int32_t startCalled{};
 
         using isGoStruct = void;
 
@@ -335,13 +414,13 @@ namespace golang::exec
 #include "golang/os/types.h"
 #include "golang/time/sleep.h"
 
-namespace golang::exec
+namespace golang::os::exec
 {
 
     namespace rec
     {
-        gocpp::string Error(golang::exec::Error* e);
-        gocpp::error Unwrap(golang::exec::Error* e);
+        gocpp::string Error(golang::os::exec::Error* e);
+        gocpp::error Unwrap(golang::os::exec::Error* e);
         gocpp::string Error(wrappedError w);
         gocpp::error Unwrap(wrappedError w);
         gocpp::string String(Cmd* c);

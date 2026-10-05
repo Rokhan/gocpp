@@ -11,12 +11,17 @@
 #include "golang/internal/abi/symtab.h"
 #include "gocpp/support.h"
 
-namespace golang::abi
+namespace golang::internal::abi
 {
     namespace rec
     {
     }
 
+    // PCLnTabMagic is the version at the start of the PC/line table.
+    // This is the start of the .pclntab section, and is also runtime.pcHeader.
+    // The magic numbers are chosen such that reading the value with
+    // a different endianness does not result in the same value.
+    // That lets us the magic number to determine the endianness.
     // A FuncFlag records bits about a function, passed to the runtime.
     // A FuncID identifies particular functions that need to be treated
     // specially by the runtime.

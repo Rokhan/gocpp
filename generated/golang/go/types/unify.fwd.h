@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     // Upper limit for recursion depth. Used to catch infinite recursions
     // due to implementation issues (e.g., see issues go.dev/issue/48619, go.dev/issue/48656).
@@ -24,6 +24,7 @@ namespace golang::types
     //   x ≢ y    types x and y cannot be unified
     //   [p, q, ...] ➞ [x, y, ...]    mapping from type parameters to types
     const bool traceInference = false;
+    struct unifier;
     using unifyMode = unsigned int;
     struct GoTag_typeParamsById;
     // If assign is set, we are unifying types involved in an assignment:
@@ -38,11 +39,9 @@ namespace golang::types
     // interface.
     const unifyMode exact = 1 << 1;
 }
-#include "golang/go/types/type.fwd.h"
 #include "golang/go/types/typeparam.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    struct unifier;
     using typeParamsById = gocpp::defined<gocpp::slice<TypeParam*>, GoTag_typeParamsById>;
 }

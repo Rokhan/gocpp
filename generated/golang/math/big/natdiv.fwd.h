@@ -3,10 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-
-namespace golang::big
-{
-    // divRecursiveThreshold is the number of divisor digits
-    // at which point divRecursive is faster than divBasic.
-    const long divRecursiveThreshold = 100;
-}

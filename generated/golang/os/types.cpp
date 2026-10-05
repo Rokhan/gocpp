@@ -18,6 +18,8 @@
 
 namespace golang::os
 {
+    namespace fs = golang::io::fs;
+    namespace syscall = golang::syscall;
     namespace rec
     {
         using fs::rec::IsDir;
@@ -30,6 +32,8 @@ namespace golang::os
     }
 
     // File represents an open file descriptor.
+    //
+    // The methods of File are safe for concurrent use.
     
     template<typename T> requires gocpp::GoStruct<T>
     File::operator T()
@@ -59,12 +63,12 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    // A FileInfo describes a file and is returned by Stat and Lstat.
+    // A FileInfo describes a file and is returned by [Stat] and [Lstat].
     // A FileMode represents a file's mode and permission bits.
     // The bits have the same definition on all systems, so that
     // information about files can be moved from one system
     // to another portably. Not all bits apply to all systems.
-    // The only required bit is ModeDir for directories.
+    // The only required bit is [ModeDir] for directories.
     gocpp::string rec::Name(fileStat* fs)
     {
         return fs->name;
@@ -79,7 +83,7 @@ namespace golang::os
     // For example, on Unix this means that the device and inode fields
     // of the two underlying structures are identical; on other systems
     // the decision may be based on the path names.
-    // SameFile only applies to results returned by this package's Stat.
+    // SameFile only applies to results returned by this package's [Stat].
     // It returns false in other cases.
     bool SameFile(FileInfo fi1, FileInfo fi2)
     {

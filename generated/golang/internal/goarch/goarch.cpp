@@ -15,11 +15,13 @@
 #include "golang/internal/goarch/zgoarch_amd64.h"
 
 // package goarch contains GOARCH-specific constants.
-namespace golang::goarch
+namespace golang::internal::goarch
 {
     namespace rec
     {
     }
 
+    // ArchFamilyType represents a family of one or more related architectures.
+    // For example, ppc64 and ppc64le are both members of the PPC64 family.
 }
 

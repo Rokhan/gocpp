@@ -15,6 +15,7 @@
 
 namespace golang::main
 {
+    namespace pic = golang::golang_org::x::tour::pic;
     namespace rec
     {
     }

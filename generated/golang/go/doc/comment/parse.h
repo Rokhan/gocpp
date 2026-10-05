@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     struct LinkDef
     {
@@ -288,7 +288,7 @@ namespace golang::comment
     std::ostream& operator<<(std::ostream& os, const struct Doc& value);
     struct Heading
     {
-        gocpp::slice<golang::comment::Text> Text{}; // the heading text
+        gocpp::slice<golang::go::doc::comment::Text> Text{}; // the heading text
 
         using isGoStruct = void;
 
@@ -326,7 +326,7 @@ namespace golang::comment
     std::ostream& operator<<(std::ostream& os, const struct ListItem& value);
     struct Paragraph
     {
-        gocpp::slice<golang::comment::Text> Text{};
+        gocpp::slice<golang::go::doc::comment::Text> Text{};
 
         using isGoStruct = void;
 
@@ -343,7 +343,7 @@ namespace golang::comment
     struct Link
     {
         bool Auto{}; // is this an automatic (implicit) link of a literal URL?
-        gocpp::slice<golang::comment::Text> Text{}; // text of link
+        gocpp::slice<golang::go::doc::comment::Text> Text{}; // text of link
         gocpp::string URL{}; // target URL of link
 
         using isGoStruct = void;
@@ -360,7 +360,7 @@ namespace golang::comment
     std::ostream& operator<<(std::ostream& os, const struct Link& value);
     struct DocLink
     {
-        gocpp::slice<golang::comment::Text> Text{}; // text of link
+        gocpp::slice<golang::go::doc::comment::Text> Text{}; // text of link
         // ImportPath, Recv, and Name identify the Go package or symbol
         // that is the link target. The potential combinations of
         // non-empty fields are:
@@ -456,9 +456,9 @@ namespace golang::comment
         Code* code(parseDoc* d, gocpp::slice<gocpp::string> lines);
         Block paragraph(parseDoc* d, gocpp::slice<gocpp::string> lines);
         List* list(parseDoc* d, gocpp::slice<gocpp::string> lines, bool forceBlankBefore);
-        gocpp::slice<golang::comment::Text> parseLinkedText(parseDoc* d, gocpp::string text);
+        gocpp::slice<golang::go::doc::comment::Text> parseLinkedText(parseDoc* d, gocpp::string text);
         std::tuple<DocLink*, bool> docLink(parseDoc* d, gocpp::string text, gocpp::string before, gocpp::string after);
-        gocpp::slice<golang::comment::Text> parseText(parseDoc* d, gocpp::slice<golang::comment::Text> out, gocpp::string s, bool autoLink);
+        gocpp::slice<golang::go::doc::comment::Text> parseText(parseDoc* d, gocpp::slice<golang::go::doc::comment::Text> out, gocpp::string s, bool autoLink);
     }
 }
 

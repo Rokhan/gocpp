@@ -28,34 +28,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    struct pcHeader
-    {
-        uint32_t magic{}; // 0xFFFFFFF1
-        uint8_t pad1{}; // 0,0
-        uint8_t pad2{};
-        uint8_t minLC{}; // min instruction size
-        uint8_t ptrSize{}; // size of a ptr in bytes
-        int nfunc{}; // number of functions in the module
-        unsigned int nfiles{}; // number of entries in the file tab
-        uintptr_t textStart{}; // base for function entry PC offsets in this module, equal to moduledata.text
-        uintptr_t funcnameOffset{}; // offset to the funcnametab variable from pcHeader
-        uintptr_t cuOffset{}; // offset to the cutab variable from pcHeader
-        uintptr_t filetabOffset{}; // offset to the filetab variable from pcHeader
-        uintptr_t pctabOffset{}; // offset to the pctab variable from pcHeader
-        uintptr_t pclnOffset{}; // offset to the pclntab variable from pcHeader
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct pcHeader& value);
     struct modulehash
     {
         gocpp::string modulename{};
@@ -74,6 +46,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct modulehash& value);
+    // aixStaticDataBase (used only on AIX) holds the unrelocated address
+    // of the data section, set by the linker.
+    //
+    // On AIX, an R_ADDR relocation from an RODATA symbol to a DATA symbol
+    // does not work, as the dynamic loader can change the address of the
+    // data section, and it is not possible to apply a dynamic relocation
+    // to RODATA. In order to get the correct address, we need to apply
+    // the delta between unrelocated and relocated data section addresses.
+    // aixStaticDataBase is the unrelocated address, and moduledata.data is
+    // the relocated one.
+    extern uintptr_t aixStaticDataBase;
     void modulesinit();
     struct functab
     {
@@ -203,80 +186,21 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct pcvalueCache& value);
 }
-#include "golang/internal/abi/symtab.h"
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/plugin.h"
 #include "golang/runtime/stack.h"
-#include "golang/runtime/proc.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
-    struct moduledata
-    {
-        sys::NotInHeap NotInHeap{}; // Only in static data
-        pcHeader* pcHeader{};
-        gocpp::slice<unsigned char> funcnametab{};
-        gocpp::slice<uint32_t> cutab{};
-        gocpp::slice<unsigned char> filetab{};
-        gocpp::slice<unsigned char> pctab{};
-        gocpp::slice<unsigned char> pclntable{};
-        gocpp::slice<functab> ftab{};
-        uintptr_t findfunctab{};
-        uintptr_t minpc{};
-        uintptr_t maxpc{};
-        uintptr_t text{};
-        uintptr_t etext{};
-        uintptr_t noptrdata{};
-        uintptr_t enoptrdata{};
-        uintptr_t data{};
-        uintptr_t edata{};
-        uintptr_t bss{};
-        uintptr_t ebss{};
-        uintptr_t noptrbss{};
-        uintptr_t enoptrbss{};
-        uintptr_t covctrs{};
-        uintptr_t ecovctrs{};
-        uintptr_t end{};
-        uintptr_t gcdata{};
-        uintptr_t gcbss{};
-        uintptr_t types{};
-        uintptr_t etypes{};
-        uintptr_t rodata{};
-        uintptr_t gofunc{}; // go.func.*
-        gocpp::slice<textsect> textsectmap{};
-        gocpp::slice<int32_t> typelinks{}; // offsets from types
-        gocpp::slice<itab*> itablinks{};
-        gocpp::slice<ptabEntry> ptab{};
-        gocpp::string pluginpath{};
-        gocpp::slice<modulehash> pkghashes{};
-        // This slice records the initializing tasks that need to be
-        // done to start up the program. It is built by the linker.
-        gocpp::slice<initTask*> inittasks{};
-        gocpp::string modulename{};
-        gocpp::slice<modulehash> modulehashes{};
-        uint8_t hasmain{}; // 1 if module contains the main function, 0 otherwise
-        bitvector gcdatamask{};
-        bitvector gcbssmask{};
-        gocpp::map<golang::runtime::typeOff, _type*> typemap{}; // offset to *_rtype in previous module
-        bool bad{}; // module failed to load and should be ignored
-        moduledata* next{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct moduledata& value);
-    extern gocpp::slice<gocpp::map<golang::runtime::typeOff, _type*>> pinnedTypemaps;
+    // pinnedTypemaps are the map[*_type]*_type from the moduledata objects.
+    //
+    // These typemap objects are allocated at run time on the heap, but the
+    // only direct reference to them is in the moduledata, created by the
+    // linker and marked SNOPTRDATA so it is ignored by the GC.
+    //
+    // To make sure the map isn't collected, we keep a second reference here.
+    extern gocpp::slice<gocpp::map<_type*, _type*>> pinnedTypemaps;
+    Func* FuncForPC(uintptr_t pc);
     struct funcInfo
     {
         _func* _func{};
@@ -294,26 +218,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct funcInfo& value);
-    struct srcFunc
-    {
-        moduledata* datap{};
-        int32_t nameOff{};
-        int32_t startLine{};
-        abi::FuncID funcID{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct srcFunc& value);
     bitvector stackmapdata(stackmap* stkmap, int32_t n);
+}
+#include "golang/internal/abi/symtab.fwd.h"
+#include "golang/internal/runtime/sys/consts.fwd.h"
+#include "golang/internal/runtime/sys/nih.fwd.h"
+
+namespace golang::runtime
+{
     struct Frame
     {
         // PC is the program counter for the location in this frame.
@@ -334,7 +246,8 @@ namespace golang::runtime
         // File and Line are the file name and line number of the
         // location in this frame. For non-leaf frames, this will be
         // the location of a call. These may be the empty string and
-        // zero, respectively, if not known.
+        // zero, respectively, if not known. The file name uses
+        // forward slashes, even on Windows.
         gocpp::string File{};
         int Line{};
         // startLine is the line number of the beginning of the function in
@@ -365,13 +278,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Frame& value);
-    extern moduledata firstmoduledata;
-    extern moduledata* lastmoduledatap;
-    extern gocpp::slice<moduledata*>* modulesSlice;
-    gocpp::slice<moduledata*> activeModules();
-    void moduledataverify1(moduledata* datap);
-    Func* FuncForPC(uintptr_t pc);
-    moduledata* findmoduledatap(uintptr_t pc);
+    uintptr_t badFuncInfoEntry(golang::runtime::funcInfo);
     golang::runtime::funcInfo findfunc(uintptr_t pc);
     std::tuple<int32_t, uintptr_t> pcvalue(golang::runtime::funcInfo f, uint32_t off, uintptr_t targetpc, bool strict);
     gocpp::string funcname(golang::runtime::funcInfo f);
@@ -385,11 +292,31 @@ namespace golang::runtime
     int32_t pcdatavalue(golang::runtime::funcInfo f, uint32_t table, uintptr_t targetpc);
     int32_t pcdatavalue1(golang::runtime::funcInfo f, uint32_t table, uintptr_t targetpc, bool strict);
     std::tuple<int32_t, uintptr_t> pcdatavalue2(golang::runtime::funcInfo f, uint32_t table, uintptr_t targetpc);
-    gocpp::unsafe_pointer funcdata(golang::runtime::funcInfo f, uint8_t i);
+    namespace abi = golang::internal::abi;
+}
+#include "golang/internal/abi/symtab.h"
+
+namespace golang::runtime
+{
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
+#include "golang/internal/runtime/sys/nih.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+}
+#include "golang/runtime/plugin.h"
+#include "golang/runtime/proc.fwd.h"
+
+namespace golang::runtime
+{
     struct Frames
     {
         // callers is a slice of PCs that have not yet been expanded to frames.
         gocpp::slice<uintptr_t> callers{};
+        // nextPC is a next PC to expand ahead of processing callers.
+        uintptr_t nextPC{};
         // frames is a slice of Frames that have yet to be returned.
         gocpp::slice<Frame> frames{};
         gocpp::array<Frame, 2> frameStore{};
@@ -409,7 +336,140 @@ namespace golang::runtime
     int runtime_FrameStartLine(Frame* f);
     gocpp::string runtime_FrameSymbolName(Frame* f);
     gocpp::slice<Frame> expandCgoFrames(uintptr_t pc);
+    struct pcHeader
+    {
+        abi::PCLnTabMagic magic{}; // abi.Go1NNPcLnTabMagic
+        uint8_t pad1{}; // 0,0
+        uint8_t pad2{};
+        uint8_t minLC{}; // min instruction size
+        uint8_t ptrSize{}; // size of a ptr in bytes
+        int nfunc{}; // number of functions in the module
+        unsigned int nfiles{}; // number of entries in the file tab
+        // The next field used to be textStart. This is no longer stored
+        // as it requires a relocation. Code should use the moduledata text
+        // field instead. This unused field can be removed in coordination
+        // with Delve.
+        uintptr_t _1{};
+        uintptr_t funcnameOffset{}; // offset to the funcnametab variable from pcHeader
+        uintptr_t cuOffset{}; // offset to the cutab variable from pcHeader
+        uintptr_t filetabOffset{}; // offset to the filetab variable from pcHeader
+        uintptr_t pctabOffset{}; // offset to the pctab variable from pcHeader
+        uintptr_t pclnOffset{}; // offset to the pclntab variable from pcHeader
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct pcHeader& value);
+    struct moduledata
+    {
+        sys::NotInHeap NotInHeap{}; // Only in static data
+        pcHeader* pcHeader{};
+        gocpp::slice<unsigned char> funcnametab{};
+        gocpp::slice<uint32_t> cutab{};
+        gocpp::slice<unsigned char> filetab{};
+        gocpp::slice<unsigned char> pctab{};
+        gocpp::slice<unsigned char> pclntable{};
+        gocpp::slice<functab> ftab{};
+        uintptr_t findfunctab{};
+        uintptr_t minpc{};
+        uintptr_t maxpc{};
+        uintptr_t text{};
+        uintptr_t etext{};
+        uintptr_t noptrdata{};
+        uintptr_t enoptrdata{};
+        uintptr_t data{};
+        uintptr_t edata{};
+        uintptr_t bss{};
+        uintptr_t ebss{};
+        uintptr_t noptrbss{};
+        uintptr_t enoptrbss{};
+        uintptr_t covctrs{};
+        uintptr_t ecovctrs{};
+        uintptr_t end{};
+        uintptr_t gcdata{};
+        uintptr_t gcbss{};
+        uintptr_t types{};
+        uintptr_t typedesclen{};
+        uintptr_t etypes{};
+        uintptr_t itaboffset{};
+        uintptr_t itabsize{};
+        uintptr_t rodata{};
+        uintptr_t gofunc{}; // go.func.*
+        uintptr_t epclntab{};
+        gocpp::slice<textsect> textsectmap{};
+        gocpp::slice<ptabEntry> ptab{};
+        gocpp::string pluginpath{};
+        gocpp::slice<modulehash> pkghashes{};
+        // This slice records the initializing tasks that need to be
+        // done to start up the program. It is built by the linker.
+        gocpp::slice<initTask*> inittasks{};
+        gocpp::string modulename{};
+        gocpp::slice<modulehash> modulehashes{};
+        uint8_t hasmain{}; // 1 if module contains the main function, 0 otherwise
+        bool bad{}; // module failed to load and should be ignored
+        bitvector gcdatamask{};
+        bitvector gcbssmask{};
+        gocpp::map<_type*, _type*> typemap{}; // *_type to use from previous module
+        moduledata* next{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct moduledata& value);
+    struct srcFunc
+    {
+        moduledata* datap{};
+        int32_t nameOff{};
+        int32_t startLine{};
+        abi::FuncID funcID{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct srcFunc& value);
+    gocpp::unsafe_pointer funcdata(golang::runtime::funcInfo f, uint8_t i);
     Frames* CallersFrames(gocpp::slice<uintptr_t> callers);
+    extern moduledata firstmoduledata;
+    // lastmoduledatap should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issues/67401.
+    // See go.dev/issues/71672.
+    //
+    //go:linkname lastmoduledatap
+    extern moduledata* lastmoduledatap;
+    extern gocpp::slice<moduledata*>* modulesSlice;
+    gocpp::slice<moduledata*> activeModules();
+    void moduledataverify1(moduledata* datap);
+    moduledata* findmoduledatap(uintptr_t pc);
+    gocpp::string badSrcFuncName(golang::runtime::srcFunc);
 }
 
 #include "golang/runtime/runtime2.h"

@@ -17,44 +17,44 @@
 #include "golang/go/token/token.h"
 #include "golang/go/types/api.h"
 #include "golang/go/types/api_predicates.h"
-#include "golang/go/types/array.h"
 #include "golang/go/types/assignments.h"
 #include "golang/go/types/basic.h"
-#include "golang/go/types/builtins.h"
 #include "golang/go/types/call.h"
-#include "golang/go/types/chan.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/const.h"
 #include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
 #include "golang/go/types/expr.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/labels.h"
-#include "golang/go/types/map.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/operand.h"
 #include "golang/go/types/package.h"
 #include "golang/go/types/predicates.h"
+#include "golang/go/types/range.h"
+#include "golang/go/types/recording.h"
 #include "golang/go/types/resolver.h"
 #include "golang/go/types/return.h"
 #include "golang/go/types/scope.h"
 #include "golang/go/types/signature.h"
-#include "golang/go/types/slice.h"
 #include "golang/go/types/tuple.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typestring.h"
 #include "golang/go/types/typexpr.h"
-#include "golang/go/types/under.h"
 #include "golang/go/types/universe.h"
 #include "golang/go/types/util.h"
 #include "golang/go/types/version.h"
-#include "golang/internal/buildcfg/exp.h"
-#include "golang/internal/goexperiment/flags.h"
 #include "golang/internal/types/errors/codes.h"
-#include "golang/sort/slice.h"
+#include "golang/slices/sort.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace constant = golang::go::constant;
+    namespace errors = golang::internal::types::errors;
+    namespace slices = golang::slices;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::End;
@@ -62,10 +62,12 @@ namespace golang::types
         using ast::rec::exprNode;
         using ast::rec::stmtNode;
         using constant::rec::Kind;
+        using token::rec::IsValid;
         using token::rec::Position;
     }
 
-    void rec::funcBody(Checker* check, declInfo* decl, gocpp::string name, Signature* sig, ast::BlockStmt* body, constant::Value iota)
+    // decl may be nil
+    void rec::funcBody(Checker* check, declInfo* decl, gocpp::string name, golang::go::types::Signature* sig, ast::BlockStmt* body, constant::Value iota)
     {
         gocpp::Defer defer;
         try
@@ -90,7 +92,8 @@ namespace golang::types
             check->environment = gocpp::Init<environment>([=](auto& x) {
                 x.decl = decl;
                 x.scope = sig->scope;
-                x.6 = 6;
+                x.version = check->environment.version;
+                x.5 = 5;
                 x.sig = sig;
             });
             check->indent = 0;
@@ -117,24 +120,28 @@ namespace golang::types
         }
     }
 
-    void rec::usage(Checker* check, golang::types::Scope* scope)
+    void rec::usage(Checker* check, golang::go::types::Scope* scope)
     {
+        auto needUse = [=](VarKind kind) mutable -> bool
+        {
+            return ! (kind == RecvVar || kind == ParamVar || kind == ResultVar);
+        };
         gocpp::slice<Var*> unused = {};
         for(auto [name, elem] : scope->elems)
         {
-            elem = types::resolve(name, elem);
-            if(auto [v, gocpp_id_0] = gocpp::getValue<Var*>(elem); v != nullptr && ! v->used)
+            elem = resolve(name, elem);
+            if(auto [v, gocpp_id_0] = gocpp::getValue<Var*>(elem); v != nullptr && needUse(v->kind) && ! check->usedVars[v])
             {
                 unused = append(unused, v);
             }
         }
-        sort::Slice(unused, [=](int i, int j) mutable -> bool
+        slices::SortFunc(unused, [=](Var* a, Var* b) mutable -> int
         {
-            return cmpPos(unused[i]->object.pos, unused[j]->object.pos) < 0;
+            return cmpPos(a->object.pos, b->object.pos);
         });
         for(auto [gocpp_ignored, v] : unused)
         {
-            rec::softErrorf(gocpp::recv(check), v, UnusedVar, "%s declared and not used"_s, v->object.name);
+            rec::softErrorf(gocpp::recv(check), v, UnusedVar, "declared and not used: %s"_s, v->object.name);
         }
 
         for(auto [gocpp_ignored, scope] : scope->children)
@@ -296,7 +303,7 @@ namespace golang::types
                     return;
                     break;
                 default:
-                    unreachable();
+                    gocpp::panic("unreachable"_s);
                     break;
             }
         }
@@ -400,12 +407,12 @@ namespace golang::types
             }
             operand v = {};
             rec::expr(gocpp::recv(check), nullptr, & v, e);
-            if(x->mode == invalid || v.mode == invalid)
+            if(! rec::isValid(gocpp::recv(x)) || ! rec::isValid(gocpp::recv(v)))
             {
                 goto L_continue;
             }
-            rec::convertUntyped(gocpp::recv(check), & v, x->typ);
-            if(v.mode == invalid)
+            rec::convertUntyped(gocpp::recv(check), & v, rec::typ(gocpp::recv(x)));
+            if(! rec::isValid(gocpp::recv(v)))
             {
                 goto L_continue;
             }
@@ -413,11 +420,11 @@ namespace golang::types
             // keep original v unchanged
             auto res = v;
             rec::comparison(gocpp::recv(check), & res, x, token::EQL, true);
-            if(res.mode == invalid)
+            if(! rec::isValid(gocpp::recv(res)))
             {
                 goto L_continue;
             }
-            if(v.mode != constant_)
+            if(rec::mode(gocpp::recv(v)) != constant_)
             {
                 // we're done
                 goto L_continue;
@@ -429,15 +436,16 @@ namespace golang::types
                 // (quadratic algorithm, but these lists tend to be very short)
                 for(auto [gocpp_ignored, vt] : seen[val])
                 {
-                    if(Identical(v.typ, vt.typ))
+                    if(Identical(rec::typ(gocpp::recv(v)), vt.typ))
                     {
-                        rec::errorf(gocpp::recv(check), & v, DuplicateCase, "duplicate case %s in expression switch"_s, & v);
-                        // secondary error, \t indented
-                        rec::error(gocpp::recv(check), atPos(vt.pos), DuplicateCase, "\tprevious case"_s);
+                        auto err = rec::newError(gocpp::recv(check), DuplicateCase);
+                        rec::addf(gocpp::recv(err), & v, "duplicate case %s in expression switch"_s, & v);
+                        rec::addf(gocpp::recv(err), atPos(vt.pos), "previous case"_s);
+                        rec::report(gocpp::recv(err));
                         goto L_continue;
                     }
                 }
-                seen[val] = append(seen[val], valueType {rec::Pos(gocpp::recv(v)), v.typ});
+                seen[val] = append(seen[val], valueType {rec::Pos(gocpp::recv(v)), rec::typ(gocpp::recv(v))});
             }
         }
     }
@@ -446,7 +454,7 @@ namespace golang::types
     bool rec::isNil(Checker* check, ast::Expr e)
     {
         // The only way to express the nil value is by literally writing nil (possibly in parentheses).
-        if(auto [name, gocpp_id_3] = gocpp::getValue<ast::Ident*>(unparen(e)); name != nullptr)
+        if(auto [name, gocpp_id_3] = gocpp::getValue<ast::Ident*>(ast::Unparen(e)); name != nullptr)
         {
             auto [gocpp_id_4, ok] = gocpp::getValue<Nil*>(rec::lookup(gocpp::recv(check), name->Name));
             return ok;
@@ -454,10 +462,30 @@ namespace golang::types
         return false;
     }
 
-    // If the type switch expression is invalid, x is nil.
-    golang::types::Type rec::caseTypes(Checker* check, operand* x, gocpp::slice<ast::Expr> types, gocpp::map<golang::types::Type, ast::Expr> seen)
+    // caseTypes typechecks the type expressions of a type case, checks for duplicate types
+    // using the seen map, and verifies that each type is valid with respect to the type of
+    // the operand x corresponding to the type switch expression. If that expression is not
+    // valid, x must be nil.
+    //
+    //	switch <x>.(type) {
+    //	case <types>: ...
+    //	...
+    //	}
+    //
+    // caseTypes returns the case-specific type for a variable v introduced through a short
+    // variable declaration by the type switch:
+    //
+    //	switch v := <x>.(type) {
+    //	case <types>: // T is the type of <v> in this case
+    //	...
+    //	}
+    //
+    // If there is exactly one type expression, T is the type of that expression. If there
+    // are multiple type expressions, or if predeclared nil is among the types, the result
+    // is the type of x. If x is invalid (nil), the result is the invalid type.
+    golang::go::types::Type rec::caseTypes(Checker* check, operand* x, gocpp::slice<ast::Expr> types, gocpp::map<golang::go::types::Type, ast::Expr> seen)
     {
-        golang::types::Type T;
+        golang::go::types::Type T = {};
         operand dummy = {};
         L:
         for(auto [gocpp_ignored, e] : types)
@@ -495,9 +523,10 @@ namespace golang::types
                     {
                         Ts = TypeString(T, [&](auto y){ return rec::qualifier(check, y); });
                     }
-                    rec::errorf(gocpp::recv(check), e, DuplicateCase, "duplicate case %s in type switch"_s, Ts);
-                    // secondary error, \t indented
-                    rec::error(gocpp::recv(check), other, DuplicateCase, "\tprevious case"_s);
+                    auto err = rec::newError(gocpp::recv(check), DuplicateCase);
+                    rec::addf(gocpp::recv(err), e, "duplicate case %s in type switch"_s, Ts);
+                    rec::addf(gocpp::recv(err), other, "previous case"_s);
+                    rec::report(gocpp::recv(err));
                     goto L_continue;
                 }
             }
@@ -507,6 +536,91 @@ namespace golang::types
                 rec::typeAssertion(gocpp::recv(check), e, x, T, true);
             }
         }
+
+        // spec: "In clauses with a case listing exactly one type, the variable has that type;
+        // otherwise, the variable has the type of the expression in the TypeSwitchGuard.
+        if(len(types) != 1 || T == nullptr)
+        {
+            T = Typ[Invalid];
+            if(x != nullptr)
+            {
+                T = rec::typ(gocpp::recv(x));
+            }
+        }
+
+        assert(T != nullptr);
+        return T;
+    }
+
+    // TODO(gri) Once we are certain that typeHash is correct in all situations, use this version of caseTypes instead.
+    // (Currently it may be possible that different types have identical names and import paths due to ImporterFrom.)
+    golang::go::types::Type rec::caseTypes_currently_unused(Checker* check, operand* x, Interface* xtyp, gocpp::slice<ast::Expr> types, gocpp::map<gocpp::string, ast::Expr> seen)
+    {
+        golang::go::types::Type T = {};
+        operand dummy = {};
+        L:
+        for(auto [gocpp_ignored, e] : types)
+        {
+            if(false) {
+            L_continue:
+                continue;
+            L_break:
+                break;
+            }
+            // The spec allows the value nil instead of a type.
+            gocpp::string hash = {};
+            if(rec::isNil(gocpp::recv(check), e))
+            {
+                // run e through expr so we get the usual Info recordings
+                rec::expr(gocpp::recv(check), nullptr, & dummy, e);
+                T = nullptr;
+                // avoid collision with a type named nil
+                hash = "<nil>"_s;
+            }
+            else
+            {
+                T = rec::varType(gocpp::recv(check), e);
+                if(! types::isValid(T))
+                {
+                    goto L_continue;
+                }
+                // hash = typeHash(T, nil)
+                gocpp::panic("enable typeHash(T, nil)"_s);
+            }
+            // look for duplicate types
+            if(auto other = seen[hash]; other != nullptr)
+            {
+                // talk about "case" rather than "type" because of nil case
+                auto Ts = "nil"_s;
+                if(T != nullptr)
+                {
+                    Ts = TypeString(T, [&](auto y){ return rec::qualifier(check, y); });
+                }
+                auto err = rec::newError(gocpp::recv(check), DuplicateCase);
+                rec::addf(gocpp::recv(err), e, "duplicate case %s in type switch"_s, Ts);
+                rec::addf(gocpp::recv(err), other, "previous case"_s);
+                rec::report(gocpp::recv(err));
+                goto L_continue;
+            }
+            seen[hash] = e;
+            if(T != nullptr)
+            {
+                rec::typeAssertion(gocpp::recv(check), e, x, T, true);
+            }
+        }
+
+        // spec: "In clauses with a case listing exactly one type, the variable has that type;
+        // otherwise, the variable has the type of the expression in the TypeSwitchGuard.
+        if(len(types) != 1 || T == nullptr)
+        {
+            T = Typ[Invalid];
+            if(x != nullptr)
+            {
+                T = rec::typ(gocpp::recv(x));
+            }
+        }
+
+        assert(T != nullptr);
         return T;
     }
 
@@ -519,7 +633,7 @@ namespace golang::types
             // statements must end with the same top scope as they started with
             if(debug)
             {
-                defer.push_back([=]{ [=](golang::types::Scope* scope) mutable -> void
+                defer.push_back([=]{ [=](golang::go::types::Scope* scope) mutable -> void
                 {
                     // don't check if code is panicking
                     if(auto p = gocpp::recover(); p != nullptr)
@@ -596,7 +710,7 @@ namespace golang::types
                         errors::Code code = {};
                         //Go switch emulation
                         {
-                            auto condition = x.mode;
+                            auto condition = rec::mode(gocpp::recv(x));
                             int conditionId = -1;
                             if(condition == types::builtin) { conditionId = 0; }
                             else if(condition == typexpr) { conditionId = 1; }
@@ -630,29 +744,15 @@ namespace golang::types
                         operand ch = {};
                         operand val = {};
                         rec::expr(gocpp::recv(check), nullptr, & ch, s->Chan);
-                        rec::expr(gocpp::recv(check), nullptr, & val, s->Value);
-                        if(ch.mode == invalid || val.mode == invalid)
+                        rec::genericExpr(gocpp::recv(check), & val, s->Value, nullptr);
+                        if(! rec::isValid(gocpp::recv(ch)) || ! rec::isValid(gocpp::recv(val)))
                         {
                             return;
                         }
-                        auto u = coreType(ch.typ);
-                        if(u == nullptr)
+                        if(auto elem = rec::chanElem(gocpp::recv(check), inNode(s, s->Arrow), & ch, false); elem != nullptr)
                         {
-                            rec::errorf(gocpp::recv(check), inNode(s, s->Arrow), InvalidSend, invalidOp + "cannot send to %s: no core type"_s, & ch);
-                            return;
+                            rec::assignment(gocpp::recv(check), & val, elem, "send"_s);
                         }
-                        auto [uch, gocpp_id_6] = gocpp::getValue<Chan*>(u);
-                        if(uch == nullptr)
-                        {
-                            rec::errorf(gocpp::recv(check), inNode(s, s->Arrow), InvalidSend, invalidOp + "cannot send to non-channel %s"_s, & ch);
-                            return;
-                        }
-                        if(uch->dir == RecvOnly)
-                        {
-                            rec::errorf(gocpp::recv(check), inNode(s, s->Arrow), InvalidSend, invalidOp + "cannot send to receive-only channel %s"_s, & ch);
-                            return;
-                        }
-                        rec::assignment(gocpp::recv(check), & val, uch->elem, "send"_s);
                         break;
                     }
 
@@ -682,13 +782,13 @@ namespace golang::types
                         }
                         operand x = {};
                         rec::expr(gocpp::recv(check), nullptr, & x, s->X);
-                        if(x.mode == invalid)
+                        if(! rec::isValid(gocpp::recv(x)))
                         {
                             return;
                         }
-                        if(! allNumeric(x.typ))
+                        if(! allNumeric(rec::typ(gocpp::recv(x))))
                         {
-                            rec::errorf(gocpp::recv(check), s->X, NonNumericIncDec, invalidOp + "%s%s (non-numeric type %s)"_s, s->X, s->Tok, x.typ);
+                            rec::errorf(gocpp::recv(check), s->X, NonNumericIncDec, invalidOp + "%s%s (non-numeric type %s)"_s, s->X, s->Tok, rec::typ(gocpp::recv(x)));
                             return;
                         }
                         // use x's position
@@ -698,7 +798,7 @@ namespace golang::types
                             y.Value = "1"_s;
                         });
                         rec::binary(gocpp::recv(check), & x, nullptr, s->X, Y, op, s->TokPos);
-                        if(x.mode == invalid)
+                        if(! rec::isValid(gocpp::recv(x)))
                         {
                             return;
                         }
@@ -751,7 +851,7 @@ namespace golang::types
                                     }
                                     operand x = {};
                                     rec::binary(gocpp::recv(check), & x, nullptr, s->Lhs[0], s->Rhs[0], op, s->TokPos);
-                                    if(x.mode == invalid)
+                                    if(! rec::isValid(gocpp::recv(x)))
                                     {
                                         return;
                                     }
@@ -792,9 +892,11 @@ namespace golang::types
                             {
                                 if(auto alt = rec::lookup(gocpp::recv(check), obj->object.name); alt != nullptr && alt != obj)
                                 {
-                                    rec::errorf(gocpp::recv(check), s, OutOfScopeResult, "result parameter %s not in scope at return"_s, obj->object.name);
+                                    auto err = rec::newError(gocpp::recv(check), OutOfScopeResult);
+                                    rec::addf(gocpp::recv(err), s, "result parameter %s not in scope at return"_s, obj->object.name);
+                                    rec::addf(gocpp::recv(err), alt, "inner declaration of %s"_s, obj);
                                     // ok to continue
-                                    rec::errorf(gocpp::recv(check), alt, OutOfScopeResult, "\tinner declaration of %s"_s, obj);
+                                    rec::report(gocpp::recv(err));
                                 }
                             }
                         }
@@ -890,7 +992,7 @@ namespace golang::types
                         rec::simpleStmt(gocpp::recv(check), s->Init);
                         operand x = {};
                         rec::expr(gocpp::recv(check), nullptr, & x, s->Cond);
-                        if(x.mode != invalid && ! allBoolean(x.typ))
+                        if(rec::isValid(gocpp::recv(x)) && ! allBoolean(rec::typ(gocpp::recv(x))))
                         {
                             rec::error(gocpp::recv(check), s->Cond, InvalidCond, "non-boolean condition in if statement"_s);
                         }
@@ -899,12 +1001,12 @@ namespace golang::types
                         // elsewhere the else branch may be invalid. Check again.
                         //Go type switch emulation
                         {
-                            const auto& gocpp_id_7 = gocpp::type_info(s->Else);
+                            const auto& gocpp_id_6 = gocpp::type_info(s->Else);
                             int conditionId = -1;
-                            if(gocpp_id_7 == typeid(untyped nil)) { conditionId = 0; }
-                            else if(gocpp_id_7 == typeid(ast::BadStmt*)) { conditionId = 1; }
-                            else if(gocpp_id_7 == typeid(ast::IfStmt*)) { conditionId = 2; }
-                            else if(gocpp_id_7 == typeid(ast::BlockStmt*)) { conditionId = 3; }
+                            if(gocpp_id_6 == typeid(untyped nil)) { conditionId = 0; }
+                            else if(gocpp_id_6 == typeid(ast::BadStmt*)) { conditionId = 1; }
+                            else if(gocpp_id_6 == typeid(ast::IfStmt*)) { conditionId = 2; }
+                            else if(gocpp_id_6 == typeid(ast::BlockStmt*)) { conditionId = 3; }
                             switch(conditionId)
                             {
                                 case 0:
@@ -943,18 +1045,18 @@ namespace golang::types
                             // By checking assignment of x to an invisible temporary
                             // (as a compiler would), we get all the relevant checks.
                             rec::assignment(gocpp::recv(check), & x, nullptr, "switch expression"_s);
-                            if(x.mode != invalid && ! Comparable(x.typ) && ! hasNil(x.typ))
+                            if(rec::isValid(gocpp::recv(x)) && ! Comparable(rec::typ(gocpp::recv(x))) && ! hasNil(rec::typ(gocpp::recv(x))))
                             {
-                                rec::errorf(gocpp::recv(check), & x, InvalidExprSwitch, "cannot switch on %s (%s is not comparable)"_s, & x, x.typ);
-                                x.mode = invalid;
+                                rec::errorf(gocpp::recv(check), & x, InvalidExprSwitch, "cannot switch on %s (%s is not comparable)"_s, & x, rec::typ(gocpp::recv(x)));
+                                rec::invalidate(gocpp::recv(x));
                             }
                         }
                         else
                         {
                             // spec: "A missing switch expression is
                             // equivalent to the boolean value true."
-                            x.mode = constant_;
-                            x.typ = Typ[Bool];
+                            x.mode_ = constant_;
+                            x.typ_ = Typ[Bool];
                             x.val = constant::MakeBool(true);
                             x.expr = gocpp::InitPtr<ast::Ident>([=](auto& y) {
                                 y.NamePos = s->Body->Lbrace;
@@ -966,7 +1068,7 @@ namespace golang::types
                         auto seen = gocpp::make(gocpp::Tag<valueMap>());
                         for(auto [i, c] : s->Body->List)
                         {
-                            auto [clause, gocpp_id_8] = gocpp::getValue<ast::CaseClause*>(c);
+                            auto [clause, gocpp_id_7] = gocpp::getValue<ast::CaseClause*>(c);
                             if(clause == nullptr)
                             {
                                 rec::error(gocpp::recv(check), c, InvalidSyntaxTree, "incorrect expression switch case"_s);
@@ -1007,10 +1109,10 @@ namespace golang::types
                         ast::Expr rhs = {};
                         //Go type switch emulation
                         {
-                            const auto& gocpp_id_9 = gocpp::type_info(s->Assign);
+                            const auto& gocpp_id_8 = gocpp::type_info(s->Assign);
                             int conditionId = -1;
-                            if(gocpp_id_9 == typeid(ast::ExprStmt*)) { conditionId = 0; }
-                            else if(gocpp_id_9 == typeid(ast::AssignStmt*)) { conditionId = 1; }
+                            if(gocpp_id_8 == typeid(ast::ExprStmt*)) { conditionId = 0; }
+                            else if(gocpp_id_8 == typeid(ast::AssignStmt*)) { conditionId = 1; }
                             switch(conditionId)
                             {
                                 case 0:
@@ -1059,44 +1161,42 @@ namespace golang::types
                             }
                         }
                         // rhs must be of the form: expr.(type) and expr must be an ordinary interface
-                        auto [expr, gocpp_id_10] = gocpp::getValue<ast::TypeAssertExpr*>(rhs);
+                        auto [expr, gocpp_id_9] = gocpp::getValue<ast::TypeAssertExpr*>(rhs);
                         if(expr == nullptr || expr->Type != nullptr)
                         {
                             rec::error(gocpp::recv(check), s, InvalidSyntaxTree, "incorrect form of type switch guard"_s);
                             return;
                         }
-                        operand x = {};
-                        rec::expr(gocpp::recv(check), nullptr, & x, expr->X);
-                        if(x.mode == invalid)
-                        {
-                            return;
-                        }
-                        // TODO(gri) we may want to permit type switches on type parameter values at some point
                         // switch expression against which cases are compared against; nil if invalid
                         operand* sx = {};
-                        if(isTypeParam(x.typ))
                         {
-                            rec::errorf(gocpp::recv(check), & x, InvalidTypeSwitch, "cannot use type switch on type parameter value %s"_s, & x);
-                        }
-                        else
-                        {
-                            if(auto [gocpp_id_11, ok] = gocpp::getValue<Interface*>(types::under(x.typ)); ok)
+                            operand x = {};
+                            rec::expr(gocpp::recv(check), nullptr, & x, expr->X);
+                            if(rec::isValid(gocpp::recv(x)))
                             {
-                                sx = & x;
-                            }
-                            else
-                            {
-                                rec::errorf(gocpp::recv(check), & x, InvalidTypeSwitch, "%s is not an interface"_s, & x);
+                                if(isTypeParam(rec::typ(gocpp::recv(x))))
+                                {
+                                    rec::errorf(gocpp::recv(check), & x, InvalidTypeSwitch, "cannot use type switch on type parameter value %s"_s, & x);
+                                }
+                                else
+                                if(IsInterface(rec::typ(gocpp::recv(x))))
+                                {
+                                    sx = & x;
+                                }
+                                else
+                                {
+                                    rec::errorf(gocpp::recv(check), & x, InvalidTypeSwitch, "%s is not an interface"_s, & x);
+                                }
                             }
                         }
                         rec::multipleDefaults(gocpp::recv(check), s->Body->List);
                         // list of implicitly declared lhs variables
                         gocpp::slice<Var*> lhsVars = {};
                         // map of seen types to positions
-                        auto seen = gocpp::make(gocpp::Tag<gocpp::map<golang::types::Type, ast::Expr>>());
+                        auto seen = gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, ast::Expr>>());
                         for(auto [gocpp_ignored, s] : s->Body->List)
                         {
-                            auto [clause, gocpp_id_12] = gocpp::getValue<ast::CaseClause*>(s);
+                            auto [clause, gocpp_id_10] = gocpp::getValue<ast::CaseClause*>(s);
                             if(clause == nullptr)
                             {
                                 rec::error(gocpp::recv(check), s, InvalidSyntaxTree, "incorrect type switch case"_s);
@@ -1108,23 +1208,8 @@ namespace golang::types
                             // If lhs exists, declare a corresponding variable in the case-local scope.
                             if(lhs != nullptr)
                             {
-                                // spec: "The TypeSwitchGuard may include a short variable declaration.
-                                // When that form is used, the variable is declared at the beginning of
-                                // the implicit block in each clause. In clauses with a case listing
-                                // exactly one type, the variable has that type; otherwise, the variable
-                                // has the type of the expression in the TypeSwitchGuard."
-                                if(len(clause->List) != 1 || T == nullptr)
-                                {
-                                    T = x.typ;
-                                }
-                                auto obj = NewVar(rec::Pos(gocpp::recv(lhs)), check->pkg, lhs->Name, T);
-                                // for default clause (len(List) == 0)
-                                auto scopePos = rec::Pos(gocpp::recv(clause)) + token::Pos(len("default"_s));
-                                if(auto n = len(clause->List); n > 0)
-                                {
-                                    scopePos = rec::End(gocpp::recv(clause->List[n - 1]));
-                                }
-                                rec::declare(gocpp::recv(check), check->environment.scope, nullptr, obj, scopePos);
+                                auto obj = newVar(LocalVar, rec::Pos(gocpp::recv(lhs)), check->pkg, lhs->Name, T);
+                                rec::declare(gocpp::recv(check), check->environment.scope, nullptr, obj, clause->Colon);
                                 rec::recordImplicit(gocpp::recv(check), clause, obj);
                                 // For the "declared and not used" error, all lhs variables act as
                                 // one; i.e., if any one of them is 'used', all of them are 'used'.
@@ -1135,17 +1220,20 @@ namespace golang::types
                             rec::closeScope(gocpp::recv(check));
                         }
                         // If lhs exists, we must have at least one lhs variable that was used.
+                        // (We can't use check.usage because that only looks at one scope; and
+                        // we don't want to use the same variable for all scopes and change the
+                        // variable type underfoot.)
                         if(lhs != nullptr)
                         {
                             bool used = {};
                             for(auto [gocpp_ignored, v] : lhsVars)
                             {
-                                if(v->used)
+                                if(check->usedVars[v])
                                 {
                                     used = true;
                                 }
                                 // avoid usage error when checking entire function
-                                v->used = true;
+                                check->usedVars[v] = true;
                             }
                             if(! used)
                             {
@@ -1162,7 +1250,7 @@ namespace golang::types
                         rec::multipleDefaults(gocpp::recv(check), s->Body->List);
                         for(auto [gocpp_ignored, s] : s->Body->List)
                         {
-                            auto [clause, gocpp_id_13] = gocpp::getValue<ast::CommClause*>(s);
+                            auto [clause, gocpp_id_11] = gocpp::getValue<ast::CommClause*>(s);
                             if(clause == nullptr)
                             {
                                 // error reported before
@@ -1175,12 +1263,12 @@ namespace golang::types
                             ast::Expr rhs = {};
                             //Go type switch emulation
                             {
-                                const auto& gocpp_id_14 = gocpp::type_info(clause->Comm);
+                                const auto& gocpp_id_12 = gocpp::type_info(clause->Comm);
                                 int conditionId = -1;
-                                if(gocpp_id_14 == typeid(untyped nil)) { conditionId = 0; }
-                                else if(gocpp_id_14 == typeid(ast::SendStmt*)) { conditionId = 1; }
-                                else if(gocpp_id_14 == typeid(ast::AssignStmt*)) { conditionId = 2; }
-                                else if(gocpp_id_14 == typeid(ast::ExprStmt*)) { conditionId = 3; }
+                                if(gocpp_id_12 == typeid(untyped nil)) { conditionId = 0; }
+                                else if(gocpp_id_12 == typeid(ast::SendStmt*)) { conditionId = 1; }
+                                else if(gocpp_id_12 == typeid(ast::AssignStmt*)) { conditionId = 2; }
+                                else if(gocpp_id_12 == typeid(ast::ExprStmt*)) { conditionId = 3; }
                                 switch(conditionId)
                                 {
                                     case 0:
@@ -1211,7 +1299,7 @@ namespace golang::types
                             // if present, rhs must be a receive operation
                             if(rhs != nullptr)
                             {
-                                if(auto [x, gocpp_id_15] = gocpp::getValue<ast::UnaryExpr*>(unparen(rhs)); x != nullptr && x->Op == token::ARROW)
+                                if(auto [x, gocpp_id_13] = gocpp::getValue<ast::UnaryExpr*>(ast::Unparen(rhs)); x != nullptr && x->Op == token::ARROW)
                                 {
                                     valid = true;
                                 }
@@ -1245,7 +1333,7 @@ namespace golang::types
                         {
                             operand x = {};
                             rec::expr(gocpp::recv(check), nullptr, & x, s->Cond);
-                            if(x.mode != invalid && ! allBoolean(x.typ))
+                            if(rec::isValid(gocpp::recv(x)) && ! allBoolean(rec::typ(gocpp::recv(x))))
                             {
                                 rec::error(gocpp::recv(check), s->Cond, InvalidCond, "non-boolean condition in for statement"_s);
                             }
@@ -1254,7 +1342,7 @@ namespace golang::types
                         // spec: "The init statement may be a short variable
                         // declaration, but the post statement must not."
                         {
-                            auto [s_tmp, gocpp_id_16] = gocpp::getValue<ast::AssignStmt*>(s->Post);
+                            auto [s_tmp, gocpp_id_14] = gocpp::getValue<ast::AssignStmt*>(s->Post);
                             if(auto& s = s_tmp; s != nullptr && s->Tok == token::DEFINE)
                             {
                                 rec::softErrorf(gocpp::recv(check), s, InvalidPostDecl, "cannot declare in post statement"_s);
@@ -1273,7 +1361,14 @@ namespace golang::types
                     {
                         ast::RangeStmt* s = gocpp::any_cast<ast::RangeStmt*>(s_ref);
                         inner |= breakOk | continueOk;
-                        rec::rangeStmt(gocpp::recv(check), inner, s);
+                        // s.TokPos is invalid when there are no range variables (for range x {});
+                        // noNewVarPos is unused in that case, but inNode asserts a valid pos.
+                        auto tokPos = s->TokPos;
+                        if(! rec::IsValid(gocpp::recv(tokPos)))
+                        {
+                            tokPos = s->For;
+                        }
+                        rec::rangeStmt(gocpp::recv(check), inner, s, inNode(s, tokPos), s->Key, s->Value, nullptr, s->X, s->Tok == token::DEFINE);
                         break;
                     }
 
@@ -1290,372 +1385,6 @@ namespace golang::types
         {
             defer.handlePanic(gp);
         }
-    }
-
-    void rec::rangeStmt(Checker* check, stmtContext inner, ast::RangeStmt* s)
-    {
-        gocpp::Defer defer;
-        try
-        {
-            // Convert go/ast form to local variables.
-            using Expr = ast::Expr;
-            using identType = ast::Ident;
-            auto identName = [=](identType* n) mutable -> gocpp::string
-            {
-                return n->Name;
-            };
-            auto [sKey, sValue] = std::tuple{s->Key, s->Value};
-            ast::Expr sExtra = nullptr;
-            auto isDef = s->Tok == token::DEFINE;
-            auto rangeVar = s->X;
-            auto noNewVarPos = inNode(s, s->TokPos);
-
-            // Everything from here on is shared between cmd/compile/internal/types2 and go/types.
-            // check expression to iterate over
-            operand x = {};
-            rec::expr(gocpp::recv(check), nullptr, & x, rangeVar);
-
-            // determine key/value types
-            golang::types::Type key = {};
-            golang::types::Type val = {};
-            if(x.mode != invalid)
-            {
-                // Ranging over a type parameter is permitted if it has a core type.
-                auto [k, v_tmp, cause, isFunc, ok] = rangeKeyVal(x.typ, [=](goVersion v) mutable -> bool
-                {
-                    return rec::allowVersion(gocpp::recv(check), check->pkg, x.expr, v);
-                });
-                auto& v = v_tmp;
-                //Go switch emulation
-                {
-                    int conditionId = -1;
-                    if(! ok && cause != ""_s) { conditionId = 0; }
-                    else if(! ok) { conditionId = 1; }
-                    else if(k == nullptr && sKey != nullptr) { conditionId = 2; }
-                    else if(v == nullptr && sValue != nullptr) { conditionId = 3; }
-                    else if(sExtra != nullptr) { conditionId = 4; }
-                    else if(isFunc && ((k == nullptr) != (sKey == nullptr) || (v == nullptr) != (sValue == nullptr))) { conditionId = 5; }
-                    switch(conditionId)
-                    {
-                        case 0:
-                            rec::softErrorf(gocpp::recv(check), & x, InvalidRangeExpr, "cannot range over %s: %s"_s, & x, cause);
-                            break;
-                        case 1:
-                            rec::softErrorf(gocpp::recv(check), & x, InvalidRangeExpr, "cannot range over %s"_s, & x);
-                            break;
-                        case 2:
-                            rec::softErrorf(gocpp::recv(check), sKey, InvalidIterVar, "range over %s permits no iteration variables"_s, & x);
-                            break;
-                        case 3:
-                            rec::softErrorf(gocpp::recv(check), sValue, InvalidIterVar, "range over %s permits only one iteration variable"_s, & x);
-                            break;
-                        case 4:
-                            rec::softErrorf(gocpp::recv(check), sExtra, InvalidIterVar, "range clause permits at most two iteration variables"_s);
-                            break;
-                        case 5:
-                            gocpp::string count = {};
-                            //Go switch emulation
-                            {
-                                int conditionId = -1;
-                                if(k == nullptr) { conditionId = 0; }
-                                else if(v == nullptr) { conditionId = 1; }
-                                switch(conditionId)
-                                {
-                                    case 0:
-                                        count = "no iteration variables"_s;
-                                        break;
-                                    case 1:
-                                        count = "one iteration variable"_s;
-                                        break;
-                                    default:
-                                        count = "two iteration variables"_s;
-                                        break;
-                                }
-                            }
-                            rec::softErrorf(gocpp::recv(check), & x, InvalidIterVar, "range over %s must have %s"_s, & x, count);
-                            break;
-                    }
-                }
-                std::tie(key, val) = std::tuple{k, v};
-            }
-
-            // Open the for-statement block scope now, after the range clause.
-            // Iteration variables declared with := need to go in this scope (was go.dev/issue/51437).
-            rec::openScope(gocpp::recv(check), s, "range"_s);
-            defer.push_back([=]{ rec::closeScope(gocpp::recv(check)); });
-
-            // check assignment to/declaration of iteration variables
-            // (irregular assignment, cannot easily map to existing assignment checks)
-            // lhs expressions and initialization value (rhs) types
-            // sKey, sValue may be nil
-            auto lhs = gocpp::array<Expr, 2> {sKey, sValue};
-            // key, val may be nil
-            auto rhs = gocpp::array<golang::types::Type, 2> {key, val};
-
-            auto constIntRange = x.mode == constant_ && isInteger(x.typ);
-
-            if(isDef)
-            {
-                // short variable declaration
-                gocpp::slice<Var*> vars = {};
-                for(auto [i, lhs] : lhs)
-                {
-                    if(lhs == nullptr)
-                    {
-                        continue;
-                    }
-
-                    // determine lhs variable
-                    Var* obj = {};
-                    if(auto [ident, gocpp_id_17] = gocpp::getValue<identType*>(lhs); ident != nullptr)
-                    {
-                        // declare new variable
-                        auto name = identName(ident);
-                        obj = NewVar(rec::Pos(gocpp::recv(ident)), check->pkg, name, nullptr);
-                        rec::recordDef(gocpp::recv(check), ident, obj);
-                        // _ variables don't count as new variables
-                        if(name != "_"_s)
-                        {
-                            vars = append(vars, obj);
-                        }
-                    }
-                    else
-                    {
-                        rec::errorf(gocpp::recv(check), lhs, InvalidSyntaxTree, "cannot declare %s"_s, lhs);
-                        // dummy variable
-                        obj = NewVar(rec::Pos(gocpp::recv(lhs)), check->pkg, "_"_s, nullptr);
-                    }
-
-                    // initialize lhs variable
-                    if(constIntRange)
-                    {
-                        rec::initVar(gocpp::recv(check), obj, & x, "range clause"_s);
-                    }
-                    else
-                    if(auto typ = rhs[i]; typ != nullptr)
-                    {
-                        x.mode = value;
-                        // we don't have a better rhs expression to use here
-                        x.expr = lhs;
-                        x.typ = typ;
-                        // error is on variable, use "assignment" not "range clause"
-                        rec::initVar(gocpp::recv(check), obj, & x, "assignment"_s);
-                    }
-                    else
-                    {
-                        obj->object.typ = Typ[Invalid];
-                        // don't complain about unused variable
-                        obj->used = true;
-                    }
-                }
-
-                // declare variables
-                if(len(vars) > 0)
-                {
-                    auto scopePos = rec::Pos(gocpp::recv(s->Body));
-                    for(auto [gocpp_ignored, obj] : vars)
-                    {
-                        rec::declare(gocpp::recv(check), check->environment.scope, nullptr, obj, scopePos);
-                    }
-                }
-                else
-                {
-                    rec::error(gocpp::recv(check), noNewVarPos, NoNewVar, "no new variables on left side of :="_s);
-                }
-            }
-            else
-            if(sKey != nullptr)
-            {
-                // ordinary assignment
-                for(auto [i, lhs] : lhs)
-                {
-                    if(lhs == nullptr)
-                    {
-                        continue;
-                    }
-
-                    if(constIntRange)
-                    {
-                        rec::assignVar(gocpp::recv(check), lhs, nullptr, & x, "range clause"_s);
-                    }
-                    else
-                    if(auto typ = rhs[i]; typ != nullptr)
-                    {
-                        x.mode = value;
-                        // we don't have a better rhs expression to use here
-                        x.expr = lhs;
-                        x.typ = typ;
-                        // error is on variable, use "assignment" not "range clause"
-                        rec::assignVar(gocpp::recv(check), lhs, nullptr, & x, "assignment"_s);
-                    }
-                }
-            }
-            else
-            if(constIntRange)
-            {
-                // If we don't have any iteration variables, we still need to
-                // check that a (possibly untyped) integer range expression x
-                // is valid.
-                // We do this by checking the assignment _ = x. This ensures
-                // that an untyped x can be converted to a value of type int.
-                rec::assignment(gocpp::recv(check), & x, nullptr, "range clause"_s);
-            }
-
-            rec::stmt(gocpp::recv(check), inner, s->Body);
-        }
-        catch(gocpp::GoPanic& gp)
-        {
-            defer.handlePanic(gp);
-        }
-    }
-
-    // rangeKeyVal returns the key and value type produced by a range clause
-    // over an expression of type typ.
-    // If allowVersion != nil, it is used to check the required language version.
-    // If the range clause is not permitted, rangeKeyVal returns ok = false.
-    // When ok = false, rangeKeyVal may also return a reason in cause.
-    std::tuple<golang::types::Type, golang::types::Type, gocpp::string, bool, bool> rangeKeyVal(golang::types::Type typ, std::function<bool (goVersion _1)> allowVersion)
-    {
-        golang::types::Type key;
-        golang::types::Type val;
-        gocpp::string cause;
-        bool isFunc;
-        bool ok;
-        auto bad = [=](gocpp::string cause) mutable -> std::tuple<golang::types::Type, golang::types::Type, gocpp::string, bool, bool>
-        {
-            return {Typ[Invalid], Typ[Invalid], cause, false, false};
-        };
-        auto toSig = [=](golang::types::Type t) mutable -> Signature*
-        {
-            auto [sig, gocpp_id_18] = gocpp::getValue<Signature*>(coreType(t));
-            return sig;
-        };
-
-        auto orig = typ;
-        //Go type switch emulation
-        {
-            const auto& gocpp_id_19 = gocpp::type_info(arrayPtrDeref(coreType(typ)));
-            int conditionId = -1;
-            if(gocpp_id_19 == typeid(untyped nil)) { conditionId = 0; }
-            else if(gocpp_id_19 == typeid(types::Basic*)) { conditionId = 1; }
-            else if(gocpp_id_19 == typeid(types::Array*)) { conditionId = 2; }
-            else if(gocpp_id_19 == typeid(types::Slice*)) { conditionId = 3; }
-            else if(gocpp_id_19 == typeid(types::Map*)) { conditionId = 4; }
-            else if(gocpp_id_19 == typeid(types::Chan*)) { conditionId = 5; }
-            else if(gocpp_id_19 == typeid(types::Signature*)) { conditionId = 6; }
-            switch(conditionId)
-            {
-                case 0:
-                {
-                    untyped nil typ = gocpp::any_cast<untyped nil>(arrayPtrDeref(coreType(typ)));
-                    return bad("no core type"_s);
-                    break;
-                }
-                case 1:
-                {
-                    types::Basic* typ = gocpp::any_cast<types::Basic*>(arrayPtrDeref(coreType(typ)));
-                    if(isString(typ))
-                    {
-                        // use 'rune' name
-                        return {Typ[Int], universeRune, ""_s, false, true};
-                    }
-                    if(isInteger(typ))
-                    {
-                        if(allowVersion != nullptr && ! allowVersion(go1_22))
-                        {
-                            return bad("requires go1.22 or later"_s);
-                        }
-                        return {orig, nullptr, ""_s, false, true};
-                    }
-                    break;
-                }
-                case 2:
-                {
-                    types::Array* typ = gocpp::any_cast<types::Array*>(arrayPtrDeref(coreType(typ)));
-                    return {Typ[Int], typ->elem, ""_s, false, true};
-                    break;
-                }
-                case 3:
-                {
-                    types::Slice* typ = gocpp::any_cast<types::Slice*>(arrayPtrDeref(coreType(typ)));
-                    return {Typ[Int], typ->elem, ""_s, false, true};
-                    break;
-                }
-                case 4:
-                {
-                    types::Map* typ = gocpp::any_cast<types::Map*>(arrayPtrDeref(coreType(typ)));
-                    return {typ->key, typ->elem, ""_s, false, true};
-                    break;
-                }
-                case 5:
-                {
-                    types::Chan* typ = gocpp::any_cast<types::Chan*>(arrayPtrDeref(coreType(typ)));
-                    if(typ->dir == SendOnly)
-                    {
-                        return bad("receive from send-only channel"_s);
-                    }
-                    return {typ->elem, nullptr, ""_s, false, true};
-                    break;
-                }
-                case 6:
-                {
-                    types::Signature* typ = gocpp::any_cast<types::Signature*>(arrayPtrDeref(coreType(typ)));
-                    // TODO(gri) when this becomes enabled permanently, add version check
-                    if(! buildcfg::Experiment.Flags.RangeFunc)
-                    {
-                        break;
-                    }
-                    assert(rec::Recv(gocpp::recv(typ)) == nullptr);
-                    //Go switch emulation
-                    {
-                        int conditionId = -1;
-                        if(rec::Len(gocpp::recv(rec::Params(gocpp::recv(typ)))) != 1) { conditionId = 0; }
-                        else if(toSig(rec::Type(gocpp::recv(rec::At(gocpp::recv(rec::Params(gocpp::recv(typ))), 0)))) == nullptr) { conditionId = 1; }
-                        else if(rec::Len(gocpp::recv(rec::Results(gocpp::recv(typ)))) != 0) { conditionId = 2; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                                return bad("func must be func(yield func(...) bool): wrong argument count"_s);
-                                break;
-                            case 1:
-                                return bad("func must be func(yield func(...) bool): argument is not func"_s);
-                                break;
-                            case 2:
-                                return bad("func must be func(yield func(...) bool): unexpected results"_s);
-                                break;
-                        }
-                    }
-                    auto cb = toSig(rec::Type(gocpp::recv(rec::At(gocpp::recv(rec::Params(gocpp::recv(typ))), 0))));
-                    assert(rec::Recv(gocpp::recv(cb)) == nullptr);
-                    //Go switch emulation
-                    {
-                        int conditionId = -1;
-                        if(rec::Len(gocpp::recv(rec::Params(gocpp::recv(cb)))) > 2) { conditionId = 0; }
-                        else if(rec::Len(gocpp::recv(rec::Results(gocpp::recv(cb)))) != 1 || ! isBoolean(rec::Type(gocpp::recv(rec::At(gocpp::recv(rec::Results(gocpp::recv(cb))), 0))))) { conditionId = 1; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                                return bad("func must be func(yield func(...) bool): yield func has too many parameters"_s);
-                                break;
-                            case 1:
-                                return bad("func must be func(yield func(...) bool): yield func does not return bool"_s);
-                                break;
-                        }
-                    }
-                    if(rec::Len(gocpp::recv(rec::Params(gocpp::recv(cb)))) >= 1)
-                    {
-                        key = rec::Type(gocpp::recv(rec::At(gocpp::recv(rec::Params(gocpp::recv(cb))), 0)));
-                    }
-                    if(rec::Len(gocpp::recv(rec::Params(gocpp::recv(cb)))) >= 2)
-                    {
-                        val = rec::Type(gocpp::recv(rec::At(gocpp::recv(rec::Params(gocpp::recv(cb))), 1)));
-                    }
-                    return {key, val, ""_s, true, true};
-                    break;
-                }
-            }
-        }
-        return {key, val, cause, isFunc, ok};
     }
 
 }

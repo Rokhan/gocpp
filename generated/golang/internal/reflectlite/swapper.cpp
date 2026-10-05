@@ -17,11 +17,15 @@
 #include "golang/internal/reflectlite/value.h"
 #include "golang/internal/unsafeheader/unsafeheader.h"
 
-namespace golang::reflectlite
+namespace golang::internal::reflectlite
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace goarch = golang::internal::goarch;
+    namespace unsafeheader = golang::internal::unsafeheader;
     namespace rec
     {
         using abi::rec::Kind;
+        using abi::rec::Pointers;
         using abi::rec::Size;
     }
 
@@ -68,7 +72,7 @@ namespace golang::reflectlite
 
         auto typ = rec::common(gocpp::recv(rec::Elem(gocpp::recv(rec::Type(gocpp::recv(v))))));
         auto size = rec::Size(gocpp::recv(typ));
-        auto hasPtr = typ->PtrBytes != 0;
+        auto hasPtr = rec::Pointers(gocpp::recv(typ));
 
         // Some common & small cases, without using memmove:
         if(hasPtr)

@@ -9,7 +9,7 @@
 #include "golang/internal/buildcfg/zbootstrap.fwd.h"
 #include "gocpp/support.h"
 
-namespace golang::buildcfg
+namespace golang::internal::buildcfg
 {
 
     namespace rec

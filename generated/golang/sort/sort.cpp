@@ -12,12 +12,14 @@
 #include "gocpp/support.h"
 
 #include "golang/math/bits/bits.h"
-#include "golang/sort/sort_impl_go121.h"
+#include "golang/slices/sort.h"
 #include "golang/sort/zsortinterface.h"
 
 // Package sort provides primitives for sorting slices and user-defined collections.
 namespace golang::sort
 {
+    namespace bits = golang::math::bits;
+    namespace slices = golang::slices;
     namespace rec
     {
     }
@@ -130,8 +132,8 @@ namespace golang::sort
     uint64_t rec::Next(xorshift* r)
     {
         *r ^= *r << 13;
-        *r ^= *r >> 17;
-        *r ^= *r << 5;
+        *r ^= *r >> 7;
+        *r ^= *r << 17;
         return uint64_t(*r);
     }
 
@@ -351,7 +353,7 @@ namespace golang::sort
     // Note: as of Go 1.22, this function simply calls [slices.Sort].
     void Ints(gocpp::slice<int> x)
     {
-        intsImpl(x);
+        slices::Sort(x);
     }
 
     // Float64s sorts a slice of float64s in increasing order.
@@ -360,7 +362,7 @@ namespace golang::sort
     // Note: as of Go 1.22, this function simply calls [slices.Sort].
     void Float64s(gocpp::slice<double> x)
     {
-        float64sImpl(x);
+        slices::Sort(x);
     }
 
     // Strings sorts a slice of strings in increasing order.
@@ -368,7 +370,7 @@ namespace golang::sort
     // Note: as of Go 1.22, this function simply calls [slices.Sort].
     void Strings(gocpp::slice<gocpp::string> x)
     {
-        stringsImpl(x);
+        slices::Sort(x);
     }
 
     // IntsAreSorted reports whether the slice x is sorted in increasing order.
@@ -376,7 +378,7 @@ namespace golang::sort
     // Note: as of Go 1.22, this function simply calls [slices.IsSorted].
     bool IntsAreSorted(gocpp::slice<int> x)
     {
-        return intsAreSortedImpl(x);
+        return slices::IsSorted(x);
     }
 
     // Float64sAreSorted reports whether the slice x is sorted in increasing order,
@@ -385,7 +387,7 @@ namespace golang::sort
     // Note: as of Go 1.22, this function simply calls [slices.IsSorted].
     bool Float64sAreSorted(gocpp::slice<double> x)
     {
-        return float64sAreSortedImpl(x);
+        return slices::IsSorted(x);
     }
 
     // StringsAreSorted reports whether the slice x is sorted in increasing order.
@@ -393,7 +395,7 @@ namespace golang::sort
     // Note: as of Go 1.22, this function simply calls [slices.IsSorted].
     bool StringsAreSorted(gocpp::slice<gocpp::string> x)
     {
-        return stringsAreSortedImpl(x);
+        return slices::IsSorted(x);
     }
 
     // Stable sorts data in ascending order as determined by the Less method,

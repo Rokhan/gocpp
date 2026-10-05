@@ -10,14 +10,16 @@
 #include "gocpp/support.h"
 
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
     struct GoTag_Table { };
     using Table = gocpp::defined<gocpp::array<uint32_t, 256>, GoTag_Table>;
     extern std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateCastagnoli;
-    void castagnoliInit();
+    extern std::function<void (void)> castagnoliInitOnce;
+    // IEEETable is the table for the [IEEE] polynomial.
+    extern gocpp::array_ptr<crc32::Table> IEEETable;
     extern std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateIEEE;
-    void ieeeInit();
+    extern std::function<void (void)> ieeeInitOnce;
     struct digest
     {
         uint32_t crc{};
@@ -35,9 +37,11 @@ namespace golang::crc32
     };
 
     std::ostream& operator<<(std::ostream& os, const struct digest& value);
-    gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
-    uint32_t readUint32(gocpp::slice<unsigned char> b);
     uint32_t ChecksumIEEE(gocpp::slice<unsigned char> data);
+    // castagnoliTable points to a lazily initialized Table for the Castagnoli
+    // polynomial. MakeTable will always return this value when asked to make a
+    // Castagnoli table so we can compare against it to find when the caller is
+    // using this polynomial.
     extern gocpp::array_ptr<Table> castagnoliTable;
     gocpp::array_ptr<Table> MakeTable(uint32_t poly);
     uint32_t update(uint32_t crc, gocpp::array_ptr<Table> tab, gocpp::slice<unsigned char> p, bool checkInitIEEE);
@@ -45,29 +49,46 @@ namespace golang::crc32
     uint32_t Checksum(gocpp::slice<unsigned char> data, gocpp::array_ptr<Table> tab);
     uint32_t tableSum(gocpp::array_ptr<Table> t);
 }
-#include "golang/hash/hash.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/once.h"
 #include "golang/hash/crc32/crc32_generic.fwd.h"
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
     extern gocpp::array_ptr<slicing8Table> castagnoliTable8;
-    extern sync::Once castagnoliOnce;
-    extern atomic::Bool haveCastagnoli;
-    extern gocpp::array_ptr<crc32::Table> IEEETable;
+    // ieeeTable8 is the slicing8Table for IEEE
     extern gocpp::array_ptr<slicing8Table> ieeeTable8;
-    extern sync::Once ieeeOnce;
+}
+#include "golang/hash/hash.fwd.h"
+#include "golang/sync/atomic/type.fwd.h"
+
+namespace golang::hash::crc32
+{
+    namespace atomic = golang::sync::atomic;
+    namespace hash = golang::hash;
+}
+#include "golang/hash/hash.h"
+#include "golang/sync/atomic/type.h"
+
+namespace golang::hash::crc32
+{
+    extern atomic::Bool haveCastagnoli;
     hash::Hash32 New(gocpp::array_ptr<Table> tab);
     hash::Hash32 NewIEEE();
+}
+
+#include "golang/hash/hash.h"
+
+namespace golang::hash::crc32
+{
 
     namespace rec
     {
         int Size(digest* d);
         int BlockSize(digest* d);
         void Reset(digest* d);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendBinary(digest* d, gocpp::slice<unsigned char> b);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(digest* d);
         gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b);
+        std::tuple<hash::Cloner, gocpp::error> Clone(digest* d);
         std::tuple<int, gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p);
         uint32_t Sum32(digest* d);
         gocpp::slice<unsigned char> Sum(digest* d, gocpp::slice<unsigned char> in);

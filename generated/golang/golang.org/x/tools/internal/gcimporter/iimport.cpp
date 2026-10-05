@@ -18,6 +18,7 @@
 #include "golang/go/constant/value.h"
 #include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
+#include "golang/go/types/alias.h"
 #include "golang/go/types/array.h"
 #include "golang/go/types/basic.h"
 #include "golang/go/types/chan.h"
@@ -40,20 +41,35 @@
 #include "golang/go/types/union.h"
 #include "golang/golang.org/x/tools/go/types/objectpath/objectpath.h"
 #include "golang/golang.org/x/tools/internal/aliases/aliases.h"
-#include "golang/golang.org/x/tools/internal/aliases/aliases_go122.h"
 #include "golang/golang.org/x/tools/internal/gcimporter/bimport.h"
 #include "golang/golang.org/x/tools/internal/gcimporter/gcimporter.h"
 #include "golang/golang.org/x/tools/internal/gcimporter/iexport.h"
-#include "golang/golang.org/x/tools/internal/gcimporter/newInterface11.h"
+#include "golang/golang.org/x/tools/internal/gcimporter/predeclared.h"
 #include "golang/golang.org/x/tools/internal/typesinternal/recv.h"
+#include "golang/golang.org/x/tools/internal/typesinternal/varkind.h"
 #include "golang/io/io.h"
 #include "golang/math/big/float.h"
 #include "golang/math/big/int.h"
+#include "golang/slices/slices.h"
 #include "golang/sort/sort.h"
 #include "golang/strings/strings.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    namespace aliases = golang::golang_org::x::tools::internal::aliases;
+    namespace big = golang::math::big;
+    namespace binary = golang::encoding::binary;
+    namespace bytes = golang::bytes;
+    namespace constant = golang::go::constant;
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace objectpath = golang::golang_org::x::tools::go::types::objectpath;
+    namespace slices = golang::slices;
+    namespace sort = golang::sort;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
+    namespace types = golang::go::types;
+    namespace typesinternal = golang::golang_org::x::tools::internal::typesinternal;
     namespace rec
     {
         using big::rec::Neg;
@@ -97,11 +113,9 @@ namespace golang::gcimporter
         using types::rec::Type;
         using types::rec::TypeArgs;
         using types::rec::Underlying;
-        using types::rec::color;
         using types::rec::order;
         using types::rec::sameId;
         using types::rec::scopePos;
-        using types::rec::setColor;
         using types::rec::setOrder;
         using types::rec::setParent;
         using types::rec::setScopePos;
@@ -332,17 +346,19 @@ namespace golang::gcimporter
             {
                 auto condition = version;
                 int conditionId = -1;
-                if(condition == iexportVersionGo1_18) { conditionId = 0; }
-                else if(condition == iexportVersionPosCol) { conditionId = 1; }
-                else if(condition == iexportVersionGo1_11) { conditionId = 2; }
+                if(condition == iexportVersionGenericMethods) { conditionId = 0; }
+                else if(condition == iexportVersionGo1_18) { conditionId = 1; }
+                else if(condition == iexportVersionPosCol) { conditionId = 2; }
+                else if(condition == iexportVersionGo1_11) { conditionId = 3; }
                 switch(conditionId)
                 {
                     case 0:
                     case 1:
                     case 2:
+                    case 3:
                         break;
                     default:
-                        if(version > iexportVersionGo1_18)
+                        if(version > iexportVersionGenericMethods)
                         {
                             errorf("unstable iexport format version %d, just rebuild compiler and std library"_s, version);
                         }
@@ -378,7 +394,6 @@ namespace golang::gcimporter
             auto p = gocpp::Init<iimporter>([=](auto& x) {
                 x.version = int(version);
                 x.ipath = path;
-                x.aliases = aliases::Enabled();
                 x.shallow = shallow;
                 x.reportf = reportf;
                 x.stringData = stringData;
@@ -390,7 +405,7 @@ namespace golang::gcimporter
                 x.declData = declData;
                 x.pkgIndex = gocpp::make(gocpp::Tag<gocpp::map<types::Package*, gocpp::map<gocpp::string, uint64_t>>>());
                 x.typCache = gocpp::make(gocpp::Tag<gocpp::map<uint64_t, types::Type>>());
-                x.tparamIndex = gocpp::make(gocpp::Tag<gocpp::map<golang::gcimporter::ident, types::Type>>());
+                x.tparamIndex = gocpp::make(gocpp::Tag<gocpp::map<golang::golang_org::x::tools::internal::gcimporter::ident, types::Type>>());
                 x.fake = gocpp::Init<fakeFileSet>([=](auto& x) {
                     x.fset = fset;
                     x.files = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, fileInfo*>>());
@@ -501,7 +516,7 @@ namespace golang::gcimporter
                 pkgs = pkgList.make_slice(0, 1);
 
                 // record all referenced packages as imports
-                auto list = append((gocpp::slice<types::Package*>)(nullptr), pkgList.make_slice(1));
+                auto list = slices::Clone(pkgList.make_slice(1));
                 sort::Sort(byPath(list));
                 rec::SetImports(gocpp::recv(pkgs[0]), list);
             }
@@ -600,7 +615,6 @@ namespace golang::gcimporter
         T result;
         result.version = this->version;
         result.ipath = this->ipath;
-        result.aliases = this->aliases;
         result.shallow = this->shallow;
         result.reportf = this->reportf;
         result.stringData = this->stringData;
@@ -626,7 +640,6 @@ namespace golang::gcimporter
     {
         if (version != ref.version) return false;
         if (ipath != ref.ipath) return false;
-        if (aliases != ref.aliases) return false;
         if (shallow != ref.shallow) return false;
         if (reportf != ref.reportf) return false;
         if (stringData != ref.stringData) return false;
@@ -652,7 +665,6 @@ namespace golang::gcimporter
         os << '{';
         os << "" << version;
         os << " " << ipath;
-        os << " " << aliases;
         os << " " << shallow;
         os << " " << reportf;
         os << " " << stringData;
@@ -679,7 +691,7 @@ namespace golang::gcimporter
         return value.PrintTo(os);
     }
 
-    void rec::trace(iimporter* p, gocpp::string format, gocpp::slice<gocpp::go_any> args)
+    void rec::trace(iimporter* p, gocpp::string format, gocpp::slice<go_any> args)
     {
         if(! gcimporter::trace)
         {
@@ -722,11 +734,10 @@ namespace golang::gcimporter
 
             auto r = gocpp::InitPtr<importReader>([=](auto& x) {
                 x.p = p;
-                x.currPkg = pkg;
             });
             rec::Reset(gocpp::recv(r->declReader), p->declData.make_slice(off));
 
-            rec::obj(gocpp::recv(r), name);
+            rec::obj(gocpp::recv(r), pkg, name);
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -857,7 +868,7 @@ namespace golang::gcimporter
         {
             return true;
         }
-        auto [iface, gocpp_id_2] = gocpp::getValue<types::Interface*>(aliases::Unalias(rhs));
+        auto [iface, gocpp_id_2] = gocpp::getValue<types::Interface*>(types::Unalias(rhs));
         if(iface == nullptr)
         {
             return true;
@@ -873,7 +884,6 @@ namespace golang::gcimporter
         T result;
         result.p = this->p;
         result.declReader = this->declReader;
-        result.currPkg = this->currPkg;
         result.prevFile = this->prevFile;
         result.prevLine = this->prevLine;
         result.prevColumn = this->prevColumn;
@@ -885,7 +895,6 @@ namespace golang::gcimporter
     {
         if (p != ref.p) return false;
         if (declReader != ref.declReader) return false;
-        if (currPkg != ref.currPkg) return false;
         if (prevFile != ref.prevFile) return false;
         if (prevLine != ref.prevLine) return false;
         if (prevColumn != ref.prevColumn) return false;
@@ -897,7 +906,6 @@ namespace golang::gcimporter
         os << '{';
         os << "" << p;
         os << " " << declReader;
-        os << " " << currPkg;
         os << " " << prevFile;
         os << " " << prevLine;
         os << " " << prevColumn;
@@ -910,7 +918,17 @@ namespace golang::gcimporter
         return value.PrintTo(os);
     }
 
-    void rec::obj(importReader* r, gocpp::string name)
+    // markBlack is redefined in iimport_go123.go, to work around golang/go#69912.
+    //
+    // If TypeNames are not marked black (in the sense of go/types cycle
+    // detection), they may be mutated when dot-imported. Fix this by punching a
+    // hole through the type, when compiling with Go 1.23. (The bug has been fixed
+    // for 1.24, but the fix was not worth back-porting).
+    std::function<void (types::TypeName*)> markBlack = [](types::TypeName* name) mutable -> void
+    {
+    };
+    // obj decodes and declares the package-level object denoted by (pkg, name).
+    void rec::obj(importReader* r, types::Package* pkg, gocpp::string name)
     {
         auto tag = rec::byte(gocpp::recv(r));
         auto pos = rec::pos(gocpp::recv(r));
@@ -920,55 +938,62 @@ namespace golang::gcimporter
             auto condition = tag;
             int conditionId = -1;
             if(condition == aliasTag) { conditionId = 0; }
-            else if(condition == constTag) { conditionId = 1; }
-            else if(condition == funcTag) { conditionId = 2; }
-            else if(condition == genericFuncTag) { conditionId = 3; }
-            else if(condition == typeTag) { conditionId = 4; }
-            else if(condition == genericTypeTag) { conditionId = 5; }
-            else if(condition == typeParamTag) { conditionId = 6; }
-            else if(condition == varTag) { conditionId = 7; }
+            else if(condition == genericAliasTag) { conditionId = 1; }
+            else if(condition == constTag) { conditionId = 2; }
+            else if(condition == funcTag) { conditionId = 3; }
+            else if(condition == genericFuncTag) { conditionId = 4; }
+            else if(condition == typeTag) { conditionId = 5; }
+            else if(condition == genericTypeTag) { conditionId = 6; }
+            else if(condition == typeParamTag) { conditionId = 7; }
+            else if(condition == varTag) { conditionId = 8; }
             switch(conditionId)
             {
                 case 0:
-                {
-                    auto typ = rec::typ(gocpp::recv(r));
-                    // TODO(adonovan): support generic aliases:
-                    // if tag == genericAliasTag {
-                    // tparams := r.tparamList()
-                    // alias.SetTypeParams(tparams)
-                    // }
-                    rec::declare(gocpp::recv(r), aliases::NewAlias(r->p->aliases, pos, r->currPkg, name, typ));
-                    break;
-                }
-
                 case 1:
                 {
-                    constant::Value val;
-                    std::tie(typ, val) = rec::value(gocpp::recv(r));
-                    rec::declare(gocpp::recv(r), types::NewConst(pos, r->currPkg, name, typ, val));
+                    gocpp::slice<types::TypeParam*> tparams = {};
+                    if(tag == genericAliasTag)
+                    {
+                        tparams = rec::tparamList(gocpp::recv(r));
+                    }
+                    auto typ = rec::typ(gocpp::recv(r));
+                    auto obj = aliases::New(pos, pkg, name, typ, tparams);
+                    // workaround for golang/go#69912
+                    markBlack(obj);
+                    rec::declare(gocpp::recv(r), obj);
                     break;
                 }
 
                 case 2:
+                {
+                    constant::Value val;
+                    std::tie(typ, val) = rec::value(gocpp::recv(r));
+                    rec::declare(gocpp::recv(r), types::NewConst(pos, pkg, name, typ, val));
+                    break;
+                }
+
                 case 3:
+                case 4:
                 {
                     gocpp::slice<types::TypeParam*> tparams = {};
                     if(tag == genericFuncTag)
                     {
                         tparams = rec::tparamList(gocpp::recv(r));
                     }
-                    auto sig = rec::signature(gocpp::recv(r), nullptr, nullptr, tparams);
-                    rec::declare(gocpp::recv(r), types::NewFunc(pos, r->currPkg, name, sig));
+                    auto sig = rec::signature(gocpp::recv(r), pkg, nullptr, nullptr, tparams);
+                    rec::declare(gocpp::recv(r), types::NewFunc(pos, pkg, name, sig));
                     break;
                 }
 
-                case 4:
                 case 5:
+                case 6:
                 {
                     // Types can be recursive. We need to setup a stub
                     // declaration before recursing.
-                    auto obj = types::NewTypeName(pos, r->currPkg, name, nullptr);
+                    auto obj = types::NewTypeName(pos, pkg, name, nullptr);
                     auto named = types::NewNamed(obj, nullptr, nullptr);
+                    // workaround for golang/go#69912
+                    markBlack(obj);
                     // Declare obj before calling r.tparamList, so the new type name is recognized
                     // if used in the constraint of one of its own typeparams (see #48280).
                     rec::declare(gocpp::recv(r), obj);
@@ -985,7 +1010,12 @@ namespace golang::gcimporter
                         {
                             auto mpos = rec::pos(gocpp::recv(r));
                             auto mname = rec::ident(gocpp::recv(r));
-                            auto recv = rec::param(gocpp::recv(r));
+                            gocpp::slice<types::TypeParam*> tpars = {};
+                            if(r->p->version >= iexportVersionGenericMethods && rec::go_bool(gocpp::recv(r)))
+                            {
+                                tpars = rec::tparamList(gocpp::recv(r));
+                            }
+                            auto recv = rec::param(gocpp::recv(r), pkg);
 
                             // If the receiver has any targs, set those as the
                             // rparams of the method (since those are the
@@ -998,18 +1028,17 @@ namespace golang::gcimporter
                                 rparams = gocpp::make(gocpp::Tag<gocpp::slice<types::TypeParam*>>(), rec::Len(gocpp::recv(targs)));
                                 for(auto [i, gocpp_ignored] : rparams)
                                 {
-                                    rparams[i] = gocpp::getValue<types::TypeParam*>(aliases::Unalias(rec::At(gocpp::recv(targs), i)));
+                                    rparams[i] = gocpp::getValue<types::TypeParam*>(types::Unalias(rec::At(gocpp::recv(targs), i)));
                                 }
                             }
-                            auto msig = rec::signature(gocpp::recv(r), recv, rparams, nullptr);
-
-                            rec::AddMethod(gocpp::recv(named), types::NewFunc(mpos, r->currPkg, mname, msig));
+                            auto msig = rec::signature(gocpp::recv(r), pkg, recv, rparams, tpars);
+                            rec::AddMethod(gocpp::recv(named), types::NewFunc(mpos, pkg, mname, msig));
                         }
                     }
                     break;
                 }
 
-                case 6:
+                case 7:
                 {
                     // We need to "declare" a typeparam in order to have a name that
                     // can be referenced recursively (if needed) in the type param's
@@ -1019,11 +1048,11 @@ namespace golang::gcimporter
                         errorf("unexpected type param type"_s);
                     }
                     auto name0 = tparamName(name);
-                    auto tn = types::NewTypeName(pos, r->currPkg, name0, nullptr);
+                    auto tn = types::NewTypeName(pos, pkg, name0, nullptr);
                     auto t = types::NewTypeParam(tn, nullptr);
                     // To handle recursive references to the typeparam within its
                     // bound, save the partial type in tparamIndex before reading the bounds.
-                    auto id = golang::gcimporter::ident {r->currPkg, name};
+                    auto id = golang::golang_org::x::tools::internal::gcimporter::ident {pkg, name};
                     r->p->tparamIndex[id] = t;
                     bool implicit = {};
                     if(r->p->version >= iexportVersionGo1_18)
@@ -1033,7 +1062,7 @@ namespace golang::gcimporter
                     auto constraint = rec::typ(gocpp::recv(r));
                     if(implicit)
                     {
-                        auto [iface, gocpp_id_4] = gocpp::getValue<types::Interface*>(aliases::Unalias(constraint));
+                        auto [iface, gocpp_id_4] = gocpp::getValue<types::Interface*>(types::Unalias(constraint));
                         if(iface == nullptr)
                         {
                             errorf("non-interface constraint marked implicit"_s);
@@ -1051,10 +1080,12 @@ namespace golang::gcimporter
                     break;
                 }
 
-                case 7:
+                case 8:
                 {
                     auto typ = rec::typ(gocpp::recv(r));
-                    rec::declare(gocpp::recv(r), types::NewVar(pos, r->currPkg, name, typ));
+                    auto v = types::NewVar(pos, pkg, name, typ);
+                    typesinternal::SetVarKind(v, typesinternal::PackageVar);
+                    rec::declare(gocpp::recv(r), v);
                     break;
                 }
 
@@ -1347,7 +1378,7 @@ namespace golang::gcimporter
 
     bool isInterface(types::Type t)
     {
-        auto [gocpp_id_6, ok] = gocpp::getValue<types::Interface*>(aliases::Unalias(t));
+        auto [gocpp_id_6, ok] = gocpp::getValue<types::Interface*>(types::Unalias(t));
         return ok;
     }
 
@@ -1370,7 +1401,7 @@ namespace golang::gcimporter
             auto k = rec::kind(gocpp::recv(r));
             if(debug)
             {
-                rec::trace(gocpp::recv(r->p), "importing type %d (base: %s)"_s, k, base);
+                rec::trace(gocpp::recv(r->p), "importing type %d (base: %v)"_s, k, base);
                 r->p->indent++;
                 defer.push_back([=, &res]{ [=]() mutable -> void
                 {
@@ -1432,13 +1463,15 @@ namespace golang::gcimporter
                         return types::NewMap(rec::typ(gocpp::recv(r)), rec::typ(gocpp::recv(r)));
                         break;
                     case 7:
-                        r->currPkg = rec::pkg(gocpp::recv(r));
-                        return rec::signature(gocpp::recv(r), nullptr, nullptr, nullptr);
+                    {
+                        auto paramPkg = rec::pkg(gocpp::recv(r));
+                        return rec::signature(gocpp::recv(r), paramPkg, nullptr, nullptr, nullptr);
                         break;
+                    }
 
                     case 8:
                     {
-                        r->currPkg = rec::pkg(gocpp::recv(r));
+                        auto fieldPkg = rec::pkg(gocpp::recv(r));
                         auto fields = gocpp::make(gocpp::Tag<gocpp::slice<types::Var*>>(), rec::uint64(gocpp::recv(r)));
                         auto tags = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), len(fields));
                         for(auto [i, gocpp_ignored] : fields)
@@ -1462,7 +1495,7 @@ namespace golang::gcimporter
                             // preferable to failing (for now at least).
                             if(field == nullptr)
                             {
-                                field = types::NewField(fpos, r->currPkg, fname, ftyp, emb);
+                                field = types::NewField(fpos, fieldPkg, fname, ftyp, emb);
                             }
 
                             fields[i] = field;
@@ -1474,7 +1507,8 @@ namespace golang::gcimporter
 
                     case 9:
                     {
-                        r->currPkg = rec::pkg(gocpp::recv(r));
+                        // qualifies methods and their param/result vars
+                        auto methodPkg = rec::pkg(gocpp::recv(r));
                         auto embeddeds = gocpp::make(gocpp::Tag<gocpp::slice<types::Type>>(), rec::uint64(gocpp::recv(r)));
                         for(auto [i, gocpp_ignored] : embeddeds)
                         {
@@ -1498,17 +1532,17 @@ namespace golang::gcimporter
                             types::Var* recv = {};
                             if(base != nullptr)
                             {
-                                recv = types::NewVar(token::NoPos, r->currPkg, ""_s, base);
+                                recv = types::NewVar(token::NoPos, methodPkg, ""_s, base);
                             }
-                            auto msig = rec::signature(gocpp::recv(r), recv, nullptr, nullptr);
+                            auto msig = rec::signature(gocpp::recv(r), methodPkg, recv, nullptr, nullptr);
 
                             if(method == nullptr)
                             {
-                                method = types::NewFunc(mpos, r->currPkg, mname, msig);
+                                method = types::NewFunc(mpos, methodPkg, mname, msig);
                             }
                             methods[i] = method;
                         }
-                        auto typ = newInterface(methods, embeddeds);
+                        auto typ = types::NewInterfaceType(methods, embeddeds);
                         r->p->interfaceList = append(r->p->interfaceList, typ);
                         return typ;
                         break;
@@ -1521,7 +1555,7 @@ namespace golang::gcimporter
                             errorf("unexpected type param type"_s);
                         }
                         std::tie(pkg, name) = rec::qualifiedIdent(gocpp::recv(r));
-                        auto id = golang::gcimporter::ident {pkg, name};
+                        auto id = golang::golang_org::x::tools::internal::gcimporter::ident {pkg, name};
                         if(auto [t, ok] = r->p->tparamIndex[id]; ok)
                         {
                             // We're already in the process of importing this typeparam.
@@ -1612,10 +1646,10 @@ namespace golang::gcimporter
         return obj;
     }
 
-    types::Signature* rec::signature(importReader* r, types::Var* recv, gocpp::slice<types::TypeParam*> rparams, gocpp::slice<types::TypeParam*> tparams)
+    types::Signature* rec::signature(importReader* r, types::Package* paramPkg, types::Var* recv, gocpp::slice<types::TypeParam*> rparams, gocpp::slice<types::TypeParam*> tparams)
     {
-        auto params = rec::paramList(gocpp::recv(r));
-        auto results = rec::paramList(gocpp::recv(r));
+        auto params = rec::paramList(gocpp::recv(r), paramPkg);
+        auto results = rec::paramList(gocpp::recv(r), paramPkg);
         auto variadic = rec::Len(gocpp::recv(params)) > 0 && rec::go_bool(gocpp::recv(r));
         return types::NewSignatureType(recv, rparams, tparams, params, results, variadic);
     }
@@ -1632,27 +1666,27 @@ namespace golang::gcimporter
         {
             // Note: the standard library importer is tolerant of nil types here,
             // though would panic in SetTypeParams.
-            xs[i] = gocpp::getValue<types::TypeParam*>(aliases::Unalias(rec::typ(gocpp::recv(r))));
+            xs[i] = gocpp::getValue<types::TypeParam*>(types::Unalias(rec::typ(gocpp::recv(r))));
         }
         return xs;
     }
 
-    types::Tuple* rec::paramList(importReader* r)
+    types::Tuple* rec::paramList(importReader* r, types::Package* pkg)
     {
         auto xs = gocpp::make(gocpp::Tag<gocpp::slice<types::Var*>>(), rec::uint64(gocpp::recv(r)));
         for(auto [i, gocpp_ignored] : xs)
         {
-            xs[i] = rec::param(gocpp::recv(r));
+            xs[i] = rec::param(gocpp::recv(r), pkg);
         }
         return types::NewTuple(xs);
     }
 
-    types::Var* rec::param(importReader* r)
+    types::Var* rec::param(importReader* r, types::Package* pkg)
     {
         auto pos = rec::pos(gocpp::recv(r));
         auto name = rec::ident(gocpp::recv(r));
         auto typ = rec::typ(gocpp::recv(r));
-        return types::NewParam(pos, r->currPkg, name, typ);
+        return types::NewParam(pos, pkg, name, typ);
     }
 
     bool rec::go_bool(importReader* r)
@@ -1688,6 +1722,21 @@ namespace golang::gcimporter
             errorf("declReader.ReadByte: %v"_s, err);
         }
         return x;
+    }
+
+    int rec::Len(byPath a)
+    {
+        return len(a);
+    }
+
+    void rec::Swap(byPath a, int i, int j)
+    {
+        std::tie(a[i], a[j]) = std::tuple{a[j], a[i]};
+    }
+
+    bool rec::Less(byPath a, int i, int j)
+    {
+        return rec::Path(gocpp::recv(a[i])) < rec::Path(gocpp::recv(a[j]));
     }
 
 }

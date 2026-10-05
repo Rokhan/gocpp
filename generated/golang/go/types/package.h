@@ -11,13 +11,13 @@
 
 #include "golang/go/types/scope.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Package
     {
         gocpp::string path{};
         gocpp::string name{};
-        golang::types::Scope* scope{};
+        golang::go::types::Scope* scope{};
         gocpp::slice<Package*> imports{};
         bool complete{};
         bool fake{}; // scope lookup errors are silently dropped if package is fake (internal use only)
@@ -41,7 +41,7 @@ namespace golang::types
 
 #include "golang/go/types/scope.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
@@ -50,7 +50,7 @@ namespace golang::types
         gocpp::string Name(Package* pkg);
         void SetName(Package* pkg, gocpp::string name);
         gocpp::string GoVersion(Package* pkg);
-        golang::types::Scope* Scope(Package* pkg);
+        golang::go::types::Scope* Scope(Package* pkg);
         bool Complete(Package* pkg);
         void MarkComplete(Package* pkg);
         gocpp::slice<Package*> Imports(Package* pkg);

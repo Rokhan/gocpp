@@ -10,9 +10,8 @@
 #include "gocpp/support.h"
 
 #include "golang/regexp/syntax/parse.h"
-#include "golang/strings/builder.fwd.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
     struct Regexp
     {
@@ -39,10 +38,17 @@ namespace golang::syntax
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Regexp& value);
-    void escape(strings::Builder* b, gocpp::rune r, bool force);
+}
+#include "golang/strings/builder.fwd.h"
+#include "golang/strings/strings.fwd.h"
+
+namespace golang::regexp::syntax
+{
     void addSpan(Regexp* start, Regexp* last, printFlags f, gocpp::map<Regexp*, printFlags>* flags);
     std::tuple<printFlags, printFlags> calcFlags(Regexp* re, gocpp::map<Regexp*, printFlags>* flags);
+    namespace strings = golang::strings;
     void writeRegexp(strings::Builder* b, Regexp* re, printFlags f, gocpp::map<Regexp*, printFlags> flags);
+    void escape(strings::Builder* b, gocpp::rune r, bool force);
 
     namespace rec
     {

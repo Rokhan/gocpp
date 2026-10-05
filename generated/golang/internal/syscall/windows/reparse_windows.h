@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
     struct REPARSE_DATA_BUFFER
     {

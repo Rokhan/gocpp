@@ -11,7 +11,7 @@
 
 #include "golang/io/fs/fs.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
     struct StatFS : virtual gocpp::Interface, FS
     {

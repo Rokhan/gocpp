@@ -10,24 +10,8 @@
 #include "gocpp/support.h"
 
 
-namespace golang::bisect
+namespace golang::internal::bisect
 {
-    struct atomicPointerDedup
-    {
-        gocpp::unsafe_pointer p{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct atomicPointerDedup& value);
     struct cond
     {
         uint64_t mask{};
@@ -146,13 +130,31 @@ namespace golang::bisect
     uint64_t fnvString(uint64_t h, gocpp::string x);
     uint64_t fnvUint64(uint64_t h, uint64_t x);
     uint64_t fnvUint32(uint64_t h, uint32_t x);
+    gocpp::error printFileLine(Writer w, uint64_t h, gocpp::string file, int line);
+    gocpp::error PrintMarker(Writer w, uint64_t h);
+    gocpp::error printStack(Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
+}
+#include "golang/sync/atomic/doc_64.fwd.h"
+#include "golang/sync/atomic/type.fwd.h"
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::internal::bisect
+{
+    namespace atomic = golang::sync::atomic;
+    namespace sync = golang::sync;
+}
+#include "golang/sync/atomic/type.h"
+#include "golang/sync/mutex.h"
+
+namespace golang::internal::bisect
+{
     struct Matcher
     {
         bool verbose{}; // annotate reporting with human-helpful information
         bool quiet{}; // disables all reporting.  reset if verbose is true. use case is -d=fmahash=qn
         bool enable{}; // when true, list is for “enable and report” (when false, “disable and report”)
         gocpp::slice<cond> list{}; // conditions; later ones win over earlier ones
-        atomicPointerDedup dedup{};
+        atomic::Pointer<dedup> dedup{};
 
         using isGoStruct = void;
 
@@ -166,14 +168,6 @@ namespace golang::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Matcher& value);
-    gocpp::error printFileLine(Writer w, uint64_t h, gocpp::string file, int line);
-    gocpp::error PrintMarker(Writer w, uint64_t h);
-    gocpp::error printStack(Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
-}
-#include "golang/sync/mutex.h"
-
-namespace golang::bisect
-{
     struct dedup
     {
         // 128-entry 4-way, lossy cache for seenLossy
@@ -198,8 +192,6 @@ namespace golang::bisect
 
     namespace rec
     {
-        dedup* Load(atomicPointerDedup* p);
-        bool CompareAndSwap(atomicPointerDedup* p, dedup* old, dedup* go_new);
         bool MarkerOnly(Matcher* m);
         bool ShouldEnable(Matcher* m, uint64_t id);
         bool ShouldPrint(Matcher* m, uint64_t id);

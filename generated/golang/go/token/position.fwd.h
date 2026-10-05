@@ -4,23 +4,19 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::token
+namespace golang::go::token
 {
+    // If debug is set, invalid offset and position values cause a panic
+    // (go.dev/issue/57490).
+    const bool debug = false;
     struct Position;
     using Pos = int;
+    struct File;
     struct lineInfo;
+    struct FileSet;
     // The zero value for [Pos] is NoPos; there is no file and line information
     // associated with it, and NoPos.IsValid() is false. NoPos is always
     // smaller than any other [Pos] value. The corresponding [Position] value
     // for NoPos is the zero value for [Position].
-    const golang::token::Pos NoPos = 0;
-}
-#include "golang/sync/atomic/type.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-#include "golang/sync/rwmutex.fwd.h"
-
-namespace golang::token
-{
-    struct File;
-    struct FileSet;
+    const golang::go::token::Pos NoPos = 0;
 }

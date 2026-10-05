@@ -19,6 +19,8 @@
 
 namespace golang::time
 {
+    namespace errors = golang::errors;
+    namespace syscall = golang::syscall;
     namespace rec
     {
         using syscall::rec::Error;

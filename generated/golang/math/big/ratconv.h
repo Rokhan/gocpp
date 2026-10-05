@@ -10,40 +10,48 @@
 #include "gocpp/support.h"
 
 
-namespace golang::big
+namespace golang::math::big
 {
     bool ratTok(gocpp::rune ch);
 }
-#include "golang/io/io.h"
 #include "golang/math/big/rat.h"
 
-namespace golang::big
+namespace golang::math::big
 {
-    extern golang::big::Rat ratZero;
+    extern golang::math::big::Rat ratZero;
+}
+#include "golang/fmt/scan.fwd.h"
+#include "golang/io/io.fwd.h"
+
+namespace golang::math::big
+{
+    namespace fmt = golang::fmt;
+}
+#include "golang/fmt/scan.h"
+#include "golang/io/io.h"
+
+namespace golang::math::big
+{
+    namespace io = golang::io;
+    extern fmt::Scanner _;
     std::tuple<int64_t, int, gocpp::error> scanExponent(io::ByteScanner r, bool base2ok, bool sepOk);
 }
-#include "golang/fmt/scan.h"
-
-namespace golang::big
-{
-    extern fmt::Scanner _;
-}
 
 #include "golang/fmt/scan.h"
 #include "golang/math/big/rat.h"
 
-namespace golang::big
+namespace golang::math::big
 {
 
     namespace rec
     {
-        gocpp::error Scan(golang::big::Rat* z, fmt::ScanState s, gocpp::rune ch);
-        std::tuple<golang::big::Rat*, bool> SetString(golang::big::Rat* z, gocpp::string s);
-        gocpp::string String(golang::big::Rat* x);
-        gocpp::slice<unsigned char> marshal(golang::big::Rat* x);
-        gocpp::string RatString(golang::big::Rat* x);
-        gocpp::string FloatString(golang::big::Rat* x, int prec);
-        std::tuple<int, bool> FloatPrec(golang::big::Rat* x);
+        gocpp::error Scan(golang::math::big::Rat* z, fmt::ScanState s, gocpp::rune ch);
+        std::tuple<golang::math::big::Rat*, bool> SetString(golang::math::big::Rat* z, gocpp::string s);
+        gocpp::string String(golang::math::big::Rat* x);
+        gocpp::slice<unsigned char> marshal(golang::math::big::Rat* x, gocpp::slice<unsigned char> buf);
+        gocpp::string RatString(golang::math::big::Rat* x);
+        gocpp::string FloatString(golang::math::big::Rat* x, int prec);
+        std::tuple<int, bool> FloatPrec(golang::math::big::Rat* x);
     }
 }
 

@@ -16,8 +16,11 @@
 #include "golang/os/file.h"
 #include "golang/os/types.h"
 
-namespace golang::reader
+namespace golang::golang_org::x::tour::reader
 {
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace os = golang::os;
     namespace rec
     {
         using io::rec::Read;

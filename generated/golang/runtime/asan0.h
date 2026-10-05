@@ -12,11 +12,15 @@
 
 namespace golang::runtime
 {
+    void lsandoleakcheck();
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     void asanread(gocpp::unsafe_pointer addr, uintptr_t sz);
     void asanwrite(gocpp::unsafe_pointer addr, uintptr_t sz);
     void asanunpoison(gocpp::unsafe_pointer addr, uintptr_t sz);
     void asanpoison(gocpp::unsafe_pointer addr, uintptr_t sz);
     void asanregisterglobals(gocpp::unsafe_pointer addr, uintptr_t sz);
+    void lsanregisterrootregion(gocpp::unsafe_pointer, uintptr_t);
+    void lsanunregisterrootregion(gocpp::unsafe_pointer, uintptr_t);
 
     namespace rec
     {

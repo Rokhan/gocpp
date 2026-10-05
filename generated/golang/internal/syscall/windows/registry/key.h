@@ -10,16 +10,20 @@
 #include "gocpp/support.h"
 
 
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
     std::tuple<Key, gocpp::error> OpenKey(Key k, gocpp::string path, uint32_t access);
     std::tuple<Key, bool, gocpp::error> CreateKey(Key k, gocpp::string path, uint32_t access);
     gocpp::error DeleteKey(Key k, gocpp::string path);
 }
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
 #include "golang/syscall/types_windows.h"
 
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
+    namespace syscall = golang::syscall;
     struct KeyInfo
     {
         uint32_t SubKeyCount{};

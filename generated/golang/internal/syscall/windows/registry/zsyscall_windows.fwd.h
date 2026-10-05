@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
     // Do the interface allocations only once for common
     // Errno values.

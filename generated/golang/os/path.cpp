@@ -11,11 +11,12 @@
 #include "golang/os/path.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/filepathlite/path.h"
 #include "golang/io/fs/fs.h"
 #include "golang/os/error.h"
 #include "golang/os/file.h"
 #include "golang/os/path_windows.h"
-#include "golang/os/removeall_noat.h"
+#include "golang/os/removeall_at.h"
 #include "golang/os/stat.h"
 #include "golang/os/types.h"
 #include "golang/syscall/syscall_windows.h"
@@ -23,9 +24,10 @@
 
 namespace golang::os
 {
+    namespace filepathlite = golang::internal::filepathlite;
+    namespace syscall = golang::syscall;
     namespace rec
     {
-        using fs::rec::Error;
         using fs::rec::IsDir;
     }
 
@@ -73,7 +75,7 @@ namespace golang::os
 
         // If there is a parent directory, and it is not the volume name,
         // recurse to ensure parent directory exists.
-        if(auto parent = path.make_slice(0, i); len(parent) > len(volumeName(path)))
+        if(auto parent = path.make_slice(0, i); len(parent) > len(filepathlite::VolumeName(path)))
         {
             err = MkdirAll(parent, perm);
             if(err != nullptr)
@@ -102,7 +104,7 @@ namespace golang::os
     // It removes everything it can but returns the first error
     // it encounters. If the path does not exist, RemoveAll
     // returns nil (no error).
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     gocpp::error RemoveAll(gocpp::string path)
     {
         return removeAll(path);

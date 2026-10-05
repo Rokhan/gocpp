@@ -11,7 +11,7 @@
 #include "golang/internal/bytealg/count_native.h"
 #include "gocpp/support.h"
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
     namespace rec
     {

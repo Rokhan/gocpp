@@ -3,9 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/go/types/scope.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Package;
 }

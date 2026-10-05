@@ -3,7 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/time/time.fwd.h"
 
 namespace golang::main
 {

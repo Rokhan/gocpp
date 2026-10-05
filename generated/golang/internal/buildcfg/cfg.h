@@ -10,13 +10,30 @@
 #include "gocpp/support.h"
 
 
-namespace golang::buildcfg
+namespace golang::internal::buildcfg
 {
+    extern gocpp::string GOROOT;
+    extern gocpp::string GOARCH;
+    extern gocpp::string GOOS;
+    extern gocpp::string GO386;
+    extern int GOAMD64;
+    extern gocpp::string GOMIPS;
+    extern gocpp::string GOMIPS64;
+    extern int GOPPC64;
+    extern int GORISCV64;
+    extern gocpp::slice<gocpp::string> ToolTags;
+    extern gocpp::string GO_LDSO;
+    extern gocpp::string GOFIPS140;
+    extern gocpp::string Version;
+    // Error is one of the errors found (if any) in the build configuration.
     extern gocpp::error Error;
     void Check();
     gocpp::string envOr(gocpp::string key, gocpp::string value);
     int goamd64();
-    struct goarmFeatures
+    gocpp::string gofips140();
+    bool isFIPSVersion(gocpp::string v);
+    std::tuple<gocpp::string, bool> cutNum(gocpp::string s);
+    struct GoarmFeatures
     {
         int Version{};
         bool SoftFloat{};
@@ -32,14 +49,37 @@ namespace golang::buildcfg
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct goarmFeatures& value);
+    std::ostream& operator<<(std::ostream& os, const struct GoarmFeatures& value);
+    struct Goarm64Features
+    {
+        gocpp::string Version{};
+        // Large Systems Extension
+        bool LSE{};
+        // ARM v8.0 Cryptographic Extension. It includes the following features:
+        // * FEAT_AES, which includes the AESD and AESE instructions.
+        // * FEAT_PMULL, which includes the PMULL, PMULL2 instructions.
+        // * FEAT_SHA1, which includes the SHA1* instructions.
+        // * FEAT_SHA256, which includes the SHA256* instructions.
+        bool Crypto{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Goarm64Features& value);
     gocpp::string gomips();
     gocpp::string gomips64();
     int goppc64();
+    int goriscv64();
     struct gowasmFeatures
     {
-        bool SatConv{};
-        bool SignExt{};
 
         using isGoStruct = void;
 
@@ -58,31 +98,19 @@ namespace golang::buildcfg
     gocpp::slice<gocpp::string> experimentTags();
     std::tuple<gocpp::string, gocpp::string> GOGOARCH();
     gocpp::slice<gocpp::string> gogoarchTags();
-    extern int GOAMD64;
-    extern gocpp::string GOMIPS;
-    extern gocpp::string GOMIPS64;
-    extern int GOPPC64;
-    extern gocpp::slice<gocpp::string> ToolTags;
-    goarmFeatures goarm();
-    gowasmFeatures gowasm();
-}
-#include "golang/internal/buildcfg/zbootstrap.h"
-#include "golang/runtime/extern.fwd.h"
-
-namespace golang::buildcfg
-{
-    extern gocpp::string GOROOT;
-    extern gocpp::string GOARCH;
-    extern gocpp::string GOOS;
-    extern gocpp::string GO386;
-    extern gocpp::string GO_LDSO;
-    extern gocpp::string Version;
-    extern buildcfg::goarmFeatures GOARM;
+    extern buildcfg::GoarmFeatures GOARM;
+    extern buildcfg::Goarm64Features GOARM64;
     extern buildcfg::gowasmFeatures GOWASM;
+    GoarmFeatures goarm();
+    std::tuple<Goarm64Features, gocpp::error> ParseGoarm64(gocpp::string v);
+    Goarm64Features goarm64();
+    gowasmFeatures gowasm();
 
     namespace rec
     {
-        gocpp::string String(goarmFeatures g);
+        gocpp::string String(GoarmFeatures g);
+        gocpp::string String(Goarm64Features g);
+        bool Supports(Goarm64Features g, gocpp::string s);
         gocpp::string String(gowasmFeatures f);
     }
 }

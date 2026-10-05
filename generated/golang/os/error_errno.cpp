@@ -12,9 +12,11 @@
 #include "gocpp/support.h"
 
 #include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/zerrors_windows.h"
 
 namespace golang::os
 {
+    namespace syscall = golang::syscall;
     namespace rec
     {
     }

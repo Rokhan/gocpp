@@ -15,12 +15,18 @@
 #include "golang/internal/buildcfg/cfg.h"
 #include "golang/internal/buildcfg/zbootstrap.h"
 #include "golang/internal/goexperiment/flags.h"
+#include "golang/iter/iter.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
+#include "golang/strings/iter.h"
 #include "golang/strings/strings.h"
 
-namespace golang::buildcfg
+namespace golang::internal::buildcfg
 {
+    namespace fmt = golang::fmt;
+    namespace goexperiment = golang::internal::goexperiment;
+    namespace reflect = golang::reflect;
+    namespace strings = golang::strings;
     namespace rec
     {
         using reflect::rec::Bool;
@@ -70,7 +76,7 @@ namespace golang::buildcfg
     // (This is not necessarily the set of experiments the compiler itself
     // was built with.)
     //
-    // experimentBaseline specifies the experiment flags that are enabled by
+    // Experiment.baseline specifies the experiment flags that are enabled by
     // default in the current toolchain. This is, in effect, the "control"
     // configuration and any variation from this is an experiment.
     ExperimentFlags Experiment = []() mutable -> ExperimentFlags
@@ -95,7 +101,7 @@ namespace golang::buildcfg
     // configuration tuple and returns the enabled and baseline experiment
     // flag sets.
     //
-    // TODO(mdempsky): Move to internal/goexperiment.
+    // TODO(mdempsky): Move to [internal/goexperiment].
     std::tuple<ExperimentFlags*, gocpp::error> ParseGOEXPERIMENT(gocpp::string goos, gocpp::string goarch, gocpp::string goexp)
     {
         // regabiSupported is set to true on platforms where register ABI is
@@ -110,10 +116,11 @@ namespace golang::buildcfg
             int conditionId = -1;
             if(condition == "amd64"_s) { conditionId = 0; }
             else if(condition == "arm64"_s) { conditionId = 1; }
-            else if(condition == "ppc64le"_s) { conditionId = 2; }
-            else if(condition == "ppc64"_s) { conditionId = 3; }
-            else if(condition == "riscv64"_s) { conditionId = 4; }
-            else if(condition == "loong64"_s) { conditionId = 5; }
+            else if(condition == "loong64"_s) { conditionId = 2; }
+            else if(condition == "ppc64le"_s) { conditionId = 3; }
+            else if(condition == "ppc64"_s) { conditionId = 4; }
+            else if(condition == "riscv64"_s) { conditionId = 5; }
+            else if(condition == "s390x"_s) { conditionId = 6; }
             switch(conditionId)
             {
                 case 0:
@@ -121,24 +128,34 @@ namespace golang::buildcfg
                 case 2:
                 case 3:
                 case 4:
-                    regabiAlwaysOn = true;
-                    regabiSupported = true;
-                    break;
                 case 5:
+                case 6:
+                    regabiAlwaysOn = true;
                     regabiSupported = true;
                     break;
             }
         }
 
+        // Older versions (anything before V16) of dsymutil don't handle
+        // the .debug_rnglists section in DWARF5. See
+        // https://github.com/golang/go/issues/26379#issuecomment-2677068742
+        // for more context. This disables all DWARF5 on mac, which is not
+        // ideal (would be better to disable just for cases where we know
+        // the build will use external linking). In the GOOS=aix case, the
+        // XCOFF format (as far as can be determined) doesn't seem to
+        // support the necessary section subtypes for DWARF-specific
+        // things like .debug_addr (needed for DWARF 5).
+        auto dwarf5Supported = (goos != "darwin"_s && goos != "ios"_s && goos != "aix"_s);
+
         auto baseline = gocpp::Init<goexperiment::Flags>([=](auto& x) {
             x.RegabiWrappers = regabiSupported;
             x.RegabiArgs = regabiSupported;
-            x.CoverageRedesign = true;
-            x.AllocHeaders = true;
-            x.ExecTracer2 = true;
+            x.Dwarf5 = dwarf5Supported;
+            x.RandomizedHeapBase64 = true;
+            x.GreenTeaGC = true;
+            x.JSONv2 = true;
+            x.SizeSpecializedMalloc = true;
         });
-
-        // Start with the statically enabled set of experiments.
         auto flags = gocpp::InitPtr<ExperimentFlags>([=](auto& x) {
             x.Flags = baseline;
             x.baseline = baseline;
@@ -170,7 +187,7 @@ namespace golang::buildcfg
             };
 
             // Parse names.
-            for(auto [gocpp_ignored, f] : strings::Split(goexp, ","_s))
+            for(auto [f, gocpp_ignored] : strings::SplitSeq(goexp, ","_s))
             {
                 if(f == ""_s)
                 {
@@ -203,7 +220,7 @@ namespace golang::buildcfg
             flags->Flags.RegabiWrappers = true;
             flags->Flags.RegabiArgs = true;
         }
-        // regabi is only supported on amd64, arm64, loong64, riscv64, ppc64 and ppc64le.
+        // regabi is only supported on amd64, arm64, loong64, riscv64, s390x, ppc64 and ppc64le.
         if(! regabiSupported)
         {
             flags->Flags.RegabiWrappers = false;

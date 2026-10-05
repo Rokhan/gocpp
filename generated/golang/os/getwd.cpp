@@ -11,11 +11,10 @@
 #include "golang/os/getwd.h"
 #include "gocpp/support.h"
 
-#include "golang/io/fs/fs.h"
 #include "golang/os/dir.h"
 #include "golang/os/env.h"
 #include "golang/os/error.h"
-#include "golang/os/file.h"
+#include "golang/os/error_errno.h"
 #include "golang/os/file_posix.h"
 #include "golang/os/file_windows.h"
 #include "golang/os/stat_windows.h"
@@ -27,6 +26,9 @@
 
 namespace golang::os
 {
+    namespace runtime = golang::runtime;
+    namespace sync = golang::sync;
+    namespace syscall = golang::syscall;
     namespace rec
     {
         using mocklib::rec::Lock;
@@ -68,31 +70,43 @@ namespace golang::os
 
 
     getwdCacheStruct getwdCache;
-    // Getwd returns a rooted path name corresponding to the
+    // Getwd returns an absolute path name corresponding to the
     // current directory. If the current directory can be
     // reached via multiple paths (due to symbolic links),
     // Getwd may return any one of them.
+    //
+    // On Unix platforms, if the environment variable PWD
+    // provides an absolute name, and it is a name of the
+    // current directory, it is returned.
     std::tuple<gocpp::string, gocpp::error> Getwd()
     {
         gocpp::string dir;
         gocpp::error err;
         if(mocklib::GOOS == "windows"_s || mocklib::GOOS == "plan9"_s)
         {
-            return syscall::Getwd();
+            // Use syscall.Getwd directly for
+            // - plan9: see reasons in CL 89575;
+            // - windows: syscall implementation is sufficient,
+            // and we should not rely on $PWD.
+            std::tie(dir, err) = syscall::Getwd();
+            return {dir, NewSyscallError("getwd"_s, err)};
         }
 
         // Clumsy but widespread kludge:
         // if $PWD is set and matches ".", use it.
-        fs::FileInfo dot;
-        std::tie(dot, err) = statNolog("."_s);
-        if(err != nullptr)
-        {
-            return {""_s, err};
-        }
+        FileInfo dot = {};
         dir = Getenv("PWD"_s);
         if(len(dir) > 0 && dir[0] == '/')
         {
+            std::tie(dot, err) = statNolog("."_s);
+            if(err != nullptr)
+            {
+                return {""_s, err};
+            }
             auto [d, err] = statNolog(dir);
+            // If err is ENAMETOOLONG here, the syscall.Getwd below will
+            // fail with the same error, too, but let's give it a try
+            // anyway as the fallback code is much slower.
             if(err == nullptr && SameFile(dot, d))
             {
                 return {dir, nullptr};
@@ -100,22 +114,28 @@ namespace golang::os
         }
 
         // If the operating system provides a Getwd call, use it.
-        // Otherwise, we're trying to find our way back to ".".
         if(syscall::ImplementsGetwd)
         {
-            gocpp::string s = {};
-            gocpp::error e = {};
-            for(; ; )
+            std::tie(dir, err) = ignoringEINTR2(syscall::Getwd);
+            // Linux returns ENAMETOOLONG if the result is too long.
+            // Some BSD systems appear to return EINVAL.
+            // FreeBSD systems appear to use ENOMEM
+            // Solaris appears to use ERANGE.
+            if(err != syscall::go_ENAMETOOLONG && err != syscall::go_EINVAL && err != errERANGE && err != errENOMEM)
             {
-                std::tie(s, e) = syscall::Getwd();
-                if(e != syscall::go_EINTR)
-                {
-                    break;
-                }
+                return {dir, NewSyscallError("getwd"_s, err)};
             }
-            return {s, NewSyscallError("getwd"_s, e)};
         }
 
+        // We're trying to find our way back to ".".
+        if(dot == nullptr)
+        {
+            std::tie(dot, err) = statNolog("."_s);
+            if(err != nullptr)
+            {
+                return {""_s, err};
+            }
+        }
         // Apply same kludge but to cached dir instead of $PWD.
         rec::Lock(gocpp::recv(getwdCache));
         dir = getwdCache.dir;
@@ -131,7 +151,7 @@ namespace golang::os
 
         // Root is a special case because it has no parent
         // and ends in a slash.
-        fs::FileInfo root;
+        FileInfo root;
         std::tie(root, err) = statNolog("/"_s);
         if(err != nullptr)
         {
@@ -152,9 +172,9 @@ namespace golang::os
             if(len(parent) >= 1024)
             {
                 // Sanity check
-                return {""_s, gocpp::error(syscall::go_ENAMETOOLONG)};
+                return {""_s, NewSyscallError("getwd"_s, syscall::go_ENAMETOOLONG)};
             }
-            auto [fd, err] = openFileNolog(parent, O_RDONLY, 0);
+            auto [fd, err] = openDirNolog(parent);
             if(err != nullptr)
             {
                 return {""_s, err};
@@ -166,7 +186,15 @@ namespace golang::os
                 if(err != nullptr)
                 {
                     rec::Close(gocpp::recv(fd));
-                    return {""_s, err};
+                    // Readdirnames can return io.EOF or other error.
+                    // In any case, we're here because syscall.Getwd
+                    // is not implemented or failed with ENAMETOOLONG,
+                    // so return the most sensible error.
+                    if(syscall::ImplementsGetwd)
+                    {
+                        return {""_s, NewSyscallError("getwd"_s, syscall::go_ENAMETOOLONG)};
+                    }
+                    return {""_s, NewSyscallError("getwd"_s, errENOSYS)};
                 }
                 for(auto [gocpp_ignored, name] : names)
                 {
@@ -180,7 +208,7 @@ namespace golang::os
             }
 
             Found:
-            fs::FileInfo pd;
+            FileInfo pd;
             std::tie(pd, err) = rec::Stat(gocpp::recv(fd));
             rec::Close(gocpp::recv(fd));
             if(err != nullptr)

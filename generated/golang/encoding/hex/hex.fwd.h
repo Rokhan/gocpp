@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::hex
+namespace golang::encoding::hex
 {
     const gocpp::string hextable = "0123456789abcdef"_s;
     const gocpp::string reverseHexTable = ""_s +
@@ -27,11 +27,6 @@ namespace golang::hex
     using InvalidByteError = unsigned char;
     // bufferSize is the number of hexadecimal characters to buffer in encoder and decoder.
     const long bufferSize = 1024;
-}
-#include "golang/io/io.fwd.h"
-
-namespace golang::hex
-{
     struct encoder;
     struct decoder;
     struct dumper;

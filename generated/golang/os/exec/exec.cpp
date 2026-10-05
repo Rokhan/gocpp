@@ -18,11 +18,11 @@
 #include "golang/errors/wrap.h"
 #include "golang/internal/godebug/godebug.h"
 #include "golang/internal/syscall/execenv/execenv_windows.h"
-#include "golang/io/fs/fs.h"
 #include "golang/io/io.h"
 #include "golang/os/env.h"
 #include "golang/os/exec.h"
 #include "golang/os/exec/exec_windows.h"
+#include "golang/os/exec/lookpath.h"
 #include "golang/os/exec/lp_windows.h"
 #include "golang/os/exec_posix.h"
 #include "golang/os/file.h"
@@ -30,14 +30,14 @@
 #include "golang/os/file_windows.h"
 #include "golang/os/types.h"
 #include "golang/path/filepath/path.h"
-#include "golang/path/filepath/path_windows.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mprof.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 #include "golang/strconv/quote.h"
 #include "golang/strings/builder.h"
 #include "golang/strings/strings.h"
+#include "golang/sync/atomic/doc.h"
 #include "golang/syscall/exec_windows.h"
 #include "golang/time/sleep.h"
 #include "golang/time/time.h"
@@ -52,16 +52,16 @@
 // pipelines, or redirections typically done by shells. The package
 // behaves more like C's "exec" family of functions. To expand glob
 // patterns, either call the shell directly, taking care to escape any
-// dangerous input, or use the path/filepath package's Glob function.
+// dangerous input, or use the [path/filepath] package's Glob function.
 // To expand environment variables, use package os's ExpandEnv.
 //
 // Note that the examples in this package assume a Unix system.
 // They may not run on Windows, and they do not run in the Go Playground
-// used by golang.org and godoc.org.
+// used by go.dev and pkg.go.dev.
 //
 // # Executables in the current directory
 //
-// The functions Command and LookPath look for a program
+// The functions [Command] and [LookPath] look for a program
 // in the directories listed in the current path, following the
 // conventions of the host operating system.
 // Operating systems have for decades included the current
@@ -72,10 +72,10 @@
 //
 // To avoid those security problems, as of Go 1.19, this package will not resolve a program
 // using an implicit or explicit path entry relative to the current directory.
-// That is, if you run exec.LookPath("go"), it will not successfully return
+// That is, if you run [LookPath]("go"), it will not successfully return
 // ./go on Unix nor .\go.exe on Windows, no matter how the path is configured.
 // Instead, if the usual path algorithms would result in that answer,
-// these functions return an error err satisfying errors.Is(err, ErrDot).
+// these functions return an error err satisfying [errors.Is](err, [ErrDot]).
 //
 // For example, consider these two program snippets:
 //
@@ -128,8 +128,22 @@
 // Before adding such overrides, make sure you understand the
 // security implications of doing so.
 // See https://go.dev/blog/path-security for more information.
-namespace golang::exec
+namespace golang::os::exec
 {
+    namespace atomic = golang::sync::atomic;
+    namespace bytes = golang::bytes;
+    namespace context = golang::context;
+    namespace errors = golang::errors;
+    namespace execenv = golang::internal::syscall::execenv;
+    namespace filepath = golang::path::filepath;
+    namespace godebug = golang::internal::godebug;
+    namespace io = golang::io;
+    namespace os = golang::os;
+    namespace runtime = golang::runtime;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace syscall = golang::syscall;
+    namespace time = golang::time;
     namespace rec
     {
         using bytes::rec::Bytes;
@@ -155,7 +169,7 @@ namespace golang::exec
         using time::rec::Stop;
     }
 
-    // Error is returned by LookPath when it fails to classify a file as an
+    // Error is returned by [LookPath] when it fails to classify a file as an
     // executable.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -189,17 +203,17 @@ namespace golang::exec
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(golang::exec::Error* e)
+    gocpp::string rec::Error(golang::os::exec::Error* e)
     {
         return "exec: "_s + strconv::Quote(e->Name) + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
-    gocpp::error rec::Unwrap(golang::exec::Error* e)
+    gocpp::error rec::Unwrap(golang::os::exec::Error* e)
     {
         return e->Err;
     }
 
-    // ErrWaitDelay is returned by (*Cmd).Wait if the process exits with a
+    // ErrWaitDelay is returned by [Cmd.Wait] if the process exits with a
     // successful status code but its output pipes are not closed before the
     // command's WaitDelay expires.
     gocpp::error ErrWaitDelay = errors::New("exec: WaitDelay expired before I/O complete"_s);
@@ -246,10 +260,43 @@ namespace golang::exec
         return w.err;
     }
 
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_0::operator T()
+    {
+        T result;
+        result.in = this->in;
+        result.out = this->out;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_0::operator==(const T& ref) const
+    {
+        if (in != ref.in) return false;
+        if (out != ref.out) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << in;
+        os << " " << out;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     // Cmd represents an external command being prepared or run.
     //
-    // A Cmd cannot be reused after calling its Run, Output or CombinedOutput
-    // methods.
+    // A Cmd cannot be reused after calling its [Cmd.Start], [Cmd.Run],
+    // [Cmd.Output], or [Cmd.CombinedOutput] methods.
     
     template<typename T> requires gocpp::GoStruct<T>
     Cmd::operator T()
@@ -277,6 +324,8 @@ namespace golang::exec
         result.ctxResult = this->ctxResult;
         result.createdByStack = this->createdByStack;
         result.lookPathErr = this->lookPathErr;
+        result.cachedLookExtensions = this->cachedLookExtensions;
+        result.startCalled = this->startCalled;
         return result;
     }
 
@@ -305,6 +354,8 @@ namespace golang::exec
         if (ctxResult != ref.ctxResult) return false;
         if (createdByStack != ref.createdByStack) return false;
         if (lookPathErr != ref.lookPathErr) return false;
+        if (cachedLookExtensions != ref.cachedLookExtensions) return false;
+        if (startCalled != ref.startCalled) return false;
         return true;
     }
 
@@ -333,6 +384,8 @@ namespace golang::exec
         os << " " << ctxResult;
         os << " " << createdByStack;
         os << " " << lookPathErr;
+        os << " " << cachedLookExtensions;
+        os << " " << startCalled;
         os << '}';
         return os;
     }
@@ -378,12 +431,12 @@ namespace golang::exec
 
     godebug::Setting* execwait = godebug::New("#execwait"_s);
     godebug::Setting* execerrdot = godebug::New("execerrdot"_s);
-    // Command returns the Cmd struct to execute the named program with
+    // Command returns the [Cmd] struct to execute the named program with
     // the given arguments.
     //
     // It sets only the Path and Args in the returned structure.
     //
-    // If name contains no path separators, Command uses LookPath to
+    // If name contains no path separators, Command uses [LookPath] to
     // resolve name to a complete path if possible. Otherwise it uses name
     // directly as Path.
     //
@@ -474,17 +527,15 @@ namespace golang::exec
             // We may need to add a filename extension from PATHEXT
             // or verify an extension that is already present.
             // Since the path is absolute, its extension should be unambiguous
-            // and independent of cmd.Dir, and we can go ahead and update cmd.Path to
-            // reflect it.
-            // Note that we cannot add an extension here for relative paths, because
-            // cmd.Dir may be set after we return from this function and that may cause
-            // the command to resolve to a different extension.
-            auto [lp, err] = lookExtensions(name, ""_s);
-            if(lp != ""_s)
+            // and independent of cmd.Dir, and we can go ahead and cache the lookup now.
+            // Note that we don't cache anything here for relative paths, because
+            // cmd.Dir may be set after we return from this function and that may
+            // cause the command to resolve to a different extension.
+            if(auto [lp, err] = lookExtensions(name, ""_s); err == nullptr)
             {
-                cmd->Path = lp;
+                std::tie(cmd->cachedLookExtensions.in, cmd->cachedLookExtensions.out) = std::tuple{name, lp};
             }
-            if(err != nullptr)
+            else
             {
                 cmd->Err = err;
             }
@@ -492,10 +543,10 @@ namespace golang::exec
         return cmd;
     }
 
-    // CommandContext is like Command but includes a context.
+    // CommandContext is like [Command] but includes a context.
     //
     // The provided context is used to interrupt the process
-    // (by calling cmd.Cancel or os.Process.Kill)
+    // (by calling cmd.Cancel or [os.Process.Kill])
     // if the context becomes done before the command completes on its own.
     //
     // CommandContext sets the command's Cancel function to invoke the Kill method
@@ -530,7 +581,7 @@ namespace golang::exec
         // report the exact executable path (plus args)
         auto b = new strings::Builder{};
         rec::WriteString(gocpp::recv(b), c->Path);
-        for(auto [gocpp_ignored, a] : c->Args.make_slice(1))
+        for(auto [gocpp_ignored, a] : rec::argv(gocpp::recv(c)).make_slice(1))
         {
             rec::WriteByte(gocpp::recv(b), ' ');
             rec::WriteString(gocpp::recv(b), a);
@@ -594,7 +645,7 @@ namespace golang::exec
         c->parentIOPipes = append(c->parentIOPipes, pw);
         c->goroutine = append(c->goroutine, [=]() mutable -> gocpp::error
         {
-            auto [gocpp_id_0, err] = io::Copy(pw, c->Stdin);
+            auto [gocpp_id_1, err] = io::Copy(pw, c->Stdin);
             if(skipStdinCopyError(err))
             {
                 err = nullptr;
@@ -654,7 +705,7 @@ namespace golang::exec
         c->parentIOPipes = append(c->parentIOPipes, pr);
         c->goroutine = append(c->goroutine, [=]() mutable -> gocpp::error
         {
-            auto [gocpp_id_1, err] = io::Copy(w, pr);
+            auto [gocpp_id_2, err] = io::Copy(w, pr);
             // in case io.Copy stopped due to write error
             rec::Close(gocpp::recv(pr));
             return err;
@@ -677,10 +728,10 @@ namespace golang::exec
     // status.
     //
     // If the command starts but does not complete successfully, the error is of
-    // type *ExitError. Other error types may be returned for other situations.
+    // type [*ExitError]. Other error types may be returned for other situations.
     //
     // If the calling goroutine has locked the operating system thread
-    // with runtime.LockOSThread and modified any inheritable OS-level
+    // with [runtime.LockOSThread] and modified any inheritable OS-level
     // thread state (for example, Linux or Plan 9 name spaces), the new
     // process will inherit the caller's thread state.
     gocpp::error rec::Run(Cmd* c)
@@ -696,7 +747,7 @@ namespace golang::exec
     //
     // If Start returns successfully, the c.Process field will be set.
     //
-    // After a successful call to Start the Wait method must be called in
+    // After a successful call to Start the [Cmd.Wait] method must be called in
     // order to release associated system resources.
     gocpp::error rec::Start(Cmd* c)
     {
@@ -705,7 +756,8 @@ namespace golang::exec
         {
             // Check for doubled Start calls before we defer failure cleanup. If the prior
             // call to Start succeeded, we don't want to spuriously close its pipes.
-            if(c->Process != nullptr)
+            // It is an error to call Start twice even if the first call did not create a process.
+            if(atomic::SwapInt32(& c->startCalled, 1) != 0)
             {
                 return errors::New("exec: already started"_s);
             }
@@ -720,6 +772,8 @@ namespace golang::exec
                 {
                     closeDescriptors(c->parentIOPipes);
                     c->parentIOPipes = nullptr;
+                    // aid GC, finalization of pipe fds
+                    c->goroutine = nullptr;
                 }
             }(); });
 
@@ -736,26 +790,35 @@ namespace golang::exec
                 return c->Err;
             }
             auto lp = c->Path;
-            if(mocklib::GOOS == "windows"_s && ! filepath::IsAbs(c->Path))
+            if(mocklib::GOOS == "windows"_s)
             {
-                // If c.Path is relative, we had to wait until now
-                // to resolve it in case c.Dir was changed.
-                // (If it is absolute, we already resolved its extension in Command
-                // and shouldn't need to do so again.)
-                // Unfortunately, we cannot write the result back to c.Path because programs
-                // may assume that they can call Start concurrently with reading the path.
-                // (It is safe and non-racy to do so on Unix platforms, and users might not
-                // test with the race detector on all platforms;
-                // see https://go.dev/issue/62596.)
-                // So we will pass the fully resolved path to os.StartProcess, but leave
-                // c.Path as is: missing a bit of logging information seems less harmful
-                // than triggering a surprising data race, and if the user really cares
-                // about that bit of logging they can always use LookPath to resolve it.
-                gocpp::error err = {};
-                std::tie(lp, err) = lookExtensions(c->Path, c->Dir);
-                if(err != nullptr)
+                if(c->Path == c->cachedLookExtensions.in)
                 {
-                    return err;
+                    // If Command was called with an absolute path, we already resolved
+                    // its extension and shouldn't need to do so again (provided c.Path
+                    // wasn't set to another value between the calls to Command and Start).
+                    lp = c->cachedLookExtensions.out;
+                }
+                else
+                {
+                    // If *Cmd was made without using Command at all, or if Command was
+                    // called with a relative path, we had to wait until now to resolve
+                    // it in case c.Dir was changed.
+                    // Unfortunately, we cannot write the result back to c.Path because programs
+                    // may assume that they can call Start concurrently with reading the path.
+                    // (It is safe and non-racy to do so on Unix platforms, and users might not
+                    // test with the race detector on all platforms;
+                    // see https://go.dev/issue/62596.)
+                    // So we will pass the fully resolved path to os.StartProcess, but leave
+                    // c.Path as is: missing a bit of logging information seems less harmful
+                    // than triggering a surprising data race, and if the user really cares
+                    // about that bit of logging they can always use LookPath to resolve it.
+                    gocpp::error err = {};
+                    std::tie(lp, err) = lookExtensions(c->Path, c->Dir);
+                    if(err != nullptr)
+                    {
+                        return err;
+                    }
                 }
             }
             if(c->Cancel != nullptr && c->ctx == nullptr)
@@ -936,10 +999,10 @@ namespace golang::exec
             else
             // The process already finished: we just didn't notice it yet.
             // (Perhaps c.Wait hadn't been called, or perhaps it happened to race with
-            // c.ctx being cancelled.) Don't inject a needless error.
+            // c.ctx being canceled.) Don't inject a needless error.
             // The process already finished: we just didn't notice it yet.
             // (Perhaps c.Wait hadn't been called, or perhaps it happened to race with
-            // c.ctx being cancelled.) Don't inject a needless error.
+            // c.ctx being canceled.) Don't inject a needless error.
             {
                 err = gocpp::Init<wrappedError>([=](auto& x) {
                     x.prefix = "exec: canceling Cmd"_s;
@@ -1085,20 +1148,23 @@ namespace golang::exec
     // Wait waits for the command to exit and waits for any copying to
     // stdin or copying from stdout or stderr to complete.
     //
-    // The command must have been started by Start.
+    // The command must have been started by [Cmd.Start].
     //
     // The returned error is nil if the command runs, has no problems
     // copying stdin, stdout, and stderr, and exits with a zero exit
     // status.
     //
     // If the command fails to run or doesn't complete successfully, the
-    // error is of type *ExitError. Other error types may be
+    // error is of type [*ExitError]. Other error types may be
     // returned for I/O problems.
     //
-    // If any of c.Stdin, c.Stdout or c.Stderr are not an *os.File, Wait also waits
+    // If any of c.Stdin, c.Stdout or c.Stderr are not an [*os.File], Wait also waits
     // for the respective I/O loop copying to or from the process to complete.
     //
-    // Wait releases any resources associated with the Cmd.
+    // Wait must not be called concurrently from multiple goroutines.
+    // A custom Cmd.Cancel function should not call Wait.
+    //
+    // Wait releases any resources associated with the [Cmd].
     gocpp::error rec::Wait(Cmd* c)
     {
         if(c->Process == nullptr)
@@ -1232,8 +1298,10 @@ namespace golang::exec
     }
 
     // Output runs the command and returns its standard output.
-    // Any returned error will usually be of type *ExitError.
-    // If c.Stderr was nil, Output populates ExitError.Stderr.
+    // Any returned error will usually be of type [*ExitError].
+    // If c.Stderr was nil and the returned error is of type
+    // [*ExitError], Output populates the Stderr field of the
+    // returned error.
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::Output(Cmd* c)
     {
         if(c->Stdout != nullptr)
@@ -1283,7 +1351,7 @@ namespace golang::exec
 
     // StdinPipe returns a pipe that will be connected to the command's
     // standard input when the command starts.
-    // The pipe will be closed automatically after Wait sees the command exit.
+    // The pipe will be closed automatically after [Cmd.Wait] sees the command exit.
     // A caller need only call Close to force the pipe to close sooner.
     // For example, if the command being run will not exit until standard input
     // is closed, the caller must close the pipe.
@@ -1311,10 +1379,10 @@ namespace golang::exec
     // StdoutPipe returns a pipe that will be connected to the command's
     // standard output when the command starts.
     //
-    // Wait will close the pipe after seeing the command exit, so most callers
+    // [Cmd.Wait] will close the pipe after seeing the command exit, so most callers
     // need not close the pipe themselves. It is thus incorrect to call Wait
     // before all reads from the pipe have completed.
-    // For the same reason, it is incorrect to call Run when using StdoutPipe.
+    // For the same reason, it is incorrect to call [Cmd.Run] when using StdoutPipe.
     // See the example for idiomatic usage.
     std::tuple<io::ReadCloser, gocpp::error> rec::StdoutPipe(Cmd* c)
     {
@@ -1340,10 +1408,10 @@ namespace golang::exec
     // StderrPipe returns a pipe that will be connected to the command's
     // standard error when the command starts.
     //
-    // Wait will close the pipe after seeing the command exit, so most callers
+    // [Cmd.Wait] will close the pipe after seeing the command exit, so most callers
     // need not close the pipe themselves. It is thus incorrect to call Wait
     // before all reads from the pipe have completed.
-    // For the same reason, it is incorrect to use Run when using StderrPipe.
+    // For the same reason, it is incorrect to use [Cmd.Run] when using StderrPipe.
     // See the StdoutPipe example for idiomatic usage.
     std::tuple<io::ReadCloser, gocpp::error> rec::StderrPipe(Cmd* c)
     {
@@ -1545,7 +1613,7 @@ namespace golang::exec
     gocpp::slice<gocpp::string> rec::Environ(Cmd* c)
     {
         // Intentionally ignore errors: environ returns a best-effort environment no matter what.
-        auto [env, gocpp_id_2] = rec::environ(gocpp::recv(c));
+        auto [env, gocpp_id_3] = rec::environ(gocpp::recv(c));
         return env;
     }
 
@@ -1561,7 +1629,7 @@ namespace golang::exec
 
     // dedupEnvCase is dedupEnv with a case option for testing.
     // If caseInsensitive is true, the case of keys is ignored.
-    // If nulOK is false, items containing NUL characters are allowed.
+    // If nulOK is false, items containing NUL characters are rejected.
     std::tuple<gocpp::slice<gocpp::string>, gocpp::error> dedupEnvCase(bool caseInsensitive, bool nulOK, gocpp::slice<gocpp::string> env)
     {
         // Construct the output in reverse order, to preserve the
@@ -1635,7 +1703,7 @@ namespace golang::exec
         }
         for(auto [gocpp_ignored, kv] : env)
         {
-            auto [k, gocpp_id_3, ok] = strings::Cut(kv, "="_s);
+            auto [k, gocpp_id_4, ok] = strings::Cut(kv, "="_s);
             if(! ok)
             {
                 continue;
@@ -1657,5 +1725,28 @@ namespace golang::exec
     // Code should use errors.Is(err, ErrDot), not err == ErrDot,
     // to test whether a returned error err is due to this condition.
     gocpp::error ErrDot = errors::New("cannot run executable found relative to current directory"_s);
+    // validateLookPath excludes paths that can't be valid
+    // executable names. See issue #74466 and CVE-2025-47906.
+    gocpp::error validateLookPath(gocpp::string s)
+    {
+        //Go switch emulation
+        {
+            auto condition = s;
+            int conditionId = -1;
+            if(condition == ""_s) { conditionId = 0; }
+            else if(condition == "."_s) { conditionId = 1; }
+            else if(condition == ".."_s) { conditionId = 2; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                    return ErrNotFound;
+                    break;
+            }
+        }
+        return nullptr;
+    }
+
 }
 

@@ -18,6 +18,7 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
@@ -69,7 +70,25 @@ namespace golang::runtime
         return c;
     }
 
+    // _cgo_setenv should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ebitengine/purego
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname _cgo_setenv
     gocpp::unsafe_pointer _cgo_setenv;
+    // _cgo_unsetenv should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ebitengine/purego
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname _cgo_unsetenv
     gocpp::unsafe_pointer _cgo_unsetenv;
     // Update the C environment if cgo is loaded.
     void setenv_c(gocpp::string k, gocpp::string v)

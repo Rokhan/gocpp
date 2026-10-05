@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::race
+namespace golang::internal::race
 {
     const bool Enabled = false;
 }

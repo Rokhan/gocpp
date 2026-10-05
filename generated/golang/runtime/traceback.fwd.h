@@ -14,6 +14,7 @@ namespace golang::runtime
     // stack trace.
     const long tracebackOuterFrames = 50;
     using unwindFlags = uint8_t;
+    struct unwinder;
     struct cgoTracebackArg;
     struct cgoContextArg;
     struct cgoSymbolizerArg;
@@ -48,13 +49,11 @@ namespace golang::runtime
     // exhausted.
     const unwindFlags unwindJumpStack = 1 << 3;
 }
-#include "golang/internal/abi/symtab.fwd.h"
-#include "golang/runtime/internal/sys/consts.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/stkframe.fwd.h"
+#include "golang/internal/runtime/sys/consts.fwd.h"
+#include "golang/internal/runtime/sys/intrinsics.fwd.h"
 
 namespace golang::runtime
 {
+    namespace sys = golang::internal::runtime::sys;
     const bool usesLR = sys::MinFrameSize > 0;
-    struct unwinder;
 }

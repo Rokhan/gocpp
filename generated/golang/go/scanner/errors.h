@@ -10,16 +10,25 @@
 #include "gocpp/support.h"
 
 
-namespace golang::scanner
+namespace golang::go::scanner
 {
+    extern gocpp::error _;
     struct GoTag_ErrorList { };
-    using ErrorList = gocpp::defined<gocpp::slice<golang::scanner::Error*>, GoTag_ErrorList>;
+    using ErrorList = gocpp::defined<gocpp::slice<golang::go::scanner::Error*>, GoTag_ErrorList>;
+}
+#include "golang/go/token/position.fwd.h"
+#include "golang/io/io.fwd.h"
+
+namespace golang::go::scanner
+{
+    namespace token = golang::go::token;
 }
 #include "golang/go/token/position.h"
 #include "golang/io/io.h"
 
-namespace golang::scanner
+namespace golang::go::scanner
 {
+    namespace io = golang::io;
     struct Error
     {
         token::Position Pos{};
@@ -42,12 +51,12 @@ namespace golang::scanner
 
 #include "golang/go/token/position.h"
 
-namespace golang::scanner
+namespace golang::go::scanner
 {
 
     namespace rec
     {
-        gocpp::string Error(golang::scanner::Error e);
+        gocpp::string Error(golang::go::scanner::Error e);
         void Add(ErrorList* p, token::Position pos, gocpp::string msg);
         void Reset(ErrorList* p);
         int Len(ErrorList p);

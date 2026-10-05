@@ -52,15 +52,26 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct addrRange& value);
+    // minOffAddr is the minimum address in the offset space, and
+    // it corresponds to the virtual address arenaBaseOffset.
+    extern offAddr minOffAddr;
+    // maxOffAddr is the maximum address in the offset address
+    // space. It corresponds to the highest virtual address representable
+    // by the page alloc chunk and heap arena maps.
+    extern offAddr maxOffAddr;
+    addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
 }
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/stack.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
 
 namespace golang::runtime
 {
-    extern offAddr minOffAddr;
-    extern offAddr maxOffAddr;
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/runtime/mstats.fwd.h"
+
+namespace golang::runtime
+{
     struct atomicOffAddr
     {
         // a contains the offset address, unlike offAddr.
@@ -78,12 +89,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
-    addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
-}
-#include "golang/runtime/mstats.fwd.h"
-
-namespace golang::runtime
-{
     struct addrRanges
     {
         // ranges is a slice of ranges sorted by base.

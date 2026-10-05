@@ -4,23 +4,28 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::buildcfg
+namespace golang::internal::buildcfg
 {
-    const gocpp::string defaultGO386 = "sse2"_s;
-    const gocpp::string defaultGOAMD64 = "v1"_s;
-    const gocpp::string defaultGOARM = "7"_s;
-    const gocpp::string defaultGOMIPS = "hardfloat"_s;
-    const gocpp::string defaultGOMIPS64 = "hardfloat"_s;
-    const gocpp::string defaultGOPPC64 = "power8"_s;
+    const gocpp::string DefaultGO386 = "sse2"_s;
+    const gocpp::string DefaultGOAMD64 = "v1"_s;
+    const gocpp::string DefaultGOARM = "7"_s;
+    const gocpp::string DefaultGOARM64 = "v8.0"_s;
+    const gocpp::string DefaultGOMIPS = "hardfloat"_s;
+    const gocpp::string DefaultGOMIPS64 = "hardfloat"_s;
+    const gocpp::string DefaultGOPPC64 = "power8"_s;
+    const gocpp::string DefaultGORISCV64 = "rva20u64"_s;
     const gocpp::string defaultGOEXPERIMENT = ""_s;
     const gocpp::string defaultGO_EXTLINK_ENABLED = ""_s;
     const gocpp::string defaultGO_LDSO = ""_s;
-    const gocpp::string version = "go1.22.2"_s;
+    const gocpp::string version = "go1.27.1"_s;
+    const gocpp::string DefaultGOFIPS140 = "off"_s;
+    const gocpp::string DefaultCGO_ENABLED = ""_s;
 }
 #include "golang/runtime/extern.fwd.h"
 
-namespace golang::buildcfg
+namespace golang::internal::buildcfg
 {
+    namespace runtime = golang::runtime;
     const gocpp::string defaultGOOS = mocklib::GOOS;
     const gocpp::string defaultGOARCH = runtime::GOARCH;
 }

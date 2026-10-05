@@ -3,10 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/bufio/bufio.fwd.h"
-#include "golang/go/token/position.fwd.h"
 
-namespace golang::build
+namespace golang::go::build
 {
     struct importReader;
 }

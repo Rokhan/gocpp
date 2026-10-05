@@ -10,9 +10,11 @@
 #include "gocpp/support.h"
 
 
-namespace golang::bits
+namespace golang::math::bits
 {
+    //go:linkname overflowError runtime.overflowError
     extern gocpp::error overflowError;
+    //go:linkname divideError runtime.divideError
     extern gocpp::error divideError;
 
     namespace rec

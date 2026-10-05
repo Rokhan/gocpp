@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::adler32
+namespace golang::hash::adler32
 {
     // mod is the largest prime that is less than 65536.
     const long mod = 65521;

@@ -13,6 +13,7 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
@@ -105,9 +106,12 @@ namespace golang::runtime
     //
     // Spills/loads arguments in registers to/from an internal/abi.RegArgs
     // respectively. Does not follow the Go ABI.
+    //
+    //go:linknamestd spillArgs
     void spillArgs()
     /* convertBlockStmt, nil block */;
 
+    //go:linknamestd unspillArgs
     void unspillArgs()
     /* convertBlockStmt, nil block */;
 

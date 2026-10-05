@@ -11,7 +11,7 @@
 #include "golang/runtime/mgclimit.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/mgcpacer.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
@@ -20,6 +20,7 @@
 
 namespace golang::runtime
 {
+    namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
         using atomic::rec::Add;
@@ -91,17 +92,17 @@ namespace golang::runtime
         T result;
         result.lock = this->lock;
         result.enabled = this->enabled;
-        result.bucket = this->bucket;
-        result.overflow = this->overflow;
         result.gcEnabled = this->gcEnabled;
         result.transitioning = this->transitioning;
+        result.test = this->test;
+        result.bucket = this->bucket;
+        result.overflow = this->overflow;
         result.assistTimePool = this->assistTimePool;
         result.idleMarkTimePool = this->idleMarkTimePool;
         result.idleTimePool = this->idleTimePool;
         result.lastUpdate = this->lastUpdate;
         result.lastEnabledCycle = this->lastEnabledCycle;
         result.nprocs = this->nprocs;
-        result.test = this->test;
         return result;
     }
 
@@ -110,17 +111,17 @@ namespace golang::runtime
     {
         if (lock != ref.lock) return false;
         if (enabled != ref.enabled) return false;
-        if (bucket != ref.bucket) return false;
-        if (overflow != ref.overflow) return false;
         if (gcEnabled != ref.gcEnabled) return false;
         if (transitioning != ref.transitioning) return false;
+        if (test != ref.test) return false;
+        if (bucket != ref.bucket) return false;
+        if (overflow != ref.overflow) return false;
         if (assistTimePool != ref.assistTimePool) return false;
         if (idleMarkTimePool != ref.idleMarkTimePool) return false;
         if (idleTimePool != ref.idleTimePool) return false;
         if (lastUpdate != ref.lastUpdate) return false;
         if (lastEnabledCycle != ref.lastEnabledCycle) return false;
         if (nprocs != ref.nprocs) return false;
-        if (test != ref.test) return false;
         return true;
     }
 
@@ -129,17 +130,17 @@ namespace golang::runtime
         os << '{';
         os << "" << lock;
         os << " " << enabled;
-        os << " " << bucket;
-        os << " " << overflow;
         os << " " << gcEnabled;
         os << " " << transitioning;
+        os << " " << test;
+        os << " " << bucket;
+        os << " " << overflow;
         os << " " << assistTimePool;
         os << " " << idleMarkTimePool;
         os << " " << idleTimePool;
         os << " " << lastUpdate;
         os << " " << lastEnabledCycle;
         os << " " << nprocs;
-        os << " " << test;
         os << '}';
         return os;
     }
@@ -291,17 +292,19 @@ namespace golang::runtime
                 {
                     auto condition = typ;
                     int conditionId = -1;
-                    if(condition == limiterEventIdleMarkWork) { conditionId = 0; }
-                    else if(condition == limiterEventIdle) { conditionId = 1; }
+                    if(condition == limiterEventIdle) { conditionId = 0; }
+                    else if(condition == limiterEventIdleMarkWork) { conditionId = 1; }
                     else if(condition == limiterEventMarkAssist) { conditionId = 2; }
                     else if(condition == limiterEventScavengeAssist) { conditionId = 3; }
                     else if(condition == limiterEventNone) { conditionId = 4; }
                     switch(conditionId)
                     {
                         case 0:
+                            rec::Add(gocpp::recv(sched.idleTime), duration);
+                            idleTime += duration;
+                            break;
                         case 1:
                             idleTime += duration;
-                            rec::Add(gocpp::recv(sched.idleTime), duration);
                             break;
                         case 2:
                         case 3:
@@ -598,18 +601,18 @@ namespace golang::runtime
         {
             auto condition = typ;
             int conditionId = -1;
-            if(condition == limiterEventIdleMarkWork) { conditionId = 0; }
-            else if(condition == limiterEventIdle) { conditionId = 1; }
+            if(condition == limiterEventIdle) { conditionId = 0; }
+            else if(condition == limiterEventIdleMarkWork) { conditionId = 1; }
             else if(condition == limiterEventMarkAssist) { conditionId = 2; }
             else if(condition == limiterEventScavengeAssist) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
+                    rec::Add(gocpp::recv(sched.idleTime), duration);
                     rec::addIdleTime(gocpp::recv(gcCPULimiter), duration);
                     break;
                 case 1:
                     rec::addIdleTime(gocpp::recv(gcCPULimiter), duration);
-                    rec::Add(gocpp::recv(sched.idleTime), duration);
                     break;
                 case 2:
                 case 3:

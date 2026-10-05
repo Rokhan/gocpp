@@ -13,8 +13,9 @@
 
 #include "golang/syscall/syscall_windows.h"
 
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
+    namespace syscall = golang::syscall;
     namespace rec
     {
     }

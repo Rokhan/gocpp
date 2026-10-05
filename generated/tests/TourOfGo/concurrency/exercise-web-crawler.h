@@ -98,6 +98,7 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
     void Crawl(gocpp::string url, int depth, Fetcher fetcher);
+    // fetcher is a populated fakeFetcher.
     extern fakeFetcher fetcher;
 
     namespace rec

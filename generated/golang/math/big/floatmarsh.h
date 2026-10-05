@@ -13,13 +13,14 @@
 
 #include "golang/math/big/float.h"
 
-namespace golang::big
+namespace golang::math::big
 {
 
     namespace rec
     {
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> GobEncode(Float* x);
         gocpp::error GobDecode(Float* z, gocpp::slice<unsigned char> buf);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendText(Float* x, gocpp::slice<unsigned char> b);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalText(Float* x);
         gocpp::error UnmarshalText(Float* z, gocpp::slice<unsigned char> text);
     }

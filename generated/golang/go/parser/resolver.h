@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::parser
+namespace golang::go::parser
 {
     struct gocpp_id_0 : virtual gocpp::Interface
     {
@@ -76,11 +76,20 @@ namespace golang::parser
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
 }
-#include "golang/go/token/position.h"
 #include "golang/go/ast/ast.fwd.h"
 #include "golang/go/ast/scope.fwd.h"
+#include "golang/go/ast/walk.fwd.h"
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
 
-namespace golang::parser
+namespace golang::go::parser
+{
+    namespace ast = golang::go::ast;
+    namespace token = golang::go::token;
+}
+#include "golang/go/token/position.h"
+
+namespace golang::go::parser
 {
     void resolveFile(ast::File* file, token::File* handle, std::function<void (token::Pos _1, gocpp::string _2)> declErr);
     struct resolver
@@ -109,6 +118,9 @@ namespace golang::parser
     };
 
     std::ostream& operator<<(std::ostream& os, const struct resolver& value);
+    // The unresolved object is a sentinel to mark identifiers that have been added
+    // to the list of unresolved identifiers. The sentinel is only used for verifying
+    // internal consistency.
     extern ast::Object* unresolved;
 }
 
@@ -117,7 +129,7 @@ namespace golang::parser
 #include "golang/go/ast/walk.h"
 #include "golang/go/token/position.h"
 
-namespace golang::parser
+namespace golang::go::parser
 {
 
     namespace rec

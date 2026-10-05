@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::wc
+namespace golang::golang_org::x::tour::wc
 {
     struct gocpp_id_0;
 }

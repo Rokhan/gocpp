@@ -12,11 +12,11 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/goos/zgoos_windows.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
 #include "golang/runtime/float.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/intrinsics.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
@@ -28,7 +28,6 @@
 #include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mranges.h"
 #include "golang/runtime/mstats.h"
-#include "golang/runtime/pagetrace_off.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/print.h"
 #include "golang/runtime/proc.h"
@@ -36,10 +35,14 @@
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/time.h"
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+#include "golang/runtime/traceruntime.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace goos = golang::internal::goos;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::Add;
@@ -188,14 +191,14 @@ namespace golang::runtime
         T result;
         result.lock = this->lock;
         result.g = this->g;
-        result.parked = this->parked;
         result.timer = this->timer;
         result.sysmonWake = this->sysmonWake;
+        result.parked = this->parked;
+        result.printControllerReset = this->printControllerReset;
         result.targetCPUFraction = this->targetCPUFraction;
         result.sleepRatio = this->sleepRatio;
         result.sleepController = this->sleepController;
         result.controllerCooldown = this->controllerCooldown;
-        result.printControllerReset = this->printControllerReset;
         result.sleepStub = this->sleepStub;
         result.scavenge = this->scavenge;
         result.shouldStop = this->shouldStop;
@@ -208,14 +211,14 @@ namespace golang::runtime
     {
         if (lock != ref.lock) return false;
         if (g != ref.g) return false;
-        if (parked != ref.parked) return false;
         if (timer != ref.timer) return false;
         if (sysmonWake != ref.sysmonWake) return false;
+        if (parked != ref.parked) return false;
+        if (printControllerReset != ref.printControllerReset) return false;
         if (targetCPUFraction != ref.targetCPUFraction) return false;
         if (sleepRatio != ref.sleepRatio) return false;
         if (sleepController != ref.sleepController) return false;
         if (controllerCooldown != ref.controllerCooldown) return false;
-        if (printControllerReset != ref.printControllerReset) return false;
         if (sleepStub != ref.sleepStub) return false;
         if (scavenge != ref.scavenge) return false;
         if (shouldStop != ref.shouldStop) return false;
@@ -228,14 +231,14 @@ namespace golang::runtime
         os << '{';
         os << "" << lock;
         os << " " << g;
-        os << " " << parked;
         os << " " << timer;
         os << " " << sysmonWake;
+        os << " " << parked;
+        os << " " << printControllerReset;
         os << " " << targetCPUFraction;
         os << " " << sleepRatio;
         os << " " << sleepController;
         os << " " << controllerCooldown;
-        os << " " << printControllerReset;
         os << " " << sleepStub;
         os << " " << scavenge;
         os << " " << shouldStop;
@@ -262,11 +265,11 @@ namespace golang::runtime
         s->g = getg();
 
         s->timer = new timer{};
-        s->timer->arg = s;
-        s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
+        auto f = [=](go_any s, uintptr_t _1, int64_t _2) mutable -> void
         {
             rec::wake(gocpp::recv(gocpp::getValue<scavengerState*>(s)));
         };
+        rec::init(gocpp::recv(s->timer), f, s);
 
         // input: fraction of CPU time actually used.
         // setpoint: ideal CPU fraction.
@@ -409,7 +412,7 @@ namespace golang::runtime
             // because we can't close over any variables without
             // failing escape analysis.
             auto start = nanotime();
-            resetTimer(s->timer, start + sleepTime);
+            rec::reset(gocpp::recv(s->timer), start + sleepTime, 0);
 
             // Mark ourselves as asleep and go to sleep.
             s->parked = true;
@@ -424,7 +427,7 @@ namespace golang::runtime
             // reason we might fail is that we've already woken up, but the timer
             // might be in the process of firing on some other P; essentially we're
             // racing with it. That's totally OK. Double wake-ups are perfectly safe.
-            stopTimer(s->timer);
+            rec::stop(gocpp::recv(s->timer));
             runtime::unlock(& s->lock);
         }
         else
@@ -715,8 +718,6 @@ namespace golang::runtime
 
                 if(! p->test)
                 {
-                    pageTraceScav(rec::ptr(gocpp::recv(getg()->m->p)), 0, addr, uintptr_t(npages));
-
                     // Only perform sys* operations if we're not in a test.
                     // It's dangerous to do so otherwise.
                     sysUnused(gocpp::unsafe_pointer(addr), uintptr_t(npages) * pageSize);
@@ -1130,7 +1131,7 @@ namespace golang::runtime
         // TODO(mknyszek): Consider eagerly backing memory with huge pages
         // here and track whether we believe this chunk is backed by huge pages.
         // In the past we've attempted to use sysHugePageCollapse (which uses
-        // MADV_COLLAPSE on Linux, and is unsupported elswhere) for this purpose,
+        // MADV_COLLAPSE on Linux, and is unsupported elsewhere) for this purpose,
         // but that caused performance issues in production environments.
         rec::store(gocpp::recv(s->chunks[ci]), sc);
     }

@@ -9,37 +9,103 @@
 #include "golang/go/types/typexpr.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/types/type.h"
-#include "golang/go/types/object.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    gocpp::string goTypeName(golang::types::Type typ);
-    void setDefType(TypeName* def, golang::types::Type typ);
+    struct gocpp_id_8 : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        gocpp_id_8(){}
+        gocpp_id_8(gocpp_id_8& i) = default;
+        gocpp_id_8(const gocpp_id_8& i) = default;
+        gocpp_id_8& operator=(gocpp_id_8& i) = default;
+        gocpp_id_8& operator=(const gocpp_id_8& i) = default;
+
+        inline gocpp_id_8(nullptr_t) {};
+        gocpp_id_8& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        gocpp_id_8(T& ref);
+
+        template<typename T>
+        gocpp_id_8(const T& ref);
+
+        template<typename T>
+        gocpp_id_8(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct Igocpp_id_8
+        {
+            virtual TypeName* vObj() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = Igocpp_id_8>
+        struct gocpp_id_8Impl : virtual TInterface
+        {
+            explicit gocpp_id_8Impl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            TypeName* vObj() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline Igocpp_id_8* value() const;
+
+        std::shared_ptr<Igocpp_id_8> mValue;
+    };
+
+    namespace rec
+    {
+        TypeName* Obj(const gocpp::PtrRecv<struct gocpp_id_8, false>& self);
+        TypeName* Obj(const gocpp::ObjRecv<struct gocpp_id_8>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value);
+}
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    gocpp::string goTypeName(golang::go::types::Type typ);
 }
 
 #include "golang/go/ast/ast.h"
-#include "golang/go/internal/typeparams/typeparams.h"
 #include "golang/go/types/check.h"
+#include "golang/go/types/index.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/operand.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
 
     namespace rec
     {
-        void ident(Checker* check, operand* x, ast::Ident* e, TypeName* def, bool wantType);
-        golang::types::Type typ(Checker* check, ast::Expr e);
-        golang::types::Type varType(Checker* check, ast::Expr e);
-        void validVarType(Checker* check, ast::Expr e, golang::types::Type typ);
-        golang::types::Type definedType(Checker* check, ast::Expr e, TypeName* def);
-        golang::types::Type genericType(Checker* check, ast::Expr e, gocpp::string* cause);
-        golang::types::Type typInternal(Checker* check, ast::Expr e0, TypeName* def);
-        golang::types::Type instantiatedType(Checker* check, typeparams::IndexExpr* ix, TypeName* def);
+        void ident(Checker* check, operand* x, ast::Ident* e, bool wantType);
+        golang::go::types::Type typ(Checker* check, ast::Expr e);
+        golang::go::types::Type varType(Checker* check, ast::Expr e);
+        void validVarType(Checker* check, ast::Expr e, golang::go::types::Type typ);
+        golang::go::types::Type declaredType(Checker* check, ast::Expr e, TypeName* def);
+        golang::go::types::Type genericType(Checker* check, ast::Expr e, gocpp::string* cause);
+        golang::go::types::Type typInternal(Checker* check, ast::Expr e0, TypeName* def);
+        golang::go::types::Type instantiatedType(Checker* check, indexedExpr* ix);
         int64_t arrayLength(Checker* check, ast::Expr e);
-        gocpp::slice<golang::types::Type> typeList(Checker* check, gocpp::slice<ast::Expr> list);
+        gocpp::slice<golang::go::types::Type> typeList(Checker* check, gocpp::slice<ast::Expr> list);
     }
 }
 

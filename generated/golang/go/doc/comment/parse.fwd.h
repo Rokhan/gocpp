@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     struct Doc;
     struct LinkDef;

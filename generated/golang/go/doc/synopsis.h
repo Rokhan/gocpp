@@ -10,16 +10,21 @@
 #include "gocpp/support.h"
 
 
-namespace golang::doc
+namespace golang::go::doc
 {
     gocpp::string firstSentence(gocpp::string s);
     gocpp::string Synopsis(gocpp::string text);
+    // IllegalPrefixes is a list of lower-case prefixes that identify
+    // a comment as not being a doc comment.
+    // This helps to avoid misinterpreting the common mistake
+    // of a copyright notice immediately before a package statement
+    // as being a doc comment.
     extern gocpp::slice<gocpp::string> IllegalPrefixes;
 }
 
 #include "golang/go/doc/doc.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
 
     namespace rec

@@ -11,7 +11,7 @@
 #include "golang/compress/flate/dict_decoder.h"
 #include "gocpp/support.h"
 
-namespace golang::flate
+namespace golang::compress::flate
 {
     namespace rec
     {
@@ -160,11 +160,7 @@ namespace golang::flate
         auto dstBase = dd->wrPos;
         auto dstPos = dstBase;
         auto srcPos = dstPos - dist;
-        auto endPos = dstPos + length;
-        if(endPos > len(dd->hist))
-        {
-            endPos = len(dd->hist);
-        }
+        auto endPos = gocpp::min(dstPos + length, len(dd->hist));
 
         // Copy non-overlapping section after destination position.
         // This section is non-overlapping in that the copy length for this section

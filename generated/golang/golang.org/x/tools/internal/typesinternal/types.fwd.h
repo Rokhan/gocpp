@@ -3,3 +3,24 @@
 
 #include "gocpp/support.fwd.h"
 
+#include "golang/go/types/alias.fwd.h"
+#include "golang/go/types/api.fwd.h"
+#include "golang/go/types/named.fwd.h"
+#include "golang/go/types/object.fwd.h"
+#include "golang/go/types/package.fwd.h"
+#include "golang/go/types/pointer.fwd.h"
+#include "golang/go/types/scope.fwd.h"
+#include "golang/go/types/selection.fwd.h"
+#include "golang/go/types/struct.fwd.h"
+#include "golang/go/types/tuple.fwd.h"
+#include "golang/go/types/type.fwd.h"
+#include "golang/go/types/typelists.fwd.h"
+#include "golang/go/types/typeparam.fwd.h"
+#include "golang/go/types/typestring.fwd.h"
+#include "golang/go/types/universe.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::typesinternal
+{
+    namespace types = golang::go::types;
+    struct NamedOrAlias;
+}

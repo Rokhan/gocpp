@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::token
+namespace golang::go::token
 {
     using Token = int;
     // A set of constants for precedence-based expression parsing.

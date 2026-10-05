@@ -12,11 +12,13 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
+#include "golang/internal/byteorder/byteorder.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/cputicks.h"
 #include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
+#include "golang/runtime/hexdump.h"
 #include "golang/runtime/mem_windows.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/panic.h"
@@ -28,12 +30,18 @@
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/typekind.h"
+#include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace byteorder = golang::internal::byteorder;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
+        using abi::rec::Kind;
         using atomic::rec::CompareAndSwap;
         using atomic::rec::Load;
         using atomic::rec::Store;
@@ -56,13 +64,23 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrierrec
-    dlogger* dlog()
+    dlogger dlog()
     {
-        if(! dlogEnabled)
-        {
-            return nullptr;
-        }
+        // dlog1 is defined to either dlogImpl or dlogFake.
+        return dlog1();
+    }
 
+    //go:nosplit
+    //go:nowritebarrierrec
+    dloggerFake dlogFake()
+    {
+        return dloggerFake {};
+    }
+
+    //go:nosplit
+    //go:nowritebarrierrec
+    dloggerImpl* dlogImpl()
+    {
         // Get the time.
         auto [tick, nano] = std::tuple{uint64_t(cputicks()), uint64_t(nanotime())};
 
@@ -74,7 +92,7 @@ namespace golang::runtime
         if(l == nullptr)
         {
             auto allp = (uintptr_t*)(gocpp::unsafe_pointer(& allDloggers));
-            auto all = (dlogger*)(gocpp::unsafe_pointer(atomic::Loaduintptr(allp)));
+            auto all = (dloggerImpl*)(gocpp::unsafe_pointer(atomic::Loaduintptr(allp)));
             for(auto l1 = all; l1 != nullptr; l1 = l1->allLink)
             {
                 if(rec::Load(gocpp::recv(l1->owned)) == 0 && rec::CompareAndSwap(gocpp::recv(l1->owned), 0, 1))
@@ -90,7 +108,7 @@ namespace golang::runtime
         {
             // Use sysAllocOS instead of sysAlloc because we want to interfere
             // with the runtime as little as possible, and sysAlloc updates accounting.
-            l = (dlogger*)(sysAllocOS(gocpp::Sizeof<dlogger>()));
+            l = (dloggerImpl*)(sysAllocOS(gocpp::Sizeof<dloggerImpl>(), "debug log"_s));
             if(l == nullptr)
             {
                 go_throw("failed to allocate debug log"_s);
@@ -103,7 +121,7 @@ namespace golang::runtime
             for(; ; )
             {
                 auto head = atomic::Loaduintptr(headp);
-                l->allLink = (dlogger*)(gocpp::unsafe_pointer(head));
+                l->allLink = (dloggerImpl*)(gocpp::unsafe_pointer(head));
                 if(atomic::Casuintptr(headp, head, uintptr_t(gocpp::unsafe_pointer(l))))
                 {
                     break;
@@ -141,13 +159,13 @@ namespace golang::runtime
         return l;
     }
 
-    // A dlogger writes to the debug log.
+    // A dloggerImpl writes to the debug log.
     //
-    // To obtain a dlogger, call dlog(). When done with the dlogger, call
+    // To obtain a dloggerImpl, call dlog(). When done with the dloggerImpl, call
     // end().
     
     template<typename T> requires gocpp::GoStruct<T>
-    dlogger::operator T()
+    dloggerImpl::operator T()
     {
         T result;
         result._1 = this->_1;
@@ -158,7 +176,7 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool dlogger::operator==(const T& ref) const
+    bool dloggerImpl::operator==(const T& ref) const
     {
         if (_1 != ref._1) return false;
         if (w != ref.w) return false;
@@ -167,7 +185,7 @@ namespace golang::runtime
         return true;
     }
 
-    std::ostream& dlogger::PrintTo(std::ostream& os) const
+    std::ostream& dloggerImpl::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << _1;
@@ -178,7 +196,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct dlogger& value)
+    std::ostream& operator<<(std::ostream& os, const struct dloggerImpl& value)
     {
         return value.PrintTo(os);
     }
@@ -186,15 +204,42 @@ namespace golang::runtime
     // allDloggers is a list of all dloggers, linked through
     // dlogger.allLink. This is accessed atomically. This is prepend only,
     // so it doesn't need to protect against ABA races.
-    dlogger* allDloggers;
-    //go:nosplit
-    void rec::end(dlogger* l)
+    dloggerImpl* allDloggers;
+    // A dloggerFake is a no-op implementation of dlogger.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    dloggerFake::operator T()
     {
-        if(! dlogEnabled)
-        {
-            return;
-        }
+        T result;
+        return result;
+    }
 
+    template<typename T> requires gocpp::GoStruct<T>
+    bool dloggerFake::operator==(const T& ref) const
+    {
+        return true;
+    }
+
+    std::ostream& dloggerFake::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct dloggerFake& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    //go:nosplit
+    void rec::end(dloggerFake l)
+    {
+    }
+
+    //go:nosplit
+    void rec::end(dloggerImpl* l)
+    {
         // Fill in framing header.
         auto size = l->w.write - l->w.r.end;
         if(! rec::writeFrameAt(gocpp::recv(l->w), l->w.r.end, size))
@@ -216,12 +261,14 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    dlogger* rec::b(dlogger* l, bool x)
+    dloggerFake rec::b(dloggerFake l, bool x)
     {
-        if(! dlogEnabled)
-        {
-            return l;
-        }
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::b(dloggerImpl* l, bool x)
+    {
         if(x)
         {
             rec::byte(gocpp::recv(l->w), debugLogBoolTrue);
@@ -234,102 +281,164 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    dlogger* rec::i(dlogger* l, int x)
+    dloggerFake rec::i(dloggerFake l, int x)
+    {
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::i(dloggerImpl* l, int x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
 
     //go:nosplit
-    dlogger* rec::i8(dlogger* l, int8_t x)
+    dloggerFake rec::i8(dloggerFake l, int8_t x)
+    {
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::i8(dloggerImpl* l, int8_t x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
 
     //go:nosplit
-    dlogger* rec::i16(dlogger* l, int16_t x)
+    dloggerFake rec::i16(dloggerFake l, int16_t x)
+    {
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::i16(dloggerImpl* l, int16_t x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
 
     //go:nosplit
-    dlogger* rec::i32(dlogger* l, int32_t x)
+    dloggerFake rec::i32(dloggerFake l, int32_t x)
+    {
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::i32(dloggerImpl* l, int32_t x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
 
     //go:nosplit
-    dlogger* rec::i64(dlogger* l, int64_t x)
+    dloggerFake rec::i64(dloggerFake l, int64_t x)
     {
-        if(! dlogEnabled)
-        {
-            return l;
-        }
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::i64(dloggerImpl* l, int64_t x)
+    {
         rec::byte(gocpp::recv(l->w), debugLogInt);
         rec::varint(gocpp::recv(l->w), x);
         return l;
     }
 
     //go:nosplit
-    dlogger* rec::u(dlogger* l, unsigned int x)
+    dloggerFake rec::u(dloggerFake l, unsigned int x)
+    {
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::u(dloggerImpl* l, unsigned int x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
     //go:nosplit
-    dlogger* rec::uptr(dlogger* l, uintptr_t x)
+    dloggerFake rec::uptr(dloggerFake l, uintptr_t x)
+    {
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::uptr(dloggerImpl* l, uintptr_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
     //go:nosplit
-    dlogger* rec::u8(dlogger* l, uint8_t x)
+    dloggerFake rec::u8(dloggerFake l, uint8_t x)
+    {
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::u8(dloggerImpl* l, uint8_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
     //go:nosplit
-    dlogger* rec::u16(dlogger* l, uint16_t x)
+    dloggerFake rec::u16(dloggerFake l, uint16_t x)
+    {
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::u16(dloggerImpl* l, uint16_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
     //go:nosplit
-    dlogger* rec::u32(dlogger* l, uint32_t x)
+    dloggerFake rec::u32(dloggerFake l, uint32_t x)
+    {
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::u32(dloggerImpl* l, uint32_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
     //go:nosplit
-    dlogger* rec::u64(dlogger* l, uint64_t x)
+    dloggerFake rec::u64(dloggerFake l, uint64_t x)
     {
-        if(! dlogEnabled)
-        {
-            return l;
-        }
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::u64(dloggerImpl* l, uint64_t x)
+    {
         rec::byte(gocpp::recv(l->w), debugLogUint);
         rec::uvarint(gocpp::recv(l->w), x);
         return l;
     }
 
     //go:nosplit
-    dlogger* rec::hex(dlogger* l, uint64_t x)
+    dloggerFake rec::hex(dloggerFake l, uint64_t x)
     {
-        if(! dlogEnabled)
-        {
-            return l;
-        }
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::hex(dloggerImpl* l, uint64_t x)
+    {
         rec::byte(gocpp::recv(l->w), debugLogHex);
         rec::uvarint(gocpp::recv(l->w), x);
         return l;
     }
 
     //go:nosplit
-    dlogger* rec::p(dlogger* l, go_any x)
+    dloggerFake rec::p(dloggerFake l, go_any x)
     {
-        if(! dlogEnabled)
-        {
-            return l;
-        }
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::p(dloggerImpl* l, go_any x)
+    {
         rec::byte(gocpp::recv(l->w), debugLogPtr);
         if(x == nullptr)
         {
@@ -340,13 +449,13 @@ namespace golang::runtime
             auto v = efaceOf(& x);
             //Go switch emulation
             {
-                auto condition = v->_type->Kind_ & kindMask;
+                auto condition = rec::Kind(gocpp::recv(v->_type));
                 int conditionId = -1;
-                if(condition == kindChan) { conditionId = 0; }
-                else if(condition == kindFunc) { conditionId = 1; }
-                else if(condition == kindMap) { conditionId = 2; }
-                else if(condition == kindPtr) { conditionId = 3; }
-                else if(condition == kindUnsafePointer) { conditionId = 4; }
+                if(condition == abi::Chan) { conditionId = 0; }
+                else if(condition == abi::Func) { conditionId = 1; }
+                else if(condition == abi::Map) { conditionId = 2; }
+                else if(condition == abi::Pointer) { conditionId = 3; }
+                else if(condition == abi::UnsafePointer) { conditionId = 4; }
                 switch(conditionId)
                 {
                     case 0:
@@ -366,13 +475,14 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    dlogger* rec::s(dlogger* l, gocpp::string x)
+    dloggerFake rec::s(dloggerFake l, gocpp::string x)
     {
-        if(! dlogEnabled)
-        {
-            return l;
-        }
+        return l;
+    }
 
+    //go:nosplit
+    dloggerImpl* rec::s(dloggerImpl* l, gocpp::string x)
+    {
         auto strData = unsafe::StringData(x);
         auto datap = & firstmoduledata;
         if(len(x) > 4 && datap->etext <= uintptr_t(gocpp::unsafe_pointer(strData)) && uintptr_t(gocpp::unsafe_pointer(strData)) < datap->end)
@@ -401,7 +511,7 @@ namespace golang::runtime
             rec::bytes(gocpp::recv(l->w), b);
             if(len(b) != len(x))
             {
-                rec::byte(gocpp::recv(l->w), debugLogStringOverflow);
+                rec::byte(gocpp::recv(l->w), debugLogOverflow);
                 rec::uvarint(gocpp::recv(l->w), uint64_t(len(x) - len(b)));
             }
         }
@@ -409,24 +519,60 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    dlogger* rec::pc(dlogger* l, uintptr_t x)
+    dloggerFake rec::hexdump(dloggerFake l, gocpp::unsafe_pointer p, uintptr_t bytes)
     {
-        if(! dlogEnabled)
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::hexdump(dloggerImpl* l, gocpp::unsafe_pointer p, uintptr_t bytes)
+    {
+        gocpp::slice<unsigned char> b = {};
+        auto bb = (golang::runtime::slice*)(gocpp::unsafe_pointer(& b));
+        bb->array = gocpp::unsafe_pointer(p);
+        std::tie(bb->len, bb->cap) = std::tuple{int(bytes), int(bytes)};
+        if(len(b) > debugLogStringLimit)
         {
-            return l;
+            b = b.make_slice(0, debugLogStringLimit);
         }
+
+        rec::byte(gocpp::recv(l->w), debugLogHexdump);
+        rec::uvarint(gocpp::recv(l->w), uint64_t(uintptr_t(p)));
+        rec::uvarint(gocpp::recv(l->w), uint64_t(len(b)));
+        rec::bytes(gocpp::recv(l->w), b);
+
+        if(uintptr_t(len(b)) != bytes)
+        {
+            rec::byte(gocpp::recv(l->w), debugLogOverflow);
+            rec::uvarint(gocpp::recv(l->w), uint64_t(bytes) - uint64_t(len(b)));
+        }
+
+        return l;
+    }
+
+    //go:nosplit
+    dloggerFake rec::pc(dloggerFake l, uintptr_t x)
+    {
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::pc(dloggerImpl* l, uintptr_t x)
+    {
         rec::byte(gocpp::recv(l->w), debugLogPC);
         rec::uvarint(gocpp::recv(l->w), uint64_t(x));
         return l;
     }
 
     //go:nosplit
-    dlogger* rec::traceback(dlogger* l, gocpp::slice<uintptr_t> x)
+    dloggerFake rec::traceback(dloggerFake l, gocpp::slice<uintptr_t> x)
     {
-        if(! dlogEnabled)
-        {
-            return l;
-        }
+        return l;
+    }
+
+    //go:nosplit
+    dloggerImpl* rec::traceback(dloggerImpl* l, gocpp::slice<uintptr_t> x)
+    {
         rec::byte(gocpp::recv(l->w), debugLogTraceback);
         rec::uvarint(gocpp::recv(l->w), uint64_t(len(x)));
         for(auto [gocpp_ignored, pc] : x)
@@ -570,14 +716,7 @@ namespace golang::runtime
     void rec::writeUint64LE(debugLogWriter* l, uint64_t x)
     {
         gocpp::array<unsigned char, 8> b = {};
-        b[0] = (unsigned char)(x);
-        b[1] = (unsigned char)(x >> 8);
-        b[2] = (unsigned char)(x >> 16);
-        b[3] = (unsigned char)(x >> 24);
-        b[4] = (unsigned char)(x >> 32);
-        b[5] = (unsigned char)(x >> 40);
-        b[6] = (unsigned char)(x >> 48);
-        b[7] = (unsigned char)(x >> 56);
+        byteorder::LEPutUint64(b.make_slice(0), x);
         rec::bytes(gocpp::recv(l), b.make_slice(0));
     }
 
@@ -717,10 +856,7 @@ namespace golang::runtime
             b[i] = r->data->b[pos % uint64_t(len(r->data->b))];
             pos++;
         }
-        return uint64_t(b[0]) | (uint64_t(b[1]) << 8) |
-                (uint64_t(b[2]) << 16) | (uint64_t(b[3]) << 24) |
-                (uint64_t(b[4]) << 32) | (uint64_t(b[5]) << 40) |
-                (uint64_t(b[6]) << 48) | (uint64_t(b[7]) << 56);
+        return byteorder::LEUint64(b.make_slice(0));
     }
 
     uint64_t rec::peek(debugLogReader* r)
@@ -842,9 +978,10 @@ namespace golang::runtime
             else if(condition == debugLogPtr) { conditionId = 6; }
             else if(condition == debugLogString) { conditionId = 7; }
             else if(condition == debugLogConstString) { conditionId = 8; }
-            else if(condition == debugLogStringOverflow) { conditionId = 9; }
-            else if(condition == debugLogPC) { conditionId = 10; }
-            else if(condition == debugLogTraceback) { conditionId = 11; }
+            else if(condition == debugLogOverflow) { conditionId = 9; }
+            else if(condition == debugLogHexdump) { conditionId = 10; }
+            else if(condition == debugLogPC) { conditionId = 11; }
+            else if(condition == debugLogTraceback) { conditionId = 12; }
             switch(conditionId)
             {
                 default:
@@ -921,10 +1058,40 @@ namespace golang::runtime
                     break;
 
                 case 10:
+                {
+                    auto p = uintptr_t(rec::uvarint(gocpp::recv(r)));
+                    auto bl = rec::uvarint(gocpp::recv(r));
+                    if(r->begin + bl > r->end)
+                    {
+                        r->begin = r->end;
+                        print("<hexdump length corrupted>"_s);
+                        break;
+                    }
+                    // Start on a new line
+                    println();
+                    auto hd = gocpp::Init<hexdumper>([=](auto& x) {
+                        x.addr = p;
+                    });
+                    for(; bl > 0; )
+                    {
+                        auto b = r->data->b.make_slice(r->begin % uint64_t(len(r->data->b)));
+                        if(uint64_t(len(b)) > bl)
+                        {
+                            b = b.make_slice(0, bl);
+                        }
+                        r->begin += uint64_t(len(b));
+                        bl -= uint64_t(len(b));
+                        rec::write(gocpp::recv(hd), b);
+                    }
+                    rec::close(gocpp::recv(hd));
+                    break;
+                }
+
+                case 11:
                     printDebugLogPC(uintptr_t(rec::uvarint(gocpp::recv(r))), false);
                     break;
 
-                case 11:
+                case 12:
                 {
                     auto n = int(rec::uvarint(gocpp::recv(r)));
                     for(auto i = 0; i < n; i++)
@@ -941,6 +1108,15 @@ namespace golang::runtime
         }
 
         return true;
+    }
+
+    // printDebugLog prints the debug log.
+    void printDebugLog()
+    {
+        if(dlogEnabled)
+        {
+            printDebugLogImpl();
+        }
     }
 
     struct gocpp_id_0
@@ -983,21 +1159,15 @@ namespace golang::runtime
             }
 
 
-    // printDebugLog prints the debug log.
-    void printDebugLog()
+    void printDebugLogImpl()
     {
-        if(! dlogEnabled)
-        {
-            return;
-        }
-
         // This function should not panic or throw since it is used in
         // the fatal panic path and this may deadlock.
         printlock();
 
         // Get the list of all debug logs.
         auto allp = (uintptr_t*)(gocpp::unsafe_pointer(& allDloggers));
-        auto all = (dlogger*)(gocpp::unsafe_pointer(atomic::Loaduintptr(allp)));
+        auto all = (dloggerImpl*)(gocpp::unsafe_pointer(atomic::Loaduintptr(allp)));
 
         // Count the logs.
         auto n = 0;
@@ -1034,7 +1204,7 @@ namespace golang::runtime
         };
         // Use sysAllocOS instead of sysAlloc because we want to interfere
         // with the runtime as little as possible, and sysAlloc updates accounting.
-        auto state1 = sysAllocOS(gocpp::Sizeof<readState>() * uintptr_t(n));
+        auto state1 = sysAllocOS(gocpp::Sizeof<readState>() * uintptr_t(n), "debug log"_s);
         if(state1 == nullptr)
         {
             println("failed to allocate read state for"_s, n, "logs"_s);

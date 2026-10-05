@@ -16,33 +16,51 @@
 #include "golang/os/exec_posix.h"
 #include "golang/os/exec_windows.h"
 #include "golang/os/types.h"
-#include "golang/runtime/mfinal.h"
+#include "golang/runtime/extern.h"
+#include "golang/runtime/mcleanup.h"
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/rwmutex.h"
 #include "golang/syscall/exec_windows.h"
 #include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/zerrors_windows.h"
 #include "golang/time/time.h"
 
 namespace golang::os
 {
+    namespace atomic = golang::sync::atomic;
+    namespace errors = golang::errors;
+    namespace runtime = golang::runtime;
+    namespace sync = golang::sync;
+    namespace syscall = golang::syscall;
+    namespace testlog = golang::internal::testlog;
+    namespace time = golang::time;
     namespace rec
     {
+        using atomic::rec::CompareAndSwap;
         using atomic::rec::Load;
         using atomic::rec::Store;
+        using runtime::rec::Stop;
+        using syscall::rec::Error;
     }
 
-    // ErrProcessDone indicates a Process has finished.
+    // ErrProcessDone indicates a [Process] has finished.
     gocpp::error ErrProcessDone = errors::New("os: process already finished"_s);
-    // Process stores the information about a process created by StartProcess.
+    // errProcessReleased indicates a [Process] has been released.
+    gocpp::error errProcessReleased = errors::New("os: process already released"_s);
+    // ErrNoHandle indicates a [Process] does not have a handle.
+    gocpp::error ErrNoHandle = errors::New("os: process handle unavailable"_s);
+    // processStatus describes the status of a [Process].
+    // Process stores the information about a process created by [StartProcess].
     
     template<typename T> requires gocpp::GoStruct<T>
     Process::operator T()
     {
         T result;
         result.Pid = this->Pid;
-        result.handle = this->handle;
-        result.isdone = this->isdone;
+        result.state = this->state;
         result.sigMu = this->sigMu;
+        result.handle = this->handle;
+        result.cleanup = this->cleanup;
         return result;
     }
 
@@ -50,9 +68,10 @@ namespace golang::os
     bool Process::operator==(const T& ref) const
     {
         if (Pid != ref.Pid) return false;
-        if (handle != ref.handle) return false;
-        if (isdone != ref.isdone) return false;
+        if (state != ref.state) return false;
         if (sigMu != ref.sigMu) return false;
+        if (handle != ref.handle) return false;
+        if (cleanup != ref.cleanup) return false;
         return true;
     }
 
@@ -60,9 +79,10 @@ namespace golang::os
     {
         os << '{';
         os << "" << Pid;
-        os << " " << handle;
-        os << " " << isdone;
+        os << " " << state;
         os << " " << sigMu;
+        os << " " << handle;
+        os << " " << cleanup;
         os << '}';
         return os;
     }
@@ -72,24 +92,182 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    Process* newProcess(int pid, uintptr_t handle)
+    // processHandle holds an operating system handle to a process.
+    // This is only used on systems that support that concept,
+    // currently Linux and Windows.
+    // This maintains a reference count to the handle,
+    // and closes the handle when the reference drops to zero.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    processHandle::operator T()
+    {
+        T result;
+        result.handle = this->handle;
+        result.refs = this->refs;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool processHandle::operator==(const T& ref) const
+    {
+        if (handle != ref.handle) return false;
+        if (refs != ref.refs) return false;
+        return true;
+    }
+
+    std::ostream& processHandle::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << handle;
+        os << " " << refs;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct processHandle& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // acquire adds a reference and returns the handle.
+    // The bool result reports whether acquire succeeded;
+    // it fails if the handle is already closed.
+    // Every successful call to acquire should be paired with a call to release.
+    std::tuple<uintptr_t, bool> rec::acquire(processHandle* ph)
+    {
+        for(; ; )
+        {
+            auto refs = rec::Load(gocpp::recv(ph->refs));
+            if(refs < 0)
+            {
+                gocpp::panic("internal error: negative process handle reference count"_s);
+            }
+            if(refs == 0)
+            {
+                return {0, false};
+            }
+            if(rec::CompareAndSwap(gocpp::recv(ph->refs), refs, refs + 1))
+            {
+                return {ph->handle, true};
+            }
+        }
+    }
+
+    // release releases a reference to the handle.
+    void rec::release(processHandle* ph)
+    {
+        for(; ; )
+        {
+            auto refs = rec::Load(gocpp::recv(ph->refs));
+            if(refs <= 0)
+            {
+                gocpp::panic("internal error: too many releases of process handle"_s);
+            }
+            if(rec::CompareAndSwap(gocpp::recv(ph->refs), refs, refs - 1))
+            {
+                if(refs == 1)
+                {
+                    rec::closeHandle(gocpp::recv(ph));
+                }
+                return;
+            }
+        }
+    }
+
+    // newPIDProcess returns a [Process] for the given PID.
+    Process* newPIDProcess(int pid)
     {
         auto p = gocpp::InitPtr<Process>([=](auto& x) {
             x.Pid = pid;
-            x.handle = handle;
         });
-        runtime::SetFinalizer(p, [&](auto x){ return rec::Release(x); });
         return p;
     }
 
-    void rec::setDone(Process* p)
+    // newHandleProcess returns a [Process] with the given PID and handle.
+    Process* newHandleProcess(int pid, uintptr_t handle)
     {
-        rec::Store(gocpp::recv(p->isdone), true);
+        auto ph = gocpp::InitPtr<processHandle>([=](auto& x) {
+            x.handle = handle;
+        });
+
+        // Start the reference count as 1,
+        // meaning the reference from the returned Process.
+        rec::Store(gocpp::recv(ph->refs), 1);
+
+        auto p = gocpp::InitPtr<Process>([=](auto& x) {
+            x.Pid = pid;
+            x.handle = ph;
+        });
+
+        p->cleanup = runtime::AddCleanup(p, [&](auto x){ return rec::release(x); }, ph);
+
+        return p;
     }
 
-    bool rec::done(Process* p)
+    // newDoneProcess returns a [Process] for the given PID
+    // that is already marked as done. This is used on Unix systems
+    // if the process is known to not exist.
+    Process* newDoneProcess(int pid)
     {
-        return rec::Load(gocpp::recv(p->isdone));
+        auto p = gocpp::InitPtr<Process>([=](auto& x) {
+            x.Pid = pid;
+        });
+        // No persistent reference, as there is no handle.
+        rec::Store(gocpp::recv(p->state), uint32_t(statusDone));
+        return p;
+    }
+
+    // handleTransientAcquire returns the process handle or,
+    // if the process is not ready, the current status.
+    std::tuple<uintptr_t, processStatus> rec::handleTransientAcquire(Process* p)
+    {
+        if(p->handle == nullptr)
+        {
+            gocpp::panic("handleTransientAcquire called in invalid mode"_s);
+        }
+
+        auto status = processStatus(rec::Load(gocpp::recv(p->state)));
+        if(status != statusOK)
+        {
+            return {0, status};
+        }
+        auto [h, ok] = rec::acquire(gocpp::recv(p->handle));
+        if(ok)
+        {
+            return {h, statusOK};
+        }
+
+        // This case means that the handle has been closed.
+        // We always set the status to non-zero before closing the handle.
+        // If we get here the status must have been set non-zero after
+        // we just checked it above.
+        status = processStatus(rec::Load(gocpp::recv(p->state)));
+        if(status == statusOK)
+        {
+            gocpp::panic("inconsistent process status"_s);
+        }
+        return {0, status};
+    }
+
+    // handleTransientRelease releases a handle returned by handleTransientAcquire.
+    void rec::handleTransientRelease(Process* p)
+    {
+        if(p->handle == nullptr)
+        {
+            gocpp::panic("handleTransientRelease called in invalid mode"_s);
+        }
+        rec::release(gocpp::recv(p->handle));
+    }
+
+    // pidStatus returns the current process status.
+    processStatus rec::pidStatus(Process* p)
+    {
+        if(p->handle != nullptr)
+        {
+            gocpp::panic("pidStatus called in invalid mode"_s);
+        }
+
+        return processStatus(rec::Load(gocpp::recv(p->state)));
     }
 
     // ProcAttr holds the attributes that will be applied to a new process
@@ -218,7 +396,7 @@ namespace golang::os
 
     // FindProcess looks for a running process by its pid.
     //
-    // The Process it returns can be used to obtain information
+    // The [Process] it returns can be used to obtain information
     // about the underlying operating system process.
     //
     // On Unix systems, FindProcess always succeeds and returns a Process
@@ -231,33 +409,92 @@ namespace golang::os
     }
 
     // StartProcess starts a new process with the program, arguments and attributes
-    // specified by name, argv and attr. The argv slice will become os.Args in the
+    // specified by name, argv and attr. The argv slice will become [os.Args] in the
     // new process, so it normally starts with the program name.
     //
     // If the calling goroutine has locked the operating system thread
-    // with runtime.LockOSThread and modified any inheritable OS-level
+    // with [runtime.LockOSThread] and modified any inheritable OS-level
     // thread state (for example, Linux or Plan 9 name spaces), the new
     // process will inherit the caller's thread state.
     //
-    // StartProcess is a low-level interface. The os/exec package provides
+    // StartProcess is a low-level interface. The [os/exec] package provides
     // higher-level interfaces.
     //
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     std::tuple<Process*, gocpp::error> StartProcess(gocpp::string name, gocpp::slice<gocpp::string> argv, ProcAttr* attr)
     {
         testlog::Open(name);
         return startProcess(name, argv, attr);
     }
 
-    // Release releases any resources associated with the Process p,
+    // Release releases any resources associated with the [Process] p,
     // rendering it unusable in the future.
-    // Release only needs to be called if Wait is not.
+    // Release only needs to be called if [Process.Wait] is not.
     gocpp::error rec::Release(Process* p)
     {
-        return rec::release(gocpp::recv(p));
+        // Unfortunately, for historical reasons, on systems other
+        // than Windows, Release sets the Pid field to -1.
+        // This causes the race detector to report a problem
+        // on concurrent calls to Release, but we can't change it now.
+        if(mocklib::GOOS != "windows"_s)
+        {
+            p->Pid = - 1;
+        }
+
+        auto oldStatus = rec::doRelease(gocpp::recv(p), statusReleased);
+
+        // For backward compatibility, on Windows only,
+        // we return EINVAL on a second call to Release.
+        if(mocklib::GOOS == "windows"_s)
+        {
+            if(oldStatus == statusReleased)
+            {
+                return gocpp::error(syscall::go_EINVAL);
+            }
+        }
+
+        return nullptr;
     }
 
-    // Kill causes the Process to exit immediately. Kill does not wait until
+    // doRelease releases a [Process], setting the status to newStatus.
+    // If the previous status is not statusOK, this does nothing.
+    // It returns the previous status.
+    processStatus rec::doRelease(Process* p, processStatus newStatus)
+    {
+        for(; ; )
+        {
+            auto state = rec::Load(gocpp::recv(p->state));
+            auto oldStatus = processStatus(state);
+            if(oldStatus != statusOK)
+            {
+                return oldStatus;
+            }
+
+            if(! rec::CompareAndSwap(gocpp::recv(p->state), state, uint32_t(newStatus)))
+            {
+                continue;
+            }
+
+            // We have successfully released the Process.
+            // If it has a handle, release the reference we
+            // created in newHandleProcess.
+            if(p->handle != nullptr)
+            {
+                // No need for more cleanup.
+                // We must stop the cleanup before calling release;
+                // otherwise the cleanup might run concurrently
+                // with the release, which would cause the reference
+                // counts to be invalid, causing a panic.
+                rec::Stop(gocpp::recv(p->cleanup));
+
+                rec::release(gocpp::recv(p->handle));
+            }
+
+            return statusOK;
+        }
+    }
+
+    // Kill causes the [Process] to exit immediately. Kill does not wait until
     // the Process has actually exited. This only kills the Process itself,
     // not any other processes it may have started.
     gocpp::error rec::Kill(Process* p)
@@ -265,7 +502,7 @@ namespace golang::os
         return rec::kill(gocpp::recv(p));
     }
 
-    // Wait waits for the Process to exit, and then returns a
+    // Wait waits for the [Process] to exit, and then returns a
     // ProcessState describing its status and an error, if any.
     // Wait releases any resources associated with the Process.
     // On most operating systems, the Process must be a child
@@ -275,11 +512,24 @@ namespace golang::os
         return rec::wait(gocpp::recv(p));
     }
 
-    // Signal sends a signal to the Process.
-    // Sending Interrupt on Windows is not implemented.
+    // Signal sends a signal to the [Process].
+    // Sending [Interrupt] on Windows is not implemented.
     gocpp::error rec::Signal(Process* p, golang::os::Signal sig)
     {
         return rec::signal(gocpp::recv(p), sig);
+    }
+
+    // WithHandle calls a supplied function f with a valid process handle
+    // as an argument. The handle is guaranteed to refer to process p
+    // until f returns, even if p terminates. This function cannot be used
+    // after [Process.Release] or [Process.Wait].
+    //
+    // If process handles are not supported or a handle is not available,
+    // it returns [ErrNoHandle]. Currently, process handles are supported
+    // on Linux 5.4 or later (pidfd) and Windows.
+    gocpp::error rec::WithHandle(Process* p, std::function<void (uintptr_t handle)> f)
+    {
+        return rec::withHandle(gocpp::recv(p), f);
     }
 
     // UserTime returns the user CPU time of the exited process and its children.
@@ -311,7 +561,7 @@ namespace golang::os
 
     // Sys returns system-dependent exit information about
     // the process. Convert it to the appropriate underlying
-    // type, such as syscall.WaitStatus on Unix, to access its contents.
+    // type, such as [syscall.WaitStatus] on Unix, to access its contents.
     go_any rec::Sys(ProcessState* p)
     {
         return rec::sys(gocpp::recv(p));
@@ -319,7 +569,7 @@ namespace golang::os
 
     // SysUsage returns system-dependent resource usage information about
     // the exited process. Convert it to the appropriate underlying
-    // type, such as *syscall.Rusage on Unix, to access its contents.
+    // type, such as [*syscall.Rusage] on Unix, to access its contents.
     // (On Unix, *syscall.Rusage matches struct rusage as defined in the
     // getrusage(2) manual page.)
     go_any rec::SysUsage(ProcessState* p)

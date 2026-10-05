@@ -11,6 +11,7 @@
 #include "golang/math/copysign.h"
 #include "gocpp/support.h"
 
+#include "golang/math/bits.h"
 #include "golang/math/unsafe.h"
 
 namespace golang::math
@@ -23,8 +24,7 @@ namespace golang::math
     // and the sign of sign.
     double Copysign(double f, double sign)
     {
-        auto signBit = 1 << 63;
-        return Float64frombits(Float64bits(f) &^ signBit | Float64bits(sign) & signBit);
+        return Float64frombits(Float64bits(f) &^ signMask | Float64bits(sign) & signMask);
     }
 
 }

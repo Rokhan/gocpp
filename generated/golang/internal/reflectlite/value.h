@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::reflectlite
+namespace golang::internal::reflectlite
 {
     gocpp::string methodName();
     struct gocpp_id_3 : virtual gocpp::Interface
@@ -139,14 +139,16 @@ namespace golang::reflectlite
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
-    int chanlen(gocpp::unsafe_pointer);
-    int maplen(gocpp::unsafe_pointer);
-    gocpp::unsafe_pointer arrayAt(gocpp::unsafe_pointer p, int i, uintptr_t eltSize, gocpp::string whySafe);
-    void escapes(go_any x);
-    struct dummyStruct
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
+#include "golang/internal/reflectlite/type.h"
+
+namespace golang::internal::reflectlite
+{
+    struct ValueError
     {
-        bool b{};
-        go_any x{};
+        gocpp::string Method{};
+        golang::internal::reflectlite::Kind Kind{};
 
         using isGoStruct = void;
 
@@ -159,15 +161,18 @@ namespace golang::reflectlite
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct dummyStruct& value);
-    gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p);
-    extern dummyStruct dummy;
+    std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
+    int chanlen(gocpp::unsafe_pointer);
+    int maplen(gocpp::unsafe_pointer);
+    gocpp::unsafe_pointer arrayAt(gocpp::unsafe_pointer p, int i, uintptr_t eltSize, gocpp::string whySafe);
 }
-#include "golang/internal/abi/type.h"
-#include "golang/internal/reflectlite/type.fwd.h"
+#include "golang/internal/abi/escape.fwd.h"
+#include "golang/internal/abi/iface.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
 
-namespace golang::reflectlite
+namespace golang::internal::reflectlite
 {
+    namespace abi = golang::internal::abi;
     struct Value
     {
         // typ_ holds the type of the value represented by a Value.
@@ -177,17 +182,16 @@ namespace golang::reflectlite
         // Valid when either flagIndir is set or typ.pointers() is true.
         gocpp::unsafe_pointer ptr{};
         // flag holds metadata about the value.
-        // The lowest bits are flag bits:
+        // The lowest five bits give the Kind of the value, mirroring typ.Kind().
+        // The next set of bits are flag bits:
         // - flagStickyRO: obtained via unexported not embedded field, so read-only
         // - flagEmbedRO: obtained via unexported embedded field, so read-only
         // - flagIndir: val holds a pointer to the data
-        // - flagAddr: v.CanAddr is true (implies flagIndir)
-        // Value cannot represent method values.
-        // The next five bits give the Kind of the value.
-        // This repeats typ.Kind() except for method values.
-        // The remaining 23+ bits give a method number for method values.
+        // - flagAddr: v.CanAddr is true (implies flagIndir and ptr is non-nil)
+        // - flagMethod: v is a method value.
+        // If !typ.IsDirectIface(), code can assume that flagIndir is set.
+        // The remaining 22+ bits give a method number for method values.
         // If flag.kind() != Func, code can assume that flagMethod is unset.
-        // If ifaceIndir(typ), code can assume that flagIndir is set.
         flag flag{};
 
         using isGoStruct = void;
@@ -202,40 +206,6 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Value& value);
-    struct ValueError
-    {
-        gocpp::string Method{};
-        golang::reflectlite::Kind Kind{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
-    struct emptyInterface
-    {
-        abi::Type* typ{};
-        gocpp::unsafe_pointer word{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct emptyInterface& value);
     gocpp::unsafe_pointer unsafe_New(abi::Type*);
     void ifaceE2I(abi::Type* t, go_any src, gocpp::unsafe_pointer dst);
     void typedmemmove(abi::Type* t, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
@@ -248,12 +218,12 @@ namespace golang::reflectlite
 #include "golang/internal/abi/type.h"
 #include "golang/internal/reflectlite/type.h"
 
-namespace golang::reflectlite
+namespace golang::internal::reflectlite
 {
 
     namespace rec
     {
-        golang::reflectlite::Kind kind(flag f);
+        golang::internal::reflectlite::Kind kind(flag f);
         flag ro(flag f);
         abi::Type* typ(Value v);
         gocpp::unsafe_pointer pointer(Value v);
@@ -264,11 +234,11 @@ namespace golang::reflectlite
         Value Elem(Value v);
         bool IsNil(Value v);
         bool IsValid(Value v);
-        golang::reflectlite::Kind Kind(Value v);
+        golang::internal::reflectlite::Kind Kind(Value v);
         int Len(Value v);
         int numMethod(Value v);
         void Set(Value v, Value x);
-        golang::reflectlite::Type Type(Value v);
+        golang::internal::reflectlite::Type Type(Value v);
         Value assignTo(Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target);
     }
 }

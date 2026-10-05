@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
     uint32_t castagnoliSSE42(uint32_t crc, gocpp::slice<unsigned char> p);
     std::tuple<uint32_t, uint32_t, uint32_t> castagnoliSSE42Triple(uint32_t crcA, uint32_t crcB, uint32_t crcC, gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, gocpp::slice<unsigned char> c, uint32_t rounds);
@@ -26,13 +26,27 @@ namespace golang::crc32
 #include "golang/hash/crc32/crc32.h"
 #include "golang/hash/crc32/crc32_generic.fwd.h"
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
     using sse42Table = gocpp::defined<gocpp::array<Table, 4>, GoTag_sse42Table>;
     extern gocpp::array_ptr<slicing8Table> archIeeeTable8;
+}
+#include "golang/internal/cpu/cpu.fwd.h"
+
+namespace golang::hash::crc32
+{
     extern gocpp::array_ptr<sse42Table> castagnoliSSE42TableK1;
     extern gocpp::array_ptr<sse42Table> castagnoliSSE42TableK2;
     uint32_t castagnoliShift(gocpp::array_ptr<sse42Table> table, uint32_t crc);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace cpu = golang::internal::cpu;
+}
+#include "golang/internal/cpu/cpu.h"
+
+namespace golang::hash::crc32
+{
+    // Offset into internal/cpu records for use in assembly.
+    const uintptr_t offsetX86HasAVX512VPCLMULQDQL = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX512VPCLMULQDQ);
 
     namespace rec
     {

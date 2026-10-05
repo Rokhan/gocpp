@@ -148,6 +148,64 @@ namespace golang::encoding
         return value.PrintTo(os);
     }
 
+    // BinaryAppender is the interface implemented by an object
+    // that can append the binary representation of itself.
+    // If a type implements both [BinaryAppender] and [BinaryMarshaler],
+    // then v.MarshalBinary() must be semantically identical to v.AppendBinary(nil).
+    
+    template<typename T>
+    BinaryAppender::BinaryAppender(T& ref)
+    {
+        mValue.reset(new BinaryAppenderImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    BinaryAppender::BinaryAppender(const T& ref)
+    {
+        mValue.reset(new BinaryAppenderImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    BinaryAppender::BinaryAppender(T* ptr)
+    {
+        mValue.reset(new BinaryAppenderImpl<T, gocpp::ptr<T>>(ptr));
+    }
+
+    std::ostream& BinaryAppender::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
+
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> BinaryAppender::BinaryAppenderImpl<T, TStore, TInterface>::vAppendBinary(gocpp::slice<unsigned char> b)
+    {
+        return rec::AppendBinary(gocpp::PtrRecv<T, false>(value.get()), b);
+    }
+
+    inline BinaryAppender::IBinaryAppender* BinaryAppender::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'BinaryAppender'");
+    }
+
+    namespace rec
+    {
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendBinary(const gocpp::PtrRecv<struct BinaryAppender, false>& self, gocpp::slice<unsigned char> b)
+        {
+            return self.ptr->value()->vAppendBinary(b);
+        }
+
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendBinary(const gocpp::ObjRecv<struct BinaryAppender>& self, gocpp::slice<unsigned char> b)
+        {
+            return self.obj.value()->vAppendBinary(b);
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct BinaryAppender& value)
+    {
+        return value.PrintTo(os);
+    }
+
     // TextMarshaler is the interface implemented by an object that can
     // marshal itself into a textual form.
     //
@@ -262,6 +320,64 @@ namespace golang::encoding
     }
 
     std::ostream& operator<<(std::ostream& os, const struct TextUnmarshaler& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // TextAppender is the interface implemented by an object
+    // that can append the textual representation of itself.
+    // If a type implements both [TextAppender] and [TextMarshaler],
+    // then v.MarshalText() must be semantically identical to v.AppendText(nil).
+    
+    template<typename T>
+    TextAppender::TextAppender(T& ref)
+    {
+        mValue.reset(new TextAppenderImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    TextAppender::TextAppender(const T& ref)
+    {
+        mValue.reset(new TextAppenderImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    TextAppender::TextAppender(T* ptr)
+    {
+        mValue.reset(new TextAppenderImpl<T, gocpp::ptr<T>>(ptr));
+    }
+
+    std::ostream& TextAppender::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
+
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> TextAppender::TextAppenderImpl<T, TStore, TInterface>::vAppendText(gocpp::slice<unsigned char> b)
+    {
+        return rec::AppendText(gocpp::PtrRecv<T, false>(value.get()), b);
+    }
+
+    inline TextAppender::ITextAppender* TextAppender::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'TextAppender'");
+    }
+
+    namespace rec
+    {
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendText(const gocpp::PtrRecv<struct TextAppender, false>& self, gocpp::slice<unsigned char> b)
+        {
+            return self.ptr->value()->vAppendText(b);
+        }
+
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendText(const gocpp::ObjRecv<struct TextAppender>& self, gocpp::slice<unsigned char> b)
+        {
+            return self.obj.value()->vAppendText(b);
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct TextAppender& value)
     {
         return value.PrintTo(os);
     }

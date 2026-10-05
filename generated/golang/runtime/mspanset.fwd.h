@@ -6,21 +6,16 @@
 
 namespace golang::runtime
 {
+    struct spanSet;
     const long spanSetBlockEntries = 512;
     const long spanSetInitSpineCap = 256;
-    struct spanSetSpinePointer;
-    using headTailIndex = uint64_t;
-}
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/lfstack.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-
-namespace golang::runtime
-{
-    struct spanSet;
+    struct spanSetBlockHeader;
+    struct spanSetBlockHeader2;
     struct spanSetBlock;
     struct atomicSpanSetSpinePointer;
+    struct spanSetSpinePointer;
     struct spanSetBlockAlloc;
+    using headTailIndex = uint64_t;
     struct atomicHeadTailIndex;
     struct atomicMSpanPointer;
 }

@@ -11,7 +11,7 @@
 
 #include "golang/golang.org/x/tools/internal/pkgbits/sync.h"
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
     struct Code : virtual gocpp::Interface
     {
@@ -88,7 +88,7 @@ namespace golang::pkgbits
 
 #include "golang/golang.org/x/tools/internal/pkgbits/sync.h"
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
 
     namespace rec

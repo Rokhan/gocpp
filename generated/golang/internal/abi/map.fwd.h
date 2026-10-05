@@ -4,14 +4,26 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::abi
+namespace golang::internal::abi
 {
     // Map constants common to several packages
     // runtime/runtime-gdb.py:MapTypePrinter contains its own copy
-    const long MapBucketCountBits = 3;
+    // Number of bits in the group.slot count.
+    const long MapGroupSlotsBits = 3;
+    // Maximum key or elem size to keep inline (instead of mallocing per element).
+    // Must fit in a uint8.
     const long MapMaxKeyBytes = 128;
     const long MapMaxElemBytes = 128;
-    // ZeroValSize is the size in bytes of runtime.zeroVal.
-    const long ZeroValSize = 1024;
-    const int MapBucketCount = 1 << MapBucketCountBits;
+    const long ctrlEmpty = 0b10000000;
+    const long bitsetLSB = 0x0101010101010101;
+    struct MapType;
+    // Flag values
+    const int MapNeedKeyUpdate = 1 << 0;
+    const int MapHashMightPanic = 1 << 1;
+    const int MapIndirectKey = 1 << 2;
+    const int MapIndirectElem = 1 << 3;
+    // Number of slots in a group.
+    const int MapGroupSlots = 1 << MapGroupSlotsBits;
+    // Value of control word with all empty slots.
+    const uint64_t MapCtrlEmpty = bitsetLSB * uint64_t(ctrlEmpty);
 }

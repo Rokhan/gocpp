@@ -3,3 +3,10 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::sync
+{
+    struct gocpp_id_0;
+    struct gocpp_id_1;
+    struct gocpp_id_2;
+}

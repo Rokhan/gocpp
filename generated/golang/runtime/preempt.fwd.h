@@ -3,7 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {

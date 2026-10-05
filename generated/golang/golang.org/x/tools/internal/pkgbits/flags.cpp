@@ -11,7 +11,7 @@
 #include "golang/golang.org/x/tools/internal/pkgbits/flags.h"
 #include "gocpp/support.h"
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
     namespace rec
     {

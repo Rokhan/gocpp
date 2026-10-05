@@ -10,11 +10,11 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Union
     {
-        gocpp::slice<golang::types::Term*> terms{}; // list of syntactical terms (not a canonicalized termlist)
+        gocpp::slice<golang::go::types::Term*> terms{}; // list of syntactical terms (not a canonicalized termlist)
 
         using isGoStruct = void;
 
@@ -30,36 +30,46 @@ namespace golang::types
     std::ostream& operator<<(std::ostream& os, const struct Union& value);
     struct GoTag_Term { };
 }
+#include "golang/go/types/typeterm.h"
+
+namespace golang::go::types
+{
+    using Term = gocpp::defined<golang::go::types::term, GoTag_Term>;
+}
+#include "golang/go/ast/ast.fwd.h"
+
+namespace golang::go::types
+{
+    Union* NewUnion(gocpp::slice<golang::go::types::Term*> terms);
+    int overlappingTerm(gocpp::slice<golang::go::types::Term*> terms, golang::go::types::Term* y);
+    namespace ast = golang::go::ast;
+}
 #include "golang/go/ast/ast.h"
 #include "golang/go/types/type.h"
-#include "golang/go/types/typeterm.h"
 #include "golang/go/types/check.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    using Term = gocpp::defined<term, GoTag_Term>;
-    golang::types::Type parseUnion(Checker* check, ast::Expr uexpr);
+    golang::go::types::Term* NewTerm(bool tilde, golang::go::types::Type typ);
+    golang::go::types::Type parseUnion(Checker* check, ast::Expr uexpr);
+    golang::go::types::Term* parseTilde(Checker* check, ast::Expr tx);
     std::tuple<gocpp::slice<ast::Expr>, gocpp::slice<ast::Expr>> flattenUnion(gocpp::slice<ast::Expr> list, ast::Expr x);
-    Union* NewUnion(gocpp::slice<golang::types::Term*> terms);
-    golang::types::Term* NewTerm(bool tilde, golang::types::Type typ);
-    golang::types::Term* parseTilde(Checker* check, ast::Expr tx);
-    int overlappingTerm(gocpp::slice<golang::types::Term*> terms, golang::types::Term* y);
 }
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
         int Len(Union* u);
-        golang::types::Term* Term(Union* u, int i);
-        golang::types::Type Underlying(Union* u);
+        golang::go::types::Term* Term(Union* u, int i);
+        golang::go::types::Type Underlying(Union* u);
         gocpp::string String(Union* u);
-        bool Tilde(golang::types::Term* t);
-        golang::types::Type Type(golang::types::Term* t);
-        gocpp::string String(golang::types::Term* t);
+        bool Tilde(golang::go::types::Term* t);
+        golang::go::types::Type Type(golang::go::types::Term* t);
+        gocpp::string String(golang::go::types::Term* t);
     }
 }
 

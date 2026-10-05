@@ -10,8 +10,18 @@
 #include "gocpp/support.h"
 
 
-namespace golang::sysdll
+namespace golang::internal::syscall::windows::sysdll
 {
+    // IsSystemDLL reports whether the named dll key (a base name, like
+    // "foo.dll") is a system DLL which should only be loaded from the
+    // Windows SYSTEM32 directory.
+    //
+    // Filenames are case sensitive, but that doesn't matter because
+    // the case registered with Add is also the same case used with
+    // LoadDLL later.
+    //
+    // It has no associated mutex and should only be mutated serially
+    // (currently: during init), and not concurrent with DLL loading.
     extern gocpp::map<gocpp::string, bool> IsSystemDLL;
     gocpp::string Add(gocpp::string dll);
 

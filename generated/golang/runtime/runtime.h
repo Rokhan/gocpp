@@ -26,14 +26,30 @@ namespace golang::runtime
     void syscall_runtimeSetenv(gocpp::string key, gocpp::string value);
     void syscall_runtimeUnsetenv(gocpp::string key);
     void writeErrStr(gocpp::string s);
+    void writeErrData(unsigned char* data, int32_t n);
+    uintptr_t setCrashFD(uintptr_t fd);
+    // auxv is populated on relevant platforms but defined here for all platforms
+    // so x/sys/cpu and x/sys/unix can assume the getAuxv symbol exists without
+    // keeping its list of auxv-using GOOS build tags in sync.
+    //
+    // It contains an even number of elements, (tag, value) pairs.
     extern gocpp::slice<uintptr_t> auxv;
     gocpp::slice<uintptr_t> getAuxv();
 }
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/abi/runtime.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/abi/runtime.h"
+#include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
+    namespace abi = golang::internal::abi;
     struct ticksType
     {
         // lock protects access to start* and val.
@@ -74,6 +90,25 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct godebugInc& value);
+    // crashFD is an optional file descriptor to use for fatal panics, as
+    // set by debug.SetCrashOutput (see #42888). If it is a valid fd (not
+    // all ones), writeErr and related functions write to it in addition
+    // to standard error.
+    //
+    // Initialized to -1 in schedinit.
+    extern atomic::Uintptr crashFD;
+    // zeroVal is used by reflect via linkname.
+    //
+    // zeroVal should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ugorji/go/codec
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname zeroVal
+    extern gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
     extern ticksType ticks;
 
     namespace rec

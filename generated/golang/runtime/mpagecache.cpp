@@ -11,8 +11,8 @@
 #include "golang/runtime/mpagecache.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/intrinsics.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mgcscavenge.h"
@@ -25,6 +25,8 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
     }

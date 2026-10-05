@@ -13,14 +13,13 @@
 
 #include "golang/bytes/buffer.h"
 #include "golang/fmt/print.h"
-#include "golang/go/token/token.h"
+#include "golang/go/token/position.h"
 #include "golang/go/types/alias.h"
 #include "golang/go/types/array.h"
 #include "golang/go/types/basic.h"
 #include "golang/go/types/chan.h"
 #include "golang/go/types/context.h"
 #include "golang/go/types/errors.h"
-#include "golang/go/types/infer.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/map.h"
 #include "golang/go/types/named.h"
@@ -39,17 +38,24 @@
 #include "golang/go/types/typeset.h"
 #include "golang/go/types/typeterm.h"
 #include "golang/go/types/typexpr.h"
-#include "golang/go/types/under.h"
 #include "golang/go/types/union.h"
 #include "golang/go/types/universe.h"
-#include "golang/sort/sort.h"
-#include "golang/strconv/itoa.h"
+#include "golang/go/types/util.h"
+#include "golang/slices/slices.h"
+#include "golang/slices/sort.h"
+#include "golang/strconv/number.h"
 #include "golang/strconv/quote.h"
 #include "golang/strings/strings.h"
 #include "golang/unicode/utf8/utf8.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace bytes = golang::bytes;
+    namespace fmt = golang::fmt;
+    namespace slices = golang::slices;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using bytes::rec::String;
@@ -89,7 +95,7 @@ namespace golang::types
     // TypeString returns the string representation of typ.
     // The [Qualifier] controls the printing of
     // package-level objects, and may be nil.
-    gocpp::string TypeString(golang::types::Type typ, Qualifier qf)
+    gocpp::string TypeString(golang::go::types::Type typ, Qualifier qf)
     {
         bytes::Buffer buf = {};
         WriteType(& buf, typ, qf);
@@ -99,7 +105,7 @@ namespace golang::types
     // WriteType writes the string representation of typ to buf.
     // The [Qualifier] controls the printing of
     // package-level objects, and may be nil.
-    void WriteType(bytes::Buffer* buf, golang::types::Type typ, Qualifier qf)
+    void WriteType(bytes::Buffer* buf, golang::go::types::Type typ, Qualifier qf)
     {
         rec::typ(gocpp::recv(newTypeWriter(buf, qf)), typ);
     }
@@ -107,7 +113,7 @@ namespace golang::types
     // WriteSignature writes the representation of the signature sig to buf,
     // without a leading "func" keyword. The [Qualifier] controls the printing
     // of package-level objects, and may be nil.
-    void WriteSignature(bytes::Buffer* buf, Signature* sig, Qualifier qf)
+    void WriteSignature(bytes::Buffer* buf, golang::go::types::Signature* sig, Qualifier qf)
     {
         rec::signature(gocpp::recv(newTypeWriter(buf, qf)), sig);
     }
@@ -164,13 +170,13 @@ namespace golang::types
 
     typeWriter* newTypeWriter(bytes::Buffer* buf, Qualifier qf)
     {
-        return new typeWriter {buf, gocpp::make(gocpp::Tag<gocpp::map<golang::types::Type, bool>>()), qf, nullptr, nullptr, true, false, false};
+        return new typeWriter {buf, gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, bool>>()), qf, nullptr, nullptr, true, false, false};
     }
 
     typeWriter* newTypeHasher(bytes::Buffer* buf, Context* ctxt)
     {
         assert(ctxt != nullptr);
-        return new typeWriter {buf, gocpp::make(gocpp::Tag<gocpp::map<golang::types::Type, bool>>()), nullptr, ctxt, nullptr, false, false, false};
+        return new typeWriter {buf, gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, bool>>()), nullptr, ctxt, nullptr, false, false, false};
     }
 
     void rec::byte(typeWriter* w, unsigned char b)
@@ -205,7 +211,7 @@ namespace golang::types
         rec::WriteString(gocpp::recv(w->buf), "<"_s + msg + ">"_s);
     }
 
-    void rec::typ(typeWriter* w, golang::types::Type typ)
+    void rec::typ(typeWriter* w, golang::go::types::Type typ)
     {
         gocpp::Defer defer;
         try
@@ -251,7 +257,7 @@ namespace golang::types
                         types::Basic* t = gocpp::any_cast<types::Basic*>(typ);
                         // exported basic types go into package unsafe
                         // (currently this is just unsafe.Pointer)
-                        if(token::IsExported(t->name))
+                        if(isExported(t->name))
                         {
                             if(auto [obj, gocpp_id_1] = gocpp::getValue<TypeName*>(rec::Lookup(gocpp::recv(Unsafe->scope), t->name)); obj != nullptr)
                             {
@@ -295,7 +301,7 @@ namespace golang::types
                             // If disambiguating one struct for another, look for the first unexported field.
                             // Do this first in case of nested structs; tag the first-outermost field.
                             auto pkgAnnotate = false;
-                            if(w->qf == nullptr && w->pkgInfo && ! token::IsExported(f->object.name))
+                            if(w->qf == nullptr && w->pkgInfo && ! isExported(f->object.name))
                             {
                                 // note for embedded types, type name is field name, and "string" etc are lower case hence unexported.
                                 pkgAnnotate = true;
@@ -321,7 +327,7 @@ namespace golang::types
                             if(auto tag = rec::Tag(gocpp::recv(t), i); tag != ""_s)
                             {
                                 rec::byte(gocpp::recv(w), ' ');
-                                // TODO(rfindley) If tag contains blanks, replacing them with '#'
+                                // TODO(gri) If tag contains blanks, replacing them with '#'
                                 // in Context.TypeHash may produce another tag
                                 // accidentally.
                                 rec::string(gocpp::recv(w), strconv::Quote(tag));
@@ -384,14 +390,6 @@ namespace golang::types
                         types::Interface* t = gocpp::any_cast<types::Interface*>(typ);
                         if(w->ctxt == nullptr)
                         {
-                            if(t == rec::Type(gocpp::recv(universeAny)))
-                            {
-                                // When not hashing, we can try to improve type strings by writing "any"
-                                // for a type that is pointer-identical to universeAny. This logic should
-                                // be deprecated by more robust handling for aliases.
-                                rec::string(gocpp::recv(w), "any"_s);
-                                break;
-                            }
                             if(t == asNamed(rec::Type(gocpp::recv(universeComparable)))->underlying)
                             {
                                 rec::string(gocpp::recv(w), "interface{comparable}"_s);
@@ -425,7 +423,7 @@ namespace golang::types
                                 }
                                 first = false;
                                 rec::string(gocpp::recv(w), m->object.name);
-                                rec::signature(gocpp::recv(w), gocpp::getValue<Signature*>(m->object.typ));
+                                rec::signature(gocpp::recv(w), gocpp::getValue<golang::go::types::Signature*>(m->object.typ));
                             }
                             for(auto [gocpp_ignored, typ] : t->embeddeds)
                             {
@@ -531,7 +529,7 @@ namespace golang::types
                             rec::error(gocpp::recv(w), "unnamed type parameter"_s);
                             break;
                         }
-                        if(auto i = tparamIndex(rec::list(gocpp::recv(w->tparams)), t); i >= 0)
+                        if(auto i = slices::Index(rec::list(gocpp::recv(w->tparams)), t); i >= 0)
                         {
                             // The names of type parameters that are declared by the type being
                             // hashed are not part of the type identity. Replace them with a
@@ -549,11 +547,18 @@ namespace golang::types
                             // (say int), point out where it is declared to avoid confusing
                             // error messages. This doesn't need to be super-elegant; we just
                             // need a clear indication that this is not a predeclared name.
-                            // Note: types2 prints position information here - we can't do
-                            // that because we don't have a token.FileSet accessible.
                             if(w->ctxt == nullptr && rec::Lookup(gocpp::recv(Universe), t->obj->object.name) != nullptr)
                             {
-                                rec::string(gocpp::recv(w), "/* type parameter */"_s);
+                                if(isTypes2)
+                                {
+                                    rec::string(gocpp::recv(w), mocklib::Sprintf(" /* with %s declared at %v */"_s, t->obj->object.name, rec::Pos(gocpp::recv(t->obj))));
+                                }
+                                else
+                                {
+                                    // Can't print position information because
+                                    // we don't have a token.FileSet accessible.
+                                    rec::string(gocpp::recv(w), "/* type parameter */"_s);
+                                }
                             }
                         }
                         break;
@@ -563,10 +568,27 @@ namespace golang::types
                     {
                         types::Alias* t = gocpp::any_cast<types::Alias*>(typ);
                         rec::typeName(gocpp::recv(w), t->obj);
+                        if(auto list = rec::list(gocpp::recv(t->targs)); len(list) != 0)
+                        {
+                            // instantiated type
+                            rec::typeList(gocpp::recv(w), list);
+                        }
+                        else
+                        if(w->ctxt == nullptr && rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(t)))) != 0)
+                        {
+                            // For type hashing, don't need to format the TypeParams
+                            // parameterized type
+                            rec::tParamList(gocpp::recv(w), rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(t)))));
+                        }
                         if(w->ctxt != nullptr)
                         {
                             // TODO(gri) do we need to print the alias type name, too?
-                            rec::typ(gocpp::recv(w), Unalias(t->obj->object.typ));
+                            auto typ = Unalias(t->obj->object.typ);
+                            if(typ == nullptr)
+                            {
+                                gocpp::panic("known implementation limitation: encountered an incomplete alias (see go.dev/issue/78296)"_s);
+                            }
+                            rec::typ(gocpp::recv(w), typ);
                         }
                         break;
                     }
@@ -601,7 +623,7 @@ namespace golang::types
             }
             first = false;
             rec::string(gocpp::recv(w), m->object.name);
-            rec::signature(gocpp::recv(w), gocpp::getValue<Signature*>(m->object.typ));
+            rec::signature(gocpp::recv(w), gocpp::getValue<golang::go::types::Signature*>(m->object.typ));
         }
         //Go switch emulation
         {
@@ -629,7 +651,7 @@ namespace golang::types
                         rec::typ(gocpp::recv(newTypeHasher(& buf, w->ctxt)), term->typ);
                         termHashes = append(termHashes, rec::String(gocpp::recv(buf)));
                     }
-                    sort::Strings(termHashes);
+                    slices::Sort(termHashes);
                     if(! first)
                     {
                         rec::byte(gocpp::recv(w), ';');
@@ -640,7 +662,7 @@ namespace golang::types
         }
     }
 
-    void rec::typeList(typeWriter* w, gocpp::slice<golang::types::Type> list)
+    void rec::typeList(typeWriter* w, gocpp::slice<golang::go::types::Type> list)
     {
         rec::byte(gocpp::recv(w), '[');
         for(auto [i, typ] : list)
@@ -657,7 +679,7 @@ namespace golang::types
     void rec::tParamList(typeWriter* w, gocpp::slice<TypeParam*> list)
     {
         rec::byte(gocpp::recv(w), '[');
-        golang::types::Type prev = {};
+        golang::go::types::Type prev = {};
         for(auto [i, tpar] : list)
         {
             // Determine the type parameter and its constraint.
@@ -715,32 +737,36 @@ namespace golang::types
                 auto typ = v->object.typ;
                 if(variadic && i == len(tup->vars) - 1)
                 {
-                    if(auto [s, ok] = gocpp::getValue<Slice*>(typ); ok)
+                    if(auto [slice, ok] = gocpp::getValue<Slice*>(typ); ok)
                     {
                         rec::string(gocpp::recv(w), "..."_s);
-                        typ = s->elem;
+                        rec::typ(gocpp::recv(w), slice->elem);
                     }
                     else
                     {
-                        // special case:
-                        // append(s, "foo"...) leads to signature func([]byte, string...)
-                        if(auto [t, gocpp_id_3] = gocpp::getValue<Basic*>(types::under(typ)); t == nullptr || t->kind != types::String)
-                        {
-                            rec::error(gocpp::recv(w), "expected string type"_s);
-                            continue;
-                        }
+                        // append(slice, str...) entails various special
+                        // cases, especially in conjunction with generics.
+                        // str may be:
+                        // - a string,
+                        // - a TypeParam whose typeset includes string, or
+                        // - a named []byte slice type B resulting from
+                        // a client instantiating append([]byte, T) at T=B.
+                        // For such cases we use the irregular notation
+                        // func([]byte, T...), with the dots after the type.
                         rec::typ(gocpp::recv(w), typ);
                         rec::string(gocpp::recv(w), "..."_s);
-                        continue;
                     }
                 }
-                rec::typ(gocpp::recv(w), typ);
+                else
+                {
+                    rec::typ(gocpp::recv(w), typ);
+                }
             }
         }
         rec::byte(gocpp::recv(w), ')');
     }
 
-    void rec::signature(typeWriter* w, Signature* sig)
+    void rec::signature(typeWriter* w, golang::go::types::Signature* sig)
     {
         gocpp::Defer defer;
         try

@@ -12,7 +12,9 @@
 
 namespace golang::runtime
 {
-    gocpp::unsafe_pointer sysAllocOS(uintptr_t n);
+    bool needZeroAfterSysUnusedOS();
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    gocpp::unsafe_pointer sysAllocOS(uintptr_t n, gocpp::string _1);
     void sysUnusedOS(gocpp::unsafe_pointer v, uintptr_t n);
     void sysUsedOS(gocpp::unsafe_pointer v, uintptr_t n);
     void sysHugePageOS(gocpp::unsafe_pointer v, uintptr_t n);
@@ -20,8 +22,8 @@ namespace golang::runtime
     void sysHugePageCollapseOS(gocpp::unsafe_pointer v, uintptr_t n);
     void sysFreeOS(gocpp::unsafe_pointer v, uintptr_t n);
     void sysFaultOS(gocpp::unsafe_pointer v, uintptr_t n);
-    gocpp::unsafe_pointer sysReserveOS(gocpp::unsafe_pointer v, uintptr_t n);
-    void sysMapOS(gocpp::unsafe_pointer v, uintptr_t n);
+    gocpp::unsafe_pointer sysReserveOS(gocpp::unsafe_pointer v, uintptr_t n, gocpp::string _1);
+    void sysMapOS(gocpp::unsafe_pointer v, uintptr_t n, gocpp::string _1);
 
     namespace rec
     {

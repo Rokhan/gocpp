@@ -11,32 +11,48 @@
 #include "golang/go/types/alias.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+#include "golang/go/token/position.h"
 #include "golang/go/types/check.h"
+#include "golang/go/types/context.h"
 #include "golang/go/types/errors.h"
 #include "golang/go/types/named.h"
 #include "golang/go/types/object.h"
+#include "golang/go/types/package.h"
+#include "golang/go/types/subst.h"
 #include "golang/go/types/type.h"
+#include "golang/go/types/typelists.h"
+#include "golang/go/types/typeparam.h"
 #include "golang/go/types/typestring.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace token = golang::go::token;
     namespace rec
     {
     }
 
     // An Alias represents an alias type.
-    // Whether or not Alias types are created is controlled by the
-    // gotypesalias setting with the GODEBUG environment variable.
-    // For gotypesalias=1, alias declarations produce an Alias type.
-    // Otherwise, the alias information is only in the type name,
-    // which points directly to the actual (aliased) type.
+    //
+    // Alias types are created by alias declarations such as:
+    //
+    //	type A = int
+    //
+    // The type on the right-hand side of the declaration can be accessed
+    // using [Alias.Rhs]. This type may itself be an alias.
+    // Call [Unalias] to obtain the first non-alias type in a chain of
+    // alias type declarations.
+    //
+    // Like a defined ([Named]) type, an alias type has a name.
+    // Use the [Alias.Obj] method to access its [TypeName] object.
     
     template<typename T> requires gocpp::GoStruct<T>
     Alias::operator T()
     {
         T result;
         result.obj = this->obj;
+        result.orig = this->orig;
+        result.tparams = this->tparams;
+        result.targs = this->targs;
         result.fromRHS = this->fromRHS;
         result.actual = this->actual;
         return result;
@@ -46,6 +62,9 @@ namespace golang::types
     bool Alias::operator==(const T& ref) const
     {
         if (obj != ref.obj) return false;
+        if (orig != ref.orig) return false;
+        if (tparams != ref.tparams) return false;
+        if (targs != ref.targs) return false;
         if (fromRHS != ref.fromRHS) return false;
         if (actual != ref.actual) return false;
         return true;
@@ -55,6 +74,9 @@ namespace golang::types
     {
         os << '{';
         os << "" << obj;
+        os << " " << orig;
+        os << " " << tparams;
+        os << " " << targs;
         os << " " << fromRHS;
         os << " " << actual;
         os << '}';
@@ -67,23 +89,20 @@ namespace golang::types
     }
 
     // NewAlias creates a new Alias type with the given type name and rhs.
-    // rhs must not be nil.
-    Alias* NewAlias(TypeName* obj, golang::types::Type rhs)
+    // If rhs is nil, the alias is incomplete.
+    Alias* NewAlias(TypeName* obj, golang::go::types::Type rhs)
     {
         auto alias = rec::newAlias(gocpp::recv((Checker*)(nullptr)), obj, rhs);
         // Ensure that alias.actual is set (#65455).
-        unalias(alias);
+        rec::cleanup(gocpp::recv(alias));
         return alias;
     }
 
+    // Obj returns the type name for the declaration defining the alias type a.
+    // For instantiated types, this is same as the type name of the origin type.
     TypeName* rec::Obj(Alias* a)
     {
-        return a->obj;
-    }
-
-    golang::types::Type rec::Underlying(Alias* a)
-    {
-        return rec::Underlying(gocpp::recv(unalias(a)));
+        return a->orig->obj;
     }
 
     gocpp::string rec::String(Alias* a)
@@ -91,11 +110,58 @@ namespace golang::types
         return TypeString(a, nullptr);
     }
 
+    // Underlying returns the [underlying type] of the alias type a, which is the
+    // underlying type of the aliased type. Underlying types are never Named,
+    // TypeParam, or Alias types.
+    //
+    // [underlying type]: https://go.dev/ref/spec#Underlying_types.
+    golang::go::types::Type rec::Underlying(Alias* a)
+    {
+        return rec::Underlying(gocpp::recv(unalias(a)));
+    }
+
+    // Origin returns the generic Alias type of which a is an instance.
+    // If a is not an instance of a generic alias, Origin returns a.
+    Alias* rec::Origin(Alias* a)
+    {
+        return a->orig;
+    }
+
+    // TypeParams returns the type parameters of the alias type a, or nil.
+    // A generic Alias and its instances have the same type parameters.
+    TypeParamList* rec::TypeParams(Alias* a)
+    {
+        return a->tparams;
+    }
+
+    // SetTypeParams sets the type parameters of the alias type a.
+    // The alias a must not have type arguments.
+    void rec::SetTypeParams(Alias* a, gocpp::slice<TypeParam*> tparams)
+    {
+        assert(a->targs == nullptr);
+        a->tparams = bindTParams(tparams);
+    }
+
+    // TypeArgs returns the type arguments used to instantiate the Alias type.
+    // If a is not an instance of a generic alias, the result is nil.
+    TypeList* rec::TypeArgs(Alias* a)
+    {
+        return a->targs;
+    }
+
+    // Rhs returns the type R on the right-hand side of an alias
+    // declaration "type A = R", which may be another alias.
+    golang::go::types::Type rec::Rhs(Alias* a)
+    {
+        return a->fromRHS;
+    }
+
     // Unalias returns t if it is not an alias type;
     // otherwise it follows t's alias chain until it
     // reaches a non-alias type which is then returned.
     // Consequently, the result is never an alias type.
-    golang::types::Type Unalias(golang::types::Type t)
+    // Returns nil if the alias is incomplete.
+    golang::go::types::Type Unalias(golang::go::types::Type t)
     {
         if(auto [a0, gocpp_id_0] = gocpp::getValue<Alias*>(t); a0 != nullptr)
         {
@@ -104,39 +170,39 @@ namespace golang::types
         return t;
     }
 
-    golang::types::Type unalias(Alias* a0)
+    golang::go::types::Type unalias(Alias* a0)
     {
         if(a0->actual != nullptr)
         {
             return a0->actual;
         }
-        golang::types::Type t = {};
+        golang::go::types::Type t = {};
         for(auto a = a0; a != nullptr; std::tie(a, std::ignore) = gocpp::getValue<Alias*>(t))
         {
             t = a->fromRHS;
         }
-        if(t == nullptr)
-        {
-            gocpp::panic(mocklib::Sprintf("non-terminated alias %s"_s, a0->obj->object.name));
-        }
+        // It's fine to memoize nil types since it's the zero value for actual.
+        // It accomplishes nothing.
         a0->actual = t;
         return t;
     }
 
     // asNamed returns t as *Named if that is t's
     // actual type. It returns nil otherwise.
-    Named* asNamed(golang::types::Type t)
+    Named* asNamed(golang::go::types::Type t)
     {
         auto [n, gocpp_id_1] = gocpp::getValue<Named*>(Unalias(t));
         return n;
     }
 
     // newAlias creates a new Alias type with the given type name and rhs.
-    // rhs must not be nil.
-    Alias* rec::newAlias(Checker* check, TypeName* obj, golang::types::Type rhs)
+    // If rhs is nil, the alias is incomplete.
+    Alias* rec::newAlias(Checker* check, TypeName* obj, golang::go::types::Type rhs)
     {
-        assert(rhs != nullptr);
-        auto a = new Alias {obj, rhs, nullptr};
+        auto a = new types::Alias{};
+        a->obj = obj;
+        a->orig = a;
+        a->fromRHS = rhs;
         if(obj->object.typ == nullptr)
         {
             obj->object.typ = a;
@@ -151,9 +217,26 @@ namespace golang::types
         return a;
     }
 
+    // newAliasInstance creates a new alias instance for the given origin and type
+    // arguments, recording pos as the position of its synthetic object (for error
+    // reporting).
+    Alias* rec::newAliasInstance(Checker* check, token::Pos pos, Alias* orig, gocpp::slice<golang::go::types::Type> targs, Named* expanding, Context* ctxt)
+    {
+        assert(len(targs) > 0);
+        auto obj = NewTypeName(pos, orig->obj->object.pkg, orig->obj->object.name, nullptr);
+        auto rhs = rec::subst(gocpp::recv(check), pos, orig->fromRHS, makeSubstMap(rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(orig)))), targs), expanding, ctxt);
+        auto res = rec::newAlias(gocpp::recv(check), obj, rhs);
+        res->orig = orig;
+        res->tparams = orig->tparams;
+        res->targs = newTypeList(targs);
+        return res;
+    }
+
     void rec::cleanup(Alias* a)
     {
-        Unalias(a);
+        // Ensure a.actual is set before types are published,
+        // so unalias is a pure "getter", not a "setter".
+        unalias(a);
     }
 
 }

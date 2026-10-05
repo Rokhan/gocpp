@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::tree
+namespace golang::golang_org::x::tour::tree
 {
     struct Tree;
 }

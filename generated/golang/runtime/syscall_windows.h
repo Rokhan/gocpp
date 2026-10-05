@@ -36,55 +36,18 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct abiPart& value);
     void callbackasm();
     uintptr_t callbackasmAddr(int i);
-    struct callbackArgs
-    {
-        uintptr_t index{};
-        // args points to the argument block.
-        // For cdecl and stdcall, all arguments are on the stack.
-        // For fastcall, the trampoline spills register arguments to
-        // the reserved spill slots below the stack arguments,
-        // resulting in a layout equivalent to stdcall.
-        // For arm, the trampoline stores the register arguments just
-        // below the stack arguments, so again we can treat it as one
-        // big stack arguments frame.
-        gocpp::unsafe_pointer args{};
-        // Below are out-args from callbackWrap
-        uintptr_t result{};
-        uintptr_t retPop{}; // For 386 cdecl, how many bytes to pop on return
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct callbackArgs& value);
-    std::tuple<uintptr_t, uintptr_t> syscall_loadsystemlibrary(uint16_t* filename);
-    std::tuple<uintptr_t, uintptr_t> syscall_loadlibrary(uint16_t* filename);
-    std::tuple<uintptr_t, uintptr_t> syscall_getprocaddress(uintptr_t handle, unsigned char* procname);
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3);
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall6(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall9(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9);
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall12(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12);
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall15(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15);
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall18(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15, uintptr_t a16, uintptr_t a17, uintptr_t a18);
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args);
+    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, gocpp::slice<uintptr_t> args);
     
     template<typename... Args>
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, Args... args)
+    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, Args... args)
     {
-        return syscall_SyscallN(trap, gocpp::ToSlice<uintptr_t>(args...));
+        return syscall_syscalln(fn, n, gocpp::ToSlice<uintptr_t>(args...));
     }
     
     template<typename... Args>
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, uintptr_t value, Args... args)
+    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, uintptr_t value, Args... args)
     {
-        return syscall_SyscallN(trap, gocpp::ToSlice<uintptr_t>(value, args...));
+        return syscall_syscalln(fn, n, gocpp::ToSlice<uintptr_t>(value, args...));
     }
     struct abiDesc
     {
@@ -109,30 +72,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
-    void callbackWrap(callbackArgs* a);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
-    struct winCallbackKey
-    {
-        funcval* fn{};
-        bool cdecl{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct winCallbackKey& value);
-    uintptr_t compileCallback(eface fn, bool cdecl);
     struct winCallback
     {
         funcval* fn{}; // Go function
@@ -151,6 +96,50 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct winCallback& value);
+    struct winCallbackKey
+    {
+        funcval* fn{};
+        bool cdecl{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct winCallbackKey& value);
+    uintptr_t compileCallback(eface fn, bool cdecl);
+    struct callbackArgs
+    {
+        uintptr_t index{};
+        // args points to the argument block.
+        // For cdecl and stdcall, all arguments are on the stack.
+        // For fastcall, the trampoline spills register arguments to
+        // the reserved spill slots below the stack arguments,
+        // resulting in a layout equivalent to stdcall.
+        gocpp::unsafe_pointer args{};
+        // Below are out-args from callbackWrap
+        uintptr_t result{};
+        uintptr_t retPop{}; // For 386 cdecl, how many bytes to pop on return
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct callbackArgs& value);
+    void callbackWrap(callbackArgs* a);
 }
 #include "golang/runtime/zcallback_windows.fwd.h"
 
@@ -175,7 +164,19 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cbsStruct& value);
+}
+#include "golang/runtime/zcallback_windows.h"
+
+namespace golang::runtime
+{
+    // cbs stores all registered Go callbacks.
     extern cbsStruct cbs;
+}
+
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

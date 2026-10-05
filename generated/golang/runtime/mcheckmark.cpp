@@ -11,25 +11,37 @@
 #include "golang/runtime/mcheckmark.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/sys/nih.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mgcmark.h"
+#include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mstats.h"
+#include "golang/runtime/mwbbuf.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/print.h"
+#include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
+#include "golang/runtime/symtab.h"
+#include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace goarch = golang::internal::goarch;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
+        using atomic::rec::Store;
     }
 
     // A checkmarksMap stores the GC marks in "checkmarks" mode. It is a
@@ -79,7 +91,7 @@ namespace golang::runtime
         assertWorldStopped();
 
         // Clear all checkmarks.
-        for(auto [gocpp_ignored, ai] : mheap_.allArenas)
+        auto clearCheckmarks = [=](arenaIdx ai) mutable -> void
         {
             auto arena = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
             auto bitmap = arena->checkmarks;
@@ -97,12 +109,18 @@ namespace golang::runtime
             else
             {
                 // Otherwise clear the existing bitmap.
-                for(auto [i, gocpp_ignored] : bitmap->b)
-                {
-                    bitmap->b[i] = 0;
-                }
+                clear(bitmap->b.make_slice(0));
             }
+        };
+        for(auto [gocpp_ignored, ai] : mheap_.heapArenas)
+        {
+            clearCheckmarks(ai);
         }
+        for(auto [gocpp_ignored, ai] : mheap_.userArenaArenas)
+        {
+            clearCheckmarks(ai);
+        }
+
         // Enable checkmarking.
         useCheckmark = true;
     }
@@ -110,7 +128,7 @@ namespace golang::runtime
     // endCheckmarks ends the checkmarks phase.
     void endCheckmarks()
     {
-        if(gcMarkWorkAvailable(nullptr))
+        if(! gcIsMarkDone())
         {
             go_throw("GC work not flushed"_s);
         }
@@ -137,21 +155,315 @@ namespace golang::runtime
             getg()->m->traceback = 2;
             go_throw("checkmark found unmarked object"_s);
         }
-
-        auto ai = arenaIndex(obj);
-        auto arena = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
-        auto arenaWord = (obj / heapArenaBytes / 8) % uintptr_t(len(arena->checkmarks->b));
-        auto mask = (unsigned char)(1 << ((obj / heapArenaBytes) % 8));
-        auto bytep = & arena->checkmarks->b[arenaWord];
-
+        auto [bytep, mask] = getCheckmark(obj);
+        if(bytep == nullptr)
+        {
+            return false;
+        }
         if(atomic::Load8(bytep) & mask != 0)
         {
             // Already checkmarked.
             return true;
         }
-
         atomic::Or8(bytep, mask);
         return false;
+    }
+
+    std::tuple<unsigned char*, uint8_t> getCheckmark(uintptr_t obj)
+    {
+        unsigned char* bytep;
+        uint8_t mask;
+        auto ai = arenaIndex(obj);
+        auto arena = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
+        if(arena == nullptr)
+        {
+            // Non-heap pointer.
+            return {nullptr, 0};
+        }
+        auto wordIdx = (obj - alignDown(obj, heapArenaBytes)) / goarch::PtrSize;
+        auto arenaWord = wordIdx / 8;
+        mask = (unsigned char)(1 << (wordIdx % 8));
+        bytep = & arena->checkmarks->b[arenaWord];
+        return {bytep, mask};
+    }
+
+    // runCheckmark runs a full non-parallel, stop-the-world mark using
+    // checkmark bits, to check that we didn't forget to mark anything
+    // during the concurrent mark process.
+    //
+    // The world must be stopped to call runCheckmark.
+    void runCheckmark(std::function<void (gcWork* _1)> prepareRootSet)
+    {
+        assertWorldStopped();
+
+        // Turn off gcwaiting because that will force
+        // gcDrain to return early if this goroutine
+        // happens to have its preemption flag set.
+        // This is fine because the world is stopped.
+        // Restore it after we're done just to be safe.
+        rec::Store(gocpp::recv(sched.gcwaiting), false);
+        startCheckmarks();
+        gcResetMarkState();
+        auto gcw = & rec::ptr(gocpp::recv(getg()->m->p))->gcw;
+        prepareRootSet(gcw);
+        gcDrain(gcw, 0);
+        wbBufFlush1(rec::ptr(gocpp::recv(getg()->m->p)));
+        rec::dispose(gocpp::recv(gcw));
+        endCheckmarks();
+        rec::Store(gocpp::recv(sched.gcwaiting), true);
+    }
+
+    // checkFinalizersAndCleanups uses checkmarks to check for potential issues
+    // with the program's use of cleanups and finalizers.
+    void checkFinalizersAndCleanups()
+    {
+        assertWorldStopped();
+
+        auto reportCycle = 1 << 0;
+        auto reportTiny = 1 << 1;
+
+        // Find the arena and page index into that arena for this shard.
+        struct report
+        {
+            int issues{};
+            uintptr_t ptr{};
+            special* sp{};
+
+            using isGoStruct = void;
+
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << issues;
+                os << " " << ptr;
+                os << " " << sp;
+                os << '}';
+                return os;
+            }
+        };
+        gocpp::array<report, 50> reports = {};
+        int nreports = {};
+        bool more = {};
+        uintptr_t lastTinyBlock = {};
+
+        forEachSpecial([=](uintptr_t p, mspan* s, special* sp) mutable -> bool
+        {
+            // N.B. The tiny block specials are sorted first in the specials list.
+            if(sp->kind == _KindSpecialTinyBlock)
+            {
+                lastTinyBlock = rec::base(gocpp::recv(s)) + sp->offset;
+                return true;
+            }
+
+            // We only care about finalizers and cleanups.
+            if(sp->kind != _KindSpecialFinalizer && sp->kind != _KindSpecialCleanup)
+            {
+                return true;
+            }
+
+            // Run a checkmark GC using this cleanup and/or finalizer as a root.
+            if(debug.checkfinalizers > 1)
+            {
+                print("Scan trace for cleanup/finalizer on "_s, hex(p), ":\n"_s);
+            }
+            runCheckmark([=](gcWork* gcw) mutable -> void
+            {
+                //Go switch emulation
+                {
+                    auto condition = sp->kind;
+                    int conditionId = -1;
+                    if(condition == _KindSpecialFinalizer) { conditionId = 0; }
+                    else if(condition == _KindSpecialCleanup) { conditionId = 1; }
+                    switch(conditionId)
+                    {
+                        case 0:
+                            gcScanFinalizer((specialfinalizer*)(gocpp::unsafe_pointer(sp)), s, gcw);
+                            break;
+                        case 1:
+                            gcScanCleanup((specialCleanup*)(gocpp::unsafe_pointer(sp)), gcw);
+                            break;
+                    }
+                }
+            });
+            if(debug.checkfinalizers > 1)
+            {
+                println();
+            }
+
+            // Now check to see if the object the special is attached to was marked.
+            // The roots above do not directly mark p, so if it is marked, then p
+            // must be reachable from the finalizer and/or cleanup, preventing
+            // reclamation.
+            auto [bytep, mask] = getCheckmark(p);
+            if(bytep == nullptr)
+            {
+                return true;
+            }
+            int issues = {};
+            if(atomic::Load8(bytep) & mask != 0)
+            {
+                issues |= reportCycle;
+            }
+            if(p >= lastTinyBlock && p < lastTinyBlock + maxTinySize)
+            {
+                issues |= reportTiny;
+            }
+            if(issues != 0)
+            {
+                if(nreports >= len(reports))
+                {
+                    more = true;
+                    return false;
+                }
+                reports[nreports] = report {issues, p, sp};
+                nreports++;
+            }
+            return true;
+        });
+
+        if(nreports > 0)
+        {
+            auto lastPtr = uintptr_t(0);
+            println("WARNING: LIKELY CLEANUP/FINALIZER ISSUES"_s);
+            println();
+            for(auto [gocpp_ignored, r] : reports.make_slice(0, nreports))
+            {
+                specialCheckFinalizer* ctx = {};
+                gocpp::string kind = {};
+                if(r.sp->kind == _KindSpecialFinalizer)
+                {
+                    kind = "finalizer"_s;
+                    ctx = getCleanupContext(r.ptr, 0);
+                }
+                else
+                {
+                    kind = "cleanup"_s;
+                    ctx = getCleanupContext(r.ptr, ((specialCleanup*)(gocpp::unsafe_pointer(r.sp)))->id);
+                }
+
+                // N.B. reports is sorted 'enough' that cleanups/finalizers on the same pointer will
+                // appear consecutively because the specials list is sorted.
+                if(lastPtr != r.ptr)
+                {
+                    if(lastPtr != 0)
+                    {
+                        println();
+                    }
+                    print("Value of type "_s, rec::string(gocpp::recv(toRType(ctx->ptrType))), " at "_s, hex(r.ptr), "\n"_s);
+                    if(r.issues & reportCycle != 0)
+                    {
+                        if(r.sp->kind == _KindSpecialFinalizer)
+                        {
+                            println("  is reachable from finalizer"_s);
+                        }
+                        else
+                        {
+                            println("  is reachable from cleanup or cleanup argument"_s);
+                        }
+                    }
+                    if(r.issues & reportTiny != 0)
+                    {
+                        println("  is in a tiny block with other (possibly long-lived) values"_s);
+                    }
+                    if(r.issues & reportTiny != 0 && r.issues & reportCycle != 0)
+                    {
+                        if(r.sp->kind == _KindSpecialFinalizer)
+                        {
+                            println("  may be in the same tiny block as finalizer"_s);
+                        }
+                        else
+                        {
+                            println("  may be in the same tiny block as cleanup or cleanup argument"_s);
+                        }
+                    }
+                }
+                println();
+
+                println("Has"_s, kind, "at"_s, hex(uintptr_t(gocpp::unsafe_pointer(r.sp))));
+                auto funcInfo = findfunc(ctx->funcPC);
+                if(rec::valid(gocpp::recv(funcInfo)))
+                {
+                    auto [file, line] = funcline(funcInfo, ctx->funcPC);
+                    print("  "_s, funcname(funcInfo), "()\n"_s);
+                    print("      "_s, file, ":"_s, line, " +"_s, hex(ctx->funcPC - rec::entry(gocpp::recv(funcInfo))), "\n"_s);
+                }
+                else
+                {
+                    print("  <bad pc "_s, hex(ctx->funcPC), ">\n"_s);
+                }
+
+                println("created at: "_s);
+                auto createInfo = findfunc(ctx->createPC);
+                if(rec::valid(gocpp::recv(createInfo)))
+                {
+                    auto [file, line] = funcline(createInfo, ctx->createPC);
+                    print("  "_s, funcname(createInfo), "()\n"_s);
+                    print("      "_s, file, ":"_s, line, " +"_s, hex(ctx->createPC - rec::entry(gocpp::recv(createInfo))), "\n"_s);
+                }
+                else
+                {
+                    print("  <bad pc "_s, hex(ctx->createPC), ">\n"_s);
+                }
+
+                lastPtr = r.ptr;
+            }
+            println();
+            if(more)
+            {
+                println("... too many potential issues ..."_s);
+            }
+            go_throw("detected possible issues with cleanups and/or finalizers"_s);
+        }
+    }
+
+    // forEachSpecial is an iterator over all specials.
+    //
+    // Used by debug.checkfinalizers.
+    //
+    // The world must be stopped.
+    void forEachSpecial(std::function<bool (uintptr_t p, mspan* s, special* sp)> yield)
+    {
+        assertWorldStopped();
+
+        // Find the arena and page index into that arena for this shard.
+        for(auto [gocpp_ignored, ai] : mheap_.markArenas)
+        {
+            auto ha = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
+
+            // Construct slice of bitmap which we'll iterate over.
+            for(auto [i, gocpp_ignored] : ha->pageSpecials.make_slice(0))
+            {
+                // Find set bits, which correspond to spans with specials.
+                auto specials = atomic::Load8(& ha->pageSpecials[i]);
+                if(specials == 0)
+                {
+                    continue;
+                }
+                for(auto j = (unsigned int)(0); j < 8; j++)
+                {
+                    if(specials & (1 << j) == 0)
+                    {
+                        continue;
+                    }
+                    // Find the span for this bit.
+                    // This value is guaranteed to be non-nil because having
+                    // specials implies that the span is in-use, and since we're
+                    // currently marking we can be sure that we don't have to worry
+                    // about the span being freed and re-used.
+                    auto s = ha->spans[(unsigned int)(i) * 8 + j];
+
+                    // Lock the specials to prevent a special from being
+                    // removed from the list while we're traversing it.
+                    for(auto sp = s->specials; sp != nullptr; sp = sp->next)
+                    {
+                        if(! yield(rec::base(gocpp::recv(s)) + sp->offset, s, sp))
+                        {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }

@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::color
+namespace golang::image::color
 {
     struct Color : virtual gocpp::Interface
     {
@@ -303,6 +303,15 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct modelFunc& value);
+    // Models for the standard color types.
+    extern Model RGBAModel;
+    extern Model RGBA64Model;
+    extern Model NRGBAModel;
+    extern Model NRGBA64Model;
+    extern Model AlphaModel;
+    extern Model Alpha16Model;
+    extern Model GrayModel;
+    extern Model Gray16Model;
     Color rgbaModel(Color c);
     Color rgba64Model(Color c);
     Color nrgbaModel(Color c);
@@ -312,22 +321,15 @@ namespace golang::color
     Color grayModel(Color c);
     Color gray16Model(Color c);
     using Palette = gocpp::defined<gocpp::slice<Color>, GoTag_Palette>;
+    // Standard colors.
     extern Gray16 Black;
     extern Gray16 White;
     extern Alpha16 Transparent;
     extern Alpha16 Opaque;
-    extern Model RGBAModel;
-    extern Model RGBA64Model;
-    extern Model NRGBAModel;
-    extern Model NRGBA64Model;
-    extern Model AlphaModel;
-    extern Model Alpha16Model;
-    extern Model GrayModel;
-    extern Model Gray16Model;
 
     namespace rec
     {
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::RGBA c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::image::color::RGBA c);
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(RGBA64 c);
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(NRGBA c);
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(NRGBA64 c);

@@ -10,15 +10,30 @@
 #include "gocpp/support.h"
 
 
-namespace golang::event
+namespace golang::golang_org::x::tools::internal::event
 {
     void SetExporter(Exporter e);
 }
+#include "golang/context/context.fwd.h"
+#include "golang/golang.org/x/tools/internal/event/core/event.fwd.h"
+#include "golang/golang.org/x/tools/internal/event/core/export.fwd.h"
+#include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::event
+{
+    namespace context = golang::context;
+    namespace core = golang::golang_org::x::tools::internal::event::core;
+}
 #include "golang/context/context.h"
 #include "golang/golang.org/x/tools/internal/event/core/event.h"
+
+namespace golang::golang_org::x::tools::internal::event
+{
+    namespace label = golang::golang_org::x::tools::internal::event::label;
+}
 #include "golang/golang.org/x/tools/internal/event/label/label.h"
 
-namespace golang::event
+namespace golang::golang_org::x::tools::internal::event
 {
     bool IsLog(core::Event ev);
     bool IsError(core::Event ev);

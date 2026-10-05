@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
 {
     std::tuple<gocpp::slice<gocpp::slice<gocpp::string>>, gocpp::error> splitIntoChunks(gocpp::slice<gocpp::string> patterns, int argMax);
     struct ModuleError
@@ -63,15 +63,17 @@ namespace golang::packages
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    extern gocpp::channel<bool> ioLimit;
     bool sameFile(gocpp::string x, gocpp::string y);
     LoadMode impliedLoadMode(LoadMode loadMode);
+    
+    template<typename T>
+    T cond(bool cond, T t, T f);
     struct flatPackage
     {
         gocpp::string ID{};
         gocpp::string Name{};
         gocpp::string PkgPath{};
-        gocpp::slice<golang::packages::Error> Errors{};
+        gocpp::slice<golang::golang_org::x::tools::go::packages::Error> Errors{};
         gocpp::slice<gocpp::string> GoFiles{};
         gocpp::slice<gocpp::string> CompiledGoFiles{};
         gocpp::slice<gocpp::string> OtherFiles{};
@@ -93,21 +95,83 @@ namespace golang::packages
     };
 
     std::ostream& operator<<(std::ostream& os, const struct flatPackage& value);
+    struct unit
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct unit& value);
 }
-#include "golang/context/context.h"
-#include "golang/go/types/api.h"
-#include "golang/go/types/sizes.h"
-#include "golang/io/io.h"
-#include "golang/sync/once.h"
+#include "golang/golang.org/x/tools/go/packages/external.fwd.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    DriverResponse* mergeResponses(gocpp::slice<DriverResponse*> responses);
+    
+    template<typename... Args>
+    DriverResponse* mergeResponses(Args... responses)
+    {
+        return mergeResponses(gocpp::ToSlice<DriverResponse*>(responses...));
+    }
+    
+    template<typename... Args>
+    DriverResponse* mergeResponses(DriverResponse* value, Args... responses)
+    {
+        return mergeResponses(gocpp::ToSlice<DriverResponse*>(value, responses...));
+    }
+    // We use a counting semaphore to limit
+    // the number of parallel I/O calls or CPU threads per process.
+    extern gocpp::channel<packages::unit> ioLimit;
+    extern gocpp::channel<packages::unit> cpuLimit;
+}
+#include "golang/context/context.fwd.h"
 #include "golang/go/ast/ast.fwd.h"
 #include "golang/go/token/position.fwd.h"
+#include "golang/go/types/api.fwd.h"
+#include "golang/go/types/check.fwd.h"
+#include "golang/go/types/object.fwd.h"
 #include "golang/go/types/package.fwd.h"
-#include "golang/golang.org/x/tools/go/packages/external.fwd.h"
-#include "golang/golang.org/x/tools/internal/gocommand/invoke.fwd.h"
+#include "golang/go/types/scope.fwd.h"
+#include "golang/go/types/selection.fwd.h"
+#include "golang/go/types/sizes.fwd.h"
+#include "golang/go/types/universe.fwd.h"
 #include "golang/golang.org/x/tools/internal/packagesinternal/packages.fwd.h"
+#include "golang/sync/atomic/type.fwd.h"
 #include "golang/time/time.fwd.h"
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
+{
+    namespace context = golang::context;
+}
+#include "golang/context/context.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    namespace token = golang::go::token;
+    namespace ast = golang::go::ast;
+    namespace types = golang::go::types;
+}
+#include "golang/go/types/api.h"
+#include "golang/go/types/sizes.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    namespace packagesinternal = golang::golang_org::x::tools::internal::packagesinternal;
+    namespace time = golang::time;
+    namespace atomic = golang::sync::atomic;
+}
+#include "golang/sync/atomic/type.h"
+
+namespace golang::golang_org::x::tools::go::packages
 {
     struct Config
     {
@@ -121,7 +185,7 @@ namespace golang::packages
         // If the user provides a logger, debug logging is enabled.
         // If the GOPACKAGESDEBUG environment variable is set to true,
         // but the logger is nil, default to log.Printf.
-        std::function<void (gocpp::string format, gocpp::slice<gocpp::go_any> args)> Logf{};
+        std::function<void (gocpp::string format, gocpp::slice<go_any> args)> Logf{};
         // Dir is the directory in which to run the build system's query tool
         // that provides information about the packages.
         // If Dir is empty, the tool is run in the current directory.
@@ -133,15 +197,9 @@ namespace golang::packages
         // a few variables, append to the current environment, as in:
         // opt.Env = append(os.Environ(), "GOOS=plan9", "GOARCH=386")
         gocpp::slice<gocpp::string> Env{};
-        // gocmdRunner guards go command calls from concurrency errors.
-        gocommand::Runner* gocmdRunner{};
         // BuildFlags is a list of command-line flags to be passed through to
         // the build system's query tool.
         gocpp::slice<gocpp::string> BuildFlags{};
-        // modFile will be used for -modfile in go command invocations.
-        gocpp::string modFile{};
-        // modFlag will be used for -modfile in go command invocations.
-        gocpp::string modFlag{};
         // Fset provides source position information for syntax trees and types.
         // If Fset is nil, Load will use a new fileset, but preserve Fset's value.
         token::FileSet* Fset{};
@@ -178,9 +236,6 @@ namespace golang::packages
         // consistent package metadata about unsaved files. However,
         // drivers may vary in their level of support for overlays.
         gocpp::map<gocpp::string, gocpp::slice<unsigned char>> Overlay{};
-        // goListOverlayFile is the JSON file that encodes the Overlay
-        // mapping, used by 'go list -overlay=...'
-        gocpp::string goListOverlayFile{};
 
         using isGoStruct = void;
 
@@ -194,19 +249,6 @@ namespace golang::packages
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Config& value);
-    DriverResponse* mergeResponses(gocpp::slice<DriverResponse*> responses);
-    
-    template<typename... Args>
-    DriverResponse* mergeResponses(Args... responses)
-    {
-        return mergeResponses(gocpp::ToSlice<DriverResponse*>(responses...));
-    }
-    
-    template<typename... Args>
-    DriverResponse* mergeResponses(DriverResponse* value, Args... responses)
-    {
-        return mergeResponses(gocpp::ToSlice<DriverResponse*>(value, responses...));
-    }
     struct Package
     {
         // ID is a unique identifier for a package,
@@ -219,9 +261,13 @@ namespace golang::packages
         gocpp::string Name{};
         // PkgPath is the package path as used by the go/types package.
         gocpp::string PkgPath{};
+        // Dir is the directory associated with the package, if it exists.
+        // For packages listed by the go command, this is the directory containing
+        // the package files.
+        gocpp::string Dir{};
         // Errors contains any errors encountered querying the metadata
         // of the package, or while parsing or type-checking its files.
-        gocpp::slice<golang::packages::Error> Errors{};
+        gocpp::slice<golang::golang_org::x::tools::go::packages::Error> Errors{};
         // TypeErrors contains the subset of errors produced during type checking.
         gocpp::slice<types::Error> TypeErrors{};
         // GoFiles lists the absolute file paths of the package's Go source files.
@@ -249,6 +295,9 @@ namespace golang::packages
         // ExportFile is the absolute path to a file containing type
         // information for the package as provided by the build system.
         gocpp::string ExportFile{};
+        // Target is the absolute install path of the .a file, for libraries,
+        // and of the executable file, for binaries.
+        gocpp::string Target{};
         // Imports maps import paths appearing in the package's Go source files
         // to corresponding loaded Packages.
         gocpp::map<gocpp::string, Package*> Imports{};
@@ -281,10 +330,14 @@ namespace golang::packages
         types::Info* TypesInfo{};
         // TypesSizes provides the effective size function for types in TypesInfo.
         types::Sizes TypesSizes{};
-        // forTest is the package under test, if any.
-        gocpp::string forTest{};
+        // ForTest is the package under test, if any.
+        gocpp::string ForTest{};
         // depsErrors is the DepsErrors field from the go list response, if any.
         gocpp::slice<packagesinternal::PackageError*> depsErrors{};
+        // exportDataError is the error encountered reading export data, if any.
+        // Decoding export data should ordinarily be infallible, so this typically
+        // indicates a producer/consumer version skew.
+        gocpp::error exportDataError{};
 
         using isGoStruct = void;
 
@@ -327,7 +380,8 @@ namespace golang::packages
     {
         Package* Package{};
         gocpp::map<gocpp::string, gocpp::error> importErrors{}; // maps each bad import to its error
-        sync::Once loadOnce{};
+        gocpp::slice<loaderPackage*> preds{}; // packages that import this one
+        atomic::Int32 unfinishedSuccs{}; // number of direct imports not yet loaded
         uint8_t color{}; // for cycle detection
         bool needsrc{}; // load from source (Mode >= LoadTypes)
         bool needtypes{}; // type information is either requested or depended on
@@ -364,7 +418,11 @@ namespace golang::packages
     };
 
     std::ostream& operator<<(std::ostream& os, const struct parseValue& value);
-    extern gocpp::go_any _;
+}
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
     std::tuple<gocpp::slice<Package*>, gocpp::error> Load(Config* cfg, gocpp::slice<gocpp::string> patterns);
     
     template<typename... Args>
@@ -396,17 +454,19 @@ namespace golang::packages
 #include "golang/golang.org/x/tools/go/packages/external.h"
 #include "golang/sync/mutex.h"
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
 {
+    namespace sync = golang::sync;
     std::tuple<DriverResponse*, gocpp::error> callDriverOnChunks(driver driver, Config* cfg, gocpp::slice<gocpp::slice<gocpp::string>> chunks);
     struct loader
     {
-        gocpp::map<gocpp::string, loaderPackage*> pkgs{};
+        gocpp::map<gocpp::string, loaderPackage*> pkgs{}; // keyed by Package.ID
         Config Config{};
         types::Sizes sizes{}; // non-nil if needed by mode
         gocpp::map<gocpp::string, parseValue*> parseCache{};
         mocklib::Mutex parseCacheMu{};
         mocklib::Mutex exportMu{}; // enforces mutual exclusion of exportdata operations
+        bool externalDriver{}; // true if an external GOPACKAGESDRIVER handled the request
         // Config.Mode contains the implied mode (see impliedLoadMode).
         // Implied mode contains all the fields we need the data for.
         // In requestedMode there are the actually requested fields.
@@ -431,21 +491,22 @@ namespace golang::packages
 }
 
 #include "golang/go/ast/ast.h"
+#include "golang/go/types/api.h"
 #include "golang/go/types/package.h"
 #include "golang/golang.org/x/tools/go/packages/external.h"
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
 {
 
     namespace rec
     {
-        gocpp::string Error(golang::packages::Error err);
+        gocpp::string Error(golang::golang_org::x::tools::go::packages::Error err);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(Package* p);
         gocpp::error UnmarshalJSON(Package* p, gocpp::slice<unsigned char> b);
         gocpp::string String(Package* p);
         std::tuple<gocpp::slice<Package*>, gocpp::error> refine(loader* ld, DriverResponse* response);
-        void loadRecursive(loader* ld, loaderPackage* lpkg);
         void loadPackage(loader* ld, loaderPackage* lpkg);
+        types::Info* newTypesInfo(loader* ld);
         std::tuple<types::Package*, gocpp::error> Import(importerFunc f, gocpp::string path);
         std::tuple<ast::File*, gocpp::error> parseFile(loader* ld, gocpp::string filename);
         std::tuple<gocpp::slice<ast::File*>, gocpp::slice<gocpp::error>> parseFiles(loader* ld, gocpp::slice<gocpp::string> filenames);

@@ -11,8 +11,10 @@
 #include "golang/runtime/mpagealloc.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/internal/goarch/zgoarch_amd64.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/gc/sizeclasses.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mem.h"
@@ -29,6 +31,10 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace gc = golang::internal::runtime::gc;
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
     }
@@ -352,7 +358,7 @@ namespace golang::runtime
             {
                 // Create the necessary l2 entry.
                 auto l2Size = gocpp::Sizeof<gocpp::array<pallocData, 8192>>();
-                auto r = runtime::sysAlloc(l2Size, p->sysStat);
+                auto r = runtime::sysAlloc(l2Size, p->sysStat, vmaNamePageAllocIndex);
                 if(r == nullptr)
                 {
                     go_throw("pageAlloc: out of memory"_s);
@@ -476,11 +482,7 @@ namespace golang::runtime
             auto whole = p->summary[len(p->summary) - 1].make_slice(sc + 1, ec);
             if(alloc)
             {
-                // Should optimize into a memclr.
-                for(auto [i, gocpp_ignored] : whole)
-                {
-                    whole[i] = 0;
-                }
+                clear(whole);
             }
             else
             {
@@ -1026,6 +1028,50 @@ namespace golang::runtime
             }
         }
         rec::update(gocpp::recv(p), base, npages, true, false);
+    }
+
+    // markRandomPaddingPages marks the range of memory [base, base+npages*pageSize]
+    // as both allocated and scavenged. This is used for randomizing the base heap
+    // address. Both the alloc and scav bits are set so that the pages are not used
+    // and so the memory accounting stats are correctly calculated.
+    //
+    // Similar to allocRange, it also updates the summaries to reflect the
+    // newly-updated bitmap.
+    //
+    // p.mheapLock must be held.
+    void rec::markRandomPaddingPages(pageAlloc* p, uintptr_t base, uintptr_t npages)
+    {
+        assertLockHeld(p->mheapLock);
+
+        auto limit = base + npages * pageSize - 1;
+        auto [sc, ec] = std::tuple{chunkIndex(base), chunkIndex(limit)};
+        auto [si, ei] = std::tuple{chunkPageIndex(base), chunkPageIndex(limit)};
+        if(sc == ec)
+        {
+            auto chunk = rec::chunkOf(gocpp::recv(p), sc);
+            rec::allocRange(gocpp::recv(chunk), si, ei + 1 - si);
+            rec::alloc(gocpp::recv(p->scav.index), sc, ei + 1 - si);
+            rec::setRange(gocpp::recv(chunk->scavenged), si, ei + 1 - si);
+        }
+        else
+        {
+            auto chunk = rec::chunkOf(gocpp::recv(p), sc);
+            rec::allocRange(gocpp::recv(chunk), si, pallocChunkPages - si);
+            rec::alloc(gocpp::recv(p->scav.index), sc, pallocChunkPages - si);
+            rec::setRange(gocpp::recv(chunk->scavenged), si, pallocChunkPages - si);
+            for(auto c = sc + 1; c < ec; c++)
+            {
+                auto chunk = rec::chunkOf(gocpp::recv(p), c);
+                rec::allocAll(gocpp::recv(chunk));
+                rec::alloc(gocpp::recv(p->scav.index), c, pallocChunkPages);
+                rec::setAll(gocpp::recv(chunk->scavenged));
+            }
+            chunk = rec::chunkOf(gocpp::recv(p), ec);
+            rec::allocRange(gocpp::recv(chunk), 0, ei + 1);
+            rec::alloc(gocpp::recv(p->scav.index), ec, ei + 1);
+            rec::setRange(gocpp::recv(chunk->scavenged), 0, ei + 1);
+        }
+        rec::update(gocpp::recv(p), base, npages, true, true);
     }
 
     // pallocSum is a packed summary type which packs three numbers: start, max,

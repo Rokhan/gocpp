@@ -36,6 +36,12 @@ namespace golang::main
     void main();
     gocpp::slice<unsigned char> Map(std::function<gocpp::rune (gocpp::rune r)> mapping, gocpp::slice<unsigned char> s);
 }
+#include "golang/unicode/letter.fwd.h"
+
+namespace golang::main
+{
+    namespace unicode = golang::unicode;
+}
 #include "golang/unicode/letter.h"
 
 namespace golang::main

@@ -17,6 +17,7 @@
 #include "golang/math/unsafe.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
+#include "golang/slices/slices.h"
 #include "golang/sync/map.h"
 
 // Package binary implements simple translation between numbers and byte
@@ -36,8 +37,14 @@
 // high-performance serialization, especially for large data structures,
 // should look at more advanced solutions such as the [encoding/gob]
 // package or [google.golang.org/protobuf] for protocol buffers.
-namespace golang::binary
+namespace golang::encoding::binary
 {
+    namespace errors = golang::errors;
+    namespace io = golang::io;
+    namespace math = golang::math;
+    namespace reflect = golang::reflect;
+    namespace slices = golang::slices;
+    namespace sync = golang::sync;
     namespace rec
     {
         using io::rec::Write;
@@ -66,6 +73,7 @@ namespace golang::binary
         using sync::rec::Store;
     }
 
+    gocpp::error errBufferTooSmall = errors::New("buffer too small"_s);
     // A ByteOrder specifies how to convert byte slices into
     // 16-, 32-, or 64-bit unsigned integers.
     //
@@ -347,6 +355,7 @@ namespace golang::binary
         return value.PrintTo(os);
     }
 
+    // Uint16 returns the uint16 representation of b[0:2].
     uint16_t rec::Uint16(littleEndian, gocpp::slice<unsigned char> b)
     {
         // bounds check hint to compiler; see golang.org/issue/14808
@@ -354,6 +363,7 @@ namespace golang::binary
         return uint16_t(b[0]) | (uint16_t(b[1]) << 8);
     }
 
+    // PutUint16 stores v into b[0:2].
     void rec::PutUint16(littleEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
         // early bounds check to guarantee safety of writes below
@@ -362,11 +372,13 @@ namespace golang::binary
         b[1] = (unsigned char)(v >> 8);
     }
 
+    // AppendUint16 appends the bytes of v to b and returns the appended slice.
     gocpp::slice<unsigned char> rec::AppendUint16(littleEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
         return append(b, (unsigned char)(v), (unsigned char)(v >> 8));
     }
 
+    // Uint32 returns the uint32 representation of b[0:4].
     uint32_t rec::Uint32(littleEndian, gocpp::slice<unsigned char> b)
     {
         // bounds check hint to compiler; see golang.org/issue/14808
@@ -374,6 +386,7 @@ namespace golang::binary
         return uint32_t(b[0]) | (uint32_t(b[1]) << 8) | (uint32_t(b[2]) << 16) | (uint32_t(b[3]) << 24);
     }
 
+    // PutUint32 stores v into b[0:4].
     void rec::PutUint32(littleEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
         // early bounds check to guarantee safety of writes below
@@ -384,11 +397,13 @@ namespace golang::binary
         b[3] = (unsigned char)(v >> 24);
     }
 
+    // AppendUint32 appends the bytes of v to b and returns the appended slice.
     gocpp::slice<unsigned char> rec::AppendUint32(littleEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
         return append(b, (unsigned char)(v), (unsigned char)(v >> 8), (unsigned char)(v >> 16), (unsigned char)(v >> 24));
     }
 
+    // Uint64 returns the uint64 representation of b[0:8].
     uint64_t rec::Uint64(littleEndian, gocpp::slice<unsigned char> b)
     {
         // bounds check hint to compiler; see golang.org/issue/14808
@@ -397,6 +412,7 @@ namespace golang::binary
                 (uint64_t(b[4]) << 32) | (uint64_t(b[5]) << 40) | (uint64_t(b[6]) << 48) | (uint64_t(b[7]) << 56);
     }
 
+    // PutUint64 stores v into b[0:8].
     void rec::PutUint64(littleEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
         // early bounds check to guarantee safety of writes below
@@ -411,6 +427,7 @@ namespace golang::binary
         b[7] = (unsigned char)(v >> 56);
     }
 
+    // AppendUint64 appends the bytes of v to b and returns the appended slice.
     gocpp::slice<unsigned char> rec::AppendUint64(littleEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
         return append(b, (unsigned char)(v), (unsigned char)(v >> 8), (unsigned char)(v >> 16), (unsigned char)(v >> 24), (unsigned char)(v >> 32), (unsigned char)(v >> 40), (unsigned char)(v >> 48), (unsigned char)(v >> 56));
@@ -452,6 +469,7 @@ namespace golang::binary
         return value.PrintTo(os);
     }
 
+    // Uint16 returns the uint16 representation of b[0:2].
     uint16_t rec::Uint16(bigEndian, gocpp::slice<unsigned char> b)
     {
         // bounds check hint to compiler; see golang.org/issue/14808
@@ -459,6 +477,7 @@ namespace golang::binary
         return uint16_t(b[1]) | (uint16_t(b[0]) << 8);
     }
 
+    // PutUint16 stores v into b[0:2].
     void rec::PutUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
         // early bounds check to guarantee safety of writes below
@@ -467,11 +486,13 @@ namespace golang::binary
         b[1] = (unsigned char)(v);
     }
 
+    // AppendUint16 appends the bytes of v to b and returns the appended slice.
     gocpp::slice<unsigned char> rec::AppendUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
         return append(b, (unsigned char)(v >> 8), (unsigned char)(v));
     }
 
+    // Uint32 returns the uint32 representation of b[0:4].
     uint32_t rec::Uint32(bigEndian, gocpp::slice<unsigned char> b)
     {
         // bounds check hint to compiler; see golang.org/issue/14808
@@ -479,6 +500,7 @@ namespace golang::binary
         return uint32_t(b[3]) | (uint32_t(b[2]) << 8) | (uint32_t(b[1]) << 16) | (uint32_t(b[0]) << 24);
     }
 
+    // PutUint32 stores v into b[0:4].
     void rec::PutUint32(bigEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
         // early bounds check to guarantee safety of writes below
@@ -489,11 +511,13 @@ namespace golang::binary
         b[3] = (unsigned char)(v);
     }
 
+    // AppendUint32 appends the bytes of v to b and returns the appended slice.
     gocpp::slice<unsigned char> rec::AppendUint32(bigEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
         return append(b, (unsigned char)(v >> 24), (unsigned char)(v >> 16), (unsigned char)(v >> 8), (unsigned char)(v));
     }
 
+    // Uint64 returns the uint64 representation of b[0:8].
     uint64_t rec::Uint64(bigEndian, gocpp::slice<unsigned char> b)
     {
         // bounds check hint to compiler; see golang.org/issue/14808
@@ -502,6 +526,7 @@ namespace golang::binary
                 (uint64_t(b[3]) << 32) | (uint64_t(b[2]) << 40) | (uint64_t(b[1]) << 48) | (uint64_t(b[0]) << 56);
     }
 
+    // PutUint64 stores v into b[0:8].
     void rec::PutUint64(bigEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
         // early bounds check to guarantee safety of writes below
@@ -516,6 +541,7 @@ namespace golang::binary
         b[7] = (unsigned char)(v);
     }
 
+    // AppendUint64 appends the bytes of v to b and returns the appended slice.
     gocpp::slice<unsigned char> rec::AppendUint64(bigEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
         return append(b, (unsigned char)(v >> 56), (unsigned char)(v >> 48), (unsigned char)(v >> 40), (unsigned char)(v >> 32), (unsigned char)(v >> 24), (unsigned char)(v >> 16), (unsigned char)(v >> 8), (unsigned char)(v));
@@ -560,215 +586,15 @@ namespace golang::binary
     gocpp::error Read(io::Reader r, ByteOrder order, go_any data)
     {
         // Fast path for basic types and slices.
-        if(auto n = intDataSize(data); n != 0)
+        if(auto [n, gocpp_id_0] = intDataSize(data); n != 0)
         {
             auto bs = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
-            if(auto [gocpp_id_0, err] = io::ReadFull(r, bs); err != nullptr)
+            if(auto [gocpp_id_1, err] = io::ReadFull(r, bs); err != nullptr)
             {
                 return err;
             }
-            //Go type switch emulation
-            {
-                const auto& gocpp_id_1 = gocpp::type_info(data);
-                const auto& data_ref = data;
-                int conditionId = -1;
-                if(gocpp_id_1 == typeid(bool*)) { conditionId = 0; }
-                else if(gocpp_id_1 == typeid(int8_t*)) { conditionId = 1; }
-                else if(gocpp_id_1 == typeid(uint8_t*)) { conditionId = 2; }
-                else if(gocpp_id_1 == typeid(int16_t*)) { conditionId = 3; }
-                else if(gocpp_id_1 == typeid(uint16_t*)) { conditionId = 4; }
-                else if(gocpp_id_1 == typeid(int32_t*)) { conditionId = 5; }
-                else if(gocpp_id_1 == typeid(uint32_t*)) { conditionId = 6; }
-                else if(gocpp_id_1 == typeid(int64_t*)) { conditionId = 7; }
-                else if(gocpp_id_1 == typeid(uint64_t*)) { conditionId = 8; }
-                else if(gocpp_id_1 == typeid(float*)) { conditionId = 9; }
-                else if(gocpp_id_1 == typeid(double*)) { conditionId = 10; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<bool>)) { conditionId = 11; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<int8_t>)) { conditionId = 12; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<uint8_t>)) { conditionId = 13; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<int16_t>)) { conditionId = 14; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<uint16_t>)) { conditionId = 15; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<int32_t>)) { conditionId = 16; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<uint32_t>)) { conditionId = 17; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<int64_t>)) { conditionId = 18; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<uint64_t>)) { conditionId = 19; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<float>)) { conditionId = 20; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<double>)) { conditionId = 21; }
-                switch(conditionId)
-                {
-                    case 0:
-                    {
-                        bool* data = gocpp::any_cast<bool*>(data_ref);
-                        *data = bs[0] != 0;
-                        break;
-                    }
-                    case 1:
-                    {
-                        int8_t* data = gocpp::any_cast<int8_t*>(data_ref);
-                        *data = int8_t(bs[0]);
-                        break;
-                    }
-                    case 2:
-                    {
-                        uint8_t* data = gocpp::any_cast<uint8_t*>(data_ref);
-                        *data = bs[0];
-                        break;
-                    }
-                    case 3:
-                    {
-                        int16_t* data = gocpp::any_cast<int16_t*>(data_ref);
-                        *data = int16_t(rec::Uint16(gocpp::recv(order), bs));
-                        break;
-                    }
-                    case 4:
-                    {
-                        uint16_t* data = gocpp::any_cast<uint16_t*>(data_ref);
-                        *data = rec::Uint16(gocpp::recv(order), bs);
-                        break;
-                    }
-                    case 5:
-                    {
-                        int32_t* data = gocpp::any_cast<int32_t*>(data_ref);
-                        *data = int32_t(rec::Uint32(gocpp::recv(order), bs));
-                        break;
-                    }
-                    case 6:
-                    {
-                        uint32_t* data = gocpp::any_cast<uint32_t*>(data_ref);
-                        *data = rec::Uint32(gocpp::recv(order), bs);
-                        break;
-                    }
-                    case 7:
-                    {
-                        int64_t* data = gocpp::any_cast<int64_t*>(data_ref);
-                        *data = int64_t(rec::Uint64(gocpp::recv(order), bs));
-                        break;
-                    }
-                    case 8:
-                    {
-                        uint64_t* data = gocpp::any_cast<uint64_t*>(data_ref);
-                        *data = rec::Uint64(gocpp::recv(order), bs);
-                        break;
-                    }
-                    case 9:
-                    {
-                        float* data = gocpp::any_cast<float*>(data_ref);
-                        *data = math::Float32frombits(rec::Uint32(gocpp::recv(order), bs));
-                        break;
-                    }
-                    case 10:
-                    {
-                        double* data = gocpp::any_cast<double*>(data_ref);
-                        *data = math::Float64frombits(rec::Uint64(gocpp::recv(order), bs));
-                        break;
-                    }
-                    case 11:
-                    {
-                        gocpp::slice<bool> data = gocpp::any_cast<gocpp::slice<bool>>(data_ref);
-                        for(auto [i, x] : bs)
-                        {
-                            // Easier to loop over the input for 8-bit values.
-                            data[i] = x != 0;
-                        }
-                        break;
-                    }
-                    case 12:
-                    {
-                        gocpp::slice<int8_t> data = gocpp::any_cast<gocpp::slice<int8_t>>(data_ref);
-                        for(auto [i, x] : bs)
-                        {
-                            data[i] = int8_t(x);
-                        }
-                        break;
-                    }
-                    case 13:
-                    {
-                        gocpp::slice<uint8_t> data = gocpp::any_cast<gocpp::slice<uint8_t>>(data_ref);
-                        copy(data, bs);
-                        break;
-                    }
-                    case 14:
-                    {
-                        gocpp::slice<int16_t> data = gocpp::any_cast<gocpp::slice<int16_t>>(data_ref);
-                        for(auto [i, gocpp_ignored] : data)
-                        {
-                            data[i] = int16_t(rec::Uint16(gocpp::recv(order), bs.make_slice(2 * i)));
-                        }
-                        break;
-                    }
-                    case 15:
-                    {
-                        gocpp::slice<uint16_t> data = gocpp::any_cast<gocpp::slice<uint16_t>>(data_ref);
-                        for(auto [i, gocpp_ignored] : data)
-                        {
-                            data[i] = rec::Uint16(gocpp::recv(order), bs.make_slice(2 * i));
-                        }
-                        break;
-                    }
-                    case 16:
-                    {
-                        gocpp::slice<int32_t> data = gocpp::any_cast<gocpp::slice<int32_t>>(data_ref);
-                        for(auto [i, gocpp_ignored] : data)
-                        {
-                            data[i] = int32_t(rec::Uint32(gocpp::recv(order), bs.make_slice(4 * i)));
-                        }
-                        break;
-                    }
-                    case 17:
-                    {
-                        gocpp::slice<uint32_t> data = gocpp::any_cast<gocpp::slice<uint32_t>>(data_ref);
-                        for(auto [i, gocpp_ignored] : data)
-                        {
-                            data[i] = rec::Uint32(gocpp::recv(order), bs.make_slice(4 * i));
-                        }
-                        break;
-                    }
-                    case 18:
-                    {
-                        gocpp::slice<int64_t> data = gocpp::any_cast<gocpp::slice<int64_t>>(data_ref);
-                        for(auto [i, gocpp_ignored] : data)
-                        {
-                            data[i] = int64_t(rec::Uint64(gocpp::recv(order), bs.make_slice(8 * i)));
-                        }
-                        break;
-                    }
-                    case 19:
-                    {
-                        gocpp::slice<uint64_t> data = gocpp::any_cast<gocpp::slice<uint64_t>>(data_ref);
-                        for(auto [i, gocpp_ignored] : data)
-                        {
-                            data[i] = rec::Uint64(gocpp::recv(order), bs.make_slice(8 * i));
-                        }
-                        break;
-                    }
-                    case 20:
-                    {
-                        gocpp::slice<float> data = gocpp::any_cast<gocpp::slice<float>>(data_ref);
-                        for(auto [i, gocpp_ignored] : data)
-                        {
-                            data[i] = math::Float32frombits(rec::Uint32(gocpp::recv(order), bs.make_slice(4 * i)));
-                        }
-                        break;
-                    }
-                    case 21:
-                    {
-                        gocpp::slice<double> data = gocpp::any_cast<gocpp::slice<double>>(data_ref);
-                        for(auto [i, gocpp_ignored] : data)
-                        {
-                            data[i] = math::Float64frombits(rec::Uint64(gocpp::recv(order), bs.make_slice(8 * i)));
-                        }
-                        break;
-                    }
-                    // fast path doesn't apply
-                    default:
-                    {
-                        auto data = data_ref;
-                        n = 0;
-                        break;
-                    }
-                }
-            }
-            if(n != 0)
+
+            if(decodeFast(bs, order, data))
             {
                 return nullptr;
             }
@@ -798,6 +624,7 @@ namespace golang::binary
         {
             return errors::New("binary.Read: invalid type "_s + rec::String(gocpp::recv(reflect::TypeOf(data))));
         }
+
         auto d = gocpp::InitPtr<decoder>([=](auto& x) {
             x.order = order;
             x.buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
@@ -808,6 +635,267 @@ namespace golang::binary
         }
         rec::value(gocpp::recv(d), v);
         return nullptr;
+    }
+
+    // Decode decodes binary data from buf into data according to
+    // the given byte order.
+    // It returns an error if buf is too small, otherwise the number of
+    // bytes consumed from buf.
+    std::tuple<int, gocpp::error> Decode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data)
+    {
+        if(auto [n, gocpp_id_3] = intDataSize(data); n != 0)
+        {
+            if(len(buf) < n)
+            {
+                return {0, errBufferTooSmall};
+            }
+
+            if(decodeFast(buf, order, data))
+            {
+                return {n, nullptr};
+            }
+        }
+
+        // Fallback to reflect-based decoding.
+        auto v = reflect::ValueOf(data);
+        auto size = - 1;
+        //Go switch emulation
+        {
+            auto condition = rec::Kind(gocpp::recv(v));
+            int conditionId = -1;
+            if(condition == reflect::Pointer) { conditionId = 0; }
+            else if(condition == reflect::Slice) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    v = rec::Elem(gocpp::recv(v));
+                    size = dataSize(v);
+                    break;
+                case 1:
+                    size = dataSize(v);
+                    break;
+            }
+        }
+        if(size < 0)
+        {
+            return {0, errors::New("binary.Decode: invalid type "_s + rec::String(gocpp::recv(reflect::TypeOf(data))))};
+        }
+
+        if(len(buf) < size)
+        {
+            return {0, errBufferTooSmall};
+        }
+        auto d = gocpp::InitPtr<decoder>([=](auto& x) {
+            x.order = order;
+            x.buf = buf.make_slice(0, size);
+        });
+        rec::value(gocpp::recv(d), v);
+        return {size, nullptr};
+    }
+
+    bool decodeFast(gocpp::slice<unsigned char> bs, ByteOrder order, go_any data)
+    {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_4 = gocpp::type_info(data);
+            const auto& data_ref = data;
+            int conditionId = -1;
+            if(gocpp_id_4 == typeid(bool*)) { conditionId = 0; }
+            else if(gocpp_id_4 == typeid(int8_t*)) { conditionId = 1; }
+            else if(gocpp_id_4 == typeid(uint8_t*)) { conditionId = 2; }
+            else if(gocpp_id_4 == typeid(int16_t*)) { conditionId = 3; }
+            else if(gocpp_id_4 == typeid(uint16_t*)) { conditionId = 4; }
+            else if(gocpp_id_4 == typeid(int32_t*)) { conditionId = 5; }
+            else if(gocpp_id_4 == typeid(uint32_t*)) { conditionId = 6; }
+            else if(gocpp_id_4 == typeid(int64_t*)) { conditionId = 7; }
+            else if(gocpp_id_4 == typeid(uint64_t*)) { conditionId = 8; }
+            else if(gocpp_id_4 == typeid(float*)) { conditionId = 9; }
+            else if(gocpp_id_4 == typeid(double*)) { conditionId = 10; }
+            else if(gocpp_id_4 == typeid(gocpp::slice<bool>)) { conditionId = 11; }
+            else if(gocpp_id_4 == typeid(gocpp::slice<int8_t>)) { conditionId = 12; }
+            else if(gocpp_id_4 == typeid(gocpp::slice<uint8_t>)) { conditionId = 13; }
+            else if(gocpp_id_4 == typeid(gocpp::slice<int16_t>)) { conditionId = 14; }
+            else if(gocpp_id_4 == typeid(gocpp::slice<uint16_t>)) { conditionId = 15; }
+            else if(gocpp_id_4 == typeid(gocpp::slice<int32_t>)) { conditionId = 16; }
+            else if(gocpp_id_4 == typeid(gocpp::slice<uint32_t>)) { conditionId = 17; }
+            else if(gocpp_id_4 == typeid(gocpp::slice<int64_t>)) { conditionId = 18; }
+            else if(gocpp_id_4 == typeid(gocpp::slice<uint64_t>)) { conditionId = 19; }
+            else if(gocpp_id_4 == typeid(gocpp::slice<float>)) { conditionId = 20; }
+            else if(gocpp_id_4 == typeid(gocpp::slice<double>)) { conditionId = 21; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    bool* data = gocpp::any_cast<bool*>(data_ref);
+                    *data = bs[0] != 0;
+                    break;
+                }
+                case 1:
+                {
+                    int8_t* data = gocpp::any_cast<int8_t*>(data_ref);
+                    *data = int8_t(bs[0]);
+                    break;
+                }
+                case 2:
+                {
+                    uint8_t* data = gocpp::any_cast<uint8_t*>(data_ref);
+                    *data = bs[0];
+                    break;
+                }
+                case 3:
+                {
+                    int16_t* data = gocpp::any_cast<int16_t*>(data_ref);
+                    *data = int16_t(rec::Uint16(gocpp::recv(order), bs));
+                    break;
+                }
+                case 4:
+                {
+                    uint16_t* data = gocpp::any_cast<uint16_t*>(data_ref);
+                    *data = rec::Uint16(gocpp::recv(order), bs);
+                    break;
+                }
+                case 5:
+                {
+                    int32_t* data = gocpp::any_cast<int32_t*>(data_ref);
+                    *data = int32_t(rec::Uint32(gocpp::recv(order), bs));
+                    break;
+                }
+                case 6:
+                {
+                    uint32_t* data = gocpp::any_cast<uint32_t*>(data_ref);
+                    *data = rec::Uint32(gocpp::recv(order), bs);
+                    break;
+                }
+                case 7:
+                {
+                    int64_t* data = gocpp::any_cast<int64_t*>(data_ref);
+                    *data = int64_t(rec::Uint64(gocpp::recv(order), bs));
+                    break;
+                }
+                case 8:
+                {
+                    uint64_t* data = gocpp::any_cast<uint64_t*>(data_ref);
+                    *data = rec::Uint64(gocpp::recv(order), bs);
+                    break;
+                }
+                case 9:
+                {
+                    float* data = gocpp::any_cast<float*>(data_ref);
+                    *data = math::Float32frombits(rec::Uint32(gocpp::recv(order), bs));
+                    break;
+                }
+                case 10:
+                {
+                    double* data = gocpp::any_cast<double*>(data_ref);
+                    *data = math::Float64frombits(rec::Uint64(gocpp::recv(order), bs));
+                    break;
+                }
+                case 11:
+                {
+                    gocpp::slice<bool> data = gocpp::any_cast<gocpp::slice<bool>>(data_ref);
+                    for(auto [i, x] : bs)
+                    {
+                        // Easier to loop over the input for 8-bit values.
+                        data[i] = x != 0;
+                    }
+                    break;
+                }
+                case 12:
+                {
+                    gocpp::slice<int8_t> data = gocpp::any_cast<gocpp::slice<int8_t>>(data_ref);
+                    for(auto [i, x] : bs)
+                    {
+                        data[i] = int8_t(x);
+                    }
+                    break;
+                }
+                case 13:
+                {
+                    gocpp::slice<uint8_t> data = gocpp::any_cast<gocpp::slice<uint8_t>>(data_ref);
+                    copy(data, bs);
+                    break;
+                }
+                case 14:
+                {
+                    gocpp::slice<int16_t> data = gocpp::any_cast<gocpp::slice<int16_t>>(data_ref);
+                    for(auto [i, gocpp_ignored] : data)
+                    {
+                        data[i] = int16_t(rec::Uint16(gocpp::recv(order), bs.make_slice(2 * i)));
+                    }
+                    break;
+                }
+                case 15:
+                {
+                    gocpp::slice<uint16_t> data = gocpp::any_cast<gocpp::slice<uint16_t>>(data_ref);
+                    for(auto [i, gocpp_ignored] : data)
+                    {
+                        data[i] = rec::Uint16(gocpp::recv(order), bs.make_slice(2 * i));
+                    }
+                    break;
+                }
+                case 16:
+                {
+                    gocpp::slice<int32_t> data = gocpp::any_cast<gocpp::slice<int32_t>>(data_ref);
+                    for(auto [i, gocpp_ignored] : data)
+                    {
+                        data[i] = int32_t(rec::Uint32(gocpp::recv(order), bs.make_slice(4 * i)));
+                    }
+                    break;
+                }
+                case 17:
+                {
+                    gocpp::slice<uint32_t> data = gocpp::any_cast<gocpp::slice<uint32_t>>(data_ref);
+                    for(auto [i, gocpp_ignored] : data)
+                    {
+                        data[i] = rec::Uint32(gocpp::recv(order), bs.make_slice(4 * i));
+                    }
+                    break;
+                }
+                case 18:
+                {
+                    gocpp::slice<int64_t> data = gocpp::any_cast<gocpp::slice<int64_t>>(data_ref);
+                    for(auto [i, gocpp_ignored] : data)
+                    {
+                        data[i] = int64_t(rec::Uint64(gocpp::recv(order), bs.make_slice(8 * i)));
+                    }
+                    break;
+                }
+                case 19:
+                {
+                    gocpp::slice<uint64_t> data = gocpp::any_cast<gocpp::slice<uint64_t>>(data_ref);
+                    for(auto [i, gocpp_ignored] : data)
+                    {
+                        data[i] = rec::Uint64(gocpp::recv(order), bs.make_slice(8 * i));
+                    }
+                    break;
+                }
+                case 20:
+                {
+                    gocpp::slice<float> data = gocpp::any_cast<gocpp::slice<float>>(data_ref);
+                    for(auto [i, gocpp_ignored] : data)
+                    {
+                        data[i] = math::Float32frombits(rec::Uint32(gocpp::recv(order), bs.make_slice(4 * i)));
+                    }
+                    break;
+                }
+                case 21:
+                {
+                    gocpp::slice<double> data = gocpp::any_cast<gocpp::slice<double>>(data_ref);
+                    for(auto [i, gocpp_ignored] : data)
+                    {
+                        data[i] = math::Float64frombits(rec::Uint64(gocpp::recv(order), bs.make_slice(8 * i)));
+                    }
+                    break;
+                }
+                default:
+                {
+                    auto data = data_ref;
+                    return false;
+                    break;
+                }
+            }
+        }
+        return true;
     }
 
     // Write writes the binary representation of data into w.
@@ -821,300 +909,15 @@ namespace golang::binary
     gocpp::error Write(io::Writer w, ByteOrder order, go_any data)
     {
         // Fast path for basic types and slices.
-        if(auto n = intDataSize(data); n != 0)
+        if(auto [n, bs] = intDataSize(data); n != 0)
         {
-            auto bs = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
-            //Go type switch emulation
+            if(bs == nullptr)
             {
-                const auto& gocpp_id_3 = gocpp::type_info(data);
-                int conditionId = -1;
-                if(gocpp_id_3 == typeid(bool*)) { conditionId = 0; }
-                else if(gocpp_id_3 == typeid(bool)) { conditionId = 1; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<bool>)) { conditionId = 2; }
-                else if(gocpp_id_3 == typeid(int8_t*)) { conditionId = 3; }
-                else if(gocpp_id_3 == typeid(int8_t)) { conditionId = 4; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<int8_t>)) { conditionId = 5; }
-                else if(gocpp_id_3 == typeid(uint8_t*)) { conditionId = 6; }
-                else if(gocpp_id_3 == typeid(uint8_t)) { conditionId = 7; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<uint8_t>)) { conditionId = 8; }
-                else if(gocpp_id_3 == typeid(int16_t*)) { conditionId = 9; }
-                else if(gocpp_id_3 == typeid(int16_t)) { conditionId = 10; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<int16_t>)) { conditionId = 11; }
-                else if(gocpp_id_3 == typeid(uint16_t*)) { conditionId = 12; }
-                else if(gocpp_id_3 == typeid(uint16_t)) { conditionId = 13; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<uint16_t>)) { conditionId = 14; }
-                else if(gocpp_id_3 == typeid(int32_t*)) { conditionId = 15; }
-                else if(gocpp_id_3 == typeid(int32_t)) { conditionId = 16; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<int32_t>)) { conditionId = 17; }
-                else if(gocpp_id_3 == typeid(uint32_t*)) { conditionId = 18; }
-                else if(gocpp_id_3 == typeid(uint32_t)) { conditionId = 19; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<uint32_t>)) { conditionId = 20; }
-                else if(gocpp_id_3 == typeid(int64_t*)) { conditionId = 21; }
-                else if(gocpp_id_3 == typeid(int64_t)) { conditionId = 22; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<int64_t>)) { conditionId = 23; }
-                else if(gocpp_id_3 == typeid(uint64_t*)) { conditionId = 24; }
-                else if(gocpp_id_3 == typeid(uint64_t)) { conditionId = 25; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<uint64_t>)) { conditionId = 26; }
-                else if(gocpp_id_3 == typeid(float*)) { conditionId = 27; }
-                else if(gocpp_id_3 == typeid(float)) { conditionId = 28; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<float>)) { conditionId = 29; }
-                else if(gocpp_id_3 == typeid(double*)) { conditionId = 30; }
-                else if(gocpp_id_3 == typeid(double)) { conditionId = 31; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<double>)) { conditionId = 32; }
-                switch(conditionId)
-                {
-                    case 0:
-                    {
-                        bool* v = gocpp::any_cast<bool*>(data);
-                        if(*v)
-                        {
-                            bs[0] = 1;
-                        }
-                        else
-                        {
-                            bs[0] = 0;
-                        }
-                        break;
-                    }
-                    case 1:
-                    {
-                        bool v = gocpp::any_cast<bool>(data);
-                        if(v)
-                        {
-                            bs[0] = 1;
-                        }
-                        else
-                        {
-                            bs[0] = 0;
-                        }
-                        break;
-                    }
-                    case 2:
-                    {
-                        gocpp::slice<bool> v = gocpp::any_cast<gocpp::slice<bool>>(data);
-                        for(auto [i, x] : v)
-                        {
-                            if(x)
-                            {
-                                bs[i] = 1;
-                            }
-                            else
-                            {
-                                bs[i] = 0;
-                            }
-                        }
-                        break;
-                    }
-                    case 3:
-                    {
-                        int8_t* v = gocpp::any_cast<int8_t*>(data);
-                        bs[0] = (unsigned char)(*v);
-                        break;
-                    }
-                    case 4:
-                    {
-                        int8_t v = gocpp::any_cast<int8_t>(data);
-                        bs[0] = (unsigned char)(v);
-                        break;
-                    }
-                    case 5:
-                    {
-                        gocpp::slice<int8_t> v = gocpp::any_cast<gocpp::slice<int8_t>>(data);
-                        for(auto [i, x] : v)
-                        {
-                            bs[i] = (unsigned char)(x);
-                        }
-                        break;
-                    }
-                    case 6:
-                    {
-                        uint8_t* v = gocpp::any_cast<uint8_t*>(data);
-                        bs[0] = *v;
-                        break;
-                    }
-                    case 7:
-                    {
-                        uint8_t v = gocpp::any_cast<uint8_t>(data);
-                        bs[0] = v;
-                        break;
-                    }
-                    case 8:
-                    {
-                        gocpp::slice<uint8_t> v = gocpp::any_cast<gocpp::slice<uint8_t>>(data);
-                        bs = v;
-                        break;
-                    }
-                    case 9:
-                    {
-                        int16_t* v = gocpp::any_cast<int16_t*>(data);
-                        rec::PutUint16(gocpp::recv(order), bs, uint16_t(*v));
-                        break;
-                    }
-                    case 10:
-                    {
-                        int16_t v = gocpp::any_cast<int16_t>(data);
-                        rec::PutUint16(gocpp::recv(order), bs, uint16_t(v));
-                        break;
-                    }
-                    case 11:
-                    {
-                        gocpp::slice<int16_t> v = gocpp::any_cast<gocpp::slice<int16_t>>(data);
-                        for(auto [i, x] : v)
-                        {
-                            rec::PutUint16(gocpp::recv(order), bs.make_slice(2 * i), uint16_t(x));
-                        }
-                        break;
-                    }
-                    case 12:
-                    {
-                        uint16_t* v = gocpp::any_cast<uint16_t*>(data);
-                        rec::PutUint16(gocpp::recv(order), bs, *v);
-                        break;
-                    }
-                    case 13:
-                    {
-                        uint16_t v = gocpp::any_cast<uint16_t>(data);
-                        rec::PutUint16(gocpp::recv(order), bs, v);
-                        break;
-                    }
-                    case 14:
-                    {
-                        gocpp::slice<uint16_t> v = gocpp::any_cast<gocpp::slice<uint16_t>>(data);
-                        for(auto [i, x] : v)
-                        {
-                            rec::PutUint16(gocpp::recv(order), bs.make_slice(2 * i), x);
-                        }
-                        break;
-                    }
-                    case 15:
-                    {
-                        int32_t* v = gocpp::any_cast<int32_t*>(data);
-                        rec::PutUint32(gocpp::recv(order), bs, uint32_t(*v));
-                        break;
-                    }
-                    case 16:
-                    {
-                        int32_t v = gocpp::any_cast<int32_t>(data);
-                        rec::PutUint32(gocpp::recv(order), bs, uint32_t(v));
-                        break;
-                    }
-                    case 17:
-                    {
-                        gocpp::slice<int32_t> v = gocpp::any_cast<gocpp::slice<int32_t>>(data);
-                        for(auto [i, x] : v)
-                        {
-                            rec::PutUint32(gocpp::recv(order), bs.make_slice(4 * i), uint32_t(x));
-                        }
-                        break;
-                    }
-                    case 18:
-                    {
-                        uint32_t* v = gocpp::any_cast<uint32_t*>(data);
-                        rec::PutUint32(gocpp::recv(order), bs, *v);
-                        break;
-                    }
-                    case 19:
-                    {
-                        uint32_t v = gocpp::any_cast<uint32_t>(data);
-                        rec::PutUint32(gocpp::recv(order), bs, v);
-                        break;
-                    }
-                    case 20:
-                    {
-                        gocpp::slice<uint32_t> v = gocpp::any_cast<gocpp::slice<uint32_t>>(data);
-                        for(auto [i, x] : v)
-                        {
-                            rec::PutUint32(gocpp::recv(order), bs.make_slice(4 * i), x);
-                        }
-                        break;
-                    }
-                    case 21:
-                    {
-                        int64_t* v = gocpp::any_cast<int64_t*>(data);
-                        rec::PutUint64(gocpp::recv(order), bs, uint64_t(*v));
-                        break;
-                    }
-                    case 22:
-                    {
-                        int64_t v = gocpp::any_cast<int64_t>(data);
-                        rec::PutUint64(gocpp::recv(order), bs, uint64_t(v));
-                        break;
-                    }
-                    case 23:
-                    {
-                        gocpp::slice<int64_t> v = gocpp::any_cast<gocpp::slice<int64_t>>(data);
-                        for(auto [i, x] : v)
-                        {
-                            rec::PutUint64(gocpp::recv(order), bs.make_slice(8 * i), uint64_t(x));
-                        }
-                        break;
-                    }
-                    case 24:
-                    {
-                        uint64_t* v = gocpp::any_cast<uint64_t*>(data);
-                        rec::PutUint64(gocpp::recv(order), bs, *v);
-                        break;
-                    }
-                    case 25:
-                    {
-                        uint64_t v = gocpp::any_cast<uint64_t>(data);
-                        rec::PutUint64(gocpp::recv(order), bs, v);
-                        break;
-                    }
-                    case 26:
-                    {
-                        gocpp::slice<uint64_t> v = gocpp::any_cast<gocpp::slice<uint64_t>>(data);
-                        for(auto [i, x] : v)
-                        {
-                            rec::PutUint64(gocpp::recv(order), bs.make_slice(8 * i), x);
-                        }
-                        break;
-                    }
-                    case 27:
-                    {
-                        float* v = gocpp::any_cast<float*>(data);
-                        rec::PutUint32(gocpp::recv(order), bs, math::Float32bits(*v));
-                        break;
-                    }
-                    case 28:
-                    {
-                        float v = gocpp::any_cast<float>(data);
-                        rec::PutUint32(gocpp::recv(order), bs, math::Float32bits(v));
-                        break;
-                    }
-                    case 29:
-                    {
-                        gocpp::slice<float> v = gocpp::any_cast<gocpp::slice<float>>(data);
-                        for(auto [i, x] : v)
-                        {
-                            rec::PutUint32(gocpp::recv(order), bs.make_slice(4 * i), math::Float32bits(x));
-                        }
-                        break;
-                    }
-                    case 30:
-                    {
-                        double* v = gocpp::any_cast<double*>(data);
-                        rec::PutUint64(gocpp::recv(order), bs, math::Float64bits(*v));
-                        break;
-                    }
-                    case 31:
-                    {
-                        double v = gocpp::any_cast<double>(data);
-                        rec::PutUint64(gocpp::recv(order), bs, math::Float64bits(v));
-                        break;
-                    }
-                    case 32:
-                    {
-                        gocpp::slice<double> v = gocpp::any_cast<gocpp::slice<double>>(data);
-                        for(auto [i, x] : v)
-                        {
-                            rec::PutUint64(gocpp::recv(order), bs.make_slice(8 * i), math::Float64bits(x));
-                        }
-                        break;
-                    }
-                }
+                bs = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
+                encodeFast(bs, order, data);
             }
-            auto [gocpp_id_4, err] = rec::Write(gocpp::recv(w), bs);
+
+            auto [gocpp_id_5, err] = rec::Write(gocpp::recv(w), bs);
             return err;
         }
 
@@ -1125,14 +928,380 @@ namespace golang::binary
         {
             return errors::New("binary.Write: some values are not fixed-sized in type "_s + rec::String(gocpp::recv(reflect::TypeOf(data))));
         }
+
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
         auto e = gocpp::InitPtr<encoder>([=](auto& x) {
             x.order = order;
             x.buf = buf;
         });
         rec::value(gocpp::recv(e), v);
-        auto [gocpp_id_5, err] = rec::Write(gocpp::recv(w), buf);
+        auto [gocpp_id_6, err] = rec::Write(gocpp::recv(w), buf);
         return err;
+    }
+
+    // Encode encodes the binary representation of data into buf according to
+    // the given byte order.
+    // It returns an error if buf is too small, otherwise the number of
+    // bytes written into buf.
+    std::tuple<int, gocpp::error> Encode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data)
+    {
+        // Fast path for basic types and slices.
+        if(auto [n, gocpp_id_7] = intDataSize(data); n != 0)
+        {
+            if(len(buf) < n)
+            {
+                return {0, errBufferTooSmall};
+            }
+
+            encodeFast(buf, order, data);
+            return {n, nullptr};
+        }
+
+        // Fallback to reflect-based encoding.
+        auto v = reflect::Indirect(reflect::ValueOf(data));
+        auto size = dataSize(v);
+        if(size < 0)
+        {
+            return {0, errors::New("binary.Encode: some values are not fixed-sized in type "_s + rec::String(gocpp::recv(reflect::TypeOf(data))))};
+        }
+
+        if(len(buf) < size)
+        {
+            return {0, errBufferTooSmall};
+        }
+        auto e = gocpp::InitPtr<encoder>([=](auto& x) {
+            x.order = order;
+            x.buf = buf;
+        });
+        rec::value(gocpp::recv(e), v);
+        return {size, nullptr};
+    }
+
+    // Append appends the binary representation of data to buf.
+    // buf may be nil, in which case a new buffer will be allocated.
+    // See [Write] on which data are acceptable.
+    // It returns the (possibly extended) buffer containing data or an error.
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> Append(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data)
+    {
+        // Fast path for basic types and slices.
+        if(auto [n, gocpp_id_8] = intDataSize(data); n != 0)
+        {
+            auto [buf_tmp, pos] = ensure(buf, n);
+            auto& buf = buf_tmp;
+            encodeFast(pos, order, data);
+            return {buf, nullptr};
+        }
+
+        // Fallback to reflect-based encoding.
+        auto v = reflect::Indirect(reflect::ValueOf(data));
+        auto size = dataSize(v);
+        if(size < 0)
+        {
+            return {nullptr, errors::New("binary.Append: some values are not fixed-sized in type "_s + rec::String(gocpp::recv(reflect::TypeOf(data))))};
+        }
+
+        auto [buf_tmp, pos] = ensure(buf, size);
+        auto& buf = buf_tmp;
+        auto e = gocpp::InitPtr<encoder>([=](auto& x) {
+            x.order = order;
+            x.buf = pos;
+        });
+        rec::value(gocpp::recv(e), v);
+        return {buf, nullptr};
+    }
+
+    void encodeFast(gocpp::slice<unsigned char> bs, ByteOrder order, go_any data)
+    {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_9 = gocpp::type_info(data);
+            int conditionId = -1;
+            if(gocpp_id_9 == typeid(bool*)) { conditionId = 0; }
+            else if(gocpp_id_9 == typeid(bool)) { conditionId = 1; }
+            else if(gocpp_id_9 == typeid(gocpp::slice<bool>)) { conditionId = 2; }
+            else if(gocpp_id_9 == typeid(int8_t*)) { conditionId = 3; }
+            else if(gocpp_id_9 == typeid(int8_t)) { conditionId = 4; }
+            else if(gocpp_id_9 == typeid(gocpp::slice<int8_t>)) { conditionId = 5; }
+            else if(gocpp_id_9 == typeid(uint8_t*)) { conditionId = 6; }
+            else if(gocpp_id_9 == typeid(uint8_t)) { conditionId = 7; }
+            else if(gocpp_id_9 == typeid(gocpp::slice<uint8_t>)) { conditionId = 8; }
+            else if(gocpp_id_9 == typeid(int16_t*)) { conditionId = 9; }
+            else if(gocpp_id_9 == typeid(int16_t)) { conditionId = 10; }
+            else if(gocpp_id_9 == typeid(gocpp::slice<int16_t>)) { conditionId = 11; }
+            else if(gocpp_id_9 == typeid(uint16_t*)) { conditionId = 12; }
+            else if(gocpp_id_9 == typeid(uint16_t)) { conditionId = 13; }
+            else if(gocpp_id_9 == typeid(gocpp::slice<uint16_t>)) { conditionId = 14; }
+            else if(gocpp_id_9 == typeid(int32_t*)) { conditionId = 15; }
+            else if(gocpp_id_9 == typeid(int32_t)) { conditionId = 16; }
+            else if(gocpp_id_9 == typeid(gocpp::slice<int32_t>)) { conditionId = 17; }
+            else if(gocpp_id_9 == typeid(uint32_t*)) { conditionId = 18; }
+            else if(gocpp_id_9 == typeid(uint32_t)) { conditionId = 19; }
+            else if(gocpp_id_9 == typeid(gocpp::slice<uint32_t>)) { conditionId = 20; }
+            else if(gocpp_id_9 == typeid(int64_t*)) { conditionId = 21; }
+            else if(gocpp_id_9 == typeid(int64_t)) { conditionId = 22; }
+            else if(gocpp_id_9 == typeid(gocpp::slice<int64_t>)) { conditionId = 23; }
+            else if(gocpp_id_9 == typeid(uint64_t*)) { conditionId = 24; }
+            else if(gocpp_id_9 == typeid(uint64_t)) { conditionId = 25; }
+            else if(gocpp_id_9 == typeid(gocpp::slice<uint64_t>)) { conditionId = 26; }
+            else if(gocpp_id_9 == typeid(float*)) { conditionId = 27; }
+            else if(gocpp_id_9 == typeid(float)) { conditionId = 28; }
+            else if(gocpp_id_9 == typeid(gocpp::slice<float>)) { conditionId = 29; }
+            else if(gocpp_id_9 == typeid(double*)) { conditionId = 30; }
+            else if(gocpp_id_9 == typeid(double)) { conditionId = 31; }
+            else if(gocpp_id_9 == typeid(gocpp::slice<double>)) { conditionId = 32; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    bool* v = gocpp::any_cast<bool*>(data);
+                    if(*v)
+                    {
+                        bs[0] = 1;
+                    }
+                    else
+                    {
+                        bs[0] = 0;
+                    }
+                    break;
+                }
+                case 1:
+                {
+                    bool v = gocpp::any_cast<bool>(data);
+                    if(v)
+                    {
+                        bs[0] = 1;
+                    }
+                    else
+                    {
+                        bs[0] = 0;
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    gocpp::slice<bool> v = gocpp::any_cast<gocpp::slice<bool>>(data);
+                    for(auto [i, x] : v)
+                    {
+                        if(x)
+                        {
+                            bs[i] = 1;
+                        }
+                        else
+                        {
+                            bs[i] = 0;
+                        }
+                    }
+                    break;
+                }
+                case 3:
+                {
+                    int8_t* v = gocpp::any_cast<int8_t*>(data);
+                    bs[0] = (unsigned char)(*v);
+                    break;
+                }
+                case 4:
+                {
+                    int8_t v = gocpp::any_cast<int8_t>(data);
+                    bs[0] = (unsigned char)(v);
+                    break;
+                }
+                case 5:
+                {
+                    gocpp::slice<int8_t> v = gocpp::any_cast<gocpp::slice<int8_t>>(data);
+                    for(auto [i, x] : v)
+                    {
+                        bs[i] = (unsigned char)(x);
+                    }
+                    break;
+                }
+                case 6:
+                {
+                    uint8_t* v = gocpp::any_cast<uint8_t*>(data);
+                    bs[0] = *v;
+                    break;
+                }
+                case 7:
+                {
+                    uint8_t v = gocpp::any_cast<uint8_t>(data);
+                    bs[0] = v;
+                    break;
+                }
+                case 8:
+                {
+                    gocpp::slice<uint8_t> v = gocpp::any_cast<gocpp::slice<uint8_t>>(data);
+                    copy(bs, v);
+                    break;
+                }
+                case 9:
+                {
+                    int16_t* v = gocpp::any_cast<int16_t*>(data);
+                    rec::PutUint16(gocpp::recv(order), bs, uint16_t(*v));
+                    break;
+                }
+                case 10:
+                {
+                    int16_t v = gocpp::any_cast<int16_t>(data);
+                    rec::PutUint16(gocpp::recv(order), bs, uint16_t(v));
+                    break;
+                }
+                case 11:
+                {
+                    gocpp::slice<int16_t> v = gocpp::any_cast<gocpp::slice<int16_t>>(data);
+                    for(auto [i, x] : v)
+                    {
+                        rec::PutUint16(gocpp::recv(order), bs.make_slice(2 * i), uint16_t(x));
+                    }
+                    break;
+                }
+                case 12:
+                {
+                    uint16_t* v = gocpp::any_cast<uint16_t*>(data);
+                    rec::PutUint16(gocpp::recv(order), bs, *v);
+                    break;
+                }
+                case 13:
+                {
+                    uint16_t v = gocpp::any_cast<uint16_t>(data);
+                    rec::PutUint16(gocpp::recv(order), bs, v);
+                    break;
+                }
+                case 14:
+                {
+                    gocpp::slice<uint16_t> v = gocpp::any_cast<gocpp::slice<uint16_t>>(data);
+                    for(auto [i, x] : v)
+                    {
+                        rec::PutUint16(gocpp::recv(order), bs.make_slice(2 * i), x);
+                    }
+                    break;
+                }
+                case 15:
+                {
+                    int32_t* v = gocpp::any_cast<int32_t*>(data);
+                    rec::PutUint32(gocpp::recv(order), bs, uint32_t(*v));
+                    break;
+                }
+                case 16:
+                {
+                    int32_t v = gocpp::any_cast<int32_t>(data);
+                    rec::PutUint32(gocpp::recv(order), bs, uint32_t(v));
+                    break;
+                }
+                case 17:
+                {
+                    gocpp::slice<int32_t> v = gocpp::any_cast<gocpp::slice<int32_t>>(data);
+                    for(auto [i, x] : v)
+                    {
+                        rec::PutUint32(gocpp::recv(order), bs.make_slice(4 * i), uint32_t(x));
+                    }
+                    break;
+                }
+                case 18:
+                {
+                    uint32_t* v = gocpp::any_cast<uint32_t*>(data);
+                    rec::PutUint32(gocpp::recv(order), bs, *v);
+                    break;
+                }
+                case 19:
+                {
+                    uint32_t v = gocpp::any_cast<uint32_t>(data);
+                    rec::PutUint32(gocpp::recv(order), bs, v);
+                    break;
+                }
+                case 20:
+                {
+                    gocpp::slice<uint32_t> v = gocpp::any_cast<gocpp::slice<uint32_t>>(data);
+                    for(auto [i, x] : v)
+                    {
+                        rec::PutUint32(gocpp::recv(order), bs.make_slice(4 * i), x);
+                    }
+                    break;
+                }
+                case 21:
+                {
+                    int64_t* v = gocpp::any_cast<int64_t*>(data);
+                    rec::PutUint64(gocpp::recv(order), bs, uint64_t(*v));
+                    break;
+                }
+                case 22:
+                {
+                    int64_t v = gocpp::any_cast<int64_t>(data);
+                    rec::PutUint64(gocpp::recv(order), bs, uint64_t(v));
+                    break;
+                }
+                case 23:
+                {
+                    gocpp::slice<int64_t> v = gocpp::any_cast<gocpp::slice<int64_t>>(data);
+                    for(auto [i, x] : v)
+                    {
+                        rec::PutUint64(gocpp::recv(order), bs.make_slice(8 * i), uint64_t(x));
+                    }
+                    break;
+                }
+                case 24:
+                {
+                    uint64_t* v = gocpp::any_cast<uint64_t*>(data);
+                    rec::PutUint64(gocpp::recv(order), bs, *v);
+                    break;
+                }
+                case 25:
+                {
+                    uint64_t v = gocpp::any_cast<uint64_t>(data);
+                    rec::PutUint64(gocpp::recv(order), bs, v);
+                    break;
+                }
+                case 26:
+                {
+                    gocpp::slice<uint64_t> v = gocpp::any_cast<gocpp::slice<uint64_t>>(data);
+                    for(auto [i, x] : v)
+                    {
+                        rec::PutUint64(gocpp::recv(order), bs.make_slice(8 * i), x);
+                    }
+                    break;
+                }
+                case 27:
+                {
+                    float* v = gocpp::any_cast<float*>(data);
+                    rec::PutUint32(gocpp::recv(order), bs, math::Float32bits(*v));
+                    break;
+                }
+                case 28:
+                {
+                    float v = gocpp::any_cast<float>(data);
+                    rec::PutUint32(gocpp::recv(order), bs, math::Float32bits(v));
+                    break;
+                }
+                case 29:
+                {
+                    gocpp::slice<float> v = gocpp::any_cast<gocpp::slice<float>>(data);
+                    for(auto [i, x] : v)
+                    {
+                        rec::PutUint32(gocpp::recv(order), bs.make_slice(4 * i), math::Float32bits(x));
+                    }
+                    break;
+                }
+                case 30:
+                {
+                    double* v = gocpp::any_cast<double*>(data);
+                    rec::PutUint64(gocpp::recv(order), bs, math::Float64bits(*v));
+                    break;
+                }
+                case 31:
+                {
+                    double v = gocpp::any_cast<double>(data);
+                    rec::PutUint64(gocpp::recv(order), bs, math::Float64bits(v));
+                    break;
+                }
+                case 32:
+                {
+                    gocpp::slice<double> v = gocpp::any_cast<gocpp::slice<double>>(data);
+                    for(auto [i, x] : v)
+                    {
+                        rec::PutUint64(gocpp::recv(order), bs.make_slice(8 * i), math::Float64bits(x));
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     // Size returns how many bytes [Write] would generate to encode the value v, which
@@ -1140,6 +1309,264 @@ namespace golang::binary
     // If v is neither of these, Size returns -1.
     int Size(go_any v)
     {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_10 = gocpp::type_info(v);
+            int conditionId = -1;
+            if(gocpp_id_10 == typeid(bool)) { conditionId = 0; }
+            else if(gocpp_id_10 == typeid(int8_t)) { conditionId = 1; }
+            else if(gocpp_id_10 == typeid(uint8_t)) { conditionId = 2; }
+            else if(gocpp_id_10 == typeid(bool*)) { conditionId = 3; }
+            else if(gocpp_id_10 == typeid(int8_t*)) { conditionId = 4; }
+            else if(gocpp_id_10 == typeid(uint8_t*)) { conditionId = 5; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<bool>)) { conditionId = 6; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<int8_t>)) { conditionId = 7; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<uint8_t>)) { conditionId = 8; }
+            else if(gocpp_id_10 == typeid(int16_t)) { conditionId = 9; }
+            else if(gocpp_id_10 == typeid(uint16_t)) { conditionId = 10; }
+            else if(gocpp_id_10 == typeid(int16_t*)) { conditionId = 11; }
+            else if(gocpp_id_10 == typeid(uint16_t*)) { conditionId = 12; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<int16_t>)) { conditionId = 13; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<uint16_t>)) { conditionId = 14; }
+            else if(gocpp_id_10 == typeid(int32_t)) { conditionId = 15; }
+            else if(gocpp_id_10 == typeid(uint32_t)) { conditionId = 16; }
+            else if(gocpp_id_10 == typeid(int32_t*)) { conditionId = 17; }
+            else if(gocpp_id_10 == typeid(uint32_t*)) { conditionId = 18; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<int32_t>)) { conditionId = 19; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<uint32_t>)) { conditionId = 20; }
+            else if(gocpp_id_10 == typeid(int64_t)) { conditionId = 21; }
+            else if(gocpp_id_10 == typeid(uint64_t)) { conditionId = 22; }
+            else if(gocpp_id_10 == typeid(int64_t*)) { conditionId = 23; }
+            else if(gocpp_id_10 == typeid(uint64_t*)) { conditionId = 24; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<int64_t>)) { conditionId = 25; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<uint64_t>)) { conditionId = 26; }
+            else if(gocpp_id_10 == typeid(float)) { conditionId = 27; }
+            else if(gocpp_id_10 == typeid(float*)) { conditionId = 28; }
+            else if(gocpp_id_10 == typeid(double)) { conditionId = 29; }
+            else if(gocpp_id_10 == typeid(double*)) { conditionId = 30; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<float>)) { conditionId = 31; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<double>)) { conditionId = 32; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                {
+                    bool data = gocpp::any_cast<bool>(v);
+                    return 1;
+                    break;
+                }
+                case 3:
+                {
+                    bool* data = gocpp::any_cast<bool*>(v);
+                    if(data == nullptr)
+                    {
+                        return - 1;
+                    }
+                    return 1;
+                    break;
+                }
+                case 4:
+                {
+                    int8_t* data = gocpp::any_cast<int8_t*>(v);
+                    if(data == nullptr)
+                    {
+                        return - 1;
+                    }
+                    return 1;
+                    break;
+                }
+                case 5:
+                {
+                    uint8_t* data = gocpp::any_cast<uint8_t*>(v);
+                    if(data == nullptr)
+                    {
+                        return - 1;
+                    }
+                    return 1;
+                    break;
+                }
+                case 6:
+                {
+                    gocpp::slice<bool> data = gocpp::any_cast<gocpp::slice<bool>>(v);
+                    return len(data);
+                    break;
+                }
+                case 7:
+                {
+                    gocpp::slice<int8_t> data = gocpp::any_cast<gocpp::slice<int8_t>>(v);
+                    return len(data);
+                    break;
+                }
+                case 8:
+                {
+                    gocpp::slice<uint8_t> data = gocpp::any_cast<gocpp::slice<uint8_t>>(v);
+                    return len(data);
+                    break;
+                }
+                case 9:
+                case 10:
+                {
+                    int16_t data = gocpp::any_cast<int16_t>(v);
+                    return 2;
+                    break;
+                }
+                case 11:
+                {
+                    int16_t* data = gocpp::any_cast<int16_t*>(v);
+                    if(data == nullptr)
+                    {
+                        return - 1;
+                    }
+                    return 2;
+                    break;
+                }
+                case 12:
+                {
+                    uint16_t* data = gocpp::any_cast<uint16_t*>(v);
+                    if(data == nullptr)
+                    {
+                        return - 1;
+                    }
+                    return 2;
+                    break;
+                }
+                case 13:
+                {
+                    gocpp::slice<int16_t> data = gocpp::any_cast<gocpp::slice<int16_t>>(v);
+                    return 2 * len(data);
+                    break;
+                }
+                case 14:
+                {
+                    gocpp::slice<uint16_t> data = gocpp::any_cast<gocpp::slice<uint16_t>>(v);
+                    return 2 * len(data);
+                    break;
+                }
+                case 15:
+                case 16:
+                {
+                    int32_t data = gocpp::any_cast<int32_t>(v);
+                    return 4;
+                    break;
+                }
+                case 17:
+                {
+                    int32_t* data = gocpp::any_cast<int32_t*>(v);
+                    if(data == nullptr)
+                    {
+                        return - 1;
+                    }
+                    return 4;
+                    break;
+                }
+                case 18:
+                {
+                    uint32_t* data = gocpp::any_cast<uint32_t*>(v);
+                    if(data == nullptr)
+                    {
+                        return - 1;
+                    }
+                    return 4;
+                    break;
+                }
+                case 19:
+                {
+                    gocpp::slice<int32_t> data = gocpp::any_cast<gocpp::slice<int32_t>>(v);
+                    return 4 * len(data);
+                    break;
+                }
+                case 20:
+                {
+                    gocpp::slice<uint32_t> data = gocpp::any_cast<gocpp::slice<uint32_t>>(v);
+                    return 4 * len(data);
+                    break;
+                }
+                case 21:
+                case 22:
+                {
+                    int64_t data = gocpp::any_cast<int64_t>(v);
+                    return 8;
+                    break;
+                }
+                case 23:
+                {
+                    int64_t* data = gocpp::any_cast<int64_t*>(v);
+                    if(data == nullptr)
+                    {
+                        return - 1;
+                    }
+                    return 8;
+                    break;
+                }
+                case 24:
+                {
+                    uint64_t* data = gocpp::any_cast<uint64_t*>(v);
+                    if(data == nullptr)
+                    {
+                        return - 1;
+                    }
+                    return 8;
+                    break;
+                }
+                case 25:
+                {
+                    gocpp::slice<int64_t> data = gocpp::any_cast<gocpp::slice<int64_t>>(v);
+                    return 8 * len(data);
+                    break;
+                }
+                case 26:
+                {
+                    gocpp::slice<uint64_t> data = gocpp::any_cast<gocpp::slice<uint64_t>>(v);
+                    return 8 * len(data);
+                    break;
+                }
+                case 27:
+                {
+                    float data = gocpp::any_cast<float>(v);
+                    return 4;
+                    break;
+                }
+                case 28:
+                {
+                    float* data = gocpp::any_cast<float*>(v);
+                    if(data == nullptr)
+                    {
+                        return - 1;
+                    }
+                    return 4;
+                    break;
+                }
+                case 29:
+                {
+                    double data = gocpp::any_cast<double>(v);
+                    return 8;
+                    break;
+                }
+                case 30:
+                {
+                    double* data = gocpp::any_cast<double*>(v);
+                    if(data == nullptr)
+                    {
+                        return - 1;
+                    }
+                    return 8;
+                    break;
+                }
+                case 31:
+                {
+                    gocpp::slice<float> data = gocpp::any_cast<gocpp::slice<float>>(v);
+                    return 4 * len(data);
+                    break;
+                }
+                case 32:
+                {
+                    gocpp::slice<double> data = gocpp::any_cast<gocpp::slice<double>>(v);
+                    return 8 * len(data);
+                    break;
+                }
+            }
+        }
         return dataSize(reflect::Indirect(reflect::ValueOf(v)));
     }
 
@@ -1155,17 +1582,31 @@ namespace golang::binary
             auto condition = rec::Kind(gocpp::recv(v));
             int conditionId = -1;
             if(condition == reflect::Slice) { conditionId = 0; }
-            else if(condition == reflect::Struct) { conditionId = 1; }
+            else if(condition == reflect::Array) { conditionId = 1; }
+            else if(condition == reflect::Struct) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
-                    if(auto s = go_sizeof(rec::Elem(gocpp::recv(rec::Type(gocpp::recv(v))))); s >= 0)
+                case 1:
+                {
+                    auto t = rec::Elem(gocpp::recv(rec::Type(gocpp::recv(v))));
+                    if(auto [size, ok] = rec::Load(gocpp::recv(structSize), t); ok)
                     {
-                        return s * rec::Len(gocpp::recv(v));
+                        return gocpp::getValue<int>(size) * rec::Len(gocpp::recv(v));
+                    }
+                    auto size = go_sizeof(t);
+                    if(size >= 0)
+                    {
+                        if(rec::Kind(gocpp::recv(t)) == reflect::Struct)
+                        {
+                            rec::Store(gocpp::recv(structSize), t, size);
+                        }
+                        return size * rec::Len(gocpp::recv(v));
                     }
                     break;
+                }
 
-                case 1:
+                case 2:
                 {
                     auto t = rec::Type(gocpp::recv(v));
                     if(auto [size, ok] = rec::Load(gocpp::recv(structSize), t); ok)
@@ -1532,21 +1973,18 @@ namespace golang::binary
             else if(condition == reflect::Struct) { conditionId = 1; }
             else if(condition == reflect::Slice) { conditionId = 2; }
             else if(condition == reflect::Bool) { conditionId = 3; }
-            else if(condition == reflect::Int) { conditionId = 4; }
-            else if(condition == reflect::Int8) { conditionId = 5; }
-            else if(condition == reflect::Int16) { conditionId = 6; }
-            else if(condition == reflect::Int32) { conditionId = 7; }
-            else if(condition == reflect::Int64) { conditionId = 8; }
-            else if(condition == reflect::Uint) { conditionId = 9; }
-            else if(condition == reflect::Uint8) { conditionId = 10; }
-            else if(condition == reflect::Uint16) { conditionId = 11; }
-            else if(condition == reflect::Uint32) { conditionId = 12; }
-            else if(condition == reflect::Uint64) { conditionId = 13; }
-            else if(condition == reflect::Uintptr) { conditionId = 14; }
-            else if(condition == reflect::Float32) { conditionId = 15; }
-            else if(condition == reflect::Float64) { conditionId = 16; }
-            else if(condition == reflect::Complex64) { conditionId = 17; }
-            else if(condition == reflect::Complex128) { conditionId = 18; }
+            else if(condition == reflect::Int8) { conditionId = 4; }
+            else if(condition == reflect::Int16) { conditionId = 5; }
+            else if(condition == reflect::Int32) { conditionId = 6; }
+            else if(condition == reflect::Int64) { conditionId = 7; }
+            else if(condition == reflect::Uint8) { conditionId = 8; }
+            else if(condition == reflect::Uint16) { conditionId = 9; }
+            else if(condition == reflect::Uint32) { conditionId = 10; }
+            else if(condition == reflect::Uint64) { conditionId = 11; }
+            else if(condition == reflect::Float32) { conditionId = 12; }
+            else if(condition == reflect::Float64) { conditionId = 13; }
+            else if(condition == reflect::Complex64) { conditionId = 14; }
+            else if(condition == reflect::Complex128) { conditionId = 15; }
             switch(conditionId)
             {
                 case 0:
@@ -1596,115 +2034,52 @@ namespace golang::binary
                     break;
 
                 case 4:
+                    rec::int8(gocpp::recv(e), int8_t(rec::Int(gocpp::recv(v))));
+                    break;
                 case 5:
+                    rec::int16(gocpp::recv(e), int16_t(rec::Int(gocpp::recv(v))));
+                    break;
                 case 6:
+                    rec::int32(gocpp::recv(e), int32_t(rec::Int(gocpp::recv(v))));
+                    break;
                 case 7:
+                    rec::int64(gocpp::recv(e), rec::Int(gocpp::recv(v)));
+                    break;
+
                 case 8:
-                    //Go switch emulation
-                    {
-                        auto condition = rec::Kind(gocpp::recv(rec::Type(gocpp::recv(v))));
-                        int conditionId = -1;
-                        if(condition == reflect::Int8) { conditionId = 0; }
-                        else if(condition == reflect::Int16) { conditionId = 1; }
-                        else if(condition == reflect::Int32) { conditionId = 2; }
-                        else if(condition == reflect::Int64) { conditionId = 3; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                                rec::int8(gocpp::recv(e), int8_t(rec::Int(gocpp::recv(v))));
-                                break;
-                            case 1:
-                                rec::int16(gocpp::recv(e), int16_t(rec::Int(gocpp::recv(v))));
-                                break;
-                            case 2:
-                                rec::int32(gocpp::recv(e), int32_t(rec::Int(gocpp::recv(v))));
-                                break;
-                            case 3:
-                                rec::int64(gocpp::recv(e), rec::Int(gocpp::recv(v)));
-                                break;
-                        }
-                    }
+                    rec::uint8(gocpp::recv(e), uint8_t(rec::Uint(gocpp::recv(v))));
                     break;
-
                 case 9:
+                    rec::uint16(gocpp::recv(e), uint16_t(rec::Uint(gocpp::recv(v))));
+                    break;
                 case 10:
+                    rec::uint32(gocpp::recv(e), uint32_t(rec::Uint(gocpp::recv(v))));
+                    break;
                 case 11:
+                    rec::uint64(gocpp::recv(e), rec::Uint(gocpp::recv(v)));
+                    break;
+
                 case 12:
+                    rec::uint32(gocpp::recv(e), math::Float32bits(float(rec::Float(gocpp::recv(v)))));
+                    break;
                 case 13:
+                    rec::uint64(gocpp::recv(e), math::Float64bits(rec::Float(gocpp::recv(v))));
+                    break;
+
                 case 14:
-                    //Go switch emulation
-                    {
-                        auto condition = rec::Kind(gocpp::recv(rec::Type(gocpp::recv(v))));
-                        int conditionId = -1;
-                        if(condition == reflect::Uint8) { conditionId = 0; }
-                        else if(condition == reflect::Uint16) { conditionId = 1; }
-                        else if(condition == reflect::Uint32) { conditionId = 2; }
-                        else if(condition == reflect::Uint64) { conditionId = 3; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                                rec::uint8(gocpp::recv(e), uint8_t(rec::Uint(gocpp::recv(v))));
-                                break;
-                            case 1:
-                                rec::uint16(gocpp::recv(e), uint16_t(rec::Uint(gocpp::recv(v))));
-                                break;
-                            case 2:
-                                rec::uint32(gocpp::recv(e), uint32_t(rec::Uint(gocpp::recv(v))));
-                                break;
-                            case 3:
-                                rec::uint64(gocpp::recv(e), rec::Uint(gocpp::recv(v)));
-                                break;
-                        }
-                    }
+                {
+                    auto x = rec::Complex(gocpp::recv(v));
+                    rec::uint32(gocpp::recv(e), math::Float32bits(float(real(x))));
+                    rec::uint32(gocpp::recv(e), math::Float32bits(float(imag(x))));
                     break;
-
+                }
                 case 15:
-                case 16:
-                    //Go switch emulation
-                    {
-                        auto condition = rec::Kind(gocpp::recv(rec::Type(gocpp::recv(v))));
-                        int conditionId = -1;
-                        if(condition == reflect::Float32) { conditionId = 0; }
-                        else if(condition == reflect::Float64) { conditionId = 1; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                                rec::uint32(gocpp::recv(e), math::Float32bits(float(rec::Float(gocpp::recv(v)))));
-                                break;
-                            case 1:
-                                rec::uint64(gocpp::recv(e), math::Float64bits(rec::Float(gocpp::recv(v))));
-                                break;
-                        }
-                    }
+                {
+                    auto x = rec::Complex(gocpp::recv(v));
+                    rec::uint64(gocpp::recv(e), math::Float64bits(real(x)));
+                    rec::uint64(gocpp::recv(e), math::Float64bits(imag(x)));
                     break;
-
-                case 17:
-                case 18:
-                    //Go switch emulation
-                    {
-                        auto condition = rec::Kind(gocpp::recv(rec::Type(gocpp::recv(v))));
-                        int conditionId = -1;
-                        if(condition == reflect::Complex64) { conditionId = 0; }
-                        else if(condition == reflect::Complex128) { conditionId = 1; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                            {
-                                auto x = rec::Complex(gocpp::recv(v));
-                                rec::uint32(gocpp::recv(e), math::Float32bits(float(real(x))));
-                                rec::uint32(gocpp::recv(e), math::Float32bits(float(imag(x))));
-                                break;
-                            }
-                            case 1:
-                            {
-                                auto x = rec::Complex(gocpp::recv(v));
-                                rec::uint64(gocpp::recv(e), math::Float64bits(real(x)));
-                                rec::uint64(gocpp::recv(e), math::Float64bits(imag(x)));
-                                break;
-                            }
-                        }
-                    }
-                    break;
+                }
             }
         }
     }
@@ -1717,56 +2092,53 @@ namespace golang::binary
     void rec::skip(encoder* e, reflect::Value v)
     {
         auto n = dataSize(v);
-        auto zero = e->buf.make_slice(e->offset, e->offset + n);
-        for(auto [i, gocpp_ignored] : zero)
-        {
-            zero[i] = 0;
-        }
+        clear(e->buf.make_slice(e->offset, e->offset + n));
         e->offset += n;
     }
 
-    // intDataSize returns the size of the data required to represent the data when encoded.
-    // It returns zero if the type cannot be implemented by the fast path in Read or Write.
-    int intDataSize(go_any data)
+    // intDataSize returns the size of the data required to represent the data when encoded,
+    // and optionally a byte slice containing the encoded data if no conversion is necessary.
+    // It returns zero, nil if the type cannot be implemented by the fast path in Read or Write.
+    std::tuple<int, gocpp::slice<unsigned char>> intDataSize(go_any data)
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_6 = gocpp::type_info(data);
+            const auto& gocpp_id_11 = gocpp::type_info(data);
             const auto& data_ref = data;
             int conditionId = -1;
-            if(gocpp_id_6 == typeid(bool)) { conditionId = 0; }
-            else if(gocpp_id_6 == typeid(int8_t)) { conditionId = 1; }
-            else if(gocpp_id_6 == typeid(uint8_t)) { conditionId = 2; }
-            else if(gocpp_id_6 == typeid(bool*)) { conditionId = 3; }
-            else if(gocpp_id_6 == typeid(int8_t*)) { conditionId = 4; }
-            else if(gocpp_id_6 == typeid(uint8_t*)) { conditionId = 5; }
-            else if(gocpp_id_6 == typeid(gocpp::slice<bool>)) { conditionId = 6; }
-            else if(gocpp_id_6 == typeid(gocpp::slice<int8_t>)) { conditionId = 7; }
-            else if(gocpp_id_6 == typeid(gocpp::slice<uint8_t>)) { conditionId = 8; }
-            else if(gocpp_id_6 == typeid(int16_t)) { conditionId = 9; }
-            else if(gocpp_id_6 == typeid(uint16_t)) { conditionId = 10; }
-            else if(gocpp_id_6 == typeid(int16_t*)) { conditionId = 11; }
-            else if(gocpp_id_6 == typeid(uint16_t*)) { conditionId = 12; }
-            else if(gocpp_id_6 == typeid(gocpp::slice<int16_t>)) { conditionId = 13; }
-            else if(gocpp_id_6 == typeid(gocpp::slice<uint16_t>)) { conditionId = 14; }
-            else if(gocpp_id_6 == typeid(int32_t)) { conditionId = 15; }
-            else if(gocpp_id_6 == typeid(uint32_t)) { conditionId = 16; }
-            else if(gocpp_id_6 == typeid(int32_t*)) { conditionId = 17; }
-            else if(gocpp_id_6 == typeid(uint32_t*)) { conditionId = 18; }
-            else if(gocpp_id_6 == typeid(gocpp::slice<int32_t>)) { conditionId = 19; }
-            else if(gocpp_id_6 == typeid(gocpp::slice<uint32_t>)) { conditionId = 20; }
-            else if(gocpp_id_6 == typeid(int64_t)) { conditionId = 21; }
-            else if(gocpp_id_6 == typeid(uint64_t)) { conditionId = 22; }
-            else if(gocpp_id_6 == typeid(int64_t*)) { conditionId = 23; }
-            else if(gocpp_id_6 == typeid(uint64_t*)) { conditionId = 24; }
-            else if(gocpp_id_6 == typeid(gocpp::slice<int64_t>)) { conditionId = 25; }
-            else if(gocpp_id_6 == typeid(gocpp::slice<uint64_t>)) { conditionId = 26; }
-            else if(gocpp_id_6 == typeid(float)) { conditionId = 27; }
-            else if(gocpp_id_6 == typeid(float*)) { conditionId = 28; }
-            else if(gocpp_id_6 == typeid(double)) { conditionId = 29; }
-            else if(gocpp_id_6 == typeid(double*)) { conditionId = 30; }
-            else if(gocpp_id_6 == typeid(gocpp::slice<float>)) { conditionId = 31; }
-            else if(gocpp_id_6 == typeid(gocpp::slice<double>)) { conditionId = 32; }
+            if(gocpp_id_11 == typeid(bool)) { conditionId = 0; }
+            else if(gocpp_id_11 == typeid(int8_t)) { conditionId = 1; }
+            else if(gocpp_id_11 == typeid(uint8_t)) { conditionId = 2; }
+            else if(gocpp_id_11 == typeid(bool*)) { conditionId = 3; }
+            else if(gocpp_id_11 == typeid(int8_t*)) { conditionId = 4; }
+            else if(gocpp_id_11 == typeid(uint8_t*)) { conditionId = 5; }
+            else if(gocpp_id_11 == typeid(gocpp::slice<bool>)) { conditionId = 6; }
+            else if(gocpp_id_11 == typeid(gocpp::slice<int8_t>)) { conditionId = 7; }
+            else if(gocpp_id_11 == typeid(gocpp::slice<uint8_t>)) { conditionId = 8; }
+            else if(gocpp_id_11 == typeid(int16_t)) { conditionId = 9; }
+            else if(gocpp_id_11 == typeid(uint16_t)) { conditionId = 10; }
+            else if(gocpp_id_11 == typeid(int16_t*)) { conditionId = 11; }
+            else if(gocpp_id_11 == typeid(uint16_t*)) { conditionId = 12; }
+            else if(gocpp_id_11 == typeid(gocpp::slice<int16_t>)) { conditionId = 13; }
+            else if(gocpp_id_11 == typeid(gocpp::slice<uint16_t>)) { conditionId = 14; }
+            else if(gocpp_id_11 == typeid(int32_t)) { conditionId = 15; }
+            else if(gocpp_id_11 == typeid(uint32_t)) { conditionId = 16; }
+            else if(gocpp_id_11 == typeid(int32_t*)) { conditionId = 17; }
+            else if(gocpp_id_11 == typeid(uint32_t*)) { conditionId = 18; }
+            else if(gocpp_id_11 == typeid(gocpp::slice<int32_t>)) { conditionId = 19; }
+            else if(gocpp_id_11 == typeid(gocpp::slice<uint32_t>)) { conditionId = 20; }
+            else if(gocpp_id_11 == typeid(int64_t)) { conditionId = 21; }
+            else if(gocpp_id_11 == typeid(uint64_t)) { conditionId = 22; }
+            else if(gocpp_id_11 == typeid(int64_t*)) { conditionId = 23; }
+            else if(gocpp_id_11 == typeid(uint64_t*)) { conditionId = 24; }
+            else if(gocpp_id_11 == typeid(gocpp::slice<int64_t>)) { conditionId = 25; }
+            else if(gocpp_id_11 == typeid(gocpp::slice<uint64_t>)) { conditionId = 26; }
+            else if(gocpp_id_11 == typeid(float)) { conditionId = 27; }
+            else if(gocpp_id_11 == typeid(float*)) { conditionId = 28; }
+            else if(gocpp_id_11 == typeid(double)) { conditionId = 29; }
+            else if(gocpp_id_11 == typeid(double*)) { conditionId = 30; }
+            else if(gocpp_id_11 == typeid(gocpp::slice<float>)) { conditionId = 31; }
+            else if(gocpp_id_11 == typeid(gocpp::slice<double>)) { conditionId = 32; }
             switch(conditionId)
             {
                 case 0:
@@ -1777,25 +2149,25 @@ namespace golang::binary
                 case 5:
                 {
                     bool data = gocpp::any_cast<bool>(data_ref);
-                    return 1;
+                    return {1, nullptr};
                     break;
                 }
                 case 6:
                 {
                     gocpp::slice<bool> data = gocpp::any_cast<gocpp::slice<bool>>(data_ref);
-                    return len(data);
+                    return {len(data), nullptr};
                     break;
                 }
                 case 7:
                 {
                     gocpp::slice<int8_t> data = gocpp::any_cast<gocpp::slice<int8_t>>(data_ref);
-                    return len(data);
+                    return {len(data), nullptr};
                     break;
                 }
                 case 8:
                 {
                     gocpp::slice<uint8_t> data = gocpp::any_cast<gocpp::slice<uint8_t>>(data_ref);
-                    return len(data);
+                    return {len(data), data};
                     break;
                 }
                 case 9:
@@ -1804,19 +2176,19 @@ namespace golang::binary
                 case 12:
                 {
                     int16_t data = gocpp::any_cast<int16_t>(data_ref);
-                    return 2;
+                    return {2, nullptr};
                     break;
                 }
                 case 13:
                 {
                     gocpp::slice<int16_t> data = gocpp::any_cast<gocpp::slice<int16_t>>(data_ref);
-                    return 2 * len(data);
+                    return {2 * len(data), nullptr};
                     break;
                 }
                 case 14:
                 {
                     gocpp::slice<uint16_t> data = gocpp::any_cast<gocpp::slice<uint16_t>>(data_ref);
-                    return 2 * len(data);
+                    return {2 * len(data), nullptr};
                     break;
                 }
                 case 15:
@@ -1825,19 +2197,19 @@ namespace golang::binary
                 case 18:
                 {
                     int32_t data = gocpp::any_cast<int32_t>(data_ref);
-                    return 4;
+                    return {4, nullptr};
                     break;
                 }
                 case 19:
                 {
                     gocpp::slice<int32_t> data = gocpp::any_cast<gocpp::slice<int32_t>>(data_ref);
-                    return 4 * len(data);
+                    return {4 * len(data), nullptr};
                     break;
                 }
                 case 20:
                 {
                     gocpp::slice<uint32_t> data = gocpp::any_cast<gocpp::slice<uint32_t>>(data_ref);
-                    return 4 * len(data);
+                    return {4 * len(data), nullptr};
                     break;
                 }
                 case 21:
@@ -1846,50 +2218,61 @@ namespace golang::binary
                 case 24:
                 {
                     int64_t data = gocpp::any_cast<int64_t>(data_ref);
-                    return 8;
+                    return {8, nullptr};
                     break;
                 }
                 case 25:
                 {
                     gocpp::slice<int64_t> data = gocpp::any_cast<gocpp::slice<int64_t>>(data_ref);
-                    return 8 * len(data);
+                    return {8 * len(data), nullptr};
                     break;
                 }
                 case 26:
                 {
                     gocpp::slice<uint64_t> data = gocpp::any_cast<gocpp::slice<uint64_t>>(data_ref);
-                    return 8 * len(data);
+                    return {8 * len(data), nullptr};
                     break;
                 }
                 case 27:
                 case 28:
                 {
                     float data = gocpp::any_cast<float>(data_ref);
-                    return 4;
+                    return {4, nullptr};
                     break;
                 }
                 case 29:
                 case 30:
                 {
                     double data = gocpp::any_cast<double>(data_ref);
-                    return 8;
+                    return {8, nullptr};
                     break;
                 }
                 case 31:
                 {
                     gocpp::slice<float> data = gocpp::any_cast<gocpp::slice<float>>(data_ref);
-                    return 4 * len(data);
+                    return {4 * len(data), nullptr};
                     break;
                 }
                 case 32:
                 {
                     gocpp::slice<double> data = gocpp::any_cast<gocpp::slice<double>>(data_ref);
-                    return 8 * len(data);
+                    return {8 * len(data), nullptr};
                     break;
                 }
             }
         }
-        return 0;
+        return {0, nullptr};
+    }
+
+    // ensure grows buf to length len(buf) + n and returns the grown buffer
+    // and a slice starting at the original length of buf (that is, buf2[len(buf):]).
+    std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>> ensure(gocpp::slice<unsigned char> buf, int n)
+    {
+        gocpp::slice<unsigned char> buf2;
+        gocpp::slice<unsigned char> pos;
+        auto l = len(buf);
+        buf = slices::Grow(buf, n).make_slice(0, l + n);
+        return {buf, buf.make_slice(l)};
     }
 
 }

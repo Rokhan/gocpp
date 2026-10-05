@@ -4,33 +4,21 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
-{
-    struct ArgumentError;
-    using ImportMode = int;
-}
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/constant/value.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/context.fwd.h"
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/operand.fwd.h"
-#include "golang/go/types/package.fwd.h"
-#include "golang/go/types/scope.fwd.h"
-#include "golang/go/types/selection.fwd.h"
-#include "golang/go/types/sizes.fwd.h"
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/typelists.fwd.h"
-#include "golang/internal/types/errors/codes.fwd.h"
-
-namespace golang::types
+namespace golang::go::types
 {
     struct Error;
-    struct Importer;
-    struct ImporterFrom;
+    struct ArgumentError;
+    using ImportMode = int;
     struct Config;
     struct Info;
     struct TypeAndValue;
     struct Instance;
     struct Initializer;
+}
+#include "golang/go/types/package.fwd.h"
+
+namespace golang::go::types
+{
+    struct Importer;
+    struct ImporterFrom;
 }

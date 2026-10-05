@@ -16,8 +16,9 @@
 //
 // This package allows packages that cannot import "reflect" to use types that
 // are tested to be equivalent to reflect.SliceHeader and reflect.StringHeader.
-namespace golang::unsafeheader
+namespace golang::internal::unsafeheader
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }

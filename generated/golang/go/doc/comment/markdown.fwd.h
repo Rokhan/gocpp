@@ -3,10 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/bytes/buffer.fwd.h"
-#include "golang/go/doc/comment/print.fwd.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     struct mdPrinter;
 }

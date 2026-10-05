@@ -13,22 +13,20 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
-#include "golang/internal/goexperiment/exp_allocheaders_on.h"
 #include "golang/internal/goexperiment/exp_cgocheck2_off.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/consts.h"
+#include "golang/internal/runtime/sys/no_dit.h"
 #include "golang/runtime/atomic_pointer.h"
 #include "golang/runtime/cgo.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/mbitmap.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/pinner.h"
-#include "golang/runtime/print.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/race0.h"
 #include "golang/runtime/runtime1.h"
@@ -39,12 +37,19 @@
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/type.h"
-#include "golang/runtime/typekind.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace goarch = golang::internal::goarch;
+    namespace goexperiment = golang::internal::goexperiment;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
+        using abi::rec::IsDirectIface;
+        using abi::rec::Kind;
+        using abi::rec::Pointers;
         using atomic::rec::Load;
     }
 
@@ -104,6 +109,15 @@ namespace golang::runtime
     // platforms. Syscalls may have untyped arguments on the stack, so
     // it's not safe to grow or scan the stack.
     //
+    // cgocall should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ebitengine/purego
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname cgocall
     //go:nosplit
     int32_t cgocall(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer arg)
     {
@@ -167,13 +181,36 @@ namespace golang::runtime
 
         osPreemptExtExit(mp);
 
+        // After exitsyscall we can be rescheduled on a different M,
+        // so we need to restore the original M's winsyscall.
+        auto winsyscall = mp->winsyscall;
+
         exitsyscall();
+
+        getg()->m->winsyscall = winsyscall;
 
         // Note that raceacquire must be called only after exitsyscall has
         // wired this M to a P.
         if(raceenabled)
         {
             raceacquire(gocpp::unsafe_pointer(& racecgosync));
+        }
+
+        if(sys::DITSupported)
+        {
+            // C code may have enabled or disabled DIT on this thread, restore
+            // our state to the expected one.
+            auto ditEnabled = sys::DITEnabled();
+            auto gp = getg();
+            if(! gp->ditWanted && ditEnabled)
+            {
+                sys::DisableDIT();
+            }
+            else
+            if(gp->ditWanted && ! ditEnabled)
+            {
+                sys::EnableDIT();
+            }
         }
 
         // From the garbage collector's perspective, time can move
@@ -202,44 +239,45 @@ namespace golang::runtime
     void callbackUpdateSystemStack(m* mp, uintptr_t sp, bool signal)
     {
         auto g0 = mp->g0;
-        if(sp > g0->stack.lo && sp <= g0->stack.hi)
+
+        if(! mp->isextra)
         {
-            // Stack already in bounds, nothing to do.
+            // We allocated the stack for standard Ms. Don't replace the
+            // stack bounds with estimated ones when we already initialized
+            // with the exact ones.
             return;
         }
 
-        if(mp->ncgo > 0)
+        auto inBound = sp > g0->stack.lo && sp <= g0->stack.hi;
+        if(inBound && mp->g0StackAccurate)
         {
-            // ncgo > 0 indicates that this M was in Go further up the stack
-            // (it called C and is now receiving a callback). It is not
-            // safe for the C call to change the stack out from under us.
-            // Note that this case isn't possible for signal == true, as
-            // that is always passing a new M from needm.
-            // Stack is bogus, but reset the bounds anyway so we can print.
-            auto hi = g0->stack.hi;
-            auto lo = g0->stack.lo;
-            g0->stack.hi = sp + 1024;
-            g0->stack.lo = sp - 32 * 1024;
-            g0->stackguard0 = g0->stack.lo + stackGuard;
-            g0->stackguard1 = g0->stackguard0;
-
-            print("M "_s, mp->id, " procid "_s, mp->procid, " runtime: cgocallback with sp="_s, hex(sp), " out of bounds ["_s, hex(lo), ", "_s, hex(hi), "]"_s);
-            print("\n"_s);
-            exit(2);
+            // This M has called into Go before and has the stack bounds
+            // initialized. We have the accurate stack bounds, and the SP
+            // is in bounds. We expect it continues to run within the same
+            // bounds.
+            return;
         }
 
-        // This M does not have Go further up the stack. However, it may have
-        // previously called into Go, initializing the stack bounds. Between
-        // that call returning and now the stack may have changed (perhaps the
-        // C thread is running a coroutine library). We need to update the
-        // stack bounds for this case.
+        // We don't have an accurate stack bounds (either it never calls
+        // into Go before, or we couldn't get the accurate bounds), or the
+        // current SP is not within the previous bounds (the stack may have
+        // changed between calls). We need to update the stack bounds.
+        // N.B. we need to update the stack bounds even if SP appears to
+        // already be in bounds, if our bounds are estimated dummy bounds
+        // (below). We may be in a different region within the same actual
+        // stack bounds, but our estimates were not accurate. Or the actual
+        // stack bounds could have shifted but still have partial overlap with
+        // our dummy bounds. If we failed to update in that case, we could find
+        // ourselves seemingly called near the bottom of the stack bounds, where
+        // we quickly run out of space.
         // Set the stack bounds to match the current stack. If we don't
         // actually know how big the stack is, like we don't know how big any
         // scheduling stack is, but we assume there's at least 32 kB. If we
         // can get a more accurate stack bound from pthread, use that, provided
-        // it actually contains SP..
+        // it actually contains SP.
         g0->stack.hi = sp + 1024;
         g0->stack.lo = sp - 32 * 1024;
+        mp->g0StackAccurate = false;
         if(! signal && _cgo_getstackbound != nullptr)
         {
             // Don't adjust if called from the signal handler.
@@ -250,6 +288,8 @@ namespace golang::runtime
             gocpp::array<uintptr_t, 2> bounds = {};
             asmcgocall(_cgo_getstackbound, gocpp::unsafe_pointer(gocpp::make_array_ptr(bounds)));
             // getstackbound is an unsupported no-op on Windows.
+            // On Unix systems, if the API to get accurate stack bounds is
+            // not available, it returns zeros.
             // Don't use these bounds if they don't contain SP. Perhaps we
             // were called by something not using the standard thread
             // stack.
@@ -257,6 +297,7 @@ namespace golang::runtime
             {
                 g0->stack.lo = bounds[0];
                 g0->stack.hi = bounds[1];
+                mp->g0StackAccurate = true;
             }
         }
         g0->stackguard0 = g0->stack.lo + stackGuard;
@@ -277,6 +318,8 @@ namespace golang::runtime
 
         // system sp saved by cgocallback.
         auto sp = gp->m->g0->sched.sp;
+        auto oldStack = gp->m->g0->stack;
+        auto oldAccurate = gp->m->g0StackAccurate;
         callbackUpdateSystemStack(gp->m, sp, false);
 
         // The call from C is on gp.m's g0 stack, so we must ensure
@@ -288,16 +331,21 @@ namespace golang::runtime
 
         auto checkm = gp->m;
 
-        // Save current syscall parameters, so m.syscall can be
+        // Save current syscall parameters, so m.winsyscall can be
         // used again if callback decide to make syscall.
-        auto syscall = gp->m->syscall;
+        auto winsyscall = gp->m->winsyscall;
 
         // entersyscall saves the caller's SP to allow the GC to trace the Go
         // stack. However, since we're returning to an earlier stack frame and
         // need to pair with the entersyscall() call made by cgocall, we must
         // save syscall* and let reentersyscall restore them.
+        // Note: savedsp and savedbp MUST be held in locals as an unsafe.Pointer.
+        // When we call into Go, the stack is free to be moved. If these locals
+        // aren't visible in the stack maps, they won't get updated properly,
+        // and will end up being stale when restored by reentersyscall.
         auto savedsp = gocpp::unsafe_pointer(gp->syscallsp);
         auto savedpc = gp->syscallpc;
+        auto savedbp = gocpp::unsafe_pointer(gp->syscallbp);
         // coming out of cgo call
         exitsyscall();
         gp->m->incgo = false;
@@ -321,8 +369,10 @@ namespace golang::runtime
         gp->m->incgo = true;
         unlockOSThread();
 
-        if(gp->m->isextra)
+        if(gp->m->isextra && gp->m->ncgo == 0)
         {
+            // There are no active cgocalls above this frame (ncgo == 0),
+            // thus there can't be more Go frames above this frame.
             gp->m->isExtraInC = true;
         }
 
@@ -334,9 +384,15 @@ namespace golang::runtime
         osPreemptExtEnter(gp->m);
 
         // going back to cgo call
-        reentersyscall(savedpc, uintptr_t(savedsp));
+        reentersyscall(savedpc, uintptr_t(savedsp), uintptr_t(savedbp));
 
-        gp->m->syscall = syscall;
+        gp->m->winsyscall = winsyscall;
+
+        // Restore the old g0 stack bounds
+        gp->m->g0->stack = oldStack;
+        gp->m->g0->stackguard0 = oldStack.lo + stackGuard;
+        gp->m->g0->stackguard1 = gp->m->g0->stackguard0;
+        gp->m->g0StackAccurate = oldAccurate;
     }
 
     void cgocallbackg1(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer frame, uintptr_t ctxt)
@@ -359,7 +415,7 @@ namespace golang::runtime
                 // Now we need to set gp.cgoCtxt = s, but we could get
                 // a SIGPROF signal while manipulating the slice, and
                 // the SIGPROF handler could pick up gp.cgoCtxt while
-                // tracing up the stack.  We need to ensure that the
+                // tracing up the stack. We need to ensure that the
                 // handler always sees a valid slice, so set the
                 // values in an order such that it always does.
                 auto p = (golang::runtime::slice*)(gocpp::unsafe_pointer(& gp->cgoCtxt));
@@ -380,8 +436,15 @@ namespace golang::runtime
                 // The C call to Go came from a thread not currently running
                 // any Go. In the case of -buildmode=c-archive or c-shared,
                 // this call may be coming in before package initialization
-                // is complete. Wait until it is.
-                main_init_done.recv();
+                // is complete. Don't proceed until it is.
+                // We check a bool first for speed, and wait on a channel
+                // if it's not ready.
+                // In race mode, skip the optimization and always use the
+                // channel, which has the race instrumentation.
+                if(raceenabled || ! rec::Load(gocpp::recv(mainInitDone)))
+                {
+                    mainInitDoneChan.recv();
+                }
             }
 
             // Check whether the profiler needs to be turned on or off; this route to
@@ -395,6 +458,26 @@ namespace golang::runtime
             // Add entry to defer stack in case of panic.
             auto restore = true;
             defer.push_back([=]{ unwindm(& restore); });
+
+            bool ditStateM = {};
+            bool ditStateG = {};
+            if(debug.dataindependenttiming == 1 && gp->m->isextra)
+            {
+                // We only need to enable DIT for threads that were created by C, as it
+                // should already by enabled on threads that were created by Go.
+                ditStateM = sys::EnableDIT();
+            }
+            else
+            if(sys::DITSupported && debug.dataindependenttiming != 1)
+            {
+                // C code may have enabled or disabled DIT on this thread. Set the flag
+                // on the M and G accordingly, saving their previous state to restore
+                // on return from the callback.
+                std::tie(ditStateM, ditStateG) = std::tuple{gp->m->ditEnabled, gp->ditWanted};
+                auto ditEnabled = sys::DITEnabled();
+                gp->ditWanted = ditEnabled;
+                gp->m->ditEnabled = ditEnabled;
+            }
 
             if(raceenabled)
             {
@@ -411,6 +494,23 @@ namespace golang::runtime
             if(raceenabled)
             {
                 racereleasemerge(gocpp::unsafe_pointer(& racecgosync));
+            }
+
+            if(debug.dataindependenttiming == 1 && ! ditStateM)
+            {
+                // Only unset DIT if it wasn't already enabled when cgocallback was called.
+                sys::DisableDIT();
+            }
+            else
+            if(sys::DITSupported && debug.dataindependenttiming != 1)
+            {
+                // Restore DIT state on M and G.
+                gp->ditWanted = ditStateG;
+                gp->m->ditEnabled = ditStateM;
+                if(! ditStateM)
+                {
+                    sys::DisableDIT();
+                }
             }
 
             // Do not unwind m->g0->sched.sp.
@@ -482,10 +582,10 @@ namespace golang::runtime
         auto t = ep->_type;
 
         auto top = true;
-        if(arg != nullptr && (t->Kind_ & kindMask == kindPtr || t->Kind_ & kindMask == kindUnsafePointer))
+        if(arg != nullptr && (rec::Kind(gocpp::recv(t)) == abi::Pointer || rec::Kind(gocpp::recv(t)) == abi::UnsafePointer))
         {
             auto p = ep->data;
-            if(t->Kind_ & kindDirectIface == 0)
+            if(! rec::IsDirectIface(gocpp::recv(t)))
             {
                 p = *(gocpp::unsafe_pointer*)(p);
             }
@@ -496,16 +596,17 @@ namespace golang::runtime
             auto aep = efaceOf(& arg);
             //Go switch emulation
             {
-                auto condition = aep->_type->Kind_ & kindMask;
+                auto condition = rec::Kind(gocpp::recv(aep->_type));
                 int conditionId = -1;
-                if(condition == kindBool) { conditionId = 0; }
-                else if(condition == kindSlice) { conditionId = 1; }
-                else if(condition == kindArray) { conditionId = 2; }
+                if(condition == abi::Bool) { conditionId = 0; }
+                else if(condition == abi::Slice) { conditionId = 1; }
+                else if(condition == abi::Array) { conditionId = 2; }
+                else if(condition == abi::Pointer) { conditionId = 3; }
                 switch(conditionId)
                 {
                     case 0:
                     {
-                        if(t->Kind_ & kindMask == kindUnsafePointer)
+                        if(rec::Kind(gocpp::recv(t)) == abi::UnsafePointer)
                         {
                             // We don't know the type of the element.
                             break;
@@ -528,6 +629,21 @@ namespace golang::runtime
                         t = ep->_type;
                         top = false;
                         break;
+                    case 3:
+                    {
+                        // The Go code is indexing into a pointer to an array,
+                        // and we have been passed the pointer-to-array.
+                        // Check the array rather than the pointer.
+                        auto pt = (abi::PtrType*)(gocpp::unsafe_pointer(aep->_type));
+                        t = pt->Elem;
+                        if(rec::Kind(gocpp::recv(t)) != abi::Array)
+                        {
+                            go_throw("can't happen"_s);
+                        }
+                        ep = aep;
+                        top = false;
+                        break;
+                    }
                     default:
                         go_throw("can't happen"_s);
                         break;
@@ -535,17 +651,17 @@ namespace golang::runtime
             }
         }
 
-        cgoCheckArg(t, ep->data, t->Kind_ & kindDirectIface == 0, top, cgoCheckPointerFail);
+        cgoCheckArg(t, ep->data, ! rec::IsDirectIface(gocpp::recv(t)), top, cgoCheckPointerFail);
     }
 
-    // cgoCheckArg is the real work of cgoCheckPointer. The argument p
-    // is either a pointer to the value (of type t), or the value itself,
-    // depending on indir. The top parameter is whether we are at the top
+    // cgoCheckArg is the real work of cgoCheckPointer and cgoCheckResult.
+    // The argument p is either a pointer to the value (of type t), or the value
+    // itself, depending on indir. The top parameter is whether we are at the top
     // level, where Go pointers are allowed. Go pointers to pinned objects are
     // allowed as long as they don't reference other unpinned pointers.
-    void cgoCheckArg(_type* t, gocpp::unsafe_pointer p, bool indir, bool top, gocpp::string msg)
+    void cgoCheckArg(_type* t, gocpp::unsafe_pointer p, bool indir, bool top, cgoErrorMsg msg)
     {
-        if(t->PtrBytes == 0 || p == nullptr)
+        if(! rec::Pointers(gocpp::recv(t)) || p == nullptr)
         {
             // If the type has no pointers there is nothing to do.
             return;
@@ -553,18 +669,18 @@ namespace golang::runtime
 
         //Go switch emulation
         {
-            auto condition = t->Kind_ & kindMask;
+            auto condition = rec::Kind(gocpp::recv(t));
             int conditionId = -1;
-            if(condition == kindArray) { conditionId = 0; }
-            else if(condition == kindChan) { conditionId = 1; }
-            else if(condition == kindMap) { conditionId = 2; }
-            else if(condition == kindFunc) { conditionId = 3; }
-            else if(condition == kindInterface) { conditionId = 4; }
-            else if(condition == kindSlice) { conditionId = 5; }
-            else if(condition == kindString) { conditionId = 6; }
-            else if(condition == kindStruct) { conditionId = 7; }
-            else if(condition == kindPtr) { conditionId = 8; }
-            else if(condition == kindUnsafePointer) { conditionId = 9; }
+            if(condition == abi::Array) { conditionId = 0; }
+            else if(condition == abi::Chan) { conditionId = 1; }
+            else if(condition == abi::Map) { conditionId = 2; }
+            else if(condition == abi::Func) { conditionId = 3; }
+            else if(condition == abi::Interface) { conditionId = 4; }
+            else if(condition == abi::Slice) { conditionId = 5; }
+            else if(condition == abi::String) { conditionId = 6; }
+            else if(condition == abi::Struct) { conditionId = 7; }
+            else if(condition == abi::Pointer) { conditionId = 8; }
+            else if(condition == abi::UnsafePointer) { conditionId = 9; }
             switch(conditionId)
             {
                 default:
@@ -579,7 +695,7 @@ namespace golang::runtime
                         {
                             go_throw("can't happen"_s);
                         }
-                        cgoCheckArg(at->Elem, p, at->Elem->Kind_ & kindDirectIface == 0, top, msg);
+                        cgoCheckArg(at->Elem, p, ! rec::IsDirectIface(gocpp::recv(at->Elem)), top, msg);
                         return;
                     }
                     for(auto i = uintptr_t(0); i < at->Len; i++)
@@ -594,7 +710,7 @@ namespace golang::runtime
                     // These types contain internal pointers that will
                     // always be allocated in the Go heap. It's never OK
                     // to pass them to C.
-                    gocpp::panic(errorString(msg));
+                    gocpp::panic(cgoFormatErr(msg, rec::Kind(gocpp::recv(t))));
                     break;
                 case 3:
                     if(indir)
@@ -605,7 +721,7 @@ namespace golang::runtime
                     {
                         return;
                     }
-                    gocpp::panic(errorString(msg));
+                    gocpp::panic(cgoFormatErr(msg, rec::Kind(gocpp::recv(t))));
                     break;
                 case 4:
                 {
@@ -619,7 +735,7 @@ namespace golang::runtime
                     // in the heap and will not be OK.
                     if(inheap(uintptr_t(gocpp::unsafe_pointer(it))))
                     {
-                        gocpp::panic(errorString(msg));
+                        gocpp::panic(cgoFormatErr(msg, rec::Kind(gocpp::recv(t))));
                     }
                     p = *(gocpp::unsafe_pointer*)(add(p, goarch::PtrSize));
                     if(! cgoIsGoPointer(p))
@@ -628,9 +744,9 @@ namespace golang::runtime
                     }
                     if(! top && ! isPinned(p))
                     {
-                        gocpp::panic(errorString(msg));
+                        gocpp::panic(cgoFormatErr(msg, rec::Kind(gocpp::recv(t))));
                     }
-                    cgoCheckArg(it, p, it->Kind_ & kindDirectIface == 0, false, msg);
+                    cgoCheckArg(it, p, ! rec::IsDirectIface(gocpp::recv(it)), false, msg);
                     break;
                 }
                 case 5:
@@ -644,9 +760,9 @@ namespace golang::runtime
                     }
                     if(! top && ! isPinned(p))
                     {
-                        gocpp::panic(errorString(msg));
+                        gocpp::panic(cgoFormatErr(msg, rec::Kind(gocpp::recv(t))));
                     }
-                    if(st->Elem->PtrBytes == 0)
+                    if(! rec::Pointers(gocpp::recv(st->Elem)))
                     {
                         return;
                     }
@@ -666,7 +782,7 @@ namespace golang::runtime
                     }
                     if(! top && ! isPinned(ss->str))
                     {
-                        gocpp::panic(errorString(msg));
+                        gocpp::panic(cgoFormatErr(msg, rec::Kind(gocpp::recv(t))));
                     }
                     break;
                 }
@@ -679,12 +795,12 @@ namespace golang::runtime
                         {
                             go_throw("can't happen"_s);
                         }
-                        cgoCheckArg(st->Fields[0].Typ, p, st->Fields[0].Typ->Kind_ & kindDirectIface == 0, top, msg);
+                        cgoCheckArg(st->Fields[0].Typ, p, ! rec::IsDirectIface(gocpp::recv(st->Fields[0].Typ)), top, msg);
                         return;
                     }
                     for(auto [gocpp_ignored, f] : st->Fields)
                     {
-                        if(f.Typ->PtrBytes == 0)
+                        if(! rec::Pointers(gocpp::recv(f.Typ)))
                         {
                             continue;
                         }
@@ -708,7 +824,7 @@ namespace golang::runtime
                     }
                     if(! top && ! isPinned(p))
                     {
-                        gocpp::panic(errorString(msg));
+                        gocpp::panic(cgoFormatErr(msg, rec::Kind(gocpp::recv(t))));
                     }
                     cgoCheckUnknownPointer(p, msg);
                     break;
@@ -720,7 +836,7 @@ namespace golang::runtime
     // memory. It checks whether that Go memory contains any other
     // pointer into unpinned Go memory. If it does, we panic.
     // The return values are unused but useful to see in panic tracebacks.
-    std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(gocpp::unsafe_pointer p, gocpp::string msg)
+    std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(gocpp::unsafe_pointer p, cgoErrorMsg msg)
     {
         uintptr_t base;
         uintptr_t i;
@@ -732,39 +848,18 @@ namespace golang::runtime
             {
                 return {base, i};
             }
-            if(goexperiment::AllocHeaders)
+            auto tp = rec::typePointersOfUnchecked(gocpp::recv(span), base);
+            for(; ; )
             {
-                auto tp = rec::typePointersOfUnchecked(gocpp::recv(span), base);
-                for(; ; )
+                uintptr_t addr = {};
+                if(std::tie(tp, addr) = rec::next(gocpp::recv(tp), base + span->elemsize); addr == 0)
                 {
-                    uintptr_t addr = {};
-                    if(std::tie(tp, addr) = rec::next(gocpp::recv(tp), base + span->elemsize); addr == 0)
-                    {
-                        break;
-                    }
-                    auto pp = *(gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(addr));
-                    if(cgoIsGoPointer(pp) && ! isPinned(pp))
-                    {
-                        gocpp::panic(errorString(msg));
-                    }
+                    break;
                 }
-            }
-            else
-            {
-                auto n = span->elemsize;
-                auto hbits = heapBitsForAddr(base, n);
-                for(; ; )
+                auto pp = *(gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(addr));
+                if(cgoIsGoPointer(pp) && ! isPinned(pp))
                 {
-                    uintptr_t addr = {};
-                    if(std::tie(hbits, addr) = rec::next(gocpp::recv(hbits)); addr == 0)
-                    {
-                        break;
-                    }
-                    auto pp = *(gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(addr));
-                    if(cgoIsGoPointer(pp) && ! isPinned(pp))
-                    {
-                        gocpp::panic(errorString(msg));
-                    }
+                    gocpp::panic(cgoFormatErr(msg, abi::Pointer));
                 }
             }
             return {base, i};
@@ -778,7 +873,7 @@ namespace golang::runtime
             {
                 // We have no way to know the size of the object.
                 // We have to assume that it might contain a pointer.
-                gocpp::panic(errorString(msg));
+                gocpp::panic(cgoFormatErr(msg, abi::Pointer));
             }
         }
 
@@ -835,7 +930,123 @@ namespace golang::runtime
 
         auto ep = efaceOf(& val);
         auto t = ep->_type;
-        cgoCheckArg(t, ep->data, t->Kind_ & kindDirectIface == 0, false, cgoResultFail);
+        if(t == nullptr)
+        {
+            return;
+        }
+        cgoCheckArg(t, ep->data, ! rec::IsDirectIface(gocpp::recv(t)), false, cgoResultFail);
+    }
+
+    // cgoFormatErr is called by cgoCheckArg and cgoCheckUnknownPointer
+    // to format panic error messages.
+    errorString cgoFormatErr(cgoErrorMsg error, abi::Kind kind)
+    {
+        gocpp::string msg = {};
+        gocpp::string kindname = {};
+        gocpp::string cgoFunction = "unknown"_s;
+        int offset = {};
+        gocpp::array<unsigned char, 20> buf = {};
+
+        // We expect one of these abi.Kind from cgoCheckArg
+        //Go switch emulation
+        {
+            auto condition = kind;
+            int conditionId = -1;
+            if(condition == abi::Chan) { conditionId = 0; }
+            else if(condition == abi::Func) { conditionId = 1; }
+            else if(condition == abi::Interface) { conditionId = 2; }
+            else if(condition == abi::Map) { conditionId = 3; }
+            else if(condition == abi::Pointer) { conditionId = 4; }
+            else if(condition == abi::Slice) { conditionId = 5; }
+            else if(condition == abi::String) { conditionId = 6; }
+            else if(condition == abi::Struct) { conditionId = 7; }
+            else if(condition == abi::UnsafePointer) { conditionId = 8; }
+            switch(conditionId)
+            {
+                case 0:
+                    kindname = "channel"_s;
+                    break;
+                case 1:
+                    kindname = "function"_s;
+                    break;
+                case 2:
+                    kindname = "interface"_s;
+                    break;
+                case 3:
+                    kindname = "map"_s;
+                    break;
+                case 4:
+                    kindname = "pointer"_s;
+                    break;
+                case 5:
+                    kindname = "slice"_s;
+                    break;
+                case 6:
+                    kindname = "string"_s;
+                    break;
+                case 7:
+                    kindname = "struct"_s;
+                    break;
+                case 8:
+                    kindname = "unsafe pointer"_s;
+                    break;
+                default:
+                    kindname = "pointer"_s;
+                    break;
+            }
+        }
+
+        // The cgo function name might need an offset to be obtained
+        if(error == cgoResultFail)
+        {
+            offset = 21;
+        }
+
+        // Relatively to cgoFormatErr, this is the stack frame:
+        // 0. cgoFormatErr
+        // 1. cgoCheckArg or cgoCheckUnknownPointer
+        // 2. cgoCheckPointer or cgoCheckResult
+        // 3. cgo function
+        auto [pc, path, line, ok] = Caller(3);
+        if(ok && error == cgoResultFail)
+        {
+            auto function = FuncForPC(pc);
+
+            if(function != nullptr)
+            {
+                // Expected format of cgo function name:
+                // - caller: _cgoexp_3c910ddb72c4_foo
+                if(offset > len(rec::Name(gocpp::recv(function))))
+                {
+                    cgoFunction = rec::Name(gocpp::recv(function));
+                }
+                else
+                {
+                    cgoFunction = rec::Name(gocpp::recv(function)).make_slice(offset);
+                }
+            }
+        }
+
+        //Go switch emulation
+        {
+            auto condition = error;
+            int conditionId = -1;
+            if(condition == cgoResultFail) { conditionId = 0; }
+            else if(condition == cgoCheckPointerFail) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    msg = path + ":"_s + gocpp::string(itoa(buf.make_slice(0), uint64_t(line)));
+                    msg += ": result of Go function "_s + cgoFunction + " called from cgo"_s;
+                    msg += " is unpinned Go "_s + kindname + " or points to unpinned Go "_s + kindname;
+                    break;
+                case 1:
+                    msg += "argument of cgo function has Go pointer to unpinned Go "_s + kindname;
+                    break;
+            }
+        }
+
+        return errorString(msg);
     }
 
 }

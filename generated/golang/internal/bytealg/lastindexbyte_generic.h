@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
     int LastIndexByte(gocpp::slice<unsigned char> s, unsigned char c);
     int LastIndexByteString(gocpp::string s, unsigned char c);

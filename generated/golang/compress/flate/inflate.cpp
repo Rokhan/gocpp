@@ -12,19 +12,24 @@
 #include "gocpp/support.h"
 
 #include "golang/bufio/bufio.h"
-#include "golang/compress/flate/deflate.h"
+#include "golang/compress/flate/deflatefast.h"
 #include "golang/compress/flate/dict_decoder.h"
 #include "golang/compress/flate/huffman_bit_writer.h"
 #include "golang/io/io.h"
 #include "golang/math/bits/bits.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 #include "golang/sync/once.h"
 
 // Package flate implements the DEFLATE compressed data format, described in
-// RFC 1951.  The gzip and zlib packages implement access to DEFLATE-based file
-// formats.
-namespace golang::flate
+// RFC 1951.  The [compress/gzip] and [compress/zlib] packages implement access
+// to DEFLATE-based file formats.
+namespace golang::compress::flate
 {
+    namespace bits = golang::math::bits;
+    namespace bufio = golang::bufio;
+    namespace io = golang::io;
+    namespace strconv = golang::strconv;
+    namespace sync = golang::sync;
     namespace rec
     {
         using bufio::rec::Read;
@@ -402,7 +407,7 @@ namespace golang::flate
     }
 
     // The actual read interface needed by [NewReader].
-    // If the passed in io.Reader does not also have ReadByte,
+    // If the passed in [io.Reader] does not also have ReadByte,
     // the [NewReader] will introduce its own buffering.
     
     template<typename T>
@@ -1223,10 +1228,10 @@ namespace golang::flate
     }
 
     // NewReaderDict is like [NewReader] but initializes the reader
-    // with a preset dictionary. The returned [Reader] behaves as if
+    // with a preset dictionary. The returned reader behaves as if
     // the uncompressed data stream started with the given dictionary,
     // which has already been read. NewReaderDict is typically used
-    // to read data compressed by NewWriterDict.
+    // to read data compressed by [NewWriterDict].
     //
     // The ReadCloser returned by NewReaderDict also implements [Resetter].
     io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict)

@@ -29,30 +29,34 @@
 // calls to servers should accept a Context. The chain of function
 // calls between them must propagate the Context, optionally replacing
 // it with a derived Context created using [WithCancel], [WithDeadline],
-// [WithTimeout], or [WithValue]. When a Context is canceled, all
-// Contexts derived from it are also canceled.
+// [WithTimeout], or [WithValue].
+//
+// A Context may be canceled to indicate that work done on its behalf should stop.
+// A Context with a deadline is canceled after the deadline passes.
+// When a Context is canceled, all Contexts derived from it are also canceled.
 //
 // The [WithCancel], [WithDeadline], and [WithTimeout] functions take a
 // Context (the parent) and return a derived Context (the child) and a
-// [CancelFunc]. Calling the CancelFunc cancels the child and its
+// [CancelFunc]. Calling the CancelFunc directly cancels the child and its
 // children, removes the parent's reference to the child, and stops
 // any associated timers. Failing to call the CancelFunc leaks the
-// child and its children until the parent is canceled or the timer
-// fires. The go vet tool checks that CancelFuncs are used on all
-// control-flow paths.
+// child and its children until the parent is canceled. The go vet tool
+// checks that CancelFuncs are used on all control-flow paths.
 //
-// The [WithCancelCause] function returns a [CancelCauseFunc], which
-// takes an error and records it as the cancellation cause. Calling
-// [Cause] on the canceled context or any of its children retrieves
-// the cause. If no cause is specified, Cause(ctx) returns the same
-// value as ctx.Err().
+// The [WithCancelCause] function returns a [CancelCauseFunc], which takes
+// an error and records it as the cancellation cause. [WithDeadlineCause]
+// and [WithTimeoutCause] take a cause to use when the deadline expires.
+// Calling [Cause] on the canceled context or any of its children retrieves
+// the cause. If no cause is specified, Cause(ctx) returns the same value
+// as ctx.Err().
 //
 // Programs that use Contexts should follow these rules to keep interfaces
 // consistent across packages and enable static analysis tools to check context
 // propagation:
 //
 // Do not store Contexts inside a struct type; instead, pass a Context
-// explicitly to each function that needs it. The Context should be the first
+// explicitly to each function that needs it. This is discussed further in
+// https://go.dev/blog/context-and-structs. The Context should be the first
 // parameter, typically named ctx:
 //
 //	func DoSomething(ctx context.Context, arg Arg) error {
@@ -68,10 +72,15 @@
 // The same Context may be passed to functions running in different goroutines;
 // Contexts are safe for simultaneous use by multiple goroutines.
 //
-// See https://blog.golang.org/context for example code for a server that uses
+// See https://go.dev/blog/context for example code for a server that uses
 // Contexts.
 namespace golang::context
 {
+    namespace atomic = golang::sync::atomic;
+    namespace errors = golang::errors;
+    namespace reflectlite = golang::internal::reflectlite;
+    namespace sync = golang::sync;
+    namespace time = golang::time;
     namespace rec
     {
         using atomic::rec::Add;
@@ -191,10 +200,11 @@ namespace golang::context
         return value.PrintTo(os);
     }
 
-    // Canceled is the error returned by [Context.Err] when the context is canceled.
+    // Canceled is the error returned by [Context.Err] when the context is canceled
+    // for some reason other than its deadline passing.
     gocpp::error Canceled = errors::New("context canceled"_s);
-    // DeadlineExceeded is the error returned by [Context.Err] when the context's
-    // deadline passes.
+    // DeadlineExceeded is the error returned by [Context.Err] when the context is canceled
+    // due to its deadline passing.
     gocpp::error DeadlineExceeded = deadlineExceededError {};
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -409,12 +419,13 @@ namespace golang::context
     // A CancelFunc does not wait for the work to stop.
     // A CancelFunc may be called by multiple goroutines simultaneously.
     // After the first call, subsequent calls to a CancelFunc do nothing.
-    // WithCancel returns a copy of parent with a new Done channel. The returned
-    // context's Done channel is closed when the returned cancel function is called
-    // or when the parent context's Done channel is closed, whichever happens first.
+    // WithCancel returns a derived context that points to the parent context
+    // but has a new Done channel. The returned context's Done channel is closed
+    // when the returned cancel function is called or when the parent context's
+    // Done channel is closed, whichever happens first.
     //
     // Canceling this context releases resources associated with it, so code should
-    // call cancel as soon as the operations running in this Context complete.
+    // call cancel as soon as the operations running in this [Context] complete.
     std::tuple<Context, CancelFunc> WithCancel(Context parent)
     {
         Context ctx;
@@ -477,31 +488,30 @@ namespace golang::context
     // Cause returns nil if c has not been canceled yet.
     gocpp::error Cause(Context c)
     {
-        gocpp::Defer defer;
-        try
+        auto err = rec::Err(gocpp::recv(c));
+        if(err == nullptr)
         {
-            if(auto [cc, ok] = gocpp::getValue<cancelCtx*>(rec::Value(gocpp::recv(c), & cancelCtxKey)); ok)
+            return nullptr;
+        }
+        if(auto [cc, ok] = gocpp::getValue<cancelCtx*>(rec::Value(gocpp::recv(c), & cancelCtxKey)); ok)
+        {
+            rec::Lock(gocpp::recv(cc->mu));
+            auto cause = cc->cause;
+            rec::Unlock(gocpp::recv(cc->mu));
+            // The parent cancelCtx doesn't have a cause,
+            // so c must have been canceled in some custom context implementation.
+            if(cause != nullptr)
             {
-                rec::Lock(gocpp::recv(cc->mu));
-                defer.push_back([=]{ rec::Unlock(gocpp::recv(cc->mu)); });
-                return cc->cause;
+                return cause;
             }
-            // There is no cancelCtxKey value, so we know that c is
-            // not a descendant of some Context created by WithCancelCause.
-            // Therefore, there is no specific cause to return.
-            // If this is not one of the standard Context types,
-            // it might still have an error even though it won't have a cause.
-            return rec::Err(gocpp::recv(c));
         }
-        catch(gocpp::GoPanic& gp)
-        {
-            defer.handlePanic(gp);
-        }
+        // We don't have a cause to return from a parent cancelCtx,
+        // so return the context's error.
+        return err;
     }
 
-    // AfterFunc arranges to call f in its own goroutine after ctx is done
-    // (cancelled or timed out).
-    // If ctx is already done, AfterFunc calls f immediately in its own goroutine.
+    // AfterFunc arranges to call f in its own goroutine after ctx is canceled.
+    // If ctx is already canceled, AfterFunc calls f immediately in its own goroutine.
     //
     // Multiple calls to AfterFunc on a context operate independently;
     // one does not replace another.
@@ -509,7 +519,7 @@ namespace golang::context
     // Calling the returned stop function stops the association of ctx with f.
     // It returns true if the call stopped f from being run.
     // If stop returns false,
-    // either the context is done and f has been started in its own goroutine;
+    // either the context is canceled and f has been started in its own goroutine;
     // or f was already stopped.
     // The stop function does not wait for f to complete before returning.
     // If the caller needs to know whether f is completed,
@@ -703,12 +713,12 @@ namespace golang::context
             return rec::Err(self.obj.Context);
         }
 
-        gocpp::go_any Value(const gocpp::PtrRecv<struct stopCtx, false>& self, gocpp::go_any key)
+        go_any Value(const gocpp::PtrRecv<struct stopCtx, false>& self, go_any key)
         {
             return rec::Value(self.ptr->Context, key);
         }
 
-        gocpp::go_any Value(const gocpp::ObjRecv<struct stopCtx>& self, gocpp::go_any key)
+        go_any Value(const gocpp::ObjRecv<struct stopCtx>& self, go_any key)
         {
             return rec::Value(self.obj.Context, key);
         }
@@ -1012,12 +1022,12 @@ namespace golang::context
             return rec::Err(self.obj.Context);
         }
 
-        gocpp::go_any Value(const gocpp::PtrRecv<struct cancelCtx, false>& self, gocpp::go_any key)
+        go_any Value(const gocpp::PtrRecv<struct cancelCtx, false>& self, go_any key)
         {
             return rec::Value(self.ptr->Context, key);
         }
 
-        gocpp::go_any Value(const gocpp::ObjRecv<struct cancelCtx>& self, gocpp::go_any key)
+        go_any Value(const gocpp::ObjRecv<struct cancelCtx>& self, go_any key)
         {
             return rec::Value(self.obj.Context, key);
         }
@@ -1193,10 +1203,14 @@ namespace golang::context
 
     gocpp::error rec::Err(cancelCtx* c)
     {
-        rec::Lock(gocpp::recv(c->mu));
-        auto err = c->err;
-        rec::Unlock(gocpp::recv(c->mu));
-        return err;
+        // An atomic load is ~5x faster than a mutex, which can matter in tight loops.
+        if(auto err = rec::Load(gocpp::recv(c->err)); err != nullptr)
+        {
+            // Ensure the done channel has been closed before returning a non-nil error.
+            rec::Done(gocpp::recv(c)).recv();
+            return gocpp::getValue<gocpp::error>(err);
+        }
+        return nullptr;
     }
 
     struct gocpp_id_11
@@ -1297,10 +1311,10 @@ namespace golang::context
         {
             // parent is a *cancelCtx, or derives from one.
             rec::Lock(gocpp::recv(p->mu));
-            if(p->err != nullptr)
+            if(auto err = rec::Load(gocpp::recv(p->err)); err != nullptr)
             {
                 // parent has already been canceled
-                rec::cancel(gocpp::recv(child), false, p->err, p->cause);
+                rec::cancel(gocpp::recv(child), false, gocpp::getValue<gocpp::error>(err), p->cause);
             }
             else
             {
@@ -1465,13 +1479,13 @@ namespace golang::context
             cause = err;
         }
         rec::Lock(gocpp::recv(c->mu));
-        if(c->err != nullptr)
+        if(rec::Load(gocpp::recv(c->err)) != nullptr)
         {
             rec::Unlock(gocpp::recv(c->mu));
             // already canceled
             return;
         }
-        c->err = err;
+        rec::Store(gocpp::recv(c->err), err);
         c->cause = cause;
         auto [d, gocpp_id_13] = gocpp::getValue<gocpp::channel<gocpp_id_14>>(rec::Load(gocpp::recv(c->done)));
         if(d == nullptr)
@@ -1496,7 +1510,8 @@ namespace golang::context
         }
     }
 
-    // WithoutCancel returns a copy of parent that is not canceled when parent is canceled.
+    // WithoutCancel returns a derived context that points to the parent context
+    // and is not canceled when parent is canceled.
     // The returned context returns no Deadline or Err, and its Done channel is nil.
     // Calling [Cause] on the returned context returns nil.
     Context WithoutCancel(Context parent)
@@ -1596,12 +1611,12 @@ namespace golang::context
         return contextName(c.c) + ".WithoutCancel"_s;
     }
 
-    // WithDeadline returns a copy of the parent context with the deadline adjusted
-    // to be no later than d. If the parent's deadline is already earlier than d,
-    // WithDeadline(parent, d) is semantically equivalent to parent. The returned
-    // [Context.Done] channel is closed when the deadline expires, when the returned
-    // cancel function is called, or when the parent context's Done channel is
-    // closed, whichever happens first.
+    // WithDeadline returns a derived context that points to the parent context
+    // but has the deadline adjusted to be no later than d. If the parent's
+    // deadline is already earlier than d, WithDeadline(parent, d) is semantically
+    // equivalent to parent. The returned [Context.Done] channel is closed when
+    // the deadline expires, when the returned cancel function is called,
+    // or when the parent context's Done channel is closed, whichever happens first.
     //
     // Canceling this context releases resources associated with it, so code should
     // call cancel as soon as the operations running in this [Context] complete.
@@ -1643,7 +1658,7 @@ namespace golang::context
             }
             rec::Lock(gocpp::recv(c->cancelCtx.mu));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(c->cancelCtx.mu)); });
-            if(c->cancelCtx.err == nullptr)
+            if(rec::Load(gocpp::recv(c->cancelCtx.err)) == nullptr)
             {
                 c->timer = time::AfterFunc(dur, [=]() mutable -> void
                 {
@@ -1753,8 +1768,8 @@ namespace golang::context
         return WithDeadlineCause(parent, rec::Add(gocpp::recv(mocklib::Date::Now()), timeout), cause);
     }
 
-    // WithValue returns a copy of parent in which the value associated with key is
-    // val.
+    // WithValue returns a derived context that points to the parent Context.
+    // In the derived context, the value associated with key is val.
     //
     // Use context Values only for request-scoped data that transits processes and
     // APIs, not for passing optional parameters to functions.
@@ -1847,12 +1862,12 @@ namespace golang::context
             return rec::Err(self.obj.Context);
         }
 
-        gocpp::go_any Value(const gocpp::PtrRecv<struct valueCtx, false>& self, gocpp::go_any key)
+        go_any Value(const gocpp::PtrRecv<struct valueCtx, false>& self, go_any key)
         {
             return rec::Value(self.ptr->Context, key);
         }
 
-        gocpp::go_any Value(const gocpp::ObjRecv<struct valueCtx>& self, gocpp::go_any key)
+        go_any Value(const gocpp::ObjRecv<struct valueCtx>& self, go_any key)
         {
             return rec::Value(self.obj.Context, key);
         }
@@ -1874,6 +1889,7 @@ namespace golang::context
             int conditionId = -1;
             if(gocpp_id_16 == typeid(stringer)) { conditionId = 0; }
             else if(gocpp_id_16 == typeid(gocpp::string)) { conditionId = 1; }
+            else if(gocpp_id_16 == typeid(untyped nil)) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -1888,16 +1904,22 @@ namespace golang::context
                     return s;
                     break;
                 }
+                case 2:
+                {
+                    untyped nil s = gocpp::any_cast<untyped nil>(v);
+                    return "<nil>"_s;
+                    break;
+                }
             }
         }
-        return "<not Stringer>"_s;
+        return rec::String(gocpp::recv(reflectlite::TypeOf(v)));
     }
 
     gocpp::string rec::String(valueCtx* c)
     {
-        return contextName(c->Context) + ".WithValue(type "_s +
-                rec::String(gocpp::recv(reflectlite::TypeOf(c->key))) +
-                ", val "_s + stringify(c->val) + ")"_s;
+        return contextName(c->Context) + ".WithValue("_s +
+                stringify(c->key) + ", "_s +
+                stringify(c->val) + ")"_s;
     }
 
     go_any rec::Value(valueCtx* c, go_any key)

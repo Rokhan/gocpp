@@ -10,13 +10,20 @@
 #include "gocpp/support.h"
 
 
-namespace golang::pic
+namespace golang::golang_org::x::tour::pic
 {
     void Show(std::function<gocpp::slice<gocpp::slice<uint8_t>> (int dx, int dy)> f);
 }
+#include "golang/image/geom.fwd.h"
+#include "golang/image/image.fwd.h"
+
+namespace golang::golang_org::x::tour::pic
+{
+    namespace image = golang::image;
+}
 #include "golang/image/image.h"
 
-namespace golang::pic
+namespace golang::golang_org::x::tour::pic
 {
     void ShowImage(image::Image m);
 

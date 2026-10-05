@@ -11,7 +11,7 @@
 
 #include "golang/io/fs/fs.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
     struct ReadDirFS : virtual gocpp::Interface, FS
     {
@@ -103,7 +103,7 @@ namespace golang::fs
 
 #include "golang/io/fs/fs.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
 
     namespace rec

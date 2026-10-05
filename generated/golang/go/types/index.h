@@ -9,26 +9,60 @@
 #include "golang/go/types/index.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/go/ast/ast.fwd.h"
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/ast/ast.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+}
+#include "golang/go/token/position.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+    struct indexedExpr
+    {
+        ast::Expr orig{}; // the wrapped expr, which may be distinct from the IndexListExpr below.
+        ast::Expr x{}; // expression
+        token::Pos lbrack{}; // position of "["
+        gocpp::slice<ast::Expr> indices{}; // index expressions
+        token::Pos rbrack{}; // position of "]"
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct indexedExpr& value);
+    indexedExpr* unpackIndexedExpr(ast::Node n);
 }
 
 #include "golang/go/ast/ast.h"
-#include "golang/go/internal/typeparams/typeparams.h"
+#include "golang/go/token/position.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/operand.h"
 #include "golang/go/types/type.h"
 #include "golang/internal/types/errors/codes.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        bool indexExpr(Checker* check, operand* x, typeparams::IndexExpr* e);
+        bool indexExpr(Checker* check, operand* x, indexedExpr* e);
         void sliceExpr(Checker* check, operand* x, ast::SliceExpr* e);
-        ast::Expr singleIndex(Checker* check, typeparams::IndexExpr* expr);
-        std::tuple<golang::types::Type, int64_t> index(Checker* check, ast::Expr index, int64_t max);
+        ast::Expr singleIndex(Checker* check, indexedExpr* expr);
+        std::tuple<golang::go::types::Type, int64_t> index(Checker* check, ast::Expr index, int64_t max);
         bool isValidIndex(Checker* check, operand* x, errors::Code code, gocpp::string what, bool allowNegative);
-        int64_t indexedElts(Checker* check, gocpp::slice<ast::Expr> elts, golang::types::Type typ, int64_t length);
+        token::Pos Pos(indexedExpr* x);
     }
 }
 

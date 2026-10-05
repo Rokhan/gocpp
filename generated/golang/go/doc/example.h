@@ -10,20 +10,31 @@
 #include "gocpp/support.h"
 
 
-namespace golang::doc
+namespace golang::go::doc
 {
     bool isTest(gocpp::string name, gocpp::string prefix);
     gocpp::string nameWithoutInst(gocpp::string name);
     std::tuple<gocpp::string, gocpp::string, bool> splitExampleName(gocpp::string s, int i);
     bool isExampleSuffix(gocpp::string s);
 }
-#include "golang/go/ast/ast.h"
-#include "golang/go/token/position.h"
+#include "golang/go/ast/ast.fwd.h"
 #include "golang/go/ast/scope.fwd.h"
+#include "golang/go/ast/walk.fwd.h"
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
 #include "golang/internal/lazyregexp/lazyre.fwd.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
+    namespace ast = golang::go::ast;
+}
+#include "golang/go/ast/ast.h"
+#include "golang/go/token/position.h"
+
+namespace golang::go::doc
+{
+    namespace token = golang::go::token;
+    namespace lazyregexp = golang::internal::lazyregexp;
     struct Example
     {
         gocpp::string Name{}; // name of the item being exemplified (including optional suffix)
@@ -59,6 +70,7 @@ namespace golang::doc
     ast::File* playExampleFile(ast::File* file);
     std::tuple<ast::BlockStmt*, gocpp::slice<ast::CommentGroup*>> stripOutputComment(ast::BlockStmt* body, gocpp::slice<ast::CommentGroup*> comments);
     std::tuple<int, ast::CommentGroup*> lastComment(ast::BlockStmt* b, gocpp::slice<ast::CommentGroup*> c);
+    void updateBasicLitPos(ast::BasicLit* lit, token::Pos pos);
     gocpp::slice<Example*> Examples(gocpp::slice<ast::File*> testFiles);
     
     template<typename... Args>
@@ -75,7 +87,7 @@ namespace golang::doc
 }
 #include "golang/go/doc/doc.fwd.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
     void classifyExamples(Package* p, gocpp::slice<Example*> examples);
 

@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct GoTag_nodeSet { };
     using nodeSet = gocpp::defined<gocpp::map<graphNode*, bool>, GoTag_nodeSet>;
@@ -22,7 +22,7 @@ namespace golang::types
 #include "golang/go/types/type.h"
 #include "golang/go/types/resolver.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     gocpp::slice<Object> findPath(gocpp::map<Object, declInfo*> objMap, Object from, Object to, gocpp::map<Object, bool> seen);
     struct dependency : virtual gocpp::Interface, Object
@@ -110,20 +110,14 @@ namespace golang::types
         types::Type Type(const gocpp::PtrRecv<struct dependency, false>& self);
         types::Type Type(const gocpp::ObjRecv<struct dependency>& self);
 
-        types::color color(const gocpp::PtrRecv<struct dependency, false>& self);
-        types::color color(const gocpp::ObjRecv<struct dependency>& self);
-
         uint32_t order(const gocpp::PtrRecv<struct dependency, false>& self);
         uint32_t order(const gocpp::ObjRecv<struct dependency>& self);
 
-        bool sameId(const gocpp::PtrRecv<struct dependency, false>& self, types::Package* pkg, gocpp::string name);
-        bool sameId(const gocpp::ObjRecv<struct dependency>& self, types::Package* pkg, gocpp::string name);
+        bool sameId(const gocpp::PtrRecv<struct dependency, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
+        bool sameId(const gocpp::ObjRecv<struct dependency>& self, types::Package* pkg, gocpp::string name, bool foldCase);
 
         token::Pos scopePos(const gocpp::PtrRecv<struct dependency, false>& self);
         token::Pos scopePos(const gocpp::ObjRecv<struct dependency>& self);
-
-        void setColor(const gocpp::PtrRecv<struct dependency, false>& self, types::color color);
-        void setColor(const gocpp::ObjRecv<struct dependency>& self, types::color color);
 
         void setOrder(const gocpp::PtrRecv<struct dependency, false>& self, uint32_t param0);
         void setOrder(const gocpp::ObjRecv<struct dependency>& self, uint32_t param0);
@@ -165,7 +159,7 @@ namespace golang::types
 #include "golang/go/types/check.h"
 #include "golang/go/types/object.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec

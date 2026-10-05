@@ -6,6 +6,7 @@
 
 namespace golang::runtime
 {
+    struct profBuf;
     using profAtomic = uint64_t;
     using profIndex = uint64_t;
     using profBufReadMode = int;
@@ -13,11 +14,4 @@ namespace golang::runtime
     const profIndex profWriteExtra = 1 << 33;
     const profBufReadMode profBufBlocking = 0;
     const profBufReadMode profBufNonBlocking = 1;
-}
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-
-namespace golang::runtime
-{
-    struct profBuf;
 }

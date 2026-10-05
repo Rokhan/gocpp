@@ -11,6 +11,7 @@
 #include "golang/math/abs.h"
 #include "gocpp/support.h"
 
+#include "golang/math/bits.h"
 #include "golang/math/unsafe.h"
 
 namespace golang::math
@@ -27,7 +28,7 @@ namespace golang::math
     //	Abs(NaN) = NaN
     double Abs(double x)
     {
-        return Float64frombits(Float64bits(x) &^ (1 << 63));
+        return Float64frombits(Float64bits(x) &^ signMask);
     }
 
 }

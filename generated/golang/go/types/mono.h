@@ -9,11 +9,9 @@
 #include "golang/go/types/mono.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/token/position.h"
-#include "golang/go/types/type.h"
 #include "golang/go/types/object.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct monoVertex
     {
@@ -36,13 +34,25 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct monoVertex& value);
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/token/position.h"
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
     struct monoEdge
     {
         int dst{};
         int src{};
         int weight{};
         token::Pos pos{};
-        golang::types::Type typ{};
+        golang::go::types::Type typ{};
 
         using isGoStruct = void;
 
@@ -59,7 +69,7 @@ namespace golang::types
 }
 #include "golang/go/types/typeparam.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct monoGraph
     {
@@ -94,19 +104,20 @@ namespace golang::types
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeparam.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
 
     namespace rec
     {
         void monomorph(Checker* check);
         void reportInstanceLoop(Checker* check, int v);
         void recordCanon(monoGraph* w, TypeParam* mpar, TypeParam* tpar);
-        void recordInstance(monoGraph* w, Package* pkg, token::Pos pos, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::types::Type> targs, gocpp::slice<ast::Expr> xlist);
-        void assign(monoGraph* w, Package* pkg, token::Pos pos, TypeParam* tpar, golang::types::Type targ);
+        void recordInstance(monoGraph* w, Package* pkg, token::Pos pos, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> targs, gocpp::slice<ast::Expr> xlist);
+        void assign(monoGraph* w, Package* pkg, token::Pos pos, TypeParam* tpar, golang::go::types::Type targ);
         int localNamedVertex(monoGraph* w, Package* pkg, Named* named);
         int typeParamVertex(monoGraph* w, TypeParam* tpar);
-        void addEdge(monoGraph* w, int dst, int src, int weight, token::Pos pos, golang::types::Type typ);
+        void addEdge(monoGraph* w, int dst, int src, int weight, token::Pos pos, golang::go::types::Type typ);
     }
 }
 

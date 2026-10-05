@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::errors
+namespace golang::internal::types::errors
 {
     using Code = int;
     // InvalidSyntaxTree occurs if an invalid syntax tree is provided
@@ -74,14 +74,13 @@ namespace golang::errors
     //  	S
     //  }
     //
-    const Code InvalidDeclCycle = 11;
-    // InvalidTypeCycle occurs when a cycle in type definitions results in a
-    // type that is not well-defined.
-    //
     // Example:
     //  import "unsafe"
     //
     //  type T [unsafe.Sizeof(T{})]int
+    const Code InvalidDeclCycle = 11;
+    // InvalidTypeCycle occurs when a cycle in type definitions results in a
+    // type that is not well-defined.
     const Code InvalidTypeCycle = 12;
     // InvalidConstInit occurs when a const declaration has a non-constant
     // initializer.
@@ -611,10 +610,7 @@ namespace golang::errors
     const Code NonVariadicDotDotDot = 78;
     // MisplacedDotDotDot occurs when a "..." is used somewhere other than the
     // final argument in a function declaration.
-    //
-    // Example:
-    // 	func f(...int, int)
-    const Code MisplacedDotDotDot = 79;
+    const Code _ = 79;
     const Code _ = 80;
     // InvalidDotDotDot occurs when a "..." is used in a non-variadic built-in
     // function.
@@ -758,7 +754,9 @@ namespace golang::errors
     // context in which it is used.
     //
     // Example:
-    //  var _ = 1 + []int{}
+    //  func f[T ~int8 | ~int16 | ~int32 | ~int64](x T) T {
+    //  	return x + 1024
+    //  }
     const Code InvalidUntypedConversion = 97;
     // BadOffsetofSyntax occurs when unsafe.Offsetof is called with an argument
     // that is not a selector expression.
@@ -1291,4 +1289,11 @@ namespace golang::errors
     //  var s, t []byte
     //  var _ = max(s, t)
     const Code InvalidMinMaxOperand = 150;
+    // TooNew indicates that, through build tags or a go.mod file,
+    // a source file requires a version of Go that is newer than
+    // the logic of the type checker. As a consequence, the type
+    // checker may produce spurious errors or fail to report real
+    // errors. The solution is to rebuild the application with a
+    // newer Go release.
+    const Code TooNew = 151;
 }

@@ -11,9 +11,9 @@ namespace golang::bytes
     struct Buffer;
     using readOp = int8_t;
     const int maxInt = int(~ (unsigned int)(0) >> 1);
-    // MinRead is the minimum slice size passed to a Read call by
+    // MinRead is the minimum slice size passed to a [Buffer.Read] call by
     // [Buffer.ReadFrom]. As long as the [Buffer] has at least MinRead bytes beyond
-    // what is required to hold the contents of r, ReadFrom will not grow the
+    // what is required to hold the contents of r, [Buffer.ReadFrom] will not grow the
     // underlying buffer.
     const long MinRead = 512;
     // Don't use iota for these, as the values need to correspond with the

@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::constraint
+namespace golang::go::build::constraint
 {
     struct Expr : virtual gocpp::Interface
     {
@@ -127,6 +127,7 @@ namespace golang::constraint
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SyntaxError& value);
+    extern gocpp::error errNotConstraint;
     bool IsGoBuild(gocpp::string line);
     std::tuple<gocpp::string, bool> splitGoBuild(gocpp::string line);
     struct exprParser
@@ -136,6 +137,7 @@ namespace golang::constraint
         gocpp::string tok{}; // last token read
         bool isTag{};
         int pos{}; // position (start) of last token
+        int size{};
 
         using isGoStruct = void;
 
@@ -152,6 +154,7 @@ namespace golang::constraint
     bool IsPlusBuild(gocpp::string line);
     std::tuple<gocpp::string, bool> splitPlusBuild(gocpp::string line);
     bool isValidTag(gocpp::string word);
+    extern gocpp::error errComplex;
     Expr tag(gocpp::string tag);
     struct NotExpr
     {
@@ -210,18 +213,11 @@ namespace golang::constraint
     Expr or(Expr x, Expr y);
     std::tuple<Expr, gocpp::error> Parse(gocpp::string line);
     std::tuple<Expr, gocpp::error> parseExpr(gocpp::string text);
-    Expr parsePlusBuildExpr(gocpp::string text);
+    std::tuple<Expr, gocpp::error> parsePlusBuildExpr(gocpp::string text);
     std::tuple<gocpp::slice<gocpp::string>, gocpp::error> PlusBuildLines(Expr x);
     Expr pushNot(Expr x, bool not);
     gocpp::slice<Expr> appendSplitAnd(gocpp::slice<Expr> list, Expr x);
     gocpp::slice<Expr> appendSplitOr(gocpp::slice<Expr> list, Expr x);
-}
-#include "golang/errors/errors.fwd.h"
-
-namespace golang::constraint
-{
-    extern gocpp::error errNotConstraint;
-    extern gocpp::error errComplex;
 
     namespace rec
     {

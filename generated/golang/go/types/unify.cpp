@@ -20,7 +20,9 @@
 #include "golang/go/types/basic.h"
 #include "golang/go/types/chan.h"
 #include "golang/go/types/check.h"
+#include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/lookup.h"
 #include "golang/go/types/map.h"
@@ -43,8 +45,12 @@
 #include "golang/sort/sort.h"
 #include "golang/strings/strings.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace bytes = golang::bytes;
+    namespace fmt = golang::fmt;
+    namespace sort = golang::sort;
+    namespace strings = golang::strings;
     namespace rec
     {
         using bytes::rec::String;
@@ -58,6 +64,7 @@ namespace golang::types
     unifier::operator T()
     {
         T result;
+        result.check = this->check;
         result.handles = this->handles;
         result.depth = this->depth;
         result.enableInterfaceInference = this->enableInterfaceInference;
@@ -67,6 +74,7 @@ namespace golang::types
     template<typename T> requires gocpp::GoStruct<T>
     bool unifier::operator==(const T& ref) const
     {
+        if (check != ref.check) return false;
         if (handles != ref.handles) return false;
         if (depth != ref.depth) return false;
         if (enableInterfaceInference != ref.enableInterfaceInference) return false;
@@ -76,7 +84,8 @@ namespace golang::types
     std::ostream& unifier::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << handles;
+        os << "" << check;
+        os << " " << handles;
         os << " " << depth;
         os << " " << enableInterfaceInference;
         os << '}';
@@ -92,24 +101,24 @@ namespace golang::types
     // and corresponding type argument lists. The type argument list may be shorter
     // than the type parameter list, and it may contain nil types. Matching type
     // parameters and arguments must have the same index.
-    unifier* newUnifier(gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::types::Type> targs, bool enableInterfaceInference)
+    unifier* newUnifier(Checker* check, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> targs, bool enableInterfaceInference)
     {
         assert(len(tparams) >= len(targs));
-        auto handles = gocpp::make(gocpp::Tag<gocpp::map<TypeParam*, golang::types::Type*>>(), len(tparams));
+        auto handles = gocpp::make(gocpp::Tag<gocpp::map<TypeParam*, golang::go::types::Type*>>(), len(tparams));
         // Allocate all handles up-front: in a correct program, all type parameters
         // must be resolved and thus eventually will get a handle.
         // Also, sharing of handles caused by unified type parameters is rare and
         // so it's ok to not optimize for that case (and delay handle allocation).
         for(auto [i, x] : tparams)
         {
-            golang::types::Type t = {};
+            golang::go::types::Type t = {};
             if(i < len(targs))
             {
                 t = targs[i];
             }
             handles[x] = & t;
         }
-        return new unifier {handles, 0, enableInterfaceInference};
+        return new unifier {check, handles, 0, enableInterfaceInference};
     }
 
     // unifyMode controls the behavior of the unifier.
@@ -145,13 +154,14 @@ namespace golang::types
     // unify attempts to unify x and y and reports whether it succeeded.
     // As a side-effect, types may be inferred for type parameters.
     // The mode parameter controls how types are compared.
-    bool rec::unify(unifier* u, golang::types::Type x, golang::types::Type y, unifyMode mode)
+    bool rec::unify(unifier* u, golang::go::types::Type x, golang::go::types::Type y, unifyMode mode)
     {
         return rec::nify(gocpp::recv(u), x, y, mode, nullptr);
     }
 
-    void rec::tracef(unifier* u, gocpp::string format, gocpp::slice<gocpp::go_any> args)
+    void rec::tracef(unifier* u, gocpp::string format, gocpp::slice<go_any> args)
     {
+        // TODO(gri) consider adjusting this to use Checker.trace
         mocklib::Println(strings::Repeat(".  "_s, u->depth) + types::sprintf(nullptr, nullptr, true, format, args));
     }
 
@@ -243,12 +253,12 @@ namespace golang::types
         return true;
     }
 
-    // asTypeParam returns x.(*TypeParam) if x is a type parameter recorded with u.
+    // asBoundTypeParam returns x.(*TypeParam) if x is a type parameter recorded with u.
     // Otherwise, the result is nil.
-    TypeParam* rec::asTypeParam(unifier* u, golang::types::Type x)
+    TypeParam* rec::asBoundTypeParam(unifier* u, golang::go::types::Type x)
     {
         {
-            auto [x_tmp, gocpp_id_0] = gocpp::getValue<TypeParam*>(x);
+            auto [x_tmp, gocpp_id_0] = gocpp::getValue<TypeParam*>(Unalias(x));
             if(auto& x = x_tmp; x != nullptr)
             {
                 if(auto [gocpp_id_1, found] = u->handles[x]; found)
@@ -262,7 +272,7 @@ namespace golang::types
 
     // setHandle sets the handle for type parameter x
     // (and all its joined type parameters) to h.
-    void rec::setHandle(unifier* u, TypeParam* x, golang::types::Type* h)
+    void rec::setHandle(unifier* u, TypeParam* x, golang::go::types::Type* h)
     {
         auto hx = u->handles[x];
         assert(hx != nullptr);
@@ -276,14 +286,14 @@ namespace golang::types
     }
 
     // at returns the (possibly nil) type for type parameter x.
-    golang::types::Type rec::at(unifier* u, TypeParam* x)
+    golang::go::types::Type rec::at(unifier* u, TypeParam* x)
     {
         return *u->handles[x];
     }
 
     // set sets the type t for type parameter x;
     // t must not be nil.
-    void rec::set(unifier* u, TypeParam* x, golang::types::Type t)
+    void rec::set(unifier* u, TypeParam* x, golang::go::types::Type t)
     {
         assert(t != nullptr);
         if(traceInference)
@@ -311,9 +321,9 @@ namespace golang::types
     // The result is never nil and has the same length as tparams; result types that
     // could not be inferred are nil. Corresponding type parameters and result types
     // have identical indices.
-    gocpp::slice<golang::types::Type> rec::inferred(unifier* u, gocpp::slice<TypeParam*> tparams)
+    gocpp::slice<golang::go::types::Type> rec::inferred(unifier* u, gocpp::slice<TypeParam*> tparams)
     {
-        auto list = gocpp::make(gocpp::Tag<gocpp::slice<golang::types::Type>>(), len(tparams));
+        auto list = gocpp::make(gocpp::Tag<gocpp::slice<golang::go::types::Type>>(), len(tparams));
         for(auto [i, x] : tparams)
         {
             list[i] = rec::at(gocpp::recv(u), x);
@@ -323,12 +333,12 @@ namespace golang::types
 
     // asInterface returns the underlying type of x as an interface if
     // it is a non-type parameter interface. Otherwise it returns nil.
-    Interface* asInterface(golang::types::Type x)
+    Interface* asInterface(golang::go::types::Type x)
     {
         Interface* i;
-        if(auto [gocpp_id_2, ok] = gocpp::getValue<TypeParam*>(x); ! ok)
+        if(auto [gocpp_id_2, ok] = gocpp::getValue<TypeParam*>(Unalias(x)); ! ok)
         {
-            std::tie(i, std::ignore) = gocpp::getValue<Interface*>(under(x));
+            std::tie(i, std::ignore) = gocpp::getValue<Interface*>(rec::Underlying(gocpp::recv(x)));
         }
         return i;
     }
@@ -337,7 +347,7 @@ namespace golang::types
     // adapted version of Checker.identical. For changes to that
     // code the corresponding changes should be made here.
     // Must not be called directly from outside the unifier.
-    bool rec::nify(unifier* u, golang::types::Type x, golang::types::Type y, unifyMode mode, ifacePair* p)
+    bool rec::nify(unifier* u, golang::go::types::Type x, golang::go::types::Type y, unifyMode mode, ifacePair* p)
     {
         bool result;
         gocpp::Defer defer;
@@ -357,11 +367,8 @@ namespace golang::types
                 u->depth--;
             }(); });
 
-            x = Unalias(x);
-            y = Unalias(y);
-
             // nothing to do if x == y
-            if(x == y)
+            if(x == y || Unalias(x) == Unalias(y))
             {
                 return true;
             }
@@ -384,7 +391,7 @@ namespace golang::types
             // Ensure that if we have at least one
             // - defined type, make sure one is in y
             // - type parameter recorded with u, make sure one is in x
-            if(asNamed(x) != nullptr || rec::asTypeParam(gocpp::recv(u), y) != nullptr)
+            if(asNamed(x) != nullptr || rec::asBoundTypeParam(gocpp::recv(u), y) != nullptr)
             {
                 if(traceInference)
                 {
@@ -415,12 +422,12 @@ namespace golang::types
                 {
                     rec::tracef(gocpp::recv(u), "%s ≡ under %s"_s, x, ny);
                 }
-                y = rec::under(gocpp::recv(ny));
+                y = rec::Underlying(gocpp::recv(ny));
                 // Per the spec, a defined type cannot have an underlying type
                 // that is a type parameter.
                 assert(! isTypeParam(y));
                 // x and y may be identical now
-                if(x == y)
+                if(x == y || Unalias(x) == Unalias(y))
                 {
                     return true;
                 }
@@ -434,7 +441,7 @@ namespace golang::types
             // (relevant for the logic below).
             //Go switch emulation
             {
-                auto [px, py] = std::tuple{rec::asTypeParam(gocpp::recv(u), x), rec::asTypeParam(gocpp::recv(u), y)};
+                auto [px, py] = std::tuple{rec::asBoundTypeParam(gocpp::recv(u), x), rec::asBoundTypeParam(gocpp::recv(u), y)};
                 int conditionId = -1;
                 if(px != nullptr && py != nullptr) { conditionId = 0; }
                 else if(px != nullptr) { conditionId = 1; }
@@ -530,7 +537,7 @@ namespace golang::types
                                                 break;
                                             default:
                                                 // Neither x nor y are defined types.
-                                                if(auto [yc, gocpp_id_3] = gocpp::getValue<Chan*>(types::under(y)); yc != nullptr && yc->dir != SendRecv)
+                                                if(auto [yc, gocpp_id_3] = gocpp::getValue<Chan*>(rec::Underlying(gocpp::recv(y))); yc != nullptr && yc->dir != SendRecv)
                                                 {
                                                     // y is a directed channel type: select y.
                                                     rec::set(gocpp::recv(u), px, y);
@@ -551,7 +558,7 @@ namespace golang::types
             }
 
             // x != y if we get here
-            assert(x != y);
+            assert(x != y && Unalias(x) != Unalias(y));
 
             // If u.EnableInterfaceInference is set and we don't require exact unification,
             // if both types are interfaces, one interface must have a subset of the
@@ -648,11 +655,20 @@ namespace golang::types
                 if(xi != nullptr)
                 {
                     // All xi methods must exist in y and corresponding signatures must unify.
+                    // A generic method never satisfies an interface method, so fail rather
+                    // than unify ym's own type parameter into an inference variable.
                     auto xmethods = rec::typeSet(gocpp::recv(xi))->methods;
                     for(auto [gocpp_ignored, xm] : xmethods)
                     {
                         auto [obj, gocpp_id_4, gocpp_id_5] = LookupFieldOrMethod(y, false, xm->object.pkg, xm->object.name);
-                        if(auto [ym, gocpp_id_6] = gocpp::getValue<Func*>(obj); ym == nullptr || ! rec::nify(gocpp::recv(u), xm->object.typ, ym->object.typ, exact, p))
+                        auto [ym, gocpp_id_6] = gocpp::getValue<Func*>(obj);
+                        if(ym == nullptr)
+                        {
+                            return false;
+                        }
+                        // ensure fully set-up signature
+                        rec::objDecl(gocpp::recv(u->check), ym);
+                        if(rec::TypeParams(gocpp::recv(rec::Signature(gocpp::recv(ym)))) != nullptr || ! rec::nify(gocpp::recv(u), xm->object.typ, ym->object.typ, exact, p))
                         {
                             return false;
                         }
@@ -686,6 +702,12 @@ namespace golang::types
             {
                 emode |= exact;
             }
+
+            // Continue with unaliased types but don't lose original alias names, if any (go.dev/issue/67628).
+            auto [xorig, x_tmp] = std::tuple{x, Unalias(x)};
+            auto& x = x_tmp;
+            auto [yorig, y_tmp] = std::tuple{y, Unalias(y)};
+            auto& y = y_tmp;
 
             //Go type switch emulation
             {
@@ -772,7 +794,7 @@ namespace golang::types
                                         auto g = y->fields[i];
                                         if(f->embedded != g->embedded ||
                                                                 rec::Tag(gocpp::recv(x), i) != rec::Tag(gocpp::recv(y), i) ||
-                                                                ! rec::sameId(gocpp::recv(f), g->object.pkg, g->object.name) ||
+                                                                ! rec::sameId(gocpp::recv(f), g->object.pkg, g->object.name, false) ||
                                                                 ! rec::nify(gocpp::recv(u), f->object.typ, g->object.typ, emode, p))
                                         {
                                             return false;
@@ -837,7 +859,7 @@ namespace golang::types
                         // Parameter and result names are not required to match.
                         // TODO(gri) handle type parameters or document why we can ignore them.
                         {
-                            auto [y_tmp, ok] = gocpp::getValue<Signature*>(y);
+                            auto [y_tmp, ok] = gocpp::getValue<golang::go::types::Signature*>(y);
                             if(auto& y = y_tmp; ok)
                             {
                                 return x->variadic == y->variadic &&
@@ -991,7 +1013,7 @@ namespace golang::types
                         // x must be an unbound type parameter (see comment above).
                         if(debug)
                         {
-                            assert(rec::asTypeParam(gocpp::recv(u), x) == nullptr);
+                            assert(rec::asBoundTypeParam(gocpp::recv(u), x) == nullptr);
                         }
                         // By definition, a valid type argument must be in the type set of
                         // the respective type constraint. Therefore, the type argument's
@@ -1013,17 +1035,17 @@ namespace golang::types
                             // If y is also an unbound type parameter, we will end
                             // up here again with x and y swapped, so we don't
                             // need to take care of that case separately.
-                            if(auto cx = coreType(x); cx != nullptr)
+                            if(auto [cx, gocpp_id_8] = commonUnder(x, nullptr); cx != nullptr)
                             {
                                 if(traceInference)
                                 {
-                                    rec::tracef(gocpp::recv(u), "core %s ≡ %s"_s, x, y);
+                                    rec::tracef(gocpp::recv(u), "core %s ≡ %s"_s, xorig, yorig);
                                 }
                                 // If y is a defined type, it may not match against cx which
                                 // is an underlying type (incl. int, string, etc.). Use assign
-                                // mode here so that the unifier automatically takes under(y)
+                                // mode here so that the unifier automatically uses y.Underlying()
                                 // if necessary.
-                                return rec::nify(gocpp::recv(u), cx, y, types::assign, p);
+                                return rec::nify(gocpp::recv(u), cx, yorig, types::assign, p);
                             }
                         }
                         break;
@@ -1039,7 +1061,7 @@ namespace golang::types
                     default:
                     {
                         auto x = x_ref;
-                        gocpp::panic(types::sprintf(nullptr, nullptr, true, "u.nify(%s, %s, %d)"_s, x, y, mode));
+                        gocpp::panic(types::sprintf(nullptr, nullptr, true, "u.nify(%s, %s, %d)"_s, xorig, yorig, mode));
                         break;
                     }
                 }

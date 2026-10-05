@@ -12,6 +12,7 @@
 
 namespace golang::runtime
 {
+    extern double inf;
     bool isNaN(double f);
     bool isFinite(double f);
     bool isInf(double f);
@@ -19,7 +20,9 @@ namespace golang::runtime
     double copysign(double x, double y);
     uint64_t float64bits(double f);
     double float64frombits(uint64_t b);
-    extern double inf;
+    double floor(double x);
+    double ceil(double x);
+    std::tuple<double, double> modf(double f);
 
     namespace rec
     {

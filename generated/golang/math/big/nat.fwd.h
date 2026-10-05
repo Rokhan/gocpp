@@ -4,13 +4,15 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::big
+namespace golang::math::big
 {
     struct GoTag_nat;
+    struct stackInner;
+    struct stack;
 }
 #include "golang/math/big/arith.fwd.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     using nat = gocpp::defined<gocpp::slice<Word>, GoTag_nat>;
 }

@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::flate
+namespace golang::compress::flate
 {
     // The largest offset code.
     const long offsetCodeCount = 30;
@@ -15,20 +15,17 @@ namespace golang::flate
     // The number of codegen codes.
     const long codegenCodeCount = 19;
     const long badCode = 255;
+    // maxPredefinedTokens is the maximum number of tokens
+    // where we check if fixed size is smaller.
+    const long maxPredefinedTokens = 250;
     // bufferFlushSize indicates the buffer size
     // after which bytes are flushed to the writer.
     // Should preferably be a multiple of 6, since
     // we accumulate 6 bytes between writes to the buffer.
-    const long bufferFlushSize = 240;
-    // bufferSize is the actual output byte buffer size.
-    // It must have additional headroom for a flush
-    // which can contain up to 8 bytes.
-    const int bufferSize = bufferFlushSize + 8;
-}
-#include "golang/compress/flate/huffman_code.fwd.h"
-#include "golang/io/io.fwd.h"
-
-namespace golang::flate
-{
+    const long bufferFlushSize = 246;
+    // lengthExtraBitsMinCode is the minimum length code that emits extra bits.
+    const long lengthExtraBitsMinCode = 8;
+    // offsetExtraBitsMinCode is the minimum offset code that emits extra bits.
+    const long offsetExtraBitsMinCode = 4;
     struct huffmanBitWriter;
 }

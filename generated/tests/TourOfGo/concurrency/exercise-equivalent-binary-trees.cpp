@@ -16,6 +16,8 @@
 
 namespace golang::main
 {
+    namespace fmt = golang::fmt;
+    namespace tree = golang::golang_org::x::tour::tree;
     namespace rec
     {
     }

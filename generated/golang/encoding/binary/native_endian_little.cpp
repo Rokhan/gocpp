@@ -13,7 +13,7 @@
 
 #include "golang/encoding/binary/binary.h"
 
-namespace golang::binary
+namespace golang::encoding::binary
 {
     namespace rec
     {

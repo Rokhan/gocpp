@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::poll
+namespace golang::internal::poll
 {
     int64_t runtimeNano();
     void runtime_pollServerInit();
@@ -41,11 +41,19 @@ namespace golang::poll
     gocpp::error convertErr(int res, bool isFile);
     bool IsPollDescriptor(uintptr_t fd);
 }
+#include "golang/sync/once.fwd.h"
+#include "golang/time/time.fwd.h"
+
+namespace golang::internal::poll
+{
+    namespace sync = golang::sync;
+    namespace time = golang::time;
+}
 #include "golang/sync/once.h"
 #include "golang/time/time.h"
 #include "golang/internal/poll/fd_windows.fwd.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
     extern sync::Once serverInit;
     gocpp::error setDeadlineImpl(FD* fd, mocklib::Date t, int mode);
@@ -54,7 +62,7 @@ namespace golang::poll
 #include "golang/internal/poll/fd_windows.h"
 #include "golang/time/time.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
 
     namespace rec

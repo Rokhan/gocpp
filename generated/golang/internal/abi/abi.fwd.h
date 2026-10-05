@@ -4,14 +4,14 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::abi
+namespace golang::internal::abi
 {
+    struct RegArgs;
     struct GoTag_IntArgRegBitmap;
 }
 #include "golang/internal/abi/abi_amd64.fwd.h"
 
-namespace golang::abi
+namespace golang::internal::abi
 {
-    struct RegArgs;
     using IntArgRegBitmap = gocpp::defined<gocpp::array<uint8_t, (IntArgRegs + 7) / 8>, GoTag_IntArgRegBitmap>;
 }

@@ -38,8 +38,15 @@ and to read that data back:
 	io.Copy(os.Stdout, r)
 	r.Close()
 */
-namespace golang::zlib
+namespace golang::compress::zlib
 {
+    namespace adler32 = golang::hash::adler32;
+    namespace binary = golang::encoding::binary;
+    namespace bufio = golang::bufio;
+    namespace errors = golang::errors;
+    namespace flate = golang::compress::flate;
+    namespace hash = golang::hash;
+    namespace io = golang::io;
     namespace rec
     {
         using binary::rec::Uint16;

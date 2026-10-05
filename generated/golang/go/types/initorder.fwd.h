@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct graphNode;
     struct GoTag_nodeSet;
@@ -14,7 +14,7 @@ namespace golang::types
 }
 #include "golang/go/types/object.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct dependency;
 }

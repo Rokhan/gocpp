@@ -22,10 +22,18 @@
 #include "golang/image/png/paeth.h"
 #include "golang/image/png/reader.h"
 #include "golang/io/io.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 
-namespace golang::png
+namespace golang::image::png
 {
+    namespace binary = golang::encoding::binary;
+    namespace bufio = golang::bufio;
+    namespace color = golang::image::color;
+    namespace crc32 = golang::hash::crc32;
+    namespace image = golang::image;
+    namespace io = golang::io;
+    namespace strconv = golang::strconv;
+    namespace zlib = golang::compress::zlib;
     namespace rec
     {
         using binary::rec::PutUint32;
@@ -568,14 +576,6 @@ namespace golang::png
         return filter;
     }
 
-    void zeroMemory(gocpp::slice<uint8_t> v)
-    {
-        for(auto [i, gocpp_ignored] : v)
-        {
-            v[i] = 0;
-        }
-    }
-
     gocpp::error rec::writeImage(encoder* e, io::Writer w, image::Image m, int cb, int level)
     {
         gocpp::Defer defer;
@@ -675,7 +675,7 @@ namespace golang::png
             else
             {
                 e->pr = e->pr.make_slice(0, sz);
-                zeroMemory(e->pr);
+                clear(e->pr);
             }
             auto pr = e->pr;
 
@@ -1002,6 +1002,10 @@ namespace golang::png
 
     // Encode writes the Image m to w in PNG format. Any Image may be
     // encoded, but images that are not [image.NRGBA] might be encoded lossily.
+    //
+    // Note that the exact bytes written to w are not covered by the Go 1
+    // compatibility promise. Callers, including tests, should not depend on the
+    // exact written bytes.
     gocpp::error Encode(io::Writer w, image::Image m)
     {
         Encoder e = {};
@@ -1009,6 +1013,10 @@ namespace golang::png
     }
 
     // Encode writes the Image m to w in PNG format.
+    //
+    // Note that the exact bytes written to w are not covered by the Go 1
+    // compatibility promise. Callers, including tests, should not depend on the
+    // exact written bytes.
     gocpp::error rec::Encode(Encoder* enc, io::Writer w, image::Image m)
     {
         gocpp::Defer defer;

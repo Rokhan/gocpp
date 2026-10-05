@@ -18,12 +18,20 @@ namespace golang::runtime
     int64_t readGOMEMLIMIT();
     void gcControllerCommit();
 }
+#include "golang/internal/cpu/cpu.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/cpu/cpu.h"
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
 #include "golang/runtime/mstats.h"
 
 namespace golang::runtime
 {
+    namespace cpu = golang::internal::cpu;
     struct gcControllerState
     {
         // Initialized from GOGC. GOGC=off means no GC.
@@ -253,6 +261,18 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcControllerState& value);
+    // gcController implements the GC pacing controller that determines
+    // when to trigger concurrent garbage collection and how much marking
+    // work to do in mutator assists and background marking.
+    //
+    // It calculates the ratio between the allocation rate (in terms of CPU
+    // time) and the GC scan throughput to determine the heap size at which to
+    // trigger a GC cycle such that no GC assists are required to finish on time.
+    // This algorithm thus optimizes GC CPU utilization to the dedicated background
+    // mark utilization of 25% of GOMAXPROCS by minimizing GC assists.
+    // GOMAXPROCS. The high-level design of this algorithm is documented
+    // at https://github.com/golang/proposal/blob/master/design/44167-gc-pacer-redesign.md.
+    // See https://golang.org/s/go15gcpacing for additional historical context.
     extern gcControllerState gcController;
 }
 
@@ -267,9 +287,11 @@ namespace golang::runtime
         void init(gcControllerState* c, int32_t gcPercent, int64_t memoryLimit);
         void startCycle(gcControllerState* c, int64_t markStartTime, int procs, gcTrigger trigger);
         void revise(gcControllerState* c);
-        void endCycle(gcControllerState* c, int64_t now, int procs, bool userForced);
+        void endCycle(gcControllerState* c, int64_t now, int procs);
         void enlistWorker(gcControllerState* c);
+        std::tuple<bool, int64_t> assignWaitingGCWorker(gcControllerState* c, golang::runtime::p* pp, int64_t now);
         std::tuple<g*, int64_t> findRunnableGCWorker(gcControllerState* c, golang::runtime::p* pp, int64_t now);
+        void releaseNextGCMarkWorker(gcControllerState* c, golang::runtime::p* pp);
         void resetLive(gcControllerState* c, uint64_t bytesMarked);
         void markWorkerStop(gcControllerState* c, gcMarkWorkerMode mode, int64_t duration);
         void update(gcControllerState* c, int64_t dHeapLive, int64_t dHeapScan);

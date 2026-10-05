@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::rand
+namespace golang::math::rand
 {
     struct Source : virtual gocpp::Interface
     {
@@ -170,12 +170,54 @@ namespace golang::rand
     Source NewSource(int64_t seed);
     std::tuple<int, gocpp::error> read(gocpp::slice<unsigned char> p, Source src, int64_t* readVal, int8_t* readPos);
 }
-#include "golang/sync/mutex.h"
 #include "golang/math/rand/rng.fwd.h"
 
-namespace golang::rand
+namespace golang::math::rand
 {
     rngSource* newSource(int64_t seed);
+    struct Rand
+    {
+        Source src{};
+        Source64 s64{}; // non-nil if src is source64
+        // readVal contains remainder of 63-bit integer used for bytes
+        // generation during most recent Read call.
+        // It is saved so next Read call can start where the previous
+        // one finished.
+        int64_t readVal{};
+        // readPos indicates the number of low-order bytes of readVal
+        // that are still valid.
+        int8_t readPos{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Rand& value);
+}
+#include "golang/internal/godebug/godebug.fwd.h"
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::math::rand
+{
+    Rand* New(Source src);
+    Rand* globalRand();
+    namespace godebug = golang::internal::godebug;
+    namespace sync = golang::sync;
+}
+#include "golang/sync/mutex.h"
+
+namespace golang::math::rand
+{
+    extern godebug::Setting* randautoseed;
+    // randseednop controls whether the global Seed is a no-op.
+    extern godebug::Setting* randseednop;
     struct runtimeSource
     {
         // The mutex is used to avoid race conditions in Read.
@@ -210,45 +252,22 @@ namespace golang::rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct lockedSource& value);
-    struct Rand
-    {
-        Source src{};
-        Source64 s64{}; // non-nil if src is source64
-        // readVal contains remainder of 63-bit integer used for bytes
-        // generation during most recent Read call.
-        // It is saved so next Read call can start where the previous
-        // one finished.
-        int64_t readVal{};
-        // readPos indicates the number of low-order bytes of readVal
-        // that are still valid.
-        int8_t readPos{};
+}
+#include "golang/sync/atomic/type.fwd.h"
 
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Rand& value);
-    Rand* New(Source src);
-    Rand* globalRand();
+namespace golang::math::rand
+{
+    namespace atomic = golang::sync::atomic;
 }
 #include "golang/sync/atomic/type.h"
 
-namespace golang::rand
+namespace golang::math::rand
 {
+    // globalRandGenerator is the source of random numbers for the top-level
+    // convenience functions. When possible it uses the runtime fastrand64
+    // function to avoid locking. This is not possible if the user called Seed,
+    // either explicitly or implicitly via GODEBUG=randautoseed=0.
     extern atomic::Pointer<Rand> globalRandGenerator;
-}
-#include "golang/internal/godebug/godebug.fwd.h"
-
-namespace golang::rand
-{
-    extern godebug::Setting* randautoseed;
 
     namespace rec
     {

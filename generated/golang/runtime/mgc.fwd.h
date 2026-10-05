@@ -7,7 +7,6 @@
 namespace golang::runtime
 {
     const long _DebugGC = 0;
-    const int _FinBlockSize = 4 * 1024;
     // concurrentSweep is a debug flag. Disabling this flag
     // ensures all spans are swept while the world is stopped.
     const bool concurrentSweep = true;
@@ -23,9 +22,15 @@ namespace golang::runtime
     const int _GCmark = 1;
     const int _GCmarktermination = 2;
     using gcMarkWorkerMode = int;
+    struct workType;
     using gcMode = int;
     struct gcTrigger;
     using gcTriggerKind = int;
+    struct gcDebugMarkDoneStruct;
+    struct gocpp_id_8;
+    struct gcBgMarkWorkerNode;
+    struct gcBgMarkWorkerNodePadded;
+    struct gocpp_id_10;
     // gcMarkWorkerNotWorker indicates that the next scheduled G is not
     // starting work and the mode should be ignored.
     const gcMarkWorkerMode gcMarkWorkerNotWorker = 0;
@@ -63,16 +68,9 @@ namespace golang::runtime
     // to work.cycles).
     const gcTriggerKind gcTriggerCycle = 2;
 }
-#include "golang/internal/cpu/cpu.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/lfstack.fwd.h"
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/mstats.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/asan0.fwd.h"
 
 namespace golang::runtime
 {
-    struct workType;
-    struct gcBgMarkWorkerNode;
+    const int gcBgMarkWorkerNodeRedZoneSize = (16 << 2) * asanenabledBit;
 }

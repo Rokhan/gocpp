@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::godebug
+namespace golang::internal::godebug
 {
     void setUpdate(std::function<void (gocpp::string _1, gocpp::string _2)> update);
     void registerMetric(gocpp::string name, std::function<uint64_t ()> read);
@@ -32,20 +32,37 @@ namespace golang::godebug
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeStderr& value);
-    int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n);
     void setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault);
     std::function<void ()> newIncNonDefault(gocpp::string name);
     extern runtimeStderr go_stderr;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n);
+}
+#include "golang/internal/bisect/bisect.fwd.h"
+#include "golang/internal/godebugs/table.fwd.h"
+#include "golang/sync/atomic/type.fwd.h"
+#include "golang/sync/map.fwd.h"
+#include "golang/sync/mutex.fwd.h"
+#include "golang/sync/once.fwd.h"
+
+namespace golang::internal::godebug
+{
+    namespace sync = golang::sync;
+    namespace atomic = golang::sync::atomic;
 }
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/map.h"
+
+namespace golang::internal::godebug
+{
+    namespace godebugs = golang::internal::godebugs;
+}
 #include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
-#include "golang/internal/bisect/bisect.fwd.h"
-#include "golang/internal/godebugs/table.fwd.h"
 
-namespace golang::godebug
+namespace golang::internal::godebug
 {
+    namespace bisect = golang::internal::bisect;
     struct Setting
     {
         gocpp::string name{};
@@ -100,6 +117,19 @@ namespace golang::godebug
     };
 
     std::ostream& operator<<(std::ostream& os, const struct value& value);
+    // cache is a cache of all the GODEBUG settings,
+    // a locked map[string]*atomic.Pointer[string].
+    //
+    // All Settings with the same name share a single
+    // *atomic.Pointer[string], so that when GODEBUG
+    // changes only that single atomic string pointer
+    // needs to be updated.
+    //
+    // A name appears in the values map either if it is the
+    // name of a Setting for which Value has been called
+    // at least once, or if the name has ever appeared in
+    // a name=value pair in the $GODEBUG environment variable.
+    // Once entered into the map, the name is never removed.
     extern sync::Map cache;
     extern mocklib::Mutex updateMu;
     Setting* New(gocpp::string name);

@@ -9,15 +9,48 @@
 #include "golang/golang.org/x/tools/internal/gcimporter/iimport.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/bytes/reader.h"
-#include "golang/go/types/type.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/basic.fwd.h"
-#include "golang/go/types/named.fwd.h"
-#include "golang/go/types/package.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    struct GoTag_byPath { };
+}
+#include "golang/bytes/reader.fwd.h"
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
+#include "golang/go/types/alias.fwd.h"
+#include "golang/go/types/array.fwd.h"
+#include "golang/go/types/basic.fwd.h"
+#include "golang/go/types/chan.fwd.h"
+#include "golang/go/types/instantiate.fwd.h"
+#include "golang/go/types/interface.fwd.h"
+#include "golang/go/types/map.fwd.h"
+#include "golang/go/types/named.fwd.h"
+#include "golang/go/types/object.fwd.h"
+#include "golang/go/types/package.fwd.h"
+#include "golang/go/types/pointer.fwd.h"
+#include "golang/go/types/signature.fwd.h"
+#include "golang/go/types/slice.fwd.h"
+#include "golang/go/types/struct.fwd.h"
+#include "golang/go/types/tuple.fwd.h"
+#include "golang/go/types/type.fwd.h"
+#include "golang/go/types/typeparam.fwd.h"
+#include "golang/go/types/union.fwd.h"
+#include "golang/bytes/reader.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace bytes = golang::bytes;
+}
+#include "golang/go/types/type.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace types = golang::go::types;
+    namespace token = golang::go::token;
+}
+#include "golang/golang.org/x/tools/internal/gcimporter/iexport.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
     struct intReader
     {
@@ -76,6 +109,8 @@ namespace golang::gcimporter
     };
 
     std::ostream& operator<<(std::ostream& os, const struct GetPackagesItem& value);
+    GetPackagesFunc GetPackagesFromMap(gocpp::map<gocpp::string, types::Package*> m);
+    std::tuple<gocpp::slice<types::Package*>, gocpp::error> iimportCommon(token::FileSet* fset, GetPackagesFunc getPackages, gocpp::slice<unsigned char> data, bool bundle, gocpp::string path, bool shallow, ReportFunc reportf);
     struct setConstraintArgs
     {
         types::TypeParam* t{};
@@ -98,7 +133,6 @@ namespace golang::gcimporter
     {
         iimporter* p{};
         bytes::Reader declReader{};
-        types::Package* currPkg{};
         gocpp::string prevFile{};
         int64_t prevLine{};
         int64_t prevColumn{};
@@ -115,22 +149,25 @@ namespace golang::gcimporter
     };
 
     std::ostream& operator<<(std::ostream& os, const struct importReader& value);
+    // markBlack is redefined in iimport_go123.go, to work around golang/go#69912.
+    //
+    // If TypeNames are not marked black (in the sense of go/types cycle
+    // detection), they may be mutated when dot-imported. Fix this by punching a
+    // hole through the type, when compiling with Go 1.23. (The bug has been fixed
+    // for 1.24, but the fix was not worth back-porting).
+    extern std::function<void (types::TypeName*)> markBlack;
     std::tuple<bool, unsigned int> intSize(types::Basic* b);
     bool isInterface(types::Type t);
-    GetPackagesFunc GetPackagesFromMap(gocpp::map<gocpp::string, types::Package*> m);
+    using byPath = gocpp::defined<gocpp::slice<types::Package*>, GoTag_byPath>;
 }
 #include "golang/golang.org/x/tools/internal/gcimporter/bimport.h"
-#include "golang/golang.org/x/tools/internal/gcimporter/iexport.h"
-#include "golang/go/types/interface.fwd.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
-    std::tuple<gocpp::slice<types::Package*>, gocpp::error> iimportCommon(token::FileSet* fset, GetPackagesFunc getPackages, gocpp::slice<unsigned char> data, bool bundle, gocpp::string path, bool shallow, ReportFunc reportf);
     struct iimporter
     {
         int version{};
         gocpp::string ipath{};
-        bool aliases{};
         bool shallow{};
         ReportFunc reportf{}; // if non-nil, used to report bugs
         gocpp::slice<unsigned char> stringData{};
@@ -142,7 +179,7 @@ namespace golang::gcimporter
         gocpp::slice<unsigned char> declData{};
         gocpp::map<types::Package*, gocpp::map<gocpp::string, uint64_t>> pkgIndex{};
         gocpp::map<uint64_t, types::Type> typCache{};
-        gocpp::map<golang::gcimporter::ident, types::Type> tparamIndex{};
+        gocpp::map<golang::golang_org::x::tools::internal::gcimporter::ident, types::Type> tparamIndex{};
         fakeFileSet fake{};
         gocpp::slice<types::Interface*> interfaceList{};
         // Workaround for the go/types bug golang/go#61561: instances produced during
@@ -180,25 +217,27 @@ namespace golang::gcimporter
 #include "golang/go/types/typeparam.h"
 #include "golang/math/big/int.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    namespace big = golang::math::big;
+    namespace constant = golang::go::constant;
 
     namespace rec
     {
         int64_t int64(intReader* r);
         uint64_t uint64(intReader* r);
-        void trace(iimporter* p, gocpp::string format, gocpp::slice<gocpp::go_any> args);
+        void trace(iimporter* p, gocpp::string format, gocpp::slice<go_any> args);
         
         template<typename... Args>
         void trace(iimporter* p, gocpp::string format, Args... args)
         {
-            return trace(p, format, gocpp::ToSlice<gocpp::go_any>(args...));
+            return trace(p, format, gocpp::ToSlice<go_any>(args...));
         }
         
         template<typename... Args>
-        void trace(iimporter* p, gocpp::string format, gocpp::go_any value, Args... args)
+        void trace(iimporter* p, gocpp::string format, go_any value, Args... args)
         {
-            return trace(p, format, gocpp::ToSlice<gocpp::go_any>(value, args...));
+            return trace(p, format, gocpp::ToSlice<go_any>(value, args...));
         }
         void doDecl(iimporter* p, types::Package* pkg, gocpp::string name);
         gocpp::string stringAt(iimporter* p, uint64_t off);
@@ -206,7 +245,7 @@ namespace golang::gcimporter
         token::File* decodeFile(iimporter* p, intReader rd);
         types::Package* pkgAt(iimporter* p, uint64_t off);
         types::Type typAt(iimporter* p, uint64_t off, types::Named* base);
-        void obj(importReader* r, gocpp::string name);
+        void obj(importReader* r, types::Package* pkg, gocpp::string name);
         void declare(importReader* r, types::Object obj);
         std::tuple<types::Type, constant::Value> value(importReader* r);
         void mpint(importReader* r, big::Int* x, types::Basic* typ);
@@ -223,14 +262,17 @@ namespace golang::gcimporter
         types::Type doType(importReader* r, types::Named* base);
         itag kind(importReader* r);
         types::Object objectPathObject(importReader* r);
-        types::Signature* signature(importReader* r, types::Var* recv, gocpp::slice<types::TypeParam*> rparams, gocpp::slice<types::TypeParam*> tparams);
+        types::Signature* signature(importReader* r, types::Package* paramPkg, types::Var* recv, gocpp::slice<types::TypeParam*> rparams, gocpp::slice<types::TypeParam*> tparams);
         gocpp::slice<types::TypeParam*> tparamList(importReader* r);
-        types::Tuple* paramList(importReader* r);
-        types::Var* param(importReader* r);
+        types::Tuple* paramList(importReader* r, types::Package* pkg);
+        types::Var* param(importReader* r, types::Package* pkg);
         bool go_bool(importReader* r);
         int64_t int64(importReader* r);
         uint64_t uint64(importReader* r);
         unsigned char byte(importReader* r);
+        int Len(byPath a);
+        void Swap(byPath a, int i, int j);
+        bool Less(byPath a, int i, int j);
     }
 }
 

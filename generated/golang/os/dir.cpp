@@ -11,29 +11,48 @@
 #include "golang/os/dir.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/bytealg/compare_native.h"
+#include "golang/internal/filepathlite/path.h"
 #include "golang/io/fs/fs.h"
+#include "golang/io/fs/readlink.h"
+#include "golang/io/fs/walk.h"
+#include "golang/io/io.h"
 #include "golang/os/dir_windows.h"
 #include "golang/os/error.h"
 #include "golang/os/file.h"
 #include "golang/os/file_posix.h"
+#include "golang/os/file_windows.h"
+#include "golang/os/path.h"
+#include "golang/os/tempfile.h"
 #include "golang/os/types.h"
-#include "golang/sort/slice.h"
+#include "golang/slices/sort.h"
 
 namespace golang::os
 {
+    namespace bytealg = golang::internal::bytealg;
+    namespace filepathlite = golang::internal::filepathlite;
+    namespace fs = golang::io::fs;
+    namespace io = golang::io;
+    namespace slices = golang::slices;
     namespace rec
     {
+        using fs::rec::Close;
+        using fs::rec::Mode;
         using fs::rec::Name;
+        using fs::rec::Open;
+        using fs::rec::Read;
+        using fs::rec::Stat;
+        using fs::rec::Type;
     }
 
     // Readdir reads the contents of the directory associated with file and
-    // returns a slice of up to n FileInfo values, as would be returned
-    // by Lstat, in directory order. Subsequent calls on the same file will yield
+    // returns a slice of up to n [FileInfo] values, as would be returned
+    // by [Lstat], in directory order. Subsequent calls on the same file will yield
     // further FileInfos.
     //
     // If n > 0, Readdir returns at most n FileInfo structures. In this case, if
     // Readdir returns an empty slice, it will return a non-nil error
-    // explaining why. At the end of a directory, the error is io.EOF.
+    // explaining why. At the end of a directory, the error is [io.EOF].
     //
     // If n <= 0, Readdir returns all the FileInfo from the directory in
     // a single slice. In this case, if Readdir succeeds (reads all
@@ -67,7 +86,7 @@ namespace golang::os
     //
     // If n > 0, Readdirnames returns at most n names. In this case, if
     // Readdirnames returns an empty slice, it will return a non-nil error
-    // explaining why. At the end of a directory, the error is io.EOF.
+    // explaining why. At the end of a directory, the error is [io.EOF].
     //
     // If n <= 0, Readdirnames returns all the names from the directory in
     // a single slice. In this case, if Readdirnames succeeds (reads all
@@ -95,14 +114,14 @@ namespace golang::os
     }
 
     // A DirEntry is an entry read from a directory
-    // (using the ReadDir function or a File's ReadDir method).
+    // (using the [ReadDir] function or a [File.ReadDir] method).
     // ReadDir reads the contents of the directory associated with the file f
-    // and returns a slice of DirEntry values in directory order.
+    // and returns a slice of [DirEntry] values in directory order.
     // Subsequent calls on the same file will yield later DirEntry records in the directory.
     //
     // If n > 0, ReadDir returns at most n DirEntry records.
     // In this case, if ReadDir returns an empty slice, it will return an error explaining why.
-    // At the end of a directory, the error is io.EOF.
+    // At the end of a directory, the error is [io.EOF].
     //
     // If n <= 0, ReadDir returns all the DirEntry records remaining in the directory.
     // When it succeeds, it returns a nil error (not io.EOF).
@@ -121,9 +140,6 @@ namespace golang::os
         return {dirents, err};
     }
 
-    // testingForceReadDirLstat forces ReadDir to call Lstat, for testing that code path.
-    // This can be difficult to provoke on some Unix systems otherwise.
-    bool testingForceReadDirLstat;
     // ReadDir reads the named directory,
     // returning all its directory entries sorted by filename.
     // If an error occurs reading the directory,
@@ -134,18 +150,18 @@ namespace golang::os
         gocpp::Defer defer;
         try
         {
-            auto [f, err] = Open(name);
+            auto [f, err] = openDir(name);
             if(err != nullptr)
             {
                 return {nullptr, err};
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(f)); });
 
-            gocpp::slice<fs::DirEntry> dirs;
+            gocpp::slice<DirEntry> dirs;
             std::tie(dirs, err) = rec::ReadDir(gocpp::recv(f), - 1);
-            sort::Slice(dirs, [=](int i, int j) mutable -> bool
+            slices::SortFunc(dirs, [=](DirEntry a, DirEntry b) mutable -> int
             {
-                return rec::Name(gocpp::recv(dirs[i])) < rec::Name(gocpp::recv(dirs[j]));
+                return bytealg::CompareString(rec::Name(gocpp::recv(a)), rec::Name(gocpp::recv(b)));
             });
             return {dirs, err};
         }
@@ -153,6 +169,114 @@ namespace golang::os
         {
             defer.handlePanic(gp);
         }
+    }
+
+    // CopyFS copies the file system fsys into the directory dir,
+    // creating dir if necessary.
+    //
+    // Files are created with mode 0o666 plus any execute permissions
+    // from the source, and directories are created with mode 0o777
+    // (before umask).
+    //
+    // CopyFS will not overwrite existing files. If a file name in fsys
+    // already exists in the destination, CopyFS will return an error
+    // such that errors.Is(err, fs.ErrExist) will be true.
+    //
+    // Symbolic links in dir are followed.
+    //
+    // New files added to fsys (including if dir is a subdirectory of fsys)
+    // while CopyFS is running are not guaranteed to be copied.
+    //
+    // Copying stops at and returns the first error encountered.
+    gocpp::error CopyFS(gocpp::string dir, fs::FS fsys)
+    {
+        return fs::WalkDir(fsys, "."_s, [=](gocpp::string path, fs::DirEntry d, gocpp::error err) mutable -> gocpp::error
+        {
+            gocpp::Defer defer;
+            try
+            {
+                if(err != nullptr)
+                {
+                    return err;
+                }
+
+                auto [fpath, err] = filepathlite::Localize(path);
+                if(err != nullptr)
+                {
+                    return err;
+                }
+                auto newPath = joinPath(dir, fpath);
+
+                //Go switch emulation
+                {
+                    auto condition = rec::Type(gocpp::recv(d));
+                    int conditionId = -1;
+                    if(condition == ModeDir) { conditionId = 0; }
+                    else if(condition == ModeSymlink) { conditionId = 1; }
+                    else if(condition == 0) { conditionId = 2; }
+                    switch(conditionId)
+                    {
+                        case 0:
+                            return MkdirAll(newPath, 0777);
+                            break;
+                        case 1:
+                        {
+                            auto [target, err] = fs::ReadLink(fsys, path);
+                            if(err != nullptr)
+                            {
+                                return err;
+                            }
+                            return Symlink(target, newPath);
+                            break;
+                        }
+                        case 2:
+                        {
+                            fs::File r;
+                            std::tie(r, err) = rec::Open(gocpp::recv(fsys), path);
+                            if(err != nullptr)
+                            {
+                                return err;
+                            }
+                            defer.push_back([=]{ rec::Close(gocpp::recv(r)); });
+                            fs::FileInfo info;
+                            std::tie(info, err) = rec::Stat(gocpp::recv(r));
+                            if(err != nullptr)
+                            {
+                                return err;
+                            }
+                            File* w;
+                            std::tie(w, err) = OpenFile(newPath, O_CREATE | O_EXCL | O_WRONLY, 0666 | rec::Mode(gocpp::recv(info)) & 0777);
+                            if(err != nullptr)
+                            {
+                                return err;
+                            }
+                            if(auto [gocpp_id_4, err] = io::Copy(w, r); err != nullptr)
+                            {
+                                rec::Close(gocpp::recv(w));
+                                return gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
+                                    x.Op = "Copy"_s;
+                                    x.Path = newPath;
+                                    x.Err = err;
+                                }));
+                            }
+                            return rec::Close(gocpp::recv(w));
+                            break;
+                        }
+                        default:
+                            return gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
+                                x.Op = "CopyFS"_s;
+                                x.Path = path;
+                                x.Err = ErrInvalid;
+                            }));
+                            break;
+                    }
+                }
+            }
+            catch(gocpp::GoPanic& gp)
+            {
+                defer.handlePanic(gp);
+            }
+        });
     }
 
 }

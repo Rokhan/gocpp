@@ -11,9 +11,8 @@
 #include "golang/math/modf.h"
 #include "gocpp/support.h"
 
-#include "golang/math/bits.h"
-#include "golang/math/modf_noasm.h"
-#include "golang/math/unsafe.h"
+#include "golang/math/copysign.h"
+#include "golang/math/floor.h"
 
 namespace golang::math
 {
@@ -30,52 +29,11 @@ namespace golang::math
     //	Modf(NaN) = NaN, NaN
     std::tuple<double, double> Modf(double f)
     {
-        double int;
-        double frac;
-        if(haveArchModf)
-        {
-            return archModf(f);
-        }
-        return modf(f);
-    }
-
-    std::tuple<double, double> modf(double f)
-    {
-        double int;
-        double frac;
-        if(f < 1)
-        {
-            //Go switch emulation
-            {
-                int conditionId = -1;
-                if(f < 0) { conditionId = 0; }
-                else if(f == 0) { conditionId = 1; }
-                switch(conditionId)
-                {
-                    case 0:
-                        std::tie(int, frac) = Modf(- f);
-                        return {- int, - frac};
-                        break;
-                    // Return -0, -0 when f == -0
-                    case 1:
-                        return {f, f};
-                        break;
-                }
-            }
-            return {0, f};
-        }
-
-        auto x = Float64bits(f);
-        auto e = (unsigned int)(x >> shift) & mask - bias;
-
-        // Keep the top 12+e bits, the integer part; clear the rest.
-        if(e < 64 - 12)
-        {
-            x &^= (1 << (64 - 12 - e)) - 1;
-        }
-        int = Float64frombits(x);
-        frac = f - int;
-        return {int, frac};
+        double integer;
+        double fractional;
+        integer = Trunc(f);
+        fractional = Copysign(f - integer, f);
+        return {integer, fractional};
     }
 
 }

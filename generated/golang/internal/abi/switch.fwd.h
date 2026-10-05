@@ -4,18 +4,12 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::abi
-{
-    struct InterfaceSwitchCache;
-    struct InterfaceSwitchCacheEntry;
-    const bool go122InterfaceSwitchCache = true;
-    struct TypeAssertCache;
-    struct TypeAssertCacheEntry;
-}
-#include "golang/internal/abi/type.fwd.h"
-
-namespace golang::abi
+namespace golang::internal::abi
 {
     struct InterfaceSwitch;
+    struct InterfaceSwitchCache;
+    struct InterfaceSwitchCacheEntry;
     struct TypeAssert;
+    struct TypeAssertCache;
+    struct TypeAssertCacheEntry;
 }

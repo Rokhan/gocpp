@@ -50,9 +50,6 @@ time.
 The GODEBUG variable controls debugging variables within the runtime.
 It is a comma-separated list of name=val pairs setting these named variables:
 
-	allocfreetrace: setting allocfreetrace=1 causes every allocation to be
-	profiled and a stack trace printed on each object's allocation and free.
-
 	clobberfree: setting clobberfree=1 causes the garbage collector to
 	clobber the memory content of an object with bad content when it frees
 	the object.
@@ -69,6 +66,28 @@ It is a comma-separated list of name=val pairs setting these named variables:
 	checks that may miss some errors. A more complete, but slow,
 	cgocheck mode can be enabled using GOEXPERIMENT (which
 	requires a rebuild), see https://pkg.go.dev/internal/goexperiment for details.
+
+	checkfinalizers: setting checkfinalizers=1 causes the garbage collector to run
+	multiple partial non-parallel stop-the-world collections to identify common issues with
+	finalizers and cleanups, like those listed at
+	https://go.dev/doc/gc-guide#Finalizers_cleanups_and_weak_pointers. If a potential issue
+	is found, the program will terminate with a description of all potential issues, the
+	associated values, and a list of those values' finalizers and cleanups, including where
+	they were created. It also adds tracking for tiny blocks to help diagnose issues with
+	those as well. The analysis performed during the partial collection is conservative.
+	Notably, it flags any path back to the original object from the cleanup function,
+	cleanup arguments, or finalizer function as a potential issue, even if that path might
+	be severed sometime later during execution (though this is not a recommended pattern).
+	This mode also produces one line of output to stderr every GC cycle with information
+	about the finalizer and cleanup queue lengths. Lines produced by this mode start with
+	"checkfinalizers:".
+
+	decoratemappings: controls whether the Go runtime annotates OS
+	anonymous memory mappings with context about their purpose. These
+	annotations appear in /proc/self/maps and /proc/self/smaps as
+	"[anon: Go: ...]". This setting is only used on Linux. For Go 1.25, it
+	defaults to `decoratemappings=1`, enabling annotations. Using
+	`decoratemappings=0` reverts to the pre-Go 1.25 behavior.
 
 	disablethp: setting disablethp=1 on Linux disables transparent huge pages for the heap.
 	It has no effect on other platforms. disablethp is meant for compatibility with versions
@@ -160,24 +179,15 @@ It is a comma-separated list of name=val pairs setting these named variables:
 	When set to 0 memory profiling is disabled.  Refer to the description of
 	MemProfileRate for the default value.
 
-	pagetrace: setting pagetrace=/path/to/file will write out a trace of page events
-	that can be viewed, analyzed, and visualized using the x/debug/cmd/pagetrace tool.
-	Build your program with GOEXPERIMENT=pagetrace to enable this functionality. Do not
-	enable this functionality if your program is a setuid binary as it introduces a security
-	risk in that scenario. Currently not supported on Windows, plan9 or js/wasm. Setting this
-	option for some applications can produce large traces, so use with care.
+	profstackdepth: profstackdepth=128 (the default) will set the maximum stack
+	depth used by all pprof profilers except for the CPU profiler to 128 frames.
+	Stack traces that exceed this limit will be truncated to the limit starting
+	from the leaf frame. Setting profstackdepth to any value above 1024 will
+	silently default to 1024. Future versions of Go may remove this limitation
+	and extend profstackdepth to apply to the CPU profiler and execution tracer.
 
 	panicnil: setting panicnil=1 disables the runtime error when calling panic with nil
 	interface value or an untyped nil.
-
-	runtimecontentionstacks: setting runtimecontentionstacks=1 enables inclusion of call stacks
-	related to contention on runtime-internal locks in the "mutex" profile, subject to the
-	MutexProfileFraction setting. When runtimecontentionstacks=0, contention on
-	runtime-internal locks will report as "runtime._LostContendedRuntimeLock". When
-	runtimecontentionstacks=1, the call stacks will correspond to the unlock call that released
-	the lock. But instead of the value corresponding to the amount of contention that call
-	stack caused, it corresponds to the amount of time the caller of unlock had to wait in its
-	original call to lock. A future release is expected to align those and remove this setting.
 
 	invalidptr: invalidptr=1 (the default) causes the garbage collector and stack
 	copier to crash the program if an invalid pointer value (for example, 1)
@@ -213,18 +223,21 @@ It is a comma-separated list of name=val pairs setting these named variables:
 
 	tracebackancestors: setting tracebackancestors=N extends tracebacks with the stacks at
 	which goroutines were created, where N limits the number of ancestor goroutines to
-	report. This also extends the information returned by runtime.Stack. Ancestor's goroutine
-	IDs will refer to the ID of the goroutine at the time of creation; it's possible for this
-	ID to be reused for another goroutine. Setting N to 0 will report no ancestry information.
+	report. This also extends the information returned by runtime.Stack.
+	Setting N to 0 will report no ancestry information.
 
-	tracefpunwindoff: setting tracefpunwindoff=1 forces the execution tracer to
-	use the runtime's default stack unwinder instead of frame pointer unwinding.
-	This increases tracer overhead, but could be helpful as a workaround or for
-	debugging unexpected regressions caused by frame pointer unwinding.
+	tracefpunwindoff: setting tracefpunwindoff=1 forces the execution tracer
+	and block and mutex profilers to use the runtime's default stack
+	unwinder instead of frame pointer unwinding. This increases their
+	overhead, but could be helpful as a workaround or for debugging
+	unexpected regressions caused by frame pointer unwinding.
 
 	traceadvanceperiod: the approximate period in nanoseconds between trace generations. Only
 	applies if a program is built with GOEXPERIMENT=exectracer2. Used primarily for testing
 	and debugging the execution tracer.
+
+	tracecheckstackownership: setting tracecheckstackownership=1 enables a debug check in the
+	execution tracer to double-check stack ownership before taking a stack trace.
 
 	asyncpreemptoff: asyncpreemptoff=1 disables signal-based
 	asynchronous goroutine preemption. This makes some loops
@@ -282,30 +295,35 @@ AT_SECURE flag in the auxiliary vector, on the BSDs and Solaris/Illumos it is
 determined by checking the issetugid syscall, and on AIX it is determined by
 checking if the uid/gid match the effective uid/gid.
 
-When the runtime determines the binary is setuid/setgid-like, it does three main
+When the runtime determines the binary is setuid/setgid-like, it does two main
 things:
-  - The standard input/output file descriptors (0, 1, 2) are checked to be open.
-    If any of them are closed, they are opened pointing at /dev/null.
   - The value of the GOTRACEBACK environment variable is set to 'none'.
   - When a signal is received that terminates the program, or the program
     encounters an unrecoverable panic that would otherwise override the value
     of GOTRACEBACK, the goroutine stack, registers, and other memory related
     information are omitted.
 
+Additinally on Unix platforms the Go runtime automatically checks whether
+the standard input/output file descriptors (0, 1, 2) are open. If any of them are
+closed, they are opened pointing at /dev/null.
+
 [Race Detector article]: https://go.dev/doc/articles/race_detector
 */
 namespace golang::runtime
 {
+    namespace goarch = golang::internal::goarch;
+    namespace goos = golang::internal::goos;
     namespace rec
     {
     }
 
     // Caller reports file and line number information about function invocations on
     // the calling goroutine's stack. The argument skip is the number of stack frames
-    // to ascend, with 0 identifying the caller of Caller.  (For historical reasons the
-    // meaning of skip differs between Caller and [Callers].) The return values report the
-    // program counter, file name, and line number within the file of the corresponding
-    // call. The boolean ok is false if it was not possible to recover the information.
+    // to ascend, with 0 identifying the caller of Caller. (For historical reasons the
+    // meaning of skip differs between Caller and [Callers].) The return values report
+    // the program counter, the file name (using forward slashes as path separator, even
+    // on Windows), and the line number within the file of the corresponding call.
+    // The boolean ok is false if it was not possible to recover the information.
     std::tuple<uintptr_t, gocpp::string, int, bool> Caller(int skip)
     {
         uintptr_t pc;
@@ -313,7 +331,7 @@ namespace golang::runtime
         int line;
         bool ok;
         auto rpc = gocpp::make(gocpp::Tag<gocpp::slice<uintptr_t>>(), 1);
-        auto n = callers(skip + 1, rpc.make_slice(0));
+        auto n = callers(skip + 1, rpc);
         if(n < 1)
         {
             return {pc, file, line, ok};
@@ -351,6 +369,11 @@ namespace golang::runtime
     // GOROOT returns the root of the Go tree. It uses the
     // GOROOT environment variable, if set at process start,
     // or else the root used during the Go build.
+    //
+    // Deprecated: The root used during the Go build will not be
+    // meaningful if the binary is copied to another machine.
+    // Use the system path to locate the “go” binary, and use
+    // “go env GOROOT” to find its GOROOT.
     gocpp::string GOROOT()
     {
         auto s = gogetenv("GOROOT"_s);

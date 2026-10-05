@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
     void init();
     int Cutover(int n);

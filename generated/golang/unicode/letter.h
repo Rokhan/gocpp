@@ -117,6 +117,8 @@ namespace golang::unicode
     using SpecialCase = gocpp::defined<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
     bool Is(RangeTable* rangeTab, gocpp::rune r);
     bool isExcludingLatin(RangeTable* rangeTab, gocpp::rune r);
+    CaseRange* lookupCaseRange(gocpp::rune r, gocpp::slice<CaseRange> caseRange);
+    gocpp::rune convertCase(int _case, gocpp::rune r, CaseRange* cr);
     std::tuple<gocpp::rune, bool> to(int _case, gocpp::rune r, gocpp::slice<CaseRange> caseRange);
 
     namespace rec

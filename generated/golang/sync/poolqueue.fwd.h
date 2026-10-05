@@ -6,6 +6,7 @@
 
 namespace golang::sync
 {
+    struct poolDequeue;
     struct eface;
     const long dequeueBits = 32;
     struct gocpp_id_0;
@@ -18,10 +19,4 @@ namespace golang::sync
     // depends on wrapping around the ring buffer without wrapping around
     // the index. We divide by 4 so this fits in an int on 32-bit.
     const int dequeueLimit = (1 << dequeueBits) / 4;
-}
-#include "golang/sync/atomic/type.fwd.h"
-
-namespace golang::sync
-{
-    struct poolDequeue;
 }

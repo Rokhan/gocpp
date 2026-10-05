@@ -4,10 +4,12 @@
 #include "gocpp/support.fwd.h"
 
 #include "golang/context/context.fwd.h"
-#include "golang/golang.org/x/tools/internal/event/core/event.fwd.h"
 #include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
+#include "golang/golang.org/x/tools/internal/event/core/event.fwd.h"
 
-namespace golang::core
+namespace golang::golang_org::x::tools::internal::event::core
 {
+    namespace context = golang::context;
+    namespace label = golang::golang_org::x::tools::internal::event::label;
     using Exporter = std::function<context::Context (context::Context _1, Event _2, label::Map _3)>;
 }

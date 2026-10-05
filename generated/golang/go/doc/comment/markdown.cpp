@@ -19,8 +19,11 @@
 #include "golang/io/io.h"
 #include "golang/strings/strings.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
+    namespace bytes = golang::bytes;
+    namespace fmt = golang::fmt;
+    namespace strings = golang::strings;
     namespace rec
     {
         using bytes::rec::Bytes;
@@ -188,7 +191,7 @@ namespace golang::comment
     }
 
     // text prints the text sequence x to out.
-    void rec::text(mdPrinter* p, bytes::Buffer* out, gocpp::slice<golang::comment::Text> x)
+    void rec::text(mdPrinter* p, bytes::Buffer* out, gocpp::slice<golang::go::doc::comment::Text> x)
     {
         rec::Reset(gocpp::recv(p->raw));
         rec::rawText(gocpp::recv(p), & p->raw, x);
@@ -257,7 +260,7 @@ namespace golang::comment
     // rawText prints the text sequence x to out,
     // without worrying about escaping characters
     // that have special meaning at the start of a Markdown line.
-    void rec::rawText(mdPrinter* p, bytes::Buffer* out, gocpp::slice<golang::comment::Text> x)
+    void rec::rawText(mdPrinter* p, bytes::Buffer* out, gocpp::slice<golang::go::doc::comment::Text> x)
     {
         for(auto [gocpp_ignored, t] : x)
         {

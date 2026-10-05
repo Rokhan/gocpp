@@ -11,18 +11,20 @@
 #include "golang/runtime/panic.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/bounds.h"
 #include "golang/internal/abi/funcpc.h"
+#include "golang/internal/abi/rangefuncconsts.h"
 #include "golang/internal/abi/symtab.h"
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goarch/zgoarch_amd64.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
+#include "golang/internal/stringslite/strings.h"
 #include "golang/runtime/debuglog.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
-#include "golang/runtime/internal/sys/intrinsics.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/os_windows.h"
@@ -35,14 +37,23 @@
 #include "golang/runtime/security_nonunix.h"
 #include "golang/runtime/signal_windows.h"
 #include "golang/runtime/stkframe.h"
-#include "golang/runtime/string.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/symtab.h"
+#include "golang/runtime/symtabinl.h"
+#include "golang/runtime/synctest.h"
+#include "golang/runtime/trace.h"
 #include "golang/runtime/traceback.h"
+#include "golang/runtime/traceruntime.h"
 #include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace goarch = golang::internal::goarch;
+    namespace stringslite = golang::internal::stringslite;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::Add;
@@ -60,13 +71,13 @@ namespace golang::runtime
     // triggered this panic.
     void panicCheck1(uintptr_t pc, gocpp::string msg)
     {
-        if(goarch::IsWasm == 0 && hasPrefix(funcname(findfunc(pc)), "runtime."_s))
+        if(goarch::IsWasm == 0 && stringslite::HasPrefix(funcname(findfunc(pc)), "runtime."_s))
         {
             // Note: wasm can't tail call, so we can't get the original caller's pc.
             go_throw(msg);
         }
         // TODO: is this redundant? How could we be in malloc
-        // but not in the runtime? runtime/internal/*, maybe?
+        // but not in the runtime? internal/runtime/*, maybe?
         auto gp = getg();
         if(gp != nullptr && gp->m != nullptr && gp->m->mallocing != 0)
         {
@@ -95,24 +106,24 @@ namespace golang::runtime
     //go:yeswritebarrierrec
     void goPanicIndex(int x, int y)
     {
-        panicCheck1(getcallerpc(), "index out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "index out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
-            z.code = boundsIndex;
+            z.code = abi::BoundsIndex;
         }));
     }
 
     //go:yeswritebarrierrec
     void goPanicIndexU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "index out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "index out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
-            z.code = boundsIndex;
+            z.code = abi::BoundsIndex;
         }));
     }
 
@@ -121,48 +132,48 @@ namespace golang::runtime
     //go:yeswritebarrierrec
     void goPanicSliceAlen(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
-            z.code = boundsSliceAlen;
+            z.code = abi::BoundsSliceAlen;
         }));
     }
 
     //go:yeswritebarrierrec
     void goPanicSliceAlenU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
-            z.code = boundsSliceAlen;
+            z.code = abi::BoundsSliceAlen;
         }));
     }
 
     //go:yeswritebarrierrec
     void goPanicSliceAcap(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
-            z.code = boundsSliceAcap;
+            z.code = abi::BoundsSliceAcap;
         }));
     }
 
     //go:yeswritebarrierrec
     void goPanicSliceAcapU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
-            z.code = boundsSliceAcap;
+            z.code = abi::BoundsSliceAcap;
         }));
     }
 
@@ -171,188 +182,269 @@ namespace golang::runtime
     //go:yeswritebarrierrec
     void goPanicSliceB(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
-            z.code = boundsSliceB;
+            z.code = abi::BoundsSliceB;
         }));
     }
 
     //go:yeswritebarrierrec
     void goPanicSliceBU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
-            z.code = boundsSliceB;
+            z.code = abi::BoundsSliceB;
         }));
     }
 
     // failures in the comparisons for s[::x], 0 <= x <= y (y == len(s) or cap(s))
     void goPanicSlice3Alen(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
-            z.code = boundsSlice3Alen;
+            z.code = abi::BoundsSlice3Alen;
         }));
     }
 
     void goPanicSlice3AlenU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
-            z.code = boundsSlice3Alen;
+            z.code = abi::BoundsSlice3Alen;
         }));
     }
 
     void goPanicSlice3Acap(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
-            z.code = boundsSlice3Acap;
+            z.code = abi::BoundsSlice3Acap;
         }));
     }
 
     void goPanicSlice3AcapU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
-            z.code = boundsSlice3Acap;
+            z.code = abi::BoundsSlice3Acap;
         }));
     }
 
     // failures in the comparisons for s[:x:y], 0 <= x <= y
     void goPanicSlice3B(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
-            z.code = boundsSlice3B;
+            z.code = abi::BoundsSlice3B;
         }));
     }
 
     void goPanicSlice3BU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
-            z.code = boundsSlice3B;
+            z.code = abi::BoundsSlice3B;
         }));
     }
 
     // failures in the comparisons for s[x:y:], 0 <= x <= y
     void goPanicSlice3C(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
-            z.code = boundsSlice3C;
+            z.code = abi::BoundsSlice3C;
         }));
     }
 
     void goPanicSlice3CU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range"_s);
+        panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
-            z.code = boundsSlice3C;
+            z.code = abi::BoundsSlice3C;
         }));
     }
 
     // failures in the conversion ([x]T)(s) or (*[x]T)(s), 0 <= x <= y, y == len(s)
     void goPanicSliceConvert(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice length too short to convert to array or pointer to array"_s);
+        panicCheck1(sys::GetCallerPC(), "slice length too short to convert to array or pointer to array"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
-            z.code = boundsConvert;
+            z.code = abi::BoundsConvert;
         }));
     }
 
-    // Implemented in assembly, as they take arguments in registers.
-    // Declared here to mark them as ABIInternal.
-    void panicIndex(int x, int y)
+    // Implemented in assembly. Declared here to mark them as ABIInternal.
+    void panicBounds()
     /* convertBlockStmt, nil block */;
 
-    void panicIndexU(unsigned int x, int y)
+    void panicExtend()
     /* convertBlockStmt, nil block */;
 
-    void panicSliceAlen(int x, int y)
-    /* convertBlockStmt, nil block */;
+    void panicBounds64(uintptr_t pc, gocpp::array_ptr<gocpp::array<int64_t, 16>> regs)
+    {
+        // called from panicBounds on 64-bit archs
+        auto f = findfunc(pc);
+        auto v = pcdatavalue(f, abi::PCDATA_PanicBounds, pc - 1);
 
-    void panicSliceAlenU(unsigned int x, int y)
-    /* convertBlockStmt, nil block */;
+        auto [code, go_signed, xIsReg, yIsReg, xVal, yVal] = abi::BoundsDecode(int(v));
 
-    void panicSliceAcap(int x, int y)
-    /* convertBlockStmt, nil block */;
+        if(code == abi::BoundsIndex)
+        {
+            panicCheck1(pc, "index out of range"_s);
+        }
+        else
+        {
+            panicCheck1(pc, "slice bounds out of range"_s);
+        }
 
-    void panicSliceAcapU(unsigned int x, int y)
-    /* convertBlockStmt, nil block */;
+        boundsError e = {};
+        e.code = code;
+        e.go_signed = go_signed;
+        if(xIsReg)
+        {
+            e.x = regs[xVal];
+        }
+        else
+        {
+            e.x = int64_t(xVal);
+        }
+        if(yIsReg)
+        {
+            e.y = int(regs[yVal]);
+        }
+        else
+        {
+            e.y = yVal;
+        }
+        gocpp::panic(e);
+    }
 
-    void panicSliceB(int x, int y)
-    /* convertBlockStmt, nil block */;
+    void panicBounds32(uintptr_t pc, gocpp::array_ptr<gocpp::array<int32_t, 16>> regs)
+    {
+        // called from panicBounds on 32-bit archs
+        auto f = findfunc(pc);
+        auto v = pcdatavalue(f, abi::PCDATA_PanicBounds, pc - 1);
 
-    void panicSliceBU(unsigned int x, int y)
-    /* convertBlockStmt, nil block */;
+        auto [code, go_signed, xIsReg, yIsReg, xVal, yVal] = abi::BoundsDecode(int(v));
 
-    void panicSlice3Alen(int x, int y)
-    /* convertBlockStmt, nil block */;
+        if(code == abi::BoundsIndex)
+        {
+            panicCheck1(pc, "index out of range"_s);
+        }
+        else
+        {
+            panicCheck1(pc, "slice bounds out of range"_s);
+        }
 
-    void panicSlice3AlenU(unsigned int x, int y)
-    /* convertBlockStmt, nil block */;
+        boundsError e = {};
+        e.code = code;
+        e.go_signed = go_signed;
+        if(xIsReg)
+        {
+            if(go_signed)
+            {
+                e.x = int64_t(regs[xVal]);
+            }
+            else
+            {
+                e.x = int64_t(uint32_t(regs[xVal]));
+            }
+        }
+        else
+        {
+            e.x = int64_t(xVal);
+        }
+        if(yIsReg)
+        {
+            e.y = int(regs[yVal]);
+        }
+        else
+        {
+            e.y = yVal;
+        }
+        gocpp::panic(e);
+    }
 
-    void panicSlice3Acap(int x, int y)
-    /* convertBlockStmt, nil block */;
+    void panicBounds32X(uintptr_t pc, gocpp::array_ptr<gocpp::array<int32_t, 16>> regs)
+    {
+        // called from panicExtend on 32-bit archs
+        auto f = findfunc(pc);
+        auto v = pcdatavalue(f, abi::PCDATA_PanicBounds, pc - 1);
 
-    void panicSlice3AcapU(unsigned int x, int y)
-    /* convertBlockStmt, nil block */;
+        auto [code, go_signed, xIsReg, yIsReg, xVal, yVal] = abi::BoundsDecode(int(v));
 
-    void panicSlice3B(int x, int y)
-    /* convertBlockStmt, nil block */;
+        if(code == abi::BoundsIndex)
+        {
+            panicCheck1(pc, "index out of range"_s);
+        }
+        else
+        {
+            panicCheck1(pc, "slice bounds out of range"_s);
+        }
 
-    void panicSlice3BU(unsigned int x, int y)
-    /* convertBlockStmt, nil block */;
-
-    void panicSlice3C(int x, int y)
-    /* convertBlockStmt, nil block */;
-
-    void panicSlice3CU(unsigned int x, int y)
-    /* convertBlockStmt, nil block */;
-
-    void panicSliceConvert(int x, int y)
-    /* convertBlockStmt, nil block */;
+        boundsError e = {};
+        e.code = code;
+        e.go_signed = go_signed;
+        if(xIsReg)
+        {
+            // Our 4-bit register numbers are actually 2 2-bit register numbers.
+            auto lo = xVal & 3;
+            auto hi = xVal >> 2;
+            e.x = (int64_t(regs[hi]) << 32) + int64_t(uint32_t(regs[lo]));
+        }
+        else
+        {
+            e.x = int64_t(xVal);
+        }
+        if(yIsReg)
+        {
+            e.y = int(regs[yVal]);
+        }
+        else
+        {
+            e.y = yVal;
+        }
+        gocpp::panic(e);
+    }
 
     gocpp::error shiftError = error(errorString("negative shift amount"_s));
     //go:yeswritebarrierrec
     void panicshift()
     {
-        panicCheck1(getcallerpc(), "negative shift amount"_s);
+        panicCheck1(sys::GetCallerPC(), "negative shift amount"_s);
         gocpp::panic(shiftError);
     }
 
@@ -394,6 +486,13 @@ namespace golang::runtime
         }));
     }
 
+    gocpp::error simdImmError = error(errorString("out-of-range immediate for simd intrinsic"_s));
+    void panicSimdImm()
+    {
+        panicCheck2("simd immediate error"_s);
+        gocpp::panic(simdImmError);
+    }
+
     // Create a new deferred function fn, which has no arguments and results.
     // The compiler turns a defer statement into a call to this.
     void deferproc(std::function<void ()> fn)
@@ -409,28 +508,45 @@ namespace golang::runtime
         d->link = gp->_defer;
         gp->_defer = d;
         d->fn = fn;
-        d->pc = getcallerpc();
-        // We must not be preempted between calling getcallersp and
-        // storing it to d.sp because getcallersp's result is a
+        d->pc = sys::GetCallerPC();
+        // We must not be preempted between calling GetCallerSP and
+        // storing it to d.sp because GetCallerSP's result is a
         // uintptr stack pointer.
-        d->sp = getcallersp();
-
-        // deferproc returns 0 normally.
-        // a deferred func that stops a panic
-        // makes the deferproc return 1.
-        // the code the compiler generates always
-        // checks the return value and jumps to the
-        // end of the function if deferproc returns != 0.
-        // No code can go here - the C return register has
-        // been set and must not be clobbered.
-        return0();
+        d->sp = sys::GetCallerSP();
     }
 
-    gocpp::error rangeExitError = error(errorString("range function continued iteration after exit"_s));
+    gocpp::error rangeDoneError = error(errorString("range function continued iteration after function for loop body returned false"_s));
+    gocpp::error rangePanicError = error(errorString("range function continued iteration after loop body panic"_s));
+    gocpp::error rangeExhaustedError = error(errorString("range function continued iteration after whole loop exit"_s));
+    gocpp::error rangeMissingPanicError = error(errorString("range function recovered a loop body panic and did not resume panicking"_s));
     //go:noinline
-    void panicrangeexit()
+    void panicrangestate(int state)
     {
-        gocpp::panic(rangeExitError);
+        //Go switch emulation
+        {
+            auto condition = abi::RF_State(state);
+            int conditionId = -1;
+            if(condition == abi::RF_DONE) { conditionId = 0; }
+            else if(condition == abi::RF_PANIC) { conditionId = 1; }
+            else if(condition == abi::RF_EXHAUSTED) { conditionId = 2; }
+            else if(condition == abi::RF_MISSING_PANIC) { conditionId = 3; }
+            switch(conditionId)
+            {
+                case 0:
+                    gocpp::panic(rangeDoneError);
+                    break;
+                case 1:
+                    gocpp::panic(rangePanicError);
+                    break;
+                case 2:
+                    gocpp::panic(rangeExhaustedError);
+                    break;
+                case 3:
+                    gocpp::panic(rangeMissingPanicError);
+                    break;
+            }
+        }
+        go_throw("unexpected state passed to panicrangestate"_s);
     }
 
     // deferrangefunc is called by functions that are about to
@@ -512,11 +628,11 @@ namespace golang::runtime
         auto d = newdefer();
         d->link = gp->_defer;
         gp->_defer = d;
-        d->pc = getcallerpc();
-        // We must not be preempted between calling getcallersp and
-        // storing it to d.sp because getcallersp's result is a
+        d->pc = sys::GetCallerPC();
+        // We must not be preempted between calling GetCallerSP and
+        // storing it to d.sp because GetCallerSP's result is a
         // uintptr stack pointer.
-        d->sp = getcallersp();
+        d->sp = sys::GetCallerSP();
 
         d->rangefunc = true;
         d->head = new atomic::Pointer[runtime::_defer]{};
@@ -537,7 +653,7 @@ namespace golang::runtime
         auto head = gocpp::getValue<atomic::Pointer<_defer>*>(frame);
         if(raceenabled)
         {
-            racewritepc(gocpp::unsafe_pointer(head), getcallerpc(), abi::FuncPCABIInternal(deferprocat));
+            racewritepc(gocpp::unsafe_pointer(head), sys::GetCallerPC(), abi::FuncPCABIInternal(deferprocat));
         }
         auto d1 = newdefer();
         d1->fn = fn;
@@ -553,24 +669,22 @@ namespace golang::runtime
                 break;
             }
         }
-
-        // Must be last - see deferproc above.
-        return0();
     }
 
-    // deferconvert converts a rangefunc defer list into an ordinary list.
+    // deferconvert converts the rangefunc defer list of d0 into an ordinary list
+    // following d0.
     // See the doc comment for deferrangefunc for details.
-    _defer* deferconvert(_defer* d)
+    void deferconvert(_defer* d0)
     {
-        auto head = d->head;
+        auto head = d0->head;
         if(raceenabled)
         {
-            racereadpc(gocpp::unsafe_pointer(head), getcallerpc(), abi::FuncPCABIInternal(deferconvert));
+            racereadpc(gocpp::unsafe_pointer(head), sys::GetCallerPC(), abi::FuncPCABIInternal(deferconvert));
         }
-        auto tail = d->link;
-        d->rangefunc = false;
-        auto d0 = d;
+        auto tail = d0->link;
+        d0->rangefunc = false;
 
+        _defer* d = {};
         for(; ; )
         {
             d = rec::Load<_defer>(gocpp::recv(head));
@@ -581,8 +695,7 @@ namespace golang::runtime
         }
         if(d == nullptr)
         {
-            freedefer(d0);
-            return tail;
+            return;
         }
         for(auto d1 = d; ; d1 = d1->link)
         {
@@ -594,8 +707,8 @@ namespace golang::runtime
                 break;
             }
         }
-        freedefer(d0);
-        return d;
+        d0->link = d;
+        return;
     }
 
     // deferprocStack queues a new deferred function with a defer record on the stack.
@@ -612,32 +725,27 @@ namespace golang::runtime
             // go code on the system stack can't defer
             go_throw("defer on system stack"_s);
         }
+
         // fn is already set.
         // The other fields are junk on entry to deferprocStack and
         // are initialized here.
         d->heap = false;
         d->rangefunc = false;
-        d->sp = getcallersp();
-        d->pc = getcallerpc();
+        d->sp = sys::GetCallerSP();
+        d->pc = sys::GetCallerPC();
         // The lines below implement:
-        // d.panic = nil
-        // d.fd = nil
         // d.link = gp._defer
         // d.head = nil
         // gp._defer = d
-        // But without write barriers. The first three are writes to
+        // But without write barriers. The first two are writes to
         // the stack so they don't need a write barrier, and furthermore
         // are to uninitialized memory, so they must not use a write barrier.
-        // The fourth write does not require a write barrier because we
+        // The third write does not require a write barrier because we
         // explicitly mark all the defer structures, so we don't need to
         // keep track of pointers to them with a write barrier.
         *(uintptr_t*)(gocpp::unsafe_pointer(& d->link)) = uintptr_t(gocpp::unsafe_pointer(gp->_defer));
         *(uintptr_t*)(gocpp::unsafe_pointer(& d->head)) = 0;
         *(uintptr_t*)(gocpp::unsafe_pointer(& gp->_defer)) = uintptr_t(gocpp::unsafe_pointer(d));
-
-        // No code can go here - the C return register has
-        // been set and must not be clobbered.
-        return0();
     }
 
     // Allocate a Defer, usually using per-P pool.
@@ -678,25 +786,21 @@ namespace golang::runtime
         return d;
     }
 
-    // Free the given defer.
-    // The defer cannot be used after this call.
-    //
-    // This is nosplit because the incoming defer is in a perilous state.
-    // It's not on any defer list, so stack copying won't adjust stack
-    // pointers in it (namely, d.link). Hence, if we were to copy the
-    // stack, d could then contain a stale pointer.
-    //
-    //go:nosplit
-    void freedefer(_defer* d)
+    // popDefer pops the head of gp's defer list and frees it.
+    void popDefer(g* gp)
     {
+        auto d = gp->_defer;
+        // Can in theory point to the stack
+        d->fn = nullptr;
+        // We must not copy the stack between the updating gp._defer and setting
+        // d.link to nil. Between these two steps, d is not on any defer list, so
+        // stack copying won't adjust stack pointers in it (namely, d.link). Hence,
+        // if we were to copy the stack, d could then contain a stale pointer.
+        gp->_defer = d->link;
         // After this point we can copy the stack.
         d->link = nullptr;
 
 
-        if(d->fn != nullptr)
-        {
-            freedeferfn();
-        }
         if(! d->heap)
         {
             return;
@@ -739,14 +843,6 @@ namespace golang::runtime
         std::tie(mp, pp) = std::tuple{nullptr, nullptr};
     }
 
-    // Separate function so that it can split stack.
-    // Windows otherwise runs out of stack space.
-    void freedeferfn()
-    {
-        // fn must be cleared before d is unlinked from gp.
-        go_throw("freedefer with d.fn != nil"_s);
-    }
-
     // deferreturn runs deferred functions for the caller's frame.
     // The compiler inserts a call to this at the end of any
     // function which calls defer.
@@ -755,7 +851,7 @@ namespace golang::runtime
         _panic p = {};
         p.deferreturn = true;
 
-        rec::start(gocpp::recv(p), getcallerpc(), gocpp::unsafe_pointer(getcallersp()));
+        rec::start(gocpp::recv(p), sys::GetCallerPC(), gocpp::unsafe_pointer(sys::GetCallerSP()));
         for(; ; )
         {
             auto [fn, ok] = rec::nextDefer(gocpp::recv(p));
@@ -775,6 +871,8 @@ namespace golang::runtime
     // without func main returning. Since func main has not returned,
     // the program continues execution of other goroutines.
     // If all other goroutines exit, the program crashes.
+    //
+    // It crashes if called from a thread not created by the Go runtime.
     void Goexit()
     {
         // Create a panic object for Goexit, so we can recognize when it might be
@@ -782,7 +880,7 @@ namespace golang::runtime
         _panic p = {};
         p.goexit = true;
 
-        rec::start(gocpp::recv(p), getcallerpc(), gocpp::unsafe_pointer(getcallersp()));
+        rec::start(gocpp::recv(p), sys::GetCallerPC(), gocpp::unsafe_pointer(sys::GetCallerSP()));
         for(; ; )
         {
             auto [fn, ok] = rec::nextDefer(gocpp::recv(p));
@@ -837,6 +935,14 @@ namespace golang::runtime
             }(); });
             for(; p != nullptr; )
             {
+                if(p->link != nullptr && *efaceOf(& p->link->arg) == *efaceOf(& p->arg))
+                {
+                    // This panic contains the same value as the next one in the chain.
+                    // Mark it as repanicked. We will skip printing it twice in a row.
+                    p->link->repanicked = true;
+                    p = p->link;
+                    continue;
+                }
                 //Go type switch emulation
                 {
                     const auto& gocpp_id_1 = gocpp::type_info(p->arg);
@@ -875,6 +981,10 @@ namespace golang::runtime
         if(p->link != nullptr)
         {
             printpanics(p->link);
+            if(p->link->repanicked)
+            {
+                return;
+            }
             if(! p->link->goexit)
             {
                 print("\t"_s);
@@ -885,7 +995,12 @@ namespace golang::runtime
             return;
         }
         print("panic: "_s);
-        printany(p->arg);
+        printpanicval(p->arg);
+        if(p->recovered && p->repanicked)
+        {
+            print(" [recovered, repanicked]"_s);
+        }
+        else
         if(p->recovered)
         {
             print(" [recovered]"_s);
@@ -955,7 +1070,7 @@ namespace golang::runtime
 
     gocpp::string rec::Error(PanicNilError*)
     {
-        return "panic called with nil argument"_s;
+        return "runtime error: panic called with nil argument"_s;
     }
 
     void rec::RuntimeError(PanicNilError*)
@@ -966,6 +1081,15 @@ namespace golang::runtime
         x.name = "panicnil"_s;
     });
     // The implementation of the predeclared function panic.
+    // The compiler emits calls to this function.
+    //
+    // gopanic should be an internal detail,
+    // but historically, widely used packages access it using linkname.
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname gopanic
     void gopanic(go_any e)
     {
         if(e == nullptr)
@@ -984,7 +1108,7 @@ namespace golang::runtime
         if(gp->m->curg != gp)
         {
             print("panic: "_s);
-            printany(e);
+            printpanicval(e);
             print("\n"_s);
             go_throw("panic on system stack"_s);
         }
@@ -992,14 +1116,14 @@ namespace golang::runtime
         if(gp->m->mallocing != 0)
         {
             print("panic: "_s);
-            printany(e);
+            printpanicval(e);
             print("\n"_s);
             go_throw("panic during malloc"_s);
         }
         if(gp->m->preemptoff != ""_s)
         {
             print("panic: "_s);
-            printany(e);
+            printpanicval(e);
             print("\n"_s);
             print("preempt off reason: "_s);
             print(gp->m->preemptoff);
@@ -1009,7 +1133,7 @@ namespace golang::runtime
         if(gp->m->locks != 0)
         {
             print("panic: "_s);
-            printany(e);
+            printpanicval(e);
             print("\n"_s);
             go_throw("panic holding locks"_s);
         }
@@ -1019,7 +1143,7 @@ namespace golang::runtime
 
         rec::Add(gocpp::recv(runningPanicDefers), 1);
 
-        rec::start(gocpp::recv(p), getcallerpc(), gocpp::unsafe_pointer(getcallersp()));
+        rec::start(gocpp::recv(p), sys::GetCallerPC(), gocpp::unsafe_pointer(sys::GetCallerSP()));
         for(; ; )
         {
             auto [fn, ok] = rec::nextDefer(gocpp::recv(p));
@@ -1028,6 +1152,16 @@ namespace golang::runtime
                 break;
             }
             fn();
+        }
+
+        // If we're tracing, flush the current generation to make the trace more
+        // readable.
+        // TODO(aktau): Handle a panic from within traceAdvance more gracefully.
+        // Currently it would hang. Not handled now because it is very unlikely, and
+        // already unrecoverable.
+        if(traceEnabled())
+        {
+            traceAdvance(false);
         }
 
         // ran out of deferred calls - old-school panic now
@@ -1053,8 +1187,8 @@ namespace golang::runtime
         // that have been recovered. Also, so that if p is from Goexit, we
         // can restart its defer processing loop if a recovered panic tries
         // to jump past it.
-        p->startPC = getcallerpc();
-        p->startSP = gocpp::unsafe_pointer(getcallersp());
+        p->startPC = sys::GetCallerPC();
+        p->startSP = gocpp::unsafe_pointer(sys::GetCallerSP());
 
         if(p->deferreturn)
         {
@@ -1083,7 +1217,7 @@ namespace golang::runtime
         // caller instead, we avoid needing to unwind through an extra
         // frame. It also somewhat simplifies the terminating condition for
         // deferreturn.
-        std::tie(p->lr, p->fp) = std::tuple{pc, sp};
+        std::tie(p->pc, p->sp) = std::tuple{pc, sp};
         rec::nextFrame(gocpp::recv(p));
     }
 
@@ -1109,10 +1243,6 @@ namespace golang::runtime
                 go_throw("recovery failed"_s);
             }
         }
-
-        // The assembler adjusts p.argp in wrapper functions that shouldn't
-        // be visible to recover(), so we need to restore it each iteration.
-        p->argp = runtime::add(p->startSP, sys::MinFrameSize);
 
         for(; ; )
         {
@@ -1148,21 +1278,17 @@ namespace golang::runtime
             {
                 if(d->rangefunc)
                 {
-                    gp->_defer = deferconvert(d);
+                    deferconvert(d);
+                    popDefer(gp);
                     goto Recheck;
                 }
 
                 auto fn = [&](){ return rec::fn(d); };
-                d->fn = nullptr;
 
-                // TODO(mdempsky): Instead of having each deferproc call have
-                // its own "deferreturn(); return" sequence, we should just make
-                // them reuse the one we emit for open-coded defers.
                 p->retpc = d->pc;
 
                 // Unlink and free.
-                gp->_defer = d->link;
-                freedefer(d);
+                popDefer(gp);
 
                 return {fn, true};
             }
@@ -1178,7 +1304,7 @@ namespace golang::runtime
     bool rec::nextFrame(_panic* p)
     {
         bool ok;
-        if(p->lr == 0)
+        if(p->pc == 0)
         {
             return false;
         }
@@ -1193,12 +1319,12 @@ namespace golang::runtime
             }
 
             unwinder u = {};
-            rec::initAt(gocpp::recv(u), p->lr, uintptr_t(p->fp), 0, gp, 0);
+            rec::initAt(gocpp::recv(u), p->pc, uintptr_t(p->sp), 0, gp, 0);
             for(; ; )
             {
                 if(! rec::valid(gocpp::recv(u)))
                 {
-                    p->lr = 0;
+                    p->pc = 0;
                     // ok == false
                     return;
                 }
@@ -1219,10 +1345,24 @@ namespace golang::runtime
                     break;
                 }
 
+                if(p->link != nullptr && uintptr_t(u.frame.sp) == uintptr_t(p->link->startSP) && uintptr_t(p->link->sp) > u.frame.sp)
+                {
+                    // Skip ahead to where the next panic up the stack was last looking
+                    // for defers. See issue 77062.
+                    // The startSP condition is to check when we have walked up the stack
+                    // to where the next panic up the stack started. If so, the processing
+                    // of that panic has run all the defers up to its current scanning
+                    // position.
+                    // The final condition is just to make sure that the line below
+                    // is actually helpful.
+                    rec::initAt(gocpp::recv(u), p->link->pc, uintptr_t(p->link->sp), 0, gp, 0);
+                    continue;
+                }
+
                 rec::next(gocpp::recv(u));
             }
 
-            p->lr = u.frame.lr;
+            p->pc = u.frame.pc;
             p->sp = gocpp::unsafe_pointer(u.frame.sp);
             p->fp = gocpp::unsafe_pointer(u.frame.fp);
 
@@ -1265,29 +1405,111 @@ namespace golang::runtime
     }
 
     // The implementation of the predeclared function recover.
-    // Cannot split the stack because it needs to reliably
-    // find the stack segment of its caller.
-    //
-    // TODO(rsc): Once we commit to CopyStackAlways,
-    // this doesn't need to be nosplit.
-    //
-    //go:nosplit
-    go_any gorecover(uintptr_t argp)
+    go_any gorecover()
     {
-        // Must be in a function running as part of a deferred call during the panic.
-        // Must be called from the topmost function of the call
-        // (the function used in the defer statement).
-        // p.argp is the argument pointer of that topmost deferred function call.
-        // Compare against argp reported by caller.
-        // If they match, the caller is the one who can recover.
         auto gp = getg();
         auto p = gp->_panic;
-        if(p != nullptr && ! p->goexit && ! p->recovered && argp == uintptr_t(p->argp))
+        if(p == nullptr || p->goexit || p->recovered)
         {
-            p->recovered = true;
-            return p->arg;
+            return nullptr;
         }
-        return nullptr;
+
+        // Check to see if the function that called recover() was
+        // deferred directly from the panicking function.
+        // For code like:
+        // func foo() {
+        // defer bar()
+        // panic("panic")
+        // }
+        // func bar() {
+        // recover()
+        // }
+        // Normally the stack would look like this:
+        // foo
+        // runtime.gopanic
+        // bar
+        // runtime.gorecover
+        // However, if the function we deferred requires a wrapper
+        // of some sort, we need to ignore the wrapper. In that case,
+        // the stack looks like:
+        // foo
+        // runtime.gopanic
+        // wrapper
+        // bar
+        // runtime.gorecover
+        // And we should also successfully recover.
+        // Finally, in the weird case "defer recover()", the stack looks like:
+        // foo
+        // runtime.gopanic
+        // wrapper
+        // runtime.gorecover
+        // And we should not recover in that case.
+        // So our criteria is, there must be exactly one non-wrapper
+        // frame between gopanic and gorecover.
+        // We don't recover this:
+        // defer func() { func() { recover() }() }()
+        // because there are 2 non-wrapper frames.
+        // We don't recover this:
+        // defer recover()
+        // because there are 0 non-wrapper frames.
+        auto canRecover = false;
+        systemstack([=]() mutable -> void
+        {
+            unwinder u = {};
+            rec::init(gocpp::recv(u), gp, 0);
+            // skip systemstack_switch
+            rec::next(gocpp::recv(u));
+            // skip gorecover
+            rec::next(gocpp::recv(u));
+            auto nonWrapperFrames = 0;
+            loop:
+            for(; rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
+            {
+                if(false) {
+                loop_continue:
+                    continue;
+                loop_break:
+                    break;
+                }
+                for(auto [iu, f] = newInlineUnwinder(u.frame.fn, rec::symPC(gocpp::recv(u))); rec::valid(gocpp::recv(f)); f = rec::next(gocpp::recv(iu), f))
+                {
+                    auto sf = rec::srcFunc(gocpp::recv(iu), f);
+                    //Go switch emulation
+                    {
+                        auto condition = sf.funcID;
+                        int conditionId = -1;
+                        if(condition == abi::FuncIDWrapper) { conditionId = 0; }
+                        else if(condition == abi::FuncID_gopanic) { conditionId = 1; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                                continue;
+                                break;
+                            case 1:
+                                if(u.frame.sp == uintptr_t(p->startSP) && nonWrapperFrames > 0)
+                                {
+                                    canRecover = true;
+                                }
+                                goto loop_break;
+                                break;
+                            default:
+                                nonWrapperFrames++;
+                                if(nonWrapperFrames > 1)
+                                {
+                                    goto loop_break;
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+        });
+        if(! canRecover)
+        {
+            return nullptr;
+        }
+        p->recovered = true;
+        return p->arg;
     }
 
     //go:linkname sync_throw sync.throw
@@ -1302,11 +1524,68 @@ namespace golang::runtime
         fatal(s);
     }
 
+    //go:linkname rand_fatal crypto/rand.fatal
+    void rand_fatal(gocpp::string s)
+    {
+        fatal(s);
+    }
+
+    //go:linkname sysrand_fatal crypto/internal/sysrand.fatal
+    void sysrand_fatal(gocpp::string s)
+    {
+        fatal(s);
+    }
+
+    //go:linkname fips_fatal crypto/internal/fips140.fatal
+    void fips_fatal(gocpp::string s)
+    {
+        fatal(s);
+    }
+
+    //go:linkname maps_fatal internal/runtime/maps.fatal
+    void maps_fatal(gocpp::string s)
+    {
+        fatal(s);
+    }
+
+    //go:linkname internal_sync_throw internal/sync.throw
+    void internal_sync_throw(gocpp::string s)
+    {
+        go_throw(s);
+    }
+
+    //go:linkname internal_sync_fatal internal/sync.fatal
+    void internal_sync_fatal(gocpp::string s)
+    {
+        fatal(s);
+    }
+
+    //go:linkname cgroup_throw internal/runtime/cgroup.throw
+    void cgroup_throw(gocpp::string s)
+    {
+        go_throw(s);
+    }
+
     // throw triggers a fatal error that dumps a stack trace and exits.
     //
     // throw should be used for runtime-internal fatal errors where Go itself,
     // rather than user code, may be at fault for the failure.
     //
+    // throw should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //   - github.com/cockroachdb/pebble
+    //   - github.com/dgraph-io/ristretto
+    //   - github.com/outcaste-io/ristretto
+    //   - github.com/pingcap/br
+    //   - gvisor.dev/gvisor
+    //   - github.com/sagernet/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname throw
     //go:nosplit
     void go_throw(gocpp::string s)
     {
@@ -1314,7 +1593,10 @@ namespace golang::runtime
         // can be called even when it's unsafe to grow the stack.
         systemstack([=]() mutable -> void
         {
-            print("fatal error: "_s, s, "\n"_s);
+            print("fatal error: "_s);
+            // logically printpanicval(s), but avoids convTstring write barrier
+            printindented(s);
+            print("\n"_s);
         });
 
         fatalthrow(throwTypeRuntime);
@@ -1331,14 +1613,47 @@ namespace golang::runtime
     //go:nosplit
     void fatal(gocpp::string s)
     {
+        auto p = getg()->_panic;
         // Everything fatal does should be recursively nosplit so it
         // can be called even when it's unsafe to grow the stack.
+        // Prevent multiple interleaved fatal reports. See issue 69447.
+        printlock();
         systemstack([=]() mutable -> void
         {
-            print("fatal error: "_s, s, "\n"_s);
+            printPreFatalDeferPanic(p);
+            print("fatal error: "_s);
+            // logically printpanicval(s), but avoids convTstring write barrier
+            printindented(s);
+            print("\n"_s);
         });
 
         fatalthrow(throwTypeUser);
+        printunlock();
+    }
+
+    // printPreFatalDeferPanic prints the panic
+    // when fatal occurs in panics while running defer.
+    void printPreFatalDeferPanic(_panic* p)
+    {
+        // Don`t call preprintpanics, because
+        // don't want to call String/Error on the panicked values.
+        // When we fatal we really want to just print and exit,
+        // no more executing user Go code.
+        for(auto x = p; x != nullptr; x = x->link)
+        {
+            if(x->link != nullptr && *efaceOf(& x->link->arg) == *efaceOf(& x->arg))
+            {
+                // This panic contains the same value as the next one in the chain.
+                // Mark it as repanicked. We will skip printing it twice in a row.
+                x->link->repanicked = true;
+            }
+        }
+        if(p != nullptr)
+        {
+            printpanics(p);
+            // make fatal have the same indentation as non-first panics.
+            print("\t"_s);
+        }
     }
 
     // runningPanicDefers is non-zero while running deferred functions for panic.
@@ -1362,6 +1677,16 @@ namespace golang::runtime
         auto [pc, sp, fp] = std::tuple{p->retpc, uintptr_t(p->sp), uintptr_t(p->fp)};
         auto [p0, saveOpenDeferState] = std::tuple{p, p->deferBitsPtr != nullptr && *p->deferBitsPtr != 0};
 
+        // The linker records the f-relative address of a call to deferreturn in f's funcInfo.
+        // Assuming a "normal" call to recover() inside one of f's deferred functions
+        // invoked for a panic, that is the desired PC for exiting f.
+        auto f = findfunc(pc);
+        if(f._func.deferreturn == 0)
+        {
+            go_throw("no deferreturn"_s);
+        }
+        auto gotoPc = rec::entry(gocpp::recv(f)) + uintptr_t(f._func.deferreturn);
+
         // Unwind the panic stack.
         for(; p != nullptr && uintptr_t(p->startSP) < sp; p = p->link)
         {
@@ -1371,7 +1696,7 @@ namespace golang::runtime
             // stack where it left off, which means it will need to rewalk
             // frames that we've already processed.
             // There's a similar issue with nested panics, when the inner
-            // panic supercedes the outer panic. Again, we end up needing to
+            // panic supersedes the outer panic. Again, we end up needing to
             // walk the same stack frames.
             // These are probably pretty rare occurrences in practice, and
             // they don't seem any worse than the existing logic. But if we
@@ -1382,7 +1707,7 @@ namespace golang::runtime
             // worthwhile though.
             if(p->goexit)
             {
-                std::tie(pc, sp) = std::tuple{p->startPC, uintptr_t(p->startSP)};
+                std::tie(gotoPc, sp) = std::tuple{p->startPC, uintptr_t(p->startSP)};
                 // goexit is unwinding the stack anyway
                 saveOpenDeferState = false;
                 break;
@@ -1441,11 +1766,9 @@ namespace golang::runtime
             go_throw("bad recovery"_s);
         }
 
-        // Make the deferproc for this d return again,
-        // this time returning 1. The calling function will
-        // jump to the standard return epilogue.
+        // branch directly to the deferreturn
         gp->sched.sp = sp;
-        gp->sched.pc = pc;
+        gp->sched.pc = gotoPc;
         gp->sched.lr = 0;
         // Restore the bp on platforms that support frame pointers.
         // N.B. It's fine to not set anything for platforms that don't
@@ -1471,7 +1794,6 @@ namespace golang::runtime
                     break;
             }
         }
-        gp->sched.ret = 1;
         gogo(& gp->sched);
     }
 
@@ -1482,8 +1804,8 @@ namespace golang::runtime
     //go:nosplit
     void fatalthrow(throwType t)
     {
-        auto pc = getcallerpc();
-        auto sp = getcallersp();
+        auto pc = sys::GetCallerPC();
+        auto sp = sys::GetCallerSP();
         auto gp = getg();
 
         if(gp->m->throwing == throwTypeNone)
@@ -1502,7 +1824,7 @@ namespace golang::runtime
 
             startpanic_m();
 
-            if(dopanic_m(gp, pc, sp))
+            if(dopanic_m(gp, pc, sp, nullptr))
             {
                 // crash uses a decent amount of nosplit stack and we're already
                 // low on stack in throw, so crash on the system stack (unlike
@@ -1524,8 +1846,8 @@ namespace golang::runtime
     //go:nosplit
     void fatalpanic(_panic* msgs)
     {
-        auto pc = getcallerpc();
-        auto sp = getcallersp();
+        auto pc = sys::GetCallerPC();
+        auto sp = sys::GetCallerSP();
         auto gp = getg();
         bool docrash = {};
         // Switch to the system stack to avoid any stack growth, which
@@ -1544,7 +1866,15 @@ namespace golang::runtime
                 printpanics(msgs);
             }
 
-            docrash = dopanic_m(gp, pc, sp);
+            // If this panic is the result of a synctest bubble deadlock,
+            // print stacks for the goroutines in the bubble.
+            synctestBubble* bubble = {};
+            if(auto [de, ok] = gocpp::getValue<synctestDeadlockError>(msgs->arg); ok)
+            {
+                bubble = de.bubble;
+            }
+
+            docrash = dopanic_m(gp, pc, sp, bubble);
         });
 
         if(docrash)
@@ -1645,7 +1975,8 @@ namespace golang::runtime
     mutex deadlock;
     // gp is the crashing g running on this M, but may be a user G, while getg() is
     // always g0.
-    bool dopanic_m(g* gp, uintptr_t pc, uintptr_t sp)
+    // If bubble is non-nil, print the stacks for goroutines in this group as well.
+    bool dopanic_m(g* gp, uintptr_t pc, uintptr_t sp, synctestBubble* bubble)
     {
         if(gp->sig != 0)
         {
@@ -1681,10 +2012,23 @@ namespace golang::runtime
                 print("\nruntime stack:\n"_s);
                 traceback(pc, sp, 0, gp);
             }
-            if(! didothers && all)
+            if(! didothers)
             {
-                didothers = true;
-                tracebackothers(gp);
+                if(all)
+                {
+                    didothers = true;
+                    tracebackothers(gp);
+                }
+                else
+                if(bubble != nullptr)
+                {
+                    // This panic is caused by a synctest bubble deadlock.
+                    // Print stacks for goroutines in the deadlocked bubble.
+                    tracebacksomeothers(gp, [=](g* other) mutable -> bool
+                    {
+                        return bubble == other->bubble;
+                    });
+                }
             }
         }
         unlock(& paniclk);
@@ -1798,6 +2142,95 @@ namespace golang::runtime
             return false;
         }
         return f._func.funcID == abi::FuncID_abort;
+    }
+
+    // For debugging only.
+    //
+    //go:noinline
+    //go:nosplit
+    void dumpPanicDeferState(gocpp::string where, g* gp)
+    {
+        systemstack([=]() mutable -> void
+        {
+            println("DUMPPANICDEFERSTATE"_s, where);
+            auto p = gp->_panic;
+            auto d = gp->_defer;
+            unwinder u = {};
+            for(rec::init(gocpp::recv(u), gp, 0); rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
+            {
+                // Print frame.
+                println("  frame sp="_s, hex(u.frame.sp), "fp="_s, hex(u.frame.fp), "pc="_s, pcName(u.frame.pc), "+"_s, pcOff(u.frame.pc));
+                // Print panic.
+                for(; p != nullptr && uintptr_t(p->sp) == u.frame.sp; )
+                {
+                    println("    panic"_s, p, "sp="_s, p->sp, "fp="_s, p->fp, "arg="_s, p->arg, "recovered="_s, p->recovered, "pc="_s, pcName(p->pc), "+"_s, pcOff(p->pc), "retpc="_s, pcName(p->retpc), "+"_s, pcOff(p->retpc), "startsp="_s, p->startSP, "startPC="_s, hex(p->startPC), pcName(p->startPC), "+"_s, pcOff(p->startPC));
+                    p = p->link;
+                }
+
+                // Print linked defers.
+                for(; d != nullptr && d->sp == u.frame.sp; )
+                {
+                    println("    defer(link)"_s, "heap="_s, d->heap, "rangefunc="_s, d->rangefunc, fnName([&](){ return rec::fn(d); }));
+                    d = d->link;
+                }
+
+                // Print open-coded defers.
+                // (A function is all linked or all open-coded, so we don't
+                // need to interleave this loop with the one above.)
+                auto fd = funcdata(u.frame.fn, abi::FUNCDATA_OpenCodedDeferInfo);
+                if(fd != nullptr)
+                {
+                    auto [deferBitsOffset, fd_tmp] = readvarintUnsafe(fd);
+                    auto& fd = fd_tmp;
+                    auto m = *(uint8_t*)(gocpp::unsafe_pointer(u.frame.varp - uintptr_t(deferBitsOffset)));
+                    uint32_t slotsOffset;
+                    std::tie(slotsOffset, fd) = readvarintUnsafe(fd);
+                    auto slots = u.frame.varp - uintptr_t(slotsOffset);
+                    for(auto i = 7; i >= 0; i--)
+                    {
+                        if((m >> i) & 1 == 0)
+                        {
+                            continue;
+                        }
+                        auto fn = *(std::function<void ()>*)(gocpp::unsafe_pointer(slots + uintptr_t(i) * goarch::PtrSize));
+                        println("    defer(open)"_s, fnName(fn));
+                    }
+                }
+            }
+            if(p != nullptr)
+            {
+                println("  REMAINING PANICS!"_s, p);
+            }
+            if(d != nullptr)
+            {
+                println("  REMAINING DEFERS!"_s);
+            }
+        });
+    }
+
+    gocpp::string pcName(uintptr_t pc)
+    {
+        auto fn = findfunc(pc);
+        if(! rec::valid(gocpp::recv(fn)))
+        {
+            return "<unk>"_s;
+        }
+        return funcname(fn);
+    }
+
+    golang::runtime::hex pcOff(uintptr_t pc)
+    {
+        auto fn = findfunc(pc);
+        if(! rec::valid(gocpp::recv(fn)))
+        {
+            return 0;
+        }
+        return hex(pc - rec::entry(gocpp::recv(fn)));
+    }
+
+    gocpp::string fnName(std::function<void ()> fn)
+    {
+        return pcName(**(uintptr_t**)(gocpp::unsafe_pointer(& fn)));
     }
 
 }

@@ -21,12 +21,16 @@
 
 namespace golang::reflect
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
         using abi::rec::Align;
         using abi::rec::Get;
         using abi::rec::InSlice;
         using abi::rec::IntRegArgAddr;
+        using abi::rec::IsDirectIface;
         using abi::rec::Kind;
         using abi::rec::OutSlice;
         using abi::rec::Pointers;
@@ -237,7 +241,7 @@ namespace golang::reflect
         a->valueStart = append(a->valueStart, len(a->steps));
         bool ok = {};
         bool ptr = {};
-        if(ifaceIndir(rcvr) || rec::Pointers(gocpp::recv(rcvr)))
+        if(! rec::IsDirectIface(gocpp::recv(rcvr)) || rec::Pointers(gocpp::recv(rcvr)))
         {
             ok = rec::assignIntN(gocpp::recv(a), 0, goarch::PtrSize, 1, 0b1);
             ptr = true;

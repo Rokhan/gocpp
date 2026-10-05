@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::rand
+namespace golang::math::rand
 {
     const double re = 7.69711747013104972;
 }

@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/internal/sys/nih.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
@@ -20,6 +20,9 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace goarch = golang::internal::goarch;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
     }

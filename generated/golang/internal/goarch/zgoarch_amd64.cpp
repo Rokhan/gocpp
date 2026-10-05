@@ -11,7 +11,7 @@
 #include "golang/internal/goarch/zgoarch_amd64.h"
 #include "gocpp/support.h"
 
-namespace golang::goarch
+namespace golang::internal::goarch
 {
     namespace rec
     {

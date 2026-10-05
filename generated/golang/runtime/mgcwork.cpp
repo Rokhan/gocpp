@@ -12,23 +12,33 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
+#include "golang/internal/goexperiment/exp_greenteagc_on.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/gc/sizeclasses.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/lfstack.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mgc.h"
+#include "golang/runtime/mgcmark_greenteagc.h"
 #include "golang/runtime/mgcpacer.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/panic.h"
+#include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace gc = golang::internal::runtime::gc;
+    namespace goarch = golang::internal::goarch;
+    namespace goexperiment = golang::internal::goexperiment;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::Add;
@@ -60,33 +70,48 @@ namespace golang::runtime
     gcWork::operator T()
     {
         T result;
+        result.id = this->id;
         result.wbuf1 = this->wbuf1;
         result.wbuf2 = this->wbuf2;
+        result.spanq = this->spanq;
+        result.ptrBuf = this->ptrBuf;
         result.bytesMarked = this->bytesMarked;
         result.heapScanWork = this->heapScanWork;
         result.flushedWork = this->flushedWork;
+        result.mayNeedWorker = this->mayNeedWorker;
+        result.stats = this->stats;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool gcWork::operator==(const T& ref) const
     {
+        if (id != ref.id) return false;
         if (wbuf1 != ref.wbuf1) return false;
         if (wbuf2 != ref.wbuf2) return false;
+        if (spanq != ref.spanq) return false;
+        if (ptrBuf != ref.ptrBuf) return false;
         if (bytesMarked != ref.bytesMarked) return false;
         if (heapScanWork != ref.heapScanWork) return false;
         if (flushedWork != ref.flushedWork) return false;
+        if (mayNeedWorker != ref.mayNeedWorker) return false;
+        if (stats != ref.stats) return false;
         return true;
     }
 
     std::ostream& gcWork::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << wbuf1;
+        os << "" << id;
+        os << " " << wbuf1;
         os << " " << wbuf2;
+        os << " " << spanq;
+        os << " " << ptrBuf;
         os << " " << bytesMarked;
         os << " " << heapScanWork;
         os << " " << flushedWork;
+        os << " " << mayNeedWorker;
+        os << " " << stats;
         os << '}';
         return os;
     }
@@ -107,11 +132,11 @@ namespace golang::runtime
         w->wbuf2 = wbuf2;
     }
 
-    // put enqueues a pointer for the garbage collector to trace.
+    // putObj enqueues a pointer for the garbage collector to trace.
     // obj must point to the beginning of a heap object or an oblet.
     //
     //go:nowritebarrierrec
-    void rec::put(gcWork* w, uintptr_t obj)
+    void rec::putObj(gcWork* w, uintptr_t obj)
     {
         auto flushed = false;
         auto wbuf = w->wbuf1;
@@ -149,15 +174,22 @@ namespace golang::runtime
         // enlistWorker may itself manipulate w.
         if(flushed && gcphase == _GCmark)
         {
-            rec::enlistWorker(gocpp::recv(gcController));
+            if(goexperiment::GreenTeaGC)
+            {
+                w->mayNeedWorker = true;
+            }
+            else
+            {
+                rec::enlistWorker(gocpp::recv(gcController));
+            }
         }
     }
 
-    // putFast does a put and reports whether it can be done quickly
+    // putObjFast does a put and reports whether it can be done quickly
     // otherwise it returns false and the caller needs to call put.
     //
     //go:nowritebarrierrec
-    bool rec::putFast(gcWork* w, uintptr_t obj)
+    bool rec::putObjFast(gcWork* w, uintptr_t obj)
     {
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr || wbuf->workbufhdr.nobj == len(wbuf->obj))
@@ -170,11 +202,11 @@ namespace golang::runtime
         return true;
     }
 
-    // putBatch performs a put on every pointer in obj. See put for
+    // putObjBatch performs a put on every pointer in obj. See put for
     // constraints on these pointers.
     //
     //go:nowritebarrierrec
-    void rec::putBatch(gcWork* w, gocpp::slice<uintptr_t> obj)
+    void rec::putObjBatch(gcWork* w, gocpp::slice<uintptr_t> obj)
     {
         if(len(obj) == 0)
         {
@@ -206,18 +238,25 @@ namespace golang::runtime
 
         if(flushed && gcphase == _GCmark)
         {
-            rec::enlistWorker(gocpp::recv(gcController));
+            if(goexperiment::GreenTeaGC)
+            {
+                w->mayNeedWorker = true;
+            }
+            else
+            {
+                rec::enlistWorker(gocpp::recv(gcController));
+            }
         }
     }
 
-    // tryGet dequeues a pointer for the garbage collector to trace.
+    // tryGetObj dequeues a pointer for the garbage collector to trace.
     //
     // If there are no pointers remaining in this gcWork or in the global
     // queue, tryGet returns 0.  Note that there may still be pointers in
     // other gcWork instances or other caches.
     //
     //go:nowritebarrierrec
-    uintptr_t rec::tryGet(gcWork* w)
+    uintptr_t rec::tryGetObj(gcWork* w)
     {
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr)
@@ -247,12 +286,12 @@ namespace golang::runtime
         return wbuf->obj[wbuf->workbufhdr.nobj];
     }
 
-    // tryGetFast dequeues a pointer for the garbage collector to trace
+    // tryGetObjFast dequeues a pointer for the garbage collector to trace
     // if one is readily available. Otherwise it returns 0 and
     // the caller is expected to call tryGet().
     //
     //go:nowritebarrierrec
-    uintptr_t rec::tryGetFast(gcWork* w)
+    uintptr_t rec::tryGetObjFast(gcWork* w)
     {
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr || wbuf->workbufhdr.nobj == 0)
@@ -297,6 +336,20 @@ namespace golang::runtime
                 w->flushedWork = true;
             }
             w->wbuf2 = nullptr;
+        }
+        if(! rec::empty(gocpp::recv(w->spanq)))
+        {
+            // Flush any local work.
+            rec::flush(gocpp::recv(w->spanq));
+
+            // There's globally-visible work now, so make everyone aware of it.
+            // Note that we need to make everyone aware even if flush didn't
+            // flush any local work. The global work was always visible, but
+            // the bitmap bit may have been unset.
+            // See the comment in tryStealSpan, which explains how it relies
+            // on this behavior.
+            rec::set(gocpp::recv(work.spanqMask), w->id);
+            w->flushedWork = true;
         }
         if(w->bytesMarked != 0)
         {
@@ -344,7 +397,14 @@ namespace golang::runtime
         // We flushed a buffer to the full list, so wake a worker.
         if(gcphase == _GCmark)
         {
-            rec::enlistWorker(gocpp::recv(gcController));
+            if(goexperiment::GreenTeaGC)
+            {
+                w->mayNeedWorker = true;
+            }
+            else
+            {
+                rec::enlistWorker(gocpp::recv(gcController));
+            }
         }
     }
 
@@ -353,7 +413,7 @@ namespace golang::runtime
     //go:nowritebarrierrec
     bool rec::empty(gcWork* w)
     {
-        return w->wbuf1 == nullptr || (w->wbuf1->workbufhdr.nobj == 0 && w->wbuf2->workbufhdr.nobj == 0);
+        return (w->wbuf1 == nullptr || (w->wbuf1->workbufhdr.nobj == 0 && w->wbuf2->workbufhdr.nobj == 0)) && rec::empty(gocpp::recv(w->spanq));
     }
 
     

@@ -19,6 +19,9 @@
 
 namespace golang::os
 {
+    namespace runtime = golang::runtime;
+    namespace syscall = golang::syscall;
+    namespace testlog = golang::internal::testlog;
     namespace rec
     {
     }
@@ -72,7 +75,7 @@ namespace golang::os
 
     // Getgroups returns a list of the numeric ids of groups that the caller belongs to.
     //
-    // On Windows, it returns syscall.EWINDOWS. See the os/user package
+    // On Windows, it returns [syscall.EWINDOWS]. See the [os/user] package
     // for a possible alternative.
     std::tuple<gocpp::slice<int>, gocpp::error> Getgroups()
     {

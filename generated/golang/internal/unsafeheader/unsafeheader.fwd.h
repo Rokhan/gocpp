@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::unsafeheader
+namespace golang::internal::unsafeheader
 {
     struct Slice;
     struct String;

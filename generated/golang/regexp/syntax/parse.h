@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
     struct Error
     {
@@ -48,6 +48,8 @@ namespace golang::syntax
     };
 
     std::ostream& operator<<(std::ostream& os, const struct charGroup& value);
+    void initAliases();
+    gocpp::string canonicalName(gocpp::string name);
     gocpp::slice<gocpp::rune> cleanClass(gocpp::slice<gocpp::rune>* rp);
     bool inCharClass(gocpp::rune r, gocpp::slice<gocpp::rune> go_class);
     gocpp::slice<gocpp::rune> appendLiteral(gocpp::slice<gocpp::rune> r, gocpp::rune x, Flags flags);
@@ -78,10 +80,9 @@ namespace golang::syntax
     bool isalnum(gocpp::rune c);
     gocpp::rune unhex(gocpp::rune c);
 }
-#include "golang/unicode/letter.h"
 #include "golang/regexp/syntax/regexp.fwd.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
     struct parser
     {
@@ -117,20 +118,53 @@ namespace golang::syntax
     bool isCharClass(Regexp* re);
     bool matchRune(Regexp* re, gocpp::rune r);
     void mergeCharClass(Regexp* dst, Regexp* src);
+}
+#include "golang/sync/once.fwd.h"
+#include "golang/unicode/letter.fwd.h"
+#include "golang/unicode/tables.fwd.h"
+#include "golang/sync/once.h"
+
+namespace golang::regexp::syntax
+{
+    namespace unicode = golang::unicode;
+    namespace sync = golang::sync;
     extern unicode::RangeTable* anyTable;
-    std::tuple<unicode::RangeTable*, unicode::RangeTable*> unicodeTable(gocpp::string name);
+    extern unicode::RangeTable* asciiTable;
+    extern unicode::RangeTable* asciiFoldTable;
+    struct aliasesStruct
+    {
+        sync::Once once{};
+        gocpp::map<gocpp::string, gocpp::string> categories{};
+        gocpp::map<gocpp::string, gocpp::string> scripts{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct aliasesStruct& value);
+    std::tuple<unicode::RangeTable*, unicode::RangeTable*, int> unicodeTable(gocpp::string name);
     gocpp::slice<gocpp::rune> appendTable(gocpp::slice<gocpp::rune> r, unicode::RangeTable* x);
     gocpp::slice<gocpp::rune> appendNegatedTable(gocpp::slice<gocpp::rune> r, unicode::RangeTable* x);
+    // aliases is a lazily constructed copy of unicode.CategoryAliases and unicode.Scripts
+    // but with the keys passed through canonicalName, to support inexact matches.
+    extern aliasesStruct aliases;
 }
 
 #include "golang/regexp/syntax/regexp.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
 
     namespace rec
     {
-        gocpp::string Error(golang::syntax::Error* e);
+        gocpp::string Error(golang::regexp::syntax::Error* e);
         gocpp::string String(ErrorCode e);
         Regexp* newRegexp(parser* p, Op op);
         void reuse(parser* p, Regexp* re);
@@ -155,7 +189,7 @@ namespace golang::syntax
         std::tuple<int, int, gocpp::string, bool> parseRepeat(parser* p, gocpp::string s);
         std::tuple<gocpp::string, gocpp::error> parsePerlFlags(parser* p, gocpp::string s);
         std::tuple<int, gocpp::string, bool> parseInt(parser* p, gocpp::string s);
-        gocpp::error parseVerticalBar(parser* p);
+        void parseVerticalBar(parser* p);
         bool swapVerticalBar(parser* p);
         gocpp::error parseRightParen(parser* p);
         std::tuple<gocpp::rune, gocpp::string, gocpp::error> parseEscape(parser* p, gocpp::string s);

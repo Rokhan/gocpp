@@ -15,10 +15,14 @@
 #include "golang/internal/goos/zgoos_windows.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/panic.h"
+#include "golang/runtime/print.h"
 #include "golang/runtime/tagptr.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace goarch = golang::internal::goarch;
+    namespace goos = golang::internal::goos;
     namespace rec
     {
     }
@@ -27,19 +31,13 @@ namespace golang::runtime
     // Tag bits that don't fit in the result are discarded.
     taggedPointer taggedPointerPack(gocpp::unsafe_pointer ptr, uintptr_t tag)
     {
-        if(GOOS == "aix"_s)
+        auto t = taggedPointer((uint64_t(uintptr_t(ptr)) << (tagBits - tagAlignBits)) | uint64_t(tag & ((1 << tagBits) - 1)));
+        if(rec::pointer(gocpp::recv(t)) != ptr || rec::tag(gocpp::recv(t)) != tag)
         {
-            if(GOARCH != "ppc64"_s)
-            {
-                go_throw("check this code for aix on non-ppc64"_s);
-            }
-            return taggedPointer((uint64_t(uintptr_t(ptr)) << (64 - aixAddrBits)) | uint64_t(tag & ((1 << aixTagBits) - 1)));
+            print("runtime: taggedPointerPack invalid packing: ptr="_s, ptr, " tag="_s, hex(tag), " packed="_s, hex(t), " -> ptr="_s, rec::pointer(gocpp::recv(t)), " tag="_s, hex(rec::tag(gocpp::recv(t))), "\n"_s);
+            go_throw("taggedPointerPack"_s);
         }
-        if(GOARCH == "riscv64"_s)
-        {
-            return taggedPointer((uint64_t(uintptr_t(ptr)) << (64 - riscv64AddrBits)) | uint64_t(tag & ((1 << riscv64TagBits) - 1)));
-        }
-        return taggedPointer((uint64_t(uintptr_t(ptr)) << (64 - addrBits)) | uint64_t(tag & ((1 << tagBits) - 1)));
+        return t;
     }
 
     // Pointer returns the pointer from a taggedPointer.
@@ -49,23 +47,19 @@ namespace golang::runtime
         {
             // amd64 systems can place the stack above the VA hole, so we need to sign extend
             // val before unpacking.
-            return gocpp::unsafe_pointer(uintptr_t((int64_t(tp) >> tagBits) << 3));
+            return gocpp::unsafe_pointer(uintptr_t((int64_t(tp) >> tagBits) << tagAlignBits));
         }
         if(GOOS == "aix"_s)
         {
-            return gocpp::unsafe_pointer(uintptr_t(((tp >> aixTagBits) << 3) | (0xa << 56)));
+            return gocpp::unsafe_pointer(uintptr_t(((tp >> tagBits) << tagAlignBits) | (0xa << 56)));
         }
-        if(GOARCH == "riscv64"_s)
-        {
-            return gocpp::unsafe_pointer(uintptr_t((tp >> riscv64TagBits) << 3));
-        }
-        return gocpp::unsafe_pointer(uintptr_t((tp >> tagBits) << 3));
+        return gocpp::unsafe_pointer(uintptr_t((tp >> tagBits) << tagAlignBits));
     }
 
     // Tag returns the tag from a taggedPointer.
     uintptr_t rec::tag(taggedPointer tp)
     {
-        return uintptr_t(tp & ((1 << taggedPointerBits) - 1));
+        return uintptr_t(tp & ((1 << tagBits) - 1));
     }
 
 }

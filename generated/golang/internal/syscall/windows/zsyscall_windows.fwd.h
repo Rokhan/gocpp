@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
     // Do the interface allocations only once for common
     // Errno values.

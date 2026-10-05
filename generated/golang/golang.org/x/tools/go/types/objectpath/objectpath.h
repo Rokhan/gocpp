@@ -10,19 +10,38 @@
 #include "gocpp/support.h"
 
 
-namespace golang::objectpath
+namespace golang::golang_org::x::tools::go::types::objectpath
 {
-    gocpp::slice<unsigned char> appendOpArg(gocpp::slice<unsigned char> path, unsigned char op, int arg);
+    gocpp::slice<unsigned char> appendOpArg(gocpp::slice<unsigned char> path, unsigned char op, int index);
 }
-#include "golang/go/types/object.h"
+#include "golang/go/types/alias.fwd.h"
+#include "golang/go/types/map.fwd.h"
+#include "golang/go/types/named.fwd.h"
+#include "golang/go/types/object.fwd.h"
 #include "golang/go/types/package.fwd.h"
-#include "golang/go/types/scope.fwd.h"
+#include "golang/go/types/predicates.fwd.h"
+#include "golang/go/types/signature.fwd.h"
+#include "golang/go/types/struct.fwd.h"
+#include "golang/go/types/tuple.fwd.h"
+#include "golang/go/types/type.fwd.h"
+#include "golang/go/types/typelists.fwd.h"
+#include "golang/go/types/typeparam.fwd.h"
+#include "golang/sync/mutex.fwd.h"
+#include "golang/go/types/object.h"
 
-namespace golang::objectpath
+namespace golang::golang_org::x::tools::go::types::objectpath
+{
+    namespace types = golang::go::types;
+    namespace sync = golang::sync;
+}
+#include "golang/sync/mutex.h"
+
+namespace golang::golang_org::x::tools::go::types::objectpath
 {
     struct Encoder
     {
-        gocpp::map<types::Scope*, gocpp::slice<types::Object>> scopeMemo{}; // memoization of scopeObjects
+        mocklib::Mutex pkgIndexMu{};
+        gocpp::map<types::Package*, pkgIndex*> pkgIndex{};
 
         using isGoStruct = void;
 
@@ -36,29 +55,73 @@ namespace golang::objectpath
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
+    struct traversal
+    {
+        types::Package* pkg{};
+        pkgIndex* ix{}; // non-nil if we are building the index
+        types::Object target{}; // the sought symbol (if ix == nil)
+        Path found{}; // the found path    (if ix == nil)
+        // These maps are used to short circuit cycles through
+        // interface methods, such as occur in the following example:
+        // type I interface { f() interface{I} }
+        // See golang/go#68046 for details.
+        gocpp::map<types::TypeName*, bool> seenTParamNames{}; // global cycle breaking through type parameters
+        gocpp::map<types::Func*, bool> seenMethods{}; // global cycle breaking through recursive interfaces
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct traversal& value);
+    struct pkgIndex
+    {
+        types::Package* pkg{};
+        gocpp::slice<unsigned char> data{}; // encoding of traversal; nil if not yet constructed
+        gocpp::slice<gocpp::string> scopeNames{}; // memo of pkg.Scope().Names() to avoid O(n) alloc/sort at lookup
+        gocpp::map<types::Object, uint32_t> offsets{}; // each object's node offset within encoded traversal data
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct pkgIndex& value);
     std::tuple<types::Object, gocpp::error> Object(types::Package* pkg, Path p);
     std::tuple<Path, gocpp::error> For(types::Object obj);
 }
-#include "golang/go/types/type.h"
-#include "golang/go/types/typelists.fwd.h"
-
-namespace golang::objectpath
-{
-    gocpp::slice<unsigned char> find(types::Object obj, types::Type T, gocpp::slice<unsigned char> path, gocpp::map<types::TypeName*, bool> seen);
-    gocpp::slice<unsigned char> findTypeParam(types::Object obj, types::TypeParamList* list, gocpp::slice<unsigned char> path, unsigned char op, gocpp::map<types::TypeName*, bool> seen);
-}
 
 #include "golang/go/types/object.h"
-#include "golang/go/types/scope.h"
+#include "golang/go/types/type.h"
+#include "golang/go/types/typelists.h"
 
-namespace golang::objectpath
+namespace golang::golang_org::x::tools::go::types::objectpath
 {
 
     namespace rec
     {
         std::tuple<Path, gocpp::error> For(Encoder* enc, types::Object obj);
+        void traverse(traversal* tr);
+        void visitType(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, types::Type T);
+        void tparams(traversal* tr, types::TypeParamList* list, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op);
+        void typ(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op, int index, types::Type t);
+        void object(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op, int index, types::Object obj);
+        uint32_t emitPackageLevel(pkgIndex* p, int index);
+        uint32_t emitPathSegment(pkgIndex* p, uint32_t parent, unsigned char op, int index);
+        Path path(pkgIndex* p, uint32_t offset);
         std::tuple<Path, bool> concreteMethod(Encoder* enc, types::Func* meth);
-        gocpp::slice<types::Object> scopeObjects(Encoder* enc, types::Scope* scope);
     }
 }
 

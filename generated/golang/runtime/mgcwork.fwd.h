@@ -15,13 +15,6 @@ namespace golang::runtime
     // values reduce heap fragmentation.
     const int workbufAlloc = 32 << 10;
     struct gcWork;
-}
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-
-namespace golang::runtime
-{
     struct workbufhdr;
     struct workbuf;
 }

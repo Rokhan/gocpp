@@ -10,16 +10,24 @@
 #include "gocpp/support.h"
 
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     gocpp::slice<int> wrap(gocpp::slice<gocpp::string> words, int max);
     int64_t wrapPenalty(gocpp::string s);
 }
-#include "golang/strings/builder.h"
 #include "golang/bytes/buffer.fwd.h"
+#include "golang/strings/builder.fwd.h"
+#include "golang/strings/strings.fwd.h"
+
+namespace golang::go::doc::comment
+{
+    namespace strings = golang::strings;
+    namespace bytes = golang::bytes;
+}
+#include "golang/strings/builder.h"
 #include "golang/go/doc/comment/print.fwd.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     struct textPrinter
     {
@@ -49,15 +57,15 @@ namespace golang::comment
 #include "golang/go/doc/comment/print.h"
 #include "golang/strings/builder.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
 
     namespace rec
     {
         gocpp::slice<unsigned char> Text(Printer* p, Doc* d);
         void block(textPrinter* p, bytes::Buffer* out, Block x);
-        void text(textPrinter* p, bytes::Buffer* out, gocpp::string indent, gocpp::slice<golang::comment::Text> x);
-        void oneLongLine(textPrinter* p, strings::Builder* out, gocpp::slice<golang::comment::Text> x);
+        void text(textPrinter* p, bytes::Buffer* out, gocpp::string indent, gocpp::slice<golang::go::doc::comment::Text> x);
+        void oneLongLine(textPrinter* p, strings::Builder* out, gocpp::slice<golang::go::doc::comment::Text> x);
     }
 }
 

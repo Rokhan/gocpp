@@ -16,11 +16,14 @@ namespace golang::syscall
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> ByteSliceFromString(gocpp::string s);
     unsigned char* StringBytePtr(gocpp::string s);
     std::tuple<unsigned char*, gocpp::error> BytePtrFromString(gocpp::string s);
+    // Single-word zero for use when we need a valid pointer to 0 bytes.
+    // See mksyscall.pl.
     extern uintptr_t _zero;
     int Getpagesize();
     void Exit(int code);
     void runtimeSetenv(gocpp::string k, gocpp::string v);
     void runtimeUnsetenv(gocpp::string k);
+    void runtimeClearenv(gocpp::map<gocpp::string, int> env);
 }
 
 #include "golang/syscall/syscall_windows.h"

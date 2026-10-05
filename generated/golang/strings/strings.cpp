@@ -15,8 +15,9 @@
 #include "golang/internal/bytealg/count_native.h"
 #include "golang/internal/bytealg/index_amd64.h"
 #include "golang/internal/bytealg/index_native.h"
-#include "golang/internal/bytealg/indexbyte_native.h"
 #include "golang/internal/bytealg/lastindexbyte_generic.h"
+#include "golang/internal/stringslite/strings.h"
+#include "golang/math/bits/bits.h"
 #include "golang/strings/builder.h"
 #include "golang/unicode/digit.h"
 #include "golang/unicode/graphic.h"
@@ -28,6 +29,11 @@
 // For information about UTF-8 strings in Go, see https://blog.golang.org/strings.
 namespace golang::strings
 {
+    namespace bits = golang::math::bits;
+    namespace bytealg = golang::internal::bytealg;
+    namespace stringslite = golang::internal::stringslite;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
     }
@@ -101,6 +107,7 @@ namespace golang::strings
     }
 
     // ContainsFunc reports whether any Unicode code points r within s satisfy f(r).
+    // It stops as soon as a call to f returns true.
     bool ContainsFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f)
     {
         return IndexFunc(s, f) >= 0;
@@ -137,43 +144,22 @@ namespace golang::strings
                     break;
             }
         }
-        // Rabin-Karp search from the end of the string
-        auto [hashss, pow] = bytealg::HashStrRev(substr);
-        auto last = len(s) - n;
-        uint32_t h = {};
-        for(auto i = len(s) - 1; i >= last; i--)
-        {
-            h = h * bytealg::PrimeRK + uint32_t(s[i]);
-        }
-        if(h == hashss && s.make_slice(last) == substr)
-        {
-            return last;
-        }
-        for(auto i = last - 1; i >= 0; i--)
-        {
-            h *= bytealg::PrimeRK;
-            h += uint32_t(s[i]);
-            h -= pow * uint32_t(s[i + n]);
-            if(h == hashss && s.make_slice(i, i + n) == substr)
-            {
-                return i;
-            }
-        }
-        return - 1;
+        return bytealg::LastIndexRabinKarp(s, substr);
     }
 
     // IndexByte returns the index of the first instance of c in s, or -1 if c is not present in s.
     int IndexByte(gocpp::string s, unsigned char c)
     {
-        return bytealg::IndexByteString(s, c);
+        return stringslite::IndexByte(s, c);
     }
 
     // IndexRune returns the index of the first instance of the Unicode code point
     // r, or -1 if rune is not present in s.
-    // If r is utf8.RuneError, it returns the first instance of any
+    // If r is [utf8.RuneError], it returns the first instance of any
     // invalid UTF-8 byte sequence.
     int IndexRune(gocpp::string s, gocpp::rune r)
     {
+        auto haveFastIndex = bytealg::MaxBruteForce > 0;
         //Go switch emulation
         {
             int conditionId = -1;
@@ -199,8 +185,82 @@ namespace golang::strings
                     return - 1;
                     break;
                 default:
-                    return Index(s, gocpp::string(r));
+                {
+                    // Search for rune r using the last byte of its UTF-8 encoded form.
+                    // The distribution of the last byte is more uniform compared to the
+                    // first byte which has a 78% chance of being [240, 243, 244].
+                    auto rs = gocpp::string(r);
+                    auto last = len(rs) - 1;
+                    auto i = last;
+                    auto fails = 0;
+                    for(; i < len(s); )
+                    {
+                        if(s[i] != rs[last])
+                        {
+                            auto o = IndexByte(s.make_slice(i + 1), rs[last]);
+                            if(o < 0)
+                            {
+                                return - 1;
+                            }
+                            i += o + 1;
+                        }
+                        // Step backwards comparing bytes.
+                        for(auto j = 1; j < len(rs); j++)
+                        {
+                            if(s[i - j] != rs[last - j])
+                            {
+                                goto next;
+                            }
+                        }
+                        return i - last;
+                        next:
+                        fails++;
+                        i++;
+                        if((haveFastIndex && fails > bytealg::Cutover(i)) && i < len(s) ||
+                                        (! haveFastIndex && fails >= 4 + (i >> 4) && i < len(s)))
+                        {
+                            goto fallback;
+                        }
+                    }
+                    return - 1;
+                    fallback:
+                    // see comment in ../bytes/bytes.go
+                    if(haveFastIndex)
+                    {
+                        if(auto j = bytealg::IndexString(s.make_slice(i - last), gocpp::string(r)); j >= 0)
+                        {
+                            return i + j - last;
+                        }
+                    }
+                    else
+                    {
+                        auto c0 = rs[last];
+                        auto c1 = rs[last - 1];
+                        loop:
+                        for(; i < len(s); i++)
+                        {
+                            if(false) {
+                            loop_continue:
+                                continue;
+                            loop_break:
+                                break;
+                            }
+                            if(s[i] == c0 && s[i - 1] == c1)
+                            {
+                                for(auto k = 2; k < len(rs); k++)
+                                {
+                                    if(s[i - k] != rs[last - k])
+                                    {
+                                        goto loop_continue;
+                                    }
+                                }
+                                return i - last;
+                            }
+                        }
+                    }
+                    return - 1;
                     break;
+                }
             }
         }
     }
@@ -224,7 +284,7 @@ namespace golang::strings
             }
             return IndexRune(s, r);
         }
-        if(len(s) > 8)
+        if(shouldUseASCIISet(len(s)))
         {
             if(auto [as, isASCII] = makeASCIISet(chars); isASCII)
             {
@@ -271,7 +331,7 @@ namespace golang::strings
             }
             return - 1;
         }
-        if(len(s) > 8)
+        if(shouldUseASCIISet(len(s)))
         {
             if(auto [as, isASCII] = makeASCIISet(chars); isASCII)
             {
@@ -338,10 +398,7 @@ namespace golang::strings
             n = Count(s, sep) + 1;
         }
 
-        if(n > len(s) + 1)
-        {
-            n = len(s) + 1;
-        }
+        n = gocpp::min(n, len(s) + 1);
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), n);
         n--;
         auto i = 0;
@@ -364,15 +421,14 @@ namespace golang::strings
     // the substrings between those separators.
     //
     // The count determines the number of substrings to return:
-    //
-    //	n > 0: at most n substrings; the last substring will be the unsplit remainder.
-    //	n == 0: the result is nil (zero substrings)
-    //	n < 0: all substrings
+    //   - n > 0: at most n substrings; the last substring will be the unsplit remainder;
+    //   - n == 0: the result is nil (zero substrings);
+    //   - n < 0: all substrings.
     //
     // Edge cases for s and sep (for example, empty strings) are handled
     // as described in the documentation for [Split].
     //
-    // To split around the first instance of a separator, see Cut.
+    // To split around the first instance of a separator, see [Cut].
     gocpp::slice<gocpp::string> SplitN(gocpp::string s, gocpp::string sep, int n)
     {
         return genSplit(s, sep, 0, n);
@@ -382,13 +438,12 @@ namespace golang::strings
     // returns a slice of those substrings.
     //
     // The count determines the number of substrings to return:
-    //
-    //	n > 0: at most n substrings; the last substring will be the unsplit remainder.
-    //	n == 0: the result is nil (zero substrings)
-    //	n < 0: all substrings
+    //   - n > 0: at most n substrings; the last substring will be the unsplit remainder;
+    //   - n == 0: the result is nil (zero substrings);
+    //   - n < 0: all substrings.
     //
     // Edge cases for s and sep (for example, empty strings) are handled
-    // as described in the documentation for SplitAfter.
+    // as described in the documentation for [SplitAfter].
     gocpp::slice<gocpp::string> SplitAfterN(gocpp::string s, gocpp::string sep, int n)
     {
         return genSplit(s, sep, len(sep), n);
@@ -405,7 +460,7 @@ namespace golang::strings
     //
     // It is equivalent to [SplitN] with a count of -1.
     //
-    // To split around the first instance of a separator, see Cut.
+    // To split around the first instance of a separator, see [Cut].
     gocpp::slice<gocpp::string> Split(gocpp::string s, gocpp::string sep)
     {
         return genSplit(s, sep, 0, - 1);
@@ -435,8 +490,10 @@ namespace golang::strings
         x[' '] = 1;
     });
     // Fields splits the string s around each instance of one or more consecutive white space
-    // characters, as defined by unicode.IsSpace, returning a slice of substrings of s or an
-    // empty slice if s contains only white space.
+    // characters, as defined by [unicode.IsSpace], returning a slice of substrings of s or an
+    // empty slice if s contains only white space. Every element of the returned slice is
+    // non-empty. Unlike [Split], leading and trailing runs of white space characters
+    // are discarded.
     gocpp::slice<gocpp::string> Fields(gocpp::string s)
     {
         // First count the fields.
@@ -497,7 +554,9 @@ namespace golang::strings
 
     // FieldsFunc splits the string s at each run of Unicode code points c satisfying f(c)
     // and returns an array of slices of s. If all code points in s satisfy f(c) or the
-    // string is empty, an empty slice is returned.
+    // string is empty, an empty slice is returned. Every element of the returned slice is
+    // non-empty. Unlike [Split], leading and trailing runs of code points satisfying f(c)
+    // are discarded.
     //
     // FieldsFunc makes no guarantees about the order in which it calls f(c)
     // and assumes that f always returns the same value for a given c.
@@ -620,13 +679,13 @@ namespace golang::strings
     // HasPrefix reports whether the string s begins with prefix.
     bool HasPrefix(gocpp::string s, gocpp::string prefix)
     {
-        return len(s) >= len(prefix) && s.make_slice(0, len(prefix)) == prefix;
+        return stringslite::HasPrefix(s, prefix);
     }
 
     // HasSuffix reports whether the string s ends with suffix.
     bool HasSuffix(gocpp::string s, gocpp::string suffix)
     {
-        return len(s) >= len(suffix) && s.make_slice(len(s) - len(suffix)) == suffix;
+        return stringslite::HasSuffix(s, suffix);
     }
 
     // Map returns a copy of the string s with all its characters modified
@@ -735,15 +794,65 @@ namespace golang::strings
         {
             gocpp::panic("strings: negative Repeat count"_s);
         }
-        if(len(s) >= maxInt / count)
+        auto [hi, lo] = bits::Mul((unsigned int)(len(s)), (unsigned int)(count));
+        if(hi > 0 || lo > (unsigned int)(maxInt))
         {
             gocpp::panic("strings: Repeat output length overflow"_s);
         }
-        auto n = len(s) * count;
+        // lo = len(s) * count
+        auto n = int(lo);
 
         if(len(s) == 0)
         {
             return ""_s;
+        }
+
+        // Optimize for commonly repeated strings of relatively short length.
+        //Go switch emulation
+        {
+            auto condition = s[0];
+            int conditionId = -1;
+            if(condition == ' ') { conditionId = 0; }
+            else if(condition == '-') { conditionId = 1; }
+            else if(condition == '0') { conditionId = 2; }
+            else if(condition == '=') { conditionId = 3; }
+            else if(condition == '\t') { conditionId = 4; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    //Go switch emulation
+                    {
+                        int conditionId = -1;
+                        if(n <= len(repeatedSpaces) && HasPrefix(repeatedSpaces, s)) { conditionId = 0; }
+                        else if(n <= len(repeatedDashes) && HasPrefix(repeatedDashes, s)) { conditionId = 1; }
+                        else if(n <= len(repeatedZeroes) && HasPrefix(repeatedZeroes, s)) { conditionId = 2; }
+                        else if(n <= len(repeatedEquals) && HasPrefix(repeatedEquals, s)) { conditionId = 3; }
+                        else if(n <= len(repeatedTabs) && HasPrefix(repeatedTabs, s)) { conditionId = 4; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                                return repeatedSpaces.make_slice(0, n);
+                                break;
+                            case 1:
+                                return repeatedDashes.make_slice(0, n);
+                                break;
+                            case 2:
+                                return repeatedZeroes.make_slice(0, n);
+                                break;
+                            case 3:
+                                return repeatedEquals.make_slice(0, n);
+                                break;
+                            case 4:
+                                return repeatedTabs.make_slice(0, n);
+                                break;
+                        }
+                    }
+                    break;
+            }
         }
 
         // Past a certain chunk size it is counterproductive to use
@@ -772,15 +881,7 @@ namespace golang::strings
         rec::WriteString(gocpp::recv(b), s);
         for(; rec::Len(gocpp::recv(b)) < n; )
         {
-            auto chunk = n - rec::Len(gocpp::recv(b));
-            if(chunk > rec::Len(gocpp::recv(b)))
-            {
-                chunk = rec::Len(gocpp::recv(b));
-            }
-            if(chunk > chunkMax)
-            {
-                chunk = chunkMax;
-            }
+            auto chunk = gocpp::min(n - rec::Len(gocpp::recv(b)), rec::Len(gocpp::recv(b)), chunkMax);
             rec::WriteString(gocpp::recv(b), rec::String(gocpp::recv(b)).make_slice(0, chunk));
         }
         return rec::String(gocpp::recv(b));
@@ -1052,7 +1153,7 @@ namespace golang::strings
     gocpp::string TrimRightFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f)
     {
         auto i = lastIndexFunc(s, f, false);
-        if(i >= 0 && s[i] >= utf8::RuneSelf)
+        if(i >= 0)
         {
             auto [gocpp_id_3, wid] = utf8::DecodeRuneInString(s.make_slice(i));
             i += wid;
@@ -1117,14 +1218,21 @@ namespace golang::strings
         return - 1;
     }
 
-    // asciiSet is a 32-byte value, where each bit represents the presence of a
-    // given ASCII character in the set. The 128-bits of the lower 16 bytes,
-    // starting with the least-significant bit of the lowest word to the
-    // most-significant bit of the highest word, map to the full range of all
-    // 128 ASCII characters. The 128-bits of the upper 16 bytes will be zeroed,
-    // ensuring that any non-ASCII character will be reported as not in the set.
-    // This allocates a total of 32 bytes even though the upper half
-    // is unused to avoid bounds checks in asciiSet.contains.
+    // asciiSet is a 256-byte lookup table for fast ASCII character membership testing.
+    // Each element corresponds to an ASCII character value, with true indicating the
+    // character is in the set. Using bool instead of byte allows the compiler to
+    // eliminate the comparison instruction, as bool values are guaranteed to be 0 or 1.
+    //
+    // The full 256-element table is used rather than a 128-element table to avoid
+    // additional operations in the lookup path. Alternative approaches were tested:
+    //   - [128]bool with explicit bounds check (if c >= 128): introduces branches
+    //     that cause pipeline stalls, resulting in ~70% slower performance
+    //   - [128]bool with masking (c&0x7f): eliminates bounds checks but the AND
+    //     operation still costs ~10% performance compared to direct indexing
+    //
+    // The 256-element array allows direct indexing with no bounds checks, no branches,
+    // and no masking operations, providing optimal performance. The additional 128 bytes
+    // of memory is a worthwhile tradeoff for the simpler, faster code.
     // makeASCIISet creates a set of ASCII characters and reports whether all
     // characters in chars are ASCII.
     std::tuple<asciiSet, bool> makeASCIISet(gocpp::string chars)
@@ -1138,7 +1246,7 @@ namespace golang::strings
             {
                 return {as, false};
             }
-            as[c / 32] |= 1 << (c % 32);
+            as[c] = true;
         }
         return {as, true};
     }
@@ -1146,7 +1254,18 @@ namespace golang::strings
     // contains reports whether c is inside the set.
     bool rec::contains(gocpp::array_ptr<asciiSet> as, unsigned char c)
     {
-        return (as[c / 32] & (1 << (c % 32))) != 0;
+        return as[c];
+    }
+
+    // shouldUseASCIISet returns whether to use the lookup table optimization.
+    // The threshold of 8 bytes balances initialization cost against per-byte
+    // search cost, performing well across all charset sizes.
+    //
+    // More complex heuristics (e.g., different thresholds per charset size)
+    // add branching overhead that eats away any theoretical improvements.
+    bool shouldUseASCIISet(int bufLen)
+    {
+        return bufLen > 8;
     }
 
     // Trim returns a slice of the string s with all leading and
@@ -1215,11 +1334,7 @@ namespace golang::strings
     {
         for(; len(s) > 0; )
         {
-            auto [r, n] = std::tuple{gocpp::rune(s[0]), 1};
-            if(r >= utf8::RuneSelf)
-            {
-                std::tie(r, n) = utf8::DecodeRuneInString(s);
-            }
+            auto [r, n] = utf8::DecodeRuneInString(s);
             if(! ContainsRune(cutset, r))
             {
                 break;
@@ -1290,69 +1405,57 @@ namespace golang::strings
         return s;
     }
 
-    // TrimSpace returns a slice of the string s, with all leading
-    // and trailing white space removed, as defined by Unicode.
+    // TrimSpace returns a slice (substring) of the string s,
+    // with all leading and trailing white space removed,
+    // as defined by Unicode.
     gocpp::string TrimSpace(gocpp::string s)
     {
-        // Fast path for ASCII: look for the first ASCII non-space byte
-        auto start = 0;
-        for(; start < len(s); start++)
+        // Fast path for ASCII: look for the first ASCII non-space byte.
+        for(auto [lo, c] : gocpp::slice<unsigned char>(s))
         {
-            auto c = s[start];
             if(c >= utf8::RuneSelf)
             {
                 // If we run into a non-ASCII byte, fall back to the
-                // slower unicode-aware method on the remaining bytes
-                return TrimFunc(s.make_slice(start), unicode::IsSpace);
+                // slower unicode-aware method on the remaining bytes.
+                return TrimFunc(s.make_slice(lo), unicode::IsSpace);
             }
-            if(asciiSpace[c] == 0)
+            if(asciiSpace[c] != 0)
             {
-                break;
+                continue;
+            }
+            s = s.make_slice(lo);
+            // Now look for the first ASCII non-space byte from the end.
+            for(auto hi = len(s) - 1; hi >= 0; hi--)
+            {
+                auto c = s[hi];
+                if(c >= utf8::RuneSelf)
+                {
+                    return TrimRightFunc(s.make_slice(0, hi + 1), unicode::IsSpace);
+                }
+                if(asciiSpace[c] == 0)
+                {
+                    // At this point, s[:hi+1] starts and ends with ASCII
+                    // non-space bytes, so we're done. Non-ASCII cases have
+                    // already been handled above.
+                    return s.make_slice(0, hi + 1);
+                }
             }
         }
-
-        // Now look for the first ASCII non-space byte from the end
-        auto stop = len(s);
-        for(; stop > start; stop--)
-        {
-            auto c = s[stop - 1];
-            if(c >= utf8::RuneSelf)
-            {
-                // start has been already trimmed above, should trim end only
-                return TrimRightFunc(s.make_slice(start, stop), unicode::IsSpace);
-            }
-            if(asciiSpace[c] == 0)
-            {
-                break;
-            }
-        }
-
-        // At this point s[start:stop] starts and ends with an ASCII
-        // non-space bytes, so we're done. Non-ASCII cases have already
-        // been handled above.
-        return s.make_slice(start, stop);
+        return ""_s;
     }
 
     // TrimPrefix returns s without the provided leading prefix string.
     // If s doesn't start with prefix, s is returned unchanged.
     gocpp::string TrimPrefix(gocpp::string s, gocpp::string prefix)
     {
-        if(HasPrefix(s, prefix))
-        {
-            return s.make_slice(len(prefix));
-        }
-        return s;
+        return stringslite::TrimPrefix(s, prefix);
     }
 
     // TrimSuffix returns s without the provided trailing suffix string.
     // If s doesn't end with suffix, s is returned unchanged.
     gocpp::string TrimSuffix(gocpp::string s, gocpp::string suffix)
     {
-        if(HasSuffix(s, suffix))
-        {
-            return s.make_slice(0, len(s) - len(suffix));
-        }
-        return s;
+        return stringslite::TrimSuffix(s, suffix);
     }
 
     // Replace returns a copy of the string s with the first n
@@ -1385,24 +1488,28 @@ namespace golang::strings
         Builder b = {};
         rec::Grow(gocpp::recv(b), len(s) + n * (len(go_new) - len(old)));
         auto start = 0;
-        for(auto i = 0; i < n; i++)
+        if(len(old) > 0)
         {
-            auto j = start;
-            if(len(old) == 0)
+            for(const auto& _ : n)
             {
-                if(i > 0)
-                {
-                    auto [gocpp_id_4, wid] = utf8::DecodeRuneInString(s.make_slice(start));
-                    j += wid;
-                }
+                auto j = start + Index(s.make_slice(start), old);
+                rec::WriteString(gocpp::recv(b), s.make_slice(start, j));
+                rec::WriteString(gocpp::recv(b), go_new);
+                start = j + len(old);
             }
-            else
-            {
-                j += Index(s.make_slice(start), old);
-            }
-            rec::WriteString(gocpp::recv(b), s.make_slice(start, j));
+        }
+        else
+        {
+            // len(old) == 0
             rec::WriteString(gocpp::recv(b), go_new);
-            start = j + len(old);
+            for(const auto& _ : n - 1)
+            {
+                auto [gocpp_id_4, wid] = utf8::DecodeRuneInString(s.make_slice(start));
+                auto j = start + wid;
+                rec::WriteString(gocpp::recv(b), s.make_slice(start, j));
+                rec::WriteString(gocpp::recv(b), go_new);
+                start = j;
+            }
         }
         rec::WriteString(gocpp::recv(b), s.make_slice(start));
         return rec::String(gocpp::recv(b));
@@ -1425,7 +1532,7 @@ namespace golang::strings
     {
         // ASCII fast path
         auto i = 0;
-        for(; i < len(s) && i < len(t); i++)
+        for(auto n = gocpp::min(len(s), len(t)); i < n; i++)
         {
             auto sr = s[i];
             auto tr = t[i];
@@ -1467,16 +1574,8 @@ namespace golang::strings
             }
 
             // Extract first rune from second string.
-            gocpp::rune tr = {};
-            if(t[0] < utf8::RuneSelf)
-            {
-                std::tie(tr, t) = std::tuple{gocpp::rune(t[0]), t.make_slice(1)};
-            }
-            else
-            {
-                auto [r, size] = utf8::DecodeRuneInString(t);
-                std::tie(tr, t) = std::tuple{r, t.make_slice(size)};
-            }
+            auto [tr, size] = utf8::DecodeRuneInString(t);
+            t = t.make_slice(size);
 
             // If they match, keep going; if not, return false.
             // Easy case.
@@ -1522,114 +1621,7 @@ namespace golang::strings
     // Index returns the index of the first instance of substr in s, or -1 if substr is not present in s.
     int Index(gocpp::string s, gocpp::string substr)
     {
-        auto n = len(substr);
-        //Go switch emulation
-        {
-            int conditionId = -1;
-            if(n == 0) { conditionId = 0; }
-            else if(n == 1) { conditionId = 1; }
-            else if(n == len(s)) { conditionId = 2; }
-            else if(n > len(s)) { conditionId = 3; }
-            else if(n <= bytealg::MaxLen) { conditionId = 4; }
-            switch(conditionId)
-            {
-                case 0:
-                    return 0;
-                    break;
-                case 1:
-                    return IndexByte(s, substr[0]);
-                    break;
-                case 2:
-                    if(substr == s)
-                    {
-                        return 0;
-                    }
-                    return - 1;
-                    break;
-                case 3:
-                    return - 1;
-                    break;
-                case 4:
-                {
-                    // Use brute force when s and substr both are small
-                    if(len(s) <= bytealg::MaxBruteForce)
-                    {
-                        return bytealg::IndexString(s, substr);
-                    }
-                    auto c0 = substr[0];
-                    auto c1 = substr[1];
-                    auto i = 0;
-                    auto t = len(s) - n + 1;
-                    auto fails = 0;
-                    for(; i < t; )
-                    {
-                        if(s[i] != c0)
-                        {
-                            // IndexByte is faster than bytealg.IndexString, so use it as long as
-                            // we're not getting lots of false positives.
-                            auto o = IndexByte(s.make_slice(i + 1, t), c0);
-                            if(o < 0)
-                            {
-                                return - 1;
-                            }
-                            i += o + 1;
-                        }
-                        if(s[i + 1] == c1 && s.make_slice(i, i + n) == substr)
-                        {
-                            return i;
-                        }
-                        fails++;
-                        i++;
-                        // Switch to bytealg.IndexString when IndexByte produces too many false positives.
-                        if(fails > bytealg::Cutover(i))
-                        {
-                            auto r = bytealg::IndexString(s.make_slice(i), substr);
-                            if(r >= 0)
-                            {
-                                return r + i;
-                            }
-                            return - 1;
-                        }
-                    }
-                    return - 1;
-                    break;
-                }
-            }
-        }
-        auto c0 = substr[0];
-        auto c1 = substr[1];
-        auto i = 0;
-        auto t = len(s) - n + 1;
-        auto fails = 0;
-        for(; i < t; )
-        {
-            if(s[i] != c0)
-            {
-                auto o = IndexByte(s.make_slice(i + 1, t), c0);
-                if(o < 0)
-                {
-                    return - 1;
-                }
-                i += o + 1;
-            }
-            if(s[i + 1] == c1 && s.make_slice(i, i + n) == substr)
-            {
-                return i;
-            }
-            i++;
-            fails++;
-            if(fails >= 4 + (i >> 4) && i < t)
-            {
-                // See comment in ../bytes/bytes.go.
-                auto j = bytealg::IndexRabinKarp(s.make_slice(i), substr);
-                if(j < 0)
-                {
-                    return - 1;
-                }
-                return i + j;
-            }
-        }
-        return - 1;
+        return stringslite::Index(s, substr);
     }
 
     // Cut slices s around the first instance of sep,
@@ -1641,11 +1633,7 @@ namespace golang::strings
         gocpp::string before;
         gocpp::string after;
         bool found;
-        if(auto i = Index(s, sep); i >= 0)
-        {
-            return {s.make_slice(0, i), s.make_slice(i + len(sep)), true};
-        }
-        return {s, ""_s, false};
+        return stringslite::Cut(s, sep);
     }
 
     // CutPrefix returns s without the provided leading prefix string
@@ -1656,11 +1644,7 @@ namespace golang::strings
     {
         gocpp::string after;
         bool found;
-        if(! HasPrefix(s, prefix))
-        {
-            return {s, false};
-        }
-        return {s.make_slice(len(prefix)), true};
+        return stringslite::CutPrefix(s, prefix);
     }
 
     // CutSuffix returns s without the provided ending suffix string
@@ -1671,11 +1655,23 @@ namespace golang::strings
     {
         gocpp::string before;
         bool found;
-        if(! HasSuffix(s, suffix))
+        return stringslite::CutSuffix(s, suffix);
+    }
+
+    // CutLast slices s around the last instance of sep,
+    // returning the text before and after sep.
+    // The found result reports whether sep appears in s.
+    // If sep does not appear in s, CutLast returns s, "", false.
+    std::tuple<gocpp::string, gocpp::string, bool> CutLast(gocpp::string s, gocpp::string sep)
+    {
+        gocpp::string before;
+        gocpp::string after;
+        bool found;
+        if(auto i = LastIndex(s, sep); i >= 0)
         {
-            return {s, false};
+            return {s.make_slice(0, i), s.make_slice(i + len(sep)), true};
         }
-        return {s.make_slice(0, len(s) - len(suffix)), true};
+        return {s, ""_s, false};
     }
 
 }

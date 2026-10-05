@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::color
+namespace golang::image::color
 {
     std::tuple<uint8_t, uint8_t, uint8_t> RGBToYCbCr(uint8_t r, uint8_t g, uint8_t b);
     std::tuple<uint8_t, uint8_t, uint8_t> YCbCrToRGB(uint8_t y, uint8_t cb, uint8_t cr);
@@ -73,14 +73,18 @@ namespace golang::color
 }
 #include "golang/image/color/color.h"
 
-namespace golang::color
+namespace golang::image::color
 {
-    Color yCbCrModel(Color c);
-    Color nYCbCrAModel(Color c);
-    Color cmykModel(Color c);
+    // YCbCrModel is the [Model] for Y'CbCr colors.
     extern Model YCbCrModel;
+    Color yCbCrModel(Color c);
+    // NYCbCrAModel is the [Model] for non-alpha-premultiplied Y'CbCr-with-alpha
+    // colors.
     extern Model NYCbCrAModel;
+    Color nYCbCrAModel(Color c);
+    // CMYKModel is the [Model] for CMYK colors.
     extern Model CMYKModel;
+    Color cmykModel(Color c);
 
     namespace rec
     {

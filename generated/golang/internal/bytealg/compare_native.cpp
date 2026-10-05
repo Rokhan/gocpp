@@ -11,7 +11,7 @@
 #include "golang/internal/bytealg/compare_native.h"
 #include "gocpp/support.h"
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
     namespace rec
     {
@@ -20,6 +20,11 @@ namespace golang::bytealg
     //go:noescape
     int Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     /* convertBlockStmt, nil block */;
+
+    int CompareString(gocpp::string a, gocpp::string b)
+    {
+        return abigen_runtime_cmpstring(a, b);
+    }
 
     //go:linkname abigen_runtime_cmpstring runtime.cmpstring
     int abigen_runtime_cmpstring(gocpp::string a, gocpp::string b)

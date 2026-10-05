@@ -12,27 +12,36 @@
 
 namespace golang::runtime
 {
-    void memclrHasPointers(gocpp::unsafe_pointer ptr, uintptr_t n);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/slice.h"
-#include "golang/internal/abi/abi.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
-    void typedmemmove(abi::Type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
     void wbZero(_type* typ, gocpp::unsafe_pointer dst);
     void wbMove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
     void reflect_typedmemmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
     void reflectlite_typedmemmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
-    void reflectcallmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t size, abi::RegArgs* regs);
+    void maps_typedmemmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
     int typedslicecopy(_type* typ, gocpp::unsafe_pointer dstPtr, int dstLen, gocpp::unsafe_pointer srcPtr, int srcLen);
     int reflect_typedslicecopy(_type* elemType, golang::runtime::slice dst, golang::runtime::slice src);
     void typedmemclr(_type* typ, gocpp::unsafe_pointer ptr);
     void reflect_typedmemclr(_type* typ, gocpp::unsafe_pointer ptr);
+    void maps_typedmemclr(_type* typ, gocpp::unsafe_pointer ptr);
     void reflect_typedmemclrpartial(_type* typ, gocpp::unsafe_pointer ptr, uintptr_t off, uintptr_t size);
     void reflect_typedarrayclear(_type* typ, gocpp::unsafe_pointer ptr, int len);
+    void memclrHasPointers(gocpp::unsafe_pointer ptr, uintptr_t n);
+}
+#include "golang/internal/abi/abi.fwd.h"
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
+    void typedmemmove(abi::Type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
+    void reflectcallmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t size, abi::RegArgs* regs);
 
     namespace rec
     {

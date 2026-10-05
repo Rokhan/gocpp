@@ -10,14 +10,27 @@
 #include "gocpp/support.h"
 
 
-namespace golang::flate
+namespace golang::compress::flate
 {
-    uint32_t load32(gocpp::slice<unsigned char> b, int32_t i);
-    uint64_t load64(gocpp::slice<unsigned char> b, int32_t i);
-    uint32_t hash(uint32_t u);
+    struct fastGen
+    {
+        gocpp::slice<unsigned char> hist{};
+        int32_t cur{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct fastGen& value);
     struct tableEntry
     {
-        uint32_t val{}; // Value at destination
         int32_t offset{};
 
         using isGoStruct = void;
@@ -32,11 +45,12 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct tableEntry& value);
-    struct deflateFast
+    uint32_t hashLen(uint64_t u, uint8_t b, uint8_t n);
+    int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
+    struct tableEntryPrev
     {
-        gocpp::array<tableEntry, tableSize> table{};
-        gocpp::slice<unsigned char> prev{}; // Previous block, zero length if unknown.
-        int32_t cur{}; // Current match offset.
+        tableEntry cur{};
+        tableEntry prev{};
 
         using isGoStruct = void;
 
@@ -49,27 +63,92 @@ namespace golang::flate
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct deflateFast& value);
+    std::ostream& operator<<(std::ostream& os, const struct tableEntryPrev& value);
 }
-#include "golang/compress/flate/token.h"
+#include "golang/compress/flate/token.fwd.h"
 
-namespace golang::flate
+namespace golang::compress::flate
 {
-    gocpp::slice<token> emitLiteral(gocpp::slice<token> dst, gocpp::slice<unsigned char> lit);
-    deflateFast* newDeflateFast();
-}
+    struct fastEnc : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
 
-#include "golang/compress/flate/token.h"
+        fastEnc(){}
+        fastEnc(fastEnc& i) = default;
+        fastEnc(const fastEnc& i) = default;
+        fastEnc& operator=(fastEnc& i) = default;
+        fastEnc& operator=(const fastEnc& i) = default;
 
-namespace golang::flate
-{
+        inline fastEnc(nullptr_t) {};
+        fastEnc& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        fastEnc(T& ref);
+
+        template<typename T>
+        fastEnc(const T& ref);
+
+        template<typename T>
+        fastEnc(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IfastEnc
+        {
+            // encode src into dst.
+            virtual void vencode(tokens* dst, gocpp::slice<unsigned char> src) = 0;
+            // reset the encoder so matches are not made with previous data.
+            virtual void vreset() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IfastEnc>
+        struct fastEncImpl : virtual TInterface
+        {
+            explicit fastEncImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            void vencode(tokens* dst, gocpp::slice<unsigned char> src) override;
+
+            void vreset() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IfastEnc* value() const;
+
+        std::shared_ptr<IfastEnc> mValue;
+    };
 
     namespace rec
     {
-        gocpp::slice<token> encode(deflateFast* e, gocpp::slice<token> dst, gocpp::slice<unsigned char> src);
-        int32_t matchLen(deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src);
-        void reset(deflateFast* e);
-        void shiftOffsets(deflateFast* e);
+        void encode(const gocpp::PtrRecv<struct fastEnc, false>& self, tokens* dst, gocpp::slice<unsigned char> src);
+        void encode(const gocpp::ObjRecv<struct fastEnc>& self, tokens* dst, gocpp::slice<unsigned char> src);
+
+        void reset(const gocpp::PtrRecv<struct fastEnc, false>& self);
+        void reset(const gocpp::ObjRecv<struct fastEnc>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct fastEnc& value);
+    fastEnc newFastEnc(int level);
+
+    namespace rec
+    {
+        int32_t addBlock(fastGen* e, gocpp::slice<unsigned char> src);
+        int32_t matchLenLimited(fastGen* e, int s, int t, gocpp::slice<unsigned char> src);
+        int32_t matchLenLong(fastGen* e, int s, int t, gocpp::slice<unsigned char> src);
+        void reset(fastGen* e);
+        fastGen* getFastGen(fastGen* f);
     }
 }
 

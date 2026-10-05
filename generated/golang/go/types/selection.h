@@ -12,12 +12,12 @@
 #include "golang/go/types/object.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Selection
     {
         SelectionKind kind{};
-        golang::types::Type recv{}; // type of x
+        golang::go::types::Type recv{}; // type of x
         Object obj{}; // object denoted by x.f
         gocpp::slice<int> index{}; // path from x to x.f
         bool indirect{}; // set if there was any pointer indirection on the path
@@ -37,7 +37,7 @@ namespace golang::types
 }
 #include "golang/go/types/typestring.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     gocpp::string SelectionString(Selection* s, Qualifier qf);
 }
@@ -45,15 +45,15 @@ namespace golang::types
 #include "golang/go/types/object.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
         SelectionKind Kind(Selection* s);
-        golang::types::Type Recv(Selection* s);
+        golang::go::types::Type Recv(Selection* s);
         Object Obj(Selection* s);
-        golang::types::Type Type(Selection* s);
+        golang::go::types::Type Type(Selection* s);
         gocpp::slice<int> Index(Selection* s);
         bool Indirect(Selection* s);
         gocpp::string String(Selection* s);

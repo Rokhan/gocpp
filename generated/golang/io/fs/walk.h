@@ -9,13 +9,22 @@
 #include "golang/io/fs/walk.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/io/fs/fs.h"
-#include "golang/errors/errors.fwd.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
+    // SkipDir is used as a return value from [WalkDirFunc] to indicate that
+    // the directory named in the call is to be skipped. It is not returned
+    // as an error by any function.
     extern gocpp::error SkipDir;
+    // SkipAll is used as a return value from [WalkDirFunc] to indicate that
+    // all remaining files and directories are to be skipped. It is not returned
+    // as an error by any function.
     extern gocpp::error SkipAll;
+}
+#include "golang/io/fs/fs.h"
+
+namespace golang::io::fs
+{
     gocpp::error walkDir(FS fsys, gocpp::string name, DirEntry d, WalkDirFunc walkDirFn);
     gocpp::error WalkDir(FS fsys, gocpp::string root, WalkDirFunc fn);
 

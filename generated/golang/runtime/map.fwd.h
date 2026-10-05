@@ -6,48 +6,7 @@
 
 namespace golang::runtime
 {
-    // Maximum average load of a bucket that triggers growth is bucketCnt*13/16 (about 80% full)
-    // Because of minimum alignment rules, bucketCnt is known to be at least 8.
-    // Represent as loadFactorNum/loadFactorDen, to allow integer math.
-    const long loadFactorDen = 2;
-    struct gocpp_id_0;
-    // Possible tophash values. We reserve a few possibilities for special marks.
-    // Each bucket (including its overflow buckets, if any) will have either all or none of its
-    // entries in the evacuated* states (except during the evacuate() method, which only happens
-    // during map writes and thus no one else can observe the map during that time).
-    const long emptyRest = 0;
-    const long emptyOne = 1;
-    const long evacuatedX = 2;
-    const long evacuatedY = 3;
-    const long evacuatedEmpty = 4;
-    const long minTopHash = 5;
-    // flags
-    const long iterator = 1;
-    const long oldIterator = 2;
-    const long hashWriting = 4;
-    const long sameSizeGrow = 8;
-    struct hmap;
-    struct mapextra;
-    struct bmap;
-    struct evacDst;
-}
-#include "golang/internal/abi/map.fwd.h"
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/type.fwd.h"
-
-namespace golang::runtime
-{
-    // Maximum number of key/elem pairs a bucket can hold.
-    const int bucketCntBits = abi::MapBucketCountBits;
-    const int bucketCnt = abi::MapBucketCount;
-    // Maximum key or elem size to keep inline (instead of mallocing per element).
-    // Must fit in a uint8.
-    // Fast versions cannot handle big elems - the cutoff size for
-    // fast versions in cmd/compile/internal/gc/walk.go must be at most this elem.
-    const int maxKeySize = abi::MapMaxKeyBytes;
-    const int maxElemSize = abi::MapMaxElemBytes;
-    // sentinel bucket ID for iterator checks
-    const int noCheck = (1 << (8 * goarch::PtrSize)) - 1;
-    struct hiter;
-    const int loadFactorNum = loadFactorDen * bucketCnt * 13 / 16;
+    // TODO: remove? These are used by tests but not the actual map
+    const long loadFactorNum = 7;
+    const long loadFactorDen = 8;
 }

@@ -12,24 +12,27 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
-#include "golang/internal/abi/type.h"
+#include "golang/internal/abi/symtab.h"
+#include "golang/internal/goarch/goarch.h"
+#include "golang/internal/profilerecord/profilerecord.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/consts.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/asan0.h"
-#include "golang/runtime/cputicks.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
+#include "golang/runtime/mcleanup.h"
 #include "golang/runtime/mem.h"
 #include "golang/runtime/mfinal.h"
+#include "golang/runtime/mgc.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/msan0.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
-#include "golang/runtime/print.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/proflabel.h"
 #include "golang/runtime/race0.h"
@@ -39,12 +42,21 @@
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/sema.h"
 #include "golang/runtime/stubs.h"
+#include "golang/runtime/stubs_amd64.h"
+#include "golang/runtime/symtab.h"
+#include "golang/runtime/symtabinl.h"
 #include "golang/runtime/time_nofake.h"
 #include "golang/runtime/traceback.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/tracestack.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace goarch = golang::internal::goarch;
+    namespace profilerecord = golang::internal::profilerecord;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::Add;
@@ -167,8 +179,6 @@ namespace golang::runtime
         T result;
         result.allocs = this->allocs;
         result.frees = this->frees;
-        result.alloc_bytes = this->alloc_bytes;
-        result.free_bytes = this->free_bytes;
         return result;
     }
 
@@ -177,8 +187,6 @@ namespace golang::runtime
     {
         if (allocs != ref.allocs) return false;
         if (frees != ref.frees) return false;
-        if (alloc_bytes != ref.alloc_bytes) return false;
-        if (free_bytes != ref.free_bytes) return false;
         return true;
     }
 
@@ -187,8 +195,6 @@ namespace golang::runtime
         os << '{';
         os << "" << allocs;
         os << " " << frees;
-        os << " " << alloc_bytes;
-        os << " " << free_bytes;
         os << '}';
         return os;
     }
@@ -203,8 +209,6 @@ namespace golang::runtime
     {
         a->allocs += b->allocs;
         a->frees += b->frees;
-        a->alloc_bytes += b->alloc_bytes;
-        a->free_bytes += b->free_bytes;
     }
 
     // A blockRecord is the bucket data for a bucket of type blockProfile,
@@ -329,9 +333,9 @@ namespace golang::runtime
     }
 
     // newBucket allocates a bucket with the given type and number of stack entries.
-    golang::runtime::bucket* newBucket(bucketType typ, int nstk)
+    bucket* newBucket(bucketType typ, int nstk)
     {
-        auto size = gocpp::Sizeof<golang::runtime::bucket>() + uintptr_t(nstk) * gocpp::Sizeof<uintptr_t>();
+        auto size = gocpp::Sizeof<bucket>() + uintptr_t(nstk) * gocpp::Sizeof<uintptr_t>();
         //Go switch emulation
         {
             auto condition = typ;
@@ -354,17 +358,18 @@ namespace golang::runtime
             }
         }
 
-        auto b = (golang::runtime::bucket*)(persistentalloc(size, 0, & memstats.buckhash_sys));
+        auto b = (bucket*)(persistentalloc(size, 0, & memstats.buckhash_sys));
         b->typ = typ;
         b->nstk = uintptr_t(nstk);
         return b;
     }
 
-    // stk returns the slice in b holding the stack.
-    gocpp::slice<uintptr_t> rec::stk(golang::runtime::bucket* b)
+    // stk returns the slice in b holding the stack. The caller can assume that the
+    // backing array is immutable.
+    gocpp::slice<uintptr_t> rec::stk(bucket* b)
     {
-        auto stk = (gocpp::array_ptr<gocpp::array<uintptr_t, maxStack>>)(runtime::add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>()));
-        if(b->nstk > maxStack)
+        auto stk = (gocpp::array_ptr<gocpp::array<uintptr_t, maxProfStackDepth>>)(runtime::add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>()));
+        if(b->nstk > maxProfStackDepth)
         {
             // prove that slicing works; otherwise a failure requires a P
             go_throw("bad profile stack count"_s);
@@ -373,7 +378,7 @@ namespace golang::runtime
     }
 
     // mp returns the memRecord associated with the memProfile bucket b.
-    memRecord* rec::mp(golang::runtime::bucket* b)
+    memRecord* rec::mp(bucket* b)
     {
         if(b->typ != memProfile)
         {
@@ -384,7 +389,7 @@ namespace golang::runtime
     }
 
     // bp returns the blockRecord associated with the blockProfile bucket b.
-    blockRecord* rec::bp(golang::runtime::bucket* b)
+    blockRecord* rec::bp(bucket* b)
     {
         if(b->typ != blockProfile && b->typ != mutexProfile)
         {
@@ -395,7 +400,7 @@ namespace golang::runtime
     }
 
     // Return the bucket for stk[0:nstk], allocating new bucket if needed.
-    golang::runtime::bucket* stkbucket(bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc)
+    bucket* stkbucket(bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc)
     {
         auto bh = (gocpp::array_ptr<buckhashArray>)(rec::Load(gocpp::recv(buckhash)));
         if(bh == nullptr)
@@ -405,7 +410,7 @@ namespace golang::runtime
             bh = (gocpp::array_ptr<buckhashArray>)(rec::Load(gocpp::recv(buckhash)));
             if(bh == nullptr)
             {
-                bh = (gocpp::array_ptr<buckhashArray>)(sysAlloc(gocpp::Sizeof<buckhashArray>(), & memstats.buckhash_sys));
+                bh = (gocpp::array_ptr<buckhashArray>)(sysAlloc(gocpp::Sizeof<buckhashArray>(), & memstats.buckhash_sys, "profiler hash buckets"_s));
                 if(bh == nullptr)
                 {
                     go_throw("runtime: cannot allocate memory"_s);
@@ -433,7 +438,7 @@ namespace golang::runtime
 
         auto i = int(h % buckHashSize);
         // first check optimistically, without the lock
-        for(auto b = (golang::runtime::bucket*)(rec::Load(gocpp::recv(bh[i]))); b != nullptr; b = b->next)
+        for(auto b = (bucket*)(rec::Load(gocpp::recv(bh[i]))); b != nullptr; b = b->next)
         {
             if(b->typ == typ && b->hash == h && b->size == size && eqslice(rec::stk(gocpp::recv(b)), stk))
             {
@@ -448,7 +453,7 @@ namespace golang::runtime
 
         lock(& profInsertLock);
         // check again under the insertion lock
-        for(auto b = (golang::runtime::bucket*)(rec::Load(gocpp::recv(bh[i]))); b != nullptr; b = b->next)
+        for(auto b = (bucket*)(rec::Load(gocpp::recv(bh[i]))); b != nullptr; b = b->next)
         {
             if(b->typ == typ && b->hash == h && b->size == size && eqslice(rec::stk(gocpp::recv(b)), stk))
             {
@@ -478,8 +483,8 @@ namespace golang::runtime
             allnext = & bbuckets;
         }
 
-        b->next = (golang::runtime::bucket*)(rec::Load(gocpp::recv(bh[i])));
-        b->allnext = (golang::runtime::bucket*)(rec::Load(gocpp::recv(allnext)));
+        b->next = (bucket*)(rec::Load(gocpp::recv(bh[i])));
+        b->allnext = (bucket*)(rec::Load(gocpp::recv(allnext)));
 
         rec::StoreNoWB(gocpp::recv(bh[i]), gocpp::unsafe_pointer(b));
         rec::StoreNoWB(gocpp::recv(allnext), gocpp::unsafe_pointer(b));
@@ -548,7 +553,7 @@ namespace golang::runtime
     {
         assertLockHeld(& profMemActiveLock);
         assertLockHeld(& profMemFutureLock[index]);
-        auto head = (golang::runtime::bucket*)(rec::Load(gocpp::recv(mbuckets)));
+        auto head = (bucket*)(rec::Load(gocpp::recv(mbuckets)));
         for(auto b = head; b != nullptr; b = b->allnext)
         {
             auto mp = rec::mp(gocpp::recv(b));
@@ -583,20 +588,27 @@ namespace golang::runtime
     }
 
     // Called by malloc to record a profiled block.
-    void mProf_Malloc(gocpp::unsafe_pointer p, uintptr_t size)
+    void mProf_Malloc(m* mp, gocpp::unsafe_pointer p, uintptr_t size)
     {
-        gocpp::array<uintptr_t, maxStack> stk = {};
-        auto nstk = callers(4, stk.make_slice(0));
-
+        if(mp->profStack == nullptr)
+        {
+            // mp.profStack is nil if we happen to sample an allocation during the
+            // initialization of mp. This case is rare, so we just ignore such
+            // allocations. Change MemProfileRate to 1 if you need to reproduce such
+            // cases for testing purposes.
+            return;
+        }
+        // Only use the part of mp.profStack we need and ignore the extra space
+        // reserved for delayed inline expansion with frame pointer unwinding.
+        auto nstk = callers(3, mp->profStack.make_slice(0, debug.profstackdepth + 2));
         auto index = (rec::read(gocpp::recv(mProfCycle)) + 2) % uint32_t(len(memRecord {}.future));
 
-        auto b = stkbucket(memProfile, size, stk.make_slice(0, nstk), true);
-        auto mp = rec::mp(gocpp::recv(b));
-        auto mpc = & mp->future[index];
+        auto b = stkbucket(memProfile, size, mp->profStack.make_slice(0, nstk), true);
+        auto mr = rec::mp(gocpp::recv(b));
+        auto mpc = & mr->future[index];
 
         lock(& profMemFutureLock[index]);
         mpc->allocs++;
-        mpc->alloc_bytes += size;
         unlock(& profMemFutureLock[index]);
 
         // Setprofilebucket locks a bunch of other mutexes, so we call it outside of
@@ -610,7 +622,7 @@ namespace golang::runtime
     }
 
     // Called when freeing a profiled block.
-    void mProf_Free(golang::runtime::bucket* b, uintptr_t size)
+    void mProf_Free(bucket* b)
     {
         auto index = (rec::read(gocpp::recv(mProfCycle)) + 1) % uint32_t(len(memRecord {}.future));
 
@@ -619,7 +631,6 @@ namespace golang::runtime
 
         lock(& profMemFutureLock[index]);
         mpc->frees++;
-        mpc->free_bytes += size;
         unlock(& profMemFutureLock[index]);
     }
 
@@ -682,156 +693,160 @@ namespace golang::runtime
         return true;
     }
 
+    // saveblockevent records a profile event of the type specified by which.
+    // cycles is the quantity associated with this event and rate is the sampling rate,
+    // used to adjust the cycles value in the manner determined by the profile type.
+    // skip is the number of frames to omit from the traceback associated with the event.
+    // The traceback will be recorded from the stack of the goroutine associated with the current m.
+    // skip should be positive if this event is recorded from the current stack
+    // (e.g. when this is not called from a system stack)
     void saveblockevent(int64_t cycles, int64_t rate, int skip, bucketType which)
     {
-        auto gp = getg();
-        int nstk = {};
-        gocpp::array<uintptr_t, maxStack> stk = {};
-        if(gp->m->curg == nullptr || gp->m->curg == gp)
+        if(debug.profstackdepth == 0)
         {
-            nstk = callers(skip, stk.make_slice(0));
+            // profstackdepth is set to 0 by the user, so mp.profStack is nil and we
+            // can't record a stack trace.
+            return;
+        }
+        if(skip > maxSkip)
+        {
+            print("requested skip="_s, skip);
+            go_throw("invalid skip value"_s);
+        }
+        auto gp = getg();
+        // we must not be preempted while accessing profstack
+        auto mp = acquirem();
+
+        int nstk = {};
+        if(tracefpunwindoff() || rec::hasCgoOnStack(gocpp::recv(gp->m)))
+        {
+            if(gp->m->curg == nullptr || gp->m->curg == gp)
+            {
+                nstk = callers(skip, mp->profStack);
+            }
+            else
+            {
+                nstk = gcallers(gp->m->curg, skip, mp->profStack);
+            }
         }
         else
         {
-            nstk = gcallers(gp->m->curg, skip, stk.make_slice(0));
+            if(gp->m->curg == nullptr || gp->m->curg == gp)
+            {
+                if(skip > 0)
+                {
+                    // We skip one fewer frame than the provided value for frame
+                    // pointer unwinding because the skip value includes the current
+                    // frame, whereas the saved frame pointer will give us the
+                    // caller's return address first (so, not including
+                    // saveblockevent)
+                    skip -= 1;
+                }
+                nstk = fpTracebackPartialExpand(skip, gocpp::unsafe_pointer(getfp()), mp->profStack);
+            }
+            else
+            {
+                mp->profStack[0] = gp->m->curg->sched.pc;
+                nstk = 1 + fpTracebackPartialExpand(skip, gocpp::unsafe_pointer(gp->m->curg->sched.bp), mp->profStack.make_slice(1));
+            }
         }
 
-        saveBlockEventStack(cycles, rate, stk.make_slice(0, nstk), which);
+        saveBlockEventStack(cycles, rate, mp->profStack.make_slice(0, nstk), which);
+        releasem(mp);
     }
 
-    // lockTimer assists with profiling contention on runtime-internal locks.
+    // fpTracebackPartialExpand records a call stack obtained starting from fp.
+    // This function will skip the given number of frames, properly accounting for
+    // inlining, and save remaining frames as "physical" return addresses. The
+    // consumer should later use CallersFrames or similar to expand inline frames.
+    int fpTracebackPartialExpand(int skip, gocpp::unsafe_pointer fp, gocpp::slice<uintptr_t> pcBuf)
+    {
+        int n = {};
+        auto lastFuncID = abi::FuncIDNormal;
+        auto skipOrAdd = [=](uintptr_t retPC) mutable -> bool
+        {
+            if(skip > 0)
+            {
+                skip--;
+            }
+            else
+            if(n < len(pcBuf))
+            {
+                pcBuf[n] = retPC;
+                n++;
+            }
+            return n < len(pcBuf);
+        };
+        for(; n < len(pcBuf) && fp != nullptr; )
+        {
+            // return addr sits one word above the frame pointer
+            auto pc = *(uintptr_t*)(gocpp::unsafe_pointer(uintptr_t(fp) + goarch::PtrSize));
+
+            if(skip > 0)
+            {
+                auto callPC = pc - 1;
+                auto fi = findfunc(callPC);
+                auto [u, uf] = newInlineUnwinder(fi, callPC);
+                for(; rec::valid(gocpp::recv(uf)); uf = rec::next(gocpp::recv(u), uf))
+                {
+                    auto sf = rec::srcFunc(gocpp::recv(u), uf);
+                    if(sf.funcID == abi::FuncIDWrapper && elideWrapperCalling(lastFuncID))
+                    {
+                    }
+                    else
+                    // ignore wrappers
+                    if(auto more = skipOrAdd(uf.pc + 1); ! more)
+                    {
+                        return n;
+                    }
+                    lastFuncID = sf.funcID;
+                }
+            }
+            else
+            {
+                // We've skipped the desired number of frames, so no need
+                // to perform further inline expansion now.
+                pcBuf[n] = pc;
+                n++;
+            }
+
+            // follow the frame pointer to the next one
+            fp = gocpp::unsafe_pointer(*(uintptr_t*)(fp));
+        }
+        return n;
+    }
+
+    // mLockProfile holds information about the runtime-internal lock contention
+    // experienced and caused by this M, to report in metrics and profiles.
     //
-    // There are several steps between the time that an M experiences contention and
-    // when that contention may be added to the profile. This comes from our
-    // constraints: We need to keep the critical section of each lock small,
-    // especially when those locks are contended. The reporting code cannot acquire
-    // new locks until the M has released all other locks, which means no memory
-    // allocations and encourages use of (temporary) M-local storage.
+    // These measurements are subject to some notable constraints: First, the fast
+    // path for lock and unlock must remain very fast, with a minimal critical
+    // section. Second, the critical section during contention has to remain small
+    // too, so low levels of contention are less likely to snowball into large ones.
+    // The reporting code cannot acquire new locks until the M has released all
+    // other locks, which means no memory allocations and encourages use of
+    // (temporary) M-local storage.
     //
-    // The M will have space for storing one call stack that caused contention, and
-    // for the magnitude of that contention. It will also have space to store the
-    // magnitude of additional contention the M caused, since it only has space to
-    // remember one call stack and might encounter several contention events before
-    // it releases all of its locks and is thus able to transfer the local buffer
-    // into the profile.
+    // The M has space for storing one call stack that caused contention, and the
+    // magnitude of that contention. It also has space to store the magnitude of
+    // additional contention the M caused, since it might encounter several
+    // contention events before it releases all of its locks and is thus able to
+    // transfer the locally buffered call stack and magnitude into the profile.
     //
-    // The M will collect the call stack when it unlocks the contended lock. That
-    // minimizes the impact on the critical section of the contended lock, and
-    // matches the mutex profile's behavior for contention in sync.Mutex: measured
-    // at the Unlock method.
+    // The M collects the call stack when it unlocks the contended lock. The
+    // traceback takes place outside of the lock's critical section.
     //
     // The profile for contention on sync.Mutex blames the caller of Unlock for the
     // amount of contention experienced by the callers of Lock which had to wait.
     // When there are several critical sections, this allows identifying which of
-    // them is responsible.
+    // them is responsible. We must match that reporting behavior for contention on
+    // runtime-internal locks.
     //
-    // Matching that behavior for runtime-internal locks will require identifying
-    // which Ms are blocked on the mutex. The semaphore-based implementation is
-    // ready to allow that, but the futex-based implementation will require a bit
-    // more work. Until then, we report contention on runtime-internal locks with a
-    // call stack taken from the unlock call (like the rest of the user-space
-    // "mutex" profile), but assign it a duration value based on how long the
-    // previous lock call took (like the user-space "block" profile).
-    //
-    // Thus, reporting the call stacks of runtime-internal lock contention is
-    // guarded by GODEBUG for now. Set GODEBUG=runtimecontentionstacks=1 to enable.
-    //
-    // TODO(rhysh): plumb through the delay duration, remove GODEBUG, update comment
-    //
-    // The M will track this by storing a pointer to the lock; lock/unlock pairs for
-    // runtime-internal locks are always on the same M.
-    //
-    // Together, that demands several steps for recording contention. First, when
-    // finally acquiring a contended lock, the M decides whether it should plan to
-    // profile that event by storing a pointer to the lock in its "to be profiled
-    // upon unlock" field. If that field is already set, it uses the relative
-    // magnitudes to weight a random choice between itself and the other lock, with
-    // the loser's time being added to the "additional contention" field. Otherwise
-    // if the M's call stack buffer is occupied, it does the comparison against that
-    // sample's magnitude.
-    //
-    // Second, having unlocked a mutex the M checks to see if it should capture the
-    // call stack into its local buffer. Finally, when the M unlocks its last mutex,
-    // it transfers the local buffer into the profile. As part of that step, it also
-    // transfers any "additional contention" time to the profile. Any lock
-    // contention that it experiences while adding samples to the profile will be
-    // recorded later as "additional contention" and not include a call stack, to
-    // avoid an echo.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    lockTimer::operator T()
-    {
-        T result;
-        result.lock = this->lock;
-        result.timeRate = this->timeRate;
-        result.timeStart = this->timeStart;
-        result.tickStart = this->tickStart;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool lockTimer::operator==(const T& ref) const
-    {
-        if (lock != ref.lock) return false;
-        if (timeRate != ref.timeRate) return false;
-        if (timeStart != ref.timeStart) return false;
-        if (tickStart != ref.tickStart) return false;
-        return true;
-    }
-
-    std::ostream& lockTimer::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << lock;
-        os << " " << timeRate;
-        os << " " << timeStart;
-        os << " " << tickStart;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct lockTimer& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    void rec::begin(lockTimer* lt)
-    {
-        auto rate = int64_t(atomic::Load64(& mutexprofilerate));
-
-        lt->timeRate = gTrackingPeriod;
-        if(rate != 0 && rate < lt->timeRate)
-        {
-            lt->timeRate = rate;
-        }
-        if(int64_t(cheaprand()) % lt->timeRate == 0)
-        {
-            lt->timeStart = nanotime();
-        }
-
-        if(rate > 0 && int64_t(cheaprand()) % rate == 0)
-        {
-            lt->tickStart = cputicks();
-        }
-    }
-
-    void rec::end(lockTimer* lt)
-    {
-        auto gp = getg();
-
-        if(lt->timeStart != 0)
-        {
-            auto nowTime = nanotime();
-            rec::Add(gocpp::recv(gp->m->mLockProfile.waitTime), (nowTime - lt->timeStart) * lt->timeRate);
-        }
-
-        if(lt->tickStart != 0)
-        {
-            auto nowTick = cputicks();
-            rec::recordLock(gocpp::recv(gp->m->mLockProfile), nowTick - lt->tickStart, lt->lock);
-        }
-    }
-
+    // When the M unlocks its last mutex, it transfers the locally buffered call
+    // stack and magnitude into the profile. As part of that step, it also transfers
+    // any "additional contention" time to the profile. Any lock contention that it
+    // experiences while adding samples to the profile will be recorded later as
+    // "additional contention" and not include a call stack, to avoid an echo.
     
     template<typename T> requires gocpp::GoStruct<T>
     mLockProfile::operator T()
@@ -839,9 +854,9 @@ namespace golang::runtime
         T result;
         result.waitTime = this->waitTime;
         result.stack = this->stack;
-        result.pending = this->pending;
         result.cycles = this->cycles;
         result.cyclesLost = this->cyclesLost;
+        result.haveStack = this->haveStack;
         result.disabled = this->disabled;
         return result;
     }
@@ -851,9 +866,9 @@ namespace golang::runtime
     {
         if (waitTime != ref.waitTime) return false;
         if (stack != ref.stack) return false;
-        if (pending != ref.pending) return false;
         if (cycles != ref.cycles) return false;
         if (cyclesLost != ref.cyclesLost) return false;
+        if (haveStack != ref.haveStack) return false;
         if (disabled != ref.disabled) return false;
         return true;
     }
@@ -863,9 +878,9 @@ namespace golang::runtime
         os << '{';
         os << "" << waitTime;
         os << " " << stack;
-        os << " " << pending;
         os << " " << cycles;
         os << " " << cyclesLost;
+        os << " " << haveStack;
         os << " " << disabled;
         os << '}';
         return os;
@@ -876,11 +891,34 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::recordLock(mLockProfile* prof, int64_t cycles, mutex* l)
+    int64_t rec::start(mLockProfile* prof)
     {
-        if(cycles <= 0)
+        if(cheaprandn(gTrackingPeriod) == 0)
         {
-            return;
+            return nanotime();
+        }
+        return 0;
+    }
+
+    void rec::end(mLockProfile* prof, int64_t start)
+    {
+        if(start != 0)
+        {
+            rec::Add(gocpp::recv(prof->waitTime), (nanotime() - start) * gTrackingPeriod);
+        }
+    }
+
+    // recordUnlock prepares data for later addition to the mutex contention
+    // profile. The M may hold arbitrary locks during this call.
+    //
+    // From unlock2, we might not be holding a p in this code.
+    //
+    //go:nowritebarrierrec
+    void rec::recordUnlock(mLockProfile* prof, int64_t cycles)
+    {
+        if(cycles < 0)
+        {
+            cycles = 0;
         }
 
         if(prof->disabled)
@@ -892,21 +930,17 @@ namespace golang::runtime
             return;
         }
 
-        if(uintptr_t(gocpp::unsafe_pointer(l)) == prof->pending)
-        {
-            // Optimization: we'd already planned to profile this same lock (though
-            // possibly from a different unlock site).
-            prof->cycles += cycles;
-            return;
-        }
-
         if(auto prev = prof->cycles; prev > 0)
         {
             // We can only store one call stack for runtime-internal lock contention
             // on this M, and we've already got one. Decide which should stay, and
             // add the other to the report for runtime._LostContendedRuntimeLock.
-            auto prevScore = uint64_t(cheaprand64()) % uint64_t(prev);
-            auto thisScore = uint64_t(cheaprand64()) % uint64_t(cycles);
+            if(cycles == 0)
+            {
+                return;
+            }
+            auto prevScore = cheaprandu64() % uint64_t(prev);
+            auto thisScore = cheaprandu64() % uint64_t(cycles);
             if(prevScore > thisScore)
             {
                 prof->cyclesLost += cycles;
@@ -917,33 +951,21 @@ namespace golang::runtime
                 prof->cyclesLost += prev;
             }
         }
-        // Saving the *mutex as a uintptr is safe because:
-        // - lockrank_on.go does this too, which gives it regular exercise
-        // - the lock would only move if it's stack allocated, which means it
-        // cannot experience multi-M contention
-        prof->pending = uintptr_t(gocpp::unsafe_pointer(l));
+        rec::captureStack(gocpp::recv(prof));
         prof->cycles = cycles;
-    }
-
-    // From unlock2, we might not be holding a p in this code.
-    //
-    //go:nowritebarrierrec
-    void rec::recordUnlock(mLockProfile* prof, mutex* l)
-    {
-        if(uintptr_t(gocpp::unsafe_pointer(l)) == prof->pending)
-        {
-            rec::captureStack(gocpp::recv(prof));
-        }
-        if(auto gp = getg(); gp->m->locks == 1 && gp->m->mLockProfile.cycles != 0)
-        {
-            rec::store(gocpp::recv(prof));
-        }
     }
 
     void rec::captureStack(mLockProfile* prof)
     {
-        // runtime.(*mLockProfile).recordUnlock runtime.unlock2 runtime.unlockWithRank
-        auto skip = 3;
+        if(debug.profstackdepth == 0)
+        {
+            // profstackdepth is set to 0 by the user, so mp.profStack is nil and we
+            // can't record a stack trace.
+            return;
+        }
+
+        // runtime.(*mLockProfile).recordUnlock runtime.unlock2Wake runtime.unlock2 runtime.unlockWithRank
+        auto skip = 4;
         if(staticLockRanking)
         {
             // When static lock ranking is enabled, we'll always be on the system
@@ -958,24 +980,17 @@ namespace golang::runtime
             // runtime.unlockWithRank.func1
             skip += 1;
         }
-        prof->pending = 0;
-
-        if(rec::Load(gocpp::recv(debug.runtimeContentionStacks)) == 0)
-        {
-            prof->stack[0] = abi::FuncPCABIInternal(_LostContendedRuntimeLock) + sys::PCQuantum;
-            prof->stack[1] = 0;
-            return;
-        }
+        prof->haveStack = true;
 
         int nstk = {};
         auto gp = getg();
-        auto sp = getcallersp();
-        auto pc = getcallerpc();
+        auto sp = sys::GetCallerSP();
+        auto pc = sys::GetCallerPC();
         systemstack([=]() mutable -> void
         {
             unwinder u = {};
             rec::initAt(gocpp::recv(u), pc, sp, 0, gp, unwindSilentErrors | unwindJumpStack);
-            nstk = tracebackPCs(& u, skip, prof->stack.make_slice(0));
+            nstk = tracebackPCs(& u, skip, prof->stack);
         });
         if(nstk < len(prof->stack))
         {
@@ -983,7 +998,20 @@ namespace golang::runtime
         }
     }
 
+    // store adds the M's local record to the mutex contention profile.
+    //
+    // From unlock2, we might not be holding a p in this code.
+    //
+    //go:nowritebarrierrec
     void rec::store(mLockProfile* prof)
+    {
+        if(auto gp = getg(); gp->m->locks / mutexMLocksDelta == 1 && gp->m->mLockProfile.haveStack)
+        {
+            rec::storeSlow(gocpp::recv(prof));
+        }
+    }
+
+    void rec::storeSlow(mLockProfile* prof)
     {
         // Report any contention we experience within this function as "lost"; it's
         // important that the act of reporting a contention event not lead to a
@@ -992,7 +1020,7 @@ namespace golang::runtime
         auto mp = acquirem();
         prof->disabled = true;
 
-        auto nstk = maxStack;
+        auto nstk = int(debug.profstackdepth);
         for(auto i = 0; i < nstk; i++)
         {
             if(auto pc = prof->stack[i]; pc == 0)
@@ -1004,6 +1032,7 @@ namespace golang::runtime
 
         auto [cycles, lost] = std::tuple{prof->cycles, prof->cyclesLost};
         std::tie(prof->cycles, prof->cyclesLost) = std::tuple{0, 0};
+        prof->haveStack = false;
 
         auto rate = int64_t(atomic::Load64(& mutexprofilerate));
         saveBlockEventStack(cycles, rate, prof->stack.make_slice(0, nstk), mutexProfile);
@@ -1069,7 +1098,6 @@ namespace golang::runtime
         return int(old);
     }
 
-    //go:linkname mutexevent sync.event
     void mutexevent(int64_t cycles, int skip)
     {
         if(cycles < 0)
@@ -1142,9 +1170,10 @@ namespace golang::runtime
     // possible in the execution of the program (for example,
     // at the beginning of main).
     int MemProfileRate = 512 * 1024;
-    // disableMemoryProfiling is set by the linker if runtime.MemProfile
+    // disableMemoryProfiling is set by the linker if memory profiling
     // is not used and the link type guarantees nobody else could use it
     // elsewhere.
+    // We check if the runtime.memProfileInternal symbol is present.
     bool disableMemoryProfiling;
     // A MemProfileRecord describes the live objects allocated
     // by a particular call sequence (stack trace).
@@ -1240,6 +1269,27 @@ namespace golang::runtime
     {
         int n;
         bool ok;
+        return memProfileInternal(len(p), inuseZero, [=](profilerecord::MemProfileRecord r) mutable -> void
+        {
+            copyMemProfileRecord(& p[0], r);
+            p = p.make_slice(1);
+        });
+    }
+
+    // memProfileInternal returns the number of records n in the profile. If there
+    // are less than size records, copyFn is invoked for each record, and ok returns
+    // true.
+    //
+    // The linker set disableMemoryProfiling to true to disable memory profiling
+    // if this function is not reachable. Mark it noinline to ensure the symbol exists.
+    // (This function is big and normally not inlined anyway.)
+    // See also disableMemoryProfiling above and cmd/link/internal/ld/lib.go:linksetup.
+    //
+    //go:noinline
+    std::tuple<int, bool> memProfileInternal(int size, bool inuseZero, std::function<void (profilerecord::MemProfileRecord _1)> copyFn)
+    {
+        int n;
+        bool ok;
         auto cycle = rec::read(gocpp::recv(mProfCycle));
         // If we're between mProf_NextCycle and mProf_Flush, take care
         // of flushing to the active profile so we only have to look
@@ -1250,11 +1300,11 @@ namespace golang::runtime
         mProf_FlushLocked(index);
         unlock(& profMemFutureLock[index]);
         auto clear = true;
-        auto head = (golang::runtime::bucket*)(rec::Load(gocpp::recv(mbuckets)));
+        auto head = (bucket*)(rec::Load(gocpp::recv(mbuckets)));
         for(auto b = head; b != nullptr; b = b->allnext)
         {
             auto mp = rec::mp(gocpp::recv(b));
-            if(inuseZero || mp->active.alloc_bytes != mp->active.free_bytes)
+            if(inuseZero || mp->active.allocs != mp->active.frees)
             {
                 n++;
             }
@@ -1280,23 +1330,27 @@ namespace golang::runtime
                     mp->future[c] = memRecordCycle {};
                     unlock(& profMemFutureLock[c]);
                 }
-                if(inuseZero || mp->active.alloc_bytes != mp->active.free_bytes)
+                if(inuseZero || mp->active.allocs != mp->active.frees)
                 {
                     n++;
                 }
             }
         }
-        if(n <= len(p))
+        if(n <= size)
         {
             ok = true;
-            auto idx = 0;
             for(auto b = head; b != nullptr; b = b->allnext)
             {
                 auto mp = rec::mp(gocpp::recv(b));
-                if(inuseZero || mp->active.alloc_bytes != mp->active.free_bytes)
+                if(inuseZero || mp->active.allocs != mp->active.frees)
                 {
-                    record(& p[idx], b);
-                    idx++;
+                    auto r = gocpp::Init<profilerecord::MemProfileRecord>([=](auto& x) {
+                        x.ObjectSize = int64_t(b->size);
+                        x.AllocObjects = int64_t(mp->active.allocs);
+                        x.FreeObjects = int64_t(mp->active.frees);
+                        x.Stack = rec::stk(gocpp::recv(b));
+                    });
+                    copyFn(r);
                 }
             }
         }
@@ -1304,37 +1358,44 @@ namespace golang::runtime
         return {n, ok};
     }
 
-    // Write b's data to r.
-    void record(MemProfileRecord* r, golang::runtime::bucket* b)
+    void copyMemProfileRecord(MemProfileRecord* dst, profilerecord::MemProfileRecord src)
     {
-        auto mp = rec::mp(gocpp::recv(b));
-        r->AllocBytes = int64_t(mp->active.alloc_bytes);
-        r->FreeBytes = int64_t(mp->active.free_bytes);
-        r->AllocObjects = int64_t(mp->active.allocs);
-        r->FreeObjects = int64_t(mp->active.frees);
+        dst->AllocBytes = src.AllocObjects * src.ObjectSize;
+        dst->FreeBytes = src.FreeObjects * src.ObjectSize;
+        dst->AllocObjects = src.AllocObjects;
+        dst->FreeObjects = src.FreeObjects;
         if(raceenabled)
         {
-            racewriterangepc(gocpp::unsafe_pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), getcallerpc(), abi::FuncPCABIInternal(MemProfile));
+            racewriterangepc(gocpp::unsafe_pointer(& dst->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), sys::GetCallerPC(), abi::FuncPCABIInternal(MemProfile));
         }
         if(msanenabled)
         {
-            msanwrite(gocpp::unsafe_pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+            msanwrite(gocpp::unsafe_pointer(& dst->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
         }
         if(asanenabled)
         {
-            asanwrite(gocpp::unsafe_pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+            asanwrite(gocpp::unsafe_pointer(& dst->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
         }
-        copy(r->Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
-        for(auto i = int(b->nstk); i < len(r->Stack0); i++)
-        {
-            r->Stack0[i] = 0;
-        }
+        auto i = copy(dst->Stack0.make_slice(0), src.Stack);
+        clear(dst->Stack0.make_slice(i));
     }
 
-    void iterate_memprof(std::function<void (golang::runtime::bucket* _1, uintptr_t _2, uintptr_t* _3, uintptr_t _4, uintptr_t _5, uintptr_t _6)> fn)
+    //go:linkname pprof_memProfileInternal
+    std::tuple<int, bool> pprof_memProfileInternal(gocpp::slice<profilerecord::MemProfileRecord> p, bool inuseZero)
+    {
+        int n;
+        bool ok;
+        return memProfileInternal(len(p), inuseZero, [=](profilerecord::MemProfileRecord r) mutable -> void
+        {
+            p[0] = r;
+            p = p.make_slice(1);
+        });
+    }
+
+    void iterate_memprof(std::function<void (bucket* _1, uintptr_t _2, uintptr_t* _3, uintptr_t _4, uintptr_t _5, uintptr_t _6)> fn)
     {
         lock(& profMemActiveLock);
-        auto head = (golang::runtime::bucket*)(rec::Load(gocpp::recv(mbuckets)));
+        auto head = (bucket*)(rec::Load(gocpp::recv(mbuckets)));
         for(auto b = head; b != nullptr; b = b->allnext)
         {
             auto mp = rec::mp(gocpp::recv(b));
@@ -1391,49 +1452,117 @@ namespace golang::runtime
     {
         int n;
         bool ok;
+        int m = {};
+        std::tie(n, ok) = blockProfileInternal(len(p), [=](profilerecord::BlockProfileRecord r) mutable -> void
+        {
+            copyBlockProfileRecord(& p[m], r);
+            m++;
+        });
+        if(ok)
+        {
+            expandFrames(p.make_slice(0, n));
+        }
+        return {n, ok};
+    }
+
+    void expandFrames(gocpp::slice<BlockProfileRecord> p)
+    {
+        auto expandedStack = makeProfStack();
+        for(auto [i, gocpp_ignored] : p)
+        {
+            auto cf = CallersFrames(rec::Stack(gocpp::recv(p[i])));
+            auto j = 0;
+            for(; j < len(expandedStack); )
+            {
+                auto [f, more] = rec::Next(gocpp::recv(cf));
+                // f.PC is a "call PC", but later consumers will expect
+                // "return PCs"
+                expandedStack[j] = f.PC + 1;
+                j++;
+                if(! more)
+                {
+                    break;
+                }
+            }
+            auto k = copy(p[i].StackRecord.Stack0.make_slice(0), expandedStack.make_slice(0, j));
+            clear(p[i].StackRecord.Stack0.make_slice(k));
+        }
+    }
+
+    // blockProfileInternal returns the number of records n in the profile. If there
+    // are less than size records, copyFn is invoked for each record, and ok returns
+    // true.
+    std::tuple<int, bool> blockProfileInternal(int size, std::function<void (profilerecord::BlockProfileRecord _1)> copyFn)
+    {
+        int n;
+        bool ok;
         lock(& profBlockLock);
-        auto head = (golang::runtime::bucket*)(rec::Load(gocpp::recv(bbuckets)));
+        auto head = (bucket*)(rec::Load(gocpp::recv(bbuckets)));
         for(auto b = head; b != nullptr; b = b->allnext)
         {
             n++;
         }
-        if(n <= len(p))
+        if(n <= size)
         {
             ok = true;
             for(auto b = head; b != nullptr; b = b->allnext)
             {
                 auto bp = rec::bp(gocpp::recv(b));
-                auto r = & p[0];
-                r->Count = int64_t(bp->count);
+                auto r = gocpp::Init<profilerecord::BlockProfileRecord>([=](auto& x) {
+                    x.Count = int64_t(bp->count);
+                    x.Cycles = bp->cycles;
+                    x.Stack = rec::stk(gocpp::recv(b));
+                });
                 // Prevent callers from having to worry about division by zero errors.
                 // See discussion on http://golang.org/cl/299991.
-                if(r->Count == 0)
+                if(r.Count == 0)
                 {
-                    r->Count = 1;
+                    r.Count = 1;
                 }
-                r->Cycles = bp->cycles;
-                if(raceenabled)
-                {
-                    racewriterangepc(gocpp::unsafe_pointer(& r->StackRecord.Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), getcallerpc(), abi::FuncPCABIInternal(BlockProfile));
-                }
-                if(msanenabled)
-                {
-                    msanwrite(gocpp::unsafe_pointer(& r->StackRecord.Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
-                }
-                if(asanenabled)
-                {
-                    asanwrite(gocpp::unsafe_pointer(& r->StackRecord.Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
-                }
-                auto i = copy(r->StackRecord.Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
-                for(; i < len(r->StackRecord.Stack0); i++)
-                {
-                    r->StackRecord.Stack0[i] = 0;
-                }
-                p = p.make_slice(1);
+                copyFn(r);
             }
         }
         unlock(& profBlockLock);
         return {n, ok};
+    }
+
+    // copyBlockProfileRecord copies the sample values and call stack from src to dst.
+    // The call stack is copied as-is. The caller is responsible for handling inline
+    // expansion, needed when the call stack was collected with frame pointer unwinding.
+    void copyBlockProfileRecord(BlockProfileRecord* dst, profilerecord::BlockProfileRecord src)
+    {
+        dst->Count = src.Count;
+        dst->Cycles = src.Cycles;
+        if(raceenabled)
+        {
+            racewriterangepc(gocpp::unsafe_pointer(& dst->StackRecord.Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), sys::GetCallerPC(), abi::FuncPCABIInternal(BlockProfile));
+        }
+        if(msanenabled)
+        {
+            msanwrite(gocpp::unsafe_pointer(& dst->StackRecord.Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+        }
+        if(asanenabled)
+        {
+            asanwrite(gocpp::unsafe_pointer(& dst->StackRecord.Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+        }
+        // We just copy the stack here without inline expansion
+        // (needed if frame pointer unwinding is used)
+        // since this function is called under the profile lock,
+        // and doing something that might allocate can violate lock ordering.
+        auto i = copy(dst->StackRecord.Stack0.make_slice(0), src.Stack);
+        clear(dst->StackRecord.Stack0.make_slice(i));
+    }
+
+    //go:linkname pprof_blockProfileInternal
+    std::tuple<int, bool> pprof_blockProfileInternal(gocpp::slice<profilerecord::BlockProfileRecord> p)
+    {
+        int n;
+        bool ok;
+        return blockProfileInternal(len(p), [=](profilerecord::BlockProfileRecord r) mutable -> void
+        {
+            p[0] = r;
+            p = p.make_slice(1);
+        });
     }
 
     // MutexProfile returns n, the number of records in the current mutex profile.
@@ -1446,31 +1575,60 @@ namespace golang::runtime
     {
         int n;
         bool ok;
+        int m = {};
+        std::tie(n, ok) = mutexProfileInternal(len(p), [=](profilerecord::BlockProfileRecord r) mutable -> void
+        {
+            copyBlockProfileRecord(& p[m], r);
+            m++;
+        });
+        if(ok)
+        {
+            expandFrames(p.make_slice(0, n));
+        }
+        return {n, ok};
+    }
+
+    // mutexProfileInternal returns the number of records n in the profile. If there
+    // are less than size records, copyFn is invoked for each record, and ok returns
+    // true.
+    std::tuple<int, bool> mutexProfileInternal(int size, std::function<void (profilerecord::BlockProfileRecord _1)> copyFn)
+    {
+        int n;
+        bool ok;
         lock(& profBlockLock);
-        auto head = (golang::runtime::bucket*)(rec::Load(gocpp::recv(xbuckets)));
+        auto head = (bucket*)(rec::Load(gocpp::recv(xbuckets)));
         for(auto b = head; b != nullptr; b = b->allnext)
         {
             n++;
         }
-        if(n <= len(p))
+        if(n <= size)
         {
             ok = true;
             for(auto b = head; b != nullptr; b = b->allnext)
             {
                 auto bp = rec::bp(gocpp::recv(b));
-                auto r = & p[0];
-                r->Count = int64_t(bp->count);
-                r->Cycles = bp->cycles;
-                auto i = copy(r->StackRecord.Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
-                for(; i < len(r->StackRecord.Stack0); i++)
-                {
-                    r->StackRecord.Stack0[i] = 0;
-                }
-                p = p.make_slice(1);
+                auto r = gocpp::Init<profilerecord::BlockProfileRecord>([=](auto& x) {
+                    x.Count = int64_t(bp->count);
+                    x.Cycles = bp->cycles;
+                    x.Stack = rec::stk(gocpp::recv(b));
+                });
+                copyFn(r);
             }
         }
         unlock(& profBlockLock);
         return {n, ok};
+    }
+
+    //go:linkname pprof_mutexProfileInternal
+    std::tuple<int, bool> pprof_mutexProfileInternal(gocpp::slice<profilerecord::BlockProfileRecord> p)
+    {
+        int n;
+        bool ok;
+        return mutexProfileInternal(len(p), [=](profilerecord::BlockProfileRecord r) mutable -> void
+        {
+            p[0] = r;
+            p = p.make_slice(1);
+        });
     }
 
     // ThreadCreateProfile returns n, the number of records in the thread creation profile.
@@ -1483,26 +1641,54 @@ namespace golang::runtime
     {
         int n;
         bool ok;
+        return threadCreateProfileInternal(len(p), [=](profilerecord::StackRecord r) mutable -> void
+        {
+            auto i = copy(p[0].Stack0.make_slice(0), r.Stack);
+            clear(p[0].Stack0.make_slice(i));
+            p = p.make_slice(1);
+        });
+    }
+
+    // threadCreateProfileInternal returns the number of records n in the profile.
+    // If there are less than size records, copyFn is invoked for each record, and
+    // ok returns true.
+    std::tuple<int, bool> threadCreateProfileInternal(int size, std::function<void (profilerecord::StackRecord _1)> copyFn)
+    {
+        int n;
+        bool ok;
         auto first = (m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm)));
         for(auto mp = first; mp != nullptr; mp = mp->alllink)
         {
             n++;
         }
-        if(n <= len(p))
+        if(n <= size)
         {
             ok = true;
-            auto i = 0;
             for(auto mp = first; mp != nullptr; mp = mp->alllink)
             {
-                p[i].Stack0 = mp->createstack;
-                i++;
+                auto r = gocpp::Init<profilerecord::StackRecord>([=](auto& x) {
+                    x.Stack = mp->createstack.make_slice(0);
+                });
+                copyFn(r);
             }
         }
         return {n, ok};
     }
 
-    //go:linkname runtime_goroutineProfileWithLabels runtime/pprof.runtime_goroutineProfileWithLabels
-    std::tuple<int, bool> runtime_goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    //go:linkname pprof_threadCreateInternal
+    std::tuple<int, bool> pprof_threadCreateInternal(gocpp::slice<profilerecord::StackRecord> p)
+    {
+        int n;
+        bool ok;
+        return threadCreateProfileInternal(len(p), [=](profilerecord::StackRecord r) mutable -> void
+        {
+            p[0] = r;
+            p = p.make_slice(1);
+        });
+    }
+
+    //go:linkname pprof_goroutineProfileWithLabels
+    std::tuple<int, bool> pprof_goroutineProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
         int n;
         bool ok;
@@ -1510,7 +1696,7 @@ namespace golang::runtime
     }
 
     // labels may be nil. If labels is non-nil, it must have the same length as p.
-    std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
         int n;
         bool ok;
@@ -1522,12 +1708,33 @@ namespace golang::runtime
         return goroutineProfileWithLabelsConcurrent(p, labels);
     }
 
+    //go:linkname pprof_goroutineLeakProfileWithLabels
+    std::tuple<int, bool> pprof_goroutineLeakProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    {
+        int n;
+        bool ok;
+        return goroutineLeakProfileWithLabels(p, labels);
+    }
+
+    // labels may be nil. If labels is non-nil, it must have the same length as p.
+    std::tuple<int, bool> goroutineLeakProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    {
+        int n;
+        bool ok;
+        if(labels != nullptr && len(labels) != len(p))
+        {
+            labels = nullptr;
+        }
+
+        return goroutineLeakProfileWithLabelsConcurrent(p, labels);
+    }
+
     struct gocpp_id_0
     {
         uint32_t sema{};
         bool active{};
         atomic::Int64 offset{};
-        gocpp::slice<StackRecord> records{};
+        gocpp::slice<profilerecord::StackRecord> records{};
         gocpp::slice<gocpp::unsafe_pointer> labels{};
 
         using isGoStruct = void;
@@ -1603,14 +1810,75 @@ namespace golang::runtime
         return rec::CompareAndSwap(gocpp::recv((atomic::Uint32*)(p)), uint32_t(old), uint32_t(go_new));
     }
 
-    std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    std::tuple<int, bool> goroutineLeakProfileWithLabelsConcurrent(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
         int n;
         bool ok;
+        if(len(p) == 0)
+        {
+            // An empty slice is obviously too small. Return a rough
+            // allocation estimate.
+            return {work.goroutineLeak.count, false};
+        }
+
+        // see saveg() for explanation
+        auto pcbuf = makeProfStack();
+
+        // Prepare a profile large enough to store all leaked goroutines.
+        n = work.goroutineLeak.count;
+
+        if(n > len(p))
+        {
+            // There's not enough space in p to store the whole profile, so
+            // we're not allowed to write to p at all and must return n, false.
+            return {n, false};
+        }
+
+        // Visit each leaked goroutine and try to record its stack.
+        int offset = {};
+        forEachGRace([=](g* gp1) mutable -> void
+        {
+            if(readgstatus(gp1) &^ _Gscan == _Gleaked)
+            {
+                systemstack([=]() mutable -> void
+                {
+                    saveg(~ uintptr_t(0), ~ uintptr_t(0), gp1, & p[offset], pcbuf);
+                });
+                if(labels != nullptr)
+                {
+                    labels[offset] = gp1->labels;
+                }
+                offset++;
+            }
+        });
+
+        if(raceenabled)
+        {
+            raceacquire(gocpp::unsafe_pointer(& labelSync));
+        }
+
+        return {n, true};
+    }
+
+    std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    {
+        int n;
+        bool ok;
+        if(len(p) == 0)
+        {
+            // An empty slice is obviously too small. Return a rough
+            // allocation estimate without bothering to STW. As long as
+            // this is close, then we'll only need to STW once (on the next
+            // call).
+            return {int(gcount(false)), false};
+        }
+
         semacquire(& goroutineProfile.sema);
 
         auto ourg = getg();
 
+        // see saveg() for explanation
+        auto pcbuf = makeProfStack();
         auto stw = stopTheWorld(stwGoroutineProfile);
         // Using gcount while the world is stopped should give us a consistent view
         // of the number of live goroutines, minus the number of goroutines that are
@@ -1618,12 +1886,13 @@ namespace golang::runtime
         // with what we'd get from isSystemGoroutine, we need special handling for
         // goroutines that can vary between user and system to ensure that the count
         // doesn't change during the collection. So, check the finalizer goroutine
-        // in particular.
-        n = int(gcount());
+        // and cleanup goroutines in particular.
+        n = int(gcount(false));
         if(rec::Load(gocpp::recv(fingStatus)) & fingRunningFinalizer != 0)
         {
             n++;
         }
+        n += int(rec::Load(gocpp::recv(gcCleanups.running)));
 
         if(n > len(p))
         {
@@ -1636,11 +1905,11 @@ namespace golang::runtime
         }
 
         // Save current goroutine.
-        auto sp = getcallersp();
-        auto pc = getcallerpc();
+        auto sp = sys::GetCallerSP();
+        auto pc = sys::GetCallerPC();
         systemstack([=]() mutable -> void
         {
-            saveg(pc, sp, ourg, & p[0]);
+            saveg(pc, sp, ourg, & p[0], pcbuf);
         });
         if(labels != nullptr)
         {
@@ -1657,17 +1926,6 @@ namespace golang::runtime
         goroutineProfile.active = true;
         goroutineProfile.records = p;
         goroutineProfile.labels = labels;
-        // The finalizer goroutine needs special handling because it can vary over
-        // time between being a user goroutine (eligible for this profile) and a
-        // system goroutine (to be excluded). Pick one before restarting the world.
-        if(fing != nullptr)
-        {
-            rec::Store(gocpp::recv(fing->goroutineProfiled), goroutineProfileSatisfied);
-            if(readgstatus(fing) != _Gdead && ! isSystemGoroutine(fing, false))
-            {
-                doRecordGoroutineProfile(fing);
-            }
-        }
         startTheWorld(stw);
 
         // Visit each goroutine that existed as of the startTheWorld call above.
@@ -1681,7 +1939,7 @@ namespace golang::runtime
         // executing can cause any changes in its stack).
         forEachGRace([=](g* gp1) mutable -> void
         {
-            tryRecordGoroutineProfile(gp1, Gosched);
+            tryRecordGoroutineProfile(gp1, pcbuf, Gosched);
         });
 
         stw = stopTheWorld(stwGoroutineProfileCleanup);
@@ -1709,7 +1967,7 @@ namespace golang::runtime
         // It's a big surprise that the number of goroutines changed while we
         // were collecting the profile. But probably better to return a
         // truncated profile than to crash the whole process.
-        // For instance, needm moves a goroutine out of the _Gdead state and so
+        // For instance, needm moves a goroutine out of the _Gdeadextra state and so
         // might be able to change the goroutine count without interacting with
         // the scheduler. For code like that, the race windows are small and the
         // combination of features is uncommon, so it's hard to be (and remain)
@@ -1728,26 +1986,20 @@ namespace golang::runtime
         {
             go_throw("no P available, write barriers are forbidden"_s);
         }
-        tryRecordGoroutineProfile(gp1, osyield);
+        tryRecordGoroutineProfile(gp1, nullptr, osyield);
     }
 
     // tryRecordGoroutineProfile ensures that gp1 has the appropriate representation
     // in the current goroutine profile: either that it should not be profiled, or
     // that a snapshot of its call stack and labels are now in the profile.
-    void tryRecordGoroutineProfile(g* gp1, std::function<void ()> yield)
+    void tryRecordGoroutineProfile(g* gp1, gocpp::slice<uintptr_t> pcbuf, std::function<void ()> yield)
     {
-        if(readgstatus(gp1) == _Gdead)
+        if(auto status = readgstatus(gp1); status == _Gdead || status == _Gdeadextra)
         {
             // Dead goroutines should not appear in the profile. Goroutines that
             // start while profile collection is active will get goroutineProfiled
             // set to goroutineProfileSatisfied before transitioning out of _Gdead,
             // so here we check _Gdead first.
-            return;
-        }
-        if(isSystemGoroutine(gp1, true))
-        {
-            // System goroutines should not appear in the profile. (The finalizer
-            // goroutine is marked as "already profiled".)
             return;
         }
 
@@ -1776,7 +2028,7 @@ namespace golang::runtime
             auto mp = acquirem();
             if(rec::CompareAndSwap(gocpp::recv(gp1->goroutineProfiled), goroutineProfileAbsent, goroutineProfileInProgress))
             {
-                doRecordGoroutineProfile(gp1);
+                doRecordGoroutineProfile(gp1, pcbuf);
                 rec::Store(gocpp::recv(gp1->goroutineProfiled), goroutineProfileSatisfied);
             }
             releasem(mp);
@@ -1790,9 +2042,30 @@ namespace golang::runtime
     // goroutine that is coordinating the goroutine profile (running on its own
     // stack), or from the scheduler in preparation to execute gp1 (running on the
     // system stack).
-    void doRecordGoroutineProfile(g* gp1)
+    void doRecordGoroutineProfile(g* gp1, gocpp::slice<uintptr_t> pcbuf)
     {
-        if(readgstatus(gp1) == _Grunning)
+        if(isSystemGoroutine(gp1, false))
+        {
+            // System goroutines should not appear in the profile.
+            // Check this here and not in tryRecordGoroutineProfile because isSystemGoroutine
+            // may change on a goroutine while it is executing, so while the scheduler might
+            // see a system goroutine, goroutineProfileWithLabelsConcurrent might not, and
+            // this inconsistency could cause invariants to be violated, such as trying to
+            // record the stack of a running goroutine below. In short, we still want system
+            // goroutines to participate in the same state machine on gp1.goroutineProfiled as
+            // everything else, we just don't record the stack in the profile.
+            return;
+        }
+        // Double-check that we didn't make a grave mistake. If the G is running then in
+        // general, we cannot safely read its stack.
+        // However, there is one case where it's OK. There's a small window of time in
+        // exitsyscall where a goroutine could be in _Grunning as it's exiting a syscall.
+        // This is OK because goroutine will not exit the syscall until it passes through
+        // a call to tryRecordGoroutineProfile. (An explicit one on the fast path, an
+        // implicit one via the scheduler on the slow path.)
+        // This is also why it's safe to check syscallsp here. The syscall path mutates
+        // syscallsp only after passing through tryRecordGoroutineProfile.
+        if(readgstatus(gp1) == _Grunning && gp1->syscallsp == 0)
         {
             print("doRecordGoroutineProfile gp1="_s, gp1->goid, "\n"_s);
             go_throw("cannot read stack of running goroutine"_s);
@@ -1817,7 +2090,7 @@ namespace golang::runtime
         // to avoid schedule delays.
         systemstack([=]() mutable -> void
         {
-            saveg(~ uintptr_t(0), ~ uintptr_t(0), gp1, & goroutineProfile.records[offset]);
+            saveg(~ uintptr_t(0), ~ uintptr_t(0), gp1, & goroutineProfile.records[offset], pcbuf);
         });
 
         if(goroutineProfile.labels != nullptr)
@@ -1826,7 +2099,7 @@ namespace golang::runtime
         }
     }
 
-    std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
         int n;
         bool ok;
@@ -1836,9 +2109,23 @@ namespace golang::runtime
         {
             // Checking isSystemGoroutine here makes GoroutineProfile
             // consistent with both NumGoroutine and Stack.
-            return gp1 != gp && readgstatus(gp1) != _Gdead && ! isSystemGoroutine(gp1, false);
+            if(gp1 == gp)
+            {
+                return false;
+            }
+            if(auto status = readgstatus(gp1); status == _Gdead || status == _Gdeadextra)
+            {
+                return false;
+            }
+            if(isSystemGoroutine(gp1, false))
+            {
+                return false;
+            }
+            return true;
         };
 
+        // see saveg() for explanation
+        auto pcbuf = makeProfStack();
         auto stw = stopTheWorld(stwGoroutineProfile);
 
         // World is stopped, no locking required.
@@ -1857,11 +2144,11 @@ namespace golang::runtime
             auto [r, lbl] = std::tuple{p, labels};
 
             // Save current goroutine.
-            auto sp = getcallersp();
-            auto pc = getcallerpc();
+            auto sp = sys::GetCallerSP();
+            auto pc = sys::GetCallerPC();
             systemstack([=]() mutable -> void
             {
-                saveg(pc, sp, gp, & r[0]);
+                saveg(pc, sp, gp, & r[0], pcbuf);
             });
             r = r.make_slice(1);
 
@@ -1892,7 +2179,7 @@ namespace golang::runtime
                 // call into the schedular (see traceback.go:cgoContextPCs).
                 systemstack([=]() mutable -> void
                 {
-                    saveg(~ uintptr_t(0), ~ uintptr_t(0), gp1, & r[0]);
+                    saveg(~ uintptr_t(0), ~ uintptr_t(0), gp1, & r[0], pcbuf);
                 });
                 if(labels != nullptr)
                 {
@@ -1922,18 +2209,49 @@ namespace golang::runtime
     {
         int n;
         bool ok;
+        auto records = gocpp::make(gocpp::Tag<gocpp::slice<profilerecord::StackRecord>>(), len(p));
+        std::tie(n, ok) = goroutineProfileInternal(records);
+        if(! ok)
+        {
+            return {n, ok};
+        }
+        for(auto [i, mr] : records.make_slice(0, n))
+        {
+            auto l = copy(p[i].Stack0.make_slice(0), mr.Stack);
+            clear(p[i].Stack0.make_slice(l));
+        }
+        return {n, ok};
+    }
+
+    std::tuple<int, bool> goroutineProfileInternal(gocpp::slice<profilerecord::StackRecord> p)
+    {
+        int n;
+        bool ok;
         return goroutineProfileWithLabels(p, nullptr);
     }
 
-    void saveg(uintptr_t pc, uintptr_t sp, g* gp, StackRecord* r)
+    void saveg(uintptr_t pc, uintptr_t sp, g* gp, profilerecord::StackRecord* r, gocpp::slice<uintptr_t> pcbuf)
     {
+        // To reduce memory usage, we want to allocate a r.Stack that is just big
+        // enough to hold gp's stack trace. Naively we might achieve this by
+        // recording our stack trace into mp.profStack, and then allocating a
+        // r.Stack of the right size. However, mp.profStack is also used for
+        // allocation profiling, so it could get overwritten if the slice allocation
+        // gets profiled. So instead we record the stack trace into a temporary
+        // pcbuf which is usually given to us by our caller. When it's not, we have
+        // to allocate one here. This will only happen for goroutines that were in a
+        // syscall when the goroutine profile started or for goroutines that manage
+        // to execute before we finish iterating over all the goroutines.
+        if(pcbuf == nullptr)
+        {
+            pcbuf = makeProfStack();
+        }
+
         unwinder u = {};
         rec::initAt(gocpp::recv(u), pc, sp, 0, gp, unwindSilentErrors);
-        auto n = tracebackPCs(& u, 0, r->Stack0.make_slice(0));
-        if(n < len(r->Stack0))
-        {
-            r->Stack0[n] = 0;
-        }
+        auto n = tracebackPCs(& u, 0, pcbuf);
+        r->Stack = gocpp::make(gocpp::Tag<gocpp::slice<uintptr_t>>(), n);
+        copy(r->Stack, pcbuf);
     }
 
     // Stack formats a stack trace of the calling goroutine into buf
@@ -1952,8 +2270,8 @@ namespace golang::runtime
         if(len(buf) > 0)
         {
             auto gp = getg();
-            auto sp = getcallersp();
-            auto pc = getcallerpc();
+            auto sp = sys::GetCallerSP();
+            auto pc = sys::GetCallerPC();
             systemstack([=]() mutable -> void
             {
                 auto g0 = getg();
@@ -1979,72 +2297,6 @@ namespace golang::runtime
             startTheWorld(stw);
         }
         return n;
-    }
-
-    mutex tracelock;
-    void tracealloc(gocpp::unsafe_pointer p, uintptr_t size, _type* typ)
-    {
-        lock(& tracelock);
-        auto gp = getg();
-        gp->m->traceback = 2;
-        if(typ == nullptr)
-        {
-            print("tracealloc("_s, p, ", "_s, hex(size), ")\n"_s);
-        }
-        else
-        {
-            print("tracealloc("_s, p, ", "_s, hex(size), ", "_s, rec::string(gocpp::recv(toRType(typ))), ")\n"_s);
-        }
-        if(gp->m->curg == nullptr || gp == gp->m->curg)
-        {
-            goroutineheader(gp);
-            auto pc = getcallerpc();
-            auto sp = getcallersp();
-            systemstack([=]() mutable -> void
-            {
-                traceback(pc, sp, 0, gp);
-            });
-        }
-        else
-        {
-            goroutineheader(gp->m->curg);
-            traceback(~ uintptr_t(0), ~ uintptr_t(0), 0, gp->m->curg);
-        }
-        print("\n"_s);
-        gp->m->traceback = 0;
-        unlock(& tracelock);
-    }
-
-    void tracefree(gocpp::unsafe_pointer p, uintptr_t size)
-    {
-        lock(& tracelock);
-        auto gp = getg();
-        gp->m->traceback = 2;
-        print("tracefree("_s, p, ", "_s, hex(size), ")\n"_s);
-        goroutineheader(gp);
-        auto pc = getcallerpc();
-        auto sp = getcallersp();
-        systemstack([=]() mutable -> void
-        {
-            traceback(pc, sp, 0, gp);
-        });
-        print("\n"_s);
-        gp->m->traceback = 0;
-        unlock(& tracelock);
-    }
-
-    void tracegc()
-    {
-        lock(& tracelock);
-        auto gp = getg();
-        gp->m->traceback = 2;
-        print("tracegc()\n"_s);
-        // running on m->g0 stack; show all non-g0 goroutines
-        tracebackothers(gp);
-        print("end tracegc\n"_s);
-        print("\n"_s);
-        gp->m->traceback = 0;
-        unlock(& tracelock);
     }
 
 }

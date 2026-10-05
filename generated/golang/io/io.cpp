@@ -24,6 +24,8 @@
 // assume they are safe for parallel execution.
 namespace golang::io
 {
+    namespace errors = golang::errors;
+    namespace sync = golang::sync;
     namespace rec
     {
         using sync::rec::Get;
@@ -1620,9 +1622,9 @@ namespace golang::io
             return rec::WriteTo(gocpp::recv(wt), dst);
         }
         // Similarly, if the writer has a ReadFrom method, use it to do the copy.
-        if(auto [rt, ok] = gocpp::getValue<ReaderFrom>(dst); ok)
+        if(auto [rf, ok] = gocpp::getValue<ReaderFrom>(dst); ok)
         {
-            return rec::ReadFrom(gocpp::recv(rt), src);
+            return rec::ReadFrom(gocpp::recv(rf), src);
         }
         if(buf == nullptr)
         {
@@ -2238,7 +2240,17 @@ namespace golang::io
     // as an error to be reported.
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadAll(Reader r)
     {
+        // Build slices of exponentially growing size,
+        // then copy into a perfectly-sized slice at the end.
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 512);
+        // Starting with next equal to 256 (instead of say 512 or 1024)
+        // allows less memory usage for small inputs that finish in the
+        // early growth stages, but we grow the read sizes quickly such that
+        // it does not materially impact medium or large inputs.
+        auto next = 256;
+        auto chunks = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<unsigned char>>>(), 0, 4);
+        // Invariant: finalSize = sum(len(c) for c in chunks)
+        int finalSize = {};
         for(; ; )
         {
             auto [n, err] = rec::Read(gocpp::recv(r), b.make_slice(len(b), cap(b)));
@@ -2249,13 +2261,29 @@ namespace golang::io
                 {
                     err = nullptr;
                 }
-                return {b, err};
+                if(len(chunks) == 0)
+                {
+                    return {b, err};
+                }
+
+                // Build our final right-sized slice.
+                finalSize += len(b);
+                auto final = append(gocpp::slice<unsigned char>(nullptr), gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), finalSize)).make_slice(0, 0);
+                for(auto [gocpp_ignored, chunk] : chunks)
+                {
+                    final = append(final, chunk);
+                }
+                final = append(final, b);
+                return {final, err};
             }
 
-            if(len(b) == cap(b))
+            if(cap(b) - len(b) < cap(b) / 16)
             {
-                // Add more capacity (let append pick how much).
-                b = append(b, 0).make_slice(0, len(b));
+                // Move to the next intermediate slice.
+                chunks = append(chunks, b);
+                finalSize += len(b);
+                b = append(gocpp::slice<unsigned char>(nullptr), gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), next)).make_slice(0, 0);
+                next += next / 2;
             }
         }
     }

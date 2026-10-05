@@ -18,6 +18,9 @@
 
 namespace golang::main
 {
+    namespace io = golang::io;
+    namespace os = golang::os;
+    namespace strings = golang::strings;
     namespace rec
     {
         using io::rec::Read;

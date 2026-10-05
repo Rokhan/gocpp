@@ -19,6 +19,8 @@
 
 namespace golang::sort
 {
+    namespace bits = golang::math::bits;
+    namespace reflectlite = golang::internal::reflectlite;
     namespace rec
     {
         using reflectlite::rec::Len;

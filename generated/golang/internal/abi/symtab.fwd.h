@@ -4,8 +4,9 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::abi
+namespace golang::internal::abi
 {
+    using PCLnTabMagic = uint32_t;
     using FuncFlag = uint8_t;
     using FuncID = uint8_t;
     // ArgsSizeUnknown is set in Func.argsize to mark all functions
@@ -20,6 +21,7 @@ namespace golang::abi
     const long PCDATA_StackMapIndex = 1;
     const long PCDATA_InlTreeIndex = 2;
     const long PCDATA_ArgLiveIndex = 3;
+    const long PCDATA_PanicBounds = 4;
     const long FUNCDATA_ArgsPointerMaps = 0;
     const long FUNCDATA_LocalsPointerMaps = 1;
     const long FUNCDATA_StackObjects = 2;
@@ -40,6 +42,18 @@ namespace golang::abi
     const long UnsafePointRestart2 = - 4;
     // Like UnsafePointRestart1, but back to function entry if async preempted.
     const long UnsafePointRestartAtEntry = - 5;
+    const long MINFUNC = 16;
+    // Initial PCLnTabMagic value used in Go 1.2 through Go 1.15.
+    const PCLnTabMagic Go12PCLnTabMagic = 0xfffffffb;
+    // PCLnTabMagic value used in Go 1.16 through Go 1.17.
+    // Several fields added to header (CL 241598).
+    const PCLnTabMagic Go116PCLnTabMagic = 0xfffffffa;
+    // PCLnTabMagic value used in Go 1.18 through Go 1.19.
+    // Entry PC of func data changed from address to offset (CL 351463).
+    const PCLnTabMagic Go118PCLnTabMagic = 0xfffffff0;
+    // PCLnTabMagic value used in Go 1.20 and later.
+    // A ":" was added to generated symbol names (#37762).
+    const PCLnTabMagic Go120PCLnTabMagic = 0xfffffff1;
     // FuncFlagTopFrame indicates a function that appears at the top of its stack.
     // The traceback routine stop at such a function and consider that a
     // successful, complete traversal of the stack.
@@ -74,10 +88,20 @@ namespace golang::abi
     const FuncID FuncID_mstart = 14;
     const FuncID FuncID_panicwrap = 15;
     const FuncID FuncID_rt0_go = 16;
-    const FuncID FuncID_runfinq = 17;
-    const FuncID FuncID_runtime_main = 18;
-    const FuncID FuncID_sigpanic = 19;
-    const FuncID FuncID_systemstack = 20;
-    const FuncID FuncID_systemstack_switch = 21;
-    const FuncID FuncIDWrapper = 22;
+    const FuncID FuncID_runtime_main = 17;
+    const FuncID FuncID_runFinalizers = 18;
+    const FuncID FuncID_runCleanups = 19;
+    const FuncID FuncID_sigpanic = 20;
+    const FuncID FuncID_systemstack = 21;
+    const FuncID FuncID_systemstack_switch = 22;
+    const FuncID FuncIDWrapper = 23;
+    const int FuncTabBucketSize = 256 * MINFUNC;
+    // CurrentPCLnTabMagic is the value emitted by the current toolchain.
+    // This is written by the linker to the pcHeader and read by the
+    // runtime and debug/gosym (and external tools like Delve).
+    //
+    // Change this value when updating the pclntab version.
+    // Changing this exported value is OK because is an
+    // internal package.
+    const abi::PCLnTabMagic CurrentPCLnTabMagic = Go120PCLnTabMagic;
 }

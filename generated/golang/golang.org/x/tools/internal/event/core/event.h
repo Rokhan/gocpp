@@ -9,10 +9,18 @@
 #include "golang/golang.org/x/tools/internal/event/core/event.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
+#include "golang/time/time.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::event::core
+{
+    namespace time = golang::time;
+    namespace label = golang::golang_org::x::tools::internal::event::label;
+}
 #include "golang/golang.org/x/tools/internal/event/label/label.h"
 #include "golang/time/time.h"
 
-namespace golang::core
+namespace golang::golang_org::x::tools::internal::event::core
 {
     struct Event
     {
@@ -32,32 +40,19 @@ namespace golang::core
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Event& value);
-    struct eventLabelMap
-    {
-        Event event{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct eventLabelMap& value);
     Event MakeEvent(gocpp::array<label::Label, 3> go_static, gocpp::slice<label::Label> labels);
     Event CloneEvent(Event ev, mocklib::Date at);
 }
 
 #include "golang/fmt/print.h"
 #include "golang/golang.org/x/tools/internal/event/label/label.h"
+#include "golang/iter/iter.h"
 #include "golang/time/time.h"
 
-namespace golang::core
+namespace golang::golang_org::x::tools::internal::event::core
 {
+    namespace fmt = golang::fmt;
+    namespace iter = golang::iter;
 
     namespace rec
     {
@@ -65,6 +60,7 @@ namespace golang::core
         void Format(Event ev, fmt::State f, gocpp::rune r);
         bool Valid(Event ev, int index);
         label::Label Label(Event ev, int index);
+        iter::Seq<label::Label> Labels(Event ev);
         label::Label Find(Event ev, label::Key key);
     }
 }

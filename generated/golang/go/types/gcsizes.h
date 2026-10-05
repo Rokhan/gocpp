@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct gcSizes
     {
@@ -35,14 +35,14 @@ namespace golang::types
 #include "golang/go/types/object.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        int64_t Alignof(gcSizes* s, golang::types::Type T);
+        int64_t Alignof(gcSizes* s, golang::go::types::Type T);
         gocpp::slice<int64_t> Offsetsof(gcSizes* s, gocpp::slice<Var*> fields);
-        int64_t Sizeof(gcSizes* s, golang::types::Type T);
+        int64_t Sizeof(gcSizes* s, golang::go::types::Type T);
     }
 }
 

@@ -10,9 +10,15 @@
 #include "gocpp/support.h"
 
 
-namespace golang::cpu
+namespace golang::internal::cpu
 {
-    extern bool DebugOptions;
+    // CacheLineSize is the CPU's assumed cache line size.
+    // There is currently no runtime detection of the real cache line size
+    // so we use the constant per GOARCH CacheLinePadSize as an approximation.
+    extern uintptr_t CacheLineSize;
+    // doDerived, if non-nil, is called after processing GODEBUG to set "derived"
+    // feature flags.
+    extern std::function<void ()> doDerived;
     void Initialize(gocpp::string env);
     struct option
     {
@@ -35,11 +41,15 @@ namespace golang::cpu
     std::ostream& operator<<(std::ostream& os, const struct option& value);
     void processOptions(gocpp::string env);
     int indexByte(gocpp::string s, unsigned char c);
+    // options contains the cpu debug options that can be used in GODEBUG.
+    // Options are arch dependent and are added by the arch specific doinit functions.
+    // Features that are mandatory for the specific GOARCH should not be added to options
+    // (e.g. SSE2 on amd64).
     extern gocpp::slice<option> options;
 }
-#include "golang/internal/cpu/cpu_x86.h"
+#include "golang/internal/cpu/cpu_x86.fwd.h"
 
-namespace golang::cpu
+namespace golang::internal::cpu
 {
     struct CacheLinePad
     {
@@ -57,21 +67,34 @@ namespace golang::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CacheLinePad& value);
-    extern uintptr_t CacheLineSize;
     struct X86Struct
     {
         CacheLinePad _1{};
         bool HasAES{};
         bool HasADX{};
         bool HasAVX{};
+        bool HasAVXVNNI{};
         bool HasAVX2{};
+        bool HasAVX512{}; // Virtual feature: F+CD+BW+DQ+VL
         bool HasAVX512F{};
+        bool HasAVX512CD{};
         bool HasAVX512BW{};
+        bool HasAVX512DQ{};
         bool HasAVX512VL{};
+        bool HasAVX512GFNI{};
+        bool HasAVX512VAES{};
+        bool HasAVX512VNNI{};
+        bool HasAVX512VBMI{};
+        bool HasAVX512VBMI2{};
+        bool HasAVX512BITALG{};
+        bool HasAVX512VPOPCNTDQ{};
+        bool HasAVX512VPCLMULQDQ{};
         bool HasBMI1{};
         bool HasBMI2{};
         bool HasERMS{};
+        bool HasFSRM{};
         bool HasFMA{};
+        bool HasGFNI{};
         bool HasOSXSAVE{};
         bool HasPCLMULQDQ{};
         bool HasPOPCNT{};
@@ -81,6 +104,8 @@ namespace golang::cpu
         bool HasSSSE3{};
         bool HasSSE41{};
         bool HasSSE42{};
+        bool HasVAES{};
+        bool HasVPCLMULQDQ{};
         CacheLinePad _2{};
 
         using isGoStruct = void;
@@ -123,9 +148,12 @@ namespace golang::cpu
         bool HasSHA1{};
         bool HasSHA2{};
         bool HasSHA512{};
+        bool HasSHA3{};
         bool HasCRC32{};
         bool HasATOMICS{};
         bool HasCPUID{};
+        bool HasDIT{};
+        bool HasSB{};
         bool IsNeoverse{};
         CacheLinePad _2{};
 
@@ -141,6 +169,31 @@ namespace golang::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ARM64Struct& value);
+    struct Loong64Struct
+    {
+        CacheLinePad _1{};
+        bool HasLSX{}; // support 128-bit vector extension
+        bool HasLASX{}; // support 256-bit vector extension
+        bool HasCRC32{}; // support CRC instruction
+        bool HasLAMCAS{}; // support AMCAS[_DB].{B/H/W/D}
+        bool HasLAM_BH{}; // support AM{SWAP/ADD}[_DB].{B/H} instruction
+        bool HasLLACQ_SCREL{}; // support LLACQ.{W/D}, SCREL.{W/D} instruction
+        bool HasSCQ{}; // support SC.Q instruction
+        bool HasDBAR_HINTS{}; // supports finer-grained DBAR hints
+        CacheLinePad _2{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Loong64Struct& value);
     struct MIPS64XStruct
     {
         CacheLinePad _1{};
@@ -219,12 +272,63 @@ namespace golang::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct S390XStruct& value);
+    struct RISCV64Struct
+    {
+        CacheLinePad _1{};
+        bool HasFastMisaligned{}; // Fast misaligned accesses
+        bool HasV{}; // Vector extension compatible with RVV 1.0
+        bool HasZbb{}; // Basic bit-manipulation extension
+        bool HasZbc{}; // Carryless multiplication extension
+        bool HasZvbb{}; // Vector Basic Bit-manipulation
+        bool HasZvbc{}; // Vector Carryless Multiplication
+        bool HasZvkg{}; // Vector GCM/GMAC
+        bool HasZvkned{}; // NIST Suite: Vector AES Block Cipher
+        bool HasZvknha{}; // NIST Suite: Vector SHA-2 Secure Hash
+        bool HasZvknhb{}; // NIST Suite: Vector SHA-2 Secure Hash
+        bool HasZvksed{}; // ShangMi Suite: SM4 Block Cipher
+        bool HasZvksh{}; // ShangMi Suite: SM3 Secure Hash
+        bool HasZvkt{}; // Vector Data-Independent Execution Latency
+        CacheLinePad _2{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct RISCV64Struct& value);
+    // The booleans in X86 contain the correspondingly named cpuid feature bit.
+    // HasAVX and HasAVX2 are only set if the OS does support XMM and YMM registers
+    // in addition to the cpuid feature bit being set.
+    // The struct is padded to avoid false sharing.
     extern X86Struct X86;
+    // The booleans in ARM contain the correspondingly named cpu feature bit.
+    // The struct is padded to avoid false sharing.
     extern ARMStruct ARM;
+    // The booleans in ARM64 contain the correspondingly named cpu feature bit.
+    // The struct is padded to avoid false sharing.
     extern ARM64Struct ARM64;
+    // The booleans in Loong64 contain the correspondingly named cpu feature bit.
+    // The struct is padded to avoid false sharing.
+    extern Loong64Struct Loong64;
     extern MIPS64XStruct MIPS64X;
+    // For ppc64(le), it is safe to check only for ISA level starting on ISA v3.00,
+    // since there are no optional categories. There are some exceptions that also
+    // require kernel support to work (darn, scv), so there are feature bits for
+    // those as well. The minimum processor requirement is POWER8 (ISA 2.07).
+    // The struct is padded to avoid false sharing.
     extern PPC64Struct PPC64;
     extern S390XStruct S390X;
+    // RISCV64 contains the supported CPU features and performance characteristics for riscv64
+    // platforms. The booleans in RISCV64, with the exception of HasFastMisaligned, indicate
+    // the presence of RISC-V extensions.
+    // The struct is padded to avoid false sharing.
+    extern RISCV64Struct RISCV64;
 
     namespace rec
     {

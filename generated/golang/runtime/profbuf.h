@@ -13,13 +13,17 @@
 namespace golang::runtime
 {
     int countSub(uint32_t x, uint32_t y);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     extern gocpp::array<gocpp::unsafe_pointer, 1> overflowTag;
 }
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/runtime2.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/runtime/note_other.h"
 
 namespace golang::runtime
 {
+    namespace atomic = golang::internal::runtime::atomic;
     struct profBuf
     {
         // accessed atomically

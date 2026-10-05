@@ -16,7 +16,6 @@
 #include "golang/go/token/token.h"
 #include "golang/go/types/basic.h"
 #include "golang/go/types/check.h"
-#include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/lookup.h"
@@ -25,16 +24,19 @@
 #include "golang/go/types/package.h"
 #include "golang/go/types/pointer.h"
 #include "golang/go/types/predicates.h"
+#include "golang/go/types/recording.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typestring.h"
 #include "golang/go/types/typexpr.h"
-#include "golang/go/types/under.h"
 #include "golang/go/types/universe.h"
 #include "golang/internal/types/errors/codes.h"
 #include "golang/strconv/quote.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace strconv = golang::strconv;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::Pos;
@@ -121,7 +123,7 @@ namespace golang::types
         return ""_s;
     }
 
-    golang::types::Type rec::Underlying(Struct* t)
+    golang::go::types::Type rec::Underlying(Struct* t)
     {
         return t;
     }
@@ -156,9 +158,9 @@ namespace golang::types
         objset fset = {};
 
         // current field typ and tag
-        golang::types::Type typ = {};
+        golang::go::types::Type typ = {};
         gocpp::string tag = {};
-        auto add = [=](ast::Ident* ident, bool embedded, token::Pos pos) mutable -> void
+        auto add = [=](ast::Ident* ident, bool embedded) mutable -> void
         {
             if(tag != ""_s && tags == nullptr)
             {
@@ -169,6 +171,7 @@ namespace golang::types
                 tags = append(tags, tag);
             }
 
+            auto pos = rec::Pos(gocpp::recv(ident));
             auto name = ident->Name;
             auto fld = NewField(pos, check->pkg, name, typ, embedded);
             // spec: "Within a struct, non-blank field names must be unique."
@@ -183,11 +186,11 @@ namespace golang::types
         // fields with errors; this keeps the number of struct fields in sync
         // with the source as long as the fields are _ or have different names
         // (go.dev/issue/25627).
-        auto addInvalid = [=](ast::Ident* ident, token::Pos pos) mutable -> void
+        auto addInvalid = [=](ast::Ident* ident) mutable -> void
         {
             typ = Typ[Invalid];
             tag = ""_s;
-            add(ident, true, pos);
+            add(ident, true);
         };
 
         for(auto [gocpp_ignored, f] : list->List)
@@ -199,7 +202,7 @@ namespace golang::types
                 // named fields
                 for(auto [gocpp_ignored, name] : f->Names)
                 {
-                    add(name, false, rec::Pos(gocpp::recv(name)));
+                    add(name, false);
                 }
             }
             else
@@ -216,16 +219,16 @@ namespace golang::types
                     rec::errorf(gocpp::recv(check), f->Type, InvalidSyntaxTree, "embedded field type %s has no name"_s, f->Type);
                     name = ast::NewIdent("_"_s);
                     name->NamePos = pos;
-                    addInvalid(name, pos);
+                    addInvalid(name);
                     continue;
                 }
                 // struct{p.T} field has position of T
-                add(name, true, rec::Pos(gocpp::recv(name)));
+                add(name, true);
 
                 // Because we have a name, typ must be of the form T or *T, where T is the name
                 // of a (named or alias) type, and t (= deref(typ)) must be the type of T.
                 // We must delay this check to the end because we don't want to instantiate
-                // (via under(t)) a possibly incomplete type.
+                // (via t.Underlying()) a possibly incomplete type.
                 // for use in the closure below
                 auto embeddedTyp = typ;
                 auto embeddedPos = f->Type;
@@ -235,7 +238,7 @@ namespace golang::types
                     auto [t, isPtr] = deref(embeddedTyp);
                     //Go type switch emulation
                     {
-                        const auto& gocpp_id_0 = gocpp::type_info(under(t));
+                        const auto& gocpp_id_0 = gocpp::type_info(rec::Underlying(gocpp::recv(t)));
                         int conditionId = -1;
                         if(gocpp_id_0 == typeid(types::Basic*)) { conditionId = 0; }
                         else if(gocpp_id_0 == typeid(types::Pointer*)) { conditionId = 1; }
@@ -244,7 +247,7 @@ namespace golang::types
                         {
                             case 0:
                             {
-                                types::Basic* u = gocpp::any_cast<types::Basic*>(under(t));
+                                types::Basic* u = gocpp::any_cast<types::Basic*>(rec::Underlying(gocpp::recv(t)));
                                 if(! isValid(t))
                                 {
                                     // error was reported before
@@ -259,13 +262,13 @@ namespace golang::types
                             }
                             case 1:
                             {
-                                types::Pointer* u = gocpp::any_cast<types::Pointer*>(under(t));
+                                types::Pointer* u = gocpp::any_cast<types::Pointer*>(rec::Underlying(gocpp::recv(t)));
                                 rec::error(gocpp::recv(check), embeddedPos, InvalidPtrEmbed, "embedded field type cannot be a pointer"_s);
                                 break;
                             }
                             case 2:
                             {
-                                types::Interface* u = gocpp::any_cast<types::Interface*>(under(t));
+                                types::Interface* u = gocpp::any_cast<types::Interface*>(rec::Underlying(gocpp::recv(t)));
                                 if(isTypeParam(t))
                                 {
                                     // The error code here is inconsistent with other error codes for
@@ -349,8 +352,10 @@ namespace golang::types
     {
         if(auto alt = rec::insert(gocpp::recv(oset), obj); alt != nullptr)
         {
-            rec::errorf(gocpp::recv(check), atPos(pos), DuplicateDecl, "%s redeclared"_s, rec::Name(gocpp::recv(obj)));
-            rec::reportAltDecl(gocpp::recv(check), alt);
+            auto err = rec::newError(gocpp::recv(check), DuplicateDecl);
+            rec::addf(gocpp::recv(err), atPos(pos), "%s redeclared"_s, rec::Name(gocpp::recv(obj)));
+            rec::addAltDecl(gocpp::recv(err), alt);
+            rec::report(gocpp::recv(err));
             return false;
         }
         return true;

@@ -12,8 +12,8 @@
 #include "gocpp/support.h"
 
 #include "golang/context/context.h"
-#include "golang/encoding/json/decode.h"
-#include "golang/encoding/json/encode.h"
+#include "golang/encoding/json/v2_decode.h"
+#include "golang/encoding/json/v2_encode.h"
 #include "golang/errors/errors.h"
 #include "golang/errors/wrap.h"
 #include "golang/fmt/errors.h"
@@ -38,7 +38,6 @@
 #include "golang/golang.org/x/tools/internal/gocommand/invoke.h"
 #include "golang/golang.org/x/tools/internal/packagesinternal/packages.h"
 #include "golang/golang.org/x/tools/internal/typesinternal/types.h"
-#include "golang/golang.org/x/tools/internal/versions/types_go122.h"
 #include "golang/io/fs/fs.h"
 #include "golang/io/io.h"
 #include "golang/log/log.h"
@@ -50,18 +49,40 @@
 #include "golang/os/stat.h"
 #include "golang/os/types.h"
 #include "golang/path/filepath/path.h"
+#include "golang/runtime/debug.h"
 #include "golang/runtime/extern.h"
 #include "golang/strings/strings.h"
+#include "golang/sync/atomic/type.h"
 #include "golang/sync/mutex.h"
-#include "golang/sync/once.h"
-#include "golang/sync/waitgroup.h"
 #include "golang/time/time.h"
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
 {
+    namespace ast = golang::go::ast;
+    namespace atomic = golang::sync::atomic;
+    namespace context = golang::context;
+    namespace errgroup = golang::golang_org::x::sync::errgroup;
+    namespace errors = golang::errors;
+    namespace filepath = golang::path::filepath;
+    namespace fmt = golang::fmt;
+    namespace gcexportdata = golang::golang_org::x::tools::go::gcexportdata;
+    namespace gocommand = golang::golang_org::x::tools::internal::gocommand;
+    namespace json = golang::encoding::json;
+    namespace log = golang::log;
+    namespace os = golang::os;
+    namespace packagesinternal = golang::golang_org::x::tools::internal::packagesinternal;
+    namespace parser = golang::go::parser;
+    namespace runtime = golang::runtime;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
+    namespace time = golang::time;
+    namespace token = golang::go::token;
+    namespace types = golang::go::types;
+    namespace typesinternal = golang::golang_org::x::tools::internal::typesinternal;
     namespace rec
     {
         using ast::rec::Pos;
+        using atomic::rec::Add;
         using context::rec::Err;
         using errgroup::rec::Go;
         using errgroup::rec::Wait;
@@ -70,10 +91,6 @@ namespace golang::packages
         using mocklib::rec::Unlock;
         using os::rec::Close;
         using os::rec::Read;
-        using sync::rec::Add;
-        using sync::rec::Do;
-        using sync::rec::Done;
-        using sync::rec::Wait;
         using token::rec::Position;
         using token::rec::String;
         using types::rec::Complete;
@@ -91,23 +108,30 @@ namespace golang::packages
     // ID and Errors (if present) will always be filled.
     // [Load] may return more information than requested.
     //
+    // The Mode flag is a union of several bits named NeedName,
+    // NeedFiles, and so on, each of which determines whether
+    // a given field of Package (Name, Files, etc) should be
+    // populated.
+    //
+    // For convenience, we provide named constants for the most
+    // common combinations of Need flags:
+    //
+    //	[LoadFiles]     lists of files in each package
+    //	[LoadImports]   ... plus imports
+    //	[LoadTypes]     ... plus type information
+    //	[LoadSyntax]    ... plus type-annotated syntax
+    //	[LoadAllSyntax] ... for all dependencies
+    //
     // Unfortunately there are a number of open bugs related to
     // interactions among the LoadMode bits:
-    // - https://github.com/golang/go/issues/48226
-    // - https://github.com/golang/go/issues/56633
-    // - https://github.com/golang/go/issues/56677
-    // - https://github.com/golang/go/issues/58726
-    // - https://github.com/golang/go/issues/63517
+    //   - https://go.dev/issue/56633
+    //   - https://go.dev/issue/56677
+    //   - https://go.dev/issue/58726
+    //   - https://go.dev/issue/63517
     // A Config specifies details about how packages should be loaded.
     // The zero value is a valid configuration.
     //
-    // Calls to Load do not modify this struct.
-    //
-    // TODO(adonovan): #67702: this is currently false: in fact,
-    // calls to [Load] do not modify the public fields of this struct, but
-    // may modify hidden fields, so concurrent calls to [Load] must not
-    // use the same Config. But perhaps we should reestablish the
-    // documented invariant.
+    // Calls to [Load] do not modify this struct.
     
     template<typename T> requires gocpp::GoStruct<T>
     Config::operator T()
@@ -118,15 +142,11 @@ namespace golang::packages
         result.Logf = this->Logf;
         result.Dir = this->Dir;
         result.Env = this->Env;
-        result.gocmdRunner = this->gocmdRunner;
         result.BuildFlags = this->BuildFlags;
-        result.modFile = this->modFile;
-        result.modFlag = this->modFlag;
         result.Fset = this->Fset;
         result.ParseFile = this->ParseFile;
         result.Tests = this->Tests;
         result.Overlay = this->Overlay;
-        result.goListOverlayFile = this->goListOverlayFile;
         return result;
     }
 
@@ -138,15 +158,11 @@ namespace golang::packages
         if (Logf != ref.Logf) return false;
         if (Dir != ref.Dir) return false;
         if (Env != ref.Env) return false;
-        if (gocmdRunner != ref.gocmdRunner) return false;
         if (BuildFlags != ref.BuildFlags) return false;
-        if (modFile != ref.modFile) return false;
-        if (modFlag != ref.modFlag) return false;
         if (Fset != ref.Fset) return false;
         if (ParseFile != ref.ParseFile) return false;
         if (Tests != ref.Tests) return false;
         if (Overlay != ref.Overlay) return false;
-        if (goListOverlayFile != ref.goListOverlayFile) return false;
         return true;
     }
 
@@ -158,15 +174,11 @@ namespace golang::packages
         os << " " << Logf;
         os << " " << Dir;
         os << " " << Env;
-        os << " " << gocmdRunner;
         os << " " << BuildFlags;
-        os << " " << modFile;
-        os << " " << modFlag;
         os << " " << Fset;
         os << " " << ParseFile;
         os << " " << Tests;
         os << " " << Overlay;
-        os << " " << goListOverlayFile;
         os << '}';
         return os;
     }
@@ -178,14 +190,13 @@ namespace golang::packages
 
     // Load loads and returns the Go packages named by the given patterns.
     //
-    // Config specifies loading options;
-    // nil behaves the same as an empty Config.
+    // The cfg parameter specifies loading options; nil behaves the same as an empty [Config].
     //
     // The [Config.Mode] field is a set of bits that determine what kinds
     // of information should be computed and returned. Modes that require
     // more information tend to be slower. See [LoadMode] for details
     // and important caveats. Its zero value is equivalent to
-    // NeedName | NeedFiles | NeedCompiledGoFiles.
+    // [NeedName] | [NeedFiles] | [NeedCompiledGoFiles].
     //
     // Each call to Load returns a new set of [Package] instances.
     // The Packages and their Imports form a directed acyclic graph.
@@ -202,7 +213,7 @@ namespace golang::packages
     // Errors associated with a particular package are recorded in the
     // corresponding Package's Errors list, and do not cause Load to
     // return an error. Clients may need to handle such errors before
-    // proceeding with further analysis. The PrintErrors function is
+    // proceeding with further analysis. The [PrintErrors] function is
     // provided for convenient display of all errors.
     std::tuple<gocpp::slice<Package*>, gocpp::error> Load(Config* cfg, gocpp::slice<gocpp::string> patterns)
     {
@@ -237,6 +248,8 @@ namespace golang::packages
             }
         }
 
+        ld->externalDriver = external;
+
         return rec::refine(gocpp::recv(ld), response);
     }
 
@@ -262,7 +275,7 @@ namespace golang::packages
             if(auto driver = findExternalDriver(cfg); driver != nullptr)
             {
                 auto [response, err] = callDriverOnChunks(driver, cfg, chunks);
-                // (fall through)
+                // not handled: fall through
                 if(err != nullptr)
                 {
                     return {nullptr, false, err};
@@ -277,18 +290,23 @@ namespace golang::packages
             // go list fallback
             // Write overlays once, as there are many calls
             // to 'go list' (one per chunk plus others too).
-            gocpp::string overlay;
+            gocpp::string overlayFile;
             std::function<void (void)> cleanupOverlay;
-            std::tie(overlay, cleanupOverlay, err) = gocommand::WriteOverlays(cfg->Overlay);
+            std::tie(overlayFile, cleanupOverlay, err) = gocommand::WriteOverlays(cfg->Overlay);
             if(err != nullptr)
             {
                 return {nullptr, false, err};
             }
             defer.push_back([=]{ cleanupOverlay(); });
-            cfg->goListOverlayFile = overlay;
 
+            // (shared across many 'go list' calls)
+            gocommand::Runner runner = {};
+            auto driver = [=](Config* cfg, gocpp::slice<gocpp::string> patterns) mutable -> std::tuple<DriverResponse*, gocpp::error>
+            {
+                return goListDriver(cfg, & runner, overlayFile, patterns);
+            };
             packages::DriverResponse* response;
-            std::tie(response, err) = callDriverOnChunks(goListDriver, cfg, chunks);
+            std::tie(response, err) = callDriverOnChunks(driver, cfg, chunks);
             if(err != nullptr)
             {
                 return {nullptr, false, err};
@@ -341,17 +359,13 @@ namespace golang::packages
     {
         if(len(chunks) == 0)
         {
-            return driver(cfg);
+            return driver(cfg, nullptr);
         }
         auto responses = gocpp::make(gocpp::Tag<gocpp::slice<DriverResponse*>>(), len(chunks));
         auto errNotHandled = errors::New("driver returned NotHandled"_s);
         errgroup::Group g = {};
         for(auto [i, chunk] : chunks)
         {
-            auto i_tmp = i;
-            auto& i = i_tmp;
-            auto chunk_tmp = chunk;
-            auto& chunk = chunk_tmp;
             rec::Go(gocpp::recv(g), [=]() mutable -> gocpp::error
             {
                 gocpp::error err;
@@ -382,6 +396,11 @@ namespace golang::packages
         {
             return nullptr;
         }
+        // No dedup needed
+        if(len(responses) == 1)
+        {
+            return responses[0];
+        }
         auto response = newDeduper();
         response->dr->NotHandled = false;
         response->dr->Compiler = responses[0]->Compiler;
@@ -406,6 +425,7 @@ namespace golang::packages
         result.ID = this->ID;
         result.Name = this->Name;
         result.PkgPath = this->PkgPath;
+        result.Dir = this->Dir;
         result.Errors = this->Errors;
         result.TypeErrors = this->TypeErrors;
         result.GoFiles = this->GoFiles;
@@ -415,6 +435,7 @@ namespace golang::packages
         result.EmbedPatterns = this->EmbedPatterns;
         result.IgnoredFiles = this->IgnoredFiles;
         result.ExportFile = this->ExportFile;
+        result.Target = this->Target;
         result.Imports = this->Imports;
         result.Module = this->Module;
         result.Types = this->Types;
@@ -423,8 +444,9 @@ namespace golang::packages
         result.Syntax = this->Syntax;
         result.TypesInfo = this->TypesInfo;
         result.TypesSizes = this->TypesSizes;
-        result.forTest = this->forTest;
+        result.ForTest = this->ForTest;
         result.depsErrors = this->depsErrors;
+        result.exportDataError = this->exportDataError;
         return result;
     }
 
@@ -434,6 +456,7 @@ namespace golang::packages
         if (ID != ref.ID) return false;
         if (Name != ref.Name) return false;
         if (PkgPath != ref.PkgPath) return false;
+        if (Dir != ref.Dir) return false;
         if (Errors != ref.Errors) return false;
         if (TypeErrors != ref.TypeErrors) return false;
         if (GoFiles != ref.GoFiles) return false;
@@ -443,6 +466,7 @@ namespace golang::packages
         if (EmbedPatterns != ref.EmbedPatterns) return false;
         if (IgnoredFiles != ref.IgnoredFiles) return false;
         if (ExportFile != ref.ExportFile) return false;
+        if (Target != ref.Target) return false;
         if (Imports != ref.Imports) return false;
         if (Module != ref.Module) return false;
         if (Types != ref.Types) return false;
@@ -451,8 +475,9 @@ namespace golang::packages
         if (Syntax != ref.Syntax) return false;
         if (TypesInfo != ref.TypesInfo) return false;
         if (TypesSizes != ref.TypesSizes) return false;
-        if (forTest != ref.forTest) return false;
+        if (ForTest != ref.ForTest) return false;
         if (depsErrors != ref.depsErrors) return false;
+        if (exportDataError != ref.exportDataError) return false;
         return true;
     }
 
@@ -462,6 +487,7 @@ namespace golang::packages
         os << "" << ID;
         os << " " << Name;
         os << " " << PkgPath;
+        os << " " << Dir;
         os << " " << Errors;
         os << " " << TypeErrors;
         os << " " << GoFiles;
@@ -471,6 +497,7 @@ namespace golang::packages
         os << " " << EmbedPatterns;
         os << " " << IgnoredFiles;
         os << " " << ExportFile;
+        os << " " << Target;
         os << " " << Imports;
         os << " " << Module;
         os << " " << Types;
@@ -479,8 +506,9 @@ namespace golang::packages
         os << " " << Syntax;
         os << " " << TypesInfo;
         os << " " << TypesSizes;
-        os << " " << forTest;
+        os << " " << ForTest;
         os << " " << depsErrors;
+        os << " " << exportDataError;
         os << '}';
         return os;
     }
@@ -582,25 +610,12 @@ namespace golang::packages
 
     void init()
     {
-        packagesinternal::GetForTest = [=](gocpp::go_any p) mutable -> gocpp::string
-        {
-            return gocpp::getValue<Package*>(p)->forTest;
-        };
-        packagesinternal::GetDepsErrors = [=](gocpp::go_any p) mutable -> gocpp::slice<packagesinternal::PackageError*>
+        packagesinternal::GetDepsErrors = [=](go_any p) mutable -> gocpp::slice<packagesinternal::PackageError*>
         {
             return gocpp::getValue<Package*>(p)->depsErrors;
         };
-        packagesinternal::SetModFile = [=](gocpp::go_any config, gocpp::string value) mutable -> void
-        {
-            gocpp::getValue<Config*>(config)->modFile = value;
-        };
-        packagesinternal::SetModFlag = [=](gocpp::go_any config, gocpp::string value) mutable -> void
-        {
-            gocpp::getValue<Config*>(config)->modFlag = value;
-        };
         packagesinternal::TypecheckCgo = int(typecheckCgo);
         packagesinternal::DepsErrors = int(needInternalDepsErrors);
-        packagesinternal::ForTest = int(needInternalForTest);
     }
 
     // An Error describes a problem with a package's metadata, syntax, or types.
@@ -642,7 +657,7 @@ namespace golang::packages
     // ErrorKind describes the source of the error, allowing the user to
     // differentiate between errors generated by the driver, the parser, or the
     // type-checker.
-    gocpp::string rec::Error(golang::packages::Error err)
+    gocpp::string rec::Error(golang::golang_org::x::tools::go::packages::Error err)
     {
         auto pos = err.Pos;
         if(pos == ""_s)
@@ -803,7 +818,8 @@ namespace golang::packages
         T result;
         result.Package = this->Package;
         result.importErrors = this->importErrors;
-        result.loadOnce = this->loadOnce;
+        result.preds = this->preds;
+        result.unfinishedSuccs = this->unfinishedSuccs;
         result.color = this->color;
         result.needsrc = this->needsrc;
         result.needtypes = this->needtypes;
@@ -817,7 +833,8 @@ namespace golang::packages
     {
         if (Package != ref.Package) return false;
         if (importErrors != ref.importErrors) return false;
-        if (loadOnce != ref.loadOnce) return false;
+        if (preds != ref.preds) return false;
+        if (unfinishedSuccs != ref.unfinishedSuccs) return false;
         if (color != ref.color) return false;
         if (needsrc != ref.needsrc) return false;
         if (needtypes != ref.needtypes) return false;
@@ -831,7 +848,8 @@ namespace golang::packages
         os << '{';
         os << "" << Package;
         os << " " << importErrors;
-        os << " " << loadOnce;
+        os << " " << preds;
+        os << " " << unfinishedSuccs;
         os << " " << color;
         os << " " << needsrc;
         os << " " << needtypes;
@@ -858,6 +876,7 @@ namespace golang::packages
         result.parseCache = this->parseCache;
         result.parseCacheMu = this->parseCacheMu;
         result.exportMu = this->exportMu;
+        result.externalDriver = this->externalDriver;
         result.requestedMode = this->requestedMode;
         return result;
     }
@@ -871,6 +890,7 @@ namespace golang::packages
         if (parseCache != ref.parseCache) return false;
         if (parseCacheMu != ref.parseCacheMu) return false;
         if (exportMu != ref.exportMu) return false;
+        if (externalDriver != ref.externalDriver) return false;
         if (requestedMode != ref.requestedMode) return false;
         return true;
     }
@@ -884,6 +904,7 @@ namespace golang::packages
         os << " " << parseCache;
         os << " " << parseCacheMu;
         os << " " << exportMu;
+        os << " " << externalDriver;
         os << " " << requestedMode;
         os << '}';
         return os;
@@ -977,7 +998,7 @@ namespace golang::packages
             }
             else
             {
-                ld->Config.Logf = [=](gocpp::string format, gocpp::slice<gocpp::go_any> args) mutable -> void
+                ld->Config.Logf = [=](gocpp::string format, gocpp::slice<go_any> args) mutable -> void
                 {
                 };
             }
@@ -990,10 +1011,6 @@ namespace golang::packages
         if(ld->Config.Env == nullptr)
         {
             ld->Config.Env = os::Environ();
-        }
-        if(ld->Config.gocmdRunner == nullptr)
-        {
-            ld->Config.gocmdRunner = new gocommand::Runner {};
         }
         if(ld->Config.Context == nullptr)
         {
@@ -1011,7 +1028,7 @@ namespace golang::packages
         ld->requestedMode = ld->Config.Mode;
         ld->Config.Mode = impliedLoadMode(ld->Config.Mode);
 
-        if(ld->Config.Mode & NeedTypes != 0 || ld->Config.Mode & NeedSyntax != 0)
+        if(ld->Config.Mode & (NeedSyntax | NeedTypes | NeedTypesInfo) != 0)
         {
             if(ld->Config.Fset == nullptr)
             {
@@ -1024,6 +1041,7 @@ namespace golang::packages
             {
                 ld->Config.ParseFile = [=](token::FileSet* fset, gocpp::string filename, gocpp::slice<unsigned char> src) mutable -> std::tuple<ast::File*, gocpp::error>
                 {
+                    // We implicitly promise to keep doing ast.Object resolution. :(
                     auto mode = parser::AllErrors | parser::ParseComments;
                     return parser::ParseFile(fset, filename, src, mode);
                 };
@@ -1059,7 +1077,7 @@ namespace golang::packages
             auto exportDataInvalid = len(ld->Config.Overlay) > 0 || pkg->ExportFile == ""_s && pkg->PkgPath != "unsafe"_s;
             // This package needs type information if the caller requested types and the package is
             // either a root, or it's a non-root and the user requested dependencies ...
-            auto needtypes = (ld->Config.Mode & NeedTypes | NeedTypesInfo != 0 && (rootIndex >= 0 || ld->Config.Mode & NeedDeps != 0));
+            auto needtypes = (ld->Config.Mode & (NeedTypes | NeedTypesInfo) != 0 && (rootIndex >= 0 || ld->Config.Mode & NeedDeps != 0));
             // This package needs source if the call requested source (or types info, which implies source)
             // and the package is either a root, or itas a non- root and the user requested dependencies...
             auto needsrc = ((ld->Config.Mode & (NeedSyntax | NeedTypesInfo) != 0 && (rootIndex >= 0 || ld->Config.Mode & NeedDeps != 0)) ||
@@ -1070,6 +1088,12 @@ namespace golang::packages
                 x.needsrc = needsrc;
                 x.goVersion = response->GoVersion;
             });
+            // Don't trust the driver to respond with duplicate-free
+            // package names (go.dev/issue/63822).
+            if(auto [gocpp_id_1, ok] = ld->pkgs[lpkg->Package.ID]; ok)
+            {
+                return {nullptr, mocklib::Errorf("%s response contained duplicate packages for ID %q"_s, cond(ld->externalDriver, "go/packages driver"_s, "go list"_s), lpkg->Package.ID)};
+            }
             ld->pkgs[lpkg->Package.ID] = lpkg;
             if(rootIndex >= 0)
             {
@@ -1085,9 +1109,12 @@ namespace golang::packages
             }
         }
 
-        if(ld->Config.Mode & NeedImports != 0)
+        // Materialize the import graph if it is needed (NeedImports),
+        // or if we'll be using loadPackages (Need{Syntax|Types|TypesInfo}).
+        // packages with no unfinished successors
+        gocpp::slice<loaderPackage*> leaves = {};
+        if(ld->Config.Mode & (NeedImports | NeedSyntax | NeedTypes | NeedTypesInfo) != 0)
         {
-            // Materialize the import graph.
             auto white = 0;
             auto grey = 1;
             auto black = 2;
@@ -1102,81 +1129,88 @@ namespace golang::packages
             // dependency on a package that does. These are the only packages
             // for which we load source code.
             gocpp::slice<loaderPackage*> stack = {};
-            std::function<bool (loaderPackage* lpkg)> visit = {};
-            visit = [=](loaderPackage* lpkg) mutable -> bool
+            std::function<bool (loaderPackage* from, loaderPackage* lpkg)> visit = {};
+            visit = [=](loaderPackage* from, loaderPackage* lpkg) mutable -> bool
             {
-                //Go switch emulation
+                if(lpkg->color == grey)
                 {
-                    auto condition = lpkg->color;
-                    int conditionId = -1;
-                    if(condition == black) { conditionId = 0; }
-                    else if(condition == grey) { conditionId = 1; }
-                    switch(conditionId)
-                    {
-                        case 0:
-                            return lpkg->needsrc;
-                            break;
-                        case 1:
-                            gocpp::panic("internal error: grey node"_s);
-                            break;
-                    }
+                    gocpp::panic("internal error: grey node"_s);
                 }
-                lpkg->color = grey;
-                // push
-                stack = append(stack, lpkg);
-                // the structure form has only stubs with the ID in the Imports
-                auto stubs = lpkg->Package.Imports;
-                lpkg->Package.Imports = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Package*>>(), len(stubs));
-                for(auto [importPath, ipkg] : stubs)
+                if(lpkg->color == white)
                 {
-                    gocpp::error importErr = {};
-                    auto imp = ld->pkgs[ipkg->ID];
-                    if(imp == nullptr)
+                    lpkg->color = grey;
+                    // push
+                    stack = append(stack, lpkg);
+                    // the structure form has only stubs with the ID in the Imports
+                    auto stubs = lpkg->Package.Imports;
+                    lpkg->Package.Imports = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Package*>>(), len(stubs));
+                    for(auto [importPath, ipkg] : stubs)
                     {
-                        // (includes package "C" when DisableCgo)
-                        importErr = mocklib::Errorf("missing package: %q"_s, ipkg->ID);
-                    }
-                    else
-                    if(imp->color == grey)
-                    {
-                        importErr = mocklib::Errorf("import cycle: %s"_s, stack);
-                    }
-                    if(importErr != nullptr)
-                    {
-                        if(lpkg->importErrors == nullptr)
+                        gocpp::error importErr = {};
+                        auto imp = ld->pkgs[ipkg->ID];
+                        if(imp == nullptr)
                         {
-                            lpkg->importErrors = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::error>>());
+                            // (includes package "C" when DisableCgo)
+                            importErr = mocklib::Errorf("missing package: %q"_s, ipkg->ID);
                         }
-                        lpkg->importErrors[importPath] = importErr;
-                        continue;
+                        else
+                        if(imp->color == grey)
+                        {
+                            importErr = mocklib::Errorf("import cycle: %s"_s, stack);
+                        }
+                        if(importErr != nullptr)
+                        {
+                            if(lpkg->importErrors == nullptr)
+                            {
+                                lpkg->importErrors = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::error>>());
+                            }
+                            lpkg->importErrors[importPath] = importErr;
+                            continue;
+                        }
+
+                        if(visit(lpkg, imp))
+                        {
+                            lpkg->needsrc = true;
+                        }
+                        lpkg->Package.Imports[importPath] = imp->Package;
                     }
 
-                    if(visit(imp))
+                    // -- postorder --
+                    // Complete type information is required for the
+                    // immediate dependencies of each source package.
+                    if(lpkg->needsrc && ld->Config.Mode & NeedTypes != 0)
                     {
-                        lpkg->needsrc = true;
+                        for(auto [gocpp_ignored, ipkg] : lpkg->Package.Imports)
+                        {
+                            ld->pkgs[ipkg->ID]->needtypes = true;
+                        }
                     }
-                    lpkg->Package.Imports[importPath] = imp->Package;
-                }
 
-                // Complete type information is required for the
-                // immediate dependencies of each source package.
-                if(lpkg->needsrc && ld->Config.Mode & NeedTypes != 0)
-                {
-                    for(auto [gocpp_ignored, ipkg] : lpkg->Package.Imports)
+                    // NeedTypeSizes causes TypeSizes to be set even
+                    // on packages for which types aren't needed.
+                    if(ld->Config.Mode & NeedTypesSizes != 0)
                     {
-                        ld->pkgs[ipkg->ID]->needtypes = true;
+                        lpkg->Package.TypesSizes = ld->sizes;
                     }
+
+                    // Add packages with no imports directly to the queue of leaves.
+                    if(len(lpkg->Package.Imports) == 0)
+                    {
+                        leaves = append(leaves, lpkg);
+                    }
+
+                    // pop
+                    stack = stack.make_slice(0, len(stack) - 1);
+                    lpkg->color = black;
                 }
 
-                // NeedTypeSizes causes TypeSizes to be set even
-                // on packages for which types aren't needed.
-                if(ld->Config.Mode & NeedTypesSizes != 0)
+                // Add edge from predecessor.
+                if(from != nullptr)
                 {
-                    lpkg->Package.TypesSizes = ld->sizes;
+                    // incref
+                    rec::Add(gocpp::recv(from->unfinishedSuccs), + 1);
+                    lpkg->preds = append(lpkg->preds, from);
                 }
-                // pop
-                stack = stack.make_slice(0, len(stack) - 1);
-                lpkg->color = black;
 
                 return lpkg->needsrc;
             };
@@ -1184,7 +1218,7 @@ namespace golang::packages
             // For each initial package, create its import DAG.
             for(auto [gocpp_ignored, lpkg] : initial)
             {
-                visit(lpkg);
+                visit(nullptr, lpkg);
             }
         }
         else
@@ -1199,19 +1233,52 @@ namespace golang::packages
 
         // Load type data and syntax if needed, starting at
         // the initial packages (roots of the import DAG).
-        if(ld->Config.Mode & NeedTypes != 0 || ld->Config.Mode & NeedSyntax != 0)
+        if(ld->Config.Mode & (NeedSyntax | NeedTypes | NeedTypesInfo) != 0)
         {
-            sync::WaitGroup wg = {};
-            for(auto [gocpp_ignored, lpkg] : initial)
+            // We avoid using g.SetLimit to limit concurrency as
+            // it makes g.Go stop accepting work, which prevents
+            // workers from enqeuing, and thus finishing, and thus
+            // allowing the group to make progress: deadlock.
+            // Instead we use the ioLimit and cpuLimit semaphores.
+            auto [g, gocpp_id_2] = errgroup::WithContext(ld->Config.Context);
+
+            // enqueues adds a package to the type-checking queue.
+            // It must have no unfinished successors.
+            std::function<void (loaderPackage* _1)> enqueue = {};
+            enqueue = [=](loaderPackage* lpkg) mutable -> void
             {
-                rec::Add(gocpp::recv(wg), 1);
-                gocpp::go([&]{ [=](loaderPackage* lpkg) mutable -> void
+                rec::Go(gocpp::recv(g), [=]() mutable -> gocpp::error
                 {
-                    rec::loadRecursive(gocpp::recv(ld), lpkg);
-                    rec::Done(gocpp::recv(wg));
-                }(lpkg); });
+                    // Parse and type-check.
+                    rec::loadPackage(gocpp::recv(ld), lpkg);
+
+                    // Notify each waiting predecessor,
+                    // and enqueue it when it becomes a leaf.
+                    for(auto [gocpp_ignored, pred] : lpkg->preds)
+                    {
+                        if(rec::Add(gocpp::recv(pred->unfinishedSuccs), - 1) == 0)
+                        {
+                            // decref
+                            enqueue(pred);
+                        }
+                    }
+
+                    return nullptr;
+                });
+            };
+
+            // Load leaves first, adding new packages
+            // to the queue as they become leaves.
+            for(auto [gocpp_ignored, leaf] : leaves)
+            {
+                enqueue(leaf);
             }
-            rec::Wait(gocpp::recv(wg));
+
+            if(auto err = rec::Wait(gocpp::recv(g)); err != nullptr)
+            {
+                // cancelled
+                return {nullptr, err};
+            }
         }
 
         // If the context is done, return its error and
@@ -1264,12 +1331,15 @@ namespace golang::packages
             if(ld->requestedMode & NeedTypes == 0)
             {
                 ld->pkgs[i]->Package.Types = nullptr;
-                ld->pkgs[i]->Package.Fset = nullptr;
                 ld->pkgs[i]->Package.IllTyped = false;
             }
             if(ld->requestedMode & NeedSyntax == 0)
             {
                 ld->pkgs[i]->Package.Syntax = nullptr;
+            }
+            if(ld->requestedMode & (NeedSyntax | NeedTypes | NeedTypesInfo) == 0)
+            {
+                ld->pkgs[i]->Package.Fset = nullptr;
             }
             if(ld->requestedMode & NeedTypesInfo == 0)
             {
@@ -1288,35 +1358,10 @@ namespace golang::packages
         return {result, nullptr};
     }
 
-    // loadRecursive loads the specified package and its dependencies,
-    // recursively, in parallel, in topological order.
-    // It is atomic and idempotent.
-    // Precondition: ld.Mode&NeedTypes.
-    void rec::loadRecursive(loader* ld, loaderPackage* lpkg)
-    {
-        rec::Do(gocpp::recv(lpkg->loadOnce), [=]() mutable -> void
-        {
-            // Load the direct dependencies, in parallel.
-            sync::WaitGroup wg = {};
-            for(auto [gocpp_ignored, ipkg] : lpkg->Package.Imports)
-            {
-                auto imp = ld->pkgs[ipkg->ID];
-                rec::Add(gocpp::recv(wg), 1);
-                gocpp::go([&]{ [=](loaderPackage* imp) mutable -> void
-                {
-                    rec::loadRecursive(gocpp::recv(ld), imp);
-                    rec::Done(gocpp::recv(wg));
-                }(imp); });
-            }
-            rec::Wait(gocpp::recv(wg));
-            rec::loadPackage(gocpp::recv(ld), lpkg);
-        });
-    }
-
-    // loadPackage loads the specified package.
+    // loadPackage loads/parses/typechecks the specified package.
     // It must be called only once per Package,
     // after immediate dependencies are loaded.
-    // Precondition: ld.Mode & NeedTypes.
+    // Precondition: ld.Mode&(NeedSyntax|NeedTypes|NeedTypesInfo) != 0.
     void rec::loadPackage(loader* ld, loaderPackage* lpkg)
     {
         gocpp::Defer defer;
@@ -1324,11 +1369,15 @@ namespace golang::packages
         {
             if(lpkg->Package.PkgPath == "unsafe"_s)
             {
-                // Fill in the blanks to avoid surprises.
+                // To avoid surprises, fill in the blanks consistent
+                // with other packages. (For example, some analyzers
+                // assert that each needed types.Info map is non-nil
+                // even when there is no syntax that would cause them
+                // to consult the map.)
                 lpkg->Package.Types = types::Unsafe;
                 lpkg->Package.Fset = ld->Config.Fset;
                 lpkg->Package.Syntax = gocpp::slice<ast::File*> {};
-                lpkg->Package.TypesInfo = new types::Info{};
+                lpkg->Package.TypesInfo = rec::newTypesInfo(gocpp::recv(ld));
                 lpkg->Package.TypesSizes = ld->sizes;
                 return;
             }
@@ -1359,11 +1408,16 @@ namespace golang::packages
             {
                 return;
             }
+
+            // TODO(adonovan): this condition looks wrong:
+            // I think it should be lpkg.needtypes && !lpkg.needsrc,
+            // so that NeedSyntax without NeedTypes can be satisfied by export data.
             if(! lpkg->needsrc)
             {
                 if(auto err = rec::loadFromExportData(gocpp::recv(ld), lpkg); err != nullptr)
                 {
-                    lpkg->Package.Errors = append(lpkg->Package.Errors, gocpp::Init<golang::packages::Error>([=](auto& x) {
+                    lpkg->Package.exportDataError = err;
+                    lpkg->Package.Errors = append(lpkg->Package.Errors, gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
                         x.Pos = "-"_s;
                         x.Msg = rec::Error(gocpp::recv(err));
                         x.Kind = UnknownError;
@@ -1376,16 +1430,16 @@ namespace golang::packages
             auto appendError = [=](gocpp::error err) mutable -> void
             {
                 // Convert various error types into the one true Error.
-                gocpp::slice<golang::packages::Error> errs = {};
+                gocpp::slice<golang::golang_org::x::tools::go::packages::Error> errs = {};
                 //Go type switch emulation
                 {
-                    const auto& gocpp_id_1 = gocpp::type_info(err);
+                    const auto& gocpp_id_3 = gocpp::type_info(err);
                     const auto& err_ref = err;
                     int conditionId = -1;
-                    if(gocpp_id_1 == typeid(packages::Error)) { conditionId = 0; }
-                    else if(gocpp_id_1 == typeid(fs::PathError*)) { conditionId = 1; }
-                    else if(gocpp_id_1 == typeid(scanner::ErrorList)) { conditionId = 2; }
-                    else if(gocpp_id_1 == typeid(types::Error)) { conditionId = 3; }
+                    if(gocpp_id_3 == typeid(packages::Error)) { conditionId = 0; }
+                    else if(gocpp_id_3 == typeid(os::PathError*)) { conditionId = 1; }
+                    else if(gocpp_id_3 == typeid(scanner::ErrorList)) { conditionId = 2; }
+                    else if(gocpp_id_3 == typeid(types::Error)) { conditionId = 3; }
                     switch(conditionId)
                     {
                         case 0:
@@ -1398,9 +1452,9 @@ namespace golang::packages
 
                         case 1:
                         {
-                            fs::PathError* err = gocpp::any_cast<fs::PathError*>(err_ref);
+                            os::PathError* err = gocpp::any_cast<os::PathError*>(err_ref);
                             // from parser
-                            errs = append(errs, gocpp::Init<golang::packages::Error>([=](auto& x) {
+                            errs = append(errs, gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
                                 x.Pos = err->Path + ":1"_s;
                                 x.Msg = rec::Error(gocpp::recv(err->Err));
                                 x.Kind = ParseError;
@@ -1414,7 +1468,7 @@ namespace golang::packages
                             // from parser
                             for(auto [gocpp_ignored, err] : err)
                             {
-                                errs = append(errs, gocpp::Init<golang::packages::Error>([=](auto& x) {
+                                errs = append(errs, gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
                                     x.Pos = rec::String(gocpp::recv(err->Pos));
                                     x.Msg = err->Msg;
                                     x.Kind = ParseError;
@@ -1428,7 +1482,7 @@ namespace golang::packages
                             types::Error err = gocpp::any_cast<types::Error>(err_ref);
                             // from type checker
                             lpkg->Package.TypeErrors = append(lpkg->Package.TypeErrors, err);
-                            errs = append(errs, gocpp::Init<golang::packages::Error>([=](auto& x) {
+                            errs = append(errs, gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
                                 x.Pos = rec::String(gocpp::recv(rec::Position(gocpp::recv(err.Fset), err.Pos)));
                                 x.Msg = err.Msg;
                                 x.Kind = TypeError;
@@ -1440,7 +1494,7 @@ namespace golang::packages
                         {
                             auto err = err_ref;
                             // unexpected impoverished error from parser?
-                            errs = append(errs, gocpp::Init<golang::packages::Error>([=](auto& x) {
+                            errs = append(errs, gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
                                 x.Pos = "-"_s;
                                 x.Msg = rec::Error(gocpp::recv(err));
                                 x.Kind = UnknownError;
@@ -1469,13 +1523,13 @@ namespace golang::packages
             // - golang.org/issue/55883 (go/packages confusing error)
             // Should we assert a hard minimum of (currently) go1.16 here?
             int runtimeVersion = {};
-            if(auto [gocpp_id_2, err] = fmt::Sscanf(runtime::Version(), "go1.%d"_s, & runtimeVersion); err == nullptr && runtimeVersion < lpkg->goVersion)
+            if(auto [gocpp_id_4, err] = fmt::Sscanf(runtime::Version(), "go1.%d"_s, & runtimeVersion); err == nullptr && runtimeVersion < lpkg->goVersion)
             {
                 defer.push_back([=]{ [=]() mutable -> void
                 {
                     if(len(lpkg->Package.Errors) > 0)
                     {
-                        appendError(gocpp::Init<golang::packages::Error>([=](auto& x) {
+                        appendError(gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
                             x.Pos = "-"_s;
                             x.Msg = mocklib::Sprintf("This application uses version go1.%d of the source-processing packages but runs version go1.%d of 'go list'. It may fail to process source files that rely on newer language features. If so, rebuild the application using a newer version of Go."_s, runtimeVersion, lpkg->goVersion);
                             x.Kind = UnknownError;
@@ -1488,7 +1542,7 @@ namespace golang::packages
             {
                 // The config requested loading sources and types, but sources are missing.
                 // Add an error to the package and fall back to loading from export data.
-                appendError(golang::packages::Error {"-"_s, mocklib::Sprintf("sources missing for package %s"_s, lpkg->Package.ID), ParseError});
+                appendError(golang::golang_org::x::tools::go::packages::Error {"-"_s, mocklib::Sprintf("sources missing for package %s"_s, lpkg->Package.ID), ParseError});
                 // ignore any secondary errors
                 _ = rec::loadFromExportData(gocpp::recv(ld), lpkg);
 
@@ -1503,7 +1557,7 @@ namespace golang::packages
             }
 
             lpkg->Package.Syntax = files;
-            if(ld->Config.Mode & NeedTypes == 0)
+            if(ld->Config.Mode & (NeedTypes | NeedTypesInfo) == 0)
             {
                 return;
             }
@@ -1516,16 +1570,7 @@ namespace golang::packages
                 return;
             }
 
-            lpkg->Package.TypesInfo = gocpp::InitPtr<types::Info>([=](auto& x) {
-                x.Types = gocpp::make(gocpp::Tag<gocpp::map<ast::Expr, types::TypeAndValue>>());
-                x.Defs = gocpp::make(gocpp::Tag<gocpp::map<ast::Ident*, types::Object>>());
-                x.Uses = gocpp::make(gocpp::Tag<gocpp::map<ast::Ident*, types::Object>>());
-                x.Implicits = gocpp::make(gocpp::Tag<gocpp::map<ast::Node, types::Object>>());
-                x.Instances = gocpp::make(gocpp::Tag<gocpp::map<ast::Ident*, types::Instance>>());
-                x.Scopes = gocpp::make(gocpp::Tag<gocpp::map<ast::Node, types::Scope*>>());
-                x.Selections = gocpp::make(gocpp::Tag<gocpp::map<ast::SelectorExpr*, types::Selection*>>());
-            });
-            versions::InitFileVersions(lpkg->Package.TypesInfo);
+            lpkg->Package.TypesInfo = rec::newTypesInfo(gocpp::recv(ld));
             lpkg->Package.TypesSizes = ld->sizes;
 
             auto importer = importerFunc([=](gocpp::string path) mutable -> std::tuple<types::Package*, gocpp::error>
@@ -1554,7 +1599,14 @@ namespace golang::packages
                 {
                     return {ipkg->Types, nullptr};
                 }
-                log::Fatalf("internal error: package %q without types was imported from %q"_s, path, lpkg);
+
+                // If types are unavailable, there must be an export data error.
+                if(ipkg->exportDataError != nullptr)
+                {
+                    return {nullptr, ipkg->exportDataError};
+                }
+
+                log::Fatalf("internal error: expected complete types for package %q"_s, path);
                 gocpp::panic("unreachable"_s);
             });
 
@@ -1569,17 +1621,33 @@ namespace golang::packages
             {
                 tc->GoVersion = "go"_s + lpkg->Package.Module->GoVersion;
             }
+            else
+            if(ld->externalDriver && lpkg->goVersion != 0)
+            {
+                // Module information is missing when GOPACKAGESDRIVER is used,
+                // so use the go version from the driver response.
+                tc->GoVersion = mocklib::Sprintf("go1.%d"_s, lpkg->goVersion);
+            }
             if((ld->Config.Mode & typecheckCgo) != 0)
             {
                 if(! typesinternal::SetUsesCgo(tc))
                 {
-                    appendError(gocpp::Init<golang::packages::Error>([=](auto& x) {
+                    appendError(gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
                         x.Msg = "typecheckCgo requires Go 1.15+"_s;
                         x.Kind = ListError;
                     }));
                     return;
                 }
             }
+
+            // Type-checking is CPU intensive.
+            // acquire a token
+            cpuLimit.send(unit {});
+            // release a token
+            defer.push_back([=]{ [=]() mutable -> void
+            {
+                cpuLimit.recv();
+            }(); });
 
             auto typErr = rec::Files(gocpp::recv(types::NewChecker(tc, ld->Config.Fset, lpkg->Package.Types, lpkg->Package.TypesInfo)), lpkg->Package.Syntax);
             // no longer needed
@@ -1664,6 +1732,26 @@ namespace golang::packages
         }
     }
 
+    types::Info* rec::newTypesInfo(loader* ld)
+    {
+        // Populate TypesInfo only if needed, as it
+        // causes the type checker to work much harder.
+        if(ld->Config.Mode & NeedTypesInfo == 0)
+        {
+            return nullptr;
+        }
+        return gocpp::InitPtr<types::Info>([=](auto& x) {
+            x.Types = gocpp::make(gocpp::Tag<gocpp::map<ast::Expr, types::TypeAndValue>>());
+            x.Defs = gocpp::make(gocpp::Tag<gocpp::map<ast::Ident*, types::Object>>());
+            x.Uses = gocpp::make(gocpp::Tag<gocpp::map<ast::Ident*, types::Object>>());
+            x.Implicits = gocpp::make(gocpp::Tag<gocpp::map<ast::Node, types::Object>>());
+            x.Instances = gocpp::make(gocpp::Tag<gocpp::map<ast::Ident*, types::Instance>>());
+            x.Scopes = gocpp::make(gocpp::Tag<gocpp::map<ast::Node, types::Scope*>>());
+            x.Selections = gocpp::make(gocpp::Tag<gocpp::map<ast::SelectorExpr*, types::Selection*>>());
+            x.FileVersions = gocpp::make(gocpp::Tag<gocpp::map<ast::File*, gocpp::string>>());
+        });
+    }
+
     // An importFunc is an implementation of the single-method
     // types.Importer interface based on a function value.
     std::tuple<types::Package*, gocpp::error> rec::Import(importerFunc f, gocpp::string path)
@@ -1672,9 +1760,10 @@ namespace golang::packages
     }
 
     // We use a counting semaphore to limit
-    // the number of parallel I/O calls per process.
-    gocpp::channel<bool> ioLimit = gocpp::make(gocpp::Tag<gocpp::channel<bool>>(), 20);
-    struct gocpp_id_3
+    // the number of parallel I/O calls or CPU threads per process.
+    gocpp::channel<packages::unit> ioLimit = gocpp::make(gocpp::Tag<gocpp::channel<unit>>(), 20);
+    gocpp::channel<packages::unit> cpuLimit = gocpp::make(gocpp::Tag<gocpp::channel<unit>>(), runtime::GOMAXPROCS(0));
+    struct gocpp_id_5
                 {
 
                     using isGoStruct = void;
@@ -1700,7 +1789,7 @@ namespace golang::packages
                     }
                 };
 
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
+                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
                 {
                     return value.PrintTo(os);
                 }
@@ -1720,7 +1809,7 @@ namespace golang::packages
         {
             // cache miss
             v = gocpp::InitPtr<parseValue>([=](auto& x) {
-                x.ready = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_3>>());
+                x.ready = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_5>>());
             });
             ld->parseCache[filename] = v;
             rec::Unlock(gocpp::recv(ld->parseCacheMu));
@@ -1728,18 +1817,23 @@ namespace golang::packages
             gocpp::slice<unsigned char> src = {};
             for(auto [f, contents] : ld->Config.Overlay)
             {
+                // TODO(adonovan): Inefficient for large overlays.
+                // Do an exact name-based map lookup
+                // (for nonexistent files) followed by a
+                // FileID-based map lookup (for existing ones).
                 if(sameFile(f, filename))
                 {
                     src = contents;
+                    break;
                 }
             }
             gocpp::error err = {};
             if(src == nullptr)
             {
-                // wait
-                ioLimit.send(true);
+                // acquire a token
+                ioLimit.send(unit {});
                 std::tie(src, err) = os::ReadFile(filename);
-                // signal
+                // release a token
                 ioLimit.recv();
             }
             if(err != nullptr)
@@ -1748,7 +1842,12 @@ namespace golang::packages
             }
             else
             {
+                // Parsing is CPU intensive.
+                // acquire a token
+                cpuLimit.send(unit {});
                 std::tie(v->f, v->err) = ld->ParseFile(ld->Config.Fset, filename, src);
+                // release a token
+                cpuLimit.recv();
             }
 
             close(v->ready);
@@ -1764,20 +1863,21 @@ namespace golang::packages
     // positions of the resulting ast.Files are not ordered.
     std::tuple<gocpp::slice<ast::File*>, gocpp::slice<gocpp::error>> rec::parseFiles(loader* ld, gocpp::slice<gocpp::string> filenames)
     {
-        sync::WaitGroup wg = {};
         auto n = len(filenames);
         auto parsed = gocpp::make(gocpp::Tag<gocpp::slice<ast::File*>>(), n);
         auto errors = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::error>>(), n);
-        for(auto [i, file] : filenames)
+        errgroup::Group g = {};
+        for(auto [i, filename] : filenames)
         {
-            rec::Add(gocpp::recv(wg), 1);
-            gocpp::go([&]{ [=](int i, gocpp::string filename) mutable -> void
+            // This creates goroutines unnecessarily in the
+            // cache-hit case, but that case is uncommon.
+            rec::Go(gocpp::recv(g), [=]() mutable -> gocpp::error
             {
                 std::tie(parsed[i], errors[i]) = rec::parseFile(gocpp::recv(ld), filename);
-                rec::Done(gocpp::recv(wg));
-            }(i, file); });
+                return nullptr;
+            });
         }
-        rec::Wait(gocpp::recv(wg));
+        rec::Wait(gocpp::recv(g));
 
         // Eliminate nils, preserving order.
         int o = {};
@@ -1938,7 +2038,7 @@ namespace golang::packages
             {
                 return mocklib::Errorf("reading %s: %v"_s, lpkg->Package.ExportFile, err);
             }
-            if(auto [gocpp_id_4, ok] = view["go.shape"_s]; ok)
+            if(auto [gocpp_id_6, ok] = view["go.shape"_s]; ok)
             {
                 // Account for the pseudopackage "go.shape" that gets
                 // created by generic code.
@@ -1967,6 +2067,11 @@ namespace golang::packages
             // All these things require knowing the import graph.
             loadMode |= NeedImports;
         }
+        if(loadMode & NeedTypes != 0)
+        {
+            // Types require the GoVersion from Module.
+            loadMode |= NeedModule;
+        }
 
         return loadMode;
     }
@@ -1976,6 +2081,44 @@ namespace golang::packages
         return cfg->Mode & NeedExportFile != 0 || cfg->Mode & NeedTypes != 0 && cfg->Mode & NeedDeps == 0;
     }
 
-    gocpp::go_any _ = io::Discard;
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    unit::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool unit::operator==(const T& ref) const
+    {
+        return true;
+    }
+
+    std::ostream& unit::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct unit& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    template<typename T>
+    T cond(bool cond, T t, T f)
+    {
+        if(cond)
+        {
+            return t;
+        }
+        else
+        {
+            return f;
+        }
+    }
+
 }
 

@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::flate
+namespace golang::compress::flate
 {
     const long maxCodeLen = 16;
     // The next three numbers come from the RFC section 3.2.7, with the
@@ -21,15 +21,14 @@ namespace golang::flate
     const long huffmanCountMask = 15;
     const long huffmanValueShift = 4;
     struct huffmanDecoder;
+    struct decompressor;
     const int huffmanNumChunks = 1 << huffmanChunkBits;
 }
-#include "golang/bufio/bufio.fwd.h"
-#include "golang/compress/flate/dict_decoder.fwd.h"
 #include "golang/io/io.fwd.h"
 
-namespace golang::flate
+namespace golang::compress::flate
 {
+    namespace io = golang::io;
     struct Resetter;
     struct Reader;
-    struct decompressor;
 }

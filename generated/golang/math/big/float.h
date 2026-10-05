@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::big
+namespace golang::math::big
 {
     struct ErrNaN
     {
@@ -28,12 +28,12 @@ namespace golang::big
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ErrNaN& value);
+    extern gocpp::error _;
     Accuracy makeAcc(bool above);
-    uint32_t umax32(uint32_t x, uint32_t y);
 }
 #include "golang/math/big/nat.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     struct Float
     {
@@ -42,7 +42,7 @@ namespace golang::big
         Accuracy acc{};
         form form{};
         bool neg{};
-        nat mant{};
+        golang::math::big::nat mant{};
         int32_t exp{};
 
         using isGoStruct = void;
@@ -57,9 +57,9 @@ namespace golang::big
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Float& value);
-    int64_t fnorm(nat m);
-    uint32_t msb32(nat x);
-    uint64_t msb64(nat x);
+    int64_t fnorm(golang::math::big::nat m);
+    uint32_t msb32(golang::math::big::nat x);
+    uint64_t msb64(golang::math::big::nat x);
     Float* NewFloat(double x);
     void validateBinaryOperands(Float* x, Float* y);
 }
@@ -67,7 +67,7 @@ namespace golang::big
 #include "golang/math/big/int.h"
 #include "golang/math/big/rat.h"
 
-namespace golang::big
+namespace golang::math::big
 {
 
     namespace rec
@@ -93,8 +93,8 @@ namespace golang::big
         Float* SetUint64(Float* z, uint64_t x);
         Float* SetInt64(Float* z, int64_t x);
         Float* SetFloat64(Float* z, double x);
-        Float* SetInt(Float* z, golang::big::Int* x);
-        Float* SetRat(Float* z, golang::big::Rat* x);
+        Float* SetInt(Float* z, golang::math::big::Int* x);
+        Float* SetRat(Float* z, golang::math::big::Rat* x);
         Float* SetInf(Float* z, bool signbit);
         Float* Set(Float* z, Float* x);
         Float* Copy(Float* z, Float* x);
@@ -102,8 +102,8 @@ namespace golang::big
         std::tuple<int64_t, Accuracy> Int64(Float* x);
         std::tuple<double, Accuracy> Float32(Float* x);
         std::tuple<double, Accuracy> Float64(Float* x);
-        std::tuple<golang::big::Int*, Accuracy> Int(Float* x, golang::big::Int* z);
-        std::tuple<golang::big::Rat*, Accuracy> Rat(Float* x, golang::big::Rat* z);
+        std::tuple<golang::math::big::Int*, Accuracy> Int(Float* x, golang::math::big::Int* z);
+        std::tuple<golang::math::big::Rat*, Accuracy> Rat(Float* x, golang::math::big::Rat* z);
         Float* Abs(Float* z, Float* x);
         Float* Neg(Float* z, Float* x);
         void uadd(Float* z, Float* x, Float* y);

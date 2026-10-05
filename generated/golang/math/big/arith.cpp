@@ -13,8 +13,9 @@
 
 #include "golang/math/bits/bits.h"
 
-namespace golang::big
+namespace golang::math::big
 {
+    namespace bits = golang::math::bits;
     namespace rec
     {
     }
@@ -51,8 +52,12 @@ namespace golang::big
     Word addVV_g(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y)
     {
         Word c;
-        // The comment near the top of this file discusses this for loop condition.
-        for(auto i = 0; i < len(z) && i < len(x) && i < len(y); i++)
+        if(len(x) != len(z) || len(y) != len(z))
+        {
+            gocpp::panic("addVV len"_s);
+        }
+
+        for(auto [i, gocpp_ignored] : z)
         {
             auto [zi, cc] = bits::Add((unsigned int)(x[i]), (unsigned int)(y[i]), (unsigned int)(c));
             z[i] = Word(zi);
@@ -65,8 +70,12 @@ namespace golang::big
     Word subVV_g(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y)
     {
         Word c;
-        // The comment near the top of this file discusses this for loop condition.
-        for(auto i = 0; i < len(z) && i < len(x) && i < len(y); i++)
+        if(len(x) != len(z) || len(y) != len(z))
+        {
+            gocpp::panic("subVV len"_s);
+        }
+
+        for(auto [i, gocpp_ignored] : z)
         {
             auto [zi, cc] = bits::Sub((unsigned int)(x[i]), (unsigned int)(y[i]), (unsigned int)(c));
             z[i] = Word(zi);
@@ -75,13 +84,64 @@ namespace golang::big
         return c;
     }
 
-    // The resulting carry c is either 0 or 1.
-    Word addVW_g(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y)
+    // addVW sets z = x + y, returning the final carry c.
+    // The behavior is undefined if len(x) != len(z).
+    // If len(z) == 0, c = y; otherwise, c is 0 or 1.
+    //
+    // addVW should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/remyoudompheng/bigfft
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname addVW
+    Word addVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y)
+    {
+        Word c;
+        if(len(x) != len(z))
+        {
+            gocpp::panic("addVW len"_s);
+        }
+
+        if(len(z) == 0)
+        {
+            return y;
+        }
+        auto [zi, cc] = bits::Add((unsigned int)(x[0]), (unsigned int)(y), 0);
+        z[0] = Word(zi);
+        if(cc == 0)
+        {
+            if(& z[0] != & x[0])
+            {
+                copy(z.make_slice(1), x.make_slice(1));
+            }
+            return 0;
+        }
+        for(auto i = 1; i < len(z); i++)
+        {
+            auto xi = x[i];
+            if(xi != ~ Word(0))
+            {
+                z[i] = xi + 1;
+                if(& z[0] != & x[0])
+                {
+                    copy(z.make_slice(i + 1), x.make_slice(i + 1));
+                }
+                return 0;
+            }
+            z[i] = 0;
+        }
+        return 1;
+    }
+
+    // addVW_ref is the reference implementation for addVW, used only for testing.
+    Word addVW_ref(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y)
     {
         Word c;
         c = y;
-        // The comment near the top of this file discusses this for loop condition.
-        for(auto i = 0; i < len(z) && i < len(x); i++)
+        for(auto [i, gocpp_ignored] : z)
         {
             auto [zi, cc] = bits::Add((unsigned int)(x[i]), (unsigned int)(c), 0);
             z[i] = Word(zi);
@@ -90,38 +150,64 @@ namespace golang::big
         return c;
     }
 
-    // addVWlarge is addVW, but intended for large z.
-    // The only difference is that we check on every iteration
-    // whether we are done with carries,
-    // and if so, switch to a much faster copy instead.
-    // This is only a good idea for large z,
-    // because the overhead of the check and the function call
-    // outweigh the benefits when z is small.
-    Word addVWlarge(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y)
+    // subVW sets z = x - y, returning the final carry c.
+    // The behavior is undefined if len(x) != len(z).
+    // If len(z) == 0, c = y; otherwise, c is 0 or 1.
+    //
+    // subVW should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/remyoudompheng/bigfft
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname subVW
+    Word subVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y)
     {
         Word c;
-        c = y;
-        // The comment near the top of this file discusses this for loop condition.
-        for(auto i = 0; i < len(z) && i < len(x); i++)
+        if(len(x) != len(z))
         {
-            if(c == 0)
-            {
-                copy(z.make_slice(i), x.make_slice(i));
-                return c;
-            }
-            auto [zi, cc] = bits::Add((unsigned int)(x[i]), (unsigned int)(c), 0);
-            z[i] = Word(zi);
-            c = Word(cc);
+            gocpp::panic("subVW len"_s);
         }
-        return c;
+
+        if(len(z) == 0)
+        {
+            return y;
+        }
+        auto [zi, cc] = bits::Sub((unsigned int)(x[0]), (unsigned int)(y), 0);
+        z[0] = Word(zi);
+        if(cc == 0)
+        {
+            if(& z[0] != & x[0])
+            {
+                copy(z.make_slice(1), x.make_slice(1));
+            }
+            return 0;
+        }
+        for(auto i = 1; i < len(z); i++)
+        {
+            auto xi = x[i];
+            if(xi != 0)
+            {
+                z[i] = xi - 1;
+                if(& z[0] != & x[0])
+                {
+                    copy(z.make_slice(i + 1), x.make_slice(i + 1));
+                }
+                return 0;
+            }
+            z[i] = ~ Word(0);
+        }
+        return 1;
     }
 
-    Word subVW_g(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y)
+    // subVW_ref is the reference implementation for subVW, used only for testing.
+    Word subVW_ref(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y)
     {
         Word c;
         c = y;
-        // The comment near the top of this file discusses this for loop condition.
-        for(auto i = 0; i < len(z) && i < len(x); i++)
+        for(auto [i, gocpp_ignored] : z)
         {
             auto [zi, cc] = bits::Sub((unsigned int)(x[i]), (unsigned int)(c), 0);
             z[i] = Word(zi);
@@ -130,29 +216,14 @@ namespace golang::big
         return c;
     }
 
-    // subVWlarge is to subVW as addVWlarge is to addVW.
-    Word subVWlarge(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y)
+    Word lshVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
     {
         Word c;
-        c = y;
-        // The comment near the top of this file discusses this for loop condition.
-        for(auto i = 0; i < len(z) && i < len(x); i++)
+        if(len(x) != len(z))
         {
-            if(c == 0)
-            {
-                copy(z.make_slice(i), x.make_slice(i));
-                return c;
-            }
-            auto [zi, cc] = bits::Sub((unsigned int)(x[i]), (unsigned int)(c), 0);
-            z[i] = Word(zi);
-            c = Word(cc);
+            gocpp::panic("lshVU len"_s);
         }
-        return c;
-    }
 
-    Word shlVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
-    {
-        Word c;
         if(s == 0)
         {
             copy(z, x);
@@ -176,9 +247,14 @@ namespace golang::big
         return c;
     }
 
-    Word shrVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
+    Word rshVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
     {
         Word c;
+        if(len(x) != len(z))
+        {
+            gocpp::panic("rshVU len"_s);
+        }
+
         if(s == 0)
         {
             copy(z, x);
@@ -187,11 +263,6 @@ namespace golang::big
         if(len(z) == 0)
         {
             return c;
-        }
-        if(len(x) != len(z))
-        {
-            // This is an invariant guaranteed by the caller.
-            gocpp::panic("len(x) != len(z)"_s);
         }
         // hint to the compiler that shifts by s don't need guard code
         s &= _W - 1;
@@ -210,22 +281,30 @@ namespace golang::big
     Word mulAddVWW_g(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y, Word r)
     {
         Word c;
+        if(len(x) != len(z))
+        {
+            gocpp::panic("mulAddVWW len"_s);
+        }
         c = r;
-        // The comment near the top of this file discusses this for loop condition.
-        for(auto i = 0; i < len(z) && i < len(x); i++)
+        for(auto [i, gocpp_ignored] : z)
         {
             std::tie(c, z[i]) = mulAddWWW_g(x[i], y, c);
         }
         return c;
     }
 
-    Word addMulVVW_g(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y)
+    Word addMulVVWW_g(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y, Word m, Word a)
     {
         Word c;
-        // The comment near the top of this file discusses this for loop condition.
-        for(auto i = 0; i < len(z) && i < len(x); i++)
+        if(len(x) != len(z) || len(y) != len(z))
         {
-            auto [z1, z0] = mulAddWWW_g(x[i], y, z[i]);
+            gocpp::panic("addMulVVWW len"_s);
+        }
+
+        c = a;
+        for(auto [i, gocpp_ignored] : z)
+        {
+            auto [z1, z0] = mulAddWWW_g(y[i], m, x[i]);
             auto [lo, cc] = bits::Add((unsigned int)(z0), (unsigned int)(c), 0);
             std::tie(c, z[i]) = std::tuple{Word(cc), Word(lo)};
             c += z1;

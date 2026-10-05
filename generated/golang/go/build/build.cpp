@@ -19,18 +19,19 @@
 #include "golang/go/build/constraint/expr.h"
 #include "golang/go/build/gc.h"
 #include "golang/go/build/read.h"
-#include "golang/go/build/syslist.h"
-#include "golang/go/build/zcgo.h"
 #include "golang/go/doc/synopsis.h"
 #include "golang/go/token/position.h"
 #include "golang/internal/buildcfg/cfg.h"
+#include "golang/internal/buildcfg/zbootstrap.h"
 #include "golang/internal/godebug/godebug.h"
 #include "golang/internal/goroot/gc.h"
 #include "golang/internal/goversion/goversion.h"
 #include "golang/internal/platform/supported.h"
+#include "golang/internal/syslist/syslist.h"
 #include "golang/io/fs/fs.h"
 #include "golang/io/fs/readdir.h"
 #include "golang/io/io.h"
+#include "golang/iter/iter.h"
 #include "golang/os/dir.h"
 #include "golang/os/env.h"
 #include "golang/os/exec/exec.h"
@@ -39,20 +40,46 @@
 #include "golang/os/stat.h"
 #include "golang/os/types.h"
 #include "golang/path/filepath/path.h"
-#include "golang/path/filepath/path_windows.h"
 #include "golang/path/path.h"
 #include "golang/runtime/compiler.h"
 #include "golang/runtime/extern.h"
-#include "golang/sort/sort.h"
-#include "golang/strconv/itoa.h"
+#include "golang/slices/slices.h"
+#include "golang/slices/sort.h"
+#include "golang/strconv/number.h"
 #include "golang/strconv/quote.h"
 #include "golang/strings/builder.h"
+#include "golang/strings/iter.h"
 #include "golang/strings/strings.h"
 #include "golang/unicode/graphic.h"
 #include "golang/unicode/utf8/utf8.h"
 
-namespace golang::build
+namespace golang::go::build
 {
+    namespace ast = golang::go::ast;
+    namespace buildcfg = golang::internal::buildcfg;
+    namespace bytes = golang::bytes;
+    namespace constraint = golang::go::build::constraint;
+    namespace doc = golang::go::doc;
+    namespace errors = golang::errors;
+    namespace exec = golang::os::exec;
+    namespace filepath = golang::path::filepath;
+    namespace fmt = golang::fmt;
+    namespace fs = golang::io::fs;
+    namespace godebug = golang::internal::godebug;
+    namespace goroot = golang::internal::goroot;
+    namespace goversion = golang::internal::goversion;
+    namespace io = golang::io;
+    namespace os = golang::os;
+    namespace pathpkg = golang::path;
+    namespace platform = golang::internal::platform;
+    namespace runtime = golang::runtime;
+    namespace slices = golang::slices;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace syslist = golang::internal::syslist;
+    namespace token = golang::go::token;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using ast::rec::Text;
@@ -368,6 +395,7 @@ namespace golang::build
     // It uses the GOARCH, GOOS, GOROOT, and GOPATH environment variables
     // if set, or else the compiled code's GOARCH, GOOS, and GOROOT.
     Context Default = defaultContext();
+    // Keep consistent with cmd/go/internal/cfg.defaultGOPATH.
     gocpp::string defaultGOPATH()
     {
         auto env = "HOME"_s;
@@ -394,7 +422,25 @@ namespace golang::build
         return ""_s;
     }
 
+    // defaultToolTags should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/gopherjs/gopherjs
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname defaultToolTags
     gocpp::slice<gocpp::string> defaultToolTags;
+    // defaultReleaseTags should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/gopherjs/gopherjs
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname defaultReleaseTags
     gocpp::slice<gocpp::string> defaultReleaseTags;
     Context defaultContext()
     {
@@ -431,7 +477,7 @@ namespace golang::build
         auto env = os::Getenv("CGO_ENABLED"_s);
         if(env == ""_s)
         {
-            env = defaultCGO_ENABLED;
+            env = buildcfg::DefaultCGO_ENABLED;
         }
         //Go switch emulation
         {
@@ -1091,7 +1137,7 @@ namespace golang::build
                     }
                     tried.goroot = dir;
                 }
-                if(ctxt->Compiler == "gccgo"_s && goroot::IsStandardPackage(ctxt->GOROOT, ctxt->Compiler, path))
+                if(ctxt->Compiler == "gccgo"_s && goroot::IsStandardPackage(os::ReadDir, ctxt->GOROOT, ctxt->Compiler, path))
                 {
                     // TODO(bcmills): Setting p.Dir here is misleading, because gccgo
                     // doesn't actually load its standard-library packages from this
@@ -1496,7 +1542,7 @@ namespace golang::build
         {
             p->AllTags = append(p->AllTags, tag);
         }
-        sort::Strings(p->AllTags);
+        slices::Sort(p->AllTags);
 
         std::tie(p->EmbedPatterns, p->EmbedPatternPos) = cleanDecls(embedPos);
         std::tie(p->TestEmbedPatterns, p->TestEmbedPatternPos) = cleanDecls(testEmbedPos);
@@ -1512,12 +1558,12 @@ namespace golang::build
         if(len(p->CgoFiles) > 0)
         {
             p->SFiles = append(p->SFiles, Sfiles);
-            sort::Strings(p->SFiles);
+            slices::Sort(p->SFiles);
         }
         else
         {
             p->IgnoredOtherFiles = append(p->IgnoredOtherFiles, Sfiles);
-            sort::Strings(p->IgnoredOtherFiles);
+            slices::Sort(p->IgnoredOtherFiles);
         }
 
         if(badGoError != nullptr)
@@ -1608,7 +1654,7 @@ namespace golang::build
         }
         auto out = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), len(list));
         copy(out, list);
-        sort::Strings(out);
+        slices::Sort(out);
         auto uniq = out.make_slice(0, 0);
         for(auto [gocpp_ignored, x] : out)
         {
@@ -1637,7 +1683,7 @@ namespace golang::build
         // we must not being doing special things like AllowBinary or IgnoreVendor,
         // and all the file system callbacks must be nil (we're meant to use the local file system).
         if(mode & AllowBinary != 0 || mode & IgnoreVendor != 0 ||
-                ctxt->JoinPath != nullptr || ctxt->SplitPathList != nullptr || ctxt->IsAbsPath != nullptr || ctxt->IsDir != nullptr || ctxt->HasSubdir != nullptr || ctxt->ReadDir != nullptr || ctxt->OpenFile != nullptr || ! equal(ctxt->ToolTags, defaultToolTags) || ! equal(ctxt->ReleaseTags, defaultReleaseTags))
+                ctxt->JoinPath != nullptr || ctxt->SplitPathList != nullptr || ctxt->IsAbsPath != nullptr || ctxt->IsDir != nullptr || ctxt->HasSubdir != nullptr || ctxt->ReadDir != nullptr || ctxt->OpenFile != nullptr || ! slices::Equal(ctxt->ToolTags, defaultToolTags) || ! slices::Equal(ctxt->ReleaseTags, defaultReleaseTags) || ctxt->UseAllFiles)
         {
             return errNoModules;
         }
@@ -1806,22 +1852,6 @@ namespace golang::build
         p->Root = f[2];
         p->Goroot = f[3] == "true"_s;
         return nullptr;
-    }
-
-    bool equal(gocpp::slice<gocpp::string> x, gocpp::slice<gocpp::string> y)
-    {
-        if(len(x) != len(y))
-        {
-            return false;
-        }
-        for(auto [i, xi] : x)
-        {
-            if(xi != y[i])
-            {
-                return false;
-            }
-        }
-        return true;
     }
 
     // hasGoFiles reports whether dir contains any files with names ending in .go.
@@ -2228,7 +2258,7 @@ namespace golang::build
         {
             all = append(all, path);
         }
-        sort::Strings(all);
+        slices::Sort(all);
         return {all, m};
     }
 
@@ -2356,6 +2386,15 @@ namespace golang::build
         return {shouldBuild, sawBinaryOnly, nullptr};
     }
 
+    // parseFileHeader should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bazelbuild/bazel-gazelle
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname parseFileHeader
     std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>, bool, gocpp::error> parseFileHeader(gocpp::slice<unsigned char> content)
     {
         gocpp::slice<unsigned char> trimmed;
@@ -2464,7 +2503,7 @@ namespace golang::build
     gocpp::error rec::saveCgo(Context* ctxt, gocpp::string filename, Package* di, ast::CommentGroup* cg)
     {
         auto text = rec::Text(gocpp::recv(cg));
-        for(auto [gocpp_ignored, line] : strings::Split(text, "\n"_s))
+        for(auto [line, gocpp_ignored] : strings::SplitSeq(text, "\n"_s))
         {
             auto orig = line;
 
@@ -2831,7 +2870,7 @@ namespace golang::build
         {
             return true;
         }
-        if(name == "unix"_s && unixOS[ctxt->GOOS])
+        if(name == "unix"_s && syslist::UnixOS[ctxt->GOOS])
         {
             return true;
         }
@@ -2842,29 +2881,8 @@ namespace golang::build
         }
 
         // other tags
-        for(auto [gocpp_ignored, tag] : ctxt->BuildTags)
-        {
-            if(tag == name)
-            {
-                return true;
-            }
-        }
-        for(auto [gocpp_ignored, tag] : ctxt->ToolTags)
-        {
-            if(tag == name)
-            {
-                return true;
-            }
-        }
-        for(auto [gocpp_ignored, tag] : ctxt->ReleaseTags)
-        {
-            if(tag == name)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return slices::Contains(ctxt->BuildTags, name) || slices::Contains(ctxt->ToolTags, name) ||
+                slices::Contains(ctxt->ReleaseTags, name);
     }
 
     // goodOSArchFile returns false if the name contains a $GOOS or $GOARCH
@@ -2907,7 +2925,7 @@ namespace golang::build
             l = l.make_slice(0, n - 1);
         }
         auto n = len(l);
-        if(n >= 2 && knownOS[l[n - 2]] && knownArch[l[n - 1]])
+        if(n >= 2 && syslist::KnownOS[l[n - 2]] && syslist::KnownArch[l[n - 1]])
         {
             if(allTags != nullptr)
             {
@@ -2916,7 +2934,7 @@ namespace golang::build
             }
             return rec::matchTag(gocpp::recv(ctxt), l[n - 1], allTags) && rec::matchTag(gocpp::recv(ctxt), l[n - 2], allTags);
         }
-        if(n >= 1 && (knownOS[l[n - 1]] || knownArch[l[n - 1]]))
+        if(n >= 1 && (syslist::KnownOS[l[n - 1]] || syslist::KnownArch[l[n - 1]]))
         {
             return rec::matchTag(gocpp::recv(ctxt), l[n - 1], allTags);
         }

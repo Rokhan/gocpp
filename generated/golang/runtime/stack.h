@@ -16,6 +16,7 @@ namespace golang::runtime
     void stackinit();
     int stacklog2(uintptr_t n);
     extern uintptr_t maxstacksize;
+    extern uintptr_t maxstackceiling;
     extern gocpp::slice<gocpp::string> ptrnames;
     struct bitvector
     {
@@ -45,7 +46,7 @@ namespace golang::runtime
         // if non-negative, offset from argp
         int32_t off{};
         int32_t size{};
-        int32_t _ptrdata{}; // ptrdata, or -ptrdata is GC prog is used
+        int32_t ptrBytes{};
         uint32_t gcdataoff{}; // offset to gcdata from moduledata.rodata
 
         using isGoStruct = void;
@@ -61,53 +62,18 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct stackObjectRecord& value);
     void morestackc();
+    // startingStackSize is the amount of stack that new goroutines start with.
+    // It is a power of 2, and between fixedStack and maxstacksize, inclusive.
+    // startingStackSize is updated every GC by tracking the average size of
+    // stacks scanned during the GC.
     extern uint32_t startingStackSize;
     void gcComputeStartingStackSize();
-    extern uintptr_t maxstackceiling;
 }
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mcache.h"
-#include "golang/runtime/mheap.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/malloc.fwd.h"
 
 namespace golang::runtime
 {
-    struct stackpoolItem
-    {
-        sys::NotInHeap _1{};
-        mutex mu{};
-        mSpanList span{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stackpoolItem& value);
-    struct stackLargeStruct
-    {
-        mutex lock{};
-        gocpp::array<mSpanList, heapAddrBits - pageShift> free{}; // free lists by log_2(s.npages)
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stackLargeStruct& value);
     gclinkptr stackpoolalloc(uint8_t order);
     void stackpoolfree(gclinkptr x, uint8_t order);
     void stackcacherefill(mcache* c, uint8_t order);
@@ -140,17 +106,78 @@ namespace golang::runtime
     void gostartcallfn(gobuf* gobuf, funcval* fv);
     bool isShrinkStackSafe(g* gp);
     void shrinkstack(g* gp);
-    extern stackLargeStruct stackLarge;
-    void adjustpointer(adjustinfo* adjinfo, gocpp::unsafe_pointer vpp);
+}
+#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
+#include "golang/internal/runtime/sys/consts.fwd.h"
+#include "golang/internal/runtime/sys/intrinsics.fwd.h"
+#include "golang/internal/runtime/sys/nih.fwd.h"
+
+namespace golang::runtime
+{
     void adjustctxt(g* gp, adjustinfo* adjinfo);
     void adjustdefers(g* gp, adjustinfo* adjinfo);
     void adjustpanics(g* gp, adjustinfo* adjinfo);
     void adjustsudogs(g* gp, adjustinfo* adjinfo);
     uintptr_t syncadjustsudogs(g* gp, uintptr_t used, adjustinfo* adjinfo);
+    namespace sys = golang::internal::runtime::sys;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace gc = golang::internal::runtime::gc;
 }
+#include "golang/internal/runtime/sys/nih.h"
+#include "golang/runtime/mheap.h"
 #include "golang/runtime/symtab.h"
-#include "golang/internal/cpu/cpu_x86.fwd.h"
+#include "golang/runtime/malloc.fwd.h"
 #include "golang/runtime/stkframe.fwd.h"
+
+namespace golang::runtime
+{
+    struct stackpoolItem
+    {
+        sys::NotInHeap _1{};
+        mutex mu{};
+        mSpanList span{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackpoolItem& value);
+    struct stackLargeStruct
+    {
+        mutex lock{};
+        gocpp::array<mSpanList, heapAddrBits - gc::PageShift> free{}; // free lists by log_2(s.npages)
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackLargeStruct& value);
+    void adjustpointer(adjustinfo* adjinfo, gocpp::unsafe_pointer vpp);
+    void adjustpointers(gocpp::unsafe_pointer scanp, bitvector* bv, adjustinfo* adjinfo, golang::runtime::funcInfo f);
+    void adjustframe(stkframe* frame, adjustinfo* adjinfo);
+}
+#include "golang/internal/cpu/cpu_x86.fwd.h"
+
+namespace golang::runtime
+{
+    namespace cpu = golang::internal::cpu;
+}
+#include "golang/internal/runtime/gc/sizeclasses.h"
+#include "golang/runtime/malloc.h"
 
 namespace golang::runtime
 {
@@ -171,16 +198,25 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackpoolStruct& value);
-    void adjustpointers(gocpp::unsafe_pointer scanp, bitvector* bv, adjustinfo* adjinfo, golang::runtime::funcInfo f);
-    void adjustframe(stkframe* frame, adjustinfo* adjinfo);
+    // Global pool of large stack spans.
+    extern stackLargeStruct stackLarge;
+}
+#include "golang/internal/cpu/cpu_x86.h"
+
+namespace golang::runtime
+{
+    // Global pool of spans that have free stacks.
+    // Stacks are assigned an order according to size.
+    //
+    //	order = log_2(size/FixedStack)
+    //
+    // There is a free list for each order.
     extern gocpp::array<stackpoolStruct, _NumStackOrders> stackpool;
 
     namespace rec
     {
         uint8_t ptrbit(bitvector* bv, uintptr_t i);
-        bool useGCProg(stackObjectRecord* r);
-        uintptr_t ptrdata(stackObjectRecord* r);
-        unsigned char* gcdata(stackObjectRecord* r);
+        std::tuple<uintptr_t, unsigned char*> gcdata(stackObjectRecord* r);
     }
 }
 

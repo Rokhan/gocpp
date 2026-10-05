@@ -17,13 +17,28 @@ namespace golang::os
     std::tuple<gocpp::slice<unsigned char>, gocpp::string> readNextArg(gocpp::string cmd);
     gocpp::slice<gocpp::string> commandLineToArgv(gocpp::string cmd);
 }
-#include "golang/time/time.h"
 #include "golang/os/exec.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::os
 {
     std::tuple<Process*, gocpp::error> findProcess(int pid);
+}
+#include "golang/syscall/security_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
+#include "golang/time/time.fwd.h"
+
+namespace golang::os
+{
+    namespace syscall = golang::syscall;
+}
+#include "golang/time/time.h"
+
+namespace golang::os
+{
+    namespace time = golang::time;
     time::Duration ftToDuration(syscall::Filetime* ft);
 }
 
@@ -38,7 +53,7 @@ namespace golang::os
     {
         std::tuple<ProcessState*, gocpp::error> wait(Process* p);
         gocpp::error signal(Process* p, golang::os::Signal sig);
-        gocpp::error release(Process* p);
+        void closeHandle(processHandle* ph);
         time::Duration userTime(ProcessState* p);
         time::Duration systemTime(ProcessState* p);
     }

@@ -5,7 +5,7 @@
 
 #include "golang/io/fs/fs.fwd.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
     using WalkDirFunc = std::function<gocpp::error (gocpp::string path, DirEntry d, gocpp::error err)>;
 }

@@ -14,7 +14,7 @@
 // Package utf8 implements functions and constants to support text encoded in
 // UTF-8. It includes functions to translate between runes and UTF-8 byte sequences.
 // See https://en.wikipedia.org/wiki/UTF-8
-namespace golang::utf8
+namespace golang::unicode::utf8
 {
     namespace rec
     {
@@ -152,6 +152,25 @@ namespace golang::utf8
     {
         gocpp::rune r;
         int size;
+        // Inlineable fast path for ASCII characters; see #48195.
+        // This implementation is weird but effective at rendering the
+        // function inlineable.
+        for(auto [gocpp_ignored, b] : p)
+        {
+            if(b < RuneSelf)
+            {
+                return {gocpp::rune(b), 1};
+            }
+            break;
+        }
+        std::tie(r, size) = decodeRuneSlow(p);
+        return {r, size};
+    }
+
+    std::tuple<gocpp::rune, int> decodeRuneSlow(gocpp::slice<unsigned char> p)
+    {
+        gocpp::rune r;
+        int size;
         auto n = len(p);
         if(n < 1)
         {
@@ -213,6 +232,22 @@ namespace golang::utf8
     {
         gocpp::rune r;
         int size;
+        // Inlineable fast path for ASCII characters; see #48195.
+        // This implementation is a bit weird but effective at rendering the
+        // function inlineable.
+        if(s != ""_s && s[0] < RuneSelf)
+        {
+            return {gocpp::rune(s[0]), 1};
+        }
+        else
+        {
+            std::tie(r, size) = decodeRuneInStringSlow(s);
+        }
+        return {r, size};
+    }
+
+    std::tuple<gocpp::rune, int> decodeRuneInStringSlow(gocpp::string s)
+    {
         auto n = len(s);
         if(n < 1)
         {
@@ -288,11 +323,7 @@ namespace golang::utf8
         // guard against O(n^2) behavior when traversing
         // backwards through strings with long sequences of
         // invalid UTF-8.
-        auto lim = end - UTFMax;
-        if(lim < 0)
-        {
-            lim = 0;
-        }
+        auto lim = gocpp::max(end - UTFMax, 0);
         for(start--; start >= lim; start--)
         {
             if(RuneStart(p[start]))
@@ -338,11 +369,7 @@ namespace golang::utf8
         // guard against O(n^2) behavior when traversing
         // backwards through strings with long sequences of
         // invalid UTF-8.
-        auto lim = end - UTFMax;
-        if(lim < 0)
-        {
-            lim = 0;
-        }
+        auto lim = gocpp::max(end - UTFMax, 0);
         for(start--; start >= lim; start--)
         {
             if(RuneStart(s[start]))
@@ -362,7 +389,7 @@ namespace golang::utf8
         return {r, size};
     }
 
-    // RuneLen returns the number of bytes required to encode the rune.
+    // RuneLen returns the number of bytes in the UTF-8 encoding of the rune.
     // It returns -1 if the rune is not a valid value to encode in UTF-8.
     int RuneLen(gocpp::rune r)
     {
@@ -405,33 +432,37 @@ namespace golang::utf8
     // It returns the number of bytes written.
     int EncodeRune(gocpp::slice<unsigned char> p, gocpp::rune r)
     {
+        // This function is inlineable for fast handling of ASCII.
+        if(uint32_t(r) <= rune1Max)
+        {
+            p[0] = (unsigned char)(r);
+            return 1;
+        }
+        return encodeRuneNonASCII(p, r);
+    }
+
+    int encodeRuneNonASCII(gocpp::slice<unsigned char> p, gocpp::rune r)
+    {
         // Negative values are erroneous. Making it unsigned addresses the problem.
         //Go switch emulation
         {
             auto i = uint32_t(r);
             int conditionId = -1;
-            if(i <= rune1Max) { conditionId = 0; }
-            else if(i <= rune2Max) { conditionId = 1; }
-            else if(i > MaxRune) { conditionId = 2; }
-            else if(surrogateMin <= i && i <= surrogateMax) { conditionId = 3; }
-            else if(i <= rune3Max) { conditionId = 4; }
+            if(i <= rune2Max) { conditionId = 0; }
+            else if(i < surrogateMin) { conditionId = 1; }
+            else if(surrogateMax < i && i <= rune3Max) { conditionId = 2; }
+            else if(i > rune3Max && i <= MaxRune) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
-                    p[0] = (unsigned char)(r);
-                    return 1;
-                    break;
-                case 1:
                     // eliminate bounds checks
                     _ = p[1];
                     p[0] = t2 | (unsigned char)(r >> 6);
                     p[1] = tx | (unsigned char)(r) & maskx;
                     return 2;
                     break;
+                case 1:
                 case 2:
-                case 3:
-                    r = RuneError;
-                case 4:
                     // eliminate bounds checks
                     _ = p[2];
                     p[0] = t3 | (unsigned char)(r >> 12);
@@ -439,7 +470,7 @@ namespace golang::utf8
                     p[2] = tx | (unsigned char)(r) & maskx;
                     return 3;
                     break;
-                default:
+                case 3:
                     // eliminate bounds checks
                     _ = p[3];
                     p[0] = t4 | (unsigned char)(r >> 18);
@@ -447,6 +478,14 @@ namespace golang::utf8
                     p[2] = tx | (unsigned char)(r >> 6) & maskx;
                     p[3] = tx | (unsigned char)(r) & maskx;
                     return 4;
+                    break;
+                default:
+                    // eliminate bounds checks
+                    _ = p[2];
+                    p[0] = runeErrorByte0;
+                    p[1] = runeErrorByte1;
+                    p[2] = runeErrorByte2;
+                    return 3;
                     break;
             }
         }
@@ -473,9 +512,9 @@ namespace golang::utf8
             auto i = uint32_t(r);
             int conditionId = -1;
             if(i <= rune2Max) { conditionId = 0; }
-            else if(i > MaxRune) { conditionId = 1; }
-            else if(surrogateMin <= i && i <= surrogateMax) { conditionId = 2; }
-            else if(i <= rune3Max) { conditionId = 3; }
+            else if(i < surrogateMin) { conditionId = 1; }
+            else if(surrogateMax < i && i <= rune3Max) { conditionId = 2; }
+            else if(i > rune3Max && i <= MaxRune) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
@@ -483,12 +522,13 @@ namespace golang::utf8
                     break;
                 case 1:
                 case 2:
-                    r = RuneError;
-                case 3:
                     return append(p, t3 | (unsigned char)(r >> 12), tx | (unsigned char)(r >> 6) & maskx, tx | (unsigned char)(r) & maskx);
                     break;
-                default:
+                case 3:
                     return append(p, t4 | (unsigned char)(r >> 18), tx | (unsigned char)(r >> 12) & maskx, tx | (unsigned char)(r >> 6) & maskx, tx | (unsigned char)(r) & maskx);
+                    break;
+                default:
+                    return append(p, runeErrorByte0, runeErrorByte1, runeErrorByte2);
                     break;
             }
         }
@@ -500,54 +540,13 @@ namespace golang::utf8
     {
         auto np = len(p);
         int n = {};
-        for(auto i = 0; i < np; )
+        for(; n < np; n++)
         {
-            n++;
-            auto c = p[i];
-            if(c < RuneSelf)
+            if(auto c = p[n]; c >= RuneSelf)
             {
-                // ASCII fast path
-                i++;
-                continue;
+                // non-ASCII slow path
+                return n + RuneCountInString(gocpp::string(p.make_slice(n)));
             }
-            auto x = first[c];
-            if(x == xx)
-            {
-                // invalid.
-                i++;
-                continue;
-            }
-            auto size = int(x & 7);
-            if(i + size > np)
-            {
-                // Short or invalid.
-                i++;
-                continue;
-            }
-            auto accept = acceptRanges[x >> 4];
-            if(auto c = p[i + 1]; c < accept.lo || accept.hi < c)
-            {
-                size = 1;
-            }
-            else
-            if(size == 2)
-            {
-            }
-            else
-            if(auto c = p[i + 2]; c < locb || hicb < c)
-            {
-                size = 1;
-            }
-            else
-            if(size == 3)
-            {
-            }
-            else
-            if(auto c = p[i + 3]; c < locb || hicb < c)
-            {
-                size = 1;
-            }
-            i += size;
         }
         return n;
     }
@@ -556,54 +555,9 @@ namespace golang::utf8
     int RuneCountInString(gocpp::string s)
     {
         int n;
-        auto ns = len(s);
-        for(auto i = 0; i < ns; n++)
+        for(const auto& _ : s)
         {
-            auto c = s[i];
-            if(c < RuneSelf)
-            {
-                // ASCII fast path
-                i++;
-                continue;
-            }
-            auto x = first[c];
-            if(x == xx)
-            {
-                // invalid.
-                i++;
-                continue;
-            }
-            auto size = int(x & 7);
-            if(i + size > ns)
-            {
-                // Short or invalid.
-                i++;
-                continue;
-            }
-            auto accept = acceptRanges[x >> 4];
-            if(auto c = s[i + 1]; c < accept.lo || accept.hi < c)
-            {
-                size = 1;
-            }
-            else
-            if(size == 2)
-            {
-            }
-            else
-            if(auto c = s[i + 2]; c < locb || hicb < c)
-            {
-                size = 1;
-            }
-            else
-            if(size == 3)
-            {
-            }
-            else
-            if(auto c = s[i + 3]; c < locb || hicb < c)
-            {
-                size = 1;
-            }
-            i += size;
+            n++;
         }
         return n;
     }
@@ -616,75 +570,87 @@ namespace golang::utf8
         return b & 0xC0 != 0x80;
     }
 
+    template<typename T>
+    uintptr_t word(T s)
+    {
+        if(ptrSize == 4)
+        {
+            return uintptr_t(s[0]) | (uintptr_t(s[1]) << 8) | (uintptr_t(s[2]) << 16) | (uintptr_t(s[3]) << 24);
+        }
+        return uintptr_t(uint64_t(s[0]) | (uint64_t(s[1]) << 8) | (uint64_t(s[2]) << 16) | (uint64_t(s[3]) << 24) | (uint64_t(s[4]) << 32) | (uint64_t(s[5]) << 40) | (uint64_t(s[6]) << 48) | (uint64_t(s[7]) << 56));
+    }
+
     // Valid reports whether p consists entirely of valid UTF-8-encoded runes.
     bool Valid(gocpp::slice<unsigned char> p)
     {
         // This optimization avoids the need to recompute the capacity
-        // when generating code for p[8:], bringing it to parity with
+        // when generating code for slicing p, bringing it to parity with
         // ValidString, which was 20% faster on long ASCII strings.
         p = p.make_slice(0, len(p), len(p));
 
-        // Fast path. Check for and skip 8 bytes of ASCII characters per iteration.
-        for(; len(p) >= 8; )
+        for(; len(p) > 0; )
         {
-            // Combining two 32 bit loads allows the same code to be used
-            // for 32 and 64 bit platforms.
-            // The compiler can generate a 32bit load for first32 and second32
-            // on many platforms. See test/codegen/memcombine.go.
-            auto first32 = uint32_t(p[0]) | (uint32_t(p[1]) << 8) | (uint32_t(p[2]) << 16) | (uint32_t(p[3]) << 24);
-            auto second32 = uint32_t(p[4]) | (uint32_t(p[5]) << 8) | (uint32_t(p[6]) << 16) | (uint32_t(p[7]) << 24);
-            if((first32 | second32) & 0x80808080 != 0)
+            auto p0 = p[0];
+            if(p0 < RuneSelf)
             {
-                // Found a non ASCII byte (>= RuneSelf).
-                break;
-            }
-            p = p.make_slice(8);
-        }
-        auto n = len(p);
-        for(auto i = 0; i < n; )
-        {
-            auto pi = p[i];
-            if(pi < RuneSelf)
-            {
-                i++;
+                p = p.make_slice(1);
+                // If there's one ASCII byte, there are probably more.
+                // Advance quickly through ASCII-only data.
+                // Note: using > instead of >= here is intentional. That avoids
+                // needing pointing-past-the-end fixup on the slice operations.
+                if(len(p) > ptrSize && word(p) & hiBits == 0)
+                {
+                    p = p.make_slice(ptrSize);
+                    if(len(p) > 2 * ptrSize && (word(p) | word(p.make_slice(ptrSize))) & hiBits == 0)
+                    {
+                        p = p.make_slice(2 * ptrSize);
+                        for(; len(p) > 4 * ptrSize && ((word(p) | word(p.make_slice(ptrSize))) | (word(p.make_slice(2 * ptrSize)) | word(p.make_slice(3 * ptrSize)))) & hiBits == 0; )
+                        {
+                            p = p.make_slice(4 * ptrSize);
+                        }
+                    }
+                }
                 continue;
             }
-            auto x = first[pi];
-            if(x == xx)
-            {
-                // Illegal starter byte.
-                return false;
-            }
+            auto x = first[p0];
             auto size = int(x & 7);
-            if(i + size > n)
-            {
-                // Short or invalid.
-                return false;
-            }
             auto accept = acceptRanges[x >> 4];
-            if(auto c = p[i + 1]; c < accept.lo || accept.hi < c)
+            //Go switch emulation
             {
-                return false;
+                auto condition = size;
+                int conditionId = -1;
+                if(condition == 2) { conditionId = 0; }
+                else if(condition == 3) { conditionId = 1; }
+                else if(condition == 4) { conditionId = 2; }
+                switch(conditionId)
+                {
+                    case 0:
+                        if(len(p) < 2 || p[1] < accept.lo || accept.hi < p[1])
+                        {
+                            return false;
+                        }
+                        p = p.make_slice(2);
+                        break;
+                    case 1:
+                        if(len(p) < 3 || p[1] < accept.lo || accept.hi < p[1] || p[2] < locb || hicb < p[2])
+                        {
+                            return false;
+                        }
+                        p = p.make_slice(3);
+                        break;
+                    case 2:
+                        if(len(p) < 4 || p[1] < accept.lo || accept.hi < p[1] || p[2] < locb || hicb < p[2] || p[3] < locb || hicb < p[3])
+                        {
+                            return false;
+                        }
+                        p = p.make_slice(4);
+                        break;
+                    // illegal starter byte
+                    default:
+                        return false;
+                        break;
+                }
             }
-            else
-            if(size == 2)
-            {
-            }
-            else
-            if(auto c = p[i + 2]; c < locb || hicb < c)
-            {
-                return false;
-            }
-            else
-            if(size == 3)
-            {
-            }
-            else
-            if(auto c = p[i + 3]; c < locb || hicb < c)
-            {
-                return false;
-            }
-            i += size;
         }
         return true;
     }
@@ -692,67 +658,69 @@ namespace golang::utf8
     // ValidString reports whether s consists entirely of valid UTF-8-encoded runes.
     bool ValidString(gocpp::string s)
     {
-        // Fast path. Check for and skip 8 bytes of ASCII characters per iteration.
-        for(; len(s) >= 8; )
+        for(; len(s) > 0; )
         {
-            // Combining two 32 bit loads allows the same code to be used
-            // for 32 and 64 bit platforms.
-            // The compiler can generate a 32bit load for first32 and second32
-            // on many platforms. See test/codegen/memcombine.go.
-            auto first32 = uint32_t(s[0]) | (uint32_t(s[1]) << 8) | (uint32_t(s[2]) << 16) | (uint32_t(s[3]) << 24);
-            auto second32 = uint32_t(s[4]) | (uint32_t(s[5]) << 8) | (uint32_t(s[6]) << 16) | (uint32_t(s[7]) << 24);
-            if((first32 | second32) & 0x80808080 != 0)
+            auto s0 = s[0];
+            if(s0 < RuneSelf)
             {
-                // Found a non ASCII byte (>= RuneSelf).
-                break;
-            }
-            s = s.make_slice(8);
-        }
-        auto n = len(s);
-        for(auto i = 0; i < n; )
-        {
-            auto si = s[i];
-            if(si < RuneSelf)
-            {
-                i++;
+                s = s.make_slice(1);
+                // If there's one ASCII byte, there are probably more.
+                // Advance quickly through ASCII-only data.
+                // Note: using > instead of >= here is intentional. That avoids
+                // needing pointing-past-the-end fixup on the slice operations.
+                if(len(s) > ptrSize && word(s) & hiBits == 0)
+                {
+                    s = s.make_slice(ptrSize);
+                    if(len(s) > 2 * ptrSize && (word(s) | word(s.make_slice(ptrSize))) & hiBits == 0)
+                    {
+                        s = s.make_slice(2 * ptrSize);
+                        for(; len(s) > 4 * ptrSize && ((word(s) | word(s.make_slice(ptrSize))) | (word(s.make_slice(2 * ptrSize)) | word(s.make_slice(3 * ptrSize)))) & hiBits == 0; )
+                        {
+                            s = s.make_slice(4 * ptrSize);
+                        }
+                    }
+                }
                 continue;
             }
-            auto x = first[si];
-            if(x == xx)
-            {
-                // Illegal starter byte.
-                return false;
-            }
+            auto x = first[s0];
             auto size = int(x & 7);
-            if(i + size > n)
-            {
-                // Short or invalid.
-                return false;
-            }
             auto accept = acceptRanges[x >> 4];
-            if(auto c = s[i + 1]; c < accept.lo || accept.hi < c)
+            //Go switch emulation
             {
-                return false;
+                auto condition = size;
+                int conditionId = -1;
+                if(condition == 2) { conditionId = 0; }
+                else if(condition == 3) { conditionId = 1; }
+                else if(condition == 4) { conditionId = 2; }
+                switch(conditionId)
+                {
+                    case 0:
+                        if(len(s) < 2 || s[1] < accept.lo || accept.hi < s[1])
+                        {
+                            return false;
+                        }
+                        s = s.make_slice(2);
+                        break;
+                    case 1:
+                        if(len(s) < 3 || s[1] < accept.lo || accept.hi < s[1] || s[2] < locb || hicb < s[2])
+                        {
+                            return false;
+                        }
+                        s = s.make_slice(3);
+                        break;
+                    case 2:
+                        if(len(s) < 4 || s[1] < accept.lo || accept.hi < s[1] || s[2] < locb || hicb < s[2] || s[3] < locb || hicb < s[3])
+                        {
+                            return false;
+                        }
+                        s = s.make_slice(4);
+                        break;
+                    // illegal starter byte
+                    default:
+                        return false;
+                        break;
+                }
             }
-            else
-            if(size == 2)
-            {
-            }
-            else
-            if(auto c = s[i + 2]; c < locb || hicb < c)
-            {
-                return false;
-            }
-            else
-            if(size == 3)
-            {
-            }
-            else
-            if(auto c = s[i + 3]; c < locb || hicb < c)
-            {
-                return false;
-            }
-            i += size;
         }
         return true;
     }

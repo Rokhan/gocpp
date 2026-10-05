@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
     // Use slicing-by-8 when payload >= this value.
     const long slicing8Cutoff = 16;
@@ -12,7 +12,7 @@ namespace golang::crc32
 }
 #include "golang/hash/crc32/crc32.fwd.h"
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
     using slicing8Table = gocpp::defined<gocpp::array<Table, 8>, GoTag_slicing8Table>;
 }

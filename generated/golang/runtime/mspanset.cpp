@@ -13,18 +13,24 @@
 
 #include "golang/internal/cpu/cpu.h"
 #include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/runtime/extern.h"
 #include "golang/runtime/lfstack.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
+#include "golang/runtime/tagptr.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace cpu = golang::internal::cpu;
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
         using atomic::rec::Add;
@@ -80,11 +86,74 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    spanSetBlock::operator T()
+    spanSetBlockHeader::operator T()
     {
         T result;
         result.lfnode = this->lfnode;
         result.popped = this->popped;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool spanSetBlockHeader::operator==(const T& ref) const
+    {
+        if (lfnode != ref.lfnode) return false;
+        if (popped != ref.popped) return false;
+        return true;
+    }
+
+    std::ostream& spanSetBlockHeader::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lfnode;
+        os << " " << popped;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct spanSetBlockHeader& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    spanSetBlockHeader2::operator T()
+    {
+        T result;
+        result.spanSetBlockHeader = this->spanSetBlockHeader;
+        result.pad = this->pad;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool spanSetBlockHeader2::operator==(const T& ref) const
+    {
+        if (spanSetBlockHeader != ref.spanSetBlockHeader) return false;
+        if (pad != ref.pad) return false;
+        return true;
+    }
+
+    std::ostream& spanSetBlockHeader2::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << spanSetBlockHeader;
+        os << " " << pad;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct spanSetBlockHeader2& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    spanSetBlock::operator T()
+    {
+        T result;
+        result.spanSetBlockHeader2 = this->spanSetBlockHeader2;
         result.spans = this->spans;
         return result;
     }
@@ -92,8 +161,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool spanSetBlock::operator==(const T& ref) const
     {
-        if (lfnode != ref.lfnode) return false;
-        if (popped != ref.popped) return false;
+        if (spanSetBlockHeader2 != ref.spanSetBlockHeader2) return false;
         if (spans != ref.spans) return false;
         return true;
     }
@@ -101,8 +169,7 @@ namespace golang::runtime
     std::ostream& spanSetBlock::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << lfnode;
-        os << " " << popped;
+        os << "" << spanSetBlockHeader2;
         os << " " << spans;
         os << '}';
         return os;
@@ -194,6 +261,12 @@ namespace golang::runtime
     {
         uint32_t head = {};
         uint32_t tail = {};
+        uint32_t backoff = {};
+        // TODO: tweak backoff parameters on other architectures.
+        if(GOARCH == "arm64"_s)
+        {
+            backoff = 128;
+        }
         claimLoop:
         for(; ; )
         {
@@ -236,6 +309,14 @@ namespace golang::runtime
                 {
                     goto claimLoop_break;
                 }
+                // Use a backoff approach to reduce demand to the shared memory location
+                // decreases memory contention and allows for other threads to make quicker
+                // progress.
+                // Read more in this Arm blog post:
+                // https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/multi-threaded-applications-arm
+                procyield(backoff);
+                // Increase backoff time.
+                backoff += backoff / 2;
                 headtail = rec::load(gocpp::recv(b->index));
                 std::tie(head, tail) = rec::split(gocpp::recv(headtail));
             }
@@ -275,7 +356,7 @@ namespace golang::runtime
         // pushers (there can't be any). Note that we may not be the popper
         // which claimed the last slot in the block, we're just the last one
         // to finish popping.
-        if(rec::Add(gocpp::recv(block->popped), 1) == spanSetBlockEntries)
+        if(rec::Add(gocpp::recv(block->spanSetBlockHeader2.spanSetBlockHeader.popped), 1) == spanSetBlockEntries)
         {
             // Clear the block's pointer.
             rec::StoreNoWB<spanSetBlock>(gocpp::recv(blockp), nullptr);
@@ -314,14 +395,14 @@ namespace golang::runtime
             if(block != nullptr)
             {
                 // Check the popped value.
-                if(rec::Load(gocpp::recv(block->popped)) == 0)
+                if(rec::Load(gocpp::recv(block->spanSetBlockHeader2.spanSetBlockHeader.popped)) == 0)
                 {
                     // popped should never be zero because that means we have
                     // pushed at least one value but not yet popped if this
                     // block pointer is not nil.
                     go_throw("span set block with unpopped elements found in reset"_s);
                 }
-                if(rec::Load(gocpp::recv(block->popped)) == spanSetBlockEntries)
+                if(rec::Load(gocpp::recv(block->spanSetBlockHeader2.spanSetBlockHeader.popped)) == spanSetBlockEntries)
                 {
                     // popped should also never be equal to spanSetBlockEntries
                     // because the last popper should have made the block pointer
@@ -419,7 +500,6 @@ namespace golang::runtime
     }
 
     // lookup returns &s[idx].
-    template<typename spanSetBlock>
     atomic::Pointer<spanSetBlock>* rec::lookup(spanSetSpinePointer s, uintptr_t idx)
     {
         return (atomic::Pointer<spanSetBlock>*)(runtime::add(s.p, goarch::PtrSize * idx));
@@ -465,14 +545,14 @@ namespace golang::runtime
         {
             return s;
         }
-        return (spanSetBlock*)(persistentalloc(gocpp::Sizeof<spanSetBlock>(), cpu::CacheLineSize, & memstats.gcMiscSys));
+        return (spanSetBlock*)(persistentalloc(gocpp::Sizeof<spanSetBlock>(), gocpp::max(cpu::CacheLineSize, tagAlign), & memstats.gcMiscSys));
     }
 
     // free returns a spanSetBlock back to the pool.
     void rec::free(spanSetBlockAlloc* p, spanSetBlock* block)
     {
-        rec::Store(gocpp::recv(block->popped), 0);
-        rec::push(gocpp::recv(p->stack), & block->lfnode);
+        rec::Store(gocpp::recv(block->spanSetBlockHeader2.spanSetBlockHeader.popped), 0);
+        rec::push(gocpp::recv(p->stack), & block->spanSetBlockHeader2.spanSetBlockHeader.lfnode);
     }
 
     // headTailIndex represents a combined 32-bit head and 32-bit tail
@@ -613,7 +693,7 @@ namespace golang::runtime
         return (mspan*)(rec::Load(gocpp::recv(p->p)));
     }
 
-    // Store stores an *mspan.
+    // StoreNoWB stores an *mspan.
     void rec::StoreNoWB(atomicMSpanPointer* p, mspan* s)
     {
         rec::StoreNoWB(gocpp::recv(p->p), gocpp::unsafe_pointer(s));

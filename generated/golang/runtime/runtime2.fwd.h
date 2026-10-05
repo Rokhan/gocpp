@@ -15,11 +15,15 @@ namespace golang::runtime
     const int _Grunnable = 1;
     // _Grunning means this goroutine may execute user code. The
     // stack is owned by this goroutine. It is not on a run queue.
-    // It is assigned an M and a P (g.m and g.m.p are valid).
+    // It is assigned an M (g.m is valid) and it usually has a P
+    // (g.m.p is valid), but there are small windows of time where
+    // it might not, namely upon entering and exiting _Gsyscall.
     const int _Grunning = 2;
     // _Gsyscall means this goroutine is executing a system call.
     // It is not executing user code. The stack is owned by this
     // goroutine. It is not on a run queue. It is assigned an M.
+    // It may have a P attached, but it does not own it. Code
+    // executing in this state must not touch g.m.p.
     const int _Gsyscall = 3;
     // _Gwaiting means this goroutine is blocked in the runtime.
     // It is not executing user code. It is not on a run queue,
@@ -52,6 +56,11 @@ namespace golang::runtime
     // the status to _Gwaiting to take responsibility for
     // ready()ing this G.
     const int _Gpreempted = 9;
+    // _Gleaked represents a leaked goroutine caught by the GC.
+    const int _Gleaked = 10;
+    // _Gdeadextra is a _Gdead goroutine that's attached to an extra M
+    // used for cgo callbacks.
+    const int _Gdeadextra = 11;
     // _Gscan combined with one of the above states other than
     // _Grunning indicates that GC is scanning the stack. The
     // goroutine is not executing user code and the stack is owned
@@ -76,21 +85,14 @@ namespace golang::runtime
     // run user code or the scheduler. Only the M that owns this P
     // is allowed to change the P's status from _Prunning. The M
     // may transition the P to _Pidle (if it has no more work to
-    // do), _Psyscall (when entering a syscall), or _Pgcstop (to
-    // halt for the GC). The M may also hand ownership of the P
-    // off directly to another M (e.g., to schedule a locked G).
+    // do), or _Pgcstop (to halt for the GC). The M may also hand
+    // ownership of the P off directly to another M (for example,
+    // to schedule a locked G).
     const int _Prunning = 1;
-    // _Psyscall means a P is not running user code. It has
-    // affinity to an M in a syscall but is not owned by it and
-    // may be stolen by another M. This is similar to _Pidle but
-    // uses lightweight transitions and maintains M affinity.
-    //
-    // Leaving _Psyscall must be done with a CAS, either to steal
-    // or retake the P. Note that there's an ABA hazard: even if
-    // an M successfully CASes its original P back to _Prunning
-    // after a syscall, it must understand the P may have been
-    // used by another M in the interim.
-    const int _Psyscall = 2;
+    // _Psyscall_unused is a now-defunct state for a P. A P is
+    // identified as "in a system call" by looking at the goroutine's
+    // state.
+    const int _Psyscall_unused = 2;
     // _Pgcstop means a P is halted for STW and owned by the M
     // that stopped the world. The M that stopped the world
     // continues to use its P, even in _Pgcstop. Transitioning
@@ -105,15 +107,21 @@ namespace golang::runtime
     // stripped of its resources, though a few things remain
     // (e.g., trace buffers).
     const int _Pdead = 4;
-    struct note;
+    struct mutex;
     struct funcval;
     struct iface;
+    struct eface;
     using guintptr = uintptr_t;
     using puintptr = uintptr_t;
     using muintptr = uintptr_t;
     struct gobuf;
+    struct maybeTraceablePtr;
+    struct maybeTraceableChan;
+    struct sudog;
     struct libcall;
     struct stack;
+    struct heldLockInfo;
+    struct g;
     // gTrackingPeriod is the number of transitions out of _Grunning between
     // latency tracking runs.
     const long gTrackingPeriod = 8;
@@ -124,6 +132,11 @@ namespace golang::runtime
     const long freeMStack = 0;
     const long freeMRef = 1;
     const long freeMWait = 2;
+    struct m;
+    struct mPadded;
+    struct mWeakPointer;
+    struct p;
+    struct schedt;
     // Values for the flags field of a sigTabT.
     const int _SigNotify = 1 << 0;
     const int _SigKill = 1 << 1;
@@ -134,8 +147,11 @@ namespace golang::runtime
     const int _SigSetStack = 1 << 6;
     const int _SigUnblock = 1 << 7;
     const int _SigIgn = 1 << 8;
+    struct _func;
     struct funcinl;
     struct lfnode;
+    struct forcegcstate;
+    struct _defer;
     struct _panic;
     struct savedOpenDeferState;
     struct ancestorInfo;
@@ -145,92 +161,74 @@ namespace golang::runtime
     const int _Gscansyscall = _Gscan + _Gsyscall;
     const int _Gscanwaiting = _Gscan + _Gwaiting;
     const int _Gscanpreempted = _Gscan + _Gpreempted;
+    const int _Gscanleaked = _Gscan + _Gleaked;
+    const int _Gscandeadextra = _Gscan + _Gdeadextra;
     const waitReason waitReasonZero = 0;
     const waitReason waitReasonGCAssistMarking = 1;
     const waitReason waitReasonIOWait = 2;
-    const waitReason waitReasonChanReceiveNilChan = 3;
-    const waitReason waitReasonChanSendNilChan = 4;
-    const waitReason waitReasonDumpingHeap = 5;
-    const waitReason waitReasonGarbageCollection = 6;
-    const waitReason waitReasonGarbageCollectionScan = 7;
-    const waitReason waitReasonPanicWait = 8;
-    const waitReason waitReasonSelect = 9;
-    const waitReason waitReasonSelectNoCases = 10;
-    const waitReason waitReasonGCAssistWait = 11;
-    const waitReason waitReasonGCSweepWait = 12;
-    const waitReason waitReasonGCScavengeWait = 13;
-    const waitReason waitReasonChanReceive = 14;
-    const waitReason waitReasonChanSend = 15;
-    const waitReason waitReasonFinalizerWait = 16;
-    const waitReason waitReasonForceGCIdle = 17;
-    const waitReason waitReasonSemacquire = 18;
-    const waitReason waitReasonSleep = 19;
-    const waitReason waitReasonSyncCondWait = 20;
-    const waitReason waitReasonSyncMutexLock = 21;
-    const waitReason waitReasonSyncRWMutexRLock = 22;
-    const waitReason waitReasonSyncRWMutexLock = 23;
-    const waitReason waitReasonTraceReaderBlocked = 24;
-    const waitReason waitReasonWaitForGCCycle = 25;
-    const waitReason waitReasonGCWorkerIdle = 26;
-    const waitReason waitReasonGCWorkerActive = 27;
-    const waitReason waitReasonPreempted = 28;
-    const waitReason waitReasonDebugCall = 29;
-    const waitReason waitReasonGCMarkTermination = 30;
-    const waitReason waitReasonStoppingTheWorld = 31;
-    const waitReason waitReasonFlushProcCaches = 32;
-    const waitReason waitReasonTraceGoroutineStatus = 33;
-    const waitReason waitReasonTraceProcStatus = 34;
-    const waitReason waitReasonPageTraceFlush = 35;
-    const waitReason waitReasonCoroutine = 36;
+    const waitReason waitReasonDumpingHeap = 3;
+    const waitReason waitReasonGarbageCollection = 4;
+    const waitReason waitReasonGarbageCollectionScan = 5;
+    const waitReason waitReasonPanicWait = 6;
+    const waitReason waitReasonGCAssistWait = 7;
+    const waitReason waitReasonGCSweepWait = 8;
+    const waitReason waitReasonGCScavengeWait = 9;
+    const waitReason waitReasonFinalizerWait = 10;
+    const waitReason waitReasonForceGCIdle = 11;
+    const waitReason waitReasonUpdateGOMAXPROCSIdle = 12;
+    const waitReason waitReasonSemacquire = 13;
+    const waitReason waitReasonSleep = 14;
+    const waitReason waitReasonChanReceiveNilChan = 15;
+    const waitReason waitReasonChanSendNilChan = 16;
+    const waitReason waitReasonSelectNoCases = 17;
+    const waitReason waitReasonSelect = 18;
+    const waitReason waitReasonChanReceive = 19;
+    const waitReason waitReasonChanSend = 20;
+    const waitReason waitReasonSyncCondWait = 21;
+    const waitReason waitReasonSyncMutexLock = 22;
+    const waitReason waitReasonSyncRWMutexRLock = 23;
+    const waitReason waitReasonSyncRWMutexLock = 24;
+    const waitReason waitReasonSyncWaitGroupWait = 25;
+    const waitReason waitReasonTraceReaderBlocked = 26;
+    const waitReason waitReasonWaitForGCCycle = 27;
+    const waitReason waitReasonGCWorkerIdle = 28;
+    const waitReason waitReasonGCWorkerActive = 29;
+    const waitReason waitReasonPreempted = 30;
+    const waitReason waitReasonDebugCall = 31;
+    const waitReason waitReasonGCMarkTermination = 32;
+    const waitReason waitReasonStoppingTheWorld = 33;
+    const waitReason waitReasonFlushProcCaches = 34;
+    const waitReason waitReasonTraceGoroutineStatus = 35;
+    const waitReason waitReasonTraceProcStatus = 36;
+    const waitReason waitReasonPageTraceFlush = 37;
+    const waitReason waitReasonCoroutine = 38;
+    const waitReason waitReasonGCWeakToStrongWait = 39;
+    const waitReason waitReasonSynctestRun = 40;
+    const waitReason waitReasonSynctestWait = 41;
+    const waitReason waitReasonSynctestChanReceive = 42;
+    const waitReason waitReasonSynctestChanSend = 43;
+    const waitReason waitReasonSynctestSelect = 44;
+    const waitReason waitReasonSynctestWaitGroupWait = 45;
+    const waitReason waitReasonCleanupWait = 46;
 }
-#include "golang/internal/abi/symtab.fwd.h"
-#include "golang/internal/chacha8rand/chacha8.fwd.h"
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/cgocall.fwd.h"
-#include "golang/runtime/chan.fwd.h"
-#include "golang/runtime/coro.fwd.h"
-#include "golang/runtime/debuglog_off.fwd.h"
+#include "golang/runtime/asan0.fwd.h"
 #include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/histogram.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/lockrank.fwd.h"
-#include "golang/runtime/lockrank_off.fwd.h"
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mcache.fwd.h"
-#include "golang/runtime/mgc.fwd.h"
-#include "golang/runtime/mgclimit.fwd.h"
-#include "golang/runtime/mgcwork.fwd.h"
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/mpagecache.fwd.h"
-#include "golang/runtime/mprof.fwd.h"
-#include "golang/runtime/mwbbuf.fwd.h"
-#include "golang/runtime/os_windows.fwd.h"
-#include "golang/runtime/pagetrace_off.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/pinner.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/signal_windows.fwd.h"
-#include "golang/runtime/symtab.fwd.h"
-#include "golang/runtime/time.fwd.h"
-#include "golang/runtime/trace2runtime.fwd.h"
-#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
-    struct mutex;
-    struct eface;
-    struct sudog;
-    struct heldLockInfo;
-    struct g;
-    const int tlsSize = tlsSlots * goarch::PtrSize;
-    struct m;
-    struct p;
-    struct schedt;
-    struct _func;
-    struct itab;
-    struct forcegcstate;
-    struct _defer;
+    const int mRedZoneSize = (16 << 3) * asanenabledBit;
     // Must agree with internal/buildcfg.FramePointerEnabled.
     const bool framepointer_enabled = GOARCH == "amd64"_s || GOARCH == "arm64"_s;
+}
+#include "golang/internal/abi/iface.fwd.h"
+#include "golang/internal/abi/symtab.fwd.h"
+#include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
+
+namespace golang::runtime
+{
+    namespace goarch = golang::internal::goarch;
+    namespace abi = golang::internal::abi;
+    const int tlsSize = tlsSlots * goarch::PtrSize;
+    using itab = abi::ITab;
 }

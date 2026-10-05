@@ -14,9 +14,58 @@ namespace golang::runtime
 {
     void init();
 }
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/mgcwork.h"
 #include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    struct stackScanState
+    {
+        // stack limits
+        golang::runtime::stack stack{};
+        // conservative indicates that the next frame must be scanned conservatively.
+        // This applies only to the innermost frame at an async safe-point.
+        bool conservative{};
+        // buf contains the set of possible pointers to stack objects.
+        // Organized as a LIFO linked list of buffers.
+        // All buffers except possibly the head buffer are full.
+        stackWorkBuf* buf{};
+        stackWorkBuf* freeBuf{}; // keep around one free buffer for allocation hysteresis
+        // cbuf contains conservative pointers to stack objects. If
+        // all pointers to a stack object are obtained via
+        // conservative scanning, then the stack object may be dead
+        // and may contain dead pointers, so it must be scanned
+        // defensively.
+        stackWorkBuf* cbuf{};
+        // list of stack objects
+        // Objects are in increasing address order.
+        stackObjectBuf* head{};
+        stackObjectBuf* tail{};
+        int nobjs{};
+        // root of binary tree for fast object lookup by address
+        // Initialized by buildIndex.
+        stackObject* root{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackScanState& value);
+}
+#include "golang/internal/runtime/sys/nih.fwd.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+}
+#include "golang/internal/runtime/sys/nih.h"
+#include "golang/runtime/mgcwork.h"
 #include "golang/runtime/stack.fwd.h"
 
 namespace golang::runtime
@@ -78,50 +127,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackObject& value);
-    struct stackScanState
-    {
-        // stack limits
-        golang::runtime::stack stack{};
-        // conservative indicates that the next frame must be scanned conservatively.
-        // This applies only to the innermost frame at an async safe-point.
-        bool conservative{};
-        // buf contains the set of possible pointers to stack objects.
-        // Organized as a LIFO linked list of buffers.
-        // All buffers except possibly the head buffer are full.
-        stackWorkBuf* buf{};
-        stackWorkBuf* freeBuf{}; // keep around one free buffer for allocation hysteresis
-        // cbuf contains conservative pointers to stack objects. If
-        // all pointers to a stack object are obtained via
-        // conservative scanning, then the stack object may be dead
-        // and may contain dead pointers, so it must be scanned
-        // defensively.
-        stackWorkBuf* cbuf{};
-        // list of stack objects
-        // Objects are in increasing address order.
-        stackObjectBuf* head{};
-        stackObjectBuf* tail{};
-        int nobjs{};
-        // root of binary tree for fast object lookup by address
-        // Initialized by buildIndex.
-        stackObject* root{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stackScanState& value);
 }
 #include "golang/internal/goarch/goarch.fwd.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace goarch = golang::internal::goarch;
     struct stackWorkBuf
     {
         sys::NotInHeap _1{};

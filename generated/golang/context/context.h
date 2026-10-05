@@ -43,6 +43,12 @@ namespace golang::context
         return value.PrintTo(os);
     }
 
+    // Canceled is the error returned by [Context.Err] when the context is canceled
+    // for some reason other than its deadline passing.
+    extern gocpp::error Canceled;
+    // DeadlineExceeded is the error returned by [Context.Err] when the context is canceled
+    // due to its deadline passing.
+    extern gocpp::error DeadlineExceeded;
     struct afterFuncer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -106,6 +112,7 @@ namespace golang::context
     }
 
     std::ostream& operator<<(std::ostream& os, const struct afterFuncer& value);
+    // &cancelCtxKey is the key that a cancelCtx returns itself for.
     extern int cancelCtxKey;
     struct gocpp_id_4
     {
@@ -317,11 +324,57 @@ namespace golang::context
     };
 
     std::ostream& operator<<(std::ostream& os, const struct emptyCtx& value);
+    // closedchan is a reusable closed channel.
     extern gocpp::channel<gocpp_id_5> closedchan;
+    struct backgroundCtx
+    {
+        emptyCtx emptyCtx{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct backgroundCtx& value);
+    struct todoCtx
+    {
+        emptyCtx emptyCtx{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct todoCtx& value);
+}
+#include "golang/sync/atomic/type.fwd.h"
+#include "golang/sync/atomic/value.fwd.h"
+#include "golang/time/sleep.fwd.h"
+#include "golang/time/time.fwd.h"
+
+namespace golang::context
+{
+    namespace time = golang::time;
 }
 #include "golang/sync/atomic/type.h"
+
+namespace golang::context
+{
+    namespace atomic = golang::sync::atomic;
+}
 #include "golang/time/time.h"
-#include "golang/errors/errors.fwd.h"
 
 namespace golang::context
 {
@@ -383,13 +436,13 @@ namespace golang::context
             // }
             // }
             // }
-            // See https://blog.golang.org/pipelines for more examples of how to use
+            // See https://go.dev/blog/pipelines for more examples of how to use
             // a Done channel for cancellation.
             virtual gocpp::channel<gocpp_id_0> vDone() = 0;
             // If Done is not yet closed, Err returns nil.
             // If Done is closed, Err returns a non-nil error explaining why:
-            // Canceled if the context was canceled
-            // or DeadlineExceeded if the context's deadline passed.
+            // DeadlineExceeded if the context's deadline passed,
+            // or Canceled if the context was canceled for some other reason.
             // After Err returns a non-nil error, successive calls to Err return the same error.
             virtual gocpp::error vErr() = 0;
             // Value returns the value associated with this context for key, or nil
@@ -476,41 +529,14 @@ namespace golang::context
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Context& value);
-    extern gocpp::error Canceled;
+    // goroutines counts the number of goroutines ever created; for testing.
     extern atomic::Int32 goroutines;
-    extern gocpp::error DeadlineExceeded;
-    struct backgroundCtx
-    {
-        emptyCtx emptyCtx{};
+}
+#include "golang/sync/mutex.fwd.h"
+#include "golang/sync/once.fwd.h"
 
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct backgroundCtx& value);
-    struct todoCtx
-    {
-        emptyCtx emptyCtx{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct todoCtx& value);
+namespace golang::context
+{
     Context Background();
     Context TODO();
     std::tuple<Context, CancelFunc> WithCancel(Context parent);
@@ -544,8 +570,8 @@ namespace golang::context
         gocpp::error Err(const gocpp::PtrRecv<struct stopCtx, false>& self);
         gocpp::error Err(const gocpp::ObjRecv<struct stopCtx>& self);
 
-        gocpp::go_any Value(const gocpp::PtrRecv<struct stopCtx, false>& self, gocpp::go_any key);
-        gocpp::go_any Value(const gocpp::ObjRecv<struct stopCtx>& self, gocpp::go_any key);
+        go_any Value(const gocpp::PtrRecv<struct stopCtx, false>& self, go_any key);
+        go_any Value(const gocpp::ObjRecv<struct stopCtx>& self, go_any key);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct stopCtx& value);
@@ -601,12 +627,13 @@ namespace golang::context
         gocpp::error Err(const gocpp::PtrRecv<struct valueCtx, false>& self);
         gocpp::error Err(const gocpp::ObjRecv<struct valueCtx>& self);
 
-        gocpp::go_any Value(const gocpp::PtrRecv<struct valueCtx, false>& self, gocpp::go_any key);
-        gocpp::go_any Value(const gocpp::ObjRecv<struct valueCtx>& self, gocpp::go_any key);
+        go_any Value(const gocpp::PtrRecv<struct valueCtx, false>& self, go_any key);
+        go_any Value(const gocpp::ObjRecv<struct valueCtx>& self, go_any key);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct valueCtx& value);
     go_any value(Context c, go_any key);
+    namespace sync = golang::sync;
 }
 #include "golang/sync/atomic/value.h"
 #include "golang/sync/mutex.h"
@@ -619,7 +646,7 @@ namespace golang::context
         mocklib::Mutex mu{}; // protects following fields
         atomic::Value done{}; // of chan struct{}, created lazily, closed by first cancel call
         gocpp::map<canceler, gocpp_id_6> children{}; // set to nil by the first cancel call
-        gocpp::error err{}; // set to non-nil by the first cancel call
+        atomic::Value err{}; // set to non-nil by the first cancel call
         gocpp::error cause{}; // set to non-nil by the first cancel call
 
         using isGoStruct = void;
@@ -644,16 +671,33 @@ namespace golang::context
         gocpp::error Err(const gocpp::PtrRecv<struct cancelCtx, false>& self);
         gocpp::error Err(const gocpp::ObjRecv<struct cancelCtx>& self);
 
-        gocpp::go_any Value(const gocpp::PtrRecv<struct cancelCtx, false>& self, gocpp::go_any key);
-        gocpp::go_any Value(const gocpp::ObjRecv<struct cancelCtx>& self, gocpp::go_any key);
+        go_any Value(const gocpp::PtrRecv<struct cancelCtx, false>& self, go_any key);
+        go_any Value(const gocpp::ObjRecv<struct cancelCtx>& self, go_any key);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct cancelCtx& value);
     cancelCtx* withCancel(Context parent);
     std::tuple<cancelCtx*, bool> parentCancelCtx(Context parent);
+    struct timerCtx
+    {
+        cancelCtx cancelCtx{};
+        time::Timer* timer{}; // Under cancelCtx.mu.
+        mocklib::Date deadline{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct timerCtx& value);
 }
 #include "golang/sync/once.h"
-#include "golang/time/sleep.fwd.h"
 
 namespace golang::context
 {
@@ -675,24 +719,6 @@ namespace golang::context
     };
 
     std::ostream& operator<<(std::ostream& os, const struct afterFuncCtx& value);
-    struct timerCtx
-    {
-        cancelCtx cancelCtx{};
-        time::Timer* timer{}; // Under cancelCtx.mu.
-        mocklib::Date deadline{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct timerCtx& value);
 }
 
 #include "golang/time/time.h"

@@ -13,8 +13,9 @@
 
 #include "golang/runtime/extern.h"
 
-namespace golang::buildcfg
+namespace golang::internal::buildcfg
 {
+    namespace runtime = golang::runtime;
     namespace rec
     {
     }

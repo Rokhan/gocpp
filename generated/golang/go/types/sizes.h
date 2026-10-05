@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct StdSizes
     {
@@ -29,14 +29,15 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct StdSizes& value);
+    extern gocpp::array<unsigned char, 17> basicSizes;
+    // common architecture word sizes and alignments
+    extern gocpp::map<gocpp::string, gcSizes*> gcArchSizes;
     int64_t align(int64_t x, int64_t a);
 }
-#include "golang/go/types/basic.h"
 #include "golang/go/types/type.h"
-#include "golang/go/types/gcsizes.fwd.h"
 #include "golang/go/types/object.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Sizes : virtual gocpp::Interface
     {
@@ -70,7 +71,7 @@ namespace golang::types
             // Alignof returns the alignment of a variable of type T.
             // Alignof must implement the alignment guarantees required by the spec.
             // The result must be >= 1.
-            virtual int64_t vAlignof(golang::types::Type T) = 0;
+            virtual int64_t vAlignof(golang::go::types::Type T) = 0;
             // Offsetsof returns the offsets of the given struct fields, in bytes.
             // Offsetsof must implement the offset guarantees required by the spec.
             // A negative entry in the result indicates that the struct is too large.
@@ -78,7 +79,7 @@ namespace golang::types
             // Sizeof returns the size of a variable of type T.
             // Sizeof must implement the size guarantees required by the spec.
             // A negative result indicates that T is too large.
-            virtual int64_t vSizeof(golang::types::Type T) = 0;
+            virtual int64_t vSizeof(golang::go::types::Type T) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -90,11 +91,11 @@ namespace golang::types
                 value.reset(ptr);
             }
 
-            int64_t vAlignof(golang::types::Type T) override;
+            int64_t vAlignof(golang::go::types::Type T) override;
 
             gocpp::slice<int64_t> vOffsetsof(gocpp::slice<Var*> fields) override;
 
-            int64_t vSizeof(golang::types::Type T) override;
+            int64_t vSizeof(golang::go::types::Type T) override;
 
             void* getPtr() override
             {
@@ -111,21 +112,20 @@ namespace golang::types
 
     namespace rec
     {
-        int64_t Alignof(const gocpp::PtrRecv<struct Sizes, false>& self, golang::types::Type T);
-        int64_t Alignof(const gocpp::ObjRecv<struct Sizes>& self, golang::types::Type T);
+        int64_t Alignof(const gocpp::PtrRecv<struct Sizes, false>& self, golang::go::types::Type T);
+        int64_t Alignof(const gocpp::ObjRecv<struct Sizes>& self, golang::go::types::Type T);
 
         gocpp::slice<int64_t> Offsetsof(const gocpp::PtrRecv<struct Sizes, false>& self, gocpp::slice<Var*> fields);
         gocpp::slice<int64_t> Offsetsof(const gocpp::ObjRecv<struct Sizes>& self, gocpp::slice<Var*> fields);
 
-        int64_t Sizeof(const gocpp::PtrRecv<struct Sizes, false>& self, golang::types::Type T);
-        int64_t Sizeof(const gocpp::ObjRecv<struct Sizes>& self, golang::types::Type T);
+        int64_t Sizeof(const gocpp::PtrRecv<struct Sizes, false>& self, golang::go::types::Type T);
+        int64_t Sizeof(const gocpp::ObjRecv<struct Sizes>& self, golang::go::types::Type T);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Sizes& value);
-    bool _IsSyncAtomicAlign64(golang::types::Type T);
-    extern gocpp::array<unsigned char, 17> basicSizes;
-    extern gocpp::map<gocpp::string, gcSizes*> gcArchSizes;
+    bool _IsSyncAtomicAlign64(golang::go::types::Type T);
     Sizes SizesFor(gocpp::string compiler, gocpp::string arch);
+    // stdSizes is used if Config.Sizes == nil.
     extern types::Sizes stdSizes;
 }
 
@@ -134,18 +134,18 @@ namespace golang::types
 #include "golang/go/types/struct.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        int64_t Alignof(StdSizes* s, golang::types::Type T);
+        int64_t Alignof(StdSizes* s, golang::go::types::Type T);
         gocpp::slice<int64_t> Offsetsof(StdSizes* s, gocpp::slice<Var*> fields);
-        int64_t Sizeof(StdSizes* s, golang::types::Type T);
-        int64_t alignof(Config* conf, golang::types::Type T);
+        int64_t Sizeof(StdSizes* s, golang::go::types::Type T);
+        int64_t go_alignof(Config* conf, golang::go::types::Type T);
         gocpp::slice<int64_t> offsetsof(Config* conf, Struct* T);
-        int64_t offsetof(Config* conf, golang::types::Type T, gocpp::slice<int> index);
-        int64_t go_sizeof(Config* conf, golang::types::Type T);
+        int64_t go_offsetof(Config* conf, golang::go::types::Type T, gocpp::slice<int> index);
+        int64_t go_sizeof(Config* conf, golang::go::types::Type T);
     }
 }
 

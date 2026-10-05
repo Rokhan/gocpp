@@ -4,13 +4,13 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::big
+namespace golang::math::big
 {
     struct decimal;
 }
 #include "golang/math/big/arith.fwd.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     // Maximum shift amount that can be done in one pass without overflow.
     // A Word has _W bits and (1<<maxShift - 1)*10 + 9 must fit into Word.

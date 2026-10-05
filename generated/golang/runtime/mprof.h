@@ -16,8 +16,6 @@ namespace golang::runtime
     {
         uintptr_t allocs{};
         uintptr_t frees{};
-        uintptr_t alloc_bytes{};
-        uintptr_t free_bytes{};
 
         using isGoStruct = void;
 
@@ -54,7 +52,6 @@ namespace golang::runtime
     void mProf_Flush();
     void mProf_FlushLocked(uint32_t index);
     void mProf_PostSweep();
-    void mProf_Malloc(gocpp::unsafe_pointer p, uintptr_t size);
     extern uint64_t blockprofilerate;
     void SetBlockProfileRate(int rate);
     void blockevent(int64_t cycles, int skip);
@@ -80,7 +77,25 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct StackRecord& value);
+    // MemProfileRate controls the fraction of memory allocations
+    // that are recorded and reported in the memory profile.
+    // The profiler aims to sample an average of
+    // one allocation per MemProfileRate bytes allocated.
+    //
+    // To include every allocated block in the profile, set MemProfileRate to 1.
+    // To turn off profiling entirely, set MemProfileRate to 0.
+    //
+    // The tools that process the memory profiles assume that the
+    // profile rate is constant across the lifetime of the program
+    // and equal to the current value. Programs that change the
+    // memory profiling rate should do so just once, as early as
+    // possible in the execution of the program (for example,
+    // at the beginning of main).
     extern int MemProfileRate;
+    // disableMemoryProfiling is set by the linker if memory profiling
+    // is not used and the link type guarantees nobody else could use it
+    // elsewhere.
+    // We check if the runtime.memProfileInternal symbol is present.
     extern bool disableMemoryProfiling;
     struct MemProfileRecord
     {
@@ -103,8 +118,6 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct MemProfileRecord& value);
     int Stack(gocpp::slice<unsigned char> buf, bool all);
-    void tracefree(gocpp::unsafe_pointer p, uintptr_t size);
-    void tracegc();
     struct memRecord
     {
         // active is the currently published profile. A profiling
@@ -153,27 +166,57 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct BlockProfileRecord& value);
     std::tuple<int, bool> ThreadCreateProfile(gocpp::slice<StackRecord> p);
-    std::tuple<int, bool> runtime_goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
-    std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
-    std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
-    std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
     std::tuple<int, bool> GoroutineProfile(gocpp::slice<StackRecord> p);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
+    // NOTE(rsc): Everything here could use cas if contention became an issue.
+    // profInsertLock protects changes to the start of all *bucket linked lists
     extern mutex profInsertLock;
+    // profBlockLock protects the contents of every blockRecord struct
     extern mutex profBlockLock;
+    // profMemActiveLock protects the active field of every memRecord struct
     extern mutex profMemActiveLock;
+    // profMemFutureLock is a set of locks that protect the respective elements
+    // of the future array of every memRecord struct
+    extern gocpp::array<mutex, len(memRecord {}.future)> profMemFutureLock;
+    /*const uint32_t mProfCycleWrap = uint32_t(len(memRecord {}.future)) * (2 << 24) [known mising deps] */;
+    void mProf_Malloc(m* mp, gocpp::unsafe_pointer p, uintptr_t size);
+    int fpTracebackPartialExpand(int skip, gocpp::unsafe_pointer fp, gocpp::slice<uintptr_t> pcBuf);
+    std::tuple<int, bool> BlockProfile(gocpp::slice<BlockProfileRecord> p);
+    void expandFrames(gocpp::slice<BlockProfileRecord> p);
+    std::tuple<int, bool> MutexProfile(gocpp::slice<BlockProfileRecord> p);
+    void tryRecordGoroutineProfileWB(g* gp1);
+    void tryRecordGoroutineProfile(g* gp1, gocpp::slice<uintptr_t> pcbuf, std::function<void ()> yield);
+    void doRecordGoroutineProfile(g* gp1, gocpp::slice<uintptr_t> pcbuf);
+}
+#include "golang/internal/profilerecord/profilerecord.fwd.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/sys/consts.fwd.h"
+#include "golang/internal/runtime/sys/intrinsics.fwd.h"
+#include "golang/internal/runtime/sys/nih.fwd.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/profilerecord/profilerecord.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/nih.h"
+
+namespace golang::runtime
+{
+    namespace profilerecord = golang::internal::profilerecord;
     struct bucket
     {
         sys::NotInHeap _1{};
-        golang::runtime::bucket* next{};
-        golang::runtime::bucket* allnext{};
+        bucket* next{};
+        bucket* allnext{};
         bucketType typ{}; // memBucket or blockBucket (includes mutexProfile)
         uintptr_t hash{};
         uintptr_t size{};
@@ -212,32 +255,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mProfCycleHolder& value);
-    struct lockTimer
-    {
-        mutex* lock{};
-        int64_t timeRate{};
-        int64_t timeStart{};
-        int64_t tickStart{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct lockTimer& value);
     struct mLockProfile
     {
-        atomic::Int64 waitTime{}; // total nanoseconds spent waiting in runtime.lockWithRank
-        gocpp::array<uintptr_t, maxStack> stack{}; // stack that experienced contention in runtime.lockWithRank
-        uintptr_t pending{}; // *mutex that experienced contention (to be traceback-ed)
-        int64_t cycles{}; // cycles attributable to "pending" (if set), otherwise to "stack"
-        int64_t cyclesLost{}; // contention for which we weren't able to record a call stack
+        atomic::Int64 waitTime{}; // (nanotime) total time this M has spent waiting in runtime.lockWithRank. Read by runtime/metrics.
+        gocpp::slice<uintptr_t> stack{}; // call stack at the point of this M's unlock call, when other Ms had to wait
+        int64_t cycles{}; // (cputicks) cycles attributable to "stack"
+        int64_t cyclesLost{}; // (cputicks) contention for which we weren't able to record a call stack
+        bool haveStack{}; // stack and cycles are to be added to the mutex profile (even if cycles is 0)
         bool disabled{}; // attribute all time to "lost"
 
         using isGoStruct = void;
@@ -252,29 +276,31 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mLockProfile& value);
+    std::tuple<int, bool> memProfileInternal(int size, bool inuseZero, std::function<void (profilerecord::MemProfileRecord _1)> copyFn);
+    void copyMemProfileRecord(MemProfileRecord* dst, profilerecord::MemProfileRecord src);
+    std::tuple<int, bool> pprof_memProfileInternal(gocpp::slice<profilerecord::MemProfileRecord> p, bool inuseZero);
+    std::tuple<int, bool> blockProfileInternal(int size, std::function<void (profilerecord::BlockProfileRecord _1)> copyFn);
+    void copyBlockProfileRecord(BlockProfileRecord* dst, profilerecord::BlockProfileRecord src);
+    std::tuple<int, bool> pprof_blockProfileInternal(gocpp::slice<profilerecord::BlockProfileRecord> p);
+    std::tuple<int, bool> mutexProfileInternal(int size, std::function<void (profilerecord::BlockProfileRecord _1)> copyFn);
+    std::tuple<int, bool> pprof_mutexProfileInternal(gocpp::slice<profilerecord::BlockProfileRecord> p);
+    std::tuple<int, bool> threadCreateProfileInternal(int size, std::function<void (profilerecord::StackRecord _1)> copyFn);
+    std::tuple<int, bool> pprof_threadCreateInternal(gocpp::slice<profilerecord::StackRecord> p);
+    std::tuple<int, bool> pprof_goroutineProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
+    std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
+    std::tuple<int, bool> pprof_goroutineLeakProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
+    std::tuple<int, bool> goroutineLeakProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
     extern gocpp_id_0 goroutineProfile;
-    void tryRecordGoroutineProfileWB(g* gp1);
-    void tryRecordGoroutineProfile(g* gp1, std::function<void ()> yield);
-    void doRecordGoroutineProfile(g* gp1);
-    void saveg(uintptr_t pc, uintptr_t sp, g* gp, StackRecord* r);
-    extern mutex tracelock;
-    void tracealloc(gocpp::unsafe_pointer p, uintptr_t size, _type* typ);
-    extern gocpp::array<mutex, len(memRecord {}.future)> profMemFutureLock;
+    std::tuple<int, bool> goroutineLeakProfileWithLabelsConcurrent(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
+    std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
+    std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
+    std::tuple<int, bool> goroutineProfileInternal(gocpp::slice<profilerecord::StackRecord> p);
+    void saveg(uintptr_t pc, uintptr_t sp, g* gp, profilerecord::StackRecord* r, gocpp::slice<uintptr_t> pcbuf);
     extern mProfCycleHolder mProfCycle;
-    /*const uint32_t mProfCycleWrap = uint32_t(len(memRecord {}.future)) * (2 << 24) [known mising deps] */;
-    golang::runtime::bucket* newBucket(bucketType typ, int nstk);
-    golang::runtime::bucket* stkbucket(bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc);
-    void mProf_Free(golang::runtime::bucket* b, uintptr_t size);
-    void record(MemProfileRecord* r, golang::runtime::bucket* b);
-    void iterate_memprof(std::function<void (golang::runtime::bucket* _1, uintptr_t _2, uintptr_t* _3, uintptr_t _4, uintptr_t _5, uintptr_t _6)> fn);
-    std::tuple<int, bool> BlockProfile(gocpp::slice<BlockProfileRecord> p);
-    std::tuple<int, bool> MutexProfile(gocpp::slice<BlockProfileRecord> p);
-}
-
-#include "golang/runtime/runtime2.h"
-
-namespace golang::runtime
-{
+    bucket* newBucket(bucketType typ, int nstk);
+    bucket* stkbucket(bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc);
+    void mProf_Free(bucket* b);
+    void iterate_memprof(std::function<void (bucket* _1, uintptr_t _2, uintptr_t* _3, uintptr_t _4, uintptr_t _5, uintptr_t _6)> fn);
 
     namespace rec
     {
@@ -282,15 +308,15 @@ namespace golang::runtime
         uint32_t read(mProfCycleHolder* c);
         std::tuple<uint32_t, bool> setFlushed(mProfCycleHolder* c);
         void increment(mProfCycleHolder* c);
-        gocpp::slice<uintptr_t> stk(golang::runtime::bucket* b);
-        memRecord* mp(golang::runtime::bucket* b);
-        blockRecord* bp(golang::runtime::bucket* b);
-        void begin(lockTimer* lt);
-        void end(lockTimer* lt);
-        void recordLock(mLockProfile* prof, int64_t cycles, mutex* l);
-        void recordUnlock(mLockProfile* prof, mutex* l);
+        gocpp::slice<uintptr_t> stk(bucket* b);
+        memRecord* mp(bucket* b);
+        blockRecord* bp(bucket* b);
+        int64_t start(mLockProfile* prof);
+        void end(mLockProfile* prof, int64_t start);
+        void recordUnlock(mLockProfile* prof, int64_t cycles);
         void captureStack(mLockProfile* prof);
         void store(mLockProfile* prof);
+        void storeSlow(mLockProfile* prof);
         gocpp::slice<uintptr_t> Stack(StackRecord* r);
         int64_t InUseBytes(MemProfileRecord* r);
         int64_t InUseObjects(MemProfileRecord* r);

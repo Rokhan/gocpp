@@ -10,16 +10,24 @@
 #include "gocpp/support.h"
 
 
-namespace golang::gcexportdata
+namespace golang::golang_org::x::tools::go::gcexportdata
 {
     std::tuple<gocpp::string, gocpp::string> Find(gocpp::string importPath, gocpp::string srcDir);
 }
-#include "golang/io/io.h"
 #include "golang/go/token/position.fwd.h"
 #include "golang/go/types/package.fwd.h"
+#include "golang/io/io.fwd.h"
 
-namespace golang::gcexportdata
+namespace golang::golang_org::x::tools::go::gcexportdata
 {
+    namespace io = golang::io;
+}
+#include "golang/io/io.h"
+
+namespace golang::golang_org::x::tools::go::gcexportdata
+{
+    namespace types = golang::go::types;
+    namespace token = golang::go::token;
     std::tuple<io::Reader, gocpp::error> NewReader(io::Reader r);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> readAll(io::Reader r);
     std::tuple<types::Package*, gocpp::error> Read(io::Reader in, token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::string path);

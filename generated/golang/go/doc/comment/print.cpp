@@ -19,8 +19,11 @@
 #include "golang/strings/builder.h"
 #include "golang/strings/strings.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
+    namespace bytes = golang::bytes;
+    namespace fmt = golang::fmt;
+    namespace strings = golang::strings;
     namespace rec
     {
         using bytes::rec::Bytes;
@@ -386,7 +389,7 @@ namespace golang::comment
     }
 
     // text prints the text sequence x to out.
-    void rec::text(commentPrinter* p, bytes::Buffer* out, gocpp::string indent, gocpp::slice<golang::comment::Text> x)
+    void rec::text(commentPrinter* p, bytes::Buffer* out, gocpp::string indent, gocpp::slice<golang::go::doc::comment::Text> x)
     {
         for(auto [gocpp_ignored, t] : x)
         {

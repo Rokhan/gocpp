@@ -14,7 +14,7 @@
 #include "golang/regexp/syntax/parse.h"
 #include "golang/regexp/syntax/regexp.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
     namespace rec
     {

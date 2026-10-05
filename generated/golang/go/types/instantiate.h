@@ -11,11 +11,81 @@
 
 #include "golang/go/types/type.h"
 #include "golang/go/types/context.fwd.h"
+#include "golang/go/types/typelists.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    std::tuple<golang::types::Type, gocpp::error> Instantiate(Context* ctxt, golang::types::Type orig, gocpp::slice<golang::types::Type> targs, bool validate);
-    bool mentions(golang::types::Type T, golang::types::Type typ);
+    struct genericType : virtual gocpp::Interface, Type
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        genericType(){}
+        genericType(genericType& i) = default;
+        genericType(const genericType& i) = default;
+        genericType& operator=(genericType& i) = default;
+        genericType& operator=(const genericType& i) = default;
+
+        inline genericType(nullptr_t) {};
+        genericType& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        genericType(T& ref);
+
+        template<typename T>
+        genericType(const T& ref);
+
+        template<typename T>
+        genericType(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IgenericType: virtual Type::IType
+        {
+            virtual TypeParamList* vTypeParams() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IgenericType>
+        struct genericTypeImpl : virtual TInterface, virtual Type::TypeImpl<T, TStore, TInterface>
+        {
+            explicit genericTypeImpl(T* ptr): Type::TypeImpl<T, TStore, TInterface>(ptr)
+            {
+                value.reset(ptr);
+            }
+
+            TypeParamList* vTypeParams() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IgenericType* value() const;
+
+        std::shared_ptr<IgenericType> mValue;
+    };
+
+    namespace rec
+    {
+        TypeParamList* TypeParams(const gocpp::PtrRecv<struct genericType, false>& self);
+        TypeParamList* TypeParams(const gocpp::ObjRecv<struct genericType>& self);
+
+        gocpp::string String(const gocpp::PtrRecv<struct genericType, false>& self);
+        gocpp::string String(const gocpp::ObjRecv<struct genericType>& self);
+
+        types::Type Underlying(const gocpp::PtrRecv<struct genericType, false>& self);
+        types::Type Underlying(const gocpp::ObjRecv<struct genericType>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct genericType& value);
+    std::tuple<golang::go::types::Type, gocpp::error> Instantiate(Context* ctxt, golang::go::types::Type orig, gocpp::slice<golang::go::types::Type> targs, bool validate);
+    bool mentions(golang::go::types::Type T, golang::go::types::Type typ);
 }
 
 #include "golang/go/token/position.h"
@@ -25,15 +95,16 @@ namespace golang::types
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeparam.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace token = golang::go::token;
 
     namespace rec
     {
-        golang::types::Type instance(Checker* check, token::Pos pos, golang::types::Type orig, gocpp::slice<golang::types::Type> targs, Named* expanding, Context* ctxt);
+        golang::go::types::Type instance(Checker* check, token::Pos pos, golang::go::types::genericType orig, gocpp::slice<golang::go::types::Type> targs, Named* expanding, Context* ctxt);
         bool validateTArgLen(Checker* check, token::Pos pos, gocpp::string name, int want, int got);
-        std::tuple<int, gocpp::error> verify(Checker* check, token::Pos pos, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::types::Type> targs, Context* ctxt);
-        bool implements(Checker* check, token::Pos pos, golang::types::Type V, golang::types::Type T, bool constraint, gocpp::string* cause);
+        std::tuple<int, gocpp::error> verify(Checker* check, token::Pos pos, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> targs, Context* ctxt);
+        bool implements(Checker* check, golang::go::types::Type V, golang::go::types::Type T, bool constraint, gocpp::string* cause);
     }
 }
 

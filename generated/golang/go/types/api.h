@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct ArgumentError
     {
@@ -30,45 +30,12 @@ namespace golang::types
 
     std::ostream& operator<<(std::ostream& os, const struct ArgumentError& value);
 }
-#include "golang/go/ast/ast.h"
-#include "golang/go/constant/value.h"
-#include "golang/go/token/position.h"
-#include "golang/go/types/operand.h"
 #include "golang/go/types/type.h"
-#include "golang/internal/types/errors/codes.h"
-#include "golang/go/types/object.fwd.h"
 #include "golang/go/types/package.fwd.h"
 #include "golang/go/types/typelists.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    struct Error
-    {
-        token::FileSet* Fset{}; // file set for interpretation of Pos
-        token::Pos Pos{}; // error position
-        gocpp::string Msg{}; // error message
-        bool Soft{}; // if set, error is "soft"
-        // go116code is a future API, unexported as the set of error codes is large
-        // and likely to change significantly during experimentation. Tools wishing
-        // to preview this feature may read go116code using reflection (see
-        // errorcodes_test.go), but beware that there is no guarantee of future
-        // compatibility.
-        errors::Code go116code{};
-        token::Pos go116start{};
-        token::Pos go116end{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Error& value);
     struct Importer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -135,28 +102,10 @@ namespace golang::types
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Importer& value);
-    struct TypeAndValue
-    {
-        operandMode mode{};
-        golang::types::Type Type{};
-        constant::Value Value{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct TypeAndValue& value);
     struct Instance
     {
         TypeList* TypeArgs{};
-        golang::types::Type Type{};
+        golang::go::types::Type Type{};
 
         using isGoStruct = void;
 
@@ -170,23 +119,13 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Instance& value);
-    struct Initializer
-    {
-        gocpp::slice<Var*> Lhs{}; // var Lhs = Rhs
-        ast::Expr Rhs{};
+}
+#include "golang/go/ast/ast.fwd.h"
+#include "golang/go/constant/value.fwd.h"
+#include "golang/go/token/position.fwd.h"
 
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Initializer& value);
+namespace golang::go::types
+{
     struct ImporterFrom : virtual gocpp::Interface, Importer
     {
         using gocpp::Interface::operator==;
@@ -262,15 +201,53 @@ namespace golang::types
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ImporterFrom& value);
+    namespace token = golang::go::token;
+    namespace errors = golang::internal::types::errors;
 }
-#include "golang/go/types/object.h"
-#include "golang/go/types/sizes.h"
-#include "golang/go/types/context.fwd.h"
-#include "golang/go/types/scope.fwd.h"
-#include "golang/go/types/selection.fwd.h"
+#include "golang/go/ast/ast.h"
+#include "golang/go/constant/value.h"
+#include "golang/go/token/position.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+}
+#include "golang/go/types/operand.h"
+#include "golang/go/types/sizes.h"
+#include "golang/internal/types/errors/codes.h"
+#include "golang/go/types/context.fwd.h"
+#include "golang/go/types/object.fwd.h"
+
+namespace golang::go::types
+{
+    namespace constant = golang::go::constant;
+    struct Error
+    {
+        token::FileSet* Fset{}; // file set for interpretation of Pos
+        token::Pos Pos{}; // error position
+        gocpp::string Msg{}; // error message
+        bool Soft{}; // if set, error is "soft"
+        // go116code is a future API, unexported as the set of error codes is large
+        // and likely to change significantly during experimentation. Tools wishing
+        // to preview this feature may read go116code using reflection (see
+        // errorcodes_test.go), but beware that there is no guarantee of future
+        // compatibility.
+        errors::Code go116code{};
+        token::Pos go116start{};
+        token::Pos go116end{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Error& value);
     struct Config
     {
         // Context is the context used for resolving global identifiers. If nil, the
@@ -340,6 +317,49 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Config& value);
+    struct TypeAndValue
+    {
+        operandMode mode{};
+        golang::go::types::Type Type{};
+        constant::Value Value{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct TypeAndValue& value);
+    struct Initializer
+    {
+        gocpp::slice<Var*> Lhs{}; // var Lhs = Rhs
+        ast::Expr Rhs{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Initializer& value);
+    void srcimporter_setUsesCgo(Config* conf);
+}
+#include "golang/go/types/object.h"
+#include "golang/go/types/scope.fwd.h"
+#include "golang/go/types/selection.fwd.h"
+
+namespace golang::go::types
+{
     struct Info
     {
         // Types maps expressions to their types, and for constant
@@ -352,11 +372,18 @@ namespace golang::types
         // is invalid.
         // The Types map does not record the type of every identifier,
         // only those that appear where an arbitrary expression is
-        // permitted. For instance, the identifier f in a selector
-        // expression x.f is found only in the Selections map, the
-        // identifier z in a variable declaration 'var z int' is found
-        // only in the Defs map, and identifiers denoting packages in
-        // qualified identifiers are collected in the Uses map.
+        // permitted. For instance:
+        // - an identifier f in a selector expression x.f is found
+        // only in the Selections map;
+        // - an identifier z in a variable declaration 'var z int'
+        // is found only in the Defs map;
+        // - an identifier p denoting a package in a qualified
+        // identifier p.X is found only in the Uses map.
+        // Similarly, no type is recorded for the (synthetic) FuncType
+        // node in a FuncDecl.Type field, since there is no corresponding
+        // syntactic function type expression in the source in this case
+        // Instead, the function type is found in the Defs map entry for
+        // the corresponding function declaration.
         gocpp::map<ast::Expr, TypeAndValue> Types{};
         // Instances maps identifiers denoting generic types or functions to their
         // type arguments and instantiated type.
@@ -375,6 +402,8 @@ namespace golang::types
         // in package clauses, or symbolic variables t in t := x.(type) of
         // type switch headers), the corresponding objects are nil.
         // For an embedded field, Defs returns the field *Var it defines.
+        // In ill-typed code, such as a duplicate declaration of the
+        // same name, Defs may lack an entry for a declaring identifier.
         // Invariant: Defs[id] == nil || Defs[id].Pos() == id.Pos()
         gocpp::map<ast::Ident*, Object> Defs{};
         // Uses maps identifiers to the objects they denote.
@@ -420,7 +449,7 @@ namespace golang::types
         // *ast.CommClause
         // *ast.ForStmt
         // *ast.RangeStmt
-        gocpp::map<ast::Node, golang::types::Scope*> Scopes{};
+        gocpp::map<ast::Node, golang::go::types::Scope*> Scopes{};
         // InitOrder is the list of package-level initializers in the order in which
         // they must be executed. Initializers referring to variables related by an
         // initialization dependency appear in topological order, the others appear
@@ -446,7 +475,6 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Info& value);
-    void srcimporter_setUsesCgo(Config* conf);
 }
 
 #include "golang/go/ast/ast.h"
@@ -455,18 +483,18 @@ namespace golang::types
 #include "golang/go/types/package.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        gocpp::string Error(golang::types::Error err);
+        gocpp::string Error(golang::go::types::Error err);
         gocpp::string Error(ArgumentError* e);
         gocpp::error Unwrap(ArgumentError* e);
-        bool recordTypes(golang::types::Info* info);
-        golang::types::Type TypeOf(golang::types::Info* info, ast::Expr e);
-        Object ObjectOf(golang::types::Info* info, ast::Ident* id);
-        PkgName* PkgNameOf(golang::types::Info* info, ast::ImportSpec* imp);
+        bool recordTypes(golang::go::types::Info* info);
+        golang::go::types::Type TypeOf(golang::go::types::Info* info, ast::Expr e);
+        Object ObjectOf(golang::go::types::Info* info, ast::Ident* id);
+        PkgName* PkgNameOf(golang::go::types::Info* info, ast::ImportSpec* imp);
         bool IsVoid(TypeAndValue tv);
         bool IsType(TypeAndValue tv);
         bool IsBuiltin(TypeAndValue tv);
@@ -475,8 +503,9 @@ namespace golang::types
         bool Addressable(TypeAndValue tv);
         bool Assignable(TypeAndValue tv);
         bool HasOk(TypeAndValue tv);
+        gocpp::string String(Instance inst);
         gocpp::string String(Initializer* init);
-        std::tuple<Package*, gocpp::error> Check(Config* conf, gocpp::string path, token::FileSet* fset, gocpp::slice<ast::File*> files, golang::types::Info* info);
+        std::tuple<Package*, gocpp::error> Check(Config* conf, gocpp::string path, token::FileSet* fset, gocpp::slice<ast::File*> files, golang::go::types::Info* info);
     }
 }
 

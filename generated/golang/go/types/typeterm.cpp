@@ -14,9 +14,8 @@
 #include "golang/go/types/api_predicates.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/type.h"
-#include "golang/go/types/under.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     namespace rec
     {
@@ -60,7 +59,7 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::String(term* x)
+    gocpp::string rec::String(golang::go::types::term* x)
     {
         //Go switch emulation
         {
@@ -87,7 +86,7 @@ namespace golang::types
     }
 
     // equal reports whether x and y represent the same type set.
-    bool rec::equal(term* x, term* y)
+    bool rec::equal(golang::go::types::term* x, golang::go::types::term* y)
     {
         // easy cases
         // ∅ ⊂ x, y ⊂ 𝓤
@@ -112,10 +111,10 @@ namespace golang::types
     }
 
     // union returns the union x ∪ y: zero, one, or two non-nil terms.
-    std::tuple<term*, term*> rec::go_union(term* x, term* y)
+    std::tuple<golang::go::types::term*, golang::go::types::term*> rec::go_union(golang::go::types::term* x, golang::go::types::term* y)
     {
-        term* _1;
-        term* _2;
+        golang::go::types::term* _1;
+        golang::go::types::term* _2;
         // easy cases
         // ∅ ⊂ x, y ⊂ 𝓤
         //Go switch emulation
@@ -172,7 +171,7 @@ namespace golang::types
     }
 
     // intersect returns the intersection x ∩ y.
-    term* rec::intersect(term* x, term* y)
+    golang::go::types::term* rec::intersect(golang::go::types::term* x, golang::go::types::term* y)
     {
         // easy cases
         // ∅ ⊂ x, y ⊂ 𝓤
@@ -220,7 +219,7 @@ namespace golang::types
     }
 
     // includes reports whether t ∈ x.
-    bool rec::includes(term* x, golang::types::Type t)
+    bool rec::includes(golang::go::types::term* x, golang::go::types::Type t)
     {
         // easy cases
         // ∅ ⊂ x ⊂ 𝓤
@@ -246,13 +245,13 @@ namespace golang::types
         auto u = t;
         if(x->tilde)
         {
-            u = types::under(u);
+            u = rec::Underlying(gocpp::recv(u));
         }
         return Identical(x->typ, u);
     }
 
     // subsetOf reports whether x ⊆ y.
-    bool rec::subsetOf(term* x, term* y)
+    bool rec::subsetOf(golang::go::types::term* x, golang::go::types::term* y)
     {
         // easy cases
         // ∅ ⊂ x, y ⊂ 𝓤
@@ -302,7 +301,7 @@ namespace golang::types
 
     // disjoint reports whether x ∩ y == ∅.
     // x.typ and y.typ must not be nil.
-    bool rec::disjoint(term* x, term* y)
+    bool rec::disjoint(golang::go::types::term* x, golang::go::types::term* y)
     {
         if(debug && (x->typ == nullptr || y->typ == nullptr))
         {
@@ -311,12 +310,12 @@ namespace golang::types
         auto ux = x->typ;
         if(y->tilde)
         {
-            ux = types::under(ux);
+            ux = rec::Underlying(gocpp::recv(ux));
         }
         auto uy = y->typ;
         if(x->tilde)
         {
-            uy = types::under(uy);
+            uy = rec::Underlying(gocpp::recv(uy));
         }
         return ! Identical(ux, uy);
     }

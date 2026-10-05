@@ -10,84 +10,121 @@
 #include "gocpp/support.h"
 
 
-namespace golang::big
+namespace golang::math::big
 {
     struct GoTag_nat { };
-    extern long karatsubaThreshold;
-    int karatsubaLen(int n, int threshold);
-    extern long basicSqrThreshold;
-    extern long karatsubaSqrThreshold;
+    struct stack
+    {
+        stackInner* si{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stack& value);
+    stack* getStack();
 }
 #include "golang/math/big/arith.h"
-#include "golang/sync/pool.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     using nat = gocpp::defined<gocpp::slice<Word>, GoTag_nat>;
-    extern sync::Pool natPool;
+    struct stackInner
+    {
+        gocpp::slice<Word> w{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackInner& value);
     Word bigEndianWord(gocpp::slice<unsigned char> buf);
-    extern nat natOne;
-    extern nat natTwo;
-    extern nat natFive;
-    extern nat natTen;
-    void basicMul(nat z, nat x, nat y);
-    void karatsubaAdd(nat z, nat x, int n);
-    void karatsubaSub(nat z, nat x, int n);
-    void karatsuba(nat z, nat x, nat y);
-    bool alias(nat x, nat y);
-    void addAt(nat z, nat x, int i);
-    void basicSqr(nat z, nat x);
-    void karatsubaSqr(nat z, nat x);
-    nat* getNat(int n);
-    void putNat(nat* x);
-    bool same(nat x, nat y);
+}
+#include "golang/sync/pool.fwd.h"
+
+namespace golang::math::big
+{
+    extern golang::math::big::nat natOne;
+    extern golang::math::big::nat natTwo;
+    extern golang::math::big::nat natFive;
+    extern golang::math::big::nat natTen;
+    bool alias(golang::math::big::nat x, golang::math::big::nat y);
+    void addTo(golang::math::big::nat z, golang::math::big::nat x);
+    stackInner* getStackInner();
+    bool same(golang::math::big::nat x, golang::math::big::nat y);
+    namespace sync = golang::sync;
+}
+#include "golang/sync/pool.h"
+
+namespace golang::math::big
+{
+    extern sync::Pool stackPool;
 }
 
 #include "golang/math/big/arith.h"
 #include "golang/math/rand/rand.h"
 
-namespace golang::big
+namespace golang::math::big
 {
+    namespace rand = golang::math::rand;
 
     namespace rec
     {
-        gocpp::string String(nat z);
-        void clear(nat z);
-        nat norm(nat z);
-        nat make(nat z, int n);
-        nat setWord(nat z, Word x);
-        nat setUint64(nat z, uint64_t x);
-        nat set(nat z, nat x);
-        nat add(nat z, nat x, nat y);
-        nat sub(nat z, nat x, nat y);
-        int cmp(nat x, nat y);
-        nat mulAddWW(nat z, nat x, Word y, Word r);
-        nat montgomery(nat z, nat x, nat y, nat m, Word k, int n);
-        nat mul(nat z, nat x, nat y);
-        nat sqr(nat z, nat x);
-        nat mulRange(nat z, uint64_t a, uint64_t b);
-        int bitLen(nat x);
-        unsigned int trailingZeroBits(nat x);
-        std::tuple<unsigned int, bool> isPow2(nat x);
-        nat shl(nat z, nat x, unsigned int s);
-        nat shr(nat z, nat x, unsigned int s);
-        nat setBit(nat z, nat x, unsigned int i, unsigned int b);
-        unsigned int bit(nat x, unsigned int i);
-        unsigned int sticky(nat x, unsigned int i);
-        nat and(nat z, nat x, nat y);
-        nat trunc(nat z, nat x, unsigned int n);
-        nat andNot(nat z, nat x, nat y);
-        nat or(nat z, nat x, nat y);
-        nat xor(nat z, nat x, nat y);
-        nat random(nat z, rand::Rand* rand, nat limit, int n);
-        nat expNN(nat z, nat x, nat y, nat m, bool slow);
-        nat expNNMontgomeryEven(nat z, nat x, nat y, nat m);
-        nat expNNWindowed(nat z, nat x, nat y, unsigned int logM);
-        nat expNNMontgomery(nat z, nat x, nat y, nat m);
-        int bytes(nat z, gocpp::slice<unsigned char> buf);
-        nat setBytes(nat z, gocpp::slice<unsigned char> buf);
-        nat sqrt(nat z, nat x);
-        nat subMod2N(nat z, nat x, nat y, unsigned int n);
+        gocpp::string String(golang::math::big::nat z);
+        golang::math::big::nat norm(golang::math::big::nat z);
+        golang::math::big::nat make(golang::math::big::nat z, int n);
+        golang::math::big::nat setWord(golang::math::big::nat z, Word x);
+        golang::math::big::nat setUint64(golang::math::big::nat z, uint64_t x);
+        golang::math::big::nat set(golang::math::big::nat z, golang::math::big::nat x);
+        golang::math::big::nat add(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
+        golang::math::big::nat sub(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
+        int cmp(golang::math::big::nat x, golang::math::big::nat y);
+        golang::math::big::nat montgomery(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y, golang::math::big::nat m, Word k, int n);
+        golang::math::big::nat mulRange(golang::math::big::nat z, stack* stk, uint64_t a, uint64_t b);
+        void free(stackInner* s);
+        int save(stackInner* s);
+        void restore(stackInner* s, int n);
+        golang::math::big::nat nat(stackInner* s, int n);
+        void free(stack* s);
+        int save(stack* s);
+        void restore(stack* s, int n);
+        golang::math::big::nat nat(stack* s, int n);
+        int bitLen(golang::math::big::nat x);
+        unsigned int trailingZeroBits(golang::math::big::nat x);
+        std::tuple<unsigned int, bool> isPow2(golang::math::big::nat x);
+        golang::math::big::nat lsh(golang::math::big::nat z, golang::math::big::nat x, unsigned int s);
+        golang::math::big::nat rsh(golang::math::big::nat z, golang::math::big::nat x, unsigned int s);
+        golang::math::big::nat setBit(golang::math::big::nat z, golang::math::big::nat x, unsigned int i, unsigned int b);
+        unsigned int bit(golang::math::big::nat x, unsigned int i);
+        unsigned int sticky(golang::math::big::nat x, unsigned int i);
+        golang::math::big::nat and(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
+        golang::math::big::nat trunc(golang::math::big::nat z, golang::math::big::nat x, unsigned int n);
+        golang::math::big::nat andNot(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
+        golang::math::big::nat or(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
+        golang::math::big::nat xor(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
+        golang::math::big::nat random(golang::math::big::nat z, rand::Rand* rand, golang::math::big::nat limit, int n);
+        golang::math::big::nat expNN(golang::math::big::nat z, stack* stk, golang::math::big::nat x, golang::math::big::nat y, golang::math::big::nat m, bool slow);
+        golang::math::big::nat expNNMontgomeryEven(golang::math::big::nat z, stack* stk, golang::math::big::nat x, golang::math::big::nat y, golang::math::big::nat m);
+        golang::math::big::nat expNNWindowed(golang::math::big::nat z, stack* stk, golang::math::big::nat x, golang::math::big::nat y, unsigned int logM);
+        golang::math::big::nat expNNMontgomery(golang::math::big::nat z, stack* stk, golang::math::big::nat x, golang::math::big::nat y, golang::math::big::nat m);
+        int bytes(golang::math::big::nat z, gocpp::slice<unsigned char> buf);
+        golang::math::big::nat setBytes(golang::math::big::nat z, gocpp::slice<unsigned char> buf);
+        golang::math::big::nat sqrt(golang::math::big::nat z, stack* stk, golang::math::big::nat x);
+        golang::math::big::nat subMod2N(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y, unsigned int n);
     }
 }
 

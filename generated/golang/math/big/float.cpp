@@ -18,6 +18,7 @@
 #include "golang/math/big/int.h"
 #include "golang/math/big/nat.h"
 #include "golang/math/big/natdiv.h"
+#include "golang/math/big/natmul.h"
 #include "golang/math/big/rat.h"
 #include "golang/math/bits.h"
 #include "golang/math/bits/bits.h"
@@ -26,8 +27,11 @@
 #include "golang/math/signbit.h"
 #include "golang/math/unsafe.h"
 
-namespace golang::big
+namespace golang::math::big
 {
+    namespace bits = golang::math::bits;
+    namespace fmt = golang::fmt;
+    namespace math = golang::math;
     namespace rec
     {
     }
@@ -61,10 +65,10 @@ namespace golang::big
     //
     // By setting the desired precision to 24 or 53 and using matching rounding
     // mode (typically [ToNearestEven]), Float operations produce the same results
-    // as the corresponding float32 or float64 IEEE-754 arithmetic for operands
+    // as the corresponding float32 or float64 IEEE 754 arithmetic for operands
     // that correspond to normal (i.e., not denormal) float32 or float64 numbers.
     // Exponent underflow and overflow lead to a 0 or an Infinity for different
-    // values than IEEE-754 because Float exponents have a much larger range.
+    // values than IEEE 754 because Float exponents have a much larger range.
     //
     // The zero (uninitialized) value for a Float is ready to use and represents
     // the number +0.0 exactly, with precision 0 and rounding mode [ToNearestEven].
@@ -123,7 +127,7 @@ namespace golang::big
     }
 
     // An ErrNaN panic is raised by a [Float] operation that would lead to
-    // a NaN under IEEE-754 rules. An ErrNaN implements the error interface.
+    // a NaN under IEEE 754 rules. An ErrNaN implements the error interface.
     
     template<typename T> requires gocpp::GoStruct<T>
     ErrNaN::operator T()
@@ -153,6 +157,7 @@ namespace golang::big
         return value.PrintTo(os);
     }
 
+    gocpp::error _ = ErrNaN {};
     gocpp::string rec::Error(ErrNaN err)
     {
         return err.msg;
@@ -266,10 +271,9 @@ namespace golang::big
     }
 
     // Sign returns:
-    //
-    //	-1 if x <   0
-    //	 0 if x is ±0
-    //	+1 if x >   0
+    //   - -1 if x < 0;
+    //   - 0 if x is ±0;
+    //   - +1 if x > 0.
     int rec::Sign(Float* x)
     {
         if(debugFloat)
@@ -458,7 +462,7 @@ namespace golang::big
     // have before calling round. z's mantissa must be normalized (with the msb set)
     // or empty.
     //
-    // CAUTION: The rounding modes ToNegativeInf, ToPositiveInf are affected by the
+    // CAUTION: The rounding modes [ToNegativeInf], [ToPositiveInf] are affected by the
     // sign of z. For correct rounding, the sign of z must be set correctly before
     // calling round.
     void rec::round(Float* z, unsigned int sbit)
@@ -591,7 +595,7 @@ namespace golang::big
                     }
                     z->exp++;
                     // adjust mantissa: divide by 2 to compensate for exponent adjustment
-                    shrVU(z->mant, z->mant, 1);
+                    rshVU(z->mant, z->mant, 1);
                     // set msb == carry == 1 from the mantissa overflow above
                     auto msb = 1 << (_W - 1);
                     z->mant[n - 1] |= msb;
@@ -700,7 +704,7 @@ namespace golang::big
     // fnorm normalizes mantissa m by shifting it to the left
     // such that the msb of the most-significant word (msw) is 1.
     // It returns the shift amount. It assumes that len(m) != 0.
-    int64_t fnorm(nat m)
+    int64_t fnorm(golang::math::big::nat m)
     {
         if(debugFloat && (len(m) == 0 || m[len(m) - 1] == 0))
         {
@@ -709,10 +713,10 @@ namespace golang::big
         auto s = nlz(m[len(m) - 1]);
         if(s > 0)
         {
-            auto c = shlVU(m, m, s);
+            auto c = lshVU(m, m, s);
             if(debugFloat && c != 0)
             {
-                gocpp::panic("nlz or shlVU incorrect"_s);
+                gocpp::panic("nlz or lshVU incorrect"_s);
             }
         }
         return int64_t(s);
@@ -721,7 +725,7 @@ namespace golang::big
     // SetInt sets z to the (possibly rounded) value of x and returns z.
     // If z's precision is 0, it is changed to the larger of x.BitLen()
     // or 64 (and rounding will have no effect).
-    Float* rec::SetInt(Float* z, golang::big::Int* x)
+    Float* rec::SetInt(Float* z, golang::math::big::Int* x)
     {
         // TODO(gri) can be more efficient if z.prec > 0
         // but small compared to the size of x, or if there
@@ -729,7 +733,7 @@ namespace golang::big
         auto bits = uint32_t(rec::BitLen(gocpp::recv(x)));
         if(z->prec == 0)
         {
-            z->prec = umax32(bits, 64);
+            z->prec = gocpp::max(bits, 64);
         }
         z->acc = Exact;
         z->neg = x->neg;
@@ -748,7 +752,7 @@ namespace golang::big
     // SetRat sets z to the (possibly rounded) value of x and returns z.
     // If z's precision is 0, it is changed to the largest of a.BitLen(),
     // b.BitLen(), or 64; with x = a/b.
-    Float* rec::SetRat(Float* z, golang::big::Rat* x)
+    Float* rec::SetRat(Float* z, golang::math::big::Rat* x)
     {
         if(rec::IsInt(gocpp::recv(x)))
         {
@@ -760,7 +764,7 @@ namespace golang::big
         rec::SetInt(gocpp::recv(b), rec::Denom(gocpp::recv(x)));
         if(z->prec == 0)
         {
-            z->prec = umax32(a.prec, b.prec);
+            z->prec = gocpp::max(a.prec, b.prec);
         }
         return rec::Quo(gocpp::recv(z), & a, & b);
     }
@@ -812,9 +816,8 @@ namespace golang::big
         return z;
     }
 
-    // Copy sets z to x, with the same precision, rounding mode, and
-    // accuracy as x, and returns z. x is not changed even if z and
-    // x are the same.
+    // Copy sets z to x, with the same precision, rounding mode, and accuracy as x.
+    // Copy returns z. If x and z are identical, Copy is a no-op.
     Float* rec::Copy(Float* z, Float* x)
     {
         if(debugFloat)
@@ -838,7 +841,7 @@ namespace golang::big
     }
 
     // msb32 returns the 32 most significant bits of x.
-    uint32_t msb32(nat x)
+    uint32_t msb32(golang::math::big::nat x)
     {
         auto i = len(x) - 1;
         if(i < 0)
@@ -869,7 +872,7 @@ namespace golang::big
     }
 
     // msb64 returns the 64 most significant bits of x.
-    uint64_t msb64(nat x)
+    uint64_t msb64(golang::math::big::nat x)
     {
         auto i = len(x) - 1;
         if(i < 0)
@@ -907,7 +910,7 @@ namespace golang::big
     }
 
     // Uint64 returns the unsigned integer resulting from truncating x
-    // towards zero. If 0 <= x <= math.MaxUint64, the result is [Exact]
+    // towards zero. If 0 <= x <= [math.MaxUint64], the result is [Exact]
     // if x is an integer and [Below] otherwise.
     // The result is (0, [Above]) for x < 0, and ([math.MaxUint64], [Below])
     // for x > [math.MaxUint64].
@@ -1341,7 +1344,7 @@ namespace golang::big
     // for x > 0, and [Above] for x < 0.
     // If a non-nil *[Int] argument z is provided, [Int] stores
     // the result in z instead of allocating a new [Int].
-    std::tuple<golang::big::Int*, Accuracy> rec::Int(Float* x, golang::big::Int* z)
+    std::tuple<golang::math::big::Int*, Accuracy> rec::Int(Float* x, golang::math::big::Int* z)
     {
         if(debugFloat)
         {
@@ -1394,13 +1397,13 @@ namespace golang::big
                         switch(conditionId)
                         {
                             case 0:
-                                z->abs = rec::shl(gocpp::recv(z->abs), x->mant, exp - allBits);
+                                z->abs = rec::lsh(gocpp::recv(z->abs), x->mant, exp - allBits);
                                 break;
                             default:
                                 z->abs = rec::set(gocpp::recv(z->abs), x->mant);
                                 break;
                             case 1:
-                                z->abs = rec::shr(gocpp::recv(z->abs), x->mant, allBits - exp);
+                                z->abs = rec::rsh(gocpp::recv(z->abs), x->mant, allBits - exp);
                                 break;
                         }
                     }
@@ -1426,7 +1429,7 @@ namespace golang::big
     // The result is [Exact] if x is not an Inf.
     // If a non-nil *[Rat] argument z is provided, [Rat] stores
     // the result in z instead of allocating a new [Rat].
-    std::tuple<golang::big::Rat*, Accuracy> rec::Rat(Float* x, golang::big::Rat* z)
+    std::tuple<golang::math::big::Rat*, Accuracy> rec::Rat(Float* x, golang::math::big::Rat* z)
     {
         if(debugFloat)
         {
@@ -1462,7 +1465,7 @@ namespace golang::big
                         {
                             // == 1 (see Rat)
                             case 0:
-                                z->a.abs = rec::shl(gocpp::recv(z->a.abs), x->mant, (unsigned int)(x->exp - allBits));
+                                z->a.abs = rec::lsh(gocpp::recv(z->a.abs), x->mant, (unsigned int)(x->exp - allBits));
                                 z->b.abs = z->b.abs.make_slice(0, 0);
                                 break;
                             // z already in normal form
@@ -1476,7 +1479,7 @@ namespace golang::big
                             {
                                 z->a.abs = rec::set(gocpp::recv(z->a.abs), x->mant);
                                 auto t = rec::setUint64(gocpp::recv(z->b.abs), 1);
-                                z->b.abs = rec::shl(gocpp::recv(t), t, (unsigned int)(allBits - x->exp));
+                                z->b.abs = rec::lsh(gocpp::recv(t), t, (unsigned int)(allBits - x->exp));
                                 rec::norm(gocpp::recv(z));
                                 break;
                             }
@@ -1572,12 +1575,12 @@ namespace golang::big
                 case 0:
                     if(al)
                     {
-                        auto t = rec::shl(gocpp::recv(nat(nullptr)), y->mant, (unsigned int)(ey - ex));
+                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), y->mant, (unsigned int)(ey - ex));
                         z->mant = rec::add(gocpp::recv(z->mant), x->mant, t);
                     }
                     else
                     {
-                        z->mant = rec::shl(gocpp::recv(z->mant), y->mant, (unsigned int)(ey - ex));
+                        z->mant = rec::lsh(gocpp::recv(z->mant), y->mant, (unsigned int)(ey - ex));
                         z->mant = rec::add(gocpp::recv(z->mant), x->mant, z->mant);
                     }
                     break;
@@ -1588,12 +1591,12 @@ namespace golang::big
                 case 1:
                     if(al)
                     {
-                        auto t = rec::shl(gocpp::recv(nat(nullptr)), x->mant, (unsigned int)(ex - ey));
+                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), x->mant, (unsigned int)(ex - ey));
                         z->mant = rec::add(gocpp::recv(z->mant), t, y->mant);
                     }
                     else
                     {
-                        z->mant = rec::shl(gocpp::recv(z->mant), x->mant, (unsigned int)(ex - ey));
+                        z->mant = rec::lsh(gocpp::recv(z->mant), x->mant, (unsigned int)(ex - ey));
                         z->mant = rec::add(gocpp::recv(z->mant), z->mant, y->mant);
                     }
                     ex = ey;
@@ -1634,12 +1637,12 @@ namespace golang::big
                 case 0:
                     if(al)
                     {
-                        auto t = rec::shl(gocpp::recv(nat(nullptr)), y->mant, (unsigned int)(ey - ex));
+                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), y->mant, (unsigned int)(ey - ex));
                         z->mant = rec::sub(gocpp::recv(t), x->mant, t);
                     }
                     else
                     {
-                        z->mant = rec::shl(gocpp::recv(z->mant), y->mant, (unsigned int)(ey - ex));
+                        z->mant = rec::lsh(gocpp::recv(z->mant), y->mant, (unsigned int)(ey - ex));
                         z->mant = rec::sub(gocpp::recv(z->mant), x->mant, z->mant);
                     }
                     break;
@@ -1650,12 +1653,12 @@ namespace golang::big
                 case 1:
                     if(al)
                     {
-                        auto t = rec::shl(gocpp::recv(nat(nullptr)), x->mant, (unsigned int)(ex - ey));
+                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), x->mant, (unsigned int)(ex - ey));
                         z->mant = rec::sub(gocpp::recv(t), t, y->mant);
                     }
                     else
                     {
-                        z->mant = rec::shl(gocpp::recv(z->mant), x->mant, (unsigned int)(ex - ey));
+                        z->mant = rec::lsh(gocpp::recv(z->mant), x->mant, (unsigned int)(ex - ey));
                         z->mant = rec::sub(gocpp::recv(z->mant), z->mant, y->mant);
                     }
                     ex = ey;
@@ -1695,11 +1698,11 @@ namespace golang::big
         auto e = int64_t(x->exp) + int64_t(y->exp);
         if(x == y)
         {
-            z->mant = rec::sqr(gocpp::recv(z->mant), x->mant);
+            z->mant = rec::sqr(gocpp::recv(z->mant), nullptr, x->mant);
         }
         else
         {
-            z->mant = rec::mul(gocpp::recv(z->mant), x->mant, y->mant);
+            z->mant = rec::mul(gocpp::recv(z->mant), nullptr, x->mant, y->mant);
         }
         rec::setExpAndRound(gocpp::recv(z), e - fnorm(z->mant), 0);
     }
@@ -1709,51 +1712,61 @@ namespace golang::big
     // x and y must have a non-empty mantissa and valid exponent.
     void rec::uquo(Float* z, Float* x, Float* y)
     {
-        if(debugFloat)
+        gocpp::Defer defer;
+        try
         {
-            validateBinaryOperands(x, y);
+            if(debugFloat)
+            {
+                validateBinaryOperands(x, y);
+            }
+
+            // mantissa length in words for desired result precision + 1
+            // (at least one extra bit so we get the rounding bit after
+            // the division)
+            auto n = int(z->prec / _W) + 1;
+
+            // compute adjusted x.mant such that we get enough result precision
+            auto xadj = x->mant;
+            // TODO(gri): If we have too many digits (d < 0), we should be able
+            // to shorten x for faster division. But we must be extra careful
+            // with rounding in that case.
+            if(auto d = n - len(x->mant) + len(y->mant); d > 0)
+            {
+                // d extra words needed => add d "0 digits" to x
+                xadj = gocpp::make(gocpp::Tag<nat>(), len(x->mant) + d);
+                copy(xadj.make_slice(d), x->mant);
+            }
+
+
+
+
+            // Compute d before division since there may be aliasing of x.mant
+            // (via xadj) or y.mant with z.mant.
+            auto d = len(xadj) - len(y->mant);
+
+            // divide
+            auto stk = getStack();
+            defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
+            golang::math::big::nat r = {};
+            std::tie(z->mant, r) = rec::div(gocpp::recv(z->mant), stk, nullptr, xadj, y->mant);
+            auto e = int64_t(x->exp) - int64_t(y->exp) - int64_t(d - len(z->mant)) * _W;
+
+            // The result is long enough to include (at least) the rounding bit.
+            // If there's a non-zero remainder, the corresponding fractional part
+            // (if it were computed), would have a non-zero sticky bit (if it were
+            // zero, it couldn't have a non-zero remainder).
+            unsigned int sbit = {};
+            if(len(r) > 0)
+            {
+                sbit = 1;
+            }
+
+            rec::setExpAndRound(gocpp::recv(z), e - fnorm(z->mant), sbit);
         }
-
-        // mantissa length in words for desired result precision + 1
-        // (at least one extra bit so we get the rounding bit after
-        // the division)
-        auto n = int(z->prec / _W) + 1;
-
-        // compute adjusted x.mant such that we get enough result precision
-        auto xadj = x->mant;
-        // TODO(gri): If we have too many digits (d < 0), we should be able
-        // to shorten x for faster division. But we must be extra careful
-        // with rounding in that case.
-        if(auto d = n - len(x->mant) + len(y->mant); d > 0)
+        catch(gocpp::GoPanic& gp)
         {
-            // d extra words needed => add d "0 digits" to x
-            xadj = gocpp::make(gocpp::Tag<nat>(), len(x->mant) + d);
-            copy(xadj.make_slice(d), x->mant);
+            defer.handlePanic(gp);
         }
-
-
-
-
-        // Compute d before division since there may be aliasing of x.mant
-        // (via xadj) or y.mant with z.mant.
-        auto d = len(xadj) - len(y->mant);
-
-        // divide
-        nat r = {};
-        std::tie(z->mant, r) = rec::div(gocpp::recv(z->mant), nullptr, xadj, y->mant);
-        auto e = int64_t(x->exp) - int64_t(y->exp) - int64_t(d - len(z->mant)) * _W;
-
-        // The result is long enough to include (at least) the rounding bit.
-        // If there's a non-zero remainder, the corresponding fractional part
-        // (if it were computed), would have a non-zero sticky bit (if it were
-        // zero, it couldn't have a non-zero remainder).
-        unsigned int sbit = {};
-        if(len(r) > 0)
-        {
-            sbit = 1;
-        }
-
-        rec::setExpAndRound(gocpp::recv(z), e - fnorm(z->mant), sbit);
     }
 
     // ucmp returns -1, 0, or +1, depending on whether
@@ -1837,7 +1850,7 @@ namespace golang::big
 
         if(z->prec == 0)
         {
-            z->prec = umax32(x->prec, y->prec);
+            z->prec = gocpp::max(x->prec, y->prec);
         }
 
         if(x->form == finite && y->form == finite)
@@ -1925,7 +1938,7 @@ namespace golang::big
 
         if(z->prec == 0)
         {
-            z->prec = umax32(x->prec, y->prec);
+            z->prec = gocpp::max(x->prec, y->prec);
         }
 
         if(x->form == finite && y->form == finite)
@@ -2007,7 +2020,7 @@ namespace golang::big
 
         if(z->prec == 0)
         {
-            z->prec = umax32(x->prec, y->prec);
+            z->prec = gocpp::max(x->prec, y->prec);
         }
 
         z->neg = x->neg != y->neg;
@@ -2058,7 +2071,7 @@ namespace golang::big
 
         if(z->prec == 0)
         {
-            z->prec = umax32(x->prec, y->prec);
+            z->prec = gocpp::max(x->prec, y->prec);
         }
 
         z->neg = x->neg != y->neg;
@@ -2096,10 +2109,9 @@ namespace golang::big
     }
 
     // Cmp compares x and y and returns:
-    //
-    //	-1 if x <  y
-    //	 0 if x == y (incl. -0 == 0, -Inf == -Inf, and +Inf == +Inf)
-    //	+1 if x >  y
+    //   - -1 if x < y;
+    //   - 0 if x == y (incl. -0 == 0, -Inf == -Inf, and +Inf == +Inf);
+    //   - +1 if x > y.
     int rec::Cmp(Float* x, Float* y)
     {
         if(debugFloat)
@@ -2184,15 +2196,6 @@ namespace golang::big
             m = - m;
         }
         return m;
-    }
-
-    uint32_t umax32(uint32_t x, uint32_t y)
-    {
-        if(x > y)
-        {
-            return x;
-        }
-        return y;
     }
 
 }

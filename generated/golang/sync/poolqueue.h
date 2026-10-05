@@ -12,6 +12,7 @@
 
 namespace golang::sync
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct eface
     {
         gocpp::unsafe_pointer typ{};
@@ -29,32 +30,14 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct eface& value);
-    struct poolChain
-    {
-        // head is the poolDequeue to push to. This is only accessed
-        // by the producer, so doesn't need to be synchronized.
-        poolChainElt* head{};
-        // tail is the poolDequeue to popTail from. This is accessed
-        // by consumers, so reads and writes must be atomic.
-        poolChainElt* tail{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct poolChain& value);
 }
+#include "golang/sync/atomic/doc.fwd.h"
+#include "golang/sync/atomic/type.fwd.h"
 #include "golang/sync/atomic/type.h"
 
 namespace golang::sync
 {
+    namespace atomic = golang::sync::atomic;
     struct poolDequeue
     {
         // headTail packs together a 32-bit head index and a 32-bit
@@ -90,6 +73,27 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolDequeue& value);
+    struct poolChain
+    {
+        // head is the poolDequeue to push to. This is only accessed
+        // by the producer, so doesn't need to be synchronized.
+        poolChainElt* head{};
+        // tail is the poolDequeue to popTail from. This is accessed
+        // by consumers, so reads and writes must be atomic.
+        atomic::Pointer<poolChainElt> tail{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct poolChain& value);
     struct poolChainElt
     {
         poolDequeue poolDequeue{};
@@ -101,8 +105,8 @@ namespace golang::sync
         // prev is written atomically by the consumer and read
         // atomically by the producer. It only transitions from
         // non-nil to nil.
-        poolChainElt* next{};
-        poolChainElt* prev{};
+        atomic::Pointer<poolChainElt> next{};
+        atomic::Pointer<poolChainElt> prev{};
 
         using isGoStruct = void;
 
@@ -116,8 +120,6 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolChainElt& value);
-    void storePoolChainElt(poolChainElt** pp, poolChainElt* v);
-    poolChainElt* loadPoolChainElt(poolChainElt** pp);
 
     namespace rec
     {

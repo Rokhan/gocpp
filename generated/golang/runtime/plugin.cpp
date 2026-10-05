@@ -13,19 +13,21 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/runtime/iface.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/print.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/type.h"
-#include "golang/runtime/typekind.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
     namespace rec
     {
+        using abi::rec::Kind;
         using abi::rec::Name;
     }
 
@@ -102,10 +104,7 @@ namespace golang::runtime
         moduledataverify1(md);
 
         lock(& itabLock);
-        for(auto [gocpp_ignored, i] : md->itablinks)
-        {
-            itabAdd(i);
-        }
+        addModuleItabs(md);
         unlock(& itabLock);
 
         // Build a map of symbol names to symbols. Here in the runtime
@@ -126,7 +125,7 @@ namespace golang::runtime
             (*valp)[0] = gocpp::unsafe_pointer(t);
 
             auto name = rec::Name(gocpp::recv(symName));
-            if(t->Kind_ & kindMask == kindFunc)
+            if(rec::Kind(gocpp::recv(t)) == abi::Func)
             {
                 name = "."_s + name;
             }

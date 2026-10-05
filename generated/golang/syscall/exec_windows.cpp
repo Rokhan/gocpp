@@ -11,8 +11,11 @@
 #include "golang/syscall/exec_windows.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/bytealg/compare_native.h"
 #include "golang/internal/bytealg/indexbyte_native.h"
 #include "golang/runtime/mfinal.h"
+#include "golang/slices/slices.h"
+#include "golang/slices/sort.h"
 #include "golang/sync/rwmutex.h"
 #include "golang/syscall/security_windows.h"
 #include "golang/syscall/syscall_windows.h"
@@ -23,6 +26,12 @@
 
 namespace golang::syscall
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace bytealg = golang::internal::bytealg;
+    namespace runtime = golang::runtime;
+    namespace slices = golang::slices;
+    namespace sync = golang::sync;
+    namespace utf16 = golang::unicode::utf16;
     namespace rec
     {
     }
@@ -182,6 +191,59 @@ namespace golang::syscall
         return gocpp::string(b);
     }
 
+    gocpp::slice<gocpp::string> envSorted(gocpp::slice<gocpp::string> envv)
+    {
+        if(len(envv) < 2)
+        {
+            return envv;
+        }
+
+        // lowercased keys to avoid recomputing them in sort
+        auto lowerKeyCache = gocpp::map<gocpp::string, gocpp::slice<unsigned char>> {};
+        auto lowerKey = [=](gocpp::string kv) mutable -> gocpp::slice<unsigned char>
+        {
+            auto eq = bytealg::IndexByteString(kv, '=');
+            if(eq < 0)
+            {
+                return nullptr;
+            }
+            auto k = kv.make_slice(0, eq);
+            auto [v, ok] = lowerKeyCache[k];
+            if(! ok)
+            {
+                v = gocpp::slice<unsigned char>(k);
+                for(auto [i, b] : v)
+                {
+                    // We only normalize ASCII for now.
+                    // In practice, all environment variables are ASCII, and the
+                    // syscall package can't import "unicode" anyway.
+                    // Also, per https://nullprogram.com/blog/2023/08/23/ the
+                    // sorting of environment variables doesn't really matter.
+                    // TODO(bradfitz): use RtlCompareUnicodeString instead,
+                    // per that blog post? For now, ASCII is good enough.
+                    if('a' <= b && b <= 'z')
+                    {
+                        v[i] -= 'a' - 'A';
+                    }
+                }
+                lowerKeyCache[k] = v;
+            }
+            return v;
+        };
+
+        auto cmpEnv = [=](gocpp::string a, gocpp::string b) mutable -> int
+        {
+            return bytealg::Compare(lowerKey(a), lowerKey(b));
+        };
+
+        if(! slices::IsSortedFunc(envv, cmpEnv))
+        {
+            envv = slices::Clone(envv);
+            slices::SortFunc(envv, cmpEnv);
+        }
+        return envv;
+    }
+
     // createEnvBlock converts an array of environment strings into
     // the representation required by CreateProcess: a sequence of NUL
     // terminated strings followed by a nil.
@@ -193,6 +255,12 @@ namespace golang::syscall
         {
             return {utf16::Encode(gocpp::slice<gocpp::rune>("\x00\x00"_s)), nullptr};
         }
+
+        // https://learn.microsoft.com/en-us/windows/win32/procthread/changing-environment-variables
+        // says that: "All strings in the environment block must be sorted
+        // alphabetically by name."
+        envv = envSorted(envv);
+
         int length = {};
         for(auto [gocpp_ignored, s] : envv)
         {
@@ -545,13 +613,14 @@ namespace golang::syscall
                     defer.push_back([=]{ DuplicateHandle(parentProcess, fd[i], 0, nullptr, 0, false, DUPLICATE_CLOSE_SOURCE); });
                 }
             }
-            auto si = new _STARTUPINFOEXW{};
-            std::tie(si->ProcThreadAttributeList, err) = newProcThreadAttributeList(2);
+            procThreadAttributeListContainer* procAttrList;
+            std::tie(procAttrList, err) = newProcThreadAttributeList(2);
             if(err != nullptr)
             {
                 return {0, 0, err};
             }
-            defer.push_back([=]{ deleteProcThreadAttributeList(si->ProcThreadAttributeList); });
+            defer.push_back([=]{ rec::go_delete(gocpp::recv(procAttrList)); });
+            auto si = new _STARTUPINFOEXW{};
             si->StartupInfo.Cb = uint32_t(gocpp::Sizeof<_STARTUPINFOEXW>());
             si->StartupInfo.Flags = STARTF_USESTDHANDLES;
             if(sys->HideWindow)
@@ -561,7 +630,7 @@ namespace golang::syscall
             }
             if(sys->ParentProcess != 0)
             {
-                err = updateProcThreadAttribute(si->ProcThreadAttributeList, 0, _PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, gocpp::unsafe_pointer(& sys->ParentProcess), gocpp::Sizeof<Handle>(), nullptr, nullptr);
+                err = rec::update(gocpp::recv(procAttrList), _PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, gocpp::unsafe_pointer(& sys->ParentProcess), gocpp::Sizeof<Handle>());
                 if(err != nullptr)
                 {
                     return {0, 0, err};
@@ -591,7 +660,7 @@ namespace golang::syscall
             // Do not accidentally inherit more than these handles.
             if(willInheritHandles)
             {
-                err = updateProcThreadAttribute(si->ProcThreadAttributeList, 0, _PROC_THREAD_ATTRIBUTE_HANDLE_LIST, gocpp::unsafe_pointer(& fd[0]), uintptr_t(len(fd)) * gocpp::Sizeof<Handle>(), nullptr, nullptr);
+                err = rec::update(gocpp::recv(procAttrList), _PROC_THREAD_ATTRIBUTE_HANDLE_LIST, gocpp::unsafe_pointer(& fd[0]), uintptr_t(len(fd)) * gocpp::Sizeof<Handle>());
                 if(err != nullptr)
                 {
                     return {0, 0, err};
@@ -605,6 +674,7 @@ namespace golang::syscall
                 return {0, 0, err};
             }
 
+            si->ProcThreadAttributeList = rec::list(gocpp::recv(procAttrList));
             auto pi = new ProcessInformation{};
             auto flags = sys->CreationFlags | CREATE_UNICODE_ENVIRONMENT | _EXTENDED_STARTUPINFO_PRESENT;
             if(sys->Token != 0)

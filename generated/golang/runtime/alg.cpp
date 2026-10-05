@@ -11,26 +11,46 @@
 #include "golang/runtime/alg.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/iface.h"
 #include "golang/internal/abi/type.h"
-#include "golang/internal/cpu/cpu.h"
+#include "golang/internal/byteorder/byteorder.h"
 #include "golang/internal/goarch/goarch.h"
+#include "golang/internal/goarch/zgoarch_amd64.h"
+#include "golang/internal/runtime/maps/memhash_aes.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
 #include "golang/runtime/error.h"
-#include "golang/runtime/extern.h"
-#include "golang/runtime/hash64.h"
 #include "golang/runtime/rand.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/slice.h"
-#include "golang/runtime/string.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/type.h"
-#include "golang/runtime/typekind.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace byteorder = golang::internal::byteorder;
+    namespace goarch = golang::internal::goarch;
+    namespace maps = golang::internal::runtime::maps;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::HashMightPanic;
         using abi::rec::IsBlank;
+        using abi::rec::IsDirectIface;
+        using abi::rec::Kind;
+    }
+
+    uintptr_t trimHash(uintptr_t h)
+    {
+        if(goarch::IsWasm != 0)
+        {
+            // On Wasm, we use 32-bit hash, despite that uintptr is 64-bit.
+            // memhash* always returns a uintptr with high 32-bit being 0
+            // (see hash32.go). We trim the hash in other places where we
+            // compute the hash manually, e.g. in interhash.
+            return uintptr_t(uint32_t(h));
+        }
+        return h;
     }
 
     uintptr_t memhash0(gocpp::unsafe_pointer p, uintptr_t h)
@@ -56,32 +76,63 @@ namespace golang::runtime
     //go:nosplit
     uintptr_t memhash_varlen(gocpp::unsafe_pointer p, uintptr_t h)
     {
-        auto ptr = getclosureptr();
+        auto ptr = sys::GetClosurePtr();
         auto size = *(uintptr_t*)(gocpp::unsafe_pointer(ptr + gocpp::Sizeof<uintptr_t>()));
         return memhash(p, h, size);
     }
 
-    // runtime variable to check if the processor we're running on
-    // actually supports the instructions used by the AES-based
-    // hash implementation.
-    bool useAeshash;
-    // in asm_*.s
+    // memhash should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/aacfactory/fns
+    //   - github.com/dgraph-io/ristretto
+    //   - github.com/minio/simdjson-go
+    //   - github.com/nbd-wtf/go-nostr
+    //   - github.com/outcaste-io/ristretto
+    //   - github.com/puzpuzpuz/xsync/v2
+    //   - github.com/puzpuzpuz/xsync/v3
+    //   - github.com/authzed/spicedb
+    //   - github.com/pingcap/badger
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:nosplit
+    //go:linkname memhash
     uintptr_t memhash(gocpp::unsafe_pointer p, uintptr_t h, uintptr_t s)
-    /* convertBlockStmt, nil block */;
-
-    uintptr_t memhash32(gocpp::unsafe_pointer p, uintptr_t h)
-    /* convertBlockStmt, nil block */;
-
-    uintptr_t memhash64(gocpp::unsafe_pointer p, uintptr_t h)
-    /* convertBlockStmt, nil block */;
-
-    uintptr_t strhash(gocpp::unsafe_pointer p, uintptr_t h)
-    /* convertBlockStmt, nil block */;
-
-    uintptr_t strhashFallback(gocpp::unsafe_pointer a, uintptr_t h)
     {
-        auto x = (stringStruct*)(a);
-        return memhashFallback(x->str, h, uintptr_t(x->len));
+        return maps::MemHash(p, h, s);
+    }
+
+    //go:nosplit
+    uintptr_t memhash64(gocpp::unsafe_pointer p, uintptr_t seed)
+    {
+        return maps::MemHash64(readUnaligned64(p), seed);
+    }
+
+    //go:nosplit
+    uintptr_t memhash32(gocpp::unsafe_pointer p, uintptr_t seed)
+    {
+        return maps::MemHash32(readUnaligned32(p), seed);
+    }
+
+    // strhash should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/aristanetworks/goarista
+    //   - github.com/bytedance/sonic
+    //   - github.com/bytedance/go-tagexpr/v2
+    //   - github.com/cloudwego/dynamicgo
+    //   - github.com/v2fly/v2ray-core/v5
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:nosplit
+    //go:linkname strhash
+    uintptr_t strhash(gocpp::unsafe_pointer p, uintptr_t h)
+    {
+        return maps::StrHash(*(gocpp::string*)(p), h);
     }
 
     uintptr_t f32hash(gocpp::unsafe_pointer p, uintptr_t h)
@@ -96,11 +147,11 @@ namespace golang::runtime
             {
                 // +0, -0
                 case 0:
-                    return c1 * (c0 ^ h);
+                    return trimHash(c1 * (c0 ^ h));
                     break;
                 // any kind of NaN
                 case 1:
-                    return c1 * (c0 ^ h ^ uintptr_t(rand()));
+                    return trimHash(c1 * (c0 ^ h ^ uintptr_t(rand())));
                     break;
                 default:
                     return memhash(p, h, 4);
@@ -121,11 +172,11 @@ namespace golang::runtime
             {
                 // +0, -0
                 case 0:
-                    return c1 * (c0 ^ h);
+                    return trimHash(c1 * (c0 ^ h));
                     break;
                 // any kind of NaN
                 case 1:
-                    return c1 * (c0 ^ h ^ uintptr_t(rand()));
+                    return trimHash(c1 * (c0 ^ h ^ uintptr_t(rand())));
                     break;
                 default:
                     return memhash(p, h, 8);
@@ -154,7 +205,7 @@ namespace golang::runtime
         {
             return h;
         }
-        auto t = tab->_type;
+        auto t = tab->Type;
         if(t->Equal == nullptr)
         {
             // Check hashability here. We could do this check inside
@@ -163,16 +214,26 @@ namespace golang::runtime
             // we want to report the struct, not the slice).
             gocpp::panic(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
         }
-        if(isDirectIface(t))
+        if(rec::IsDirectIface(gocpp::recv(t)))
         {
-            return c1 * typehash(t, gocpp::unsafe_pointer(& a->data), h ^ c0);
+            return trimHash(c1 * typehash(t, gocpp::unsafe_pointer(& a->data), h ^ c0));
         }
         else
         {
-            return c1 * typehash(t, a->data, h ^ c0);
+            return trimHash(c1 * typehash(t, a->data, h ^ c0));
         }
     }
 
+    // nilinterhash should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/anacrolix/stm
+    //   - github.com/aristanetworks/goarista
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname nilinterhash
     uintptr_t nilinterhash(gocpp::unsafe_pointer p, uintptr_t h)
     {
         auto a = (eface*)(p);
@@ -186,13 +247,13 @@ namespace golang::runtime
             // See comment in interhash above.
             gocpp::panic(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
         }
-        if(isDirectIface(t))
+        if(rec::IsDirectIface(gocpp::recv(t)))
         {
-            return c1 * typehash(t, gocpp::unsafe_pointer(& a->data), h ^ c0);
+            return trimHash(c1 * typehash(t, gocpp::unsafe_pointer(& a->data), h ^ c0));
         }
         else
         {
-            return c1 * typehash(t, a->data, h ^ c0);
+            return trimHash(c1 * typehash(t, a->data, h ^ c0));
         }
     }
 
@@ -204,8 +265,17 @@ namespace golang::runtime
     // is slower but more general and is used for hashing interface types
     // (called from interhash or nilinterhash, above) or for hashing in
     // maps generated by reflect.MapOf (reflect_typehash, below).
-    // Note: this function must match the compiler generated
-    // functions exactly. See issue 37716.
+    //
+    // typehash should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/puzpuzpuz/xsync/v2
+    //   - github.com/puzpuzpuz/xsync/v3
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname typehash
     uintptr_t typehash(_type* t, gocpp::unsafe_pointer p, uintptr_t h)
     {
         if(t->TFlag & abi::TFlagRegularMemory != 0)
@@ -233,16 +303,16 @@ namespace golang::runtime
         }
         //Go switch emulation
         {
-            auto condition = t->Kind_ & kindMask;
+            auto condition = rec::Kind(gocpp::recv(t));
             int conditionId = -1;
-            if(condition == kindFloat32) { conditionId = 0; }
-            else if(condition == kindFloat64) { conditionId = 1; }
-            else if(condition == kindComplex64) { conditionId = 2; }
-            else if(condition == kindComplex128) { conditionId = 3; }
-            else if(condition == kindString) { conditionId = 4; }
-            else if(condition == kindInterface) { conditionId = 5; }
-            else if(condition == kindArray) { conditionId = 6; }
-            else if(condition == kindStruct) { conditionId = 7; }
+            if(condition == abi::Float32) { conditionId = 0; }
+            else if(condition == abi::Float64) { conditionId = 1; }
+            else if(condition == abi::Complex64) { conditionId = 2; }
+            else if(condition == abi::Complex128) { conditionId = 3; }
+            else if(condition == abi::String) { conditionId = 4; }
+            else if(condition == abi::Interface) { conditionId = 5; }
+            else if(condition == abi::Array) { conditionId = 6; }
+            else if(condition == abi::Struct) { conditionId = 7; }
             switch(conditionId)
             {
                 case 0:
@@ -298,119 +368,6 @@ namespace golang::runtime
                     // Should never happen, as typehash should only be called
                     // with comparable types.
                     gocpp::panic(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
-                    break;
-            }
-        }
-    }
-
-    gocpp::error mapKeyError(maptype* t, gocpp::unsafe_pointer p)
-    {
-        if(! rec::HashMightPanic(gocpp::recv(t)))
-        {
-            return nullptr;
-        }
-        return mapKeyError2(t->Key, p);
-    }
-
-    gocpp::error mapKeyError2(_type* t, gocpp::unsafe_pointer p)
-    {
-        if(t->TFlag & abi::TFlagRegularMemory != 0)
-        {
-            return nullptr;
-        }
-        //Go switch emulation
-        {
-            auto condition = t->Kind_ & kindMask;
-            int conditionId = -1;
-            if(condition == kindFloat32) { conditionId = 0; }
-            else if(condition == kindFloat64) { conditionId = 1; }
-            else if(condition == kindComplex64) { conditionId = 2; }
-            else if(condition == kindComplex128) { conditionId = 3; }
-            else if(condition == kindString) { conditionId = 4; }
-            else if(condition == kindInterface) { conditionId = 5; }
-            else if(condition == kindArray) { conditionId = 6; }
-            else if(condition == kindStruct) { conditionId = 7; }
-            switch(conditionId)
-            {
-                case 0:
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                    return nullptr;
-                    break;
-                case 5:
-                {
-                    auto i = (interfacetype*)(gocpp::unsafe_pointer(t));
-                    _type* t = {};
-                    gocpp::unsafe_pointer* pdata = {};
-                    if(len(i->Methods) == 0)
-                    {
-                        auto a = (eface*)(p);
-                        t = a->_type;
-                        if(t == nullptr)
-                        {
-                            return nullptr;
-                        }
-                        pdata = & a->data;
-                    }
-                    else
-                    {
-                        auto a = (iface*)(p);
-                        if(a->tab == nullptr)
-                        {
-                            return nullptr;
-                        }
-                        t = a->tab->_type;
-                        pdata = & a->data;
-                    }
-                    if(t->Equal == nullptr)
-                    {
-                        return gocpp::error(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
-                    }
-                    if(isDirectIface(t))
-                    {
-                        return mapKeyError2(t, gocpp::unsafe_pointer(pdata));
-                    }
-                    else
-                    {
-                        return mapKeyError2(t, *pdata);
-                    }
-                    break;
-                }
-                case 6:
-                {
-                    auto a = (arraytype*)(gocpp::unsafe_pointer(t));
-                    for(auto i = uintptr_t(0); i < a->Len; i++)
-                    {
-                        if(auto err = mapKeyError2(a->Elem, add(p, i * a->Elem->Size_)); err != nullptr)
-                        {
-                            return err;
-                        }
-                    }
-                    return nullptr;
-                    break;
-                }
-                case 7:
-                {
-                    auto s = (structtype*)(gocpp::unsafe_pointer(t));
-                    for(auto [gocpp_ignored, f] : s->Fields)
-                    {
-                        if(rec::IsBlank(gocpp::recv(f.Name)))
-                        {
-                            continue;
-                        }
-                        if(auto err = mapKeyError2(f.Typ, add(p, f.Offset)); err != nullptr)
-                        {
-                            return err;
-                        }
-                    }
-                    return nullptr;
-                    break;
-                }
-                default:
-                    // Should never happen, keep this case for robustness.
-                    return gocpp::error(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
                     break;
             }
         }
@@ -502,7 +459,7 @@ namespace golang::runtime
         {
             gocpp::panic(errorString("comparing uncomparable type "_s + rec::string(gocpp::recv(toRType(t)))));
         }
-        if(isDirectIface(t))
+        if(rec::IsDirectIface(gocpp::recv(t)))
         {
             // Direct interface types are ptr, chan, map, func, and single-element structs/arrays thereof.
             // Maps and funcs are not comparable, so they can't reach here.
@@ -518,13 +475,13 @@ namespace golang::runtime
         {
             return true;
         }
-        auto t = tab->_type;
+        auto t = tab->Type;
         auto eq = [&](auto z, auto u){ return abi::rec::Equal(t, z, u); };
         if(eq == nullptr)
         {
             gocpp::panic(errorString("comparing uncomparable type "_s + rec::string(gocpp::recv(toRType(t)))));
         }
-        if(isDirectIface(t))
+        if(rec::IsDirectIface(gocpp::recv(t)))
         {
             // See comment in efaceeq.
             return x == y;
@@ -533,6 +490,16 @@ namespace golang::runtime
     }
 
     // Testing adapters for hash quality tests (see hash_test.go)
+    //
+    // stringHash should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/k14s/starlark-go
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname stringHash
     uintptr_t stringHash(gocpp::string s, uintptr_t seed)
     {
         return strhash(noescape(gocpp::unsafe_pointer(& s)), seed);
@@ -618,54 +585,14 @@ namespace golang::runtime
         return interhash(noescape(gocpp::unsafe_pointer(& i)), seed);
     }
 
-    // used in asm_{386,amd64,arm64}.s to seed the hash function
-    gocpp::array<unsigned char, hashRandomBytes> aeskeysched;
-    // used in hash{32,64}.go to seed the hash function
-    gocpp::array<uintptr_t, 4> hashkey;
-    void alginit()
-    {
-        // Install AES hash algorithms if the instructions needed are present.
-        if((GOARCH == "386"_s || GOARCH == "amd64"_s) &&
-                cpu::X86.HasAES &&
-                cpu::X86.HasSSSE3 &&
-                cpu::X86.HasSSE41)
-        {
-            // PINSR{D,Q}
-            initAlgAES();
-            return;
-        }
-        if(GOARCH == "arm64"_s && cpu::ARM64.HasAES)
-        {
-            initAlgAES();
-            return;
-        }
-        for(auto [i, gocpp_ignored] : hashkey)
-        {
-            // make sure these numbers are odd
-            hashkey[i] = uintptr_t(rand()) | 1;
-        }
-    }
-
-    void initAlgAES()
-    {
-        useAeshash = true;
-        // Initialize with random data so hash collisions will be hard to engineer.
-        auto key = (gocpp::array_ptr<gocpp::array<uint64_t, hashRandomBytes / 8>>)(gocpp::unsafe_pointer(gocpp::make_array_ptr(aeskeysched)));
-        for(auto [i, gocpp_ignored] : key)
-        {
-            key[i] = bootstrapRand();
-        }
-    }
-
-    // Note: These routines perform the read with a native endianness.
     uint32_t readUnaligned32(gocpp::unsafe_pointer p)
     {
         auto q = (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(p);
         if(goarch::BigEndian)
         {
-            return uint32_t(q[3]) | (uint32_t(q[2]) << 8) | (uint32_t(q[1]) << 16) | (uint32_t(q[0]) << 24);
+            return byteorder::BEUint32(q.make_slice(0));
         }
-        return uint32_t(q[0]) | (uint32_t(q[1]) << 8) | (uint32_t(q[2]) << 16) | (uint32_t(q[3]) << 24);
+        return byteorder::LEUint32(q.make_slice(0));
     }
 
     uint64_t readUnaligned64(gocpp::unsafe_pointer p)
@@ -673,10 +600,9 @@ namespace golang::runtime
         auto q = (gocpp::array_ptr<gocpp::array<unsigned char, 8>>)(p);
         if(goarch::BigEndian)
         {
-            return uint64_t(q[7]) | (uint64_t(q[6]) << 8) | (uint64_t(q[5]) << 16) | (uint64_t(q[4]) << 24) |
-                        (uint64_t(q[3]) << 32) | (uint64_t(q[2]) << 40) | (uint64_t(q[1]) << 48) | (uint64_t(q[0]) << 56);
+            return byteorder::BEUint64(q.make_slice(0));
         }
-        return uint64_t(q[0]) | (uint64_t(q[1]) << 8) | (uint64_t(q[2]) << 16) | (uint64_t(q[3]) << 24) | (uint64_t(q[4]) << 32) | (uint64_t(q[5]) << 40) | (uint64_t(q[6]) << 48) | (uint64_t(q[7]) << 56);
+        return byteorder::LEUint64(q.make_slice(0));
     }
 
 }

@@ -11,44 +11,54 @@
 #include "golang/go/types/resolver.h"
 #include "gocpp/support.h"
 
+#include "golang/cmp/cmp.h"
 #include "golang/fmt/errors.h"
 #include "golang/fmt/print.h"
 #include "golang/go/ast/ast.h"
 #include "golang/go/constant/value.h"
-#include "golang/go/internal/typeparams/typeparams.h"
 #include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
 #include "golang/go/types/api.h"
-#include "golang/go/types/builtins.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
+#include "golang/go/types/format.h"
+#include "golang/go/types/index.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/package.h"
+#include "golang/go/types/recording.h"
 #include "golang/go/types/scope.h"
 #include "golang/go/types/signature.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/version.h"
 #include "golang/internal/types/errors/codes.h"
-#include "golang/sort/sort.h"
+#include "golang/slices/sort.h"
 #include "golang/strconv/quote.h"
 #include "golang/strings/strings.h"
 #include "golang/unicode/graphic.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace cmp = golang::cmp;
+    namespace constant = golang::go::constant;
+    namespace fmt = golang::fmt;
+    namespace slices = golang::slices;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
+    namespace unicode = golang::unicode;
     namespace rec
     {
         using ast::rec::End;
         using ast::rec::NumFields;
         using ast::rec::Pos;
-        using ast::rec::exprNode;
         using token::rec::Base;
+        using token::rec::End;
         using token::rec::File;
         using token::rec::IsValid;
         using token::rec::Name;
         using token::rec::Position;
-        using token::rec::Size;
     }
 
     // A declInfo describes a package-level const, type, var, or func declaration.
@@ -58,6 +68,7 @@ namespace golang::types
     {
         T result;
         result.file = this->file;
+        result.version = this->version;
         result.lhs = this->lhs;
         result.vtyp = this->vtyp;
         result.init = this->init;
@@ -72,6 +83,7 @@ namespace golang::types
     bool declInfo::operator==(const T& ref) const
     {
         if (file != ref.file) return false;
+        if (version != ref.version) return false;
         if (lhs != ref.lhs) return false;
         if (vtyp != ref.vtyp) return false;
         if (init != ref.init) return false;
@@ -86,6 +98,7 @@ namespace golang::types
     {
         os << '{';
         os << "" << file;
+        os << " " << version;
         os << " " << lhs;
         os << " " << vtyp;
         os << " " << init;
@@ -253,6 +266,10 @@ namespace golang::types
         // no package yet => import it
         if(path == "C"_s && (check->conf->FakeImportC || check->conf->go115UsesCgo))
         {
+            if(check->conf->FakeImportC && check->conf->go115UsesCgo)
+            {
+                rec::error(gocpp::recv(check), at, BadImportPath, "cannot use FakeImportC and go115UsesCgo together"_s);
+            }
             imp = NewPackage("C"_s, "C"_s);
             // package scope is not populated
             imp->fake = true;
@@ -372,9 +389,13 @@ namespace golang::types
         };
         // collected methods with valid receivers and non-blank _ names
         gocpp::slice<methodInfo> methods = {};
-        gocpp::slice<golang::types::Scope*> fileScopes = {};
+
+        // fileScopes[i] corresponds to check.files[i]
+        auto fileScopes = gocpp::make(gocpp::Tag<gocpp::slice<golang::go::types::Scope*>>(), len(check->files));
         for(auto [fileNo, file] : check->files)
         {
+            check->environment.version = asGoVersion(check->versions[file]);
+
             // The package identifier denotes the current package,
             // but there is no corresponding package object.
             rec::recordDef(gocpp::recv(check), file->Name, nullptr);
@@ -385,10 +406,10 @@ namespace golang::types
             auto [pos, end] = std::tuple{rec::Pos(gocpp::recv(file)), rec::End(gocpp::recv(file))};
             if(auto f = rec::File(gocpp::recv(check->fset), rec::Pos(gocpp::recv(file))); f != nullptr)
             {
-                std::tie(pos, end) = std::tuple{token::Pos(rec::Base(gocpp::recv(f))), token::Pos(rec::Base(gocpp::recv(f)) + rec::Size(gocpp::recv(f)))};
+                std::tie(pos, end) = std::tuple{token::Pos(rec::Base(gocpp::recv(f))), rec::End(gocpp::recv(f))};
             }
             auto fileScope = NewScope(pkg->scope, pos, end, rec::filename(gocpp::recv(check), fileNo));
-            fileScopes = append(fileScopes, fileScope);
+            fileScopes[fileNo] = fileScope;
             rec::recordScope(gocpp::recv(check), file, fileScope);
 
             // determine file directory, necessary to resolve imports
@@ -468,7 +489,7 @@ namespace golang::types
                             if(imp->fake)
                             {
                                 // match 1.17 cmd/compile (not prescribed by spec)
-                                pkgName->used = true;
+                                check->usedPkgNames[pkgName] = true;
                             }
                             // add import to file scope
                             check->imports = append(check->imports, pkgName);
@@ -495,8 +516,10 @@ namespace golang::types
                                         // concurrently. See go.dev/issue/32154.)
                                         if(auto alt = rec::Lookup(gocpp::recv(fileScope), name); alt != nullptr)
                                         {
-                                            rec::errorf(gocpp::recv(check), d.spec->Name, DuplicateDecl, "%s redeclared in this block"_s, rec::Name(gocpp::recv(alt)));
-                                            rec::reportAltDecl(gocpp::recv(check), alt);
+                                            auto err = rec::newError(gocpp::recv(check), DuplicateDecl);
+                                            rec::addf(gocpp::recv(err), d.spec->Name, "%s redeclared in this block"_s, rec::Name(gocpp::recv(alt)));
+                                            rec::addAltDecl(gocpp::recv(err), alt);
+                                            rec::report(gocpp::recv(err));
                                         }
                                         else
                                         {
@@ -530,6 +553,7 @@ namespace golang::types
 
                                 auto d_tmp = gocpp::InitPtr<declInfo>([=](auto& x) {
                                     x.file = fileScope;
+                                    x.version = check->environment.version;
                                     x.vtyp = d.typ;
                                     x.init = init;
                                     x.inherited = d.inherited;
@@ -556,6 +580,7 @@ namespace golang::types
                                 // for a later phase.
                                 d1 = gocpp::InitPtr<declInfo>([=](auto& x) {
                                     x.file = fileScope;
+                                    x.version = check->environment.version;
                                     x.lhs = lhs;
                                     x.vtyp = d.spec->Type;
                                     x.init = d.spec->Values[0];
@@ -564,7 +589,7 @@ namespace golang::types
                             // declare all variables
                             for(auto [i, name] : d.spec->Names)
                             {
-                                auto obj = NewVar(rec::Pos(gocpp::recv(name)), pkg, name->Name, nullptr);
+                                auto obj = newVar(PackageVar, rec::Pos(gocpp::recv(name)), pkg, name->Name, nullptr);
                                 lhs[i] = obj;
 
                                 auto di = d1;
@@ -578,6 +603,7 @@ namespace golang::types
                                     }
                                     di = gocpp::InitPtr<declInfo>([=](auto& x) {
                                         x.file = fileScope;
+                                        x.version = check->environment.version;
                                         x.vtyp = d.spec->Type;
                                         x.init = init;
                                     });
@@ -590,10 +616,10 @@ namespace golang::types
                         case 3:
                         {
                             types::typeDecl d = gocpp::any_cast<types::typeDecl>(d_ref);
-                            _ = rec::NumFields(gocpp::recv(d.spec->TypeParams)) != 0 && rec::verifyVersionf(gocpp::recv(check), d.spec->TypeParams->List[0], go1_18, "type parameter"_s);
                             auto obj = NewTypeName(rec::Pos(gocpp::recv(d.spec->Name)), pkg, d.spec->Name->Name, nullptr);
                             rec::declarePkgObj(gocpp::recv(check), d.spec->Name, obj, gocpp::InitPtr<declInfo>([=](auto& x) {
                                 x.file = fileScope;
+                                x.version = check->environment.version;
                                 x.tdecl = d.spec;
                             }));
                             break;
@@ -602,9 +628,13 @@ namespace golang::types
                         {
                             types::funcDecl d = gocpp::any_cast<types::funcDecl>(d_ref);
                             auto name = d.decl->Name->Name;
+                            // signature set later
                             auto obj = NewFunc(rec::Pos(gocpp::recv(d.decl->Name)), pkg, name, nullptr);
-                            // avoid duplicate type parameter errors
-                            auto hasTParamError = false;
+                            ast::Field* tparam0 = {};
+                            if(rec::NumFields(gocpp::recv(d.decl->Type->TypeParams)) > 0)
+                            {
+                                tparam0 = d.decl->Type->TypeParams->List[0];
+                            }
                             if(rec::NumFields(gocpp::recv(d.decl->Recv)) == 0)
                             {
                                 // regular function
@@ -615,15 +645,15 @@ namespace golang::types
                                 }
                                 if(name == "init"_s || (name == "main"_s && check->pkg->name == "main"_s))
                                 {
+                                    // init and main functions must not declare type and ordinary parameters or results
                                     auto code = InvalidInitDecl;
                                     if(name == "main"_s)
                                     {
                                         code = InvalidMainDecl;
                                     }
-                                    if(rec::NumFields(gocpp::recv(d.decl->Type->TypeParams)) != 0)
+                                    if(tparam0 != nullptr)
                                     {
-                                        rec::softErrorf(gocpp::recv(check), d.decl->Type->TypeParams->List[0], code, "func %s must have no type parameters"_s, name);
-                                        hasTParamError = true;
+                                        rec::softErrorf(gocpp::recv(check), tparam0, code, "func %s must have no type parameters"_s, name);
                                     }
                                     if(auto t = d.decl->Type; rec::NumFields(gocpp::recv(t->Params)) != 0 || t->Results != nullptr)
                                     {
@@ -631,16 +661,18 @@ namespace golang::types
                                         rec::softErrorf(gocpp::recv(check), d.decl->Name, code, "func %s must have no arguments and no return values"_s, name);
                                     }
                                 }
+                                else
+                                {
+                                    _ = tparam0 != nullptr && rec::verifyVersionf(gocpp::recv(check), tparam0, go1_18, "type parameter"_s);
+                                }
                                 if(name == "init"_s)
                                 {
                                     // don't declare init functions in the package scope - they are invisible
                                     obj->object.parent = pkg->scope;
                                     rec::recordDef(gocpp::recv(check), d.decl->Name, obj);
-                                    // init functions must have a body
                                     if(d.decl->Body == nullptr)
                                     {
-                                        // TODO(gri) make this error message consistent with the others above
-                                        rec::softErrorf(gocpp::recv(check), obj, MissingInitBody, "missing function body"_s);
+                                        rec::softErrorf(gocpp::recv(check), obj, MissingInitBody, "func init must have a body"_s);
                                     }
                                 }
                                 else
@@ -651,23 +683,20 @@ namespace golang::types
                             else
                             {
                                 // method
-                                // TODO(rFindley) earlier versions of this code checked that methods
-                                // have no type parameters, but this is checked later
-                                // when type checking the function type. Confirm that
-                                // we don't need to check tparams here.
-                                auto [ptr, recv, gocpp_id_1] = rec::unpackRecv(gocpp::recv(check), d.decl->Recv->List[0]->Type, false);
+                                auto [ptr, base, gocpp_id_1] = rec::unpackRecv(gocpp::recv(check), d.decl->Recv->List[0]->Type, false);
                                 // (Methods with invalid receiver cannot be associated to a type, and
                                 // methods with blank _ names are never found; no need to collect any
                                 // of them. They will still be type-checked with all the other functions.)
-                                if(recv != nullptr && name != "_"_s)
+                                if(auto [recv, gocpp_id_2] = gocpp::getValue<ast::Ident*>(base); recv != nullptr && name != "_"_s)
                                 {
                                     methods = append(methods, methodInfo {obj, ptr, recv});
                                 }
+                                _ = tparam0 != nullptr && rec::verifyVersionf(gocpp::recv(check), tparam0, go1_27, "generic method"_s);
                                 rec::recordDef(gocpp::recv(check), d.decl->Name, obj);
                             }
-                            _ = rec::NumFields(gocpp::recv(d.decl->Type->TypeParams)) != 0 && ! hasTParamError && rec::verifyVersionf(gocpp::recv(check), d.decl->Type->TypeParams->List[0], go1_18, "type parameter"_s);
                             auto info = gocpp::InitPtr<declInfo>([=](auto& x) {
                                 x.file = fileScope;
+                                x.version = check->environment.version;
                                 x.fdecl = d.decl;
                             });
                             // Methods are not package-level objects but we still track them in the
@@ -690,18 +719,20 @@ namespace golang::types
             {
                 if(auto alt = rec::Lookup(gocpp::recv(pkg->scope), name); alt != nullptr)
                 {
-                    obj = types::resolve(name, obj);
+                    obj = resolve(name, obj);
+                    auto err = rec::newError(gocpp::recv(check), DuplicateDecl);
                     if(auto [pkg, ok] = gocpp::getValue<PkgName*>(obj); ok)
                     {
-                        rec::errorf(gocpp::recv(check), alt, DuplicateDecl, "%s already declared through import of %s"_s, rec::Name(gocpp::recv(alt)), rec::Imported(gocpp::recv(pkg)));
-                        rec::reportAltDecl(gocpp::recv(check), pkg);
+                        rec::addf(gocpp::recv(err), alt, "%s already declared through import of %s"_s, rec::Name(gocpp::recv(alt)), rec::Imported(gocpp::recv(pkg)));
+                        rec::addAltDecl(gocpp::recv(err), pkg);
                     }
                     else
                     {
-                        rec::errorf(gocpp::recv(check), alt, DuplicateDecl, "%s already declared through dot-import of %s"_s, rec::Name(gocpp::recv(alt)), rec::Pkg(gocpp::recv(obj)));
-                        // TODO(gri) dot-imported objects don't have a position; reportAltDecl won't print anything
-                        rec::reportAltDecl(gocpp::recv(check), obj);
+                        rec::addf(gocpp::recv(err), alt, "%s already declared through dot-import of %s"_s, rec::Name(gocpp::recv(alt)), rec::Pkg(gocpp::recv(obj)));
+                        // TODO(gri) dot-imported objects don't have a position; addAltDecl won't print anything
+                        rec::addAltDecl(gocpp::recv(err), obj);
                     }
+                    rec::report(gocpp::recv(err));
                 }
             }
         }
@@ -712,15 +743,15 @@ namespace golang::types
         // type-checked later, with regular functions.
         if(methods == nullptr)
         {
-            // nothing to do
             return;
         }
+
         check->methods = gocpp::make(gocpp::Tag<gocpp::map<TypeName*, gocpp::slice<Func*>>>());
         for(auto [i, gocpp_ignored] : methods)
         {
             auto m = & methods[i];
             // Determine the receiver base type and associate m with it.
-            auto [ptr, base] = rec::resolveBaseTypeName(gocpp::recv(check), m->ptr, m->recv, fileScopes);
+            auto [ptr, base] = rec::resolveBaseTypeName(gocpp::recv(check), m->ptr, m->recv);
             if(base != nullptr)
             {
                 m->obj->hasPtrRecv_ = ptr;
@@ -729,86 +760,71 @@ namespace golang::types
         }
     }
 
-    // unpackRecv unpacks a receiver type and returns its components: ptr indicates whether
-    // rtyp is a pointer receiver, rname is the receiver type name, and tparams are its
-    // type parameters, if any. The type parameters are only unpacked if unpackParams is
-    // set. If rname is nil, the receiver is unusable (i.e., the source has a bug which we
-    // cannot easily work around).
-    std::tuple<bool, ast::Ident*, gocpp::slice<ast::Ident*>> rec::unpackRecv(Checker* check, ast::Expr rtyp, bool unpackParams)
+    // sortObjects sorts package-level objects by source-order for reproducible processing
+    void rec::sortObjects(Checker* check)
+    {
+        check->objList = gocpp::make(gocpp::Tag<gocpp::slice<Object>>(), len(check->objMap));
+        auto i = 0;
+        for(auto [obj, gocpp_ignored] : check->objMap)
+        {
+            check->objList[i] = obj;
+            i++;
+        }
+        slices::SortFunc(check->objList, [=](Object a, Object b) mutable -> int
+        {
+            return cmp::Compare(rec::order(gocpp::recv(a)), rec::order(gocpp::recv(b)));
+        });
+    }
+
+    // unpackRecv unpacks a receiver type expression and returns its components: ptr indicates
+    // whether rtyp is a pointer receiver, base is the receiver base type expression stripped
+    // of its type parameters (if any), and tparams are its type parameter names, if any. The
+    // type parameters are only unpacked if unpackParams is set. For instance, given the rtyp
+    //
+    //	*T[A, _]
+    //
+    // ptr is true, base is T, and tparams is [A, _] (assuming unpackParams is set).
+    // Note that base may not be a *ast.Ident for erroneous programs.
+    std::tuple<bool, ast::Expr, gocpp::slice<ast::Ident*>> rec::unpackRecv(Checker* check, ast::Expr rtyp, bool unpackParams)
     {
         bool ptr;
-        ast::Ident* rname;
+        ast::Expr base;
         gocpp::slice<ast::Ident*> tparams;
-        L:
-        // This accepts invalid receivers such as ***T and does not
-        // work for other invalid receivers, but we don't care. The
-        // validity of receiver expressions is checked elsewhere.
-        for(; ; )
+        // unpack receiver type
+        base = ast::Unparen(rtyp);
+        if(auto [t, gocpp_id_3] = gocpp::getValue<ast::StarExpr*>(base); t != nullptr)
         {
-            if(false) {
-            L_continue:
-                continue;
-            L_break:
-                break;
-            }
-            //Go type switch emulation
-            {
-                const auto& gocpp_id_2 = gocpp::type_info(rtyp);
-                int conditionId = -1;
-                if(gocpp_id_2 == typeid(ast::ParenExpr*)) { conditionId = 0; }
-                else if(gocpp_id_2 == typeid(ast::StarExpr*)) { conditionId = 1; }
-                switch(conditionId)
-                {
-                    case 0:
-                    {
-                        ast::ParenExpr* t = gocpp::any_cast<ast::ParenExpr*>(rtyp);
-                        rtyp = t->X;
-                        break;
-                    }
-                    case 1:
-                    {
-                        ast::StarExpr* t = gocpp::any_cast<ast::StarExpr*>(rtyp);
-                        ptr = true;
-                        rtyp = t->X;
-                        break;
-                    }
-                    default:
-                    {
-                        auto t = rtyp;
-                        goto L_break;
-                        break;
-                    }
-                }
-            }
+            ptr = true;
+            base = ast::Unparen(t->X);
         }
 
         // unpack type parameters, if any
         //Go type switch emulation
         {
-            const auto& gocpp_id_3 = gocpp::type_info(rtyp);
+            const auto& gocpp_id_4 = gocpp::type_info(base);
             int conditionId = -1;
-            if(gocpp_id_3 == typeid(ast::IndexExpr*)) { conditionId = 0; }
-            else if(gocpp_id_3 == typeid(ast::IndexListExpr*)) { conditionId = 1; }
+            if(gocpp_id_4 == typeid(ast::IndexExpr*)) { conditionId = 0; }
+            else if(gocpp_id_4 == typeid(ast::IndexListExpr*)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
                 case 1:
                 {
-                    auto ix = typeparams::UnpackIndexExpr(rtyp);
-                    rtyp = ix->IndexListExpr.X;
+                    auto ix = unpackIndexedExpr(base);
+                    base = ix->x;
                     if(unpackParams)
                     {
-                        for(auto [gocpp_ignored, arg] : ix->IndexListExpr.Indices)
+                        for(auto [gocpp_ignored, arg] : ix->indices)
                         {
                             ast::Ident* par = {};
                             //Go type switch emulation
                             {
-                                const auto& gocpp_id_4 = gocpp::type_info(arg);
+                                const auto& gocpp_id_5 = gocpp::type_info(arg);
                                 const auto& arg_ref = arg;
                                 int conditionId = -1;
-                                if(gocpp_id_4 == typeid(ast::Ident*)) { conditionId = 0; }
-                                else if(gocpp_id_4 == typeid(ast::BadExpr*)) { conditionId = 1; }
-                                else if(gocpp_id_4 == typeid(untyped nil)) { conditionId = 2; }
+                                if(gocpp_id_5 == typeid(ast::Ident*)) { conditionId = 0; }
+                                else if(gocpp_id_5 == typeid(ast::BadExpr*)) { conditionId = 1; }
+                                else if(gocpp_id_5 == typeid(untyped nil)) { conditionId = 2; }
                                 switch(conditionId)
                                 {
                                     case 0:
@@ -826,7 +842,7 @@ namespace golang::types
                                     case 2:
                                     {
                                         untyped nil arg = gocpp::any_cast<untyped nil>(arg_ref);
-                                        rec::error(gocpp::recv(check), ix->Orig, InvalidSyntaxTree, "parameterized receiver contains nil parameters"_s);
+                                        rec::error(gocpp::recv(check), ix->orig, InvalidSyntaxTree, "parameterized receiver contains nil parameters"_s);
                                         break;
                                     }
                                     default:
@@ -852,133 +868,46 @@ namespace golang::types
             }
         }
 
-        // unpack receiver name
-        if(auto [name, gocpp_id_5] = gocpp::getValue<ast::Ident*>(rtyp); name != nullptr)
-        {
-            rname = name;
-        }
-
-        return {ptr, rname, tparams};
+        return {ptr, base, tparams};
     }
 
-    // resolveBaseTypeName returns the non-alias base type name for typ, and whether
+    // resolveBaseTypeName returns the non-alias base type name for the given name, and whether
     // there was a pointer indirection to get to it. The base type name must be declared
-    // in package scope, and there can be at most one pointer indirection. If no such type
-    // name exists, the returned base is nil.
-    std::tuple<bool, TypeName*> rec::resolveBaseTypeName(Checker* check, bool seenPtr, ast::Expr typ, gocpp::slice<golang::types::Scope*> fileScopes)
+    // in package scope, and there can be at most one pointer indirection. Traversals
+    // through generic alias types are not permitted. If no such type name exists, the
+    // returned base is nil.
+    std::tuple<bool, TypeName*> rec::resolveBaseTypeName(Checker* check, bool ptr, ast::Ident* name)
     {
-        bool ptr;
+        bool ptr_;
         TypeName* base;
-        // Algorithm: Starting from a type expression, which may be a name,
-        // we follow that type through alias declarations until we reach a
-        // non-alias type name. If we encounter anything but pointer types or
-        // parentheses we're done. If we encounter more than one pointer type
-        // we're done.
-        ptr = seenPtr;
+        // Algorithm: Starting from name, which is expected to denote a type,
+        // we follow that type through non-generic alias declarations until
+        // we reach a non-alias type name.
         gocpp::map<TypeName*, bool> seen = {};
-        for(; ; )
+        for(; name != nullptr; )
         {
-            // Note: this differs from types2, but is necessary. The syntax parser
-            // strips unnecessary parens.
-            typ = unparen(typ);
-
-            // check if we have a pointer type
-            if(auto [pexpr, gocpp_id_6] = gocpp::getValue<ast::StarExpr*>(typ); pexpr != nullptr)
-            {
-                // if we've already seen a pointer, we're done
-                if(ptr)
-                {
-                    return {false, nullptr};
-                }
-                ptr = true;
-                // continue with pointer base type
-                typ = unparen(pexpr->X);
-            }
-
-            // typ must be a name, or a C.name cgo selector.
-            gocpp::string name = {};
-            //Go type switch emulation
-            {
-                const auto& gocpp_id_7 = gocpp::type_info(typ);
-                const auto& typ_ref = typ;
-                int conditionId = -1;
-                if(gocpp_id_7 == typeid(ast::Ident*)) { conditionId = 0; }
-                else if(gocpp_id_7 == typeid(ast::SelectorExpr*)) { conditionId = 1; }
-                switch(conditionId)
-                {
-                    case 0:
-                    {
-                        ast::Ident* typ = gocpp::any_cast<ast::Ident*>(typ_ref);
-                        name = typ->Name;
-                        break;
-                    }
-                    case 1:
-                    {
-                        ast::SelectorExpr* typ = gocpp::any_cast<ast::SelectorExpr*>(typ_ref);
-                        // C.struct_foo is a valid type name for packages using cgo.
-                        // Detect this case, and adjust name so that the correct TypeName is
-                        // resolved below.
-                        if(auto [ident, gocpp_id_8] = gocpp::getValue<ast::Ident*>(typ->X); ident != nullptr && ident->Name == "C"_s)
-                        {
-                            // Check whether "C" actually resolves to an import of "C", by looking
-                            // in the appropriate file scope.
-                            Object obj = {};
-                            for(auto [gocpp_ignored, scope] : fileScopes)
-                            {
-                                if(rec::Contains(gocpp::recv(scope), rec::Pos(gocpp::recv(ident))))
-                                {
-                                    obj = rec::Lookup(gocpp::recv(scope), ident->Name);
-                                }
-                            }
-                            // If Config.go115UsesCgo is set, the typechecker will resolve Cgo
-                            // selectors to their cgo name. We must do the same here.
-                            if(auto [pname, gocpp_id_9] = gocpp::getValue<PkgName*>(obj); pname != nullptr)
-                            {
-                                if(pname->imported->cgo)
-                                {
-                                    // only set if Config.go115UsesCgo is set
-                                    name = "_Ctype_"_s + typ->Sel->Name;
-                                }
-                            }
-                        }
-                        if(name == ""_s)
-                        {
-                            return {false, nullptr};
-                        }
-                        break;
-                    }
-                    default:
-                    {
-                        auto typ = typ_ref;
-                        return {false, nullptr};
-                        break;
-                    }
-                }
-            }
-
             // name must denote an object found in the current package scope
             // (note that dot-imported objects are not in the package scope!)
-            auto obj = rec::Lookup(gocpp::recv(check->pkg->scope), name);
+            auto obj = rec::Lookup(gocpp::recv(check->pkg->scope), name->Name);
             if(obj == nullptr)
             {
-                return {false, nullptr};
+                break;
             }
 
             // the object must be a type name...
-            auto [tname, gocpp_id_10] = gocpp::getValue<TypeName*>(obj);
+            auto [tname, gocpp_id_6] = gocpp::getValue<TypeName*>(obj);
             if(tname == nullptr)
             {
-                return {false, nullptr};
+                break;
             }
 
             // ... which we have not seen before
             if(seen[tname])
             {
-                return {false, nullptr};
+                break;
             }
 
-            // we're done if tdecl defined tname as a new type
-            // (rather than an alias)
+            // we're done if tdecl describes a defined type (not an alias)
             // must exist for objects in package scope
             auto tdecl = check->objMap[tname]->tdecl;
             if(! rec::IsValid(gocpp::recv(tdecl->Assign)))
@@ -986,34 +915,59 @@ namespace golang::types
                 return {ptr, tname};
             }
 
-            // otherwise, continue resolving
-            typ = tdecl->Type;
+            // an alias must not be generic
+            // (importantly, we must not collect such methods - was https://go.dev/issue/70417)
+            if(tdecl->TypeParams != nullptr)
+            {
+                break;
+            }
+
+            // otherwise, remember this type name and continue resolving
             if(seen == nullptr)
             {
                 seen = gocpp::make(gocpp::Tag<gocpp::map<TypeName*, bool>>());
             }
             seen[tname] = true;
+
+            // The go/parser keeps parentheses; strip them, if any.
+            auto typ = ast::Unparen(tdecl->Type);
+
+            // dereference a pointer type
+            if(auto [pexpr, gocpp_id_7] = gocpp::getValue<ast::StarExpr*>(typ); pexpr != nullptr)
+            {
+                // if we've already seen a pointer, we're done
+                if(ptr)
+                {
+                    break;
+                }
+                ptr = true;
+                // continue with pointer base type
+                typ = ast::Unparen(pexpr->X);
+            }
+
+            // After dereferencing, typ must be a locally defined type name.
+            // Referring to other packages (qualified identifiers) or going
+            // through instantiated types (index expressions) is not permitted,
+            // so we can ignore those.
+            std::tie(name, std::ignore) = gocpp::getValue<ast::Ident*>(typ);
+            if(name == nullptr)
+            {
+                break;
+            }
         }
+
+        // no base type found
+        return {false, nullptr};
     }
 
     // packageObjects typechecks all package objects, but not function bodies.
     void rec::packageObjects(Checker* check)
     {
-        // process package objects in source order for reproducible results
-        auto objList = gocpp::make(gocpp::Tag<gocpp::slice<Object>>(), len(check->objMap));
-        auto i = 0;
-        for(auto [obj, gocpp_ignored] : check->objMap)
-        {
-            objList[i] = obj;
-            i++;
-        }
-        sort::Sort(inSourceOrder(objList));
-
         // add new methods to already type-checked types (from a prior Checker.Files call)
-        for(auto [gocpp_ignored, obj] : objList)
+        for(auto [gocpp_ignored, obj] : check->objList)
         {
             {
-                auto [obj_tmp, gocpp_id_11] = gocpp::getValue<TypeName*>(obj);
+                auto [obj_tmp, gocpp_id_8] = gocpp::getValue<TypeName*>(obj);
                 if(auto& obj = obj_tmp; obj != nullptr && obj->object.typ != nullptr)
                 {
                     rec::collectMethods(gocpp::recv(check), obj);
@@ -1021,17 +975,27 @@ namespace golang::types
             }
         }
 
-        if(check->enableAlias)
+        if(false)
         {
-            // With Alias nodes we can process declarations in any order.
-            for(auto [gocpp_ignored, obj] : objList)
+            // TODO: determine if we can enable this code now or
+            // if there are still problems with cycles and
+            // aliases.
+            // For example, in GOROOT/test/typeparam/issue50259.go,
+            // type T[_ any] struct{}
+            // type A T[B]
+            // type B = T[A]
+            // TypeName A has Type Named during checking, but by
+            // the time the unified export data is written out,
+            // its Type is Invalid.
+            // Investigate and reenable this branch.
+            for(auto [gocpp_ignored, obj] : check->objList)
             {
-                rec::objDecl(gocpp::recv(check), obj, nullptr);
+                rec::objDecl(gocpp::recv(check), obj);
             }
         }
         else
         {
-            // Without Alias nodes, we process non-alias type declarations first, followed by
+            // To avoid problems with cycles, we process non-alias type declarations first, followed by
             // alias declarations, and then everything else. This appears to avoid most situations
             // where the type of an alias is needed before it is available.
             // There may still be cases where this is not good enough (see also go.dev/issue/25838).
@@ -1040,9 +1004,9 @@ namespace golang::types
             // everything that's not a type
             gocpp::slice<Object> othersList = {};
             // phase 1: non-alias type declarations
-            for(auto [gocpp_ignored, obj] : objList)
+            for(auto [gocpp_ignored, obj] : check->objList)
             {
-                if(auto [tname, gocpp_id_12] = gocpp::getValue<TypeName*>(obj); tname != nullptr)
+                if(auto [tname, gocpp_id_9] = gocpp::getValue<TypeName*>(obj); tname != nullptr)
                 {
                     if(rec::IsValid(gocpp::recv(check->objMap[tname]->tdecl->Assign)))
                     {
@@ -1050,7 +1014,7 @@ namespace golang::types
                     }
                     else
                     {
-                        rec::objDecl(gocpp::recv(check), obj, nullptr);
+                        rec::objDecl(gocpp::recv(check), obj);
                     }
                 }
                 else
@@ -1061,12 +1025,12 @@ namespace golang::types
             // phase 2: alias type declarations
             for(auto [gocpp_ignored, obj] : aliasList)
             {
-                rec::objDecl(gocpp::recv(check), obj, nullptr);
+                rec::objDecl(gocpp::recv(check), obj);
             }
             // phase 3: all other declarations
             for(auto [gocpp_ignored, obj] : othersList)
             {
-                rec::objDecl(gocpp::recv(check), obj, nullptr);
+                rec::objDecl(gocpp::recv(check), obj);
             }
         }
 
@@ -1075,22 +1039,6 @@ namespace golang::types
         // types were not found. In that case, an error was reported when declaring those
         // methods. We can now safely discard this map.
         check->methods = nullptr;
-    }
-
-    // inSourceOrder implements the sort.Sort interface.
-    int rec::Len(inSourceOrder a)
-    {
-        return len(a);
-    }
-
-    bool rec::Less(inSourceOrder a, int i, int j)
-    {
-        return rec::order(gocpp::recv(a[i])) < rec::order(gocpp::recv(a[j]));
-    }
-
-    void rec::Swap(inSourceOrder a, int i, int j)
-    {
-        std::tie(a[i], a[j]) = std::tuple{a[j], a[i]};
     }
 
     // unusedImports checks for unused imports.
@@ -1107,7 +1055,7 @@ namespace golang::types
         // (initialization), use the blank identifier as explicit package name."
         for(auto [gocpp_ignored, obj] : check->imports)
         {
-            if(! obj->used && obj->object.name != "_"_s)
+            if(obj->object.name != "_"_s && ! check->usedPkgNames[obj])
             {
                 rec::errorUnusedPkg(gocpp::recv(check), obj);
             }

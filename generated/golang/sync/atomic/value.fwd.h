@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::atomic
+namespace golang::sync::atomic
 {
     struct Value;
     struct efaceWords;

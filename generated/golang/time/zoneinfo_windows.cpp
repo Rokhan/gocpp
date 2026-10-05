@@ -23,6 +23,9 @@
 
 namespace golang::time
 {
+    namespace errors = golang::errors;
+    namespace registry = golang::internal::syscall::windows::registry;
+    namespace syscall = golang::syscall;
     namespace rec
     {
         using registry::rec::Close;
@@ -33,7 +36,7 @@ namespace golang::time
 
     gocpp::slice<gocpp::string> platformZoneSources;
     // matchZoneKey checks if stdname and dstname match the corresponding key
-    // values "MUI_Std" and MUI_Dlt" or "Std" and "Dlt" in the kname key stored
+    // values "MUI_Std" and "MUI_Dlt" or "Std" and "Dlt" in the kname key stored
     // under the open registry key zones.
     std::tuple<bool, gocpp::error> matchZoneKey(registry::Key zones, gocpp::string kname, gocpp::string stdname, gocpp::string dstname)
     {

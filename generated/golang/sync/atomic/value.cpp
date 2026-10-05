@@ -13,15 +13,16 @@
 
 #include "golang/sync/atomic/doc.h"
 
-namespace golang::atomic
+namespace golang::sync::atomic
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
 
     // A Value provides an atomic load and store of a consistently typed value.
-    // The zero value for a Value returns nil from Load.
-    // Once Store has been called, a Value must not be copied.
+    // The zero value for a Value returns nil from [Value.Load].
+    // Once [Value.Store] has been called, a Value must not be copied.
     //
     // A Value must not be copied after first use.
     
@@ -106,7 +107,7 @@ namespace golang::atomic
     }
 
     unsigned char firstStoreInProgress;
-    // Store sets the value of the Value v to val.
+    // Store sets the value of the [Value] v to val.
     // All calls to Store for a given Value must use values of the same concrete type.
     // Store of an inconsistent type panics, as does Store(nil).
     void rec::Store(Value* v, go_any val)
@@ -175,8 +176,7 @@ namespace golang::atomic
             {
                 // Attempt to start first store.
                 // Disable preemption so that other goroutines can use
-                // active spin wait to wait for completion; and so that
-                // GC does not see the fake type accidentally.
+                // active spin wait to wait for completion.
                 runtime_procPin();
                 if(! CompareAndSwapPointer(& vp->typ, nullptr, gocpp::unsafe_pointer(& firstStoreInProgress)))
                 {
@@ -207,7 +207,7 @@ namespace golang::atomic
         }
     }
 
-    // CompareAndSwap executes the compare-and-swap operation for the Value.
+    // CompareAndSwap executes the compare-and-swap operation for the [Value].
     //
     // All calls to CompareAndSwap for a given Value must use values of the same
     // concrete type. CompareAndSwap of an inconsistent type panics, as does
@@ -237,8 +237,7 @@ namespace golang::atomic
                 }
                 // Attempt to start first store.
                 // Disable preemption so that other goroutines can use
-                // active spin wait to wait for completion; and so that
-                // GC does not see the fake type accidentally.
+                // active spin wait to wait for completion.
                 runtime_procPin();
                 if(! CompareAndSwapPointer(& vp->typ, nullptr, gocpp::unsafe_pointer(& firstStoreInProgress)))
                 {

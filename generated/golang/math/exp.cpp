@@ -53,26 +53,22 @@ namespace golang::math
         //Go switch emulation
         {
             int conditionId = -1;
-            if(IsNaN(x) || IsInf(x, 1)) { conditionId = 0; }
-            else if(IsInf(x, - 1)) { conditionId = 1; }
-            else if(x > Overflow) { conditionId = 2; }
-            else if(x < Underflow) { conditionId = 3; }
-            else if(- NearZero < x && x < NearZero) { conditionId = 4; }
+            if(IsNaN(x)) { conditionId = 0; }
+            else if(x > Overflow) { conditionId = 1; }
+            else if(x < Underflow) { conditionId = 2; }
+            else if(- NearZero < x && x < NearZero) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
                     return x;
                     break;
                 case 1:
-                    return 0;
-                    break;
-                case 2:
                     return Inf(1);
                     break;
-                case 3:
+                case 2:
                     return 0;
                     break;
-                case 4:
+                case 3:
                     return 1 + x;
                     break;
             }
@@ -125,22 +121,18 @@ namespace golang::math
         //Go switch emulation
         {
             int conditionId = -1;
-            if(IsNaN(x) || IsInf(x, 1)) { conditionId = 0; }
-            else if(IsInf(x, - 1)) { conditionId = 1; }
-            else if(x > Overflow) { conditionId = 2; }
-            else if(x < Underflow) { conditionId = 3; }
+            if(IsNaN(x)) { conditionId = 0; }
+            else if(x > Overflow) { conditionId = 1; }
+            else if(x < Underflow) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
                     return x;
                     break;
                 case 1:
-                    return 0;
-                    break;
-                case 2:
                     return Inf(1);
                     break;
-                case 3:
+                case 2:
                     return 0;
                     break;
             }

@@ -13,7 +13,6 @@
 
 #include "golang/go/token/position.h"
 #include "golang/go/types/alias.h"
-#include "golang/go/types/api.h"
 #include "golang/go/types/array.h"
 #include "golang/go/types/basic.h"
 #include "golang/go/types/chan.h"
@@ -23,8 +22,10 @@
 #include "golang/go/types/instantiate.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/map.h"
+#include "golang/go/types/mono.h"
 #include "golang/go/types/named.h"
 #include "golang/go/types/object.h"
+#include "golang/go/types/package.h"
 #include "golang/go/types/pointer.h"
 #include "golang/go/types/signature.h"
 #include "golang/go/types/slice.h"
@@ -38,15 +39,16 @@
 #include "golang/go/types/union.h"
 #include "golang/go/types/universe.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace token = golang::go::token;
     namespace rec
     {
     }
 
     // makeSubstMap creates a new substitution map mapping tpars[i] to targs[i].
     // If targs[i] is nil, tpars[i] is not substituted.
-    substMap makeSubstMap(gocpp::slice<TypeParam*> tpars, gocpp::slice<golang::types::Type> targs)
+    substMap makeSubstMap(gocpp::slice<TypeParam*> tpars, gocpp::slice<golang::go::types::Type> targs)
     {
         assert(len(tpars) == len(targs));
         auto proj = gocpp::make(gocpp::Tag<substMap>(), len(tpars));
@@ -75,7 +77,7 @@ namespace golang::types
         return len(m) == 0;
     }
 
-    golang::types::Type rec::lookup(substMap m, TypeParam* tpar)
+    golang::go::types::Type rec::lookup(substMap m, TypeParam* tpar)
     {
         if(auto t = m[tpar]; t != nullptr)
         {
@@ -91,7 +93,7 @@ namespace golang::types
     //
     // If expanding is non-nil, it is the instance type currently being expanded.
     // One of expanding or ctxt must be non-nil.
-    golang::types::Type rec::subst(Checker* check, token::Pos pos, golang::types::Type typ, substMap smap, Named* expanding, Context* ctxt)
+    golang::go::types::Type rec::subst(Checker* check, token::Pos pos, golang::go::types::Type typ, substMap smap, Named* expanding, Context* ctxt)
     {
         assert(expanding != nullptr || ctxt != nullptr);
 
@@ -177,334 +179,393 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
-    golang::types::Type rec::typ(subster* subst, golang::types::Type typ)
+    golang::go::types::Type rec::typ(subster* subst, golang::go::types::Type typ)
     {
-        gocpp::Defer defer;
-        try
+        //Go type switch emulation
         {
-            //Go type switch emulation
+            const auto& gocpp_id_1 = gocpp::type_info(typ);
+            int conditionId = -1;
+            if(gocpp_id_1 == typeid(untyped nil)) { conditionId = 0; }
+            else if(gocpp_id_1 == typeid(types::Basic*)) { conditionId = 1; }
+            else if(gocpp_id_1 == typeid(types::Alias*)) { conditionId = 2; }
+            else if(gocpp_id_1 == typeid(types::Array*)) { conditionId = 3; }
+            else if(gocpp_id_1 == typeid(types::Slice*)) { conditionId = 4; }
+            else if(gocpp_id_1 == typeid(types::Struct*)) { conditionId = 5; }
+            else if(gocpp_id_1 == typeid(types::Pointer*)) { conditionId = 6; }
+            else if(gocpp_id_1 == typeid(types::Tuple*)) { conditionId = 7; }
+            else if(gocpp_id_1 == typeid(types::Signature*)) { conditionId = 8; }
+            else if(gocpp_id_1 == typeid(types::Union*)) { conditionId = 9; }
+            else if(gocpp_id_1 == typeid(types::Interface*)) { conditionId = 10; }
+            else if(gocpp_id_1 == typeid(types::Map*)) { conditionId = 11; }
+            else if(gocpp_id_1 == typeid(types::Chan*)) { conditionId = 12; }
+            else if(gocpp_id_1 == typeid(types::Named*)) { conditionId = 13; }
+            else if(gocpp_id_1 == typeid(types::TypeParam*)) { conditionId = 14; }
+            switch(conditionId)
             {
-                const auto& gocpp_id_1 = gocpp::type_info(typ);
-                int conditionId = -1;
-                if(gocpp_id_1 == typeid(untyped nil)) { conditionId = 0; }
-                else if(gocpp_id_1 == typeid(types::Basic*)) { conditionId = 1; }
-                else if(gocpp_id_1 == typeid(types::Alias*)) { conditionId = 2; }
-                else if(gocpp_id_1 == typeid(types::Array*)) { conditionId = 3; }
-                else if(gocpp_id_1 == typeid(types::Slice*)) { conditionId = 4; }
-                else if(gocpp_id_1 == typeid(types::Struct*)) { conditionId = 5; }
-                else if(gocpp_id_1 == typeid(types::Pointer*)) { conditionId = 6; }
-                else if(gocpp_id_1 == typeid(types::Tuple*)) { conditionId = 7; }
-                else if(gocpp_id_1 == typeid(types::Signature*)) { conditionId = 8; }
-                else if(gocpp_id_1 == typeid(types::Union*)) { conditionId = 9; }
-                else if(gocpp_id_1 == typeid(types::Interface*)) { conditionId = 10; }
-                else if(gocpp_id_1 == typeid(types::Map*)) { conditionId = 11; }
-                else if(gocpp_id_1 == typeid(types::Chan*)) { conditionId = 12; }
-                else if(gocpp_id_1 == typeid(types::Named*)) { conditionId = 13; }
-                else if(gocpp_id_1 == typeid(types::TypeParam*)) { conditionId = 14; }
-                switch(conditionId)
+                case 0:
                 {
-                    case 0:
-                    {
-                        untyped nil t = gocpp::any_cast<untyped nil>(typ);
-                        // Call typOrNil if it's possible that typ is nil.
-                        gocpp::panic("nil typ"_s);
-                        break;
-                    }
+                    untyped nil t = gocpp::any_cast<untyped nil>(typ);
+                    // Call typOrNil if it's possible that typ is nil.
+                    gocpp::panic("nil typ"_s);
+                    break;
+                }
 
-                    // nothing to do
-                    case 1:
+                // nothing to do
+                case 1:
+                {
+                    types::Basic* t = gocpp::any_cast<types::Basic*>(typ);
+                    break;
+                }
+                case 2:
+                {
+                    types::Alias* t = gocpp::any_cast<types::Alias*>(typ);
+                    // This code follows the code for *Named types closely.
+                    // TODO(gri) try to factor better
+                    auto orig = rec::Origin(gocpp::recv(t));
+                    auto n = rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(orig))));
+                    if(n == 0)
                     {
-                        types::Basic* t = gocpp::any_cast<types::Basic*>(typ);
-                        break;
+                        // type is not parameterized
+                        return t;
                     }
-                    case 2:
+                    // TODO(gri) do we need this for Alias types?
+                    if(rec::Len(gocpp::recv(rec::TypeArgs(gocpp::recv(t)))) != n)
                     {
-                        types::Alias* t = gocpp::any_cast<types::Alias*>(typ);
-                        auto rhs = rec::typ(gocpp::recv(subst), t->fromRHS);
-                        if(rhs != t->fromRHS)
+                        // error reported elsewhere
+                        return Typ[Invalid];
+                    }
+                    // already instantiated
+                    // For each (existing) type argument determine if it needs
+                    // to be substituted; i.e., if it is or contains a type parameter
+                    // that has a type argument for it.
+                    if(auto targs = substList(rec::list(gocpp::recv(rec::TypeArgs(gocpp::recv(t)))), [&](auto x){ return rec::typ(subst, x); }); targs != nullptr)
+                    {
+                        return rec::newAliasInstance(gocpp::recv(subst->check), subst->pos, t->orig, targs, subst->expanding, subst->ctxt);
+                    }
+                    break;
+                }
+
+                case 3:
+                {
+                    types::Array* t = gocpp::any_cast<types::Array*>(typ);
+                    auto elem = rec::typOrNil(gocpp::recv(subst), t->elem);
+                    if(elem != t->elem)
+                    {
+                        return gocpp::InitPtr<Array>([=](auto& x) {
+                            x.len = t->len;
+                            x.elem = elem;
+                        });
+                    }
+                    break;
+                }
+
+                case 4:
+                {
+                    types::Slice* t = gocpp::any_cast<types::Slice*>(typ);
+                    auto elem = rec::typOrNil(gocpp::recv(subst), t->elem);
+                    if(elem != t->elem)
+                    {
+                        return gocpp::InitPtr<Slice>([=](auto& x) {
+                            x.elem = elem;
+                        });
+                    }
+                    break;
+                }
+
+                case 5:
+                {
+                    types::Struct* t = gocpp::any_cast<types::Struct*>(typ);
+                    if(auto fields = substList(t->fields, [&](auto x){ return rec::var_(subst, x); }); fields != nullptr)
+                    {
+                        auto s = gocpp::InitPtr<Struct>([=](auto& x) {
+                            x.fields = fields;
+                            x.tags = t->tags;
+                        });
+                        rec::markComplete(gocpp::recv(s));
+                        return s;
+                    }
+                    break;
+                }
+
+                case 6:
+                {
+                    types::Pointer* t = gocpp::any_cast<types::Pointer*>(typ);
+                    auto base = rec::typ(gocpp::recv(subst), t->base);
+                    if(base != t->base)
+                    {
+                        return gocpp::InitPtr<Pointer>([=](auto& x) {
+                            x.base = base;
+                        });
+                    }
+                    break;
+                }
+
+                case 7:
+                {
+                    types::Tuple* t = gocpp::any_cast<types::Tuple*>(typ);
+                    return rec::tuple(gocpp::recv(subst), t);
+                    break;
+                }
+
+                case 8:
+                {
+                    types::Signature* t = gocpp::any_cast<types::Signature*>(typ);
+                    // Preserve the receiver: it is handled during *Interface and *Named type
+                    // substitution.
+                    // Naively doing the substitution here can lead to an infinite recursion in
+                    // the case where the receiver is an interface. For example, consider the
+                    // following declaration:
+                    // type T[A any] struct { f interface{ m() } }
+                    // In this case, the type of f is an interface that is itself the receiver
+                    // type of all of its methods. Because we have no type name to break
+                    // cycles, substituting in the recv results in an infinite loop of
+                    // recv->interface->recv->interface->...
+                    auto recv = t->recv;
+                    // If t is a generic method signature whose own type parameters are not
+                    // themselves the subject of this substitution, we are substituting the
+                    // receiver type parameters (via Named.expandMethod). Because a method
+                    // type parameter's bound may refer to a receiver type parameter
+                    // (e.g. func (G[T]) M[P interface{ ~*T }]), we must create fresh type
+                    // parameters with substituted bounds, and rename occurrences in params
+                    // and results so they refer to the fresh parameters. Otherwise the
+                    // resulting signature would retain a free reference to the original
+                    // receiver type parameter.
+                    // Fresh type parameters are always created, even when the bounds are
+                    // unaffected by the substitution, so that the methods of distinct
+                    // instances of the receiver type have distinct (method-specific) type
+                    // parameters.
+                    // When t's type parameters are the variables being substituted, we are
+                    // instantiating t itself; the caller (Checker.instance for *Signature)
+                    // sets tparams to nil afterward, so we leave them in place here.
+                    auto tparams = t->tparams;
+                    auto s = subst;
+                    if(auto n = rec::Len(gocpp::recv(tparams)); n > 0)
+                    {
+                        // If (any) one of the signature's type parameters is in the
+                        // substitution map, this subst call is an instantiation of the
+                        // signature.
+                        auto [gocpp_id_2, instantiating] = subst->smap[rec::At(gocpp::recv(tparams), 0)];
+                        if(debug)
                         {
-                            // This branch cannot be reached because the RHS of an alias
-                            // may only contain type parameters of an enclosing function.
-                            // Such function bodies are never "instantiated" and thus
-                            // substitution is not called on locally declared alias types.
-                            // TODO(gri) adjust once parameterized aliases are supported
-                            // return subst.check.newAlias(t.obj, rhs)
-                            gocpp::panic("unreachable for unparameterized aliases"_s);
-                        }
-                        break;
-                    }
-
-                    case 3:
-                    {
-                        types::Array* t = gocpp::any_cast<types::Array*>(typ);
-                        auto elem = rec::typOrNil(gocpp::recv(subst), t->elem);
-                        if(elem != t->elem)
-                        {
-                            return gocpp::InitPtr<Array>([=](auto& x) {
-                                x.len = t->len;
-                                x.elem = elem;
-                            });
-                        }
-                        break;
-                    }
-
-                    case 4:
-                    {
-                        types::Slice* t = gocpp::any_cast<types::Slice*>(typ);
-                        auto elem = rec::typOrNil(gocpp::recv(subst), t->elem);
-                        if(elem != t->elem)
-                        {
-                            return gocpp::InitPtr<Slice>([=](auto& x) {
-                                x.elem = elem;
-                            });
-                        }
-                        break;
-                    }
-
-                    case 5:
-                    {
-                        types::Struct* t = gocpp::any_cast<types::Struct*>(typ);
-                        if(auto [fields, copied] = rec::varList(gocpp::recv(subst), t->fields); copied)
-                        {
-                            auto s = gocpp::InitPtr<Struct>([=](auto& x) {
-                                x.fields = fields;
-                                x.tags = t->tags;
-                            });
-                            rec::markComplete(gocpp::recv(s));
-                            return s;
-                        }
-                        break;
-                    }
-
-                    case 6:
-                    {
-                        types::Pointer* t = gocpp::any_cast<types::Pointer*>(typ);
-                        auto base = rec::typ(gocpp::recv(subst), t->base);
-                        if(base != t->base)
-                        {
-                            return gocpp::InitPtr<Pointer>([=](auto& x) {
-                                x.base = base;
-                            });
-                        }
-                        break;
-                    }
-
-                    case 7:
-                    {
-                        types::Tuple* t = gocpp::any_cast<types::Tuple*>(typ);
-                        return rec::tuple(gocpp::recv(subst), t);
-                        break;
-                    }
-
-                    case 8:
-                    {
-                        types::Signature* t = gocpp::any_cast<types::Signature*>(typ);
-                        // Preserve the receiver: it is handled during *Interface and *Named type
-                        // substitution.
-                        // Naively doing the substitution here can lead to an infinite recursion in
-                        // the case where the receiver is an interface. For example, consider the
-                        // following declaration:
-                        // type T[A any] struct { f interface{ m() } }
-                        // In this case, the type of f is an interface that is itself the receiver
-                        // type of all of its methods. Because we have no type name to break
-                        // cycles, substituting in the recv results in an infinite loop of
-                        // recv->interface->recv->interface->...
-                        auto recv = t->recv;
-                        auto params = rec::tuple(gocpp::recv(subst), t->params);
-                        auto results = rec::tuple(gocpp::recv(subst), t->results);
-                        if(params != t->params || results != t->results)
-                        {
-                            return gocpp::InitPtr<Signature>([=](auto& x) {
-                                x.rparams = t->rparams;
-                                x.tparams = t->tparams;
-                                x.recv = recv;
-                                x.params = params;
-                                x.results = results;
-                                x.variadic = t->variadic;
-                            });
-                        }
-                        break;
-                    }
-
-                    case 9:
-                    {
-                        types::Union* t = gocpp::any_cast<types::Union*>(typ);
-                        auto [terms, copied] = rec::termlist(gocpp::recv(subst), t->terms);
-                        if(copied)
-                        {
-                            // term list substitution may introduce duplicate terms (unlikely but possible).
-                            // This is ok; lazy type set computation will determine the actual type set
-                            // in normal form.
-                            return new Union {terms};
-                        }
-                        break;
-                    }
-
-                    case 10:
-                    {
-                        types::Interface* t = gocpp::any_cast<types::Interface*>(typ);
-                        auto [methods, mcopied] = rec::funcList(gocpp::recv(subst), t->methods);
-                        auto [embeddeds, ecopied] = rec::typeList(gocpp::recv(subst), t->embeddeds);
-                        if(mcopied || ecopied)
-                        {
-                            auto iface = rec::newInterface(gocpp::recv(subst->check));
-                            iface->embeddeds = embeddeds;
-                            iface->embedPos = t->embedPos;
-                            iface->implicit = t->implicit;
-                            // otherwise we are copying incomplete data
-                            assert(t->complete);
-                            iface->complete = t->complete;
-                            // If we've changed the interface type, we may need to replace its
-                            // receiver if the receiver type is the original interface. Receivers of
-                            // *Named type are replaced during named type expansion.
-                            // Notably, it's possible to reach here and not create a new *Interface,
-                            // even though the receiver type may be parameterized. For example:
-                            // type T[P any] interface{ m() }
-                            // In this case the interface will not be substituted here, because its
-                            // method signatures do not depend on the type parameter P, but we still
-                            // need to create new interface methods to hold the instantiated
-                            // receiver. This is handled by Named.expandUnderlying.
-                            std::tie(iface->methods, std::ignore) = replaceRecvType(methods, t, iface);
-
-                            // If check != nil, check.newInterface will have saved the interface for later completion.
-                            if(subst->check == nullptr)
+                            // When calling subst on a signature, the substitution either
+                            // applies to all of the type parameters (all are in the map)
+                            // or none of them (none are in the map).
+                            for(auto [gocpp_ignored, tp] : rec::list(gocpp::recv(tparams)))
                             {
-                                // golang/go#61561: all newly created interfaces must be completed
-                                rec::typeSet(gocpp::recv(iface));
+                                auto [gocpp_id_3, ok] = subst->smap[tp];
+                                assert(ok == instantiating);
                             }
-                            return iface;
                         }
-                        break;
-                    }
-
-                    case 11:
-                    {
-                        types::Map* t = gocpp::any_cast<types::Map*>(typ);
-                        auto key = rec::typ(gocpp::recv(subst), t->key);
-                        auto elem = rec::typ(gocpp::recv(subst), t->elem);
-                        if(key != t->key || elem != t->elem)
+                        if(! instantiating)
                         {
-                            return gocpp::InitPtr<Map>([=](auto& x) {
-                                x.key = key;
-                                x.elem = elem;
-                            });
-                        }
-                        break;
-                    }
-
-                    case 12:
-                    {
-                        types::Chan* t = gocpp::any_cast<types::Chan*>(typ);
-                        auto elem = rec::typ(gocpp::recv(subst), t->elem);
-                        if(elem != t->elem)
-                        {
-                            return gocpp::InitPtr<Chan>([=](auto& x) {
-                                x.dir = t->dir;
-                                x.elem = elem;
-                            });
-                        }
-                        break;
-                    }
-
-                    case 13:
-                    {
-                        types::Named* t = gocpp::any_cast<types::Named*>(typ);
-                        // dump is for debugging
-                        auto dump = [=](gocpp::string, gocpp::slice<gocpp::go_any>) mutable -> void
-                        {
-                        };
-                        if(subst->check != nullptr && subst->check->conf->_Trace)
-                        {
-                            subst->check->indent++;
-                            defer.push_back([=]{ [=]() mutable -> void
+                            auto fresh = gocpp::make(gocpp::Tag<gocpp::slice<TypeParam*>>(), n);
+                            // We're introducing a fresh set of method type parameters
+                            // which appear elsewhere in the signature (parameter or
+                            // result types, or the bounds of other type parameters).
+                            // Create an updated substitution map containing the
+                            // existing entries plus an entry for each fresh type
+                            // parameter so that they are substituted simultaneously
+                            // when we proceed with the outer substitution.
+                            auto smap = gocpp::make(gocpp::Tag<substMap>(), len(subst->smap) + n);
+                            for(auto [k, v] : subst->smap)
                             {
-                                subst->check->indent--;
-                            }(); });
-                            dump = [=](gocpp::string format, gocpp::slice<gocpp::go_any> args) mutable -> void
+                                smap[k] = v;
+                            }
+                            for(auto [i, tp] : rec::list(gocpp::recv(tparams)))
                             {
-                                rec::trace(gocpp::recv(subst->check), subst->pos, format, args);
-                            };
-                        }
-                        // subst is called during expansion, so in this function we need to be
-                        // careful not to call any methods that would cause t to be expanded: doing
-                        // so would result in deadlock.
-                        // So we call t.Origin().TypeParams() rather than t.TypeParams().
-                        auto orig = rec::Origin(gocpp::recv(t));
-                        auto n = rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(orig))));
-                        if(n == 0)
-                        {
-                            dump(">>> %s is not parameterized"_s, t);
-                            // type is not parameterized
-                            return t;
-                        }
-                        gocpp::slice<golang::types::Type> newTArgs = {};
-                        if(rec::Len(gocpp::recv(rec::TypeArgs(gocpp::recv(t)))) != n)
-                        {
-                            // error reported elsewhere
-                            return Typ[Invalid];
-                        }
-                        // already instantiated
-                        dump(">>> %s already instantiated"_s, t);
-                        // For each (existing) type argument targ, determine if it needs
-                        // to be substituted; i.e., if it is or contains a type parameter
-                        // that has a type argument for it.
-                        for(auto [i, targ] : rec::list(gocpp::recv(rec::TypeArgs(gocpp::recv(t)))))
-                        {
-                            dump(">>> %d targ = %s"_s, i, targ);
-                            auto new_targ = rec::typ(gocpp::recv(subst), targ);
-                            if(new_targ != targ)
-                            {
-                                dump(">>> substituted %d targ %s => %s"_s, i, targ, new_targ);
-                                if(newTArgs == nullptr)
+                                auto tname = NewTypeName(rec::Pos(gocpp::recv(rec::Obj(gocpp::recv(tp)))), rec::Pkg(gocpp::recv(rec::Obj(gocpp::recv(tp)))), rec::Name(gocpp::recv(rec::Obj(gocpp::recv(tp)))), nullptr);
+                                auto ftp = rec::newTypeParam(gocpp::recv(subst->check), tname, nullptr);
+                                ftp->index = tp->index;
+                                fresh[i] = ftp;
+                                smap[tp] = ftp;
+                                // The fresh parameter stands in for tp in the mono graph,
+                                // so that instantiations of (e.g.) G[int].M and G[A].M
+                                // are tracked against the same vertex as the origin's tp.
+                                if(subst->check != nullptr)
                                 {
-                                    newTArgs = gocpp::make(gocpp::Tag<gocpp::slice<golang::types::Type>>(), n);
-                                    copy(newTArgs, rec::list(gocpp::recv(rec::TypeArgs(gocpp::recv(t)))));
+                                    rec::recordCanon(gocpp::recv(subst->check->mono), ftp, tp);
                                 }
-                                newTArgs[i] = new_targ;
                             }
+                            // Now that we have the updated substitution map, use it to
+                            // compute the constraints for the fresh type parameters.
+                            for(auto [i, tp] : rec::list(gocpp::recv(tparams)))
+                            {
+                                fresh[i]->bound = rec::subst(gocpp::recv(subst->check), subst->pos, tp->bound, smap, subst->expanding, subst->ctxt);
+                            }
+                            // Continue with the fresh type parameters and updated map.
+                            tparams = gocpp::InitPtr<TypeParamList>([=](auto& x) {
+                                x.tparams = fresh;
+                            });
+                            s = gocpp::InitPtr<subster>([=](auto& x) {
+                                x.pos = subst->pos;
+                                x.smap = smap;
+                                x.check = subst->check;
+                                x.expanding = subst->expanding;
+                                x.ctxt = subst->ctxt;
+                            });
                         }
-                        if(newTArgs == nullptr)
+                    }
+                    auto params = rec::tuple(gocpp::recv(s), t->params);
+                    auto results = rec::tuple(gocpp::recv(s), t->results);
+                    if(params != t->params || results != t->results || tparams != t->tparams)
+                    {
+                        return gocpp::InitPtr<golang::go::types::Signature>([=](auto& x) {
+                            x.rparams = t->rparams;
+                            x.tparams = tparams;
+                            x.recv = recv;
+                            x.recvold = t->recvold;
+                            x.params = params;
+                            x.results = results;
+                            x.variadic = t->variadic;
+                        });
+                    }
+                    break;
+                }
+
+                case 9:
+                {
+                    types::Union* t = gocpp::any_cast<types::Union*>(typ);
+                    if(auto terms = substList(t->terms, [&](auto x){ return rec::term(subst, x); }); terms != nullptr)
+                    {
+                        // term list substitution may introduce duplicate terms (unlikely but possible).
+                        // This is ok; lazy type set computation will determine the actual type set
+                        // in normal form.
+                        return new Union {terms};
+                    }
+                    break;
+                }
+
+                case 10:
+                {
+                    types::Interface* t = gocpp::any_cast<types::Interface*>(typ);
+                    auto methods = substList(t->methods, [&](auto x){ return rec::func_(subst, x); });
+                    auto embeddeds = substList(t->embeddeds, [&](auto x){ return rec::typ(subst, x); });
+                    if(methods != nullptr || embeddeds != nullptr)
+                    {
+                        if(methods == nullptr)
                         {
-                            dump(">>> nothing to substitute in %s"_s, t);
-                            // nothing to substitute
-                            return t;
+                            methods = t->methods;
                         }
+                        if(embeddeds == nullptr)
+                        {
+                            embeddeds = t->embeddeds;
+                        }
+                        auto iface = rec::newInterface(gocpp::recv(subst->check));
+                        iface->embeddeds = embeddeds;
+                        iface->embedPos = t->embedPos;
+                        iface->implicit = t->implicit;
+                        // otherwise we are copying incomplete data
+                        assert(t->complete);
+                        iface->complete = t->complete;
+                        // If we've changed the interface type, we may need to replace its
+                        // receiver if the receiver type is the original interface. Receivers of
+                        // *Named type are replaced during named type expansion.
+                        // Notably, it's possible to reach here and not create a new *Interface,
+                        // even though the receiver type may be parameterized. For example:
+                        // type T[P any] interface{ m() }
+                        // In this case the interface will not be substituted here, because its
+                        // method signatures do not depend on the type parameter P, but we still
+                        // need to create new interface methods to hold the instantiated
+                        // receiver. This is handled by Named.expandUnderlying.
+                        std::tie(iface->methods, std::ignore) = replaceRecvType(methods, t, iface);
+
+                        // If check != nil, check.newInterface will have saved the interface for later completion.
+                        if(subst->check == nullptr)
+                        {
+                            // golang/go#61561: all newly created interfaces must be completed
+                            rec::typeSet(gocpp::recv(iface));
+                        }
+                        return iface;
+                    }
+                    break;
+                }
+
+                case 11:
+                {
+                    types::Map* t = gocpp::any_cast<types::Map*>(typ);
+                    auto key = rec::typ(gocpp::recv(subst), t->key);
+                    auto elem = rec::typ(gocpp::recv(subst), t->elem);
+                    if(key != t->key || elem != t->elem)
+                    {
+                        return gocpp::InitPtr<Map>([=](auto& x) {
+                            x.key = key;
+                            x.elem = elem;
+                        });
+                    }
+                    break;
+                }
+
+                case 12:
+                {
+                    types::Chan* t = gocpp::any_cast<types::Chan*>(typ);
+                    auto elem = rec::typ(gocpp::recv(subst), t->elem);
+                    if(elem != t->elem)
+                    {
+                        return gocpp::InitPtr<Chan>([=](auto& x) {
+                            x.dir = t->dir;
+                            x.elem = elem;
+                        });
+                    }
+                    break;
+                }
+
+                case 13:
+                {
+                    types::Named* t = gocpp::any_cast<types::Named*>(typ);
+                    // subst is called during expansion, so in this function we need to be
+                    // careful not to call any methods that would cause t to be expanded: doing
+                    // so would result in deadlock.
+                    // So we call t.Origin().TypeParams() rather than t.TypeParams().
+                    auto orig = rec::Origin(gocpp::recv(t));
+                    auto n = rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(orig))));
+                    if(n == 0)
+                    {
+                        // type is not parameterized
+                        return t;
+                    }
+                    if(rec::Len(gocpp::recv(rec::TypeArgs(gocpp::recv(t)))) != n)
+                    {
+                        // error reported elsewhere
+                        return Typ[Invalid];
+                    }
+                    // already instantiated
+                    // For each (existing) type argument determine if it needs
+                    // to be substituted; i.e., if it is or contains a type parameter
+                    // that has a type argument for it.
+                    if(auto targs = substList(rec::list(gocpp::recv(rec::TypeArgs(gocpp::recv(t)))), [&](auto x){ return rec::typ(subst, x); }); targs != nullptr)
+                    {
                         // Create a new instance and populate the context to avoid endless
                         // recursion. The position used here is irrelevant because validation only
                         // occurs on t (we don't call validType on named), but we use subst.pos to
                         // help with debugging.
-                        return rec::instance(gocpp::recv(subst->check), subst->pos, orig, newTArgs, subst->expanding, subst->ctxt);
-                        break;
+                        return rec::instance(gocpp::recv(subst->check), subst->pos, orig, targs, subst->expanding, subst->ctxt);
                     }
+                    break;
+                }
 
-                    case 14:
-                    {
-                        types::TypeParam* t = gocpp::any_cast<types::TypeParam*>(typ);
-                        return rec::lookup(gocpp::recv(subst->smap), t);
-                        break;
-                    }
+                case 14:
+                {
+                    types::TypeParam* t = gocpp::any_cast<types::TypeParam*>(typ);
+                    return rec::lookup(gocpp::recv(subst->smap), t);
+                    break;
+                }
 
-                    default:
-                    {
-                        auto t = typ;
-                        unreachable();
-                        break;
-                    }
+                default:
+                {
+                    auto t = typ;
+                    gocpp::panic("unreachable"_s);
+                    break;
                 }
             }
+        }
 
-            return typ;
-        }
-        catch(gocpp::GoPanic& gp)
-        {
-            defer.handlePanic(gp);
-        }
+        return typ;
     }
 
     // typOrNil is like typ but if the argument is nil it is replaced with Typ[Invalid].
     // A nil type may appear in pathological cases such as type T[P any] []func(_ T([]_))
     // where an array/slice element is accessed before it is set up.
-    golang::types::Type rec::typOrNil(subster* subst, golang::types::Type typ)
+    golang::go::types::Type rec::typOrNil(subster* subst, golang::go::types::Type typ)
     {
         if(typ == nullptr)
         {
@@ -519,13 +580,13 @@ namespace golang::types
         {
             if(auto typ = rec::typ(gocpp::recv(subst), v->object.typ); typ != v->object.typ)
             {
-                return substVar(v, typ);
+                return cloneVar(v, typ);
             }
         }
         return v;
     }
 
-    Var* substVar(Var* v, golang::types::Type typ)
+    Var* cloneVar(Var* v, golang::go::types::Type typ)
     {
         auto copy = *v;
         copy.object.typ = typ;
@@ -537,7 +598,7 @@ namespace golang::types
     {
         if(t != nullptr)
         {
-            if(auto [vars, copied] = rec::varList(gocpp::recv(subst), t->vars); copied)
+            if(auto vars = substList(t->vars, [&](auto x){ return rec::var_(subst, x); }); vars != nullptr)
             {
                 return gocpp::InitPtr<Tuple>([=](auto& x) {
                     x.vars = vars;
@@ -547,28 +608,28 @@ namespace golang::types
         return t;
     }
 
-    std::tuple<gocpp::slice<Var*>, bool> rec::varList(subster* subst, gocpp::slice<Var*> in)
+    // substList applies subst to each element of the incoming slice.
+    // If at least one element changes, the result is a new slice with
+    // all the (possibly updated) elements of the incoming slice;
+    // otherwise the result it nil. The incoming slice is unchanged.
+    template<typename T>
+    gocpp::slice<T> substList(gocpp::slice<T> in, std::function<T (T _1)> subst)
     {
-        gocpp::slice<Var*> out;
-        bool copied;
-        out = in;
-        for(auto [i, v] : in)
+        gocpp::slice<T> out;
+        for(auto [i, t] : in)
         {
-            if(auto w = rec::var_(gocpp::recv(subst), v); w != v)
+            if(auto u = subst(t); u != t)
             {
-                if(! copied)
+                if(out == nullptr)
                 {
-                    // first variable that got substituted => allocate new out slice
-                    // and copy all variables
-                    auto go_new = gocpp::make(gocpp::Tag<gocpp::slice<Var*>>(), len(in));
-                    copy(go_new, out);
-                    out = go_new;
-                    copied = true;
+                    // lazily allocate a new slice on first substitution
+                    out = gocpp::make(gocpp::Tag<gocpp::slice<T>>(), len(in));
+                    copy(out, in);
                 }
-                out[i] = w;
+                out[i] = u;
             }
         }
-        return {out, copied};
+        return out;
     }
 
     Func* rec::func_(subster* subst, Func* f)
@@ -577,13 +638,13 @@ namespace golang::types
         {
             if(auto typ = rec::typ(gocpp::recv(subst), f->object.typ); typ != f->object.typ)
             {
-                return substFunc(f, typ);
+                return cloneFunc(f, typ);
             }
         }
         return f;
     }
 
-    Func* substFunc(Func* f, golang::types::Type typ)
+    Func* cloneFunc(Func* f, golang::go::types::Type typ)
     {
         auto copy = *f;
         copy.object.typ = typ;
@@ -591,76 +652,13 @@ namespace golang::types
         return & copy;
     }
 
-    std::tuple<gocpp::slice<Func*>, bool> rec::funcList(subster* subst, gocpp::slice<Func*> in)
+    golang::go::types::Term* rec::term(subster* subst, golang::go::types::Term* t)
     {
-        gocpp::slice<Func*> out;
-        bool copied;
-        out = in;
-        for(auto [i, f] : in)
+        if(auto typ = rec::typ(gocpp::recv(subst), t->typ); typ != t->typ)
         {
-            if(auto g = rec::func_(gocpp::recv(subst), f); g != f)
-            {
-                if(! copied)
-                {
-                    // first function that got substituted => allocate new out slice
-                    // and copy all functions
-                    auto go_new = gocpp::make(gocpp::Tag<gocpp::slice<Func*>>(), len(in));
-                    copy(go_new, out);
-                    out = go_new;
-                    copied = true;
-                }
-                out[i] = g;
-            }
+            return NewTerm(t->tilde, typ);
         }
-        return {out, copied};
-    }
-
-    std::tuple<gocpp::slice<golang::types::Type>, bool> rec::typeList(subster* subst, gocpp::slice<golang::types::Type> in)
-    {
-        gocpp::slice<golang::types::Type> out;
-        bool copied;
-        out = in;
-        for(auto [i, t] : in)
-        {
-            if(auto u = rec::typ(gocpp::recv(subst), t); u != t)
-            {
-                if(! copied)
-                {
-                    // first function that got substituted => allocate new out slice
-                    // and copy all functions
-                    auto go_new = gocpp::make(gocpp::Tag<gocpp::slice<golang::types::Type>>(), len(in));
-                    copy(go_new, out);
-                    out = go_new;
-                    copied = true;
-                }
-                out[i] = u;
-            }
-        }
-        return {out, copied};
-    }
-
-    std::tuple<gocpp::slice<golang::types::Term*>, bool> rec::termlist(subster* subst, gocpp::slice<golang::types::Term*> in)
-    {
-        gocpp::slice<golang::types::Term*> out;
-        bool copied;
-        out = in;
-        for(auto [i, t] : in)
-        {
-            if(auto u = rec::typ(gocpp::recv(subst), t->typ); u != t->typ)
-            {
-                if(! copied)
-                {
-                    // first function that got substituted => allocate new out slice
-                    // and copy all functions
-                    auto go_new = gocpp::make(gocpp::Tag<gocpp::slice<golang::types::Term*>>(), len(in));
-                    copy(go_new, out);
-                    out = go_new;
-                    copied = true;
-                }
-                out[i] = NewTerm(t->tilde, u);
-            }
-        }
-        return {out, copied};
+        return t;
     }
 
     // replaceRecvType updates any function receivers that have type old to have
@@ -669,14 +667,14 @@ namespace golang::types
     //
     // The resulting out slice contains the updated functions, and copied reports
     // if anything was modified.
-    std::tuple<gocpp::slice<Func*>, bool> replaceRecvType(gocpp::slice<Func*> in, golang::types::Type old, golang::types::Type go_new)
+    std::tuple<gocpp::slice<Func*>, bool> replaceRecvType(gocpp::slice<Func*> in, golang::go::types::Type old, golang::go::types::Type go_new)
     {
         gocpp::slice<Func*> out;
         bool copied;
         out = in;
         for(auto [i, method] : in)
         {
-            auto sig = gocpp::getValue<Signature*>(rec::Type(gocpp::recv(method)));
+            auto sig = rec::Signature(gocpp::recv(method));
             if(sig->recv != nullptr && rec::Type(gocpp::recv(sig->recv)) == old)
             {
                 if(! copied)
@@ -689,8 +687,8 @@ namespace golang::types
                     copied = true;
                 }
                 auto newsig = *sig;
-                newsig.recv = substVar(sig->recv, go_new);
-                out[i] = substFunc(method, & newsig);
+                newsig.recv = cloneVar(sig->recv, go_new);
+                out[i] = cloneFunc(method, & newsig);
             }
         }
         return {out, copied};

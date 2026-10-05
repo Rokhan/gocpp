@@ -4,14 +4,14 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
+    struct MethodSet;
     struct GoTag_methodSet;
 }
 #include "golang/go/types/selection.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    struct MethodSet;
     using methodSet = gocpp::defined<gocpp::map<gocpp::string, Selection*>, GoTag_methodSet>;
 }

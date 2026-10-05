@@ -4,15 +4,13 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::flate
+namespace golang::compress::flate
 {
-    struct hcode;
+    const long maxBitsLimit = 16;
+    // number of valid literals
+    const long literalCount = 286;
+    using hcode = uint32_t;
     struct huffmanEncoder;
     struct literalNode;
     struct levelInfo;
-    const long maxBitsLimit = 16;
-    struct GoTag_byLiteral;
-    struct GoTag_byFreq;
-    using byLiteral = gocpp::defined<gocpp::slice<literalNode>, GoTag_byLiteral>;
-    using byFreq = gocpp::defined<gocpp::slice<literalNode>, GoTag_byFreq>;
 }

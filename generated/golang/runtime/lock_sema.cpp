@@ -11,166 +11,22 @@
 #include "golang/runtime/lock_sema.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/runtime/atomic/stubs.h"
 #include "golang/runtime/cgo.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mprof.h"
+#include "golang/runtime/note_other.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/stack.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/time_nofake.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
-    }
-
-    bool mutexContended(mutex* l)
-    {
-        return atomic::Loaduintptr(& l->key) > locked;
-    }
-
-    void lock(mutex* l)
-    {
-        lockWithRank(l, getLockRank(l));
-    }
-
-    void lock2(mutex* l)
-    {
-        auto gp = getg();
-        if(gp->m->locks < 0)
-        {
-            go_throw("runtime·lock: lock count"_s);
-        }
-        gp->m->locks++;
-
-        // Speculative grab for lock.
-        if(atomic::Casuintptr(& l->key, 0, locked))
-        {
-            return;
-        }
-        semacreate(gp->m);
-
-        auto timer = gocpp::InitPtr<lockTimer>([=](auto& x) {
-            x.lock = l;
-        });
-        rec::begin(gocpp::recv(timer));
-        // On uniprocessor's, no point spinning.
-        // On multiprocessors, spin for ACTIVE_SPIN attempts.
-        auto spin = 0;
-        if(ncpu > 1)
-        {
-            spin = active_spin;
-        }
-        Loop:
-        for(auto i = 0; ; i++)
-        {
-            if(false) {
-            Loop_continue:
-                continue;
-            Loop_break:
-                break;
-            }
-            auto v = atomic::Loaduintptr(& l->key);
-            if(v & locked == 0)
-            {
-                // Unlocked. Try to lock.
-                if(atomic::Casuintptr(& l->key, v, v | locked))
-                {
-                    rec::end(gocpp::recv(timer));
-                    return;
-                }
-                i = 0;
-            }
-            if(i < spin)
-            {
-                procyield(active_spin_cnt);
-            }
-            else
-            if(i < spin + passive_spin)
-            {
-                osyield();
-            }
-            else
-            {
-                // Someone else has it.
-                // l->waitm points to a linked list of M's waiting
-                // for this lock, chained through m->nextwaitm.
-                // Queue this M.
-                for(; ; )
-                {
-                    gp->m->nextwaitm = muintptr(v &^ locked);
-                    if(atomic::Casuintptr(& l->key, v, uintptr_t(gocpp::unsafe_pointer(gp->m)) | locked))
-                    {
-                        break;
-                    }
-                    v = atomic::Loaduintptr(& l->key);
-                    if(v & locked == 0)
-                    {
-                        goto Loop_continue;
-                    }
-                }
-                if(v & locked != 0)
-                {
-                    // Queued. Wait.
-                    semasleep(- 1);
-                    i = 0;
-                }
-            }
-        }
-    }
-
-    void unlock(mutex* l)
-    {
-        unlockWithRank(l);
-    }
-
-    // We might not be holding a p in this code.
-    //
-    //go:nowritebarrier
-    void unlock2(mutex* l)
-    {
-        auto gp = getg();
-        m* mp = {};
-        for(; ; )
-        {
-            auto v = atomic::Loaduintptr(& l->key);
-            if(v == locked)
-            {
-                if(atomic::Casuintptr(& l->key, locked, 0))
-                {
-                    break;
-                }
-            }
-            else
-            {
-                // Other M's are waiting for the lock.
-                // Dequeue an M.
-                mp = rec::ptr(gocpp::recv(muintptr(v &^ locked)));
-                if(atomic::Casuintptr(& l->key, v, uintptr_t(mp->nextwaitm)))
-                {
-                    // Dequeued an M.  Wake it.
-                    semawakeup(mp);
-                    break;
-                }
-            }
-        }
-        rec::recordUnlock(gocpp::recv(gp->m->mLockProfile), l);
-        gp->m->locks--;
-        if(gp->m->locks < 0)
-        {
-            go_throw("runtime·unlock: lock count"_s);
-        }
-        if(gp->m->locks == 0 && gp->preempt)
-        {
-            // restore the preemption request in case we've cleared it in newstack
-            gp->stackguard0 = stackPreempt;
-        }
     }
 
     // One-time notifications.

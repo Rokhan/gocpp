@@ -6,13 +6,7 @@
 
 namespace golang::sync
 {
+    struct Cond;
     using copyChecker = uintptr_t;
     struct noCopy;
-}
-#include "golang/sync/mutex.fwd.h"
-#include "golang/sync/runtime2.fwd.h"
-
-namespace golang::sync
-{
-    struct Cond;
 }

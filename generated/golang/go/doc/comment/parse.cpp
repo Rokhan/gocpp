@@ -21,8 +21,12 @@
 #include "golang/unicode/letter.h"
 #include "golang/unicode/utf8/utf8.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
+    namespace slices = golang::slices;
+    namespace strings = golang::strings;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using strings::rec::Len;
@@ -1130,7 +1134,7 @@ namespace golang::comment
     Block rec::oldHeading(parseDoc* d, gocpp::string line)
     {
         return gocpp::InitPtr<Heading>([=](auto& x) {
-            x.Text = gocpp::slice<golang::comment::Text> {Plain(strings::TrimSpace(line))};
+            x.Text = gocpp::slice<golang::go::doc::comment::Text> {Plain(strings::TrimSpace(line))};
         });
     }
 
@@ -1147,7 +1151,7 @@ namespace golang::comment
     Block rec::heading(parseDoc* d, gocpp::string line)
     {
         return gocpp::InitPtr<Heading>([=](auto& x) {
-            x.Text = gocpp::slice<golang::comment::Text> {Plain(strings::TrimSpace(line.make_slice(1)))};
+            x.Text = gocpp::slice<golang::go::doc::comment::Text> {Plain(strings::TrimSpace(line.make_slice(1)))};
         });
     }
 
@@ -1188,7 +1192,7 @@ namespace golang::comment
         return nullptr;
         NoDefs:
         return gocpp::InitPtr<Paragraph>([=](auto& x) {
-            x.Text = gocpp::slice<golang::comment::Text> {Plain(mocklib::StringsJoin(lines, "\n"_s))};
+            x.Text = gocpp::slice<golang::go::doc::comment::Text> {Plain(mocklib::StringsJoin(lines, "\n"_s))};
         });
     }
 
@@ -1345,9 +1349,9 @@ namespace golang::comment
     // must be both preceded and followed by punctuation, spaces, tabs,
     // or the start or end of a line. An example problem would be treating
     // map[ast.Expr]TypeAndValue as containing a link.
-    gocpp::slice<golang::comment::Text> rec::parseLinkedText(parseDoc* d, gocpp::string text)
+    gocpp::slice<golang::go::doc::comment::Text> rec::parseLinkedText(parseDoc* d, gocpp::string text)
     {
-        gocpp::slice<golang::comment::Text> out = {};
+        gocpp::slice<golang::go::doc::comment::Text> out = {};
         auto wrote = 0;
         auto flush = [=](int i) mutable -> void
         {
@@ -1499,7 +1503,7 @@ namespace golang::comment
     // those are handled by parseLinkedText.
     // If autoLink is true, then parseText recognizes URLs and words from d.Words
     // and converts those to links as appropriate.
-    gocpp::slice<golang::comment::Text> rec::parseText(parseDoc* d, gocpp::slice<golang::comment::Text> out, gocpp::string s, bool autoLink)
+    gocpp::slice<golang::go::doc::comment::Text> rec::parseText(parseDoc* d, gocpp::slice<golang::go::doc::comment::Text> out, gocpp::string s, bool autoLink)
     {
         strings::Builder w = {};
         auto wrote = 0;
@@ -1532,7 +1536,7 @@ namespace golang::comment
                     // of that is, so we're not doing that lookup here.
                     out = append(out, gocpp::InitPtr<Link>([=](auto& x) {
                         x.Auto = true;
-                        x.Text = gocpp::slice<golang::comment::Text> {Plain(url)};
+                        x.Text = gocpp::slice<golang::go::doc::comment::Text> {Plain(url)};
                         x.URL = url;
                     }));
                     i += len(url);
@@ -1556,7 +1560,7 @@ namespace golang::comment
                     {
                         out = append(out, gocpp::InitPtr<Link>([=](auto& x) {
                             x.Auto = true;
-                            x.Text = gocpp::slice<golang::comment::Text> {Italic(id)};
+                            x.Text = gocpp::slice<golang::go::doc::comment::Text> {Italic(id)};
                             x.URL = url;
                         }));
                     }

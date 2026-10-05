@@ -16,11 +16,18 @@
 #include "golang/fmt/errors.h"
 #include "golang/fmt/scan.h"
 #include "golang/golang.org/x/tools/internal/gocommand/invoke.h"
+#include "golang/iter/iter.h"
 #include "golang/regexp/regexp.h"
+#include "golang/slices/iter.h"
 #include "golang/strings/strings.h"
 
-namespace golang::gocommand
+namespace golang::golang_org::x::tools::internal::gocommand
 {
+    namespace context = golang::context;
+    namespace fmt = golang::fmt;
+    namespace regexp = golang::regexp;
+    namespace slices = golang::slices;
+    namespace strings = golang::strings;
     namespace rec
     {
         using bytes::rec::String;
@@ -44,6 +51,9 @@ namespace golang::gocommand
         inv.BuildFlags = nullptr;
         inv.ModFlag = ""_s;
         inv.ModFile = ""_s;
+        // Set GO111MODULE=off so that we are immune to errors in go.{work,mod}.
+        // Unfortunately, this breaks the Go 1.21+ toolchain directive and
+        // may affect the set of ReleaseTags; see #68495.
         inv.Env = append(inv.Env.make_slice(0, len(inv.Env), len(inv.Env)), "GO111MODULE=off"_s);
 
         auto [stdoutBytes, err] = rec::Run(gocpp::recv(r), ctx, inv);
@@ -58,10 +68,10 @@ namespace golang::gocommand
         }
         // Split up "[go1.1 go1.15]" and return highest go1.X value.
         auto tags = mocklib::StringsFields(go_stdout.make_slice(1, len(go_stdout) - 2));
-        for(auto i = len(tags) - 1; i >= 0; i--)
+        for(auto [gocpp_ignored, tag] : slices::Backward(tags))
         {
             int version = {};
-            if(auto [gocpp_id_0, err] = fmt::Sscanf(tags[i], "go1.%d"_s, & version); err != nullptr)
+            if(auto [gocpp_id_0, err] = fmt::Sscanf(tag, "go1.%d"_s, & version); err != nullptr)
             {
                 continue;
             }

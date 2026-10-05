@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::poll
+namespace golang::internal::poll
 {
     struct fdMutex
     {
@@ -36,7 +36,7 @@ namespace golang::poll
 
 #include "golang/internal/poll/fd_windows.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
 
     namespace rec
@@ -44,7 +44,7 @@ namespace golang::poll
         bool incref(fdMutex* mu);
         bool increfAndClose(fdMutex* mu);
         bool decref(fdMutex* mu);
-        bool rwlock(fdMutex* mu, bool read);
+        bool rwlock(fdMutex* mu, bool read, bool wait);
         bool rwunlock(fdMutex* mu, bool read);
         gocpp::error incref(FD* fd);
         gocpp::error decref(FD* fd);
@@ -52,6 +52,10 @@ namespace golang::poll
         void readUnlock(FD* fd);
         gocpp::error writeLock(FD* fd);
         void writeUnlock(FD* fd);
+        gocpp::error readWriteLock(FD* fd);
+        std::tuple<bool, gocpp::error> tryReadWriteLock(FD* fd);
+        void readWriteUnlock(FD* fd);
+        bool closing(FD* fd);
     }
 }
 

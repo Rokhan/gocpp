@@ -39,21 +39,36 @@
 //
 // Type-checking consists of several interdependent phases:
 //
-// Name resolution maps each identifier (ast.Ident) in the program to the
-// language object ([Object]) it denotes.
-// Use [Info].{Defs,Uses,Implicits} for the results of name resolution.
+// Name resolution maps each identifier ([ast.Ident]) in the program
+// to the symbol ([Object]) it denotes. Use the Defs and Uses fields
+// of [Info] or the [Info.ObjectOf] method to find the symbol for an
+// identifier, and use the Implicits field of [Info] to find the
+// symbol for certain other kinds of syntax node.
 //
-// Constant folding computes the exact constant value (constant.Value)
-// for every expression (ast.Expr) that is a compile-time constant.
-// Use Info.Types[expr].Value for the results of constant folding.
+// Constant folding computes the exact constant value
+// ([constant.Value]) of every expression ([ast.Expr]) that is a
+// compile-time constant. Use the Types field of [Info] to find the
+// results of constant folding for an expression.
 //
-// [Type] inference computes the type ([Type]) of every expression ([ast.Expr])
-// and checks for compliance with the language specification.
-// Use [Info.Types][expr].Type for the results of type inference.
+// Type deduction computes the type ([Type]) of every expression
+// ([ast.Expr]) and checks for compliance with the language
+// specification. Use the Types field of [Info] for the results of
+// type deduction.
 //
-// For a tutorial, see https://golang.org/s/types-tutorial.
-namespace golang::types
+// Applications that need to type-check one or more complete packages
+// of Go source code may find it more convenient not to invoke the
+// type checker directly but instead to use the Load function in
+// package [golang.org/x/tools/go/packages].
+//
+// For a tutorial, see https://go.dev/s/types-tutorial.
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace bytes = golang::bytes;
+    namespace constant = golang::go::constant;
+    namespace errors = golang::internal::types::errors;
+    namespace fmt = golang::fmt;
+    namespace token = golang::go::token;
     namespace rec
     {
         using bytes::rec::String;
@@ -115,7 +130,7 @@ namespace golang::types
 
     // Error returns an error string formatted as follows:
     // filename:line:column: message
-    gocpp::string rec::Error(golang::types::Error err)
+    gocpp::string rec::Error(golang::go::types::Error err)
     {
         return mocklib::Sprintf("%s: %s"_s, rec::Position(gocpp::recv(err.Fset), err.Pos), err.Msg);
     }
@@ -413,14 +428,14 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
-    bool rec::recordTypes(golang::types::Info* info)
+    bool rec::recordTypes(golang::go::types::Info* info)
     {
         return info->Types != nullptr;
     }
 
     // TypeOf returns the type of expression e, or nil if not found.
     // Precondition: the Types, Uses and Defs maps are populated.
-    golang::types::Type rec::TypeOf(golang::types::Info* info, ast::Expr e)
+    golang::go::types::Type rec::TypeOf(golang::go::types::Info* info, ast::Expr e)
     {
         if(auto [t, ok] = info->Types[e]; ok)
         {
@@ -443,7 +458,7 @@ namespace golang::types
     // it defines, not the type (*[TypeName]) it uses.
     //
     // Precondition: the Uses and Defs maps are populated.
-    Object rec::ObjectOf(golang::types::Info* info, ast::Ident* id)
+    Object rec::ObjectOf(golang::go::types::Info* info, ast::Ident* id)
     {
         if(auto obj = info->Defs[id]; obj != nullptr)
         {
@@ -458,7 +473,7 @@ namespace golang::types
     // For dot-imports, the package name is ".".
     //
     // Precondition: the Defs and Implicts maps are populated.
-    PkgName* rec::PkgNameOf(golang::types::Info* info, ast::ImportSpec* imp)
+    PkgName* rec::PkgNameOf(golang::go::types::Info* info, ast::ImportSpec* imp)
     {
         Object obj = {};
         if(imp->Name != nullptr)
@@ -624,6 +639,11 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
+    gocpp::string rec::String(Instance inst)
+    {
+        return mocklib::Sprintf("%s%s"_s, inst.TypeArgs, inst.Type);
+    }
+
     // An Initializer describes a package-level variable, or a list of variables in case
     // of a multi-valued initialization expression, and the corresponding initialization
     // expression.
@@ -686,7 +706,7 @@ namespace golang::types
     // The package is specified by a list of *ast.Files and corresponding
     // file set, and the package path the package is identified with.
     // The clean path must not be empty or dot (".").
-    std::tuple<Package*, gocpp::error> rec::Check(Config* conf, gocpp::string path, token::FileSet* fset, gocpp::slice<ast::File*> files, golang::types::Info* info)
+    std::tuple<Package*, gocpp::error> rec::Check(Config* conf, gocpp::string path, token::FileSet* fset, gocpp::slice<ast::File*> files, golang::go::types::Info* info)
     {
         auto pkg = NewPackage(path, ""_s);
         return {pkg, rec::Files(gocpp::recv(NewChecker(conf, fset, pkg, info)), files)};

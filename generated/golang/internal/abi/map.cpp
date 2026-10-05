@@ -11,10 +11,99 @@
 #include "golang/internal/abi/map.h"
 #include "gocpp/support.h"
 
-namespace golang::abi
+#include "golang/internal/abi/type.h"
+
+namespace golang::internal::abi
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    MapType::operator T()
+    {
+        T result;
+        result.Type = this->Type;
+        result.Key = this->Key;
+        result.Elem = this->Elem;
+        result.Group = this->Group;
+        result.Hasher = this->Hasher;
+        result.GroupSize = this->GroupSize;
+        result.KeysOff = this->KeysOff;
+        result.KeyStride = this->KeyStride;
+        result.ElemsOff = this->ElemsOff;
+        result.ElemStride = this->ElemStride;
+        result.ElemOff = this->ElemOff;
+        result.Flags = this->Flags;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool MapType::operator==(const T& ref) const
+    {
+        if (Type != ref.Type) return false;
+        if (Key != ref.Key) return false;
+        if (Elem != ref.Elem) return false;
+        if (Group != ref.Group) return false;
+        if (Hasher != ref.Hasher) return false;
+        if (GroupSize != ref.GroupSize) return false;
+        if (KeysOff != ref.KeysOff) return false;
+        if (KeyStride != ref.KeyStride) return false;
+        if (ElemsOff != ref.ElemsOff) return false;
+        if (ElemStride != ref.ElemStride) return false;
+        if (ElemOff != ref.ElemOff) return false;
+        if (Flags != ref.Flags) return false;
+        return true;
+    }
+
+    std::ostream& MapType::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Type;
+        os << " " << Key;
+        os << " " << Elem;
+        os << " " << Group;
+        os << " " << Hasher;
+        os << " " << GroupSize;
+        os << " " << KeysOff;
+        os << " " << KeyStride;
+        os << " " << ElemsOff;
+        os << " " << ElemStride;
+        os << " " << ElemOff;
+        os << " " << Flags;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct MapType& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    bool rec::NeedKeyUpdate(golang::internal::abi::MapType* mt)
+    {
+        // true if we need to update key on an overwrite
+        return mt->Flags & MapNeedKeyUpdate != 0;
+    }
+
+    bool rec::HashMightPanic(golang::internal::abi::MapType* mt)
+    {
+        // true if hash function might panic
+        return mt->Flags & MapHashMightPanic != 0;
+    }
+
+    bool rec::IndirectKey(golang::internal::abi::MapType* mt)
+    {
+        // store ptr to key instead of key itself
+        return mt->Flags & MapIndirectKey != 0;
+    }
+
+    bool rec::IndirectElem(golang::internal::abi::MapType* mt)
+    {
+        // store ptr to elem instead of elem itself
+        return mt->Flags & MapIndirectElem != 0;
     }
 
 }

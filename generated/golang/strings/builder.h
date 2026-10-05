@@ -15,6 +15,9 @@ namespace golang::strings
     struct Builder
     {
         Builder* addr{}; // of receiver, to detect copies by value
+        // External users should never get direct access to this buffer, since
+        // the slice at some point will be converted to a string using unsafe, also
+        // data between len(buf) and cap(buf) might be uninitialized.
         gocpp::slice<unsigned char> buf{};
 
         using isGoStruct = void;
@@ -29,7 +32,6 @@ namespace golang::strings
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Builder& value);
-    gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p);
 
     namespace rec
     {

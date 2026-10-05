@@ -13,6 +13,7 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
@@ -69,6 +70,99 @@ namespace golang::runtime
     double float64frombits(uint64_t b)
     {
         return *(double*)(gocpp::unsafe_pointer(& b));
+    }
+
+    // floor returns the greatest integer value less than or equal to x.
+    //
+    // Special cases are:
+    //
+    //	floor(±0) = ±0
+    //	floor(±Inf) = ±Inf
+    //	floor(NaN) = NaN
+    //
+    // N.B. Portable floor copied from math. math also has optimized arch-specific
+    // implementations.
+    double floor(double x)
+    {
+        if(x == 0 || isNaN(x) || isInf(x))
+        {
+            return x;
+        }
+        if(x < 0)
+        {
+            auto [d, fract] = modf(- x);
+            if(fract != 0.0)
+            {
+                d = d + 1;
+            }
+            return - d;
+        }
+        auto [d, gocpp_id_0] = modf(x);
+        return d;
+    }
+
+    // ceil returns the least integer value greater than or equal to x.
+    //
+    // Special cases are:
+    //
+    //	Ceil(±0) = ±0
+    //	Ceil(±Inf) = ±Inf
+    //	Ceil(NaN) = NaN
+    //
+    // N.B. Portable ceil copied from math. math also has optimized arch-specific
+    // implementations.
+    double ceil(double x)
+    {
+        return - floor(- x);
+    }
+
+    // modf returns integer and fractional floating-point numbers
+    // that sum to f. Both values have the same sign as f.
+    //
+    // Special cases are:
+    //
+    //	Modf(±Inf) = ±Inf, NaN
+    //	Modf(NaN) = NaN, NaN
+    //
+    // N.B. Portable modf copied from math. math also has optimized arch-specific
+    // implementations.
+    std::tuple<double, double> modf(double f)
+    {
+        double int;
+        double frac;
+        if(f < 1)
+        {
+            //Go switch emulation
+            {
+                int conditionId = -1;
+                if(f < 0) { conditionId = 0; }
+                else if(f == 0) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    case 0:
+                        std::tie(int, frac) = modf(- f);
+                        return {- int, - frac};
+                        break;
+                    // Return -0, -0 when f == -0
+                    case 1:
+                        return {f, f};
+                        break;
+                }
+            }
+            return {0, f};
+        }
+
+        auto x = float64bits(f);
+        auto e = (unsigned int)(x >> float64Shift) & float64Mask - float64Bias;
+
+        // Keep the top 12+e bits, the integer part; clear the rest.
+        if(e < 64 - 12)
+        {
+            x &^= (1 << (64 - 12 - e)) - 1;
+        }
+        int = float64frombits(x);
+        frac = f - int;
+        return {int, frac};
     }
 
 }

@@ -11,7 +11,7 @@
 
 #include "golang/sort/sort.h"
 
-namespace golang::heap
+namespace golang::container::heap
 {
     struct Interface : virtual gocpp::Interface, sort::Interface
     {

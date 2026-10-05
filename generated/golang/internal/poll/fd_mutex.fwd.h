@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::poll
+namespace golang::internal::poll
 {
     struct fdMutex;
     // fdMutex.state is organized as follows:
@@ -23,5 +23,9 @@ namespace golang::poll
     const int mutexRMask = ((1 << 20) - 1) << 23;
     const int mutexWWait = 1 << 43;
     const int mutexWMask = ((1 << 20) - 1) << 43;
+    const bool readlock = true;
+    const bool writeLock = false;
+    const bool waitLock = true;
+    const bool tryLock = false;
     const gocpp::string overflowMsg = "too many concurrent operations on a single file or socket (max 1048575)"_s;
 }

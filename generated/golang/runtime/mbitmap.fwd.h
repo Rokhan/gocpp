@@ -6,15 +6,23 @@
 
 namespace golang::runtime
 {
+    struct typePointers;
     struct markBits;
     // clobberdeadPtr is a special value that is used by the compiler to
     // clobber dead stack slots, when -clobberdead flag is set.
     const uintptr_t clobberdeadPtr = uintptr_t(0xdeaddead | (0xdeaddead << ((~ uintptr_t(0) >> 63) * 32)));
     struct debugPtrmaskStruct;
 }
+#include "golang/runtime/malloc.fwd.h"
+
+namespace golang::runtime
+{
+    const bool doubleCheckHeapSetType = doubleCheckMalloc;
+}
 #include "golang/internal/goarch/goarch.fwd.h"
 
 namespace golang::runtime
 {
+    namespace goarch = golang::internal::goarch;
     const int ptrBits = 8 * goarch::PtrSize;
 }

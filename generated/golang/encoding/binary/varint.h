@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::binary
+namespace golang::encoding::binary
 {
     gocpp::slice<unsigned char> AppendUvarint(gocpp::slice<unsigned char> buf, uint64_t x);
     int PutUvarint(gocpp::slice<unsigned char> buf, uint64_t x);
@@ -18,13 +18,18 @@ namespace golang::binary
     gocpp::slice<unsigned char> AppendVarint(gocpp::slice<unsigned char> buf, int64_t x);
     int PutVarint(gocpp::slice<unsigned char> buf, int64_t x);
     std::tuple<int64_t, int> Varint(gocpp::slice<unsigned char> buf);
+    extern gocpp::error errOverflow;
+}
+#include "golang/io/io.fwd.h"
+
+namespace golang::encoding::binary
+{
+    namespace io = golang::io;
 }
 #include "golang/io/io.h"
-#include "golang/errors/errors.fwd.h"
 
-namespace golang::binary
+namespace golang::encoding::binary
 {
-    extern gocpp::error errOverflow;
     std::tuple<uint64_t, gocpp::error> ReadUvarint(io::ByteReader r);
     std::tuple<int64_t, gocpp::error> ReadVarint(io::ByteReader r);
 

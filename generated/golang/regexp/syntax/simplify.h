@@ -12,14 +12,14 @@
 #include "golang/regexp/syntax/parse.h"
 #include "golang/regexp/syntax/regexp.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
     Regexp* simplify1(Op op, Flags flags, Regexp* sub, Regexp* re);
 }
 
 #include "golang/regexp/syntax/regexp.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
 
     namespace rec

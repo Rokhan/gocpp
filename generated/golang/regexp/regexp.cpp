@@ -13,6 +13,7 @@
 
 #include "golang/bytes/bytes.h"
 #include "golang/io/io.h"
+#include "golang/iter/iter.h"
 #include "golang/regexp/backtrack.h"
 #include "golang/regexp/exec.h"
 #include "golang/regexp/onepass.h"
@@ -21,6 +22,8 @@
 #include "golang/regexp/syntax/prog.h"
 #include "golang/regexp/syntax/regexp.h"
 #include "golang/regexp/syntax/simplify.h"
+#include "golang/slices/iter.h"
+#include "golang/slices/slices.h"
 #include "golang/strconv/quote.h"
 #include "golang/strings/strings.h"
 #include "golang/sync/pool.h"
@@ -40,59 +43,62 @@
 // guaranteed to run in time linear in the size of the input.
 // (This is a property not guaranteed by most open source
 // implementations of regular expressions.) For more information
-// about this property, see
-//
-//	https://swtch.com/~rsc/regexp/regexp1.html
-//
+// about this property, see https://swtch.com/~rsc/regexp/regexp1.html
 // or any book about automata theory.
 //
 // All characters are UTF-8-encoded code points.
 // Following [utf8.DecodeRune], each byte of an invalid UTF-8 sequence
 // is treated as if it encoded utf8.RuneError (U+FFFD).
 //
-// There are 16 methods of [Regexp] that match a regular expression and identify
+// There are 24 methods of [Regexp] that match a regular expression and identify
 // the matched text. Their names are matched by this regular expression:
 //
-//	Find(All)?(String)?(Submatch)?(Index)?
+//	(All|Find|FindAll)(String)?(Submatch)?(Index)?
 //
-// If 'All' is present, the routine matches successive non-overlapping
-// matches of the entire expression. Empty matches abutting a preceding
-// match are ignored. The return value is a slice containing the successive
-// return values of the corresponding non-'All' routine. These routines take
-// an extra integer argument, n. If n >= 0, the function returns at most n
-// matches/submatches; otherwise, it returns all of them.
+// The ‘All’ variants return an iterator over successive non-overlapping
+// matches of the entire expression. The ‘FindAll’ variants return a slice
+// of those matches instead. Empty matches abutting a preceding
+// match are ignored. The ‘FindAll’ variants take an extra integer argument, n.
+// If n >= 0, the function returns at most n matches/submatches;
+// otherwise, it returns all of them.
 //
-// If 'String' is present, the argument is a string; otherwise it is a slice
-// of bytes; return values are adjusted as appropriate.
+// The ‘Find’ variants return only the first match that All or FindAll would return.
 //
-// If 'Submatch' is present, the return value is a slice identifying the
-// successive submatches of the expression. Submatches are matches of
-// parenthesized subexpressions (also known as capturing groups) within the
-// regular expression, numbered from left to right in order of opening
+// If ‘String’ is present, the argument is a string; otherwise it is a []byte.
+//
+// By default, each returned match is denoted by the substring matching the
+// regular expression, of type string or []byte according to the type of the argument.
+// If ‘Submatch’ is present, each match is represented instead by a slice of
+// the substrings matching the regular expression's parenthesized subexpressions
+// (also known as capturing groups), numbered from left to right in order of opening
 // parenthesis. Submatch 0 is the match of the entire expression, submatch 1 is
 // the match of the first parenthesized subexpression, and so on.
-//
-// If 'Index' is present, matches and submatches are identified by byte index
-// pairs within the input string: result[2*n:2*n+2] identifies the indexes of
-// the nth submatch. The pair for n==0 identifies the match of the entire
-// expression. If 'Index' is not present, the match is identified by the text
-// of the match/submatch. If an index is negative or text is nil, it means that
-// subexpression did not match any string in the input. For 'String' versions
+// If ‘Index’ is present, each substring is instead denoted by a pair of byte indexes
+// within the input string. If an index is negative or substring is nil, it means that
+// the subexpression did not match any string in the input. For ‘String’ versions,
 // an empty string means either no match or an empty match.
 //
-// There is also a subset of the methods that can be applied to text read
-// from a RuneReader:
-//
-//	MatchReader, FindReaderIndex, FindReaderSubmatchIndex
-//
-// This set may grow. Note that regular expression matches may need to
+// There is also a subset of the methods that can be applied to text read from
+// an [io.RuneReader]: [Regexp.MatchReader], [Regexp.FindReaderIndex],
+// [Regexp.FindReaderSubmatchIndex].
+// Note that regular expression matches may need to
 // examine text beyond the text returned by a match, so the methods that
-// match text from a RuneReader may read arbitrarily far into the input
+// match text from an [io.RuneReader] may read arbitrarily far into the input
 // before returning.
 //
 // (There are a few other methods that do not match this pattern.)
 namespace golang::regexp
 {
+    namespace bytes = golang::bytes;
+    namespace io = golang::io;
+    namespace iter = golang::iter;
+    namespace slices = golang::slices;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
+    namespace syntax = golang::regexp::syntax;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using io::rec::ReadRune;
@@ -314,7 +320,7 @@ namespace golang::regexp
         return {regexp, nullptr};
     }
 
-    // Pools of *machine for use during (*Regexp).doExecute,
+    // Pools of *machine for use during (*Regexp).find,
     // split up by the size of the execution queues.
     // matchPool[i] machines have queue size matchSize[i].
     // On a 64-bit system each queue entry is 16 bytes,
@@ -670,11 +676,6 @@ namespace golang::regexp
     {
         if(pos < len(i->str))
         {
-            auto c = i->str[pos];
-            if(c < utf8::RuneSelf)
-            {
-                return {gocpp::rune(c), 1};
-            }
             return utf8::DecodeRuneInString(i->str.make_slice(pos));
         }
         return {endOfText, 0};
@@ -701,20 +702,12 @@ namespace golang::regexp
         // 0 < pos && pos <= len(i.str)
         if((unsigned int)(pos - 1) < (unsigned int)(len(i->str)))
         {
-            r1 = gocpp::rune(i->str[pos - 1]);
-            if(r1 >= utf8::RuneSelf)
-            {
-                std::tie(r1, std::ignore) = utf8::DecodeLastRuneInString(i->str.make_slice(0, pos));
-            }
+            std::tie(r1, std::ignore) = utf8::DecodeLastRuneInString(i->str.make_slice(0, pos));
         }
         // 0 <= pos && pos < len(i.str)
         if((unsigned int)(pos) < (unsigned int)(len(i->str)))
         {
-            r2 = gocpp::rune(i->str[pos]);
-            if(r2 >= utf8::RuneSelf)
-            {
-                std::tie(r2, std::ignore) = utf8::DecodeRuneInString(i->str.make_slice(pos));
-            }
+            std::tie(r2, std::ignore) = utf8::DecodeRuneInString(i->str.make_slice(pos));
         }
         return newLazyFlag(r1, r2);
     }
@@ -753,11 +746,6 @@ namespace golang::regexp
     {
         if(pos < len(i->str))
         {
-            auto c = i->str[pos];
-            if(c < utf8::RuneSelf)
-            {
-                return {gocpp::rune(c), 1};
-            }
             return utf8::DecodeRune(i->str.make_slice(pos));
         }
         return {endOfText, 0};
@@ -784,20 +772,12 @@ namespace golang::regexp
         // 0 < pos && pos <= len(i.str)
         if((unsigned int)(pos - 1) < (unsigned int)(len(i->str)))
         {
-            r1 = gocpp::rune(i->str[pos - 1]);
-            if(r1 >= utf8::RuneSelf)
-            {
-                std::tie(r1, std::ignore) = utf8::DecodeLastRune(i->str.make_slice(0, pos));
-            }
+            std::tie(r1, std::ignore) = utf8::DecodeLastRune(i->str.make_slice(0, pos));
         }
         // 0 <= pos && pos < len(i.str)
         if((unsigned int)(pos) < (unsigned int)(len(i->str)))
         {
-            r2 = gocpp::rune(i->str[pos]);
-            if(r2 >= utf8::RuneSelf)
-            {
-                std::tie(r2, std::ignore) = utf8::DecodeRune(i->str.make_slice(pos));
-            }
+            std::tie(r2, std::ignore) = utf8::DecodeRune(i->str.make_slice(pos));
         }
         return newLazyFlag(r1, r2);
     }
@@ -906,7 +886,7 @@ namespace golang::regexp
         return rec::doMatch(gocpp::recv(re), nullptr, b, ""_s);
     }
 
-    // MatchReader reports whether the text returned by the RuneReader
+    // MatchReader reports whether the text returned by the [io.RuneReader]
     // contains any match of the regular expression pattern.
     // More complicated queries need to use [Compile] and the full [Regexp] interface.
     std::tuple<bool, gocpp::error> MatchReader(gocpp::string pattern, io::RuneReader r)
@@ -1019,7 +999,7 @@ namespace golang::regexp
         gocpp::array<int, 2> dstCap = {};
         for(; searchPos <= endPos; )
         {
-            auto a = rec::doExecute(gocpp::recv(re), nullptr, bsrc, src, searchPos, nmatch, dstCap.make_slice(0, 0));
+            auto a = rec::find(gocpp::recv(re), nullptr, bsrc, src, searchPos, nmatch, dstCap.make_slice(0, 0));
             if(len(a) == 0)
             {
                 // no more matches
@@ -1203,83 +1183,98 @@ namespace golang::regexp
         return a;
     }
 
-    // allMatches calls deliver at most n times
-    // with the location of successive matches in the input text.
+    // matches yields the location of successive matches in the input text.
     // The input text is b if non-nil, otherwise s.
-    void rec::allMatches(Regexp* re, gocpp::string s, gocpp::slice<unsigned char> b, int n, std::function<void (gocpp::slice<int> _1)> deliver)
+    iter::Seq<gocpp::slice<int>> rec::matches(Regexp* re, gocpp::string s, gocpp::slice<unsigned char> b, int max, int ncap)
     {
-        int end = {};
-        if(b == nullptr)
+        return [=](std::function<bool (gocpp::slice<int> _1)> yield) mutable -> void
         {
-            end = len(s);
-        }
-        else
-        {
-            end = len(b);
-        }
-
-        for(auto [pos, i, prevMatchEnd] = std::tuple{0, 0, - 1}; i < n && pos <= end; )
-        {
-            auto matches = rec::doExecute(gocpp::recv(re), nullptr, b, s, pos, re->prog->NumCap, nullptr);
-            if(len(matches) == 0)
+            if(max == 0)
             {
-                break;
+                return;
             }
-
-            auto accept = true;
-            if(matches[1] == pos)
+            int end = {};
+            if(b == nullptr)
             {
-                // We've found an empty match.
-                if(matches[0] == prevMatchEnd)
-                {
-                    // We don't allow an empty match right
-                    // after a previous match, so ignore it.
-                    accept = false;
-                }
-                int width = {};
-                if(b == nullptr)
-                {
-                    auto is = gocpp::Init<inputString>([=](auto& x) {
-                        x.str = s;
-                    });
-                    std::tie(std::ignore, width) = rec::step(gocpp::recv(is), pos);
-                }
-                else
-                {
-                    auto ib = gocpp::Init<inputBytes>([=](auto& x) {
-                        x.str = b;
-                    });
-                    std::tie(std::ignore, width) = rec::step(gocpp::recv(ib), pos);
-                }
-                if(width > 0)
-                {
-                    pos += width;
-                }
-                else
-                {
-                    pos = end + 1;
-                }
+                end = len(s);
             }
             else
             {
-                pos = matches[1];
+                end = len(b);
             }
-            prevMatchEnd = matches[1];
-
-            if(accept)
+            gocpp::slice<int> matches = {};
+            for(auto [pos, prevMatchEnd] = std::tuple{0, - 1}; pos <= end; )
             {
-                deliver(rec::pad(gocpp::recv(re), matches));
-                i++;
+                matches = rec::find(gocpp::recv(re), nullptr, b, s, pos, ncap, matches.make_slice(0, 0));
+                if(len(matches) == 0)
+                {
+                    break;
+                }
+
+                auto accept = true;
+                if(matches[1] == pos)
+                {
+                    // We've found an empty match.
+                    if(matches[0] == prevMatchEnd)
+                    {
+                        // We don't allow an empty match right
+                        // after a previous match, so ignore it.
+                        accept = false;
+                    }
+                    int width = {};
+                    if(b == nullptr)
+                    {
+                        auto is = gocpp::Init<inputString>([=](auto& x) {
+                            x.str = s;
+                        });
+                        std::tie(std::ignore, width) = rec::step(gocpp::recv(is), pos);
+                    }
+                    else
+                    {
+                        auto ib = gocpp::Init<inputBytes>([=](auto& x) {
+                            x.str = b;
+                        });
+                        std::tie(std::ignore, width) = rec::step(gocpp::recv(ib), pos);
+                    }
+                    if(width > 0)
+                    {
+                        pos += width;
+                    }
+                    else
+                    {
+                        pos = end + 1;
+                    }
+                }
+                else
+                {
+                    pos = matches[1];
+                }
+                prevMatchEnd = matches[1];
+
+                if(accept)
+                {
+                    if(! yield(rec::pad(gocpp::recv(re), matches)))
+                    {
+                        return;
+                    }
+                    if(max > 0)
+                    {
+                        if(max--; max == 0)
+                        {
+                            return;
+                        }
+                    }
+                }
             }
-        }
+        };
     }
 
-    // Find returns a slice holding the text of the leftmost match in b of the regular expression.
-    // A return value of nil indicates no match.
+    // Find returns the text of the leftmost match for re in b.
+    // The return value is nil for no match.
     gocpp::slice<unsigned char> rec::Find(Regexp* re, gocpp::slice<unsigned char> b)
     {
         gocpp::array<int, 2> dstCap = {};
-        auto a = rec::doExecute(gocpp::recv(re), nullptr, b, ""_s, 0, 2, dstCap.make_slice(0, 0));
+        auto a = rec::find(gocpp::recv(re), nullptr, b, ""_s, 0, 2, dstCap.make_slice(0, 0));
         if(a == nullptr)
         {
             return nullptr;
@@ -1287,30 +1282,13 @@ namespace golang::regexp
         return b.make_slice(a[0], a[1], a[1]);
     }
 
-    // FindIndex returns a two-element slice of integers defining the location of
-    // the leftmost match in b of the regular expression. The match itself is at
-    // b[loc[0]:loc[1]].
-    // A return value of nil indicates no match.
-    gocpp::slice<int> rec::FindIndex(Regexp* re, gocpp::slice<unsigned char> b)
-    {
-        gocpp::slice<int> loc;
-        auto a = rec::doExecute(gocpp::recv(re), nullptr, b, ""_s, 0, 2, nullptr);
-        if(a == nullptr)
-        {
-            return nullptr;
-        }
-        return a.make_slice(0, 2);
-    }
-
-    // FindString returns a string holding the text of the leftmost match in s of the regular
-    // expression. If there is no match, the return value is an empty string,
-    // but it will also be empty if the regular expression successfully matches
-    // an empty string. Use [Regexp.FindStringIndex] or [Regexp.FindStringSubmatch] if it is
-    // necessary to distinguish these cases.
+    // FindString returns the text of the leftmost match for re in s.
+    // The return value is the empty string both for an empty match and for no match.
+    // To distinguish those two cases, use [Regexp.FindStringIndex] or [Regexp.FindStringSubmatch].
     gocpp::string rec::FindString(Regexp* re, gocpp::string s)
     {
         gocpp::array<int, 2> dstCap = {};
-        auto a = rec::doExecute(gocpp::recv(re), nullptr, nullptr, s, 0, 2, dstCap.make_slice(0, 0));
+        auto a = rec::find(gocpp::recv(re), nullptr, nullptr, s, 0, 2, dstCap.make_slice(0, 0));
         if(a == nullptr)
         {
             return ""_s;
@@ -1318,59 +1296,397 @@ namespace golang::regexp
         return s.make_slice(a[0], a[1]);
     }
 
-    // FindStringIndex returns a two-element slice of integers defining the
-    // location of the leftmost match in s of the regular expression. The match
-    // itself is at s[loc[0]:loc[1]].
-    // A return value of nil indicates no match.
+    // FindIndex returns the location of the leftmost match for re in b.
+    // The match itself is at b[m[0]:m[1]].
+    // The return value is nil for no match.
+    gocpp::slice<int> rec::FindIndex(Regexp* re, gocpp::slice<unsigned char> b)
+    {
+        gocpp::slice<int> m;
+        m = rec::find(gocpp::recv(re), nullptr, b, ""_s, 0, 2, nullptr);
+        if(m == nullptr)
+        {
+            return nullptr;
+        }
+        return m.make_slice(0, 2);
+    }
+
+    // FindStringIndex returns the location of the leftmost match for re in s.
+    // The match itself is at s[m[0]:m[1]].
+    // The return value is nil for no match.
     gocpp::slice<int> rec::FindStringIndex(Regexp* re, gocpp::string s)
     {
-        gocpp::slice<int> loc;
-        auto a = rec::doExecute(gocpp::recv(re), nullptr, nullptr, s, 0, 2, nullptr);
-        if(a == nullptr)
+        gocpp::slice<int> m;
+        m = rec::find(gocpp::recv(re), nullptr, nullptr, s, 0, 2, nullptr);
+        if(m == nullptr)
         {
             return nullptr;
         }
-        return a.make_slice(0, 2);
+        return m.make_slice(0, 2);
     }
 
-    // FindReaderIndex returns a two-element slice of integers defining the
-    // location of the leftmost match of the regular expression in text read from
-    // the [io.RuneReader]. The match text was found in the input stream at
-    // byte offset loc[0] through loc[1]-1.
-    // A return value of nil indicates no match.
+    // FindReaderIndex returns the location of the leftmost match for re in r.
+    // The match starts at byte index m[0] and ends just before byte index m[1].
+    // The return value is nil for no match.
+    //
+    // FindReaderIndex may read arbitrarily far from r,
+    // including reading beyond the returned match.
     gocpp::slice<int> rec::FindReaderIndex(Regexp* re, io::RuneReader r)
     {
-        gocpp::slice<int> loc;
-        auto a = rec::doExecute(gocpp::recv(re), r, nullptr, ""_s, 0, 2, nullptr);
-        if(a == nullptr)
+        gocpp::slice<int> m;
+        m = rec::find(gocpp::recv(re), r, nullptr, ""_s, 0, 2, nullptr);
+        if(m == nullptr)
         {
             return nullptr;
         }
-        return a.make_slice(0, 2);
+        return m.make_slice(0, 2);
     }
 
-    // FindSubmatch returns a slice of slices holding the text of the leftmost
-    // match of the regular expression in b and the matches, if any, of its
-    // subexpressions, as defined by the 'Submatch' descriptions in the package
-    // comment.
-    // A return value of nil indicates no match.
+    // FindSubmatch returns the first match for re in b, including submatches.
+    // The overall match is m[0], the first submatch is m[1], and so on.
+    // The return value is nil for no match.
     gocpp::slice<gocpp::slice<unsigned char>> rec::FindSubmatch(Regexp* re, gocpp::slice<unsigned char> b)
     {
         gocpp::array<int, 4> dstCap = {};
-        auto a = rec::doExecute(gocpp::recv(re), nullptr, b, ""_s, 0, re->prog->NumCap, dstCap.make_slice(0, 0));
+        auto m = rec::find(gocpp::recv(re), nullptr, b, ""_s, 0, re->prog->NumCap, dstCap.make_slice(0, 0));
+        if(m == nullptr)
+        {
+            return nullptr;
+        }
+        auto sub = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<unsigned char>>>(), 1 + re->numSubexp);
+        for(auto [i, gocpp_ignored] : sub)
+        {
+            if(2 * i < len(m) && m[2 * i] >= 0)
+            {
+                sub[i] = b.make_slice(m[2 * i], m[2 * i + 1], m[2 * i + 1]);
+            }
+        }
+        return sub;
+    }
+
+    // FindStringSubmatch returns the first match for re in s, including submatches.
+    // The overall match is s[0], the first submatch is s[1], and so on.
+    // The return value is nil for no match.
+    gocpp::slice<gocpp::string> rec::FindStringSubmatch(Regexp* re, gocpp::string s)
+    {
+        gocpp::array<int, 4> dstCap = {};
+        auto a = rec::find(gocpp::recv(re), nullptr, nullptr, s, 0, re->prog->NumCap, dstCap.make_slice(0, 0));
         if(a == nullptr)
         {
             return nullptr;
         }
-        auto ret = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<unsigned char>>>(), 1 + re->numSubexp);
+        auto ret = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 1 + re->numSubexp);
         for(auto [i, gocpp_ignored] : ret)
         {
             if(2 * i < len(a) && a[2 * i] >= 0)
             {
-                ret[i] = b.make_slice(a[2 * i], a[2 * i + 1], a[2 * i + 1]);
+                ret[i] = s.make_slice(a[2 * i], a[2 * i + 1]);
             }
         }
         return ret;
+    }
+
+    // FindSubmatchIndex returns the first match for re in b, including submatches.
+    // The overall match is b[m[0]:m[1]], the first submatch is b[m[2]:m[3]], and so on.
+    // The return value is nil for no match.
+    gocpp::slice<int> rec::FindSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b)
+    {
+        return rec::pad(gocpp::recv(re), rec::find(gocpp::recv(re), nullptr, b, ""_s, 0, re->prog->NumCap, nullptr));
+    }
+
+    // FindStringSubmatchIndex returns the first match for re in s, including submatches.
+    // The overall match is s[m[0]:m[1]], the first submatch is s[m[2]:m[3]], and so on.
+    // The return value is nil for no match.
+    gocpp::slice<int> rec::FindStringSubmatchIndex(Regexp* re, gocpp::string s)
+    {
+        return rec::pad(gocpp::recv(re), rec::find(gocpp::recv(re), nullptr, nullptr, s, 0, re->prog->NumCap, nullptr));
+    }
+
+    // FindReaderSubmatchIndex returns the first match for re in r, including submatches.
+    // The overall match is at byte index m[0] up to m[1],
+    // the first submatch is at byte index m[2] up to m[3], and so on.
+    // The return value is nil for no match.
+    //
+    // FindReaderSubmatchIndex may read arbitrarily far from r,
+    // including reading beyond the returned match.
+    gocpp::slice<int> rec::FindReaderSubmatchIndex(Regexp* re, io::RuneReader r)
+    {
+        return rec::pad(gocpp::recv(re), rec::find(gocpp::recv(re), r, nullptr, ""_s, 0, re->prog->NumCap, nullptr));
+    }
+
+    // all returns at most n matches for re in b.
+    iter::Seq<gocpp::slice<unsigned char>> rec::all(Regexp* re, gocpp::slice<unsigned char> b, int n)
+    {
+        return [=](std::function<bool (gocpp::slice<unsigned char> _1)> yield) mutable -> void
+        {
+            for(auto [m, gocpp_ignored] : rec::matches(gocpp::recv(re), ""_s, b, n, 2))
+            {
+                if(! yield(b.make_slice(m[0], m[1], m[1])))
+                {
+                    break;
+                }
+            }
+        };
+    }
+
+    // allString returns at most n matches for re in s.
+    iter::Seq<gocpp::string> rec::allString(Regexp* re, gocpp::string s, int n)
+    {
+        return [=](std::function<bool (gocpp::string _1)> yield) mutable -> void
+        {
+            for(auto [m, gocpp_ignored] : rec::matches(gocpp::recv(re), s, nullptr, n, 2))
+            {
+                if(! yield(s.make_slice(m[0], m[1])))
+                {
+                    break;
+                }
+            }
+        };
+    }
+
+    // allIndex returns the locations of at most n matches for re in b.
+    iter::Seq<gocpp::slice<int>> rec::allIndex(Regexp* re, gocpp::slice<unsigned char> b, int n)
+    {
+        return [=](std::function<bool (gocpp::slice<int> _1)> yield) mutable -> void
+        {
+            for(auto [m, gocpp_ignored] : rec::matches(gocpp::recv(re), ""_s, b, n, 2))
+            {
+                if(! yield(gocpp::slice<int> {m[0], m[1]}))
+                {
+                    break;
+                }
+            }
+        };
+    }
+
+    // allStringIndex returns the locations of at most n matches for re in s.
+    iter::Seq<gocpp::slice<int>> rec::allStringIndex(Regexp* re, gocpp::string s, int n)
+    {
+        return [=](std::function<bool (gocpp::slice<int> _1)> yield) mutable -> void
+        {
+            for(auto [m, gocpp_ignored] : rec::matches(gocpp::recv(re), s, nullptr, n, 2))
+            {
+                if(! yield(gocpp::slice<int> {m[0], m[1]}))
+                {
+                    break;
+                }
+            }
+        };
+    }
+
+    // allSubmatch returns the locations of at most n matches for re in b,
+    // including submatch locations.
+    iter::Seq<gocpp::slice<gocpp::slice<unsigned char>>> rec::allSubmatch(Regexp* re, gocpp::slice<unsigned char> b, int n)
+    {
+        return [=](std::function<bool (gocpp::slice<gocpp::slice<unsigned char>> _1)> yield) mutable -> void
+        {
+            for(auto [m, gocpp_ignored] : rec::matches(gocpp::recv(re), ""_s, b, n, re->prog->NumCap))
+            {
+                auto sub = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<unsigned char>>>(), len(m) / 2);
+                for(auto [i, gocpp_ignored] : sub)
+                {
+                    if(m[2 * i] >= 0)
+                    {
+                        sub[i] = b.make_slice(m[2 * i], m[2 * i + 1], m[2 * i + 1]);
+                    }
+                }
+                if(! yield(sub))
+                {
+                    break;
+                }
+            }
+        };
+    }
+
+    // allStringSubmatch returns the locations of at most n matches for re in s,
+    // including submatch locations.
+    iter::Seq<gocpp::slice<gocpp::string>> rec::allStringSubmatch(Regexp* re, gocpp::string s, int n)
+    {
+        return [=](std::function<bool (gocpp::slice<gocpp::string> _1)> yield) mutable -> void
+        {
+            for(auto [m, gocpp_ignored] : rec::matches(gocpp::recv(re), s, nullptr, n, re->prog->NumCap))
+            {
+                auto sub = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), len(m) / 2);
+                for(auto [i, gocpp_ignored] : sub)
+                {
+                    if(m[2 * i] >= 0)
+                    {
+                        sub[i] = s.make_slice(m[2 * i], m[2 * i + 1]);
+                    }
+                }
+                if(! yield(sub))
+                {
+                    break;
+                }
+            }
+        };
+    }
+
+    // allSubmatchIndex returns the locations of at most n matches for re in b,
+    // including submatch locations.
+    iter::Seq<gocpp::slice<int>> rec::allSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b, int n)
+    {
+        return [=](std::function<bool (gocpp::slice<int> _1)> yield) mutable -> void
+        {
+            for(auto [m, gocpp_ignored] : rec::matches(gocpp::recv(re), ""_s, b, n, re->prog->NumCap))
+            {
+                if(! yield(slices::Clone(m)))
+                {
+                    break;
+                }
+            }
+        };
+    }
+
+    // allStringSubmatchIndex returns the locations of at most n matches for re in s,
+    // including submatch locations.
+    iter::Seq<gocpp::slice<int>> rec::allStringSubmatchIndex(Regexp* re, gocpp::string s, int n)
+    {
+        return [=](std::function<bool (gocpp::slice<int> _1)> yield) mutable -> void
+        {
+            for(auto [m, gocpp_ignored] : rec::matches(gocpp::recv(re), s, nullptr, n, re->prog->NumCap))
+            {
+                if(! yield(slices::Clone(m)))
+                {
+                    break;
+                }
+            }
+        };
+    }
+
+    // All returns all the matches for re in b.
+    iter::Seq<gocpp::slice<unsigned char>> rec::_All(Regexp* re, gocpp::slice<unsigned char> b)
+    {
+        return rec::all(gocpp::recv(re), b, - 1);
+    }
+
+    // AllString returns all the matches for re in s.
+    iter::Seq<gocpp::string> rec::_AllString(Regexp* re, gocpp::string s)
+    {
+        return rec::allString(gocpp::recv(re), s, - 1);
+    }
+
+    // AllIndex returns the locations of all matches for re in b.
+    iter::Seq<gocpp::slice<int>> rec::_AllIndex(Regexp* re, gocpp::slice<unsigned char> b)
+    {
+        return rec::allIndex(gocpp::recv(re), b, - 1);
+    }
+
+    // AllStringIndex returns the locations of all matches for re in s.
+    iter::Seq<gocpp::slice<int>> rec::_AllStringIndex(Regexp* re, gocpp::string s)
+    {
+        return rec::allStringIndex(gocpp::recv(re), s, - 1);
+    }
+
+    // AllSubmatch returns the locations of all matches for re in b,
+    // including submatch locations.
+    // In each returned match m, the overall match is m[0],
+    // the first submatch is m[1], and so on.
+    iter::Seq<gocpp::slice<gocpp::slice<unsigned char>>> rec::_AllSubmatch(Regexp* re, gocpp::slice<unsigned char> b)
+    {
+        return rec::allSubmatch(gocpp::recv(re), b, - 1);
+    }
+
+    // AllStringSubmatch returns the locations of all matches for re in s,
+    // including submatch locations.
+    // In each returned match m, m[0] is the overall match,
+    // m[1] is the first submatch, and so on.
+    iter::Seq<gocpp::slice<gocpp::string>> rec::_AllStringSubmatch(Regexp* re, gocpp::string s)
+    {
+        return rec::allStringSubmatch(gocpp::recv(re), s, - 1);
+    }
+
+    // AllSubmatchIndex returns the locations of all matches for re in b,
+    // including submatch locations.
+    // In each returned match m, the overall match is b[m[0]:m[1]],
+    // the first submatch is b[m[2]:m[3]], and so on.
+    iter::Seq<gocpp::slice<int>> rec::_AllSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b)
+    {
+        return rec::allSubmatchIndex(gocpp::recv(re), b, - 1);
+    }
+
+    // AllStringSubmatchIndex returns the locations of all matches for re in s,
+    // including submatch locations.
+    // In each returned match m, the overall match is s[m[0]:m[1]],
+    // the first submatch is s[m[2]:m[3]], and so on.
+    iter::Seq<gocpp::slice<int>> rec::_AllStringSubmatchIndex(Regexp* re, gocpp::string s)
+    {
+        return rec::allStringSubmatchIndex(gocpp::recv(re), s, - 1);
+    }
+
+    // FindAll returns all the matches for re in b.
+    // If n >= 0, FindAll returns no more than n matches.
+    // See [Regexp.All] for the equivalent iterator form.
+    gocpp::slice<gocpp::slice<unsigned char>> rec::FindAll(Regexp* re, gocpp::slice<unsigned char> b, int n)
+    {
+        return slices::Collect(rec::all(gocpp::recv(re), b, n));
+    }
+
+    // FindAllString returns all the matches for re in s.
+    // If n >= 0, FindAllString returns no more than n matches.
+    // See [Regexp.AllString] for the equivalent iterator form.
+    gocpp::slice<gocpp::string> rec::FindAllString(Regexp* re, gocpp::string s, int n)
+    {
+        return slices::Collect(rec::allString(gocpp::recv(re), s, n));
+    }
+
+    // FindAllIndex returns the locations of all matches for re in b.
+    // If n >= 0, FindAllIndex returns no more than n matches.
+    // See [Regexp.AllIndex] for the equivalent iterator form.
+    gocpp::slice<gocpp::slice<int>> rec::FindAllIndex(Regexp* re, gocpp::slice<unsigned char> b, int n)
+    {
+        return slices::Collect(rec::allIndex(gocpp::recv(re), b, n));
+    }
+
+    // FindAllStringIndex returns the locations of all matches for re in s.
+    // If n >= 0, FindAllStringIndex returns no more than n matches.
+    // See [Regexp.AllStringIndex] for the equivalent iterator form.
+    gocpp::slice<gocpp::slice<int>> rec::FindAllStringIndex(Regexp* re, gocpp::string s, int n)
+    {
+        return slices::Collect(rec::allStringIndex(gocpp::recv(re), s, n));
+    }
+
+    // FindAllSubmatch returns the locations of all matches for re in b,
+    // including submatch locations.
+    // In each returned match m, the overall match is m[0],
+    // the first submatch is m[1], and so on.
+    // If n >= 0, FindAllSubmatch returns no more than n matches.
+    // See [Regexp.AllSubmatch] for the equivalent iterator form.
+    gocpp::slice<gocpp::slice<gocpp::slice<unsigned char>>> rec::FindAllSubmatch(Regexp* re, gocpp::slice<unsigned char> b, int n)
+    {
+        return slices::Collect(rec::allSubmatch(gocpp::recv(re), b, n));
+    }
+
+    // FindAllStringSubmatch returns the locations of all matches for re in s,
+    // including submatch locations.
+    // In each returned match m, m[0] is the overall match,
+    // m[1] is the first submatch, and so on.
+    // If n >= 0, FindAllStringSubmatch returns no more than n matches.
+    // See [Regexp.AllStringSubmatch] for the equivalent iterator form.
+    gocpp::slice<gocpp::slice<gocpp::string>> rec::FindAllStringSubmatch(Regexp* re, gocpp::string s, int n)
+    {
+        return slices::Collect(rec::allStringSubmatch(gocpp::recv(re), s, n));
+    }
+
+    // FindAllSubmatchIndex returns the locations of all matches for re in b,
+    // including submatch locations.
+    // In each returned match m, the overall match is b[m[0]:m[1]],
+    // the first submatch is b[m[2]:m[3]], and so on.
+    // If n >= 0, FindAllSubmatchIndex returns no more than n matches.
+    // See [Regexp.AllSubmatchIndex] for the equivalent iterator form.
+    gocpp::slice<gocpp::slice<int>> rec::FindAllSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b, int n)
+    {
+        return slices::Collect(rec::allSubmatchIndex(gocpp::recv(re), b, n));
+    }
+
+    // FindAllStringSubmatchIndex returns the locations of all matches for re in s,
+    // including submatch locations.
+    // In each returned match m, the overall match is s[m[0]:m[1]],
+    // the first submatch is s[m[2]:m[3]], and so on.
+    // If n >= 0, FindAllStringSubmatchIndex returns no more than n matches.
+    // See [Regexp.AllStringSubmatchIndex] for the equivalent iterator form.
+    gocpp::slice<gocpp::slice<int>> rec::FindAllStringSubmatchIndex(Regexp* re, gocpp::string s, int n)
+    {
+        return slices::Collect(rec::allStringSubmatchIndex(gocpp::recv(re), s, n));
     }
 
     // Expand appends template to dst and returns the result; during the
@@ -1536,253 +1852,6 @@ namespace golang::regexp
         return {name, num, rest, ok};
     }
 
-    // FindSubmatchIndex returns a slice holding the index pairs identifying the
-    // leftmost match of the regular expression in b and the matches, if any, of
-    // its subexpressions, as defined by the 'Submatch' and 'Index' descriptions
-    // in the package comment.
-    // A return value of nil indicates no match.
-    gocpp::slice<int> rec::FindSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b)
-    {
-        return rec::pad(gocpp::recv(re), rec::doExecute(gocpp::recv(re), nullptr, b, ""_s, 0, re->prog->NumCap, nullptr));
-    }
-
-    // FindStringSubmatch returns a slice of strings holding the text of the
-    // leftmost match of the regular expression in s and the matches, if any, of
-    // its subexpressions, as defined by the 'Submatch' description in the
-    // package comment.
-    // A return value of nil indicates no match.
-    gocpp::slice<gocpp::string> rec::FindStringSubmatch(Regexp* re, gocpp::string s)
-    {
-        gocpp::array<int, 4> dstCap = {};
-        auto a = rec::doExecute(gocpp::recv(re), nullptr, nullptr, s, 0, re->prog->NumCap, dstCap.make_slice(0, 0));
-        if(a == nullptr)
-        {
-            return nullptr;
-        }
-        auto ret = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 1 + re->numSubexp);
-        for(auto [i, gocpp_ignored] : ret)
-        {
-            if(2 * i < len(a) && a[2 * i] >= 0)
-            {
-                ret[i] = s.make_slice(a[2 * i], a[2 * i + 1]);
-            }
-        }
-        return ret;
-    }
-
-    // FindStringSubmatchIndex returns a slice holding the index pairs
-    // identifying the leftmost match of the regular expression in s and the
-    // matches, if any, of its subexpressions, as defined by the 'Submatch' and
-    // 'Index' descriptions in the package comment.
-    // A return value of nil indicates no match.
-    gocpp::slice<int> rec::FindStringSubmatchIndex(Regexp* re, gocpp::string s)
-    {
-        return rec::pad(gocpp::recv(re), rec::doExecute(gocpp::recv(re), nullptr, nullptr, s, 0, re->prog->NumCap, nullptr));
-    }
-
-    // FindReaderSubmatchIndex returns a slice holding the index pairs
-    // identifying the leftmost match of the regular expression of text read by
-    // the [io.RuneReader], and the matches, if any, of its subexpressions, as defined
-    // by the 'Submatch' and 'Index' descriptions in the package comment. A
-    // return value of nil indicates no match.
-    gocpp::slice<int> rec::FindReaderSubmatchIndex(Regexp* re, io::RuneReader r)
-    {
-        return rec::pad(gocpp::recv(re), rec::doExecute(gocpp::recv(re), r, nullptr, ""_s, 0, re->prog->NumCap, nullptr));
-    }
-
-    // FindAll is the 'All' version of Find; it returns a slice of all successive
-    // matches of the expression, as defined by the 'All' description in the
-    // package comment.
-    // A return value of nil indicates no match.
-    gocpp::slice<gocpp::slice<unsigned char>> rec::FindAll(Regexp* re, gocpp::slice<unsigned char> b, int n)
-    {
-        if(n < 0)
-        {
-            n = len(b) + 1;
-        }
-        gocpp::slice<gocpp::slice<unsigned char>> result = {};
-        rec::allMatches(gocpp::recv(re), ""_s, b, n, [=](gocpp::slice<int> match) mutable -> void
-        {
-            if(result == nullptr)
-            {
-                result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<unsigned char>>>(), 0, startSize);
-            }
-            result = append(result, b.make_slice(match[0], match[1], match[1]));
-        });
-        return result;
-    }
-
-    // FindAllIndex is the 'All' version of [Regexp.FindIndex]; it returns a slice of all
-    // successive matches of the expression, as defined by the 'All' description
-    // in the package comment.
-    // A return value of nil indicates no match.
-    gocpp::slice<gocpp::slice<int>> rec::FindAllIndex(Regexp* re, gocpp::slice<unsigned char> b, int n)
-    {
-        if(n < 0)
-        {
-            n = len(b) + 1;
-        }
-        gocpp::slice<gocpp::slice<int>> result = {};
-        rec::allMatches(gocpp::recv(re), ""_s, b, n, [=](gocpp::slice<int> match) mutable -> void
-        {
-            if(result == nullptr)
-            {
-                result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<int>>>(), 0, startSize);
-            }
-            result = append(result, match.make_slice(0, 2));
-        });
-        return result;
-    }
-
-    // FindAllString is the 'All' version of [Regexp.FindString]; it returns a slice of all
-    // successive matches of the expression, as defined by the 'All' description
-    // in the package comment.
-    // A return value of nil indicates no match.
-    gocpp::slice<gocpp::string> rec::FindAllString(Regexp* re, gocpp::string s, int n)
-    {
-        if(n < 0)
-        {
-            n = len(s) + 1;
-        }
-        gocpp::slice<gocpp::string> result = {};
-        rec::allMatches(gocpp::recv(re), s, nullptr, n, [=](gocpp::slice<int> match) mutable -> void
-        {
-            if(result == nullptr)
-            {
-                result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0, startSize);
-            }
-            result = append(result, s.make_slice(match[0], match[1]));
-        });
-        return result;
-    }
-
-    // FindAllStringIndex is the 'All' version of [Regexp.FindStringIndex]; it returns a
-    // slice of all successive matches of the expression, as defined by the 'All'
-    // description in the package comment.
-    // A return value of nil indicates no match.
-    gocpp::slice<gocpp::slice<int>> rec::FindAllStringIndex(Regexp* re, gocpp::string s, int n)
-    {
-        if(n < 0)
-        {
-            n = len(s) + 1;
-        }
-        gocpp::slice<gocpp::slice<int>> result = {};
-        rec::allMatches(gocpp::recv(re), s, nullptr, n, [=](gocpp::slice<int> match) mutable -> void
-        {
-            if(result == nullptr)
-            {
-                result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<int>>>(), 0, startSize);
-            }
-            result = append(result, match.make_slice(0, 2));
-        });
-        return result;
-    }
-
-    // FindAllSubmatch is the 'All' version of [Regexp.FindSubmatch]; it returns a slice
-    // of all successive matches of the expression, as defined by the 'All'
-    // description in the package comment.
-    // A return value of nil indicates no match.
-    gocpp::slice<gocpp::slice<gocpp::slice<unsigned char>>> rec::FindAllSubmatch(Regexp* re, gocpp::slice<unsigned char> b, int n)
-    {
-        if(n < 0)
-        {
-            n = len(b) + 1;
-        }
-        gocpp::slice<gocpp::slice<gocpp::slice<unsigned char>>> result = {};
-        rec::allMatches(gocpp::recv(re), ""_s, b, n, [=](gocpp::slice<int> match) mutable -> void
-        {
-            if(result == nullptr)
-            {
-                result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<gocpp::slice<unsigned char>>>>(), 0, startSize);
-            }
-            auto slice = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<unsigned char>>>(), len(match) / 2);
-            for(auto [j, gocpp_ignored] : slice)
-            {
-                if(match[2 * j] >= 0)
-                {
-                    slice[j] = b.make_slice(match[2 * j], match[2 * j + 1], match[2 * j + 1]);
-                }
-            }
-            result = append(result, slice);
-        });
-        return result;
-    }
-
-    // FindAllSubmatchIndex is the 'All' version of [Regexp.FindSubmatchIndex]; it returns
-    // a slice of all successive matches of the expression, as defined by the
-    // 'All' description in the package comment.
-    // A return value of nil indicates no match.
-    gocpp::slice<gocpp::slice<int>> rec::FindAllSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b, int n)
-    {
-        if(n < 0)
-        {
-            n = len(b) + 1;
-        }
-        gocpp::slice<gocpp::slice<int>> result = {};
-        rec::allMatches(gocpp::recv(re), ""_s, b, n, [=](gocpp::slice<int> match) mutable -> void
-        {
-            if(result == nullptr)
-            {
-                result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<int>>>(), 0, startSize);
-            }
-            result = append(result, match);
-        });
-        return result;
-    }
-
-    // FindAllStringSubmatch is the 'All' version of [Regexp.FindStringSubmatch]; it
-    // returns a slice of all successive matches of the expression, as defined by
-    // the 'All' description in the package comment.
-    // A return value of nil indicates no match.
-    gocpp::slice<gocpp::slice<gocpp::string>> rec::FindAllStringSubmatch(Regexp* re, gocpp::string s, int n)
-    {
-        if(n < 0)
-        {
-            n = len(s) + 1;
-        }
-        gocpp::slice<gocpp::slice<gocpp::string>> result = {};
-        rec::allMatches(gocpp::recv(re), s, nullptr, n, [=](gocpp::slice<int> match) mutable -> void
-        {
-            if(result == nullptr)
-            {
-                result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<gocpp::string>>>(), 0, startSize);
-            }
-            auto slice = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), len(match) / 2);
-            for(auto [j, gocpp_ignored] : slice)
-            {
-                if(match[2 * j] >= 0)
-                {
-                    slice[j] = s.make_slice(match[2 * j], match[2 * j + 1]);
-                }
-            }
-            result = append(result, slice);
-        });
-        return result;
-    }
-
-    // FindAllStringSubmatchIndex is the 'All' version of
-    // [Regexp.FindStringSubmatchIndex]; it returns a slice of all successive matches of
-    // the expression, as defined by the 'All' description in the package
-    // comment.
-    // A return value of nil indicates no match.
-    gocpp::slice<gocpp::slice<int>> rec::FindAllStringSubmatchIndex(Regexp* re, gocpp::string s, int n)
-    {
-        if(n < 0)
-        {
-            n = len(s) + 1;
-        }
-        gocpp::slice<gocpp::slice<int>> result = {};
-        rec::allMatches(gocpp::recv(re), s, nullptr, n, [=](gocpp::slice<int> match) mutable -> void
-        {
-            if(result == nullptr)
-            {
-                result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<int>>>(), 0, startSize);
-            }
-            result = append(result, match);
-        });
-        return result;
-    }
-
     // Split slices s into substrings separated by the expression and returns a slice of
     // the substrings between those expression matches.
     //
@@ -1796,17 +1865,15 @@ namespace golang::regexp
     //	// s: ["", "b", "b", "c", "cadaaae"]
     //
     // The count determines the number of substrings to return:
-    //
-    //	n > 0: at most n substrings; the last substring will be the unsplit remainder.
-    //	n == 0: the result is nil (zero substrings)
-    //	n < 0: all substrings
+    //   - n > 0: at most n substrings; the last substring will be the unsplit remainder;
+    //   - n == 0: the result is nil (zero substrings);
+    //   - n < 0: all substrings.
     gocpp::slice<gocpp::string> rec::Split(Regexp* re, gocpp::string s, int n)
     {
         if(n == 0)
         {
             return nullptr;
         }
-
         if(len(re->expr) > 0 && len(s) == 0)
         {
             return gocpp::slice<gocpp::string> {""_s};
@@ -1840,15 +1907,24 @@ namespace golang::regexp
         return strings;
     }
 
-    // MarshalText implements [encoding.TextMarshaler]. The output
+    // AppendText implements [encoding.TextAppender]. The output
     // matches that of calling the [Regexp.String] method.
     //
     // Note that the output is lossy in some cases: This method does not indicate
     // POSIX regular expressions (i.e. those compiled by calling [CompilePOSIX]), or
     // those for which the [Regexp.Longest] method has been called.
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::AppendText(Regexp* re, gocpp::slice<unsigned char> b)
+    {
+        return {append(b, rec::String(gocpp::recv(re))), nullptr};
+    }
+
+    // MarshalText implements [encoding.TextMarshaler]. The output
+    // matches that of calling the [Regexp.AppendText] method.
+    //
+    // See [Regexp.AppendText] for more information.
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::MarshalText(Regexp* re)
     {
-        return {gocpp::slice<unsigned char>(rec::String(gocpp::recv(re))), nullptr};
+        return rec::AppendText(gocpp::recv(re), nullptr);
     }
 
     // UnmarshalText implements [encoding.TextUnmarshaler] by calling

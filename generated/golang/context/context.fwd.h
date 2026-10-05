@@ -15,11 +15,13 @@ namespace golang::context
     using CancelFunc = std::function<void ()>;
     using CancelCauseFunc = std::function<void (gocpp::error cause)>;
     struct afterFuncer;
+    struct afterFuncCtx;
     struct stopCtx;
     struct gocpp_id_3;
     struct canceler;
     struct gocpp_id_4;
     struct gocpp_id_5;
+    struct cancelCtx;
     struct gocpp_id_7;
     struct gocpp_id_8;
     struct gocpp_id_9;
@@ -30,18 +32,14 @@ namespace golang::context
     struct gocpp_id_14;
     struct withoutCancelCtx;
     struct gocpp_id_15;
+    struct timerCtx;
     struct valueCtx;
 }
-#include "golang/sync/atomic/value.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-#include "golang/sync/once.fwd.h"
 #include "golang/time/sleep.fwd.h"
 #include "golang/time/time.fwd.h"
 
 namespace golang::context
 {
+    namespace time = golang::time;
     struct Context;
-    struct afterFuncCtx;
-    struct cancelCtx;
-    struct timerCtx;
 }

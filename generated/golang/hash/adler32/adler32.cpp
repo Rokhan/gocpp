@@ -13,6 +13,7 @@
 
 #include "golang/errors/errors.h"
 #include "golang/hash/hash.h"
+#include "golang/internal/byteorder/byteorder.h"
 
 // Package adler32 implements the Adler-32 checksum.
 //
@@ -23,8 +24,11 @@
 //	are done modulo 65521. s1 is initialized to 1, s2 to zero.  The
 //	Adler-32 checksum is stored as s2*65536 + s1 in most-
 //	significant-byte first (network) order.
-namespace golang::adler32
+namespace golang::hash::adler32
 {
+    namespace byteorder = golang::internal::byteorder;
+    namespace errors = golang::errors;
+    namespace hash = golang::hash;
     namespace rec
     {
     }
@@ -58,12 +62,16 @@ namespace golang::adler32
         return 4;
     }
 
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::AppendBinary(digest* d, gocpp::slice<unsigned char> b)
+    {
+        b = append(b, magic);
+        b = byteorder::BEAppendUint32(b, uint32_t(*d));
+        return {b, nullptr};
+    }
+
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::MarshalBinary(digest* d)
     {
-        auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
-        b = append(b, magic);
-        b = appendUint32(b, uint32_t(*d));
-        return {b, nullptr};
+        return rec::AppendBinary(gocpp::recv(d), gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize));
     }
 
     gocpp::error rec::UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
@@ -76,23 +84,14 @@ namespace golang::adler32
         {
             return errors::New("hash/adler32: invalid hash state size"_s);
         }
-        *d = digest(readUint32(b.make_slice(len(magic))));
+        *d = digest(byteorder::BEUint32(b.make_slice(len(magic))));
         return nullptr;
     }
 
-    // appendUint32 is semantically the same as [binary.BigEndian.AppendUint32]
-    // We copied this function because we can not import "encoding/binary" here.
-    gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x)
+    std::tuple<hash::Cloner, gocpp::error> rec::Clone(digest* d)
     {
-        return append(b, (unsigned char)(x >> 24), (unsigned char)(x >> 16), (unsigned char)(x >> 8), (unsigned char)(x));
-    }
-
-    // readUint32 is semantically the same as [binary.BigEndian.Uint32]
-    // We copied this function because we can not import "encoding/binary" here.
-    uint32_t readUint32(gocpp::slice<unsigned char> b)
-    {
-        _ = b[3];
-        return uint32_t(b[3]) | (uint32_t(b[2]) << 8) | (uint32_t(b[1]) << 16) | (uint32_t(b[0]) << 24);
+        auto r = *d;
+        return {& r, nullptr};
     }
 
     // Add p to the running checksum d.

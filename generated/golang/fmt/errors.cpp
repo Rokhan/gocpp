@@ -13,10 +13,14 @@
 
 #include "golang/errors/errors.h"
 #include "golang/fmt/print.h"
-#include "golang/sort/sort.h"
+#include "golang/internal/stringslite/strings.h"
+#include "golang/slices/sort.h"
 
 namespace golang::fmt
 {
+    namespace errors = golang::errors;
+    namespace slices = golang::slices;
+    namespace stringslite = golang::internal::stringslite;
     namespace rec
     {
     }
@@ -33,6 +37,25 @@ namespace golang::fmt
     // the error interface. The %w verb is otherwise a synonym for %v.
     gocpp::error Errorf(gocpp::string format, gocpp::slice<go_any> a)
     {
+        gocpp::error err;
+        // This function has been split in a somewhat unnatural way
+        // so that both it and the errors.New call can be inlined.
+        if(err = errorf(format, a); err != nullptr)
+        {
+            return err;
+        }
+        // No formatting was needed. We can avoid some allocations and other work.
+        // See https://go.dev/cl/708836 for details.
+        return errors::New(format);
+    }
+
+    // errorf formats and returns an error value, or nil if no formatting is required.
+    gocpp::error errorf(gocpp::string format, gocpp::slice<go_any> a)
+    {
+        if(len(a) == 0 && stringslite::IndexByte(format, '%') == - 1)
+        {
+            return nullptr;
+        }
         auto p = newPrinter();
         p->wrapErrs = true;
         rec::doPrintf(gocpp::recv(p), format, a);
@@ -61,7 +84,7 @@ namespace golang::fmt
                 default:
                     if(p->reordered)
                     {
-                        sort::Ints(p->wrappedErrs);
+                        slices::Sort(p->wrappedErrs);
                     }
                     gocpp::slice<gocpp::error> errs = {};
                     for(auto [i, argNum] : p->wrappedErrs)

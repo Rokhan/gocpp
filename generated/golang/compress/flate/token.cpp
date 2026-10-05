@@ -11,15 +11,21 @@
 #include "golang/compress/flate/token.h"
 #include "gocpp/support.h"
 
-namespace golang::flate
+#include "golang/compress/flate/deflatefast.h"
+#include "golang/compress/flate/huffman_bit_writer.h"
+#include "golang/compress/flate/huffman_code.h"
+#include "golang/math/unsafe.h"
+
+namespace golang::compress::flate
 {
+    namespace math = golang::math;
     namespace rec
     {
     }
 
     // The length code for length X (MIN_MATCH_LENGTH <= X <= MAX_MATCH_LENGTH)
     // is lengthCodes[length - MIN_MATCH_LENGTH]
-    gocpp::array<uint32_t, 256> lengthCodes = gocpp::array<uint32_t, 256> {
+    gocpp::array<uint8_t, 256> lengthCodes = gocpp::array<uint8_t, 256> {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 8,
         9, 9, 10, 10, 11, 11, 12, 12, 12, 12,
         13, 13, 13, 13, 14, 14, 14, 14, 15, 15,
@@ -47,6 +53,35 @@ namespace golang::flate
         27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
         27, 27, 27, 27, 27, 28
     };
+    // lengthCodes1 is length codes, but starting at 1.
+    gocpp::array<uint8_t, 256> lengthCodes1 = gocpp::array<uint8_t, 256> {
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 9,
+        10, 10, 11, 11, 12, 12, 13, 13, 13, 13,
+        14, 14, 14, 14, 15, 15, 15, 15, 16, 16,
+        16, 16, 17, 17, 17, 17, 17, 17, 17, 17,
+        18, 18, 18, 18, 18, 18, 18, 18, 19, 19,
+        19, 19, 19, 19, 19, 19, 20, 20, 20, 20,
+        20, 20, 20, 20, 21, 21, 21, 21, 21, 21,
+        21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+        22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+        22, 22, 22, 22, 22, 22, 23, 23, 23, 23,
+        23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+        23, 23, 24, 24, 24, 24, 24, 24, 24, 24,
+        24, 24, 24, 24, 24, 24, 24, 24, 25, 25,
+        25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
+        25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
+        25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
+        26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+        26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+        26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+        26, 26, 27, 27, 27, 27, 27, 27, 27, 27,
+        27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+        27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+        27, 27, 27, 27, 28, 28, 28, 28, 28, 28,
+        28, 28, 28, 28, 28, 28, 28, 28, 28, 28,
+        28, 28, 28, 28, 28, 28, 28, 28, 28, 28,
+        28, 28, 28, 28, 28, 29
+    };
     gocpp::array<uint32_t, 256> offsetCodes = gocpp::array<uint32_t, 256> {
         0, 1, 2, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7,
         8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9,
@@ -65,52 +100,288 @@ namespace golang::flate
         15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
         15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15
     };
-    // Convert a literal into a literal token.
-    token literalToken(uint32_t literal)
+    // offsetCodes14 are offsetCodes, but with 14 added.
+    gocpp::array<uint32_t, 256> offsetCodes14 = gocpp::array<uint32_t, 256> {
+        14, 15, 16, 17, 18, 18, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21,
+        22, 22, 22, 22, 22, 22, 22, 22, 23, 23, 23, 23, 23, 23, 23, 23,
+        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
+        25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
+        26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+        26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+        27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+        27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+        28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28,
+        28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28,
+        28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28,
+        28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28,
+        29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29,
+        29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29,
+        29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29,
+        29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29
+    };
+    // A token is a token that will be written to output stream.
+    // It is either a literal or a match with offset and length.
+    // tokens are compound values as described above.
+    // Histograms are created as tokens are added.
+    // A full block is allocated.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    tokens::operator T()
     {
-        return token(literalType + literal);
+        T result;
+        result.extraHist = this->extraHist;
+        result.offHist = this->offHist;
+        result.litHist = this->litHist;
+        result.nFilled = this->nFilled;
+        result.n = this->n;
+        result.tokens = this->tokens;
+        return result;
     }
 
-    // Convert a < xlength, xoffset > pair into a match token.
-    token matchToken(uint32_t xlength, uint32_t xoffset)
+    template<typename T> requires gocpp::GoStruct<T>
+    bool tokens::operator==(const T& ref) const
     {
-        return token(matchType + (xlength << lengthShift) + xoffset);
+        if (extraHist != ref.extraHist) return false;
+        if (offHist != ref.offHist) return false;
+        if (litHist != ref.litHist) return false;
+        if (nFilled != ref.nFilled) return false;
+        if (n != ref.n) return false;
+        if (tokens != ref.tokens) return false;
+        return true;
     }
 
-    // Returns the literal of a literal token.
-    uint32_t rec::literal(token t)
+    std::ostream& tokens::PrintTo(std::ostream& os) const
     {
-        return uint32_t(t - literalType);
+        os << '{';
+        os << "" << extraHist;
+        os << " " << offHist;
+        os << " " << litHist;
+        os << " " << nFilled;
+        os << " " << n;
+        os << " " << tokens;
+        os << '}';
+        return os;
     }
 
-    // Returns the extra offset of a match token.
+    std::ostream& operator<<(std::ostream& os, const struct tokens& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // Reset resets the tokens and histograms.
+    void rec::Reset(tokens* t)
+    {
+        if(t->n == 0)
+        {
+            return;
+        }
+        t->n = 0;
+        t->nFilled = 0;
+        clear(t->litHist.make_slice(0));
+        clear(t->extraHist.make_slice(0));
+        clear(t->offHist.make_slice(0));
+    }
+
+    // indexTokens creates tokens from a slice of unindexed tokens.
+    tokens indexTokens(gocpp::slice<token> in)
+    {
+        tokens t = {};
+        rec::indexTokens(gocpp::recv(t), in);
+        return t;
+    }
+
+    // indexTokens clears and sets t from a slice of unindexed tokens.
+    void rec::indexTokens(tokens* t, gocpp::slice<token> in)
+    {
+        rec::Reset(gocpp::recv(t));
+        for(auto [gocpp_ignored, tok] : in)
+        {
+            if(tok < matchType)
+            {
+                rec::AddLiteral(gocpp::recv(t), rec::literal(gocpp::recv(tok)));
+                continue;
+            }
+            rec::AddMatch(gocpp::recv(t), uint32_t(rec::length(gocpp::recv(tok))), rec::offset(gocpp::recv(tok)) & matchOffsetOnlyMask);
+        }
+    }
+
+    // emitLiterals writes a literal chunk and returns the number of bytes written.
+    void emitLiterals(tokens* dst, gocpp::slice<unsigned char> lit)
+    {
+        for(auto [gocpp_ignored, v] : lit)
+        {
+            dst->tokens[dst->n] = token(v);
+            dst->litHist[v]++;
+            dst->n++;
+        }
+    }
+
+    // AddLiteral adds a single literal to the tokens.
+    void rec::AddLiteral(tokens* t, unsigned char lit)
+    {
+        t->tokens[t->n] = token(lit);
+        t->litHist[lit]++;
+        t->n++;
+    }
+
+    // mFastLog2 returns a fast approximation of log2(val).
+    // From https://stackoverflow.com/a/28730362.
+    double mFastLog2(double val)
+    {
+        auto ux = int32_t(math::Float32bits(val));
+        auto log2 = (float)(((ux >> 23) & 255) - 128);
+        ux &= - 0x7f800001;
+        ux += 127 << 23;
+        auto uval = math::Float32frombits(uint32_t(ux));
+        log2 += ((- 0.34484843) * uval + 2.02466578) * uval - 0.67487759;
+        return log2;
+    }
+
+    // EstimatedBits returns an estimated minimum size for the
+    // optimal compression of t.
+    // Minimum 1 bit is assigned per symbol.
+    // Maximum 15 bits are assigned per symbol.
+    int rec::EstimatedBits(tokens* t)
+    {
+        auto shannon = float(0);
+        auto bits = int(0);
+        auto nMatches = 0;
+        auto total = int(t->n) + t->nFilled;
+        if(total > 0)
+        {
+            auto invTotal = 1.0 / float(total);
+            for(auto [gocpp_ignored, v] : t->litHist.make_slice(0))
+            {
+                if(v > 0)
+                {
+                    auto n = float(v);
+                    shannon += gocpp::min(15, gocpp::max(1, - mFastLog2(n * invTotal))) * n;
+                }
+            }
+            // Just add 15 for EOB
+            shannon += 15;
+            for(auto [i, v] : t->extraHist.make_slice(1, literalCount - 256))
+            {
+                if(v > 0)
+                {
+                    auto n = float(v);
+                    shannon += gocpp::min(15, gocpp::max(1, - mFastLog2(n * invTotal))) * n;
+                    bits += int(lengthExtraBits[i & 31]) * int(v);
+                    nMatches += int(v);
+                }
+            }
+        }
+        if(nMatches > 0)
+        {
+            auto invTotal = 1.0 / float(nMatches);
+            for(auto [i, v] : t->offHist.make_slice(0, offsetCodeCount))
+            {
+                if(v > 0)
+                {
+                    auto n = float(v);
+                    shannon += gocpp::min(15, gocpp::max(1, - mFastLog2(n * invTotal))) * n;
+                    bits += int(offsetExtraBits[i & 31]) * int(v);
+                }
+            }
+        }
+        return int(shannon) + bits;
+    }
+
+    // AddMatch adds a match to the tokens.
+    // This function is very sensitive to inlining and right on the border.
+    void rec::AddMatch(tokens* t, uint32_t xlength, uint32_t xoffset)
+    {
+        auto oCode = offsetCode(xoffset);
+        xoffset |= oCode << 16;
+
+        t->extraHist[lengthCodes1[uint8_t(xlength)]]++;
+        t->offHist[oCode & 31]++;
+        t->tokens[t->n] = token(matchType | (xlength << lengthShift) | xoffset);
+        t->n++;
+    }
+
+    // AddMatchLong adds a match to the tokens, potentially longer than max match length.
+    // Length should NOT have the base subtracted, only offset should.
+    void rec::AddMatchLong(tokens* t, int32_t xlength, uint32_t xoffset)
+    {
+        auto oc = offsetCode(xoffset);
+        xoffset |= oc << 16;
+        for(; xlength > 0; )
+        {
+            auto xl = xlength;
+            if(xl > 258)
+            {
+                // We need to have at least baseMatchLength left over for next loop.
+                if(xl > 258 + baseMatchLength)
+                {
+                    xl = 258;
+                }
+                else
+                {
+                    xl = 258 - baseMatchLength;
+                }
+            }
+            xlength -= xl;
+            xl -= baseMatchLength;
+            t->extraHist[lengthCodes1[uint8_t(xl)]]++;
+            t->offHist[oc & 31]++;
+            t->tokens[t->n] = token(matchType | (uint32_t(xl) << lengthShift) | xoffset);
+            t->n++;
+        }
+    }
+
+    // AddEOB adds an end of block marker to the tokens.
+    void rec::AddEOB(tokens* t)
+    {
+        t->tokens[t->n] = token(endBlockMarker);
+        t->extraHist[0]++;
+        t->n++;
+    }
+
+    // Slice returns a slice of the tokens that references the tokens in t.
+    gocpp::slice<token> rec::Slice(tokens* t)
+    {
+        return t->tokens.make_slice(0, t->n);
+    }
+
+    // typ returns the type of a token.
+    uint32_t rec::typ(token t)
+    {
+        return uint32_t(t) & typeMask;
+    }
+
+    // literal returns the literal value of t.
+    uint8_t rec::literal(token t)
+    {
+        return uint8_t(t);
+    }
+
+    // offset returns the offset of a match token.
     uint32_t rec::offset(token t)
     {
         return uint32_t(t) & offsetMask;
     }
 
-    uint32_t rec::length(token t)
+    // length returns the length of a match token.
+    uint8_t rec::length(token t)
     {
-        return uint32_t((t - matchType) >> lengthShift);
+        return uint8_t(t >> lengthShift);
     }
 
-    uint32_t lengthCode(uint32_t len)
+    // lengthCode converts a match length to its code.
+    uint8_t lengthCode(uint8_t len)
     {
         return lengthCodes[len];
     }
 
-    // Returns the offset code corresponding to a specific offset.
+    // offsetCode returns the offset code corresponding to a specific offset.
     uint32_t offsetCode(uint32_t off)
     {
         if(off < uint32_t(len(offsetCodes)))
         {
-            return offsetCodes[off];
+            return offsetCodes[uint8_t(off)];
         }
-        if((off >> 7) < uint32_t(len(offsetCodes)))
-        {
-            return offsetCodes[off >> 7] + 14;
-        }
-        return offsetCodes[off >> 14] + 28;
+        return offsetCodes14[uint8_t(off >> 7)];
     }
 
 }

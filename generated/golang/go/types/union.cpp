@@ -22,17 +22,19 @@
 #include "golang/go/types/object.h"
 #include "golang/go/types/operand.h"
 #include "golang/go/types/predicates.h"
+#include "golang/go/types/recording.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeset.h"
 #include "golang/go/types/typestring.h"
 #include "golang/go/types/typeterm.h"
 #include "golang/go/types/typexpr.h"
-#include "golang/go/types/under.h"
 #include "golang/go/types/universe.h"
 #include "golang/internal/types/errors/codes.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::End;
@@ -72,7 +74,7 @@ namespace golang::types
 
     // NewUnion returns a new [Union] type with the given terms.
     // It is an error to create an empty union; they are syntactically not possible.
-    Union* NewUnion(gocpp::slice<golang::types::Term*> terms)
+    Union* NewUnion(gocpp::slice<golang::go::types::Term*> terms)
     {
         if(len(terms) == 0)
         {
@@ -86,12 +88,12 @@ namespace golang::types
         return len(u->terms);
     }
 
-    golang::types::Term* rec::Term(Union* u, int i)
+    golang::go::types::Term* rec::Term(Union* u, int i)
     {
         return u->terms[i];
     }
 
-    golang::types::Type rec::Underlying(Union* u)
+    golang::go::types::Type rec::Underlying(Union* u)
     {
         return u;
     }
@@ -103,36 +105,36 @@ namespace golang::types
 
     // A Term represents a term in a [Union].
     // NewTerm returns a new union term.
-    golang::types::Term* NewTerm(bool tilde, golang::types::Type typ)
+    golang::go::types::Term* NewTerm(bool tilde, golang::go::types::Type typ)
     {
         return new Term {tilde, typ};
     }
 
-    bool rec::Tilde(golang::types::Term* t)
+    bool rec::Tilde(golang::go::types::Term* t)
     {
         return t->tilde;
     }
 
-    golang::types::Type rec::Type(golang::types::Term* t)
+    golang::go::types::Type rec::Type(golang::go::types::Term* t)
     {
         return t->typ;
     }
 
-    gocpp::string rec::String(golang::types::Term* t)
+    gocpp::string rec::String(golang::go::types::Term* t)
     {
-        return rec::String(gocpp::recv((term*)(t)));
+        return rec::String(gocpp::recv((golang::go::types::term*)(t)));
     }
 
     // parseUnion parses uexpr as a union of expressions.
     // The result is a Union type, or Typ[Invalid] for some errors.
-    golang::types::Type parseUnion(Checker* check, ast::Expr uexpr)
+    golang::go::types::Type parseUnion(Checker* check, ast::Expr uexpr)
     {
         auto [blist, tlist] = flattenUnion(nullptr, uexpr);
         assert(len(blist) == len(tlist) - 1);
 
         gocpp::slice<Term*> terms = {};
 
-        golang::types::Type u = {};
+        golang::go::types::Type u = {};
         for(auto [i, x] : tlist)
         {
             auto term = parseTilde(check, x);
@@ -181,7 +183,7 @@ namespace golang::types
                     continue;
                 }
 
-                auto u = under(t->typ);
+                auto u = rec::Underlying(gocpp::recv(t->typ));
                 auto [f, gocpp_id_0] = gocpp::getValue<Interface*>(u);
                 if(t->tilde)
                 {
@@ -241,7 +243,7 @@ namespace golang::types
         return u;
     }
 
-    golang::types::Term* parseTilde(Checker* check, ast::Expr tx)
+    golang::go::types::Term* parseTilde(Checker* check, ast::Expr tx)
     {
         auto x = tx;
         bool tilde = {};
@@ -280,7 +282,7 @@ namespace golang::types
     // overlapping (not disjoint) from y. The result is < 0 if there is no
     // such term. The type of term y must not be an interface, and terms
     // with an interface type are ignored in the terms list.
-    int overlappingTerm(gocpp::slice<golang::types::Term*> terms, golang::types::Term* y)
+    int overlappingTerm(gocpp::slice<golang::go::types::Term*> terms, golang::go::types::Term* y)
     {
         assert(! IsInterface(y->typ));
         for(auto [i, x] : terms)
@@ -298,7 +300,7 @@ namespace golang::types
                     gocpp::panic("empty or top union term"_s);
                 }
             }
-            if(! rec::disjoint(gocpp::recv((term*)(x)), (term*)(y)))
+            if(! rec::disjoint(gocpp::recv((golang::go::types::term*)(x)), (golang::go::types::term*)(y)))
             {
                 return i;
             }

@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
     extern gocpp::slice<gocpp::rune> code1;
     extern gocpp::slice<gocpp::rune> code2;
@@ -32,7 +32,7 @@ namespace golang::syntax
 }
 #include "golang/regexp/syntax/parse.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
     extern gocpp::map<gocpp::string, charGroup> perlGroup;
     extern gocpp::map<gocpp::string, charGroup> posixGroup;

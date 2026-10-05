@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
     // The size of a CRC-32 checksum in bytes.
     const long Size = 4;

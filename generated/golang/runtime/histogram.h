@@ -16,10 +16,12 @@ namespace golang::runtime
     double float64NegInf();
     gocpp::slice<double> timeHistogramMetricsBuckets();
 }
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/atomic/types.h"
 
 namespace golang::runtime
 {
+    namespace atomic = golang::internal::runtime::atomic;
     struct timeHistogram
     {
         gocpp::array<atomic::Uint64, timeHistNumBuckets * timeHistNumSubBuckets> counts{};

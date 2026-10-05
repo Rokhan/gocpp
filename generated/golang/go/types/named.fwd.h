@@ -4,23 +4,15 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
-{
-    using namedState = uint32_t;
-    const namedState unresolved = 0;
-    const namedState resolved = 1;
-    const namedState complete = 2;
-}
-#include "golang/go/types/check.fwd.h"
-#include "golang/go/types/context.fwd.h"
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/typelists.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-
-namespace golang::types
+namespace golang::go::types
 {
     struct Named;
     struct instance;
+    using stateMask = uint32_t;
+    // initially, type parameters, RHS, underlying, and methods might be unavailable
+    const stateMask lazyLoaded = 1 << 0;
+    const stateMask unpacked = 1 << 1;
+    const stateMask hasMethods = 1 << 2;
+    const stateMask hasUnder = 1 << 3;
+    const stateMask hasVarSize = 1 << 4;
 }

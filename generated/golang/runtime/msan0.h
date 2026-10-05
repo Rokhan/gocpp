@@ -12,6 +12,7 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     void msanread(gocpp::unsafe_pointer addr, uintptr_t sz);
     void msanwrite(gocpp::unsafe_pointer addr, uintptr_t sz);
     void msanmalloc(gocpp::unsafe_pointer addr, uintptr_t sz);

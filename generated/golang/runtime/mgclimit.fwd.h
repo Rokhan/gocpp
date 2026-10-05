@@ -6,6 +6,7 @@
 
 namespace golang::runtime
 {
+    struct gcCPULimiterState;
     // gcCPULimiterUpdatePeriod dictates the maximum amount of wall-clock time
     // we can go before updating the limiter.
     const double gcCPULimiterUpdatePeriod = 10e6;
@@ -14,6 +15,7 @@ namespace golang::runtime
     using limiterEventType = uint8_t;
     const long limiterEventBits = 3;
     using limiterEventStamp = uint64_t;
+    struct limiterEvent;
     const limiterEventType limiterEventNone = 0;
     const limiterEventType limiterEventIdleMarkWork = 1;
     const limiterEventType limiterEventMarkAssist = 2;
@@ -23,11 +25,4 @@ namespace golang::runtime
     // the event type. The rest of the bits of that field represent a timestamp.
     const uint64_t limiterEventTypeMask = uint64_t((1 << limiterEventBits) - 1) << (64 - limiterEventBits);
     const limiterEventStamp limiterEventStampNone = limiterEventStamp(0);
-}
-#include "golang/runtime/internal/atomic/types.fwd.h"
-
-namespace golang::runtime
-{
-    struct gcCPULimiterState;
-    struct limiterEvent;
 }

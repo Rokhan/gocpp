@@ -12,17 +12,31 @@
 
 namespace golang::image
 {
+    // ErrFormat indicates that decoding encountered an unknown format.
+    extern gocpp::error ErrFormat;
     bool match(gocpp::string magic, gocpp::slice<unsigned char> b);
+}
+#include "golang/io/io.fwd.h"
+#include "golang/sync/atomic/value.fwd.h"
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::image
+{
+    namespace io = golang::io;
 }
 #include "golang/image/image.h"
 #include "golang/io/io.h"
 #include "golang/sync/atomic/value.h"
-#include "golang/sync/mutex.h"
-#include "golang/errors/errors.fwd.h"
 
 namespace golang::image
 {
-    extern gocpp::error ErrFormat;
+    namespace sync = golang::sync;
+}
+#include "golang/sync/mutex.h"
+
+namespace golang::image
+{
+    namespace atomic = golang::sync::atomic;
     struct format
     {
         gocpp::string name{};
@@ -42,6 +56,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct format& value);
+    // Formats is the list of registered formats.
     extern mocklib::Mutex formatsMu;
     extern atomic::Value atomicFormats;
     void RegisterFormat(gocpp::string name, gocpp::string magic, std::function<std::tuple<Image, gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<Config, gocpp::error> (io::Reader _1)> decodeConfig);

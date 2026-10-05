@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::doc
+namespace golang::go::doc
 {
     using Filter = std::function<bool (gocpp::string _1)>;
 }

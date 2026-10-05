@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
     extern gocpp::slice<gocpp::string> instOpNames;
     EmptyOp EmptyOpContext(gocpp::rune r1, gocpp::rune r2);
@@ -56,8 +56,9 @@ namespace golang::syntax
 }
 #include "golang/strings/builder.fwd.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
+    namespace strings = golang::strings;
     void bw(strings::Builder* b, gocpp::slice<gocpp::string> args);
     
     template<typename... Args>
@@ -71,8 +72,8 @@ namespace golang::syntax
     {
         return bw(b, gocpp::ToSlice<gocpp::string>(value, args...));
     }
-    void dumpInst(strings::Builder* b, Inst* i);
     void dumpProg(strings::Builder* b, Prog* p);
+    void dumpInst(strings::Builder* b, Inst* i);
 
     namespace rec
     {

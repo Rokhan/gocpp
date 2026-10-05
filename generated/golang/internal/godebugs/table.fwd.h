@@ -4,7 +4,8 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::godebugs
+namespace golang::internal::godebugs
 {
     struct Info;
+    struct RemovedInfo;
 }

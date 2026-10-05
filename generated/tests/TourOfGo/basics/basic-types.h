@@ -14,13 +14,8 @@ namespace golang::main
 {
     extern bool ToBe;
     extern uint64_t MaxInt;
-    void main();
-}
-#include "golang/math/cmplx/sqrt.fwd.h"
-
-namespace golang::main
-{
     extern gocpp::complex128 z;
+    void main();
 
     namespace rec
     {

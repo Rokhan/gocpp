@@ -14,13 +14,22 @@ namespace golang::main
 {
     void main();
 }
-#include "golang/go/types/type.h"
 #include "golang/go/ast/ast.fwd.h"
+#include "golang/go/ast/walk.fwd.h"
 #include "golang/go/types/api.fwd.h"
+#include "golang/go/types/api_predicates.fwd.h"
 #include "golang/go/types/interface.fwd.h"
+#include "golang/go/types/type.fwd.h"
 
 namespace golang::main
 {
+    namespace ast = golang::go::ast;
+}
+#include "golang/go/types/type.h"
+
+namespace golang::main
+{
+    namespace types = golang::go::types;
     gocpp::slice<types::Type> flatten(types::Info* info, ast::FieldList* fl);
     types::Interface* singleParamInterface(ast::FuncDecl* fd, types::Info* info);
     gocpp::slice<gocpp::string> missingMethods(types::Interface* have, types::Interface* want);

@@ -12,6 +12,7 @@
 
 namespace golang::time
 {
+    // std0x records the std values for "01", "02", ..., "06".
     extern gocpp::array<int, 6> std0x;
     bool startsWithLowerCase(gocpp::string str);
     std::tuple<gocpp::string, int, gocpp::string> nextStdChunk(gocpp::string layout);
@@ -22,6 +23,8 @@ namespace golang::time
     bool match(gocpp::string s1, gocpp::string s2);
     std::tuple<int, gocpp::string, gocpp::error> lookup(gocpp::slice<gocpp::string> tab, gocpp::string val);
     gocpp::slice<unsigned char> appendInt(gocpp::slice<unsigned char> b, int x, int width);
+    // Never printed, just needs to be non-nil for return by atoi.
+    extern gocpp::error errAtoi;
     
     template<typename bytes>
     std::tuple<int, gocpp::error> atoi(bytes s);
@@ -29,6 +32,7 @@ namespace golang::time
     int digitsLen(int std);
     unsigned char separator(int std);
     gocpp::slice<unsigned char> appendNano(gocpp::slice<unsigned char> b, int nanosec, int std);
+    extern gocpp::error errBad;
     struct ParseError
     {
         gocpp::string Layout{};
@@ -49,7 +53,6 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ParseError& value);
-    gocpp::string cloneString(gocpp::string s);
     gocpp::string quote(gocpp::string s);
     
     template<typename bytes>
@@ -65,25 +68,39 @@ namespace golang::time
     
     template<typename bytes>
     std::tuple<int, gocpp::string, gocpp::error> parseNanoseconds(bytes value, int nbytes);
+    extern gocpp::error errLeadingInt;
     
     template<typename bytes>
     std::tuple<uint64_t, bytes, gocpp::error> leadingInt(bytes s);
     std::tuple<uint64_t, double, gocpp::string> leadingFraction(gocpp::string s);
+    struct parseDurationError
+    {
+        gocpp::string message{};
+        gocpp::string value{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct parseDurationError& value);
+    extern gocpp::map<gocpp::string, uint64_t> unitMap;
     ParseError* newParseError(gocpp::string layout, gocpp::string value, gocpp::string layoutElem, gocpp::string valueElem, gocpp::string message);
 }
 #include "golang/time/time.h"
-#include "golang/errors/errors.fwd.h"
 #include "golang/time/zoneinfo.fwd.h"
 
 namespace golang::time
 {
-    extern gocpp::error errAtoi;
-    extern gocpp::error errBad;
     std::tuple<Time, gocpp::error> Parse(gocpp::string layout, gocpp::string value);
     std::tuple<Time, gocpp::error> ParseInLocation(gocpp::string layout, gocpp::string value, golang::time::Location* loc);
     std::tuple<Time, gocpp::error> parse(gocpp::string layout, gocpp::string value, golang::time::Location* defaultLocation, golang::time::Location* local);
-    extern gocpp::error errLeadingInt;
-    extern gocpp::map<gocpp::string, uint64_t> unitMap;
     std::tuple<Duration, gocpp::error> ParseDuration(gocpp::string s);
 }
 
@@ -100,6 +117,7 @@ namespace golang::time
         gocpp::slice<unsigned char> AppendFormat(Time t, gocpp::slice<unsigned char> b, gocpp::string layout);
         gocpp::slice<unsigned char> appendFormat(Time t, gocpp::slice<unsigned char> b, gocpp::string layout);
         gocpp::string Error(ParseError* e);
+        gocpp::string Error(parseDurationError* e);
     }
 }
 

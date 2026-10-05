@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::filepath
+namespace golang::path::filepath
 {
     std::tuple<gocpp::string, gocpp::error> walkSymlinks(gocpp::string path);
 

@@ -20,8 +20,12 @@
 #include "golang/syscall/zsyscall_windows.h"
 #include "golang/unicode/utf16/utf16.h"
 
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace errors = golang::errors;
+    namespace syscall = golang::syscall;
+    namespace utf16 = golang::unicode::utf16;
     namespace rec
     {
     }
@@ -425,7 +429,12 @@ namespace golang::registry
     // DeleteValue removes a named value from the key k.
     gocpp::error rec::DeleteValue(Key k, gocpp::string name)
     {
-        return regDeleteValue(syscall::Handle(k), syscall::StringToUTF16Ptr(name));
+        auto [namep, err] = syscall::UTF16PtrFromString(name);
+        if(err != nullptr)
+        {
+            return err;
+        }
+        return regDeleteValue(syscall::Handle(k), namep);
     }
 
     // ReadValueNames returns the value names of key k.

@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::rand
+namespace golang::math::rand
 {
     uint32_t absInt32(int32_t i);
     extern gocpp::array<uint32_t, 128> kn;
@@ -20,7 +20,7 @@ namespace golang::rand
 
 #include "golang/math/rand/rand.h"
 
-namespace golang::rand
+namespace golang::math::rand
 {
 
     namespace rec

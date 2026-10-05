@@ -9,26 +9,31 @@
 #include "golang/go/doc/filter.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/ast/ast.fwd.h"
 #include "golang/go/doc/doc.fwd.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
-    bool matchFields(ast::FieldList* fields, golang::doc::Filter f);
-    bool matchDecl(ast::GenDecl* d, golang::doc::Filter f);
-    gocpp::slice<Value*> filterValues(gocpp::slice<Value*> a, golang::doc::Filter f);
-    gocpp::slice<Func*> filterFuncs(gocpp::slice<Func*> a, golang::doc::Filter f);
-    gocpp::slice<Type*> filterTypes(gocpp::slice<Type*> a, golang::doc::Filter f);
+    gocpp::slice<Value*> filterValues(gocpp::slice<Value*> a, golang::go::doc::Filter f);
+    gocpp::slice<Func*> filterFuncs(gocpp::slice<Func*> a, golang::go::doc::Filter f);
+    gocpp::slice<Type*> filterTypes(gocpp::slice<Type*> a, golang::go::doc::Filter f);
+}
+#include "golang/go/ast/ast.fwd.h"
+
+namespace golang::go::doc
+{
+    namespace ast = golang::go::ast;
+    bool matchFields(ast::FieldList* fields, golang::go::doc::Filter f);
+    bool matchDecl(ast::GenDecl* d, golang::go::doc::Filter f);
 }
 
 #include "golang/go/doc/doc.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
 
     namespace rec
     {
-        void Filter(Package* p, golang::doc::Filter f);
+        void Filter(Package* p, golang::go::doc::Filter f);
     }
 }
 

@@ -8,10 +8,12 @@ namespace golang::hash
 {
     struct Hash32;
     struct Hash64;
+    struct Cloner;
 }
 #include "golang/io/io.fwd.h"
 
 namespace golang::hash
 {
     struct Hash;
+    struct XOF;
 }

@@ -10,29 +10,38 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct GoTag_substMap { };
+    
+    template<typename T>
+    gocpp::slice<T> substList(gocpp::slice<T> in, std::function<T (T _1)> subst);
 }
 #include "golang/go/types/type.h"
 #include "golang/go/types/object.fwd.h"
 #include "golang/go/types/typeparam.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    using substMap = gocpp::defined<gocpp::map<TypeParam*, golang::types::Type>, GoTag_substMap>;
-    Var* substVar(Var* v, golang::types::Type typ);
-    Func* substFunc(Func* f, golang::types::Type typ);
-    std::tuple<gocpp::slice<Func*>, bool> replaceRecvType(gocpp::slice<Func*> in, golang::types::Type old, golang::types::Type go_new);
-    substMap makeSubstMap(gocpp::slice<TypeParam*> tpars, gocpp::slice<golang::types::Type> targs);
+    using substMap = gocpp::defined<gocpp::map<TypeParam*, golang::go::types::Type>, GoTag_substMap>;
+    Var* cloneVar(Var* v, golang::go::types::Type typ);
+    Func* cloneFunc(Func* f, golang::go::types::Type typ);
+    std::tuple<gocpp::slice<Func*>, bool> replaceRecvType(gocpp::slice<Func*> in, golang::go::types::Type old, golang::go::types::Type go_new);
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    substMap makeSubstMap(gocpp::slice<TypeParam*> tpars, gocpp::slice<golang::go::types::Type> targs);
     substMap makeRenameMap(gocpp::slice<TypeParam*> from, gocpp::slice<TypeParam*> to);
+    namespace token = golang::go::token;
 }
 #include "golang/go/token/position.h"
 #include "golang/go/types/check.fwd.h"
 #include "golang/go/types/context.fwd.h"
 #include "golang/go/types/named.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct subster
     {
@@ -66,23 +75,20 @@ namespace golang::types
 #include "golang/go/types/typeparam.h"
 #include "golang/go/types/union.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
         bool empty(substMap m);
-        golang::types::Type lookup(substMap m, TypeParam* tpar);
-        golang::types::Type subst(Checker* check, token::Pos pos, golang::types::Type typ, substMap smap, Named* expanding, Context* ctxt);
-        golang::types::Type typ(subster* subst, golang::types::Type typ);
-        golang::types::Type typOrNil(subster* subst, golang::types::Type typ);
+        golang::go::types::Type lookup(substMap m, TypeParam* tpar);
+        golang::go::types::Type subst(Checker* check, token::Pos pos, golang::go::types::Type typ, substMap smap, Named* expanding, Context* ctxt);
+        golang::go::types::Type typ(subster* subst, golang::go::types::Type typ);
+        golang::go::types::Type typOrNil(subster* subst, golang::go::types::Type typ);
         Var* var_(subster* subst, Var* v);
         Tuple* tuple(subster* subst, Tuple* t);
-        std::tuple<gocpp::slice<Var*>, bool> varList(subster* subst, gocpp::slice<Var*> in);
         Func* func_(subster* subst, Func* f);
-        std::tuple<gocpp::slice<Func*>, bool> funcList(subster* subst, gocpp::slice<Func*> in);
-        std::tuple<gocpp::slice<golang::types::Type>, bool> typeList(subster* subst, gocpp::slice<golang::types::Type> in);
-        std::tuple<gocpp::slice<golang::types::Term*>, bool> termlist(subster* subst, gocpp::slice<golang::types::Term*> in);
+        golang::go::types::Term* term(subster* subst, golang::go::types::Term* t);
     }
 }
 

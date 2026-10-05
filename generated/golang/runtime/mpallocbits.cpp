@@ -11,11 +11,12 @@
 #include "golang/runtime/mpallocbits.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/sys/intrinsics.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
 #include "golang/runtime/mpagealloc.h"
 
 namespace golang::runtime
 {
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
     }
@@ -109,10 +110,7 @@ namespace golang::runtime
         _ = b[j / 64];
         // Clear leading bits.
         b[i / 64] &^= ~ uint64_t(0) << (i % 64);
-        for(auto k = i / 64 + 1; k < j / 64; k++)
-        {
-            b[k] = 0;
-        }
+        clear(b.make_slice(i / 64 + 1, j / 64));
         // Clear trailing bits.
         b[j / 64] &^= (uint64_t(1) << (j % 64 + 1)) - 1;
     }
@@ -120,10 +118,7 @@ namespace golang::runtime
     // clearAll frees all the bits of b.
     void rec::clearAll(gocpp::array_ptr<pageBits> b)
     {
-        for(auto [i, gocpp_ignored] : b)
-        {
-            b[i] = 0;
-        }
+        clear(b.make_slice(0));
     }
 
     // clearBlock64 clears the 64-bit aligned block of bits containing the i'th bit that
@@ -414,7 +409,6 @@ namespace golang::runtime
             auto s = (unsigned int)(sys::TrailingZeros64(x));
             if(s + size >= (unsigned int)(npages))
             {
-                size += s;
                 return {start, newSearchIdx};
             }
             if(s < 64)

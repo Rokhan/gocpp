@@ -20,8 +20,12 @@
 #include "golang/go/token/token.h"
 #include "golang/strings/strings.h"
 
-namespace golang::parser
+namespace golang::go::parser
 {
+    namespace ast = golang::go::ast;
+    namespace fmt = golang::fmt;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::End;

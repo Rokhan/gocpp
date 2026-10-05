@@ -18,8 +18,12 @@
 
 // Package lazyregexp is a thin wrapper over regexp, allowing the use of global
 // regexp variables without forcing them to be compiled at init.
-namespace golang::lazyregexp
+namespace golang::internal::lazyregexp
 {
+    namespace os = golang::os;
+    namespace regexp = golang::regexp;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
     namespace rec
     {
         using regexp::rec::FindAllString;
@@ -28,6 +32,7 @@ namespace golang::lazyregexp
         using regexp::rec::FindStringSubmatchIndex;
         using regexp::rec::FindSubmatch;
         using regexp::rec::MatchString;
+        using regexp::rec::ReplaceAll;
         using regexp::rec::ReplaceAllString;
         using regexp::rec::SubexpNames;
         using sync::rec::Do;
@@ -95,6 +100,11 @@ namespace golang::lazyregexp
     gocpp::slice<int> rec::FindStringSubmatchIndex(Regexp* r, gocpp::string s)
     {
         return rec::FindStringSubmatchIndex(gocpp::recv(rec::re(gocpp::recv(r))), s);
+    }
+
+    gocpp::slice<unsigned char> rec::ReplaceAll(Regexp* r, gocpp::slice<unsigned char> src, gocpp::slice<unsigned char> repl)
+    {
+        return rec::ReplaceAll(gocpp::recv(rec::re(gocpp::recv(r))), src, repl);
     }
 
     gocpp::string rec::ReplaceAllString(Regexp* r, gocpp::string src, gocpp::string repl)

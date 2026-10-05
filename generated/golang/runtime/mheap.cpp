@@ -11,32 +11,36 @@
 #include "golang/runtime/mheap.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
+#include "golang/internal/abi/escape.h"
 #include "golang/internal/cpu/cpu.h"
 #include "golang/internal/cpu/cpu_x86.h"
 #include "golang/internal/goarch/goarch.h"
-#include "golang/internal/goexperiment/exp_allocheaders_on.h"
+#include "golang/internal/goexperiment/exp_greenteagc_on.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/gc/malloc.h"
+#include "golang/internal/runtime/gc/sizeclasses.h"
+#include "golang/internal/runtime/sys/nih.h"
+#include "golang/runtime/alg.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
 #include "golang/runtime/mcache.h"
 #include "golang/runtime/mcentral.h"
 #include "golang/runtime/mcheckmark.h"
+#include "golang/runtime/mcleanup.h"
 #include "golang/runtime/mem.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mgclimit.h"
 #include "golang/runtime/mgcmark.h"
+#include "golang/runtime/mgcmark_greenteagc.h"
 #include "golang/runtime/mgcpacer.h"
 #include "golang/runtime/mgcscavenge.h"
 #include "golang/runtime/mgcstack.h"
@@ -48,24 +52,36 @@
 #include "golang/runtime/mranges.h"
 #include "golang/runtime/msan0.h"
 #include "golang/runtime/mstats.h"
-#include "golang/runtime/pagetrace_off.h"
 #include "golang/runtime/panic.h"
+#include "golang/runtime/preempt_xreg.h"
 #include "golang/runtime/print.h"
+#include "golang/runtime/proc.h"
 #include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/sizeclasses.h"
 #include "golang/runtime/slice.h"
 #include "golang/runtime/stubs.h"
+#include "golang/runtime/synctest.h"
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+#include "golang/runtime/traceallocfree.h"
+#include "golang/runtime/traceruntime.h"
 #include "golang/runtime/type.h"
+#include "golang/runtime/valgrind0.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace cpu = golang::internal::cpu;
+    namespace gc = golang::internal::runtime::gc;
+    namespace goarch = golang::internal::goarch;
+    namespace goexperiment = golang::internal::goexperiment;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::Add;
         using atomic::rec::CompareAndSwap;
+        using atomic::rec::CompareAndSwapNoWB;
         using atomic::rec::Load;
         using atomic::rec::Store;
     }
@@ -173,7 +189,7 @@ namespace golang::runtime
 
 
     // Main malloc heap.
-    // The heap itself is the "free" and "scav" treaps,
+    // The heap use pageAlloc to manage free and scavenged pages,
     // but all the other global data is here too.
     //
     // mheap must not be heap-allocated because it contains mSpanLists,
@@ -201,20 +217,31 @@ namespace golang::runtime
         result.heapArenaAlloc = this->heapArenaAlloc;
         result.arenaHints = this->arenaHints;
         result.arena = this->arena;
-        result.allArenas = this->allArenas;
+        result.heapArenas = this->heapArenas;
+        result.userArenaArenas = this->userArenaArenas;
         result.sweepArenas = this->sweepArenas;
         result.markArenas = this->markArenas;
         result.curArena = this->curArena;
         result.central = this->central;
         result.spanalloc = this->spanalloc;
+        result.spanSPMCAlloc = this->spanSPMCAlloc;
         result.cachealloc = this->cachealloc;
         result.specialfinalizeralloc = this->specialfinalizeralloc;
+        result.specialCleanupAlloc = this->specialCleanupAlloc;
+        result.specialCheckFinalizerAlloc = this->specialCheckFinalizerAlloc;
+        result.specialTinyBlockAlloc = this->specialTinyBlockAlloc;
         result.specialprofilealloc = this->specialprofilealloc;
         result.specialReachableAlloc = this->specialReachableAlloc;
         result.specialPinCounterAlloc = this->specialPinCounterAlloc;
+        result.specialWeakHandleAlloc = this->specialWeakHandleAlloc;
+        result.specialBubbleAlloc = this->specialBubbleAlloc;
+        result.specialSecretAlloc = this->specialSecretAlloc;
         result.speciallock = this->speciallock;
         result.arenaHintAlloc = this->arenaHintAlloc;
         result.userArena = this->userArena;
+        result.cleanupID = this->cleanupID;
+        result._3 = this->_3;
+        result.immortalWeakHandles = this->immortalWeakHandles;
         result.unused = this->unused;
         return result;
     }
@@ -240,20 +267,31 @@ namespace golang::runtime
         if (heapArenaAlloc != ref.heapArenaAlloc) return false;
         if (arenaHints != ref.arenaHints) return false;
         if (arena != ref.arena) return false;
-        if (allArenas != ref.allArenas) return false;
+        if (heapArenas != ref.heapArenas) return false;
+        if (userArenaArenas != ref.userArenaArenas) return false;
         if (sweepArenas != ref.sweepArenas) return false;
         if (markArenas != ref.markArenas) return false;
         if (curArena != ref.curArena) return false;
         if (central != ref.central) return false;
         if (spanalloc != ref.spanalloc) return false;
+        if (spanSPMCAlloc != ref.spanSPMCAlloc) return false;
         if (cachealloc != ref.cachealloc) return false;
         if (specialfinalizeralloc != ref.specialfinalizeralloc) return false;
+        if (specialCleanupAlloc != ref.specialCleanupAlloc) return false;
+        if (specialCheckFinalizerAlloc != ref.specialCheckFinalizerAlloc) return false;
+        if (specialTinyBlockAlloc != ref.specialTinyBlockAlloc) return false;
         if (specialprofilealloc != ref.specialprofilealloc) return false;
         if (specialReachableAlloc != ref.specialReachableAlloc) return false;
         if (specialPinCounterAlloc != ref.specialPinCounterAlloc) return false;
+        if (specialWeakHandleAlloc != ref.specialWeakHandleAlloc) return false;
+        if (specialBubbleAlloc != ref.specialBubbleAlloc) return false;
+        if (specialSecretAlloc != ref.specialSecretAlloc) return false;
         if (speciallock != ref.speciallock) return false;
         if (arenaHintAlloc != ref.arenaHintAlloc) return false;
         if (userArena != ref.userArena) return false;
+        if (cleanupID != ref.cleanupID) return false;
+        if (_3 != ref._3) return false;
+        if (immortalWeakHandles != ref.immortalWeakHandles) return false;
         if (unused != ref.unused) return false;
         return true;
     }
@@ -279,20 +317,31 @@ namespace golang::runtime
         os << " " << heapArenaAlloc;
         os << " " << arenaHints;
         os << " " << arena;
-        os << " " << allArenas;
+        os << " " << heapArenas;
+        os << " " << userArenaArenas;
         os << " " << sweepArenas;
         os << " " << markArenas;
         os << " " << curArena;
         os << " " << central;
         os << " " << spanalloc;
+        os << " " << spanSPMCAlloc;
         os << " " << cachealloc;
         os << " " << specialfinalizeralloc;
+        os << " " << specialCleanupAlloc;
+        os << " " << specialCheckFinalizerAlloc;
+        os << " " << specialTinyBlockAlloc;
         os << " " << specialprofilealloc;
         os << " " << specialReachableAlloc;
         os << " " << specialPinCounterAlloc;
+        os << " " << specialWeakHandleAlloc;
+        os << " " << specialBubbleAlloc;
+        os << " " << specialSecretAlloc;
         os << " " << speciallock;
         os << " " << arenaHintAlloc;
         os << " " << userArena;
+        os << " " << cleanupID;
+        os << " " << _3;
+        os << " " << immortalWeakHandles;
         os << " " << unused;
         os << '}';
         return os;
@@ -312,11 +361,11 @@ namespace golang::runtime
     {
         T result;
         result._1 = this->_1;
-        result.heapArenaPtrScalar = this->heapArenaPtrScalar;
         result.spans = this->spans;
         result.pageInUse = this->pageInUse;
         result.pageMarks = this->pageMarks;
         result.pageSpecials = this->pageSpecials;
+        result.pageUseSpanInlineMarkBits = this->pageUseSpanInlineMarkBits;
         result.checkmarks = this->checkmarks;
         result.zeroedBase = this->zeroedBase;
         return result;
@@ -326,11 +375,11 @@ namespace golang::runtime
     bool heapArena::operator==(const T& ref) const
     {
         if (_1 != ref._1) return false;
-        if (heapArenaPtrScalar != ref.heapArenaPtrScalar) return false;
         if (spans != ref.spans) return false;
         if (pageInUse != ref.pageInUse) return false;
         if (pageMarks != ref.pageMarks) return false;
         if (pageSpecials != ref.pageSpecials) return false;
+        if (pageUseSpanInlineMarkBits != ref.pageUseSpanInlineMarkBits) return false;
         if (checkmarks != ref.checkmarks) return false;
         if (zeroedBase != ref.zeroedBase) return false;
         return true;
@@ -340,11 +389,11 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << _1;
-        os << " " << heapArenaPtrScalar;
         os << " " << spans;
         os << " " << pageInUse;
         os << " " << pageMarks;
         os << " " << pageSpecials;
+        os << " " << pageUseSpanInlineMarkBits;
         os << " " << checkmarks;
         os << " " << zeroedBase;
         os << '}';
@@ -469,42 +518,6 @@ namespace golang::runtime
         return mSpanState(rec::Load(gocpp::recv(b->s)));
     }
 
-    // mSpanList heads a linked list of spans.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    mSpanList::operator T()
-    {
-        T result;
-        result._1 = this->_1;
-        result.first = this->first;
-        result.last = this->last;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool mSpanList::operator==(const T& ref) const
-    {
-        if (_1 != ref._1) return false;
-        if (first != ref.first) return false;
-        if (last != ref.last) return false;
-        return true;
-    }
-
-    std::ostream& mSpanList::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << _1;
-        os << " " << first;
-        os << " " << last;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct mSpanList& value)
-    {
-        return value.PrintTo(os);
-    }
-
     
     template<typename T> requires gocpp::GoStruct<T>
     mspan::operator T()
@@ -620,20 +633,6 @@ namespace golang::runtime
         return s->startAddr;
     }
 
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> rec::layout(mspan* s)
-    {
-        uintptr_t size;
-        uintptr_t n;
-        uintptr_t total;
-        total = s->npages << _PageShift;
-        size = s->elemsize;
-        if(size > 0)
-        {
-            n = total / size;
-        }
-        return {size, n, total};
-    }
-
     // recordspan adds a newly allocated span to h.allspans.
     //
     // This only happens the first time a span is allocated from
@@ -663,7 +662,7 @@ namespace golang::runtime
             }
             gocpp::slice<mspan*> go_new = {};
             auto sp = (golang::runtime::slice*)(gocpp::unsafe_pointer(& go_new));
-            sp->array = sysAlloc(uintptr_t(n) * goarch::PtrSize, & memstats.other_sys);
+            sp->array = sysAlloc(uintptr_t(n) * goarch::PtrSize, & memstats.other_sys, "allspans array"_s);
             if(sp->array == nullptr)
             {
                 go_throw("runtime: cannot allocate memory"_s);
@@ -908,6 +907,35 @@ namespace golang::runtime
         return {arena, pageIdx, pageMask};
     }
 
+    // heapArenaOf returns the heap arena for p, if one exists.
+    heapArena* heapArenaOf(uintptr_t p)
+    {
+        auto ri = arenaIndex(p);
+        if(arenaL1Bits == 0)
+        {
+            // If there's no L1, then ri.l1() can't be out of bounds but ri.l2() can.
+            if(rec::l2(gocpp::recv(ri)) >= (unsigned int)(len(mheap_.arenas[0])))
+            {
+                return nullptr;
+            }
+        }
+        else
+        {
+            // If there's an L1, then ri.l1() can be out of bounds but ri.l2() can't.
+            if(rec::l1(gocpp::recv(ri)) >= (unsigned int)(len(mheap_.arenas)))
+            {
+                return nullptr;
+            }
+        }
+        auto l2 = mheap_.arenas[rec::l1(gocpp::recv(ri))];
+        if(arenaL1Bits != 0 && l2 == nullptr)
+        {
+            // Should never happen if there's no L1.
+            return nullptr;
+        }
+        return l2[rec::l2(gocpp::recv(ri))];
+    }
+
     // Initialize the heap.
     void rec::init(mheap* h)
     {
@@ -915,11 +943,18 @@ namespace golang::runtime
         lockInit(& h->speciallock, lockRankMheapSpecial);
 
         rec::init(gocpp::recv(h->spanalloc), gocpp::Sizeof<mspan>(), recordspan, gocpp::unsafe_pointer(h), & memstats.mspan_sys);
+        rec::init(gocpp::recv(h->spanSPMCAlloc), gocpp::Sizeof<spanSPMC>(), nullptr, nullptr, & memstats.gcMiscSys);
         rec::init(gocpp::recv(h->cachealloc), gocpp::Sizeof<mcache>(), nullptr, nullptr, & memstats.mcache_sys);
         rec::init(gocpp::recv(h->specialfinalizeralloc), gocpp::Sizeof<specialfinalizer>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialCleanupAlloc), gocpp::Sizeof<specialCleanup>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialCheckFinalizerAlloc), gocpp::Sizeof<specialCheckFinalizer>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialTinyBlockAlloc), gocpp::Sizeof<specialTinyBlock>(), nullptr, nullptr, & memstats.other_sys);
         rec::init(gocpp::recv(h->specialprofilealloc), gocpp::Sizeof<specialprofile>(), nullptr, nullptr, & memstats.other_sys);
         rec::init(gocpp::recv(h->specialReachableAlloc), gocpp::Sizeof<specialReachable>(), nullptr, nullptr, & memstats.other_sys);
         rec::init(gocpp::recv(h->specialPinCounterAlloc), gocpp::Sizeof<specialPinCounter>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialSecretAlloc), gocpp::Sizeof<specialSecret>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialWeakHandleAlloc), gocpp::Sizeof<specialWeakHandle>(), nullptr, nullptr, & memstats.gcMiscSys);
+        rec::init(gocpp::recv(h->specialBubbleAlloc), gocpp::Sizeof<specialBubble>(), nullptr, nullptr, & memstats.other_sys);
         rec::init(gocpp::recv(h->arenaHintAlloc), gocpp::Sizeof<arenaHint>(), nullptr, nullptr, & memstats.other_sys);
 
         // Don't zero mspan allocations. Background sweeping can
@@ -937,6 +972,8 @@ namespace golang::runtime
         }
 
         rec::init(gocpp::recv(h->pages), & h->lock, & memstats.gcMiscSys, false);
+
+        xRegInitAlloc();
     }
 
     // reclaim sweeps and reclaims at least npage pages into the heap.
@@ -1509,7 +1546,7 @@ namespace golang::runtime
             // that we expect to page in.
             auto inuse = rec::Load(gocpp::recv(gcController.mappedReady));
             // Be careful about overflow, especially with uintptrs. Even on 32-bit platforms
-            // someone can set a really big memory limit that isn't maxInt64.
+            // someone can set a really big memory limit that isn't math.MaxInt64.
             if(uint64_t(scav) + inuse > uint64_t(limit))
             {
                 bytesToScavenge = uintptr_t(uint64_t(scav) + inuse - uint64_t(limit));
@@ -1573,7 +1610,12 @@ namespace golang::runtime
         }
 
         // Initialize the span.
-        rec::initSpan(gocpp::recv(h), s, typ, spanclass, base, npages);
+        rec::initSpan(gocpp::recv(h), s, typ, spanclass, base, npages, scav);
+
+        if(valgrindenabled)
+        {
+            valgrindMempoolMalloc(gocpp::unsafe_pointer(arenaBase(arenaIndex(base))), gocpp::unsafe_pointer(base), npages * pageSize);
+        }
 
         // Commit and account for any scavenged memory that the span now owns.
         auto nbytes = npages * pageSize;
@@ -1600,8 +1642,7 @@ namespace golang::runtime
             int conditionId = -1;
             if(condition == spanAllocHeap) { conditionId = 0; }
             else if(condition == spanAllocStack) { conditionId = 1; }
-            else if(condition == spanAllocPtrScalarBits) { conditionId = 2; }
-            else if(condition == spanAllocWorkBuf) { conditionId = 3; }
+            else if(condition == spanAllocWorkBuf) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -1611,27 +1652,39 @@ namespace golang::runtime
                     atomic::Xaddint64(& stats->inStacks, int64_t(nbytes));
                     break;
                 case 2:
-                    atomic::Xaddint64(& stats->inPtrScalarBits, int64_t(nbytes));
-                    break;
-                case 3:
                     atomic::Xaddint64(& stats->inWorkBufs, int64_t(nbytes));
                     break;
             }
         }
         rec::release(gocpp::recv(memstats.heapStats));
 
-        pageTraceAlloc(pp, now, base, npages);
+        // Trace the span alloc.
+        if(traceAllocFreeEnabled())
+        {
+            auto trace = traceAcquire();
+            if(rec::ok(gocpp::recv(trace)))
+            {
+                rec::SpanAlloc(gocpp::recv(trace), s);
+                traceRelease(trace);
+            }
+        }
         return s;
     }
 
     // initSpan initializes a blank span s which will represent the range
     // [base, base+npages*pageSize). typ is the type of span being allocated.
-    void rec::initSpan(mheap* h, mspan* s, spanAllocType typ, spanClass spanclass, uintptr_t base, uintptr_t npages)
+    void rec::initSpan(mheap* h, mspan* s, spanAllocType typ, spanClass spanclass, uintptr_t base, uintptr_t npages, uintptr_t scav)
     {
         // At this point, both s != nil and base != 0, and the heap
         // lock is no longer held. Initialize the span.
         rec::init(gocpp::recv(s), base, npages);
-        if(rec::allocNeedsZero(gocpp::recv(h), base, npages))
+        // Always call allocNeedsZero to update the arena's zeroedBase watermark
+        // and determine if the memory is considered dirty.
+        auto needZero = rec::allocNeedsZero(gocpp::recv(h), base, npages);
+        // If these pages were scavenged (returned to the OS), the kernel guarantees
+        // they will be zero-filled on next use (fault-in), so we can treat them as
+        // already zeroed and skip explicit clearing.
+        if((needZeroAfterSysUnused() || scav != npages * pageSize) && needZero)
         {
             s->needzero = 1;
         }
@@ -1640,7 +1693,6 @@ namespace golang::runtime
         {
             s->manualFreeList = 0;
             s->nelems = 0;
-            s->limit = rec::base(gocpp::recv(s)) + s->npages * pageSize;
             rec::set(gocpp::recv(s->state), mSpanManual);
         }
         else
@@ -1656,17 +1708,35 @@ namespace golang::runtime
             }
             else
             {
-                s->elemsize = uintptr_t(class_to_size[sizeclass]);
-                if(goexperiment::AllocHeaders && ! rec::noscan(gocpp::recv(s->spanclass)) && heapBitsInSpan(s->elemsize))
+                s->elemsize = uintptr_t(gc::SizeClassToSize[sizeclass]);
+                if(goexperiment::GreenTeaGC)
                 {
-                    // In the allocheaders experiment, reserve space for the pointer/scan bitmap at the end.
-                    s->nelems = uint16_t((nbytes - (nbytes / goarch::PtrSize / 8)) / s->elemsize);
+                    uintptr_t reserve = {};
+                    if(gcUsesSpanInlineMarkBits(s->elemsize))
+                    {
+                        // Reserve space for the inline mark bits.
+                        reserve += gocpp::Sizeof<spanInlineMarkBits>();
+                    }
+                    if(heapBitsInSpan(s->elemsize) && ! rec::noscan(gocpp::recv(s->spanclass)))
+                    {
+                        // Reserve space for the pointer/scan bitmap at the end.
+                        reserve += nbytes / goarch::PtrSize / 8;
+                    }
+                    s->nelems = uint16_t((nbytes - reserve) / s->elemsize);
                 }
                 else
                 {
-                    s->nelems = uint16_t(nbytes / s->elemsize);
+                    if(! rec::noscan(gocpp::recv(s->spanclass)) && heapBitsInSpan(s->elemsize))
+                    {
+                        // Reserve space for the pointer/scan bitmap at the end.
+                        s->nelems = uint16_t((nbytes - (nbytes / goarch::PtrSize / 8)) / s->elemsize);
+                    }
+                    else
+                    {
+                        s->nelems = uint16_t(nbytes / s->elemsize);
+                    }
                 }
-                s->divMul = class_to_divmagic[sizeclass];
+                s->divMul = gc::SizeClassToDivMagic[sizeclass];
             }
 
             // Initialize mark and allocation structures.
@@ -1676,6 +1746,9 @@ namespace golang::runtime
             s->allocCache = ~ uint64_t(0);
             s->gcmarkBits = newMarkBits(uintptr_t(s->nelems));
             s->allocBits = newAllocBits(uintptr_t(s->nelems));
+
+            // Adjust s.limit down to the object-containing part of the span.
+            s->limit = rec::base(gocpp::recv(s)) + s->elemsize * uintptr_t(s->nelems);
 
             // It's safe to access h.sweepgen without the heap lock because it's
             // only ever updated with the world stopped and we run on the
@@ -1712,6 +1785,12 @@ namespace golang::runtime
             auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(s)));
             atomic::Or8(& arena->pageInUse[pageIdx], pageMask);
 
+            // Mark packed span.
+            if(gcUsesSpanInlineMarkBits(s->elemsize))
+            {
+                atomic::Or8(& arena->pageUseSpanInlineMarkBits[pageIdx], pageMask);
+            }
+
             // Update related page sweeper stats.
             rec::Add(gocpp::recv(h->pagesInUse), npages);
         }
@@ -1728,6 +1807,8 @@ namespace golang::runtime
     std::tuple<uintptr_t, bool> rec::grow(mheap* h, uintptr_t npage)
     {
         assertLockHeld(& h->lock);
+
+        auto firstGrow = h->curArena.base == 0;
 
         // We must grow the heap in whole palloc chunks.
         // We call sysMap below but note that because we
@@ -1746,7 +1827,7 @@ namespace golang::runtime
             // Not enough room in the current arena. Allocate more
             // arena space. This may not be contiguous with the
             // current arena, so we have to request the full ask.
-            auto [av, asize] = rec::sysAlloc(gocpp::recv(h), ask, & h->arenaHints, true);
+            auto [av, asize] = rec::sysAlloc(gocpp::recv(h), ask, & h->arenaHints, & h->heapArenas);
             if(av == nullptr)
             {
                 auto inUse = rec::load(gocpp::recv(gcController.heapFree)) + rec::load(gocpp::recv(gcController.heapReleased)) + rec::load(gocpp::recv(gcController.heapInUse));
@@ -1770,7 +1851,7 @@ namespace golang::runtime
                     // Transition this space from Reserved to Prepared and mark it
                     // as released since we'll be able to start using it after updating
                     // the page allocator and releasing the lock at any time.
-                    sysMap(gocpp::unsafe_pointer(h->curArena.base), size, & gcController.heapReleased);
+                    sysMap(gocpp::unsafe_pointer(h->curArena.base), size, & gcController.heapReleased, "heap"_s);
                     // Update stats.
                     auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
                     atomic::Xaddint64(& stats->released, int64_t(size));
@@ -1783,6 +1864,17 @@ namespace golang::runtime
                 // Switch to the new space.
                 h->curArena.base = uintptr_t(av);
                 h->curArena.end = uintptr_t(av) + asize;
+
+                if(firstGrow && randomizeHeapBase)
+                {
+                    // The top heapAddrBits-logHeapArenaBytes are randomized, we now
+                    // want to randomize the next
+                    // logHeapArenaBytes-log2(pallocChunkBytes) bits, making sure
+                    // h.curArena.base is aligned to pallocChunkBytes.
+                    auto bits = logHeapArenaBytes - logPallocChunkBytes;
+                    auto offset = nextHeapRandBits(bits);
+                    h->curArena.base = alignDown(h->curArena.base | (offset << logPallocChunkBytes), pallocChunkBytes);
+                }
             }
 
             // Recalculate nBase.
@@ -1800,7 +1892,7 @@ namespace golang::runtime
         // The allocation is always aligned to the heap arena
         // size which is always > physPageSize, so its safe to
         // just add directly to heapReleased.
-        sysMap(gocpp::unsafe_pointer(v), nBase - v, & gcController.heapReleased);
+        sysMap(gocpp::unsafe_pointer(v), nBase - v, & gcController.heapReleased, "heap"_s);
 
         // The memory just allocated counts as both released
         // and idle, even though it's not yet backed by spans.
@@ -1812,6 +1904,24 @@ namespace golang::runtime
         // space ready for allocation.
         rec::grow(gocpp::recv(h->pages), v, nBase - v);
         totalGrowth += nBase - v;
+
+        if(firstGrow && randomizeHeapBase)
+        {
+            // The top heapAddrBits-log2(pallocChunkBytes) bits are now randomized,
+            // we finally want to randomize the next
+            // log2(pallocChunkBytes)-log2(pageSize) bits, while maintaining
+            // alignment to pageSize. We do this by calculating a random number of
+            // pages into the current arena, and marking them as allocated. The
+            // address of the next available page becomes our fully randomized base
+            // heap address.
+            auto randOffset = nextHeapRandBits(logPallocChunkBytes);
+            auto randNumPages = alignDown(randOffset, pageSize) / pageSize;
+            if(randNumPages != 0)
+            {
+                rec::markRandomPaddingPages(gocpp::recv(h->pages), v, randNumPages);
+            }
+        }
+
         return {totalGrowth, true};
     }
 
@@ -1820,22 +1930,36 @@ namespace golang::runtime
     {
         systemstack([=]() mutable -> void
         {
-            pageTraceFree(rec::ptr(gocpp::recv(getg()->m->p)), 0, rec::base(gocpp::recv(s)), s->npages);
+            // Trace the span free.
+            if(traceAllocFreeEnabled())
+            {
+                auto trace = traceAcquire();
+                if(rec::ok(gocpp::recv(trace)))
+                {
+                    rec::SpanFree(gocpp::recv(trace), s);
+                    traceRelease(trace);
+                }
+            }
 
             lock(& h->lock);
             if(msanenabled)
             {
                 // Tell msan that this entire span is no longer in use.
                 auto base = gocpp::unsafe_pointer(rec::base(gocpp::recv(s)));
-                auto bytes = s->npages << _PageShift;
+                auto bytes = s->npages << gc::PageShift;
                 msanfree(base, bytes);
             }
             if(asanenabled)
             {
                 // Tell asan that this entire span is no longer in use.
                 auto base = gocpp::unsafe_pointer(rec::base(gocpp::recv(s)));
-                auto bytes = s->npages << _PageShift;
+                auto bytes = s->npages << gc::PageShift;
                 asanpoison(base, bytes);
+            }
+            if(valgrindenabled)
+            {
+                auto base = rec::base(gocpp::recv(s));
+                valgrindMempoolFree(gocpp::unsafe_pointer(arenaBase(arenaIndex(base))), gocpp::unsafe_pointer(base));
             }
             rec::freeSpanLocked(gocpp::recv(h), s, spanAllocHeap);
             unlock(& h->lock);
@@ -1855,10 +1979,24 @@ namespace golang::runtime
     //go:systemstack
     void rec::freeManual(mheap* h, mspan* s, spanAllocType typ)
     {
-        pageTraceFree(rec::ptr(gocpp::recv(getg()->m->p)), 0, rec::base(gocpp::recv(s)), s->npages);
+        // Trace the span free.
+        if(traceAllocFreeEnabled())
+        {
+            auto trace = traceAcquire();
+            if(rec::ok(gocpp::recv(trace)))
+            {
+                rec::SpanFree(gocpp::recv(trace), s);
+                traceRelease(trace);
+            }
+        }
 
         s->needzero = 1;
         runtime::lock(& h->lock);
+        if(valgrindenabled)
+        {
+            auto base = rec::base(gocpp::recv(s));
+            valgrindMempoolFree(gocpp::unsafe_pointer(arenaBase(arenaIndex(base))), gocpp::unsafe_pointer(base));
+        }
         rec::freeSpanLocked(gocpp::recv(h), s, typ);
         runtime::unlock(& h->lock);
     }
@@ -1896,6 +2034,11 @@ namespace golang::runtime
                     // Clear in-use bit in arena page bitmap.
                     auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(s)));
                     atomic::And8(& arena->pageInUse[pageIdx], ~ pageMask);
+                    // Clear small heap span bit if necessary.
+                    if(gcUsesSpanInlineMarkBits(s->elemsize))
+                    {
+                        atomic::And8(& arena->pageUseSpanInlineMarkBits[pageIdx], ~ pageMask);
+                    }
                     break;
                 }
                 default:
@@ -1920,8 +2063,7 @@ namespace golang::runtime
             int conditionId = -1;
             if(condition == spanAllocHeap) { conditionId = 0; }
             else if(condition == spanAllocStack) { conditionId = 1; }
-            else if(condition == spanAllocPtrScalarBits) { conditionId = 2; }
-            else if(condition == spanAllocWorkBuf) { conditionId = 3; }
+            else if(condition == spanAllocWorkBuf) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -1931,9 +2073,6 @@ namespace golang::runtime
                     atomic::Xaddint64(& stats->inStacks, - int64_t(nbytes));
                     break;
                 case 2:
-                    atomic::Xaddint64(& stats->inPtrScalarBits, - int64_t(nbytes));
-                    break;
-                case 3:
                     atomic::Xaddint64(& stats->inWorkBufs, - int64_t(nbytes));
                     break;
             }
@@ -1993,6 +2132,8 @@ namespace golang::runtime
         span->list = nullptr;
         span->startAddr = base;
         span->npages = npages;
+        // see go.dev/issue/74288; adjusted later for heap spans
+        span->limit = base + npages * gc::PageSize;
         span->allocCount = 0;
         span->spanclass = 0;
         span->elemsize = 0;
@@ -2011,6 +2152,42 @@ namespace golang::runtime
     bool rec::inList(mspan* span)
     {
         return span->list != nullptr;
+    }
+
+    // mSpanList heads a linked list of spans.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    mSpanList::operator T()
+    {
+        T result;
+        result._1 = this->_1;
+        result.first = this->first;
+        result.last = this->last;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mSpanList::operator==(const T& ref) const
+    {
+        if (_1 != ref._1) return false;
+        if (first != ref.first) return false;
+        if (last != ref.last) return false;
+        return true;
+    }
+
+    std::ostream& mSpanList::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << _1;
+        os << " " << first;
+        os << " " << last;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct mSpanList& value)
+    {
+        return value.PrintTo(os);
     }
 
     // Initialize an empty doubly-linked list.
@@ -2185,13 +2362,13 @@ namespace golang::runtime
         atomic::And8(& ha->pageSpecials[arenaPage / 8], ~ (uint8_t(1) << (arenaPage % 8)));
     }
 
-    // Adds the special record s to the list of special records for
+    // addspecial adds the special record s to the list of special records for
     // the object p. All fields of s should be filled in except for
     // offset & next, which this routine will fill in.
     // Returns true if the special was successfully added, false otherwise.
     // (The add will fail only if a record with the same p and s->kind
-    // already exists.)
-    bool addspecial(gocpp::unsafe_pointer p, special* s)
+    // already exists unless force is set to true.)
+    bool addspecial(gocpp::unsafe_pointer p, special* s, bool force)
     {
         auto span = spanOfHeap(uintptr_t(p));
         if(span == nullptr)
@@ -2212,10 +2389,10 @@ namespace golang::runtime
 
         // Find splice point, check for existing record.
         auto [iter, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, kind);
-        if(! exists)
+        if(! exists || force)
         {
             // Splice in record, fill in offset.
-            s->offset = uint16_t(offset);
+            s->offset = offset;
             s->next = *iter;
             *iter = s;
             spanHasSpecials(span);
@@ -2223,8 +2400,11 @@ namespace golang::runtime
 
         unlock(& span->speciallock);
         releasem(mp);
-        // already exists
-        return ! exists;
+        // We're converting p to a uintptr and looking it up, and we
+        // don't want it to die and get swept while we're doing so.
+        KeepAlive(p);
+        // already exists or addition was forced
+        return ! exists || force;
     }
 
     // Removes the Special record of the given kind for the object p.
@@ -2280,12 +2460,12 @@ namespace golang::runtime
             {
                 break;
             }
-            if(offset == uintptr_t(s->offset) && kind == s->kind)
+            if(offset == s->offset && kind == s->kind)
             {
                 found = true;
                 break;
             }
-            if(offset < uintptr_t(s->offset) || (offset == uintptr_t(s->offset) && kind < s->kind))
+            if(offset < s->offset || (offset == s->offset && kind < s->kind))
             {
                 break;
             }
@@ -2353,7 +2533,7 @@ namespace golang::runtime
         s->nret = nret;
         s->fint = fint;
         s->ot = ot;
-        if(addspecial(p, & s->special))
+        if(addspecial(p, & s->special, false))
         {
             // This is responsible for maintaining the same
             // GC-related invariants as markrootSpans in any
@@ -2368,7 +2548,7 @@ namespace golang::runtime
                 // so it's retained for the finalizer.
                 if(! rec::noscan(gocpp::recv(span->spanclass)))
                 {
-                    scanobject(base, gcw);
+                    scanObject(base, gcw);
                 }
                 // Mark the finalizer itself, since the
                 // special isn't part of the GC'd heap.
@@ -2397,6 +2577,785 @@ namespace golang::runtime
         lock(& mheap_.speciallock);
         rec::free(gocpp::recv(mheap_.specialfinalizeralloc), gocpp::unsafe_pointer(s));
         unlock(& mheap_.speciallock);
+    }
+
+    // The described object has a cleanup set for it.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    specialCleanup::operator T()
+    {
+        T result;
+        result._1 = this->_1;
+        result.special = this->special;
+        result.cleanup = this->cleanup;
+        result.id = this->id;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool specialCleanup::operator==(const T& ref) const
+    {
+        if (_1 != ref._1) return false;
+        if (special != ref.special) return false;
+        if (cleanup != ref.cleanup) return false;
+        if (id != ref.id) return false;
+        return true;
+    }
+
+    std::ostream& specialCleanup::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << _1;
+        os << " " << special;
+        os << " " << cleanup;
+        os << " " << id;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct specialCleanup& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // addCleanup attaches a cleanup function to the object. Multiple
+    // cleanups are allowed on an object, and even the same pointer.
+    // A cleanup id is returned which can be used to uniquely identify
+    // the cleanup.
+    uint64_t addCleanup(gocpp::unsafe_pointer p, cleanupFn c)
+    {
+        // TODO(mknyszek): Consider pooling specialCleanups on the P
+        // so we don't have to take the lock every time. Just locking
+        // is a considerable part of the cost of AddCleanup. This
+        // would also require reserving some cleanup IDs on the P.
+        lock(& mheap_.speciallock);
+        auto s = (specialCleanup*)(rec::alloc(gocpp::recv(mheap_.specialCleanupAlloc)));
+        // Increment first. ID 0 is reserved.
+        mheap_.cleanupID++;
+        auto id = mheap_.cleanupID;
+        unlock(& mheap_.speciallock);
+        s->special.kind = _KindSpecialCleanup;
+        s->cleanup = c;
+        s->id = id;
+
+        auto mp = acquirem();
+        addspecial(p, & s->special, true);
+        // This is responsible for maintaining the same
+        // GC-related invariants as markrootSpans in any
+        // situation where it's possible that markrootSpans
+        // has already run but mark termination hasn't yet.
+        if(gcphase != _GCoff)
+        {
+            // Mark the cleanup itself, since the
+            // special isn't part of the GC'd heap.
+            gcScanCleanup(s, & rec::ptr(gocpp::recv(mp->p))->gcw);
+        }
+        releasem(mp);
+        // Keep c and its referents alive. There's a window in this function
+        // where it's only reachable via the special while the special hasn't
+        // been added to the specials list yet. This is similar to a bug
+        // discovered for weak handles, see #70455.
+        KeepAlive(c);
+        return id;
+    }
+
+    // Always paired with a specialCleanup or specialfinalizer, adds context.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    specialCheckFinalizer::operator T()
+    {
+        T result;
+        result._1 = this->_1;
+        result.special = this->special;
+        result.cleanupID = this->cleanupID;
+        result.createPC = this->createPC;
+        result.funcPC = this->funcPC;
+        result.ptrType = this->ptrType;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool specialCheckFinalizer::operator==(const T& ref) const
+    {
+        if (_1 != ref._1) return false;
+        if (special != ref.special) return false;
+        if (cleanupID != ref.cleanupID) return false;
+        if (createPC != ref.createPC) return false;
+        if (funcPC != ref.funcPC) return false;
+        if (ptrType != ref.ptrType) return false;
+        return true;
+    }
+
+    std::ostream& specialCheckFinalizer::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << _1;
+        os << " " << special;
+        os << " " << cleanupID;
+        os << " " << createPC;
+        os << " " << funcPC;
+        os << " " << ptrType;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct specialCheckFinalizer& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // setFinalizerContext adds a specialCheckFinalizer to ptr. ptr must already have a
+    // finalizer special attached.
+    void setFinalizerContext(gocpp::unsafe_pointer ptr, _type* ptrType, uintptr_t createPC, uintptr_t funcPC)
+    {
+        setCleanupContext(ptr, ptrType, createPC, funcPC, 0);
+    }
+
+    // setCleanupContext adds a specialCheckFinalizer to ptr. ptr must already have a
+    // finalizer or cleanup special attached. Pass 0 for the cleanupID to indicate
+    // a finalizer.
+    void setCleanupContext(gocpp::unsafe_pointer ptr, _type* ptrType, uintptr_t createPC, uintptr_t funcPC, uint64_t cleanupID)
+    {
+        lock(& mheap_.speciallock);
+        auto s = (specialCheckFinalizer*)(rec::alloc(gocpp::recv(mheap_.specialCheckFinalizerAlloc)));
+        unlock(& mheap_.speciallock);
+        s->special.kind = _KindSpecialCheckFinalizer;
+        s->cleanupID = cleanupID;
+        s->createPC = createPC;
+        s->funcPC = funcPC;
+        s->ptrType = ptrType;
+
+        auto mp = acquirem();
+        addspecial(ptr, & s->special, true);
+        releasem(mp);
+        KeepAlive(ptr);
+    }
+
+    specialCheckFinalizer* getCleanupContext(uintptr_t ptr, uint64_t cleanupID)
+    {
+        assertWorldStopped();
+
+        auto span = spanOfHeap(ptr);
+        if(span == nullptr)
+        {
+            return nullptr;
+        }
+        specialCheckFinalizer* found = {};
+        auto offset = ptr - rec::base(gocpp::recv(span));
+        auto [iter, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialCheckFinalizer);
+        if(exists)
+        {
+            for(; ; )
+            {
+                auto s = *iter;
+                if(s == nullptr)
+                {
+                    // Reached the end of the linked list. Stop searching at this point.
+                    break;
+                }
+                if(offset == s->offset && _KindSpecialCheckFinalizer == s->kind &&
+                                (specialCheckFinalizer*)(gocpp::unsafe_pointer(s))->cleanupID == cleanupID)
+                {
+                    // The special is a cleanup and contains a matching cleanup id.
+                    *iter = s->next;
+                    found = (specialCheckFinalizer*)(gocpp::unsafe_pointer(s));
+                    break;
+                }
+                if(offset < s->offset || (offset == s->offset && _KindSpecialCheckFinalizer < s->kind))
+                {
+                    // The special is outside the region specified for that kind of
+                    // special. The specials are sorted by kind.
+                    break;
+                }
+                // Try the next special.
+                iter = & s->next;
+            }
+        }
+        return found;
+    }
+
+    // clearFinalizerContext removes the specialCheckFinalizer for the given pointer, if any.
+    void clearFinalizerContext(uintptr_t ptr)
+    {
+        clearCleanupContext(ptr, 0);
+    }
+
+    // clearFinalizerContext removes the specialCheckFinalizer for the given pointer and cleanup ID, if any.
+    void clearCleanupContext(uintptr_t ptr, uint64_t cleanupID)
+    {
+        // The following block removes the Special record of type cleanup for the object c.ptr.
+        auto span = spanOfHeap(ptr);
+        if(span == nullptr)
+        {
+            return;
+        }
+        // Ensure that the span is swept.
+        // Sweeping accesses the specials list w/o locks, so we have
+        // to synchronize with it. And it's just much safer.
+        auto mp = acquirem();
+        rec::ensureSwept(gocpp::recv(span));
+
+        auto offset = ptr - rec::base(gocpp::recv(span));
+
+        special* found = {};
+        lock(& span->speciallock);
+
+        auto [iter, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialCheckFinalizer);
+        if(exists)
+        {
+            for(; ; )
+            {
+                auto s = *iter;
+                if(s == nullptr)
+                {
+                    // Reached the end of the linked list. Stop searching at this point.
+                    break;
+                }
+                if(offset == s->offset && _KindSpecialCheckFinalizer == s->kind &&
+                                (specialCheckFinalizer*)(gocpp::unsafe_pointer(s))->cleanupID == cleanupID)
+                {
+                    // The special is a cleanup and contains a matching cleanup id.
+                    *iter = s->next;
+                    found = s;
+                    break;
+                }
+                if(offset < s->offset || (offset == s->offset && _KindSpecialCheckFinalizer < s->kind))
+                {
+                    // The special is outside the region specified for that kind of
+                    // special. The specials are sorted by kind.
+                    break;
+                }
+                // Try the next special.
+                iter = & s->next;
+            }
+        }
+        if(span->specials == nullptr)
+        {
+            spanHasNoSpecials(span);
+        }
+        unlock(& span->speciallock);
+        releasem(mp);
+
+        if(found == nullptr)
+        {
+            return;
+        }
+        lock(& mheap_.speciallock);
+        rec::free(gocpp::recv(mheap_.specialCheckFinalizerAlloc), gocpp::unsafe_pointer(found));
+        unlock(& mheap_.speciallock);
+    }
+
+    // Indicates that an allocation is a tiny block.
+    // Used only if debug.checkfinalizers != 0.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    specialTinyBlock::operator T()
+    {
+        T result;
+        result._1 = this->_1;
+        result.special = this->special;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool specialTinyBlock::operator==(const T& ref) const
+    {
+        if (_1 != ref._1) return false;
+        if (special != ref.special) return false;
+        return true;
+    }
+
+    std::ostream& specialTinyBlock::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << _1;
+        os << " " << special;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct specialTinyBlock& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // setTinyBlockContext marks an allocation as a tiny block to diagnostics like
+    // checkfinalizer.
+    //
+    // A tiny block is only marked if it actually contains more than one distinct
+    // value, since we're using this for debugging.
+    void setTinyBlockContext(gocpp::unsafe_pointer ptr)
+    {
+        lock(& mheap_.speciallock);
+        auto s = (specialTinyBlock*)(rec::alloc(gocpp::recv(mheap_.specialTinyBlockAlloc)));
+        unlock(& mheap_.speciallock);
+        s->special.kind = _KindSpecialTinyBlock;
+
+        auto mp = acquirem();
+        addspecial(ptr, & s->special, false);
+        releasem(mp);
+        KeepAlive(ptr);
+    }
+
+    // inTinyBlock returns whether ptr is in a tiny alloc block, at one point grouped
+    // with other distinct values.
+    bool inTinyBlock(uintptr_t ptr)
+    {
+        assertWorldStopped();
+
+        ptr = alignDown(ptr, maxTinySize);
+        auto span = spanOfHeap(ptr);
+        if(span == nullptr)
+        {
+            return false;
+        }
+        auto offset = ptr - rec::base(gocpp::recv(span));
+        auto [gocpp_id_4, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialTinyBlock);
+        return exists;
+    }
+
+    // The described object has a weak pointer.
+    //
+    // Weak pointers in the GC have the following invariants:
+    //
+    //   - Strong-to-weak conversions must ensure the strong pointer
+    //     remains live until the weak handle is installed. This ensures
+    //     that creating a weak pointer cannot fail.
+    //
+    //   - Weak-to-strong conversions require the weakly-referenced
+    //     object to be swept before the conversion may proceed. This
+    //     ensures that weak-to-strong conversions cannot resurrect
+    //     dead objects by sweeping them before that happens.
+    //
+    //   - Weak handles are unique and canonical for each byte offset into
+    //     an object that a strong pointer may point to, until an object
+    //     becomes unreachable.
+    //
+    //   - Weak handles contain nil as soon as an object becomes unreachable
+    //     the first time, before a finalizer makes it reachable again. New
+    //     weak handles created after resurrection are newly unique.
+    //
+    // specialWeakHandle is allocated from non-GC'd memory, so any heap
+    // pointers must be specially handled.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    specialWeakHandle::operator T()
+    {
+        T result;
+        result._1 = this->_1;
+        result.special = this->special;
+        result.handle = this->handle;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool specialWeakHandle::operator==(const T& ref) const
+    {
+        if (_1 != ref._1) return false;
+        if (special != ref.special) return false;
+        if (handle != ref.handle) return false;
+        return true;
+    }
+
+    std::ostream& specialWeakHandle::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << _1;
+        os << " " << special;
+        os << " " << handle;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct specialWeakHandle& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    //go:linkname internal_weak_runtime_registerWeakPointer weak.runtime_registerWeakPointer
+    gocpp::unsafe_pointer internal_weak_runtime_registerWeakPointer(gocpp::unsafe_pointer p)
+    {
+        return gocpp::unsafe_pointer(getOrAddWeakHandle(p));
+    }
+
+    //go:linkname internal_weak_runtime_makeStrongFromWeak weak.runtime_makeStrongFromWeak
+    gocpp::unsafe_pointer internal_weak_runtime_makeStrongFromWeak(gocpp::unsafe_pointer u)
+    {
+        auto handle = (atomic::Uintptr*)(u);
+
+        // Prevent preemption. We want to make sure that another GC cycle can't start
+        // and that work.strongFromWeak.block can't change out from under us.
+        auto mp = acquirem();
+
+        // Yield to the GC if necessary.
+        if(work.strongFromWeak.block)
+        {
+            releasem(mp);
+
+            // Try to park and wait for mark termination.
+            // N.B. gcParkStrongFromWeak calls acquirem before returning.
+            mp = gcParkStrongFromWeak();
+        }
+
+        auto p = rec::Load(gocpp::recv(handle));
+        if(p == 0)
+        {
+            releasem(mp);
+            return nullptr;
+        }
+        // Be careful. p may or may not refer to valid memory anymore, as it could've been
+        // swept and released already. It's always safe to ensure a span is swept, though,
+        // even if it's just some random span.
+        auto span = spanOfHeap(p);
+        if(span == nullptr)
+        {
+            // If it's immortal, then just return the pointer.
+            // Stay non-preemptible so the GC can't see us convert this potentially
+            // completely bogus value to an unsafe.Pointer.
+            if(isGoPointerWithoutSpan(gocpp::unsafe_pointer(p)))
+            {
+                releasem(mp);
+                return gocpp::unsafe_pointer(p);
+            }
+            // It's heap-allocated, so the span probably just got swept and released.
+            releasem(mp);
+            return nullptr;
+        }
+        // Ensure the span is swept.
+        rec::ensureSwept(gocpp::recv(span));
+
+        // Now we can trust whatever we get from handle, so make a strong pointer.
+        // Even if we just swept some random span that doesn't contain this object, because
+        // this object is long dead and its memory has since been reused, we'll just observe nil.
+        auto ptr = gocpp::unsafe_pointer(rec::Load(gocpp::recv(handle)));
+
+        // This is responsible for maintaining the same GC-related
+        // invariants as the Yuasa part of the write barrier. During
+        // the mark phase, it's possible that we just created the only
+        // valid pointer to the object pointed to by ptr. If it's only
+        // ever referenced from our stack, and our stack is blackened
+        // already, we could fail to mark it. So, mark it now.
+        if(gcphase != _GCoff)
+        {
+            shade(uintptr_t(ptr));
+        }
+        releasem(mp);
+
+        // Explicitly keep ptr alive. This seems unnecessary since we return ptr,
+        // but let's be explicit since it's important we keep ptr alive across the
+        // call to shade.
+        KeepAlive(ptr);
+        return ptr;
+    }
+
+    // gcParkStrongFromWeak puts the current goroutine on the weak->strong queue and parks.
+    m* gcParkStrongFromWeak()
+    {
+        // Prevent preemption as we check strongFromWeak, so it can't change out from under us.
+        auto mp = acquirem();
+
+        for(; work.strongFromWeak.block; )
+        {
+            lock(& work.strongFromWeak.lock);
+            // N.B. Holding the lock prevents preemption.
+            releasem(mp);
+
+            // Queue ourselves up.
+            rec::pushBack(gocpp::recv(work.strongFromWeak.q), getg());
+
+            // Park.
+            goparkunlock(& work.strongFromWeak.lock, waitReasonGCWeakToStrongWait, traceBlockGCWeakToStrongWait, 2);
+
+            // Re-acquire the current M since we're going to check the condition again.
+            mp = acquirem();
+        }
+        // Re-check condition. We may have awoken in the next GC's mark termination phase.
+        return mp;
+    }
+
+    // gcWakeAllStrongFromWeak wakes all currently blocked weak->strong
+    // conversions. This is used at the end of a GC cycle.
+    //
+    // work.strongFromWeak.block must be false to prevent woken goroutines
+    // from immediately going back to sleep.
+    void gcWakeAllStrongFromWeak()
+    {
+        lock(& work.strongFromWeak.lock);
+        auto list = rec::popList(gocpp::recv(work.strongFromWeak.q));
+        injectglist(& list);
+        unlock(& work.strongFromWeak.lock);
+    }
+
+    // Retrieves or creates a weak pointer handle for the object p.
+    atomic::Uintptr* getOrAddWeakHandle(gocpp::unsafe_pointer p)
+    {
+        if(debug.sbrk != 0)
+        {
+            // debug.sbrk never frees memory, so it'll never go nil. However, we do still
+            // need a weak handle that's specific to p. Use the immortal weak handle map.
+            // Keep p alive across the call to getOrAdd defensively, though it doesn't
+            // really matter in this particular case.
+            auto handle = rec::getOrAdd(gocpp::recv(mheap_.immortalWeakHandles), uintptr_t(p));
+            KeepAlive(p);
+            return handle;
+        }
+
+        // First try to retrieve without allocating.
+        if(auto handle = getWeakHandle(p); handle != nullptr)
+        {
+            // Keep p alive for the duration of the function to ensure
+            // that it cannot die while we're trying to do this.
+            KeepAlive(p);
+            return handle;
+        }
+
+        lock(& mheap_.speciallock);
+        auto s = (specialWeakHandle*)(rec::alloc(gocpp::recv(mheap_.specialWeakHandleAlloc)));
+        unlock(& mheap_.speciallock);
+
+        // N.B. Pad the weak handle to ensure it doesn't share a tiny
+        // block with any other allocations. This can lead to leaks, such
+        // as in go.dev/issue/76007. As an alternative, we could consider
+        // using the currently-unused 8-byte noscan size class.
+        struct weakHandleBox
+        {
+            atomic::Uintptr h{};
+            gocpp::array<unsigned char, maxTinySize - gocpp::Sizeof<atomic::Uintptr>()> _1{};
+
+            using isGoStruct = void;
+
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << h;
+                os << " " << _1;
+                os << '}';
+                return os;
+            }
+        };
+        auto handle = & (new weakHandleBox{}->h);
+        s->special.kind = _KindSpecialWeakHandle;
+        s->handle = handle;
+        rec::Store(gocpp::recv(handle), uintptr_t(p));
+        if(addspecial(p, & s->special, false))
+        {
+            // This is responsible for maintaining the same
+            // GC-related invariants as markrootSpans in any
+            // situation where it's possible that markrootSpans
+            // has already run but mark termination hasn't yet.
+            if(gcphase != _GCoff)
+            {
+                auto mp = acquirem();
+                auto gcw = & rec::ptr(gocpp::recv(mp->p))->gcw;
+                // Mark the weak handle itself, since the
+                // special isn't part of the GC'd heap.
+                scanblock(uintptr_t(gocpp::unsafe_pointer(& s->handle)), goarch::PtrSize, & oneptrmask[0], gcw, nullptr);
+                releasem(mp);
+            }
+
+            // Keep p alive for the duration of the function to ensure
+            // that it cannot die while we're trying to do this.
+            // Same for handle, which is only stored in the special.
+            // There's a window where it might die if we don't keep it
+            // alive explicitly. Returning it here is probably good enough,
+            // but let's be defensive and explicit. See #70455.
+            KeepAlive(p);
+            KeepAlive(handle);
+            return handle;
+        }
+
+        // There was an existing handle. Free the special
+        // and try again. We must succeed because we're explicitly
+        // keeping p live until the end of this function. Either
+        // we, or someone else, must have succeeded, because we can
+        // only fail in the event of a race, and p will still be
+        // be valid no matter how much time we spend here.
+        lock(& mheap_.speciallock);
+        rec::free(gocpp::recv(mheap_.specialWeakHandleAlloc), gocpp::unsafe_pointer(s));
+        unlock(& mheap_.speciallock);
+
+        handle = getWeakHandle(p);
+        if(handle == nullptr)
+        {
+            go_throw("failed to get or create weak handle"_s);
+        }
+
+        // Keep p alive for the duration of the function to ensure
+        // that it cannot die while we're trying to do this.
+        // Same for handle, just to be defensive.
+        KeepAlive(p);
+        KeepAlive(handle);
+        return handle;
+    }
+
+    atomic::Uintptr* getWeakHandle(gocpp::unsafe_pointer p)
+    {
+        auto span = spanOfHeap(uintptr_t(p));
+        if(span == nullptr)
+        {
+            if(isGoPointerWithoutSpan(p))
+            {
+                return rec::getOrAdd(gocpp::recv(mheap_.immortalWeakHandles), uintptr_t(p));
+            }
+            go_throw("getWeakHandle on invalid pointer"_s);
+        }
+
+        // Ensure that the span is swept.
+        // Sweeping accesses the specials list w/o locks, so we have
+        // to synchronize with it. And it's just much safer.
+        auto mp = acquirem();
+        rec::ensureSwept(gocpp::recv(span));
+
+        auto offset = uintptr_t(p) - rec::base(gocpp::recv(span));
+
+        lock(& span->speciallock);
+
+        // Find the existing record and return the handle if one exists.
+        atomic::Uintptr* handle = {};
+        auto [iter, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialWeakHandle);
+        if(exists)
+        {
+            handle = ((specialWeakHandle*)(gocpp::unsafe_pointer(*iter)))->handle;
+        }
+        unlock(& span->speciallock);
+        releasem(mp);
+
+        // Keep p alive for the duration of the function to ensure
+        // that it cannot die while we're trying to do this.
+        KeepAlive(p);
+        return handle;
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    immortalWeakHandleMap::operator T()
+    {
+        T result;
+        result.root = this->root;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool immortalWeakHandleMap::operator==(const T& ref) const
+    {
+        if (root != ref.root) return false;
+        return true;
+    }
+
+    std::ostream& immortalWeakHandleMap::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << root;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct immortalWeakHandleMap& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // immortalWeakHandle is a lock-free append-only hash-trie.
+    //
+    // Key features:
+    //   - 2-ary trie. Child nodes are indexed by the highest bit (remaining) of the hash of the address.
+    //   - New nodes are placed at the first empty level encountered.
+    //   - When the first child is added to a node, the existing value is not moved into a child.
+    //     This means that we must check the value at each level, not just at the leaf.
+    //   - No deletion or rebalancing.
+    //   - Intentionally devolves into a linked list on hash collisions (the hash bits will all
+    //     get shifted out during iteration, and new nodes will just be appended to the 0th child).
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    immortalWeakHandle::operator T()
+    {
+        T result;
+        result._1 = this->_1;
+        result.children = this->children;
+        result.ptr = this->ptr;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool immortalWeakHandle::operator==(const T& ref) const
+    {
+        if (_1 != ref._1) return false;
+        if (children != ref.children) return false;
+        if (ptr != ref.ptr) return false;
+        return true;
+    }
+
+    std::ostream& immortalWeakHandle::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << _1;
+        os << " " << children;
+        os << " " << ptr;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct immortalWeakHandle& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // handle returns a canonical weak handle.
+    atomic::Uintptr* rec::handle(immortalWeakHandle* h)
+    {
+        // N.B. Since we just need an *atomic.Uintptr that never changes, we can trivially
+        // reference ptr to save on some memory in immortalWeakHandle and avoid extra atomics
+        // in getOrAdd.
+        return (atomic::Uintptr*)(gocpp::unsafe_pointer(& h->ptr));
+    }
+
+    // getOrAdd introduces p, which must be a pointer to immortal memory (for example, a linker-allocated
+    // object) and returns a weak handle. The weak handle will never become nil.
+    atomic::Uintptr* rec::getOrAdd(immortalWeakHandleMap* tab, uintptr_t p)
+    {
+        immortalWeakHandle* newNode = {};
+        auto m = & tab->root;
+        auto hash = memhash(abi::NoEscape(gocpp::unsafe_pointer(& p)), 0, goarch::PtrSize);
+        auto hashIter = hash;
+        for(; ; )
+        {
+            auto n = (immortalWeakHandle*)(rec::Load(gocpp::recv(m)));
+            if(n == nullptr)
+            {
+                // Try to insert a new map node. We may end up discarding
+                // this node if we fail to insert because it turns out the
+                // value is already in the map.
+                // The discard will only happen if two threads race on inserting
+                // the same value. Both might create nodes, but only one will
+                // succeed on insertion. If two threads race to insert two
+                // different values, then both nodes will *always* get inserted,
+                // because the equality checking below will always fail.
+                // Performance note: contention on insertion is likely to be
+                // higher for small maps, but since this data structure is
+                // append-only, either the map stays small because there isn't
+                // much activity, or the map gets big and races to insert on
+                // the same node are much less likely.
+                if(newNode == nullptr)
+                {
+                    newNode = (immortalWeakHandle*)(persistentalloc(gocpp::Sizeof<immortalWeakHandle>(), goarch::PtrSize, & memstats.gcMiscSys));
+                    newNode->ptr = p;
+                }
+                if(rec::CompareAndSwapNoWB(gocpp::recv(m), nullptr, gocpp::unsafe_pointer(newNode)))
+                {
+                    return rec::handle(gocpp::recv(newNode));
+                }
+                // Reload n. Because pointers are only stored once,
+                // we must have lost the race, and therefore n is not nil
+                // anymore.
+                n = (immortalWeakHandle*)(rec::Load(gocpp::recv(m)));
+            }
+            if(n->ptr == p)
+            {
+                return rec::handle(gocpp::recv(n));
+            }
+            m = & n->children[hashIter >> (8 * goarch::PtrSize - 1)];
+            hashIter <<= 1;
+        }
     }
 
     // The described object is being heap profiled.
@@ -2436,14 +3395,14 @@ namespace golang::runtime
     }
 
     // Set the heap profile bucket associated with addr to b.
-    void setprofilebucket(gocpp::unsafe_pointer p, golang::runtime::bucket* b)
+    void setprofilebucket(gocpp::unsafe_pointer p, bucket* b)
     {
         lock(& mheap_.speciallock);
         auto s = (specialprofile*)(rec::alloc(gocpp::recv(mheap_.specialprofilealloc)));
         unlock(& mheap_.speciallock);
         s->special.kind = _KindSpecialProfile;
         s->b = b;
-        if(! addspecial(p, & s->special))
+        if(! addspecial(p, & s->special, false))
         {
             go_throw("setprofilebucket: profile already set"_s);
         }
@@ -2519,6 +3478,43 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // specialSecret tracks whether we need to zero an object immediately
+    // upon freeing.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    specialSecret::operator T()
+    {
+        T result;
+        result._1 = this->_1;
+        result.special = this->special;
+        result.size = this->size;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool specialSecret::operator==(const T& ref) const
+    {
+        if (_1 != ref._1) return false;
+        if (special != ref.special) return false;
+        if (size != ref.size) return false;
+        return true;
+    }
+
+    std::ostream& specialSecret::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << _1;
+        os << " " << special;
+        os << " " << size;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct specialSecret& value)
+    {
+        return value.PrintTo(os);
+    }
+
     // specialsIter helps iterate over specials lists.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -2580,6 +3576,12 @@ namespace golang::runtime
 
     // freeSpecial performs any cleanup on special s and deallocates it.
     // s must already be unlinked from the specials list.
+    // TODO(mknyszek): p and size together DO NOT represent a valid allocation.
+    // size is the size of the allocation block in the span (mspan.elemsize), and p is
+    // whatever pointer the special was attached to, which need not point to the
+    // beginning of the block, though it may.
+    // Consider passing the arguments differently to avoid giving the impression
+    // that p and size together represent an address range.
     void freeSpecial(special* s, gocpp::unsafe_pointer p, uintptr_t size)
     {
         //Go switch emulation
@@ -2587,9 +3589,15 @@ namespace golang::runtime
             auto condition = s->kind;
             int conditionId = -1;
             if(condition == _KindSpecialFinalizer) { conditionId = 0; }
-            else if(condition == _KindSpecialProfile) { conditionId = 1; }
-            else if(condition == _KindSpecialReachable) { conditionId = 2; }
-            else if(condition == _KindSpecialPinCounter) { conditionId = 3; }
+            else if(condition == _KindSpecialWeakHandle) { conditionId = 1; }
+            else if(condition == _KindSpecialProfile) { conditionId = 2; }
+            else if(condition == _KindSpecialReachable) { conditionId = 3; }
+            else if(condition == _KindSpecialPinCounter) { conditionId = 4; }
+            else if(condition == _KindSpecialCleanup) { conditionId = 5; }
+            else if(condition == _KindSpecialCheckFinalizer) { conditionId = 6; }
+            else if(condition == _KindSpecialTinyBlock) { conditionId = 7; }
+            else if(condition == _KindSpecialBubble) { conditionId = 8; }
+            else if(condition == _KindSpecialSecret) { conditionId = 9; }
             switch(conditionId)
             {
                 case 0:
@@ -2603,25 +3611,89 @@ namespace golang::runtime
                 }
                 case 1:
                 {
+                    auto sw = (specialWeakHandle*)(gocpp::unsafe_pointer(s));
+                    rec::Store(gocpp::recv(sw->handle), 0);
+                    lock(& mheap_.speciallock);
+                    rec::free(gocpp::recv(mheap_.specialWeakHandleAlloc), gocpp::unsafe_pointer(s));
+                    unlock(& mheap_.speciallock);
+                    break;
+                }
+                case 2:
+                {
                     auto sp = (specialprofile*)(gocpp::unsafe_pointer(s));
-                    mProf_Free(sp->b, size);
+                    mProf_Free(sp->b);
                     lock(& mheap_.speciallock);
                     rec::free(gocpp::recv(mheap_.specialprofilealloc), gocpp::unsafe_pointer(sp));
                     unlock(& mheap_.speciallock);
                     break;
                 }
-                case 2:
+                case 3:
                 {
                     auto sp = (specialReachable*)(gocpp::unsafe_pointer(s));
                     sp->done = true;
                     break;
                 }
                 // The creator frees these.
-                case 3:
+                case 4:
                     lock(& mheap_.speciallock);
                     rec::free(gocpp::recv(mheap_.specialPinCounterAlloc), gocpp::unsafe_pointer(s));
                     unlock(& mheap_.speciallock);
                     break;
+                case 5:
+                {
+                    auto sc = (specialCleanup*)(gocpp::unsafe_pointer(s));
+                    // Cleanups, unlike finalizers, do not resurrect the objects
+                    // they're attached to, so we only need to pass the cleanup
+                    // function, not the object.
+                    rec::enqueue(gocpp::recv(gcCleanups), sc->cleanup);
+                    lock(& mheap_.speciallock);
+                    rec::free(gocpp::recv(mheap_.specialCleanupAlloc), gocpp::unsafe_pointer(sc));
+                    unlock(& mheap_.speciallock);
+                    break;
+                }
+                case 6:
+                {
+                    auto sc = (specialCheckFinalizer*)(gocpp::unsafe_pointer(s));
+                    lock(& mheap_.speciallock);
+                    rec::free(gocpp::recv(mheap_.specialCheckFinalizerAlloc), gocpp::unsafe_pointer(sc));
+                    unlock(& mheap_.speciallock);
+                    break;
+                }
+                case 7:
+                {
+                    auto st = (specialTinyBlock*)(gocpp::unsafe_pointer(s));
+                    lock(& mheap_.speciallock);
+                    rec::free(gocpp::recv(mheap_.specialTinyBlockAlloc), gocpp::unsafe_pointer(st));
+                    unlock(& mheap_.speciallock);
+                    break;
+                }
+                case 8:
+                {
+                    auto st = (specialBubble*)(gocpp::unsafe_pointer(s));
+                    lock(& mheap_.speciallock);
+                    rec::free(gocpp::recv(mheap_.specialBubbleAlloc), gocpp::unsafe_pointer(st));
+                    unlock(& mheap_.speciallock);
+                    break;
+                }
+                case 9:
+                {
+                    auto ss = (specialSecret*)(gocpp::unsafe_pointer(s));
+                    // p is the actual byte location that the special was
+                    // attached to, but the size argument is the span
+                    // element size. If we were to zero out using the size
+                    // argument, we'd trounce over adjacent memory in cases
+                    // where the allocation contains a header. Hence, we use
+                    // the user-visible size which we stash in the special itself.
+                    // p always points to the beginning of the user-visible
+                    // allocation since the only way to attach a secret special
+                    // is via the allocation path. This isn't universal for
+                    // tiny allocs, but we avoid them in mallocgc anyway.
+                    memclrNoHeapPointers(p, ss->size);
+                    lock(& mheap_.speciallock);
+                    rec::free(gocpp::recv(mheap_.specialSecretAlloc), gocpp::unsafe_pointer(s));
+                    unlock(& mheap_.speciallock);
+                    break;
+                }
                 default:
                     go_throw("bad special kind"_s);
                     gocpp::panic("not reached"_s);
@@ -2927,7 +3999,7 @@ namespace golang::runtime
         if(gcBitsArenas.free == nullptr)
         {
             unlock(& gcBitsArenas.lock);
-            result = (gcBitsArena*)(sysAlloc(gcBitsChunkBytes, & memstats.gcMiscSys));
+            result = (gcBitsArena*)(sysAlloc(gcBitsChunkBytes, & memstats.gcMiscSys, "gc bits"_s));
             if(result == nullptr)
             {
                 go_throw("runtime: cannot allocate memory"_s);

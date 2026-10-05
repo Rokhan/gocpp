@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::base64
+namespace golang::encoding::base64
 {
     struct Encoding;
     const gocpp::rune StdPadding = '=';
@@ -27,13 +27,8 @@ namespace golang::base64
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s +
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s;
     const char invalidIndex = '\xff';
-    using CorruptInputError = int64_t;
-}
-#include "golang/io/io.fwd.h"
-
-namespace golang::base64
-{
     struct encoder;
+    using CorruptInputError = int64_t;
     struct decoder;
     struct newlineFilteringReader;
 }

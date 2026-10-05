@@ -11,7 +11,6 @@
 #include "golang/go/types/api_predicates.h"
 #include "gocpp/support.h"
 
-#include "golang/go/token/position.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/conversions.h"
 #include "golang/go/types/instantiate.h"
@@ -22,7 +21,7 @@
 #include "golang/go/types/type.h"
 #include "golang/internal/types/errors/codes.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     namespace rec
     {
@@ -35,7 +34,7 @@ namespace golang::types
     //   - if V is a generalized interface; i.e., an interface that may only be used
     //     as a type constraint in Go code
     //   - if T is an uninstantiated generic type
-    bool AssertableTo(Interface* V, golang::types::Type T)
+    bool AssertableTo(Interface* V, golang::go::types::Type T)
     {
         // Checker.newAssertableTo suppresses errors for invalid types, so we need special
         // handling here.
@@ -43,7 +42,7 @@ namespace golang::types
         {
             return false;
         }
-        return rec::newAssertableTo(gocpp::recv((Checker*)(nullptr)), nopos, V, T, nullptr);
+        return rec::newAssertableTo(gocpp::recv((Checker*)(nullptr)), V, T, nullptr);
     }
 
     // AssignableTo reports whether a value of type V is assignable to a variable
@@ -51,11 +50,11 @@ namespace golang::types
     //
     // The behavior of AssignableTo is unspecified if V or T is Typ[Invalid] or an
     // uninstantiated generic type.
-    bool AssignableTo(golang::types::Type V, golang::types::Type T)
+    bool AssignableTo(golang::go::types::Type V, golang::go::types::Type T)
     {
         auto x = gocpp::Init<operand>([=](auto& y) {
-            y.mode = value;
-            y.typ = V;
+            y.mode_ = value;
+            y.typ_ = V;
         });
         // check not needed for non-constant x
         auto [ok, gocpp_id_0] = rec::assignableTo(gocpp::recv(x), nullptr, T, nullptr);
@@ -67,11 +66,11 @@ namespace golang::types
     //
     // The behavior of ConvertibleTo is unspecified if V or T is Typ[Invalid] or an
     // uninstantiated generic type.
-    bool ConvertibleTo(golang::types::Type V, golang::types::Type T)
+    bool ConvertibleTo(golang::go::types::Type V, golang::go::types::Type T)
     {
         auto x = gocpp::Init<operand>([=](auto& y) {
-            y.mode = value;
-            y.typ = V;
+            y.mode_ = value;
+            y.typ_ = V;
         });
         // check not needed for non-constant x
         return rec::convertibleTo(gocpp::recv(x), nullptr, T, nullptr);
@@ -81,7 +80,7 @@ namespace golang::types
     //
     // The behavior of Implements is unspecified if V is Typ[Invalid] or an uninstantiated
     // generic type.
-    bool Implements(golang::types::Type V, Interface* T)
+    bool Implements(golang::go::types::Type V, Interface* T)
     {
         if(rec::Empty(gocpp::recv(T)))
         {
@@ -94,21 +93,33 @@ namespace golang::types
         {
             return false;
         }
-        return rec::implements(gocpp::recv((Checker*)(nullptr)), nopos, V, T, false, nullptr);
+        return rec::implements(gocpp::recv((Checker*)(nullptr)), V, T, false, nullptr);
     }
 
     // Satisfies reports whether type V satisfies the constraint T.
     //
     // The behavior of Satisfies is unspecified if V is Typ[Invalid] or an uninstantiated
     // generic type.
-    bool Satisfies(golang::types::Type V, Interface* T)
+    bool Satisfies(golang::go::types::Type V, Interface* T)
     {
-        return rec::implements(gocpp::recv((Checker*)(nullptr)), nopos, V, T, true, nullptr);
+        return rec::implements(gocpp::recv((Checker*)(nullptr)), V, T, true, nullptr);
     }
 
     // Identical reports whether x and y are identical types.
     // Receivers of [Signature] types are ignored.
-    bool Identical(golang::types::Type x, golang::types::Type y)
+    //
+    // Predicates such as [Identical], [Implements], and
+    // [Satisfies] assume that both operands belong to a
+    // consistent collection of symbols ([Object] values).
+    // For example, two [Named] types can be identical only if their
+    // [Named.Obj] methods return the same [TypeName] symbol.
+    // A collection of symbols is consistent if, for each logical
+    // package whose path is P, the creation of those symbols
+    // involved at most one call to [NewPackage](P, ...).
+    // To ensure consistency, use a single [Importer] for
+    // all loaded packages and their dependencies.
+    // For more information, see https://github.com/golang/go/issues/57497.
+    bool Identical(golang::go::types::Type x, golang::go::types::Type y)
     {
         comparer c = {};
         return rec::identical(gocpp::recv(c), x, y, nullptr);
@@ -116,7 +127,7 @@ namespace golang::types
 
     // IdenticalIgnoreTags reports whether x and y are identical types if tags are ignored.
     // Receivers of [Signature] types are ignored.
-    bool IdenticalIgnoreTags(golang::types::Type x, golang::types::Type y)
+    bool IdenticalIgnoreTags(golang::go::types::Type x, golang::go::types::Type y)
     {
         comparer c = {};
         c.ignoreTags = true;

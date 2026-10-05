@@ -12,16 +12,40 @@
 
 namespace golang::runtime
 {
+    // physPageSize is the size in bytes of the OS's physical pages.
+    // Mapping and unmapping operations must be done at multiples of
+    // physPageSize.
+    //
+    // This must be set by the OS init code (typically in osinit) before
+    // mallocinit.
     extern uintptr_t physPageSize;
+    // physHugePageSize is the size in bytes of the OS's default physical huge
+    // page size whose allocation is opaque to the application. It is assumed
+    // and verified to be a power of two.
+    //
+    // If set, this must be set by the OS init code (typically in osinit) before
+    // mallocinit. However, setting it at all is optional, and leaving the default
+    // value is always safe (though potentially less efficient).
+    //
+    // Since physHugePageSize is always assumed to be a power of two,
+    // physHugePageShift is defined as physHugePageSize == 1 << physHugePageShift.
+    // The purpose of physHugePageShift is to avoid doing divisions in
+    // performance critical functions.
     extern uintptr_t physHugePageSize;
     extern unsigned int physHugePageShift;
+    // heapRandSeed is a random value that is populated in mallocinit if
+    // randomizeHeapBase is set. It is used in mallocinit, and mheap.grow, to
+    // randomize the base heap address.
+    extern uintptr_t heapRandSeed;
+    extern int heapRandSeedBitsRemaining;
+    uintptr_t nextHeapRandBits(int bits);
     void mallocinit();
-    std::tuple<gocpp::unsafe_pointer, uintptr_t> sysReserveAligned(gocpp::unsafe_pointer v, uintptr_t size, uintptr_t align);
+    // base address for all 0-byte allocations
     extern uintptr_t zerobase;
-    void memclrNoHeapPointersChunked(uintptr_t size, gocpp::unsafe_pointer x);
-    uintptr_t nextSample();
+    void addAssistCredit(uintptr_t size);
+    bool reusableSize(uintptr_t size);
+    int64_t nextSample();
     int32_t fastexprand(int mean);
-    uintptr_t nextSampleNoFP();
     struct persistentAlloc
     {
         notInHeap* base{};
@@ -59,12 +83,16 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct linearAlloc& value);
-    uintptr_t computeRZlog(uintptr_t userSize);
+    uintptr_t redZoneSize(uintptr_t userSize);
 }
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mcache.h"
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/mheap.fwd.h"
 #include "golang/runtime/mstats.fwd.h"
 #include "golang/runtime/type.fwd.h"
 
@@ -72,12 +100,24 @@ namespace golang::runtime
 {
     gclinkptr nextFreeFast(mspan* s);
     gocpp::unsafe_pointer mallocgc(uintptr_t size, _type* typ, bool needzero);
-    g* deductAssistCredit(uintptr_t size);
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcTiny(uintptr_t size, _type* typ);
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcSmallNoscan(uintptr_t size, _type* typ, bool needzero);
+    gocpp::unsafe_pointer mallocgcSmallNoscanReuse(mcache* c, mspan* span, spanClass spc, uintptr_t size, bool needzero);
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcSmallScanNoHeader(uintptr_t size, _type* typ);
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcSmallScanHeader(uintptr_t size, _type* typ);
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcLarge(uintptr_t size, _type* typ, bool needzero);
+    gocpp::unsafe_pointer preMallocgcDebug(uintptr_t size, _type* typ);
+    void postMallocgcDebug(gocpp::unsafe_pointer x, uintptr_t elemsize, _type* typ);
+    bool freegc(gocpp::unsafe_pointer ptr, uintptr_t size, bool noscan);
+    void doubleCheckNextReusable(gclinkptr v);
+    void memclrNoHeapPointersChunked(uintptr_t size, gocpp::unsafe_pointer x);
     gocpp::unsafe_pointer newobject(_type* typ);
+    gocpp::unsafe_pointer maps_newobject(_type* typ);
     gocpp::unsafe_pointer reflect_unsafe_New(_type* typ);
     gocpp::unsafe_pointer reflectlite_unsafe_New(_type* typ);
     gocpp::unsafe_pointer newarray(_type* typ, int n);
     gocpp::unsafe_pointer reflect_unsafe_NewArray(_type* typ, int n);
+    gocpp::unsafe_pointer maps_newarray(_type* typ, int n);
     void profilealloc(m* mp, gocpp::unsafe_pointer x, uintptr_t size);
     struct globalAllocStruct
     {
@@ -97,6 +137,19 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct globalAllocStruct& value);
     gocpp::unsafe_pointer persistentalloc(uintptr_t size, uintptr_t align, sysMemStat* sysStat);
+}
+#include "golang/internal/runtime/sys/intrinsics.fwd.h"
+#include "golang/internal/runtime/sys/nih.fwd.h"
+
+namespace golang::runtime
+{
+    extern globalAllocStruct globalAlloc;
+}
+#include "golang/internal/runtime/sys/nih.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
     struct notInHeap
     {
         sys::NotInHeap _1{};
@@ -113,7 +166,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct notInHeap& value);
-    extern globalAllocStruct globalAlloc;
+    // persistentChunks is a list of all the persistent chunks we have
+    // allocated. The list is maintained through the first word in the
+    // persistent chunk. This is updated atomically.
     extern notInHeap* persistentChunks;
     notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, sysMemStat* sysStat);
 }
@@ -127,11 +182,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        std::tuple<gocpp::unsafe_pointer, uintptr_t> sysAlloc(mheap* h, uintptr_t n, arenaHint** hintList, bool go_register);
+        std::tuple<gocpp::unsafe_pointer, uintptr_t> sysAlloc(mheap* h, uintptr_t n, arenaHint** hintList, gocpp::slice<arenaIdx>* arenaList);
         void enableMetadataHugePages(mheap* h);
         std::tuple<gclinkptr, mspan*, bool> nextFree(mcache* c, spanClass spc);
+        std::tuple<gclinkptr, mspan*> nextReusableNoScan(mcache* c, mspan* s, spanClass spc);
         void init(linearAlloc* l, uintptr_t base, uintptr_t size, bool mapMemory);
-        gocpp::unsafe_pointer alloc(linearAlloc* l, uintptr_t size, uintptr_t align, sysMemStat* sysStat);
+        gocpp::unsafe_pointer alloc(linearAlloc* l, uintptr_t size, uintptr_t align, sysMemStat* sysStat, gocpp::string vmaName);
         notInHeap* add(notInHeap* p, uintptr_t bytes);
     }
 }

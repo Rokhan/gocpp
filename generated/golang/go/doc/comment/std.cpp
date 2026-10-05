@@ -11,7 +11,7 @@
 #include "golang/go/doc/comment/std.h"
 #include "gocpp/support.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     namespace rec
     {
@@ -33,6 +33,7 @@ namespace golang::comment
         "html"_s,
         "image"_s,
         "io"_s,
+        "iter"_s,
         "log"_s,
         "maps"_s,
         "math"_s,
@@ -48,12 +49,16 @@ namespace golang::comment
         "sort"_s,
         "strconv"_s,
         "strings"_s,
+        "structs"_s,
         "sync"_s,
         "syscall"_s,
         "testing"_s,
         "time"_s,
         "unicode"_s,
-        "unsafe"_s
+        "unique"_s,
+        "unsafe"_s,
+        "uuid"_s,
+        "weak"_s
     };
 }
 

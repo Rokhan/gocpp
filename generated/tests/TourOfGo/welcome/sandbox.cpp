@@ -16,6 +16,8 @@
 
 namespace golang::main
 {
+    namespace fmt = golang::fmt;
+    namespace time = golang::time;
     namespace rec
     {
     }

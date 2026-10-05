@@ -9,11 +9,17 @@
 #include "golang/go/types/const.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/go/constant/value.fwd.h"
+
+namespace golang::go::types
+{
+    namespace constant = golang::go::constant;
+}
 #include "golang/go/constant/value.h"
 #include "golang/go/types/basic.fwd.h"
 #include "golang/go/types/check.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     bool representableConst(constant::Value x, Checker* check, Basic* typ, constant::Value* rounded);
     bool fitsFloat32(constant::Value x);
@@ -30,16 +36,17 @@ namespace golang::types
 #include "golang/go/types/type.h"
 #include "golang/internal/types/errors/codes.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace token = golang::go::token;
 
     namespace rec
     {
         void overflow(Checker* check, operand* x, token::Pos opPos);
         void representable(Checker* check, operand* x, Basic* typ);
         std::tuple<constant::Value, errors::Code> representation(Checker* check, operand* x, Basic* typ);
-        void invalidConversion(Checker* check, errors::Code code, operand* x, golang::types::Type target);
-        void convertUntyped(Checker* check, operand* x, golang::types::Type target);
+        void invalidConversion(Checker* check, errors::Code code, operand* x, golang::go::types::Type target);
+        void convertUntyped(Checker* check, operand* x, golang::go::types::Type target);
     }
 }
 

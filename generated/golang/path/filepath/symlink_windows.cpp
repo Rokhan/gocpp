@@ -18,8 +18,10 @@
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/zsyscall_windows.h"
 
-namespace golang::filepath
+namespace golang::path::filepath
 {
+    namespace strings = golang::strings;
+    namespace syscall = golang::syscall;
     namespace rec
     {
     }

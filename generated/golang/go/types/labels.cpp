@@ -15,15 +15,20 @@
 #include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
 #include "golang/go/types/check.h"
-#include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/package.h"
+#include "golang/go/types/recording.h"
 #include "golang/go/types/scope.h"
 #include "golang/internal/types/errors/codes.h"
+#include "golang/slices/slices.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace errors = golang::internal::types::errors;
+    namespace slices = golang::slices;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::End;
@@ -53,9 +58,9 @@ namespace golang::types
             if(auto alt = rec::Lookup(gocpp::recv(all), name); alt != nullptr)
             {
                 msg = "goto %s jumps into block"_s;
+                code = JumpIntoBlock;
                 // avoid another error
                 gocpp::getValue<Label*>(alt)->used = true;
-                code = JumpIntoBlock;
             }
             else
             {
@@ -68,7 +73,7 @@ namespace golang::types
         // spec: "It is illegal to define a label that is never used."
         for(auto [name, obj] : all->elems)
         {
-            obj = types::resolve(name, obj);
+            obj = resolve(name, obj);
             if(auto lbl = gocpp::getValue<Label*>(obj); ! lbl->used)
             {
                 rec::softErrorf(gocpp::recv(check), lbl, UnusedLabel, "label %s declared and not used"_s, lbl->object.name);
@@ -161,7 +166,7 @@ namespace golang::types
     // blockBranches processes a block's statement list and returns the set of outgoing forward jumps.
     // all is the scope of all declared labels, parent the set of labels declared in the immediately
     // enclosing block, and lstmt is the labeled statement this block is associated with (or nil).
-    gocpp::slice<ast::BranchStmt*> rec::blockBranches(Checker* check, golang::types::Scope* all, block* parent, ast::LabeledStmt* lstmt, gocpp::slice<ast::Stmt> list)
+    gocpp::slice<ast::BranchStmt*> rec::blockBranches(Checker* check, golang::go::types::Scope* all, block* parent, ast::LabeledStmt* lstmt, gocpp::slice<ast::Stmt> list)
     {
         auto b = gocpp::InitPtr<block>([=](auto& x) {
             x.parent = parent;
@@ -184,17 +189,7 @@ namespace golang::types
 
         auto jumpsOverVarDecl = [=](ast::BranchStmt* jmp) mutable -> bool
         {
-            if(rec::IsValid(gocpp::recv(varDeclPos)))
-            {
-                for(auto [gocpp_ignored, bad] : badJumps)
-                {
-                    if(jmp == bad)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
+            return rec::IsValid(gocpp::recv(varDeclPos)) && slices::Contains(badJumps, jmp);
         };
 
         auto blockBranches = [=](ast::LabeledStmt* lstmt, gocpp::slice<ast::Stmt> list) mutable -> void
@@ -204,8 +199,8 @@ namespace golang::types
             fwdJumps = append(fwdJumps, rec::blockBranches(gocpp::recv(check), all, b, lstmt, list));
         };
 
-        std::function<void (ast::Stmt _1)> stmtBranches = {};
-        stmtBranches = [=](ast::Stmt s) mutable -> void
+        std::function<void (ast::LabeledStmt* _1, ast::Stmt _2)> stmtBranches = {};
+        stmtBranches = [=](ast::LabeledStmt* lstmt, ast::Stmt s) mutable -> void
         {
             //Go type switch emulation
             {
@@ -246,8 +241,11 @@ namespace golang::types
                             auto lbl = NewLabel(rec::Pos(gocpp::recv(s->Label)), check->pkg, name);
                             if(auto alt = rec::Insert(gocpp::recv(all), lbl); alt != nullptr)
                             {
-                                rec::softErrorf(gocpp::recv(check), lbl, DuplicateLabel, "label %s already declared"_s, name);
-                                rec::reportAltDecl(gocpp::recv(check), alt);
+                                auto err = rec::newError(gocpp::recv(check), DuplicateLabel);
+                                err->soft = true;
+                                rec::addf(gocpp::recv(err), lbl, "label %s already declared"_s, name);
+                                rec::addAltDecl(gocpp::recv(err), alt);
+                                rec::report(gocpp::recv(err));
                             }
                             else
                             // ok to continue
@@ -281,7 +279,7 @@ namespace golang::types
                             fwdJumps = fwdJumps.make_slice(0, i);
                             lstmt = s;
                         }
-                        stmtBranches(s->Stmt);
+                        stmtBranches(lstmt, s->Stmt);
                         break;
                     }
 
@@ -417,10 +415,10 @@ namespace golang::types
                     case 5:
                     {
                         ast::IfStmt* s = gocpp::any_cast<ast::IfStmt*>(s_ref);
-                        stmtBranches(s->Body);
+                        stmtBranches(lstmt, s->Body);
                         if(s->Else != nullptr)
                         {
-                            stmtBranches(s->Else);
+                            stmtBranches(lstmt, s->Else);
                         }
                         break;
                     }
@@ -435,14 +433,14 @@ namespace golang::types
                     case 7:
                     {
                         ast::SwitchStmt* s = gocpp::any_cast<ast::SwitchStmt*>(s_ref);
-                        stmtBranches(s->Body);
+                        stmtBranches(lstmt, s->Body);
                         break;
                     }
 
                     case 8:
                     {
                         ast::TypeSwitchStmt* s = gocpp::any_cast<ast::TypeSwitchStmt*>(s_ref);
-                        stmtBranches(s->Body);
+                        stmtBranches(lstmt, s->Body);
                         break;
                     }
 
@@ -456,21 +454,21 @@ namespace golang::types
                     case 10:
                     {
                         ast::SelectStmt* s = gocpp::any_cast<ast::SelectStmt*>(s_ref);
-                        stmtBranches(s->Body);
+                        stmtBranches(lstmt, s->Body);
                         break;
                     }
 
                     case 11:
                     {
                         ast::ForStmt* s = gocpp::any_cast<ast::ForStmt*>(s_ref);
-                        stmtBranches(s->Body);
+                        stmtBranches(lstmt, s->Body);
                         break;
                     }
 
                     case 12:
                     {
                         ast::RangeStmt* s = gocpp::any_cast<ast::RangeStmt*>(s_ref);
-                        stmtBranches(s->Body);
+                        stmtBranches(lstmt, s->Body);
                         break;
                     }
                 }
@@ -479,7 +477,7 @@ namespace golang::types
 
         for(auto [gocpp_ignored, s] : list)
         {
-            stmtBranches(s);
+            stmtBranches(nullptr, s);
         }
 
         return fwdJumps;

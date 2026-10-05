@@ -17,23 +17,6 @@ namespace golang::runtime
     bool stringDataOnStack(gocpp::string s);
     gocpp::string slicebytetostringtmp(unsigned char* ptr, int n);
     gocpp::slice<gocpp::rune> stringtoslicerune(gocpp::array_ptr<gocpp::array<gocpp::rune, tmpStringBufSize>> buf, gocpp::string s);
-    struct stringStruct
-    {
-        gocpp::unsafe_pointer str{};
-        int len{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stringStruct& value);
     struct stringStructDWARF
     {
         unsigned char* str{};
@@ -59,11 +42,6 @@ namespace golang::runtime
     gocpp::string gostring(unsigned char* p);
     gocpp::string internal_syscall_gostring(unsigned char* p);
     gocpp::string gostringn(unsigned char* p, int l);
-    bool hasPrefix(gocpp::string s, gocpp::string prefix);
-    bool hasSuffix(gocpp::string s, gocpp::string suffix);
-    std::tuple<int64_t, bool> atoi64(gocpp::string s);
-    std::tuple<int, bool> atoi(gocpp::string s);
-    std::tuple<int32_t, bool> atoi32(gocpp::string s);
     std::tuple<int64_t, bool> parseByteCount(gocpp::string s);
     int findnull(unsigned char* s);
     int findnullw(uint16_t* s);
@@ -74,10 +52,33 @@ namespace golang::runtime
     gocpp::string concatstring3(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2);
     gocpp::string concatstring4(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3);
     gocpp::string concatstring5(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4);
+    gocpp::slice<unsigned char> concatbytes(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::string> a);
+    gocpp::slice<unsigned char> concatbyte2(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1);
+    gocpp::slice<unsigned char> concatbyte3(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2);
+    gocpp::slice<unsigned char> concatbyte4(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3);
+    gocpp::slice<unsigned char> concatbyte5(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4);
     gocpp::string slicebytetostring(gocpp::array_ptr<tmpBuf> buf, unsigned char* ptr, int n);
     std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(gocpp::array_ptr<tmpBuf> buf, int l);
     gocpp::slice<unsigned char> stringtoslicebyte(gocpp::array_ptr<tmpBuf> buf, gocpp::string s);
     gocpp::string slicerunetostring(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::rune> a);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    struct stringStruct
+    {
+        gocpp::unsafe_pointer str{};
+        int len{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stringStruct& value);
     stringStruct* stringStructOf(gocpp::string* sp);
 
     namespace rec

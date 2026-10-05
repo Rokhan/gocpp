@@ -18,6 +18,7 @@
 
 namespace golang::time
 {
+    namespace errors = golang::errors;
     namespace rec
     {
     }
@@ -27,7 +28,7 @@ namespace golang::time
         auto [gocpp_id_0, offset, abs] = rec::locabs(gocpp::recv(t));
 
         // Format date.
-        auto [year, month, day, gocpp_id_1] = absDate(abs, true);
+        auto [year, month, day] = rec::date(gocpp::recv(rec::days(gocpp::recv(abs))));
         b = appendInt(b, year, 4);
         b = append(b, '-');
         b = appendInt(b, int(month), 2);
@@ -37,7 +38,7 @@ namespace golang::time
         b = append(b, 'T');
 
         // Format time.
-        auto [hour, min, sec] = absClock(abs);
+        auto [hour, min, sec] = rec::clock(gocpp::recv(abs));
         b = appendInt(b, hour, 2);
         b = append(b, ':');
         b = appendInt(b, min, 2);
@@ -196,7 +197,7 @@ namespace golang::time
             rec::addSec(gocpp::recv(t), - int64_t(zoneOffset));
 
             // Use local zone with the given offset if possible.
-            if(auto [gocpp_id_2, offset, gocpp_id_3, gocpp_id_4, gocpp_id_5] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t))); offset == zoneOffset)
+            if(auto [gocpp_id_1, offset, gocpp_id_2, gocpp_id_3, gocpp_id_4] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t))); offset == zoneOffset)
             {
                 rec::setLoc(gocpp::recv(t), local);
             }

@@ -8,6 +8,8 @@ namespace golang::encoding
 {
     struct BinaryMarshaler;
     struct BinaryUnmarshaler;
+    struct BinaryAppender;
     struct TextMarshaler;
     struct TextUnmarshaler;
+    struct TextAppender;
 }

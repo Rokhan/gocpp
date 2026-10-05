@@ -14,7 +14,7 @@
 #include "golang/go/types/type.h"
 #include "golang/go/types/typestring.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     namespace rec
     {
@@ -51,7 +51,7 @@ namespace golang::types
     }
 
     // NewSlice returns a new slice type for the given element type.
-    Slice* NewSlice(golang::types::Type elem)
+    Slice* NewSlice(golang::go::types::Type elem)
     {
         return gocpp::InitPtr<Slice>([=](auto& x) {
             x.elem = elem;
@@ -59,12 +59,12 @@ namespace golang::types
     }
 
     // Elem returns the element type of slice s.
-    golang::types::Type rec::Elem(Slice* s)
+    golang::go::types::Type rec::Elem(Slice* s)
     {
         return s->elem;
     }
 
-    golang::types::Type rec::Underlying(Slice* s)
+    golang::go::types::Type rec::Underlying(Slice* s)
     {
         return s;
     }

@@ -13,8 +13,9 @@
 
 #include "golang/internal/cpu/cpu.h"
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
@@ -22,18 +23,18 @@ namespace golang::bytealg
     // MaxLen is the maximum length of the string to be searched for (argument b) in Index.
     // If MaxLen is not 0, make sure MaxLen >= 4.
     int MaxLen;
-    // HashStr returns the hash and the appropriate multiplicative
+    // hashStr returns the hash and the appropriate multiplicative
     // factor for use in Rabin-Karp algorithm.
     template<typename T>
-    std::tuple<uint32_t, uint32_t> HashStr(T sep)
+    std::tuple<uint32_t, uint32_t> hashStr(T sep)
     {
         auto hash = uint32_t(0);
         for(auto i = 0; i < len(sep); i++)
         {
-            hash = hash * PrimeRK + uint32_t(sep[i]);
+            hash = hash * primeRK + uint32_t(sep[i]);
         }
         uint32_t pow = 1;
-        uint32_t sq = PrimeRK;
+        uint32_t sq = primeRK;
         for(auto i = len(sep); i > 0; i >>= 1)
         {
             if(i & 1 != 0)
@@ -45,18 +46,18 @@ namespace golang::bytealg
         return {hash, pow};
     }
 
-    // HashStrRev returns the hash of the reverse of sep and the
+    // hashStrRev returns the hash of the reverse of sep and the
     // appropriate multiplicative factor for use in Rabin-Karp algorithm.
     template<typename T>
-    std::tuple<uint32_t, uint32_t> HashStrRev(T sep)
+    std::tuple<uint32_t, uint32_t> hashStrRev(T sep)
     {
         auto hash = uint32_t(0);
         for(auto i = len(sep) - 1; i >= 0; i--)
         {
-            hash = hash * PrimeRK + uint32_t(sep[i]);
+            hash = hash * primeRK + uint32_t(sep[i]);
         }
         uint32_t pow = 1;
-        uint32_t sq = PrimeRK;
+        uint32_t sq = primeRK;
         for(auto i = len(sep); i > 0; i >>= 1)
         {
             if(i & 1 != 0)
@@ -74,12 +75,12 @@ namespace golang::bytealg
     int IndexRabinKarp(T s, T sep)
     {
         // Rabin-Karp search
-        auto [hashss, pow] = HashStr(sep);
+        auto [hashss, pow] = hashStr(sep);
         auto n = len(sep);
         uint32_t h = {};
         for(auto i = 0; i < n; i++)
         {
-            h = h * PrimeRK + uint32_t(s[i]);
+            h = h * primeRK + uint32_t(s[i]);
         }
         if(h == hashss && gocpp::string(s.make_slice(0, n)) == gocpp::string(sep))
         {
@@ -87,7 +88,7 @@ namespace golang::bytealg
         }
         for(auto i = n; i < len(s); )
         {
-            h *= PrimeRK;
+            h *= primeRK;
             h += uint32_t(s[i]);
             h -= pow * uint32_t(s[i - n]);
             i++;
@@ -105,13 +106,13 @@ namespace golang::bytealg
     int LastIndexRabinKarp(T s, T sep)
     {
         // Rabin-Karp search from the end of the string
-        auto [hashss, pow] = HashStrRev(sep);
+        auto [hashss, pow] = hashStrRev(sep);
         auto n = len(sep);
         auto last = len(s) - n;
         uint32_t h = {};
         for(auto i = len(s) - 1; i >= last; i--)
         {
-            h = h * PrimeRK + uint32_t(s[i]);
+            h = h * primeRK + uint32_t(s[i]);
         }
         if(h == hashss && gocpp::string(s.make_slice(last)) == gocpp::string(sep))
         {
@@ -119,7 +120,7 @@ namespace golang::bytealg
         }
         for(auto i = last - 1; i >= 0; i--)
         {
-            h *= PrimeRK;
+            h *= primeRK;
             h += uint32_t(s[i]);
             h -= pow * uint32_t(s[i + n]);
             if(h == hashss && gocpp::string(s.make_slice(i, i + n)) == gocpp::string(sep))
@@ -130,7 +131,8 @@ namespace golang::bytealg
         return - 1;
     }
 
-    // MakeNoZero makes a slice of length and capacity n without zeroing the bytes.
+    // MakeNoZero makes a slice of length n and capacity of at least n Bytes
+    // without zeroing the bytes (including the bytes between len and cap).
     // It is the caller's responsibility to ensure uninitialized bytes
     // do not leak to the end user.
     gocpp::slice<unsigned char> MakeNoZero(int n)

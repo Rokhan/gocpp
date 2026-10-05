@@ -12,18 +12,25 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
+#include "golang/internal/filepathlite/path.h"
 #include "golang/io/fs/fs.h"
 #include "golang/os/file.h"
 #include "golang/os/path_windows.h"
 #include "golang/os/stat.h"
+#include "golang/os/types.h"
 #include "golang/path/filepath/path.h"
-#include "golang/path/filepath/path_windows.h"
 #include "golang/runtime/extern.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/zerrors_windows.h"
 
-namespace golang::filepath
+namespace golang::path::filepath
 {
+    namespace errors = golang::errors;
+    namespace filepathlite = golang::internal::filepathlite;
+    namespace fs = golang::io::fs;
+    namespace os = golang::os;
+    namespace runtime = golang::runtime;
+    namespace syscall = golang::syscall;
     namespace rec
     {
         using fs::rec::IsDir;
@@ -33,7 +40,7 @@ namespace golang::filepath
 
     std::tuple<gocpp::string, gocpp::error> walkSymlinks(gocpp::string path)
     {
-        auto volLen = volumeNameLen(path);
+        auto volLen = filepathlite::VolumeNameLen(path);
         auto pathSeparator = gocpp::string(os::PathSeparator);
 
         if(volLen < len(path) && os::IsPathSeparator(path[volLen]))
@@ -58,7 +65,7 @@ namespace golang::filepath
             // On Windows, "." can be a symlink.
             // We look it up, and use the value if it is absolute.
             // If not, we just return ".".
-            auto isWindowsDot = mocklib::GOOS == "windows"_s && path.make_slice(volumeNameLen(path)) == "."_s;
+            auto isWindowsDot = mocklib::GOOS == "windows"_s && path.make_slice(filepathlite::VolumeNameLen(path)) == "."_s;
 
             // The next path component is in path[start:end].
             if(end == start)
@@ -108,7 +115,7 @@ namespace golang::filepath
             }
 
             // Ordinary path component. Add it to result.
-            if(len(dest) > volumeNameLen(dest) && ! os::IsPathSeparator(dest[len(dest) - 1]))
+            if(len(dest) > filepathlite::VolumeNameLen(dest) && ! os::IsPathSeparator(dest[len(dest) - 1]))
             {
                 dest += pathSeparator;
             }
@@ -154,7 +161,7 @@ namespace golang::filepath
 
             path = link + path.make_slice(end);
 
-            auto v = volumeNameLen(link);
+            auto v = filepathlite::VolumeNameLen(link);
             if(v > 0)
             {
                 // Symlink to drive name is an absolute path.

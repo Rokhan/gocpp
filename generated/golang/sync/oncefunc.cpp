@@ -19,51 +19,151 @@ namespace golang::sync
     {
     }
 
+    struct gocpp_id_0
+        {
+            std::function<void ()> f{};
+            Once once{};
+            bool valid{};
+            go_any p{};
+
+            using isGoStruct = void;
+
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                result.f = this->f;
+                result.once = this->once;
+                result.valid = this->valid;
+                result.p = this->p;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                if (f != ref.f) return false;
+                if (once != ref.once) return false;
+                if (valid != ref.valid) return false;
+                if (p != ref.p) return false;
+                return true;
+            }
+
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << f;
+                os << " " << once;
+                os << " " << valid;
+                os << " " << p;
+                os << '}';
+                return os;
+            }
+        };
+
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+        {
+            return value.PrintTo(os);
+        }
+
+
     // OnceFunc returns a function that invokes f only once. The returned function
     // may be called concurrently.
     //
     // If f panics, the returned function will panic with the same value on every call.
     std::function<void ()> OnceFunc(std::function<void ()> f)
     {
-        Once once = {};
-        bool valid = {};
-        go_any p = {};
-        // Construct the inner closure just once to reduce costs on the fast path.
-        auto g = [=]() mutable -> void
-        {
-            gocpp::Defer defer;
-            try
-            {
-                defer.push_back([=]{ [=]() mutable -> void
-                {
-                    p = gocpp::recover();
-                    if(! valid)
-                    {
-                        // Re-panic immediately so on the first call the user gets a
-                        // complete stack trace into f.
-                        gocpp::panic(p);
-                    }
-                }(); });
-                f();
-                // Do not keep f alive after invoking it.
-                f = nullptr;
-                // Set only if f does not panic.
-                valid = true;
-            }
-            catch(gocpp::GoPanic& gp)
-            {
-                defer.handlePanic(gp);
-            }
-        };
+        // Use a struct so that there's a single heap allocation.
+        auto d = gocpp::Init<gocpp_id_0>([=](auto& x) {
+            x.f = f;
+        });
         return [=]() mutable -> void
         {
-            rec::Do(gocpp::recv(once), g);
-            if(! valid)
+            rec::Do(gocpp::recv(d.once), [=]() mutable -> void
             {
-                gocpp::panic(p);
+                gocpp::Defer defer;
+                try
+                {
+                    defer.push_back([=]{ [=]() mutable -> void
+                    {
+                        // Do not keep f alive after invoking it.
+                        d.f = nullptr;
+                        d.p = gocpp::recover();
+                        if(! d.valid)
+                        {
+                            // Re-panic immediately so on the first
+                            // call the user gets a complete stack
+                            // trace into f.
+                            gocpp::panic(d.p);
+                        }
+                    }(); });
+                    d.f();
+                    // Set only if f does not panic.
+                    d.valid = true;
+                }
+                catch(gocpp::GoPanic& gp)
+                {
+                    defer.handlePanic(gp);
+                }
+            });
+            if(! d.valid)
+            {
+                gocpp::panic(d.p);
             }
         };
     }
+
+    struct gocpp_id_1
+        {
+            std::function<T ()> f{};
+            Once once{};
+            bool valid{};
+            go_any p{};
+            T result{};
+
+            using isGoStruct = void;
+
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                result.f = this->f;
+                result.once = this->once;
+                result.valid = this->valid;
+                result.p = this->p;
+                result.result = this->result;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                if (f != ref.f) return false;
+                if (once != ref.once) return false;
+                if (valid != ref.valid) return false;
+                if (p != ref.p) return false;
+                if (result != ref.result) return false;
+                return true;
+            }
+
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << f;
+                os << " " << once;
+                os << " " << valid;
+                os << " " << p;
+                os << " " << result;
+                os << '}';
+                return os;
+            }
+        };
+
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+        {
+            return value.PrintTo(os);
+        }
+
 
     // OnceValue returns a function that invokes f only once and returns the value
     // returned by f. The returned function may be called concurrently.
@@ -72,42 +172,97 @@ namespace golang::sync
     template<typename T>
     std::function<T ()> OnceValue(std::function<T ()> f)
     {
-        Once once = {};
-        bool valid = {};
-        go_any p = {};
-        T result = {};
-        auto g = [=]() mutable -> void
-        {
-            gocpp::Defer defer;
-            try
-            {
-                defer.push_back([=]{ [=]() mutable -> void
-                {
-                    p = gocpp::recover();
-                    if(! valid)
-                    {
-                        gocpp::panic(p);
-                    }
-                }(); });
-                result = f();
-                f = nullptr;
-                valid = true;
-            }
-            catch(gocpp::GoPanic& gp)
-            {
-                defer.handlePanic(gp);
-            }
-        };
+        // Use a struct so that there's a single heap allocation.
+        auto d = gocpp::Init<gocpp_id_1>([=](auto& x) {
+            x.f = f;
+        });
         return [=]() mutable -> T
         {
-            rec::Do(gocpp::recv(once), g);
-            if(! valid)
+            rec::Do(gocpp::recv(d.once), [=]() mutable -> void
             {
-                gocpp::panic(p);
+                gocpp::Defer defer;
+                try
+                {
+                    defer.push_back([=]{ [=]() mutable -> void
+                    {
+                        d.f = nullptr;
+                        d.p = gocpp::recover();
+                        if(! d.valid)
+                        {
+                            gocpp::panic(d.p);
+                        }
+                    }(); });
+                    d.result = d.f();
+                    d.valid = true;
+                }
+                catch(gocpp::GoPanic& gp)
+                {
+                    defer.handlePanic(gp);
+                }
+            });
+            if(! d.valid)
+            {
+                gocpp::panic(d.p);
             }
-            return result;
+            return d.result;
         };
     }
+
+    struct gocpp_id_2
+        {
+            std::function<std::tuple<T1, T2> ()> f{};
+            Once once{};
+            bool valid{};
+            go_any p{};
+            T1 r1{};
+            T2 r2{};
+
+            using isGoStruct = void;
+
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                result.f = this->f;
+                result.once = this->once;
+                result.valid = this->valid;
+                result.p = this->p;
+                result.r1 = this->r1;
+                result.r2 = this->r2;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                if (f != ref.f) return false;
+                if (once != ref.once) return false;
+                if (valid != ref.valid) return false;
+                if (p != ref.p) return false;
+                if (r1 != ref.r1) return false;
+                if (r2 != ref.r2) return false;
+                return true;
+            }
+
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << f;
+                os << " " << once;
+                os << " " << valid;
+                os << " " << p;
+                os << " " << r1;
+                os << " " << r2;
+                os << '}';
+                return os;
+            }
+        };
+
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+        {
+            return value.PrintTo(os);
+        }
+
 
     // OnceValues returns a function that invokes f only once and returns the values
     // returned by f. The returned function may be called concurrently.
@@ -116,41 +271,39 @@ namespace golang::sync
     template<typename T1, typename T2>
     std::function<std::tuple<T1, T2> ()> OnceValues(std::function<std::tuple<T1, T2> ()> f)
     {
-        Once once = {};
-        bool valid = {};
-        go_any p = {};
-        T1 r1 = {};
-        T2 r2 = {};
-        auto g = [=]() mutable -> void
-        {
-            gocpp::Defer defer;
-            try
-            {
-                defer.push_back([=]{ [=]() mutable -> void
-                {
-                    p = gocpp::recover();
-                    if(! valid)
-                    {
-                        gocpp::panic(p);
-                    }
-                }(); });
-                std::tie(r1, r2) = f();
-                f = nullptr;
-                valid = true;
-            }
-            catch(gocpp::GoPanic& gp)
-            {
-                defer.handlePanic(gp);
-            }
-        };
+        // Use a struct so that there's a single heap allocation.
+        auto d = gocpp::Init<gocpp_id_2>([=](auto& x) {
+            x.f = f;
+        });
         return [=]() mutable -> std::tuple<T1, T2>
         {
-            rec::Do(gocpp::recv(once), g);
-            if(! valid)
+            rec::Do(gocpp::recv(d.once), [=]() mutable -> void
             {
-                gocpp::panic(p);
+                gocpp::Defer defer;
+                try
+                {
+                    defer.push_back([=]{ [=]() mutable -> void
+                    {
+                        d.f = nullptr;
+                        d.p = gocpp::recover();
+                        if(! d.valid)
+                        {
+                            gocpp::panic(d.p);
+                        }
+                    }(); });
+                    std::tie(d.r1, d.r2) = d.f();
+                    d.valid = true;
+                }
+                catch(gocpp::GoPanic& gp)
+                {
+                    defer.handlePanic(gp);
+                }
+            });
+            if(! d.valid)
+            {
+                gocpp::panic(d.p);
             }
-            return {r1, r2};
+            return {d.r1, d.r2};
         };
     }
 

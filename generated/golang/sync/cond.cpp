@@ -18,6 +18,8 @@
 
 namespace golang::sync
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::sync::atomic;
     namespace rec
     {
     }
@@ -26,24 +28,25 @@ namespace golang::sync
     // for goroutines waiting for or announcing the occurrence
     // of an event.
     //
-    // Each Cond has an associated Locker L (often a *Mutex or *RWMutex),
+    // Each Cond has an associated Locker L (often a [*Mutex] or [*RWMutex]),
     // which must be held when changing the condition and
-    // when calling the Wait method.
+    // when calling the [Cond.Wait] method.
     //
     // A Cond must not be copied after first use.
     //
-    // In the terminology of the Go memory model, Cond arranges that
-    // a call to Broadcast or Signal “synchronizes before” any Wait call
+    // In the terminology of [the Go memory model], Cond arranges that
+    // a call to [Cond.Broadcast] or [Cond.Signal] “synchronizes before” any Wait call
     // that it unblocks.
     //
     // For many simple use cases, users will be better off using channels than a
     // Cond (Broadcast corresponds to closing a channel, and Signal corresponds to
     // sending on a channel).
     //
-    // For more on replacements for sync.Cond, see [Roberto Clapis's series on
+    // For more on replacements for [sync.Cond], see [Roberto Clapis's series on
     // advanced concurrency patterns], as well as [Bryan Mills's talk on concurrency
     // patterns].
     //
+    // [the Go memory model]: https://go.dev/ref/mem
     // [Roberto Clapis's series on advanced concurrency patterns]: https://blogtitle.github.io/categories/concurrency/
     // [Bryan Mills's talk on concurrency patterns]: https://drive.google.com/file/d/1nPdvhB0PutEJzdCq5ms6UI58dp50fcAN/view
     
@@ -95,7 +98,7 @@ namespace golang::sync
     // Wait atomically unlocks c.L and suspends execution
     // of the calling goroutine. After later resuming execution,
     // Wait locks c.L before returning. Unlike in other systems,
-    // Wait cannot return unless awoken by Broadcast or Signal.
+    // Wait cannot return unless awoken by [Cond.Broadcast] or [Cond.Signal].
     //
     // Because c.L is not locked while Wait is waiting, the caller
     // typically cannot assume that the condition is true when
@@ -131,8 +134,10 @@ namespace golang::sync
 
     // Broadcast wakes all goroutines waiting on c.
     //
-    // It is allowed but not required for the caller to hold c.L
-    // during the call.
+    // It is allowed but not required for the caller to hold c.L during the call.
+    // The time it takes to run Broadcast is proportional to the number of waiting goroutines;
+    // be aware that holding the lock across a call to Broadcast
+    // will extend the amount of time that the lock is held.
     void rec::Broadcast(Cond* c)
     {
         rec::check(gocpp::recv(c->checker));

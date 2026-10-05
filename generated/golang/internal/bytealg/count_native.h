@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
     int Count(gocpp::slice<unsigned char> b, unsigned char c);
     int CountString(gocpp::string s, unsigned char c);

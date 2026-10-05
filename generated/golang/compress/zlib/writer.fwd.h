@@ -3,18 +3,21 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/compress/flate/deflate.fwd.h"
-#include "golang/hash/hash.fwd.h"
-#include "golang/io/io.fwd.h"
 
-namespace golang::zlib
+namespace golang::compress::zlib
 {
-    // These constants are copied from the flate package, so that code that imports
-    // "compress/zlib" does not also have to import "compress/flate".
+    struct Writer;
+}
+#include "golang/compress/flate/deflate.fwd.h"
+
+namespace golang::compress::zlib
+{
+    namespace flate = golang::compress::flate;
+    // These constants are copied from the [flate] package, so that code that imports
+    // [compress/zlib] does not also have to import [compress/flate].
     const int NoCompression = flate::NoCompression;
     const int BestSpeed = flate::BestSpeed;
     const int BestCompression = flate::BestCompression;
     const int DefaultCompression = flate::DefaultCompression;
     const int HuffmanOnly = flate::HuffmanOnly;
-    struct Writer;
 }

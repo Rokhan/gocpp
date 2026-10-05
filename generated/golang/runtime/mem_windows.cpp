@@ -17,6 +17,7 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
@@ -25,14 +26,14 @@ namespace golang::runtime
     // which prevents us from allocating more stack.
     //
     //go:nosplit
-    gocpp::unsafe_pointer sysAllocOS(uintptr_t n)
+    gocpp::unsafe_pointer sysAllocOS(uintptr_t n, gocpp::string _1)
     {
-        return gocpp::unsafe_pointer(stdcall4(_VirtualAlloc, 0, n, _MEM_COMMIT | _MEM_RESERVE, _PAGE_READWRITE));
+        return gocpp::unsafe_pointer(stdcall(_VirtualAlloc, 0, n, _MEM_COMMIT | _MEM_RESERVE, _PAGE_READWRITE));
     }
 
     void sysUnusedOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
-        auto r = stdcall3(_VirtualFree, uintptr_t(v), n, _MEM_DECOMMIT);
+        auto r = stdcall(_VirtualFree, uintptr_t(v), n, _MEM_DECOMMIT);
         if(r != 0)
         {
             return;
@@ -50,7 +51,7 @@ namespace golang::runtime
         for(; n > 0; )
         {
             auto small = n;
-            for(; small >= 4096 && stdcall3(_VirtualFree, uintptr_t(v), small, _MEM_DECOMMIT) == 0; )
+            for(; small >= 4096 && stdcall(_VirtualFree, uintptr_t(v), small, _MEM_DECOMMIT) == 0; )
             {
                 small /= 2;
                 small &^= 4096 - 1;
@@ -67,7 +68,7 @@ namespace golang::runtime
 
     void sysUsedOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
-        auto p = stdcall4(_VirtualAlloc, uintptr_t(v), n, _MEM_COMMIT, _PAGE_READWRITE);
+        auto p = stdcall(_VirtualAlloc, uintptr_t(v), n, _MEM_COMMIT, _PAGE_READWRITE);
         if(p == uintptr_t(v))
         {
             return;
@@ -80,7 +81,7 @@ namespace golang::runtime
         for(; k > 0; )
         {
             auto small = k;
-            for(; small >= 4096 && stdcall4(_VirtualAlloc, uintptr_t(v), small, _MEM_COMMIT, _PAGE_READWRITE) == 0; )
+            for(; small >= 4096 && stdcall(_VirtualAlloc, uintptr_t(v), small, _MEM_COMMIT, _PAGE_READWRITE) == 0; )
             {
                 small /= 2;
                 small &^= 4096 - 1;
@@ -131,7 +132,7 @@ namespace golang::runtime
     //go:nosplit
     void sysFreeOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
-        auto r = stdcall3(_VirtualFree, uintptr_t(v), 0, _MEM_RELEASE);
+        auto r = stdcall(_VirtualFree, uintptr_t(v), 0, _MEM_RELEASE);
         if(r == 0)
         {
             print("runtime: VirtualFree of "_s, n, " bytes failed with errno="_s, getlasterror(), "\n"_s);
@@ -145,23 +146,28 @@ namespace golang::runtime
         sysUnusedOS(v, n);
     }
 
-    gocpp::unsafe_pointer sysReserveOS(gocpp::unsafe_pointer v, uintptr_t n)
+    gocpp::unsafe_pointer sysReserveOS(gocpp::unsafe_pointer v, uintptr_t n, gocpp::string _1)
     {
         // v is just a hint.
         // First try at v.
         // This will fail if any of [v, v+n) is already reserved.
-        v = gocpp::unsafe_pointer(stdcall4(_VirtualAlloc, uintptr_t(v), n, _MEM_RESERVE, _PAGE_READWRITE));
+        v = gocpp::unsafe_pointer(stdcall(_VirtualAlloc, uintptr_t(v), n, _MEM_RESERVE, _PAGE_READWRITE));
         if(v != nullptr)
         {
             return v;
         }
 
         // Next let the kernel choose the address.
-        return gocpp::unsafe_pointer(stdcall4(_VirtualAlloc, 0, n, _MEM_RESERVE, _PAGE_READWRITE));
+        return gocpp::unsafe_pointer(stdcall(_VirtualAlloc, 0, n, _MEM_RESERVE, _PAGE_READWRITE));
     }
 
-    void sysMapOS(gocpp::unsafe_pointer v, uintptr_t n)
+    void sysMapOS(gocpp::unsafe_pointer v, uintptr_t n, gocpp::string _1)
     {
+    }
+
+    bool needZeroAfterSysUnusedOS()
+    {
+        return true;
     }
 
 }

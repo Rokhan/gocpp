@@ -304,21 +304,34 @@ namespace golang::fmt
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ssave& value);
+    // space is a copy of the unicode.White_Space ranges,
+    // to avoid depending on package unicode.
     extern gocpp::slice<gocpp::array<uint16_t, 2>> space;
     bool isSpace(gocpp::rune r);
     bool notSpace(gocpp::rune r);
+    extern gocpp::error errComplex;
+    extern gocpp::error errBool;
     int indexRune(gocpp::string s, gocpp::rune r);
     bool hasX(gocpp::string s);
     std::tuple<int, bool> hexDigit(gocpp::rune d);
     void errorHandler(gocpp::error* errp);
 }
-#include "golang/fmt/print.h"
-#include "golang/io/io.h"
-#include "golang/errors/errors.fwd.h"
+#include "golang/io/io.fwd.h"
+#include "golang/sync/pool.fwd.h"
 #include "golang/unicode/utf8/utf8.fwd.h"
+#include "golang/fmt/print.h"
 
 namespace golang::fmt
 {
+    namespace io = golang::io;
+}
+#include "golang/io/io.h"
+#include "golang/sync/pool.h"
+
+namespace golang::fmt
+{
+    namespace utf8 = golang::unicode::utf8;
+    namespace sync = golang::sync;
     std::tuple<int, gocpp::error> Fscan(io::Reader r, gocpp::slice<go_any> a);
     
     template<typename... Args>
@@ -398,15 +411,8 @@ namespace golang::fmt
     };
 
     std::ostream& operator<<(std::ostream& os, const struct readRune& value);
-    extern gocpp::error errComplex;
-    extern gocpp::error errBool;
-    std::tuple<ss*, ssave> newScanState(io::Reader r, bool nlIsSpace, bool nlIsEnd);
-}
-#include "golang/sync/pool.h"
-
-namespace golang::fmt
-{
     extern sync::Pool ssFree;
+    std::tuple<ss*, ssave> newScanState(io::Reader r, bool nlIsSpace, bool nlIsEnd);
 
     namespace rec
     {

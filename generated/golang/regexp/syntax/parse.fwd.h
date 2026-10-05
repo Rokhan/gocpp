@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
     struct Error;
     using ErrorCode = gocpp::string;
@@ -24,7 +24,9 @@ namespace golang::syntax
     const long maxHeight = 1000;
     const int instSize = 5 * 8;
     const long runeSize = 4;
+    struct parser;
     struct charGroup;
+    struct aliasesStruct;
     // minimum and maximum runes involved in folding.
     // checked during test.
     const long minFold = 0x0041;
@@ -85,12 +87,11 @@ namespace golang::syntax
 }
 #include "golang/regexp/syntax/regexp.fwd.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
+    const syntax::Flags MatchNL = ClassNL | DotNL;
+    const syntax::Flags Perl = ClassNL | OneLine | PerlX | UnicodeGroups;
     // Pseudo-ops for parsing stack.
     const syntax::Op opLeftParen = opPseudo + 0;
     const syntax::Op opVerticalBar = opPseudo + 1;
-    struct parser;
-    const syntax::Flags MatchNL = ClassNL | DotNL;
-    const syntax::Flags Perl = ClassNL | OneLine | PerlX | UnicodeGroups;
 }

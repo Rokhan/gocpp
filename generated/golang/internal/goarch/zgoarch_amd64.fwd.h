@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::goarch
+namespace golang::internal::goarch
 {
     const gocpp::string GOARCH = "amd64"_s;
     const long Is386 = 0;

@@ -11,7 +11,7 @@
 
 #include "golang/go/ast/ast.h"
 
-namespace golang::ast
+namespace golang::go::ast
 {
     struct Visitor : virtual gocpp::Interface
     {
@@ -77,16 +77,28 @@ namespace golang::ast
 
     std::ostream& operator<<(std::ostream& os, const struct Visitor& value);
     void Inspect(Node node, std::function<bool (Node _1)> f);
-    void walkExprList(Visitor v, gocpp::slice<Expr> list);
-    void walkStmtList(Visitor v, gocpp::slice<Stmt> list);
-    void walkDeclList(Visitor v, gocpp::slice<Decl> list);
+    void PreorderStack(Node root, gocpp::slice<Node> stack, std::function<bool (Node n, gocpp::slice<Node> stack)> f);
+}
+#include "golang/iter/iter.fwd.h"
+
+namespace golang::go::ast
+{
+    
+    template<typename N>
+    void walkList(Visitor v, gocpp::slice<N> list);
     void Walk(Visitor v, Node node);
-    void walkIdentList(Visitor v, gocpp::slice<Ident*> list);
+    namespace iter = golang::iter;
+}
+#include "golang/iter/iter.h"
+
+namespace golang::go::ast
+{
+    iter::Seq<Node> Preorder(Node root);
 }
 
 #include "golang/go/ast/ast.h"
 
-namespace golang::ast
+namespace golang::go::ast
 {
 
     namespace rec

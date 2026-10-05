@@ -12,11 +12,20 @@
 
 namespace golang::runtime
 {
+    // Set in runtime.cpuinit.
+    // TODO: deprecate these; use internal/cpu directly.
+    extern bool x86HasAVX;
+    extern bool x86HasFMA;
     extern bool x86HasPOPCNT;
     extern bool x86HasSSE41;
-    extern bool x86HasFMA;
     extern bool armHasVFPv4;
     extern bool arm64HasATOMICS;
+    extern bool loong64HasLAMCAS;
+    extern bool loong64HasLAM_BH;
+    extern bool loong64HasDBAR_HINTS;
+    extern bool loong64HasLSX;
+    extern bool riscv64HasZbb;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/internal/cpu/cpu.h"
 
@@ -25,10 +34,13 @@ namespace golang::runtime
     // Offsets into internal/cpu records for use in assembly.
     const uintptr_t offsetX86HasAVX = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX);
     const uintptr_t offsetX86HasAVX2 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX2);
+    const uintptr_t offsetX86HasAVX512 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX512);
     const uintptr_t offsetX86HasERMS = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasERMS);
     const uintptr_t offsetX86HasRDTSCP = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasRDTSCP);
     const uintptr_t offsetARMHasIDIVA = gocpp::Offsetof<cpu::ARMStruct>(&cpu::ARMStruct::HasIDIVA);
     const uintptr_t offsetMIPS64XHasMSA = gocpp::Offsetof<cpu::MIPS64XStruct>(&cpu::MIPS64XStruct::HasMSA);
+    const uintptr_t offsetLOONG64HasLSX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLSX);
+    const uintptr_t offsetLOONG64HasLASX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLASX);
 
     namespace rec
     {

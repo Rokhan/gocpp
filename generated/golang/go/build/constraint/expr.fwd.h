@@ -4,8 +4,11 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::constraint
+namespace golang::go::build::constraint
 {
+    // maxSize is a limit used to control the complexity of expressions, in order
+    // to prevent stack exhaustion issues due to recursion.
+    const long maxSize = 1000;
     struct Expr;
     struct TagExpr;
     struct NotExpr;

@@ -30,29 +30,27 @@ namespace golang::bytes
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Buffer& value);
-    gocpp::slice<unsigned char> growSlice(gocpp::slice<unsigned char> b, int n);
-    Buffer* NewBuffer(gocpp::slice<unsigned char> buf);
-    Buffer* NewBufferString(gocpp::string s);
-}
-#include "golang/errors/errors.fwd.h"
-
-namespace golang::bytes
-{
+    // ErrTooLarge is passed to panic if memory cannot be allocated to store data in a buffer.
     extern gocpp::error ErrTooLarge;
     extern gocpp::error errNegativeRead;
+    gocpp::slice<unsigned char> growSlice(gocpp::slice<unsigned char> b, int n);
     extern gocpp::error errUnreadByte;
+    Buffer* NewBuffer(gocpp::slice<unsigned char> buf);
+    Buffer* NewBufferString(gocpp::string s);
 }
 
 #include "golang/io/io.h"
 
 namespace golang::bytes
 {
+    namespace io = golang::io;
 
     namespace rec
     {
         gocpp::slice<unsigned char> Bytes(Buffer* b);
         gocpp::slice<unsigned char> AvailableBuffer(Buffer* b);
         gocpp::string String(Buffer* b);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(Buffer* b, int n);
         bool empty(Buffer* b);
         int Len(Buffer* b);
         int Cap(Buffer* b);

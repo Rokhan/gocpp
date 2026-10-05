@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::poll
+namespace golang::internal::poll
 {
     struct pollDesc;
     // Error values returned by runtime_pollReset and runtime_pollWait.

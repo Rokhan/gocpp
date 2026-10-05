@@ -22,8 +22,11 @@
 #include "golang/math/big/ratconv.h"
 #include "golang/strings/reader.h"
 
-namespace golang::big
+namespace golang::math::big
 {
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace strings = golang::strings;
     namespace rec
     {
         using fmt::rec::SkipSpace;

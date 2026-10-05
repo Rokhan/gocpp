@@ -34,12 +34,18 @@ namespace golang::regexp
     extern gocpp::slice<gocpp::rune> noRune;
     extern gocpp::slice<uint32_t> noNext;
     std::tuple<gocpp::slice<gocpp::rune>, gocpp::slice<uint32_t>> mergeRuneSets(gocpp::slice<gocpp::rune>* leftRunes, gocpp::slice<gocpp::rune>* rightRunes, uint32_t leftPC, uint32_t rightPC);
-    struct GoTag_runeSlice { };
-    using runeSlice = gocpp::defined<gocpp::slice<gocpp::rune>, GoTag_runeSlice>;
+    extern gocpp::slice<gocpp::rune> anyRuneNotNL;
+    extern gocpp::slice<gocpp::rune> anyRune;
     queueOnePass* newQueue(int size);
 }
+#include "golang/regexp/syntax/parse.fwd.h"
+#include "golang/regexp/syntax/prog.fwd.h"
+
+namespace golang::regexp
+{
+    namespace syntax = golang::regexp::syntax;
+}
 #include "golang/regexp/syntax/prog.h"
-#include "golang/unicode/letter.h"
 
 namespace golang::regexp
 {
@@ -62,8 +68,6 @@ namespace golang::regexp
     std::ostream& operator<<(std::ostream& os, const struct onePassInst& value);
     std::tuple<gocpp::string, bool, uint32_t> onePassPrefix(syntax::Prog* p);
     syntax::InstOp iop(syntax::Inst* i);
-    extern gocpp::slice<gocpp::rune> anyRuneNotNL;
-    extern gocpp::slice<gocpp::rune> anyRune;
     struct onePassProg
     {
         gocpp::slice<onePassInst> Inst{};
@@ -96,9 +100,6 @@ namespace golang::regexp
         bool contains(queueOnePass* q, uint32_t u);
         void insert(queueOnePass* q, uint32_t u);
         void insertNew(queueOnePass* q, uint32_t u);
-        int Len(runeSlice p);
-        bool Less(runeSlice p, int i, int j);
-        void Swap(runeSlice p, int i, int j);
     }
 }
 

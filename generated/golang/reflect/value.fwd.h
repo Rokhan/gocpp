@@ -6,16 +6,21 @@
 
 namespace golang::reflect
 {
+    struct Value;
     using flag = uintptr_t;
     const long flagKindWidth = 5;
     const long flagMethodShift = 10;
+    struct ValueError;
+    struct nonEmptyInterface;
     const bool debugReflectCall = false;
-    struct hiter;
-    struct MapIter;
     struct StringHeader;
     struct SliceHeader;
+    struct runtimeSelect;
     using SelectDir = int;
     struct SelectCase;
+    // stackAllocSelectCases represents the length of a slice that we
+    // pre-allocate in [Select] to avoid heap allocations.
+    const long stackAllocSelectCases = 4;
     struct dummyStruct;
     const flag flagKindMask = (1 << flagKindWidth) - 1;
     const flag flagStickyRO = 1 << 5;
@@ -27,16 +32,5 @@ namespace golang::reflect
     const SelectDir SelectSend = 1;
     const SelectDir SelectRecv = 2;
     const SelectDir SelectDefault = 3;
-}
-#include "golang/internal/abi/type.fwd.h"
-#include "golang/reflect/type.fwd.h"
-
-namespace golang::reflect
-{
-    struct Value;
-    struct ValueError;
-    struct emptyInterface;
-    struct nonEmptyInterface;
-    struct runtimeSelect;
     const flag flagRO = flagStickyRO | flagEmbedRO;
 }

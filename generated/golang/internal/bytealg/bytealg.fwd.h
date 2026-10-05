@@ -4,8 +4,8 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
-    // PrimeRK is the prime base used in Rabin-Karp algorithm.
-    const long PrimeRK = 16777619;
+    // primeRK is the prime base used in Rabin-Karp algorithm.
+    const long primeRK = 16777619;
 }

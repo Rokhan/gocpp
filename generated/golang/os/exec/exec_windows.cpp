@@ -15,8 +15,10 @@
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 
-namespace golang::exec
+namespace golang::os::exec
 {
+    namespace fs = golang::io::fs;
+    namespace syscall = golang::syscall;
     namespace rec
     {
     }

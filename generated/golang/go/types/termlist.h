@@ -10,36 +10,38 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct GoTag_termlist { };
 }
 #include "golang/go/types/typeterm.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    using termlist = gocpp::defined<gocpp::slice<term*>, GoTag_termlist>;
-    extern golang::types::termlist allTermlist;
+    using termlist = gocpp::defined<gocpp::slice<golang::go::types::term*>, GoTag_termlist>;
+    // allTermlist represents the set of all types.
+    // It is in normal form.
+    extern termlist allTermlist;
 }
 
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeterm.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        gocpp::string String(golang::types::termlist xl);
-        bool isEmpty(golang::types::termlist xl);
-        bool isAll(golang::types::termlist xl);
-        golang::types::termlist norm(golang::types::termlist xl);
-        golang::types::termlist go_union(golang::types::termlist xl, golang::types::termlist yl);
-        golang::types::termlist intersect(golang::types::termlist xl, golang::types::termlist yl);
-        bool equal(golang::types::termlist xl, golang::types::termlist yl);
-        bool includes(golang::types::termlist xl, golang::types::Type t);
-        bool supersetOf(golang::types::termlist xl, term* y);
-        bool subsetOf(golang::types::termlist xl, golang::types::termlist yl);
+        gocpp::string String(termlist xl);
+        bool isEmpty(termlist xl);
+        bool isAll(termlist xl);
+        termlist norm(termlist xl);
+        termlist go_union(termlist xl, termlist yl);
+        termlist intersect(termlist xl, termlist yl);
+        bool equal(termlist xl, termlist yl);
+        bool includes(termlist xl, golang::go::types::Type t);
+        bool supersetOf(termlist xl, golang::go::types::term* y);
+        bool subsetOf(termlist xl, termlist yl);
     }
 }
 

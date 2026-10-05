@@ -4,32 +4,50 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::cpu
+namespace golang::internal::cpu
 {
     const long CacheLinePadSize = 64;
-    // edx bits
-    const int cpuid_SSE2 = 1 << 26;
+    // eax bits
+    const int cpuid_AVXVNNI = 1 << 4;
     // ecx bits
     const int cpuid_SSE3 = 1 << 0;
     const int cpuid_PCLMULQDQ = 1 << 1;
+    const int cpuid_AVX512VBMI = 1 << 1;
+    const int cpuid_AVX512VBMI2 = 1 << 6;
     const int cpuid_SSSE3 = 1 << 9;
+    const int cpuid_AVX512GFNI = 1 << 8;
+    const int cpuid_VAES = 1 << 9;
+    const int cpuid_AVX512VNNI = 1 << 11;
+    const int cpuid_AVX512BITALG = 1 << 12;
     const int cpuid_FMA = 1 << 12;
+    const int cpuid_AVX512VPOPCNTDQ = 1 << 14;
     const int cpuid_SSE41 = 1 << 19;
     const int cpuid_SSE42 = 1 << 20;
     const int cpuid_POPCNT = 1 << 23;
     const int cpuid_AES = 1 << 25;
     const int cpuid_OSXSAVE = 1 << 27;
     const int cpuid_AVX = 1 << 28;
-    // ebx bits
+    // "Extended Feature Flag" bits returned in EBX for CPUID EAX=0x7 ECX=0x0
     const int cpuid_BMI1 = 1 << 3;
     const int cpuid_AVX2 = 1 << 5;
     const int cpuid_BMI2 = 1 << 8;
     const int cpuid_ERMS = 1 << 9;
     const int cpuid_AVX512F = 1 << 16;
+    const int cpuid_AVX512DQ = 1 << 17;
     const int cpuid_ADX = 1 << 19;
+    const int cpuid_AVX512CD = 1 << 28;
     const int cpuid_SHA = 1 << 29;
     const int cpuid_AVX512BW = 1 << 30;
     const int cpuid_AVX512VL = 1 << 31;
+    // "Extended Feature Flag" bits returned in ECX for CPUID EAX=0x7 ECX=0x0
+    const int cpuid_AVX512_VBMI = 1 << 1;
+    const int cpuid_AVX512_VBMI2 = 1 << 6;
+    const int cpuid_GFNI = 1 << 8;
+    const int cpuid_VPCLMULQDQ = 1 << 10;
+    const int cpuid_AVX512VPCLMULQDQ = 1 << 10;
+    const int cpuid_AVX512_BITALG = 1 << 12;
+    // edx bits
+    const int cpuid_FSRM = 1 << 4;
     // edx bits for CPUID 0x80000001
     const int cpuid_RDTSCP = 1 << 27;
 }

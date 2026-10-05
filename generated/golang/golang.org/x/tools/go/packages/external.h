@@ -9,16 +9,9 @@
 #include "golang/golang.org/x/tools/go/packages/external.fwd.h"
 #include "gocpp/support.h"
 
-
-namespace golang::packages
-{
-    
-    template<template<typename> class  S, typename E>
-    S<E> slicesClip(S<E> s);
-}
 #include "golang/golang.org/x/tools/go/packages/packages.h"
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
 {
     struct DriverRequest
     {

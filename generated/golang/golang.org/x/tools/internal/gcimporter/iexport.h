@@ -10,42 +10,77 @@
 #include "gocpp/support.h"
 
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
     gocpp::string tparamName(gocpp::string exportName);
     void assert(bool cond);
-    gocpp::error internalErrorf(gocpp::string format, gocpp::slice<gocpp::go_any> args);
+    gocpp::error internalErrorf(gocpp::string format, gocpp::slice<go_any> args);
     
     template<typename... Args>
     gocpp::error internalErrorf(gocpp::string format, Args... args)
     {
-        return internalErrorf(format, gocpp::ToSlice<gocpp::go_any>(args...));
+        return internalErrorf(format, gocpp::ToSlice<go_any>(args...));
     }
     
     template<typename... Args>
-    gocpp::error internalErrorf(gocpp::string format, gocpp::go_any value, Args... args)
+    gocpp::error internalErrorf(gocpp::string format, go_any value, Args... args)
     {
-        return internalErrorf(format, gocpp::ToSlice<gocpp::go_any>(value, args...));
+        return internalErrorf(format, gocpp::ToSlice<go_any>(value, args...));
     }
 }
+#include "golang/bytes/buffer.fwd.h"
+#include "golang/go/constant/value.fwd.h"
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
+#include "golang/go/types/alias.fwd.h"
+#include "golang/go/types/basic.fwd.h"
+#include "golang/go/types/chan.fwd.h"
+#include "golang/go/types/interface.fwd.h"
+#include "golang/go/types/named.fwd.h"
+#include "golang/go/types/object.fwd.h"
+#include "golang/go/types/package.fwd.h"
+#include "golang/go/types/predicates.fwd.h"
+#include "golang/go/types/signature.fwd.h"
+#include "golang/go/types/tuple.fwd.h"
+#include "golang/go/types/type.fwd.h"
+#include "golang/go/types/typelists.fwd.h"
+#include "golang/go/types/typeparam.fwd.h"
+#include "golang/go/types/universe.fwd.h"
+#include "golang/io/io.fwd.h"
+#include "golang/math/big/float.fwd.h"
+#include "golang/math/big/int.fwd.h"
+#include "golang/math/big/rat.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace token = golang::go::token;
+    namespace types = golang::go::types;
+}
 #include "golang/bytes/buffer.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace bytes = golang::bytes;
+}
 #include "golang/go/constant/value.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace io = golang::io;
+}
 #include "golang/go/types/object.h"
 #include "golang/golang.org/x/tools/internal/gcimporter/iimport.h"
 #include "golang/io/io.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/package.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
-#include "golang/math/big/float.fwd.h"
-#include "golang/math/big/rat.fwd.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    namespace constant = golang::go::constant;
+    namespace big = golang::math::big;
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> IExportShallow(token::FileSet* fset, types::Package* pkg, ReportFunc reportf);
     std::tuple<types::Package*, gocpp::error> IImportShallow(token::FileSet* fset, GetPackagesFunc getPackages, gocpp::slice<unsigned char> data, gocpp::string path, ReportFunc reportf);
     gocpp::error IExportData(io::Writer out, token::FileSet* fset, types::Package* pkg);
     gocpp::error IExportBundle(io::Writer out, token::FileSet* fset, gocpp::slice<types::Package*> pkgs);
-    gocpp::error iexportCommon(io::Writer out, token::FileSet* fset, bool bundle, bool shallow, int version, gocpp::slice<types::Package*> pkgs);
+    gocpp::error iexportCommon(io::Writer out, token::FileSet* fset, bool bundle, bool shallow, int version, gocpp::slice<types::Package*> pkgs, ReportFunc reportf);
     struct filePositions
     {
         token::File* file{};
@@ -100,6 +135,11 @@ namespace golang::gcimporter
     };
 
     std::ostream& operator<<(std::ostream& os, const struct objQueue& value);
+}
+#include "golang/golang.org/x/tools/go/types/objectpath/objectpath.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
     struct exportWriter
     {
         iexporter* p{};
@@ -122,14 +162,13 @@ namespace golang::gcimporter
     std::ostream& operator<<(std::ostream& os, const struct exportWriter& value);
 }
 #include "golang/go/types/type.h"
-#include "golang/golang.org/x/tools/go/types/objectpath/objectpath.fwd.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    namespace objectpath = golang::golang_org::x::tools::go::types::objectpath;
     struct iexporter
     {
         token::FileSet* fset{};
-        bytes::Buffer* out{};
         int version{};
         bool shallow{}; // don't put types from other packages in the index
         objectpath::Encoder* objEncoder{}; // encodes objects from other packages in shallow mode; lazily allocated
@@ -179,7 +218,7 @@ namespace golang::gcimporter
 #include "golang/math/big/float.h"
 #include "golang/math/big/int.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
 
     namespace rec
@@ -187,18 +226,18 @@ namespace golang::gcimporter
         void encodeFile(iexporter* p, intWriter* w, token::File* file, gocpp::slice<uint64_t> needed);
         void writeIndex(exportWriter* w, gocpp::map<types::Object, uint64_t> index);
         gocpp::string exportName(iexporter* p, types::Object obj);
-        void trace(iexporter* p, gocpp::string format, gocpp::slice<gocpp::go_any> args);
+        void trace(iexporter* p, gocpp::string format, gocpp::slice<go_any> args);
         
         template<typename... Args>
         void trace(iexporter* p, gocpp::string format, Args... args)
         {
-            return trace(p, format, gocpp::ToSlice<gocpp::go_any>(args...));
+            return trace(p, format, gocpp::ToSlice<go_any>(args...));
         }
         
         template<typename... Args>
-        void trace(iexporter* p, gocpp::string format, gocpp::go_any value, Args... args)
+        void trace(iexporter* p, gocpp::string format, go_any value, Args... args)
         {
-            return trace(p, format, gocpp::ToSlice<gocpp::go_any>(value, args...));
+            return trace(p, format, gocpp::ToSlice<go_any>(value, args...));
         }
         objectpath::Encoder* objectpathEncoder(iexporter* p);
         uint64_t stringOff(iexporter* p, gocpp::string s);

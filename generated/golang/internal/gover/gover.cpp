@@ -19,8 +19,9 @@
 //
 // The go/version package should be imported instead of this one when possible.
 // Note that this package works on "1.21" while go/version works on "go1.21".
-namespace golang::gover
+namespace golang::internal::gover
 {
+    namespace cmp = golang::cmp;
     namespace rec
     {
     }

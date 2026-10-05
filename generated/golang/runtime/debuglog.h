@@ -12,6 +12,21 @@
 
 namespace golang::runtime
 {
+    struct dloggerFake
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct dloggerFake& value);
     struct debugLogReader
     {
         debugLogBuf* data{};
@@ -36,12 +51,22 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct debugLogReader& value);
     void printDebugLog();
+    void printDebugLogImpl();
     void printDebugLogPC(uintptr_t pc, bool returnPC);
+    dloggerFake dlogFake();
 }
-#include "golang/runtime/internal/sys/nih.h"
+#include "golang/runtime/debuglog_off.h"
 
 namespace golang::runtime
 {
+    dlogger dlog();
+}
+#include "golang/internal/runtime/sys/nih.fwd.h"
+#include "golang/internal/runtime/sys/nih.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
     struct debugLogBuf
     {
         sys::NotInHeap _1{};
@@ -89,16 +114,19 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct debugLogWriter& value);
 }
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/atomic/types.h"
 
 namespace golang::runtime
 {
-    struct dlogger
+    namespace atomic = golang::internal::runtime::atomic;
+    struct dloggerImpl
     {
         sys::NotInHeap _1{};
         debugLogWriter w{};
         // allLink is the next dlogger in the allDloggers list.
-        dlogger* allLink{};
+        dloggerImpl* allLink{};
         // owned indicates that this dlogger is owned by an M. This is
         // accessed atomically.
         atomic::Uint32 owned{};
@@ -114,30 +142,54 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct dlogger& value);
-    dlogger* dlog();
-    extern dlogger* allDloggers;
+    std::ostream& operator<<(std::ostream& os, const struct dloggerImpl& value);
+    dloggerImpl* dlogImpl();
+    // allDloggers is a list of all dloggers, linked through
+    // dlogger.allLink. This is accessed atomically. This is prepend only,
+    // so it doesn't need to protect against ABA races.
+    extern dloggerImpl* allDloggers;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 
     namespace rec
     {
-        void end(dlogger* l);
-        dlogger* b(dlogger* l, bool x);
-        dlogger* i(dlogger* l, int x);
-        dlogger* i8(dlogger* l, int8_t x);
-        dlogger* i16(dlogger* l, int16_t x);
-        dlogger* i32(dlogger* l, int32_t x);
-        dlogger* i64(dlogger* l, int64_t x);
-        dlogger* u(dlogger* l, unsigned int x);
-        dlogger* uptr(dlogger* l, uintptr_t x);
-        dlogger* u8(dlogger* l, uint8_t x);
-        dlogger* u16(dlogger* l, uint16_t x);
-        dlogger* u32(dlogger* l, uint32_t x);
-        dlogger* u64(dlogger* l, uint64_t x);
-        dlogger* hex(dlogger* l, uint64_t x);
-        dlogger* p(dlogger* l, go_any x);
-        dlogger* s(dlogger* l, gocpp::string x);
-        dlogger* pc(dlogger* l, uintptr_t x);
-        dlogger* traceback(dlogger* l, gocpp::slice<uintptr_t> x);
+        void end(dloggerFake l);
+        void end(dloggerImpl* l);
+        dloggerFake b(dloggerFake l, bool x);
+        dloggerImpl* b(dloggerImpl* l, bool x);
+        dloggerFake i(dloggerFake l, int x);
+        dloggerImpl* i(dloggerImpl* l, int x);
+        dloggerFake i8(dloggerFake l, int8_t x);
+        dloggerImpl* i8(dloggerImpl* l, int8_t x);
+        dloggerFake i16(dloggerFake l, int16_t x);
+        dloggerImpl* i16(dloggerImpl* l, int16_t x);
+        dloggerFake i32(dloggerFake l, int32_t x);
+        dloggerImpl* i32(dloggerImpl* l, int32_t x);
+        dloggerFake i64(dloggerFake l, int64_t x);
+        dloggerImpl* i64(dloggerImpl* l, int64_t x);
+        dloggerFake u(dloggerFake l, unsigned int x);
+        dloggerImpl* u(dloggerImpl* l, unsigned int x);
+        dloggerFake uptr(dloggerFake l, uintptr_t x);
+        dloggerImpl* uptr(dloggerImpl* l, uintptr_t x);
+        dloggerFake u8(dloggerFake l, uint8_t x);
+        dloggerImpl* u8(dloggerImpl* l, uint8_t x);
+        dloggerFake u16(dloggerFake l, uint16_t x);
+        dloggerImpl* u16(dloggerImpl* l, uint16_t x);
+        dloggerFake u32(dloggerFake l, uint32_t x);
+        dloggerImpl* u32(dloggerImpl* l, uint32_t x);
+        dloggerFake u64(dloggerFake l, uint64_t x);
+        dloggerImpl* u64(dloggerImpl* l, uint64_t x);
+        dloggerFake hex(dloggerFake l, uint64_t x);
+        dloggerImpl* hex(dloggerImpl* l, uint64_t x);
+        dloggerFake p(dloggerFake l, go_any x);
+        dloggerImpl* p(dloggerImpl* l, go_any x);
+        dloggerFake s(dloggerFake l, gocpp::string x);
+        dloggerImpl* s(dloggerImpl* l, gocpp::string x);
+        dloggerFake hexdump(dloggerFake l, gocpp::unsafe_pointer p, uintptr_t bytes);
+        dloggerImpl* hexdump(dloggerImpl* l, gocpp::unsafe_pointer p, uintptr_t bytes);
+        dloggerFake pc(dloggerFake l, uintptr_t x);
+        dloggerImpl* pc(dloggerImpl* l, uintptr_t x);
+        dloggerFake traceback(dloggerFake l, gocpp::slice<uintptr_t> x);
+        dloggerImpl* traceback(dloggerImpl* l, gocpp::slice<uintptr_t> x);
         void ensure(debugLogWriter* l, uint64_t n);
         bool writeFrameAt(debugLogWriter* l, uint64_t pos, uint64_t size);
         void writeSync(debugLogWriter* l, uint64_t tick, uint64_t nano);

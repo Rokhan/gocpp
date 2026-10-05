@@ -9,16 +9,10 @@ namespace golang::reflect
     struct abiStep;
     using abiStepKind = int;
     struct abiSeq;
+    struct abiDesc;
     const abiStepKind abiStepBad = 0;
     const abiStepKind abiStepStack = 1;
     const abiStepKind abiStepIntReg = 2;
     const abiStepKind abiStepPointer = 3;
     const abiStepKind abiStepFloatReg = 4;
-}
-#include "golang/internal/abi/abi.fwd.h"
-#include "golang/reflect/type.fwd.h"
-
-namespace golang::reflect
-{
-    struct abiDesc;
 }

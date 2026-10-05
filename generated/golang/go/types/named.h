@@ -10,50 +10,11 @@
 #include "gocpp/support.h"
 
 #include "golang/go/types/type.h"
-#include "golang/sync/mutex.h"
-#include "golang/go/types/check.fwd.h"
 #include "golang/go/types/context.fwd.h"
-#include "golang/go/types/object.fwd.h"
 #include "golang/go/types/typelists.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    struct Named
-    {
-        Checker* check{}; // non-nil during type-checking; nil otherwise
-        TypeName* obj{}; // corresponding declared object for declared types; see above for instantiated types
-        // fromRHS holds the type (on RHS of declaration) this *Named type is derived
-        // from (for cycle reporting). Only used by validType, and therefore does not
-        // require synchronization.
-        golang::types::Type fromRHS{};
-        // information for instantiated types; nil otherwise
-        golang::types::instance* inst{};
-        mocklib::Mutex mu{}; // guards all fields below
-        uint32_t state_{}; // the current state of this type; must only be accessed atomically
-        golang::types::Type underlying{}; // possibly a *Named during setup; never a *Named once set up completely
-        TypeParamList* tparams{}; // type parameters, or nil
-        // methods declared for this type (not the method set of this type)
-        // Signatures are type-checked lazily.
-        // For non-instantiated types, this is a fully populated list of methods. For
-        // instantiated types, methods are individually expanded when they are first
-        // accessed.
-        gocpp::slice<Func*> methods{};
-        // loader may be provided to lazily load type parameters, underlying type, and methods.
-        std::function<std::tuple<gocpp::slice<TypeParam*>, golang::types::Type, gocpp::slice<Func*>> (Named* _1)> loader{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Named& value);
     struct instance
     {
         Named* orig{}; // original, uninstantiated type
@@ -73,8 +34,55 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct instance& value);
-    golang::types::Type safeUnderlying(golang::types::Type typ);
-    Named* NewNamed(TypeName* obj, golang::types::Type underlying, gocpp::slice<Func*> methods);
+    golang::go::types::Type safeUnderlying(golang::go::types::Type typ);
+}
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::go::types
+{
+    namespace sync = golang::sync;
+}
+#include "golang/sync/mutex.h"
+#include "golang/go/types/check.fwd.h"
+#include "golang/go/types/object.fwd.h"
+#include "golang/go/types/typeparam.fwd.h"
+
+namespace golang::go::types
+{
+    struct Named
+    {
+        Checker* check{}; // non-nil during type-checking; nil otherwise
+        TypeName* obj{}; // corresponding declared object for declared types; see above for instantiated types
+        bool allowNilRHS{}; // may be true from creation via [NewNamed] until [Named.SetUnderlying]
+        golang::go::types::instance* inst{}; // information for instantiated types; nil otherwise
+        mocklib::Mutex mu{}; // guards all fields below
+        uint32_t state_{}; // the current state of this type; must only be accessed atomically or when mu is held
+        golang::go::types::Type fromRHS{}; // the declaration RHS this type is derived from
+        TypeParamList* tparams{}; // type parameters, or nil
+        golang::go::types::Type underlying{}; // underlying type, or nil
+        bool varSize{}; // whether the type has variable size
+        // methods declared for this type (not the method set of this type)
+        // Signatures are type-checked lazily.
+        // For non-instantiated types, this is a fully populated list of methods. For
+        // instantiated types, methods are individually expanded when they are first
+        // accessed.
+        gocpp::slice<Func*> methods{};
+        // loader may be provided to lazily load type parameters, underlying type, methods, and delayed functions
+        std::function<std::tuple<gocpp::slice<TypeParam*>, golang::go::types::Type, gocpp::slice<Func*>, gocpp::slice<std::function<void ()>>> (Named* _1)> loader{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Named& value);
+    Named* NewNamed(TypeName* obj, golang::go::types::Type underlying, gocpp::slice<Func*> methods);
 }
 
 #include "golang/go/token/position.h"
@@ -86,17 +94,18 @@ namespace golang::types
 #include "golang/go/types/typelists.h"
 #include "golang/go/types/typeparam.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace token = golang::go::token;
 
     namespace rec
     {
-        Named* resolve(Named* n);
-        namedState state(Named* n);
-        void setState(Named* n, namedState state);
-        Named* newNamed(Checker* check, TypeName* obj, golang::types::Type underlying, gocpp::slice<Func*> methods);
-        Named* newNamedInstance(Checker* check, token::Pos pos, Named* orig, gocpp::slice<golang::types::Type> targs, Named* expanding);
-        void cleanup(Named* t);
+        Named* unpack(Named* n);
+        bool stateHas(Named* n, stateMask m);
+        void setState(Named* n, stateMask m);
+        Named* newNamed(Checker* check, TypeName* obj, golang::go::types::Type fromRHS, gocpp::slice<Func*> methods);
+        Named* newNamedInstance(Checker* check, token::Pos pos, Named* orig, gocpp::slice<golang::go::types::Type> targs, Named* expanding);
+        void cleanup(Named* n);
         TypeName* Obj(Named* t);
         Named* Origin(Named* t);
         TypeParamList* TypeParams(Named* t);
@@ -105,14 +114,16 @@ namespace golang::types
         int NumMethods(Named* t);
         Func* Method(Named* t, int i);
         Func* expandMethod(Named* t, int i);
-        void SetUnderlying(Named* t, golang::types::Type underlying);
+        void SetUnderlying(Named* t, golang::go::types::Type u);
         void AddMethod(Named* t, Func* m);
-        golang::types::Type Underlying(Named* t);
+        int methodIndex(Named* t, gocpp::string name, bool foldCase);
+        golang::go::types::Type rhs(Named* n);
+        golang::go::types::Type Underlying(Named* n);
         gocpp::string String(Named* t);
-        golang::types::Type under(Named* n0);
+        void resolveUnderlying(Named* n);
         std::tuple<int, Func*> lookupMethod(Named* n, Package* pkg, gocpp::string name, bool foldCase);
         Context* context(Checker* check);
-        golang::types::Type expandUnderlying(Named* n);
+        golang::go::types::Type expandRHS(Named* n);
     }
 }
 

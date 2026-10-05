@@ -138,6 +138,72 @@ namespace golang::encoding
     }
 
     std::ostream& operator<<(std::ostream& os, const struct BinaryUnmarshaler& value);
+    struct BinaryAppender : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        BinaryAppender(){}
+        BinaryAppender(BinaryAppender& i) = default;
+        BinaryAppender(const BinaryAppender& i) = default;
+        BinaryAppender& operator=(BinaryAppender& i) = default;
+        BinaryAppender& operator=(const BinaryAppender& i) = default;
+
+        inline BinaryAppender(nullptr_t) {};
+        BinaryAppender& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        BinaryAppender(T& ref);
+
+        template<typename T>
+        BinaryAppender(const T& ref);
+
+        template<typename T>
+        BinaryAppender(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IBinaryAppender
+        {
+            // AppendBinary appends the binary representation of itself to the end of b
+            // (allocating a larger slice if necessary) and returns the updated slice.
+            // Implementations must not retain b, nor mutate any bytes within b[:len(b)].
+            virtual std::tuple<gocpp::slice<unsigned char>, gocpp::error> vAppendBinary(gocpp::slice<unsigned char> b) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IBinaryAppender>
+        struct BinaryAppenderImpl : virtual TInterface
+        {
+            explicit BinaryAppenderImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<gocpp::slice<unsigned char>, gocpp::error> vAppendBinary(gocpp::slice<unsigned char> b) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IBinaryAppender* value() const;
+
+        std::shared_ptr<IBinaryAppender> mValue;
+    };
+
+    namespace rec
+    {
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendBinary(const gocpp::PtrRecv<struct BinaryAppender, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendBinary(const gocpp::ObjRecv<struct BinaryAppender>& self, gocpp::slice<unsigned char> b);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct BinaryAppender& value);
     struct TextMarshaler : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -264,6 +330,72 @@ namespace golang::encoding
     }
 
     std::ostream& operator<<(std::ostream& os, const struct TextUnmarshaler& value);
+    struct TextAppender : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        TextAppender(){}
+        TextAppender(TextAppender& i) = default;
+        TextAppender(const TextAppender& i) = default;
+        TextAppender& operator=(TextAppender& i) = default;
+        TextAppender& operator=(const TextAppender& i) = default;
+
+        inline TextAppender(nullptr_t) {};
+        TextAppender& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        TextAppender(T& ref);
+
+        template<typename T>
+        TextAppender(const T& ref);
+
+        template<typename T>
+        TextAppender(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct ITextAppender
+        {
+            // AppendText appends the textual representation of itself to the end of b
+            // (allocating a larger slice if necessary) and returns the updated slice.
+            // Implementations must not retain b, nor mutate any bytes within b[:len(b)].
+            virtual std::tuple<gocpp::slice<unsigned char>, gocpp::error> vAppendText(gocpp::slice<unsigned char> b) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = ITextAppender>
+        struct TextAppenderImpl : virtual TInterface
+        {
+            explicit TextAppenderImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<gocpp::slice<unsigned char>, gocpp::error> vAppendText(gocpp::slice<unsigned char> b) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline ITextAppender* value() const;
+
+        std::shared_ptr<ITextAppender> mValue;
+    };
+
+    namespace rec
+    {
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendText(const gocpp::PtrRecv<struct TextAppender, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendText(const gocpp::ObjRecv<struct TextAppender>& self, gocpp::slice<unsigned char> b);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct TextAppender& value);
 
     namespace rec
     {

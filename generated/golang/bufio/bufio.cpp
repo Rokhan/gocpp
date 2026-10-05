@@ -22,6 +22,11 @@
 // the interface but provides buffering and some help for textual I/O.
 namespace golang::bufio
 {
+    namespace bytes = golang::bytes;
+    namespace errors = golang::errors;
+    namespace io = golang::io;
+    namespace strings = golang::strings;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using io::rec::Read;
@@ -39,6 +44,9 @@ namespace golang::bufio
     gocpp::error ErrBufferFull = errors::New("bufio: buffer full"_s);
     gocpp::error ErrNegativeCount = errors::New("bufio: negative count"_s);
     // Reader implements buffering for an io.Reader object.
+    // A new Reader is created by calling [NewReader] or [NewReaderSize];
+    // alternatively the zero value of a Reader may be used after calling [Reader.Reset]
+    // on it.
     
     template<typename T> requires gocpp::GoStruct<T>
     Reader::operator T()
@@ -192,9 +200,10 @@ namespace golang::bufio
     }
 
     // Peek returns the next n bytes without advancing the reader. The bytes stop
-    // being valid at the next read call. If Peek returns fewer than n bytes, it
-    // also returns an error explaining why the read is short. The error is
-    // [ErrBufferFull] if n is larger than b's buffer size.
+    // being valid at the next read call. If necessary, Peek will read more bytes
+    // into the buffer in order to make n bytes available. If Peek returns fewer
+    // than n bytes, it also returns an error explaining why the read is short.
+    // The error is [ErrBufferFull] if n is larger than b's buffer size.
     //
     // Calling Peek prevents a [Reader.UnreadByte] or [Reader.UnreadRune] call from succeeding
     // until the next read operation.
@@ -414,11 +423,7 @@ namespace golang::bufio
         {
             return {0, 0, rec::readErr(gocpp::recv(b))};
         }
-        std::tie(r, size) = std::tuple{gocpp::rune(b->buf[b->r]), 1};
-        if(r >= utf8::RuneSelf)
-        {
-            std::tie(r, size) = utf8::DecodeRune(b->buf.make_slice(b->r, b->w));
-        }
+        std::tie(r, size) = utf8::DecodeRune(b->buf.make_slice(b->r, b->w));
         b->r += size;
         b->lastByte = int(b->buf[b->r - 1]);
         b->lastRuneSize = size;
@@ -667,10 +672,13 @@ namespace golang::bufio
         b->lastByte = - 1;
         b->lastRuneSize = - 1;
 
-        std::tie(n, err) = rec::writeBuf(gocpp::recv(b), w);
-        if(err != nullptr)
+        if(b->r < b->w)
         {
-            return {n, err};
+            std::tie(n, err) = rec::writeBuf(gocpp::recv(b), w);
+            if(err != nullptr)
+            {
+                return {n, err};
+            }
         }
 
         if(auto [r, ok] = gocpp::getValue<io::WriterTo>(b->rd); ok)

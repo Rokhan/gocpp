@@ -31,6 +31,9 @@ namespace golang::image
     std::ostream& operator<<(std::ostream& os, const struct Point& value);
     int mul3NonNeg(int x, int y, int z);
     int add2NonNeg(int x, int y);
+    // ZP is the zero [Point].
+    //
+    // Deprecated: Use a literal [image.Point] instead.
     extern Point ZP;
     Point Pt(int X, int Y);
     struct Rectangle
@@ -50,6 +53,9 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Rectangle& value);
+    // ZR is the zero [Rectangle].
+    //
+    // Deprecated: Use a literal [image.Rectangle] instead.
     extern Rectangle ZR;
     Rectangle Rect(int x0, int y0, int x1, int y1);
 }
@@ -58,6 +64,7 @@ namespace golang::image
 
 namespace golang::image
 {
+    namespace color = golang::image::color;
 
     namespace rec
     {

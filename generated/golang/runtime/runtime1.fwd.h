@@ -14,11 +14,7 @@ namespace golang::runtime
     const int tracebackCrash = 1 << 0;
     const int tracebackAll = 1 << 1;
     const int tracebackShift = 2;
-    struct debugStruct;
-}
-#include "golang/runtime/internal/atomic/types.fwd.h"
-
-namespace golang::runtime
-{
     struct dbgVar;
+    struct debugStruct;
+    struct invalidGODEBUGStruct;
 }

@@ -3,13 +3,16 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
     struct ticksType;
+    struct godebugInc;
+}
+#include "golang/runtime/proc.fwd.h"
+
+namespace golang::runtime
+{
     // minTimeForTicksPerSecond is the minimum elapsed time we require to consider our ticksPerSecond
     // measurement to be of decent enough quality for profiling.
     //
@@ -26,5 +29,4 @@ namespace golang::runtime
     // the tiny error doesn't matter. The error is definitely going to be a problem when trying to
     // use this for timestamps, as it'll make those timestamps much less likely to line up.
     const int minTimeForTicksPerSecond = 5000000 * (1 - osHasLowResClockInt) + 100000000 * osHasLowResClockInt;
-    struct godebugInc;
 }

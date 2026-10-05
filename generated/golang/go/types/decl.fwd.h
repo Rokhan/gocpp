@@ -3,14 +3,19 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/go/ast/ast.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    struct decl;
     struct importDecl;
     struct constDecl;
     struct varDecl;
     struct typeDecl;
     struct funcDecl;
+}
+#include "golang/go/ast/ast.fwd.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+    struct decl;
 }

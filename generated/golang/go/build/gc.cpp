@@ -14,8 +14,10 @@
 #include "golang/path/filepath/path.h"
 #include "golang/runtime/extern.h"
 
-namespace golang::build
+namespace golang::go::build
 {
+    namespace filepath = golang::path::filepath;
+    namespace runtime = golang::runtime;
     namespace rec
     {
     }

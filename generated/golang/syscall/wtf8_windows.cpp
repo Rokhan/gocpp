@@ -16,6 +16,8 @@
 
 namespace golang::syscall
 {
+    namespace utf16 = golang::unicode::utf16;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
     }

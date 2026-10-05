@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::typesinternal
+namespace golang::golang_org::x::tools::internal::typesinternal
 {
     using ErrorCode = int;
     // InvalidSyntaxTree occurs if an invalid syntax tree is provided
@@ -685,7 +685,7 @@ namespace golang::typesinternal
     // InvalidCap occurs when an argument to the cap built-in function is not of
     // supported type.
     //
-    // See https://golang.org/ref/spec#Lengthand_capacity for information on
+    // See https://golang.org/ref/spec#Length_and_capacity for information on
     // which underlying types are supported as arguments to cap and len.
     //
     // Example:
@@ -704,7 +704,7 @@ namespace golang::typesinternal
     // InvalidCopy occurs when the arguments are not of slice type or do not
     // have compatible type.
     //
-    // See https://golang.org/ref/spec#Appendingand_copying_slices for more
+    // See https://golang.org/ref/spec#Appending_and_copying_slices for more
     // information on the type requirements for the copy built-in.
     //
     // Example:
@@ -738,7 +738,7 @@ namespace golang::typesinternal
     // InvalidLen occurs when an argument to the len built-in function is not of
     // supported type.
     //
-    // See https://golang.org/ref/spec#Lengthand_capacity for information on
+    // See https://golang.org/ref/spec#Length_and_capacity for information on
     // which underlying types are supported as arguments to cap and len.
     //
     // Example:
@@ -753,7 +753,7 @@ namespace golang::typesinternal
     const ErrorCode SwappedMakeArgs = 91;
     // InvalidMake occurs when make is called with an unsupported type argument.
     //
-    // See https://golang.org/ref/spec#Makingslices_maps_and_channels for
+    // See https://golang.org/ref/spec#Making_slices_maps_and_channels for
     // information on the types that may be created using make.
     //
     // Example:
@@ -796,7 +796,7 @@ namespace golang::typesinternal
     //  var x float64
     //  var _ = string(x)
     const ErrorCode InvalidConversion = 96;
-    // InvalidUntypedConversion occurs when an there is no valid implicit
+    // InvalidUntypedConversion occurs when there is no valid implicit
     // conversion from an untyped value satisfying the type constraints of the
     // context in which it is used.
     //

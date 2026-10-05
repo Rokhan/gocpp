@@ -15,6 +15,7 @@ namespace golang::syscall
     gocpp::string EscapeArg(gocpp::string s);
     gocpp::slice<unsigned char> appendEscapeArg(gocpp::slice<unsigned char> b, gocpp::string s);
     gocpp::string makeCmdLine(gocpp::slice<gocpp::string> args);
+    gocpp::slice<gocpp::string> envSorted(gocpp::slice<gocpp::string> envv);
     std::tuple<gocpp::slice<uint16_t>, gocpp::error> createEnvBlock(gocpp::slice<gocpp::string> envv);
     std::tuple<gocpp::string, gocpp::error> FullPath(gocpp::string name);
     bool isSlash(uint8_t c);
@@ -44,14 +45,12 @@ namespace golang::syscall
     extern ProcAttr zeroProcAttr;
     std::tuple<int, uintptr_t, gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, ProcAttr* attr);
 }
-#include "golang/sync/rwmutex.h"
 #include "golang/syscall/security_windows.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::syscall
 {
-    extern sync::RWMutex ForkLock;
     void CloseOnExec(golang::syscall::Handle fd);
     gocpp::error SetNonblock(golang::syscall::Handle fd, bool nonblocking);
     struct SysProcAttr
@@ -78,7 +77,20 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SysProcAttr& value);
+}
+#include "golang/sync/rwmutex.fwd.h"
+
+namespace golang::syscall
+{
     extern SysProcAttr zeroSysProcAttr;
+    namespace sync = golang::sync;
+}
+#include "golang/sync/rwmutex.h"
+
+namespace golang::syscall
+{
+    // ForkLock is not used on Windows.
+    extern sync::RWMutex ForkLock;
 
     namespace rec
     {

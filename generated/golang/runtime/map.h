@@ -12,200 +12,46 @@
 
 namespace golang::runtime
 {
-    bool isEmpty(uint8_t x);
-    struct hmap
-    {
-        // Note: the format of the hmap is also encoded in cmd/compile/internal/reflectdata/reflect.go.
-        // Make sure this stays in sync with the compiler's definition.
-        int count{}; // # live cells == size of map.  Must be first (used by len() builtin)
-        uint8_t flags{};
-        uint8_t B{}; // log_2 of # of buckets (can hold up to loadFactor * 2^B items)
-        uint16_t noverflow{}; // approximate number of overflow buckets; see incrnoverflow for details
-        uint32_t hash0{}; // hash seed
-        gocpp::unsafe_pointer buckets{}; // array of 2^B Buckets. may be nil if count==0.
-        gocpp::unsafe_pointer oldbuckets{}; // previous bucket array of half the size, non-nil only when growing
-        uintptr_t nevacuate{}; // progress counter for evacuation (buckets less than this have been evacuated)
-        mapextra* extra{}; // optional fields
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct hmap& value);
-    struct mapextra
-    {
-        // If both key and elem do not contain pointers and are inline, then we mark bucket
-        // type as containing no pointers. This avoids scanning such maps.
-        // However, bmap.overflow is a pointer. In order to keep overflow buckets
-        // alive, we store pointers to all overflow buckets in hmap.extra.overflow and hmap.extra.oldoverflow.
-        // overflow and oldoverflow are only used if key and elem do not contain pointers.
-        // overflow contains overflow buckets for hmap.buckets.
-        // oldoverflow contains overflow buckets for hmap.oldbuckets.
-        // The indirection allows to store a pointer to the slice in hiter.
-        gocpp::slice<bmap*>* overflow{};
-        gocpp::slice<bmap*>* oldoverflow{};
-        // nextOverflow holds a pointer to a free overflow bucket.
-        bmap* nextOverflow{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct mapextra& value);
-    struct bmap
-    {
-        // tophash generally contains the top byte of the hash value
-        // for each key in this bucket. If tophash[0] < minTopHash,
-        // tophash[0] is a bucket evacuation state instead.
-        gocpp::array<uint8_t, bucketCnt> tophash{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct bmap& value);
-    uintptr_t bucketShift(uint8_t b);
-    uintptr_t bucketMask(uint8_t b);
-    uint8_t tophash(uintptr_t hash);
-    bool overLoadFactor(int count, uint8_t B);
-    bool tooManyOverflowBuckets(uint16_t noverflow, uint8_t B);
-    struct evacDst
-    {
-        bmap* b{}; // current destination bucket
-        int i{}; // key/elem index into b
-        gocpp::unsafe_pointer k{}; // pointer to current key storage
-        gocpp::unsafe_pointer e{}; // pointer to current elem storage
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct evacDst& value);
+    //go:linkname maps_errNilAssign internal/runtime/maps.errNilAssign
+    extern gocpp::error maps_errNilAssign;
     void mapinitnoop();
     go_any mapclone(go_any m);
-    void keys(go_any m, gocpp::unsafe_pointer p);
-    void values(go_any m, gocpp::unsafe_pointer p);
-    // data offset should be the size of the bmap struct, but needs to be
-    // aligned correctly. For amd64p32 this means 64-bit alignment
-    // even though pointers are 32 bit.
-    const uintptr_t dataOffset = gocpp::Offsetof<gocpp_id_0>(&gocpp_id_0::v);
-    bool evacuated(bmap* b);
-    hmap* makemap_small();
-    int reflect_maplen(hmap* h);
-    int reflectlite_maplen(hmap* h);
 }
+#include "golang/internal/abi/funcpc.fwd.h"
 #include "golang/internal/abi/map.fwd.h"
-#include "golang/runtime/slice.fwd.h"
-#include "golang/runtime/type.fwd.h"
+#include "golang/internal/runtime/maps/map.fwd.h"
+#include "golang/internal/runtime/maps/table.fwd.h"
 
 namespace golang::runtime
 {
-    struct hiter
-    {
-        gocpp::unsafe_pointer key{}; // Must be in first position.  Write nil to indicate iteration end (see cmd/compile/internal/walk/range.go).
-        gocpp::unsafe_pointer elem{}; // Must be in second position (see cmd/compile/internal/walk/range.go).
-        maptype* t{};
-        hmap* h{};
-        gocpp::unsafe_pointer buckets{}; // bucket ptr at hash_iter initialization time
-        bmap* bptr{}; // current bucket
-        gocpp::slice<bmap*>* overflow{}; // keeps overflow buckets of hmap.buckets alive
-        gocpp::slice<bmap*>* oldoverflow{}; // keeps overflow buckets of hmap.oldbuckets alive
-        uintptr_t startBucket{}; // bucket iteration started at
-        uint8_t offset{}; // intra-bucket offset to start from during iteration (should be big enough to hold bucketCnt-1)
-        bool wrapped{}; // already wrapped around from end of bucket array to beginning
-        uint8_t B{};
-        uint8_t i{};
-        uintptr_t bucket{};
-        uintptr_t checkBucket{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct hiter& value);
-    hmap* makemap64(maptype* t, int64_t hint, hmap* h);
-    hmap* makemap(maptype* t, int hint, hmap* h);
-    std::tuple<gocpp::unsafe_pointer, bmap*> makeBucketArray(maptype* t, uint8_t b, gocpp::unsafe_pointer dirtyalloc);
-    gocpp::unsafe_pointer mapaccess1(maptype* t, hmap* h, gocpp::unsafe_pointer key);
-    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2(maptype* t, hmap* h, gocpp::unsafe_pointer key);
-    std::tuple<gocpp::unsafe_pointer, gocpp::unsafe_pointer> mapaccessK(maptype* t, hmap* h, gocpp::unsafe_pointer key);
-    gocpp::unsafe_pointer mapaccess1_fat(maptype* t, hmap* h, gocpp::unsafe_pointer key, gocpp::unsafe_pointer zero);
-    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2_fat(maptype* t, hmap* h, gocpp::unsafe_pointer key, gocpp::unsafe_pointer zero);
-    gocpp::unsafe_pointer mapassign(maptype* t, hmap* h, gocpp::unsafe_pointer key);
-    void mapdelete(maptype* t, hmap* h, gocpp::unsafe_pointer key);
-    void mapclear(maptype* t, hmap* h);
-    void hashGrow(maptype* t, hmap* h);
-    void growWork(maptype* t, hmap* h, uintptr_t bucket);
-    bool bucketEvacuated(maptype* t, hmap* h, uintptr_t bucket);
-    void evacuate(maptype* t, hmap* h, uintptr_t oldbucket);
-    void advanceEvacuationMark(hmap* h, maptype* t, uintptr_t newbit);
-    hmap* reflect_makemap(maptype* t, int cap);
-    gocpp::unsafe_pointer reflect_mapaccess(maptype* t, hmap* h, gocpp::unsafe_pointer key);
-    gocpp::unsafe_pointer reflect_mapaccess_faststr(maptype* t, hmap* h, gocpp::string key);
-    void reflect_mapassign(maptype* t, hmap* h, gocpp::unsafe_pointer key, gocpp::unsafe_pointer elem);
-    void reflect_mapassign_faststr(maptype* t, hmap* h, gocpp::string key, gocpp::unsafe_pointer elem);
-    void reflect_mapdelete(maptype* t, hmap* h, gocpp::unsafe_pointer key);
-    void reflect_mapdelete_faststr(maptype* t, hmap* h, gocpp::string key);
-    void reflect_mapclear(maptype* t, hmap* h);
-    extern gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
-    std::tuple<bmap*, int> moveToBmap(maptype* t, hmap* h, bmap* dst, int pos, bmap* src);
-    hmap* mapclone2(maptype* t, hmap* src);
-    void copyKeys(maptype* t, hmap* h, bmap* b, golang::runtime::slice* s, uint8_t offset);
-    void copyValues(maptype* t, hmap* h, bmap* b, golang::runtime::slice* s, uint8_t offset);
-    void mapiterinit(maptype* t, hmap* h, hiter* it);
-    void mapiternext(hiter* it);
-    void reflect_mapiterinit(maptype* t, hmap* h, hiter* it);
-    void reflect_mapiternext(hiter* it);
-    gocpp::unsafe_pointer reflect_mapiterkey(hiter* it);
-    gocpp::unsafe_pointer reflect_mapiterelem(hiter* it);
+    namespace maps = golang::internal::runtime::maps;
+    namespace abi = golang::internal::abi;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    maps::Map* makemap64(abi::MapType* t, int64_t hint, maps::Map* m);
+    maps::Map* makemap_small();
+    maps::Map* makemap(abi::MapType* t, int hint, maps::Map* m);
+    gocpp::unsafe_pointer mapaccess1(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key);
+    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key);
+    gocpp::unsafe_pointer mapaccess1_fat(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key, gocpp::unsafe_pointer zero);
+    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2_fat(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key, gocpp::unsafe_pointer zero);
+    gocpp::unsafe_pointer mapassign(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key);
+    void mapdelete(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key);
+    void mapIterStart(abi::MapType* t, maps::Map* m, maps::Iter* it);
+    void mapIterNext(maps::Iter* it);
+    void mapclear(abi::MapType* t, maps::Map* m);
+    maps::Map* reflect_makemap(abi::MapType* t, int cap);
+    gocpp::unsafe_pointer reflect_mapaccess(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key);
+    gocpp::unsafe_pointer reflect_mapaccess_faststr(abi::MapType* t, maps::Map* m, gocpp::string key);
+    void reflect_mapassign(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key, gocpp::unsafe_pointer elem);
+    void reflect_mapassign_faststr(abi::MapType* t, maps::Map* m, gocpp::string key, gocpp::unsafe_pointer elem);
+    void reflect_mapdelete(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key);
+    void reflect_mapdelete_faststr(abi::MapType* t, maps::Map* m, gocpp::string key);
+    int reflect_maplen(maps::Map* m);
+    void reflect_mapclear(abi::MapType* t, maps::Map* m);
+    int reflectlite_maplen(maps::Map* m);
 
     namespace rec
     {
-        bmap* overflow(bmap* b, maptype* t);
-        void setoverflow(bmap* b, maptype* t, bmap* ovf);
-        gocpp::unsafe_pointer keys(bmap* b);
-        void incrnoverflow(hmap* h);
-        bmap* newoverflow(hmap* h, maptype* t, bmap* b);
-        void createOverflow(hmap* h);
-        bool growing(hmap* h);
-        bool sameSizeGrow(hmap* h);
-        uintptr_t noldbuckets(hmap* h);
-        uintptr_t oldbucketmask(hmap* h);
     }
 }
 

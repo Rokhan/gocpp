@@ -4,26 +4,17 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::png
+namespace golang::image::png
 {
     struct Encoder;
     struct EncoderBufferPool;
     struct GoTag_EncoderBuffer;
+    struct encoder;
     using CompressionLevel = int;
     struct opaquer;
+    using EncoderBuffer = gocpp::defined<encoder, GoTag_EncoderBuffer>;
     const CompressionLevel DefaultCompression = 0;
     const CompressionLevel NoCompression = - 1;
     const CompressionLevel BestSpeed = - 2;
     const CompressionLevel BestCompression = - 3;
-}
-#include "golang/bufio/bufio.fwd.h"
-#include "golang/compress/zlib/writer.fwd.h"
-#include "golang/image/image.fwd.h"
-#include "golang/image/png/reader.fwd.h"
-#include "golang/io/io.fwd.h"
-
-namespace golang::png
-{
-    struct encoder;
-    using EncoderBuffer = gocpp::defined<encoder, GoTag_EncoderBuffer>;
 }

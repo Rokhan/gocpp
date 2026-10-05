@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::bits
+namespace golang::math::bits
 {
     int LeadingZeros(unsigned int x);
     int LeadingZeros8(uint8_t x);

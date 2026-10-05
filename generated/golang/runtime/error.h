@@ -42,9 +42,9 @@ namespace golang::runtime
         struct IError: virtual gocpp::error::Ierror
         {
             // RuntimeError is a no-op function but
-            // serves to distinguish types that are run time
+            // serves to distinguish types that are runtime
             // errors from ordinary errors: a type is a
-            // run time error if it has a RuntimeError method.
+            // runtime error if it has a RuntimeError method.
             virtual void vRuntimeError() = 0;
             virtual void* getPtr() = 0;
         };
@@ -100,30 +100,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct errorAddressString& value);
-    struct boundsError
-    {
-        int64_t x{};
-        int y{};
-        // Values in an index or slice expression can be signed or unsigned.
-        // That means we'd need 65 bits to encode all possible indexes, from -2^63 to 2^64-1.
-        // Instead, we keep track of whether x should be interpreted as signed or unsigned.
-        // y is known to be nonnegative and to fit in an int.
-        bool go_signed{};
-        boundsErrorCode code{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct boundsError& value);
+    extern gocpp::error _;
+    extern gocpp::error _;
+    extern gocpp::error _;
+    // boundsErrorFmts provide error text for various out-of-bounds panics.
+    // Note: if you change these strings, you should adjust the size of the buffer
+    // in boundsError.Error below as well.
     extern gocpp::array<gocpp::string, 9> boundsErrorFmts;
+    // boundsNegErrorFmts are overriding formats if x is negative. In this case there's no need to report y.
     extern gocpp::array<gocpp::string, 8> boundsNegErrorFmts;
     gocpp::slice<unsigned char> appendIntStr(gocpp::slice<unsigned char> b, int64_t v, bool go_signed);
     struct stringer : virtual gocpp::Interface
@@ -189,8 +173,9 @@ namespace golang::runtime
     }
 
     std::ostream& operator<<(std::ostream& os, const struct stringer& value);
-    void printany(go_any i);
+    void printpanicval(go_any v);
     void printanycustomtype(go_any i);
+    void printindented(gocpp::string s);
     void panicwrap();
 }
 #include "golang/runtime/type.fwd.h"
@@ -216,6 +201,41 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeAssertionError& value);
+}
+#include "golang/internal/abi/bounds.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
+}
+#include "golang/internal/abi/bounds.h"
+
+namespace golang::runtime
+{
+    struct boundsError
+    {
+        int64_t x{};
+        int y{};
+        // Values in an index or slice expression can be signed or unsigned.
+        // That means we'd need 65 bits to encode all possible indexes, from -2^63 to 2^64-1.
+        // Instead, we keep track of whether x should be interpreted as signed or unsigned.
+        // y is known to be nonnegative and to fit in an int.
+        bool go_signed{};
+        abi::BoundsErrorCode code{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct boundsError& value);
 
     namespace rec
     {

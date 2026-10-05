@@ -23,6 +23,7 @@
 #include "golang/golang.org/x/tools/internal/pkgbits/reloc.h"
 #include "golang/golang.org/x/tools/internal/pkgbits/support.h"
 #include "golang/golang.org/x/tools/internal/pkgbits/sync.h"
+#include "golang/golang.org/x/tools/internal/pkgbits/version.h"
 #include "golang/io/io.h"
 #include "golang/math/big/float.h"
 #include "golang/math/big/floatmarsh.h"
@@ -32,8 +33,18 @@
 #include "golang/runtime/extern.h"
 #include "golang/strings/reader.h"
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
+    namespace big = golang::math::big;
+    namespace binary = golang::encoding::binary;
+    namespace constant = golang::go::constant;
+    namespace errors = golang::errors;
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace os = golang::os;
+    namespace runtime = golang::runtime;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
     namespace rec
     {
         using big::rec::Neg;
@@ -62,7 +73,6 @@ namespace golang::pkgbits
     {
         T result;
         result.version = this->version;
-        result.aliases = this->aliases;
         result.sync = this->sync;
         result.pkgPath = this->pkgPath;
         result.elemData = this->elemData;
@@ -76,7 +86,6 @@ namespace golang::pkgbits
     bool PkgDecoder::operator==(const T& ref) const
     {
         if (version != ref.version) return false;
-        if (aliases != ref.aliases) return false;
         if (sync != ref.sync) return false;
         if (pkgPath != ref.pkgPath) return false;
         if (elemData != ref.elemData) return false;
@@ -90,7 +99,6 @@ namespace golang::pkgbits
     {
         os << '{';
         os << "" << version;
-        os << " " << aliases;
         os << " " << sync;
         os << " " << pkgPath;
         os << " " << elemData;
@@ -123,8 +131,6 @@ namespace golang::pkgbits
     // NewPkgDecoder returns a PkgDecoder initialized to read the Unified
     // IR export data from input. pkgPath is the package path for the
     // compilation unit that produced the export data.
-    //
-    // TODO(mdempsky): Remove pkgPath parameter; unneeded since CL 391014.
     PkgDecoder NewPkgDecoder(gocpp::string pkgPath, gocpp::string input)
     {
         auto pr = gocpp::Init<PkgDecoder>([=](auto& x) {
@@ -135,28 +141,20 @@ namespace golang::pkgbits
         // avoid copying the position information.
         auto r = strings::NewReader(input);
 
-        assert(binary::Read(r, binary::LittleEndian, & pr.version) == nullptr);
+        uint32_t ver = {};
+        assert(binary::Read(r, binary::LittleEndian, & ver) == nullptr);
+        pr.version = Version(ver);
 
-        //Go switch emulation
+        if(pr.version >= numVersions)
         {
-            auto condition = pr.version;
-            int conditionId = -1;
-            if(condition == 0) { conditionId = 0; }
-            else if(condition == 1) { conditionId = 1; }
-            switch(conditionId)
-            {
-                default:
-                    gocpp::panic(mocklib::Errorf("unsupported version: %v"_s, pr.version));
-                    break;
-                case 0:
-                    break;
-                // no flags
-                case 1:
-                    uint32_t flags = {};
-                    assert(binary::Read(r, binary::LittleEndian, & flags) == nullptr);
-                    pr.sync = flags & flagSyncMarkers != 0;
-                    break;
-            }
+            gocpp::panic(mocklib::Errorf("cannot decode %q, export data version %d is greater than maximum supported version %d"_s, pkgPath, pr.version, numVersions - 1));
+        }
+
+        if(rec::Has(gocpp::recv(pr.version), Flags))
+        {
+            uint32_t flags = {};
+            assert(binary::Read(r, binary::LittleEndian, & flags) == nullptr);
+            pr.sync = flags & flagSyncMarkers != 0;
         }
 
         assert(binary::Read(r, binary::LittleEndian, pr.elemEndsEnds.make_slice(0)) == nullptr);
@@ -168,7 +166,9 @@ namespace golang::pkgbits
         assert(err == nullptr);
 
         pr.elemData = input.make_slice(pos);
-        assert(len(pr.elemData) - 8 == int(pr.elemEnds[len(pr.elemEnds) - 1]));
+
+        auto fingerprintSize = 8;
+        assert(len(pr.elemData) - fingerprintSize == int(pr.elemEnds[len(pr.elemEnds) - 1]));
 
         return pr;
     }
@@ -209,7 +209,7 @@ namespace golang::pkgbits
         }
         if(absIdx >= int(pr->elemEndsEnds[k]))
         {
-            errorf("%v:%v is out of bounds; %v"_s, k, idx, pr->elemEndsEnds);
+            panicf("%v:%v is out of bounds; %v"_s, k, idx, pr->elemEndsEnds);
         }
         return absIdx;
     }
@@ -273,9 +273,7 @@ namespace golang::pkgbits
             x.Idx = idx;
         });
 
-        // TODO(mdempsky) r.data.Reset(...) after #44505 is resolved.
-        r.Data = *strings::NewReader(rec::DataIdx(gocpp::recv(pr), k, idx));
-
+        rec::Reset(gocpp::recv(r.Data), rec::DataIdx(gocpp::recv(pr), k, idx));
         rec::Sync(gocpp::recv(r), SyncRelocs);
         r.Relocs = gocpp::make(gocpp::Tag<gocpp::slice<RelocEnt>>(), rec::Len(gocpp::recv(r)));
         for(auto [i, gocpp_ignored] : r.Relocs)
@@ -363,7 +361,7 @@ namespace golang::pkgbits
     {
         if(err != nullptr)
         {
-            errorf("unexpected decoding error: %w"_s, err);
+            panicf("unexpected decoding error: %w"_s, err);
         }
     }
 
@@ -381,7 +379,7 @@ namespace golang::pkgbits
     {
         uint64_t x = {};
         unsigned int s = {};
-        for(auto i = 0; i < binary::MaxVarintLen64; i++)
+        for(auto [i, gocpp_ignored] : binary::MaxVarintLen64)
         {
             auto [b, err] = rec::ReadByte(gocpp::recv(r));
             if(err != nullptr)
@@ -698,6 +696,12 @@ namespace golang::pkgbits
         auto tag = CodeObj(rcode);
 
         return {path, name, tag};
+    }
+
+    // Version reports the version of the bitstream.
+    golang::golang_org::x::tools::internal::pkgbits::Version rec::Version(Decoder* w)
+    {
+        return w->common->version;
     }
 
 }

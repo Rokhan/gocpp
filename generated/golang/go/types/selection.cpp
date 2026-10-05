@@ -13,7 +13,6 @@
 
 #include "golang/bytes/buffer.h"
 #include "golang/fmt/print.h"
-#include "golang/go/types/errors.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/signature.h"
 #include "golang/go/types/tuple.h"
@@ -21,8 +20,10 @@
 #include "golang/go/types/typestring.h"
 #include "golang/io/io.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace bytes = golang::bytes;
+    namespace fmt = golang::fmt;
     namespace rec
     {
         using bytes::rec::String;
@@ -129,7 +130,7 @@ namespace golang::types
     }
 
     // Recv returns the type of x in x.f.
-    golang::types::Type rec::Recv(Selection* s)
+    golang::go::types::Type rec::Recv(Selection* s)
     {
         return s->recv;
     }
@@ -143,7 +144,7 @@ namespace golang::types
 
     // Type returns the type of x.f, which may be different from the type of f.
     // See Selection for more information.
-    golang::types::Type rec::Type(Selection* s)
+    golang::go::types::Type rec::Type(Selection* s)
     {
         //Go switch emulation
         {
@@ -155,9 +156,10 @@ namespace golang::types
             {
                 case 0:
                 {
+                    // TODO(mark) Align this with call.go if possible.
                     // The type of x.f is a method with its receiver type set
                     // to the type of x.
-                    auto sig = *gocpp::getValue<Signature*>(gocpp::getValue<Func*>(s->obj)->object.typ);
+                    auto sig = *gocpp::getValue<golang::go::types::Signature*>(gocpp::getValue<Func*>(s->obj)->object.typ);
                     auto recv = *sig.recv;
                     recv.object.typ = s->recv;
                     sig.recv = & recv;
@@ -171,8 +173,10 @@ namespace golang::types
                     // and an additional first argument with the same type as x.
                     // TODO(gri) Similar code is already in call.go - factor!
                     // TODO(gri) Compute this eagerly to avoid allocations.
-                    auto sig = *gocpp::getValue<Signature*>(gocpp::getValue<Func*>(s->obj)->object.typ);
+                    auto sig = *gocpp::getValue<golang::go::types::Signature*>(gocpp::getValue<Func*>(s->obj)->object.typ);
                     auto arg0 = *sig.recv;
+                    // stash receiver (for consistency with call.go)
+                    sig.recvold = sig.recv;
                     sig.recv = nullptr;
                     arg0.object.typ = s->recv;
                     gocpp::slice<Var*> params = {};
@@ -187,7 +191,7 @@ namespace golang::types
             }
         }
 
-        // In all other cases, the type of x.f is the type of x.
+        // In all other cases, the type of x.f is the type of f.
         return rec::Type(gocpp::recv(s->obj));
     }
 
@@ -254,7 +258,7 @@ namespace golang::types
                     k = "method expr "_s;
                     break;
                 default:
-                    unreachable();
+                    gocpp::panic("unreachable"_s);
                     break;
             }
         }
@@ -270,7 +274,7 @@ namespace golang::types
         }
         else
         {
-            WriteSignature(& buf, gocpp::getValue<Signature*>(T), qf);
+            WriteSignature(& buf, gocpp::getValue<golang::go::types::Signature*>(T), qf);
         }
         return rec::String(gocpp::recv(buf));
     }

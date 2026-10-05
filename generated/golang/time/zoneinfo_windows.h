@@ -17,11 +17,21 @@ namespace golang::time
     gocpp::string extractCAPS(gocpp::string desc);
     void initLocal();
 }
+#include "golang/internal/syscall/windows/registry/key.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
+
+namespace golang::time
+{
+    namespace registry = golang::internal::syscall::windows::registry;
+}
 #include "golang/internal/syscall/windows/registry/key.h"
 #include "golang/syscall/types_windows.h"
 
 namespace golang::time
 {
+    namespace syscall = golang::syscall;
     std::tuple<bool, gocpp::error> matchZoneKey(registry::Key zones, gocpp::string kname, gocpp::string stdname, gocpp::string dstname);
     std::tuple<gocpp::string, gocpp::string> abbrev(syscall::Timezoneinformation* z);
     int64_t pseudoUnix(int year, syscall::Systemtime* d);

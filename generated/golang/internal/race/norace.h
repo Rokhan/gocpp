@@ -10,18 +10,29 @@
 #include "gocpp/support.h"
 
 
-namespace golang::race
+namespace golang::internal::race
 {
+    void Disable();
+    void Enable();
+    int Errors();
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     void Acquire(gocpp::unsafe_pointer addr);
     void Release(gocpp::unsafe_pointer addr);
     void ReleaseMerge(gocpp::unsafe_pointer addr);
-    void Disable();
-    void Enable();
     void Read(gocpp::unsafe_pointer addr);
+    void ReadPC(gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
     void Write(gocpp::unsafe_pointer addr);
+    void WritePC(gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
     void ReadRange(gocpp::unsafe_pointer addr, int len);
     void WriteRange(gocpp::unsafe_pointer addr, int len);
-    int Errors();
+}
+#include "golang/internal/abi/type.fwd.h"
+
+namespace golang::internal::race
+{
+    namespace abi = golang::internal::abi;
+    void ReadObjectPC(abi::Type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
+    void WriteObjectPC(abi::Type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
 
     namespace rec
     {

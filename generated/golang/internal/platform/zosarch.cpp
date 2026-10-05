@@ -13,7 +13,7 @@
 
 #include "golang/internal/platform/supported.h"
 
-namespace golang::platform
+namespace golang::internal::platform
 {
     namespace rec
     {
@@ -61,7 +61,6 @@ namespace golang::platform
         {"openbsd"_s, "amd64"_s},
         {"openbsd"_s, "arm"_s},
         {"openbsd"_s, "arm64"_s},
-        {"openbsd"_s, "mips64"_s},
         {"openbsd"_s, "ppc64"_s},
         {"openbsd"_s, "riscv64"_s},
         {"plan9"_s, "386"_s},
@@ -71,7 +70,6 @@ namespace golang::platform
         {"wasip1"_s, "wasm"_s},
         {"windows"_s, "386"_s},
         {"windows"_s, "amd64"_s},
-        {"windows"_s, "arm"_s},
         {"windows"_s, "arm64"_s}
     };
     gocpp::map<OSArch, osArchInfo> distInfo = gocpp::map<OSArch, osArchInfo> {
@@ -115,6 +113,7 @@ namespace golang::platform
     }) },
         { {"freebsd"_s, "riscv64"_s}, gocpp::Init<>([](auto& x) {
         x.CgoSupported = true;
+        x.Broken = true;
     }) },
         { {"illumos"_s, "amd64"_s}, gocpp::Init<>([](auto& x) {
         x.CgoSupported = true;
@@ -157,7 +156,9 @@ namespace golang::platform
         { {"linux"_s, "mipsle"_s}, gocpp::Init<>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"linux"_s, "ppc64"_s}, {} },
+        { {"linux"_s, "ppc64"_s}, gocpp::Init<>([](auto& x) {
+        x.CgoSupported = true;
+    }) },
         { {"linux"_s, "ppc64le"_s}, gocpp::Init<>([](auto& x) {
         x.CgoSupported = true;
     }) },
@@ -195,13 +196,9 @@ namespace golang::platform
         { {"openbsd"_s, "arm64"_s}, gocpp::Init<>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"openbsd"_s, "mips64"_s}, gocpp::Init<>([](auto& x) {
-        x.CgoSupported = true;
-        x.Broken = true;
-    }) },
         { {"openbsd"_s, "ppc64"_s}, {} },
         { {"openbsd"_s, "riscv64"_s}, gocpp::Init<>([](auto& x) {
-        x.Broken = true;
+        x.CgoSupported = true;
     }) },
         { {"plan9"_s, "386"_s}, {} },
         { {"plan9"_s, "amd64"_s}, {} },
@@ -218,7 +215,6 @@ namespace golang::platform
         x.CgoSupported = true;
         x.FirstClass = true;
     }) },
-        { {"windows"_s, "arm"_s}, {} },
         { {"windows"_s, "arm64"_s}, gocpp::Init<>([](auto& x) {
         x.CgoSupported = true;
     }) }

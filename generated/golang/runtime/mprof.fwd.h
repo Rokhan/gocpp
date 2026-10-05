@@ -8,16 +8,27 @@ namespace golang::runtime
 {
     // size of bucket hash table
     const long buckHashSize = 179999;
-    // maxStack is the max depth of stack to record in bucket.
-    // Note that it's only used internally as a guard against
-    // wildly out-of-bounds slicing of the PCs that come after
-    // a bucket struct, and it could increase in the future.
-    const long maxStack = 32;
+    // maxSkip is to account for deferred inline expansion
+    // when using frame pointer unwinding. We record the stack
+    // with "physical" frame pointers but handle skipping "logical"
+    // frames at some point after collecting the stack. So
+    // we need extra space in order to avoid getting fewer than the
+    // desired maximum number of frames after expansion.
+    // This should be at least as large as the largest skip value
+    // used for profiling; otherwise stacks may be truncated inconsistently
+    const long maxSkip = 6;
+    // maxProfStackDepth is the highest valid value for debug.profstackdepth.
+    // It's used for the bucket.stk func.
+    // TODO(fg): can we get rid of this?
+    const long maxProfStackDepth = 1024;
     using bucketType = int;
+    struct bucket;
     struct memRecord;
     struct memRecordCycle;
     struct blockRecord;
     struct GoTag_buckhashArray;
+    struct mProfCycleHolder;
+    struct mLockProfile;
     struct StackRecord;
     struct MemProfileRecord;
     struct BlockProfileRecord;
@@ -31,16 +42,12 @@ namespace golang::runtime
     const goroutineProfileState goroutineProfileInProgress = 1;
     const goroutineProfileState goroutineProfileSatisfied = 2;
 }
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
 
 namespace golang::runtime
 {
-    struct bucket;
+    namespace atomic = golang::internal::runtime::atomic;
     using buckhashArray = gocpp::defined<gocpp::array<atomic::UnsafePointer, buckHashSize>, GoTag_buckhashArray>;
-    struct mProfCycleHolder;
-    struct lockTimer;
-    struct mLockProfile;
     using goroutineProfileStateHolder = atomic::Uint32;
 }

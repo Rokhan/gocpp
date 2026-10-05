@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
     // Registry value types.
     const long NONE = 0;

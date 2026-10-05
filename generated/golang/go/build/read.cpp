@@ -16,25 +16,46 @@
 #include "golang/errors/errors.h"
 #include "golang/fmt/errors.h"
 #include "golang/go/ast/ast.h"
+#include "golang/go/ast/directive.h"
 #include "golang/go/build/build.h"
 #include "golang/go/parser/interface.h"
 #include "golang/go/scanner/errors.h"
+#include "golang/go/scanner/scanner.h"
 #include "golang/go/token/position.h"
+#include "golang/go/token/token.h"
 #include "golang/io/io.h"
 #include "golang/strconv/quote.h"
 #include "golang/strings/strings.h"
 #include "golang/unicode/graphic.h"
 #include "golang/unicode/utf8/utf8.h"
 
-namespace golang::build
+namespace golang::go::build
 {
+    namespace ast = golang::go::ast;
+    namespace bufio = golang::bufio;
+    namespace bytes = golang::bytes;
+    namespace errors = golang::errors;
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace parser = golang::go::parser;
+    namespace scanner = golang::go::scanner;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
+        using ast::rec::ParseArgs;
         using ast::rec::Pos;
         using bufio::rec::Discard;
         using bufio::rec::Peek;
+        using bufio::rec::Read;
         using bufio::rec::ReadByte;
         using scanner::rec::Error;
+        using scanner::rec::Init;
+        using scanner::rec::Scan;
+        using token::rec::AddFile;
         using token::rec::Position;
     }
 
@@ -152,50 +173,32 @@ namespace golang::build
         return c;
     }
 
-    // readByteNoBuf is like readByte but doesn't buffer the byte.
-    // It exhausts r.buf before reading from r.b.
-    unsigned char rec::readByteNoBuf(importReader* r)
+    // readRest reads the entire rest of the file into r.buf.
+    void rec::readRest(importReader* r)
     {
-        unsigned char c = {};
-        gocpp::error err = {};
-        if(len(r->buf) > 0)
+        for(; ; )
         {
-            c = r->buf[0];
-            r->buf = r->buf.make_slice(1);
-        }
-        else
-        {
-            std::tie(c, err) = rec::ReadByte(gocpp::recv(r->b));
-            if(err == nullptr && c == 0)
+            if(len(r->buf) == cap(r->buf))
             {
-                err = errNUL;
+                // Grow the buffer
+                r->buf = append(r->buf, 0).make_slice(0, len(r->buf));
+            }
+            auto [n, err] = rec::Read(gocpp::recv(r->b), r->buf.make_slice(len(r->buf), cap(r->buf)));
+            r->buf = r->buf.make_slice(0, len(r->buf) + n);
+            if(err != nullptr)
+            {
+                if(err == io::go_EOF)
+                {
+                    r->eof = true;
+                }
+                else
+                if(r->err == nullptr)
+                {
+                    r->err = err;
+                }
+                break;
             }
         }
-
-        if(err != nullptr)
-        {
-            if(err == io::go_EOF)
-            {
-                r->eof = true;
-            }
-            else
-            if(r->err == nullptr)
-            {
-                r->err = err;
-            }
-            return 0;
-        }
-        r->pos.Offset++;
-        if(c == '\n')
-        {
-            r->pos.Line++;
-            r->pos.Column = 1;
-        }
-        else
-        {
-            r->pos.Column++;
-        }
-        return c;
     }
 
     // peekByte returns the next byte from the input reader but does not advance beyond it.
@@ -292,216 +295,6 @@ namespace golang::build
         auto c = rec::peekByte(gocpp::recv(r), skipSpace);
         r->peek = 0;
         return c;
-    }
-
-    gocpp::slice<unsigned char> goEmbed = gocpp::slice<unsigned char>("go:embed"_s);
-    // findEmbed advances the input reader to the next //go:embed comment.
-    // It reports whether it found a comment.
-    // (Otherwise it found an error or EOF.)
-    bool rec::findEmbed(importReader* r, bool first)
-    {
-        // The import block scan stopped after a non-space character,
-        // so the reader is not at the start of a line on the first call.
-        // After that, each //go:embed extraction leaves the reader
-        // at the end of a line.
-        auto startLine = ! first;
-        unsigned char c = {};
-        for(; r->err == nullptr && ! r->eof; )
-        {
-            c = rec::readByteNoBuf(gocpp::recv(r));
-            Reswitch:
-            //Go switch emulation
-            {
-                auto condition = c;
-                int conditionId = -1;
-                if(condition == '\n') { conditionId = 0; }
-                else if(condition == ' ') { conditionId = 1; }
-                else if(condition == '\t') { conditionId = 2; }
-                else if(condition == '"') { conditionId = 3; }
-                else if(condition == '`') { conditionId = 4; }
-                else if(condition == '\'') { conditionId = 5; }
-                else if(condition == '/') { conditionId = 6; }
-                switch(conditionId)
-                {
-                    default:
-                        if(false) {
-                        Reswitch_break_0:
-                            break;
-                        }
-                        startLine = false;
-                        break;
-
-                    case 0:
-                        if(false) {
-                        Reswitch_break_0:
-                            break;
-                        }
-                        startLine = true;
-                        break;
-
-                    // leave startLine alone
-                    case 1:
-                    case 2:
-                        if(false) {
-                        Reswitch_break_1:
-                            break;
-                        }
-                        break;
-                    case 3:
-                        if(false) {
-                        Reswitch_break_3:
-                            break;
-                        }
-                        startLine = false;
-                        for(; r->err == nullptr; )
-                        {
-                            if(r->eof)
-                            {
-                                rec::syntaxError(gocpp::recv(r));
-                            }
-                            c = rec::readByteNoBuf(gocpp::recv(r));
-                            if(c == '\\')
-                            {
-                                rec::readByteNoBuf(gocpp::recv(r));
-                                if(r->err != nullptr)
-                                {
-                                    rec::syntaxError(gocpp::recv(r));
-                                    return false;
-                                }
-                                continue;
-                            }
-                            if(c == '"')
-                            {
-                                c = rec::readByteNoBuf(gocpp::recv(r));
-                                goto Reswitch;
-                            }
-                        }
-                        goto Reswitch;
-                        break;
-
-                    case 4:
-                        if(false) {
-                        Reswitch_break_4:
-                            break;
-                        }
-                        startLine = false;
-                        for(; r->err == nullptr; )
-                        {
-                            if(r->eof)
-                            {
-                                rec::syntaxError(gocpp::recv(r));
-                            }
-                            c = rec::readByteNoBuf(gocpp::recv(r));
-                            if(c == '`')
-                            {
-                                c = rec::readByteNoBuf(gocpp::recv(r));
-                                goto Reswitch;
-                            }
-                        }
-                        break;
-
-                    case 5:
-                        if(false) {
-                        Reswitch_break_5:
-                            break;
-                        }
-                        startLine = false;
-                        for(; r->err == nullptr; )
-                        {
-                            if(r->eof)
-                            {
-                                rec::syntaxError(gocpp::recv(r));
-                            }
-                            c = rec::readByteNoBuf(gocpp::recv(r));
-                            if(c == '\\')
-                            {
-                                rec::readByteNoBuf(gocpp::recv(r));
-                                if(r->err != nullptr)
-                                {
-                                    rec::syntaxError(gocpp::recv(r));
-                                    return false;
-                                }
-                                continue;
-                            }
-                            if(c == '\'')
-                            {
-                                c = rec::readByteNoBuf(gocpp::recv(r));
-                                goto Reswitch;
-                            }
-                        }
-                        break;
-
-                    case 6:
-                        if(false) {
-                        Reswitch_break_6:
-                            break;
-                        }
-                        c = rec::readByteNoBuf(gocpp::recv(r));
-                        //Go switch emulation
-                        {
-                            auto condition = c;
-                            int conditionId = -1;
-                            if(condition == '*') { conditionId = 0; }
-                            else if(condition == '/') { conditionId = 1; }
-                            switch(conditionId)
-                            {
-                                default:
-                                    startLine = false;
-                                    goto Reswitch;
-                                    break;
-
-                                case 0:
-                                    unsigned char c1 = {};
-                                    for(; (c != '*' || c1 != '/') && r->err == nullptr; )
-                                    {
-                                        if(r->eof)
-                                        {
-                                            rec::syntaxError(gocpp::recv(r));
-                                        }
-                                        std::tie(c, c1) = std::tuple{c1, rec::readByteNoBuf(gocpp::recv(r))};
-                                    }
-                                    startLine = false;
-                                    break;
-
-                                case 1:
-                                    if(startLine)
-                                    {
-                                        // Try to read this as a //go:embed comment.
-                                        for(auto [i, gocpp_ignored] : goEmbed)
-                                        {
-                                            c = rec::readByteNoBuf(gocpp::recv(r));
-                                            if(c != goEmbed[i])
-                                            {
-                                                goto SkipSlashSlash;
-                                            }
-                                        }
-                                        c = rec::readByteNoBuf(gocpp::recv(r));
-                                        if(c == ' ' || c == '\t')
-                                        {
-                                            // Found one!
-                                            return true;
-                                        }
-                                    }
-                                    SkipSlashSlash:
-                                    for(; c != '\n' && r->err == nullptr && ! r->eof; )
-                                    {
-                                        if(false) {
-                                        SkipSlashSlash_continue:
-                                            continue;
-                                        SkipSlashSlash_break:
-                                            break;
-                                        }
-                                        c = rec::readByteNoBuf(gocpp::recv(r));
-                                    }
-                                    startLine = true;
-                                    break;
-                            }
-                        }
-                        break;
-                }
-            }
-        }
-        return false;
     }
 
     // readKeyword reads the given keyword from the input.
@@ -608,6 +401,16 @@ namespace golang::build
 
     // readComments is like io.ReadAll, except that it only reads the leading
     // block of comments in the file.
+    //
+    // readComments should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bazelbuild/bazel-gazelle
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname readComments
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> readComments(io::Reader f)
     {
         auto r = newImportReader(""_s, f);
@@ -665,10 +468,7 @@ namespace golang::build
         if(r->err == errSyntax)
         {
             r->err = nullptr;
-            for(; r->err == nullptr && ! r->eof; )
-            {
-                rec::readByte(gocpp::recv(r));
-            }
+            rec::readRest(gocpp::recv(r));
             info->header = r->buf;
         }
         if(r->err != nullptr)
@@ -682,7 +482,7 @@ namespace golang::build
         }
 
         // Parse file header & record imports.
-        std::tie(info->parsed, info->parseErr) = parser::ParseFile(info->fset, info->name, info->header, parser::ImportsOnly | parser::ParseComments);
+        std::tie(info->parsed, info->parseErr) = parser::ParseFile(info->fset, info->name, info->header, parser::ImportsOnly | parser::ParseComments | parser::SkipObjectResolution);
         if(info->parseErr != nullptr)
         {
             return nullptr;
@@ -713,7 +513,7 @@ namespace golang::build
                 {
                     // The parser used to return a parse error for invalid import paths, but
                     // no longer does, so check for and create the error here instead.
-                    info->parseErr = gocpp::Init<scanner::Error>([=](auto& x) {
+                    info->parseErr = gocpp::InitPtr<scanner::Error>([=](auto& x) {
                         x.Pos = rec::Position(gocpp::recv(info->fset), rec::Pos(gocpp::recv(spec)));
                         x.Msg = "invalid import path: "_s + path;
                     });
@@ -760,27 +560,27 @@ namespace golang::build
         // will reject them. They can be (and have already been) ignored.
         if(hasEmbed)
         {
-            gocpp::slice<unsigned char> line = {};
-            for(auto first = true; rec::findEmbed(gocpp::recv(r), first); first = false)
+            rec::readRest(gocpp::recv(r));
+            auto fset = token::NewFileSet();
+            auto file = rec::AddFile(gocpp::recv(fset), r->pos.Filename, - 1, len(r->buf));
+            scanner::Scanner sc = {};
+            rec::Init(gocpp::recv(sc), file, r->buf, nullptr, scanner::ScanComments);
+            for(; ; )
             {
-                line = line.make_slice(0, 0);
-                auto pos = r->pos;
-                for(; ; )
+                auto [pos, tok, lit] = rec::Scan(gocpp::recv(sc));
+                if(tok == token::go_EOF)
                 {
-                    auto c = rec::readByteNoBuf(gocpp::recv(r));
-                    if(c == '\n' || r->err != nullptr || r->eof)
-                    {
-                        break;
-                    }
-                    line = append(line, c);
+                    break;
                 }
-                // Add args if line is well-formed.
-                // Ignore badly-formed lines - the compiler will report them when it finds them,
-                // and we can pretend they are not there to help go list succeed with what it knows.
-                auto [embs, err] = parseGoEmbed(gocpp::string(line), pos);
-                if(err == nullptr)
+                if(tok == token::COMMENT && strings::HasPrefix(lit, "//go:embed"_s))
                 {
-                    info->embeds = append(info->embeds, embs);
+                    // Ignore badly-formed lines - the compiler will report them when it finds them,
+                    // and we can pretend they are not there to help go list succeed with what it knows.
+                    auto [embs, err] = parseGoEmbed(fset, pos, lit);
+                    if(err == nullptr)
+                    {
+                        info->embeds = append(info->embeds, embs);
+                    }
                 }
             }
         }
@@ -805,116 +605,25 @@ namespace golang::build
         return s != ""_s;
     }
 
-    // parseGoEmbed parses the text following "//go:embed" to extract the glob patterns.
+    // parseGoEmbed parses a "//go:embed" to extract the glob patterns.
     // It accepts unquoted space-separated patterns as well as double-quoted and back-quoted Go strings.
-    // This is based on a similar function in cmd/compile/internal/gc/noder.go;
-    // this version calculates position information as well.
-    std::tuple<gocpp::slice<fileEmbed>, gocpp::error> parseGoEmbed(gocpp::string args, token::Position pos)
+    // This must match the behavior of cmd/compile/internal/noder.go.
+    std::tuple<gocpp::slice<fileEmbed>, gocpp::error> parseGoEmbed(token::FileSet* fset, token::Pos pos, gocpp::string comment)
     {
-        auto trimBytes = [=](int n) mutable -> void
+        auto [dir, ok] = ast::ParseDirective(pos, comment);
+        if(! ok || dir.Tool != "go"_s || dir.Name != "embed"_s)
         {
-            pos.Offset += n;
-            pos.Column += utf8::RuneCountInString(args.make_slice(0, n));
-            args = args.make_slice(n);
-        };
-        auto trimSpace = [=]() mutable -> void
+            return {nullptr, nullptr};
+        }
+        auto [args, err] = rec::ParseArgs(gocpp::recv(dir));
+        if(err != nullptr)
         {
-            auto trim = strings::TrimLeftFunc(args, unicode::IsSpace);
-            trimBytes(len(args) - len(trim));
-        };
-
+            return {nullptr, err};
+        }
         gocpp::slice<fileEmbed> list = {};
-        for(trimSpace(); args != ""_s; trimSpace())
+        for(auto [gocpp_ignored, arg] : args)
         {
-            gocpp::string path = {};
-            auto pathPos = pos;
-            Switch:
-            //Go switch emulation
-            {
-                auto condition = args[0];
-                int conditionId = -1;
-                if(condition == '`') { conditionId = 0; }
-                else if(condition == '"') { conditionId = 1; }
-                switch(conditionId)
-                {
-                    default:
-                    {
-                        if(false) {
-                        Switch_break_0:
-                            break;
-                        }
-                        auto i = len(args);
-                        for(auto [j, c] : args)
-                        {
-                            if(unicode::IsSpace(c))
-                            {
-                                i = j;
-                                break;
-                            }
-                        }
-                        path = args.make_slice(0, i);
-                        trimBytes(i);
-                        break;
-                    }
-
-                    case 0:
-                        if(false) {
-                        Switch_break_0:
-                            break;
-                        }
-                        bool ok = {};
-                        std::tie(path, std::ignore, ok) = strings::Cut(args.make_slice(1), "`"_s);
-                        if(! ok)
-                        {
-                            return {nullptr, mocklib::Errorf("invalid quoted string in //go:embed: %s"_s, args)};
-                        }
-                        trimBytes(1 + len(path) + 1);
-                        break;
-
-                    case 1:
-                    {
-                        if(false) {
-                        Switch_break_1:
-                            break;
-                        }
-                        auto i = 1;
-                        for(; i < len(args); i++)
-                        {
-                            if(args[i] == '\\')
-                            {
-                                i++;
-                                continue;
-                            }
-                            if(args[i] == '"')
-                            {
-                                auto [q, err] = strconv::Unquote(args.make_slice(0, i + 1));
-                                if(err != nullptr)
-                                {
-                                    return {nullptr, mocklib::Errorf("invalid quoted string in //go:embed: %s"_s, args.make_slice(0, i + 1))};
-                                }
-                                path = q;
-                                trimBytes(i + 1);
-                                goto Switch_break_1;
-                            }
-                        }
-                        if(i >= len(args))
-                        {
-                            return {nullptr, mocklib::Errorf("invalid quoted string in //go:embed: %s"_s, args)};
-                        }
-                        break;
-                    }
-                }
-            }
-
-            if(args != ""_s)
-            {
-                auto [r, gocpp_id_0] = utf8::DecodeRuneInString(args);
-                if(! unicode::IsSpace(r))
-                {
-                    return {nullptr, mocklib::Errorf("invalid quoted string in //go:embed: %s"_s, args)};
-                }
-            }
-            list = append(list, fileEmbed {path, pathPos});
+            list = append(list, fileEmbed {arg.Arg, rec::Position(gocpp::recv(fset), arg.Pos)});
         }
         return {list, nullptr};
     }

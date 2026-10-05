@@ -25,6 +25,19 @@ namespace golang::fmt
     {
         return Errorf(format, gocpp::ToSlice<go_any>(value, a...));
     }
+    gocpp::error errorf(gocpp::string format, gocpp::slice<go_any> a);
+    
+    template<typename... Args>
+    gocpp::error errorf(gocpp::string format, Args... a)
+    {
+        return errorf(format, gocpp::ToSlice<go_any>(a...));
+    }
+    
+    template<typename... Args>
+    gocpp::error errorf(gocpp::string format, go_any value, Args... a)
+    {
+        return errorf(format, gocpp::ToSlice<go_any>(value, a...));
+    }
     struct wrapError
     {
         gocpp::string msg{};

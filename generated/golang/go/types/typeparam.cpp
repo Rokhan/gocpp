@@ -23,11 +23,11 @@
 #include "golang/go/types/typeset.h"
 #include "golang/go/types/typestring.h"
 #include "golang/go/types/typeterm.h"
-#include "golang/go/types/under.h"
 #include "golang/sync/atomic/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace atomic = golang::sync::atomic;
     namespace rec
     {
         using atomic::rec::Add;
@@ -44,7 +44,10 @@ namespace golang::types
         return uint64_t(rec::Add(gocpp::recv(lastID), 1));
     }
 
-    // A TypeParam represents a type parameter type.
+    // A TypeParam represents the type of a type parameter in a generic declaration.
+    //
+    // A TypeParam has a name; use the [TypeParam.Obj] method to access
+    // its [TypeName] object.
     
     template<typename T> requires gocpp::GoStruct<T>
     TypeParam::operator T()
@@ -87,18 +90,18 @@ namespace golang::types
     }
 
     // NewTypeParam returns a new TypeParam. Type parameters may be set on a Named
-    // or Signature type by calling SetTypeParams. Setting a type parameter on more
-    // than one type will result in a panic.
+    // type by calling SetTypeParams. Setting a type parameter on more than one type
+    // will result in a panic.
     //
     // The constraint argument can be nil, and set later via SetConstraint. If the
     // constraint is non-nil, it must be fully defined.
-    TypeParam* NewTypeParam(TypeName* obj, golang::types::Type constraint)
+    TypeParam* NewTypeParam(TypeName* obj, golang::go::types::Type constraint)
     {
         return rec::newTypeParam(gocpp::recv((Checker*)(nullptr)), obj, constraint);
     }
 
     // check may be nil
-    TypeParam* rec::newTypeParam(Checker* check, TypeName* obj, golang::types::Type constraint)
+    TypeParam* rec::newTypeParam(Checker* check, TypeName* obj, golang::go::types::Type constraint)
     {
         // Always increment lastID, even if it is not used.
         auto id = nextID();
@@ -146,7 +149,7 @@ namespace golang::types
     }
 
     // Constraint returns the type constraint specified for t.
-    golang::types::Type rec::Constraint(TypeParam* t)
+    golang::go::types::Type rec::Constraint(TypeParam* t)
     {
         return t->bound;
     }
@@ -157,7 +160,7 @@ namespace golang::types
     // fully defined, and before using the type parameter in any way other than to
     // form other types. Once SetConstraint returns the receiver, t is safe for
     // concurrent use.
-    void rec::SetConstraint(TypeParam* t, golang::types::Type bound)
+    void rec::SetConstraint(TypeParam* t, golang::go::types::Type bound)
     {
         if(bound == nullptr)
         {
@@ -169,7 +172,11 @@ namespace golang::types
         rec::iface(gocpp::recv(t));
     }
 
-    golang::types::Type rec::Underlying(TypeParam* t)
+    // Underlying returns the [underlying type] of the type parameter t, which is
+    // the underlying type of its constraint. This type is always an interface.
+    //
+    // [underlying type]: https://go.dev/ref/spec#Underlying_types.
+    golang::go::types::Type rec::Underlying(TypeParam* t)
     {
         return rec::iface(gocpp::recv(t));
     }
@@ -194,7 +201,7 @@ namespace golang::types
         Interface* ityp = {};
         //Go type switch emulation
         {
-            const auto& gocpp_id_0 = gocpp::type_info(types::under(bound));
+            const auto& gocpp_id_0 = gocpp::type_info(rec::Underlying(gocpp::recv(bound)));
             int conditionId = -1;
             if(gocpp_id_0 == typeid(types::Basic*)) { conditionId = 0; }
             else if(gocpp_id_0 == typeid(types::Interface*)) { conditionId = 1; }
@@ -202,7 +209,7 @@ namespace golang::types
             {
                 case 0:
                 {
-                    types::Basic* u = gocpp::any_cast<types::Basic*>(types::under(bound));
+                    types::Basic* u = gocpp::any_cast<types::Basic*>(rec::Underlying(gocpp::recv(bound)));
                     if(! types::isValid(u))
                     {
                         // error is reported elsewhere
@@ -212,7 +219,7 @@ namespace golang::types
                 }
                 case 1:
                 {
-                    types::Interface* u = gocpp::any_cast<types::Interface*>(types::under(bound));
+                    types::Interface* u = gocpp::any_cast<types::Interface*>(rec::Underlying(gocpp::recv(bound)));
                     if(isTypeParam(bound))
                     {
                         // error is reported in Checker.collectTypeParams
@@ -227,7 +234,7 @@ namespace golang::types
         // If we don't have an interface, wrap constraint into an implicit interface.
         if(ityp == nullptr)
         {
-            ityp = NewInterfaceType(nullptr, gocpp::slice<golang::types::Type> {bound});
+            ityp = NewInterfaceType(nullptr, gocpp::slice<golang::go::types::Type> {bound});
             ityp->implicit = true;
             // update t.bound for next time (optimization)
             t->bound = ityp;
@@ -252,17 +259,18 @@ namespace golang::types
     // is calls f with the specific type terms of t's constraint and reports whether
     // all calls to f returned true. If there are no specific terms, is
     // returns the result of f(nil).
-    bool rec::is(TypeParam* t, std::function<bool (term* _1)> f)
+    bool rec::is(TypeParam* t, std::function<bool (golang::go::types::term* _1)> f)
     {
         return rec::is(gocpp::recv(rec::typeSet(gocpp::recv(rec::iface(gocpp::recv(t))))), f);
     }
 
-    // underIs calls f with the underlying types of the specific type terms
-    // of t's constraint and reports whether all calls to f returned true.
-    // If there are no specific terms, underIs returns the result of f(nil).
-    bool rec::underIs(TypeParam* t, std::function<bool (golang::types::Type _1)> f)
+    // typeset reports whether f(t, y) is true for all (type/underlying type) pairs of the
+    // specific type terms of t's constraint.
+    // If there are no specific terms, typeset returns f(nil, nil).
+    // In any case, typeset is guaranteed to call f at least once.
+    bool rec::typeset(TypeParam* t, std::function<bool (golang::go::types::Type t, golang::go::types::Type u)> f)
     {
-        return rec::underIs(gocpp::recv(rec::typeSet(gocpp::recv(rec::iface(gocpp::recv(t))))), f);
+        return rec::all(gocpp::recv(rec::typeSet(gocpp::recv(rec::iface(gocpp::recv(t))))), f);
     }
 
 }

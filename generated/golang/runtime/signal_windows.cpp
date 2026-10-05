@@ -12,19 +12,19 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/syscall/windows/defs_windows.h"
+#include "golang/internal/runtime/syscall/windows/defs_windows_amd64.h"
 #include "golang/runtime/arena.h"
 #include "golang/runtime/cgo.h"
-#include "golang/runtime/defs_windows.h"
-#include "golang/runtime/defs_windows_amd64.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/preempt.h"
 #include "golang/runtime/print.h"
 #include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/signal_windows_amd64.h"
 #include "golang/runtime/stack.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/symtab.h"
@@ -32,38 +32,48 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace windows = golang::internal::runtime::syscall::windows;
     namespace rec
     {
         using atomic::rec::Load;
         using atomic::rec::Store;
+        using windows::rec::Ctx;
+        using windows::rec::LR;
+        using windows::rec::PC;
+        using windows::rec::PushCall;
+        using windows::rec::SP;
+        using windows::rec::SetPC;
+        using windows::rec::SetSP;
     }
 
     void preventErrorDialogs()
     {
-        auto errormode = stdcall0(_GetErrorMode);
-        stdcall1(_SetErrorMode, errormode | _SEM_FAILCRITICALERRORS | _SEM_NOGPFAULTERRORBOX | _SEM_NOOPENFILEERRORBOX);
+        auto errormode = stdcall(_GetErrorMode);
+        stdcall(_SetErrorMode, errormode | windows::SEM_FAILCRITICALERRORS | windows::SEM_NOGPFAULTERRORBOX | windows::SEM_NOOPENFILEERRORBOX);
 
         // Disable WER fault reporting UI.
         // Do this even if WER is disabled as a whole,
         // as WER might be enabled later with setTraceback("wer")
         // and we still want the fault reporting UI to be disabled if this happens.
         uintptr_t werflags = {};
-        stdcall2(_WerGetFlags, currentProcess, uintptr_t(gocpp::unsafe_pointer(& werflags)));
-        stdcall1(_WerSetFlags, werflags | _WER_FAULT_REPORTING_NO_UI);
+        stdcall(_WerGetFlags, windows::CurrentProcess, uintptr_t(gocpp::unsafe_pointer(& werflags)));
+        stdcall(_WerSetFlags, werflags | windows::WER_FAULT_REPORTING_NO_UI);
     }
 
     // enableWER re-enables Windows error reporting without fault reporting UI.
     void enableWER()
     {
         // re-enable Windows Error Reporting
-        auto errormode = stdcall0(_GetErrorMode);
-        if(errormode & _SEM_NOGPFAULTERRORBOX != 0)
+        auto errormode = stdcall(_GetErrorMode);
+        if(errormode & windows::SEM_NOGPFAULTERRORBOX != 0)
         {
-            stdcall1(_SetErrorMode, errormode ^ _SEM_NOGPFAULTERRORBOX);
+            stdcall(_SetErrorMode, errormode ^ windows::SEM_NOGPFAULTERRORBOX);
         }
     }
 
-    // in sys_windows_386.s, sys_windows_amd64.s, sys_windows_arm.s, and sys_windows_arm64.s
+    // in sys_windows_386.s, sys_windows_amd64.s, and sys_windows_arm64.s
     void exceptiontramp()
     /* convertBlockStmt, nil block */;
 
@@ -81,17 +91,17 @@ namespace golang::runtime
 
     void initExceptionHandler()
     {
-        stdcall2(_AddVectoredExceptionHandler, 1, abi::FuncPCABI0(exceptiontramp));
+        stdcall(_AddVectoredExceptionHandler, 1, abi::FuncPCABI0(exceptiontramp));
         if(GOARCH == "386"_s)
         {
             // use SetUnhandledExceptionFilter for windows-386.
             // note: SetUnhandledExceptionFilter handler won't be called, if debugging.
-            stdcall1(_SetUnhandledExceptionFilter, abi::FuncPCABI0(lastcontinuetramp));
+            stdcall(_SetUnhandledExceptionFilter, abi::FuncPCABI0(lastcontinuetramp));
         }
         else
         {
-            stdcall2(_AddVectoredContinueHandler, 1, abi::FuncPCABI0(firstcontinuetramp));
-            stdcall2(_AddVectoredContinueHandler, 0, abi::FuncPCABI0(lastcontinuetramp));
+            stdcall(_AddVectoredContinueHandler, 1, abi::FuncPCABI0(firstcontinuetramp));
+            stdcall(_AddVectoredContinueHandler, 0, abi::FuncPCABI0(lastcontinuetramp));
         }
     }
 
@@ -99,14 +109,13 @@ namespace golang::runtime
     // by calling runtime.abort function.
     //
     //go:nosplit
-    bool isAbort(context* r)
+    bool isAbort(windows::Context* r)
     {
-        auto pc = rec::ip(gocpp::recv(r));
-        if(GOARCH == "386"_s || GOARCH == "amd64"_s || GOARCH == "arm"_s)
+        auto pc = rec::PC(gocpp::recv(r));
+        if(GOARCH == "386"_s || GOARCH == "amd64"_s)
         {
             // In the case of an abort, the exception IP is one byte after
-            // the INT3 (this differs from UNIX OSes). Note that on ARM,
-            // this means that the exception IP is no longer aligned.
+            // the INT3 (this differs from UNIX OSes).
             pc--;
         }
         return isAbortPC(pc);
@@ -119,12 +128,12 @@ namespace golang::runtime
     // because of a stack overflow.
     //
     //go:nosplit
-    bool isgoexception(exceptionrecord* info, context* r)
+    bool isgoexception(windows::ExceptionRecord* info, windows::Context* r)
     {
         // Only handle exception if executing instructions in Go binary
         // (not Windows library code).
         // TODO(mwhudson): needs to loop to support shared libs
-        if(rec::ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::ip(gocpp::recv(r)))
+        if(rec::PC(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::PC(gocpp::recv(r)))
         {
             return false;
         }
@@ -132,19 +141,19 @@ namespace golang::runtime
         // Go will only handle some exceptions.
         //Go switch emulation
         {
-            auto condition = info->exceptioncode;
+            auto condition = info->ExceptionCode;
             int conditionId = -1;
-            if(condition == _EXCEPTION_ACCESS_VIOLATION) { conditionId = 0; }
-            else if(condition == _EXCEPTION_IN_PAGE_ERROR) { conditionId = 1; }
-            else if(condition == _EXCEPTION_INT_DIVIDE_BY_ZERO) { conditionId = 2; }
-            else if(condition == _EXCEPTION_INT_OVERFLOW) { conditionId = 3; }
-            else if(condition == _EXCEPTION_FLT_DENORMAL_OPERAND) { conditionId = 4; }
-            else if(condition == _EXCEPTION_FLT_DIVIDE_BY_ZERO) { conditionId = 5; }
-            else if(condition == _EXCEPTION_FLT_INEXACT_RESULT) { conditionId = 6; }
-            else if(condition == _EXCEPTION_FLT_OVERFLOW) { conditionId = 7; }
-            else if(condition == _EXCEPTION_FLT_UNDERFLOW) { conditionId = 8; }
-            else if(condition == _EXCEPTION_BREAKPOINT) { conditionId = 9; }
-            else if(condition == _EXCEPTION_ILLEGAL_INSTRUCTION) { conditionId = 10; }
+            if(condition == windows::EXCEPTION_ACCESS_VIOLATION) { conditionId = 0; }
+            else if(condition == windows::EXCEPTION_IN_PAGE_ERROR) { conditionId = 1; }
+            else if(condition == windows::EXCEPTION_INT_DIVIDE_BY_ZERO) { conditionId = 2; }
+            else if(condition == windows::EXCEPTION_INT_OVERFLOW) { conditionId = 3; }
+            else if(condition == windows::EXCEPTION_FLT_DENORMAL_OPERAND) { conditionId = 4; }
+            else if(condition == windows::EXCEPTION_FLT_DIVIDE_BY_ZERO) { conditionId = 5; }
+            else if(condition == windows::EXCEPTION_FLT_INEXACT_RESULT) { conditionId = 6; }
+            else if(condition == windows::EXCEPTION_FLT_OVERFLOW) { conditionId = 7; }
+            else if(condition == windows::EXCEPTION_FLT_UNDERFLOW) { conditionId = 8; }
+            else if(condition == windows::EXCEPTION_BREAKPOINT) { conditionId = 9; }
+            else if(condition == windows::EXCEPTION_ILLEGAL_INSTRUCTION) { conditionId = 10; }
             switch(conditionId)
             {
                 default:
@@ -203,15 +212,15 @@ namespace golang::runtime
     // It is nosplit for the same reason as exceptionhandler.
     //
     //go:nosplit
-    int32_t sigtrampgo(exceptionpointers* ep, int kind)
+    int32_t sigtrampgo(windows::ExceptionPointers* ep, int kind)
     {
         auto gp = sigFetchG();
         if(gp == nullptr)
         {
-            return _EXCEPTION_CONTINUE_SEARCH;
+            return windows::EXCEPTION_CONTINUE_SEARCH;
         }
 
-        std::function<int32_t (exceptionrecord* info, context* r, g* gp)> fn = {};
+        std::function<int32_t (windows::ExceptionRecord* info, windows::Context* r, g* gp)> fn = {};
         //Go switch emulation
         {
             auto condition = kind;
@@ -253,14 +262,14 @@ namespace golang::runtime
         {
             systemstack([=]() mutable -> void
             {
-                ret = fn(ep->record, ep->context, gp);
+                ret = fn(ep->Record, ep->Context, gp);
             });
         }
         else
         {
-            ret = fn(ep->record, ep->context, gp);
+            ret = fn(ep->Record, ep->Context, gp);
         }
-        if(ret == _EXCEPTION_CONTINUE_SEARCH)
+        if(ret == windows::EXCEPTION_CONTINUE_SEARCH)
         {
             return ret;
         }
@@ -276,14 +285,14 @@ namespace golang::runtime
         // will not actually return to the original frame, so the registers
         // are effectively dead. But this does mean we can't use the
         // same mechanism for async preemption.
-        if(rec::ip(gocpp::recv(ep->context)) == abi::FuncPCABI0(sigresume))
+        if(rec::PC(gocpp::recv(ep->Context)) == abi::FuncPCABI0(sigresume))
         {
             // sigresume has already been set up by a previous exception.
             return ret;
         }
-        prepareContextForSigResume(ep->context);
-        rec::set_sp(gocpp::recv(ep->context), gp->m->g0->sched.sp);
-        rec::set_ip(gocpp::recv(ep->context), abi::FuncPCABI0(sigresume));
+        prepareContextForSigResume(ep->Context);
+        rec::SetSP(gocpp::recv(ep->Context), gp->m->g0->sched.sp);
+        rec::SetPC(gocpp::recv(ep->Context), abi::FuncPCABI0(sigresume));
         return ret;
     }
 
@@ -295,11 +304,11 @@ namespace golang::runtime
     // _EXCEPTION_BREAKPOINT, which is raised by abort() if we overflow the g0 stack.
     //
     //go:nosplit
-    int32_t exceptionhandler(exceptionrecord* info, context* r, g* gp)
+    int32_t exceptionhandler(windows::ExceptionRecord* info, windows::Context* r, g* gp)
     {
         if(! isgoexception(info, r))
         {
-            return _EXCEPTION_CONTINUE_SEARCH;
+            return windows::EXCEPTION_CONTINUE_SEARCH;
         }
 
         if(gp->throwsplit || isAbort(r))
@@ -316,10 +325,10 @@ namespace golang::runtime
         // Have to pass arguments out of band since
         // augmenting the stack frame would break
         // the unwinding code.
-        gp->sig = info->exceptioncode;
-        gp->sigcode0 = info->exceptioninformation[0];
-        gp->sigcode1 = info->exceptioninformation[1];
-        gp->sigpc = rec::ip(gocpp::recv(r));
+        gp->sig = info->ExceptionCode;
+        gp->sigcode0 = info->ExceptionInformation[0];
+        gp->sigcode1 = info->ExceptionInformation[1];
+        gp->sigpc = rec::PC(gocpp::recv(r));
 
         // Only push runtime·sigpanic if r.ip() != 0.
         // If r.ip() == 0, probably panicked because of a
@@ -334,24 +343,16 @@ namespace golang::runtime
         // The exception is not from asyncPreempt, so not to push a
         // sigpanic call to make it look like that. Instead, just
         // overwrite the PC. (See issue #35773)
-        if(rec::ip(gocpp::recv(r)) != 0 && rec::ip(gocpp::recv(r)) != abi::FuncPCABI0(asyncPreempt))
+        if(rec::PC(gocpp::recv(r)) != 0 && rec::PC(gocpp::recv(r)) != abi::FuncPCABI0(asyncPreempt))
         {
-            auto sp = gocpp::unsafe_pointer(rec::sp(gocpp::recv(r)));
-            auto delta = uintptr_t(sys::StackAlign);
-            sp = add(sp, - delta);
-            rec::set_sp(gocpp::recv(r), uintptr_t(sp));
-            if(usesLR)
-            {
-                *((uintptr_t*)(sp)) = rec::lr(gocpp::recv(r));
-                rec::set_lr(gocpp::recv(r), rec::ip(gocpp::recv(r)));
-            }
-            else
-            {
-                *((uintptr_t*)(sp)) = rec::ip(gocpp::recv(r));
-            }
+            rec::PushCall(gocpp::recv(r), abi::FuncPCABI0(sigpanic0), rec::PC(gocpp::recv(r)));
         }
-        rec::set_ip(gocpp::recv(r), abi::FuncPCABI0(sigpanic0));
-        return _EXCEPTION_CONTINUE_EXECUTION;
+        else
+        {
+            // Not safe to push the call. Just clobber the frame.
+            rec::SetPC(gocpp::recv(r), abi::FuncPCABI0(sigpanic0));
+        }
+        return windows::EXCEPTION_CONTINUE_EXECUTION;
     }
 
     // sehhandler is reached as part of the SEH chain.
@@ -359,13 +360,13 @@ namespace golang::runtime
     // It is nosplit for the same reason as exceptionhandler.
     //
     //go:nosplit
-    int32_t sehhandler(exceptionrecord* _1, uint64_t _2, context* _3, _DISPATCHER_CONTEXT* dctxt)
+    int32_t sehhandler(windows::ExceptionRecord* _1, uint64_t _2, windows::Context* _3, windows::DISPATCHER_CONTEXT* dctxt)
     {
         auto g0 = getg();
         if(g0 == nullptr || g0->m->curg == nullptr)
         {
             // No g available, nothing to do here.
-            return _EXCEPTION_CONTINUE_SEARCH_SEH;
+            return windows::EXCEPTION_CONTINUE_SEARCH_SEH;
         }
         // The Windows SEH machinery will unwind the stack until it finds
         // a frame with a handler for the exception or until the frame is
@@ -377,23 +378,23 @@ namespace golang::runtime
         // To work around this, manually unwind the stack until the top of the goroutine
         // stack is reached, and then pass the control back to Windows.
         auto gp = g0->m->curg;
-        auto ctxt = rec::ctx(gocpp::recv(dctxt));
+        auto ctxt = rec::Ctx(gocpp::recv(dctxt));
         uintptr_t base = {};
         uintptr_t sp = {};
         for(; ; )
         {
-            auto entry = stdcall3(_RtlLookupFunctionEntry, rec::ip(gocpp::recv(ctxt)), uintptr_t(gocpp::unsafe_pointer(& base)), 0);
+            auto entry = stdcall(_RtlLookupFunctionEntry, rec::PC(gocpp::recv(ctxt)), uintptr_t(gocpp::unsafe_pointer(& base)), 0);
             if(entry == 0)
             {
                 break;
             }
-            stdcall8(_RtlVirtualUnwind, 0, base, rec::ip(gocpp::recv(ctxt)), entry, uintptr_t(gocpp::unsafe_pointer(ctxt)), 0, uintptr_t(gocpp::unsafe_pointer(& sp)), 0);
+            stdcall(_RtlVirtualUnwind, 0, base, rec::PC(gocpp::recv(ctxt)), entry, uintptr_t(gocpp::unsafe_pointer(ctxt)), 0, uintptr_t(gocpp::unsafe_pointer(& sp)), 0);
             if(sp < gp->stack.lo || gp->stack.hi <= sp)
             {
                 break;
             }
         }
-        return _EXCEPTION_CONTINUE_SEARCH_SEH;
+        return windows::EXCEPTION_CONTINUE_SEARCH_SEH;
     }
 
     // It seems Windows searches ContinueHandler's list even
@@ -404,13 +405,13 @@ namespace golang::runtime
     // It is nosplit for the same reason as exceptionhandler.
     //
     //go:nosplit
-    int32_t firstcontinuehandler(exceptionrecord* info, context* r, g* gp)
+    int32_t firstcontinuehandler(windows::ExceptionRecord* info, windows::Context* r, g* gp)
     {
         if(! isgoexception(info, r))
         {
-            return _EXCEPTION_CONTINUE_SEARCH;
+            return windows::EXCEPTION_CONTINUE_SEARCH;
         }
-        return _EXCEPTION_CONTINUE_EXECUTION;
+        return windows::EXCEPTION_CONTINUE_EXECUTION;
     }
 
     // lastcontinuehandler is reached, because runtime cannot handle
@@ -419,14 +420,14 @@ namespace golang::runtime
     // It is nosplit for the same reason as exceptionhandler.
     //
     //go:nosplit
-    int32_t lastcontinuehandler(exceptionrecord* info, context* r, g* gp)
+    int32_t lastcontinuehandler(windows::ExceptionRecord* info, windows::Context* r, g* gp)
     {
         if(islibrary || isarchive)
         {
             // Go DLL/archive has been loaded in a non-go program.
             // If the exception does not originate from go, the go runtime
             // should not take responsibility of crashing the process.
-            return _EXCEPTION_CONTINUE_SEARCH;
+            return windows::EXCEPTION_CONTINUE_SEARCH;
         }
 
         // VEH is called before SEH, but arm64 MSVC DLLs use SEH to trap
@@ -435,10 +436,10 @@ namespace golang::runtime
         // arm64 and it's an illegal instruction and this is coming from
         // non-Go code, then assume it's this runtime probing happen, and
         // pass that onward to SEH.
-        if(GOARCH == "arm64"_s && info->exceptioncode == _EXCEPTION_ILLEGAL_INSTRUCTION &&
-                (rec::ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::ip(gocpp::recv(r))))
+        if(GOARCH == "arm64"_s && info->ExceptionCode == windows::EXCEPTION_ILLEGAL_INSTRUCTION &&
+                (rec::PC(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::PC(gocpp::recv(r))))
         {
-            return _EXCEPTION_CONTINUE_SEARCH;
+            return windows::EXCEPTION_CONTINUE_SEARCH;
         }
 
         winthrow(info, r, gp);
@@ -449,7 +450,7 @@ namespace golang::runtime
     // Always called on g0. gp is the G where the exception occurred.
     //
     //go:nosplit
-    void winthrow(exceptionrecord* info, context* r, g* gp)
+    void winthrow(windows::ExceptionRecord* info, windows::Context* r, g* gp)
     {
         auto g0 = getg();
 
@@ -467,9 +468,9 @@ namespace golang::runtime
         g0->stackguard0 = g0->stack.lo + stackGuard;
         g0->stackguard1 = g0->stackguard0;
 
-        print("Exception "_s, hex(info->exceptioncode), " "_s, hex(info->exceptioninformation[0]), " "_s, hex(info->exceptioninformation[1]), " "_s, hex(rec::ip(gocpp::recv(r))), "\n"_s);
+        print("Exception "_s, hex(info->ExceptionCode), " "_s, hex(info->ExceptionInformation[0]), " "_s, hex(info->ExceptionInformation[1]), " "_s, hex(rec::PC(gocpp::recv(r))), "\n"_s);
 
-        print("PC="_s, hex(rec::ip(gocpp::recv(r))), "\n"_s);
+        print("PC="_s, hex(rec::PC(gocpp::recv(r))), "\n"_s);
         if(g0->m->incgo && gp == g0->m->g0 && g0->m->curg != nullptr)
         {
             if(iscgo)
@@ -486,7 +487,7 @@ namespace golang::runtime
         auto [level, gocpp_id_0, docrash] = gotraceback();
         if(level > 0)
         {
-            tracebacktrap(rec::ip(gocpp::recv(r)), rec::sp(gocpp::recv(r)), rec::lr(gocpp::recv(r)), gp);
+            tracebacktrap(rec::PC(gocpp::recv(r)), rec::SP(gocpp::recv(r)), rec::LR(gocpp::recv(r)), gp);
             tracebackothers(gp);
             dumpregs(r);
         }
@@ -511,15 +512,15 @@ namespace golang::runtime
         {
             auto condition = gp->sig;
             int conditionId = -1;
-            if(condition == _EXCEPTION_ACCESS_VIOLATION) { conditionId = 0; }
-            else if(condition == _EXCEPTION_IN_PAGE_ERROR) { conditionId = 1; }
-            else if(condition == _EXCEPTION_INT_DIVIDE_BY_ZERO) { conditionId = 2; }
-            else if(condition == _EXCEPTION_INT_OVERFLOW) { conditionId = 3; }
-            else if(condition == _EXCEPTION_FLT_DENORMAL_OPERAND) { conditionId = 4; }
-            else if(condition == _EXCEPTION_FLT_DIVIDE_BY_ZERO) { conditionId = 5; }
-            else if(condition == _EXCEPTION_FLT_INEXACT_RESULT) { conditionId = 6; }
-            else if(condition == _EXCEPTION_FLT_OVERFLOW) { conditionId = 7; }
-            else if(condition == _EXCEPTION_FLT_UNDERFLOW) { conditionId = 8; }
+            if(condition == windows::EXCEPTION_ACCESS_VIOLATION) { conditionId = 0; }
+            else if(condition == windows::EXCEPTION_IN_PAGE_ERROR) { conditionId = 1; }
+            else if(condition == windows::EXCEPTION_INT_DIVIDE_BY_ZERO) { conditionId = 2; }
+            else if(condition == windows::EXCEPTION_INT_OVERFLOW) { conditionId = 3; }
+            else if(condition == windows::EXCEPTION_FLT_DENORMAL_OPERAND) { conditionId = 4; }
+            else if(condition == windows::EXCEPTION_FLT_DIVIDE_BY_ZERO) { conditionId = 5; }
+            else if(condition == windows::EXCEPTION_FLT_INEXACT_RESULT) { conditionId = 6; }
+            else if(condition == windows::EXCEPTION_FLT_OVERFLOW) { conditionId = 7; }
+            else if(condition == windows::EXCEPTION_FLT_UNDERFLOW) { conditionId = 8; }
             switch(conditionId)
             {
                 case 0:
@@ -594,7 +595,7 @@ namespace golang::runtime
     // This provides the expected exit status for the shell.
     //
     //go:nosplit
-    void dieFromException(exceptionrecord* info, context* r)
+    void dieFromException(windows::ExceptionRecord* info, windows::Context* r)
     {
         if(info == nullptr)
         {
@@ -603,25 +604,24 @@ namespace golang::runtime
             {
                 // Try to reconstruct an exception record from
                 // the exception information stored in gp.
-                info = gocpp::InitPtr<exceptionrecord>([=](auto& x) {
-                    x.exceptionaddress = gp->sigpc;
-                    x.exceptioncode = gp->sig;
-                    x.numberparameters = 2;
+                info = gocpp::InitPtr<windows::ExceptionRecord>([=](auto& x) {
+                    x.ExceptionAddress = gp->sigpc;
+                    x.ExceptionCode = gp->sig;
+                    x.NumberParameters = 2;
                 });
-                info->exceptioninformation[0] = gp->sigcode0;
-                info->exceptioninformation[1] = gp->sigcode1;
+                info->ExceptionInformation[0] = gp->sigcode0;
+                info->ExceptionInformation[1] = gp->sigcode1;
             }
             else
             {
                 // By default, a failing Go application exits with exit code 2.
                 // Use this value when gp does not contain exception info.
-                info = gocpp::InitPtr<exceptionrecord>([=](auto& x) {
-                    x.exceptioncode = 2;
+                info = gocpp::InitPtr<windows::ExceptionRecord>([=](auto& x) {
+                    x.ExceptionCode = 2;
                 });
             }
         }
-        auto FAIL_FAST_GENERATE_EXCEPTION_ADDRESS = 0x1;
-        stdcall3(_RaiseFailFastException, uintptr_t(gocpp::unsafe_pointer(info)), uintptr_t(gocpp::unsafe_pointer(r)), FAIL_FAST_GENERATE_EXCEPTION_ADDRESS);
+        stdcall(_RaiseFailFastException, uintptr_t(gocpp::unsafe_pointer(info)), uintptr_t(gocpp::unsafe_pointer(r)), windows::FAIL_FAST_GENERATE_EXCEPTION_ADDRESS);
     }
 
     // gsignalStack is unused on Windows.

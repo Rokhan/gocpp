@@ -14,6 +14,12 @@ namespace golang::main
 {
     void main();
 }
+#include "golang/io/io.fwd.h"
+
+namespace golang::main
+{
+    namespace io = golang::io;
+}
 #include "golang/io/io.h"
 
 namespace golang::main

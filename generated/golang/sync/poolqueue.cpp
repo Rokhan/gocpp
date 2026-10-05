@@ -16,11 +16,14 @@
 
 namespace golang::sync
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::sync::atomic;
     namespace rec
     {
         using atomic::rec::Add;
         using atomic::rec::CompareAndSwap;
         using atomic::rec::Load;
+        using atomic::rec::Store;
     }
 
     // poolDequeue is a lock-free fixed-size single-producer,
@@ -343,16 +346,6 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    void storePoolChainElt(poolChainElt** pp, poolChainElt* v)
-    {
-        atomic::StorePointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(pp)), gocpp::unsafe_pointer(v));
-    }
-
-    poolChainElt* loadPoolChainElt(poolChainElt** pp)
-    {
-        return (poolChainElt*)(atomic::LoadPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(pp))));
-    }
-
     void rec::pushHead(poolChain* c, go_any val)
     {
         auto d = c->head;
@@ -364,7 +357,7 @@ namespace golang::sync
             d = new poolChainElt{};
             d->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), initSize);
             c->head = d;
-            storePoolChainElt(& c->tail, d);
+            rec::Store<poolChainElt>(gocpp::recv(c->tail), d);
         }
 
         if(rec::pushHead(gocpp::recv(d), val))
@@ -381,12 +374,11 @@ namespace golang::sync
             newSize = dequeueLimit;
         }
 
-        auto d2 = gocpp::InitPtr<poolChainElt>([=](auto& x) {
-            x.prev = d;
-        });
+        auto d2 = new poolChainElt {};
+        rec::Store<poolChainElt>(gocpp::recv(d2->prev), d);
         d2->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), newSize);
         c->head = d2;
-        storePoolChainElt(& d->next, d2);
+        rec::Store<poolChainElt>(gocpp::recv(d->next), d2);
         rec::pushHead(gocpp::recv(d2), val);
     }
 
@@ -401,14 +393,14 @@ namespace golang::sync
             }
             // There may still be unconsumed elements in the
             // previous dequeue, so try backing up.
-            d = loadPoolChainElt(& d->prev);
+            d = rec::Load<poolChainElt>(gocpp::recv(d->prev));
         }
         return {nullptr, false};
     }
 
     std::tuple<go_any, bool> rec::popTail(poolChain* c)
     {
-        auto d = loadPoolChainElt(& c->tail);
+        auto d = rec::Load<poolChainElt>(gocpp::recv(c->tail));
         if(d == nullptr)
         {
             return {nullptr, false};
@@ -422,7 +414,7 @@ namespace golang::sync
             // the pop and the pop fails, then d is permanently
             // empty, which is the only condition under which it's
             // safe to drop d from the chain.
-            auto d2 = loadPoolChainElt(& d->next);
+            auto d2 = rec::Load<poolChainElt>(gocpp::recv(d->next));
 
             if(auto [val, ok] = rec::popTail(gocpp::recv(d)); ok)
             {
@@ -440,13 +432,13 @@ namespace golang::sync
             // to the next dequeue. Try to drop it from the chain
             // so the next pop doesn't have to look at the empty
             // dequeue again.
-            if(atomic::CompareAndSwapPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& c->tail)), gocpp::unsafe_pointer(d), gocpp::unsafe_pointer(d2)))
+            if(rec::CompareAndSwap<poolChainElt>(gocpp::recv(c->tail), d, d2))
             {
                 // We won the race. Clear the prev pointer so
                 // the garbage collector can collect the empty
                 // dequeue and so popHead doesn't back up
                 // further than necessary.
-                storePoolChainElt(& d2->prev, nullptr);
+                rec::Store<poolChainElt>(gocpp::recv(d2->prev), nullptr);
             }
             d = d2;
         }

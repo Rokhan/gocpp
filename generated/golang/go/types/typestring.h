@@ -10,27 +10,36 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     gocpp::string subscript(uint64_t x);
 }
 #include "golang/go/types/type.h"
-#include "golang/bytes/buffer.fwd.h"
-#include "golang/go/types/context.fwd.h"
 #include "golang/go/types/package.fwd.h"
+
+namespace golang::go::types
+{
+    Qualifier RelativeTo(Package* pkg);
+    gocpp::string TypeString(golang::go::types::Type typ, Qualifier qf);
+}
+#include "golang/bytes/buffer.fwd.h"
+
+namespace golang::go::types
+{
+    namespace bytes = golang::bytes;
+}
+#include "golang/go/types/context.fwd.h"
 #include "golang/go/types/signature.fwd.h"
 #include "golang/go/types/typelists.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    Qualifier RelativeTo(Package* pkg);
-    gocpp::string TypeString(golang::types::Type typ, Qualifier qf);
-    void WriteType(bytes::Buffer* buf, golang::types::Type typ, Qualifier qf);
-    void WriteSignature(bytes::Buffer* buf, Signature* sig, Qualifier qf);
+    void WriteType(bytes::Buffer* buf, golang::go::types::Type typ, Qualifier qf);
+    void WriteSignature(bytes::Buffer* buf, golang::go::types::Signature* sig, Qualifier qf);
     struct typeWriter
     {
         bytes::Buffer* buf{};
-        gocpp::map<golang::types::Type, bool> seen{};
+        gocpp::map<golang::go::types::Type, bool> seen{};
         Qualifier qf{};
         Context* ctxt{}; // if non-nil, we are type hashing
         TypeParamList* tparams{}; // local type parameters
@@ -61,7 +70,7 @@ namespace golang::types
 #include "golang/go/types/typeparam.h"
 #include "golang/go/types/typeset.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
@@ -69,13 +78,13 @@ namespace golang::types
         void byte(typeWriter* w, unsigned char b);
         void string(typeWriter* w, gocpp::string s);
         void error(typeWriter* w, gocpp::string msg);
-        void typ(typeWriter* w, golang::types::Type typ);
+        void typ(typeWriter* w, golang::go::types::Type typ);
         void typeSet(typeWriter* w, _TypeSet* s);
-        void typeList(typeWriter* w, gocpp::slice<golang::types::Type> list);
+        void typeList(typeWriter* w, gocpp::slice<golang::go::types::Type> list);
         void tParamList(typeWriter* w, gocpp::slice<TypeParam*> list);
         void typeName(typeWriter* w, TypeName* obj);
         void tuple(typeWriter* w, Tuple* tup, bool variadic);
-        void signature(typeWriter* w, Signature* sig);
+        void signature(typeWriter* w, golang::go::types::Signature* sig);
     }
 }
 

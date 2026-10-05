@@ -10,32 +10,13 @@
 #include "gocpp/support.h"
 
 
-namespace golang::doc
+namespace golang::go::doc
 {
     struct GoTag_methodSet { };
     struct GoTag_embeddedSet { };
     using embeddedSet = gocpp::defined<gocpp::map<namedType*, bool>, GoTag_embeddedSet>;
     extern gocpp::string noteMarker;
     gocpp::string clean(gocpp::string s);
-    struct data
-    {
-        int n{};
-        std::function<void (int i, int j)> swap{};
-        std::function<bool (int i, int j)> less{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct data& value);
-    void sortBy(std::function<bool (int i, int j)> less, std::function<void (int i, int j)> swap, int n);
     gocpp::slice<gocpp::string> sortedKeys(gocpp::map<gocpp::string, int> m);
     gocpp::string removeStar(gocpp::string s);
     bool IsPredeclared(gocpp::string s);
@@ -44,26 +25,34 @@ namespace golang::doc
     extern gocpp::map<gocpp::string, bool> predeclaredConstants;
     gocpp::string assumedPackageName(gocpp::string importPath);
 }
-#include "golang/go/ast/ast.h"
-#include "golang/go/token/token.h"
 #include "golang/go/doc/doc.fwd.h"
-#include "golang/internal/lazyregexp/lazyre.fwd.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
     using methodSet = gocpp::defined<gocpp::map<gocpp::string, Func*>, GoTag_methodSet>;
+    Func* customizeRecv(Func* f, gocpp::string recvTypeName, bool embeddedIsPtr, int level);
+    gocpp::slice<gocpp::string> noteBodies(gocpp::slice<Note*> notes);
+}
+#include "golang/go/ast/ast.fwd.h"
+#include "golang/go/token/token.fwd.h"
+#include "golang/internal/lazyregexp/lazyre.fwd.h"
+
+namespace golang::go::doc
+{
+    gocpp::slice<Func*> sortedFuncs(methodSet m, bool allMethods);
+    namespace ast = golang::go::ast;
+}
+#include "golang/go/ast/ast.h"
+#include "golang/go/doc/doc.h"
+#include "golang/go/token/token.h"
+
+namespace golang::go::doc
+{
+    namespace token = golang::go::token;
+    namespace lazyregexp = golang::internal::lazyregexp;
     gocpp::string recvString(ast::Expr recv);
     gocpp::string recvParam(ast::Expr p);
     std::tuple<gocpp::string, bool> baseTypeName(ast::Expr x);
-    gocpp::slice<gocpp::string> specNames(gocpp::slice<ast::Spec> specs);
-    std::tuple<gocpp::slice<ast::Field*>, bool> fields(ast::Expr typ);
-    ast::Ident* lookupTypeParam(gocpp::string name, ast::FieldList* tparams);
-    extern lazyregexp::Regexp* noteMarkerRx;
-    extern lazyregexp::Regexp* noteCommentRx;
-    Func* customizeRecv(Func* f, gocpp::string recvTypeName, bool embeddedIsPtr, int level);
-    gocpp::string sortingName(ast::GenDecl* d);
-    gocpp::slice<Value*> sortedValues(gocpp::slice<Value*> m, token::Token tok);
-    gocpp::slice<gocpp::string> noteBodies(gocpp::slice<Note*> notes);
     struct namedType
     {
         gocpp::string doc{}; // doc comment for type
@@ -89,12 +78,6 @@ namespace golang::doc
     };
 
     std::ostream& operator<<(std::ostream& os, const struct namedType& value);
-    gocpp::slice<Func*> sortedFuncs(methodSet m, bool allMethods);
-}
-#include "golang/go/doc/doc.h"
-
-namespace golang::doc
-{
     struct reader
     {
         Mode mode{};
@@ -127,13 +110,20 @@ namespace golang::doc
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);
+    gocpp::slice<gocpp::string> specNames(gocpp::slice<ast::Spec> specs);
+    std::tuple<gocpp::slice<ast::Field*>, bool> fields(ast::Expr typ);
+    ast::Ident* lookupTypeParam(gocpp::string name, ast::FieldList* tparams);
+    extern lazyregexp::Regexp* noteMarkerRx;
+    extern lazyregexp::Regexp* noteCommentRx;
+    gocpp::string sortingName(ast::GenDecl* d);
+    gocpp::slice<Value*> sortedValues(gocpp::slice<Value*> m, token::Token tok);
     gocpp::slice<Type*> sortedTypes(gocpp::map<gocpp::string, namedType*> m, bool allMethods);
 }
 
 #include "golang/go/ast/ast.h"
 #include "golang/go/doc/doc.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
 
     namespace rec
@@ -156,9 +146,6 @@ namespace golang::doc
         void collectEmbeddedMethods(reader* r, methodSet mset, namedType* typ, gocpp::string recvTypeName, bool embeddedIsPtr, int level, embeddedSet visited);
         void computeMethodSets(reader* r);
         void cleanupTypes(reader* r);
-        int Len(data* d);
-        void Swap(data* d, int i, int j);
-        bool Less(data* d, int i, int j);
     }
 }
 

@@ -14,524 +14,89 @@
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/map.h"
 #include "golang/internal/abi/type.h"
-#include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/alg.h"
+#include "golang/internal/runtime/maps/map.h"
+#include "golang/internal/runtime/maps/table.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/error.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/math/math.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/map_faststr.h"
 #include "golang/runtime/mbarrier.h"
 #include "golang/runtime/msan0.h"
-#include "golang/runtime/msize_allocheaders.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/race0.h"
-#include "golang/runtime/rand.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/slice.h"
-#include "golang/runtime/stubs.h"
 #include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace maps = golang::internal::runtime::maps;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::IndirectElem;
-        using abi::rec::IndirectKey;
-        using abi::rec::NeedKeyUpdate;
-        using abi::rec::ReflexiveKey;
-        using abi::rec::Size;
+        using maps::rec::Clear;
+        using maps::rec::Clone;
+        using maps::rec::Delete;
+        using maps::rec::Init;
+        using maps::rec::Map;
+        using maps::rec::Next;
+        using maps::rec::Used;
     }
 
-    struct gocpp_id_0
-    {
-        bmap b{};
-        int64_t v{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.b = this->b;
-            result.v = this->v;
-            return result;
-        }
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (b != ref.b) return false;
-            if (v != ref.v) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << b;
-            os << " " << v;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
-    // isEmpty reports whether the given tophash array entry represents an empty bucket entry.
-    bool isEmpty(uint8_t x)
-    {
-        return x <= emptyOne;
-    }
-
-    // A header for a Go map.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    hmap::operator T()
-    {
-        T result;
-        result.count = this->count;
-        result.flags = this->flags;
-        result.B = this->B;
-        result.noverflow = this->noverflow;
-        result.hash0 = this->hash0;
-        result.buckets = this->buckets;
-        result.oldbuckets = this->oldbuckets;
-        result.nevacuate = this->nevacuate;
-        result.extra = this->extra;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool hmap::operator==(const T& ref) const
-    {
-        if (count != ref.count) return false;
-        if (flags != ref.flags) return false;
-        if (B != ref.B) return false;
-        if (noverflow != ref.noverflow) return false;
-        if (hash0 != ref.hash0) return false;
-        if (buckets != ref.buckets) return false;
-        if (oldbuckets != ref.oldbuckets) return false;
-        if (nevacuate != ref.nevacuate) return false;
-        if (extra != ref.extra) return false;
-        return true;
-    }
-
-    std::ostream& hmap::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << count;
-        os << " " << flags;
-        os << " " << B;
-        os << " " << noverflow;
-        os << " " << hash0;
-        os << " " << buckets;
-        os << " " << oldbuckets;
-        os << " " << nevacuate;
-        os << " " << extra;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct hmap& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // mapextra holds fields that are not present on all maps.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    mapextra::operator T()
-    {
-        T result;
-        result.overflow = this->overflow;
-        result.oldoverflow = this->oldoverflow;
-        result.nextOverflow = this->nextOverflow;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool mapextra::operator==(const T& ref) const
-    {
-        if (overflow != ref.overflow) return false;
-        if (oldoverflow != ref.oldoverflow) return false;
-        if (nextOverflow != ref.nextOverflow) return false;
-        return true;
-    }
-
-    std::ostream& mapextra::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << overflow;
-        os << " " << oldoverflow;
-        os << " " << nextOverflow;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct mapextra& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // A bucket for a Go map.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    bmap::operator T()
-    {
-        T result;
-        result.tophash = this->tophash;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool bmap::operator==(const T& ref) const
-    {
-        if (tophash != ref.tophash) return false;
-        return true;
-    }
-
-    std::ostream& bmap::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << tophash;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct bmap& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // A hash iteration structure.
-    // If you modify hiter, also change cmd/compile/internal/reflectdata/reflect.go
-    // and reflect/value.go to match the layout of this structure.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    hiter::operator T()
-    {
-        T result;
-        result.key = this->key;
-        result.elem = this->elem;
-        result.t = this->t;
-        result.h = this->h;
-        result.buckets = this->buckets;
-        result.bptr = this->bptr;
-        result.overflow = this->overflow;
-        result.oldoverflow = this->oldoverflow;
-        result.startBucket = this->startBucket;
-        result.offset = this->offset;
-        result.wrapped = this->wrapped;
-        result.B = this->B;
-        result.i = this->i;
-        result.bucket = this->bucket;
-        result.checkBucket = this->checkBucket;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool hiter::operator==(const T& ref) const
-    {
-        if (key != ref.key) return false;
-        if (elem != ref.elem) return false;
-        if (t != ref.t) return false;
-        if (h != ref.h) return false;
-        if (buckets != ref.buckets) return false;
-        if (bptr != ref.bptr) return false;
-        if (overflow != ref.overflow) return false;
-        if (oldoverflow != ref.oldoverflow) return false;
-        if (startBucket != ref.startBucket) return false;
-        if (offset != ref.offset) return false;
-        if (wrapped != ref.wrapped) return false;
-        if (B != ref.B) return false;
-        if (i != ref.i) return false;
-        if (bucket != ref.bucket) return false;
-        if (checkBucket != ref.checkBucket) return false;
-        return true;
-    }
-
-    std::ostream& hiter::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << key;
-        os << " " << elem;
-        os << " " << t;
-        os << " " << h;
-        os << " " << buckets;
-        os << " " << bptr;
-        os << " " << overflow;
-        os << " " << oldoverflow;
-        os << " " << startBucket;
-        os << " " << offset;
-        os << " " << wrapped;
-        os << " " << B;
-        os << " " << i;
-        os << " " << bucket;
-        os << " " << checkBucket;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct hiter& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // bucketShift returns 1<<b, optimized for code generation.
-    uintptr_t bucketShift(uint8_t b)
-    {
-        // Masking the shift amount allows overflow checks to be elided.
-        return uintptr_t(1) << (b & (goarch::PtrSize * 8 - 1));
-    }
-
-    // bucketMask returns 1<<b - 1, optimized for code generation.
-    uintptr_t bucketMask(uint8_t b)
-    {
-        return bucketShift(b) - 1;
-    }
-
-    // tophash calculates the tophash value for hash.
-    uint8_t tophash(uintptr_t hash)
-    {
-        auto top = uint8_t(hash >> (goarch::PtrSize * 8 - 8));
-        if(top < minTopHash)
-        {
-            top += minTopHash;
-        }
-        return top;
-    }
-
-    bool evacuated(bmap* b)
-    {
-        auto h = b->tophash[0];
-        return h > emptyOne && h < minTopHash;
-    }
-
-    bmap* rec::overflow(bmap* b, maptype* t)
-    {
-        return *(bmap**)(runtime::add(gocpp::unsafe_pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize));
-    }
-
-    void rec::setoverflow(bmap* b, maptype* t, bmap* ovf)
-    {
-        *(bmap**)(runtime::add(gocpp::unsafe_pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize)) = ovf;
-    }
-
-    gocpp::unsafe_pointer rec::keys(bmap* b)
-    {
-        return runtime::add(gocpp::unsafe_pointer(b), dataOffset);
-    }
-
-    // incrnoverflow increments h.noverflow.
-    // noverflow counts the number of overflow buckets.
-    // This is used to trigger same-size map growth.
-    // See also tooManyOverflowBuckets.
-    // To keep hmap small, noverflow is a uint16.
-    // When there are few buckets, noverflow is an exact count.
-    // When there are many buckets, noverflow is an approximate count.
-    void rec::incrnoverflow(hmap* h)
-    {
-        // We trigger same-size map growth if there are
-        // as many overflow buckets as buckets.
-        // We need to be able to count to 1<<h.B.
-        if(h->B < 16)
-        {
-            h->noverflow++;
-            return;
-        }
-        // Increment with probability 1/(1<<(h.B-15)).
-        // When we reach 1<<15 - 1, we will have approximately
-        // as many overflow buckets as buckets.
-        auto mask = (uint32_t(1) << (h->B - 15)) - 1;
-        // Example: if h.B == 18, then mask == 7,
-        // and rand() & 7 == 0 with probability 1/8.
-        if(uint32_t(rand()) & mask == 0)
-        {
-            h->noverflow++;
-        }
-    }
-
-    bmap* rec::newoverflow(hmap* h, maptype* t, bmap* b)
-    {
-        bmap* ovf = {};
-        if(h->extra != nullptr && h->extra->nextOverflow != nullptr)
-        {
-            // We have preallocated overflow buckets available.
-            // See makeBucketArray for more details.
-            ovf = h->extra->nextOverflow;
-            if(rec::overflow(gocpp::recv(ovf), t) == nullptr)
-            {
-                // We're not at the end of the preallocated overflow buckets. Bump the pointer.
-                h->extra->nextOverflow = (bmap*)(runtime::add(gocpp::unsafe_pointer(ovf), uintptr_t(t->BucketSize)));
-            }
-            else
-            {
-                // This is the last preallocated overflow bucket.
-                // Reset the overflow pointer on this bucket,
-                // which was set to a non-nil sentinel value.
-                rec::setoverflow(gocpp::recv(ovf), t, nullptr);
-                h->extra->nextOverflow = nullptr;
-            }
-        }
-        else
-        {
-            ovf = (bmap*)(newobject(t->Bucket));
-        }
-        rec::incrnoverflow(gocpp::recv(h));
-        if(t->Bucket->PtrBytes == 0)
-        {
-            rec::createOverflow(gocpp::recv(h));
-            *h->extra->overflow = append(*h->extra->overflow, ovf);
-        }
-        rec::setoverflow(gocpp::recv(b), t, ovf);
-        return ovf;
-    }
-
-    void rec::createOverflow(hmap* h)
-    {
-        if(h->extra == nullptr)
-        {
-            h->extra = new mapextra{};
-        }
-        if(h->extra->overflow == nullptr)
-        {
-            h->extra->overflow = new gocpp::slice<bmap*>{};
-        }
-    }
-
-    hmap* makemap64(maptype* t, int64_t hint, hmap* h)
+    //go:linkname maps_errNilAssign internal/runtime/maps.errNilAssign
+    gocpp::error maps_errNilAssign = plainError("assignment to entry in nil map"_s);
+    maps::Map* makemap64(abi::MapType* t, int64_t hint, maps::Map* m)
     {
         if(int64_t(int(hint)) != hint)
         {
             hint = 0;
         }
-        return makemap(t, int(hint), h);
+        return makemap(t, int(hint), m);
     }
 
     // makemap_small implements Go map creation for make(map[k]v) and
-    // make(map[k]v, hint) when hint is known to be at most bucketCnt
+    // make(map[k]v, hint) when hint is known to be at most abi.MapGroupSlots
     // at compile time and the map needs to be allocated on the heap.
-    hmap* makemap_small()
+    //
+    // makemap_small should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname makemap_small
+    maps::Map* makemap_small()
     {
-        auto h = new hmap{};
-        h->hash0 = uint32_t(rand());
-        return h;
+        return maps::NewEmptyMap();
     }
 
     // makemap implements Go map creation for make(map[k]v, hint).
-    // If the compiler has determined that the map or the first bucket
-    // can be created on the stack, h and/or bucket may be non-nil.
-    // If h != nil, the map can be created directly in h.
-    // If h.buckets != nil, bucket pointed to can be used as the first bucket.
-    hmap* makemap(maptype* t, int hint, hmap* h)
+    // If the compiler has determined that the map or the first group
+    // can be created on the stack, m and optionally m.dirPtr may be non-nil.
+    // If m != nil, the map can be created directly in m.
+    // If m.dirPtr != nil, it points to a group usable for a small map.
+    //
+    // makemap should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ugorji/go/codec
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname makemap
+    maps::Map* makemap(abi::MapType* t, int hint, maps::Map* m)
     {
-        auto [mem, overflow] = math::MulUintptr(uintptr_t(hint), t->Bucket->Size_);
-        if(overflow || mem > maxAlloc)
+        if(hint < 0)
         {
             hint = 0;
         }
 
-        // initialize Hmap
-        if(h == nullptr)
-        {
-            h = new hmap{};
-        }
-        h->hash0 = uint32_t(rand());
-
-        // Find the size parameter B which will hold the requested # of elements.
-        // For hint < 0 overLoadFactor returns false since hint < bucketCnt.
-        auto B = uint8_t(0);
-        for(; overLoadFactor(hint, B); )
-        {
-            B++;
-        }
-        h->B = B;
-
-        // allocate initial hash table
-        // if B == 0, the buckets field is allocated lazily later (in mapassign)
-        // If hint is large zeroing this memory could take a while.
-        if(h->B != 0)
-        {
-            bmap* nextOverflow = {};
-            std::tie(h->buckets, nextOverflow) = makeBucketArray(t, h->B, nullptr);
-            if(nextOverflow != nullptr)
-            {
-                h->extra = new mapextra{};
-                h->extra->nextOverflow = nextOverflow;
-            }
-        }
-
-        return h;
-    }
-
-    // makeBucketArray initializes a backing array for map buckets.
-    // 1<<b is the minimum number of buckets to allocate.
-    // dirtyalloc should either be nil or a bucket array previously
-    // allocated by makeBucketArray with the same t and b parameters.
-    // If dirtyalloc is nil a new backing array will be alloced and
-    // otherwise dirtyalloc will be cleared and reused as backing array.
-    std::tuple<gocpp::unsafe_pointer, bmap*> makeBucketArray(maptype* t, uint8_t b, gocpp::unsafe_pointer dirtyalloc)
-    {
-        gocpp::unsafe_pointer buckets;
-        bmap* nextOverflow;
-        auto base = bucketShift(b);
-        auto nbuckets = base;
-        // For small b, overflow buckets are unlikely.
-        // Avoid the overhead of the calculation.
-        if(b >= 4)
-        {
-            // Add on the estimated number of overflow buckets
-            // required to insert the median number of elements
-            // used with this value of b.
-            nbuckets += bucketShift(b - 4);
-            auto sz = t->Bucket->Size_ * nbuckets;
-            auto up = roundupsize(sz, t->Bucket->PtrBytes == 0);
-            if(up != sz)
-            {
-                nbuckets = up / t->Bucket->Size_;
-            }
-        }
-
-        if(dirtyalloc == nullptr)
-        {
-            buckets = newarray(t->Bucket, int(nbuckets));
-        }
-        else
-        {
-            // dirtyalloc was previously generated by
-            // the above newarray(t.Bucket, int(nbuckets))
-            // but may not be empty.
-            buckets = dirtyalloc;
-            auto size = t->Bucket->Size_ * nbuckets;
-            if(t->Bucket->PtrBytes != 0)
-            {
-                memclrHasPointers(buckets, size);
-            }
-            else
-            {
-                memclrNoHeapPointers(buckets, size);
-            }
-        }
-
-        if(base != nbuckets)
-        {
-            // We preallocated some overflow buckets.
-            // To keep the overhead of tracking these overflow buckets to a minimum,
-            // we use the convention that if a preallocated overflow bucket's overflow
-            // pointer is nil, then there are more available by bumping the pointer.
-            // We need a safe non-nil pointer for the last overflow bucket; just use buckets.
-            nextOverflow = (bmap*)(add(buckets, base * uintptr_t(t->BucketSize)));
-            auto last = (bmap*)(add(buckets, (nbuckets - 1) * uintptr_t(t->BucketSize)));
-            rec::setoverflow(gocpp::recv(last), t, (bmap*)(buckets));
-        }
-        return {buckets, nextOverflow};
+        return maps::NewMap(t, uintptr_t(hint), m, maxAlloc);
     }
 
     // mapaccess1 returns a pointer to h[key].  Never returns nil, instead
@@ -539,1239 +104,177 @@ namespace golang::runtime
     // the key is not in the map.
     // NOTE: The returned pointer may keep the whole map live, so don't
     // hold onto it for very long.
-    gocpp::unsafe_pointer mapaccess1(maptype* t, hmap* h, gocpp::unsafe_pointer key)
-    {
-        if(raceenabled && h != nullptr)
-        {
-            auto callerpc = getcallerpc();
-            auto pc = abi::FuncPCABIInternal(mapaccess1);
-            racereadpc(gocpp::unsafe_pointer(h), callerpc, pc);
-            raceReadObjectPC(t->Key, key, callerpc, pc);
-        }
-        if(msanenabled && h != nullptr)
-        {
-            msanread(key, t->Key->Size_);
-        }
-        if(asanenabled && h != nullptr)
-        {
-            asanread(key, t->Key->Size_);
-        }
-        if(h == nullptr || h->count == 0)
-        {
-            if(auto err = mapKeyError(t, key); err != nullptr)
-            {
-                // see issue 23734
-                gocpp::panic(err);
-            }
-            return gocpp::unsafe_pointer(& zeroVal[0]);
-        }
-        if(h->flags & hashWriting != 0)
-        {
-            fatal("concurrent map read and map write"_s);
-        }
-        auto hash = t->Hasher(key, uintptr_t(h->hash0));
-        auto m = bucketMask(h->B);
-        auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
-        if(auto c = h->oldbuckets; c != nullptr)
-        {
-            if(! rec::sameSizeGrow(gocpp::recv(h)))
-            {
-                // There used to be half as many buckets; mask down one more power of two.
-                m >>= 1;
-            }
-            auto oldb = (bmap*)(add(c, (hash & m) * uintptr_t(t->BucketSize)));
-            if(! evacuated(oldb))
-            {
-                b = oldb;
-            }
-        }
-        auto top = tophash(hash);
-        bucketloop:
-        for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
-        {
-            if(false) {
-            bucketloop_continue:
-                continue;
-            bucketloop_break:
-                break;
-            }
-            for(auto i = uintptr_t(0); i < bucketCnt; i++)
-            {
-                if(b->tophash[i] != top)
-                {
-                    if(b->tophash[i] == emptyRest)
-                    {
-                        goto bucketloop_break;
-                    }
-                    continue;
-                }
-                auto k = add(gocpp::unsafe_pointer(b), dataOffset + i * uintptr_t(t->KeySize));
-                if(rec::IndirectKey(gocpp::recv(t)))
-                {
-                    k = *((gocpp::unsafe_pointer*)(k));
-                }
-                if(t->Key->Equal(key, k))
-                {
-                    auto e = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
-                    if(rec::IndirectElem(gocpp::recv(t)))
-                    {
-                        e = *((gocpp::unsafe_pointer*)(e));
-                    }
-                    return e;
-                }
-            }
-        }
-        return gocpp::unsafe_pointer(& zeroVal[0]);
-    }
+    //
+    // mapaccess1 is pushed from internal/runtime/maps. We could just call it, but
+    // we want to avoid one layer of call.
+    //
+    //go:linkname mapaccess1
+    gocpp::unsafe_pointer mapaccess1(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key)
+    /* convertBlockStmt, nil block */;
 
-    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2(maptype* t, hmap* h, gocpp::unsafe_pointer key)
-    {
-        if(raceenabled && h != nullptr)
-        {
-            auto callerpc = getcallerpc();
-            auto pc = abi::FuncPCABIInternal(mapaccess2);
-            racereadpc(gocpp::unsafe_pointer(h), callerpc, pc);
-            raceReadObjectPC(t->Key, key, callerpc, pc);
-        }
-        if(msanenabled && h != nullptr)
-        {
-            msanread(key, t->Key->Size_);
-        }
-        if(asanenabled && h != nullptr)
-        {
-            asanread(key, t->Key->Size_);
-        }
-        if(h == nullptr || h->count == 0)
-        {
-            if(auto err = mapKeyError(t, key); err != nullptr)
-            {
-                // see issue 23734
-                gocpp::panic(err);
-            }
-            return {gocpp::unsafe_pointer(& zeroVal[0]), false};
-        }
-        if(h->flags & hashWriting != 0)
-        {
-            fatal("concurrent map read and map write"_s);
-        }
-        auto hash = t->Hasher(key, uintptr_t(h->hash0));
-        auto m = bucketMask(h->B);
-        auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
-        if(auto c = h->oldbuckets; c != nullptr)
-        {
-            if(! rec::sameSizeGrow(gocpp::recv(h)))
-            {
-                // There used to be half as many buckets; mask down one more power of two.
-                m >>= 1;
-            }
-            auto oldb = (bmap*)(add(c, (hash & m) * uintptr_t(t->BucketSize)));
-            if(! evacuated(oldb))
-            {
-                b = oldb;
-            }
-        }
-        auto top = tophash(hash);
-        bucketloop:
-        for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
-        {
-            if(false) {
-            bucketloop_continue:
-                continue;
-            bucketloop_break:
-                break;
-            }
-            for(auto i = uintptr_t(0); i < bucketCnt; i++)
-            {
-                if(b->tophash[i] != top)
-                {
-                    if(b->tophash[i] == emptyRest)
-                    {
-                        goto bucketloop_break;
-                    }
-                    continue;
-                }
-                auto k = add(gocpp::unsafe_pointer(b), dataOffset + i * uintptr_t(t->KeySize));
-                if(rec::IndirectKey(gocpp::recv(t)))
-                {
-                    k = *((gocpp::unsafe_pointer*)(k));
-                }
-                if(t->Key->Equal(key, k))
-                {
-                    auto e = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
-                    if(rec::IndirectElem(gocpp::recv(t)))
-                    {
-                        e = *((gocpp::unsafe_pointer*)(e));
-                    }
-                    return {e, true};
-                }
-            }
-        }
-        return {gocpp::unsafe_pointer(& zeroVal[0]), false};
-    }
+    // mapaccess2 should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ugorji/go/codec
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname mapaccess2
+    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key)
+    /* convertBlockStmt, nil block */;
 
-    // returns both key and elem. Used by map iterator.
-    std::tuple<gocpp::unsafe_pointer, gocpp::unsafe_pointer> mapaccessK(maptype* t, hmap* h, gocpp::unsafe_pointer key)
+    gocpp::unsafe_pointer mapaccess1_fat(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key, gocpp::unsafe_pointer zero)
     {
-        if(h == nullptr || h->count == 0)
-        {
-            return {nullptr, nullptr};
-        }
-        auto hash = t->Hasher(key, uintptr_t(h->hash0));
-        auto m = bucketMask(h->B);
-        auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
-        if(auto c = h->oldbuckets; c != nullptr)
-        {
-            if(! rec::sameSizeGrow(gocpp::recv(h)))
-            {
-                // There used to be half as many buckets; mask down one more power of two.
-                m >>= 1;
-            }
-            auto oldb = (bmap*)(add(c, (hash & m) * uintptr_t(t->BucketSize)));
-            if(! evacuated(oldb))
-            {
-                b = oldb;
-            }
-        }
-        auto top = tophash(hash);
-        bucketloop:
-        for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
-        {
-            if(false) {
-            bucketloop_continue:
-                continue;
-            bucketloop_break:
-                break;
-            }
-            for(auto i = uintptr_t(0); i < bucketCnt; i++)
-            {
-                if(b->tophash[i] != top)
-                {
-                    if(b->tophash[i] == emptyRest)
-                    {
-                        goto bucketloop_break;
-                    }
-                    continue;
-                }
-                auto k = add(gocpp::unsafe_pointer(b), dataOffset + i * uintptr_t(t->KeySize));
-                if(rec::IndirectKey(gocpp::recv(t)))
-                {
-                    k = *((gocpp::unsafe_pointer*)(k));
-                }
-                if(t->Key->Equal(key, k))
-                {
-                    auto e = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
-                    if(rec::IndirectElem(gocpp::recv(t)))
-                    {
-                        e = *((gocpp::unsafe_pointer*)(e));
-                    }
-                    return {k, e};
-                }
-            }
-        }
-        return {nullptr, nullptr};
-    }
-
-    gocpp::unsafe_pointer mapaccess1_fat(maptype* t, hmap* h, gocpp::unsafe_pointer key, gocpp::unsafe_pointer zero)
-    {
-        auto e = mapaccess1(t, h, key);
-        if(e == gocpp::unsafe_pointer(& zeroVal[0]))
+        auto [e, ok] = mapaccess2(t, m, key);
+        if(! ok)
         {
             return zero;
         }
         return e;
     }
 
-    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2_fat(maptype* t, hmap* h, gocpp::unsafe_pointer key, gocpp::unsafe_pointer zero)
+    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2_fat(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key, gocpp::unsafe_pointer zero)
     {
-        auto e = mapaccess1(t, h, key);
-        if(e == gocpp::unsafe_pointer(& zeroVal[0]))
+        auto [e, ok] = mapaccess2(t, m, key);
+        if(! ok)
         {
             return {zero, false};
         }
         return {e, true};
     }
 
-    // Like mapaccess, but allocates a slot for the key if it is not present in the map.
-    gocpp::unsafe_pointer mapassign(maptype* t, hmap* h, gocpp::unsafe_pointer key)
+    // mapassign is pushed from internal/runtime/maps. We could just call it, but
+    // we want to avoid one layer of call.
+    //
+    // mapassign should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //   - github.com/RomiChan/protobuf
+    //   - github.com/segmentio/encoding
+    //   - github.com/ugorji/go/codec
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname mapassign
+    gocpp::unsafe_pointer mapassign(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key)
+    /* convertBlockStmt, nil block */;
+
+    // mapdelete should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ugorji/go/codec
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname mapdelete
+    void mapdelete(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key)
     {
-        if(h == nullptr)
+        if(raceenabled && m != nullptr)
         {
-            gocpp::panic(plainError("assignment to entry in nil map"_s));
-        }
-        if(raceenabled)
-        {
-            auto callerpc = getcallerpc();
-            auto pc = abi::FuncPCABIInternal(mapassign);
-            racewritepc(gocpp::unsafe_pointer(h), callerpc, pc);
-            raceReadObjectPC(t->Key, key, callerpc, pc);
-        }
-        if(msanenabled)
-        {
-            msanread(key, t->Key->Size_);
-        }
-        if(asanenabled)
-        {
-            asanread(key, t->Key->Size_);
-        }
-        if(h->flags & hashWriting != 0)
-        {
-            fatal("concurrent map writes"_s);
-        }
-        auto hash = t->Hasher(key, uintptr_t(h->hash0));
-
-        // Set hashWriting after calling t.hasher, since t.hasher may panic,
-        // in which case we have not actually done a write.
-        h->flags ^= hashWriting;
-
-        if(h->buckets == nullptr)
-        {
-            // newarray(t.Bucket, 1)
-            h->buckets = newobject(t->Bucket);
-        }
-
-        again:
-        auto bucket = hash & bucketMask(h->B);
-        if(rec::growing(gocpp::recv(h)))
-        {
-            growWork(t, h, bucket);
-        }
-        auto b = (bmap*)(add(h->buckets, bucket * uintptr_t(t->BucketSize)));
-        auto top = tophash(hash);
-
-        uint8_t* inserti = {};
-        gocpp::unsafe_pointer insertk = {};
-        gocpp::unsafe_pointer elem = {};
-        bucketloop:
-        for(; ; )
-        {
-            if(false) {
-            bucketloop_continue:
-                continue;
-            bucketloop_break:
-                break;
-            }
-            for(auto i = uintptr_t(0); i < bucketCnt; i++)
-            {
-                if(b->tophash[i] != top)
-                {
-                    if(isEmpty(b->tophash[i]) && inserti == nullptr)
-                    {
-                        inserti = & b->tophash[i];
-                        insertk = add(gocpp::unsafe_pointer(b), dataOffset + i * uintptr_t(t->KeySize));
-                        elem = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
-                    }
-                    if(b->tophash[i] == emptyRest)
-                    {
-                        goto bucketloop_break;
-                    }
-                    continue;
-                }
-                auto k = add(gocpp::unsafe_pointer(b), dataOffset + i * uintptr_t(t->KeySize));
-                if(rec::IndirectKey(gocpp::recv(t)))
-                {
-                    k = *((gocpp::unsafe_pointer*)(k));
-                }
-                if(! t->Key->Equal(key, k))
-                {
-                    continue;
-                }
-                // already have a mapping for key. Update it.
-                if(rec::NeedKeyUpdate(gocpp::recv(t)))
-                {
-                    typedmemmove(t->Key, k, key);
-                }
-                elem = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
-                goto done;
-            }
-            auto ovf = rec::overflow(gocpp::recv(b), t);
-            if(ovf == nullptr)
-            {
-                break;
-            }
-            b = ovf;
-        }
-
-        // Did not find mapping for key. Allocate new cell & add entry.
-        // If we hit the max load factor or we have too many overflow buckets,
-        // and we're not already in the middle of growing, start growing.
-        if(! rec::growing(gocpp::recv(h)) && (overLoadFactor(h->count + 1, h->B) || tooManyOverflowBuckets(h->noverflow, h->B)))
-        {
-            hashGrow(t, h);
-            // Growing the table invalidates everything, so try again
-            goto again;
-        }
-
-        if(inserti == nullptr)
-        {
-            // The current bucket and all the overflow buckets connected to it are full, allocate a new one.
-            auto newb = rec::newoverflow(gocpp::recv(h), t, b);
-            inserti = & newb->tophash[0];
-            insertk = add(gocpp::unsafe_pointer(newb), dataOffset);
-            elem = add(insertk, bucketCnt * uintptr_t(t->KeySize));
-        }
-
-        // store new key/elem at insert position
-        if(rec::IndirectKey(gocpp::recv(t)))
-        {
-            auto kmem = newobject(t->Key);
-            *(gocpp::unsafe_pointer*)(insertk) = kmem;
-            insertk = kmem;
-        }
-        if(rec::IndirectElem(gocpp::recv(t)))
-        {
-            auto vmem = newobject(t->Elem);
-            *(gocpp::unsafe_pointer*)(elem) = vmem;
-        }
-        typedmemmove(t->Key, insertk, key);
-        *inserti = top;
-        h->count++;
-
-        done:
-        if(h->flags & hashWriting == 0)
-        {
-            fatal("concurrent map writes"_s);
-        }
-        h->flags &^= hashWriting;
-        if(rec::IndirectElem(gocpp::recv(t)))
-        {
-            elem = *((gocpp::unsafe_pointer*)(elem));
-        }
-        return elem;
-    }
-
-    void mapdelete(maptype* t, hmap* h, gocpp::unsafe_pointer key)
-    {
-        if(raceenabled && h != nullptr)
-        {
-            auto callerpc = getcallerpc();
+            auto callerpc = sys::GetCallerPC();
             auto pc = abi::FuncPCABIInternal(mapdelete);
-            racewritepc(gocpp::unsafe_pointer(h), callerpc, pc);
+            racewritepc(gocpp::unsafe_pointer(m), callerpc, pc);
             raceReadObjectPC(t->Key, key, callerpc, pc);
         }
-        if(msanenabled && h != nullptr)
+        if(msanenabled && m != nullptr)
         {
             msanread(key, t->Key->Size_);
         }
-        if(asanenabled && h != nullptr)
+        if(asanenabled && m != nullptr)
         {
             asanread(key, t->Key->Size_);
         }
-        if(h == nullptr || h->count == 0)
-        {
-            if(auto err = mapKeyError(t, key); err != nullptr)
-            {
-                // see issue 23734
-                gocpp::panic(err);
-            }
-            return;
-        }
-        if(h->flags & hashWriting != 0)
-        {
-            fatal("concurrent map writes"_s);
-        }
 
-        auto hash = t->Hasher(key, uintptr_t(h->hash0));
-
-        // Set hashWriting after calling t.hasher, since t.hasher may panic,
-        // in which case we have not actually done a write (delete).
-        h->flags ^= hashWriting;
-
-        auto bucket = hash & bucketMask(h->B);
-        if(rec::growing(gocpp::recv(h)))
-        {
-            growWork(t, h, bucket);
-        }
-        auto b = (bmap*)(add(h->buckets, bucket * uintptr_t(t->BucketSize)));
-        auto bOrig = b;
-        auto top = tophash(hash);
-        search:
-        for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
-        {
-            if(false) {
-            search_continue:
-                continue;
-            search_break:
-                break;
-            }
-            for(auto i = uintptr_t(0); i < bucketCnt; i++)
-            {
-                if(b->tophash[i] != top)
-                {
-                    if(b->tophash[i] == emptyRest)
-                    {
-                        goto search_break;
-                    }
-                    continue;
-                }
-                auto k = add(gocpp::unsafe_pointer(b), dataOffset + i * uintptr_t(t->KeySize));
-                auto k2 = k;
-                if(rec::IndirectKey(gocpp::recv(t)))
-                {
-                    k2 = *((gocpp::unsafe_pointer*)(k2));
-                }
-                if(! t->Key->Equal(key, k2))
-                {
-                    continue;
-                }
-                // Only clear key if there are pointers in it.
-                if(rec::IndirectKey(gocpp::recv(t)))
-                {
-                    *(gocpp::unsafe_pointer*)(k) = nullptr;
-                }
-                else
-                if(t->Key->PtrBytes != 0)
-                {
-                    memclrHasPointers(k, t->Key->Size_);
-                }
-                auto e = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
-                if(rec::IndirectElem(gocpp::recv(t)))
-                {
-                    *(gocpp::unsafe_pointer*)(e) = nullptr;
-                }
-                else
-                if(t->Elem->PtrBytes != 0)
-                {
-                    memclrHasPointers(e, t->Elem->Size_);
-                }
-                else
-                {
-                    memclrNoHeapPointers(e, t->Elem->Size_);
-                }
-                b->tophash[i] = emptyOne;
-                // If the bucket now ends in a bunch of emptyOne states,
-                // change those to emptyRest states.
-                // It would be nice to make this a separate function, but
-                // for loops are not currently inlineable.
-                if(i == bucketCnt - 1)
-                {
-                    if(rec::overflow(gocpp::recv(b), t) != nullptr && rec::overflow(gocpp::recv(b), t)->tophash[0] != emptyRest)
-                    {
-                        goto notLast;
-                    }
-                }
-                else
-                {
-                    if(b->tophash[i + 1] != emptyRest)
-                    {
-                        goto notLast;
-                    }
-                }
-                for(; ; )
-                {
-                    b->tophash[i] = emptyRest;
-                    if(i == 0)
-                    {
-                        if(b == bOrig)
-                        {
-                            // beginning of initial bucket, we're done.
-                            break;
-                        }
-                        // Find previous bucket, continue at its last entry.
-                        auto c = b;
-                        for(b = bOrig; rec::overflow(gocpp::recv(b), t) != c; b = rec::overflow(gocpp::recv(b), t))
-                        {
-                        }
-                        i = bucketCnt - 1;
-                    }
-                    else
-                    {
-                        i--;
-                    }
-                    if(b->tophash[i] != emptyOne)
-                    {
-                        break;
-                    }
-                }
-                notLast:
-                h->count--;
-                // Reset the hash seed to make it more difficult for attackers to
-                // repeatedly trigger hash collisions. See issue 25237.
-                if(h->count == 0)
-                {
-                    h->hash0 = uint32_t(rand());
-                }
-                goto search_break;
-            }
-        }
-
-        if(h->flags & hashWriting == 0)
-        {
-            fatal("concurrent map writes"_s);
-        }
-        h->flags &^= hashWriting;
+        rec::Delete(gocpp::recv(m), t, key);
     }
 
-    // mapiterinit initializes the hiter struct used for ranging over maps.
-    // The hiter struct pointed to by 'it' is allocated on the stack
-    // by the compilers order pass or on the heap by reflect_mapiterinit.
-    // Both need to have zeroed hiter since the struct contains pointers.
-    void mapiterinit(maptype* t, hmap* h, hiter* it)
+    // mapIterStart initializes the Iter struct used for ranging over maps and
+    // performs the first step of iteration. The Iter struct pointed to by 'it' is
+    // allocated on the stack by the compilers order pass or on the heap by
+    // reflect. Both need to have zeroed it since the struct contains pointers.
+    void mapIterStart(abi::MapType* t, maps::Map* m, maps::Iter* it)
     {
-        if(raceenabled && h != nullptr)
+        if(raceenabled && m != nullptr)
         {
-            auto callerpc = getcallerpc();
-            racereadpc(gocpp::unsafe_pointer(h), callerpc, abi::FuncPCABIInternal(mapiterinit));
+            auto callerpc = sys::GetCallerPC();
+            racereadpc(gocpp::unsafe_pointer(m), callerpc, abi::FuncPCABIInternal(mapIterStart));
         }
 
-        it->t = t;
-        if(h == nullptr || h->count == 0)
-        {
-            return;
-        }
-
-        if(gocpp::Sizeof<hiter>() / goarch::PtrSize != 12)
-        {
-            // see cmd/compile/internal/reflectdata/reflect.go
-            go_throw("hash_iter size incorrect"_s);
-        }
-        it->h = h;
-
-        // grab snapshot of bucket state
-        it->B = h->B;
-        it->buckets = h->buckets;
-        if(t->Bucket->PtrBytes == 0)
-        {
-            // Allocate the current slice and remember pointers to both current and old.
-            // This preserves all relevant overflow buckets alive even if
-            // the table grows and/or overflow buckets are added to the table
-            // while we are iterating.
-            rec::createOverflow(gocpp::recv(h));
-            it->overflow = h->extra->overflow;
-            it->oldoverflow = h->extra->oldoverflow;
-        }
-
-        // decide where to start
-        auto r = uintptr_t(rand());
-        it->startBucket = r & bucketMask(h->B);
-        it->offset = uint8_t((r >> h->B) & (bucketCnt - 1));
-
-        // iterator state
-        it->bucket = it->startBucket;
-
-        // Remember we have an iterator.
-        // Can run concurrently with another mapiterinit().
-        if(auto old = h->flags; old & (iterator | oldIterator) != iterator | oldIterator)
-        {
-            atomic::Or8(& h->flags, iterator | oldIterator);
-        }
-
-        mapiternext(it);
+        rec::Init(gocpp::recv(it), t, m);
+        rec::Next(gocpp::recv(it));
     }
 
-    void mapiternext(hiter* it)
+    // mapIterNext performs the next step of iteration. Afterwards, the next
+    // key/elem are in it.Key()/it.Elem().
+    void mapIterNext(maps::Iter* it)
     {
-        auto h = it->h;
         if(raceenabled)
         {
-            auto callerpc = getcallerpc();
-            racereadpc(gocpp::unsafe_pointer(h), callerpc, abi::FuncPCABIInternal(mapiternext));
+            auto callerpc = sys::GetCallerPC();
+            racereadpc(gocpp::unsafe_pointer(rec::Map(gocpp::recv(it))), callerpc, abi::FuncPCABIInternal(mapIterNext));
         }
-        if(h->flags & hashWriting != 0)
-        {
-            fatal("concurrent map iteration and map write"_s);
-        }
-        auto t = it->t;
-        auto bucket = it->bucket;
-        auto b = it->bptr;
-        auto i = it->i;
-        auto checkBucket = it->checkBucket;
 
-        next:
-        if(b == nullptr)
-        {
-            if(bucket == it->startBucket && it->wrapped)
-            {
-                // end of iteration
-                it->key = nullptr;
-                it->elem = nullptr;
-                return;
-            }
-            if(rec::growing(gocpp::recv(h)) && it->B == h->B)
-            {
-                // Iterator was started in the middle of a grow, and the grow isn't done yet.
-                // If the bucket we're looking at hasn't been filled in yet (i.e. the old
-                // bucket hasn't been evacuated) then we need to iterate through the old
-                // bucket and only return the ones that will be migrated to this bucket.
-                auto oldbucket = bucket & rec::oldbucketmask(gocpp::recv(it->h));
-                b = (bmap*)(add(h->oldbuckets, oldbucket * uintptr_t(t->BucketSize)));
-                if(! evacuated(b))
-                {
-                    checkBucket = bucket;
-                }
-                else
-                {
-                    b = (bmap*)(add(it->buckets, bucket * uintptr_t(t->BucketSize)));
-                    checkBucket = noCheck;
-                }
-            }
-            else
-            {
-                b = (bmap*)(add(it->buckets, bucket * uintptr_t(t->BucketSize)));
-                checkBucket = noCheck;
-            }
-            bucket++;
-            if(bucket == bucketShift(it->B))
-            {
-                bucket = 0;
-                it->wrapped = true;
-            }
-            i = 0;
-        }
-        for(; i < bucketCnt; i++)
-        {
-            auto offi = (i + it->offset) & (bucketCnt - 1);
-            if(isEmpty(b->tophash[offi]) || b->tophash[offi] == evacuatedEmpty)
-            {
-                // TODO: emptyRest is hard to use here, as we start iterating
-                // in the middle of a bucket. It's feasible, just tricky.
-                continue;
-            }
-            auto k = add(gocpp::unsafe_pointer(b), dataOffset + uintptr_t(offi) * uintptr_t(t->KeySize));
-            if(rec::IndirectKey(gocpp::recv(t)))
-            {
-                k = *((gocpp::unsafe_pointer*)(k));
-            }
-            auto e = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + uintptr_t(offi) * uintptr_t(t->ValueSize));
-            if(checkBucket != noCheck && ! rec::sameSizeGrow(gocpp::recv(h)))
-            {
-                // Special case: iterator was started during a grow to a larger size
-                // and the grow is not done yet. We're working on a bucket whose
-                // oldbucket has not been evacuated yet. Or at least, it wasn't
-                // evacuated when we started the bucket. So we're iterating
-                // through the oldbucket, skipping any keys that will go
-                // to the other new bucket (each oldbucket expands to two
-                // buckets during a grow).
-                if(rec::ReflexiveKey(gocpp::recv(t)) || t->Key->Equal(k, k))
-                {
-                    // If the item in the oldbucket is not destined for
-                    // the current new bucket in the iteration, skip it.
-                    auto hash = t->Hasher(k, uintptr_t(h->hash0));
-                    if(hash & bucketMask(it->B) != checkBucket)
-                    {
-                        continue;
-                    }
-                }
-                else
-                {
-                    // Hash isn't repeatable if k != k (NaNs).  We need a
-                    // repeatable and randomish choice of which direction
-                    // to send NaNs during evacuation. We'll use the low
-                    // bit of tophash to decide which way NaNs go.
-                    // NOTE: this case is why we need two evacuate tophash
-                    // values, evacuatedX and evacuatedY, that differ in
-                    // their low bit.
-                    if((checkBucket >> (it->B - 1)) != uintptr_t(b->tophash[offi] & 1))
-                    {
-                        continue;
-                    }
-                }
-            }
-            if((b->tophash[offi] != evacuatedX && b->tophash[offi] != evacuatedY) ||
-                        ! (rec::ReflexiveKey(gocpp::recv(t)) || t->Key->Equal(k, k)))
-            {
-                // This is the golden data, we can return it.
-                // OR
-                // key!=key, so the entry can't be deleted or updated, so we can just return it.
-                // That's lucky for us because when key!=key we can't look it up successfully.
-                it->key = k;
-                if(rec::IndirectElem(gocpp::recv(t)))
-                {
-                    e = *((gocpp::unsafe_pointer*)(e));
-                }
-                it->elem = e;
-            }
-            else
-            {
-                // The hash table has grown since the iterator was started.
-                // The golden data for this key is now somewhere else.
-                // Check the current hash table for the data.
-                // This code handles the case where the key
-                // has been deleted, updated, or deleted and reinserted.
-                // NOTE: we need to regrab the key as it has potentially been
-                // updated to an equal() but not identical key (e.g. +0.0 vs -0.0).
-                auto [rk, re] = mapaccessK(t, h, k);
-                if(rk == nullptr)
-                {
-                    // key has been deleted
-                    continue;
-                }
-                it->key = rk;
-                it->elem = re;
-            }
-            it->bucket = bucket;
-            if(it->bptr != b)
-            {
-                // avoid unnecessary write barrier; see issue 14921
-                it->bptr = b;
-            }
-            it->i = i + 1;
-            it->checkBucket = checkBucket;
-            return;
-        }
-        b = rec::overflow(gocpp::recv(b), t);
-        i = 0;
-        goto next;
+        rec::Next(gocpp::recv(it));
     }
 
     // mapclear deletes all keys from a map.
-    void mapclear(maptype* t, hmap* h)
+    void mapclear(abi::MapType* t, maps::Map* m)
     {
-        if(raceenabled && h != nullptr)
+        if(raceenabled && m != nullptr)
         {
-            auto callerpc = getcallerpc();
+            auto callerpc = sys::GetCallerPC();
             auto pc = abi::FuncPCABIInternal(mapclear);
-            racewritepc(gocpp::unsafe_pointer(h), callerpc, pc);
+            racewritepc(gocpp::unsafe_pointer(m), callerpc, pc);
         }
 
-        if(h == nullptr || h->count == 0)
-        {
-            return;
-        }
-
-        if(h->flags & hashWriting != 0)
-        {
-            fatal("concurrent map writes"_s);
-        }
-
-        h->flags ^= hashWriting;
-
-        // Mark buckets empty, so existing iterators can be terminated, see issue #59411.
-        auto markBucketsEmpty = [=](gocpp::unsafe_pointer bucket, uintptr_t mask) mutable -> void
-        {
-            for(auto i = uintptr_t(0); i <= mask; i++)
-            {
-                auto b = (bmap*)(add(bucket, i * uintptr_t(t->BucketSize)));
-                for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
-                {
-                    for(auto i = uintptr_t(0); i < bucketCnt; i++)
-                    {
-                        b->tophash[i] = emptyRest;
-                    }
-                }
-            }
-        };
-        markBucketsEmpty(h->buckets, bucketMask(h->B));
-        if(auto oldBuckets = h->oldbuckets; oldBuckets != nullptr)
-        {
-            markBucketsEmpty(oldBuckets, rec::oldbucketmask(gocpp::recv(h)));
-        }
-
-        h->flags &^= runtime::sameSizeGrow;
-        h->oldbuckets = nullptr;
-        h->nevacuate = 0;
-        h->noverflow = 0;
-        h->count = 0;
-
-        // Reset the hash seed to make it more difficult for attackers to
-        // repeatedly trigger hash collisions. See issue 25237.
-        h->hash0 = uint32_t(rand());
-
-        // Keep the mapextra allocation but clear any extra information.
-        if(h->extra != nullptr)
-        {
-            *h->extra = mapextra {};
-        }
-
-        // makeBucketArray clears the memory pointed to by h.buckets
-        // and recovers any overflow buckets by generating them
-        // as if h.buckets was newly alloced.
-        auto [gocpp_id_1, nextOverflow] = makeBucketArray(t, h->B, h->buckets);
-        if(nextOverflow != nullptr)
-        {
-            // If overflow buckets are created then h.extra
-            // will have been allocated during initial bucket creation.
-            h->extra->nextOverflow = nextOverflow;
-        }
-
-        if(h->flags & hashWriting == 0)
-        {
-            fatal("concurrent map writes"_s);
-        }
-        h->flags &^= hashWriting;
+        rec::Clear(gocpp::recv(m), t);
     }
 
-    void hashGrow(maptype* t, hmap* h)
-    {
-        // If we've hit the load factor, get bigger.
-        // Otherwise, there are too many overflow buckets,
-        // so keep the same number of buckets and "grow" laterally.
-        auto bigger = uint8_t(1);
-        if(! overLoadFactor(h->count + 1, h->B))
-        {
-            bigger = 0;
-            h->flags |= runtime::sameSizeGrow;
-        }
-        auto oldbuckets = h->buckets;
-        auto [newbuckets, nextOverflow] = makeBucketArray(t, h->B + bigger, nullptr);
-
-        auto flags = h->flags &^ (iterator | oldIterator);
-        if(h->flags & iterator != 0)
-        {
-            flags |= oldIterator;
-        }
-        // commit the grow (atomic wrt gc)
-        h->B += bigger;
-        h->flags = flags;
-        h->oldbuckets = oldbuckets;
-        h->buckets = newbuckets;
-        h->nevacuate = 0;
-        h->noverflow = 0;
-
-        if(h->extra != nullptr && h->extra->overflow != nullptr)
-        {
-            // Promote current overflow buckets to the old generation.
-            if(h->extra->oldoverflow != nullptr)
-            {
-                go_throw("oldoverflow is not nil"_s);
-            }
-            h->extra->oldoverflow = h->extra->overflow;
-            h->extra->overflow = nullptr;
-        }
-        if(nextOverflow != nullptr)
-        {
-            if(h->extra == nullptr)
-            {
-                h->extra = new mapextra{};
-            }
-            h->extra->nextOverflow = nextOverflow;
-        }
-    }
-
-    // overLoadFactor reports whether count items placed in 1<<B buckets is over loadFactor.
-    bool overLoadFactor(int count, uint8_t B)
-    {
-        return count > bucketCnt && uintptr_t(count) > loadFactorNum * (bucketShift(B) / loadFactorDen);
-    }
-
-    // tooManyOverflowBuckets reports whether noverflow buckets is too many for a map with 1<<B buckets.
-    // Note that most of these overflow buckets must be in sparse use;
-    // if use was dense, then we'd have already triggered regular map growth.
-    bool tooManyOverflowBuckets(uint16_t noverflow, uint8_t B)
-    {
-        // If the threshold is too low, we do extraneous work.
-        // If the threshold is too high, maps that grow and shrink can hold on to lots of unused memory.
-        // "too many" means (approximately) as many overflow buckets as regular buckets.
-        // See incrnoverflow for more details.
-        if(B > 15)
-        {
-            B = 15;
-        }
-        // The compiler doesn't see here that B < 16; mask B to generate shorter shift code.
-        return noverflow >= (uint16_t(1) << (B & 15));
-    }
-
-    // growing reports whether h is growing. The growth may be to the same size or bigger.
-    bool rec::growing(hmap* h)
-    {
-        return h->oldbuckets != nullptr;
-    }
-
-    // sameSizeGrow reports whether the current growth is to a map of the same size.
-    bool rec::sameSizeGrow(hmap* h)
-    {
-        return h->flags & runtime::sameSizeGrow != 0;
-    }
-
-    // noldbuckets calculates the number of buckets prior to the current map growth.
-    uintptr_t rec::noldbuckets(hmap* h)
-    {
-        auto oldB = h->B;
-        if(! rec::sameSizeGrow(gocpp::recv(h)))
-        {
-            oldB--;
-        }
-        return bucketShift(oldB);
-    }
-
-    // oldbucketmask provides a mask that can be applied to calculate n % noldbuckets().
-    uintptr_t rec::oldbucketmask(hmap* h)
-    {
-        return rec::noldbuckets(gocpp::recv(h)) - 1;
-    }
-
-    void growWork(maptype* t, hmap* h, uintptr_t bucket)
-    {
-        // make sure we evacuate the oldbucket corresponding
-        // to the bucket we're about to use
-        evacuate(t, h, bucket & rec::oldbucketmask(gocpp::recv(h)));
-
-        // evacuate one more oldbucket to make progress on growing
-        if(rec::growing(gocpp::recv(h)))
-        {
-            evacuate(t, h, h->nevacuate);
-        }
-    }
-
-    bool bucketEvacuated(maptype* t, hmap* h, uintptr_t bucket)
-    {
-        auto b = (bmap*)(add(h->oldbuckets, bucket * uintptr_t(t->BucketSize)));
-        return evacuated(b);
-    }
-
-    // evacDst is an evacuation destination.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    evacDst::operator T()
-    {
-        T result;
-        result.b = this->b;
-        result.i = this->i;
-        result.k = this->k;
-        result.e = this->e;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool evacDst::operator==(const T& ref) const
-    {
-        if (b != ref.b) return false;
-        if (i != ref.i) return false;
-        if (k != ref.k) return false;
-        if (e != ref.e) return false;
-        return true;
-    }
-
-    std::ostream& evacDst::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << b;
-        os << " " << i;
-        os << " " << k;
-        os << " " << e;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct evacDst& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    void evacuate(maptype* t, hmap* h, uintptr_t oldbucket)
-    {
-        auto b = (bmap*)(add(h->oldbuckets, oldbucket * uintptr_t(t->BucketSize)));
-        auto newbit = rec::noldbuckets(gocpp::recv(h));
-        if(! evacuated(b))
-        {
-            // TODO: reuse overflow buckets instead of using new ones, if there
-            // is no iterator using the old buckets.  (If !oldIterator.)
-            // xy contains the x and y (low and high) evacuation destinations.
-            gocpp::array<evacDst, 2> xy = {};
-            auto x = & xy[0];
-            x->b = (bmap*)(add(h->buckets, oldbucket * uintptr_t(t->BucketSize)));
-            x->k = add(gocpp::unsafe_pointer(x->b), dataOffset);
-            x->e = add(x->k, bucketCnt * uintptr_t(t->KeySize));
-
-            if(! rec::sameSizeGrow(gocpp::recv(h)))
-            {
-                // Only calculate y pointers if we're growing bigger.
-                // Otherwise GC can see bad pointers.
-                auto y = & xy[1];
-                y->b = (bmap*)(add(h->buckets, (oldbucket + newbit) * uintptr_t(t->BucketSize)));
-                y->k = add(gocpp::unsafe_pointer(y->b), dataOffset);
-                y->e = add(y->k, bucketCnt * uintptr_t(t->KeySize));
-            }
-
-            for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
-            {
-                auto k = add(gocpp::unsafe_pointer(b), dataOffset);
-                auto e = add(k, bucketCnt * uintptr_t(t->KeySize));
-                for(auto i = 0; i < bucketCnt; std::tie(i, k, e) = std::tuple{i + 1, add(k, uintptr_t(t->KeySize)), add(e, uintptr_t(t->ValueSize))})
-                {
-                    auto top = b->tophash[i];
-                    if(isEmpty(top))
-                    {
-                        b->tophash[i] = evacuatedEmpty;
-                        continue;
-                    }
-                    if(top < minTopHash)
-                    {
-                        go_throw("bad map state"_s);
-                    }
-                    auto k2 = k;
-                    if(rec::IndirectKey(gocpp::recv(t)))
-                    {
-                        k2 = *((gocpp::unsafe_pointer*)(k2));
-                    }
-                    uint8_t useY = {};
-                    if(! rec::sameSizeGrow(gocpp::recv(h)))
-                    {
-                        // Compute hash to make our evacuation decision (whether we need
-                        // to send this key/elem to bucket x or bucket y).
-                        auto hash = t->Hasher(k2, uintptr_t(h->hash0));
-                        if(h->flags & iterator != 0 && ! rec::ReflexiveKey(gocpp::recv(t)) && ! t->Key->Equal(k2, k2))
-                        {
-                            // If key != key (NaNs), then the hash could be (and probably
-                            // will be) entirely different from the old hash. Moreover,
-                            // it isn't reproducible. Reproducibility is required in the
-                            // presence of iterators, as our evacuation decision must
-                            // match whatever decision the iterator made.
-                            // Fortunately, we have the freedom to send these keys either
-                            // way. Also, tophash is meaningless for these kinds of keys.
-                            // We let the low bit of tophash drive the evacuation decision.
-                            // We recompute a new random tophash for the next level so
-                            // these keys will get evenly distributed across all buckets
-                            // after multiple grows.
-                            useY = top & 1;
-                            top = tophash(hash);
-                        }
-                        else
-                        {
-                            if(hash & newbit != 0)
-                            {
-                                useY = 1;
-                            }
-                        }
-                    }
-
-                    if(evacuatedX + 1 != evacuatedY || evacuatedX ^ 1 != evacuatedY)
-                    {
-                        go_throw("bad evacuatedN"_s);
-                    }
-
-                    // evacuatedX + 1 == evacuatedY
-                    b->tophash[i] = evacuatedX + useY;
-                    // evacuation destination
-                    auto dst = & xy[useY];
-
-                    if(dst->i == bucketCnt)
-                    {
-                        dst->b = rec::newoverflow(gocpp::recv(h), t, dst->b);
-                        dst->i = 0;
-                        dst->k = add(gocpp::unsafe_pointer(dst->b), dataOffset);
-                        dst->e = add(dst->k, bucketCnt * uintptr_t(t->KeySize));
-                    }
-                    // mask dst.i as an optimization, to avoid a bounds check
-                    dst->b->tophash[dst->i & (bucketCnt - 1)] = top;
-                    if(rec::IndirectKey(gocpp::recv(t)))
-                    {
-                        // copy pointer
-                        *(gocpp::unsafe_pointer*)(dst->k) = k2;
-                    }
-                    else
-                    {
-                        // copy elem
-                        typedmemmove(t->Key, dst->k, k);
-                    }
-                    if(rec::IndirectElem(gocpp::recv(t)))
-                    {
-                        *(gocpp::unsafe_pointer*)(dst->e) = *(gocpp::unsafe_pointer*)(e);
-                    }
-                    else
-                    {
-                        typedmemmove(t->Elem, dst->e, e);
-                    }
-                    dst->i++;
-                    // These updates might push these pointers past the end of the
-                    // key or elem arrays.  That's ok, as we have the overflow pointer
-                    // at the end of the bucket to protect against pointing past the
-                    // end of the bucket.
-                    dst->k = add(dst->k, uintptr_t(t->KeySize));
-                    dst->e = add(dst->e, uintptr_t(t->ValueSize));
-                }
-            }
-            // Unlink the overflow buckets & clear key/elem to help GC.
-            if(h->flags & oldIterator == 0 && t->Bucket->PtrBytes != 0)
-            {
-                auto b = add(h->oldbuckets, oldbucket * uintptr_t(t->BucketSize));
-                // Preserve b.tophash because the evacuation
-                // state is maintained there.
-                auto ptr = add(b, dataOffset);
-                auto n = uintptr_t(t->BucketSize) - dataOffset;
-                memclrHasPointers(ptr, n);
-            }
-        }
-
-        if(oldbucket == h->nevacuate)
-        {
-            advanceEvacuationMark(h, t, newbit);
-        }
-    }
-
-    void advanceEvacuationMark(hmap* h, maptype* t, uintptr_t newbit)
-    {
-        h->nevacuate++;
-        // Experiments suggest that 1024 is overkill by at least an order of magnitude.
-        // Put it in there as a safeguard anyway, to ensure O(1) behavior.
-        auto stop = h->nevacuate + 1024;
-        if(stop > newbit)
-        {
-            stop = newbit;
-        }
-        for(; h->nevacuate != stop && bucketEvacuated(t, h, h->nevacuate); )
-        {
-            h->nevacuate++;
-        }
-        if(h->nevacuate == newbit)
-        {
-            // newbit == # of oldbuckets
-            // Growing is all done. Free old main bucket array.
-            h->oldbuckets = nullptr;
-            // Can discard old overflow buckets as well.
-            // If they are still referenced by an iterator,
-            // then the iterator holds a pointers to the slice.
-            if(h->extra != nullptr)
-            {
-                h->extra->oldoverflow = nullptr;
-            }
-            h->flags &^= runtime::sameSizeGrow;
-        }
-    }
-
+    // reflect_makemap is for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gitee.com/quant1x/gox
+    //   - github.com/modern-go/reflect2
+    //   - github.com/goccy/go-json
+    //   - github.com/RomiChan/protobuf
+    //   - github.com/segmentio/encoding
+    //   - github.com/v2pro/plz
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname reflect_makemap reflect.makemap
-    hmap* reflect_makemap(maptype* t, int cap)
+    maps::Map* reflect_makemap(abi::MapType* t, int cap)
     {
         // Check invariants and reflects math.
+        // TODO: other checks
         if(t->Key->Equal == nullptr)
         {
             go_throw("runtime.reflect_makemap: unsupported map key type"_s);
         }
-        if(t->Key->Size_ > maxKeySize && (! rec::IndirectKey(gocpp::recv(t)) || t->KeySize != uint8_t(goarch::PtrSize)) ||
-                t->Key->Size_ <= maxKeySize && (rec::IndirectKey(gocpp::recv(t)) || t->KeySize != uint8_t(t->Key->Size_)))
-        {
-            go_throw("key size wrong"_s);
-        }
-        if(t->Elem->Size_ > maxElemSize && (! rec::IndirectElem(gocpp::recv(t)) || t->ValueSize != uint8_t(goarch::PtrSize)) ||
-                t->Elem->Size_ <= maxElemSize && (rec::IndirectElem(gocpp::recv(t)) || t->ValueSize != uint8_t(t->Elem->Size_)))
-        {
-            go_throw("elem size wrong"_s);
-        }
-        if(t->Key->Align_ > bucketCnt)
-        {
-            go_throw("key align too big"_s);
-        }
-        if(t->Elem->Align_ > bucketCnt)
-        {
-            go_throw("elem align too big"_s);
-        }
-        if(t->Key->Size_ % uintptr_t(t->Key->Align_) != 0)
-        {
-            go_throw("key size not a multiple of key align"_s);
-        }
-        if(t->Elem->Size_ % uintptr_t(t->Elem->Align_) != 0)
-        {
-            go_throw("elem size not a multiple of elem align"_s);
-        }
-        if(bucketCnt < 8)
-        {
-            go_throw("bucketsize too small for proper alignment"_s);
-        }
-        if(dataOffset % uintptr_t(t->Key->Align_) != 0)
-        {
-            go_throw("need padding in bucket (key)"_s);
-        }
-        if(dataOffset % uintptr_t(t->Elem->Align_) != 0)
-        {
-            go_throw("need padding in bucket (elem)"_s);
-        }
+
 
         return makemap(t, cap, nullptr);
     }
 
+    // reflect_mapaccess is for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gitee.com/quant1x/gox
+    //   - github.com/modern-go/reflect2
+    //   - github.com/v2pro/plz
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname reflect_mapaccess reflect.mapaccess
-    gocpp::unsafe_pointer reflect_mapaccess(maptype* t, hmap* h, gocpp::unsafe_pointer key)
+    gocpp::unsafe_pointer reflect_mapaccess(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key)
     {
-        auto [elem, ok] = mapaccess2(t, h, key);
+        auto [elem, ok] = mapaccess2(t, m, key);
         if(! ok)
         {
             // reflect wants nil for a missing element
@@ -1781,9 +284,9 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_mapaccess_faststr reflect.mapaccess_faststr
-    gocpp::unsafe_pointer reflect_mapaccess_faststr(maptype* t, hmap* h, gocpp::string key)
+    gocpp::unsafe_pointer reflect_mapaccess_faststr(abi::MapType* t, maps::Map* m, gocpp::string key)
     {
-        auto [elem, ok] = mapaccess2_faststr(t, h, key);
+        auto [elem, ok] = mapaccess2_faststr(t, m, key);
         if(! ok)
         {
             // reflect wants nil for a missing element
@@ -1792,93 +295,85 @@ namespace golang::runtime
         return elem;
     }
 
+    // reflect_mapassign is for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gitee.com/quant1x/gox
+    //   - github.com/v2pro/plz
+    //
+    // Do not remove or change the type signature.
+    //
     //go:linkname reflect_mapassign reflect.mapassign0
-    void reflect_mapassign(maptype* t, hmap* h, gocpp::unsafe_pointer key, gocpp::unsafe_pointer elem)
+    void reflect_mapassign(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key, gocpp::unsafe_pointer elem)
     {
-        auto p = mapassign(t, h, key);
+        auto p = mapassign(t, m, key);
         typedmemmove(t->Elem, p, elem);
     }
 
     //go:linkname reflect_mapassign_faststr reflect.mapassign_faststr0
-    void reflect_mapassign_faststr(maptype* t, hmap* h, gocpp::string key, gocpp::unsafe_pointer elem)
+    void reflect_mapassign_faststr(abi::MapType* t, maps::Map* m, gocpp::string key, gocpp::unsafe_pointer elem)
     {
-        auto p = mapassign_faststr(t, h, key);
+        auto p = mapassign_faststr(t, m, key);
         typedmemmove(t->Elem, p, elem);
     }
 
     //go:linkname reflect_mapdelete reflect.mapdelete
-    void reflect_mapdelete(maptype* t, hmap* h, gocpp::unsafe_pointer key)
+    void reflect_mapdelete(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key)
     {
-        mapdelete(t, h, key);
+        mapdelete(t, m, key);
     }
 
     //go:linkname reflect_mapdelete_faststr reflect.mapdelete_faststr
-    void reflect_mapdelete_faststr(maptype* t, hmap* h, gocpp::string key)
+    void reflect_mapdelete_faststr(abi::MapType* t, maps::Map* m, gocpp::string key)
     {
-        mapdelete_faststr(t, h, key);
+        mapdelete_faststr(t, m, key);
     }
 
-    //go:linkname reflect_mapiterinit reflect.mapiterinit
-    void reflect_mapiterinit(maptype* t, hmap* h, hiter* it)
-    {
-        mapiterinit(t, h, it);
-    }
-
-    //go:linkname reflect_mapiternext reflect.mapiternext
-    void reflect_mapiternext(hiter* it)
-    {
-        mapiternext(it);
-    }
-
-    //go:linkname reflect_mapiterkey reflect.mapiterkey
-    gocpp::unsafe_pointer reflect_mapiterkey(hiter* it)
-    {
-        return it->key;
-    }
-
-    //go:linkname reflect_mapiterelem reflect.mapiterelem
-    gocpp::unsafe_pointer reflect_mapiterelem(hiter* it)
-    {
-        return it->elem;
-    }
-
+    // reflect_maplen is for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/goccy/go-json
+    //   - github.com/wI2L/jettison
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname reflect_maplen reflect.maplen
-    int reflect_maplen(hmap* h)
+    int reflect_maplen(maps::Map* m)
     {
-        if(h == nullptr)
+        if(m == nullptr)
         {
             return 0;
         }
         if(raceenabled)
         {
-            auto callerpc = getcallerpc();
-            racereadpc(gocpp::unsafe_pointer(h), callerpc, abi::FuncPCABIInternal(reflect_maplen));
+            auto callerpc = sys::GetCallerPC();
+            racereadpc(gocpp::unsafe_pointer(m), callerpc, abi::FuncPCABIInternal(reflect_maplen));
         }
-        return h->count;
+        return int(rec::Used(gocpp::recv(m)));
     }
 
     //go:linkname reflect_mapclear reflect.mapclear
-    void reflect_mapclear(maptype* t, hmap* h)
+    void reflect_mapclear(abi::MapType* t, maps::Map* m)
     {
-        mapclear(t, h);
+        mapclear(t, m);
     }
 
     //go:linkname reflectlite_maplen internal/reflectlite.maplen
-    int reflectlite_maplen(hmap* h)
+    int reflectlite_maplen(maps::Map* m)
     {
-        if(h == nullptr)
+        if(m == nullptr)
         {
             return 0;
         }
         if(raceenabled)
         {
-            auto callerpc = getcallerpc();
-            racereadpc(gocpp::unsafe_pointer(h), callerpc, abi::FuncPCABIInternal(reflect_maplen));
+            auto callerpc = sys::GetCallerPC();
+            racereadpc(gocpp::unsafe_pointer(m), callerpc, abi::FuncPCABIInternal(reflect_maplen));
         }
-        return h->count;
+        return int(rec::Used(gocpp::recv(m)));
     }
 
-    gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
     // mapinitnoop is a no-op function known the Go linker; if a given global
     // map (of the right size) is determined to be dead, the linker will
     // rewrite the relocation (from the package init func) from the outlined
@@ -1893,354 +388,11 @@ namespace golang::runtime
     go_any mapclone(go_any m)
     {
         auto e = efaceOf(& m);
-        e->data = gocpp::unsafe_pointer(mapclone2((maptype*)(gocpp::unsafe_pointer(e->_type)), (hmap*)(e->data)));
+        auto typ = (abi::MapType*)(gocpp::unsafe_pointer(e->_type));
+        auto map_ = (maps::Map*)(e->data);
+        map_ = rec::Clone(gocpp::recv(map_), typ);
+        e->data = (gocpp::unsafe_pointer)(map_);
         return m;
-    }
-
-    // moveToBmap moves a bucket from src to dst. It returns the destination bucket or new destination bucket if it overflows
-    // and the pos that the next key/value will be written, if pos == bucketCnt means needs to written in overflow bucket.
-    std::tuple<bmap*, int> moveToBmap(maptype* t, hmap* h, bmap* dst, int pos, bmap* src)
-    {
-        for(auto i = 0; i < bucketCnt; i++)
-        {
-            if(isEmpty(src->tophash[i]))
-            {
-                continue;
-            }
-
-            for(; pos < bucketCnt; pos++)
-            {
-                if(isEmpty(dst->tophash[pos]))
-                {
-                    break;
-                }
-            }
-
-            if(pos == bucketCnt)
-            {
-                dst = rec::newoverflow(gocpp::recv(h), t, dst);
-                pos = 0;
-            }
-
-            auto srcK = add(gocpp::unsafe_pointer(src), dataOffset + uintptr_t(i) * uintptr_t(t->KeySize));
-            auto srcEle = add(gocpp::unsafe_pointer(src), dataOffset + bucketCnt * uintptr_t(t->KeySize) + uintptr_t(i) * uintptr_t(t->ValueSize));
-            auto dstK = add(gocpp::unsafe_pointer(dst), dataOffset + uintptr_t(pos) * uintptr_t(t->KeySize));
-            auto dstEle = add(gocpp::unsafe_pointer(dst), dataOffset + bucketCnt * uintptr_t(t->KeySize) + uintptr_t(pos) * uintptr_t(t->ValueSize));
-
-            dst->tophash[pos] = src->tophash[i];
-            if(rec::IndirectKey(gocpp::recv(t)))
-            {
-                srcK = *(gocpp::unsafe_pointer*)(srcK);
-                if(rec::NeedKeyUpdate(gocpp::recv(t)))
-                {
-                    auto kStore = newobject(t->Key);
-                    typedmemmove(t->Key, kStore, srcK);
-                    srcK = kStore;
-                }
-                // Note: if NeedKeyUpdate is false, then the memory
-                // used to store the key is immutable, so we can share
-                // it between the original map and its clone.
-                *(gocpp::unsafe_pointer*)(dstK) = srcK;
-            }
-            else
-            {
-                typedmemmove(t->Key, dstK, srcK);
-            }
-            if(rec::IndirectElem(gocpp::recv(t)))
-            {
-                srcEle = *(gocpp::unsafe_pointer*)(srcEle);
-                auto eStore = newobject(t->Elem);
-                typedmemmove(t->Elem, eStore, srcEle);
-                *(gocpp::unsafe_pointer*)(dstEle) = eStore;
-            }
-            else
-            {
-                typedmemmove(t->Elem, dstEle, srcEle);
-            }
-            pos++;
-            h->count++;
-        }
-        return {dst, pos};
-    }
-
-    hmap* mapclone2(maptype* t, hmap* src)
-    {
-        auto dst = makemap(t, src->count, nullptr);
-        dst->hash0 = src->hash0;
-        // flags do not need to be copied here, just like a new map has no flags.
-        dst->nevacuate = 0;
-
-
-        if(src->count == 0)
-        {
-            return dst;
-        }
-
-        if(src->flags & hashWriting != 0)
-        {
-            fatal("concurrent map clone and map write"_s);
-        }
-
-        if(src->B == 0 && ! (rec::IndirectKey(gocpp::recv(t)) && rec::NeedKeyUpdate(gocpp::recv(t))) && ! rec::IndirectElem(gocpp::recv(t)))
-        {
-            // Quick copy for small maps.
-            dst->buckets = newobject(t->Bucket);
-            dst->count = src->count;
-            typedmemmove(t->Bucket, dst->buckets, src->buckets);
-            return dst;
-        }
-
-        if(dst->B == 0)
-        {
-            dst->buckets = newobject(t->Bucket);
-        }
-        auto dstArraySize = int(bucketShift(dst->B));
-        auto srcArraySize = int(bucketShift(src->B));
-        for(auto i = 0; i < dstArraySize; i++)
-        {
-            auto dstBmap = (bmap*)(add(dst->buckets, uintptr_t(i * int(t->BucketSize))));
-            auto pos = 0;
-            for(auto j = 0; j < srcArraySize; j += dstArraySize)
-            {
-                auto srcBmap = (bmap*)(add(src->buckets, uintptr_t((i + j) * int(t->BucketSize))));
-                for(; srcBmap != nullptr; )
-                {
-                    std::tie(dstBmap, pos) = moveToBmap(t, dst, dstBmap, pos, srcBmap);
-                    srcBmap = rec::overflow(gocpp::recv(srcBmap), t);
-                }
-            }
-        }
-
-        if(src->oldbuckets == nullptr)
-        {
-            return dst;
-        }
-
-        auto oldB = src->B;
-        auto srcOldbuckets = src->oldbuckets;
-        if(! rec::sameSizeGrow(gocpp::recv(src)))
-        {
-            oldB--;
-        }
-        auto oldSrcArraySize = int(bucketShift(oldB));
-
-        for(auto i = 0; i < oldSrcArraySize; i++)
-        {
-            auto srcBmap = (bmap*)(add(srcOldbuckets, uintptr_t(i * int(t->BucketSize))));
-            if(evacuated(srcBmap))
-            {
-                continue;
-            }
-
-            if(oldB >= dst->B)
-            {
-                // main bucket bits in dst is less than oldB bits in src
-                auto dstBmap = (bmap*)(add(dst->buckets, (uintptr_t(i) & bucketMask(dst->B)) * uintptr_t(t->BucketSize)));
-                for(; rec::overflow(gocpp::recv(dstBmap), t) != nullptr; )
-                {
-                    dstBmap = rec::overflow(gocpp::recv(dstBmap), t);
-                }
-                auto pos = 0;
-                for(; srcBmap != nullptr; )
-                {
-                    std::tie(dstBmap, pos) = moveToBmap(t, dst, dstBmap, pos, srcBmap);
-                    srcBmap = rec::overflow(gocpp::recv(srcBmap), t);
-                }
-                continue;
-            }
-
-            // oldB < dst.B, so a single source bucket may go to multiple destination buckets.
-            // Process entries one at a time.
-            for(; srcBmap != nullptr; )
-            {
-                // move from oldBlucket to new bucket
-                for(auto i = uintptr_t(0); i < bucketCnt; i++)
-                {
-                    if(isEmpty(srcBmap->tophash[i]))
-                    {
-                        continue;
-                    }
-
-                    if(src->flags & hashWriting != 0)
-                    {
-                        fatal("concurrent map clone and map write"_s);
-                    }
-
-                    auto srcK = add(gocpp::unsafe_pointer(srcBmap), dataOffset + i * uintptr_t(t->KeySize));
-                    if(rec::IndirectKey(gocpp::recv(t)))
-                    {
-                        srcK = *((gocpp::unsafe_pointer*)(srcK));
-                    }
-
-                    auto srcEle = add(gocpp::unsafe_pointer(srcBmap), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
-                    if(rec::IndirectElem(gocpp::recv(t)))
-                    {
-                        srcEle = *((gocpp::unsafe_pointer*)(srcEle));
-                    }
-                    auto dstEle = mapassign(t, dst, srcK);
-                    typedmemmove(t->Elem, dstEle, srcEle);
-                }
-                srcBmap = rec::overflow(gocpp::recv(srcBmap), t);
-            }
-        }
-        return dst;
-    }
-
-    // keys for implementing maps.keys
-    //
-    //go:linkname keys maps.keys
-    void keys(go_any m, gocpp::unsafe_pointer p)
-    {
-        auto e = efaceOf(& m);
-        auto t = (maptype*)(gocpp::unsafe_pointer(e->_type));
-        auto h = (hmap*)(e->data);
-
-        if(h == nullptr || h->count == 0)
-        {
-            return;
-        }
-        auto s = (golang::runtime::slice*)(p);
-        auto r = int(rand());
-        auto offset = uint8_t((r >> h->B) & (bucketCnt - 1));
-        if(h->B == 0)
-        {
-            copyKeys(t, h, (bmap*)(h->buckets), s, offset);
-            return;
-        }
-        auto arraySize = int(bucketShift(h->B));
-        auto buckets = h->buckets;
-        for(auto i = 0; i < arraySize; i++)
-        {
-            auto bucket = (i + r) & (arraySize - 1);
-            auto b = (bmap*)(add(buckets, uintptr_t(bucket) * uintptr_t(t->BucketSize)));
-            copyKeys(t, h, b, s, offset);
-        }
-
-        if(rec::growing(gocpp::recv(h)))
-        {
-            auto oldArraySize = int(rec::noldbuckets(gocpp::recv(h)));
-            for(auto i = 0; i < oldArraySize; i++)
-            {
-                auto bucket = (i + r) & (oldArraySize - 1);
-                auto b = (bmap*)(add(h->oldbuckets, uintptr_t(bucket) * uintptr_t(t->BucketSize)));
-                if(evacuated(b))
-                {
-                    continue;
-                }
-                copyKeys(t, h, b, s, offset);
-            }
-        }
-        return;
-    }
-
-    void copyKeys(maptype* t, hmap* h, bmap* b, golang::runtime::slice* s, uint8_t offset)
-    {
-        for(; b != nullptr; )
-        {
-            for(auto i = uintptr_t(0); i < bucketCnt; i++)
-            {
-                auto offi = (i + uintptr_t(offset)) & (bucketCnt - 1);
-                if(isEmpty(b->tophash[offi]))
-                {
-                    continue;
-                }
-                if(h->flags & hashWriting != 0)
-                {
-                    fatal("concurrent map read and map write"_s);
-                }
-                auto k = add(gocpp::unsafe_pointer(b), dataOffset + offi * uintptr_t(t->KeySize));
-                if(rec::IndirectKey(gocpp::recv(t)))
-                {
-                    k = *((gocpp::unsafe_pointer*)(k));
-                }
-                if(s->len >= s->cap)
-                {
-                    fatal("concurrent map read and map write"_s);
-                }
-                typedmemmove(t->Key, add(s->array, uintptr_t(s->len) * uintptr_t(rec::Size(gocpp::recv(t->Key)))), k);
-                s->len++;
-            }
-            b = rec::overflow(gocpp::recv(b), t);
-        }
-    }
-
-    // values for implementing maps.values
-    //
-    //go:linkname values maps.values
-    void values(go_any m, gocpp::unsafe_pointer p)
-    {
-        auto e = efaceOf(& m);
-        auto t = (maptype*)(gocpp::unsafe_pointer(e->_type));
-        auto h = (hmap*)(e->data);
-        if(h == nullptr || h->count == 0)
-        {
-            return;
-        }
-        auto s = (golang::runtime::slice*)(p);
-        auto r = int(rand());
-        auto offset = uint8_t((r >> h->B) & (bucketCnt - 1));
-        if(h->B == 0)
-        {
-            copyValues(t, h, (bmap*)(h->buckets), s, offset);
-            return;
-        }
-        auto arraySize = int(bucketShift(h->B));
-        auto buckets = h->buckets;
-        for(auto i = 0; i < arraySize; i++)
-        {
-            auto bucket = (i + r) & (arraySize - 1);
-            auto b = (bmap*)(add(buckets, uintptr_t(bucket) * uintptr_t(t->BucketSize)));
-            copyValues(t, h, b, s, offset);
-        }
-
-        if(rec::growing(gocpp::recv(h)))
-        {
-            auto oldArraySize = int(rec::noldbuckets(gocpp::recv(h)));
-            for(auto i = 0; i < oldArraySize; i++)
-            {
-                auto bucket = (i + r) & (oldArraySize - 1);
-                auto b = (bmap*)(add(h->oldbuckets, uintptr_t(bucket) * uintptr_t(t->BucketSize)));
-                if(evacuated(b))
-                {
-                    continue;
-                }
-                copyValues(t, h, b, s, offset);
-            }
-        }
-        return;
-    }
-
-    void copyValues(maptype* t, hmap* h, bmap* b, golang::runtime::slice* s, uint8_t offset)
-    {
-        for(; b != nullptr; )
-        {
-            for(auto i = uintptr_t(0); i < bucketCnt; i++)
-            {
-                auto offi = (i + uintptr_t(offset)) & (bucketCnt - 1);
-                if(isEmpty(b->tophash[offi]))
-                {
-                    continue;
-                }
-
-                if(h->flags & hashWriting != 0)
-                {
-                    fatal("concurrent map read and map write"_s);
-                }
-
-                auto ele = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + offi * uintptr_t(t->ValueSize));
-                if(rec::IndirectElem(gocpp::recv(t)))
-                {
-                    ele = *((gocpp::unsafe_pointer*)(ele));
-                }
-                if(s->len >= s->cap)
-                {
-                    fatal("concurrent map read and map write"_s);
-                }
-                typedmemmove(t->Elem, add(s->array, uintptr_t(s->len) * uintptr_t(rec::Size(gocpp::recv(t->Elem)))), ele);
-                s->len++;
-            }
-            b = rec::overflow(gocpp::recv(b), t);
-        }
     }
 
 }

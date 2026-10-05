@@ -10,21 +10,21 @@
 #include "gocpp/support.h"
 
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
     void assert(bool b);
-    void errorf(gocpp::string format, gocpp::slice<gocpp::go_any> args);
+    void panicf(gocpp::string format, gocpp::slice<go_any> args);
     
     template<typename... Args>
-    void errorf(gocpp::string format, Args... args)
+    void panicf(gocpp::string format, Args... args)
     {
-        return errorf(format, gocpp::ToSlice<gocpp::go_any>(args...));
+        return panicf(format, gocpp::ToSlice<go_any>(args...));
     }
     
     template<typename... Args>
-    void errorf(gocpp::string format, gocpp::go_any value, Args... args)
+    void panicf(gocpp::string format, go_any value, Args... args)
     {
-        return errorf(format, gocpp::ToSlice<gocpp::go_any>(value, args...));
+        return panicf(format, gocpp::ToSlice<go_any>(value, args...));
     }
 
     namespace rec

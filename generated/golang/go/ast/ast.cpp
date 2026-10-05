@@ -14,12 +14,20 @@
 #include "golang/go/ast/scope.h"
 #include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
+#include "golang/iter/iter.h"
+#include "golang/strings/iter.h"
 #include "golang/strings/strings.h"
 
 // Package ast declares the types used to represent syntax trees for Go
 // packages.
-namespace golang::ast
+//
+// Syntax trees may be constructed directly, but they are typically
+// produced from Go source code by the parser; see the
+// [go/parser.ParseFile] function.
+namespace golang::go::ast
 {
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
     namespace rec
     {
         using token::rec::IsValid;
@@ -485,10 +493,10 @@ namespace golang::ast
             }
 
             // Split on newlines.
-            auto cl = strings::Split(c, "\n"_s);
+            auto cl = strings::SplitSeq(c, "\n"_s);
 
             // Walk lines, stripping trailing white space and adding to list.
-            for(auto [gocpp_ignored, l] : cl)
+            for(auto [l, gocpp_ignored] : cl)
             {
                 lines = append(lines, stripTrailingWhitespace(l));
             }
@@ -724,6 +732,16 @@ namespace golang::ast
     // parameter list or the "..." length in an array type.
     //
     // A BasicLit node represents a literal of basic type.
+    //
+    // Note that for the CHAR and STRING kinds, the literal is stored
+    // with its quotes. For example, for a double-quoted STRING, the
+    // first and the last rune in the Value field will be ". The
+    // [strconv.Unquote] and [strconv.UnquoteChar] functions can be
+    // used to unquote STRING and CHAR values, respectively.
+    //
+    // For raw string literals (Kind == token.STRING && Value[0] == '`'),
+    // the Value field contains the string text without carriage returns (\r) that
+    // may have been present in the source.
     // A FuncLit node represents a function literal.
     // A CompositeLit node represents a composite literal.
     // A ParenExpr node represents a parenthesized expression.
@@ -851,6 +869,7 @@ namespace golang::ast
     {
         T result;
         result.ValuePos = this->ValuePos;
+        result.ValueEnd = this->ValueEnd;
         result.Kind = this->Kind;
         result.Value = this->Value;
         return result;
@@ -860,6 +879,7 @@ namespace golang::ast
     bool BasicLit::operator==(const T& ref) const
     {
         if (ValuePos != ref.ValuePos) return false;
+        if (ValueEnd != ref.ValueEnd) return false;
         if (Kind != ref.Kind) return false;
         if (Value != ref.Value) return false;
         return true;
@@ -869,6 +889,7 @@ namespace golang::ast
     {
         os << '{';
         os << "" << ValuePos;
+        os << " " << ValueEnd;
         os << " " << Kind;
         os << " " << Value;
         os << '}';
@@ -1736,7 +1757,14 @@ namespace golang::ast
 
     token::Pos rec::End(BasicLit* x)
     {
-        return token::Pos(int(x->ValuePos) + len(x->Value));
+        if(! rec::IsValid(gocpp::recv(x->ValueEnd)))
+        {
+            // Not from parser; use a heuristic.
+            // (Incorrect for `...` containing \r\n;
+            // see https://go.dev/issue/76031.)
+            return token::Pos(int(x->ValuePos) + len(x->Value));
+        }
+        return x->ValueEnd;
     }
 
     token::Pos rec::End(FuncLit* x)
@@ -3542,9 +3570,12 @@ namespace golang::ast
     // positions). A [CommentMap] may be used to facilitate some of these operations.
     //
     // Whether and how a comment is associated with a node depends on the
-    // interpretation of the syntax tree by the manipulating program: Except for Doc
+    // interpretation of the syntax tree by the manipulating program: except for Doc
     // and [Comment] comments directly associated with nodes, the remaining comments
-    // are "free-floating" (see also issues #18593, #20744).
+    // are "free-floating" (see also issues [#18593], [#20744]).
+    //
+    // [#18593]: https://go.dev/issue/18593
+    // [#20744]: https://go.dev/issue/20744
     
     template<typename T> requires gocpp::GoStruct<T>
     File::operator T()
@@ -3605,14 +3636,18 @@ namespace golang::ast
     }
 
     // Pos returns the position of the package declaration.
-    // (Use FileStart for the start of the entire file.)
+    // It may be invalid, for example in an empty file.
+    //
+    // (Use FileStart for the start of the entire file. It is always valid.)
     token::Pos rec::Pos(File* f)
     {
         return f->Package;
     }
 
     // End returns the end of the last declaration in the file.
-    // (Use FileEnd for the end of the entire file.)
+    // It may be invalid, for example in an empty file.
+    //
+    // (Use FileEnd for the end of the entire file. It is always valid.)
     token::Pos rec::End(File* f)
     {
         if(auto n = len(f->Decls); n > 0)
@@ -3678,10 +3713,10 @@ namespace golang::ast
     // not handwritten, by detecting the special comment described
     // at https://go.dev/s/generatedcode.
     //
-    // The syntax tree must have been parsed with the ParseComments flag.
+    // The syntax tree must have been parsed with the [go/parser.ParseComments] flag.
     // Example:
     //
-    //	f, err := parser.ParseFile(fset, filename, src, parser.ParseComments|parser.PackageClauseOnly)
+    //	f, err := parser.ParseFile(fset, filename, src, parser.ParseComments|parser.PackageClauseOnly|parser.SkipObjectResolution)
     //	if err != nil { ... }
     //	gen := ast.IsGenerated(f)
     bool IsGenerated(File* file)
@@ -3705,7 +3740,7 @@ namespace golang::ast
                 auto prefix = "// Code generated "_s;
                 if(strings::Contains(comment->Text, prefix))
                 {
-                    for(auto [gocpp_ignored, line] : strings::Split(comment->Text, "\n"_s))
+                    for(auto [line, gocpp_ignored] : strings::SplitSeq(comment->Text, "\n"_s))
                     {
                         if(auto [rest, ok] = strings::CutPrefix(line, prefix); ok)
                         {

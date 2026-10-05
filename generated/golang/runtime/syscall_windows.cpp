@@ -15,10 +15,10 @@
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
+#include "golang/internal/runtime/syscall/windows/syscall_windows.h"
 #include "golang/runtime/cgocall.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/lock_sema.h"
-#include "golang/runtime/mfinal.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
@@ -26,14 +26,17 @@
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/type.h"
-#include "golang/runtime/typekind.h"
 #include "golang/runtime/zcallback_windows.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
         using abi::rec::InSlice;
+        using abi::rec::Kind;
         using abi::rec::OutSlice;
     }
 
@@ -251,20 +254,15 @@ namespace golang::runtime
             // passed as two words (little endian); and
             // structs are pushed on the stack. In
             // fastcall, arguments larger than the word
-            // size are passed by reference. On arm,
-            // 8-byte aligned arguments round up to the
-            // next even register and can be split across
-            // registers and the stack.
+            // size are passed by reference.
             gocpp::panic("compileCallback: argument size is larger than uintptr"_s);
         }
-        if(auto k = t->Kind_ & kindMask; GOARCH != "386"_s && (k == kindFloat32 || k == kindFloat64))
+        if(auto k = rec::Kind(gocpp::recv(t)); GOARCH != "386"_s && (k == abi::Float32 || k == abi::Float64))
         {
             // In fastcall, floating-point arguments in
             // the first four positions are passed in
             // floating-point registers, which we don't
-            // currently spill. arm passes floating-point
-            // arguments in VFP registers, which we also
-            // don't support.
+            // currently spill.
             // So basically we only support 386.
             gocpp::panic("compileCallback: float arguments not supported"_s);
         }
@@ -282,7 +280,7 @@ namespace golang::runtime
         // argument word and all supported Windows
         // architectures are little endian, so srcStackOffset
         // is already pointing to the right place for smaller
-        // arguments. The same is true on arm.
+        // arguments.
         auto oldParts = p->parts;
         if(rec::tryRegAssignArg(gocpp::recv(p), t, 0))
         {
@@ -320,8 +318,8 @@ namespace golang::runtime
             p->dstStackSize += t->Size_;
         }
 
-        // cdecl, stdcall, fastcall, and arm pad arguments to word size.
-        // TODO(rsc): On arm and arm64 do we need to skip the caller's saved LR?
+        // cdecl, stdcall, and fastcall pad arguments to word size.
+        // TODO(rsc): On arm64 do we need to skip the caller's saved LR?
         p->srcStackSize += goarch::PtrSize;
     }
 
@@ -335,25 +333,25 @@ namespace golang::runtime
     {
         //Go switch emulation
         {
-            auto k = t->Kind_ & kindMask;
+            auto k = rec::Kind(gocpp::recv(t));
             auto condition = k;
             int conditionId = -1;
-            if(condition == kindBool) { conditionId = 0; }
-            else if(condition == kindInt) { conditionId = 1; }
-            else if(condition == kindInt8) { conditionId = 2; }
-            else if(condition == kindInt16) { conditionId = 3; }
-            else if(condition == kindInt32) { conditionId = 4; }
-            else if(condition == kindUint) { conditionId = 5; }
-            else if(condition == kindUint8) { conditionId = 6; }
-            else if(condition == kindUint16) { conditionId = 7; }
-            else if(condition == kindUint32) { conditionId = 8; }
-            else if(condition == kindUintptr) { conditionId = 9; }
-            else if(condition == kindPtr) { conditionId = 10; }
-            else if(condition == kindUnsafePointer) { conditionId = 11; }
-            else if(condition == kindInt64) { conditionId = 12; }
-            else if(condition == kindUint64) { conditionId = 13; }
-            else if(condition == kindArray) { conditionId = 14; }
-            else if(condition == kindStruct) { conditionId = 15; }
+            if(condition == abi::Bool) { conditionId = 0; }
+            else if(condition == abi::Int) { conditionId = 1; }
+            else if(condition == abi::Int8) { conditionId = 2; }
+            else if(condition == abi::Int16) { conditionId = 3; }
+            else if(condition == abi::Int32) { conditionId = 4; }
+            else if(condition == abi::Uint) { conditionId = 5; }
+            else if(condition == abi::Uint8) { conditionId = 6; }
+            else if(condition == abi::Uint16) { conditionId = 7; }
+            else if(condition == abi::Uint32) { conditionId = 8; }
+            else if(condition == abi::Uintptr) { conditionId = 9; }
+            else if(condition == abi::Pointer) { conditionId = 10; }
+            else if(condition == abi::UnsafePointer) { conditionId = 11; }
+            else if(condition == abi::Int64) { conditionId = 12; }
+            else if(condition == abi::Uint64) { conditionId = 13; }
+            else if(condition == abi::Array) { conditionId = 14; }
+            else if(condition == abi::Struct) { conditionId = 15; }
             switch(conditionId)
             {
                 case 0:
@@ -472,7 +470,7 @@ namespace golang::runtime
     // and we want callback to arrive at
     // correspondent call instruction instead of start of
     // runtime.callbackasm.
-    // On ARM, runtime.callbackasm is a series of mov and branch instructions.
+    // On ARM64, runtime.callbackasm is a series of mov and branch instructions.
     // R12 is loaded with the callback index. Each entry is two instructions,
     // hence 8 bytes.
     uintptr_t callbackasmAddr(int i)
@@ -484,8 +482,7 @@ namespace golang::runtime
             int conditionId = -1;
             if(condition == "386"_s) { conditionId = 0; }
             else if(condition == "amd64"_s) { conditionId = 1; }
-            else if(condition == "arm"_s) { conditionId = 2; }
-            else if(condition == "arm64"_s) { conditionId = 3; }
+            else if(condition == "arm64"_s) { conditionId = 2; }
             switch(conditionId)
             {
                 default:
@@ -496,8 +493,7 @@ namespace golang::runtime
                     entrySize = 5;
                     break;
                 case 2:
-                case 3:
-                    // On ARM and ARM64, each entry is a MOV instruction
+                    // On ARM64, each entry is a MOV instruction
                     // followed by a branch instruction
                     entrySize = 8;
                     break;
@@ -511,7 +507,7 @@ namespace golang::runtime
     //
     // On 386, if cdecl is true, the returned C function will use the
     // cdecl calling convention; otherwise, it will use stdcall. On amd64,
-    // it always uses fastcall. On arm, it always uses the ARM convention.
+    // it always uses fastcall.
     //
     //go:linkname compileCallback syscall.compileCallback
     uintptr_t compileCallback(eface fn, bool cdecl)
@@ -523,7 +519,7 @@ namespace golang::runtime
             cdecl = false;
         }
 
-        if(fn._type == nullptr || (fn._type->Kind_ & kindMask) != kindFunc)
+        if(fn._type == nullptr || rec::Kind(gocpp::recv(fn._type)) != abi::Func)
         {
             gocpp::panic("compileCallback: expected function with one uintptr-sized result"_s);
         }
@@ -548,7 +544,7 @@ namespace golang::runtime
         {
             gocpp::panic("compileCallback: expected function with one uintptr-sized result"_s);
         }
-        if(auto k = rec::OutSlice(gocpp::recv(ft))[0]->Kind_ & kindMask; k == kindFloat32 || k == kindFloat64)
+        if(auto k = rec::Kind(gocpp::recv(rec::OutSlice(gocpp::recv(ft))[0])); k == abi::Float32 || k == abi::Float64)
         {
             // In cdecl and stdcall, float results are returned in
             // ST(0). In fastcall, they're returned in XMM0.
@@ -712,246 +708,41 @@ namespace golang::runtime
         }
     }
 
-    struct gocpp_id_0
-        {
-            uint16_t* lpFileName{};
-            uintptr_t hFile{}; // always 0
-            uint32_t flags{};
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                result.lpFileName = this->lpFileName;
-                result.hFile = this->hFile;
-                result.flags = this->flags;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                if (lpFileName != ref.lpFileName) return false;
-                if (hFile != ref.hFile) return false;
-                if (flags != ref.flags) return false;
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << "" << lpFileName;
-                os << " " << hFile;
-                os << " " << flags;
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
-    //go:linkname syscall_loadsystemlibrary syscall.loadsystemlibrary
+    // syscall_syscalln calls fn with args[:n].
+    // It is used to implement [syscall.SyscallN].
+    // It shouldn't be used in the runtime package,
+    // use [stdcall] instead.
+    //
+    //go:linkname syscall_syscalln syscall.syscalln
     //go:nosplit
-    //go:cgo_unsafe_args
-    std::tuple<uintptr_t, uintptr_t> syscall_loadsystemlibrary(uint16_t* filename)
-    {
-        uintptr_t handle;
-        uintptr_t err;
-        lockOSThread();
-        auto c = & getg()->m->syscall;
-        c->fn = getLoadLibraryEx();
-        c->n = 3;
-        auto args = gocpp_id_0 {filename, 0, _LOAD_LIBRARY_SEARCH_SYSTEM32};
-        c->args = uintptr_t(noescape(gocpp::unsafe_pointer(& args)));
-
-        cgocall(asmstdcallAddr, gocpp::unsafe_pointer(c));
-        KeepAlive(filename);
-        handle = c->r1;
-        if(handle == 0)
-        {
-            err = c->err;
-        }
-        // not defer'd after the lockOSThread above to save stack frame size.
-        unlockOSThread();
-        return {handle, err};
-    }
-
-    //go:linkname syscall_loadlibrary syscall.loadlibrary
-    //go:nosplit
-    //go:cgo_unsafe_args
-    std::tuple<uintptr_t, uintptr_t> syscall_loadlibrary(uint16_t* filename)
-    {
-        uintptr_t handle;
-        uintptr_t err;
-        gocpp::Defer defer;
-        try
-        {
-            lockOSThread();
-            defer.push_back([=]{ unlockOSThread(); });
-            auto c = & getg()->m->syscall;
-            c->fn = getLoadLibrary();
-            c->n = 1;
-            c->args = uintptr_t(noescape(gocpp::unsafe_pointer(& filename)));
-            cgocall(asmstdcallAddr, gocpp::unsafe_pointer(c));
-            KeepAlive(filename);
-            handle = c->r1;
-            if(handle == 0)
-            {
-                err = c->err;
-            }
-            return {handle, err};
-        }
-        catch(gocpp::GoPanic& gp)
-        {
-            defer.handlePanic(gp);
-            return {handle, err};
-        }
-    }
-
-    //go:linkname syscall_getprocaddress syscall.getprocaddress
-    //go:nosplit
-    //go:cgo_unsafe_args
-    std::tuple<uintptr_t, uintptr_t> syscall_getprocaddress(uintptr_t handle, unsigned char* procname)
-    {
-        uintptr_t outhandle;
-        uintptr_t err;
-        gocpp::Defer defer;
-        try
-        {
-            lockOSThread();
-            defer.push_back([=]{ unlockOSThread(); });
-            auto c = & getg()->m->syscall;
-            c->fn = getGetProcAddress();
-            c->n = 2;
-            c->args = uintptr_t(noescape(gocpp::unsafe_pointer(& handle)));
-            cgocall(asmstdcallAddr, gocpp::unsafe_pointer(c));
-            KeepAlive(procname);
-            outhandle = c->r1;
-            if(outhandle == 0)
-            {
-                err = c->err;
-            }
-            return {outhandle, err};
-        }
-        catch(gocpp::GoPanic& gp)
-        {
-            defer.handlePanic(gp);
-            return {outhandle, err};
-        }
-    }
-
-    //go:linkname syscall_Syscall syscall.Syscall
-    //go:nosplit
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3)
+    //go:uintptrkeepalive
+    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, gocpp::slice<uintptr_t> args)
     {
         uintptr_t r1;
         uintptr_t r2;
         uintptr_t err;
-        return syscall_SyscallN(fn, a1, a2, a3);
-    }
-
-    //go:linkname syscall_Syscall6 syscall.Syscall6
-    //go:nosplit
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall6(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6)
-    {
-        uintptr_t r1;
-        uintptr_t r2;
-        uintptr_t err;
-        return syscall_SyscallN(fn, a1, a2, a3, a4, a5, a6);
-    }
-
-    //go:linkname syscall_Syscall9 syscall.Syscall9
-    //go:nosplit
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall9(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9)
-    {
-        uintptr_t r1;
-        uintptr_t r2;
-        uintptr_t err;
-        return syscall_SyscallN(fn, a1, a2, a3, a4, a5, a6, a7, a8, a9);
-    }
-
-    //go:linkname syscall_Syscall12 syscall.Syscall12
-    //go:nosplit
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall12(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12)
-    {
-        uintptr_t r1;
-        uintptr_t r2;
-        uintptr_t err;
-        return syscall_SyscallN(fn, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
-    }
-
-    //go:linkname syscall_Syscall15 syscall.Syscall15
-    //go:nosplit
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall15(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15)
-    {
-        uintptr_t r1;
-        uintptr_t r2;
-        uintptr_t err;
-        return syscall_SyscallN(fn, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
-    }
-
-    //go:linkname syscall_Syscall18 syscall.Syscall18
-    //go:nosplit
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall18(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15, uintptr_t a16, uintptr_t a17, uintptr_t a18)
-    {
-        uintptr_t r1;
-        uintptr_t r2;
-        uintptr_t err;
-        return syscall_SyscallN(fn, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18);
-    }
-
-    //go:linkname syscall_SyscallN syscall.SyscallN
-    //go:nosplit
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args)
-    {
-        uintptr_t r1;
-        uintptr_t r2;
-        uintptr_t err;
-        gocpp::Defer defer;
-        try
+        if(n > uintptr_t(len(args)))
         {
-            auto nargs = len(args);
-
-            // asmstdcall expects it can access the first 4 arguments
-            // to load them into registers.
-            gocpp::array<uintptr_t, 4> tmp = {};
-            //Go switch emulation
-            {
-                int conditionId = -1;
-                if(nargs < 4) { conditionId = 0; }
-                else if(nargs > maxArgs) { conditionId = 1; }
-                switch(conditionId)
-                {
-                    case 0:
-                        copy(tmp.make_slice(0), args);
-                        args = tmp.make_slice(0);
-                        break;
-                    case 1:
-                        gocpp::panic("runtime: SyscallN has too many arguments"_s);
-                        break;
-                }
-            }
-
-            lockOSThread();
-            defer.push_back([=]{ unlockOSThread(); });
-            auto c = & getg()->m->syscall;
-            c->fn = trap;
-            c->n = uintptr_t(nargs);
-            c->args = uintptr_t(noescape(gocpp::unsafe_pointer(& args[0])));
-            cgocall(asmstdcallAddr, gocpp::unsafe_pointer(c));
-            return {c->r1, c->r2, c->err};
+            // should not be reachable from user code
+            gocpp::panic("syscall: n > len(args)"_s);
         }
-        catch(gocpp::GoPanic& gp)
+
+        // The cgocall parameters are stored in m instead of in
+        // the stack because the stack can move during fn if it
+        // calls back into Go.
+        auto c = & getg()->m->winsyscall;
+        c->Fn = fn;
+        c->N = n;
+        if(c->N != 0)
         {
-            defer.handlePanic(gp);
-            return {r1, r2, err};
+            c->Args = uintptr_t(noescape(gocpp::unsafe_pointer(& args[0])));
         }
+        auto errno = cgocall(asmstdcallAddr, gocpp::unsafe_pointer(c));
+        // cgocall may reschedule us on to a different M,
+        // but it copies the return values into the new M's
+        // so we can read them from there.
+        c = & getg()->m->winsyscall;
+        return {c->R1, c->R2, uintptr_t(uint32_t(errno))};
     }
 
 }

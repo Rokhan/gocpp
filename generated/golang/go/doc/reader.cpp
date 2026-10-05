@@ -11,6 +11,7 @@
 #include "golang/go/doc/reader.h"
 #include "gocpp/support.h"
 
+#include "golang/cmp/cmp.h"
 #include "golang/fmt/print.h"
 #include "golang/go/ast/ast.h"
 #include "golang/go/doc/doc.h"
@@ -19,17 +20,29 @@
 #include "golang/go/token/token.h"
 #include "golang/internal/lazyregexp/lazyre.h"
 #include "golang/path/path.h"
-#include "golang/sort/sort.h"
-#include "golang/strconv/atoi.h"
+#include "golang/slices/sort.h"
+#include "golang/strconv/number.h"
 #include "golang/strconv/quote.h"
 #include "golang/strings/builder.h"
+#include "golang/strings/compare.h"
 #include "golang/strings/strings.h"
 #include "golang/unicode/digit.h"
 #include "golang/unicode/graphic.h"
 #include "golang/unicode/utf8/utf8.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
+    namespace ast = golang::go::ast;
+    namespace cmp = golang::cmp;
+    namespace fmt = golang::fmt;
+    namespace lazyregexp = golang::internal::lazyregexp;
+    namespace path = golang::path;
+    namespace slices = golang::slices;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using ast::rec::End;
@@ -984,7 +997,7 @@ namespace golang::doc
             r->filenames[i] = filename;
             i++;
         }
-        sort::Strings(r->filenames);
+        slices::Sort(r->filenames);
 
         // process files in sorted order
         for(auto [gocpp_ignored, filename] : r->filenames)
@@ -1168,62 +1181,6 @@ namespace golang::doc
         }
     }
 
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    data::operator T()
-    {
-        T result;
-        result.n = this->n;
-        result.swap = this->swap;
-        result.less = this->less;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool data::operator==(const T& ref) const
-    {
-        if (n != ref.n) return false;
-        if (swap != ref.swap) return false;
-        if (less != ref.less) return false;
-        return true;
-    }
-
-    std::ostream& data::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << n;
-        os << " " << swap;
-        os << " " << less;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct data& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    int rec::Len(data* d)
-    {
-        return d->n;
-    }
-
-    void rec::Swap(data* d, int i, int j)
-    {
-        d->swap(i, j);
-    }
-
-    bool rec::Less(data* d, int i, int j)
-    {
-        return d->less(i, j);
-    }
-
-    // sortBy is a helper function for sorting.
-    void sortBy(std::function<bool (int i, int j)> less, std::function<void (int i, int j)> swap, int n)
-    {
-        sort::Sort(new data {n, swap, less});
-    }
-
     gocpp::slice<gocpp::string> sortedKeys(gocpp::map<gocpp::string, int> m)
     {
         auto list = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), len(m));
@@ -1233,7 +1190,7 @@ namespace golang::doc
             list[i] = key;
             i++;
         }
-        sort::Strings(list);
+        slices::Sort(list);
         return list;
     }
 
@@ -1265,17 +1222,15 @@ namespace golang::doc
         }
         list = list.make_slice(0, i);
 
-        sortBy([=](int i, int j) mutable -> bool
+        slices::SortFunc(list, [=](Value* a, Value* b) mutable -> int
         {
-            if(auto [ni, nj] = std::tuple{sortingName(list[i]->Decl), sortingName(list[j]->Decl)}; ni != nj)
+            auto r = strings::Compare(sortingName(a->Decl), sortingName(b->Decl));
+            if(r != 0)
             {
-                return ni < nj;
+                return r;
             }
-            return list[i]->order < list[j]->order;
-        }, [=](int i, int j) mutable -> void
-        {
-            std::tie(list[i], list[j]) = std::tuple{list[j], list[i]};
-        }, len(list));
+            return cmp::Compare(a->order, b->order);
+        });
 
         return list;
     }
@@ -1298,13 +1253,10 @@ namespace golang::doc
             i++;
         }
 
-        sortBy([=](int i, int j) mutable -> bool
+        slices::SortFunc(list, [=](Type* a, Type* b) mutable -> int
         {
-            return list[i]->Name < list[j]->Name;
-        }, [=](int i, int j) mutable -> void
-        {
-            std::tie(list[i], list[j]) = std::tuple{list[j], list[i]};
-        }, len(list));
+            return strings::Compare(a->Name, b->Name);
+        });
 
         return list;
     }
@@ -1349,13 +1301,10 @@ namespace golang::doc
             }
         }
         list = list.make_slice(0, i);
-        sortBy([=](int i, int j) mutable -> bool
+        slices::SortFunc(list, [=](Func* a, Func* b) mutable -> int
         {
-            return list[i]->Name < list[j]->Name;
-        }, [=](int i, int j) mutable -> void
-        {
-            std::tie(list[i], list[j]) = std::tuple{list[j], list[i]};
-        }, len(list));
+            return strings::Compare(a->Name, b->Name);
+        });
         return list;
     }
 
@@ -1404,6 +1353,7 @@ namespace golang::doc
     gocpp::map<gocpp::string, bool> predeclaredFuncs = gocpp::map<gocpp::string, bool> {
         { "append"_s, true },
         { "cap"_s, true },
+        { "clear"_s, true },
         { "close"_s, true },
         { "complex"_s, true },
         { "copy"_s, true },
@@ -1411,6 +1361,8 @@ namespace golang::doc
         { "imag"_s, true },
         { "len"_s, true },
         { "make"_s, true },
+        { "max"_s, true },
+        { "min"_s, true },
         { "new"_s, true },
         { "panic"_s, true },
         { "print"_s, true },

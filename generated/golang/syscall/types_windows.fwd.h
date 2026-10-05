@@ -18,13 +18,18 @@ namespace golang::syscall
     const long O_APPEND = 0x00400;
     const long O_SYNC = 0x01000;
     const long O_ASYNC = 0x02000;
+    const long o_DIRECTORY = 0x04000;
     const long O_CLOEXEC = 0x80000;
+    const long o_NOFOLLOW_ANY = 0x200000000;
+    const long o_WRITE_ATTRS = 0x800000000;
+    const long fileFlagsMask = 0xFFF00000;
     const long GENERIC_READ = 0x80000000;
     const long GENERIC_WRITE = 0x40000000;
     const long GENERIC_EXECUTE = 0x20000000;
     const long GENERIC_ALL = 0x10000000;
     const long FILE_LIST_DIRECTORY = 0x00000001;
     const long FILE_APPEND_DATA = 0x00000004;
+    const long _FILE_WRITE_EA = 0x00000010;
     const long FILE_WRITE_ATTRIBUTES = 0x00000100;
     const long FILE_SHARE_READ = 0x00000001;
     const long FILE_SHARE_WRITE = 0x00000002;
@@ -42,9 +47,19 @@ namespace golang::syscall
     const long OPEN_EXISTING = 3;
     const long OPEN_ALWAYS = 4;
     const long TRUNCATE_EXISTING = 5;
+    // The following flags are supported by [Open]
+    // and exported in [golang.org/x/sys/windows].
+    const long _FILE_FLAG_OPEN_NO_RECALL = 0x00100000;
     const long FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000;
+    const long _FILE_FLAG_SESSION_AWARE = 0x00800000;
+    const long _FILE_FLAG_POSIX_SEMANTICS = 0x01000000;
     const long FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+    const long _FILE_FLAG_DELETE_ON_CLOSE = 0x04000000;
+    const long _FILE_FLAG_SEQUENTIAL_SCAN = 0x08000000;
+    const long _FILE_FLAG_RANDOM_ACCESS = 0x10000000;
+    const long _FILE_FLAG_NO_BUFFERING = 0x20000000;
     const long FILE_FLAG_OVERLAPPED = 0x40000000;
+    const long _FILE_FLAG_WRITE_THROUGH = 0x80000000;
     const long HANDLE_FLAG_INHERIT = 0x00000001;
     const long STARTF_USESTDHANDLES = 0x00000100;
     const long STARTF_USESHOWWINDOW = 0x00000001;
@@ -189,6 +204,7 @@ namespace golang::syscall
     using Pointer = gocpp_id_0*;
     struct Timeval;
     struct SecurityAttributes;
+    struct Overlapped;
     struct FileNotifyInformation;
     struct Filetime;
     struct Win32finddata;
@@ -213,11 +229,14 @@ namespace golang::syscall
     const long SW_RESTORE = 9;
     const long SW_SHOWDEFAULT = 10;
     const long SW_FORCEMINIMIZE = 11;
+    struct StartupInfo;
     struct _PROC_THREAD_ATTRIBUTE_LIST;
+    struct procThreadAttributeListContainer;
     const long _PROC_THREAD_ATTRIBUTE_PARENT_PROCESS = 0x00020000;
     const long _PROC_THREAD_ATTRIBUTE_HANDLE_LIST = 0x00020002;
     struct _STARTUPINFOEXW;
     const long _EXTENDED_STARTUPINFO_PRESENT = 0x00080000;
+    struct ProcessInformation;
     struct ProcessEntry32;
     struct Systemtime;
     struct Timezoneinformation;
@@ -394,6 +413,7 @@ namespace golang::syscall
     const long MAXLEN_IFDESCR = 256;
     struct MibIfRow;
     struct CertInfo;
+    struct CertContext;
     struct CertChainContext;
     struct CertTrustListInfo;
     struct CertSimpleChain;
@@ -488,6 +508,17 @@ namespace golang::syscall
     const long SYMBOLIC_LINK_FLAG_DIRECTORY = 0x1;
     const long _SYMLINK_FLAG_RELATIVE = 1;
     const long UNIX_PATH_MAX = 108;
+    const int validFileFlagsMask = FILE_FLAG_OPEN_REPARSE_POINT |
+        FILE_FLAG_BACKUP_SEMANTICS |
+        FILE_FLAG_OVERLAPPED |
+        _FILE_FLAG_OPEN_NO_RECALL |
+        _FILE_FLAG_SESSION_AWARE |
+        _FILE_FLAG_POSIX_SEMANTICS |
+        _FILE_FLAG_DELETE_ON_CLOSE |
+        _FILE_FLAG_SEQUENTIAL_SCAN |
+        _FILE_FLAG_NO_BUFFERING |
+        _FILE_FLAG_RANDOM_ACCESS |
+        _FILE_FLAG_WRITE_THROUGH;
     const int TH32CS_SNAPALL = TH32CS_SNAPHEAPLIST | TH32CS_SNAPMODULE | TH32CS_SNAPPROCESS | TH32CS_SNAPTHREAD;
     const int IOC_INOUT = IOC_IN | IOC_OUT;
     const int SIO_KEEPALIVE_VALS = IOC_IN | IOC_VENDOR | 4;
@@ -522,8 +553,10 @@ namespace golang::syscall
     const Errno ERROR_NOT_FOUND = 1168;
     const Errno ERROR_PRIVILEGE_NOT_HELD = 1314;
     const Errno WSAEACCES = 10013;
+    const Errno WSAENOPROTOOPT = 10042;
     const Errno WSAECONNABORTED = 10053;
     const Errno WSAECONNRESET = 10054;
+    const Errno _ERROR_INVALID_PARAMETER = 87;
     // More invented values for signals
     const Signal go_SIGHUP = Signal(0x1);
     const Signal go_SIGINT = Signal(0x2);
@@ -538,9 +571,5 @@ namespace golang::syscall
     const Signal go_SIGPIPE = Signal(0xd);
     const Signal go_SIGALRM = Signal(0xe);
     const Signal go_SIGTERM = Signal(0xf);
-    struct Overlapped;
-    struct StartupInfo;
-    struct ProcessInformation;
-    struct CertContext;
     const int SIO_GET_EXTENSION_FUNCTION_POINTER = IOC_INOUT | IOC_WS2 | 6;
 }

@@ -13,6 +13,7 @@
 
 namespace golang::sync
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }

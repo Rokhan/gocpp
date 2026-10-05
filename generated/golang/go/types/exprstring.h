@@ -9,10 +9,17 @@
 #include "golang/go/types/exprstring.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/ast/ast.h"
 #include "golang/bytes/buffer.fwd.h"
+#include "golang/go/ast/ast.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+    namespace bytes = golang::bytes;
+}
+#include "golang/go/ast/ast.h"
+
+namespace golang::go::types
 {
     gocpp::string ExprString(ast::Expr x);
     void WriteExpr(bytes::Buffer* buf, ast::Expr x);

@@ -11,6 +11,8 @@
 #include "golang/internal/reflectlite/value.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/escape.h"
+#include "golang/internal/abi/iface.h"
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/reflectlite/type.h"
@@ -18,10 +20,16 @@
 #include "golang/runtime/extern.h"
 #include "golang/runtime/symtab.h"
 
-namespace golang::reflectlite
+namespace golang::internal::reflectlite
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace goarch = golang::internal::goarch;
+    namespace runtime = golang::runtime;
+    namespace unsafeheader = golang::internal::unsafeheader;
     namespace rec
     {
+        using abi::rec::IsDirectIface;
         using abi::rec::Kind;
         using abi::rec::NumMethod;
         using abi::rec::Pointers;
@@ -86,7 +94,7 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
-    golang::reflectlite::Kind rec::kind(flag f)
+    golang::internal::reflectlite::Kind rec::kind(flag f)
     {
         return Kind(f & flagKindMask);
     }
@@ -107,7 +115,7 @@ namespace golang::reflectlite
         // types, held in the central map). So there is no need to
         // escape types. noescape here help avoid unnecessary escape
         // of v.
-        return (abi::Type*)(noescape(gocpp::unsafe_pointer(v.typ_)));
+        return (abi::Type*)(abi::NoEscape(gocpp::unsafe_pointer(v.typ_)));
     }
 
     // pointer returns the underlying pointer represented by v.
@@ -130,12 +138,12 @@ namespace golang::reflectlite
     {
         auto t = rec::typ(gocpp::recv(v));
         go_any i = {};
-        auto e = (emptyInterface*)(gocpp::unsafe_pointer(& i));
+        auto e = (abi::EmptyInterface*)(gocpp::unsafe_pointer(& i));
         // First, fill in the data portion of the interface.
         //Go switch emulation
         {
             int conditionId = -1;
-            if(ifaceIndir(t)) { conditionId = 0; }
+            if(! rec::IsDirectIface(gocpp::recv(t))) { conditionId = 0; }
             else if(v.flag & flagIndir != 0) { conditionId = 1; }
             switch(conditionId)
             {
@@ -149,23 +157,21 @@ namespace golang::reflectlite
                     auto ptr = v.ptr;
                     if(v.flag & flagAddr != 0)
                     {
-                        // TODO: pass safe boolean from valueInterface so
-                        // we don't need to copy if safe==true?
                         auto c = unsafe_New(t);
                         typedmemmove(t, c, ptr);
                         ptr = c;
                     }
-                    e->word = ptr;
+                    e->Data = ptr;
                     break;
                 }
                 case 1:
                     // Value is indirect, but interface is direct. We need
                     // to load the data at v.ptr into the interface data word.
-                    e->word = *(gocpp::unsafe_pointer*)(v.ptr);
+                    e->Data = *(gocpp::unsafe_pointer*)(v.ptr);
                     break;
                 default:
                     // Value is direct, and so is the interface.
-                    e->word = v.ptr;
+                    e->Data = v.ptr;
                     break;
             }
         }
@@ -173,26 +179,26 @@ namespace golang::reflectlite
         // to have any operation between the e.word and e.typ assignments
         // that would let the garbage collector observe the partially-built
         // interface value.
-        e->typ = t;
+        e->Type = t;
         return i;
     }
 
     // unpackEface converts the empty interface i to a Value.
     Value unpackEface(go_any i)
     {
-        auto e = (emptyInterface*)(gocpp::unsafe_pointer(& i));
+        auto e = (abi::EmptyInterface*)(gocpp::unsafe_pointer(& i));
         // NOTE: don't read e.word until we know whether it is really a pointer or not.
-        auto t = e->typ;
+        auto t = e->Type;
         if(t == nullptr)
         {
             return Value {};
         }
         auto f = flag(rec::Kind(gocpp::recv(t)));
-        if(ifaceIndir(t))
+        if(! rec::IsDirectIface(gocpp::recv(t)))
         {
             f |= flagIndir;
         }
-        return Value {t, e->word, f};
+        return Value {t, e->Data, f};
     }
 
     // A ValueError occurs when a Value method is invoked on
@@ -250,39 +256,6 @@ namespace golang::reflectlite
             return "unknown method"_s;
         }
         return rec::Name(gocpp::recv(f));
-    }
-
-    // emptyInterface is the header for an interface{} value.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    emptyInterface::operator T()
-    {
-        T result;
-        result.typ = this->typ;
-        result.word = this->word;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool emptyInterface::operator==(const T& ref) const
-    {
-        if (typ != ref.typ) return false;
-        if (word != ref.word) return false;
-        return true;
-    }
-
-    std::ostream& emptyInterface::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << typ;
-        os << " " << word;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct emptyInterface& value)
-    {
-        return value.PrintTo(os);
     }
 
     // mustBeExported panics if f records that the value was obtained using
@@ -516,7 +489,6 @@ namespace golang::reflectlite
             return *(gocpp_id_4*)(v.ptr);
         }
 
-        // TODO: pass safe to packEface so we don't need to copy if safe==true?
         return packEface(v);
     }
 
@@ -583,7 +555,7 @@ namespace golang::reflectlite
 
     // Kind returns v's Kind.
     // If v is the zero Value (IsValid returns false), Kind returns Invalid.
-    golang::reflectlite::Kind rec::Kind(Value v)
+    golang::internal::reflectlite::Kind rec::Kind(Value v)
     {
         return rec::kind(gocpp::recv(v));
     }
@@ -634,7 +606,7 @@ namespace golang::reflectlite
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Len"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new ValueError {"reflectlite.Value.Len"_s, rec::kind(gocpp::recv(v))});
     }
 
     // NumMethod returns the number of exported methods in the value's method set.
@@ -672,7 +644,7 @@ namespace golang::reflectlite
     }
 
     // Type returns v's type.
-    golang::reflectlite::Type rec::Type(Value v)
+    golang::internal::reflectlite::Type rec::Type(Value v)
     {
         auto f = v.flag;
         if(f == 0)
@@ -775,58 +747,6 @@ namespace golang::reflectlite
     //go:noescape
     void typedmemmove(abi::Type* t, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
     /* convertBlockStmt, nil block */;
-
-    // Dummy annotation marking that the value x escapes,
-    // for use in cases where the reflect code is so clever that
-    // the compiler cannot follow.
-    void escapes(go_any x)
-    {
-        if(dummy.b)
-        {
-            dummy.x = x;
-        }
-    }
-
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    dummyStruct::operator T()
-    {
-        T result;
-        result.b = this->b;
-        result.x = this->x;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool dummyStruct::operator==(const T& ref) const
-    {
-        if (b != ref.b) return false;
-        if (x != ref.x) return false;
-        return true;
-    }
-
-    std::ostream& dummyStruct::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << b;
-        os << " " << x;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct dummyStruct& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
-    dummyStruct dummy;
-    //go:nosplit
-    gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p)
-    {
-        auto x = uintptr_t(p);
-        return gocpp::unsafe_pointer(x ^ 0);
-    }
 
 }
 

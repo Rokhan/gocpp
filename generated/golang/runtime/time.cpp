@@ -12,22 +12,31 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/consts.h"
+#include "golang/runtime/chan.h"
+#include "golang/runtime/lock_spinbit.h"
+#include "golang/runtime/lockrank.h"
+#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/netpoll.h"
-#include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/race0.h"
+#include "golang/runtime/rand.h"
 #include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
+#include "golang/runtime/synctest.h"
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+#include "golang/runtime/timeasm.h"
+#include "golang/runtime/traceruntime.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::Add;
@@ -36,49 +45,123 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    // Package time knows the layout of this structure.
-    // If this struct changes, adjust ../time/sleep.go:/runtimeTimer.
+    //go:linkname time_runtimeNow time.runtimeNow
+    std::tuple<int64_t, int32_t, int64_t> time_runtimeNow()
+    {
+        int64_t sec;
+        int32_t nsec;
+        int64_t mono;
+        if(auto bubble = getg()->bubble; bubble != nullptr)
+        {
+            sec = bubble->now / (1000 * 1000 * 1000);
+            nsec = int32_t(bubble->now % (1000 * 1000 * 1000));
+            // Don't return a monotonic time inside a synctest bubble.
+            // If we return a monotonic time based on the fake clock,
+            // arithmetic on times created inside/outside bubbles is confusing.
+            // If we return a monotonic time based on the real monotonic clock,
+            // arithmetic on times created in the same bubble is confusing.
+            // Simplest is to omit the monotonic time within a bubble.
+            return {sec, nsec, 0};
+        }
+        return time_now();
+    }
+
+    //go:linkname crypto_internal_fips140deps_time_monoTime crypto/internal/fips140deps/time.monoTime
+    int64_t crypto_internal_fips140deps_time_monoTime()
+    {
+        int64_t mono;
+        std::tie(std::ignore, std::ignore, mono) = time_now();
+        return mono;
+    }
+
+    //go:linkname time_runtimeNano time.runtimeNano
+    int64_t time_runtimeNano()
+    {
+        auto gp = getg();
+        if(gp->bubble != nullptr)
+        {
+            return gp->bubble->now;
+        }
+        return nanotime();
+    }
+
+    //go:linkname time_runtimeIsBubbled time.runtimeIsBubbled
+    bool time_runtimeIsBubbled()
+    {
+        return getg()->bubble != nullptr;
+    }
+
+    // A timer is a potentially repeating trigger for calling t.f(t.arg, t.seq).
+    // Timers are allocated by client code, often as part of other data structures.
+    // Each P has a heap of pointers to timers that it manages.
+    //
+    // A timer is expected to be used by only one client goroutine at a time,
+    // but there will be concurrent access by the P managing that timer.
+    // Timer accesses are protected by the lock t.mu, with a snapshot of
+    // t's state bits published in t.astate to enable certain fast paths to make
+    // decisions about a timer without acquiring the lock.
     
     template<typename T> requires gocpp::GoStruct<T>
     timer::operator T()
     {
         T result;
-        result.pp = this->pp;
+        result.mu = this->mu;
+        result.astate = this->astate;
+        result.state = this->state;
+        result.isChan = this->isChan;
+        result.isFake = this->isFake;
+        result.blocked = this->blocked;
+        result.rand = this->rand;
         result.when = this->when;
         result.period = this->period;
         result.f = this->f;
         result.arg = this->arg;
         result.seq = this->seq;
-        result.nextwhen = this->nextwhen;
-        result.status = this->status;
+        result.ts = this->ts;
+        result.sendLock = this->sendLock;
+        result.isSending = this->isSending;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool timer::operator==(const T& ref) const
     {
-        if (pp != ref.pp) return false;
+        if (mu != ref.mu) return false;
+        if (astate != ref.astate) return false;
+        if (state != ref.state) return false;
+        if (isChan != ref.isChan) return false;
+        if (isFake != ref.isFake) return false;
+        if (blocked != ref.blocked) return false;
+        if (rand != ref.rand) return false;
         if (when != ref.when) return false;
         if (period != ref.period) return false;
         if (f != ref.f) return false;
         if (arg != ref.arg) return false;
         if (seq != ref.seq) return false;
-        if (nextwhen != ref.nextwhen) return false;
-        if (status != ref.status) return false;
+        if (ts != ref.ts) return false;
+        if (sendLock != ref.sendLock) return false;
+        if (isSending != ref.isSending) return false;
         return true;
     }
 
     std::ostream& timer::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << pp;
+        os << "" << mu;
+        os << " " << astate;
+        os << " " << state;
+        os << " " << isChan;
+        os << " " << isFake;
+        os << " " << blocked;
+        os << " " << rand;
         os << " " << when;
         os << " " << period;
         os << " " << f;
         os << " " << arg;
         os << " " << seq;
-        os << " " << nextwhen;
-        os << " " << status;
+        os << " " << ts;
+        os << " " << sendLock;
+        os << " " << isSending;
         os << '}';
         return os;
     }
@@ -86,6 +169,250 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct timer& value)
     {
         return value.PrintTo(os);
+    }
+
+    // init initializes a newly allocated timer t.
+    // Any code that allocates a timer must call t.init before using it.
+    // The arg and f can be set during init, or they can be nil in init
+    // and set by a future call to t.modify.
+    void rec::init(timer* t, std::function<void (go_any arg, uintptr_t seq, int64_t delay)> f, go_any arg)
+    {
+        lockInit(& t->mu, lockRankTimer);
+        t->f = f;
+        t->arg = arg;
+    }
+
+    // A timers is a per-P set of timers.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    timers::operator T()
+    {
+        T result;
+        result.mu = this->mu;
+        result.heap = this->heap;
+        result.len = this->len;
+        result.zombies = this->zombies;
+        result.raceCtx = this->raceCtx;
+        result.minWhenHeap = this->minWhenHeap;
+        result.minWhenModified = this->minWhenModified;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool timers::operator==(const T& ref) const
+    {
+        if (mu != ref.mu) return false;
+        if (heap != ref.heap) return false;
+        if (len != ref.len) return false;
+        if (zombies != ref.zombies) return false;
+        if (raceCtx != ref.raceCtx) return false;
+        if (minWhenHeap != ref.minWhenHeap) return false;
+        if (minWhenModified != ref.minWhenModified) return false;
+        return true;
+    }
+
+    std::ostream& timers::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << mu;
+        os << " " << heap;
+        os << " " << len;
+        os << " " << zombies;
+        os << " " << raceCtx;
+        os << " " << minWhenHeap;
+        os << " " << minWhenModified;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct timers& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    timerWhen::operator T()
+    {
+        T result;
+        result.timer = this->timer;
+        result.when = this->when;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool timerWhen::operator==(const T& ref) const
+    {
+        if (timer != ref.timer) return false;
+        if (when != ref.when) return false;
+        return true;
+    }
+
+    std::ostream& timerWhen::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << timer;
+        os << " " << when;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct timerWhen& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // less reports whether tw is less than other.
+    bool rec::less(timerWhen tw, timerWhen other)
+    {
+        //Go switch emulation
+        {
+            int conditionId = -1;
+            if(tw.when < other.when) { conditionId = 0; }
+            else if(tw.when > other.when) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    return true;
+                    break;
+                case 1:
+                    return false;
+                    break;
+                default:
+                    // When timers wake at the same time, use a per-timer random value to order them.
+                    // We only set the random value for timers using fake time, since there's
+                    // no practical way to schedule real-time timers for the same instant.
+                    return tw.timer->rand < other.timer->rand;
+                    break;
+            }
+        }
+    }
+
+    void rec::lock(timers* ts)
+    {
+        runtime::lock(& ts->mu);
+    }
+
+    void rec::unlock(timers* ts)
+    {
+        // Update atomic copy of len(ts.heap).
+        // We only update at unlock so that the len is always
+        // the most recent unlocked length, not an ephemeral length.
+        // This matters if we lock ts, delete the only timer from the heap,
+        // add it back, and unlock. We want ts.len.Load to return 1 the
+        // entire time, never 0. This is important for pidleput deciding
+        // whether ts is empty.
+        rec::Store(gocpp::recv(ts->len), uint32_t(len(ts->heap)));
+
+        runtime::unlock(& ts->mu);
+    }
+
+    void rec::trace(timer* t, gocpp::string op)
+    {
+        if(timerDebug)
+        {
+            rec::trace1(gocpp::recv(t), op);
+        }
+    }
+
+    void rec::trace1(timer* t, gocpp::string op)
+    {
+        if(! timerDebug)
+        {
+            return;
+        }
+        auto bits = gocpp::array<gocpp::string, 4> {"h"_s, "m"_s, "z"_s, "c"_s};
+        for(auto [i, gocpp_ignored] : 3)
+        {
+            if(t->state & (1 << i) == 0)
+            {
+                bits[i] = "-"_s;
+            }
+        }
+        if(! t->isChan)
+        {
+            bits[3] = "-"_s;
+        }
+        print("T "_s, t, " "_s, bits[0], bits[1], bits[2], bits[3], " b="_s, t->blocked, " "_s, op, "\n"_s);
+    }
+
+    void rec::trace(timers* ts, gocpp::string op)
+    {
+        if(timerDebug)
+        {
+            println("TS"_s, ts, op);
+        }
+    }
+
+    // lock locks the timer, allowing reading or writing any of the timer fields.
+    void rec::lock(timer* t)
+    {
+        runtime::lock(& t->mu);
+        rec::trace(gocpp::recv(t), "lock"_s);
+    }
+
+    // unlock updates t.astate and unlocks the timer.
+    void rec::unlock(timer* t)
+    {
+        rec::trace(gocpp::recv(t), "unlock"_s);
+        // Let heap fast paths know whether heap[i].when is accurate.
+        // Also let maybeRunChan know whether channel is in heap.
+        rec::Store(gocpp::recv(t->astate), t->state);
+        runtime::unlock(& t->mu);
+    }
+
+    // hchan returns the channel in t.arg.
+    // t must be a timer with a channel.
+    golang::runtime::hchan* rec::hchan(timer* t)
+    {
+        if(! t->isChan)
+        {
+            badTimer();
+        }
+        // Note: t.arg is a chan time.Time,
+        // and runtime cannot refer to that type,
+        // so we cannot use a type assertion.
+        return (golang::runtime::hchan*)(efaceOf(& t->arg)->data);
+    }
+
+    // updateHeap updates t as directed by t.state, updating t.state
+    // and returning a bool indicating whether the state (and ts.heap[0].when) changed.
+    // The caller must hold t's lock, or the world can be stopped instead.
+    // The timer set t.ts must be non-nil and locked, t must be t.ts.heap[0], and updateHeap
+    // takes care of moving t within the timers heap to preserve the heap invariants.
+    // If ts == nil, then t must not be in a heap (or is in a heap that is
+    // temporarily not maintaining its invariant, such as during timers.adjust).
+    bool rec::updateHeap(timer* t)
+    {
+        bool updated;
+        assertWorldStoppedOrLockHeld(& t->mu);
+        rec::trace(gocpp::recv(t), "updateHeap"_s);
+        auto ts = t->ts;
+        if(ts == nullptr || t != ts->heap[0].timer)
+        {
+            badTimer();
+        }
+        assertLockHeld(& ts->mu);
+        if(t->state & timerZombie != 0)
+        {
+            // Take timer out of heap.
+            t->state &^= timerHeaped | timerZombie | timerModified;
+            rec::Add(gocpp::recv(ts->zombies), - 1);
+            rec::deleteMin(gocpp::recv(ts));
+            return true;
+        }
+
+        if(t->state & timerModified != 0)
+        {
+            // Update ts.heap[0].when and move within heap.
+            t->state &^= timerModified;
+            ts->heap[0].when = t->when;
+            rec::siftDown(gocpp::recv(ts), 0);
+            rec::updateMinWhenHeap(gocpp::recv(ts));
+            return true;
+        }
+
+        return false;
     }
 
     // timeSleep puts the current goroutine to sleep for at least ns nanoseconds.
@@ -103,123 +430,168 @@ namespace golang::runtime
         if(t == nullptr)
         {
             t = new timer{};
+            rec::init(gocpp::recv(t), goroutineReady, gp);
+            if(gp->bubble != nullptr)
+            {
+                t->isFake = true;
+            }
             gp->timer = t;
         }
-        t->f = goroutineReady;
-        t->arg = gp;
-        t->nextwhen = nanotime() + ns;
-        if(t->nextwhen < 0)
+        int64_t now = {};
+        if(auto bubble = gp->bubble; bubble != nullptr)
+        {
+            now = bubble->now;
+        }
+        else
+        {
+            now = nanotime();
+        }
+        auto when = now + ns;
+        if(when < 0)
         {
             // check for overflow.
-            t->nextwhen = maxWhen;
+            when = maxWhen;
         }
-        gopark(resetForSleep, gocpp::unsafe_pointer(t), waitReasonSleep, traceBlockSleep, 1);
+        gp->sleepWhen = when;
+        if(t->isFake)
+        {
+            // Call timer.reset in this goroutine, since it's the one in a bubble.
+            // We don't need to worry about the timer function running before the goroutine
+            // is parked, because time won't advance until we park.
+            resetForSleep(gp, nullptr);
+            gopark(nullptr, nullptr, waitReasonSleep, traceBlockSleep, 1);
+        }
+        else
+        {
+            gopark(resetForSleep, nullptr, waitReasonSleep, traceBlockSleep, 1);
+        }
     }
 
     // resetForSleep is called after the goroutine is parked for timeSleep.
-    // We can't call resettimer in timeSleep itself because if this is a short
+    // We can't call timer.reset in timeSleep itself because if this is a short
     // sleep and there are many goroutines then the P can wind up running the
     // timer function, goroutineReady, before the goroutine has been parked.
-    bool resetForSleep(g* gp, gocpp::unsafe_pointer ut)
+    bool resetForSleep(g* gp, gocpp::unsafe_pointer _1)
     {
-        auto t = (timer*)(ut);
-        resettimer(t, t->nextwhen);
+        rec::reset(gocpp::recv(gp->timer), gp->sleepWhen, 0);
         return true;
     }
 
-    // startTimer adds t to the timer heap.
-    //
-    //go:linkname startTimer time.startTimer
-    void startTimer(timer* t)
+    // A timeTimer is a runtime-allocated time.Timer or time.Ticker
+    // with the additional runtime state following it.
+    // The runtime state is inaccessible to package time.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    timeTimer::operator T()
     {
+        T result;
+        result.c = this->c;
+        result.init = this->init;
+        result.timer = this->timer;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool timeTimer::operator==(const T& ref) const
+    {
+        if (c != ref.c) return false;
+        if (init != ref.init) return false;
+        if (timer != ref.timer) return false;
+        return true;
+    }
+
+    std::ostream& timeTimer::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << c;
+        os << " " << init;
+        os << " " << timer;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct timeTimer& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // newTimer allocates and returns a new time.Timer or time.Ticker (same layout)
+    // with the given parameters.
+    //
+    //go:linkname newTimer time.newTimer
+    timeTimer* newTimer(int64_t when, int64_t period, std::function<void (go_any arg, uintptr_t seq, int64_t delay)> f, go_any arg, golang::runtime::hchan* c)
+    {
+        auto t = new timeTimer{};
+        rec::init(gocpp::recv(t->timer), nullptr, nullptr);
+        rec::trace(gocpp::recv(t), "new"_s);
         if(raceenabled)
         {
-            racerelease(gocpp::unsafe_pointer(t));
+            racerelease(gocpp::unsafe_pointer(& t->timer));
         }
-        addtimer(t);
+        if(c != nullptr)
+        {
+            lockInit(& t->timer.sendLock, lockRankTimerSend);
+            t->timer.isChan = true;
+            c->timer = & t->timer;
+            if(c->dataqsiz == 0)
+            {
+                go_throw("invalid timer channel: no capacity"_s);
+            }
+        }
+        if(auto bubble = getg()->bubble; bubble != nullptr)
+        {
+            t->timer.isFake = true;
+        }
+        rec::modify(gocpp::recv(t), when, period, f, arg, 0);
+        t->init = true;
+        return t;
     }
 
     // stopTimer stops a timer.
     // It reports whether t was stopped before being run.
     //
     //go:linkname stopTimer time.stopTimer
-    bool stopTimer(timer* t)
+    bool stopTimer(timeTimer* t)
     {
-        return deltimer(t);
+        if(t->timer.isFake && getg()->bubble == nullptr)
+        {
+            fatal("stop of synctest timer from outside bubble"_s);
+        }
+        return rec::stop(gocpp::recv(t));
     }
 
-    // resetTimer resets an inactive timer, adding it to the heap.
+    // resetTimer resets an inactive timer, adding it to the timer heap.
     //
     // Reports whether the timer was modified before it was run.
     //
     //go:linkname resetTimer time.resetTimer
-    bool resetTimer(timer* t, int64_t when)
+    bool resetTimer(timeTimer* t, int64_t when, int64_t period)
     {
         if(raceenabled)
         {
-            racerelease(gocpp::unsafe_pointer(t));
+            racerelease(gocpp::unsafe_pointer(& t->timer));
         }
-        return resettimer(t, when);
-    }
-
-    // modTimer modifies an existing timer.
-    //
-    //go:linkname modTimer time.modTimer
-    void modTimer(timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq)
-    {
-        modtimer(t, when, period, f, arg, seq);
+        if(t->timer.isFake && getg()->bubble == nullptr)
+        {
+            fatal("reset of synctest timer from outside bubble"_s);
+        }
+        return rec::reset(gocpp::recv(t), when, period);
     }
 
     // Ready the goroutine arg.
-    void goroutineReady(go_any arg, uintptr_t seq)
+    void goroutineReady(go_any arg, uintptr_t _1, int64_t _2)
     {
         goready(gocpp::getValue<g*>(arg), 0);
     }
 
-    // Note: this changes some unsynchronized operations to synchronized operations
-    // addtimer adds a timer to the current P.
-    // This should only be called with a newly created timer.
-    // That avoids the risk of changing the when field of a timer in some P's heap,
-    // which could cause the heap to become unsorted.
-    void addtimer(timer* t)
+    // addHeap adds t to the timers heap.
+    // The caller must hold ts.lock or the world must be stopped.
+    // The caller must also have checked that t belongs in the heap.
+    // Callers that are not sure can call t.maybeAdd instead,
+    // but note that maybeAdd has different locking requirements.
+    void rec::addHeap(timers* ts, timer* t)
     {
-        // when must be positive. A negative value will cause runtimer to
-        // overflow during its delta calculation and never expire other runtime
-        // timers. Zero will cause checkTimers to fail to notice the timer.
-        if(t->when <= 0)
-        {
-            go_throw("timer when must be positive"_s);
-        }
-        if(t->period < 0)
-        {
-            go_throw("timer period must be non-negative"_s);
-        }
-        if(rec::Load(gocpp::recv(t->status)) != timerNoStatus)
-        {
-            go_throw("addtimer called with initialized timer"_s);
-        }
-        rec::Store(gocpp::recv(t->status), timerWaiting);
-
-        auto when = t->when;
-
-        // Disable preemption while using pp to avoid changing another P's heap.
-        auto mp = acquirem();
-
-        auto pp = rec::ptr(gocpp::recv(getg()->m->p));
-        lock(& pp->timersLock);
-        cleantimers(pp);
-        doaddtimer(pp, t);
-        unlock(& pp->timersLock);
-
-        wakeNetPoller(when);
-
-        releasem(mp);
-    }
-
-    // doaddtimer adds t to the current P's heap.
-    // The caller must have locked the timers for pp.
-    void doaddtimer(golang::runtime::p* pp, timer* t)
-    {
+        assertWorldStoppedOrLockHeld(& ts->mu);
         // Timers rely on the network poller, so make sure the poller
         // has started.
         if(rec::Load(gocpp::recv(netpollInited)) == 0)
@@ -227,208 +599,108 @@ namespace golang::runtime
             netpollGenericInit();
         }
 
-        if(t->pp != 0)
+        if(t->ts != nullptr)
         {
-            go_throw("doaddtimer: P already set in timer"_s);
+            go_throw("ts set in timer"_s);
         }
-        rec::set(gocpp::recv(t->pp), pp);
-        auto i = len(pp->timers);
-        pp->timers = append(pp->timers, t);
-        siftupTimer(pp->timers, i);
-        if(t == pp->timers[0])
+        t->ts = ts;
+        ts->heap = append(ts->heap, timerWhen {t, t->when});
+        rec::siftUp(gocpp::recv(ts), len(ts->heap) - 1);
+        if(t == ts->heap[0].timer)
         {
-            rec::Store(gocpp::recv(pp->timer0When), t->when);
+            rec::updateMinWhenHeap(gocpp::recv(ts));
         }
-        rec::Add(gocpp::recv(pp->numTimers), 1);
     }
 
-    // deltimer deletes the timer t. It may be on some other P, so we can't
-    // actually remove it from the timers heap. We can only mark it as deleted.
+    // stop stops the timer t. It may be on some other P, so we can't
+    // actually remove it from the timers heap. We can only mark it as stopped.
     // It will be removed in due course by the P whose heap it is on.
-    // Reports whether the timer was removed before it was run.
-    bool deltimer(timer* t)
+    // Reports whether the timer was stopped before it was run.
+    bool rec::stop(timer* t)
     {
-        for(; ; )
+        if(t->isChan)
         {
-            //Go switch emulation
+            runtime::lock(& t->sendLock);
+        }
+
+        rec::lock(gocpp::recv(t));
+        rec::trace(gocpp::recv(t), "stop"_s);
+        if(t->state & timerHeaped != 0)
+        {
+            t->state |= timerModified;
+            if(t->state & timerZombie == 0)
             {
-                auto s = rec::Load(gocpp::recv(t->status));
-                auto condition = s;
-                int conditionId = -1;
-                if(condition == timerWaiting) { conditionId = 0; }
-                else if(condition == timerModifiedLater) { conditionId = 1; }
-                else if(condition == timerModifiedEarlier) { conditionId = 2; }
-                else if(condition == timerDeleted) { conditionId = 3; }
-                else if(condition == timerRemoving) { conditionId = 4; }
-                else if(condition == timerRemoved) { conditionId = 5; }
-                else if(condition == timerRunning) { conditionId = 6; }
-                else if(condition == timerMoving) { conditionId = 7; }
-                else if(condition == timerNoStatus) { conditionId = 8; }
-                else if(condition == timerModifying) { conditionId = 9; }
-                switch(conditionId)
-                {
-                    case 0:
-                    case 1:
-                    {
-                        // Prevent preemption while the timer is in timerModifying.
-                        // This could lead to a self-deadlock. See #38070.
-                        auto mp = acquirem();
-                        if(rec::CompareAndSwap(gocpp::recv(t->status), s, timerModifying))
-                        {
-                            // Must fetch t.pp before changing status,
-                            // as cleantimers in another goroutine
-                            // can clear t.pp of a timerDeleted timer.
-                            auto tpp = rec::ptr(gocpp::recv(t->pp));
-                            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerModifying, timerDeleted))
-                            {
-                                badTimer();
-                            }
-                            releasem(mp);
-                            rec::Add(gocpp::recv(tpp->deletedTimers), 1);
-                            // Timer was not yet run.
-                            return true;
-                        }
-                        else
-                        {
-                            releasem(mp);
-                        }
-                        break;
-                    }
-                    case 2:
-                    {
-                        // Prevent preemption while the timer is in timerModifying.
-                        // This could lead to a self-deadlock. See #38070.
-                        auto mp = acquirem();
-                        if(rec::CompareAndSwap(gocpp::recv(t->status), s, timerModifying))
-                        {
-                            // Must fetch t.pp before setting status
-                            // to timerDeleted.
-                            auto tpp = rec::ptr(gocpp::recv(t->pp));
-                            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerModifying, timerDeleted))
-                            {
-                                badTimer();
-                            }
-                            releasem(mp);
-                            rec::Add(gocpp::recv(tpp->deletedTimers), 1);
-                            // Timer was not yet run.
-                            return true;
-                        }
-                        else
-                        {
-                            releasem(mp);
-                        }
-                        break;
-                    }
-                    case 3:
-                    case 4:
-                    case 5:
-                        // Timer was already run.
-                        return false;
-                        break;
-                    case 6:
-                    case 7:
-                        // The timer is being run or moved, by a different P.
-                        // Wait for it to complete.
-                        osyield();
-                        break;
-                    case 8:
-                        // Removing timer that was never added or
-                        // has already been run. Also see issue 21874.
-                        return false;
-                        break;
-                    case 9:
-                        // Simultaneous calls to deltimer and modtimer.
-                        // Wait for the other call to complete.
-                        osyield();
-                        break;
-                    default:
-                        badTimer();
-                        break;
-                }
+                t->state |= timerZombie;
+                rec::Add(gocpp::recv(t->ts->zombies), 1);
             }
         }
+        auto pending = t->when > 0;
+        t->when = 0;
+
+        if(t->isChan)
+        {
+            // Stop any future sends with stale values.
+            // See timer.unlockAndRun.
+            t->seq++;
+
+            // If there is currently a send in progress,
+            // incrementing seq is going to prevent that
+            // send from actually happening. That means
+            // that we should return true: the timer was
+            // stopped, even though t.when may be zero.
+            if(t->period == 0 && rec::Load(gocpp::recv(t->isSending)) > 0)
+            {
+                pending = true;
+            }
+        }
+        rec::unlock(gocpp::recv(t));
+        if(t->isChan)
+        {
+            runtime::unlock(& t->sendLock);
+            if(timerchandrain(rec::hchan(gocpp::recv(t))))
+            {
+                pending = true;
+            }
+        }
+
+        return pending;
     }
 
-    // dodeltimer removes timer i from the current P's heap.
-    // We are locked on the P when this is called.
-    // It returns the smallest changed index in pp.timers.
-    // The caller must have locked the timers for pp.
-    int dodeltimer(golang::runtime::p* pp, int i)
+    // deleteMin removes timer 0 from ts.
+    // ts must be locked.
+    void rec::deleteMin(timers* ts)
     {
-        if(auto t = pp->timers[i]; rec::ptr(gocpp::recv(t->pp)) != pp)
+        assertLockHeld(& ts->mu);
+        auto t = ts->heap[0].timer;
+        if(t->ts != ts)
         {
-            go_throw("dodeltimer: wrong P"_s);
+            go_throw("wrong timers"_s);
         }
-        else
-        {
-            t->pp = 0;
-        }
-        auto last = len(pp->timers) - 1;
-        if(i != last)
-        {
-            pp->timers[i] = pp->timers[last];
-        }
-        pp->timers[last] = nullptr;
-        pp->timers = pp->timers.make_slice(0, last);
-        auto smallestChanged = i;
-        if(i != last)
-        {
-            // Moving to i may have moved the last timer to a new parent,
-            // so sift up to preserve the heap guarantee.
-            smallestChanged = siftupTimer(pp->timers, i);
-            siftdownTimer(pp->timers, i);
-        }
-        if(i == 0)
-        {
-            updateTimer0When(pp);
-        }
-        auto n = rec::Add(gocpp::recv(pp->numTimers), - 1);
-        if(n == 0)
-        {
-            // If there are no timers, then clearly none are modified.
-            rec::Store(gocpp::recv(pp->timerModifiedEarliest), 0);
-        }
-        return smallestChanged;
-    }
-
-    // dodeltimer0 removes timer 0 from the current P's heap.
-    // We are locked on the P when this is called.
-    // It reports whether it saw no problems due to races.
-    // The caller must have locked the timers for pp.
-    void dodeltimer0(golang::runtime::p* pp)
-    {
-        if(auto t = pp->timers[0]; rec::ptr(gocpp::recv(t->pp)) != pp)
-        {
-            go_throw("dodeltimer0: wrong P"_s);
-        }
-        else
-        {
-            t->pp = 0;
-        }
-        auto last = len(pp->timers) - 1;
+        t->ts = nullptr;
+        auto last = len(ts->heap) - 1;
         if(last > 0)
         {
-            pp->timers[0] = pp->timers[last];
+            ts->heap[0] = ts->heap[last];
         }
-        pp->timers[last] = nullptr;
-        pp->timers = pp->timers.make_slice(0, last);
+        ts->heap[last] = timerWhen {};
+        ts->heap = ts->heap.make_slice(0, last);
         if(last > 0)
         {
-            siftdownTimer(pp->timers, 0);
+            rec::siftDown(gocpp::recv(ts), 0);
         }
-        updateTimer0When(pp);
-        auto n = rec::Add(gocpp::recv(pp->numTimers), - 1);
-        if(n == 0)
+        rec::updateMinWhenHeap(gocpp::recv(ts));
+        if(last == 0)
         {
-            // If there are no timers, then clearly none are modified.
-            rec::Store(gocpp::recv(pp->timerModifiedEarliest), 0);
+            // If there are no timers, then clearly there are no timerModified timers.
+            rec::Store(gocpp::recv(ts->minWhenModified), 0);
         }
     }
 
-    // modtimer modifies an existing timer.
+    // modify modifies an existing timer.
     // This is called by the netpoll code or time.Ticker.Reset or time.Timer.Reset.
     // Reports whether the timer was modified before it was run.
-    bool modtimer(timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq)
+    // If f == nil, then t.f, t.arg, and t.seq are not modified.
+    bool rec::modify(timer* t, int64_t when, int64_t period, std::function<void (go_any arg, uintptr_t seq, int64_t delay)> f, go_any arg, uintptr_t seq)
     {
         if(when <= 0)
         {
@@ -439,176 +711,228 @@ namespace golang::runtime
             go_throw("timer period must be non-negative"_s);
         }
 
-        auto status = uint32_t(timerNoStatus);
-        auto wasRemoved = false;
-        bool pending = {};
-        m* mp = {};
-        loop:
-        for(; ; )
+        if(t->isChan)
         {
-            if(false) {
-            loop_continue:
-                continue;
-            loop_break:
-                break;
-            }
-            //Go switch emulation
-            {
-                status = rec::Load(gocpp::recv(t->status));
-                auto condition = status;
-                int conditionId = -1;
-                if(condition == timerWaiting) { conditionId = 0; }
-                else if(condition == timerModifiedEarlier) { conditionId = 1; }
-                else if(condition == timerModifiedLater) { conditionId = 2; }
-                else if(condition == timerNoStatus) { conditionId = 3; }
-                else if(condition == timerRemoved) { conditionId = 4; }
-                else if(condition == timerDeleted) { conditionId = 5; }
-                else if(condition == timerRunning) { conditionId = 6; }
-                else if(condition == timerRemoving) { conditionId = 7; }
-                else if(condition == timerMoving) { conditionId = 8; }
-                else if(condition == timerModifying) { conditionId = 9; }
-                switch(conditionId)
-                {
-                    case 0:
-                    case 1:
-                    case 2:
-                        // Prevent preemption while the timer is in timerModifying.
-                        // This could lead to a self-deadlock. See #38070.
-                        mp = acquirem();
-                        if(rec::CompareAndSwap(gocpp::recv(t->status), status, timerModifying))
-                        {
-                            // timer not yet run
-                            pending = true;
-                            goto loop_break;
-                        }
-                        releasem(mp);
-                        break;
-                    case 3:
-                    case 4:
-                        // Prevent preemption while the timer is in timerModifying.
-                        // This could lead to a self-deadlock. See #38070.
-                        mp = acquirem();
-                        // Timer was already run and t is no longer in a heap.
-                        // Act like addtimer.
-                        if(rec::CompareAndSwap(gocpp::recv(t->status), status, timerModifying))
-                        {
-                            wasRemoved = true;
-                            // timer already run or stopped
-                            pending = false;
-                            goto loop_break;
-                        }
-                        releasem(mp);
-                        break;
-                    case 5:
-                        // Prevent preemption while the timer is in timerModifying.
-                        // This could lead to a self-deadlock. See #38070.
-                        mp = acquirem();
-                        if(rec::CompareAndSwap(gocpp::recv(t->status), status, timerModifying))
-                        {
-                            rec::Add(gocpp::recv(rec::ptr(gocpp::recv(t->pp))->deletedTimers), - 1);
-                            // timer already stopped
-                            pending = false;
-                            goto loop_break;
-                        }
-                        releasem(mp);
-                        break;
-                    case 6:
-                    case 7:
-                    case 8:
-                        // The timer is being run or moved, by a different P.
-                        // Wait for it to complete.
-                        osyield();
-                        break;
-                    case 9:
-                        // Multiple simultaneous calls to modtimer.
-                        // Wait for the other call to complete.
-                        osyield();
-                        break;
-                    default:
-                        badTimer();
-                        break;
-                }
-            }
+            runtime::lock(& t->sendLock);
         }
 
+        rec::lock(gocpp::recv(t));
+        rec::trace(gocpp::recv(t), "modify"_s);
+        auto oldPeriod = t->period;
         t->period = period;
-        t->f = f;
-        t->arg = arg;
-        t->seq = seq;
-
-        if(wasRemoved)
+        if(f != nullptr)
         {
-            t->when = when;
-            auto pp = rec::ptr(gocpp::recv(getg()->m->p));
-            lock(& pp->timersLock);
-            doaddtimer(pp, t);
-            unlock(& pp->timersLock);
-            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerModifying, timerWaiting))
-            {
-                badTimer();
-            }
-            releasem(mp);
-            wakeNetPoller(when);
+            t->f = f;
+            t->arg = arg;
+            t->seq = seq;
         }
-        else
+
+        auto wake = false;
+        auto pending = t->when > 0;
+        t->when = when;
+        if(t->state & timerHeaped != 0)
         {
-            // The timer is in some other P's heap, so we can't change
-            // the when field. If we did, the other P's heap would
-            // be out of order. So we put the new when value in the
-            // nextwhen field, and let the other P set the when field
-            // when it is prepared to resort the heap.
-            t->nextwhen = when;
-
-            auto newStatus = uint32_t(timerModifiedLater);
-            if(when < t->when)
+            t->state |= timerModified;
+            if(t->state & timerZombie != 0)
             {
-                newStatus = timerModifiedEarlier;
+                // In the heap but marked for removal (by a Stop).
+                // Unmark it, since it has been Reset and will be running again.
+                rec::Add(gocpp::recv(t->ts->zombies), - 1);
+                t->state &^= timerZombie;
             }
-
-            auto tpp = rec::ptr(gocpp::recv(t->pp));
-
-            if(newStatus == timerModifiedEarlier)
+            // The corresponding heap[i].when is updated later.
+            // See comment in type timer above and in timers.adjust below.
+            if(auto min = rec::Load(gocpp::recv(t->ts->minWhenModified)); min == 0 || when < min)
             {
-                updateTimerModifiedEarliest(tpp, when);
+                wake = true;
+                // Force timerModified bit out to t.astate before updating t.minWhenModified,
+                // to synchronize with t.ts.adjust. See comment in adjust.
+                rec::Store(gocpp::recv(t->astate), t->state);
+                rec::updateMinWhenModified(gocpp::recv(t->ts), when);
             }
+        }
 
-            // Set the new status of the timer.
-            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerModifying, newStatus))
-            {
-                badTimer();
-            }
-            releasem(mp);
+        auto add = rec::needsAdd(gocpp::recv(t));
 
-            // If the new status is earlier, wake up the poller.
-            if(newStatus == timerModifiedEarlier)
+        if(add && t->isFake)
+        {
+            // If this is a bubbled timer scheduled to fire immediately,
+            // run it now rather than waiting for the bubble's timer scheduler.
+            // This avoids deferring timer execution until after the bubble
+            // becomes durably blocked.
+            // Don't do this for non-bubbled timers: It isn't necessary,
+            // and there may be cases where the runtime executes timers with
+            // the expectation the timer func will not run in the current goroutine.
+            // Bubbled timers are always created by the time package, and are
+            // safe to run in the current goroutine.
+            auto bubble = getg()->bubble;
+            if(bubble == nullptr)
             {
-                wakeNetPoller(when);
+                go_throw("fake timer executing with no bubble"_s);
             }
+            if(t->state & timerHeaped == 0 && when <= bubble->now)
+            {
+                systemstack([=]() mutable -> void
+                {
+                    if(t->isChan)
+                    {
+                        unlock(& t->sendLock);
+                    }
+                    rec::unlockAndRun(gocpp::recv(t), bubble->now, bubble);
+                });
+                return pending;
+            }
+        }
+
+        if(t->isChan)
+        {
+            // Stop any future sends with stale values.
+            // See timer.unlockAndRun.
+            t->seq++;
+
+            // If there is currently a send in progress,
+            // incrementing seq is going to prevent that
+            // send from actually happening. That means
+            // that we should return true: the timer was
+            // stopped, even though t.when may be zero.
+            if(oldPeriod == 0 && rec::Load(gocpp::recv(t->isSending)) > 0)
+            {
+                pending = true;
+            }
+        }
+        rec::unlock(gocpp::recv(t));
+        if(t->isChan)
+        {
+            if(timerchandrain(rec::hchan(gocpp::recv(t))))
+            {
+                pending = true;
+            }
+            runtime::unlock(& t->sendLock);
+        }
+
+        if(add)
+        {
+            rec::maybeAdd(gocpp::recv(t));
+        }
+        if(wake)
+        {
+            wakeNetPoller(when);
         }
 
         return pending;
     }
 
-    // resettimer resets the time when a timer should fire.
-    // If used for an inactive timer, the timer will become active.
-    // This should be called instead of addtimer if the timer value has been,
-    // or may have been, used previously.
-    // Reports whether the timer was modified before it was run.
-    bool resettimer(timer* t, int64_t when)
+    // needsAdd reports whether t needs to be added to a timers heap.
+    // t must be locked.
+    bool rec::needsAdd(timer* t)
     {
-        return modtimer(t, when, t->period, [&](auto x, auto y){ return rec::f(t, x, y); }, t->arg, t->seq);
+        assertLockHeld(& t->mu);
+        auto need = t->state & timerHeaped == 0 && t->when > 0 && (! t->isChan || t->blocked > 0);
+        if(need)
+        {
+            rec::trace(gocpp::recv(t), "needsAdd+"_s);
+        }
+        else
+        {
+            rec::trace(gocpp::recv(t), "needsAdd-"_s);
+        }
+        return need;
     }
 
-    // cleantimers cleans up the head of the timer queue. This speeds up
-    // programs that create and delete timers; leaving them in the heap
-    // slows down addtimer. Reports whether no timer problems were found.
-    // The caller must have locked the timers for pp.
-    void cleantimers(golang::runtime::p* pp)
+    // maybeAdd adds t to the local timers heap if it needs to be in a heap.
+    // The caller must not hold t's lock nor any timers heap lock.
+    // The caller probably just unlocked t, but that lock must be dropped
+    // in order to acquire a ts.lock, to avoid lock inversions.
+    // (timers.adjust holds ts.lock while acquiring each t's lock,
+    // so we cannot hold any t's lock while acquiring ts.lock).
+    //
+    // Strictly speaking it *might* be okay to hold t.lock and
+    // acquire ts.lock at the same time, because we know that
+    // t is not in any ts.heap, so nothing holding a ts.lock would
+    // be acquiring the t.lock at the same time, meaning there
+    // isn't a possible deadlock. But it is easier and safer not to be
+    // too clever and respect the static ordering.
+    // (If we don't, we have to change the static lock checking of t and ts.)
+    //
+    // Concurrent calls to time.Timer.Reset or blockTimerChan
+    // may result in concurrent calls to t.maybeAdd,
+    // so we cannot assume that t is not in a heap on entry to t.maybeAdd.
+    void rec::maybeAdd(timer* t)
     {
+        // Note: Not holding any locks on entry to t.maybeAdd,
+        // so the current g can be rescheduled to a different M and P
+        // at any time, including between the ts := assignment and the
+        // call to ts.lock. If a reschedule happened then, we would be
+        // adding t to some other P's timers, perhaps even a P that the scheduler
+        // has marked as idle with no timers, in which case the timer could
+        // go unnoticed until long after t.when.
+        // Calling acquirem instead of using getg().m makes sure that
+        // we end up locking and inserting into the current P's timers.
+        auto mp = acquirem();
+        timers* ts = {};
+        if(t->isFake)
+        {
+            auto bubble = getg()->bubble;
+            if(bubble == nullptr)
+            {
+                go_throw("invalid timer: fake time but no syncgroup"_s);
+            }
+            ts = & bubble->timers;
+        }
+        else
+        {
+            ts = & rec::ptr(gocpp::recv(mp->p))->timers;
+        }
+        rec::lock(gocpp::recv(ts));
+        rec::cleanHead(gocpp::recv(ts));
+        rec::lock(gocpp::recv(t));
+        rec::trace(gocpp::recv(t), "maybeAdd"_s);
+        auto when = int64_t(0);
+        auto wake = false;
+        if(rec::needsAdd(gocpp::recv(t)))
+        {
+            if(t->isFake)
+            {
+                // Re-randomize timer order.
+                // We could do this for all timers, but unbubbled timers are highly
+                // unlikely to have the same when.
+                t->rand = cheaprand();
+            }
+            t->state |= timerHeaped;
+            when = t->when;
+            auto wakeTime = rec::wakeTime(gocpp::recv(ts));
+            wake = wakeTime == 0 || when < wakeTime;
+            rec::addHeap(gocpp::recv(ts), t);
+        }
+        rec::unlock(gocpp::recv(t));
+        rec::unlock(gocpp::recv(ts));
+        releasem(mp);
+        if(wake)
+        {
+            wakeNetPoller(when);
+        }
+    }
+
+    // reset resets the time when a timer should fire.
+    // If used for an inactive timer, the timer will become active.
+    // Reports whether the timer was active and was stopped.
+    bool rec::reset(timer* t, int64_t when, int64_t period)
+    {
+        return rec::modify(gocpp::recv(t), when, period, nullptr, nullptr, 0);
+    }
+
+    // cleanHead cleans up the head of the timer queue. This speeds up
+    // programs that create and delete timers; leaving them in the heap
+    // slows down heap operations.
+    // The caller must have locked ts.
+    void rec::cleanHead(timers* ts)
+    {
+        rec::trace(gocpp::recv(ts), "cleanHead"_s);
+        assertLockHeld(& ts->mu);
         auto gp = getg();
         for(; ; )
         {
-            if(len(pp->timers) == 0)
+            if(len(ts->heap) == 0)
             {
                 return;
             }
@@ -622,453 +946,453 @@ namespace golang::runtime
                 return;
             }
 
-            auto t = pp->timers[0];
-            if(rec::ptr(gocpp::recv(t->pp)) != pp)
+            // Delete zombies from tail of heap. It requires no heap adjustments at all,
+            // and doing so increases the chances that when we swap out a zombie
+            // in heap[0] for the tail of the heap, we'll get a non-zombie timer,
+            // shortening this loop.
+            auto n = len(ts->heap);
+            if(auto t = ts->heap[n - 1].timer; rec::Load(gocpp::recv(t->astate)) & timerZombie != 0)
             {
-                go_throw("cleantimers: bad p"_s);
-            }
-            //Go switch emulation
-            {
-                auto s = rec::Load(gocpp::recv(t->status));
-                auto condition = s;
-                int conditionId = -1;
-                if(condition == timerDeleted) { conditionId = 0; }
-                else if(condition == timerModifiedEarlier) { conditionId = 1; }
-                else if(condition == timerModifiedLater) { conditionId = 2; }
-                switch(conditionId)
+                rec::lock(gocpp::recv(t));
+                if(t->state & timerZombie != 0)
                 {
-                    case 0:
-                        if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerRemoving))
-                        {
-                            continue;
-                        }
-                        dodeltimer0(pp);
-                        if(! rec::CompareAndSwap(gocpp::recv(t->status), timerRemoving, timerRemoved))
-                        {
-                            badTimer();
-                        }
-                        rec::Add(gocpp::recv(pp->deletedTimers), - 1);
-                        break;
-                    case 1:
-                    case 2:
-                        if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
-                        {
-                            continue;
-                        }
-                        // Now we can change the when field.
-                        t->when = t->nextwhen;
-                        // Move t to the right position.
-                        dodeltimer0(pp);
-                        doaddtimer(pp, t);
-                        if(! rec::CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
-                        {
-                            badTimer();
-                        }
-                        break;
-                    default:
-                        // Head of timers does not need adjustment.
-                        return;
-                        break;
+                    t->state &^= timerHeaped | timerZombie | timerModified;
+                    t->ts = nullptr;
+                    rec::Add(gocpp::recv(ts->zombies), - 1);
+                    ts->heap[n - 1] = timerWhen {};
+                    ts->heap = ts->heap.make_slice(0, n - 1);
                 }
+                rec::unlock(gocpp::recv(t));
+                continue;
+            }
+
+            auto t = ts->heap[0].timer;
+            if(t->ts != ts)
+            {
+                go_throw("bad ts"_s);
+            }
+
+            if(rec::Load(gocpp::recv(t->astate)) & (timerModified | timerZombie) == 0)
+            {
+                // Fast path: head of timers does not need adjustment.
+                return;
+            }
+
+            rec::lock(gocpp::recv(t));
+            auto updated = rec::updateHeap(gocpp::recv(t));
+            rec::unlock(gocpp::recv(t));
+            if(! updated)
+            {
+                // Head of timers does not need adjustment.
+                return;
             }
         }
     }
 
-    // moveTimers moves a slice of timers to pp. The slice has been taken
-    // from a different P.
-    // This is currently called when the world is stopped, but the caller
-    // is expected to have locked the timers for pp.
-    void moveTimers(golang::runtime::p* pp, gocpp::slice<timer*> timers)
+    // take moves any timers from src into ts
+    // and then clears the timer state from src,
+    // because src is being destroyed.
+    // The caller must not have locked either timers.
+    // For now this is only called when the world is stopped.
+    void rec::take(timers* ts, timers* src)
     {
-        for(auto [gocpp_ignored, t] : timers)
+        rec::trace(gocpp::recv(ts), "take"_s);
+        assertWorldStopped();
+        if(len(src->heap) > 0)
         {
-            loop:
-            for(; ; )
+            // The world is stopped, so we ignore the locking of ts and src here.
+            // That would introduce a sched < timers lock ordering,
+            // which we'd rather avoid in the static ranking.
+            for(auto [gocpp_ignored, tw] : src->heap)
             {
-                if(false) {
-                loop_continue:
-                    continue;
-                loop_break:
-                    break;
-                }
-                //Go switch emulation
+                auto t = tw.timer;
+                t->ts = nullptr;
+                if(t->state & timerZombie != 0)
                 {
-                    auto s = rec::Load(gocpp::recv(t->status));
-                    auto condition = s;
-                    int conditionId = -1;
-                    if(condition == timerWaiting) { conditionId = 0; }
-                    else if(condition == timerModifiedEarlier) { conditionId = 1; }
-                    else if(condition == timerModifiedLater) { conditionId = 2; }
-                    else if(condition == timerDeleted) { conditionId = 3; }
-                    else if(condition == timerModifying) { conditionId = 4; }
-                    else if(condition == timerNoStatus) { conditionId = 5; }
-                    else if(condition == timerRemoved) { conditionId = 6; }
-                    else if(condition == timerRunning) { conditionId = 7; }
-                    else if(condition == timerRemoving) { conditionId = 8; }
-                    else if(condition == timerMoving) { conditionId = 9; }
-                    switch(conditionId)
-                    {
-                        case 0:
-                            if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
-                            {
-                                continue;
-                            }
-                            t->pp = 0;
-                            doaddtimer(pp, t);
-                            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
-                            {
-                                badTimer();
-                            }
-                            goto loop_break;
-                            break;
-                        case 1:
-                        case 2:
-                            if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
-                            {
-                                continue;
-                            }
-                            t->when = t->nextwhen;
-                            t->pp = 0;
-                            doaddtimer(pp, t);
-                            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
-                            {
-                                badTimer();
-                            }
-                            goto loop_break;
-                            break;
-                        case 3:
-                            if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerRemoved))
-                            {
-                                continue;
-                            }
-                            t->pp = 0;
-                            // We no longer need this timer in the heap.
-                            goto loop_break;
-                            break;
-                        case 4:
-                            // Loop until the modification is complete.
-                            osyield();
-                            break;
-                        case 5:
-                        case 6:
-                            // We should not see these status values in a timers heap.
-                            badTimer();
-                            break;
-                        case 7:
-                        case 8:
-                        case 9:
-                            // Some other P thinks it owns this timer,
-                            // which should not happen.
-                            badTimer();
-                            break;
-                        default:
-                            badTimer();
-                            break;
-                    }
+                    t->state &^= timerHeaped | timerZombie | timerModified;
+                }
+                else
+                {
+                    t->state &^= timerModified;
+                    rec::addHeap(gocpp::recv(ts), t);
                 }
             }
+            src->heap = nullptr;
+            rec::Store(gocpp::recv(src->zombies), 0);
+            rec::Store(gocpp::recv(src->minWhenHeap), 0);
+            rec::Store(gocpp::recv(src->minWhenModified), 0);
+            rec::Store(gocpp::recv(src->len), 0);
+            rec::Store(gocpp::recv(ts->len), uint32_t(len(ts->heap)));
         }
     }
 
-    // adjusttimers looks through the timers in the current P's heap for
+    // adjust looks through the timers in ts.heap for
     // any timers that have been modified to run earlier, and puts them in
     // the correct place in the heap. While looking for those timers,
     // it also moves timers that have been modified to run later,
-    // and removes deleted timers. The caller must have locked the timers for pp.
-    void adjusttimers(golang::runtime::p* pp, int64_t now)
+    // and removes deleted timers. The caller must have locked ts.
+    void rec::adjust(timers* ts, int64_t now, bool force)
     {
-        // If we haven't yet reached the time of the first timerModifiedEarlier
+        rec::trace(gocpp::recv(ts), "adjust"_s);
+        assertLockHeld(& ts->mu);
+        // If we haven't yet reached the time of the earliest modified
         // timer, don't do anything. This speeds up programs that adjust
         // a lot of timers back and forth if the timers rarely expire.
         // We'll postpone looking through all the adjusted timers until
         // one would actually expire.
-        auto first = rec::Load(gocpp::recv(pp->timerModifiedEarliest));
-        if(first == 0 || first > now)
+        if(! force)
         {
-            if(verifyTimers)
+            auto first = rec::Load(gocpp::recv(ts->minWhenModified));
+            if(first == 0 || first > now)
             {
-                verifyTimerHeap(pp);
+                if(verifyTimers)
+                {
+                    rec::verify(gocpp::recv(ts));
+                }
+                return;
             }
-            return;
         }
 
-        // We are going to clear all timerModifiedEarlier timers.
-        rec::Store(gocpp::recv(pp->timerModifiedEarliest), 0);
+        // minWhenModified is a lower bound on the earliest t.when
+        // among the timerModified timers. We want to make it more precise:
+        // we are going to scan the heap and clean out all the timerModified bits,
+        // at which point minWhenModified can be set to 0 (indicating none at all).
+        // Other P's can be calling ts.wakeTime concurrently, and we'd like to
+        // keep ts.wakeTime returning an accurate value throughout this entire process.
+        // Setting minWhenModified = 0 *before* the scan could make wakeTime
+        // return an incorrect value: if minWhenModified < minWhenHeap, then clearing
+        // it to 0 will make wakeTime return minWhenHeap (too late) until the scan finishes.
+        // To avoid that, we want to set minWhenModified to 0 *after* the scan.
+        // Setting minWhenModified = 0 *after* the scan could result in missing
+        // concurrent timer modifications in other goroutines; those will lock
+        // the specific timer, set the timerModified bit, and set t.when.
+        // To avoid that, we want to set minWhenModified to 0 *before* the scan.
+        // The way out of this dilemma is to preserve wakeTime a different way.
+        // wakeTime is min(minWhenHeap, minWhenModified), and minWhenHeap
+        // is protected by ts.lock, which we hold, so we can modify it however we like
+        // in service of keeping wakeTime accurate.
+        // So we can:
+        // 1. Set minWhenHeap = min(minWhenHeap, minWhenModified)
+        // 2. Set minWhenModified = 0
+        // (Other goroutines may modify timers and update minWhenModified now.)
+        // 3. Scan timers
+        // 4. Set minWhenHeap = heap[0].when
+        // That order preserves a correct value of wakeTime throughout the entire
+        // operation:
+        // Step 1 “locks in” an accurate wakeTime even with minWhenModified cleared.
+        // Step 2 makes sure concurrent t.when updates are not lost during the scan.
+        // Step 3 processes all modified timer values, justifying minWhenModified = 0.
+        // Step 4 corrects minWhenHeap to a precise value.
+        // The wakeTime method implementation reads minWhenModified *before* minWhenHeap,
+        // so that if the minWhenModified is observed to be 0, that means the minWhenHeap that
+        // follows will include the information that was zeroed out of it.
+        // Originally Step 3 locked every timer, which made sure any timer update that was
+        // already in progress during Steps 1+2 completed and was observed by Step 3.
+        // All that locking was too expensive, so now we do an atomic load of t.astate to
+        // decide whether we need to do a full lock. To make sure that we still observe any
+        // timer update already in progress during Steps 1+2, t.modify sets timerModified
+        // in t.astate *before* calling t.updateMinWhenModified. That ensures that the
+        // overwrite in Step 2 cannot lose an update: if it does overwrite an update, Step 3
+        // will see the timerModified and do a full lock.
+        rec::Store(gocpp::recv(ts->minWhenHeap), rec::wakeTime(gocpp::recv(ts)));
+        rec::Store(gocpp::recv(ts->minWhenModified), 0);
 
-        gocpp::slice<timer*> moved = {};
-        for(auto i = 0; i < len(pp->timers); i++)
+        auto changed = false;
+        for(auto i = 0; i < len(ts->heap); i++)
         {
-            auto t = pp->timers[i];
-            if(rec::ptr(gocpp::recv(t->pp)) != pp)
+            auto tw = & ts->heap[i];
+            auto t = tw->timer;
+            if(t->ts != ts)
             {
-                go_throw("adjusttimers: bad p"_s);
+                go_throw("bad ts"_s);
             }
+
+            if(rec::Load(gocpp::recv(t->astate)) & (timerModified | timerZombie) == 0)
+            {
+                // Does not need adjustment.
+                continue;
+            }
+
+            rec::lock(gocpp::recv(t));
             //Go switch emulation
             {
-                auto s = rec::Load(gocpp::recv(t->status));
-                auto condition = s;
                 int conditionId = -1;
-                if(condition == timerDeleted) { conditionId = 0; }
-                else if(condition == timerModifiedEarlier) { conditionId = 1; }
-                else if(condition == timerModifiedLater) { conditionId = 2; }
-                else if(condition == timerNoStatus) { conditionId = 3; }
-                else if(condition == timerRunning) { conditionId = 4; }
-                else if(condition == timerRemoving) { conditionId = 5; }
-                else if(condition == timerRemoved) { conditionId = 6; }
-                else if(condition == timerMoving) { conditionId = 7; }
-                else if(condition == timerWaiting) { conditionId = 8; }
-                else if(condition == timerModifying) { conditionId = 9; }
+                if(t->state & timerHeaped == 0) { conditionId = 0; }
+                else if(t->state & timerZombie != 0) { conditionId = 1; }
+                else if(t->state & timerModified != 0) { conditionId = 2; }
                 switch(conditionId)
                 {
                     case 0:
-                        if(rec::CompareAndSwap(gocpp::recv(t->status), s, timerRemoving))
-                        {
-                            auto changed = dodeltimer(pp, i);
-                            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerRemoving, timerRemoved))
-                            {
-                                badTimer();
-                            }
-                            rec::Add(gocpp::recv(pp->deletedTimers), - 1);
-                            // Go back to the earliest changed heap entry.
-                            // "- 1" because the loop will add 1.
-                            i = changed - 1;
-                        }
+                        badTimer();
                         break;
+
                     case 1:
-                    case 2:
-                        if(rec::CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
-                        {
-                            // Now we can change the when field.
-                            t->when = t->nextwhen;
-                            // Take t off the heap, and hold onto it.
-                            // We don't add it back yet because the
-                            // heap manipulation could cause our
-                            // loop to skip some other timer.
-                            auto changed = dodeltimer(pp, i);
-                            moved = append(moved, t);
-                            // Go back to the earliest changed heap entry.
-                            // "- 1" because the loop will add 1.
-                            i = changed - 1;
-                        }
-                        break;
-                    case 3:
-                    case 4:
-                    case 5:
-                    case 6:
-                    case 7:
-                        badTimer();
-                        break;
-                    case 8:
-                        break;
-                    // OK, nothing to do.
-                    case 9:
-                        // Check again after modification is complete.
-                        osyield();
+                    {
+                        rec::Add(gocpp::recv(ts->zombies), - 1);
+                        t->state &^= timerHeaped | timerZombie | timerModified;
+                        auto n = len(ts->heap);
+                        ts->heap[i] = ts->heap[n - 1];
+                        ts->heap[n - 1] = timerWhen {};
+                        ts->heap = ts->heap.make_slice(0, n - 1);
+                        t->ts = nullptr;
                         i--;
+                        changed = true;
                         break;
-                    default:
-                        badTimer();
+                    }
+
+                    case 2:
+                        tw->when = t->when;
+                        t->state &^= timerModified;
+                        changed = true;
                         break;
                 }
             }
+            rec::unlock(gocpp::recv(t));
         }
 
-        if(len(moved) > 0)
+        if(changed)
         {
-            addAdjustedTimers(pp, moved);
+            rec::initHeap(gocpp::recv(ts));
         }
+        rec::updateMinWhenHeap(gocpp::recv(ts));
 
         if(verifyTimers)
         {
-            verifyTimerHeap(pp);
+            rec::verify(gocpp::recv(ts));
         }
     }
 
-    // addAdjustedTimers adds any timers we adjusted in adjusttimers
-    // back to the timer heap.
-    void addAdjustedTimers(golang::runtime::p* pp, gocpp::slice<timer*> moved)
-    {
-        for(auto [gocpp_ignored, t] : moved)
-        {
-            doaddtimer(pp, t);
-            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
-            {
-                badTimer();
-            }
-        }
-    }
-
-    // nobarrierWakeTime looks at P's timers and returns the time when we
+    // wakeTime looks at ts's timers and returns the time when we
     // should wake up the netpoller. It returns 0 if there are no timers.
-    // This function is invoked when dropping a P, and must run without
+    // This function is invoked when dropping a P, so it must run without
     // any write barriers.
     //
     //go:nowritebarrierrec
-    int64_t nobarrierWakeTime(golang::runtime::p* pp)
+    int64_t rec::wakeTime(timers* ts)
     {
-        auto next = rec::Load(gocpp::recv(pp->timer0When));
-        auto nextAdj = rec::Load(gocpp::recv(pp->timerModifiedEarliest));
-        if(next == 0 || (nextAdj != 0 && nextAdj < next))
+        // Note that the order of these two loads matters:
+        // adjust updates minWhen to make it safe to clear minNextWhen.
+        // We read minWhen after reading minNextWhen so that
+        // if we see a cleared minNextWhen, we are guaranteed to see
+        // the updated minWhen.
+        auto nextWhen = rec::Load(gocpp::recv(ts->minWhenModified));
+        auto when = rec::Load(gocpp::recv(ts->minWhenHeap));
+        if(when == 0 || (nextWhen != 0 && nextWhen < when))
         {
-            next = nextAdj;
+            when = nextWhen;
         }
-        return next;
+        return when;
     }
 
-    // runtimer examines the first timer in timers. If it is ready based on now,
+    // check runs any timers in ts that are ready.
+    // If now is not 0 it is the current time.
+    // It returns the passed time or the current time if now was passed as 0.
+    // and the time when the next timer should run or 0 if there is no next timer,
+    // and reports whether it ran any timers.
+    // If the time when the next timer should run is not 0,
+    // it is always larger than the returned time.
+    // We pass now in and out to avoid extra calls of nanotime.
+    //
+    //go:yeswritebarrierrec
+    std::tuple<int64_t, int64_t, bool> rec::check(timers* ts, int64_t now, synctestBubble* bubble)
+    {
+        int64_t rnow;
+        int64_t pollUntil;
+        bool ran;
+        rec::trace(gocpp::recv(ts), "check"_s);
+        // If it's not yet time for the first timer, or the first adjusted
+        // timer, then there is nothing to do.
+        auto next = rec::wakeTime(gocpp::recv(ts));
+        if(next == 0)
+        {
+            // No timers to run or adjust.
+            return {now, 0, false};
+        }
+
+        if(now == 0)
+        {
+            now = nanotime();
+        }
+
+        // If this is the local P, and there are a lot of deleted timers,
+        // clear them out. We only do this for the local P to reduce
+        // lock contention on timersLock.
+        auto zombies = rec::Load(gocpp::recv(ts->zombies));
+        if(zombies < 0)
+        {
+            badTimer();
+        }
+        auto force = ts == & rec::ptr(gocpp::recv(getg()->m->p))->timers && int(zombies) > int(rec::Load(gocpp::recv(ts->len))) / 4;
+
+        if(now < next && ! force)
+        {
+            // Next timer is not ready to run, and we don't need to clear deleted timers.
+            return {now, next, false};
+        }
+
+        rec::lock(gocpp::recv(ts));
+        if(len(ts->heap) > 0)
+        {
+            rec::adjust(gocpp::recv(ts), now, false);
+            for(; len(ts->heap) > 0; )
+            {
+                // Note that runtimer may temporarily unlock ts.
+                if(auto tw = rec::run(gocpp::recv(ts), now, bubble); tw != 0)
+                {
+                    if(tw > 0)
+                    {
+                        pollUntil = tw;
+                    }
+                    break;
+                }
+                ran = true;
+            }
+
+            // Note: Delaying the forced adjustment until after the ts.run
+            // (as opposed to calling ts.adjust(now, force) above)
+            // is significantly faster under contention, such as in
+            // package time's BenchmarkTimerAdjust10000,
+            // though we do not fully understand why.
+            force = ts == & rec::ptr(gocpp::recv(getg()->m->p))->timers && int(rec::Load(gocpp::recv(ts->zombies))) > int(rec::Load(gocpp::recv(ts->len))) / 4;
+            if(force)
+            {
+                rec::adjust(gocpp::recv(ts), now, true);
+            }
+        }
+        rec::unlock(gocpp::recv(ts));
+
+        return {now, pollUntil, ran};
+    }
+
+    // run examines the first timer in ts. If it is ready based on now,
     // it runs the timer and removes or updates it.
     // Returns 0 if it ran a timer, -1 if there are no more timers, or the time
     // when the first timer should run.
-    // The caller must have locked the timers for pp.
-    // If a timer is run, this will temporarily unlock the timers.
+    // The caller must have locked ts.
+    // If a timer is run, this will temporarily unlock ts.
     //
     //go:systemstack
-    int64_t runtimer(golang::runtime::p* pp, int64_t now)
+    int64_t rec::run(timers* ts, int64_t now, synctestBubble* bubble)
     {
-        for(; ; )
+        rec::trace(gocpp::recv(ts), "run"_s);
+        assertLockHeld(& ts->mu);
+        Redo:
+        if(len(ts->heap) == 0)
         {
-            auto t = pp->timers[0];
-            if(rec::ptr(gocpp::recv(t->pp)) != pp)
-            {
-                go_throw("runtimer: bad p"_s);
-            }
-            //Go switch emulation
-            {
-                auto s = rec::Load(gocpp::recv(t->status));
-                auto condition = s;
-                int conditionId = -1;
-                if(condition == timerWaiting) { conditionId = 0; }
-                else if(condition == timerDeleted) { conditionId = 1; }
-                else if(condition == timerModifiedEarlier) { conditionId = 2; }
-                else if(condition == timerModifiedLater) { conditionId = 3; }
-                else if(condition == timerModifying) { conditionId = 4; }
-                else if(condition == timerNoStatus) { conditionId = 5; }
-                else if(condition == timerRemoved) { conditionId = 6; }
-                else if(condition == timerRunning) { conditionId = 7; }
-                else if(condition == timerRemoving) { conditionId = 8; }
-                else if(condition == timerMoving) { conditionId = 9; }
-                switch(conditionId)
-                {
-                    case 0:
-                        if(t->when > now)
-                        {
-                            // Not ready to run.
-                            return t->when;
-                        }
-                        if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerRunning))
-                        {
-                            continue;
-                        }
-                        // Note that runOneTimer may temporarily unlock
-                        // pp.timersLock.
-                        runOneTimer(pp, t, now);
-                        return 0;
-                        break;
-
-                    case 1:
-                        if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerRemoving))
-                        {
-                            continue;
-                        }
-                        dodeltimer0(pp);
-                        if(! rec::CompareAndSwap(gocpp::recv(t->status), timerRemoving, timerRemoved))
-                        {
-                            badTimer();
-                        }
-                        rec::Add(gocpp::recv(pp->deletedTimers), - 1);
-                        if(len(pp->timers) == 0)
-                        {
-                            return - 1;
-                        }
-                        break;
-
-                    case 2:
-                    case 3:
-                        if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
-                        {
-                            continue;
-                        }
-                        t->when = t->nextwhen;
-                        dodeltimer0(pp);
-                        doaddtimer(pp, t);
-                        if(! rec::CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
-                        {
-                            badTimer();
-                        }
-                        break;
-
-                    case 4:
-                        // Wait for modification to complete.
-                        osyield();
-                        break;
-
-                    case 5:
-                    case 6:
-                        // Should not see a new or inactive timer on the heap.
-                        badTimer();
-                        break;
-                    case 7:
-                    case 8:
-                    case 9:
-                        // These should only be set when timers are locked,
-                        // and we didn't do it.
-                        badTimer();
-                        break;
-                    default:
-                        badTimer();
-                        break;
-                }
-            }
+            return - 1;
         }
+        auto tw = ts->heap[0];
+        auto t = tw.timer;
+        if(t->ts != ts)
+        {
+            go_throw("bad ts"_s);
+        }
+
+        if(rec::Load(gocpp::recv(t->astate)) & (timerModified | timerZombie) == 0 && tw.when > now)
+        {
+            // Fast path: not ready to run.
+            return tw.when;
+        }
+
+        rec::lock(gocpp::recv(t));
+        if(rec::updateHeap(gocpp::recv(t)))
+        {
+            rec::unlock(gocpp::recv(t));
+            goto Redo;
+        }
+
+        if(t->state & timerHeaped == 0 || t->state & timerModified != 0)
+        {
+            badTimer();
+        }
+
+        if(t->when > now)
+        {
+            // Not ready to run.
+            rec::unlock(gocpp::recv(t));
+            return t->when;
+        }
+
+        rec::unlockAndRun(gocpp::recv(t), now, bubble);
+        // t is unlocked now, but not ts
+        assertLockHeld(& ts->mu);
+        return 0;
     }
 
-    // runOneTimer runs a single timer.
-    // The caller must have locked the timers for pp.
-    // This will temporarily unlock the timers while running the timer function.
+    // unlockAndRun unlocks and runs the timer t (which must be locked).
+    // If t is in a timer set (t.ts != nil), the caller must also have locked the timer set,
+    // and this call will temporarily unlock the timer set while running the timer function.
+    // unlockAndRun returns with t unlocked and t.ts (re-)locked.
     //
     //go:systemstack
-    void runOneTimer(golang::runtime::p* pp, timer* t, int64_t now)
+    void rec::unlockAndRun(timer* t, int64_t now, synctestBubble* bubble)
     {
+        rec::trace(gocpp::recv(t), "unlockAndRun"_s);
+        assertLockHeld(& t->mu);
+        if(t->ts != nullptr)
+        {
+            assertLockHeld(& t->ts->mu);
+        }
         if(raceenabled)
         {
-            auto ppcur = rec::ptr(gocpp::recv(getg()->m->p));
-            if(ppcur->timerRaceCtx == 0)
+            // Note that we are running on a system stack,
+            // so there is no chance of getg().m being reassigned
+            // out from under us while this function executes.
+            auto tsLocal = & rec::ptr(gocpp::recv(getg()->m->p))->timers;
+            if(tsLocal->raceCtx == 0)
             {
-                ppcur->timerRaceCtx = racegostart(abi::FuncPCABIInternal(runtimer) + sys::PCQuantum);
+                tsLocal->raceCtx = racegostart(abi::FuncPCABIInternal([&](auto x, auto y, auto z){ return rec::run(x, y, z); }) + sys::PCQuantum);
             }
-            raceacquirectx(ppcur->timerRaceCtx, gocpp::unsafe_pointer(t));
+            raceacquirectx(tsLocal->raceCtx, gocpp::unsafe_pointer(t));
         }
 
-        auto f = [&](auto x, auto y){ return rec::f(t, x, y); };
+        if(t->state & (timerModified | timerZombie) != 0)
+        {
+            badTimer();
+        }
+
+        auto f = [&](auto x, auto y, auto z){ return rec::f(t, x, y, z); };
         auto arg = t->arg;
         auto seq = t->seq;
-
+        int64_t next = {};
+        auto delay = now - t->when;
         if(t->period > 0)
         {
             // Leave in heap but adjust next time to fire.
-            auto delta = t->when - now;
-            t->when += t->period * (1 + - delta / t->period);
-            if(t->when < 0)
+            next = t->when + t->period * (1 + delay / t->period);
+            if(next < 0)
             {
                 // check for overflow.
-                t->when = maxWhen;
+                next = maxWhen;
             }
-            siftdownTimer(pp->timers, 0);
-            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerRunning, timerWaiting))
-            {
-                badTimer();
-            }
-            updateTimer0When(pp);
         }
         else
         {
-            // Remove from heap.
-            dodeltimer0(pp);
-            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerRunning, timerNoStatus))
+            next = 0;
+        }
+        auto ts = t->ts;
+        t->when = next;
+        if(t->state & timerHeaped != 0)
+        {
+            t->state |= timerModified;
+            if(next == 0)
             {
-                badTimer();
+                t->state |= timerZombie;
+                rec::Add(gocpp::recv(t->ts->zombies), 1);
+            }
+            rec::updateHeap(gocpp::recv(t));
+        }
+
+        if(t->isChan && t->period == 0)
+        {
+            // Tell Stop/Reset that we are sending a value.
+            if(rec::Add(gocpp::recv(t->isSending), 1) < 0)
+            {
+                go_throw("too many concurrent timer firings"_s);
             }
         }
+
+        rec::unlock(gocpp::recv(t));
 
         if(raceenabled)
         {
@@ -1076,16 +1400,92 @@ namespace golang::runtime
             auto gp = getg();
             if(gp->racectx != 0)
             {
-                go_throw("runOneTimer: unexpected racectx"_s);
+                go_throw("unexpected racectx"_s);
             }
-            gp->racectx = rec::ptr(gocpp::recv(gp->m->p))->timerRaceCtx;
+            gp->racectx = rec::ptr(gocpp::recv(gp->m->p))->timers.raceCtx;
         }
 
-        unlock(& pp->timersLock);
+        if(ts != nullptr)
+        {
+            rec::unlock(gocpp::recv(ts));
+        }
 
-        f(arg, seq);
+        if(bubble != nullptr)
+        {
+            // Temporarily use the timer's synctest group for the G running this timer.
+            auto gp = getg();
+            if(gp->bubble != nullptr)
+            {
+                go_throw("unexpected syncgroup set"_s);
+            }
+            gp->bubble = bubble;
+            rec::changegstatus(gocpp::recv(bubble), gp, _Gdead, _Grunning);
+        }
 
-        lock(& pp->timersLock);
+        if(t->isChan)
+        {
+            // For a timer channel, we want to make sure that no stale sends
+            // happen after a t.stop or t.modify, but we cannot hold t.mu
+            // during the actual send (which f does) due to lock ordering.
+            // It can happen that we are holding t's lock above, we decide
+            // it's time to send a time value (by calling f), grab the parameters,
+            // unlock above, and then a t.stop or t.modify changes the timer
+            // and returns. At that point, the send needs not to happen after all.
+            // The way we arrange for it not to happen is that t.stop and t.modify
+            // both increment t.seq while holding both t.mu and t.sendLock.
+            // We copied the seq value above while holding t.mu.
+            // Now we can acquire t.sendLock (which will be held across the send)
+            // and double-check that t.seq is still the seq value we saw above.
+            // If not, the timer has been updated and we should skip the send.
+            // We skip the send by reassigning f to a no-op function.
+            // The isSending field tells t.stop or t.modify that we have
+            // started to send the value. That lets them correctly return
+            // true meaning that no value was sent.
+            runtime::lock(& t->sendLock);
+
+            if(t->period == 0)
+            {
+                // We are committed to possibly sending a value
+                // based on seq, so no need to keep telling
+                // stop/modify that we are sending.
+                if(rec::Add(gocpp::recv(t->isSending), - 1) < 0)
+                {
+                    go_throw("mismatched isSending updates"_s);
+                }
+            }
+
+            if(t->seq != seq)
+            {
+                f = [=](go_any, uintptr_t, int64_t) mutable -> void
+                {
+                };
+            }
+        }
+
+        f(arg, seq, delay);
+
+        if(t->isChan)
+        {
+            runtime::unlock(& t->sendLock);
+        }
+
+        if(bubble != nullptr)
+        {
+            auto gp = getg();
+            rec::changegstatus(gocpp::recv(bubble), gp, _Grunning, _Gdead);
+            if(raceenabled)
+            {
+                // Establish a happens-before between this timer event and
+                // the next synctest.Wait call.
+                racereleasemergeg(gp, rec::raceaddr(gocpp::recv(bubble)));
+            }
+            gp->bubble = nullptr;
+        }
+
+        if(ts != nullptr)
+        {
+            rec::lock(gocpp::recv(ts));
+        }
 
         if(raceenabled)
         {
@@ -1094,141 +1494,13 @@ namespace golang::runtime
         }
     }
 
-    // clearDeletedTimers removes all deleted timers from the P's timer heap.
-    // This is used to avoid clogging up the heap if the program
-    // starts a lot of long-running timers and then stops them.
-    // For example, this can happen via context.WithTimeout.
-    //
-    // This is the only function that walks through the entire timer heap,
-    // other than moveTimers which only runs when the world is stopped.
-    //
-    // The caller must have locked the timers for pp.
-    void clearDeletedTimers(golang::runtime::p* pp)
-    {
-        // We are going to clear all timerModifiedEarlier timers.
-        // Do this now in case new ones show up while we are looping.
-        rec::Store(gocpp::recv(pp->timerModifiedEarliest), 0);
-
-        auto cdel = int32_t(0);
-        auto to = 0;
-        auto changedHeap = false;
-        auto timers = pp->timers;
-        nextTimer:
-        for(auto [gocpp_ignored, t] : timers)
-        {
-            if(false) {
-            nextTimer_continue:
-                continue;
-            nextTimer_break:
-                break;
-            }
-            for(; ; )
-            {
-                //Go switch emulation
-                {
-                    auto s = rec::Load(gocpp::recv(t->status));
-                    auto condition = s;
-                    int conditionId = -1;
-                    if(condition == timerWaiting) { conditionId = 0; }
-                    else if(condition == timerModifiedEarlier) { conditionId = 1; }
-                    else if(condition == timerModifiedLater) { conditionId = 2; }
-                    else if(condition == timerDeleted) { conditionId = 3; }
-                    else if(condition == timerModifying) { conditionId = 4; }
-                    else if(condition == timerNoStatus) { conditionId = 5; }
-                    else if(condition == timerRemoved) { conditionId = 6; }
-                    else if(condition == timerRunning) { conditionId = 7; }
-                    else if(condition == timerRemoving) { conditionId = 8; }
-                    else if(condition == timerMoving) { conditionId = 9; }
-                    switch(conditionId)
-                    {
-                        case 0:
-                            if(changedHeap)
-                            {
-                                timers[to] = t;
-                                siftupTimer(timers, to);
-                            }
-                            to++;
-                            goto nextTimer_continue;
-                            break;
-                        case 1:
-                        case 2:
-                            if(rec::CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
-                            {
-                                t->when = t->nextwhen;
-                                timers[to] = t;
-                                siftupTimer(timers, to);
-                                to++;
-                                changedHeap = true;
-                                if(! rec::CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
-                                {
-                                    badTimer();
-                                }
-                                goto nextTimer_continue;
-                            }
-                            break;
-                        case 3:
-                            if(rec::CompareAndSwap(gocpp::recv(t->status), s, timerRemoving))
-                            {
-                                t->pp = 0;
-                                cdel++;
-                                if(! rec::CompareAndSwap(gocpp::recv(t->status), timerRemoving, timerRemoved))
-                                {
-                                    badTimer();
-                                }
-                                changedHeap = true;
-                                goto nextTimer_continue;
-                            }
-                            break;
-                        case 4:
-                            // Loop until modification complete.
-                            osyield();
-                            break;
-                        case 5:
-                        case 6:
-                            // We should not see these status values in a timer heap.
-                            badTimer();
-                            break;
-                        case 7:
-                        case 8:
-                        case 9:
-                            // Some other P thinks it owns this timer,
-                            // which should not happen.
-                            badTimer();
-                            break;
-                        default:
-                            badTimer();
-                            break;
-                    }
-                }
-            }
-        }
-
-        // Set remaining slots in timers slice to nil,
-        // so that the timer values can be garbage collected.
-        for(auto i = to; i < len(timers); i++)
-        {
-            timers[i] = nullptr;
-        }
-
-        rec::Add(gocpp::recv(pp->deletedTimers), - cdel);
-        rec::Add(gocpp::recv(pp->numTimers), - cdel);
-
-        timers = timers.make_slice(0, to);
-        pp->timers = timers;
-        updateTimer0When(pp);
-
-        if(verifyTimers)
-        {
-            verifyTimerHeap(pp);
-        }
-    }
-
-    // verifyTimerHeap verifies that the timer heap is in a valid state.
+    // verify verifies that the timer heap is in a valid state.
     // This is only for debugging, and is only called if verifyTimers is true.
-    // The caller must have locked the timers.
-    void verifyTimerHeap(golang::runtime::p* pp)
+    // The caller must have locked ts.
+    void rec::verify(timers* ts)
     {
-        for(auto [i, t] : pp->timers)
+        assertLockHeld(& ts->mu);
+        for(auto [i, tw] : ts->heap)
         {
             if(i == 0)
             {
@@ -1236,49 +1508,48 @@ namespace golang::runtime
                 continue;
             }
 
-            // The heap is 4-ary. See siftupTimer and siftdownTimer.
-            auto p = (i - 1) / 4;
-            if(t->when < pp->timers[p]->when)
+            // The heap is timerHeapN-ary. See siftupTimer and siftdownTimer.
+            auto p = int((unsigned int)(i - 1) / timerHeapN);
+            if(rec::less(gocpp::recv(tw), ts->heap[p]))
             {
-                print("bad timer heap at "_s, i, ": "_s, p, ": "_s, pp->timers[p]->when, ", "_s, i, ": "_s, t->when, "\n"_s);
+                print("bad timer heap at "_s, i, ": "_s, p, ": "_s, ts->heap[p].when, ", "_s, i, ": "_s, tw.when, "\n"_s);
                 go_throw("bad timer heap"_s);
             }
         }
-        if(auto numTimers = int(rec::Load(gocpp::recv(pp->numTimers))); len(pp->timers) != numTimers)
+        if(auto n = int(rec::Load(gocpp::recv(ts->len))); len(ts->heap) != n)
         {
-            println("timer heap len"_s, len(pp->timers), "!= numTimers"_s, numTimers);
+            println("timer heap len"_s, len(ts->heap), "!= atomic len"_s, n);
             go_throw("bad timer heap len"_s);
         }
     }
 
-    // updateTimer0When sets the P's timer0When field.
-    // The caller must have locked the timers for pp.
-    void updateTimer0When(golang::runtime::p* pp)
+    // updateMinWhenHeap sets ts.minWhenHeap to ts.heap[0].when.
+    // The caller must have locked ts or the world must be stopped.
+    void rec::updateMinWhenHeap(timers* ts)
     {
-        if(len(pp->timers) == 0)
+        assertWorldStoppedOrLockHeld(& ts->mu);
+        if(len(ts->heap) == 0)
         {
-            rec::Store(gocpp::recv(pp->timer0When), 0);
+            rec::Store(gocpp::recv(ts->minWhenHeap), 0);
         }
         else
         {
-            rec::Store(gocpp::recv(pp->timer0When), pp->timers[0]->when);
+            rec::Store(gocpp::recv(ts->minWhenHeap), ts->heap[0].when);
         }
     }
 
-    // updateTimerModifiedEarliest updates the recorded nextwhen field of the
-    // earlier timerModifiedEarier value.
-    // The timers for pp will not be locked.
-    void updateTimerModifiedEarliest(golang::runtime::p* pp, int64_t nextwhen)
+    // updateMinWhenModified updates ts.minWhenModified to be <= when.
+    // ts need not be (and usually is not) locked.
+    void rec::updateMinWhenModified(timers* ts, int64_t when)
     {
         for(; ; )
         {
-            auto old = rec::Load(gocpp::recv(pp->timerModifiedEarliest));
-            if(old != 0 && old < nextwhen)
+            auto old = rec::Load(gocpp::recv(ts->minWhenModified));
+            if(old != 0 && old < when)
             {
                 return;
             }
-
-            if(rec::CompareAndSwap(gocpp::recv(pp->timerModifiedEarliest), old, nextwhen))
+            if(rec::CompareAndSwap(gocpp::recv(ts->minWhenModified), old, when))
             {
                 return;
             }
@@ -1303,16 +1574,9 @@ namespace golang::runtime
                 continue;
             }
 
-            auto w = rec::Load(gocpp::recv(pp->timer0When));
-            if(w != 0 && w < next)
+            if(auto w = rec::wakeTime(gocpp::recv(pp->timers)); w != 0)
             {
-                next = w;
-            }
-
-            w = rec::Load(gocpp::recv(pp->timerModifiedEarliest));
-            if(w != 0 && w < next)
-            {
-                next = w;
+                next = gocpp::min(next, w);
             }
         }
         unlock(& allpLock);
@@ -1320,94 +1584,99 @@ namespace golang::runtime
         return next;
     }
 
-    // siftupTimer puts the timer at position i in the right place
+    // siftUp puts the timer at position i in the right place
     // in the heap by moving it up toward the top of the heap.
-    // It returns the smallest changed index.
-    int siftupTimer(gocpp::slice<timer*> t, int i)
+    void rec::siftUp(timers* ts, int i)
     {
-        if(i >= len(t))
+        auto heap = ts->heap;
+        if(i >= len(heap))
         {
             badTimer();
         }
-        auto when = t[i]->when;
-        if(when <= 0)
+        auto tw = heap[i];
+        if(tw.when <= 0)
         {
             badTimer();
         }
-        auto tmp = t[i];
         for(; i > 0; )
         {
             // parent
-            auto p = (i - 1) / 4;
-            if(when >= t[p]->when)
+            auto p = int((unsigned int)(i - 1) / timerHeapN);
+            if(! rec::less(gocpp::recv(tw), heap[p]))
             {
                 break;
             }
-            t[i] = t[p];
+            heap[i] = heap[p];
             i = p;
         }
-        if(tmp != t[i])
+        if(heap[i].timer != tw.timer)
         {
-            t[i] = tmp;
+            heap[i] = tw;
         }
-        return i;
     }
 
-    // siftdownTimer puts the timer at position i in the right place
+    // siftDown puts the timer at position i in the right place
     // in the heap by moving it down toward the bottom of the heap.
-    void siftdownTimer(gocpp::slice<timer*> t, int i)
+    void rec::siftDown(timers* ts, int i)
     {
-        auto n = len(t);
+        auto heap = ts->heap;
+        auto n = len(heap);
         if(i >= n)
         {
             badTimer();
         }
-        auto when = t[i]->when;
-        if(when <= 0)
+        if(i * timerHeapN + 1 >= n)
+        {
+            return;
+        }
+        auto tw = heap[i];
+        if(tw.when <= 0)
         {
             badTimer();
         }
-        auto tmp = t[i];
         for(; ; )
         {
-            // left child
-            auto c = i * 4 + 1;
-            // mid child
-            auto c3 = c + 2;
-            if(c >= n)
+            auto leftChild = i * timerHeapN + 1;
+            if(leftChild >= n)
             {
                 break;
             }
-            auto w = t[c]->when;
-            if(c + 1 < n && t[c + 1]->when < w)
+            auto w = tw;
+            auto c = - 1;
+            for(auto [j, tw] : heap.make_slice(leftChild, gocpp::min(leftChild + timerHeapN, n)))
             {
-                w = t[c + 1]->when;
-                c++;
-            }
-            if(c3 < n)
-            {
-                auto w3 = t[c3]->when;
-                if(c3 + 1 < n && t[c3 + 1]->when < w3)
+                if(rec::less(gocpp::recv(tw), w))
                 {
-                    w3 = t[c3 + 1]->when;
-                    c3++;
-                }
-                if(w3 < w)
-                {
-                    w = w3;
-                    c = c3;
+                    w = tw;
+                    c = leftChild + j;
                 }
             }
-            if(w >= when)
+            if(c < 0)
             {
                 break;
             }
-            t[i] = t[c];
+            heap[i] = heap[c];
             i = c;
         }
-        if(tmp != t[i])
+        if(heap[i].timer != tw.timer)
         {
-            t[i] = tmp;
+            heap[i] = tw;
+        }
+    }
+
+    // initHeap reestablishes the heap order in the slice ts.heap.
+    // It takes O(n) time for n=len(ts.heap), not the O(n log n) of n repeated add operations.
+    void rec::initHeap(timers* ts)
+    {
+        // Last possible element that needs sifting down is parent of last element;
+        // last element is len(t)-1; parent of last element is (len(t)-1-1)/timerHeapN.
+        if(len(ts->heap) <= 1)
+        {
+            return;
+        }
+        for(auto i = int((unsigned int)(len(ts->heap) - 1 - 1) / timerHeapN); i >= 0; i--)
+        {
+            rec::siftDown(gocpp::recv(ts), i);
         }
     }
 
@@ -1418,6 +1687,115 @@ namespace golang::runtime
     void badTimer()
     {
         go_throw("timer data corruption"_s);
+    }
+
+    // maybeRunChan checks whether the timer needs to run
+    // to send a value to its associated channel. If so, it does.
+    // The timer must not be locked.
+    void rec::maybeRunChan(timer* t, golang::runtime::hchan* c)
+    {
+        if(t->isFake && getg()->bubble != c->bubble)
+        {
+            // This should have been checked by the caller, but check just in case.
+            fatal("synctest timer accessed from outside bubble"_s);
+        }
+        if(rec::Load(gocpp::recv(t->astate)) & timerHeaped != 0)
+        {
+            // If the timer is in the heap, the ordinary timer code
+            // is in charge of sending when appropriate.
+            return;
+        }
+
+        rec::lock(gocpp::recv(t));
+        auto now = nanotime();
+        if(t->isFake)
+        {
+            now = getg()->bubble->now;
+        }
+        if(t->state & timerHeaped != 0 || t->when == 0 || t->when > now)
+        {
+            rec::trace(gocpp::recv(t), "maybeRunChan-"_s);
+            // Timer in the heap, or not running at all, or not triggered.
+            rec::unlock(gocpp::recv(t));
+            return;
+        }
+        rec::trace(gocpp::recv(t), "maybeRunChan+"_s);
+        systemstack([=]() mutable -> void
+        {
+            rec::unlockAndRun(gocpp::recv(t), now, c->bubble);
+        });
+    }
+
+    // blockTimerChan is called when a channel op has decided to block on c.
+    // The caller holds the channel lock for c and possibly other channels.
+    // blockTimerChan makes sure that c is in a timer heap,
+    // adding it if needed.
+    void blockTimerChan(golang::runtime::hchan* c)
+    {
+        auto t = c->timer;
+        if(t->isFake && c->bubble != getg()->bubble)
+        {
+            // This should have been checked by the caller, but check just in case.
+            fatal("synctest timer accessed from outside bubble"_s);
+        }
+
+        rec::lock(gocpp::recv(t));
+        rec::trace(gocpp::recv(t), "blockTimerChan"_s);
+        if(! t->isChan)
+        {
+            badTimer();
+        }
+
+        t->blocked++;
+
+        // If this is the first enqueue after a recent dequeue,
+        // the timer may still be in the heap but marked as a zombie.
+        // Unmark it in this case, if the timer is still pending.
+        if(t->state & timerHeaped != 0 && t->state & timerZombie != 0 && t->when > 0)
+        {
+            t->state &^= timerZombie;
+            rec::Add(gocpp::recv(t->ts->zombies), - 1);
+        }
+
+        // t.maybeAdd must be called with t unlocked,
+        // because it needs to lock t.ts before t.
+        // Then it will do nothing if t.needsAdd(state) is false.
+        // Check that now before the unlock,
+        // avoiding the extra lock-lock-unlock-unlock
+        // inside maybeAdd when t does not need to be added.
+        auto add = rec::needsAdd(gocpp::recv(t));
+        rec::unlock(gocpp::recv(t));
+        if(add)
+        {
+            rec::maybeAdd(gocpp::recv(t));
+        }
+    }
+
+    // unblockTimerChan is called when a channel op that was blocked on c
+    // is no longer blocked. Every call to blockTimerChan must be paired with
+    // a call to unblockTimerChan.
+    // The caller holds the channel lock for c and possibly other channels.
+    // unblockTimerChan removes c from the timer heap when nothing is
+    // blocked on it anymore.
+    void unblockTimerChan(golang::runtime::hchan* c)
+    {
+        auto t = c->timer;
+        rec::lock(gocpp::recv(t));
+        rec::trace(gocpp::recv(t), "unblockTimerChan"_s);
+        if(! t->isChan || t->blocked == 0)
+        {
+            badTimer();
+        }
+        t->blocked--;
+        if(t->blocked == 0 && t->state & timerHeaped != 0 && t->state & timerZombie == 0)
+        {
+            // Last goroutine that was blocked on this timer.
+            // Mark for removal from heap but do not clear t.when,
+            // so that we know what time it is still meant to trigger.
+            t->state |= timerZombie;
+            rec::Add(gocpp::recv(t->ts->zombies), 1);
+        }
+        rec::unlock(gocpp::recv(t));
     }
 
 }

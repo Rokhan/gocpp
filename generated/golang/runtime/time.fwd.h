@@ -6,48 +6,34 @@
 
 namespace golang::runtime
 {
-    // Values for the timer status field.
-    // Timer has no status set yet.
-    const int timerNoStatus = 0;
-    // Waiting for timer to fire.
-    // The timer is in some P's heap.
-    const int timerWaiting = 1;
-    // Running the timer function.
-    // A timer will only have this status briefly.
-    const int timerRunning = 2;
-    // The timer is deleted and should be removed.
-    // It should not be run, but it is still in some P's heap.
-    const int timerDeleted = 3;
-    // The timer is being removed.
-    // The timer will only have this status briefly.
-    const int timerRemoving = 4;
-    // The timer has been stopped.
-    // It is not in any P's heap.
-    const int timerRemoved = 5;
-    // The timer is being modified.
-    // The timer will only have this status briefly.
-    const int timerModifying = 6;
-    // The timer has been modified to an earlier time.
-    // The new when value is in the nextwhen field.
-    // The timer is in some P's heap, possibly in the wrong place.
-    const int timerModifiedEarlier = 7;
-    // The timer has been modified to the same or a later time.
-    // The new when value is in the nextwhen field.
-    // The timer is in some P's heap, possibly in the wrong place.
-    const int timerModifiedLater = 8;
-    // The timer has been modified and is being moved.
-    // The timer will only have this status briefly.
-    const int timerMoving = 9;
+    struct timer;
+    struct timers;
+    struct timerWhen;
+    // Timer state field.
+    // timerHeaped is set when the timer is stored in some P's heap.
+    const uint8_t timerHeaped = 1 << 0;
+    // timerModified is set when t.when has been modified
+    // but the heap's heap[i].when entry still needs to be updated.
+    // That change waits until the heap in which
+    // the timer appears can be locked and rearranged.
+    // timerModified is only set when timerHeaped is also set.
+    const uint8_t timerModified = 1 << 1;
+    // timerZombie is set when the timer has been stopped
+    // but is still present in some P's heap.
+    // Only set when timerHeaped is also set.
+    // It is possible for timerModified and timerZombie to both
+    // be set, meaning that the timer was modified and then stopped.
+    // A timer sending to a channel may be placed in timerZombie
+    // to take it out of the heap even though the timer is not stopped,
+    // as long as nothing is reading from the channel.
+    const uint8_t timerZombie = 1 << 2;
+    // timerDebug enables printing a textual debug trace of all timer operations to stderr.
+    const bool timerDebug = false;
     // maxWhen is the maximum value for timer's when field.
     const int maxWhen = (1 << 63) - 1;
     // verifyTimers can be set to true to add debugging checks that the
     // timer heaps are valid.
     const bool verifyTimers = false;
-}
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-
-namespace golang::runtime
-{
-    struct timer;
+    struct timeTimer;
+    const long timerHeapN = 4;
 }

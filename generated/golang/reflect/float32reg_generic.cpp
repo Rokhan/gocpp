@@ -13,6 +13,7 @@
 
 namespace golang::reflect
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }

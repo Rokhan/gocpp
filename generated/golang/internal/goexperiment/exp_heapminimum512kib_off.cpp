@@ -11,7 +11,7 @@
 #include "golang/internal/goexperiment/exp_heapminimum512kib_off.h"
 #include "gocpp/support.h"
 
-namespace golang::goexperiment
+namespace golang::internal::goexperiment
 {
     namespace rec
     {

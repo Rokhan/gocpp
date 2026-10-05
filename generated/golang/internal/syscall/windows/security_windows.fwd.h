@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
     const long SecurityAnonymous = 0;
     const long SecurityIdentification = 1;
@@ -15,19 +15,37 @@ namespace golang::windows
     struct LUID;
     struct LUID_AND_ATTRIBUTES;
     struct TOKEN_PRIVILEGES;
+    struct SID_AND_ATTRIBUTES;
     struct TOKEN_MANDATORY_LABEL;
     const long SE_GROUP_INTEGRITY = 0x00000020;
     using TokenType = uint32_t;
     const long LG_INCLUDE_INDIRECT = 0x1;
     const long MAX_PREFERRED_LENGTH = 0xFFFFFFFF;
     struct LocalGroupUserInfo0;
+    const long USER_PRIV_USER = 1;
+    struct UserInfo1;
+    struct UserInfo4;
+    struct TOKEN_GROUPS;
+    struct SID_IDENTIFIER_AUTHORITY;
+    const long SID_REVISION = 1;
+    // https://learn.microsoft.com/en-us/windows/win32/services/localsystem-account
+    const long SECURITY_LOCAL_SYSTEM_RID = 18;
+    // https://learn.microsoft.com/en-us/windows/win32/services/localservice-account
+    const long SECURITY_LOCAL_SERVICE_RID = 19;
+    // https://learn.microsoft.com/en-us/windows/win32/services/networkservice-account
+    const long SECURITY_NETWORK_SERVICE_RID = 20;
     const TokenType TokenPrimary = 1;
     const TokenType TokenImpersonation = 2;
 }
 #include "golang/syscall/security_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
-    struct SID_AND_ATTRIBUTES;
-    struct UserInfo4;
+    namespace syscall = golang::syscall;
+    const syscall::Errno NERR_UserNotFound = 2221;
+    const syscall::Errno NERR_UserExists = 2224;
 }

@@ -18,6 +18,9 @@
 
 namespace golang::main
 {
+    namespace fmt = golang::fmt;
+    namespace sync = golang::sync;
+    namespace time = golang::time;
     namespace rec
     {
         using mocklib::rec::Lock;

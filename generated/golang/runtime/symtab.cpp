@@ -12,14 +12,13 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/symtab.h"
-#include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/consts.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/atomic_pointer.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mbitmap.h"
 #include "golang/runtime/mgcpacer.h"
 #include "golang/runtime/panic.h"
@@ -38,6 +37,11 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace goarch = golang::internal::goarch;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::Load;
@@ -51,6 +55,7 @@ namespace golang::runtime
     {
         T result;
         result.callers = this->callers;
+        result.nextPC = this->nextPC;
         result.frames = this->frames;
         result.frameStore = this->frameStore;
         return result;
@@ -60,6 +65,7 @@ namespace golang::runtime
     bool Frames::operator==(const T& ref) const
     {
         if (callers != ref.callers) return false;
+        if (nextPC != ref.nextPC) return false;
         if (frames != ref.frames) return false;
         if (frameStore != ref.frameStore) return false;
         return true;
@@ -69,6 +75,7 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << callers;
+        os << " " << nextPC;
         os << " " << frames;
         os << " " << frameStore;
         os << '}';
@@ -165,12 +172,19 @@ namespace golang::runtime
             {
                 break;
             }
-            auto pc = ci->callers[0];
-            ci->callers = ci->callers.make_slice(1);
+            uintptr_t pc = {};
+            if(ci->nextPC != 0)
+            {
+                std::tie(pc, ci->nextPC) = std::tuple{ci->nextPC, 0};
+            }
+            else
+            {
+                std::tie(pc, ci->callers) = std::tuple{ci->callers[0], ci->callers.make_slice(1)};
+            }
             auto funcInfo = findfunc(pc);
             if(! rec::valid(gocpp::recv(funcInfo)))
             {
-                if(cgoSymbolizer != nullptr)
+                if(cgoSymbolizerAvailable())
                 {
                     // Pre-expand cgo frames. We could do this
                     // incrementally, too, but there's no way to
@@ -181,12 +195,16 @@ namespace golang::runtime
             }
             auto f = rec::_Func(gocpp::recv(funcInfo));
             auto entry = rec::Entry(gocpp::recv(f));
+            // We store the pc of the start of the instruction following
+            // the instruction in question (the call or the inline mark).
+            // This is done for historical reasons, and to make FuncForPC
+            // work correctly for entries in the result of runtime.Callers.
+            // Decrement to get back to the instruction we care about.
+            // It is not possible to get pc == entry from runtime.Callers,
+            // but if the caller does provide one, provide best-effort
+            // results by avoiding backing out of the function entirely.
             if(pc > entry)
             {
-                // We store the pc of the start of the instruction following
-                // the instruction in question (the call or the inline mark).
-                // This is done for historical reasons, and to make FuncForPC
-                // work correctly for entries in the result of runtime.Callers.
                 pc--;
             }
             // It's important that interpret pc non-strictly as cgoTraceback may
@@ -198,6 +216,31 @@ namespace golang::runtime
                 // Note: entry is not modified. It always refers to a real frame, not an inlined one.
                 // File/line from funcline1 below are already correct.
                 f = nullptr;
+
+                // When CallersFrame is invoked using the PC list returned by Callers,
+                // the PC list includes virtual PCs corresponding to each outer frame
+                // around an innermost real inlined PC.
+                // We also want to support code passing in a PC list extracted from a
+                // stack trace, and there only the real PCs are printed, not the virtual ones.
+                // So check to see if the implied virtual PC for this PC (obtained from the
+                // unwinder itself) is the next PC in ci.callers. If not, insert it.
+                // The +1 here correspond to the pc-- above: the output of Callers
+                // and therefore the input to CallersFrames is return PCs from the stack;
+                // The pc-- backs up into the CALL instruction (not the first byte of the CALL
+                // instruction, but good enough to find it nonetheless).
+                // There are no cycles in implied virtual PCs (some number of frames were
+                // inlined, but that number is finite), so this unpacking cannot cause an infinite loop.
+                for(auto unext = rec::next(gocpp::recv(u), uf); rec::valid(gocpp::recv(unext)) && len(ci->callers) > 0 && ci->callers[0] != unext.pc + 1; unext = rec::next(gocpp::recv(u), unext))
+                {
+                    auto snext = rec::srcFunc(gocpp::recv(u), unext);
+                    if(snext.funcID == abi::FuncIDWrapper && elideWrapperCalling(sf.funcID))
+                    {
+                        // Skip, because tracebackPCs (inside runtime.Callers) would too.
+                        continue;
+                    }
+                    ci->nextPC = unext.pc + 1;
+                    break;
+                }
             }
             ci->frames = append(ci->frames, gocpp::Init<Frame>([=](auto& x) {
                 x.PC = pc;
@@ -252,6 +295,14 @@ namespace golang::runtime
 
     // runtime_FrameStartLine returns the start line of the function in a Frame.
     //
+    // runtime_FrameStartLine should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/grafana/pyroscope-go/godeltaprof
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname runtime_FrameStartLine runtime/pprof.runtime_FrameStartLine
     int runtime_FrameStartLine(Frame* f)
     {
@@ -261,6 +312,14 @@ namespace golang::runtime
     // runtime_FrameSymbolName returns the full symbol name of the function in a Frame.
     // For generic functions this differs from f.Function in that this doesn't replace
     // the shape name to "...".
+    //
+    // runtime_FrameSymbolName should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/grafana/pyroscope-go/godeltaprof
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
     //
     //go:linkname runtime_FrameSymbolName runtime/pprof.runtime_FrameSymbolName
     gocpp::string runtime_FrameSymbolName(Frame* f)
@@ -276,6 +335,15 @@ namespace golang::runtime
 
     // runtime_expandFinalInlineFrame expands the final pc in stk to include all
     // "callers" if pc is inline.
+    //
+    // runtime_expandFinalInlineFrame should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/grafana/pyroscope-go/godeltaprof
+    //   - github.com/pyroscope-io/godeltaprof
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
     //
     //go:linkname runtime_expandFinalInlineFrame runtime/pprof.runtime_expandFinalInlineFrame
     gocpp::slice<uintptr_t> runtime_expandFinalInlineFrame(gocpp::slice<uintptr_t> stk)
@@ -332,6 +400,8 @@ namespace golang::runtime
     // expandCgoFrames expands frame information for pc, known to be
     // a non-Go function, using the cgoSymbolizer hook. expandCgoFrames
     // returns nil if pc could not be expanded.
+    //
+    // Preconditions: cgoSymbolizerAvailable returns true.
     gocpp::slice<Frame> expandCgoFrames(uintptr_t pc)
     {
         auto arg = gocpp::Init<cgoSymbolizerArg>([=](auto& x) {
@@ -476,7 +546,7 @@ namespace golang::runtime
         result.ptrSize = this->ptrSize;
         result.nfunc = this->nfunc;
         result.nfiles = this->nfiles;
-        result.textStart = this->textStart;
+        result._1 = this->_1;
         result.funcnameOffset = this->funcnameOffset;
         result.cuOffset = this->cuOffset;
         result.filetabOffset = this->filetabOffset;
@@ -495,7 +565,7 @@ namespace golang::runtime
         if (ptrSize != ref.ptrSize) return false;
         if (nfunc != ref.nfunc) return false;
         if (nfiles != ref.nfiles) return false;
-        if (textStart != ref.textStart) return false;
+        if (_1 != ref._1) return false;
         if (funcnameOffset != ref.funcnameOffset) return false;
         if (cuOffset != ref.cuOffset) return false;
         if (filetabOffset != ref.filetabOffset) return false;
@@ -514,7 +584,7 @@ namespace golang::runtime
         os << " " << ptrSize;
         os << " " << nfunc;
         os << " " << nfiles;
-        os << " " << textStart;
+        os << " " << _1;
         os << " " << funcnameOffset;
         os << " " << cuOffset;
         os << " " << filetabOffset;
@@ -566,12 +636,14 @@ namespace golang::runtime
         result.gcdata = this->gcdata;
         result.gcbss = this->gcbss;
         result.types = this->types;
+        result.typedesclen = this->typedesclen;
         result.etypes = this->etypes;
+        result.itaboffset = this->itaboffset;
+        result.itabsize = this->itabsize;
         result.rodata = this->rodata;
         result.gofunc = this->gofunc;
+        result.epclntab = this->epclntab;
         result.textsectmap = this->textsectmap;
-        result.typelinks = this->typelinks;
-        result.itablinks = this->itablinks;
         result.ptab = this->ptab;
         result.pluginpath = this->pluginpath;
         result.pkghashes = this->pkghashes;
@@ -579,10 +651,10 @@ namespace golang::runtime
         result.modulename = this->modulename;
         result.modulehashes = this->modulehashes;
         result.hasmain = this->hasmain;
+        result.bad = this->bad;
         result.gcdatamask = this->gcdatamask;
         result.gcbssmask = this->gcbssmask;
         result.typemap = this->typemap;
-        result.bad = this->bad;
         result.next = this->next;
         return result;
     }
@@ -617,12 +689,14 @@ namespace golang::runtime
         if (gcdata != ref.gcdata) return false;
         if (gcbss != ref.gcbss) return false;
         if (types != ref.types) return false;
+        if (typedesclen != ref.typedesclen) return false;
         if (etypes != ref.etypes) return false;
+        if (itaboffset != ref.itaboffset) return false;
+        if (itabsize != ref.itabsize) return false;
         if (rodata != ref.rodata) return false;
         if (gofunc != ref.gofunc) return false;
+        if (epclntab != ref.epclntab) return false;
         if (textsectmap != ref.textsectmap) return false;
-        if (typelinks != ref.typelinks) return false;
-        if (itablinks != ref.itablinks) return false;
         if (ptab != ref.ptab) return false;
         if (pluginpath != ref.pluginpath) return false;
         if (pkghashes != ref.pkghashes) return false;
@@ -630,10 +704,10 @@ namespace golang::runtime
         if (modulename != ref.modulename) return false;
         if (modulehashes != ref.modulehashes) return false;
         if (hasmain != ref.hasmain) return false;
+        if (bad != ref.bad) return false;
         if (gcdatamask != ref.gcdatamask) return false;
         if (gcbssmask != ref.gcbssmask) return false;
         if (typemap != ref.typemap) return false;
-        if (bad != ref.bad) return false;
         if (next != ref.next) return false;
         return true;
     }
@@ -668,12 +742,14 @@ namespace golang::runtime
         os << " " << gcdata;
         os << " " << gcbss;
         os << " " << types;
+        os << " " << typedesclen;
         os << " " << etypes;
+        os << " " << itaboffset;
+        os << " " << itabsize;
         os << " " << rodata;
         os << " " << gofunc;
+        os << " " << epclntab;
         os << " " << textsectmap;
-        os << " " << typelinks;
-        os << " " << itablinks;
         os << " " << ptab;
         os << " " << pluginpath;
         os << " " << pkghashes;
@@ -681,10 +757,10 @@ namespace golang::runtime
         os << " " << modulename;
         os << " " << modulehashes;
         os << " " << hasmain;
+        os << " " << bad;
         os << " " << gcdatamask;
         os << " " << gcbssmask;
         os << " " << typemap;
-        os << " " << bad;
         os << " " << next;
         os << '}';
         return os;
@@ -742,15 +818,36 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    // pinnedTypemaps are the map[typeOff]*_type from the moduledata objects.
+    // pinnedTypemaps are the map[*_type]*_type from the moduledata objects.
     //
     // These typemap objects are allocated at run time on the heap, but the
     // only direct reference to them is in the moduledata, created by the
     // linker and marked SNOPTRDATA so it is ignored by the GC.
     //
     // To make sure the map isn't collected, we keep a second reference here.
-    gocpp::slice<gocpp::map<golang::runtime::typeOff, _type*>> pinnedTypemaps;
+    gocpp::slice<gocpp::map<_type*, _type*>> pinnedTypemaps;
+    // aixStaticDataBase (used only on AIX) holds the unrelocated address
+    // of the data section, set by the linker.
+    //
+    // On AIX, an R_ADDR relocation from an RODATA symbol to a DATA symbol
+    // does not work, as the dynamic loader can change the address of the
+    // data section, and it is not possible to apply a dynamic relocation
+    // to RODATA. In order to get the correct address, we need to apply
+    // the delta between unrelocated and relocated data section addresses.
+    // aixStaticDataBase is the unrelocated address, and moduledata.data is
+    // the relocated one.
+    uintptr_t aixStaticDataBase;
     moduledata firstmoduledata;
+    // lastmoduledatap should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issues/67401.
+    // See go.dev/issues/71672.
+    //
+    //go:linkname lastmoduledatap
     moduledata* lastmoduledatap;
     gocpp::slice<moduledata*>* modulesSlice;
     // activeModules returns a slice of active modules.
@@ -947,14 +1044,24 @@ namespace golang::runtime
         }
     }
 
+    // moduledataverify1 should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issues/67401.
+    // See go.dev/issues/71672.
+    //
+    //go:linkname moduledataverify1
     void moduledataverify1(moduledata* datap)
     {
         // Check that the pclntab's format is valid.
         auto hdr = datap->pcHeader;
-        if(hdr->magic != 0xfffffff1 || hdr->pad1 != 0 || hdr->pad2 != 0 ||
-                hdr->minLC != sys::PCQuantum || hdr->ptrSize != goarch::PtrSize || hdr->textStart != datap->text)
+        if(hdr->magic != abi::CurrentPCLnTabMagic || hdr->pad1 != 0 || hdr->pad2 != 0 ||
+                hdr->minLC != sys::PCQuantum || hdr->ptrSize != goarch::PtrSize)
         {
-            println("runtime: pcHeader: magic="_s, hex(hdr->magic), "pad1="_s, hdr->pad1, "pad2="_s, hdr->pad2, "minLC="_s, hdr->minLC, "ptrSize="_s, hdr->ptrSize, "pcHeader.textStart="_s, hex(hdr->textStart), "text="_s, hex(datap->text), "pluginpath="_s, datap->pluginpath);
+            println("runtime: pcHeader: magic="_s, hex(hdr->magic), "pad1="_s, hdr->pad1, "pad2="_s, hdr->pad2, "minLC="_s, hdr->minLC, "ptrSize="_s, hdr->ptrSize, "pluginpath="_s, datap->pluginpath);
             go_throw("invalid function symbol table"_s);
         }
 
@@ -987,9 +1094,18 @@ namespace golang::runtime
 
         auto min = rec::textAddr(gocpp::recv(datap), datap->ftab[0].entryoff);
         auto max = rec::textAddr(gocpp::recv(datap), datap->ftab[nftab].entryoff);
-        if(datap->minpc != min || datap->maxpc != max)
+        auto minpc = datap->minpc;
+        auto maxpc = datap->maxpc;
+        if(GOARCH == "wasm"_s)
         {
-            println("minpc="_s, hex(datap->minpc), "min="_s, hex(min), "maxpc="_s, hex(datap->maxpc), "max="_s, hex(max));
+            // On Wasm, the func table contains the function index, whereas
+            // the "PC" is function index << 16 + block index.
+            // round up for end PC
+            maxpc = alignUp(maxpc, 1 << 16);
+        }
+        if(minpc != min || maxpc != max)
+        {
+            println("minpc="_s, hex(minpc), "min="_s, hex(min), "maxpc="_s, hex(maxpc), "max="_s, hex(max));
             go_throw("minpc or maxpc invalid"_s);
         }
 
@@ -1043,6 +1159,12 @@ namespace golang::runtime
                 go_throw("runtime: text offset out of range"_s);
             }
         }
+        if(GOARCH == "wasm"_s)
+        {
+            // On Wasm, a text offset (e.g. in the method table) is function index, whereas
+            // the "PC" is function index << 16 + block index.
+            res <<= 16;
+        }
         return res;
     }
 
@@ -1054,9 +1176,20 @@ namespace golang::runtime
     //go:nosplit
     std::tuple<uint32_t, bool> rec::textOff(moduledata* md, uintptr_t pc)
     {
-        auto res = uint32_t(pc - md->text);
+        auto off = pc - md->text;
+        if(GOARCH == "wasm"_s)
+        {
+            // On Wasm, the func table contains the function index, whereas
+            // the "PC" is function index << 16 + block index.
+            off >>= 16;
+        }
+        auto res = uint32_t(off);
         if(len(md->textsectmap) > 1)
         {
+            if(GOARCH == "wasm"_s)
+            {
+                fatal("unexpected multiple text sections on Wasm"_s);
+            }
             for(auto [i, sect] : md->textsectmap)
             {
                 if(sect.baseaddr > pc)
@@ -1259,17 +1392,38 @@ namespace golang::runtime
     }
 
     // entry returns the entry PC for f.
+    //
+    // entry should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/phuslu/log
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
     uintptr_t rec::entry(golang::runtime::funcInfo f)
     {
         return rec::textAddr(gocpp::recv(f.datap), f._func.entryOff);
     }
+
+    //go:linkname badFuncInfoEntry runtime.funcInfo.entry
+    uintptr_t badFuncInfoEntry(golang::runtime::funcInfo)
+    /* convertBlockStmt, nil block */;
 
     // findfunc looks up function metadata for a PC.
     //
     // It is nosplit because it's part of the isgoexception
     // implementation.
     //
+    // findfunc should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/phuslu/log
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:nosplit
+    //go:linkname findfunc
     golang::runtime::funcInfo findfunc(uintptr_t pc)
     {
         auto datap = findmoduledatap(pc);
@@ -1287,8 +1441,14 @@ namespace golang::runtime
 
         // TODO: are datap.text and datap.minpc always equal?
         auto x = uintptr_t(pcOff) + datap->text - datap->minpc;
-        auto b = x / pcbucketsize;
-        auto i = x % pcbucketsize / (pcbucketsize / nsub);
+        if(GOARCH == "wasm"_s)
+        {
+            // On Wasm, pcOff is the function index, whereas
+            // the "PC" is function index << 16 + block index.
+            x = (uintptr_t(pcOff) << 16) + datap->text - datap->minpc;
+        }
+        auto b = x / abi::FuncTabBucketSize;
+        auto i = x % abi::FuncTabBucketSize / (abi::FuncTabBucketSize / nsub);
 
         auto ffb = (findfuncbucket*)(add(gocpp::unsafe_pointer(datap->findfunctab), b * gocpp::Sizeof<findfuncbucket>()));
         auto idx = ffb->idx + uint32_t(ffb->subbuckets[i]);
@@ -1353,6 +1513,13 @@ namespace golang::runtime
         return golang::runtime::srcFunc {f.datap, f._func.nameOff, f._func.startLine, f._func.funcID};
     }
 
+    // name should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/phuslu/log
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
     gocpp::string rec::name(golang::runtime::srcFunc s)
     {
         if(s.datap == nullptr)
@@ -1361,6 +1528,10 @@ namespace golang::runtime
         }
         return rec::funcName(gocpp::recv(s.datap), s.nameOff);
     }
+
+    //go:linkname badSrcFuncName runtime.srcFunc.name
+    gocpp::string badSrcFuncName(golang::runtime::srcFunc)
+    /* convertBlockStmt, nil block */;
 
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -1448,6 +1619,9 @@ namespace golang::runtime
         // matches the cached contents.
         auto debugCheckCache = false;
 
+        // If true, skip checking the cache entirely.
+        auto skipCache = false;
+
         if(off == 0)
         {
             return {- 1, 0};
@@ -1459,6 +1633,7 @@ namespace golang::runtime
         int32_t checkVal = {};
         uintptr_t checkPC = {};
         auto ck = pcvalueCacheKey(targetpc);
+        if(! skipCache)
         {
             auto mp = acquirem();
             auto cache = & mp->pcvalueCache;
@@ -1642,6 +1817,15 @@ namespace golang::runtime
         return "?"_s;
     }
 
+    // funcline1 should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/phuslu/log
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname funcline1
     std::tuple<gocpp::string, int32_t> funcline1(golang::runtime::funcInfo f, uintptr_t targetpc, bool strict)
     {
         gocpp::string file;

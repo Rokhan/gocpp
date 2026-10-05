@@ -8,12 +8,6 @@ namespace golang::runtime
 {
     const long maxAlign = 8;
     const bool debugChan = false;
-}
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/type.fwd.h"
-
-namespace golang::runtime
-{
     struct hchan;
     struct waitq;
 }

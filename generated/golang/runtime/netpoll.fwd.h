@@ -29,6 +29,7 @@ namespace golang::runtime
     const uintptr_t pdReady = 1;
     const uintptr_t pdWait = 2;
     const int pollBlockSize = 4 * 1024;
+    struct pollDesc;
     using pollInfo = uint32_t;
     const int pollClosing = 1 << 0;
     const int pollEventErr = 1 << 1;
@@ -36,15 +37,6 @@ namespace golang::runtime
     const int pollExpiredWriteDeadline = 1 << 3;
     const int pollFDSeq = 1 << 4;
     const long pollFDSeqBits = 20;
-    const int pollFDSeqMask = (1 << pollFDSeqBits) - 1;
-}
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/time.fwd.h"
-
-namespace golang::runtime
-{
-    struct pollDesc;
     struct pollCache;
+    const int pollFDSeqMask = (1 << pollFDSeqBits) - 1;
 }

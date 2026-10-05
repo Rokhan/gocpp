@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
@@ -23,6 +23,9 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
         using atomic::rec::CompareAndSwap;

@@ -13,7 +13,7 @@
 
 #include "golang/image/color/color.h"
 
-namespace golang::color
+namespace golang::image::color
 {
     namespace rec
     {

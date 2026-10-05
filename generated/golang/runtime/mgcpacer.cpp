@@ -12,11 +12,14 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/cpu/cpu.h"
+#include "golang/internal/goexperiment/exp_greenteagc_on.h"
 #include "golang/internal/goexperiment/exp_heapminimum512kib_off.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/math/math.h"
+#include "golang/internal/strconv/atoi.h"
 #include "golang/runtime/env_posix.h"
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/lfstack.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mgclimit.h"
@@ -33,10 +36,15 @@
 #include "golang/runtime/string.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+#include "golang/runtime/traceruntime.h"
 
 namespace golang::runtime
 {
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace cpu = golang::internal::cpu;
+    namespace goexperiment = golang::internal::goexperiment;
+    namespace math = golang::internal::runtime::math;
+    namespace strconv = golang::internal::strconv;
     namespace rec
     {
         using atomic::rec::Add;
@@ -269,7 +277,7 @@ namespace golang::runtime
         for(auto [gocpp_ignored, p] : allp)
         {
             p->gcAssistTime = 0;
-            p->gcFractionalMarkTime = 0;
+            rec::Store(gocpp::recv(p->gcFractionalMarkTime), 0);
         }
 
         if(trigger.kind == gcTriggerTime)
@@ -442,9 +450,7 @@ namespace golang::runtime
     }
 
     // endCycle computes the consMark estimate for the next cycle.
-    // userForced indicates whether the current GC cycle was forced
-    // by the application.
-    void rec::endCycle(gcControllerState* c, int64_t now, int procs, bool userForced)
+    void rec::endCycle(gcControllerState* c, int64_t now, int procs)
     {
         // Record last heap goal for the scavenger.
         // We'll be updating the heap goal soon.
@@ -532,21 +538,47 @@ namespace golang::runtime
     // another P if there are spare worker slots. It is used by putfull
     // when more work is made available.
     //
+    // If goexperiment.GreenTeaGC, the caller must not hold a G's scan bit,
+    // otherwise this could cause a deadlock. This is already enforced by
+    // the static lock ranking.
+    //
     //go:nowritebarrier
     void rec::enlistWorker(gcControllerState* c)
     {
-        // If there are idle Ps, wake one so it will run an idle worker.
-        // NOTE: This is suspected of causing deadlocks. See golang.org/issue/19112.
-        // if sched.npidle.Load() != 0 && sched.nmspinning.Load() == 0 {
-        // wakep()
-        // return
-        // }
-        // There are no idle Ps. If we need more dedicated workers,
-        // try to preempt a running P so it will switch to a worker.
-        if(rec::Load(gocpp::recv(c->dedicatedMarkWorkersNeeded)) <= 0)
+        auto needDedicated = rec::Load(gocpp::recv(c->dedicatedMarkWorkersNeeded)) > 0;
+
+        // Create new workers from idle Ps with goexperiment.GreenTeaGC.
+        // Note: with Green Tea, this places a requirement on enlistWorker
+        // that it must not be called while a G's scan bit is held.
+        if(goexperiment::GreenTeaGC)
+        {
+            auto needIdle = rec::needIdleMarkWorker(gocpp::recv(c));
+
+            // If we're all full on dedicated and idle workers, nothing
+            // to do.
+            if(! needDedicated && ! needIdle)
+            {
+                return;
+            }
+
+            // If there are idle Ps, wake one so it will run a worker
+            // (the scheduler will already prefer to spin up a new
+            // dedicated worker over an idle one).
+            if(rec::Load(gocpp::recv(sched.npidle)) != 0 && rec::Load(gocpp::recv(sched.nmspinning)) == 0)
+            {
+                // Likely to consume our worker request.
+                wakep();
+                return;
+            }
+        }
+
+        // If we still need more dedicated workers, try to preempt a running P
+        // so it will switch to a worker.
+        if(! needDedicated)
         {
             return;
         }
+
         // Pick a random other P to preempt.
         if(gomaxprocs <= 1)
         {
@@ -577,35 +609,48 @@ namespace golang::runtime
         }
     }
 
-    // findRunnableGCWorker returns a background mark worker for pp if it
-    // should be run. This must only be called when gcBlackenEnabled != 0.
-    std::tuple<g*, int64_t> rec::findRunnableGCWorker(gcControllerState* c, golang::runtime::p* pp, int64_t now)
+    // assignWaitingGCWorker assigns a background mark worker to pp if one should
+    // be run.
+    //
+    // If a worker is selected, it is assigned to pp.nextMarkGCWorker and the P is
+    // wired as a GC mark worker. The G is still in _Gwaiting. If no worker is
+    // selected, ok returns false.
+    //
+    // If assignedWaitingGCWorker returns true, this P must either:
+    // - Mark the G as runnable and run it, clearing pp.nextMarkGCWorker.
+    // - Or, call c.releaseNextGCMarkWorker.
+    //
+    // This must only be called when gcBlackenEnabled != 0.
+    std::tuple<bool, int64_t> rec::assignWaitingGCWorker(gcControllerState* c, golang::runtime::p* pp, int64_t now)
     {
         if(gcBlackenEnabled == 0)
         {
             go_throw("gcControllerState.findRunnable: blackening not enabled"_s);
         }
 
-        // Since we have the current time, check if the GC CPU limiter
-        // hasn't had an update in a while. This check is necessary in
-        // case the limiter is on but hasn't been checked in a while and
-        // so may have left sufficient headroom to turn off again.
         if(now == 0)
         {
             now = nanotime();
         }
-        if(rec::needUpdate(gocpp::recv(gcCPULimiter), now))
-        {
-            rec::update(gocpp::recv(gcCPULimiter), now);
-        }
 
-        if(! gcMarkWorkAvailable(pp))
+        if(! gcShouldScheduleWorker(pp))
         {
-            // No work to be done right now. This can happen at
+            // No good reason to schedule a worker. This can happen at
             // the end of the mark phase when there are still
             // assists tapering off. Don't bother running a worker
             // now because it'll just return immediately.
-            return {nullptr, now};
+            return {false, now};
+        }
+
+        if(rec::Load(gocpp::recv(c->dedicatedMarkWorkersNeeded)) <= 0 && c->fractionalUtilizationGoal == 0)
+        {
+            // No current need for dedicated workers, and no need at all for
+            // fractional workers. Check before trying to acquire a worker; when
+            // GOMAXPROCS is large, that can be expensive and is often unnecessary.
+            // When a dedicated worker stops running, the gcBgMarkWorker loop notes
+            // the need for the worker before returning it to the pool. If we don't
+            // see the need now, we wouldn't have found it in the pool anyway.
+            return {false, now};
         }
 
         // Grab a worker before we commit to running below.
@@ -622,7 +667,7 @@ namespace golang::runtime
             // it will always do so with queued global work. Thus, that P
             // will be immediately eligible to re-run the worker G it was
             // just using, ensuring work can complete.
-            return {nullptr, now};
+            return {false, now};
         }
 
         auto decIfPositive = [=](atomic::Int64* val) mutable -> bool
@@ -653,7 +698,7 @@ namespace golang::runtime
         {
             // No need for fractional workers.
             rec::push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
-            return {nullptr, now};
+            return {false, now};
         }
         else
         {
@@ -661,15 +706,60 @@ namespace golang::runtime
             // goal?
             // This should be kept in sync with pollFractionalWorkerExit.
             auto delta = now - c->markStartTime;
-            if(delta > 0 && double(pp->gcFractionalMarkTime) / double(delta) > c->fractionalUtilizationGoal)
+            if(delta > 0 && double(rec::Load(gocpp::recv(pp->gcFractionalMarkTime))) / double(delta) > c->fractionalUtilizationGoal)
             {
                 // Nope. No need to run a fractional worker.
                 rec::push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
-                return {nullptr, now};
+                return {false, now};
             }
             // Run a fractional worker.
             pp->gcMarkWorkerMode = gcMarkWorkerFractionalMode;
         }
+
+        pp->nextGCMarkWorker = node;
+        return {true, now};
+    }
+
+    // findRunnableGCWorker returns a background mark worker for pp if it
+    // should be run.
+    //
+    // If findRunnableGCWorker returns a G, this P is wired as a GC mark worker and
+    // must run the G.
+    //
+    // This must only be called when gcBlackenEnabled != 0.
+    //
+    // This function is allowed to have write barriers because it is called from
+    // the portion of findRunnable that always has a P.
+    //
+    //go:yeswritebarrierrec
+    std::tuple<g*, int64_t> rec::findRunnableGCWorker(gcControllerState* c, golang::runtime::p* pp, int64_t now)
+    {
+        // Since we have the current time, check if the GC CPU limiter
+        // hasn't had an update in a while. This check is necessary in
+        // case the limiter is on but hasn't been checked in a while and
+        // so may have left sufficient headroom to turn off again.
+        if(now == 0)
+        {
+            now = nanotime();
+        }
+        if(rec::needUpdate(gocpp::recv(gcCPULimiter), now))
+        {
+            rec::update(gocpp::recv(gcCPULimiter), now);
+        }
+
+        // If a worker wasn't already assigned by procresize, assign one now.
+        if(pp->nextGCMarkWorker == nullptr)
+        {
+            auto [ok, now_tmp] = rec::assignWaitingGCWorker(gocpp::recv(c), pp, now);
+            auto& now = now_tmp;
+            if(! ok)
+            {
+                return {nullptr, now};
+            }
+        }
+
+        auto node = pp->nextGCMarkWorker;
+        pp->nextGCMarkWorker = nullptr;
 
         // Run the background mark worker.
         auto gp = rec::ptr(gocpp::recv(node->gp));
@@ -681,6 +771,25 @@ namespace golang::runtime
             traceRelease(trace);
         }
         return {gp, now};
+    }
+
+    // Release an unused pp.nextGCMarkWorker, if any.
+    //
+    // This function is allowed to have write barriers because it is called from
+    // the portion of schedule.
+    //
+    //go:yeswritebarrierrec
+    void rec::releaseNextGCMarkWorker(gcControllerState* c, golang::runtime::p* pp)
+    {
+        auto node = pp->nextGCMarkWorker;
+        if(node == nullptr)
+        {
+            return;
+        }
+
+        rec::markWorkerStop(gocpp::recv(c), pp->gcMarkWorkerMode, 0);
+        rec::push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
+        pp->nextGCMarkWorker = nullptr;
     }
 
     // resetLive sets up the controller state for the next mark phase after the end
@@ -1182,9 +1291,9 @@ namespace golang::runtime
         {
             return - 1;
         }
-        if(auto [n, ok] = atoi32(p); ok)
+        if(auto [n, err] = strconv::ParseInt(p, 10, 32); err == nullptr)
         {
-            return n;
+            return int32_t(n);
         }
         return 100;
     }
@@ -1236,7 +1345,7 @@ namespace golang::runtime
         auto p = gogetenv("GOMEMLIMIT"_s);
         if(p == ""_s || p == "off"_s)
         {
-            return maxInt64;
+            return math::MaxInt64;
         }
         auto [n, ok] = parseByteCount(p);
         if(! ok)

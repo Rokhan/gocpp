@@ -4,14 +4,15 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::big
+namespace golang::math::big
 {
     using Word = unsigned int;
 }
 #include "golang/math/bits/bits.fwd.h"
 
-namespace golang::big
+namespace golang::math::big
 {
+    namespace bits = golang::math::bits;
     const int _W = bits::UintSize;
     const int go_S = _W / 8;
     const int _B = 1 << _W;

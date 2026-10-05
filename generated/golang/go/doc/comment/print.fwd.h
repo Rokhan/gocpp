@@ -4,13 +4,8 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::comment
-{
-    struct commentPrinter;
-}
-#include "golang/go/doc/comment/parse.fwd.h"
-
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     struct Printer;
+    struct commentPrinter;
 }

@@ -4,27 +4,26 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::parser
+namespace golang::go::parser
 {
+    struct parser;
     // maxNestLev is the deepest we're willing to recurse during parsing
     const int maxNestLev = 1e5;
+    struct bailout;
+    struct field;
     // Parsing modes for parseSimpleStmt.
     const int basic = 0;
     const int labelOk = 1;
     const int rangeOk = 2;
-    struct gocpp_id_9;
+    struct gocpp_id_7;
 }
 #include "golang/go/ast/ast.fwd.h"
-#include "golang/go/parser/interface.fwd.h"
-#include "golang/go/scanner/errors.fwd.h"
-#include "golang/go/scanner/scanner.fwd.h"
 #include "golang/go/token/position.fwd.h"
 #include "golang/go/token/token.fwd.h"
 
-namespace golang::parser
+namespace golang::go::parser
 {
-    struct parser;
-    struct bailout;
-    struct field;
+    namespace token = golang::go::token;
+    namespace ast = golang::go::ast;
     using parseSpecFunction = std::function<ast::Spec (ast::CommentGroup* doc, token::Token keyword, int iota)>;
 }

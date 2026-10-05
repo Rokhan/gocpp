@@ -22,15 +22,53 @@ namespace golang::runtime
     void goargs();
     void goenvs_unix();
     gocpp::slice<gocpp::string> environ();
+    // TODO: These should be locals in testAtomic64, but we don't 8-byte
+    // align stack variables on 386.
     extern uint64_t test_z64;
+    // TODO: These should be locals in testAtomic64, but we don't 8-byte
+    // align stack variables on 386.
     extern uint64_t test_x64;
     void testAtomic64();
     void check();
-    void parsedebugvars();
+    extern gocpp::slice<dbgVar*> dbgvars;
+    void parseRuntimeDebugVars(gocpp::string godebug);
+    void finishDebugVarsSetup();
     void reparsedebugvars(gocpp::string env);
+    struct invalidGODEBUGStruct
+    {
+        gocpp::string key{};
+        gocpp::string value{};
+        int removed{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct invalidGODEBUGStruct& value);
     void parsegodebug(gocpp::string godebug, gocpp::map<gocpp::string, bool> seen);
     void setTraceback(gocpp::string level);
-    int32_t timediv(int64_t v, int32_t div, int32_t* rem);
+    unsigned char* reflect_adjustAIXGCDataForRuntime(unsigned char* addr);
+    uint8_t fips_getIndicator();
+    void fips_setIndicator(uint8_t indicator);
+    // If an invalid GODEBUG setting is found during startup time,
+    // invalidGODEBUG is set to that setting so it can be reported
+    // when initialization has progressed sufficiently.
+    extern invalidGODEBUGStruct invalidGODEBUG;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    m* acquirem();
+    void releasem(m* mp);
     std::tuple<gocpp::slice<gocpp::unsafe_pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks();
     gocpp::unsafe_pointer reflect_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
     gocpp::unsafe_pointer reflect_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
@@ -39,11 +77,20 @@ namespace golang::runtime
     gocpp::unsafe_pointer reflectlite_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
     int32_t reflect_addReflectOff(gocpp::unsafe_pointer ptr);
 }
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/runtime2.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
 
 namespace golang::runtime
 {
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
     struct dbgVar
     {
         gocpp::string name{};
@@ -67,6 +114,8 @@ namespace golang::runtime
     {
         int32_t cgocheck{};
         int32_t clobberfree{};
+        int32_t containermaxprocs{};
+        int32_t decoratemappings{};
         int32_t disablethp{};
         int32_t dontfreezetheworld{};
         int32_t efence{};
@@ -77,24 +126,39 @@ namespace golang::runtime
         int32_t gctrace{};
         int32_t invalidptr{};
         int32_t madvdontneed{}; // for Linux; issue 28466
-        atomic::Int32 runtimeContentionStacks{};
         int32_t scavtrace{};
         int32_t scheddetail{};
         int32_t schedtrace{};
         int32_t tracebackancestors{};
+        int32_t updatemaxprocs{};
         int32_t asyncpreemptoff{};
         int32_t harddecommit{};
         int32_t adaptivestackstart{};
         int32_t tracefpunwindoff{};
         int32_t traceadvanceperiod{};
+        int32_t traceCheckStackOwnership{};
+        int32_t profstackdepth{};
+        int32_t dataindependenttiming{};
         // debug.malloc is used as a combined debug check
         // in the malloc function and should be set
         // if any of the below debug options is != 0.
         bool malloc{};
-        int32_t allocfreetrace{};
         int32_t inittrace{};
         int32_t sbrk{};
+        int32_t checkfinalizers{};
+        // traceallocfree controls whether execution traces contain
+        // detailed trace data about memory allocation. This value
+        // affects debug.malloc only if it is != 0 and the execution
+        // tracer is enabled, in which case debug.malloc will be
+        // set to "true" if it isn't already while tracing is enabled.
+        // It will be set while the world is stopped, so it's safe.
+        // The value of traceallocfree can be changed any time in response
+        // to os.Setenv("GODEBUG").
+        atomic::Int32 traceallocfree{};
         atomic::Int32 panicnil{};
+        // tracebacklabels controls the inclusion of goroutine labels in the
+        // goroutine status header line.
+        atomic::Int32 tracebacklabels{};
 
         using isGoStruct = void;
 
@@ -108,10 +172,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct debugStruct& value);
-    m* acquirem();
-    void releasem(m* mp);
+    std::tuple<gocpp::slice<abi::Type*>, gocpp::slice<gocpp::slice<abi::Type*>>> reflect_compiledTypelinks();
+    // Holds variables parsed from GODEBUG env var,
+    // except for "memprofilerate" since there is an
+    // existing int var for that value, which may
+    // already have an initial value.
     extern debugStruct debug;
-    extern gocpp::slice<dbgVar*> dbgvars;
 
     namespace rec
     {

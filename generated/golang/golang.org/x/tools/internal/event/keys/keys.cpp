@@ -13,18 +13,18 @@
 
 #include "golang/fmt/print.h"
 #include "golang/golang.org/x/tools/internal/event/label/label.h"
-#include "golang/io/io.h"
 #include "golang/math/unsafe.h"
-#include "golang/strconv/atob.h"
-#include "golang/strconv/ftoa.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 #include "golang/strconv/quote.h"
 
-namespace golang::keys
+namespace golang::golang_org::x::tools::internal::event::keys
 {
+    namespace fmt = golang::fmt;
+    namespace label = golang::golang_org::x::tools::internal::event::label;
+    namespace math = golang::math;
+    namespace strconv = golang::strconv;
     namespace rec
     {
-        using io::rec::Write;
         using label::rec::Find;
         using label::rec::Unpack64;
         using label::rec::UnpackString;
@@ -33,7 +33,7 @@ namespace golang::keys
         using mocklib::rec::Error;
     }
 
-    // Value represents a key for untyped values.
+    // Value is a [label.Key] for untyped values.
     
     template<typename T> requires gocpp::GoStruct<T>
     Value::operator T()
@@ -85,13 +85,13 @@ namespace golang::keys
         return k->description;
     }
 
-    void rec::Format(Value* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
+    gocpp::slice<unsigned char> rec::Append(Value* k, gocpp::slice<unsigned char> buf, label::Label l)
     {
-        fmt::Fprint(w, rec::From(gocpp::recv(k), l));
+        return fmt::Append(buf, rec::From(gocpp::recv(k), l));
     }
 
-    // Get can be used to get a label for the key from a label.Map.
-    gocpp::go_any rec::Get(Value* k, label::Map lm)
+    // Get returns the label for the key of a label.Map.
+    go_any rec::Get(Value* k, label::Map lm)
     {
         if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
         {
@@ -100,14 +100,14 @@ namespace golang::keys
         return nullptr;
     }
 
-    // From can be used to get a value from a Label.
-    gocpp::go_any rec::From(Value* k, label::Label t)
+    // From returns the value of a Label.
+    go_any rec::From(Value* k, label::Label t)
     {
         return rec::UnpackValue(gocpp::recv(t));
     }
 
     // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(Value* k, gocpp::go_any value)
+    label::Label rec::Of(Value* k, go_any value)
     {
         return label::OfValue(k, value);
     }
@@ -148,7 +148,7 @@ namespace golang::keys
         return value.PrintTo(os);
     }
 
-    // NewTag creates a new Key for tagging labels.
+    // NewTag creates a new [label.Key] for tagging labels.
     Tag* NewTag(gocpp::string name, gocpp::string description)
     {
         return gocpp::InitPtr<Tag>([=](auto& x) {
@@ -167,8 +167,9 @@ namespace golang::keys
         return k->description;
     }
 
-    void rec::Format(Tag* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
+    gocpp::slice<unsigned char> rec::Append(Tag* k, gocpp::slice<unsigned char> buf, label::Label l)
     {
+        return buf;
     }
 
     // New creates a new Label with this key.
@@ -177,7 +178,7 @@ namespace golang::keys
         return label::OfValue(k, nullptr);
     }
 
-    // Int represents a key
+    // Int is a [label.Key] for signed integers.
     
     template<typename T> requires gocpp::GoStruct<T>
     Int::operator T()
@@ -210,7 +211,7 @@ namespace golang::keys
         return value.PrintTo(os);
     }
 
-    // NewInt creates a new Key for int values.
+    // NewInt returns a new [label.Key] for int64 values.
     Int* NewInt(gocpp::string name, gocpp::string description)
     {
         return gocpp::InitPtr<Int>([=](auto& x) {
@@ -229,19 +230,25 @@ namespace golang::keys
         return k->description;
     }
 
-    void rec::Format(Int* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
+    gocpp::slice<unsigned char> rec::Append(Int* k, gocpp::slice<unsigned char> buf, label::Label l)
     {
-        rec::Write(gocpp::recv(w), strconv::AppendInt(buf, int64_t(rec::From(gocpp::recv(k), l)), 10));
+        return strconv::AppendInt(buf, rec::From(gocpp::recv(k), l), 10);
     }
 
     // Of creates a new Label with this key and the supplied value.
     label::Label rec::Of(Int* k, int v)
     {
+        return rec::Of64(gocpp::recv(k), int64_t(v));
+    }
+
+    // Of64 creates a new Label with this key and the supplied value.
+    label::Label rec::Of64(Int* k, int64_t v)
+    {
         return label::Of64(k, uint64_t(v));
     }
 
-    // Get can be used to get a label for the key from a label.Map.
-    int rec::Get(Int* k, label::Map lm)
+    // Get returns the label for the key of a label.Map.
+    int64_t rec::Get(Int* k, label::Map lm)
     {
         if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
         {
@@ -250,332 +257,16 @@ namespace golang::keys
         return 0;
     }
 
-    // From can be used to get a value from a Label.
-    int rec::From(Int* k, label::Label t)
-    {
-        return int(rec::Unpack64(gocpp::recv(t)));
-    }
-
-    // Int8 represents a key
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    Int8::operator T()
-    {
-        T result;
-        result.name = this->name;
-        result.description = this->description;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool Int8::operator==(const T& ref) const
-    {
-        if (name != ref.name) return false;
-        if (description != ref.description) return false;
-        return true;
-    }
-
-    std::ostream& Int8::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << name;
-        os << " " << description;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Int8& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // NewInt8 creates a new Key for int8 values.
-    Int8* NewInt8(gocpp::string name, gocpp::string description)
-    {
-        return gocpp::InitPtr<Int8>([=](auto& x) {
-            x.name = name;
-            x.description = description;
-        });
-    }
-
-    gocpp::string rec::Name(Int8* k)
-    {
-        return k->name;
-    }
-
-    gocpp::string rec::Description(Int8* k)
-    {
-        return k->description;
-    }
-
-    void rec::Format(Int8* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
-    {
-        rec::Write(gocpp::recv(w), strconv::AppendInt(buf, int64_t(rec::From(gocpp::recv(k), l)), 10));
-    }
-
-    // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(Int8* k, int8_t v)
-    {
-        return label::Of64(k, uint64_t(v));
-    }
-
-    // Get can be used to get a label for the key from a label.Map.
-    int8_t rec::Get(Int8* k, label::Map lm)
-    {
-        if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
-        {
-            return rec::From(gocpp::recv(k), t);
-        }
-        return 0;
-    }
-
-    // From can be used to get a value from a Label.
-    int8_t rec::From(Int8* k, label::Label t)
-    {
-        return int8_t(rec::Unpack64(gocpp::recv(t)));
-    }
-
-    // Int16 represents a key
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    Int16::operator T()
-    {
-        T result;
-        result.name = this->name;
-        result.description = this->description;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool Int16::operator==(const T& ref) const
-    {
-        if (name != ref.name) return false;
-        if (description != ref.description) return false;
-        return true;
-    }
-
-    std::ostream& Int16::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << name;
-        os << " " << description;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Int16& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // NewInt16 creates a new Key for int16 values.
-    Int16* NewInt16(gocpp::string name, gocpp::string description)
-    {
-        return gocpp::InitPtr<Int16>([=](auto& x) {
-            x.name = name;
-            x.description = description;
-        });
-    }
-
-    gocpp::string rec::Name(Int16* k)
-    {
-        return k->name;
-    }
-
-    gocpp::string rec::Description(Int16* k)
-    {
-        return k->description;
-    }
-
-    void rec::Format(Int16* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
-    {
-        rec::Write(gocpp::recv(w), strconv::AppendInt(buf, int64_t(rec::From(gocpp::recv(k), l)), 10));
-    }
-
-    // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(Int16* k, int16_t v)
-    {
-        return label::Of64(k, uint64_t(v));
-    }
-
-    // Get can be used to get a label for the key from a label.Map.
-    int16_t rec::Get(Int16* k, label::Map lm)
-    {
-        if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
-        {
-            return rec::From(gocpp::recv(k), t);
-        }
-        return 0;
-    }
-
-    // From can be used to get a value from a Label.
-    int16_t rec::From(Int16* k, label::Label t)
-    {
-        return int16_t(rec::Unpack64(gocpp::recv(t)));
-    }
-
-    // Int32 represents a key
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    Int32::operator T()
-    {
-        T result;
-        result.name = this->name;
-        result.description = this->description;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool Int32::operator==(const T& ref) const
-    {
-        if (name != ref.name) return false;
-        if (description != ref.description) return false;
-        return true;
-    }
-
-    std::ostream& Int32::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << name;
-        os << " " << description;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Int32& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // NewInt32 creates a new Key for int32 values.
-    Int32* NewInt32(gocpp::string name, gocpp::string description)
-    {
-        return gocpp::InitPtr<Int32>([=](auto& x) {
-            x.name = name;
-            x.description = description;
-        });
-    }
-
-    gocpp::string rec::Name(Int32* k)
-    {
-        return k->name;
-    }
-
-    gocpp::string rec::Description(Int32* k)
-    {
-        return k->description;
-    }
-
-    void rec::Format(Int32* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
-    {
-        rec::Write(gocpp::recv(w), strconv::AppendInt(buf, int64_t(rec::From(gocpp::recv(k), l)), 10));
-    }
-
-    // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(Int32* k, int32_t v)
-    {
-        return label::Of64(k, uint64_t(v));
-    }
-
-    // Get can be used to get a label for the key from a label.Map.
-    int32_t rec::Get(Int32* k, label::Map lm)
-    {
-        if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
-        {
-            return rec::From(gocpp::recv(k), t);
-        }
-        return 0;
-    }
-
-    // From can be used to get a value from a Label.
-    int32_t rec::From(Int32* k, label::Label t)
-    {
-        return int32_t(rec::Unpack64(gocpp::recv(t)));
-    }
-
-    // Int64 represents a key
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    Int64::operator T()
-    {
-        T result;
-        result.name = this->name;
-        result.description = this->description;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool Int64::operator==(const T& ref) const
-    {
-        if (name != ref.name) return false;
-        if (description != ref.description) return false;
-        return true;
-    }
-
-    std::ostream& Int64::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << name;
-        os << " " << description;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Int64& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // NewInt64 creates a new Key for int64 values.
-    Int64* NewInt64(gocpp::string name, gocpp::string description)
-    {
-        return gocpp::InitPtr<Int64>([=](auto& x) {
-            x.name = name;
-            x.description = description;
-        });
-    }
-
-    gocpp::string rec::Name(Int64* k)
-    {
-        return k->name;
-    }
-
-    gocpp::string rec::Description(Int64* k)
-    {
-        return k->description;
-    }
-
-    void rec::Format(Int64* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
-    {
-        rec::Write(gocpp::recv(w), strconv::AppendInt(buf, rec::From(gocpp::recv(k), l), 10));
-    }
-
-    // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(Int64* k, int64_t v)
-    {
-        return label::Of64(k, uint64_t(v));
-    }
-
-    // Get can be used to get a label for the key from a label.Map.
-    int64_t rec::Get(Int64* k, label::Map lm)
-    {
-        if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
-        {
-            return rec::From(gocpp::recv(k), t);
-        }
-        return 0;
-    }
-
-    // From can be used to get a value from a Label.
-    int64_t rec::From(Int64* k, label::Label t)
+    // From returns the value of a Label.
+    int64_t rec::From(Int* k, label::Label t)
     {
         return int64_t(rec::Unpack64(gocpp::recv(t)));
     }
 
-    // UInt represents a key
+    // Uint is a [label.Key] for unsigned integers.
     
     template<typename T> requires gocpp::GoStruct<T>
-    UInt::operator T()
+    Uint::operator T()
     {
         T result;
         result.name = this->name;
@@ -584,14 +275,14 @@ namespace golang::keys
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool UInt::operator==(const T& ref) const
+    bool Uint::operator==(const T& ref) const
     {
         if (name != ref.name) return false;
         if (description != ref.description) return false;
         return true;
     }
 
-    std::ostream& UInt::PrintTo(std::ostream& os) const
+    std::ostream& Uint::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << name;
@@ -600,359 +291,43 @@ namespace golang::keys
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct UInt& value)
+    std::ostream& operator<<(std::ostream& os, const struct Uint& value)
     {
         return value.PrintTo(os);
     }
 
-    // NewUInt creates a new Key for uint values.
-    UInt* NewUInt(gocpp::string name, gocpp::string description)
+    // NewUint creates a new [label.Key] for unsigned values.
+    Uint* NewUint(gocpp::string name, gocpp::string description)
     {
-        return gocpp::InitPtr<UInt>([=](auto& x) {
+        return gocpp::InitPtr<Uint>([=](auto& x) {
             x.name = name;
             x.description = description;
         });
     }
 
-    gocpp::string rec::Name(UInt* k)
+    gocpp::string rec::Name(Uint* k)
     {
         return k->name;
     }
 
-    gocpp::string rec::Description(UInt* k)
+    gocpp::string rec::Description(Uint* k)
     {
         return k->description;
     }
 
-    void rec::Format(UInt* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
+    gocpp::slice<unsigned char> rec::Append(Uint* k, gocpp::slice<unsigned char> buf, label::Label l)
     {
-        rec::Write(gocpp::recv(w), strconv::AppendUint(buf, uint64_t(rec::From(gocpp::recv(k), l)), 10));
+        return strconv::AppendUint(buf, rec::From(gocpp::recv(k), l), 10);
     }
 
     // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(UInt* k, unsigned int v)
-    {
-        return label::Of64(k, uint64_t(v));
-    }
-
-    // Get can be used to get a label for the key from a label.Map.
-    unsigned int rec::Get(UInt* k, label::Map lm)
-    {
-        if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
-        {
-            return rec::From(gocpp::recv(k), t);
-        }
-        return 0;
-    }
-
-    // From can be used to get a value from a Label.
-    unsigned int rec::From(UInt* k, label::Label t)
-    {
-        return (unsigned int)(rec::Unpack64(gocpp::recv(t)));
-    }
-
-    // UInt8 represents a key
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    UInt8::operator T()
-    {
-        T result;
-        result.name = this->name;
-        result.description = this->description;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool UInt8::operator==(const T& ref) const
-    {
-        if (name != ref.name) return false;
-        if (description != ref.description) return false;
-        return true;
-    }
-
-    std::ostream& UInt8::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << name;
-        os << " " << description;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct UInt8& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // NewUInt8 creates a new Key for uint8 values.
-    UInt8* NewUInt8(gocpp::string name, gocpp::string description)
-    {
-        return gocpp::InitPtr<UInt8>([=](auto& x) {
-            x.name = name;
-            x.description = description;
-        });
-    }
-
-    gocpp::string rec::Name(UInt8* k)
-    {
-        return k->name;
-    }
-
-    gocpp::string rec::Description(UInt8* k)
-    {
-        return k->description;
-    }
-
-    void rec::Format(UInt8* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
-    {
-        rec::Write(gocpp::recv(w), strconv::AppendUint(buf, uint64_t(rec::From(gocpp::recv(k), l)), 10));
-    }
-
-    // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(UInt8* k, uint8_t v)
-    {
-        return label::Of64(k, uint64_t(v));
-    }
-
-    // Get can be used to get a label for the key from a label.Map.
-    uint8_t rec::Get(UInt8* k, label::Map lm)
-    {
-        if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
-        {
-            return rec::From(gocpp::recv(k), t);
-        }
-        return 0;
-    }
-
-    // From can be used to get a value from a Label.
-    uint8_t rec::From(UInt8* k, label::Label t)
-    {
-        return uint8_t(rec::Unpack64(gocpp::recv(t)));
-    }
-
-    // UInt16 represents a key
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    UInt16::operator T()
-    {
-        T result;
-        result.name = this->name;
-        result.description = this->description;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool UInt16::operator==(const T& ref) const
-    {
-        if (name != ref.name) return false;
-        if (description != ref.description) return false;
-        return true;
-    }
-
-    std::ostream& UInt16::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << name;
-        os << " " << description;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct UInt16& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // NewUInt16 creates a new Key for uint16 values.
-    UInt16* NewUInt16(gocpp::string name, gocpp::string description)
-    {
-        return gocpp::InitPtr<UInt16>([=](auto& x) {
-            x.name = name;
-            x.description = description;
-        });
-    }
-
-    gocpp::string rec::Name(UInt16* k)
-    {
-        return k->name;
-    }
-
-    gocpp::string rec::Description(UInt16* k)
-    {
-        return k->description;
-    }
-
-    void rec::Format(UInt16* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
-    {
-        rec::Write(gocpp::recv(w), strconv::AppendUint(buf, uint64_t(rec::From(gocpp::recv(k), l)), 10));
-    }
-
-    // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(UInt16* k, uint16_t v)
-    {
-        return label::Of64(k, uint64_t(v));
-    }
-
-    // Get can be used to get a label for the key from a label.Map.
-    uint16_t rec::Get(UInt16* k, label::Map lm)
-    {
-        if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
-        {
-            return rec::From(gocpp::recv(k), t);
-        }
-        return 0;
-    }
-
-    // From can be used to get a value from a Label.
-    uint16_t rec::From(UInt16* k, label::Label t)
-    {
-        return uint16_t(rec::Unpack64(gocpp::recv(t)));
-    }
-
-    // UInt32 represents a key
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    UInt32::operator T()
-    {
-        T result;
-        result.name = this->name;
-        result.description = this->description;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool UInt32::operator==(const T& ref) const
-    {
-        if (name != ref.name) return false;
-        if (description != ref.description) return false;
-        return true;
-    }
-
-    std::ostream& UInt32::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << name;
-        os << " " << description;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct UInt32& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // NewUInt32 creates a new Key for uint32 values.
-    UInt32* NewUInt32(gocpp::string name, gocpp::string description)
-    {
-        return gocpp::InitPtr<UInt32>([=](auto& x) {
-            x.name = name;
-            x.description = description;
-        });
-    }
-
-    gocpp::string rec::Name(UInt32* k)
-    {
-        return k->name;
-    }
-
-    gocpp::string rec::Description(UInt32* k)
-    {
-        return k->description;
-    }
-
-    void rec::Format(UInt32* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
-    {
-        rec::Write(gocpp::recv(w), strconv::AppendUint(buf, uint64_t(rec::From(gocpp::recv(k), l)), 10));
-    }
-
-    // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(UInt32* k, uint32_t v)
-    {
-        return label::Of64(k, uint64_t(v));
-    }
-
-    // Get can be used to get a label for the key from a label.Map.
-    uint32_t rec::Get(UInt32* k, label::Map lm)
-    {
-        if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
-        {
-            return rec::From(gocpp::recv(k), t);
-        }
-        return 0;
-    }
-
-    // From can be used to get a value from a Label.
-    uint32_t rec::From(UInt32* k, label::Label t)
-    {
-        return uint32_t(rec::Unpack64(gocpp::recv(t)));
-    }
-
-    // UInt64 represents a key
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    UInt64::operator T()
-    {
-        T result;
-        result.name = this->name;
-        result.description = this->description;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool UInt64::operator==(const T& ref) const
-    {
-        if (name != ref.name) return false;
-        if (description != ref.description) return false;
-        return true;
-    }
-
-    std::ostream& UInt64::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << name;
-        os << " " << description;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct UInt64& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // NewUInt64 creates a new Key for uint64 values.
-    UInt64* NewUInt64(gocpp::string name, gocpp::string description)
-    {
-        return gocpp::InitPtr<UInt64>([=](auto& x) {
-            x.name = name;
-            x.description = description;
-        });
-    }
-
-    gocpp::string rec::Name(UInt64* k)
-    {
-        return k->name;
-    }
-
-    gocpp::string rec::Description(UInt64* k)
-    {
-        return k->description;
-    }
-
-    void rec::Format(UInt64* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
-    {
-        rec::Write(gocpp::recv(w), strconv::AppendUint(buf, rec::From(gocpp::recv(k), l), 10));
-    }
-
-    // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(UInt64* k, uint64_t v)
+    label::Label rec::Of(Uint* k, uint64_t v)
     {
         return label::Of64(k, v);
     }
 
-    // Get can be used to get a label for the key from a label.Map.
-    uint64_t rec::Get(UInt64* k, label::Map lm)
+    // Get returns the label for the key of a label.Map.
+    uint64_t rec::Get(Uint* k, label::Map lm)
     {
         if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
         {
@@ -961,16 +336,16 @@ namespace golang::keys
         return 0;
     }
 
-    // From can be used to get a value from a Label.
-    uint64_t rec::From(UInt64* k, label::Label t)
+    // From returns the value of a Label.
+    uint64_t rec::From(Uint* k, label::Label t)
     {
         return rec::Unpack64(gocpp::recv(t));
     }
 
-    // Float32 represents a key
+    // Float is a label.Key for floating-point values.
     
     template<typename T> requires gocpp::GoStruct<T>
-    Float32::operator T()
+    Float::operator T()
     {
         T result;
         result.name = this->name;
@@ -979,14 +354,14 @@ namespace golang::keys
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool Float32::operator==(const T& ref) const
+    bool Float::operator==(const T& ref) const
     {
         if (name != ref.name) return false;
         if (description != ref.description) return false;
         return true;
     }
 
-    std::ostream& Float32::PrintTo(std::ostream& os) const
+    std::ostream& Float::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << name;
@@ -995,122 +370,43 @@ namespace golang::keys
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct Float32& value)
+    std::ostream& operator<<(std::ostream& os, const struct Float& value)
     {
         return value.PrintTo(os);
     }
 
-    // NewFloat32 creates a new Key for float32 values.
-    Float32* NewFloat32(gocpp::string name, gocpp::string description)
+    // NewFloat creates a new [label.Key] for floating-point values.
+    Float* NewFloat(gocpp::string name, gocpp::string description)
     {
-        return gocpp::InitPtr<Float32>([=](auto& x) {
+        return gocpp::InitPtr<Float>([=](auto& x) {
             x.name = name;
             x.description = description;
         });
     }
 
-    gocpp::string rec::Name(Float32* k)
+    gocpp::string rec::Name(Float* k)
     {
         return k->name;
     }
 
-    gocpp::string rec::Description(Float32* k)
+    gocpp::string rec::Description(Float* k)
     {
         return k->description;
     }
 
-    void rec::Format(Float32* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
+    gocpp::slice<unsigned char> rec::Append(Float* k, gocpp::slice<unsigned char> buf, label::Label l)
     {
-        rec::Write(gocpp::recv(w), strconv::AppendFloat(buf, double(rec::From(gocpp::recv(k), l)), 'E', - 1, 32));
+        return strconv::AppendFloat(buf, rec::From(gocpp::recv(k), l), 'E', - 1, 64);
     }
 
     // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(Float32* k, double v)
-    {
-        return label::Of64(k, uint64_t(math::Float32bits(v)));
-    }
-
-    // Get can be used to get a label for the key from a label.Map.
-    double rec::Get(Float32* k, label::Map lm)
-    {
-        if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
-        {
-            return rec::From(gocpp::recv(k), t);
-        }
-        return 0;
-    }
-
-    // From can be used to get a value from a Label.
-    double rec::From(Float32* k, label::Label t)
-    {
-        return math::Float32frombits(uint32_t(rec::Unpack64(gocpp::recv(t))));
-    }
-
-    // Float64 represents a key
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    Float64::operator T()
-    {
-        T result;
-        result.name = this->name;
-        result.description = this->description;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool Float64::operator==(const T& ref) const
-    {
-        if (name != ref.name) return false;
-        if (description != ref.description) return false;
-        return true;
-    }
-
-    std::ostream& Float64::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << name;
-        os << " " << description;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Float64& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // NewFloat64 creates a new Key for int64 values.
-    Float64* NewFloat64(gocpp::string name, gocpp::string description)
-    {
-        return gocpp::InitPtr<Float64>([=](auto& x) {
-            x.name = name;
-            x.description = description;
-        });
-    }
-
-    gocpp::string rec::Name(Float64* k)
-    {
-        return k->name;
-    }
-
-    gocpp::string rec::Description(Float64* k)
-    {
-        return k->description;
-    }
-
-    void rec::Format(Float64* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
-    {
-        rec::Write(gocpp::recv(w), strconv::AppendFloat(buf, rec::From(gocpp::recv(k), l), 'E', - 1, 64));
-    }
-
-    // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(Float64* k, double v)
+    label::Label rec::Of(Float* k, double v)
     {
         return label::Of64(k, math::Float64bits(v));
     }
 
-    // Get can be used to get a label for the key from a label.Map.
-    double rec::Get(Float64* k, label::Map lm)
+    // Get returns the label for the key of a label.Map.
+    double rec::Get(Float* k, label::Map lm)
     {
         if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
         {
@@ -1119,8 +415,8 @@ namespace golang::keys
         return 0;
     }
 
-    // From can be used to get a value from a Label.
-    double rec::From(Float64* k, label::Label t)
+    // From returns the value of a Label.
+    double rec::From(Float* k, label::Label t)
     {
         return math::Float64frombits(rec::Unpack64(gocpp::recv(t)));
     }
@@ -1177,9 +473,9 @@ namespace golang::keys
         return k->description;
     }
 
-    void rec::Format(String* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
+    gocpp::slice<unsigned char> rec::Append(String* k, gocpp::slice<unsigned char> buf, label::Label l)
     {
-        rec::Write(gocpp::recv(w), strconv::AppendQuote(buf, rec::From(gocpp::recv(k), l)));
+        return strconv::AppendQuote(buf, rec::From(gocpp::recv(k), l));
     }
 
     // Of creates a new Label with this key and the supplied value.
@@ -1188,7 +484,7 @@ namespace golang::keys
         return label::OfString(k, v);
     }
 
-    // Get can be used to get a label for the key from a label.Map.
+    // Get returns the label for the key of a label.Map.
     gocpp::string rec::Get(String* k, label::Map lm)
     {
         if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
@@ -1198,93 +494,10 @@ namespace golang::keys
         return ""_s;
     }
 
-    // From can be used to get a value from a Label.
+    // From returns the value of a Label.
     gocpp::string rec::From(String* k, label::Label t)
     {
         return rec::UnpackString(gocpp::recv(t));
-    }
-
-    // Boolean represents a key
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    Boolean::operator T()
-    {
-        T result;
-        result.name = this->name;
-        result.description = this->description;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool Boolean::operator==(const T& ref) const
-    {
-        if (name != ref.name) return false;
-        if (description != ref.description) return false;
-        return true;
-    }
-
-    std::ostream& Boolean::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << name;
-        os << " " << description;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Boolean& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // NewBoolean creates a new Key for bool values.
-    Boolean* NewBoolean(gocpp::string name, gocpp::string description)
-    {
-        return gocpp::InitPtr<Boolean>([=](auto& x) {
-            x.name = name;
-            x.description = description;
-        });
-    }
-
-    gocpp::string rec::Name(Boolean* k)
-    {
-        return k->name;
-    }
-
-    gocpp::string rec::Description(Boolean* k)
-    {
-        return k->description;
-    }
-
-    void rec::Format(Boolean* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
-    {
-        rec::Write(gocpp::recv(w), strconv::AppendBool(buf, rec::From(gocpp::recv(k), l)));
-    }
-
-    // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(Boolean* k, bool v)
-    {
-        if(v)
-        {
-            return label::Of64(k, 1);
-        }
-        return label::Of64(k, 0);
-    }
-
-    // Get can be used to get a label for the key from a label.Map.
-    bool rec::Get(Boolean* k, label::Map lm)
-    {
-        if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
-        {
-            return rec::From(gocpp::recv(k), t);
-        }
-        return false;
-    }
-
-    // From can be used to get a value from a Label.
-    bool rec::From(Boolean* k, label::Label t)
-    {
-        return rec::Unpack64(gocpp::recv(t)) > 0;
     }
 
     // Error represents a key
@@ -1320,7 +533,7 @@ namespace golang::keys
         return value.PrintTo(os);
     }
 
-    // NewError creates a new Key for int64 values.
+    // NewError returns a new [label.Key] for error values.
     Error* NewError(gocpp::string name, gocpp::string description)
     {
         return gocpp::InitPtr<Error>([=](auto& x) {
@@ -1339,18 +552,18 @@ namespace golang::keys
         return k->description;
     }
 
-    void rec::Format(Error* k, io::Writer w, gocpp::slice<unsigned char> buf, label::Label l)
+    gocpp::slice<unsigned char> rec::Append(Error* k, gocpp::slice<unsigned char> buf, label::Label l)
     {
-        io::WriteString(w, rec::Error(gocpp::recv(rec::From(gocpp::recv(k), l))));
+        return append(buf, rec::Error(gocpp::recv(rec::From(gocpp::recv(k), l))));
     }
 
-    // Of creates a new Label with this key and the supplied value.
+    // Of returns a new Label with this key and the supplied value.
     label::Label rec::Of(Error* k, gocpp::error v)
     {
         return label::OfValue(k, v);
     }
 
-    // Get can be used to get a label for the key from a label.Map.
+    // Get returns the label for the key of a label.Map.
     gocpp::error rec::Get(Error* k, label::Map lm)
     {
         if(auto t = rec::Find(gocpp::recv(lm), k); rec::Valid(gocpp::recv(t)))
@@ -1360,7 +573,7 @@ namespace golang::keys
         return nullptr;
     }
 
-    // From can be used to get a value from a Label.
+    // From returns the value of a Label.
     gocpp::error rec::From(Error* k, label::Label t)
     {
         auto [err, gocpp_id_0] = gocpp::getValue<gocpp::error>(rec::UnpackValue(gocpp::recv(t)));

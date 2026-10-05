@@ -13,10 +13,14 @@
 
 #include "golang/fmt/print.h"
 #include "golang/io/io.h"
-#include "golang/reflect/value.h"
+#include "golang/slices/slices.h"
 
-namespace golang::label
+namespace golang::golang_org::x::tools::internal::event::label
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace slices = golang::slices;
     namespace rec
     {
         using fmt::rec::Write;
@@ -60,9 +64,9 @@ namespace golang::label
         return rec::Description(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    void Key::KeyImpl<T, TStore, TInterface>::vFormat(io::Writer w, gocpp::slice<unsigned char> buf, golang::label::Label l)
+    gocpp::slice<unsigned char> Key::KeyImpl<T, TStore, TInterface>::vAppend(gocpp::slice<unsigned char> buf, golang::golang_org::x::tools::internal::event::label::Label l)
     {
-        return rec::Format(gocpp::PtrRecv<T, false>(value.get()), w, buf, l);
+        return rec::Append(gocpp::PtrRecv<T, false>(value.get()), buf, l);
     }
 
     inline Key::IKey* Key::value() const
@@ -93,14 +97,14 @@ namespace golang::label
             return self.obj.value()->vDescription();
         }
 
-        void Format(const gocpp::PtrRecv<struct Key, false>& self, io::Writer w, gocpp::slice<unsigned char> buf, golang::label::Label l)
+        gocpp::slice<unsigned char> Append(const gocpp::PtrRecv<struct Key, false>& self, gocpp::slice<unsigned char> buf, golang::golang_org::x::tools::internal::event::label::Label l)
         {
-            return self.ptr->value()->vFormat(w, buf, l);
+            return self.ptr->value()->vAppend(buf, l);
         }
 
-        void Format(const gocpp::ObjRecv<struct Key>& self, io::Writer w, gocpp::slice<unsigned char> buf, golang::label::Label l)
+        gocpp::slice<unsigned char> Append(const gocpp::ObjRecv<struct Key>& self, gocpp::slice<unsigned char> buf, golang::golang_org::x::tools::internal::event::label::Label l)
         {
-            return self.obj.value()->vFormat(w, buf, l);
+            return self.obj.value()->vAppend(buf, l);
         }
     }
 
@@ -172,7 +176,7 @@ namespace golang::label
     }
 
     template<typename T, typename TStore, typename TInterface>
-    golang::label::Label Map::MapImpl<T, TStore, TInterface>::vFind(golang::label::Key key)
+    golang::golang_org::x::tools::internal::event::label::Label Map::MapImpl<T, TStore, TInterface>::vFind(golang::golang_org::x::tools::internal::event::label::Key key)
     {
         return rec::Find(gocpp::PtrRecv<T, false>(value.get()), key);
     }
@@ -185,12 +189,12 @@ namespace golang::label
 
     namespace rec
     {
-        golang::label::Label Find(const gocpp::PtrRecv<struct Map, false>& self, golang::label::Key key)
+        golang::golang_org::x::tools::internal::event::label::Label Find(const gocpp::PtrRecv<struct Map, false>& self, golang::golang_org::x::tools::internal::event::label::Key key)
         {
             return self.ptr->value()->vFind(key);
         }
 
-        golang::label::Label Find(const gocpp::ObjRecv<struct Map>& self, golang::label::Key key)
+        golang::golang_org::x::tools::internal::event::label::Label Find(const gocpp::ObjRecv<struct Map>& self, golang::golang_org::x::tools::internal::event::label::Key key)
         {
             return self.obj.value()->vFind(key);
         }
@@ -234,7 +238,7 @@ namespace golang::label
         return rec::Valid(gocpp::PtrRecv<T, false>(value.get()), index);
     }
     template<typename T, typename TStore, typename TInterface>
-    golang::label::Label List::ListImpl<T, TStore, TInterface>::vLabel(int index)
+    golang::golang_org::x::tools::internal::event::label::Label List::ListImpl<T, TStore, TInterface>::vLabel(int index)
     {
         return rec::Label(gocpp::PtrRecv<T, false>(value.get()), index);
     }
@@ -257,12 +261,12 @@ namespace golang::label
             return self.obj.value()->vValid(index);
         }
 
-        golang::label::Label Label(const gocpp::PtrRecv<struct List, false>& self, int index)
+        golang::golang_org::x::tools::internal::event::label::Label Label(const gocpp::PtrRecv<struct List, false>& self, int index)
         {
             return self.ptr->value()->vLabel(index);
         }
 
-        golang::label::Label Label(const gocpp::ObjRecv<struct List>& self, int index)
+        golang::golang_org::x::tools::internal::event::label::Label Label(const gocpp::ObjRecv<struct List>& self, int index)
         {
             return self.obj.value()->vLabel(index);
         }
@@ -399,9 +403,9 @@ namespace golang::label
     // OfValue creates a new label from the key and value.
     // This method is for implementing new key types, label creation should
     // normally be done with the Of method of the key.
-    golang::label::Label OfValue(golang::label::Key k, gocpp::go_any value)
+    golang::golang_org::x::tools::internal::event::label::Label OfValue(golang::golang_org::x::tools::internal::event::label::Key k, go_any value)
     {
-        return gocpp::Init<golang::label::Label>([=](auto& x) {
+        return gocpp::Init<golang::golang_org::x::tools::internal::event::label::Label>([=](auto& x) {
             x.key = k;
             x.untyped = value;
         });
@@ -411,7 +415,7 @@ namespace golang::label
     // that was passed to that constructor.
     // This method is for implementing new key types, for type safety normal
     // access should be done with the From method of the key.
-    gocpp::go_any rec::UnpackValue(golang::label::Label t)
+    go_any rec::UnpackValue(golang::golang_org::x::tools::internal::event::label::Label t)
     {
         return t.untyped;
     }
@@ -420,9 +424,9 @@ namespace golang::label
     // used for non uint64 values that can be packed into a uint64.
     // This method is for implementing new key types, label creation should
     // normally be done with the Of method of the key.
-    golang::label::Label Of64(golang::label::Key k, uint64_t v)
+    golang::golang_org::x::tools::internal::event::label::Label Of64(golang::golang_org::x::tools::internal::event::label::Key k, uint64_t v)
     {
-        return gocpp::Init<golang::label::Label>([=](auto& x) {
+        return gocpp::Init<golang::golang_org::x::tools::internal::event::label::Label>([=](auto& x) {
             x.key = k;
             x.packed = v;
         });
@@ -432,7 +436,7 @@ namespace golang::label
     // was passed to that constructor.
     // This method is for implementing new key types, for type safety normal
     // access should be done with the From method of the key.
-    uint64_t rec::Unpack64(golang::label::Label t)
+    uint64_t rec::Unpack64(golang::golang_org::x::tools::internal::event::label::Label t)
     {
         return t.packed;
     }
@@ -440,13 +444,12 @@ namespace golang::label
     // OfString creates a new label from a key and a string.
     // This method is for implementing new key types, label creation should
     // normally be done with the Of method of the key.
-    golang::label::Label OfString(golang::label::Key k, gocpp::string v)
+    golang::golang_org::x::tools::internal::event::label::Label OfString(golang::golang_org::x::tools::internal::event::label::Key k, gocpp::string v)
     {
-        auto hdr = (reflect::StringHeader*)(gocpp::unsafe_pointer(& v));
-        return gocpp::Init<golang::label::Label>([=](auto& x) {
+        return gocpp::Init<golang::golang_org::x::tools::internal::event::label::Label>([=](auto& x) {
             x.key = k;
-            x.packed = uint64_t(hdr->Len);
-            x.untyped = stringptr(hdr->Data);
+            x.packed = uint64_t(len(v));
+            x.untyped = stringptr(unsafe::StringData(v));
         });
     }
 
@@ -454,29 +457,25 @@ namespace golang::label
     // value that was passed to that constructor.
     // This method is for implementing new key types, for type safety normal
     // access should be done with the From method of the key.
-    gocpp::string rec::UnpackString(golang::label::Label t)
+    gocpp::string rec::UnpackString(golang::golang_org::x::tools::internal::event::label::Label t)
     {
-        gocpp::string v = {};
-        auto hdr = (reflect::StringHeader*)(gocpp::unsafe_pointer(& v));
-        hdr->Data = uintptr_t(gocpp::getValue<stringptr>(t.untyped));
-        hdr->Len = int(t.packed);
-        return v;
+        return unsafe::String((unsigned char*)(gocpp::getValue<stringptr>(t.untyped)), int(t.packed));
     }
 
     // Valid returns true if the Label is a valid one (it has a key).
-    bool rec::Valid(golang::label::Label t)
+    bool rec::Valid(golang::golang_org::x::tools::internal::event::label::Label t)
     {
         return t.key != nullptr;
     }
 
     // Key returns the key of this Label.
-    golang::label::Key rec::Key(golang::label::Label t)
+    golang::golang_org::x::tools::internal::event::label::Key rec::Key(golang::golang_org::x::tools::internal::event::label::Label t)
     {
         return t.key;
     }
 
     // Format is used for debug printing of labels.
-    void rec::Format(golang::label::Label t, fmt::State f, gocpp::rune r)
+    void rec::Format(golang::golang_org::x::tools::internal::event::label::Label t, fmt::State f, gocpp::rune r)
     {
         if(! rec::Valid(gocpp::recv(t)))
         {
@@ -485,8 +484,8 @@ namespace golang::label
         }
         io::WriteString(f, rec::Name(gocpp::recv(rec::Key(gocpp::recv(t)))));
         io::WriteString(f, "="_s);
-        gocpp::array<unsigned char, 128> buf = {};
-        rec::Format(gocpp::recv(rec::Key(gocpp::recv(t))), f, buf.make_slice(0, 0), t);
+        // ignore error
+        rec::Write(gocpp::recv(f), rec::Append(gocpp::recv(rec::Key(gocpp::recv(t))), nullptr, t));
     }
 
     bool rec::Valid(list* l, int index)
@@ -494,7 +493,7 @@ namespace golang::label
         return index >= 0 && index < len(l->labels);
     }
 
-    golang::label::Label rec::Label(list* l, int index)
+    golang::golang_org::x::tools::internal::event::label::Label rec::Label(list* l, int index)
     {
         return l->labels[index];
     }
@@ -504,20 +503,17 @@ namespace golang::label
         return rec::Valid(gocpp::recv(f->underlying), index);
     }
 
-    golang::label::Label rec::Label(filter* f, int index)
+    golang::golang_org::x::tools::internal::event::label::Label rec::Label(filter* f, int index)
     {
         auto l = rec::Label(gocpp::recv(f->underlying), index);
-        for(auto [gocpp_ignored, f] : f->keys)
+        if(slices::Contains(f->keys, rec::Key(gocpp::recv(l))))
         {
-            if(rec::Key(gocpp::recv(l)) == f)
-            {
-                return golang::label::Label {};
-            }
+            return golang::golang_org::x::tools::internal::event::label::Label {};
         }
         return l;
     }
 
-    golang::label::Label rec::Find(listMap lm, golang::label::Key key)
+    golang::golang_org::x::tools::internal::event::label::Label rec::Find(listMap lm, golang::golang_org::x::tools::internal::event::label::Key key)
     {
         for(auto [gocpp_ignored, l] : lm.labels)
         {
@@ -526,10 +522,10 @@ namespace golang::label
                 return l;
             }
         }
-        return golang::label::Label {};
+        return golang::golang_org::x::tools::internal::event::label::Label {};
     }
 
-    golang::label::Label rec::Find(mapChain c, golang::label::Key key)
+    golang::golang_org::x::tools::internal::event::label::Label rec::Find(mapChain c, golang::golang_org::x::tools::internal::event::label::Key key)
     {
         for(auto [gocpp_ignored, src] : c.maps)
         {
@@ -539,11 +535,11 @@ namespace golang::label
                 return l;
             }
         }
-        return golang::label::Label {};
+        return golang::golang_org::x::tools::internal::event::label::Label {};
     }
 
     list* emptyList = new list {};
-    List NewList(gocpp::slice<golang::label::Label> labels)
+    List NewList(gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels)
     {
         if(len(labels) == 0)
         {
@@ -554,7 +550,7 @@ namespace golang::label
         });
     }
 
-    List Filter(List l, gocpp::slice<golang::label::Key> keys)
+    List Filter(List l, gocpp::slice<golang::golang_org::x::tools::internal::event::label::Key> keys)
     {
         if(len(keys) == 0)
         {
@@ -566,7 +562,7 @@ namespace golang::label
         });
     }
 
-    Map NewMap(gocpp::slice<golang::label::Label> labels)
+    Map NewMap(gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels)
     {
         return gocpp::Init<listMap>([=](auto& x) {
             x.labels = labels;

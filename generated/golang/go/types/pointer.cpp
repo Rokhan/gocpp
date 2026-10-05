@@ -14,7 +14,7 @@
 #include "golang/go/types/type.h"
 #include "golang/go/types/typestring.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     namespace rec
     {
@@ -51,7 +51,7 @@ namespace golang::types
     }
 
     // NewPointer returns a new pointer type for the given element (base) type.
-    Pointer* NewPointer(golang::types::Type elem)
+    Pointer* NewPointer(golang::go::types::Type elem)
     {
         return gocpp::InitPtr<Pointer>([=](auto& x) {
             x.base = elem;
@@ -59,12 +59,12 @@ namespace golang::types
     }
 
     // Elem returns the element type for the given pointer p.
-    golang::types::Type rec::Elem(Pointer* p)
+    golang::go::types::Type rec::Elem(Pointer* p)
     {
         return p->base;
     }
 
-    golang::types::Type rec::Underlying(Pointer* p)
+    golang::go::types::Type rec::Underlying(Pointer* p)
     {
         return p;
     }

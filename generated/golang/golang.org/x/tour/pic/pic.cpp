@@ -22,8 +22,14 @@
 
 // Package pic implements functions that
 // display pictures on the Go playground.
-namespace golang::pic
+namespace golang::golang_org::x::tour::pic
 {
+    namespace base64 = golang::encoding::base64;
+    namespace bufio = golang::bufio;
+    namespace image = golang::image;
+    namespace io = golang::io;
+    namespace os = golang::os;
+    namespace png = golang::image::png;
     namespace rec
     {
         using bufio::rec::Flush;

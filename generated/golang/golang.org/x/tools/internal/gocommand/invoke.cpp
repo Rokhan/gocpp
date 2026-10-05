@@ -13,14 +13,14 @@
 
 #include "golang/bytes/buffer.h"
 #include "golang/context/context.h"
-#include "golang/encoding/json/encode.h"
+#include "golang/encoding/json/v2_encode.h"
 #include "golang/errors/wrap.h"
 #include "golang/fmt/errors.h"
 #include "golang/fmt/print.h"
 #include "golang/golang.org/x/tools/internal/event/event.h"
 #include "golang/golang.org/x/tools/internal/event/keys/keys.h"
 #include "golang/golang.org/x/tools/internal/event/label/label.h"
-#include "golang/io/fs/fs.h"
+#include "golang/golang.org/x/tools/internal/gocommand/invoke_notunix.h"
 #include "golang/io/io.h"
 #include "golang/log/log.h"
 #include "golang/os/env.h"
@@ -35,7 +35,6 @@
 #include "golang/os/tempfile.h"
 #include "golang/os/types.h"
 #include "golang/path/filepath/path.h"
-#include "golang/reflect/value.h"
 #include "golang/regexp/regexp.h"
 #include "golang/runtime/extern.h"
 #include "golang/strconv/quote.h"
@@ -45,11 +44,31 @@
 #include "golang/time/time.h"
 
 // Package gocommand is a helper for calling the go command.
-namespace golang::gocommand
+namespace golang::golang_org::x::tools::internal::gocommand
 {
+    namespace bytes = golang::bytes;
+    namespace context = golang::context;
+    namespace errors = golang::errors;
+    namespace event = golang::golang_org::x::tools::internal::event;
+    namespace exec = golang::os::exec;
+    namespace filepath = golang::path::filepath;
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace json = golang::encoding::json;
+    namespace keys = golang::golang_org::x::tools::internal::event::keys;
+    namespace label = golang::golang_org::x::tools::internal::event::label;
+    namespace log = golang::log;
+    namespace os = golang::os;
+    namespace regexp = golang::regexp;
+    namespace runtime = golang::runtime;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
+    namespace time = golang::time;
     namespace rec
     {
         using bytes::rec::Reset;
+        using bytes::rec::String;
         using bytes::rec::Write;
         using context::rec::Done;
         using context::rec::Err;
@@ -63,10 +82,6 @@ namespace golang::gocommand
         using os::rec::Read;
         using os::rec::Signal;
         using os::rec::Write;
-        using reflect::rec::Elem;
-        using reflect::rec::FieldByName;
-        using reflect::rec::IsValid;
-        using reflect::rec::Set;
         using regexp::rec::MatchString;
         using sync::rec::Do;
         using time::rec::Stop;
@@ -126,7 +141,7 @@ namespace golang::gocommand
     }
 
 
-    // An Runner will run go command invocations and serialize
+    // A Runner will run go command invocations and serialize
     // them if it sees a concurrency error.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -489,7 +504,7 @@ namespace golang::gocommand
 
             // Wait for all in-progress go commands to return before proceeding,
             // to avoid load concurrency errors.
-            for(auto i = 0; i < maxInFlight; i++)
+            for(const auto& _ : maxInFlight)
             {
                 //Go select emulation
                 {
@@ -679,17 +694,13 @@ namespace golang::gocommand
             cmd->Stdout = go_stdout;
             cmd->Stderr = go_stderr;
 
-            // cmd.WaitDelay was added only in go1.20 (see #50436).
-            if(auto waitDelay = rec::FieldByName(gocpp::recv(rec::Elem(gocpp::recv(reflect::ValueOf(cmd)))), "WaitDelay"_s); rec::IsValid(gocpp::recv(waitDelay)))
-            {
-                // https://go.dev/issue/59541: don't wait forever copying stderr
-                // after the command has exited.
-                // After CL 484741 we copy stdout manually, so we we'll stop reading that as
-                // soon as ctx is done. However, we also don't want to wait around forever
-                // for stderr. Give a much-longer-than-reasonable delay and then assume that
-                // something has wedged in the kernel or runtime.
-                rec::Set(gocpp::recv(waitDelay), reflect::ValueOf(30 * mocklib::Second));
-            }
+            // https://go.dev/issue/59541: don't wait forever copying stderr
+            // after the command has exited.
+            // After CL 484741 we copy stdout manually, so we we'll stop reading that as
+            // soon as ctx is done. However, we also don't want to wait around forever
+            // for stderr. Give a much-longer-than-reasonable delay and then assume that
+            // something has wedged in the kernel or runtime.
+            cmd->WaitDelay = 30 * mocklib::Second;
 
             // The cwd gets resolved to the real path. On Darwin, where
             // /tmp is a symlink, this breaks anything that expects the
@@ -874,7 +885,9 @@ namespace golang::gocommand
                             return err;
                             break;
                         case 1:
-                            HandleHangingGoCommand(startTime, cmd);
+                            // HandleHangingGoCommand terminates this process.
+                            // Pass off resChan in case we can collect the command error.
+                            handleHangingGoCommand(startTime, cmd, resChan);
                             break;
                         case 2:
                             break;
@@ -928,8 +941,6 @@ namespace golang::gocommand
             }
 
             // Didn't shut down in response to interrupt. Kill it hard.
-            // TODO(rfindley): per advice from bcmills@, it may be better to send SIGQUIT
-            // on certain platforms, such as unix.
             if(auto err = rec::Kill(gocpp::recv(cmd->Process)); err != nullptr && ! errors::Is(err, os::ErrProcessDone) && debug)
             {
                 log::Printf("error killing the Go command: %v"_s, err);
@@ -944,7 +955,9 @@ namespace golang::gocommand
         }
     }
 
-    void HandleHangingGoCommand(mocklib::Date start, exec::Cmd* cmd)
+    // handleHangingGoCommand outputs debugging information to help diagnose the
+    // cause of a hanging Go command, and then exits with log.Fatalf.
+    void handleHangingGoCommand(mocklib::Date start, exec::Cmd* cmd, gocpp::channel<gocpp::error> resChan)
     {
         //Go switch emulation
         {
@@ -954,14 +967,16 @@ namespace golang::gocommand
             else if(condition == "darwin"_s) { conditionId = 1; }
             else if(condition == "freebsd"_s) { conditionId = 2; }
             else if(condition == "netbsd"_s) { conditionId = 3; }
+            else if(condition == "openbsd"_s) { conditionId = 4; }
             switch(conditionId)
             {
                 case 0:
                 case 1:
                 case 2:
                 case 3:
+                case 4:
                 {
-                    fmt::Fprintln(os::Stderr, "DETECTED A HANGING GO COMMAND\n\nThe gopls test runner has detected a hanging go command. In order to debug\nthis, the output of ps and lsof/fstat is printed below.\n\nSee golang/go#54461 for more details."_s);
+                    fmt::Fprintln(os::Stderr, "DETECTED A HANGING GO COMMAND\n\n\t\t\tThe gopls test runner has detected a hanging go command. In order to debug\n\t\t\tthis, the output of ps and lsof/fstat is printed below.\n\n\t\t\tSee golang/go#54461 for more details."_s);
                     fmt::Fprintln(os::Stderr, "\nps axo ppid,pid,command:"_s);
                     fmt::Fprintln(os::Stderr, "-------------------------"_s);
                     auto psCmd = exec::Command("ps"_s, "axo"_s, "ppid,pid,command"_s);
@@ -969,7 +984,7 @@ namespace golang::gocommand
                     psCmd->Stderr = os::Stderr;
                     if(auto err = rec::Run(gocpp::recv(psCmd)); err != nullptr)
                     {
-                        gocpp::panic(mocklib::Sprintf("running ps: %v"_s, err));
+                        log::Printf("Handling hanging Go command: running ps: %v"_s, err);
                     }
                     auto listFiles = "lsof"_s;
                     if(mocklib::GOOS == "freebsd"_s || mocklib::GOOS == "netbsd"_s)
@@ -983,13 +998,42 @@ namespace golang::gocommand
                     listFilesCmd->Stderr = os::Stderr;
                     if(auto err = rec::Run(gocpp::recv(listFilesCmd)); err != nullptr)
                     {
-                        gocpp::panic(mocklib::Sprintf("running %s: %v"_s, listFiles, err));
+                        log::Printf("Handling hanging Go command: running %s: %v"_s, listFiles, err);
+                    }
+                    // Try to extract information about the slow go process by issuing a SIGQUIT.
+                    if(auto err = rec::Signal(gocpp::recv(cmd->Process), sigStuckProcess); err == nullptr)
+                    {
+                        //Go select emulation
+                        {
+                            int conditionId = -1;
+                            gocpp::error err;
+                            if(resChan.tryRecv(err)) { conditionId = 0; }
+                            else if(auto [gocpp_ignored , ok] = mocklib::After(5 * mocklib::Second).tryRecv(); ok) { conditionId = 1; }
+                            switch(conditionId)
+                            {
+                                case 0:
+                                    auto go_stderr = "not a bytes.Buffer"_s;
+                                    if(auto [buf, gocpp_id_12] = gocpp::getValue<bytes::Buffer*>(cmd->Stderr); buf != nullptr)
+                                    {
+                                        go_stderr = rec::String(gocpp::recv(buf));
+                                    }
+                                    log::Printf("Quit hanging go command:\n\terr:%v\n\tstderr:\n%v\n\n"_s, err, go_stderr);
+                                    break;
+                                case 1:
+                                    break;
+                            }
+                        }
+                        std::this_thread::yield();
+                    }
+                    else
+                    {
+                        log::Printf("Sending signal %d to hanging go command: %v"_s, sigStuckProcess, err);
                     }
                     break;
                 }
             }
         }
-        gocpp::panic(mocklib::Sprintf("detected hanging go command (golang/go#54461); waited %s\n\tcommand:%s\n\tpid:%d"_s, time::Since(start), cmd, cmd->Process->Pid));
+        log::Fatalf("detected hanging go command (golang/go#54461); waited %s\n\tcommand:%s\n\tpid:%d"_s, time::Since(start), cmd, cmd->Process->Pid);
     }
 
     gocpp::string cmdDebugStr(exec::Cmd* cmd)

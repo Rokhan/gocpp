@@ -16,6 +16,8 @@
 
 namespace golang::main
 {
+    namespace strings = golang::strings;
+    namespace wc = golang::golang_org::x::tour::wc;
     namespace rec
     {
     }

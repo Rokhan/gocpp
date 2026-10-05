@@ -12,8 +12,11 @@ namespace golang::os
     const readdirMode readdirFileInfo = 2;
 }
 #include "golang/io/fs/fs.fwd.h"
+#include "golang/io/fs/readlink.fwd.h"
+#include "golang/io/fs/walk.fwd.h"
 
 namespace golang::os
 {
+    namespace fs = golang::io::fs;
     using DirEntry = fs::DirEntry;
 }

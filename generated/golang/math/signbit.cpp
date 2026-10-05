@@ -22,7 +22,7 @@ namespace golang::math
     // Signbit reports whether x is negative or negative zero.
     bool Signbit(double x)
     {
-        return Float64bits(x) & (1 << 63) != 0;
+        return int64_t(Float64bits(x)) < 0;
     }
 
 }

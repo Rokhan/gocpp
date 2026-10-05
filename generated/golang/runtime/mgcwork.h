@@ -13,50 +13,6 @@
 namespace golang::runtime
 {
     void init();
-    struct gcWork
-    {
-        // wbuf1 and wbuf2 are the primary and secondary work buffers.
-        // This can be thought of as a stack of both work buffers'
-        // pointers concatenated. When we pop the last pointer, we
-        // shift the stack up by one work buffer by bringing in a new
-        // full buffer and discarding an empty one. When we fill both
-        // buffers, we shift the stack down by one work buffer by
-        // bringing in a new empty buffer and discarding a full one.
-        // This way we have one buffer's worth of hysteresis, which
-        // amortizes the cost of getting or putting a work buffer over
-        // at least one buffer of work and reduces contention on the
-        // global work lists.
-        // wbuf1 is always the buffer we're currently pushing to and
-        // popping from and wbuf2 is the buffer that will be discarded
-        // next.
-        // Invariant: Both wbuf1 and wbuf2 are nil or neither are.
-        workbuf* wbuf1{};
-        workbuf* wbuf2{};
-        // Bytes marked (blackened) on this gcWork. This is aggregated
-        // into work.bytesMarked by dispose.
-        uint64_t bytesMarked{};
-        // Heap scan work performed on this gcWork. This is aggregated into
-        // gcController by dispose and may also be flushed by callers.
-        // Other types of scan work are flushed immediately.
-        int64_t heapScanWork{};
-        // flushedWork indicates that a non-empty work buffer was
-        // flushed to the global work list since the last gcMarkDone
-        // termination check. Specifically, this indicates that this
-        // gcWork may have communicated work to another gcWork.
-        bool flushedWork{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gcWork& value);
     void prepareFreeWorkbufs();
     bool freeSomeWbufs(bool preemptible);
 }
@@ -82,11 +38,84 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct workbufhdr& value);
 }
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
+#include "golang/internal/runtime/sys/nih.fwd.h"
 
 namespace golang::runtime
 {
+    namespace goarch = golang::internal::goarch;
+    namespace gc = golang::internal::runtime::gc;
+}
+#include "golang/internal/runtime/sys/nih.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
+#include "golang/runtime/mgcmark_greenteagc.h"
+#include "golang/runtime/malloc.fwd.h"
+
+namespace golang::runtime
+{
+    struct gcWork
+    {
+        int32_t id{}; // same ID as the parent P
+        // wbuf1 and wbuf2 are the primary and secondary work buffers.
+        // This can be thought of as a stack of both work buffers'
+        // pointers concatenated. When we pop the last pointer, we
+        // shift the stack up by one work buffer by bringing in a new
+        // full buffer and discarding an empty one. When we fill both
+        // buffers, we shift the stack down by one work buffer by
+        // bringing in a new empty buffer and discarding a full one.
+        // This way we have one buffer's worth of hysteresis, which
+        // amortizes the cost of getting or putting a work buffer over
+        // at least one buffer of work and reduces contention on the
+        // global work lists.
+        // wbuf1 is always the buffer we're currently pushing to and
+        // popping from and wbuf2 is the buffer that will be discarded
+        // next.
+        // Invariant: Both wbuf1 and wbuf2 are nil or neither are.
+        workbuf* wbuf1{};
+        workbuf* wbuf2{};
+        // spanq is a queue of spans to process.
+        // Only used if goexperiment.GreenTeaGC.
+        spanQueue spanq{};
+        // ptrBuf is a temporary buffer used by span scanning.
+        gocpp::array_ptr<gocpp::array<uintptr_t, pageSize / goarch::PtrSize>> ptrBuf{};
+        // Bytes marked (blackened) on this gcWork. This is aggregated
+        // into work.bytesMarked by dispose.
+        uint64_t bytesMarked{};
+        // Heap scan work performed on this gcWork. This is aggregated into
+        // gcController by dispose and may also be flushed by callers.
+        // Other types of scan work are flushed immediately.
+        int64_t heapScanWork{};
+        // flushedWork indicates that a non-empty work buffer was
+        // flushed to the global work list since the last gcMarkDone
+        // termination check. Specifically, this indicates that this
+        // gcWork may have communicated work to another gcWork.
+        bool flushedWork{};
+        // mayNeedWorker is a hint that we may need to spin up a new
+        // worker, and that gcDrain* should call enlistWorker. This flag
+        // is set only if goexperiment.GreenTeaGC. If !goexperiment.GreenTeaGC,
+        // enlistWorker is called directly instead.
+        bool mayNeedWorker{};
+        // stats are scan stats broken down by size class.
+        gocpp::array<sizeClassScanStats, gc::NumSizeClasses> stats{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gcWork& value);
     struct workbuf
     {
         sys::NotInHeap _1{};
@@ -115,11 +144,11 @@ namespace golang::runtime
     namespace rec
     {
         void init(gcWork* w);
-        void put(gcWork* w, uintptr_t obj);
-        bool putFast(gcWork* w, uintptr_t obj);
-        void putBatch(gcWork* w, gocpp::slice<uintptr_t> obj);
-        uintptr_t tryGet(gcWork* w);
-        uintptr_t tryGetFast(gcWork* w);
+        void putObj(gcWork* w, uintptr_t obj);
+        bool putObjFast(gcWork* w, uintptr_t obj);
+        void putObjBatch(gcWork* w, gocpp::slice<uintptr_t> obj);
+        uintptr_t tryGetObj(gcWork* w);
+        uintptr_t tryGetObjFast(gcWork* w);
         void dispose(gcWork* w);
         void balance(gcWork* w);
         bool empty(gcWork* w);

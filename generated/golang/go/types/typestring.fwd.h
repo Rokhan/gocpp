@@ -3,14 +3,14 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/bytes/buffer.fwd.h"
-#include "golang/go/types/context.fwd.h"
-#include "golang/go/types/package.fwd.h"
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/typelists.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
+{
+    struct typeWriter;
+}
+#include "golang/go/types/package.fwd.h"
+
+namespace golang::go::types
 {
     using Qualifier = std::function<gocpp::string (Package* _1)>;
-    struct typeWriter;
 }

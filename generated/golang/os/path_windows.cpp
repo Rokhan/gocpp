@@ -11,10 +11,23 @@
 #include "golang/os/path_windows.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/filepathlite/path.h"
+#include "golang/internal/filepathlite/path_windows.h"
+#include "golang/internal/syscall/windows/syscall_windows.h"
+#include "golang/os/getwd.h"
+#include "golang/sync/mutex.h"
+#include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/zsyscall_windows.h"
+
 namespace golang::os
 {
+    namespace filepathlite = golang::internal::filepathlite;
+    namespace syscall = golang::syscall;
+    namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
     }
 
     // IsPathSeparator reports whether c is a directory separator character.
@@ -24,133 +37,71 @@ namespace golang::os
         return c == '\\' || c == '/';
     }
 
-    // basename removes trailing slashes and the leading
-    // directory name and drive letter from path name.
-    gocpp::string basename(gocpp::string name)
+    // splitPath returns the base name and parent directory.
+    std::tuple<gocpp::string, gocpp::string> splitPath(gocpp::string path)
     {
-        // Remove drive letter
-        if(len(name) == 2 && name[1] == ':')
-        {
-            name = "."_s;
-        }
-        else
-        if(len(name) > 2 && name[1] == ':')
-        {
-            name = name.make_slice(2);
-        }
-        auto i = len(name) - 1;
-        // Remove trailing slashes
-        for(; i > 0 && (name[i] == '/' || name[i] == '\\'); i--)
-        {
-            name = name.make_slice(0, i);
-        }
-        // Remove leading directory name
-        for(i--; i >= 0; i--)
-        {
-            if(name[i] == '/' || name[i] == '\\')
-            {
-                name = name.make_slice(i + 1);
-                break;
-            }
-        }
-        return name;
-    }
-
-    bool isAbs(gocpp::string path)
-    {
-        bool b;
-        auto v = volumeName(path);
-        if(v == ""_s)
-        {
-            return false;
-        }
-        path = path.make_slice(len(v));
         if(path == ""_s)
         {
-            return false;
+            return {"."_s, "."_s};
         }
-        return IsPathSeparator(path[0]);
-    }
 
-    gocpp::string volumeName(gocpp::string path)
-    {
-        gocpp::string v;
-        if(len(path) < 2)
+        // The first prefixlen bytes are part of the parent directory.
+        // The prefix consists of the volume name (if any) and the first \ (if significant).
+        auto prefixlen = filepathlite::VolumeNameLen(path);
+        if(len(path) > prefixlen && IsPathSeparator(path[prefixlen]))
         {
-            return ""_s;
-        }
-        // with drive letter
-        auto c = path[0];
-        if(path[1] == ':' &&
-                ('0' <= c && c <= '9' || 'a' <= c && c <= 'z' ||
-                    'A' <= c && c <= 'Z'))
-        {
-            return path.make_slice(0, 2);
-        }
-        // is it UNC
-        if(auto l = len(path); l >= 5 && IsPathSeparator(path[0]) && IsPathSeparator(path[1]) &&
-                ! IsPathSeparator(path[2]) && path[2] != '.')
-        {
-            // first, leading `\\` and next shouldn't be `\`. its server name.
-            for(auto n = 3; n < l - 1; n++)
+            if(prefixlen == 0)
             {
-                // second, next '\' shouldn't be repeated.
-                if(IsPathSeparator(path[n]))
-                {
-                    n++;
-                    // third, following something characters. its share name.
-                    if(! IsPathSeparator(path[n]))
-                    {
-                        if(path[n] == '.')
-                        {
-                            break;
-                        }
-                        for(; n < l; n++)
-                        {
-                            if(IsPathSeparator(path[n]))
-                            {
-                                break;
-                            }
-                        }
-                        return path.make_slice(0, n);
-                    }
-                    break;
-                }
+                // This is a path relative to the current volume, like \foo.
+                // Include the initial \ in the prefix.
+                prefixlen = 1;
+            }
+            else
+            if(path[prefixlen - 1] == ':')
+            {
+                // This is an absolute path on a named drive, like c:\foo.
+                // Include the initial \ in the prefix.
+                prefixlen++;
             }
         }
-        return ""_s;
-    }
 
-    gocpp::string fromSlash(gocpp::string path)
-    {
-        // Replace each '/' with '\\' if present
-        gocpp::slice<unsigned char> pathbuf = {};
-        int lastSlash = {};
-        for(auto [i, b] : path)
+        auto i = len(path) - 1;
+
+        // Remove trailing slashes.
+        for(; i >= prefixlen && IsPathSeparator(path[i]); )
         {
-            if(b == '/')
-            {
-                if(pathbuf == nullptr)
-                {
-                    pathbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(path));
-                }
-                copy(pathbuf.make_slice(lastSlash), path.make_slice(lastSlash, i));
-                pathbuf[i] = '\\';
-                lastSlash = i + 1;
-            }
+            i--;
         }
-        if(pathbuf == nullptr)
+        path = path.make_slice(0, i + 1);
+
+        // Find the last path separator. The basename is what follows.
+        for(; i >= prefixlen && ! IsPathSeparator(path[i]); )
         {
-            return path;
+            i--;
+        }
+        auto basename = path.make_slice(i + 1);
+        if(basename == ""_s)
+        {
+            basename = "."_s;
         }
 
-        copy(pathbuf.make_slice(lastSlash), path.make_slice(lastSlash));
-        return gocpp::string(pathbuf);
+        // Remove trailing slashes. The remainder is dirname.
+        for(; i >= prefixlen && IsPathSeparator(path[i]); )
+        {
+            i--;
+        }
+        auto dirname = path.make_slice(0, i + 1);
+        if(dirname == ""_s)
+        {
+            dirname = "."_s;
+        }
+
+        return {dirname, basename};
     }
 
     gocpp::string dirname(gocpp::string path)
     {
-        auto vol = volumeName(path);
+        auto vol = filepathlite::VolumeName(path);
         auto i = len(path) - 1;
         for(; i >= len(vol) && ! IsPathSeparator(path[i]); )
         {
@@ -169,23 +120,41 @@ namespace golang::os
         return vol + dir;
     }
 
-    // This is set via go:linkname on runtime.canUseLongPaths, and is true when the OS
-    // supports opting into proper long path handling without the need for fixups.
-    bool canUseLongPaths;
     // fixLongPath returns the extended-length (\\?\-prefixed) form of
     // path when needed, in order to avoid the default 260 character file
-    // path limit imposed by Windows. If path is not easily converted to
-    // the extended-length form (for example, if path is a relative path
-    // or contains .. elements), or is short enough, fixLongPath returns
-    // path unmodified.
+    // path limit imposed by Windows. If the path is short enough or already
+    // has the extended-length prefix, fixLongPath returns path unmodified.
+    // If the path is relative and joining it with the current working
+    // directory results in a path that is too long, fixLongPath returns
+    // the absolute path with the extended-length prefix.
     //
     // See https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
     gocpp::string fixLongPath(gocpp::string path)
     {
-        if(canUseLongPaths)
+        if(windows::CanUseLongPaths)
         {
             return path;
         }
+        return addExtendedPrefix(path);
+    }
+
+    // addExtendedPrefix adds the extended path prefix (\\?\) to path.
+    gocpp::string addExtendedPrefix(gocpp::string path)
+    {
+        if(len(path) >= 4)
+        {
+            if(path.make_slice(0, 4) == "\\??\\"_s)
+            {
+                // Already extended with \??\
+                return path;
+            }
+            if(IsPathSeparator(path[0]) && IsPathSeparator(path[1]) && path[2] == '?' && IsPathSeparator(path[3]))
+            {
+                // Already extended with \\?\ or any combination of directory separators.
+                return path;
+            }
+        }
+
         // Do nothing (and don't allocate) if the path is "short".
         // Empirically (at least on the Windows Server 2013 builder),
         // the kernel is arbitrarily okay with < 248 bytes. That
@@ -196,82 +165,98 @@ namespace golang::os
         // minus 12)." Since MAX_PATH is 260, 260 - 12 = 248.
         // The MSDN docs appear to say that a normal path that is 248 bytes long
         // will work; empirically the path must be less then 248 bytes long.
-        if(len(path) < 248)
+        auto pathLength = len(path);
+        if(! filepathlite::IsAbs(path))
+        {
+            // If the path is relative, we need to prepend the working directory
+            // plus a separator to the path before we can determine if it's too long.
+            // We don't want to call syscall.Getwd here, as that call is expensive to do
+            // every time fixLongPath is called with a relative path, so we use a cache.
+            // Note that getwdCache might be outdated if the working directory has been
+            // changed without using os.Chdir, i.e. using syscall.Chdir directly or cgo.
+            // This is fine, as the worst that can happen is that we fail to fix the path.
+            rec::Lock(gocpp::recv(getwdCache));
+            if(getwdCache.dir == ""_s)
+            {
+                // Init the working directory cache.
+                std::tie(getwdCache.dir, std::ignore) = syscall::Getwd();
+            }
+            pathLength += len(getwdCache.dir) + 1;
+            rec::Unlock(gocpp::recv(getwdCache));
+        }
+
+        if(pathLength < 248)
         {
             // Don't fix. (This is how Go 1.7 and earlier worked,
             // not automatically generating the \\?\ form)
             return path;
         }
 
-        // The extended form begins with \\?\, as in
-        // \\?\c:\windows\foo.txt or \\?\UNC\server\share\foo.txt.
-        // The extended form disables evaluation of . and .. path
-        // elements and disables the interpretation of / as equivalent
-        // to \. The conversion here rewrites / to \ and elides
-        // . elements as well as trailing or duplicate separators. For
-        // simplicity it avoids the conversion entirely for relative
-        // paths or paths containing .. elements. For now,
-        // \\server\share paths are not converted to
-        // \\?\UNC\server\share paths because the rules for doing so
-        // are less well-specified.
-        if(len(path) >= 2 && path.make_slice(0, 2) == "\\\\"_s)
+        bool isUNC = {};
+        bool isDevice = {};
+        if(len(path) >= 2 && IsPathSeparator(path[0]) && IsPathSeparator(path[1]))
         {
-            // Don't canonicalize UNC paths.
-            return path;
-        }
-        if(! isAbs(path))
-        {
-            // Relative path
-            return path;
-        }
-
-        auto prefix = "\\\\?"_s;
-
-        auto pathbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(prefix) + len(path) + len("\\"_s));
-        copy(pathbuf, prefix);
-        auto n = len(path);
-        auto [r, w] = std::tuple{0, len(prefix)};
-        for(; r < n; )
-        {
-            //Go switch emulation
+            if(len(path) >= 4 && path[2] == '.' && IsPathSeparator(path[3]))
             {
-                int conditionId = -1;
-                if(IsPathSeparator(path[r])) { conditionId = 0; }
-                else if(path[r] == '.' && (r + 1 == n || IsPathSeparator(path[r + 1]))) { conditionId = 1; }
-                else if(r + 1 < n && path[r] == '.' && path[r + 1] == '.' && (r + 2 == n || IsPathSeparator(path[r + 2]))) { conditionId = 2; }
-                switch(conditionId)
-                {
-                    case 0:
-                        // empty block
-                        r++;
-                        break;
-                    case 1:
-                        // /./
-                        r++;
-                        break;
-                    case 2:
-                        // /../ is currently unhandled
-                        return path;
-                        break;
-                    default:
-                        pathbuf[w] = '\\';
-                        w++;
-                        for(; r < n && ! IsPathSeparator(path[r]); r++)
-                        {
-                            pathbuf[w] = path[r];
-                            w++;
-                        }
-                        break;
-                }
+                // Starts with //./
+                isDevice = true;
+            }
+            else
+            {
+                // Starts with //
+                isUNC = true;
             }
         }
-        // A drive's root directory needs a trailing \
-        if(w == len("\\\\?\\c:"_s))
+        gocpp::slice<uint16_t> prefix = {};
+        if(isUNC)
         {
-            pathbuf[w] = '\\';
-            w++;
+            // UNC path, prepend the \\?\UNC\ prefix.
+            prefix = gocpp::slice<uint16_t> {'\\', '\\', '?', '\\', 'U', 'N', 'C', '\\'};
         }
-        return gocpp::string(pathbuf.make_slice(0, w));
+        else
+        if(isDevice)
+        {
+        }
+        else
+        // Don't add the extended prefix to device paths, as it would
+        // change its meaning.
+        // Don't add the extended prefix to device paths, as it would
+        // change its meaning.
+        {
+            prefix = gocpp::slice<uint16_t> {'\\', '\\', '?', '\\'};
+        }
+
+        auto [p, err] = syscall::UTF16FromString(path);
+        if(err != nullptr)
+        {
+            return path;
+        }
+        // Estimate the required buffer size using the path length plus the null terminator.
+        // pathLength includes the working directory. This should be accurate unless
+        // the working directory has changed without using os.Chdir.
+        auto n = uint32_t(pathLength) + 1;
+        gocpp::slice<uint16_t> buf = {};
+        for(; ; )
+        {
+            buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n + uint32_t(len(prefix)));
+            std::tie(n, err) = syscall::GetFullPathName(& p[0], n, & buf[len(prefix)], nullptr);
+            if(err != nullptr)
+            {
+                return path;
+            }
+            if(n <= uint32_t(len(buf) - len(prefix)))
+            {
+                buf = buf.make_slice(0, n + uint32_t(len(prefix)));
+                break;
+            }
+        }
+        if(isUNC)
+        {
+            // Remove leading \\.
+            buf = buf.make_slice(2);
+        }
+        copy(buf, prefix);
+        return syscall::UTF16ToString(buf);
     }
 
 }

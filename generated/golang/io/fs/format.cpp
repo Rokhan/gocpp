@@ -15,8 +15,9 @@
 #include "golang/time/format.h"
 #include "golang/time/time.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
+    namespace time = golang::time;
     namespace rec
     {
         using time::rec::Format;

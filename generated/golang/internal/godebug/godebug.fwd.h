@@ -4,18 +4,10 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::godebug
-{
-    struct runtimeStderr;
-}
-#include "golang/internal/bisect/bisect.fwd.h"
-#include "golang/internal/godebugs/table.fwd.h"
-#include "golang/sync/atomic/type.fwd.h"
-#include "golang/sync/once.fwd.h"
-
-namespace golang::godebug
+namespace golang::internal::godebug
 {
     struct Setting;
     struct setting;
     struct value;
+    struct runtimeStderr;
 }

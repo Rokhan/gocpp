@@ -4,32 +4,37 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
-    using color = uint32_t;
-    struct TypeName;
-    struct Var;
-    struct Func;
-    struct Label;
-    struct Nil;
-    // An object may be painted in one of three colors.
-    // Color values other than white or black are considered grey.
-    const golang::types::color white = 0;
-    const golang::types::color black = 1;
-    const golang::types::color grey = 2;
-}
-#include "golang/go/constant/value.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/package.fwd.h"
-#include "golang/go/types/scope.fwd.h"
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/universe.fwd.h"
-
-namespace golang::types
-{
-    struct Object;
     struct object;
     struct PkgName;
     struct Const;
+    struct TypeName;
+    struct Var;
+    using VarKind = uint8_t;
+    struct Func;
+    struct Label;
     struct Builtin;
+    struct Nil;
+    const VarKind _ = 0;
+    const VarKind PackageVar = 1;
+    const VarKind LocalVar = 2;
+    const VarKind RecvVar = 3;
+    const VarKind ParamVar = 4;
+    const VarKind ResultVar = 5;
+    const VarKind FieldVar = 6;
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/types/package.fwd.h"
+#include "golang/go/types/scope.fwd.h"
+#include "golang/go/types/type.fwd.h"
+
+namespace golang::go::types
+{
+    struct Object;
 }

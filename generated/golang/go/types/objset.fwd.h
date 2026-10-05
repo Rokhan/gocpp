@@ -4,13 +4,13 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct GoTag_objset;
 }
 #include "golang/go/types/object.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     using objset = gocpp::defined<gocpp::map<gocpp::string, Object>, GoTag_objset>;
 }

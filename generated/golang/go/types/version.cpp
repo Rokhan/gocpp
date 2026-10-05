@@ -12,23 +12,18 @@
 #include "gocpp/support.h"
 
 #include "golang/fmt/print.h"
-#include "golang/go/ast/ast.h"
-#include "golang/go/token/position.h"
-#include "golang/go/token/token.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/errors.h"
-#include "golang/go/types/package.h"
 #include "golang/go/version/version.h"
 #include "golang/internal/goversion/goversion.h"
-#include "golang/strings/strings.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace fmt = golang::fmt;
+    namespace goversion = golang::internal::goversion;
+    namespace version = golang::go::version;
     namespace rec
     {
-        using ast::rec::Pos;
-        using token::rec::IsValid;
-        using token::rec::Position;
     }
 
     // A goVersion is a Go language version string of the form "go1.%d"
@@ -63,99 +58,29 @@ namespace golang::types
     types::goVersion go1_20 = asGoVersion("go1.20"_s);
     types::goVersion go1_21 = asGoVersion("go1.21"_s);
     types::goVersion go1_22 = asGoVersion("go1.22"_s);
+    types::goVersion go1_23 = asGoVersion("go1.23"_s);
+    types::goVersion go1_26 = asGoVersion("go1.26"_s);
+    types::goVersion go1_27 = asGoVersion("go1.27"_s);
     // current (deployed) Go version
     types::goVersion go_current = asGoVersion(mocklib::Sprintf("go1.%d"_s, goversion::Version));
-    // langCompat reports an error if the representation of a numeric
-    // literal is not compatible with the current language version.
-    void rec::langCompat(Checker* check, ast::BasicLit* lit)
+    // allowVersion reports whether the current effective Go version
+    // (which may vary from one file to another) is allowed to use the
+    // feature version (want).
+    bool rec::allowVersion(Checker* check, goVersion want)
     {
-        auto s = lit->Value;
-        if(len(s) <= 2 || rec::allowVersion(gocpp::recv(check), check->pkg, lit, go1_13))
-        {
-            return;
-        }
-        // len(s) > 2
-        if(strings::Contains(s, "_"_s))
-        {
-            rec::versionErrorf(gocpp::recv(check), lit, go1_13, "underscores in numeric literals"_s);
-            return;
-        }
-        if(s[0] != '0')
-        {
-            return;
-        }
-        auto radix = s[1];
-        if(radix == 'b' || radix == 'B')
-        {
-            rec::versionErrorf(gocpp::recv(check), lit, go1_13, "binary literals"_s);
-            return;
-        }
-        if(radix == 'o' || radix == 'O')
-        {
-            rec::versionErrorf(gocpp::recv(check), lit, go1_13, "0o/0O-style octal literals"_s);
-            return;
-        }
-        if(lit->Kind != token::INT && (radix == 'x' || radix == 'X'))
-        {
-            rec::versionErrorf(gocpp::recv(check), lit, go1_13, "hexadecimal floating-point literals"_s);
-        }
-    }
-
-    // allowVersion reports whether the given package is allowed to use version v.
-    bool rec::allowVersion(Checker* check, Package* pkg, positioner at, goVersion v)
-    {
-        // We assume that imported packages have all been checked,
-        // so we only have to check for the local package.
-        if(pkg != check->pkg)
-        {
-            return true;
-        }
-
-        // If no explicit file version is specified,
-        // fileVersion corresponds to the module version.
-        goVersion fileVersion = {};
-        if(auto pos = rec::Pos(gocpp::recv(at)); rec::IsValid(gocpp::recv(pos)))
-        {
-            // We need version.Lang below because file versions
-            // can be (unaltered) Config.GoVersion strings that
-            // may contain dot-release information.
-            fileVersion = asGoVersion(check->versions[rec::fileFor(gocpp::recv(check), pos)]);
-        }
-        return ! rec::isValid(gocpp::recv(fileVersion)) || rec::cmp(gocpp::recv(fileVersion), v) >= 0;
+        return ! rec::isValid(gocpp::recv(check->environment.version)) || rec::cmp(gocpp::recv(check->environment.version), want) >= 0;
     }
 
     // verifyVersionf is like allowVersion but also accepts a format string and arguments
-    // which are used to report a version error if allowVersion returns false. It uses the
-    // current package.
-    bool rec::verifyVersionf(Checker* check, positioner at, goVersion v, gocpp::string format, gocpp::slice<gocpp::go_any> args)
+    // which are used to report a version error if allowVersion returns false.
+    bool rec::verifyVersionf(Checker* check, positioner at, goVersion v, gocpp::string format, gocpp::slice<go_any> args)
     {
-        if(! rec::allowVersion(gocpp::recv(check), check->pkg, at, v))
+        if(! rec::allowVersion(gocpp::recv(check), v))
         {
             rec::versionErrorf(gocpp::recv(check), at, v, format, args);
             return false;
         }
         return true;
-    }
-
-    // fileFor returns the *ast.File which contains the position pos.
-    // If there are no files, the result is nil.
-    // The position must be valid.
-    ast::File* rec::fileFor(Checker* check, token::Pos pos)
-    {
-        assert(rec::IsValid(gocpp::recv(pos)));
-        // Eval and CheckExpr tests may not have any source files.
-        if(len(check->files) == 0)
-        {
-            return nullptr;
-        }
-        for(auto [gocpp_ignored, file] : check->files)
-        {
-            if(file->FileStart <= pos && pos < file->FileEnd)
-            {
-                return file;
-            }
-        }
-        gocpp::panic(rec::sprintf(gocpp::recv(check), "file not found for pos = %d (%s)"_s, int(pos), rec::Position(gocpp::recv(check->fset), pos)));
     }
 
 }

@@ -11,12 +11,12 @@
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Chan
     {
         ChanDir dir{};
-        golang::types::Type elem{};
+        golang::go::types::Type elem{};
 
         using isGoStruct = void;
 
@@ -30,19 +30,19 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Chan& value);
-    Chan* NewChan(ChanDir dir, golang::types::Type elem);
+    Chan* NewChan(ChanDir dir, golang::go::types::Type elem);
 }
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
         ChanDir Dir(Chan* c);
-        golang::types::Type Elem(Chan* c);
-        golang::types::Type Underlying(Chan* c);
+        golang::go::types::Type Elem(Chan* c);
+        golang::go::types::Type Underlying(Chan* c);
         gocpp::string String(Chan* c);
     }
 }

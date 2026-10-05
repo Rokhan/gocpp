@@ -11,12 +11,13 @@
 #include "golang/os/exec_posix.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/itoa/itoa.h"
+#include "golang/internal/strconv/itoa.h"
 #include "golang/internal/syscall/execenv/execenv_windows.h"
 #include "golang/io/fs/fs.h"
 #include "golang/os/error.h"
 #include "golang/os/exec.h"
-#include "golang/os/file_windows.h"
+#include "golang/os/file.h"
+#include "golang/os/pidfd_other.h"
 #include "golang/os/stat.h"
 #include "golang/os/types.h"
 #include "golang/runtime/extern.h"
@@ -27,9 +28,12 @@
 
 namespace golang::os
 {
+    namespace execenv = golang::internal::syscall::execenv;
+    namespace runtime = golang::runtime;
+    namespace strconv = golang::internal::strconv;
+    namespace syscall = golang::syscall;
     namespace rec
     {
-        using fs::rec::Error;
         using syscall::rec::Continued;
         using syscall::rec::CoreDump;
         using syscall::rec::ExitStatus;
@@ -66,10 +70,11 @@ namespace golang::os
             }
         }
 
+        auto [attrSys, shouldDupPidfd] = ensurePidfd(attr->Sys);
         auto sysattr = gocpp::InitPtr<syscall::ProcAttr>([=](auto& x) {
             x.Dir = attr->Dir;
             x.Env = attr->Env;
-            x.Sys = attr->Sys;
+            x.Sys = attrSys;
         });
         if(sysattr->Env == nullptr)
         {
@@ -99,12 +104,60 @@ namespace golang::os
             }))};
         }
 
-        return {newProcess(pid, h), nullptr};
+        // For Windows, syscall.StartProcess above already returned a process handle.
+        if(mocklib::GOOS != "windows"_s)
+        {
+            bool ok = {};
+            std::tie(h, ok) = getPidfd(sysattr->Sys, shouldDupPidfd);
+            if(! ok)
+            {
+                return {newPIDProcess(pid), nullptr};
+            }
+        }
+
+        return {newHandleProcess(pid, h), nullptr};
     }
 
     gocpp::error rec::kill(Process* p)
     {
         return rec::Signal(gocpp::recv(p), os::Kill);
+    }
+
+    gocpp::error rec::withHandle(Process* p, std::function<void (uintptr_t handle)> f)
+    {
+        gocpp::Defer defer;
+        try
+        {
+            if(p->handle == nullptr)
+            {
+                return ErrNoHandle;
+            }
+            auto [handle, status] = rec::handleTransientAcquire(gocpp::recv(p));
+            //Go switch emulation
+            {
+                auto condition = status;
+                int conditionId = -1;
+                if(condition == statusDone) { conditionId = 0; }
+                else if(condition == statusReleased) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    case 0:
+                        return ErrProcessDone;
+                        break;
+                    case 1:
+                        return errProcessReleased;
+                        break;
+                }
+            }
+            defer.push_back([=]{ rec::handleTransientRelease(gocpp::recv(p)); });
+            f(handle);
+
+            return nullptr;
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     // ProcessState stores information about a process, as reported by Wait.
@@ -192,13 +245,13 @@ namespace golang::os
                     if(mocklib::GOOS == "windows"_s && (unsigned int)(code) >= (1 << 16))
                     {
                         // windows uses large hex numbers
-                        res = "exit status "_s + itoa::Uitox((unsigned int)(code));
+                        res = "exit status 0x"_s + strconv::FormatUint(uint64_t(code), 16);
                     }
                     else
                     {
                         // unix systems use small decimal integers
                         // unix
-                        res = "exit status "_s + itoa::Itoa(code);
+                        res = "exit status "_s + strconv::Itoa(code);
                     }
                     break;
                 }
@@ -209,7 +262,7 @@ namespace golang::os
                     res = "stop signal: "_s + rec::String(gocpp::recv(rec::StopSignal(gocpp::recv(status))));
                     if(rec::StopSignal(gocpp::recv(status)) == syscall::go_SIGTRAP && rec::TrapCause(gocpp::recv(status)) != 0)
                     {
-                        res += " (trap "_s + itoa::Itoa(rec::TrapCause(gocpp::recv(status))) + ")"_s;
+                        res += " (trap "_s + strconv::Itoa(rec::TrapCause(gocpp::recv(status))) + ")"_s;
                     }
                     break;
                 case 3:

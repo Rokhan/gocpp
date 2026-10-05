@@ -10,29 +10,13 @@
 #include "gocpp/support.h"
 
 
-namespace golang::flate
+namespace golang::compress::flate
 {
-    struct hcode
-    {
-        uint16_t code{};
-        uint16_t len{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct hcode& value);
+    hcode newhcode(uint16_t code, uint8_t length);
     struct literalNode
     {
         uint16_t literal{};
-        int32_t freq{};
+        uint16_t freq{};
 
         using isGoStruct = void;
 
@@ -73,19 +57,17 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct levelInfo& value);
-    struct GoTag_byLiteral { };
-    struct GoTag_byFreq { };
-    uint16_t reverseBits(uint16_t number, unsigned char bitLength);
-    literalNode maxNode();
-    using byLiteral = gocpp::defined<gocpp::slice<literalNode>, GoTag_byLiteral>;
-    using byFreq = gocpp::defined<gocpp::slice<literalNode>, GoTag_byFreq>;
+    uint16_t reverseBits(uint16_t x, unsigned char b);
+    void histogram(gocpp::slice<unsigned char> b, gocpp::slice<uint16_t> h);
+    void histogramSplit(gocpp::slice<unsigned char> b, gocpp::slice<uint16_t> h);
     struct huffmanEncoder
     {
         gocpp::slice<hcode> codes{};
-        gocpp::slice<literalNode> freqcache{};
         gocpp::array<int32_t, 17> bitCount{};
-        byLiteral lns{}; // stored to avoid repeated allocation in generate
-        byFreq lfs{}; // stored to avoid repeated allocation in generate
+        // freqcache is a reusable buffer with the longest possible frequency table.
+        // Possible lengths are codegenCodeCount, offsetCodeCount and literalCount.
+        // The largest of these is literalCount, so we allocate for that case.
+        gocpp::array<literalNode, literalCount + 1> freqcache{};
 
         using isGoStruct = void;
 
@@ -99,27 +81,36 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct huffmanEncoder& value);
+    literalNode maxNode();
     huffmanEncoder* newHuffmanEncoder(int size);
     huffmanEncoder* generateFixedLiteralEncoding();
     huffmanEncoder* generateFixedOffsetEncoding();
-    extern huffmanEncoder* fixedLiteralEncoding;
-    extern huffmanEncoder* fixedOffsetEncoding;
+}
+#include "golang/sync/oncefunc.fwd.h"
+
+namespace golang::compress::flate
+{
+    namespace sync = golang::sync;
+}
+#include "golang/sync/oncefunc.h"
+
+namespace golang::compress::flate
+{
+    extern std::function<flate::huffmanEncoder* (void)> fixedLiteralEncoding;
+    extern std::function<flate::huffmanEncoder* (void)> fixedOffsetEncoding;
 
     namespace rec
     {
-        void set(hcode* h, uint16_t code, uint16_t length);
-        int bitLength(huffmanEncoder* h, gocpp::slice<int32_t> freq);
+        uint8_t len(hcode h);
+        uint64_t code64(hcode h);
+        bool zero(hcode h);
+        void set(hcode* h, uint16_t code, uint8_t length);
+        int bitLength(huffmanEncoder* h, gocpp::slice<uint16_t> freq);
+        int bitLengthRaw(huffmanEncoder* h, gocpp::slice<unsigned char> b);
+        int canEncodeLen(huffmanEncoder* h, gocpp::slice<uint16_t> freq);
         gocpp::slice<int32_t> bitCounts(huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits);
         void assignEncodingAndSize(huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list);
-        void generate(huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits);
-        void sort(byLiteral* s, gocpp::slice<literalNode> a);
-        int Len(byLiteral s);
-        bool Less(byLiteral s, int i, int j);
-        void Swap(byLiteral s, int i, int j);
-        void sort(byFreq* s, gocpp::slice<literalNode> a);
-        int Len(byFreq s);
-        bool Less(byFreq s, int i, int j);
-        void Swap(byFreq s, int i, int j);
+        void generate(huffmanEncoder* h, gocpp::slice<uint16_t> freq, int32_t maxBits);
     }
 }
 

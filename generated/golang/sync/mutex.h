@@ -12,25 +12,6 @@
 
 namespace golang::sync
 {
-    void go_throw(gocpp::string);
-    void fatal(gocpp::string);
-    struct Mutex
-    {
-        int32_t state{};
-        uint32_t sema{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Mutex& value);
     struct Locker : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -100,14 +81,41 @@ namespace golang::sync
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Locker& value);
+}
+#include "golang/internal/sync/mutex.fwd.h"
+
+namespace golang::sync
+{
+    namespace isync = golang::internal::sync;
+}
+#include "golang/internal/sync/mutex.h"
+#include "golang/sync/cond.h"
+
+namespace golang::sync
+{
+    struct Mutex
+    {
+        noCopy _1{};
+        isync::Mutex mu{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Mutex& value);
 
     namespace rec
     {
         void Lock(Mutex* m);
         bool TryLock(Mutex* m);
-        void lockSlow(Mutex* m);
         void Unlock(Mutex* m);
-        void unlockSlow(Mutex* m, int32_t go_new);
     }
 }
 

@@ -18,8 +18,12 @@
 #include "golang/golang.org/x/tools/internal/event/keys/standard.h"
 #include "golang/golang.org/x/tools/internal/event/label/label.h"
 
-namespace golang::event
+namespace golang::golang_org::x::tools::internal::event
 {
+    namespace context = golang::context;
+    namespace core = golang::golang_org::x::tools::internal::event::core;
+    namespace keys = golang::golang_org::x::tools::internal::event::keys;
+    namespace label = golang::golang_org::x::tools::internal::event::label;
     namespace rec
     {
         using core::rec::Label;

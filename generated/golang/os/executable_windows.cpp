@@ -16,6 +16,8 @@
 
 namespace golang::os
 {
+    namespace syscall = golang::syscall;
+    namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
     }

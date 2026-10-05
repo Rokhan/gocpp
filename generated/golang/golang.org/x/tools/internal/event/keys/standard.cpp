@@ -13,7 +13,7 @@
 
 #include "golang/golang.org/x/tools/internal/event/keys/keys.h"
 
-namespace golang::keys
+namespace golang::golang_org::x::tools::internal::event::keys
 {
     namespace rec
     {

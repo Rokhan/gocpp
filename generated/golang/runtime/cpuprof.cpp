@@ -12,10 +12,10 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/consts.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/profbuf.h"
@@ -25,6 +25,9 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::CompareAndSwap;
@@ -253,8 +256,17 @@ namespace golang::runtime
         gocpp::panic("CPUProfile no longer available"_s);
     }
 
-    //go:linkname runtime_pprof_runtime_cyclesPerSecond runtime/pprof.runtime_cyclesPerSecond
-    int64_t runtime_pprof_runtime_cyclesPerSecond()
+    // runtime/pprof.runtime_cyclesPerSecond should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/grafana/pyroscope-go/godeltaprof
+    //   - github.com/pyroscope-io/godeltaprof
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname pprof_cyclesPerSecond runtime/pprof.runtime_cyclesPerSecond
+    int64_t pprof_cyclesPerSecond()
     {
         return ticksPerSecond();
     }
@@ -266,6 +278,14 @@ namespace golang::runtime
     // The caller must save the returned data and tags before calling readProfile again.
     // The returned data contains a whole number of records, and tags contains
     // exactly one entry per record.
+    //
+    // runtime_pprof_readProfile should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/pyroscope-io/pyroscope
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
     //
     //go:linkname runtime_pprof_readProfile runtime/pprof.readProfile
     std::tuple<gocpp::slice<uint64_t>, gocpp::slice<gocpp::unsafe_pointer>, bool> runtime_pprof_readProfile()

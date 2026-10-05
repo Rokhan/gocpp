@@ -5,9 +5,13 @@
 
 #include "golang/context/context.fwd.h"
 #include "golang/golang.org/x/tools/internal/event/core/event.fwd.h"
+#include "golang/golang.org/x/tools/internal/event/core/export.fwd.h"
 #include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
 
-namespace golang::event
+namespace golang::golang_org::x::tools::internal::event
 {
+    namespace context = golang::context;
+    namespace core = golang::golang_org::x::tools::internal::event::core;
+    namespace label = golang::golang_org::x::tools::internal::event::label;
     using Exporter = std::function<context::Context (context::Context _1, core::Event _2, label::Map _3)>;
 }

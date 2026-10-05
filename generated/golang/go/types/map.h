@@ -11,12 +11,12 @@
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Map
     {
-        golang::types::Type key{};
-        golang::types::Type elem{};
+        golang::go::types::Type key{};
+        golang::go::types::Type elem{};
 
         using isGoStruct = void;
 
@@ -30,19 +30,19 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Map& value);
-    Map* NewMap(golang::types::Type key, golang::types::Type elem);
+    Map* NewMap(golang::go::types::Type key, golang::go::types::Type elem);
 }
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        golang::types::Type Key(Map* m);
-        golang::types::Type Elem(Map* m);
-        golang::types::Type Underlying(Map* t);
+        golang::go::types::Type Key(Map* m);
+        golang::go::types::Type Elem(Map* m);
+        golang::go::types::Type Underlying(Map* t);
         gocpp::string String(Map* t);
     }
 }

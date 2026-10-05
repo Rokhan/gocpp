@@ -10,9 +10,9 @@
 #include "gocpp/support.h"
 
 
-namespace golang::packagesinternal
+namespace golang::golang_org::x::tools::internal::packagesinternal
 {
-    extern std::function<gocpp::string (gocpp::go_any)> GetForTest;
+    extern std::function<gocpp::slice<packagesinternal::PackageError*> (go_any)> GetDepsErrors;
     struct PackageError
     {
         gocpp::slice<gocpp::string> ImportStack{}; // shortest path from package named on command line to this one
@@ -33,13 +33,10 @@ namespace golang::packagesinternal
     std::ostream& operator<<(std::ostream& os, const struct PackageError& value);
     extern int TypecheckCgo;
     extern int DepsErrors;
-    extern int ForTest;
-    extern std::function<void (gocpp::go_any, gocpp::string)> SetModFlag;
-    extern std::function<void (gocpp::go_any, gocpp::string)> SetModFile;
-    extern std::function<gocpp::slice<packagesinternal::PackageError*> (gocpp::go_any)> GetDepsErrors;
 
     namespace rec
     {
+        gocpp::string String(PackageError err);
     }
 }
 

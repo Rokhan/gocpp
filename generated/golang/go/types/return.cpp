@@ -13,12 +13,12 @@
 
 #include "golang/go/ast/ast.h"
 #include "golang/go/token/token.h"
-#include "golang/go/types/builtins.h"
 #include "golang/go/types/check.h"
-#include "golang/go/types/errors.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::End;
@@ -60,7 +60,7 @@ namespace golang::types
                 default:
                 {
                     auto s = s_ref;
-                    unreachable();
+                    gocpp::panic("unreachable"_s);
                     break;
                 }
 
@@ -89,7 +89,7 @@ namespace golang::types
                 {
                     ast::ExprStmt* s = gocpp::any_cast<ast::ExprStmt*>(s_ref);
                     // calling the predeclared (possibly parenthesized) panic() function is terminating
-                    if(auto [call, ok] = gocpp::getValue<ast::CallExpr*>(unparen(s->X)); ok && check->environment.isPanic[call])
+                    if(auto [call, ok] = gocpp::getValue<ast::CallExpr*>(ast::Unparen(s->X)); ok && check->environment.isPanic[call])
                     {
                         return true;
                     }
@@ -244,7 +244,7 @@ namespace golang::types
                 default:
                 {
                     auto s = s_ref;
-                    unreachable();
+                    gocpp::panic("unreachable"_s);
                     break;
                 }
 

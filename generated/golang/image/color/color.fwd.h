@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::color
+namespace golang::image::color
 {
     struct Color;
     struct RGBA;

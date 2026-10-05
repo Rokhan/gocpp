@@ -4,27 +4,17 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
-    using ReportFunc = std::function<void (gocpp::string _1, gocpp::slice<gocpp::go_any> _2)>;
+    using ReportFunc = std::function<void (gocpp::string _1, gocpp::slice<go_any> _2)>;
     // Current bundled export format version. Increase with each format change.
     // 0: initial implementation
     const long bundleVersion = 0;
-    struct exportWriter;
-    const gocpp::string blankMarker = "$"_s;
-    using internalError = gocpp::string;
-}
-#include "golang/bytes/buffer.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/package.fwd.h"
-#include "golang/go/types/type.fwd.h"
-#include "golang/golang.org/x/tools/go/types/objectpath/objectpath.fwd.h"
-
-namespace golang::gcimporter
-{
     struct iexporter;
     struct filePositions;
+    struct exportWriter;
+    const gocpp::string blankMarker = "$"_s;
     struct intWriter;
     struct objQueue;
+    using internalError = gocpp::string;
 }

@@ -15,11 +15,13 @@
 #include "golang/fmt/print.h"
 #include "golang/go/constant/value.h"
 #include "golang/go/token/position.h"
+#include "golang/go/types/alias.h"
 #include "golang/go/types/api_predicates.h"
 #include "golang/go/types/basic.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/errors.h"
 #include "golang/go/types/expr.h"
+#include "golang/go/types/instantiate.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/lookup.h"
 #include "golang/go/types/named.h"
@@ -31,14 +33,22 @@
 #include "golang/go/types/typelists.h"
 #include "golang/go/types/typeparam.h"
 #include "golang/go/types/typestring.h"
-#include "golang/go/types/under.h"
 #include "golang/go/types/universe.h"
 #include "golang/io/io.h"
+#include "golang/strings/compare.h"
+#include "golang/strings/strings.h"
 #include "golang/unicode/letter.h"
 #include "golang/unicode/utf8/utf8.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace bytes = golang::bytes;
+    namespace constant = golang::go::constant;
+    namespace fmt = golang::fmt;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using bytes::rec::String;
@@ -47,9 +57,15 @@ namespace golang::types
         using bytes::rec::WriteString;
     }
 
-    // An Object describes a named language entity such as a package,
-    // constant, type, variable, function (incl. methods), or label.
-    // All objects implement the Object interface.
+    // An Object is a named language entity.
+    // An Object may be a constant ([Const]), type name ([TypeName]),
+    // variable or struct field ([Var]), function or method ([Func]),
+    // imported package ([PkgName]), label ([Label]),
+    // built-in function ([Builtin]),
+    // or the predeclared identifier 'nil' ([Nil]).
+    //
+    // The environment, which is structured as a tree of Scopes,
+    // maps each name to the unique Object that it denotes.
     
     template<typename T>
     Object::Object(T& ref)
@@ -75,7 +91,7 @@ namespace golang::types
     }
 
     template<typename T, typename TStore, typename TInterface>
-    golang::types::Scope* Object::ObjectImpl<T, TStore, TInterface>::vParent()
+    golang::go::types::Scope* Object::ObjectImpl<T, TStore, TInterface>::vParent()
     {
         return rec::Parent(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -95,7 +111,7 @@ namespace golang::types
         return rec::Name(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    golang::types::Type Object::ObjectImpl<T, TStore, TInterface>::vType()
+    golang::go::types::Type Object::ObjectImpl<T, TStore, TInterface>::vType()
     {
         return rec::Type(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -120,12 +136,7 @@ namespace golang::types
         return rec::order(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    golang::types::color Object::ObjectImpl<T, TStore, TInterface>::vcolor()
-    {
-        return rec::color(gocpp::PtrRecv<T, false>(value.get()));
-    }
-    template<typename T, typename TStore, typename TInterface>
-    void Object::ObjectImpl<T, TStore, TInterface>::vsetType(golang::types::Type _1)
+    void Object::ObjectImpl<T, TStore, TInterface>::vsetType(golang::go::types::Type _1)
     {
         return rec::setType(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
@@ -135,19 +146,14 @@ namespace golang::types
         return rec::setOrder(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
     template<typename T, typename TStore, typename TInterface>
-    void Object::ObjectImpl<T, TStore, TInterface>::vsetColor(golang::types::color color)
-    {
-        return rec::setColor(gocpp::PtrRecv<T, false>(value.get()), color);
-    }
-    template<typename T, typename TStore, typename TInterface>
-    void Object::ObjectImpl<T, TStore, TInterface>::vsetParent(golang::types::Scope* _1)
+    void Object::ObjectImpl<T, TStore, TInterface>::vsetParent(golang::go::types::Scope* _1)
     {
         return rec::setParent(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
     template<typename T, typename TStore, typename TInterface>
-    bool Object::ObjectImpl<T, TStore, TInterface>::vsameId(Package* pkg, gocpp::string name)
+    bool Object::ObjectImpl<T, TStore, TInterface>::vsameId(Package* pkg, gocpp::string name, bool foldCase)
     {
-        return rec::sameId(gocpp::PtrRecv<T, false>(value.get()), pkg, name);
+        return rec::sameId(gocpp::PtrRecv<T, false>(value.get()), pkg, name, foldCase);
     }
     template<typename T, typename TStore, typename TInterface>
     token::Pos Object::ObjectImpl<T, TStore, TInterface>::vscopePos()
@@ -168,12 +174,12 @@ namespace golang::types
 
     namespace rec
     {
-        golang::types::Scope* Parent(const gocpp::PtrRecv<struct Object, false>& self)
+        golang::go::types::Scope* Parent(const gocpp::PtrRecv<struct Object, false>& self)
         {
             return self.ptr->value()->vParent();
         }
 
-        golang::types::Scope* Parent(const gocpp::ObjRecv<struct Object>& self)
+        golang::go::types::Scope* Parent(const gocpp::ObjRecv<struct Object>& self)
         {
             return self.obj.value()->vParent();
         }
@@ -208,12 +214,12 @@ namespace golang::types
             return self.obj.value()->vName();
         }
 
-        golang::types::Type Type(const gocpp::PtrRecv<struct Object, false>& self)
+        golang::go::types::Type Type(const gocpp::PtrRecv<struct Object, false>& self)
         {
             return self.ptr->value()->vType();
         }
 
-        golang::types::Type Type(const gocpp::ObjRecv<struct Object>& self)
+        golang::go::types::Type Type(const gocpp::ObjRecv<struct Object>& self)
         {
             return self.obj.value()->vType();
         }
@@ -258,22 +264,12 @@ namespace golang::types
             return self.obj.value()->vorder();
         }
 
-        golang::types::color color(const gocpp::PtrRecv<struct Object, false>& self)
-        {
-            return self.ptr->value()->vcolor();
-        }
-
-        golang::types::color color(const gocpp::ObjRecv<struct Object>& self)
-        {
-            return self.obj.value()->vcolor();
-        }
-
-        void setType(const gocpp::PtrRecv<struct Object, false>& self, golang::types::Type _1)
+        void setType(const gocpp::PtrRecv<struct Object, false>& self, golang::go::types::Type _1)
         {
             return self.ptr->value()->vsetType(_1);
         }
 
-        void setType(const gocpp::ObjRecv<struct Object>& self, golang::types::Type _1)
+        void setType(const gocpp::ObjRecv<struct Object>& self, golang::go::types::Type _1)
         {
             return self.obj.value()->vsetType(_1);
         }
@@ -288,34 +284,24 @@ namespace golang::types
             return self.obj.value()->vsetOrder(_1);
         }
 
-        void setColor(const gocpp::PtrRecv<struct Object, false>& self, golang::types::color color)
-        {
-            return self.ptr->value()->vsetColor(color);
-        }
-
-        void setColor(const gocpp::ObjRecv<struct Object>& self, golang::types::color color)
-        {
-            return self.obj.value()->vsetColor(color);
-        }
-
-        void setParent(const gocpp::PtrRecv<struct Object, false>& self, golang::types::Scope* _1)
+        void setParent(const gocpp::PtrRecv<struct Object, false>& self, golang::go::types::Scope* _1)
         {
             return self.ptr->value()->vsetParent(_1);
         }
 
-        void setParent(const gocpp::ObjRecv<struct Object>& self, golang::types::Scope* _1)
+        void setParent(const gocpp::ObjRecv<struct Object>& self, golang::go::types::Scope* _1)
         {
             return self.obj.value()->vsetParent(_1);
         }
 
-        bool sameId(const gocpp::PtrRecv<struct Object, false>& self, Package* pkg, gocpp::string name)
+        bool sameId(const gocpp::PtrRecv<struct Object, false>& self, Package* pkg, gocpp::string name, bool foldCase)
         {
-            return self.ptr->value()->vsameId(pkg, name);
+            return self.ptr->value()->vsameId(pkg, name, foldCase);
         }
 
-        bool sameId(const gocpp::ObjRecv<struct Object>& self, Package* pkg, gocpp::string name)
+        bool sameId(const gocpp::ObjRecv<struct Object>& self, Package* pkg, gocpp::string name, bool foldCase)
         {
-            return self.obj.value()->vsameId(pkg, name);
+            return self.obj.value()->vsameId(pkg, name, foldCase);
         }
 
         token::Pos scopePos(const gocpp::PtrRecv<struct Object, false>& self)
@@ -385,7 +371,6 @@ namespace golang::types
         result.name = this->name;
         result.typ = this->typ;
         result.order_ = this->order_;
-        result.color_ = this->color_;
         result.scopePos_ = this->scopePos_;
         return result;
     }
@@ -399,7 +384,6 @@ namespace golang::types
         if (name != ref.name) return false;
         if (typ != ref.typ) return false;
         if (order_ != ref.order_) return false;
-        if (color_ != ref.color_) return false;
         if (scopePos_ != ref.scopePos_) return false;
         return true;
     }
@@ -413,7 +397,6 @@ namespace golang::types
         os << " " << name;
         os << " " << typ;
         os << " " << order_;
-        os << " " << color_;
         os << " " << scopePos_;
         os << '}';
         return os;
@@ -424,44 +407,9 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
-    // color encodes the color of an object (see Checker.objDecl for details).
-    gocpp::string rec::String(golang::types::color c)
-    {
-        //Go switch emulation
-        {
-            auto condition = c;
-            int conditionId = -1;
-            if(condition == white) { conditionId = 0; }
-            else if(condition == black) { conditionId = 1; }
-            switch(conditionId)
-            {
-                case 0:
-                    return "white"_s;
-                    break;
-                case 1:
-                    return "black"_s;
-                    break;
-                default:
-                    return "grey"_s;
-                    break;
-            }
-        }
-    }
-
-    // colorFor returns the (initial) color for an object depending on
-    // whether its type t is known or not.
-    golang::types::color colorFor(golang::types::Type t)
-    {
-        if(t != nullptr)
-        {
-            return black;
-        }
-        return white;
-    }
-
     // Parent returns the scope in which the object is declared.
     // The result is nil for methods and struct fields.
-    golang::types::Scope* rec::Parent(object* obj)
+    golang::go::types::Scope* rec::Parent(object* obj)
     {
         return obj->parent;
     }
@@ -486,7 +434,7 @@ namespace golang::types
     }
 
     // Type returns the object's type.
-    golang::types::Type rec::Type(object* obj)
+    golang::go::types::Type rec::Type(object* obj)
     {
         return obj->typ;
     }
@@ -515,22 +463,17 @@ namespace golang::types
         return obj->order_;
     }
 
-    golang::types::color rec::color(object* obj)
-    {
-        return obj->color_;
-    }
-
     token::Pos rec::scopePos(object* obj)
     {
         return obj->scopePos_;
     }
 
-    void rec::setParent(object* obj, golang::types::Scope* parent)
+    void rec::setParent(object* obj, golang::go::types::Scope* parent)
     {
         obj->parent = parent;
     }
 
-    void rec::setType(object* obj, golang::types::Type typ)
+    void rec::setType(object* obj, golang::go::types::Type typ)
     {
         obj->typ = typ;
     }
@@ -541,24 +484,23 @@ namespace golang::types
         obj->order_ = order;
     }
 
-    void rec::setColor(object* obj, golang::types::color color)
-    {
-        assert(color != white);
-        obj->color_ = color;
-    }
-
     void rec::setScopePos(object* obj, token::Pos pos)
     {
         obj->scopePos_ = pos;
     }
 
-    bool rec::sameId(object* obj, Package* pkg, gocpp::string name)
+    bool rec::sameId(object* obj, Package* pkg, gocpp::string name, bool foldCase)
     {
+        // If we don't care about capitalization, we also ignore packages.
+        if(foldCase && strings::EqualFold(obj->name, name))
+        {
+            return true;
+        }
         // spec:
         // "Two identifiers are different if they are spelled differently,
         // or if they appear in different packages and are not exported.
         // Otherwise, they are the same."
-        if(name != obj->name)
+        if(obj->name != name)
         {
             return false;
         }
@@ -567,37 +509,35 @@ namespace golang::types
         {
             return true;
         }
-        // not exported, so packages must be the same (pkg == nil for
-        // fields in Universe scope; this can only happen for types
-        // introduced via Eval)
-        if(pkg == nullptr || obj->pkg == nullptr)
-        {
-            return pkg == obj->pkg;
-        }
-        // pkg != nil && obj.pkg != nil
-        return pkg->path == obj->pkg->path;
+        // not exported, so packages must be the same
+        return samePkg(obj->pkg, pkg);
     }
 
-    // less reports whether object a is ordered before object b.
+    // cmp reports whether object a is ordered before object b.
+    // cmp returns:
+    //
+    //	-1 if a is before b
+    //	 0 if a is equivalent to b
+    //	+1 if a is behind b
     //
     // Objects are ordered nil before non-nil, exported before
     // non-exported, then by name, and finally (for non-exported
     // functions) by package path.
-    bool rec::less(object* a, object* b)
+    int rec::cmp(object* a, object* b)
     {
         if(a == b)
         {
-            return false;
+            return 0;
         }
 
         // Nil before non-nil.
         if(a == nullptr)
         {
-            return true;
+            return - 1;
         }
         if(b == nullptr)
         {
-            return false;
+            return + 1;
         }
 
         // Exported functions before non-exported.
@@ -605,20 +545,24 @@ namespace golang::types
         auto eb = isExported(b->name);
         if(ea != eb)
         {
-            return ea;
+            if(ea)
+            {
+                return - 1;
+            }
+            return + 1;
         }
 
         // Order by name and then (for non-exported names) by package.
         if(a->name != b->name)
         {
-            return a->name < b->name;
+            return strings::Compare(a->name, b->name);
         }
         if(! ea)
         {
-            return a->pkg->path < b->pkg->path;
+            return strings::Compare(a->pkg->path, b->pkg->path);
         }
 
-        return false;
+        return 0;
     }
 
     // A PkgName represents an imported Go package.
@@ -630,7 +574,6 @@ namespace golang::types
         T result;
         result.object = this->object;
         result.imported = this->imported;
-        result.used = this->used;
         return result;
     }
 
@@ -639,7 +582,6 @@ namespace golang::types
     {
         if (object != ref.object) return false;
         if (imported != ref.imported) return false;
-        if (used != ref.used) return false;
         return true;
     }
 
@@ -648,7 +590,6 @@ namespace golang::types
         os << '{';
         os << "" << object;
         os << " " << imported;
-        os << " " << used;
         os << '}';
         return os;
     }
@@ -662,7 +603,7 @@ namespace golang::types
     // The remaining arguments set the attributes found with all Objects.
     PkgName* NewPkgName(token::Pos pos, Package* pkg, gocpp::string name, Package* imported)
     {
-        return new PkgName {object {nullptr, pos, pkg, name, Typ[Invalid], 0, black, nopos}, imported, false};
+        return new PkgName {object {nullptr, pos, pkg, name, Typ[Invalid], 0, nopos}, imported};
     }
 
     // Imported returns the package that was imported.
@@ -707,9 +648,9 @@ namespace golang::types
 
     // NewConst returns a new constant with value val.
     // The remaining arguments set the attributes found with all Objects.
-    Const* NewConst(token::Pos pos, Package* pkg, gocpp::string name, golang::types::Type typ, constant::Value val)
+    Const* NewConst(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ, constant::Value val)
     {
-        return new Const {object {nullptr, pos, pkg, name, typ, 0, colorFor(typ), nopos}, val};
+        return new Const {object {nullptr, pos, pkg, name, typ, 0, nopos}, val};
     }
 
     // Val returns the constant's value.
@@ -722,7 +663,11 @@ namespace golang::types
     {
     }
 
-    // A TypeName represents a name for a (defined or alias) type.
+    // A TypeName is an [Object] that represents a type with a name:
+    // a defined type ([Named]),
+    // an alias type ([Alias]),
+    // a type parameter ([TypeParam]),
+    // or a predeclared type such as int or error.
     
     template<typename T> requires gocpp::GoStruct<T>
     TypeName::operator T()
@@ -759,17 +704,18 @@ namespace golang::types
     // It may also be nil such that the returned TypeName can be used as
     // argument for NewNamed, which will set the TypeName's type as a side-
     // effect.
-    TypeName* NewTypeName(token::Pos pos, Package* pkg, gocpp::string name, golang::types::Type typ)
+    TypeName* NewTypeName(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ)
     {
-        return new TypeName {object {nullptr, pos, pkg, name, typ, 0, colorFor(typ), nopos}};
+        return new TypeName {object {nullptr, pos, pkg, name, typ, 0, nopos}};
     }
 
     // NewTypeNameLazy returns a new defined type like NewTypeName, but it
-    // lazily calls resolve to finish constructing the Named object.
-    TypeName* _NewTypeNameLazy(token::Pos pos, Package* pkg, gocpp::string name, std::function<std::tuple<gocpp::slice<TypeParam*>, golang::types::Type, gocpp::slice<Func*>> (Named* named)> load)
+    // lazily calls unpack to finish constructing the Named object.
+    TypeName* _NewTypeNameLazy(token::Pos pos, Package* pkg, gocpp::string name, std::function<std::tuple<gocpp::slice<TypeParam*>, golang::go::types::Type, gocpp::slice<Func*>, gocpp::slice<std::function<void ()>>> (Named* _1)> load)
     {
         auto obj = NewTypeName(pos, pkg, name, nullptr);
-        NewNamed(obj, nullptr, nullptr)->loader = load;
+        auto n = rec::newNamed(gocpp::recv((Checker*)(nullptr)), obj, nullptr, nullptr);
+        n->loader = load;
         return obj;
     }
 
@@ -833,17 +779,16 @@ namespace golang::types
         }
     }
 
-    // A Variable represents a declared variable (including function parameters and results, and struct fields).
+    // A Var represents a declared variable (including function parameters and results, and struct fields).
     
     template<typename T> requires gocpp::GoStruct<T>
     Var::operator T()
     {
         T result;
         result.object = this->object;
-        result.embedded = this->embedded;
-        result.isField = this->isField;
-        result.used = this->used;
         result.origin = this->origin;
+        result.kind = this->kind;
+        result.embedded = this->embedded;
         return result;
     }
 
@@ -851,10 +796,9 @@ namespace golang::types
     bool Var::operator==(const T& ref) const
     {
         if (object != ref.object) return false;
-        if (embedded != ref.embedded) return false;
-        if (isField != ref.isField) return false;
-        if (used != ref.used) return false;
         if (origin != ref.origin) return false;
+        if (kind != ref.kind) return false;
+        if (embedded != ref.embedded) return false;
         return true;
     }
 
@@ -862,10 +806,9 @@ namespace golang::types
     {
         os << '{';
         os << "" << object;
-        os << " " << embedded;
-        os << " " << isField;
-        os << " " << used;
         os << " " << origin;
+        os << " " << kind;
+        os << " " << embedded;
         os << '}';
         return os;
     }
@@ -875,34 +818,74 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
+    // A VarKind discriminates the various kinds of variables.
+    gocpp::array<gocpp::string, 7> varKindNames = gocpp::Init<gocpp::array<gocpp::string, 7>>([](auto& x) {
+        x[0] = "VarKind(0)"_s;
+        x[PackageVar] = "PackageVar"_s;
+        x[LocalVar] = "LocalVar"_s;
+        x[RecvVar] = "RecvVar"_s;
+        x[ParamVar] = "ParamVar"_s;
+        x[ResultVar] = "ResultVar"_s;
+        x[FieldVar] = "FieldVar"_s;
+    });
+    gocpp::string rec::String(VarKind kind)
+    {
+        if(0 <= kind && int(kind) < len(varKindNames))
+        {
+            return varKindNames[kind];
+        }
+        return mocklib::Sprintf("VarKind(%d)"_s, kind);
+    }
+
+    // Kind reports what kind of variable v is.
+    VarKind rec::Kind(Var* v)
+    {
+        return v->kind;
+    }
+
+    // SetKind sets the kind of the variable.
+    // It should be used only immediately after [NewVar] or [NewParam].
+    void rec::SetKind(Var* v, VarKind kind)
+    {
+        v->kind = kind;
+    }
+
     // NewVar returns a new variable.
     // The arguments set the attributes found with all Objects.
-    Var* NewVar(token::Pos pos, Package* pkg, gocpp::string name, golang::types::Type typ)
+    //
+    // The caller must subsequently call [Var.SetKind]
+    // if the desired Var is not of kind [PackageVar].
+    Var* NewVar(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ)
     {
-        return gocpp::InitPtr<Var>([=](auto& x) {
-            x.object = object {nullptr, pos, pkg, name, typ, 0, colorFor(typ), nopos};
-        });
+        return newVar(PackageVar, pos, pkg, name, typ);
     }
 
     // NewParam returns a new variable representing a function parameter.
-    Var* NewParam(token::Pos pos, Package* pkg, gocpp::string name, golang::types::Type typ)
+    //
+    // The caller must subsequently call [Var.SetKind] if the desired Var
+    // is not of kind [ParamVar]: for example, [RecvVar] or [ResultVar].
+    Var* NewParam(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ)
     {
-        // parameters are always 'used'
-        return gocpp::InitPtr<Var>([=](auto& x) {
-            x.object = object {nullptr, pos, pkg, name, typ, 0, colorFor(typ), nopos};
-            x.used = true;
-        });
+        return newVar(ParamVar, pos, pkg, name, typ);
     }
 
     // NewField returns a new variable representing a struct field.
     // For embedded fields, the name is the unqualified type name
     // under which the field is accessible.
-    Var* NewField(token::Pos pos, Package* pkg, gocpp::string name, golang::types::Type typ, bool embedded)
+    Var* NewField(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ, bool embedded)
+    {
+        auto v = newVar(FieldVar, pos, pkg, name, typ);
+        v->embedded = embedded;
+        return v;
+    }
+
+    // newVar returns a new variable.
+    // The arguments set the attributes found with all Objects.
+    Var* newVar(VarKind kind, token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ)
     {
         return gocpp::InitPtr<Var>([=](auto& x) {
-            x.object = object {nullptr, pos, pkg, name, typ, 0, colorFor(typ), nopos};
-            x.embedded = embedded;
-            x.isField = true;
+            x.object = object {nullptr, pos, pkg, name, typ, 0, nopos};
+            x.kind = kind;
         });
     }
 
@@ -922,7 +905,7 @@ namespace golang::types
     // IsField reports whether the variable is a struct field.
     bool rec::IsField(Var* obj)
     {
-        return obj->isField;
+        return obj->kind == FieldVar;
     }
 
     // Origin returns the canonical Var for its receiver, i.e. the Var object
@@ -954,8 +937,9 @@ namespace golang::types
     {
         T result;
         result.object = this->object;
-        result.hasPtrRecv_ = this->hasPtrRecv_;
         result.origin = this->origin;
+        result.hasPtrRecv_ = this->hasPtrRecv_;
+        result.nointerface = this->nointerface;
         return result;
     }
 
@@ -963,8 +947,9 @@ namespace golang::types
     bool Func::operator==(const T& ref) const
     {
         if (object != ref.object) return false;
-        if (hasPtrRecv_ != ref.hasPtrRecv_) return false;
         if (origin != ref.origin) return false;
+        if (hasPtrRecv_ != ref.hasPtrRecv_) return false;
+        if (nointerface != ref.nointerface) return false;
         return true;
     }
 
@@ -972,8 +957,9 @@ namespace golang::types
     {
         os << '{';
         os << "" << object;
-        os << " " << hasPtrRecv_;
         os << " " << origin;
+        os << " " << hasPtrRecv_;
+        os << " " << nointerface;
         os << '}';
         return os;
     }
@@ -985,15 +971,40 @@ namespace golang::types
 
     // NewFunc returns a new function with the given signature, representing
     // the function's type.
-    Func* NewFunc(token::Pos pos, Package* pkg, gocpp::string name, Signature* sig)
+    Func* NewFunc(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Signature* sig)
     {
-        // don't store a (typed) nil signature
-        golang::types::Type typ = {};
+        golang::go::types::Type typ = {};
         if(sig != nullptr)
         {
             typ = sig;
         }
-        return new Func {object {nullptr, pos, pkg, name, typ, 0, colorFor(typ), nopos}, false, nullptr};
+        else
+        {
+        }
+        // Don't store a (typed) nil *Signature.
+        // We can't simply replace it with new(Signature) either,
+        // as this would violate object.{Type,color} invariants.
+        // TODO(adonovan): propose to disallow NewFunc with nil *Signature.
+        return new Func {object {nullptr, pos, pkg, name, typ, 0, nopos}, nullptr, false, false};
+    }
+
+    // Signature returns the signature (type) of the function or method.
+    golang::go::types::Signature* rec::Signature(Func* obj)
+    {
+        if(obj->object.typ != nullptr)
+        {
+            // normal case
+            return gocpp::getValue<golang::go::types::Signature*>(obj->object.typ);
+        }
+        // No signature: Signature was called either:
+        // - within go/types, before a FuncDecl's initially
+        // nil Func.Type was lazily populated, indicating
+        // a types bug; or
+        // - by a client after NewFunc(..., nil),
+        // which is arguably a client bug, but we need a
+        // proposal to tighten NewFunc's precondition.
+        // For now, return a trivial signature.
+        return new types::Signature{};
     }
 
     // FullName returns the package- or receiver-type-qualified name of
@@ -1008,9 +1019,9 @@ namespace golang::types
     // Scope returns the scope of the function's body block.
     // The result is nil for imported or instantiated functions and methods
     // (but there is also no mechanism to get to an instantiated function).
-    golang::types::Scope* rec::Scope(Func* obj)
+    golang::go::types::Scope* rec::Scope(Func* obj)
     {
-        return gocpp::getValue<Signature*>(obj->object.typ)->scope;
+        return gocpp::getValue<golang::go::types::Signature*>(obj->object.typ)->scope;
     }
 
     // Origin returns the canonical Func for its receiver, i.e. the Func object
@@ -1045,7 +1056,7 @@ namespace golang::types
         // Caution: Checker.funcDecl (decl.go) marks a function by setting its type to an empty
         // signature. We may reach here before the signature is fully set up: we must explicitly
         // check if the receiver is set (we cannot just look for non-nil obj.typ).
-        if(auto [sig, gocpp_id_2] = gocpp::getValue<Signature*>(obj->object.typ); sig != nullptr && sig->recv != nullptr)
+        if(auto [sig, gocpp_id_2] = gocpp::getValue<golang::go::types::Signature*>(obj->object.typ); sig != nullptr && sig->recv != nullptr)
         {
             auto [gocpp_id_3, isPtr] = deref(sig->recv->object.typ);
             return isPtr;
@@ -1105,7 +1116,6 @@ namespace golang::types
             x.pkg = pkg;
             x.name = name;
             x.typ = Typ[Invalid];
-            x.color_ = black;
         }), false};
     }
 
@@ -1148,7 +1158,6 @@ namespace golang::types
         return new Builtin {gocpp::Init<object>([=](auto& x) {
             x.name = predeclaredFuncs[id].name;
             x.typ = Typ[Invalid];
-            x.color_ = black;
         }), id};
     }
 
@@ -1236,7 +1245,7 @@ namespace golang::types
                 case 3:
                 {
                     types::Var* obj = gocpp::any_cast<types::Var*>(obj_ref);
-                    if(obj->isField)
+                    if(rec::IsField(gocpp::recv(obj)))
                     {
                         rec::WriteString(gocpp::recv(buf), "field"_s);
                     }
@@ -1254,7 +1263,7 @@ namespace golang::types
                     writeFuncName(buf, obj, qf);
                     if(typ != nullptr)
                     {
-                        WriteSignature(buf, gocpp::getValue<Signature*>(typ), qf);
+                        WriteSignature(buf, gocpp::getValue<golang::go::types::Signature*>(typ), qf);
                     }
                     return;
                     break;
@@ -1314,7 +1323,7 @@ namespace golang::types
                 const auto& gocpp_id_5 = gocpp::type_info(typ);
                 int conditionId = -1;
                 if(gocpp_id_5 == typeid(types::Basic*)) { conditionId = 0; }
-                else if(gocpp_id_5 == typeid(types::Named*)) { conditionId = 1; }
+                else if(gocpp_id_5 == typeid(types::genericType)) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
@@ -1327,7 +1336,7 @@ namespace golang::types
                     }
                     case 1:
                     {
-                        types::Named* t = gocpp::any_cast<types::Named*>(typ);
+                        types::genericType t = gocpp::any_cast<types::genericType>(typ);
                         if(rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(t)))) > 0)
                         {
                             rec::tParamList(gocpp::recv(newTypeWriter(buf, qf)), rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(t)))));
@@ -1339,6 +1348,11 @@ namespace golang::types
             if(rec::IsAlias(gocpp::recv(tname)))
             {
                 rec::WriteString(gocpp::recv(buf), " ="_s);
+                if(auto [alias, ok] = gocpp::getValue<Alias*>(typ); ok)
+                {
+                    // materialized? TODO(gri) Do we still need this (e.g. for byte, rune)?
+                    typ = alias->fromRHS;
+                }
             }
             else
             if(auto [t, gocpp_id_6] = gocpp::getValue<TypeParam*>(typ); t != nullptr)
@@ -1348,14 +1362,15 @@ namespace golang::types
             else
             {
                 // TODO(gri) should this be fromRHS for *Named?
-                typ = under(typ);
+                // (See discussion in #66559.)
+                typ = rec::Underlying(gocpp::recv(typ));
             }
         }
 
         // Special handling for any: because WriteType will format 'any' as 'any',
         // resulting in the object string `type any = any` rather than `type any =
         // interface{}`. To avoid this, swap in a different empty interface.
-        if(obj == universeAny)
+        if(rec::Name(gocpp::recv(obj)) == "any"_s && rec::Parent(gocpp::recv(obj)) == Universe)
         {
             assert(Identical(typ, & emptyInterface));
             typ = & emptyInterface;
@@ -1441,7 +1456,7 @@ namespace golang::types
     {
         if(f->object.typ != nullptr)
         {
-            auto sig = gocpp::getValue<Signature*>(f->object.typ);
+            auto sig = gocpp::getValue<golang::go::types::Signature*>(f->object.typ);
             if(auto recv = rec::Recv(gocpp::recv(sig)); recv != nullptr)
             {
                 rec::WriteByte(gocpp::recv(buf), '(');
@@ -1467,6 +1482,131 @@ namespace golang::types
             }
         }
         rec::WriteString(gocpp::recv(buf), f->object.name);
+    }
+
+    // objectKind returns a description of the object's kind.
+    gocpp::string objectKind(Object obj)
+    {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_8 = gocpp::type_info(obj);
+            const auto& obj_ref = obj;
+            int conditionId = -1;
+            if(gocpp_id_8 == typeid(types::PkgName*)) { conditionId = 0; }
+            else if(gocpp_id_8 == typeid(types::Const*)) { conditionId = 1; }
+            else if(gocpp_id_8 == typeid(types::TypeName*)) { conditionId = 2; }
+            else if(gocpp_id_8 == typeid(types::Var*)) { conditionId = 3; }
+            else if(gocpp_id_8 == typeid(types::Func*)) { conditionId = 4; }
+            else if(gocpp_id_8 == typeid(types::Label*)) { conditionId = 5; }
+            else if(gocpp_id_8 == typeid(types::Builtin*)) { conditionId = 6; }
+            else if(gocpp_id_8 == typeid(types::Nil*)) { conditionId = 7; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    types::PkgName* obj = gocpp::any_cast<types::PkgName*>(obj_ref);
+                    return "package name"_s;
+                    break;
+                }
+                case 1:
+                {
+                    types::Const* obj = gocpp::any_cast<types::Const*>(obj_ref);
+                    return "constant"_s;
+                    break;
+                }
+                case 2:
+                {
+                    types::TypeName* obj = gocpp::any_cast<types::TypeName*>(obj_ref);
+                    if(rec::IsAlias(gocpp::recv(obj)))
+                    {
+                        return "type alias"_s;
+                    }
+                    else
+                    if(auto [gocpp_id_9, ok] = gocpp::getValue<TypeParam*>(rec::Type(gocpp::recv(obj))); ok)
+                    {
+                        return "type parameter"_s;
+                    }
+                    else
+                    {
+                        return "defined type"_s;
+                    }
+                    break;
+                }
+                case 3:
+                {
+                    types::Var* obj = gocpp::any_cast<types::Var*>(obj_ref);
+                    //Go switch emulation
+                    {
+                        auto condition = rec::Kind(gocpp::recv(obj));
+                        int conditionId = -1;
+                        if(condition == PackageVar) { conditionId = 0; }
+                        else if(condition == LocalVar) { conditionId = 1; }
+                        else if(condition == RecvVar) { conditionId = 2; }
+                        else if(condition == ParamVar) { conditionId = 3; }
+                        else if(condition == ResultVar) { conditionId = 4; }
+                        else if(condition == FieldVar) { conditionId = 5; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                                return "package-level variable"_s;
+                                break;
+                            case 1:
+                                return "local variable"_s;
+                                break;
+                            case 2:
+                                return "receiver"_s;
+                                break;
+                            case 3:
+                                return "parameter"_s;
+                                break;
+                            case 4:
+                                return "result variable"_s;
+                                break;
+                            case 5:
+                                return "struct field"_s;
+                                break;
+                        }
+                    }
+                    break;
+                }
+                case 4:
+                {
+                    types::Func* obj = gocpp::any_cast<types::Func*>(obj_ref);
+                    if(rec::Recv(gocpp::recv(rec::Signature(gocpp::recv(obj)))) != nullptr)
+                    {
+                        return "method"_s;
+                    }
+                    else
+                    {
+                        return "function"_s;
+                    }
+                    break;
+                }
+                case 5:
+                {
+                    types::Label* obj = gocpp::any_cast<types::Label*>(obj_ref);
+                    return "label"_s;
+                    break;
+                }
+                case 6:
+                {
+                    types::Builtin* obj = gocpp::any_cast<types::Builtin*>(obj_ref);
+                    return "built-in function"_s;
+                    break;
+                }
+                case 7:
+                {
+                    types::Nil* obj = gocpp::any_cast<types::Nil*>(obj_ref);
+                    return "untyped nil"_s;
+                    break;
+                }
+            }
+        }
+        if(debug)
+        {
+            gocpp::panic(mocklib::Sprintf("unknown symbol (%T)"_s, obj));
+        }
+        return "unknown symbol"_s;
     }
 
 }

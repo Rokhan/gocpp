@@ -6,13 +6,7 @@
 
 namespace golang::sync
 {
-    struct poolLocal;
-}
-#include "golang/sync/cond.fwd.h"
-#include "golang/sync/poolqueue.fwd.h"
-
-namespace golang::sync
-{
     struct Pool;
     struct poolLocalInternal;
+    struct poolLocal;
 }

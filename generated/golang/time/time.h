@@ -12,21 +12,28 @@
 
 namespace golang::time
 {
-    golang::time::Weekday absWeekday(uint64_t abs);
-    std::tuple<int, int, int> absClock(uint64_t abs);
+    absDays dateToAbsDays(int64_t year, golang::time::Month month, int day);
     std::tuple<int, uint64_t> fmtFrac(gocpp::slice<unsigned char> buf, uint64_t v, int prec);
     int fmtInt(gocpp::slice<unsigned char> buf, uint64_t v);
     bool lessThanHalf(Duration x, Duration y);
     Duration subMono(int64_t t, int64_t u);
-    std::tuple<int, golang::time::Month, int, int> absDate(uint64_t abs, bool full);
-    extern gocpp::array<int32_t, 13> daysBefore;
+    int daysBefore(golang::time::Month m);
     int daysIn(golang::time::Month m, int year);
-    uint64_t daysSinceEpoch(int year);
     std::tuple<int64_t, int32_t, int64_t> now();
+    std::tuple<int64_t, int32_t, int64_t> runtimeNow();
     int64_t runtimeNano();
+    bool runtimeIsBubbled();
+    // Monotonic times are reported as offsets from startNano.
+    // We initialize startNano to runtimeNano() - 1 so that on systems where
+    // monotonic time resolution is fairly low (e.g. Windows 2008
+    // which appears to have a default resolution of 15ms),
+    // we avoid ever reporting a monotonic time of 0.
+    // (Callers may want to use 0 as "time not set".)
+    extern int64_t startNano;
     bool isLeap(int year);
     std::tuple<int, int> norm(int hi, int lo, int base);
-    extern int64_t startNano;
+    std::tuple<int, int, int> legacyAbsClock(uint64_t abs);
+    std::tuple<int, golang::time::Month, int, int> legacyAbsDate(uint64_t abs, bool full);
 }
 #include "golang/time/zoneinfo.fwd.h"
 
@@ -74,6 +81,7 @@ namespace golang::time
     Time UnixMicro(int64_t usec);
     Time Date(int year, golang::time::Month month, int day, int hour, int min, int sec, int nsec, golang::time::Location* loc);
     std::tuple<int, Duration> div(Time t, Duration d);
+    uint64_t legacyTimeTimeAbs(Time t);
 }
 
 #include "golang/time/zoneinfo.h"
@@ -91,22 +99,34 @@ namespace golang::time
         void stripMono(Time* t);
         void setMono(Time* t, int64_t m);
         int64_t mono(Time* t);
+        bool IsZero(Time t);
         bool After(Time t, Time u);
         bool Before(Time t, Time u);
         int Compare(Time t, Time u);
         bool Equal(Time t, Time u);
         gocpp::string String(golang::time::Month m);
         gocpp::string String(golang::time::Weekday d);
-        bool IsZero(Time t);
-        uint64_t abs(Time t);
-        std::tuple<gocpp::string, int, uint64_t> locabs(Time t);
+        absDays days(absSeconds abs);
+        std::tuple<absCentury, absCyear, absYday> split(absDays days);
+        std::tuple<absMonth, int> split(absYday ayday);
+        absJanFeb janFeb(absYday ayday);
+        golang::time::Month month(absMonth m, absJanFeb janFeb);
+        absLeap leap(absCentury century, absCyear cyear);
+        int year(absCentury century, absCyear cyear, absJanFeb janFeb);
+        int yday(absYday ayday, absJanFeb janFeb, absLeap leap);
+        std::tuple<int, golang::time::Month, int> date(absDays days);
+        std::tuple<int, int> yearYday(absDays days);
+        absSeconds absSec(Time t);
+        std::tuple<gocpp::string, int, absSeconds> locabs(Time t);
         std::tuple<int, golang::time::Month, int> Date(Time t);
         int Year(Time t);
         golang::time::Month Month(Time t);
         int Day(Time t);
         golang::time::Weekday Weekday(Time t);
+        golang::time::Weekday weekday(absDays days);
         std::tuple<int, int> ISOWeek(Time t);
         std::tuple<int, int, int> Clock(Time t);
+        std::tuple<int, int, int> clock(absSeconds abs);
         int Hour(Time t);
         int Minute(Time t);
         int Second(Time t);
@@ -126,7 +146,6 @@ namespace golang::time
         Time Add(Time t, Duration d);
         Duration Sub(Time t, Time u);
         Time AddDate(Time t, int years, int months, int days);
-        std::tuple<int, golang::time::Month, int, int> date(Time t, bool full);
         Time UTC(Time t);
         Time Local(Time t);
         Time In(Time t, golang::time::Location* loc);
@@ -137,12 +156,15 @@ namespace golang::time
         int64_t UnixMilli(Time t);
         int64_t UnixMicro(Time t);
         int64_t UnixNano(Time t);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendBinary(Time t, gocpp::slice<unsigned char> b);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(Time t);
         gocpp::error UnmarshalBinary(Time* t, gocpp::slice<unsigned char> data);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> GobEncode(Time t);
         gocpp::error GobDecode(Time* t, gocpp::slice<unsigned char> data);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(Time t);
         gocpp::error UnmarshalJSON(Time* t, gocpp::slice<unsigned char> data);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> appendTo(Time t, gocpp::slice<unsigned char> b, gocpp::string errPrefix);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendText(Time t, gocpp::slice<unsigned char> b);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalText(Time t);
         gocpp::error UnmarshalText(Time* t, gocpp::slice<unsigned char> data);
         bool IsDST(Time t);

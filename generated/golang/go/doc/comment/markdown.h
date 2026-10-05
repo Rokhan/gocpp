@@ -9,10 +9,17 @@
 #include "golang/go/doc/comment/markdown.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/bytes/buffer.fwd.h"
+#include "golang/bytes/bytes.fwd.h"
+
+namespace golang::go::doc::comment
+{
+    namespace bytes = golang::bytes;
+}
 #include "golang/bytes/buffer.h"
 #include "golang/go/doc/comment/print.fwd.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     struct mdPrinter
     {
@@ -38,15 +45,15 @@ namespace golang::comment
 #include "golang/go/doc/comment/parse.h"
 #include "golang/go/doc/comment/print.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
 
     namespace rec
     {
         gocpp::slice<unsigned char> Markdown(Printer* p, Doc* d);
         void block(mdPrinter* p, bytes::Buffer* out, Block x);
-        void text(mdPrinter* p, bytes::Buffer* out, gocpp::slice<golang::comment::Text> x);
-        void rawText(mdPrinter* p, bytes::Buffer* out, gocpp::slice<golang::comment::Text> x);
+        void text(mdPrinter* p, bytes::Buffer* out, gocpp::slice<golang::go::doc::comment::Text> x);
+        void rawText(mdPrinter* p, bytes::Buffer* out, gocpp::slice<golang::go::doc::comment::Text> x);
         void escape(mdPrinter* p, bytes::Buffer* out, gocpp::string s);
     }
 }

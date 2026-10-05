@@ -12,11 +12,11 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/cpu/cpu_x86.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/cputicks.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/mprof.h"
@@ -25,11 +25,15 @@
 #include "golang/runtime/rand.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
+#include "golang/runtime/synctest.h"
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+#include "golang/runtime/traceruntime.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace cpu = golang::internal::cpu;
     namespace rec
     {
         using atomic::rec::Add;
@@ -127,6 +131,15 @@ namespace golang::runtime
         return & t[(uintptr_t(gocpp::unsafe_pointer(addr)) >> 3) % semTabSize].root;
     }
 
+    // sync_runtime_Semacquire should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gvisor.dev/gvisor
+    //   - github.com/sagernet/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname sync_runtime_Semacquire sync.runtime_Semacquire
     void sync_runtime_Semacquire(uint32_t* addr)
     {
@@ -139,14 +152,23 @@ namespace golang::runtime
         semacquire1(addr, false, semaBlockProfile, 0, waitReasonSemacquire);
     }
 
+    // sync_runtime_Semrelease should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gvisor.dev/gvisor
+    //   - github.com/sagernet/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname sync_runtime_Semrelease sync.runtime_Semrelease
     void sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes)
     {
         semrelease1(addr, handoff, skipframes);
     }
 
-    //go:linkname sync_runtime_SemacquireMutex sync.runtime_SemacquireMutex
-    void sync_runtime_SemacquireMutex(uint32_t* addr, bool lifo, int skipframes)
+    //go:linkname internal_sync_runtime_SemacquireMutex internal/sync.runtime_SemacquireMutex
+    void internal_sync_runtime_SemacquireMutex(uint32_t* addr, bool lifo, int skipframes)
     {
         semacquire1(addr, lifo, semaBlockProfile | semaMutexProfile, skipframes, waitReasonSyncMutexLock);
     }
@@ -163,10 +185,27 @@ namespace golang::runtime
         semacquire1(addr, lifo, semaBlockProfile | semaMutexProfile, skipframes, waitReasonSyncRWMutexLock);
     }
 
+    //go:linkname sync_runtime_SemacquireWaitGroup sync.runtime_SemacquireWaitGroup
+    void sync_runtime_SemacquireWaitGroup(uint32_t* addr, bool synctestDurable)
+    {
+        auto reason = waitReasonSyncWaitGroupWait;
+        if(synctestDurable)
+        {
+            reason = waitReasonSynctestWaitGroupWait;
+        }
+        semacquire1(addr, false, semaBlockProfile, 0, reason);
+    }
+
     //go:linkname poll_runtime_Semrelease internal/poll.runtime_Semrelease
     void poll_runtime_Semrelease(uint32_t* addr)
     {
         semrelease(addr);
+    }
+
+    //go:linkname internal_sync_runtime_Semrelease internal/sync.runtime_Semrelease
+    void internal_sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes)
+    {
+        semrelease1(addr, handoff, skipframes);
     }
 
     void readyWithTime(sudog* s, int traceskip)
@@ -323,7 +362,7 @@ namespace golang::runtime
                 s->ticket = 1;
             }
             readyWithTime(s, 5 + skipframes);
-            if(s->ticket == 1 && getg()->m->locks == 0)
+            if(s->ticket == 1 && getg()->m->locks == 0 && getg() != getg()->m->g0)
             {
                 // Direct G handoff
                 // readyWithTime has added the waiter G as runnext in the
@@ -338,9 +377,10 @@ namespace golang::runtime
                 // the non-starving case it is possible for a different waiter
                 // to acquire the semaphore while we are yielding/scheduling,
                 // and this would be wasteful. We wait instead to enter starving
-                // regime, and then we start to do direct handoffs of ticket and
-                // P.
+                // regime, and then we start to do direct handoffs of ticket and P.
                 // See issue 33747 for discussion.
+                // We don't handoff directly if we're holding locks or on the
+                // system stack, since it's not safe to enter the scheduler.
                 goyield();
             }
         }
@@ -366,7 +406,10 @@ namespace golang::runtime
     void rec::queue(semaRoot* root, uint32_t* addr, sudog* s, bool lifo)
     {
         s->g = getg();
-        s->elem = gocpp::unsafe_pointer(addr);
+        rec::set(gocpp::recv(s->elem), gocpp::unsafe_pointer(addr));
+        // Storing this pointer so that we can trace the semaphore address
+        // from the blocked goroutine when checking for goroutine leaks.
+        s->g->waiting = s;
         s->next = nullptr;
         s->prev = nullptr;
         s->waiters = 0;
@@ -375,7 +418,7 @@ namespace golang::runtime
         auto pt = & root->treap;
         for(auto t = *pt; t != nullptr; t = *pt)
         {
-            if(t->elem == gocpp::unsafe_pointer(addr))
+            if(uintptr_t(gocpp::unsafe_pointer(addr)) == rec::uintptr(gocpp::recv(t->elem)))
             {
                 // Already have addr in list.
                 if(lifo)
@@ -434,7 +477,7 @@ namespace golang::runtime
                 return;
             }
             last = t;
-            if(uintptr_t(gocpp::unsafe_pointer(addr)) < uintptr_t(t->elem))
+            if(uintptr_t(gocpp::unsafe_pointer(addr)) < rec::uintptr(gocpp::recv(t->elem)))
             {
                 pt = & t->prev;
             }
@@ -490,13 +533,15 @@ namespace golang::runtime
         int64_t tailtime;
         auto ps = & root->treap;
         auto s = *ps;
+
         for(; s != nullptr; s = *ps)
         {
-            if(s->elem == gocpp::unsafe_pointer(addr))
+            if(uintptr_t(gocpp::unsafe_pointer(addr)) == rec::uintptr(gocpp::recv(s->elem)))
             {
                 goto Found;
             }
-            if(uintptr_t(gocpp::unsafe_pointer(addr)) < uintptr_t(s->elem))
+
+            if(uintptr_t(gocpp::unsafe_pointer(addr)) < rec::uintptr(gocpp::recv(s->elem)))
             {
                 ps = & s->prev;
             }
@@ -583,8 +628,10 @@ namespace golang::runtime
             }
             tailtime = s->acquiretime;
         }
+        // Goroutine is no longer blocked. Clear the waiting pointer.
+        s->g->waiting = nullptr;
         s->parent = nullptr;
-        s->elem = nullptr;
+        rec::set(gocpp::recv(s->elem), nullptr);
         s->next = nullptr;
         s->prev = nullptr;
         s->ticket = 0;
@@ -746,6 +793,10 @@ namespace golang::runtime
         // Enqueue itself.
         auto s = acquireSudog();
         s->g = getg();
+        // Storing this pointer so that we can trace the condvar address
+        // from the blocked goroutine when checking for goroutine leaks.
+        rec::set(gocpp::recv(s->elem), gocpp::unsafe_pointer(l));
+        s->g->waiting = s;
         s->ticket = t;
         s->releasetime = 0;
         auto t0 = int64_t(0);
@@ -768,6 +819,10 @@ namespace golang::runtime
         {
             blockevent(s->releasetime - t0, 2);
         }
+        // Goroutine is no longer blocked. Clear up its waiting pointer,
+        // and clean up the sudog before releasing it.
+        s->g->waiting = nullptr;
+        rec::set(gocpp::recv(s->elem), nullptr);
         releaseSudog(s);
     }
 
@@ -802,6 +857,11 @@ namespace golang::runtime
         {
             auto next = s->next;
             s->next = nullptr;
+            if(s->g->bubble != nullptr && getg()->bubble != s->g->bubble)
+            {
+                println("semaphore wake of synctest goroutine"_s, s->g->goid, "from outside bubble"_s);
+                fatal("semaphore wake of synctest goroutine from outside bubble"_s);
+            }
             readyWithTime(s, 4);
             s = next;
         }
@@ -863,6 +923,11 @@ namespace golang::runtime
                 }
                 unlock(& l->lock);
                 s->next = nullptr;
+                if(s->g->bubble != nullptr && getg()->bubble != s->g->bubble)
+                {
+                    println("semaphore wake of synctest goroutine"_s, s->g->goid, "from outside bubble"_s);
+                    fatal("semaphore wake of synctest goroutine from outside bubble"_s);
+                }
                 readyWithTime(s, 4);
                 return;
             }
@@ -880,8 +945,8 @@ namespace golang::runtime
         }
     }
 
-    //go:linkname sync_nanotime sync.runtime_nanotime
-    int64_t sync_nanotime()
+    //go:linkname internal_sync_nanotime internal/sync.runtime_nanotime
+    int64_t internal_sync_nanotime()
     {
         return nanotime();
     }

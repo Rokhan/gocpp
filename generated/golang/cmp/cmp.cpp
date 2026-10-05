@@ -89,15 +89,23 @@ namespace golang::cmp
     {
         auto xNaN = isNaN(x);
         auto yNaN = isNaN(y);
-        if(xNaN && yNaN)
+        if(xNaN)
         {
-            return 0;
+            if(yNaN)
+            {
+                return 0;
+            }
+            return - 1;
         }
-        if(xNaN || x < y)
+        if(yNaN)
+        {
+            return + 1;
+        }
+        if(x < y)
         {
             return - 1;
         }
-        if(yNaN || x > y)
+        if(x > y)
         {
             return + 1;
         }

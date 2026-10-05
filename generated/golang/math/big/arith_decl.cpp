@@ -13,42 +13,102 @@
 
 #include "golang/math/big/arith.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     namespace rec
     {
     }
 
+    // addVV should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/remyoudompheng/bigfft
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname addVV
     //go:noescape
     Word addVV(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y)
     /* convertBlockStmt, nil block */;
 
+    // subVV should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/remyoudompheng/bigfft
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname subVV
     //go:noescape
     Word subVV(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y)
     /* convertBlockStmt, nil block */;
 
-    //go:noescape
-    Word addVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y)
-    /* convertBlockStmt, nil block */;
-
-    //go:noescape
-    Word subVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y)
-    /* convertBlockStmt, nil block */;
-
-    //go:noescape
+    // shlVU should be an internal detail (and a stale one at that),
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/remyoudompheng/bigfft
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname shlVU
     Word shlVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
+    {
+        Word c;
+        if(s == 0)
+        {
+            copy(z, x);
+            return 0;
+        }
+        return lshVU(z, x, s);
+    }
+
+    // lshVU sets z = x<<s, returning the high bits c. 1 ≤ s ≤ _B-1.
+    //
+    //go:noescape
+    Word lshVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
     /* convertBlockStmt, nil block */;
 
+    // rshVU sets z = x>>s, returning the low bits c. 1 ≤ s ≤ _B-1.
+    //
     //go:noescape
-    Word shrVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
+    Word rshVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
     /* convertBlockStmt, nil block */;
 
+    // mulAddVWW should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/remyoudompheng/bigfft
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname mulAddVWW
     //go:noescape
-    Word mulAddVWW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y, Word r)
+    Word mulAddVWW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word m, Word a)
     /* convertBlockStmt, nil block */;
 
-    //go:noescape
+    // addMulVVW should be an internal detail (and a stale one at that),
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/remyoudompheng/bigfft
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname addMulVVW
     Word addMulVVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y)
+    {
+        Word c;
+        return addMulVVWW(z, z, x, y, 0);
+    }
+
+    // addMulVVWW sets z = x+y*m+a.
+    //
+    //go:noescape
+    Word addMulVVWW(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y, Word m, Word a)
     /* convertBlockStmt, nil block */;
 
 }

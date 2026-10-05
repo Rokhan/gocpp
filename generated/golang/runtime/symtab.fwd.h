@@ -10,28 +10,15 @@ namespace golang::runtime
     struct Frame;
     struct Func;
     struct pcHeader;
+    struct moduledata;
     struct modulehash;
     struct functab;
     struct textsect;
-    const long minfunc = 16;
     struct findfuncbucket;
     const bool debugPcln = false;
+    struct funcInfo;
+    struct srcFunc;
     struct pcvalueCache;
     struct pcvalueCacheEnt;
     struct stackmap;
-    const int pcbucketsize = 256 * minfunc;
-}
-#include "golang/internal/abi/symtab.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/plugin.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/stack.fwd.h"
-#include "golang/runtime/type.fwd.h"
-
-namespace golang::runtime
-{
-    struct moduledata;
-    struct funcInfo;
-    struct srcFunc;
 }

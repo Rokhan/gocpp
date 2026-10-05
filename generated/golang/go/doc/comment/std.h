@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     extern gocpp::slice<gocpp::string> stdPkgs;
 

@@ -13,6 +13,7 @@
 
 namespace golang::math
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }

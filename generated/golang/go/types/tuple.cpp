@@ -15,7 +15,7 @@
 #include "golang/go/types/type.h"
 #include "golang/go/types/typestring.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     namespace rec
     {
@@ -81,7 +81,7 @@ namespace golang::types
         return t->vars[i];
     }
 
-    golang::types::Type rec::Underlying(Tuple* t)
+    golang::go::types::Type rec::Underlying(Tuple* t)
     {
         return t;
     }

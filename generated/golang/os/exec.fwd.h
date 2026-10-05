@@ -6,15 +6,17 @@
 
 namespace golang::os
 {
-    struct Signal;
-}
-#include "golang/os/types.fwd.h"
-#include "golang/sync/atomic/type.fwd.h"
-#include "golang/sync/rwmutex.fwd.h"
-#include "golang/syscall/exec_windows.fwd.h"
-
-namespace golang::os
-{
+    using processStatus = uint32_t;
     struct Process;
+    struct processHandle;
     struct ProcAttr;
+    struct Signal;
+    // statusOK means that the Process is ready to use.
+    const processStatus statusOK = 0;
+    // statusDone indicates that the PID/handle should not be used because
+    // the process is done (has been successfully Wait'd on).
+    const processStatus statusDone = 1;
+    // statusReleased indicates that the PID/handle should not be used
+    // because the process is released.
+    const processStatus statusReleased = 2;
 }

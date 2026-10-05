@@ -17,8 +17,10 @@
 #include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
+    namespace ast = golang::go::ast;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::End;
@@ -44,7 +46,7 @@ namespace golang::doc
     }
 
     ast::Ident* underscore = ast::NewIdent("_"_s);
-    void filterCompositeLit(ast::CompositeLit* lit, golang::doc::Filter filter, bool export)
+    void filterCompositeLit(ast::CompositeLit* lit, golang::go::doc::Filter filter, bool export)
     {
         auto n = len(lit->Elts);
         lit->Elts = filterExprList(lit->Elts, filter, export);
@@ -54,7 +56,7 @@ namespace golang::doc
         }
     }
 
-    gocpp::slice<ast::Expr> filterExprList(gocpp::slice<ast::Expr> list, golang::doc::Filter filter, bool export)
+    gocpp::slice<ast::Expr> filterExprList(gocpp::slice<ast::Expr> list, golang::go::doc::Filter filter, bool export)
     {
         auto j = 0;
         for(auto [gocpp_ignored, exp] : list)

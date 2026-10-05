@@ -19,10 +19,26 @@
 // A file system can be provided by the host operating system
 // but also by other packages.
 //
+// # Path Names
+//
+// The interfaces in this package all operate on the same
+// path name syntax, regardless of the host operating system.
+//
+// Path names are UTF-8-encoded,
+// unrooted, slash-separated sequences of path elements, like “x/y/z”.
+// Path names must not contain an element that is “.” or “..” or the empty string,
+// except for the special case that the name "." may be used for the root directory.
+// Paths must not start or end with a slash: “/x” and “x/” are invalid.
+//
+// # Testing
+//
 // See the [testing/fstest] package for support with testing
 // implementations of file systems.
-namespace golang::fs
+namespace golang::io::fs
 {
+    namespace oserror = golang::internal::oserror;
+    namespace time = golang::time;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using mocklib::rec::Error;
@@ -93,16 +109,13 @@ namespace golang::fs
     // ValidPath reports whether the given path name
     // is valid for use in a call to Open.
     //
-    // Path names passed to open are UTF-8-encoded,
-    // unrooted, slash-separated sequences of path elements, like “x/y/z”.
-    // Path names must not contain an element that is “.” or “..” or the empty string,
-    // except for the special case that the root directory is named “.”.
-    // Paths must not start or end with a slash: “/x” and “x/” are invalid.
-    //
     // Note that paths are slash-separated on all systems, even Windows.
     // Paths containing other characters such as backslash and colon
     // are accepted as valid, but those characters must never be
     // interpreted by an [FS] implementation as path element separators.
+    // See the [Path Names] section for more details.
+    //
+    // [Path Names]: https://pkg.go.dev/io/fs#hdr-Path_Names
     bool ValidPath(gocpp::string name)
     {
         if(! utf8::ValidString(name))
@@ -422,6 +435,8 @@ namespace golang::fs
     gocpp::error ErrPermission = errPermission();
     gocpp::error ErrExist = errExist();
     gocpp::error ErrNotExist = errNotExist();
+    // ErrClosed is returned when operations are attempted on a file that
+    // has already been closed, including when Close is called more than once.
     gocpp::error ErrClosed = errClosed();
     gocpp::error errInvalid()
     {

@@ -14,18 +14,23 @@
 #include "golang/errors/errors.h"
 #include "golang/internal/godebug/godebug.h"
 #include "golang/io/fs/fs.h"
+#include "golang/iter/iter.h"
 #include "golang/os/env.h"
 #include "golang/os/exec/exec.h"
 #include "golang/os/path_windows.h"
 #include "golang/os/stat.h"
 #include "golang/os/types.h"
 #include "golang/path/filepath/path.h"
-#include "golang/path/filepath/path_windows.h"
+#include "golang/strings/iter.h"
 #include "golang/strings/strings.h"
-#include "golang/syscall/env_windows.h"
 
-namespace golang::exec
+namespace golang::os::exec
 {
+    namespace errors = golang::errors;
+    namespace filepath = golang::path::filepath;
+    namespace fs = golang::io::fs;
+    namespace os = golang::os;
+    namespace strings = golang::strings;
     namespace rec
     {
         using fs::rec::IsDir;
@@ -88,19 +93,14 @@ namespace golang::exec
         return {""_s, ErrNotFound};
     }
 
-    // LookPath searches for an executable named file in the
-    // directories named by the PATH environment variable.
-    // LookPath also uses PATHEXT environment variable to match
-    // a suitable candidate.
-    // If file contains a slash, it is tried directly and the PATH is not consulted.
-    // Otherwise, on success, the result is an absolute path.
-    //
-    // In older versions of Go, LookPath could return a path relative to the current directory.
-    // As of Go 1.19, LookPath will instead return that path along with an error satisfying
-    // errors.Is(err, ErrDot). See the package documentation for more details.
-    std::tuple<gocpp::string, gocpp::error> LookPath(gocpp::string file)
+    std::tuple<gocpp::string, gocpp::error> lookPath(gocpp::string file)
     {
-        return lookPath(file, pathExt());
+        if(auto err = validateLookPath(file); err != nullptr)
+        {
+            return {""_s, gocpp::error(new golang::os::exec::Error {file, err})};
+        }
+
+        return lookPathExts(file, pathExt());
     }
 
     // lookExtensions finds windows executable by its dir and path.
@@ -114,6 +114,11 @@ namespace golang::exec
     // program is actually "C:\foo\example.com.exe".
     std::tuple<gocpp::string, gocpp::error> lookExtensions(gocpp::string path, gocpp::string dir)
     {
+        if(auto err = validateLookPath(path); err != nullptr)
+        {
+            return {""_s, gocpp::error(new golang::os::exec::Error {path, err})};
+        }
+
         if(filepath::Base(path) == path)
         {
             path = "."_s + gocpp::string(filepath::Separator) + path;
@@ -132,19 +137,19 @@ namespace golang::exec
         }
         if(dir == ""_s)
         {
-            return lookPath(path, exts);
+            return lookPathExts(path, exts);
         }
         if(filepath::VolumeName(path) != ""_s)
         {
-            return lookPath(path, exts);
+            return lookPathExts(path, exts);
         }
         if(len(path) > 1 && os::IsPathSeparator(path[0]))
         {
-            return lookPath(path, exts);
+            return lookPathExts(path, exts);
         }
         auto dirandpath = filepath::Join(dir, path);
         // We assume that LookPath will only add file extension.
-        auto [lp, err] = lookPath(dirandpath, exts);
+        auto [lp, err] = lookPathExts(dirandpath, exts);
         if(err != nullptr)
         {
             return {""_s, err};
@@ -159,7 +164,7 @@ namespace golang::exec
         auto x = os::Getenv("PATHEXT"_s);
         if(x != ""_s)
         {
-            for(auto [gocpp_ignored, e] : strings::Split(strings::ToLower(x), ";"_s))
+            for(auto [e, gocpp_ignored] : strings::SplitSeq(strings::ToLower(x), ";"_s))
             {
                 if(e == ""_s)
                 {
@@ -179,8 +184,8 @@ namespace golang::exec
         return exts;
     }
 
-    // lookPath implements LookPath for the given PATHEXT list.
-    std::tuple<gocpp::string, gocpp::error> lookPath(gocpp::string file, gocpp::slice<gocpp::string> exts)
+    // lookPathExts implements LookPath for the given PATHEXT list.
+    std::tuple<gocpp::string, gocpp::error> lookPathExts(gocpp::string file, gocpp::slice<gocpp::string> exts)
     {
         if(strings::ContainsAny(file, ":\\/"_s))
         {
@@ -189,7 +194,7 @@ namespace golang::exec
             {
                 return {f, nullptr};
             }
-            return {""_s, gocpp::error(new golang::exec::Error {file, err})};
+            return {""_s, gocpp::error(new golang::os::exec::Error {file, err})};
         }
 
         // On Windows, creating the NoDefaultCurrentDirectoryInExePath
@@ -203,7 +208,7 @@ namespace golang::exec
         // See also go.dev/issue/43947.
         gocpp::string dotf = {};
         gocpp::error dotErr = {};
-        if(auto [gocpp_id_0, found] = syscall::Getenv("NoDefaultCurrentDirectoryInExePath"_s); ! found)
+        if(auto [gocpp_id_0, found] = os::LookupEnv("NoDefaultCurrentDirectoryInExePath"_s); ! found)
         {
             if(auto [f, err] = findExecutable(filepath::Join("."_s, file), exts); err == nullptr)
             {
@@ -212,7 +217,7 @@ namespace golang::exec
                     rec::IncNonDefault(gocpp::recv(execerrdot));
                     return {f, nullptr};
                 }
-                std::tie(dotf, dotErr) = std::tuple{f, new golang::exec::Error {file, ErrDot}};
+                std::tie(dotf, dotErr) = std::tuple{f, new golang::os::exec::Error {file, ErrDot}};
             }
         }
 
@@ -254,7 +259,7 @@ namespace golang::exec
                         // with or without a dotErr.
                         if(dotErr == nullptr)
                         {
-                            std::tie(dotf, dotErr) = std::tuple{f, new golang::exec::Error {file, ErrDot}};
+                            std::tie(dotf, dotErr) = std::tuple{f, new golang::os::exec::Error {file, ErrDot}};
                         }
                         continue;
                     }
@@ -268,7 +273,7 @@ namespace golang::exec
         {
             return {dotf, dotErr};
         }
-        return {""_s, gocpp::error(new golang::exec::Error {file, ErrNotFound})};
+        return {""_s, gocpp::error(new golang::os::exec::Error {file, ErrNotFound})};
     }
 
 }

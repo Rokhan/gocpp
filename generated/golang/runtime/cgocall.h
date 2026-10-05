@@ -14,6 +14,20 @@ namespace golang::runtime
 {
     struct GoTag_cgoCallers { };
     using cgoCallers = gocpp::defined<gocpp::array<uintptr_t, 32>, GoTag_cgoCallers>;
+    extern uint64_t ncgocall;
+    void unwindm(bool* restore);
+    void badcgocallback();
+    void cgounimpl();
+    extern uint64_t racecgosync;
+    void cgoCheckPointer(go_any ptr, go_any arg);
+    void cgoCheckResult(go_any val);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/type.fwd.h"
+
+namespace golang::runtime
+{
     struct argset
     {
         gocpp::unsafe_pointer args{};
@@ -44,27 +58,23 @@ namespace golang::runtime
     {
         return syscall_cgocaller(fn, gocpp::ToSlice<uintptr_t>(value, args...));
     }
-    extern uint64_t ncgocall;
     int32_t cgocall(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer arg);
+    void callbackUpdateSystemStack(m* mp, uintptr_t sp, bool signal);
     void cgocallbackg(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer frame, uintptr_t ctxt);
     void cgocallbackg1(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer frame, uintptr_t ctxt);
-    void unwindm(bool* restore);
-    void badcgocallback();
-    void cgounimpl();
-    extern uint64_t racecgosync;
-    void cgoCheckPointer(go_any ptr, go_any arg);
-    std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(gocpp::unsafe_pointer p, gocpp::string msg);
+    void cgoCheckArg(_type* t, gocpp::unsafe_pointer p, bool indir, bool top, cgoErrorMsg msg);
+    std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(gocpp::unsafe_pointer p, cgoErrorMsg msg);
     bool cgoIsGoPointer(gocpp::unsafe_pointer p);
     bool cgoInRange(gocpp::unsafe_pointer p, uintptr_t start, uintptr_t end);
-    void cgoCheckResult(go_any val);
 }
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/type.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+#include "golang/internal/abi/type.h"
+#include "golang/runtime/error.h"
 
 namespace golang::runtime
 {
-    void callbackUpdateSystemStack(m* mp, uintptr_t sp, bool signal);
-    void cgoCheckArg(_type* t, gocpp::unsafe_pointer p, bool indir, bool top, gocpp::string msg);
+    namespace abi = golang::internal::abi;
+    errorString cgoFormatErr(cgoErrorMsg error, abi::Kind kind);
 
     namespace rec
     {

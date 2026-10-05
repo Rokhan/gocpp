@@ -16,6 +16,8 @@
 
 namespace golang::main
 {
+    namespace cmplx = golang::math::cmplx;
+    namespace fmt = golang::fmt;
     namespace rec
     {
     }

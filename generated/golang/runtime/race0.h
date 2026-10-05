@@ -16,22 +16,12 @@ namespace golang::runtime
     void racefini();
     uintptr_t raceproccreate();
     void raceprocdestroy(uintptr_t ctx);
-    void racemapshadow(gocpp::unsafe_pointer addr, uintptr_t size);
-    void racewritepc(gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
-    void racereadpc(gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
-    void racereadrangepc(gocpp::unsafe_pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc);
-    void racewriterangepc(gocpp::unsafe_pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc);
-    void raceacquire(gocpp::unsafe_pointer addr);
-    void raceacquirectx(uintptr_t racectx, gocpp::unsafe_pointer addr);
-    void racerelease(gocpp::unsafe_pointer addr);
-    void racereleaseacquire(gocpp::unsafe_pointer addr);
-    void racereleasemerge(gocpp::unsafe_pointer addr);
     void racefingo();
-    void racemalloc(gocpp::unsafe_pointer p, uintptr_t sz);
-    void racefree(gocpp::unsafe_pointer p, uintptr_t sz);
     uintptr_t racegostart(uintptr_t pc);
     void racegoend();
+    uintptr_t racectxstart(uintptr_t spawnctx, uintptr_t racectx);
     void racectxend(uintptr_t racectx);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/type.fwd.h"
@@ -40,10 +30,22 @@ namespace golang::runtime
 {
     void raceReadObjectPC(_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
     void raceWriteObjectPC(_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
+    void racemapshadow(gocpp::unsafe_pointer addr, uintptr_t size);
+    void racewritepc(gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
+    void racereadpc(gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
+    void racereadrangepc(gocpp::unsafe_pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc);
+    void racewriterangepc(gocpp::unsafe_pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc);
+    void raceacquire(gocpp::unsafe_pointer addr);
     void raceacquireg(g* gp, gocpp::unsafe_pointer addr);
+    void raceacquirectx(uintptr_t racectx, gocpp::unsafe_pointer addr);
+    void racerelease(gocpp::unsafe_pointer addr);
     void racereleaseg(g* gp, gocpp::unsafe_pointer addr);
+    void racereleaseacquire(gocpp::unsafe_pointer addr);
     void racereleaseacquireg(g* gp, gocpp::unsafe_pointer addr);
+    void racereleasemerge(gocpp::unsafe_pointer addr);
     void racereleasemergeg(g* gp, gocpp::unsafe_pointer addr);
+    void racemalloc(gocpp::unsafe_pointer p, uintptr_t sz);
+    void racefree(gocpp::unsafe_pointer p, uintptr_t sz);
 
     namespace rec
     {

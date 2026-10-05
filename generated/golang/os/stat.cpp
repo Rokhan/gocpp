@@ -12,28 +12,28 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/testlog/log.h"
-#include "golang/io/fs/fs.h"
 #include "golang/os/stat_windows.h"
 #include "golang/os/types.h"
 
 namespace golang::os
 {
+    namespace testlog = golang::internal::testlog;
     namespace rec
     {
     }
 
-    // Stat returns a FileInfo describing the named file.
-    // If there is an error, it will be of type *PathError.
+    // Stat returns a [FileInfo] describing the named file.
+    // If there is an error, it will be of type [*PathError].
     std::tuple<FileInfo, gocpp::error> Stat(gocpp::string name)
     {
         testlog::Stat(name);
         return statNolog(name);
     }
 
-    // Lstat returns a FileInfo describing the named file.
+    // Lstat returns a [FileInfo] describing the named file.
     // If the file is a symbolic link, the returned FileInfo
     // describes the symbolic link. Lstat makes no attempt to follow the link.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     //
     // On Windows, if the file is a reparse point that is a surrogate for another
     // named entity (such as a symbolic link or mounted folder), the returned
@@ -44,5 +44,7 @@ namespace golang::os
         return lstatNolog(name);
     }
 
+    // stathook is set in tests
+    std::function<std::tuple<FileInfo, gocpp::error> (File* f, gocpp::string name)> stathook;
 }
 

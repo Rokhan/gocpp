@@ -10,8 +10,9 @@
 #include "gocpp/support.h"
 
 
-namespace golang::utf8
+namespace golang::unicode::utf8
 {
+    // first is information about the first byte in a UTF-8 sequence.
     extern gocpp::array<uint8_t, 256> first;
     struct acceptRange
     {
@@ -33,19 +34,26 @@ namespace golang::utf8
     bool FullRune(gocpp::slice<unsigned char> p);
     bool FullRuneInString(gocpp::string s);
     std::tuple<gocpp::rune, int> DecodeRune(gocpp::slice<unsigned char> p);
+    std::tuple<gocpp::rune, int> decodeRuneSlow(gocpp::slice<unsigned char> p);
     std::tuple<gocpp::rune, int> DecodeRuneInString(gocpp::string s);
+    std::tuple<gocpp::rune, int> decodeRuneInStringSlow(gocpp::string s);
     std::tuple<gocpp::rune, int> DecodeLastRune(gocpp::slice<unsigned char> p);
     std::tuple<gocpp::rune, int> DecodeLastRuneInString(gocpp::string s);
     int RuneLen(gocpp::rune r);
     int EncodeRune(gocpp::slice<unsigned char> p, gocpp::rune r);
+    int encodeRuneNonASCII(gocpp::slice<unsigned char> p, gocpp::rune r);
     gocpp::slice<unsigned char> AppendRune(gocpp::slice<unsigned char> p, gocpp::rune r);
     gocpp::slice<unsigned char> appendRuneNonASCII(gocpp::slice<unsigned char> p, gocpp::rune r);
     int RuneCount(gocpp::slice<unsigned char> p);
     int RuneCountInString(gocpp::string s);
     bool RuneStart(unsigned char b);
+    
+    template<typename T>
+    uintptr_t word(T s);
     bool Valid(gocpp::slice<unsigned char> p);
     bool ValidString(gocpp::string s);
     bool ValidRune(gocpp::rune r);
+    // acceptRanges has size 16 to avoid bounds checks in the code that uses it.
     extern gocpp::array<acceptRange, 16> acceptRanges;
 
     namespace rec

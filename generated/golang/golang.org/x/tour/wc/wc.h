@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::wc
+namespace golang::golang_org::x::tour::wc
 {
     void Test(std::function<gocpp::map<gocpp::string, int> (gocpp::string _1)> f);
     extern gocpp::slice<gocpp_id_0> testCases;

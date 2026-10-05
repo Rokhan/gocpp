@@ -12,9 +12,26 @@
 
 namespace golang::runtime
 {
+    // faketime is the simulated time in nanoseconds since 1970 for the
+    // playground.
+    //
+    // Zero means not to use faketime.
     extern int64_t faketime;
     int64_t nanotime();
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n);
+    // overrideWrite allows write to be redirected externally, by
+    // linkname'ing this and set it to a write function.
+    //
+    // overrideWrite should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - golang.zx2c4.com/wireguard/windows
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname overrideWrite
     extern std::function<int32_t (uintptr_t fd, gocpp::unsafe_pointer p, int32_t n)> overrideWrite;
 
     namespace rec

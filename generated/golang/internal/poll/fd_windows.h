@@ -10,41 +10,65 @@
 #include "gocpp/support.h"
 
 
-namespace golang::poll
+namespace golang::internal::poll
 {
     extern gocpp::error initErr;
     extern uint64_t ioSync;
-    extern bool useSetFileCompletionNotificationModes;
-    void checkSetFileCompletionNotificationModes();
-    void init();
+    // InitWSA initiates the use of the Winsock DLL by the current process.
+    // It is called from the net package at init time to avoid
+    // loading ws2_32.dll when net is not used.
+    extern std::function<void (void)> InitWSA;
+    gocpp::slice<go_any> pinPtrsFromBuf(gocpp::slice<unsigned char> buf);
+    std::tuple<int, gocpp::string, gocpp::error> DupCloseOnExec(int fd);
 }
-#include "golang/internal/syscall/windows/syscall_windows.h"
+#include "golang/internal/syscall/windows/net_windows.fwd.h"
+#include "golang/internal/syscall/windows/symlink_windows.fwd.h"
+#include "golang/internal/syscall/windows/syscall_windows.fwd.h"
+#include "golang/internal/syscall/windows/types_windows.fwd.h"
+#include "golang/internal/syscall/windows/zsyscall_windows.fwd.h"
+#include "golang/runtime/pinner.fwd.h"
+#include "golang/sync/oncefunc.fwd.h"
+#include "golang/sync/pool.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/types_windows_amd64.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
+
+namespace golang::internal::poll
+{
+    namespace sync = golang::sync;
+    namespace syscall = golang::syscall;
+}
+#include "golang/internal/poll/fd_mutex.h"
+#include "golang/internal/poll/fd_poll_runtime.h"
+
+namespace golang::internal::poll
+{
+    namespace windows = golang::internal::syscall::windows;
+}
+#include "golang/runtime/pinner.h"
+#include "golang/sync/oncefunc.h"
+#include "golang/sync/pool.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/zsyscall_windows.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
+    namespace runtime = golang::runtime;
+    // ifsHandlesOnly returns true if the system only has IFS handles for TCP sockets.
+    // See https://support.microsoft.com/kb/2568167 for details.
+    extern std::function<bool (void)> ifsHandlesOnly;
+    bool canSkipCompletionPortOnSuccess(syscall::Handle h, bool isSocket);
     struct operation
     {
         // Used by IOCP interface, it must be first field
-        // of the struct, as our code rely on it.
+        // of the struct, as our code relies on it.
         syscall::Overlapped o{};
         // fields used by runtime.netpoll
         uintptr_t runtimeCtx{};
         int32_t mode{};
-        int32_t errno{};
-        uint32_t qty{};
-        // fields used only by net package
-        FD* fd{};
-        syscall::WSABuf buf{};
-        windows::WSAMsg msg{};
-        syscall::Sockaddr sa{};
-        syscall::RawSockaddrAny* rsa{};
-        int32_t rsan{};
-        syscall::Handle handle{};
-        uint32_t flags{};
-        gocpp::slice<syscall::WSABuf> bufs{};
 
         using isGoStruct = void;
 
@@ -58,34 +82,44 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct operation& value);
-    extern std::function<gocpp::error (syscall::Handle, uint16_t*, uint32_t, uint32_t*, unsigned char*)> ReadConsole;
-    int32_t sockaddrInet4ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
-    int32_t sockaddrInet6ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
-    void rawToSockaddrInet4(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
-    void rawToSockaddrInet6(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
-    std::tuple<int32_t, gocpp::error> sockaddrToRaw(syscall::RawSockaddrAny* rsa, syscall::Sockaddr sa);
-    std::tuple<int, gocpp::error> execIO(operation* o, std::function<gocpp::error (operation* o)> submit);
-}
-#include "golang/internal/poll/fd_mutex.h"
-#include "golang/internal/poll/fd_poll_runtime.h"
-#include "golang/sync/mutex.h"
+    syscall::WSABuf* newWsaBuf(gocpp::slice<unsigned char> b);
+    extern sync::Pool wsaBufsPool;
+    gocpp::slice<syscall::WSABuf>* newWSABufs(gocpp::slice<gocpp::slice<unsigned char>>* buf);
+    void freeWSABufs(gocpp::slice<syscall::WSABuf>* bufsPtr);
+    // wsaMsgPool is a pool of WSAMsg structures that can only hold a single WSABuf.
+    extern sync::Pool wsaMsgPool;
+    void freeWSAMsg(windows::WSAMsg* msg);
+    struct wsaRsa
+    {
+        syscall::RawSockaddrAny name{};
+        int32_t namelen{};
 
-namespace golang::poll
-{
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct wsaRsa& value);
+    extern sync::Pool wsaRsaPool;
+    extern sync::Pool operationPool;
     struct FD
     {
         // Lock sysfd and serialize access to Read and Write methods.
         fdMutex fdmu{};
         // System file descriptor. Immutable until Close.
         syscall::Handle Sysfd{};
-        // Read operation.
-        operation rop{};
-        // Write operation.
-        operation wop{};
         // I/O poller.
         pollDesc pd{};
-        // Used to implement pread/pwrite.
-        mocklib::Mutex l{};
+        // The file offset for the next read or write.
+        // Overlapped IO operations don't use the real file pointer,
+        // so we need to keep track of the offset ourselves.
+        int64_t offset{};
         // For console I/O.
         gocpp::slice<unsigned char> lastbits{}; // first few bytes of the last incomplete rune in last write
         gocpp::slice<uint16_t> readuint16{}; // buffer to hold uint16s obtained with ReadConsole
@@ -93,17 +127,27 @@ namespace golang::poll
         int readbyteOffset{}; // readbyte[readOffset:] is yet to be consumed with file.Read
         // Semaphore signaled when file is closed.
         uint32_t csema{};
-        bool skipSyncNotif{};
+        // Don't wait from completion port notifications for successful
+        // operations that complete synchronously.
+        bool waitOnSuccess{};
         // Whether this is a streaming descriptor, as opposed to a
         // packet-based descriptor like a UDP socket.
         bool IsStream{};
         // Whether a zero byte read indicates EOF. This is false for a
         // message based socket connection.
         bool ZeroReadIsEOF{};
-        // Whether this is a file rather than a network socket.
+        // Whether the handle is owned by os.File.
         bool isFile{};
         // The kind of this file.
         fileKind kind{};
+        // Whether FILE_FLAG_OVERLAPPED was not set when opening the file.
+        bool isBlocking{};
+        // Whether the handle is currently associated with the IOCP.
+        bool associated{};
+        // readPinner and writePinner are automatically unpinned
+        // before execIO returns.
+        runtime::Pinner readPinner{};
+        runtime::Pinner writePinner{};
 
         using isGoStruct = void;
 
@@ -117,27 +161,49 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct FD& value);
-    extern std::function<void (gocpp::string net, FD* fd, gocpp::error err)> logInitFD;
+    extern std::function<gocpp::error (syscall::Handle, uint16_t*, uint32_t, uint32_t*, unsigned char*)> ReadConsole;
+    int32_t sockaddrInet4ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
+    int32_t sockaddrInet6ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
+    void rawToSockaddrInet4(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
+    void rawToSockaddrInet6(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
+    std::tuple<int32_t, gocpp::error> sockaddrToRaw(syscall::RawSockaddrAny* rsa, syscall::Sockaddr sa);
+    windows::WSAMsg* newWSAMsg(gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, wsaRsa* rsa);
+    wsaRsa* newWSARsa();
 }
 
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
 
     namespace rec
     {
-        void InitBuf(operation* o, gocpp::slice<unsigned char> buf);
-        void InitBufs(operation* o, gocpp::slice<gocpp::slice<unsigned char>>* buf);
-        void ClearBufs(operation* o);
-        void InitMsg(operation* o, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob);
-        std::tuple<gocpp::string, gocpp::error> Init(FD* fd, gocpp::string net, bool pollable);
+        void setOffset(operation* o, int64_t off);
+        syscall::Overlapped* overlapped(FD* fd, operation* o);
+        gocpp::error waitIO(FD* fd, operation* o);
+        std::tuple<int, gocpp::error> execIO(FD* fd, int mode, std::function<std::tuple<uint32_t, gocpp::error> (operation* o)> submit, gocpp::slice<go_any> pinPtrs);
+        
+        template<typename... Args>
+        std::tuple<int, gocpp::error> execIO(FD* fd, int mode, std::function<std::tuple<uint32_t, gocpp::error> (operation* o)> submit, Args... pinPtrs)
+        {
+            return execIO(fd, mode, submit, gocpp::ToSlice<go_any>(pinPtrs...));
+        }
+        
+        template<typename... Args>
+        std::tuple<int, gocpp::error> execIO(FD* fd, int mode, std::function<std::tuple<uint32_t, gocpp::error> (operation* o)> submit, go_any value, Args... pinPtrs)
+        {
+            return execIO(fd, mode, submit, gocpp::ToSlice<go_any>(value, pinPtrs...));
+        }
+        void setOffset(FD* fd, int64_t off);
+        void addOffset(FD* fd, int off);
+        gocpp::error Init(FD* fd, gocpp::string net, bool pollable);
+        gocpp::error DisassociateIOCP(FD* fd);
         gocpp::error destroy(FD* fd);
         gocpp::error Close(FD* fd);
         std::tuple<int, gocpp::error> Read(FD* fd, gocpp::slice<unsigned char> buf);
         std::tuple<int, gocpp::error> readConsole(FD* fd, gocpp::slice<unsigned char> b);
-        std::tuple<int, gocpp::error> Pread(FD* fd, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> Pread(FD* fd, gocpp::slice<unsigned char> buf, int64_t off);
         std::tuple<int, syscall::Sockaddr, gocpp::error> ReadFrom(FD* fd, gocpp::slice<unsigned char> buf);
         std::tuple<int, gocpp::error> ReadFromInet4(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4);
         std::tuple<int, gocpp::error> ReadFromInet6(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6);
@@ -149,7 +215,7 @@ namespace golang::poll
         std::tuple<int, gocpp::error> WriteToInet4(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4);
         std::tuple<int, gocpp::error> WriteToInet6(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6);
         gocpp::error ConnectEx(FD* fd, syscall::Sockaddr ra);
-        std::tuple<gocpp::string, gocpp::error> acceptOne(FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa, operation* o);
+        std::tuple<gocpp::string, gocpp::error> acceptOne(FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa);
         std::tuple<syscall::Handle, gocpp::slice<syscall::RawSockaddrAny>, uint32_t, gocpp::string, gocpp::error> Accept(FD* fd, std::function<std::tuple<syscall::Handle, gocpp::error> ()> sysSocket);
         std::tuple<int64_t, gocpp::error> Seek(FD* fd, int64_t offset, int whence);
         gocpp::error Fchmod(FD* fd, uint32_t mode);

@@ -15,6 +15,7 @@
 
 namespace golang::sync
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
@@ -25,6 +26,10 @@ namespace golang::sync
     void runtime_Semacquire(uint32_t* s)
     /* convertBlockStmt, nil block */;
 
+    // SemacquireWaitGroup is like Semacquire, but for WaitGroup.Wait.
+    void runtime_SemacquireWaitGroup(uint32_t* s, bool synctestDurable)
+    /* convertBlockStmt, nil block */;
+
     // Semacquire(RW)Mutex(R) is like Semacquire, but for profiling contended
     // Mutexes and RWMutexes.
     // If lifo is true, queue waiter at the head of wait queue.
@@ -33,9 +38,6 @@ namespace golang::sync
     // The different forms of this function just tell the runtime how to present
     // the reason for waiting in a backtrace, and is used to compute some metrics.
     // Otherwise they're functionally identical.
-    void runtime_SemacquireMutex(uint32_t* s, bool lifo, int skipframes)
-    /* convertBlockStmt, nil block */;
-
     void runtime_SemacquireRWMutexR(uint32_t* s, bool lifo, int skipframes)
     /* convertBlockStmt, nil block */;
 
@@ -78,16 +80,10 @@ namespace golang::sync
         runtime_notifyListCheck(gocpp::Sizeof<notifyList>());
     }
 
-    // Active spinning runtime support.
-    // runtime_canSpin reports whether spinning makes sense at the moment.
-    bool runtime_canSpin(int i)
+    void go_throw(gocpp::string)
     /* convertBlockStmt, nil block */;
 
-    // runtime_doSpin does active spinning.
-    void runtime_doSpin()
-    /* convertBlockStmt, nil block */;
-
-    int64_t runtime_nanotime()
+    void fatal(gocpp::string)
     /* convertBlockStmt, nil block */;
 
 }

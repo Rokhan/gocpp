@@ -6,13 +6,13 @@
 
 namespace golang::time
 {
-    // These are predefined layouts for use in Time.Format and time.Parse.
+    // These are predefined layouts for use in [Time.Format] and [time.Parse].
     // The reference time used in these layouts is the specific time stamp:
     //
     //	01/02 03:04:05PM '06 -0700
     //
     // (January 2, 15:04:05, 2006, in time zone seven hours west of GMT).
-    // That value is recorded as the constant named Layout, listed below. As a Unix
+    // That value is recorded as the constant named [Layout], listed below. As a Unix
     // time, this is 1136239445. Since MST is GMT-0700, the reference would be
     // printed by the Unix date command as:
     //
@@ -24,16 +24,20 @@ namespace golang::time
     // The example for Time.Format demonstrates the working of the layout string
     // in detail and is a good reference.
     //
-    // Note that the RFC822, RFC850, and RFC1123 formats should be applied
+    // Note that the [RFC822], [RFC850], and [RFC1123] formats should be applied
     // only to local times. Applying them to UTC times will use "UTC" as the
     // time zone abbreviation, while strictly speaking those RFCs require the
     // use of "GMT" in that case.
-    // In general RFC1123Z should be used instead of RFC1123 for servers
-    // that insist on that format, and RFC3339 should be preferred for new protocols.
-    // RFC3339, RFC822, RFC822Z, RFC1123, and RFC1123Z are useful for formatting;
+    // When using the [RFC1123] or [RFC1123Z] formats for parsing, note that these
+    // formats define a leading zero for the day-in-month portion, which is not
+    // strictly allowed by RFC 1123. This will result in an error when parsing
+    // date strings that occur in the first 9 days of a given month.
+    // In general [RFC1123Z] should be used instead of [RFC1123] for servers
+    // that insist on that format, and [RFC3339] should be preferred for new protocols.
+    // [RFC3339], [RFC822], [RFC822Z], [RFC1123], and [RFC1123Z] are useful for formatting;
     // when used with time.Parse they do not accept all the time formats
     // permitted by the RFCs and they do accept time formats not formally defined.
-    // The RFC3339Nano format removes trailing zeros from the seconds field
+    // The [RFC3339Nano] format removes trailing zeros from the seconds field
     // and thus may not sort correctly once formatted.
     //
     // Most programs can use one of the defined constants as the layout passed to
@@ -41,8 +45,8 @@ namespace golang::time
     // creating a custom layout string.
     //
     // To define your own format, write down what the reference time would look like
-    // formatted your way; see the values of constants like ANSIC, StampMicro or
-    // Kitchen for examples. The model is to demonstrate what the reference time
+    // formatted your way; see the values of constants like [ANSIC], [StampMicro] or
+    // [Kitchen] for examples. The model is to demonstrate what the reference time
     // looks like so that the Format and Parse methods can apply the same
     // transformation to a general time value.
     //
@@ -132,7 +136,8 @@ namespace golang::time
     const int stdFracSecond0 = 34;
     const int stdFracSecond9 = 35;
     const int stdNeedDate = 1 << 8;
-    const int stdNeedClock = 2 << 8;
+    const int stdNeedYday = 1 << 9;
+    const int stdNeedClock = 1 << 10;
     const long stdArgShift = 16;
     const long stdSeparatorShift = 28;
     struct ParseError;
@@ -141,6 +146,7 @@ namespace golang::time
     const gocpp::string lowerhex = "0123456789abcdef"_s;
     const long runeSelf = 0x80;
     const char runeError = '\uFFFD';
+    struct parseDurationError;
     const int stdLongMonth = 1 + stdNeedDate;
     const int stdMonth = 2 + stdNeedDate;
     const int stdNumMonth = 3 + stdNeedDate;
@@ -150,8 +156,8 @@ namespace golang::time
     const int stdDay = 7 + stdNeedDate;
     const int stdUnderDay = 8 + stdNeedDate;
     const int stdZeroDay = 9 + stdNeedDate;
-    const int stdUnderYearDay = 10 + stdNeedDate;
-    const int stdZeroYearDay = 11 + stdNeedDate;
+    const int stdUnderYearDay = 10 + stdNeedYday;
+    const int stdZeroYearDay = 11 + stdNeedYday;
     const int stdHour = 12 + stdNeedClock;
     const int stdHour12 = 13 + stdNeedClock;
     const int stdZeroHour12 = 14 + stdNeedClock;

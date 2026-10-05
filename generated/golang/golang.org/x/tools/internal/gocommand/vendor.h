@@ -12,8 +12,10 @@
 #include "golang/regexp/regexp.fwd.h"
 #include "golang/time/time.fwd.h"
 
-namespace golang::gocommand
+namespace golang::golang_org::x::tools::internal::gocommand
 {
+    namespace time = golang::time;
+    namespace regexp = golang::regexp;
     struct ModuleJSON
     {
         gocpp::string Path{}; // module path
@@ -42,10 +44,16 @@ namespace golang::gocommand
     std::ostream& operator<<(std::ostream& os, const struct ModuleJSON& value);
     extern regexp::Regexp* modFlagRegexp;
 }
+#include "golang/context/context.fwd.h"
 #include "golang/context/context.h"
+
+namespace golang::golang_org::x::tools::internal::gocommand
+{
+    namespace context = golang::context;
+}
 #include "golang/golang.org/x/tools/internal/gocommand/invoke.h"
 
-namespace golang::gocommand
+namespace golang::golang_org::x::tools::internal::gocommand
 {
     std::tuple<bool, ModuleJSON*, gocpp::error> VendorEnabled(context::Context ctx, Invocation inv, Runner* r);
     std::tuple<ModuleJSON*, bool, gocpp::error> getMainModuleAnd114(context::Context ctx, Invocation inv, Runner* r);

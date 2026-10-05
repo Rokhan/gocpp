@@ -11,7 +11,7 @@
 #include "golang/internal/goos/zgoos_windows.h"
 #include "gocpp/support.h"
 
-namespace golang::goos
+namespace golang::internal::goos
 {
     namespace rec
     {

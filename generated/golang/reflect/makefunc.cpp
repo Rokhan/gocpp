@@ -14,6 +14,7 @@
 #include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/type.h"
+#include "golang/internal/goarch/goarch.h"
 #include "golang/reflect/abi.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
@@ -21,6 +22,9 @@
 
 namespace golang::reflect
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
         using abi::rec::Common;
@@ -68,7 +72,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    // MakeFunc returns a new function of the given Type
+    // MakeFunc returns a new function of the given [Type]
     // that wraps the function fn. When called, that new function
     // does the following:
     //
@@ -76,14 +80,14 @@ namespace golang::reflect
     //   - runs results := fn(args).
     //   - returns the results as a slice of Values, one per formal result.
     //
-    // The implementation fn can assume that the argument Value slice
+    // The implementation fn can assume that the argument [Value] slice
     // has the number and type of arguments given by typ.
     // If typ describes a variadic function, the final Value is itself
     // a slice representing the variadic arguments, as in the
     // body of a variadic function. The result Value slice returned by fn
     // must have the number and type of results given by typ.
     //
-    // The Value.Call method allows the caller to invoke a typed function
+    // The [Value.Call] method allows the caller to invoke a typed function
     // in terms of Values; in contrast, MakeFunc allows the caller to implement
     // a typed function in terms of Values.
     //
@@ -91,12 +95,14 @@ namespace golang::reflect
     // of how to use MakeFunc to build a swap function for different types.
     golang::reflect::Value MakeFunc(golang::reflect::Type typ, std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> args)> fn)
     {
+        auto t = rec::common(gocpp::recv(typ));
+        // for #80332, ensure t's exported methods are not shadowed
+        typ = toType(t);
         if(rec::Kind(gocpp::recv(typ)) != Func)
         {
             gocpp::panic("reflect: call of MakeFunc with non-Func type"_s);
         }
 
-        auto t = rec::common(gocpp::recv(typ));
         auto ftyp = (funcType*)(gocpp::unsafe_pointer(t));
 
         auto code = abi::FuncPCABI0(makeFuncStub);
@@ -279,16 +285,21 @@ namespace golang::reflect
         {
             // Avoid write barriers! Because our write barrier enqueues what
             // was there before, we might enqueue garbage.
+            // Also avoid bounds checks, we don't have the stack space for it.
+            // (Normally the prove pass removes them, but for -N builds we
+            // use too much stack.)
+            // ptr := &args.Ptrs[i] (but cast from *unsafe.Pointer to *uintptr)
+            auto ptr = (uintptr_t*)(add(gocpp::unsafe_pointer(unsafe::SliceData(args->Ptrs.make_slice(0))), uintptr_t(i) * goarch::PtrSize, "always in [0:IntArgRegs]"_s));
             if(rec::Get(gocpp::recv(ctxt->regPtrs), i))
             {
-                *(uintptr_t*)(gocpp::unsafe_pointer(& args->Ptrs[i])) = arg;
+                *ptr = arg;
             }
             else
             {
                 // We *must* zero this space ourselves because it's defined in
                 // assembly code and the GC will scan these pointers. Otherwise,
                 // there will be garbage here.
-                *(uintptr_t*)(gocpp::unsafe_pointer(& args->Ptrs[i])) = 0;
+                *ptr = 0;
             }
         }
     }

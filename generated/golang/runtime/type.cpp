@@ -12,28 +12,54 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
+#include "golang/internal/abi/map.h"
 #include "golang/internal/abi/type.h"
+#include "golang/internal/goarch/goarch.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/runtime/extern.h"
 #include "golang/runtime/iface.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
+#include "golang/runtime/lockrank.h"
+#include "golang/runtime/lockrank_off.h"
+#include "golang/runtime/malloc.h"
+#include "golang/runtime/mbitmap.h"
+#include "golang/runtime/mstats.h"
+#include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/print.h"
 #include "golang/runtime/race0.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/stubs.h"
 #include "golang/runtime/symtab.h"
-#include "golang/runtime/typekind.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
+        using abi::rec::ArrayType;
         using abi::rec::Data;
+        using abi::rec::DescriptorSize;
         using abi::rec::InSlice;
         using abi::rec::IsEmbedded;
+        using abi::rec::Kind;
         using abi::rec::Name;
         using abi::rec::OutSlice;
+        using abi::rec::Pointers;
         using abi::rec::ReadVarint;
+        using abi::rec::StructType;
         using abi::rec::Tag;
         using abi::rec::Uncommon;
+    }
+
+    //go:linkname maps_typeString internal/runtime/maps.typeString
+    gocpp::string maps_typeString(abi::Type* typ)
+    {
+        return rec::string(gocpp::recv(toRType(typ)));
     }
 
     // rtype is a wrapper that allows us to define additional methods.
@@ -66,7 +92,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::string(rtype t)
+    gocpp::string rec::string(golang::runtime::rtype t)
     {
         auto s = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), t.Type.Str)));
         if(t.Type.TFlag & abi::TFlagExtraStar != 0)
@@ -76,12 +102,12 @@ namespace golang::runtime
         return s;
     }
 
-    uncommontype* rec::uncommon(rtype t)
+    uncommontype* rec::uncommon(golang::runtime::rtype t)
     {
         return rec::Uncommon(gocpp::recv(t));
     }
 
-    gocpp::string rec::name(rtype t)
+    gocpp::string rec::name(golang::runtime::rtype t)
     {
         if(t.Type.TFlag & abi::TFlagNamed == 0)
         {
@@ -117,7 +143,7 @@ namespace golang::runtime
     // available. This is not the same as the reflect package's PkgPath
     // method, in that it returns the package path for struct and interface
     // types, not just named types.
-    gocpp::string rec::pkgpath(rtype t)
+    gocpp::string rec::pkgpath(golang::runtime::rtype t)
     {
         if(auto u = rec::uncommon(gocpp::recv(t)); u != nullptr)
         {
@@ -125,10 +151,10 @@ namespace golang::runtime
         }
         //Go switch emulation
         {
-            auto condition = t.Type.Kind_ & kindMask;
+            auto condition = rec::Kind(gocpp::recv(t));
             int conditionId = -1;
-            if(condition == kindStruct) { conditionId = 0; }
-            else if(condition == kindInterface) { conditionId = 1; }
+            if(condition == abi::Struct) { conditionId = 0; }
+            else if(condition == abi::Interface) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -146,6 +172,265 @@ namespace golang::runtime
             }
         }
         return ""_s;
+    }
+
+    // getGCMask returns the pointer/nonpointer bitmask for type t.
+    //
+    // nosplit because it is used during write barriers and must not be preempted.
+    //
+    //go:nosplit
+    unsigned char* getGCMask(_type* t)
+    {
+        if(t->TFlag & abi::TFlagGCMaskOnDemand != 0)
+        {
+            // Split the rest into getGCMaskOnDemand so getGCMask itself is inlineable.
+            return getGCMaskOnDemand(t);
+        }
+        return t->GCData;
+    }
+
+    // inProgress is a byte whose address is a sentinel indicating that
+    // some thread is currently building the GC bitmask for a type.
+    unsigned char inProgress;
+    // nosplit because it is used during write barriers and must not be preempted.
+    //
+    //go:nosplit
+    unsigned char* getGCMaskOnDemand(_type* t)
+    {
+        // For large types, GCData doesn't point directly to a bitmask.
+        // Instead it points to a pointer to a bitmask, and the runtime
+        // is responsible for (on first use) creating the bitmask and
+        // storing a pointer to it in that slot.
+        // TODO: we could use &t.GCData as the slot, but types are
+        // in read-only memory currently.
+        auto addr = gocpp::unsafe_pointer(t->GCData);
+
+        if(GOOS == "aix"_s)
+        {
+            addr = add(addr, firstmoduledata.data - aixStaticDataBase);
+        }
+
+        for(; ; )
+        {
+            auto p = (unsigned char*)(atomic::Loadp(addr));
+            //Go switch emulation
+            {
+                auto condition = p;
+                int conditionId = -1;
+                if(condition == & inProgress) { conditionId = 0; }
+                else if(condition == nullptr) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    default:
+                        // Already built.
+                        return p;
+                        break;
+                    case 0:
+                        // Just wait until the builder is done.
+                        // We can't block here, so spinning while having
+                        // the OS thread yield is about the best we can do.
+                        osyield();
+                        continue;
+                        break;
+                    case 1:
+                    {
+                        // Attempt to get exclusive access to build it.
+                        if(! atomic::Casp1((gocpp::unsafe_pointer*)(addr), nullptr, gocpp::unsafe_pointer(& inProgress)))
+                        {
+                            continue;
+                        }
+                        // Build gcmask for this type.
+                        auto bytes = goarch::PtrSize * divRoundUp(t->PtrBytes / goarch::PtrSize, 8 * goarch::PtrSize);
+                        p = (unsigned char*)(persistentalloc(bytes, goarch::PtrSize, & memstats.other_sys));
+                        systemstack([=]() mutable -> void
+                        {
+                            buildGCMask(t, gocpp::Init<bitCursor>([=](auto& x) {
+                                x.ptr = p;
+                                x.n = 0;
+                            }));
+                        });
+                        // Store the newly-built gcmask for future callers.
+                        atomic::StorepNoWB(addr, gocpp::unsafe_pointer(p));
+                        return p;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // A bitCursor is a simple cursor to memory to which we
+    // can write a set of bits.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    bitCursor::operator T()
+    {
+        T result;
+        result.ptr = this->ptr;
+        result.n = this->n;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool bitCursor::operator==(const T& ref) const
+    {
+        if (ptr != ref.ptr) return false;
+        if (n != ref.n) return false;
+        return true;
+    }
+
+    std::ostream& bitCursor::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << ptr;
+        os << " " << n;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct bitCursor& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // Write to b cnt bits starting at bit 0 of data.
+    // Requires cnt>0.
+    void rec::write(bitCursor b, unsigned char* data, uintptr_t cnt)
+    {
+        // Starting byte for writing.
+        auto p = addb(b.ptr, b.n / 8);
+
+        // Note: if we're starting halfway through a byte, we load the
+        // existing lower bits so we don't clobber them.
+        // # of valid bits in buf
+        auto n = b.n % 8;
+        // buffered bits to start
+        auto buf = uintptr_t(*p) & ((1 << n) - 1);
+
+        // Work 8 bits at a time.
+        for(; cnt > 8; )
+        {
+            // Read 8 more bits, now buf has 8-15 valid bits in it.
+            buf |= uintptr_t(*data) << n;
+            n += 8;
+            data = addb(data, 1);
+            cnt -= 8;
+            // Write 8 of the buffered bits out.
+            *p = (unsigned char)(buf);
+            buf >>= 8;
+            n -= 8;
+            p = addb(p, 1);
+        }
+        // Read remaining bits.
+        buf |= (uintptr_t(*data) & ((1 << cnt) - 1)) << n;
+        n += cnt;
+
+        // Flush remaining bits.
+        if(n > 8)
+        {
+            *p = (unsigned char)(buf);
+            buf >>= 8;
+            n -= 8;
+            p = addb(p, 1);
+        }
+        *p &^= (1 << n) - 1;
+        *p |= (unsigned char)(buf);
+    }
+
+    bitCursor rec::offset(bitCursor b, uintptr_t cnt)
+    {
+        return gocpp::Init<bitCursor>([=](auto& x) {
+            x.ptr = b.ptr;
+            x.n = b.n + cnt;
+        });
+    }
+
+    // buildGCMask writes the ptr/nonptr bitmap for t to dst.
+    // t must have a pointer.
+    void buildGCMask(_type* t, bitCursor dst)
+    {
+        // Note: we want to avoid a situation where buildGCMask gets into a
+        // very deep recursion, because M stacks are fixed size and pretty small
+        // (16KB). We do that by ensuring that any recursive
+        // call operates on a type at most half the size of its parent.
+        // Thus, the recursive chain can be at most 64 calls deep (on a
+        // 64-bit machine).
+        // Recursion is avoided by using a "tail call" (jumping to the
+        // "top" label) for any recursive call with a large subtype.
+        top:
+        if(t->PtrBytes == 0)
+        {
+            go_throw("pointerless type"_s);
+        }
+        if(t->TFlag & abi::TFlagGCMaskOnDemand == 0)
+        {
+            // copy t.GCData to dst
+            rec::write(gocpp::recv(dst), t->GCData, t->PtrBytes / goarch::PtrSize);
+            return;
+        }
+        // The above case should handle all kinds except
+        // possibly arrays and structs.
+        //Go switch emulation
+        {
+            auto condition = rec::Kind(gocpp::recv(t));
+            int conditionId = -1;
+            if(condition == abi::Array) { conditionId = 0; }
+            else if(condition == abi::Struct) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    auto a = rec::ArrayType(gocpp::recv(t));
+                    if(a->Len == 1)
+                    {
+                        // Avoid recursive call for element type that
+                        // isn't smaller than the parent type.
+                        t = a->Elem;
+                        goto top;
+                    }
+                    auto e = a->Elem;
+                    for(auto i = uintptr_t(0); i < a->Len; i++)
+                    {
+                        buildGCMask(e, dst);
+                        dst = rec::offset(gocpp::recv(dst), e->Size_ / goarch::PtrSize);
+                    }
+                    break;
+                }
+                case 1:
+                {
+                    auto s = rec::StructType(gocpp::recv(t));
+                    abi::StructField bigField = {};
+                    for(auto [gocpp_ignored, f] : s->Fields)
+                    {
+                        auto ft = f.Typ;
+                        if(! rec::Pointers(gocpp::recv(ft)))
+                        {
+                            continue;
+                        }
+                        if(ft->Size_ > t->Size_ / 2)
+                        {
+                            // Avoid recursive call for field type that
+                            // is larger than half of the parent type.
+                            // There can be only one.
+                            bigField = f;
+                            continue;
+                        }
+                        buildGCMask(ft, rec::offset(gocpp::recv(dst), f.Offset / goarch::PtrSize));
+                    }
+                    if(bigField.Typ != nullptr)
+                    {
+                        // Note: this case causes bits to be written out of order.
+                        t = bigField.Typ;
+                        dst = rec::offset(gocpp::recv(dst), bigField.Offset / goarch::PtrSize);
+                        goto top;
+                    }
+                    break;
+                }
+                default:
+                    go_throw("unexpected kind"_s);
+                    break;
+            }
+        }
     }
 
     
@@ -260,7 +545,7 @@ namespace golang::runtime
         });
     }
 
-    golang::runtime::name rec::nameOff(rtype t, golang::runtime::nameOff off)
+    golang::runtime::name rec::nameOff(golang::runtime::rtype t, golang::runtime::nameOff off)
     {
         return resolveNameOff(gocpp::unsafe_pointer(t.Type), off);
     }
@@ -299,25 +584,26 @@ namespace golang::runtime
             }
             return (_type*)(res);
         }
-        if(auto t = md->typemap[off]; t != nullptr)
+        auto res = md->types + uintptr_t(off);
+        auto resType = (_type*)(gocpp::unsafe_pointer(res));
+        if(auto t = md->typemap[resType]; t != nullptr)
         {
             return t;
         }
-        auto res = md->types + uintptr_t(off);
         if(res > md->etypes)
         {
             println("runtime: typeOff"_s, hex(off), "out of range"_s, hex(md->types), "-"_s, hex(md->etypes));
             go_throw("runtime: type offset out of range"_s);
         }
-        return (_type*)(gocpp::unsafe_pointer(res));
+        return resType;
     }
 
-    _type* rec::typeOff(rtype t, golang::runtime::typeOff off)
+    _type* rec::typeOff(golang::runtime::rtype t, golang::runtime::typeOff off)
     {
         return resolveTypeOff(gocpp::unsafe_pointer(t.Type), off);
     }
 
-    gocpp::unsafe_pointer rec::textOff(rtype t, golang::runtime::textOff off)
+    gocpp::unsafe_pointer rec::textOff(golang::runtime::rtype t, golang::runtime::textOff off)
     {
         if(off == - 1)
         {
@@ -410,19 +696,22 @@ namespace golang::runtime
     // moduledata typemap used to de-duplicate type pointers.
     void typelinksinit()
     {
+        lockInit(& moduleToTypelinksLock, lockRankTypelinks);
+
         if(firstmoduledata.next == nullptr)
         {
             return;
         }
-        auto typehash = gocpp::make(gocpp::Tag<gocpp::map<uint32_t, gocpp::slice<_type*>>>(), len(firstmoduledata.typelinks));
 
         auto modules = activeModules();
         auto prev = modules[0];
+        auto prevTypelinks = moduleTypelinks(modules[0]);
+        auto typehash = gocpp::make(gocpp::Tag<gocpp::map<uint32_t, gocpp::slice<_type*>>>(), len(prevTypelinks));
         for(auto [gocpp_ignored, md] : modules.make_slice(1))
         {
             // Collect types from the previous module into typehash.
             collect:
-            for(auto [gocpp_ignored, tl] : prev->typelinks)
+            for(auto [gocpp_ignored, tl] : prevTypelinks)
             {
                 if(false) {
                 collect_continue:
@@ -430,14 +719,10 @@ namespace golang::runtime
                 collect_break:
                     break;
                 }
-                _type* t = {};
-                if(prev->typemap == nullptr)
+                auto t = tl;
+                if(prev->typemap != nullptr)
                 {
-                    t = (_type*)(gocpp::unsafe_pointer(prev->types + uintptr_t(tl)));
-                }
-                else
-                {
-                    t = prev->typemap[typeOff(tl)];
+                    t = prev->typemap[tl];
                 }
                 // Add to typehash if not seen before.
                 auto tlist = typehash[t->Hash];
@@ -451,32 +736,103 @@ namespace golang::runtime
                 typehash[t->Hash] = append(tlist, t);
             }
 
+            auto mdTypelinks = moduleTypelinks(md);
+
             if(md->typemap == nullptr)
             {
                 // If any of this module's typelinks match a type from a
                 // prior module, prefer that prior type by adding the offset
                 // to this module's typemap.
-                auto tm = gocpp::make(gocpp::Tag<gocpp::map<typeOff, _type*>>(), len(md->typelinks));
+                auto tm = gocpp::make(gocpp::Tag<gocpp::map<_type*, _type*>>(), len(mdTypelinks));
                 pinnedTypemaps = append(pinnedTypemaps, tm);
                 md->typemap = tm;
-                for(auto [gocpp_ignored, tl] : md->typelinks)
+                for(auto [gocpp_ignored, t] : mdTypelinks)
                 {
-                    auto t = (_type*)(gocpp::unsafe_pointer(md->types + uintptr_t(tl)));
+                    auto set = t;
                     for(auto [gocpp_ignored, candidate] : typehash[t->Hash])
                     {
                         auto seen = gocpp::map<_typePair, gocpp_id_0> {};
                         if(typesEqual(t, candidate, seen))
                         {
-                            t = candidate;
+                            set = candidate;
                             break;
                         }
                     }
-                    md->typemap[typeOff(tl)] = t;
+                    md->typemap[t] = set;
                 }
             }
 
             prev = md;
+            prevTypelinks = mdTypelinks;
         }
+    }
+
+    // moduleToTypelinks maps from moduledata to typelinks.
+    // We build this lazily as needed, since most programs do not need it.
+    gocpp::map<moduledata*, gocpp::slice<_type*>> moduleToTypelinks;
+    mutex moduleToTypelinksLock;
+    // moduleTypelinks takes a moduledata and returns the type
+    // descriptors that the reflect package needs to know about.
+    // These are the typelinks. They are the types that the user
+    // can construct. This is used to ensure that we use a unique
+    // type descriptor for all types. The returned types are sorted
+    // by type string; the sorting is done by the linker.
+    // This slice is constructed as needed.
+    gocpp::slice<_type*> moduleTypelinks(moduledata* md)
+    {
+        lock(& moduleToTypelinksLock);
+        if(raceenabled)
+        {
+            raceacquire(gocpp::unsafe_pointer(& moduleToTypelinksLock));
+        }
+
+        if(auto [typelinks, ok] = moduleToTypelinks[md]; ok)
+        {
+            if(raceenabled)
+            {
+                racerelease(gocpp::unsafe_pointer(& moduleToTypelinksLock));
+            }
+            unlock(& moduleToTypelinksLock);
+            return typelinks;
+        }
+
+        // Allocate a very rough estimate of the number of types.
+        auto ret = gocpp::make(gocpp::Tag<gocpp::slice<_type*>>(), 0, md->typedesclen / (2 * gocpp::Sizeof<_type>()));
+
+        auto td = md->types;
+
+        // We have to increment by the pointer size to match the
+        // increment in cmd/link/internal/data.go createRelroSect
+        // in allocateDataSections.
+        // The linker doesn't do that increment when runtime.types
+        // has a non-zero size, but in that case the runtime.types
+        // symbol itself pushes the other symbols forward.
+        // So either way this increment is correct.
+        td += goarch::PtrSize;
+
+        auto etypedesc = md->types + md->typedesclen;
+        for(; td < etypedesc; )
+        {
+            td = alignUp(td, goarch::PtrSize);
+
+            auto typ = (_type*)(gocpp::unsafe_pointer(td));
+            ret = append(ret, typ);
+
+            td += uintptr_t(rec::DescriptorSize(gocpp::recv(typ)));
+        }
+
+        if(moduleToTypelinks == nullptr)
+        {
+            moduleToTypelinks = gocpp::make(gocpp::Tag<gocpp::map<moduledata*, gocpp::slice<_type*>>>());
+        }
+        moduleToTypelinks[md] = ret;
+
+        if(raceenabled)
+        {
+            racerelease(gocpp::unsafe_pointer(& moduleToTypelinksLock));
+        }
+        unlock(& moduleToTypelinksLock);
+        return ret;
     }
 
     
@@ -511,9 +867,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    rtype toRType(abi::Type* t)
+    golang::runtime::rtype toRType(abi::Type* t)
     {
-        return rtype {t};
+        return golang::runtime::rtype {t};
     }
 
     struct gocpp_id_3
@@ -603,8 +959,8 @@ namespace golang::runtime
         {
             return true;
         }
-        auto kind = t->Kind_ & kindMask;
-        if(kind != v->Kind_ & kindMask)
+        auto kind = rec::Kind(gocpp::recv(t));
+        if(kind != rec::Kind(gocpp::recv(v)))
         {
             return false;
         }
@@ -628,7 +984,7 @@ namespace golang::runtime
                 return false;
             }
         }
-        if(kindBool <= kind && kind <= kindComplex128)
+        if(abi::Bool <= kind && kind <= abi::Complex128)
         {
             return true;
         }
@@ -636,16 +992,16 @@ namespace golang::runtime
         {
             auto condition = kind;
             int conditionId = -1;
-            if(condition == kindString) { conditionId = 0; }
-            else if(condition == kindUnsafePointer) { conditionId = 1; }
-            else if(condition == kindArray) { conditionId = 2; }
-            else if(condition == kindChan) { conditionId = 3; }
-            else if(condition == kindFunc) { conditionId = 4; }
-            else if(condition == kindInterface) { conditionId = 5; }
-            else if(condition == kindMap) { conditionId = 6; }
-            else if(condition == kindPtr) { conditionId = 7; }
-            else if(condition == kindSlice) { conditionId = 8; }
-            else if(condition == kindStruct) { conditionId = 9; }
+            if(condition == abi::String) { conditionId = 0; }
+            else if(condition == abi::UnsafePointer) { conditionId = 1; }
+            else if(condition == abi::Array) { conditionId = 2; }
+            else if(condition == abi::Chan) { conditionId = 3; }
+            else if(condition == abi::Func) { conditionId = 4; }
+            else if(condition == abi::Interface) { conditionId = 5; }
+            else if(condition == abi::Map) { conditionId = 6; }
+            else if(condition == abi::Pointer) { conditionId = 7; }
+            else if(condition == abi::Slice) { conditionId = 8; }
+            else if(condition == abi::Struct) { conditionId = 9; }
             switch(conditionId)
             {
                 case 0:
@@ -733,8 +1089,8 @@ namespace golang::runtime
                 }
                 case 6:
                 {
-                    auto mt = (maptype*)(gocpp::unsafe_pointer(t));
-                    auto mv = (maptype*)(gocpp::unsafe_pointer(v));
+                    auto mt = (abi::MapType*)(gocpp::unsafe_pointer(t));
+                    auto mv = (abi::MapType*)(gocpp::unsafe_pointer(v));
                     return typesEqual(mt->Key, mv->Key, seen) && typesEqual(mt->Elem, mv->Elem, seen);
                     break;
                 }

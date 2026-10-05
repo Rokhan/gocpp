@@ -11,6 +11,7 @@
 #include "golang/golang.org/x/tools/go/types/objectpath/objectpath.h"
 #include "gocpp/support.h"
 
+#include "golang/encoding/binary/varint.h"
 #include "golang/fmt/errors.h"
 #include "golang/go/types/alias.h"
 #include "golang/go/types/array.h"
@@ -31,11 +32,13 @@
 #include "golang/go/types/type.h"
 #include "golang/go/types/typelists.h"
 #include "golang/go/types/typeparam.h"
-#include "golang/golang.org/x/tools/internal/aliases/aliases_go122.h"
 #include "golang/golang.org/x/tools/internal/typesinternal/recv.h"
-#include "golang/strconv/atoi.h"
-#include "golang/strconv/itoa.h"
+#include "golang/iter/iter.h"
+#include "golang/slices/iter.h"
+#include "golang/strconv/number.h"
+#include "golang/strings/builder.h"
 #include "golang/strings/strings.h"
+#include "golang/sync/mutex.h"
 
 // Package objectpath defines a naming scheme for types.Objects
 // (that is, named entities in Go programs) relative to their enclosing
@@ -56,18 +59,31 @@
 // the field X has two paths due to its membership of both A and B.
 // The For(obj) function always returns one of these paths, arbitrarily
 // but consistently.
-namespace golang::objectpath
+namespace golang::golang_org::x::tools::go::types::objectpath
 {
+    namespace binary = golang::encoding::binary;
+    namespace fmt = golang::fmt;
+    namespace slices = golang::slices;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
+    namespace types = golang::go::types;
+    namespace typesinternal = golang::golang_org::x::tools::internal::typesinternal;
     namespace rec
     {
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
+        using strings::rec::Grow;
+        using strings::rec::String;
+        using strings::rec::WriteString;
         using types::rec::At;
         using types::rec::Constraint;
         using types::rec::Elem;
         using types::rec::Exported;
         using types::rec::Field;
         using types::rec::Id;
-        using types::rec::IsAlias;
         using types::rec::Key;
+        using types::rec::Kind;
         using types::rec::Len;
         using types::rec::Lookup;
         using types::rec::Method;
@@ -85,16 +101,16 @@ namespace golang::objectpath
         using types::rec::Recv;
         using types::rec::RecvTypeParams;
         using types::rec::Results;
+        using types::rec::Rhs;
         using types::rec::Scope;
+        using types::rec::Signature;
         using types::rec::String;
         using types::rec::Type;
         using types::rec::TypeParams;
         using types::rec::Underlying;
-        using types::rec::color;
         using types::rec::order;
         using types::rec::sameId;
         using types::rec::scopePos;
-        using types::rec::setColor;
         using types::rec::setOrder;
         using types::rec::setParent;
         using types::rec::setScopePos;
@@ -121,21 +137,24 @@ namespace golang::objectpath
     Encoder::operator T()
     {
         T result;
-        result.scopeMemo = this->scopeMemo;
+        result.pkgIndexMu = this->pkgIndexMu;
+        result.pkgIndex = this->pkgIndex;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool Encoder::operator==(const T& ref) const
     {
-        if (scopeMemo != ref.scopeMemo) return false;
+        if (pkgIndexMu != ref.pkgIndexMu) return false;
+        if (pkgIndex != ref.pkgIndex) return false;
         return true;
     }
 
     std::ostream& Encoder::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << scopeMemo;
+        os << "" << pkgIndexMu;
+        os << " " << pkgIndex;
         os << '}';
         return os;
     }
@@ -145,8 +164,127 @@ namespace golang::objectpath
         return value.PrintTo(os);
     }
 
+    // A traversal encapsulates the state of a single traversal of the object/type graph.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    traversal::operator T()
+    {
+        T result;
+        result.pkg = this->pkg;
+        result.ix = this->ix;
+        result.target = this->target;
+        result.found = this->found;
+        result.seenTParamNames = this->seenTParamNames;
+        result.seenMethods = this->seenMethods;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traversal::operator==(const T& ref) const
+    {
+        if (pkg != ref.pkg) return false;
+        if (ix != ref.ix) return false;
+        if (target != ref.target) return false;
+        if (found != ref.found) return false;
+        if (seenTParamNames != ref.seenTParamNames) return false;
+        if (seenMethods != ref.seenMethods) return false;
+        return true;
+    }
+
+    std::ostream& traversal::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << pkg;
+        os << " " << ix;
+        os << " " << target;
+        os << " " << found;
+        os << " " << seenTParamNames;
+        os << " " << seenMethods;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct traversal& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // A pkgIndex holds a compressed index of objectpaths of all symbols
+    // (fields, methods, params) requiring search for an entire package.
+    //
+    // The first time a search for a given package is requested, we simply
+    // traverse the type graph for the target object, maintaining the
+    // current object path as a stack. If we find the target object, we
+    // save the path and terminate the main loop (but it's not worth
+    // breaking out of the current recursion).
+    //
+    // On the second search (a pkgIndex exists but its data is nil), we
+    // build an index of the traversal, which we use for all subsequent
+    // searches.
+    //
+    // The traversal index is encoded in the data field as a list of records,
+    // one per node, in preorder. Records are of two types:
+    //
+    //   - A record for a package-level object consists of a pair
+    //     (parent, nameIndex uvarint), where parent is zero and
+    //     nameIndex is the index of the object's name in the sorted
+    //     pkg.Scope().Names() slice.
+    //
+    //   - A record for a nested node (a segment of an object path)
+    //     consists of (parent uvarint, op byte, index uvarint), where
+    //     parent is the index of the record for the parent node,
+    //     op is the destructuring operator, and index (if op = [AFMTr])
+    //     is its integer operand.
+    //
+    // Since data[0] = 0 all nodes have positive offsets. In effect the
+    // encoding is a trie in which each node stores one path segment
+    // and points to the node for its prefix.
+    //
+    // TODO(adonovan): opt: evaluate an only 2-level tree with nodes for
+    // package-level objects and the-rest-of-the-path. One calculation
+    // suggested that it might be similar speed but 30% more compact.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    pkgIndex::operator T()
+    {
+        T result;
+        result.pkg = this->pkg;
+        result.data = this->data;
+        result.scopeNames = this->scopeNames;
+        result.offsets = this->offsets;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pkgIndex::operator==(const T& ref) const
+    {
+        if (pkg != ref.pkg) return false;
+        if (data != ref.data) return false;
+        if (scopeNames != ref.scopeNames) return false;
+        if (offsets != ref.offsets) return false;
+        return true;
+    }
+
+    std::ostream& pkgIndex::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << pkg;
+        os << " " << data;
+        os << " " << scopeNames;
+        os << " " << offsets;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct pkgIndex& value)
+    {
+        return value.PrintTo(os);
+    }
+
     // For returns the path to an object relative to its package,
     // or an error if the object is not accessible from the package's Scope.
+    //
+    // For is safe for concurrent use.
     //
     // The For function guarantees to return a path only for the following objects:
     // - package-level types
@@ -190,198 +328,316 @@ namespace golang::objectpath
     // where p is the package (*types.Package) to which X belongs.
     std::tuple<Path, gocpp::error> rec::For(Encoder* enc, types::Object obj)
     {
-        auto pkg = rec::Pkg(gocpp::recv(obj));
-
-        // This table lists the cases of interest.
-        // Object				Action
-        // ------                               ------
-        // nil					reject
-        // builtin				reject
-        // pkgname				reject
-        // label				reject
-        // var
-        // package-level			accept
-        // func param/result			accept
-        // local				reject
-        // struct field			accept
-        // const
-        // package-level			accept
-        // local				reject
-        // func
-        // package-level			accept
-        // init functions			reject
-        // concrete method			accept
-        // interface method			accept
-        // type
-        // package-level			accept
-        // local				reject
-        // The only accessible package-level objects are members of pkg itself.
-        // The cases are handled in four steps:
-        // 1. reject nil and builtin
-        // 2. accept package-level objects
-        // 3. reject obviously invalid objects
-        // 4. search the API for the path to the param/result/field/method.
-        // 1. reference to nil or builtin?
-        if(pkg == nullptr)
+        gocpp::Defer defer;
+        try
         {
-            return {""_s, mocklib::Errorf("predeclared %s has no path"_s, obj)};
-        }
-        auto scope = rec::Scope(gocpp::recv(pkg));
+            auto pkg = rec::Pkg(gocpp::recv(obj));
 
-        // 2. package-level object?
-        if(rec::Lookup(gocpp::recv(scope), rec::Name(gocpp::recv(obj))) == obj)
-        {
-            // Only exported objects (and non-exported types) have a path.
-            // Non-exported types may be referenced by other objects.
-            if(auto [gocpp_id_0, ok] = gocpp::getValue<types::TypeName*>(obj); ! ok && ! rec::Exported(gocpp::recv(obj)))
+            // This table lists the cases of interest.
+            // Object				Action
+            // ------                               ------
+            // nil					reject
+            // builtin				reject
+            // pkgname				reject
+            // label				reject
+            // var
+            // package-level			accept
+            // func param/result			accept
+            // local				reject
+            // struct field			accept
+            // const
+            // package-level			accept
+            // local				reject
+            // func
+            // package-level			accept
+            // init functions			reject
+            // concrete method			accept
+            // interface method			accept
+            // type
+            // package-level			accept
+            // local				reject
+            // The only accessible package-level objects are members of pkg itself.
+            // The cases are handled in four steps:
+            // 1. reject nil and builtin
+            // 2. accept package-level objects
+            // 3. reject obviously invalid objects
+            // 4. search the API for the path to the param/result/field/method.
+            // 1. reference to nil or builtin?
+            if(pkg == nullptr)
             {
-                return {""_s, mocklib::Errorf("no path for non-exported %v"_s, obj)};
+                return {""_s, mocklib::Errorf("predeclared %s has no path"_s, obj)};
             }
-            return {Path(rec::Name(gocpp::recv(obj))), nullptr};
-        }
 
-        // 3. Not a package-level object.
-        // Reject obviously non-viable cases.
-        //Go type switch emulation
-        {
-            const auto& gocpp_id_1 = gocpp::type_info(obj);
-            const auto& obj_ref = obj;
-            int conditionId = -1;
-            if(gocpp_id_1 == typeid(types::TypeName*)) { conditionId = 0; }
-            else if(gocpp_id_1 == typeid(types::Const*)) { conditionId = 1; }
-            else if(gocpp_id_1 == typeid(types::Label*)) { conditionId = 2; }
-            else if(gocpp_id_1 == typeid(types::PkgName*)) { conditionId = 3; }
-            else if(gocpp_id_1 == typeid(types::Var*)) { conditionId = 4; }
-            else if(gocpp_id_1 == typeid(types::Func*)) { conditionId = 5; }
-            switch(conditionId)
+            // 2. package-level object?
+            if(rec::Lookup(gocpp::recv(rec::Scope(gocpp::recv(pkg))), rec::Name(gocpp::recv(obj))) == obj)
             {
-                case 0:
+                // Only exported objects (and non-exported types) have a path.
+                // Non-exported types may be referenced by other objects.
+                if(auto [gocpp_id_0, ok] = gocpp::getValue<types::TypeName*>(obj); ! ok && ! rec::Exported(gocpp::recv(obj)))
                 {
-                    types::TypeName* obj = gocpp::any_cast<types::TypeName*>(obj_ref);
-                    if(auto [gocpp_id_2, ok] = gocpp::getValue<types::TypeParam*>(aliases::Unalias(rec::Type(gocpp::recv(obj)))); ! ok)
+                    return {""_s, mocklib::Errorf("no path for non-exported %v"_s, obj)};
+                }
+                return {Path(rec::Name(gocpp::recv(obj))), nullptr};
+            }
+
+            // 3. Not a package-level object.
+            // Reject obviously non-viable cases.
+            //Go type switch emulation
+            {
+                const auto& gocpp_id_1 = gocpp::type_info(obj);
+                const auto& obj_ref = obj;
+                int conditionId = -1;
+                if(gocpp_id_1 == typeid(types::TypeName*)) { conditionId = 0; }
+                else if(gocpp_id_1 == typeid(types::Const*)) { conditionId = 1; }
+                else if(gocpp_id_1 == typeid(types::Label*)) { conditionId = 2; }
+                else if(gocpp_id_1 == typeid(types::PkgName*)) { conditionId = 3; }
+                else if(gocpp_id_1 == typeid(types::Var*)) { conditionId = 4; }
+                else if(gocpp_id_1 == typeid(types::Func*)) { conditionId = 5; }
+                switch(conditionId)
+                {
+                    case 0:
                     {
-                        // With the exception of type parameters, only package-level type names
-                        // have a path.
+                        types::TypeName* obj = gocpp::any_cast<types::TypeName*>(obj_ref);
+                        if(auto [gocpp_id_2, ok] = gocpp::getValue<types::TypeParam*>(types::Unalias(rec::Type(gocpp::recv(obj)))); ! ok)
+                        {
+                            // With the exception of type parameters, only package-level type names
+                            // have a path.
+                            return {""_s, mocklib::Errorf("no path for %v"_s, obj)};
+                        }
+                        break;
+                    }
+
+                    case 1:
+                    case 2:
+                    case 3:
+                    {
+                        types::Const* obj = gocpp::any_cast<types::Const*>(obj_ref);
                         return {""_s, mocklib::Errorf("no path for %v"_s, obj)};
+                        break;
                     }
-                    break;
-                }
-                case 1:
-                case 2:
-                case 3:
-                {
-                    types::Const* obj = gocpp::any_cast<types::Const*>(obj_ref);
-                    return {""_s, mocklib::Errorf("no path for %v"_s, obj)};
-                    break;
-                }
 
-                // Could be:
-                // - a field (obj.IsField())
-                // - a func parameter or result
-                // - a local var.
-                // Sadly there is no way to distinguish
-                // a param/result from a local
-                // so we must proceed to the find.
-                case 4:
-                {
-                    types::Var* obj = gocpp::any_cast<types::Var*>(obj_ref);
-                    break;
-                }
-                case 5:
-                {
-                    types::Func* obj = gocpp::any_cast<types::Func*>(obj_ref);
-                    // A func, if not package-level, must be a method.
-                    if(auto recv = rec::Recv(gocpp::recv(gocpp::getValue<types::Signature*>(rec::Type(gocpp::recv(obj))))); recv == nullptr)
+                    case 4:
                     {
-                        return {""_s, mocklib::Errorf("func is not a method: %v"_s, obj)};
+                        types::Var* obj = gocpp::any_cast<types::Var*>(obj_ref);
+                        // A var, if not package-level, must be a
+                        // parameter (incl. receiver) or result, or a struct field.
+                        if(rec::Kind(gocpp::recv(obj)) == types::LocalVar)
+                        {
+                            return {""_s, mocklib::Errorf("no path for local %v"_s, obj)};
+                        }
+                        break;
                     }
-                    if(auto [path, ok] = rec::concreteMethod(gocpp::recv(enc), obj); ok)
-                    {
-                        // Fast path for concrete methods that avoids looping over scope.
-                        return {path, nullptr};
-                    }
-                    break;
-                }
 
-                default:
-                {
-                    auto obj = obj_ref;
-                    gocpp::panic(obj);
-                    break;
+                    case 5:
+                    {
+                        types::Func* obj = gocpp::any_cast<types::Func*>(obj_ref);
+                        // A func, if not package-level, must be a method.
+                        if(auto recv = rec::Recv(gocpp::recv(rec::Signature(gocpp::recv(obj)))); recv == nullptr)
+                        {
+                            return {""_s, mocklib::Errorf("func is not a method: %v"_s, obj)};
+                        }
+                        if(auto [path, ok] = rec::concreteMethod(gocpp::recv(enc), obj); ok)
+                        {
+                            // Fast path for concrete methods that avoids looping over scope.
+                            return {path, nullptr};
+                        }
+                        break;
+                    }
+
+                    default:
+                    {
+                        auto obj = obj_ref;
+                        gocpp::panic(obj);
+                        break;
+                    }
                 }
             }
+
+            rec::Lock(gocpp::recv(enc->pkgIndexMu));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(enc->pkgIndexMu)); });
+
+            // 4. Search the object/type graph for the path to
+            // the var (field/param/result) or method.
+            auto [ix, ok] = enc->pkgIndex[pkg];
+            if(! ok)
+            {
+                // First search: don't build an index, just traverse.
+                // This avoids allocation in [For], whose Encoder
+                // lives for a single call.
+                ix = gocpp::InitPtr<pkgIndex>([=](auto& x) {
+                    x.pkg = pkg;
+                });
+
+                if(enc->pkgIndex == nullptr)
+                {
+                    enc->pkgIndex = gocpp::make(gocpp::Tag<gocpp::map<types::Package*, pkgIndex*>>());
+                }
+                // build the index next time
+                enc->pkgIndex[pkg] = ix;
+
+                auto f = gocpp::Init<traversal>([=](auto& x) {
+                    x.pkg = pkg;
+                    x.target = obj;
+                });
+                rec::traverse(gocpp::recv(f));
+
+                if(f.found != ""_s)
+                {
+                    return {f.found, nullptr};
+                }
+            }
+            else
+            {
+                // Second search: build an index while traversing.
+                if(ix->data == nullptr)
+                {
+                    ix->offsets = gocpp::make(gocpp::Tag<gocpp::map<types::Object, uint32_t>>());
+                    // offset 0 is sentinel
+                    ix->data = gocpp::slice<unsigned char> {0};
+                    rec::traverse(gocpp::recv((gocpp::InitPtr<traversal>([=](auto& x) {
+                        x.pkg = pkg;
+                        x.ix = ix;
+                    }))));
+                }
+
+                // Second and later searches: consult the index.
+                if(auto [offset, ok] = ix->offsets[obj]; ok)
+                {
+                    return {rec::path(gocpp::recv(ix), offset), nullptr};
+                }
+            }
+
+            return {""_s, mocklib::Errorf("can't find path for %v in %s"_s, obj, rec::Path(gocpp::recv(pkg)))};
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
+    }
+
+    // traverse performs a complete traversal of all symbols reachable from the package.
+    void rec::traverse(traversal* tr)
+    {
+        auto scope = rec::Scope(gocpp::recv(tr->pkg));
+        auto names = rec::Names(gocpp::recv(scope));
+        if(tr->ix != nullptr)
+        {
+            tr->ix->scopeNames = names;
         }
 
-        // 4. Search the API for the path to the var (field/param/result) or method.
-        // First inspect package-level named types.
+        // initial space for stack (ix == nil)
+        auto empty = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 48);
+
+        // First inspect package-level type names.
         // In the presence of path aliases, these give
         // the best paths because non-types may
         // refer to types, but not the reverse.
-        // initial space
-        auto empty = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 48);
-        auto objs = rec::scopeObjects(gocpp::recv(enc), scope);
-        for(auto [gocpp_ignored, o] : objs)
+        for(auto [i, name] : names)
         {
-            auto [tname, ok] = gocpp::getValue<types::TypeName*>(o);
-            if(! ok)
+            if(tr->found != ""_s)
+            {
+                // found (ix == nil)
+                return;
+            }
+
+            auto obj = rec::Lookup(gocpp::recv(scope), name);
+            if(auto [gocpp_id_3, ok] = gocpp::getValue<types::TypeName*>(obj); ! ok)
             {
                 // handle non-types in second pass
                 continue;
             }
 
-            auto path = append(empty, rec::Name(gocpp::recv(o)));
-            path = append(path, opType);
-
-            auto T = rec::Type(gocpp::recv(o));
-
-            if(rec::IsAlias(gocpp::recv(tname)))
+            // emit (name, opType)
+            gocpp::slice<unsigned char> path = {};
+            uint32_t offset = {};
+            if(tr->ix == nullptr)
             {
-                // type alias
-                if(auto r = find(obj, T, path, nullptr); r != nullptr)
-                {
-                    return {Path(r), nullptr};
-                }
+                path = append(empty, name);
+                path = append(path, opType);
             }
             else
             {
-                if(auto [named, gocpp_id_3] = gocpp::getValue<types::Named*>(T); named != nullptr)
+                offset = rec::emitPackageLevel(gocpp::recv(tr->ix), i);
+                tr->ix->offsets[obj] = offset;
+                offset = rec::emitPathSegment(gocpp::recv(tr->ix), offset, opType, - 1);
+            }
+
+            // A TypeName (for Named or Alias) may have type parameters.
+            //Go type switch emulation
+            {
+                const auto& gocpp_id_4 = gocpp::type_info(rec::Type(gocpp::recv(obj)));
+                int conditionId = -1;
+                if(gocpp_id_4 == typeid(types::Alias*)) { conditionId = 0; }
+                else if(gocpp_id_4 == typeid(types::Named*)) { conditionId = 1; }
+                switch(conditionId)
                 {
-                    if(auto r = findTypeParam(obj, rec::TypeParams(gocpp::recv(named)), path, opTypeParam, nullptr); r != nullptr)
+                    case 0:
                     {
-                        // generic named type
-                        return {Path(r), nullptr};
+                        types::Alias* t = gocpp::any_cast<types::Alias*>(rec::Type(gocpp::recv(obj)));
+                        rec::tparams(gocpp::recv(tr), rec::TypeParams(gocpp::recv(t)), path, offset, opTypeParam);
+                        rec::typ(gocpp::recv(tr), path, offset, opRhs, - 1, rec::Rhs(gocpp::recv(t)));
+                        break;
                     }
-                }
-                // defined (named) type
-                if(auto r = find(obj, rec::Underlying(gocpp::recv(T)), append(path, opUnderlying), nullptr); r != nullptr)
-                {
-                    return {Path(r), nullptr};
+                    case 1:
+                    {
+                        types::Named* t = gocpp::any_cast<types::Named*>(rec::Type(gocpp::recv(obj)));
+                        rec::tparams(gocpp::recv(tr), rec::TypeParams(gocpp::recv(t)), path, offset, opTypeParam);
+                        rec::typ(gocpp::recv(tr), path, offset, opUnderlying, - 1, rec::Underlying(gocpp::recv(t)));
+                        break;
+                    }
                 }
             }
         }
 
         // Then inspect everything else:
-        // non-types, and declared methods of defined types.
-        for(auto [gocpp_ignored, o] : objs)
+        // exported non-types, and declared methods of defined types.
+        for(auto [i, name] : names)
         {
-            auto path = append(empty, rec::Name(gocpp::recv(o)));
-            if(auto [gocpp_id_4, ok] = gocpp::getValue<types::TypeName*>(o); ! ok)
+            if(tr->found != ""_s)
             {
-                if(rec::Exported(gocpp::recv(o)))
-                {
-                    // exported non-type (const, var, func)
-                    if(auto r = find(obj, rec::Type(gocpp::recv(o)), append(path, opType), nullptr); r != nullptr)
-                    {
-                        return {Path(r), nullptr};
-                    }
-                }
-                continue;
+                // found (ix == nil)
+                return;
             }
 
-            // Inspect declared methods of defined types.
-            if(auto [T, ok] = gocpp::getValue<types::Named*>(aliases::Unalias(rec::Type(gocpp::recv(o)))); ok)
+            auto obj = rec::Lookup(gocpp::recv(scope), name);
+
+            if(auto [tname, ok] = gocpp::getValue<types::TypeName*>(obj); ! ok)
             {
-                path = append(path, opType);
+                if(rec::Exported(gocpp::recv(obj)))
+                {
+                    // exported non-type (const, var, func)
+                    gocpp::slice<unsigned char> path = {};
+                    uint32_t offset = {};
+                    if(tr->ix == nullptr)
+                    {
+                        path = append(empty, name);
+                    }
+                    else
+                    {
+                        offset = rec::emitPackageLevel(gocpp::recv(tr->ix), i);
+                        tr->ix->offsets[obj] = offset;
+                    }
+                    rec::typ(gocpp::recv(tr), path, offset, opType, - 1, rec::Type(gocpp::recv(obj)));
+                }
+            }
+            else
+            if(auto [T, ok] = gocpp::getValue<types::Named*>(types::Unalias(rec::Type(gocpp::recv(tname)))); ok)
+            {
+                // defined type
+                gocpp::slice<unsigned char> path = {};
+                uint32_t offset = {};
+                if(tr->ix == nullptr)
+                {
+                    path = append(empty, name);
+                    path = append(path, opType);
+                }
+                else
+                {
+                    // Inv: map entry for obj was populated in first pass.
+                    offset = rec::emitPathSegment(gocpp::recv(tr->ix), tr->ix->offsets[obj], opType, - 1);
+                }
+
+                // Inspect declared methods of defined types.
                 // The method index here is always with respect
                 // to the underlying go/types data structures,
                 // which ultimately derives from source order
@@ -389,27 +645,402 @@ namespace golang::objectpath
                 for(auto i = 0; i < rec::NumMethods(gocpp::recv(T)); i++)
                 {
                     auto m = rec::Method(gocpp::recv(T), i);
-                    auto path2 = appendOpArg(path, opMethod, i);
-                    if(m == obj)
-                    {
-                        // found declared method
-                        return {Path(path2), nullptr};
-                    }
-                    if(auto r = find(obj, rec::Type(gocpp::recv(m)), append(path2, opType), nullptr); r != nullptr)
-                    {
-                        return {Path(r), nullptr};
-                    }
+                    rec::object(gocpp::recv(tr), path, offset, opMethod, i, m);
                 }
             }
         }
-
-        return {""_s, mocklib::Errorf("can't find path for %v in %s"_s, obj, rec::Path(gocpp::recv(pkg)))};
     }
 
-    gocpp::slice<unsigned char> appendOpArg(gocpp::slice<unsigned char> path, unsigned char op, int arg)
+    void rec::visitType(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, types::Type T)
+    {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_5 = gocpp::type_info(T);
+            const auto& T_ref = T;
+            int conditionId = -1;
+            if(gocpp_id_5 == typeid(types::Alias*)) { conditionId = 0; }
+            else if(gocpp_id_5 == typeid(types::Basic*)) { conditionId = 1; }
+            else if(gocpp_id_5 == typeid(types::Named*)) { conditionId = 2; }
+            else if(gocpp_id_5 == typeid(types::Pointer*)) { conditionId = 3; }
+            else if(gocpp_id_5 == typeid(types::Slice*)) { conditionId = 4; }
+            else if(gocpp_id_5 == typeid(types::Array*)) { conditionId = 5; }
+            else if(gocpp_id_5 == typeid(types::Chan*)) { conditionId = 6; }
+            else if(gocpp_id_5 == typeid(types::Map*)) { conditionId = 7; }
+            else if(gocpp_id_5 == typeid(types::Signature*)) { conditionId = 8; }
+            else if(gocpp_id_5 == typeid(types::Struct*)) { conditionId = 9; }
+            else if(gocpp_id_5 == typeid(types::Tuple*)) { conditionId = 10; }
+            else if(gocpp_id_5 == typeid(types::Interface*)) { conditionId = 11; }
+            else if(gocpp_id_5 == typeid(types::TypeParam*)) { conditionId = 12; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    types::Alias* T = gocpp::any_cast<types::Alias*>(T_ref);
+                    rec::typ(gocpp::recv(tr), path, offset, opRhs, - 1, rec::Rhs(gocpp::recv(T)));
+                    break;
+                }
+
+                case 1:
+                case 2:
+                {
+                    types::Basic* T = gocpp::any_cast<types::Basic*>(T_ref);
+                    // Named types belonging to pkg were handled already,
+                    // so T must belong to another package. No path.
+                    return;
+                    break;
+                }
+
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                {
+                    types::Pointer* T = gocpp::any_cast<types::Pointer*>(T_ref);
+                    // note: includes Map
+                    // // note: includes Map
+                    struct hasElem : virtual gocpp::Interface
+                    {
+                        using gocpp::Interface::operator==;
+                        using gocpp::Interface::operator!=;
+
+                        hasElem(){}
+                        hasElem(hasElem& i) = default;
+                        hasElem(const hasElem& i) = default;
+                        hasElem& operator=(hasElem& i) = default;
+                        hasElem& operator=(const hasElem& i) = default;
+
+                        inline hasElem(nullptr_t) {}
+                        hasElem& operator=(nullptr_t) { mValue.reset(); }
+
+                        template<typename T>
+                        hasElem(T& ref)
+                        {
+                            mValue.reset(new hasElemImpl<T, std::unique_ptr<T>>(new T(ref)));
+                        }
+
+                        template<typename T>
+                        hasElem(const T& ref)
+                        {
+                            mValue.reset(new hasElemImpl<T, std::unique_ptr<T>>(new T(ref)));
+                        }
+
+                        template<typename T>
+                        hasElem(T* ptr)
+                        {
+                            mValue.reset(new hasElemImpl<T, gocpp::ptr<T>>(ptr));
+                        }
+
+                        using isGoInterface = void;
+
+                        std::ostream& PrintTo(std::ostream& os) const
+                        {
+                            return os;
+                        }
+
+                        struct IhasElem
+                        {
+                            virtual types::Type vElem() = 0;
+                            virtual void* getPtr() = 0;
+                        };
+
+                        template<typename T, typename TStore, typename TInterface = IhasElem>
+                        struct hasElemImpl : virtual TInterface
+                        {
+                            explicit hasElemImpl(T* ptr)
+                            {
+                                value.reset(ptr);
+                            }
+
+                            types::Type vElem() override
+                            {
+                                return rec::Elem(gocpp::PtrRecv<T, false>(value.get()));
+                            }
+
+                            void* getPtr() override
+                            {
+                                return value.get();
+                            }
+
+                            TStore value;
+                        };
+
+                        inline IhasElem* value() const
+                        {
+                            if(auto res = mValue.get()) { return res; }
+                            throw gocpp::GoPanic("using nil value for interface 'hasElem'");
+                        }
+
+                        std::shared_ptr<IhasElem> mValue;
+                    };
+
+                    namespace rec
+                    {
+                        types::Type Elem(const gocpp::PtrRecv<struct hasElem, false>& self)
+                        {
+                            return self.ptr->value()->vElem();
+                        }
+
+                        types::Type Elem(const gocpp::ObjRecv<struct hasElem>& self)
+                        {
+                            return self.obj.value()->vElem();
+                        }
+                    }
+                    rec::typ(gocpp::recv(tr), path, offset, opElem, - 1, rec::Elem(gocpp::recv(gocpp::getValue<hasElem>(T))));
+                    break;
+                }
+
+                case 7:
+                {
+                    types::Map* T = gocpp::any_cast<types::Map*>(T_ref);
+                    rec::typ(gocpp::recv(tr), path, offset, opKey, - 1, rec::Key(gocpp::recv(T)));
+                    rec::typ(gocpp::recv(tr), path, offset, opElem, - 1, rec::Elem(gocpp::recv(T)));
+                    break;
+                }
+
+                case 8:
+                {
+                    types::Signature* T = gocpp::any_cast<types::Signature*>(T_ref);
+                    rec::tparams(gocpp::recv(tr), rec::RecvTypeParams(gocpp::recv(T)), path, offset, opRecvTypeParam);
+                    rec::tparams(gocpp::recv(tr), rec::TypeParams(gocpp::recv(T)), path, offset, opTypeParam);
+                    rec::typ(gocpp::recv(tr), path, offset, opParams, - 1, rec::Params(gocpp::recv(T)));
+                    rec::typ(gocpp::recv(tr), path, offset, opResults, - 1, rec::Results(gocpp::recv(T)));
+                    break;
+                }
+
+                case 9:
+                {
+                    types::Struct* T = gocpp::any_cast<types::Struct*>(T_ref);
+                    for(auto i = 0; i < rec::NumFields(gocpp::recv(T)); i++)
+                    {
+                        rec::object(gocpp::recv(tr), path, offset, opField, i, rec::Field(gocpp::recv(T), i));
+                    }
+                    break;
+                }
+
+                case 10:
+                {
+                    types::Tuple* T = gocpp::any_cast<types::Tuple*>(T_ref);
+                    for(auto i = 0; i < rec::Len(gocpp::recv(T)); i++)
+                    {
+                        rec::object(gocpp::recv(tr), path, offset, opAt, i, rec::At(gocpp::recv(T), i));
+                    }
+                    break;
+                }
+
+                case 11:
+                {
+                    types::Interface* T = gocpp::any_cast<types::Interface*>(T_ref);
+                    for(auto i = 0; i < rec::NumMethods(gocpp::recv(T)); i++)
+                    {
+                        auto m = rec::Method(gocpp::recv(T), i);
+                        if(rec::Pkg(gocpp::recv(m)) != nullptr && rec::Pkg(gocpp::recv(m)) != tr->pkg)
+                        {
+                            // embedded method from another package
+                            continue;
+                        }
+                        if(! tr->seenMethods[m])
+                        {
+                            if(tr->seenMethods == nullptr)
+                            {
+                                tr->seenMethods = gocpp::make(gocpp::Tag<gocpp::map<types::Func*, bool>>());
+                            }
+                            tr->seenMethods[m] = true;
+                            rec::object(gocpp::recv(tr), path, offset, opMethod, i, m);
+                        }
+                    }
+                    break;
+                }
+
+                case 12:
+                {
+                    types::TypeParam* T = gocpp::any_cast<types::TypeParam*>(T_ref);
+                    auto tname = rec::Obj(gocpp::recv(T));
+                    if(rec::Pkg(gocpp::recv(tname)) != nullptr && rec::Pkg(gocpp::recv(tname)) != tr->pkg)
+                    {
+                        // type parameter from another package
+                        return;
+                    }
+                    if(! tr->seenTParamNames[tname])
+                    {
+                        if(tr->seenTParamNames == nullptr)
+                        {
+                            tr->seenTParamNames = gocpp::make(gocpp::Tag<gocpp::map<types::TypeName*, bool>>());
+                        }
+                        tr->seenTParamNames[tname] = true;
+                        rec::object(gocpp::recv(tr), path, offset, opObj, - 1, tname);
+                        rec::typ(gocpp::recv(tr), path, offset, opConstraint, - 1, rec::Constraint(gocpp::recv(T)));
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    void rec::tparams(traversal* tr, types::TypeParamList* list, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op)
+    {
+        for(auto i = 0; i < rec::Len(gocpp::recv(list)); i++)
+        {
+            rec::typ(gocpp::recv(tr), path, offset, op, i, rec::At(gocpp::recv(list), i));
+        }
+    }
+
+    // typ descends the type graph edge (op, index), then proceeds to traverse type t.
+    void rec::typ(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op, int index, types::Type t)
+    {
+        if(tr->ix == nullptr)
+        {
+            path = appendOpArg(path, op, index);
+        }
+        else
+        {
+            offset = rec::emitPathSegment(gocpp::recv(tr->ix), offset, op, index);
+        }
+        rec::visitType(gocpp::recv(tr), path, offset, t);
+    }
+
+    // object descends the type graph edge (op, index), records object
+    // obj, then proceeds to traverse its type.
+    void rec::object(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op, int index, types::Object obj)
+    {
+        if(tr->ix == nullptr)
+        {
+            path = appendOpArg(path, op, index);
+            if(obj == tr->target && tr->found == ""_s)
+            {
+                tr->found = Path(path);
+            }
+            path = append(path, opType);
+        }
+        else
+        {
+            offset = rec::emitPathSegment(gocpp::recv(tr->ix), offset, op, index);
+            if(auto [gocpp_id_6, ok] = tr->ix->offsets[obj]; ! ok)
+            {
+                tr->ix->offsets[obj] = offset;
+            }
+            offset = rec::emitPathSegment(gocpp::recv(tr->ix), offset, opType, - 1);
+        }
+        rec::visitType(gocpp::recv(tr), path, offset, rec::Type(gocpp::recv(obj)));
+    }
+
+    // emitPackageLevel encodes a record for a package-level symbol,
+    // identified by its index in ix.scopeNames.
+    uint32_t rec::emitPackageLevel(pkgIndex* p, int index)
+    {
+        auto off = uint32_t(len(p->data));
+        // zero varint => no parent
+        p->data = append(p->data, 0);
+        p->data = binary::AppendUvarint(p->data, uint64_t(index));
+        return off;
+    }
+
+    // emitPathSegment emits a record for a non-initial object path segment.
+    uint32_t rec::emitPathSegment(pkgIndex* p, uint32_t parent, unsigned char op, int index)
+    {
+        auto off = uint32_t(len(p->data));
+        p->data = binary::AppendUvarint(p->data, uint64_t(parent));
+        p->data = append(p->data, op);
+        //Go switch emulation
+        {
+            auto condition = op;
+            int conditionId = -1;
+            if(condition == opAt) { conditionId = 0; }
+            else if(condition == opField) { conditionId = 1; }
+            else if(condition == opMethod) { conditionId = 2; }
+            else if(condition == opTypeParam) { conditionId = 3; }
+            else if(condition == opRecvTypeParam) { conditionId = 4; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    p->data = binary::AppendUvarint(p->data, uint64_t(index));
+                    break;
+            }
+        }
+        return off;
+    }
+
+    // path returns the Path for the encoded node at the specified offset.
+    Path rec::path(pkgIndex* p, uint32_t offset)
+    {
+        // path elements in reverse
+        gocpp::slice<gocpp::string> elems = {};
+        for(; ; )
+        {
+            // Read parent index.
+            auto [parent, n] = binary::Uvarint(p->data.make_slice(offset));
+            offset += uint32_t(n);
+
+            if(parent == 0)
+            {
+                // root (end of path)
+                break;
+            }
+
+            auto op = p->data[offset];
+            offset++;
+
+            // The [AFMTr] operators have a numeric operand.
+            //Go switch emulation
+            {
+                auto condition = op;
+                int conditionId = -1;
+                if(condition == opAt) { conditionId = 0; }
+                else if(condition == opField) { conditionId = 1; }
+                else if(condition == opMethod) { conditionId = 2; }
+                else if(condition == opTypeParam) { conditionId = 3; }
+                else if(condition == opRecvTypeParam) { conditionId = 4; }
+                switch(conditionId)
+                {
+                    case 0:
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 4:
+                    {
+                        auto [val, n] = binary::Uvarint(p->data.make_slice(offset));
+                        offset += uint32_t(n);
+                        elems = append(elems, strconv::Itoa(int(val)));
+                        break;
+                    }
+                }
+            }
+
+            elems = append(elems, gocpp::string(gocpp::slice<unsigned char> {op}));
+
+            offset = uint32_t(parent);
+        }
+        auto [idx, gocpp_id_7] = binary::Uvarint(p->data.make_slice(offset));
+
+        // Convert index to Path string.
+        auto name = p->scopeNames[idx];
+        auto sz = len(name);
+        for(auto [gocpp_ignored, elem] : elems)
+        {
+            sz += len(elem);
+        }
+        strings::Builder buf = {};
+        rec::Grow(gocpp::recv(buf), sz);
+        rec::WriteString(gocpp::recv(buf), name);
+        for(auto [gocpp_ignored, elem] : slices::Backward(elems))
+        {
+            rec::WriteString(gocpp::recv(buf), elem);
+        }
+        return Path(rec::String(gocpp::recv(buf)));
+    }
+
+    // appendOpArg appends (op, index) to the object path.
+    // A negative index is ignored.
+    gocpp::slice<unsigned char> appendOpArg(gocpp::slice<unsigned char> path, unsigned char op, int index)
     {
         path = append(path, op);
-        path = strconv::AppendInt(path, int64_t(arg), 10);
+        if(index >= 0)
+        {
+            path = strconv::AppendInt(path, int64_t(index), 10);
+        }
         return path;
     }
 
@@ -463,7 +1094,7 @@ namespace golang::objectpath
             return {""_s, false};
         }
 
-        auto [gocpp_id_5, named] = typesinternal::ReceiverNamed(rec::Recv(gocpp::recv(gocpp::getValue<types::Signature*>(rec::Type(gocpp::recv(meth))))));
+        auto [gocpp_id_8, named] = typesinternal::ReceiverNamed(rec::Recv(gocpp::recv(rec::Signature(gocpp::recv(meth)))));
         if(named == nullptr)
         {
             return {""_s, false};
@@ -501,202 +1132,6 @@ namespace golang::objectpath
         // versions gopls supports.
         // panic(fmt.Sprintf("couldn't find method %s on type %s; methods: %#v", meth, named, enc.namedMethods(named)))
         return {""_s, false};
-    }
-
-    // find finds obj within type T, returning the path to it, or nil if not found.
-    //
-    // The seen map is used to short circuit cycles through type parameters. If
-    // nil, it will be allocated as necessary.
-    gocpp::slice<unsigned char> find(types::Object obj, types::Type T, gocpp::slice<unsigned char> path, gocpp::map<types::TypeName*, bool> seen)
-    {
-        //Go type switch emulation
-        {
-            const auto& gocpp_id_6 = gocpp::type_info(T);
-            const auto& T_ref = T;
-            int conditionId = -1;
-            if(gocpp_id_6 == typeid(types::Alias*)) { conditionId = 0; }
-            else if(gocpp_id_6 == typeid(types::Basic*)) { conditionId = 1; }
-            else if(gocpp_id_6 == typeid(types::Named*)) { conditionId = 2; }
-            else if(gocpp_id_6 == typeid(types::Pointer*)) { conditionId = 3; }
-            else if(gocpp_id_6 == typeid(types::Slice*)) { conditionId = 4; }
-            else if(gocpp_id_6 == typeid(types::Array*)) { conditionId = 5; }
-            else if(gocpp_id_6 == typeid(types::Chan*)) { conditionId = 6; }
-            else if(gocpp_id_6 == typeid(types::Map*)) { conditionId = 7; }
-            else if(gocpp_id_6 == typeid(types::Signature*)) { conditionId = 8; }
-            else if(gocpp_id_6 == typeid(types::Struct*)) { conditionId = 9; }
-            else if(gocpp_id_6 == typeid(types::Tuple*)) { conditionId = 10; }
-            else if(gocpp_id_6 == typeid(types::Interface*)) { conditionId = 11; }
-            else if(gocpp_id_6 == typeid(types::TypeParam*)) { conditionId = 12; }
-            switch(conditionId)
-            {
-                case 0:
-                {
-                    types::Alias* T = gocpp::any_cast<types::Alias*>(T_ref);
-                    return find(obj, aliases::Unalias(T), path, seen);
-                    break;
-                }
-                case 1:
-                case 2:
-                {
-                    types::Basic* T = gocpp::any_cast<types::Basic*>(T_ref);
-                    // Named types belonging to pkg were handled already,
-                    // so T must belong to another package. No path.
-                    return nullptr;
-                    break;
-                }
-                case 3:
-                {
-                    types::Pointer* T = gocpp::any_cast<types::Pointer*>(T_ref);
-                    return find(obj, rec::Elem(gocpp::recv(T)), append(path, opElem), seen);
-                    break;
-                }
-                case 4:
-                {
-                    types::Slice* T = gocpp::any_cast<types::Slice*>(T_ref);
-                    return find(obj, rec::Elem(gocpp::recv(T)), append(path, opElem), seen);
-                    break;
-                }
-                case 5:
-                {
-                    types::Array* T = gocpp::any_cast<types::Array*>(T_ref);
-                    return find(obj, rec::Elem(gocpp::recv(T)), append(path, opElem), seen);
-                    break;
-                }
-                case 6:
-                {
-                    types::Chan* T = gocpp::any_cast<types::Chan*>(T_ref);
-                    return find(obj, rec::Elem(gocpp::recv(T)), append(path, opElem), seen);
-                    break;
-                }
-                case 7:
-                {
-                    types::Map* T = gocpp::any_cast<types::Map*>(T_ref);
-                    if(auto r = find(obj, rec::Key(gocpp::recv(T)), append(path, opKey), seen); r != nullptr)
-                    {
-                        return r;
-                    }
-                    return find(obj, rec::Elem(gocpp::recv(T)), append(path, opElem), seen);
-                    break;
-                }
-                case 8:
-                {
-                    types::Signature* T = gocpp::any_cast<types::Signature*>(T_ref);
-                    if(auto r = findTypeParam(obj, rec::RecvTypeParams(gocpp::recv(T)), path, opRecvTypeParam, nullptr); r != nullptr)
-                    {
-                        return r;
-                    }
-                    if(auto r = findTypeParam(obj, rec::TypeParams(gocpp::recv(T)), path, opTypeParam, seen); r != nullptr)
-                    {
-                        return r;
-                    }
-                    if(auto r = find(obj, rec::Params(gocpp::recv(T)), append(path, opParams), seen); r != nullptr)
-                    {
-                        return r;
-                    }
-                    return find(obj, rec::Results(gocpp::recv(T)), append(path, opResults), seen);
-                    break;
-                }
-                case 9:
-                {
-                    types::Struct* T = gocpp::any_cast<types::Struct*>(T_ref);
-                    for(auto i = 0; i < rec::NumFields(gocpp::recv(T)); i++)
-                    {
-                        auto fld = rec::Field(gocpp::recv(T), i);
-                        auto path2 = appendOpArg(path, opField, i);
-                        if(fld == obj)
-                        {
-                            // found field var
-                            return path2;
-                        }
-                        if(auto r = find(obj, rec::Type(gocpp::recv(fld)), append(path2, opType), seen); r != nullptr)
-                        {
-                            return r;
-                        }
-                    }
-                    return nullptr;
-                    break;
-                }
-                case 10:
-                {
-                    types::Tuple* T = gocpp::any_cast<types::Tuple*>(T_ref);
-                    for(auto i = 0; i < rec::Len(gocpp::recv(T)); i++)
-                    {
-                        auto v = rec::At(gocpp::recv(T), i);
-                        auto path2 = appendOpArg(path, opAt, i);
-                        if(v == obj)
-                        {
-                            // found param/result var
-                            return path2;
-                        }
-                        if(auto r = find(obj, rec::Type(gocpp::recv(v)), append(path2, opType), seen); r != nullptr)
-                        {
-                            return r;
-                        }
-                    }
-                    return nullptr;
-                    break;
-                }
-                case 11:
-                {
-                    types::Interface* T = gocpp::any_cast<types::Interface*>(T_ref);
-                    for(auto i = 0; i < rec::NumMethods(gocpp::recv(T)); i++)
-                    {
-                        auto m = rec::Method(gocpp::recv(T), i);
-                        auto path2 = appendOpArg(path, opMethod, i);
-                        if(m == obj)
-                        {
-                            // found interface method
-                            return path2;
-                        }
-                        if(auto r = find(obj, rec::Type(gocpp::recv(m)), append(path2, opType), seen); r != nullptr)
-                        {
-                            return r;
-                        }
-                    }
-                    return nullptr;
-                    break;
-                }
-                case 12:
-                {
-                    types::TypeParam* T = gocpp::any_cast<types::TypeParam*>(T_ref);
-                    auto name = rec::Obj(gocpp::recv(T));
-                    if(name == obj)
-                    {
-                        return append(path, opObj);
-                    }
-                    if(seen[name])
-                    {
-                        return nullptr;
-                    }
-                    if(seen == nullptr)
-                    {
-                        seen = gocpp::make(gocpp::Tag<gocpp::map<types::TypeName*, bool>>());
-                    }
-                    seen[name] = true;
-                    if(auto r = find(obj, rec::Constraint(gocpp::recv(T)), append(path, opConstraint), seen); r != nullptr)
-                    {
-                        return r;
-                    }
-                    return nullptr;
-                    break;
-                }
-            }
-        }
-        gocpp::panic(T);
-    }
-
-    gocpp::slice<unsigned char> findTypeParam(types::Object obj, types::TypeParamList* list, gocpp::slice<unsigned char> path, unsigned char op, gocpp::map<types::TypeName*, bool> seen)
-    {
-        for(auto i = 0; i < rec::Len(gocpp::recv(list)); i++)
-        {
-            auto tparam = rec::At(gocpp::recv(list), i);
-            auto path2 = appendOpArg(path, op, i);
-            if(auto r = find(obj, tparam, path2, seen); r != nullptr)
-            {
-                return r;
-            }
-        }
-        return nullptr;
     }
 
     // Object returns the object denoted by path p within the package pkg.
@@ -903,7 +1338,7 @@ namespace golang::objectpath
                 return self.obj.value()->vTypeParams();
             }
         }
-        // abstraction of *types.{Named,TypeParam}
+        // abstraction of *types.{Alias,Named,TypeParam}
         struct hasObj : virtual gocpp::Interface
         {
             using gocpp::Interface::operator==;
@@ -1065,7 +1500,7 @@ namespace golang::objectpath
             }
 
             // Inv: t != nil, obj == nil
-            t = aliases::Unalias(t);
+            t = types::Unalias(t);
             //Go switch emulation
             {
                 auto condition = code;
@@ -1075,19 +1510,20 @@ namespace golang::objectpath
                 else if(condition == opParams) { conditionId = 2; }
                 else if(condition == opResults) { conditionId = 3; }
                 else if(condition == opUnderlying) { conditionId = 4; }
-                else if(condition == opTypeParam) { conditionId = 5; }
-                else if(condition == opRecvTypeParam) { conditionId = 6; }
-                else if(condition == opConstraint) { conditionId = 7; }
-                else if(condition == opAt) { conditionId = 8; }
-                else if(condition == opField) { conditionId = 9; }
-                else if(condition == opMethod) { conditionId = 10; }
-                else if(condition == opObj) { conditionId = 11; }
+                else if(condition == opRhs) { conditionId = 5; }
+                else if(condition == opTypeParam) { conditionId = 6; }
+                else if(condition == opRecvTypeParam) { conditionId = 7; }
+                else if(condition == opConstraint) { conditionId = 8; }
+                else if(condition == opAt) { conditionId = 9; }
+                else if(condition == opField) { conditionId = 10; }
+                else if(condition == opMethod) { conditionId = 11; }
+                else if(condition == opObj) { conditionId = 12; }
                 switch(conditionId)
                 {
                     case 0:
                     {
                         // Pointer, Slice, Array, Chan, Map
-                        auto [hasElem_tmp, ok] = gocpp::getValue<golang::objectpath::hasElem>(t);
+                        auto [hasElem_tmp, ok] = gocpp::getValue<golang::golang_org::x::tools::go::types::objectpath::hasElem>(t);
                         auto& hasElem = hasElem_tmp;
                         if(! ok)
                         {
@@ -1145,9 +1581,24 @@ namespace golang::objectpath
                     }
 
                     case 5:
+                        if(auto [alias, ok] = gocpp::getValue<types::Alias*>(t); ok)
+                        {
+                            t = rec::Rhs(gocpp::recv(alias));
+                        }
+                        else
+                        if(false)
+                        {
+                            // Now that go1.24 is assured, we should be able to
+                            // replace this with "if true {", but it causes objectpath
+                            // tests to fail. TODO(adonovan): investigate.
+                            return {nullptr, mocklib::Errorf("cannot apply %q to %s (got %T, want alias)"_s, code, t, t)};
+                        }
+                        break;
+
+                    case 6:
                     {
                         // Named, Signature
-                        std::tie(hasTypeParams_tmp, ok) = gocpp::getValue<golang::objectpath::hasTypeParams>(t);
+                        std::tie(hasTypeParams_tmp, ok) = gocpp::getValue<golang::golang_org::x::tools::go::types::objectpath::hasTypeParams>(t);
                         auto& hasTypeParams = hasTypeParams_tmp;
                         if(! ok)
                         {
@@ -1156,13 +1607,13 @@ namespace golang::objectpath
                         auto tparams = rec::TypeParams(gocpp::recv(hasTypeParams));
                         if(auto n = rec::Len(gocpp::recv(tparams)); index >= n)
                         {
-                            return {nullptr, mocklib::Errorf("tuple index %d out of range [0-%d)"_s, index, n)};
+                            return {nullptr, mocklib::Errorf("type parameter index %d out of range [0-%d)"_s, index, n)};
                         }
                         t = rec::At(gocpp::recv(tparams), index);
                         break;
                     }
 
-                    case 6:
+                    case 7:
                     {
                         // Signature
                         std::tie(sig, ok) = gocpp::getValue<types::Signature*>(t);
@@ -1173,13 +1624,13 @@ namespace golang::objectpath
                         auto rtparams = rec::RecvTypeParams(gocpp::recv(sig));
                         if(auto n = rec::Len(gocpp::recv(rtparams)); index >= n)
                         {
-                            return {nullptr, mocklib::Errorf("tuple index %d out of range [0-%d)"_s, index, n)};
+                            return {nullptr, mocklib::Errorf("receiver type parameter index %d out of range [0-%d)"_s, index, n)};
                         }
                         t = rec::At(gocpp::recv(rtparams), index);
                         break;
                     }
 
-                    case 7:
+                    case 8:
                     {
                         types::TypeParam* tparam;
                         std::tie(tparam, ok) = gocpp::getValue<types::TypeParam*>(t);
@@ -1191,7 +1642,7 @@ namespace golang::objectpath
                         break;
                     }
 
-                    case 8:
+                    case 9:
                     {
                         types::Tuple* tuple;
                         std::tie(tuple, ok) = gocpp::getValue<types::Tuple*>(t);
@@ -1208,7 +1659,7 @@ namespace golang::objectpath
                         break;
                     }
 
-                    case 9:
+                    case 10:
                     {
                         types::Struct* structType;
                         std::tie(structType, ok) = gocpp::getValue<types::Struct*>(t);
@@ -1225,14 +1676,14 @@ namespace golang::objectpath
                         break;
                     }
 
-                    case 10:
+                    case 11:
                         //Go type switch emulation
                         {
-                            const auto& gocpp_id_7 = gocpp::type_info(t);
+                            const auto& gocpp_id_9 = gocpp::type_info(t);
                             const auto& t_ref = t;
                             int conditionId = -1;
-                            if(gocpp_id_7 == typeid(types::Interface*)) { conditionId = 0; }
-                            else if(gocpp_id_7 == typeid(types::Named*)) { conditionId = 1; }
+                            if(gocpp_id_9 == typeid(types::Interface*)) { conditionId = 0; }
+                            else if(gocpp_id_9 == typeid(types::Named*)) { conditionId = 1; }
                             switch(conditionId)
                             {
                                 // Id-ordered
@@ -1269,9 +1720,9 @@ namespace golang::objectpath
                         t = nullptr;
                         break;
 
-                    case 11:
+                    case 12:
                     {
-                        std::tie(hasObj_tmp, ok) = gocpp::getValue<golang::objectpath::hasObj>(t);
+                        std::tie(hasObj_tmp, ok) = gocpp::getValue<golang::golang_org::x::tools::go::types::objectpath::hasObj>(t);
                         auto& hasObj = hasObj_tmp;
                         if(! ok)
                         {
@@ -1302,31 +1753,6 @@ namespace golang::objectpath
 
         // success
         return {obj, nullptr};
-    }
-
-    // scopeObjects is a memoization of scope objects.
-    // Callers must not modify the result.
-    gocpp::slice<types::Object> rec::scopeObjects(Encoder* enc, types::Scope* scope)
-    {
-        auto m = enc->scopeMemo;
-        if(m == nullptr)
-        {
-            m = gocpp::make(gocpp::Tag<gocpp::map<types::Scope*, gocpp::slice<types::Object>>>());
-            enc->scopeMemo = m;
-        }
-        auto [objs, ok] = m[scope];
-        if(! ok)
-        {
-            // allocates and sorts
-            auto names = rec::Names(gocpp::recv(scope));
-            objs = gocpp::make(gocpp::Tag<gocpp::slice<types::Object>>(), len(names));
-            for(auto [i, name] : names)
-            {
-                objs[i] = rec::Lookup(gocpp::recv(scope), name);
-            }
-            m[scope] = objs;
-        }
-        return objs;
     }
 
 }

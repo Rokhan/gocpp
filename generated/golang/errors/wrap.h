@@ -457,6 +457,208 @@ namespace golang::errors
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value);
+    
+    template<typename E>
+    std::tuple<E, bool> AsType(gocpp::error err);
+    
+    template<typename E>
+    std::tuple<E, bool> asType(gocpp::error err, E** ppe);
+    struct gocpp_id_9 : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        gocpp_id_9(){}
+        gocpp_id_9(gocpp_id_9& i) = default;
+        gocpp_id_9(const gocpp_id_9& i) = default;
+        gocpp_id_9& operator=(gocpp_id_9& i) = default;
+        gocpp_id_9& operator=(const gocpp_id_9& i) = default;
+
+        inline gocpp_id_9(nullptr_t) {};
+        gocpp_id_9& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        gocpp_id_9(T& ref);
+
+        template<typename T>
+        gocpp_id_9(const T& ref);
+
+        template<typename T>
+        gocpp_id_9(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct Igocpp_id_9
+        {
+            virtual bool vAs(go_any _1) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = Igocpp_id_9>
+        struct gocpp_id_9Impl : virtual TInterface
+        {
+            explicit gocpp_id_9Impl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            bool vAs(go_any _1) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline Igocpp_id_9* value() const;
+
+        std::shared_ptr<Igocpp_id_9> mValue;
+    };
+
+    namespace rec
+    {
+        bool As(const gocpp::PtrRecv<struct gocpp_id_9, false>& self, go_any _1);
+        bool As(const gocpp::ObjRecv<struct gocpp_id_9>& self, go_any _1);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value);
+    struct gocpp_id_11 : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        gocpp_id_11(){}
+        gocpp_id_11(gocpp_id_11& i) = default;
+        gocpp_id_11(const gocpp_id_11& i) = default;
+        gocpp_id_11& operator=(gocpp_id_11& i) = default;
+        gocpp_id_11& operator=(const gocpp_id_11& i) = default;
+
+        inline gocpp_id_11(nullptr_t) {};
+        gocpp_id_11& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        gocpp_id_11(T& ref);
+
+        template<typename T>
+        gocpp_id_11(const T& ref);
+
+        template<typename T>
+        gocpp_id_11(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct Igocpp_id_11
+        {
+            virtual gocpp::error vUnwrap() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = Igocpp_id_11>
+        struct gocpp_id_11Impl : virtual TInterface
+        {
+            explicit gocpp_id_11Impl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            gocpp::error vUnwrap() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline Igocpp_id_11* value() const;
+
+        std::shared_ptr<Igocpp_id_11> mValue;
+    };
+
+    namespace rec
+    {
+        gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_11, false>& self);
+        gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_11>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_11& value);
+    struct gocpp_id_12 : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        gocpp_id_12(){}
+        gocpp_id_12(gocpp_id_12& i) = default;
+        gocpp_id_12(const gocpp_id_12& i) = default;
+        gocpp_id_12& operator=(gocpp_id_12& i) = default;
+        gocpp_id_12& operator=(const gocpp_id_12& i) = default;
+
+        inline gocpp_id_12(nullptr_t) {};
+        gocpp_id_12& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        gocpp_id_12(T& ref);
+
+        template<typename T>
+        gocpp_id_12(const T& ref);
+
+        template<typename T>
+        gocpp_id_12(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct Igocpp_id_12
+        {
+            virtual gocpp::slice<gocpp::error> vUnwrap() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = Igocpp_id_12>
+        struct gocpp_id_12Impl : virtual TInterface
+        {
+            explicit gocpp_id_12Impl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            gocpp::slice<gocpp::error> vUnwrap() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline Igocpp_id_12* value() const;
+
+        std::shared_ptr<Igocpp_id_12> mValue;
+    };
+
+    namespace rec
+    {
+        gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_id_12, false>& self);
+        gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_id_12>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_12& value);
+}
+#include "golang/internal/reflectlite/type.fwd.h"
+#include "golang/internal/reflectlite/value.fwd.h"
+
+namespace golang::errors
+{
+    namespace reflectlite = golang::internal::reflectlite;
 }
 #include "golang/internal/reflectlite/type.h"
 #include "golang/internal/reflectlite/value.h"

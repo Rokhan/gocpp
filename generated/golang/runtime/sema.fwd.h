@@ -6,21 +6,21 @@
 
 namespace golang::runtime
 {
+    struct semaRoot;
     // Prime to not correlate with any user patterns.
     const long semTabSize = 251;
     struct gocpp_id_0;
     struct GoTag_semTable;
     using semaProfileFlags = int;
+    struct notifyList;
     const semaProfileFlags semaBlockProfile = 1 << 0;
     const semaProfileFlags semaMutexProfile = 1 << 1;
 }
 #include "golang/internal/cpu/cpu_x86.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
-    struct semaRoot;
+    namespace cpu = golang::internal::cpu;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     using semTable = gocpp::defined<gocpp::array<gocpp_id_0, semTabSize>, GoTag_semTable>;
-    struct notifyList;
 }

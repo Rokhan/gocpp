@@ -18,8 +18,11 @@
 #include "golang/strings/strings.h"
 #include "golang/unicode/letter.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
+    namespace comment = golang::go::doc::comment;
+    namespace strings = golang::strings;
+    namespace unicode = golang::unicode;
     namespace rec
     {
         using comment::rec::Parse;

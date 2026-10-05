@@ -9,17 +9,157 @@
 #include "golang/golang.org/x/tools/internal/typesinternal/types.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/types/alias.fwd.h"
+#include "golang/go/types/api.fwd.h"
+#include "golang/go/types/named.fwd.h"
+#include "golang/go/types/object.fwd.h"
+#include "golang/go/types/package.fwd.h"
+#include "golang/go/types/pointer.fwd.h"
+#include "golang/go/types/scope.fwd.h"
+#include "golang/go/types/selection.fwd.h"
+#include "golang/go/types/struct.fwd.h"
+#include "golang/go/types/tuple.fwd.h"
+#include "golang/go/types/type.fwd.h"
+#include "golang/go/types/typelists.fwd.h"
+#include "golang/go/types/typeparam.fwd.h"
+#include "golang/go/types/typestring.fwd.h"
+#include "golang/go/types/universe.fwd.h"
+#include "golang/golang.org/x/tools/go/ast/inspector/cursor.fwd.h"
+#include "golang/iter/iter.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::typesinternal
+{
+    namespace types = golang::go::types;
+    namespace token = golang::go::token;
+}
 #include "golang/go/token/position.h"
 #include "golang/go/types/api.h"
+#include "golang/go/types/object.h"
+#include "golang/go/types/selection.h"
+#include "golang/go/types/type.h"
 #include "golang/go/types/typestring.h"
+#include "golang/golang.org/x/tools/go/ast/inspector/cursor.h"
 #include "golang/golang.org/x/tools/internal/typesinternal/errorcode.h"
-#include "golang/go/types/package.fwd.h"
+#include "golang/iter/iter.h"
 
-namespace golang::typesinternal
+namespace golang::golang_org::x::tools::internal::typesinternal
 {
+    namespace inspector = golang::golang_org::x::tools::go::ast::inspector;
+    namespace iter = golang::iter;
     bool SetUsesCgo(types::Config* conf);
-    std::tuple<ErrorCode, token::Pos, token::Pos, bool> ReadGo116ErrorData(types::Error err);
+    std::tuple<ErrorCode, token::Pos, token::Pos, bool> ErrorCodeStartEnd(types::Error err);
     types::Qualifier NameRelativeTo(types::Package* pkg);
+    types::TypeName* TypeNameFor(types::Type t);
+    struct NamedOrAlias : virtual gocpp::Interface, types::Type
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        NamedOrAlias(){}
+        NamedOrAlias(NamedOrAlias& i) = default;
+        NamedOrAlias(const NamedOrAlias& i) = default;
+        NamedOrAlias& operator=(NamedOrAlias& i) = default;
+        NamedOrAlias& operator=(const NamedOrAlias& i) = default;
+
+        inline NamedOrAlias(nullptr_t) {};
+        NamedOrAlias& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        NamedOrAlias(T& ref);
+
+        template<typename T>
+        NamedOrAlias(const T& ref);
+
+        template<typename T>
+        NamedOrAlias(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct INamedOrAlias: virtual types::Type::IType
+        {
+            virtual types::TypeName* vObj() = 0;
+            virtual types::TypeList* vTypeArgs() = 0;
+            virtual types::TypeParamList* vTypeParams() = 0;
+            virtual void vSetTypeParams(gocpp::slice<types::TypeParam*> tparams) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = INamedOrAlias>
+        struct NamedOrAliasImpl : virtual TInterface, virtual types::Type::TypeImpl<T, TStore, TInterface>
+        {
+            explicit NamedOrAliasImpl(T* ptr): types::Type::TypeImpl<T, TStore, TInterface>(ptr)
+            {
+                value.reset(ptr);
+            }
+
+            types::TypeName* vObj() override;
+
+            types::TypeList* vTypeArgs() override;
+
+            types::TypeParamList* vTypeParams() override;
+
+            void vSetTypeParams(gocpp::slice<types::TypeParam*> tparams) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline INamedOrAlias* value() const;
+
+        std::shared_ptr<INamedOrAlias> mValue;
+    };
+
+    namespace rec
+    {
+        types::TypeName* Obj(const gocpp::PtrRecv<struct NamedOrAlias, false>& self);
+        types::TypeName* Obj(const gocpp::ObjRecv<struct NamedOrAlias>& self);
+
+        types::TypeList* TypeArgs(const gocpp::PtrRecv<struct NamedOrAlias, false>& self);
+        types::TypeList* TypeArgs(const gocpp::ObjRecv<struct NamedOrAlias>& self);
+
+        types::TypeParamList* TypeParams(const gocpp::PtrRecv<struct NamedOrAlias, false>& self);
+        types::TypeParamList* TypeParams(const gocpp::ObjRecv<struct NamedOrAlias>& self);
+
+        void SetTypeParams(const gocpp::PtrRecv<struct NamedOrAlias, false>& self, gocpp::slice<types::TypeParam*> tparams);
+        void SetTypeParams(const gocpp::ObjRecv<struct NamedOrAlias>& self, gocpp::slice<types::TypeParam*> tparams);
+
+        gocpp::string String(const gocpp::PtrRecv<struct NamedOrAlias, false>& self);
+        gocpp::string String(const gocpp::ObjRecv<struct NamedOrAlias>& self);
+
+        types::Type Underlying(const gocpp::PtrRecv<struct NamedOrAlias, false>& self);
+        types::Type Underlying(const gocpp::ObjRecv<struct NamedOrAlias>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct NamedOrAlias& value);
+    bool IsPackageLevel(types::Object obj);
+    types::Info* NewTypesInfo();
+    types::Scope* EnclosingScope(types::Info* info, inspector::Cursor cur);
+    bool Imports(types::Package* pkg, gocpp::string path);
+    gocpp::string ObjectKind(types::Object obj);
+    iter::Seq2<types::Var*, bool> ImplicitFieldSelections(types::Selection seln);
+    types::Tuple* TupleOf(gocpp::slice<types::Type> elems);
+    
+    template<typename... Args>
+    types::Tuple* TupleOf(Args... elems)
+    {
+        return TupleOf(gocpp::ToSlice<types::Type>(elems...));
+    }
+    
+    template<typename... Args>
+    types::Tuple* TupleOf(types::Type value, Args... elems)
+    {
+        return TupleOf(gocpp::ToSlice<types::Type>(value, elems...));
+    }
+    extern NamedOrAlias _;
+    extern NamedOrAlias _;
+    NamedOrAlias Origin(NamedOrAlias t);
 
     namespace rec
     {

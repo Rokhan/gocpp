@@ -4,26 +4,18 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::reflectlite
+namespace golang::internal::reflectlite
 {
+    struct Value;
     using flag = uintptr_t;
     const long flagKindWidth = 5;
     const long flagMethodShift = 10;
-    struct dummyStruct;
+    struct ValueError;
     const flag flagKindMask = (1 << flagKindWidth) - 1;
     const flag flagStickyRO = 1 << 5;
     const flag flagEmbedRO = 1 << 6;
     const flag flagIndir = 1 << 7;
     const flag flagAddr = 1 << 8;
     const flag flagMethod = 1 << 9;
-}
-#include "golang/internal/abi/type.fwd.h"
-#include "golang/internal/reflectlite/type.fwd.h"
-
-namespace golang::reflectlite
-{
-    struct Value;
-    struct ValueError;
-    struct emptyInterface;
     const flag flagRO = flagStickyRO | flagEmbedRO;
 }

@@ -39,6 +39,9 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     void init();
+    // doubleCheckReadMemStats controls a double-check mode for ReadMemStats that
+    // ensures consistency between the values that ReadMemStats is using and the
+    // runtime-internal stats.
     extern bool doubleCheckReadMemStats;
     void readGCStats(gocpp::slice<uint64_t>* pauses);
     void readGCStats_m(gocpp::slice<uint64_t>* pauses);
@@ -46,17 +49,17 @@ namespace golang::runtime
     void flushallmcaches();
     struct cpuStats
     {
-        int64_t gcAssistTime{}; // GC assists
-        int64_t gcDedicatedTime{}; // GC dedicated mark workers + pauses
-        int64_t gcIdleTime{}; // GC idle mark workers
-        int64_t gcPauseTime{}; // GC pauses (all GOMAXPROCS, even if just 1 is running)
-        int64_t gcTotalTime{};
-        int64_t scavengeAssistTime{}; // background scavenger
-        int64_t scavengeBgTime{}; // scavenge assists
-        int64_t scavengeTotalTime{};
-        int64_t idleTime{}; // Time Ps spent in _Pidle.
-        int64_t userTime{}; // Time Ps spent in _Prunning or _Psyscall that's not any of the above.
-        int64_t totalTime{}; // GOMAXPROCS * (monotonic wall clock time elapsed)
+        int64_t GCAssistTime{}; // GC assists
+        int64_t GCDedicatedTime{}; // GC dedicated mark workers + pauses
+        int64_t GCIdleTime{}; // GC idle mark workers
+        int64_t GCPauseTime{}; // GC pauses (all GOMAXPROCS, even if just 1 is running)
+        int64_t GCTotalTime{};
+        int64_t ScavengeAssistTime{}; // background scavenger
+        int64_t ScavengeBgTime{}; // scavenge assists
+        int64_t ScavengeTotalTime{};
+        int64_t IdleTime{}; // Time Ps spent in _Pidle.
+        int64_t UserTime{}; // Time Ps spent in _Prunning that's not any of the above.
+        int64_t TotalTime{}; // GOMAXPROCS * (monotonic wall clock time elapsed)
 
         using isGoStruct = void;
 
@@ -251,11 +254,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MemStats& value);
+    void ReadMemStats(MemStats* m);
+    void readmemstats_m(MemStats* stats);
 }
-#include "golang/runtime/sizeclasses.fwd.h"
+#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
 
 namespace golang::runtime
 {
+    namespace gc = golang::internal::runtime::gc;
     struct heapStatsDelta
     {
         // Memory stats.
@@ -264,17 +270,16 @@ namespace golang::runtime
         int64_t inHeap{}; // byte delta of memory placed in the heap
         int64_t inStacks{}; // byte delta of memory reserved for stacks
         int64_t inWorkBufs{}; // byte delta of memory reserved for work bufs
-        int64_t inPtrScalarBits{}; // byte delta of memory reserved for unrolled GC prog bits
         // Allocator stats.
         // These are all uint64 because they're cumulative, and could quickly wrap
         // around otherwise.
         uint64_t tinyAllocCount{}; // number of tiny allocations
         uint64_t largeAlloc{}; // bytes allocated for large objects
         uint64_t largeAllocCount{}; // number of large object allocations
-        gocpp::array<uint64_t, _NumSizeClasses> smallAllocCount{}; // number of allocs for small objects
+        gocpp::array<uint64_t, gc::NumSizeClasses> smallAllocCount{}; // number of allocs for small objects
         uint64_t largeFree{}; // bytes freed for large objects (>maxSmallSize)
         uint64_t largeFreeCount{}; // number of frees for large objects (>maxSmallSize)
-        gocpp::array<uint64_t, _NumSizeClasses> smallFreeCount{}; // number of frees for small objects (<=maxSmallSize)
+        gocpp::array<uint64_t, gc::NumSizeClasses> smallFreeCount{}; // number of frees for small objects (<=maxSmallSize)
 
         using isGoStruct = void;
 
@@ -288,10 +293,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct heapStatsDelta& value);
-    void ReadMemStats(MemStats* m);
-    void readmemstats_m(MemStats* stats);
 }
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
@@ -338,6 +348,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct consistentHeapStats& value);
+}
+#include "golang/runtime/mgcmark_greenteagc.h"
+
+namespace golang::runtime
+{
     struct mstats
     {
         // Statistics about malloc heap.
@@ -362,6 +377,7 @@ namespace golang::runtime
         double gc_cpu_fraction{}; // fraction of CPU time used by GC
         uint64_t last_gc_nanotime{}; // last gc (monotonic time)
         uint64_t lastHeapInUse{}; // heapInUse at mark termination of the previous GC
+        gocpp::array<sizeClassScanStats, gc::NumSizeClasses> lastScanStats{};
         bool enablegc{};
 
         using isGoStruct = void;
@@ -388,6 +404,7 @@ namespace golang::runtime
         void unsafeRead(consistentHeapStats* m, heapStatsDelta* out);
         void unsafeClear(consistentHeapStats* m);
         void read(consistentHeapStats* m, heapStatsDelta* out);
+        void accumulateGCPauseTime(cpuStats* s, int64_t dt, int32_t maxProcs);
         void accumulate(cpuStats* s, int64_t now, bool gcMarkPhase);
     }
 }

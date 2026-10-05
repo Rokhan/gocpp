@@ -10,8 +10,13 @@
 #include "gocpp/support.h"
 
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
+    // CanUseLongPaths is true when the OS supports opting into
+    // proper long path handling without the need for fixups.
+    //
+    //go:linkname CanUseLongPaths
+    extern bool CanUseLongPaths;
     gocpp::string UTF16PtrToString(uint16_t* p);
     struct SecurityAttributes
     {
@@ -85,6 +90,24 @@ namespace golang::windows
 
     std::ostream& operator<<(std::ostream& os, const struct SHARE_INFO_2& value);
     gocpp::error ErrorLoadingGetTempPath2();
+    struct RUNTIME_FUNCTION
+    {
+        uint32_t BeginAddress{};
+        uint32_t EndAddress{};
+        uint32_t UnwindData{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct RUNTIME_FUNCTION& value);
     struct SERVICE_STATUS
     {
         uint32_t ServiceType{};
@@ -107,13 +130,40 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SERVICE_STATUS& value);
+    int64_t QueryPerformanceCounter();
+    int64_t QueryPerformanceFrequency();
+    uint32_t langID(uint16_t pri, uint16_t sub);
+    struct FILE_MODE_INFORMATION
+    {
+        uint32_t Mode{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct FILE_MODE_INFORMATION& value);
 }
+#include "golang/sync/once.fwd.h"
+#include "golang/syscall/dll_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
 #include "golang/sync/once.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
+    namespace syscall = golang::syscall;
+    namespace sync = golang::sync;
     struct SocketAddress
     {
         syscall::RawSockaddrAny* Sockaddr{};
@@ -153,6 +203,10 @@ namespace golang::windows
         uint32_t Ipv6IfIndex{};
         gocpp::array<uint32_t, 16> ZoneIndices{};
         IpAdapterPrefix* FirstPrefix{};
+        uint64_t TransmitLinkSpeed{};
+        uint64_t ReceiveLinkSpeed{};
+        IpAdapterWinsServerAddress* FirstWinsServerAddress{};
+        IpAdapterGatewayAddress* FirstGatewayAddress{};
 
         using isGoStruct = void;
 
@@ -214,7 +268,7 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct sendRecvMsgFuncStruct& value);
     struct WSAMsg
     {
-        syscall::Pointer Name{};
+        syscall::RawSockaddrAny* Name{};
         int32_t Namelen{};
         syscall::WSABuf* Buffers{};
         uint32_t BufferCount{};
@@ -290,6 +344,7 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct FILE_FULL_DIR_INFO& value);
+    std::tuple<gocpp::string, gocpp::error> FinalPath(syscall::Handle h, uint32_t flags);
     struct IpAdapterUnicastAddress
     {
         uint32_t Length{};
@@ -393,13 +448,60 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterPrefix& value);
-    const uintptr_t SizeofModuleEntry32 = gocpp::Sizeof<ModuleEntry32>();
+    struct IpAdapterWinsServerAddress
+    {
+        uint32_t Length{};
+        uint32_t Reserved{};
+        IpAdapterWinsServerAddress* Next{};
+        SocketAddress Address{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct IpAdapterWinsServerAddress& value);
+    struct IpAdapterGatewayAddress
+    {
+        uint32_t Length{};
+        uint32_t Reserved{};
+        IpAdapterGatewayAddress* Next{};
+        SocketAddress Address{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct IpAdapterGatewayAddress& value);
     extern sendRecvMsgFuncStruct sendRecvMsgFunc;
     gocpp::error WSASendMsg(syscall::Handle fd, WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, syscall::Overlapped* overlapped, unsigned char* croutine);
     gocpp::error WSARecvMsg(syscall::Handle fd, WSAMsg* msg, uint32_t* bytesReceived, syscall::Overlapped* overlapped, unsigned char* croutine);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    const uintptr_t SizeofModuleEntry32 = gocpp::Sizeof<ModuleEntry32>();
+}
+
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::internal::syscall::windows
+{
 
     namespace rec
     {
+        syscall::Errno Errno(NTStatus s);
+        gocpp::string Error(NTStatus s);
     }
 }
 

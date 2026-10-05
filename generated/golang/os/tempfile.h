@@ -14,17 +14,16 @@ namespace golang::os
 {
     uint64_t runtime_rand();
     gocpp::string nextRandom();
+    extern gocpp::error errPatternHasSeparator;
     std::tuple<gocpp::string, gocpp::string, gocpp::error> prefixAndSuffix(gocpp::string pattern);
     std::tuple<gocpp::string, gocpp::error> MkdirTemp(gocpp::string dir, gocpp::string pattern);
     gocpp::string joinPath(gocpp::string dir, gocpp::string name);
 }
-#include "golang/errors/errors.fwd.h"
 #include "golang/os/types.fwd.h"
 
 namespace golang::os
 {
     std::tuple<File*, gocpp::error> CreateTemp(gocpp::string dir, gocpp::string pattern);
-    extern gocpp::error errPatternHasSeparator;
 
     namespace rec
     {

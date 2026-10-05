@@ -14,12 +14,17 @@
 #include "golang/fmt/print.h"
 #include "golang/golang.org/x/tools/internal/event/label/label.h"
 #include "golang/io/io.h"
+#include "golang/iter/iter.h"
 #include "golang/time/format.h"
 #include "golang/time/time.h"
 
 // Package core provides support for event based telemetry.
-namespace golang::core
+namespace golang::golang_org::x::tools::internal::event::core
 {
+    namespace fmt = golang::fmt;
+    namespace iter = golang::iter;
+    namespace label = golang::golang_org::x::tools::internal::event::label;
+    namespace time = golang::time;
     namespace rec
     {
         using fmt::rec::Write;
@@ -65,36 +70,6 @@ namespace golang::core
         return value.PrintTo(os);
     }
 
-    // eventLabelMap implements label.Map for a the labels of an Event.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    eventLabelMap::operator T()
-    {
-        T result;
-        result.event = this->event;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool eventLabelMap::operator==(const T& ref) const
-    {
-        if (event != ref.event) return false;
-        return true;
-    }
-
-    std::ostream& eventLabelMap::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << event;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct eventLabelMap& value)
-    {
-        return value.PrintTo(os);
-    }
-
     mocklib::Date rec::At(Event ev)
     {
         return ev.at;
@@ -106,12 +81,9 @@ namespace golang::core
         {
             fmt::Fprint(f, rec::Format(gocpp::recv(ev.at), "2006/01/02 15:04:05 "_s));
         }
-        for(auto index = 0; rec::Valid(gocpp::recv(ev), index); index++)
+        for(auto [l, gocpp_ignored] : rec::Labels(gocpp::recv(ev)))
         {
-            if(auto l = rec::Label(gocpp::recv(ev), index); rec::Valid(gocpp::recv(l)))
-            {
-                fmt::Fprintf(f, "\n\t%v"_s, l);
-            }
+            fmt::Fprintf(f, "\n\t%v"_s, l);
         }
     }
 
@@ -127,6 +99,28 @@ namespace golang::core
             return ev.go_static[index];
         }
         return ev.dynamic[index - len(ev.go_static)];
+    }
+
+    // Labels returns an iterator over the event's valid labels.
+    iter::Seq<label::Label> rec::Labels(Event ev)
+    {
+        return [=](std::function<bool (label::Label _1)> yield) mutable -> void
+        {
+            for(auto [gocpp_ignored, l] : ev.go_static)
+            {
+                if(rec::Valid(gocpp::recv(l)) && ! yield(l))
+                {
+                    return;
+                }
+            }
+            for(auto [gocpp_ignored, l] : ev.dynamic)
+            {
+                if(rec::Valid(gocpp::recv(l)) && ! yield(l))
+                {
+                    return;
+                }
+            }
+        };
     }
 
     label::Label rec::Find(Event ev, label::Key key)

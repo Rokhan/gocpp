@@ -9,11 +9,19 @@
 #include "golang/golang.org/x/tools/internal/typesinternal/recv.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/types/type.h"
+#include "golang/go/types/alias.fwd.h"
 #include "golang/go/types/named.fwd.h"
 #include "golang/go/types/object.fwd.h"
+#include "golang/go/types/pointer.fwd.h"
+#include "golang/go/types/type.fwd.h"
 
-namespace golang::typesinternal
+namespace golang::golang_org::x::tools::internal::typesinternal
+{
+    namespace types = golang::go::types;
+}
+#include "golang/go/types/type.h"
+
+namespace golang::golang_org::x::tools::internal::typesinternal
 {
     std::tuple<bool, types::Named*> ReceiverNamed(types::Var* recv);
     types::Type Unpointer(types::Type t);

@@ -13,7 +13,7 @@
 
 #include "golang/io/fs/fs.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
     namespace rec
     {
@@ -86,7 +86,7 @@ namespace golang::fs
 
     // Stat returns a [FileInfo] describing the named file from the file system.
     //
-    // If fs implements [StatFS], Stat calls fs.Stat.
+    // If fsys implements [StatFS], Stat calls fsys.Stat.
     // Otherwise, Stat opens the [File] to stat it.
     std::tuple<FileInfo, gocpp::error> Stat(FS fsys, gocpp::string name)
     {

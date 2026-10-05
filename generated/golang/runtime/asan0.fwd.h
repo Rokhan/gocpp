@@ -7,4 +7,5 @@
 namespace golang::runtime
 {
     const bool asanenabled = false;
+    const long asanenabledBit = 0;
 }

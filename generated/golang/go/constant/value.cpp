@@ -27,9 +27,7 @@
 #include "golang/math/const.h"
 #include "golang/math/frexp.h"
 #include "golang/math/pow.h"
-#include "golang/strconv/atob.h"
-#include "golang/strconv/atoi.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 #include "golang/strconv/quote.h"
 #include "golang/strings/strings.h"
 #include "golang/sync/mutex.h"
@@ -42,8 +40,17 @@
 // is unknown due to an error. Operations on unknown
 // values produce unknown values unless specified
 // otherwise.
-namespace golang::constant
+namespace golang::go::constant
 {
+    namespace big = golang::math::big;
+    namespace bits = golang::math::bits;
+    namespace fmt = golang::fmt;
+    namespace math = golang::math;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
+    namespace token = golang::go::token;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using big::rec::Add;
@@ -120,7 +127,7 @@ namespace golang::constant
     }
 
     template<typename T, typename TStore, typename TInterface>
-    golang::constant::Kind Value::ValueImpl<T, TStore, TInterface>::vKind()
+    golang::go::constant::Kind Value::ValueImpl<T, TStore, TInterface>::vKind()
     {
         return rec::Kind(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -148,12 +155,12 @@ namespace golang::constant
 
     namespace rec
     {
-        golang::constant::Kind Kind(const gocpp::PtrRecv<struct Value, false>& self)
+        golang::go::constant::Kind Kind(const gocpp::PtrRecv<struct Value, false>& self)
         {
             return self.ptr->value()->vKind();
         }
 
-        golang::constant::Kind Kind(const gocpp::ObjRecv<struct Value>& self)
+        golang::go::constant::Kind Kind(const gocpp::ObjRecv<struct Value>& self)
         {
             return self.obj.value()->vKind();
         }
@@ -381,42 +388,42 @@ namespace golang::constant
         return value.PrintTo(os);
     }
 
-    golang::constant::Kind rec::Kind(unknownVal)
+    golang::go::constant::Kind rec::Kind(unknownVal)
     {
         return Unknown;
     }
 
-    golang::constant::Kind rec::Kind(boolVal)
+    golang::go::constant::Kind rec::Kind(boolVal)
     {
         return Bool;
     }
 
-    golang::constant::Kind rec::Kind(stringVal*)
+    golang::go::constant::Kind rec::Kind(stringVal*)
     {
         return constant::String;
     }
 
-    golang::constant::Kind rec::Kind(int64Val)
+    golang::go::constant::Kind rec::Kind(int64Val)
     {
         return Int;
     }
 
-    golang::constant::Kind rec::Kind(intVal)
+    golang::go::constant::Kind rec::Kind(intVal)
     {
         return Int;
     }
 
-    golang::constant::Kind rec::Kind(ratVal)
+    golang::go::constant::Kind rec::Kind(ratVal)
     {
         return Float;
     }
 
-    golang::constant::Kind rec::Kind(floatVal)
+    golang::go::constant::Kind rec::Kind(floatVal)
     {
         return Float;
     }
 
-    golang::constant::Kind rec::Kind(complexVal)
+    golang::go::constant::Kind rec::Kind(complexVal)
     {
         return Complex;
     }
@@ -460,17 +467,23 @@ namespace golang::constant
     // concatenation. See golang.org/issue/23348.
     gocpp::string rec::string(stringVal* x)
     {
-        rec::Lock(gocpp::recv(x->mu));
-        if(x->l != nullptr)
+        gocpp::Defer defer;
+        try
         {
-            x->s = mocklib::StringsJoin(reverse(rec::appendReverse(gocpp::recv(x), nullptr)), ""_s);
-            x->l = nullptr;
-            x->r = nullptr;
+            rec::Lock(gocpp::recv(x->mu));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(x->mu)); });
+            if(x->l != nullptr)
+            {
+                x->s = mocklib::StringsJoin(reverse(rec::appendReverse(gocpp::recv(x), nullptr)), ""_s);
+                x->l = nullptr;
+                x->r = nullptr;
+            }
+            return x->s;
         }
-        auto s = x->s;
-        rec::Unlock(gocpp::recv(x->mu));
-
-        return s;
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     // reverse reverses x in place and returns it.
@@ -1325,6 +1338,62 @@ namespace golang::constant
         }
     }
 
+    // StringLen returns the length of x if x is a [String].
+    // If x is [Unknown], the result is 0.
+    // In all other cases, the function panics.
+    int64_t StringLen(Value x)
+    {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_13 = gocpp::type_info(x);
+            const auto& x_ref = x;
+            int conditionId = -1;
+            if(gocpp_id_13 == typeid(constant::stringVal*)) { conditionId = 0; }
+            else if(gocpp_id_13 == typeid(constant::unknownVal)) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    constant::stringVal* x = gocpp::any_cast<constant::stringVal*>(x_ref);
+                    return rec::len(gocpp::recv(x));
+                    break;
+                }
+                case 1:
+                {
+                    constant::unknownVal x = gocpp::any_cast<constant::unknownVal>(x_ref);
+                    return 0;
+                    break;
+                }
+                default:
+                {
+                    auto x = x_ref;
+                    gocpp::panic(mocklib::Sprintf("%v not a String"_s, x));
+                    break;
+                }
+            }
+        }
+    }
+
+    // len computes and returns the length of x without constructing the entire string.
+    int64_t rec::len(stringVal* x)
+    {
+        gocpp::Defer defer;
+        try
+        {
+            rec::Lock(gocpp::recv(x->mu));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(x->mu)); });
+            if(x->l != nullptr)
+            {
+                return rec::len(gocpp::recv(x->l)) + rec::len(gocpp::recv(x->r));
+            }
+            return int64_t(len(x->s));
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
+    }
+
     // Make returns the [Value] for x.
     //
     //	type of x        result Kind
@@ -1340,15 +1409,15 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_13 = gocpp::type_info(x);
+            const auto& gocpp_id_14 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_13 == typeid(bool)) { conditionId = 0; }
-            else if(gocpp_id_13 == typeid(gocpp::string)) { conditionId = 1; }
-            else if(gocpp_id_13 == typeid(int64_t)) { conditionId = 2; }
-            else if(gocpp_id_13 == typeid(big::Int*)) { conditionId = 3; }
-            else if(gocpp_id_13 == typeid(big::Rat*)) { conditionId = 4; }
-            else if(gocpp_id_13 == typeid(big::Float*)) { conditionId = 5; }
+            if(gocpp_id_14 == typeid(bool)) { conditionId = 0; }
+            else if(gocpp_id_14 == typeid(gocpp::string)) { conditionId = 1; }
+            else if(gocpp_id_14 == typeid(int64_t)) { conditionId = 2; }
+            else if(gocpp_id_14 == typeid(big::Int*)) { conditionId = 3; }
+            else if(gocpp_id_14 == typeid(big::Rat*)) { conditionId = 4; }
+            else if(gocpp_id_14 == typeid(big::Float*)) { conditionId = 5; }
             switch(conditionId)
             {
                 case 0:
@@ -1406,12 +1475,12 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_14 = gocpp::type_info(x);
+            const auto& gocpp_id_15 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_14 == typeid(constant::int64Val)) { conditionId = 0; }
-            else if(gocpp_id_14 == typeid(constant::intVal)) { conditionId = 1; }
-            else if(gocpp_id_14 == typeid(constant::unknownVal)) { conditionId = 2; }
+            if(gocpp_id_15 == typeid(constant::int64Val)) { conditionId = 0; }
+            else if(gocpp_id_15 == typeid(constant::intVal)) { conditionId = 1; }
+            else if(gocpp_id_15 == typeid(constant::unknownVal)) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -1454,15 +1523,15 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_15 = gocpp::type_info(x);
+            const auto& gocpp_id_16 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_15 == typeid(constant::int64Val)) { conditionId = 0; }
-            else if(gocpp_id_15 == typeid(constant::intVal)) { conditionId = 1; }
-            else if(gocpp_id_15 == typeid(constant::ratVal)) { conditionId = 2; }
-            else if(gocpp_id_15 == typeid(constant::floatVal)) { conditionId = 3; }
-            else if(gocpp_id_15 == typeid(constant::complexVal)) { conditionId = 4; }
-            else if(gocpp_id_15 == typeid(constant::unknownVal)) { conditionId = 5; }
+            if(gocpp_id_16 == typeid(constant::int64Val)) { conditionId = 0; }
+            else if(gocpp_id_16 == typeid(constant::intVal)) { conditionId = 1; }
+            else if(gocpp_id_16 == typeid(constant::ratVal)) { conditionId = 2; }
+            else if(gocpp_id_16 == typeid(constant::floatVal)) { conditionId = 3; }
+            else if(gocpp_id_16 == typeid(constant::complexVal)) { conditionId = 4; }
+            else if(gocpp_id_16 == typeid(constant::unknownVal)) { conditionId = 5; }
             switch(conditionId)
             {
                 case 0:
@@ -1534,11 +1603,11 @@ namespace golang::constant
         intVal t = {};
         //Go type switch emulation
         {
-            const auto& gocpp_id_16 = gocpp::type_info(x);
+            const auto& gocpp_id_17 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_16 == typeid(constant::int64Val)) { conditionId = 0; }
-            else if(gocpp_id_16 == typeid(constant::intVal)) { conditionId = 1; }
+            if(gocpp_id_17 == typeid(constant::int64Val)) { conditionId = 0; }
+            else if(gocpp_id_17 == typeid(constant::intVal)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -1627,14 +1696,14 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_17 = gocpp::type_info(x);
+            const auto& gocpp_id_18 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_17 == typeid(constant::int64Val)) { conditionId = 0; }
-            else if(gocpp_id_17 == typeid(constant::intVal)) { conditionId = 1; }
-            else if(gocpp_id_17 == typeid(constant::ratVal)) { conditionId = 2; }
-            else if(gocpp_id_17 == typeid(constant::floatVal)) { conditionId = 3; }
-            else if(gocpp_id_17 == typeid(constant::unknownVal)) { conditionId = 4; }
+            if(gocpp_id_18 == typeid(constant::int64Val)) { conditionId = 0; }
+            else if(gocpp_id_18 == typeid(constant::intVal)) { conditionId = 1; }
+            else if(gocpp_id_18 == typeid(constant::ratVal)) { conditionId = 2; }
+            else if(gocpp_id_18 == typeid(constant::floatVal)) { conditionId = 3; }
+            else if(gocpp_id_18 == typeid(constant::unknownVal)) { conditionId = 4; }
             switch(conditionId)
             {
                 case 0:
@@ -1655,7 +1724,7 @@ namespace golang::constant
                     constant::floatVal x = gocpp::any_cast<constant::floatVal>(x_ref);
                     if(smallFloat(x.val))
                     {
-                        auto [r, gocpp_id_18] = rec::Rat(gocpp::recv(x.val), nullptr);
+                        auto [r, gocpp_id_19] = rec::Rat(gocpp::recv(x.val), nullptr);
                         return makeInt(rec::Num(gocpp::recv(r)));
                     }
                     break;
@@ -1684,14 +1753,14 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_19 = gocpp::type_info(x);
+            const auto& gocpp_id_20 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_19 == typeid(constant::int64Val)) { conditionId = 0; }
-            else if(gocpp_id_19 == typeid(constant::intVal)) { conditionId = 1; }
-            else if(gocpp_id_19 == typeid(constant::ratVal)) { conditionId = 2; }
-            else if(gocpp_id_19 == typeid(constant::floatVal)) { conditionId = 3; }
-            else if(gocpp_id_19 == typeid(constant::unknownVal)) { conditionId = 4; }
+            if(gocpp_id_20 == typeid(constant::int64Val)) { conditionId = 0; }
+            else if(gocpp_id_20 == typeid(constant::intVal)) { conditionId = 1; }
+            else if(gocpp_id_20 == typeid(constant::ratVal)) { conditionId = 2; }
+            else if(gocpp_id_20 == typeid(constant::floatVal)) { conditionId = 3; }
+            else if(gocpp_id_20 == typeid(constant::unknownVal)) { conditionId = 4; }
             switch(conditionId)
             {
                 case 0:
@@ -1712,7 +1781,7 @@ namespace golang::constant
                     constant::floatVal x = gocpp::any_cast<constant::floatVal>(x_ref);
                     if(smallFloat(x.val))
                     {
-                        auto [r, gocpp_id_20] = rec::Rat(gocpp::recv(x.val), nullptr);
+                        auto [r, gocpp_id_21] = rec::Rat(gocpp::recv(x.val), nullptr);
                         return makeInt(rec::Denom(gocpp::recv(r)));
                     }
                     break;
@@ -1741,13 +1810,13 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_21 = gocpp::type_info(x);
+            const auto& gocpp_id_22 = gocpp::type_info(x);
             int conditionId = -1;
-            if(gocpp_id_21 == typeid(constant::unknownVal)) { conditionId = 0; }
-            else if(gocpp_id_21 == typeid(constant::int64Val)) { conditionId = 1; }
-            else if(gocpp_id_21 == typeid(constant::intVal)) { conditionId = 2; }
-            else if(gocpp_id_21 == typeid(constant::ratVal)) { conditionId = 3; }
-            else if(gocpp_id_21 == typeid(constant::floatVal)) { conditionId = 4; }
+            if(gocpp_id_22 == typeid(constant::unknownVal)) { conditionId = 0; }
+            else if(gocpp_id_22 == typeid(constant::int64Val)) { conditionId = 1; }
+            else if(gocpp_id_22 == typeid(constant::intVal)) { conditionId = 2; }
+            else if(gocpp_id_22 == typeid(constant::ratVal)) { conditionId = 3; }
+            else if(gocpp_id_22 == typeid(constant::floatVal)) { conditionId = 4; }
             switch(conditionId)
             {
                 case 0:
@@ -1778,15 +1847,15 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_22 = gocpp::type_info(x);
+            const auto& gocpp_id_23 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_22 == typeid(constant::unknownVal)) { conditionId = 0; }
-            else if(gocpp_id_22 == typeid(constant::int64Val)) { conditionId = 1; }
-            else if(gocpp_id_22 == typeid(constant::intVal)) { conditionId = 2; }
-            else if(gocpp_id_22 == typeid(constant::ratVal)) { conditionId = 3; }
-            else if(gocpp_id_22 == typeid(constant::floatVal)) { conditionId = 4; }
-            else if(gocpp_id_22 == typeid(constant::complexVal)) { conditionId = 5; }
+            if(gocpp_id_23 == typeid(constant::unknownVal)) { conditionId = 0; }
+            else if(gocpp_id_23 == typeid(constant::int64Val)) { conditionId = 1; }
+            else if(gocpp_id_23 == typeid(constant::intVal)) { conditionId = 2; }
+            else if(gocpp_id_23 == typeid(constant::ratVal)) { conditionId = 3; }
+            else if(gocpp_id_23 == typeid(constant::floatVal)) { conditionId = 4; }
+            else if(gocpp_id_23 == typeid(constant::complexVal)) { conditionId = 5; }
             switch(conditionId)
             {
                 case 0:
@@ -1821,15 +1890,15 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_23 = gocpp::type_info(x);
+            const auto& gocpp_id_24 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_23 == typeid(constant::unknownVal)) { conditionId = 0; }
-            else if(gocpp_id_23 == typeid(constant::int64Val)) { conditionId = 1; }
-            else if(gocpp_id_23 == typeid(constant::intVal)) { conditionId = 2; }
-            else if(gocpp_id_23 == typeid(constant::ratVal)) { conditionId = 3; }
-            else if(gocpp_id_23 == typeid(constant::floatVal)) { conditionId = 4; }
-            else if(gocpp_id_23 == typeid(constant::complexVal)) { conditionId = 5; }
+            if(gocpp_id_24 == typeid(constant::unknownVal)) { conditionId = 0; }
+            else if(gocpp_id_24 == typeid(constant::int64Val)) { conditionId = 1; }
+            else if(gocpp_id_24 == typeid(constant::intVal)) { conditionId = 2; }
+            else if(gocpp_id_24 == typeid(constant::ratVal)) { conditionId = 3; }
+            else if(gocpp_id_24 == typeid(constant::floatVal)) { conditionId = 4; }
+            else if(gocpp_id_24 == typeid(constant::complexVal)) { conditionId = 5; }
             switch(conditionId)
             {
                 case 0:
@@ -1869,14 +1938,14 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_24 = gocpp::type_info(x);
+            const auto& gocpp_id_25 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_24 == typeid(constant::int64Val)) { conditionId = 0; }
-            else if(gocpp_id_24 == typeid(constant::intVal)) { conditionId = 1; }
-            else if(gocpp_id_24 == typeid(constant::ratVal)) { conditionId = 2; }
-            else if(gocpp_id_24 == typeid(constant::floatVal)) { conditionId = 3; }
-            else if(gocpp_id_24 == typeid(constant::complexVal)) { conditionId = 4; }
+            if(gocpp_id_25 == typeid(constant::int64Val)) { conditionId = 0; }
+            else if(gocpp_id_25 == typeid(constant::intVal)) { conditionId = 1; }
+            else if(gocpp_id_25 == typeid(constant::ratVal)) { conditionId = 2; }
+            else if(gocpp_id_25 == typeid(constant::floatVal)) { conditionId = 3; }
+            else if(gocpp_id_25 == typeid(constant::complexVal)) { conditionId = 4; }
             switch(conditionId)
             {
                 case 0:
@@ -1906,7 +1975,7 @@ namespace golang::constant
                     if(smallFloat(x.val))
                     {
                         auto i = newInt();
-                        if(auto [gocpp_id_25, acc] = rec::Int(gocpp::recv(x.val), i); acc == big::Exact)
+                        if(auto [gocpp_id_26, acc] = rec::Int(gocpp::recv(x.val), i); acc == big::Exact)
                         {
                             return makeInt(i);
                         }
@@ -1922,7 +1991,7 @@ namespace golang::constant
                         // try rounding down a little
                         rec::SetMode(gocpp::recv(t), big::ToZero);
                         rec::Set(gocpp::recv(t), x.val);
-                        if(auto [gocpp_id_26, acc] = rec::Int(gocpp::recv(t), i); acc == big::Exact)
+                        if(auto [gocpp_id_27, acc] = rec::Int(gocpp::recv(t), i); acc == big::Exact)
                         {
                             return makeInt(i);
                         }
@@ -1930,7 +1999,7 @@ namespace golang::constant
                         // try rounding up a little
                         rec::SetMode(gocpp::recv(t), big::AwayFromZero);
                         rec::Set(gocpp::recv(t), x.val);
-                        if(auto [gocpp_id_27, acc] = rec::Int(gocpp::recv(t), i); acc == big::Exact)
+                        if(auto [gocpp_id_28, acc] = rec::Int(gocpp::recv(t), i); acc == big::Exact)
                         {
                             return makeInt(i);
                         }
@@ -1959,14 +2028,14 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_28 = gocpp::type_info(x);
+            const auto& gocpp_id_29 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_28 == typeid(constant::int64Val)) { conditionId = 0; }
-            else if(gocpp_id_28 == typeid(constant::intVal)) { conditionId = 1; }
-            else if(gocpp_id_28 == typeid(constant::ratVal)) { conditionId = 2; }
-            else if(gocpp_id_28 == typeid(constant::floatVal)) { conditionId = 3; }
-            else if(gocpp_id_28 == typeid(constant::complexVal)) { conditionId = 4; }
+            if(gocpp_id_29 == typeid(constant::int64Val)) { conditionId = 0; }
+            else if(gocpp_id_29 == typeid(constant::intVal)) { conditionId = 1; }
+            else if(gocpp_id_29 == typeid(constant::ratVal)) { conditionId = 2; }
+            else if(gocpp_id_29 == typeid(constant::floatVal)) { conditionId = 3; }
+            else if(gocpp_id_29 == typeid(constant::complexVal)) { conditionId = 4; }
             switch(conditionId)
             {
                 // x is always a small int
@@ -2013,14 +2082,14 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_29 = gocpp::type_info(x);
+            const auto& gocpp_id_30 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_29 == typeid(constant::int64Val)) { conditionId = 0; }
-            else if(gocpp_id_29 == typeid(constant::intVal)) { conditionId = 1; }
-            else if(gocpp_id_29 == typeid(constant::ratVal)) { conditionId = 2; }
-            else if(gocpp_id_29 == typeid(constant::floatVal)) { conditionId = 3; }
-            else if(gocpp_id_29 == typeid(constant::complexVal)) { conditionId = 4; }
+            if(gocpp_id_30 == typeid(constant::int64Val)) { conditionId = 0; }
+            else if(gocpp_id_30 == typeid(constant::intVal)) { conditionId = 1; }
+            else if(gocpp_id_30 == typeid(constant::ratVal)) { conditionId = 2; }
+            else if(gocpp_id_30 == typeid(constant::floatVal)) { conditionId = 3; }
+            else if(gocpp_id_30 == typeid(constant::complexVal)) { conditionId = 4; }
             switch(conditionId)
             {
                 case 0:
@@ -2076,14 +2145,14 @@ namespace golang::constant
                 case 0:
                     //Go type switch emulation
                     {
-                        const auto& gocpp_id_30 = gocpp::type_info(y);
+                        const auto& gocpp_id_31 = gocpp::type_info(y);
                         int conditionId = -1;
-                        if(gocpp_id_30 == typeid(constant::unknownVal)) { conditionId = 0; }
-                        else if(gocpp_id_30 == typeid(constant::int64Val)) { conditionId = 1; }
-                        else if(gocpp_id_30 == typeid(constant::intVal)) { conditionId = 2; }
-                        else if(gocpp_id_30 == typeid(constant::ratVal)) { conditionId = 3; }
-                        else if(gocpp_id_30 == typeid(constant::floatVal)) { conditionId = 4; }
-                        else if(gocpp_id_30 == typeid(constant::complexVal)) { conditionId = 5; }
+                        if(gocpp_id_31 == typeid(constant::unknownVal)) { conditionId = 0; }
+                        else if(gocpp_id_31 == typeid(constant::int64Val)) { conditionId = 1; }
+                        else if(gocpp_id_31 == typeid(constant::intVal)) { conditionId = 2; }
+                        else if(gocpp_id_31 == typeid(constant::ratVal)) { conditionId = 3; }
+                        else if(gocpp_id_31 == typeid(constant::floatVal)) { conditionId = 4; }
+                        else if(gocpp_id_31 == typeid(constant::complexVal)) { conditionId = 5; }
                         switch(conditionId)
                         {
                             case 0:
@@ -2103,15 +2172,15 @@ namespace golang::constant
                 case 1:
                     //Go type switch emulation
                     {
-                        const auto& gocpp_id_31 = gocpp::type_info(y);
+                        const auto& gocpp_id_32 = gocpp::type_info(y);
                         const auto& y_ref = y;
                         int conditionId = -1;
-                        if(gocpp_id_31 == typeid(constant::unknownVal)) { conditionId = 0; }
-                        else if(gocpp_id_31 == typeid(constant::int64Val)) { conditionId = 1; }
-                        else if(gocpp_id_31 == typeid(constant::intVal)) { conditionId = 2; }
-                        else if(gocpp_id_31 == typeid(constant::ratVal)) { conditionId = 3; }
-                        else if(gocpp_id_31 == typeid(constant::floatVal)) { conditionId = 4; }
-                        else if(gocpp_id_31 == typeid(constant::complexVal)) { conditionId = 5; }
+                        if(gocpp_id_32 == typeid(constant::unknownVal)) { conditionId = 0; }
+                        else if(gocpp_id_32 == typeid(constant::int64Val)) { conditionId = 1; }
+                        else if(gocpp_id_32 == typeid(constant::intVal)) { conditionId = 2; }
+                        else if(gocpp_id_32 == typeid(constant::ratVal)) { conditionId = 3; }
+                        else if(gocpp_id_32 == typeid(constant::floatVal)) { conditionId = 4; }
+                        else if(gocpp_id_32 == typeid(constant::complexVal)) { conditionId = 5; }
                         switch(conditionId)
                         {
                             case 0:
@@ -2166,12 +2235,12 @@ namespace golang::constant
                     auto z = newInt();
                     //Go type switch emulation
                     {
-                        const auto& gocpp_id_32 = gocpp::type_info(y);
+                        const auto& gocpp_id_33 = gocpp::type_info(y);
                         const auto& y_ref = y;
                         int conditionId = -1;
-                        if(gocpp_id_32 == typeid(constant::unknownVal)) { conditionId = 0; }
-                        else if(gocpp_id_32 == typeid(constant::int64Val)) { conditionId = 1; }
-                        else if(gocpp_id_32 == typeid(constant::intVal)) { conditionId = 2; }
+                        if(gocpp_id_33 == typeid(constant::unknownVal)) { conditionId = 0; }
+                        else if(gocpp_id_33 == typeid(constant::int64Val)) { conditionId = 1; }
+                        else if(gocpp_id_33 == typeid(constant::intVal)) { conditionId = 2; }
                         switch(conditionId)
                         {
                             case 0:
@@ -2215,11 +2284,11 @@ namespace golang::constant
                 case 3:
                     //Go type switch emulation
                     {
-                        const auto& gocpp_id_33 = gocpp::type_info(y);
+                        const auto& gocpp_id_34 = gocpp::type_info(y);
                         const auto& y_ref = y;
                         int conditionId = -1;
-                        if(gocpp_id_33 == typeid(constant::unknownVal)) { conditionId = 0; }
-                        else if(gocpp_id_33 == typeid(constant::boolVal)) { conditionId = 1; }
+                        if(gocpp_id_34 == typeid(constant::unknownVal)) { conditionId = 0; }
+                        else if(gocpp_id_34 == typeid(constant::boolVal)) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:
@@ -2248,16 +2317,16 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_34 = gocpp::type_info(x);
+            const auto& gocpp_id_35 = gocpp::type_info(x);
             int conditionId = -1;
-            if(gocpp_id_34 == typeid(constant::unknownVal)) { conditionId = 0; }
-            else if(gocpp_id_34 == typeid(constant::boolVal)) { conditionId = 1; }
-            else if(gocpp_id_34 == typeid(constant::stringVal*)) { conditionId = 2; }
-            else if(gocpp_id_34 == typeid(constant::int64Val)) { conditionId = 3; }
-            else if(gocpp_id_34 == typeid(constant::intVal)) { conditionId = 4; }
-            else if(gocpp_id_34 == typeid(constant::ratVal)) { conditionId = 5; }
-            else if(gocpp_id_34 == typeid(constant::floatVal)) { conditionId = 6; }
-            else if(gocpp_id_34 == typeid(constant::complexVal)) { conditionId = 7; }
+            if(gocpp_id_35 == typeid(constant::unknownVal)) { conditionId = 0; }
+            else if(gocpp_id_35 == typeid(constant::boolVal)) { conditionId = 1; }
+            else if(gocpp_id_35 == typeid(constant::stringVal*)) { conditionId = 2; }
+            else if(gocpp_id_35 == typeid(constant::int64Val)) { conditionId = 3; }
+            else if(gocpp_id_35 == typeid(constant::intVal)) { conditionId = 4; }
+            else if(gocpp_id_35 == typeid(constant::ratVal)) { conditionId = 5; }
+            else if(gocpp_id_35 == typeid(constant::floatVal)) { conditionId = 6; }
+            else if(gocpp_id_35 == typeid(constant::complexVal)) { conditionId = 7; }
             switch(conditionId)
             {
                 default:
@@ -2344,21 +2413,21 @@ namespace golang::constant
         // to avoid unnecessary heap allocations.
         //Go type switch emulation
         {
-            const auto& gocpp_id_35 = gocpp::type_info(y);
+            const auto& gocpp_id_36 = gocpp::type_info(y);
             int conditionId = -1;
-            if(gocpp_id_35 == typeid(constant::intVal)) { conditionId = 0; }
-            else if(gocpp_id_35 == typeid(constant::ratVal)) { conditionId = 1; }
-            else if(gocpp_id_35 == typeid(constant::floatVal)) { conditionId = 2; }
-            else if(gocpp_id_35 == typeid(constant::complexVal)) { conditionId = 3; }
+            if(gocpp_id_36 == typeid(constant::intVal)) { conditionId = 0; }
+            else if(gocpp_id_36 == typeid(constant::ratVal)) { conditionId = 1; }
+            else if(gocpp_id_36 == typeid(constant::floatVal)) { conditionId = 2; }
+            else if(gocpp_id_36 == typeid(constant::complexVal)) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
                 {
                     //Go type switch emulation
                     {
-                        const auto& gocpp_id_36 = gocpp::type_info(x);
+                        const auto& gocpp_id_37 = gocpp::type_info(x);
                         int conditionId = -1;
-                        if(gocpp_id_36 == typeid(constant::int64Val)) { conditionId = 0; }
+                        if(gocpp_id_37 == typeid(constant::int64Val)) { conditionId = 0; }
                         switch(conditionId)
                         {
                             case 0:
@@ -2375,10 +2444,10 @@ namespace golang::constant
                 {
                     //Go type switch emulation
                     {
-                        const auto& gocpp_id_37 = gocpp::type_info(x);
+                        const auto& gocpp_id_38 = gocpp::type_info(x);
                         int conditionId = -1;
-                        if(gocpp_id_37 == typeid(constant::int64Val)) { conditionId = 0; }
-                        else if(gocpp_id_37 == typeid(constant::intVal)) { conditionId = 1; }
+                        if(gocpp_id_38 == typeid(constant::int64Val)) { conditionId = 0; }
+                        else if(gocpp_id_38 == typeid(constant::intVal)) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:
@@ -2401,11 +2470,11 @@ namespace golang::constant
                 {
                     //Go type switch emulation
                     {
-                        const auto& gocpp_id_38 = gocpp::type_info(x);
+                        const auto& gocpp_id_39 = gocpp::type_info(x);
                         int conditionId = -1;
-                        if(gocpp_id_38 == typeid(constant::int64Val)) { conditionId = 0; }
-                        else if(gocpp_id_38 == typeid(constant::intVal)) { conditionId = 1; }
-                        else if(gocpp_id_38 == typeid(constant::ratVal)) { conditionId = 2; }
+                        if(gocpp_id_39 == typeid(constant::int64Val)) { conditionId = 0; }
+                        else if(gocpp_id_39 == typeid(constant::intVal)) { conditionId = 1; }
+                        else if(gocpp_id_39 == typeid(constant::ratVal)) { conditionId = 2; }
                         switch(conditionId)
                         {
                             case 0:
@@ -2432,7 +2501,27 @@ namespace golang::constant
                 }
                 case 3:
                 {
-                    return {vtoc(x), y};
+                    //Go type switch emulation
+                    {
+                        const auto& gocpp_id_40 = gocpp::type_info(x);
+                        int conditionId = -1;
+                        if(gocpp_id_40 == typeid(constant::int64Val)) { conditionId = 0; }
+                        else if(gocpp_id_40 == typeid(constant::intVal)) { conditionId = 1; }
+                        else if(gocpp_id_40 == typeid(constant::ratVal)) { conditionId = 2; }
+                        else if(gocpp_id_40 == typeid(constant::floatVal)) { conditionId = 3; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                            case 1:
+                            case 2:
+                            case 3:
+                            {
+                                constant::int64Val x1 = gocpp::any_cast<constant::int64Val>(x);
+                                return {vtoc(x1), y};
+                                break;
+                            }
+                        }
+                    }
                     break;
                 }
             }
@@ -2458,17 +2547,17 @@ namespace golang::constant
 
         //Go type switch emulation
         {
-            const auto& gocpp_id_39 = gocpp::type_info(x);
+            const auto& gocpp_id_41 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_39 == typeid(constant::unknownVal)) { conditionId = 0; }
-            else if(gocpp_id_39 == typeid(constant::boolVal)) { conditionId = 1; }
-            else if(gocpp_id_39 == typeid(constant::int64Val)) { conditionId = 2; }
-            else if(gocpp_id_39 == typeid(constant::intVal)) { conditionId = 3; }
-            else if(gocpp_id_39 == typeid(constant::ratVal)) { conditionId = 4; }
-            else if(gocpp_id_39 == typeid(constant::floatVal)) { conditionId = 5; }
-            else if(gocpp_id_39 == typeid(constant::complexVal)) { conditionId = 6; }
-            else if(gocpp_id_39 == typeid(constant::stringVal*)) { conditionId = 7; }
+            if(gocpp_id_41 == typeid(constant::unknownVal)) { conditionId = 0; }
+            else if(gocpp_id_41 == typeid(constant::boolVal)) { conditionId = 1; }
+            else if(gocpp_id_41 == typeid(constant::int64Val)) { conditionId = 2; }
+            else if(gocpp_id_41 == typeid(constant::intVal)) { conditionId = 3; }
+            else if(gocpp_id_41 == typeid(constant::ratVal)) { conditionId = 4; }
+            else if(gocpp_id_41 == typeid(constant::floatVal)) { conditionId = 5; }
+            else if(gocpp_id_41 == typeid(constant::complexVal)) { conditionId = 6; }
+            else if(gocpp_id_41 == typeid(constant::stringVal*)) { conditionId = 7; }
             switch(conditionId)
             {
                 case 0:
@@ -2822,12 +2911,12 @@ namespace golang::constant
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_40 = gocpp::type_info(x);
+            const auto& gocpp_id_42 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_40 == typeid(constant::unknownVal)) { conditionId = 0; }
-            else if(gocpp_id_40 == typeid(constant::int64Val)) { conditionId = 1; }
-            else if(gocpp_id_40 == typeid(constant::intVal)) { conditionId = 2; }
+            if(gocpp_id_42 == typeid(constant::unknownVal)) { conditionId = 0; }
+            else if(gocpp_id_42 == typeid(constant::int64Val)) { conditionId = 1; }
+            else if(gocpp_id_42 == typeid(constant::intVal)) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -2945,17 +3034,17 @@ namespace golang::constant
 
         //Go type switch emulation
         {
-            const auto& gocpp_id_41 = gocpp::type_info(x);
+            const auto& gocpp_id_43 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_41 == typeid(constant::unknownVal)) { conditionId = 0; }
-            else if(gocpp_id_41 == typeid(constant::boolVal)) { conditionId = 1; }
-            else if(gocpp_id_41 == typeid(constant::int64Val)) { conditionId = 2; }
-            else if(gocpp_id_41 == typeid(constant::intVal)) { conditionId = 3; }
-            else if(gocpp_id_41 == typeid(constant::ratVal)) { conditionId = 4; }
-            else if(gocpp_id_41 == typeid(constant::floatVal)) { conditionId = 5; }
-            else if(gocpp_id_41 == typeid(constant::complexVal)) { conditionId = 6; }
-            else if(gocpp_id_41 == typeid(constant::stringVal*)) { conditionId = 7; }
+            if(gocpp_id_43 == typeid(constant::unknownVal)) { conditionId = 0; }
+            else if(gocpp_id_43 == typeid(constant::boolVal)) { conditionId = 1; }
+            else if(gocpp_id_43 == typeid(constant::int64Val)) { conditionId = 2; }
+            else if(gocpp_id_43 == typeid(constant::intVal)) { conditionId = 3; }
+            else if(gocpp_id_43 == typeid(constant::ratVal)) { conditionId = 4; }
+            else if(gocpp_id_43 == typeid(constant::floatVal)) { conditionId = 5; }
+            else if(gocpp_id_43 == typeid(constant::complexVal)) { conditionId = 6; }
+            else if(gocpp_id_43 == typeid(constant::stringVal*)) { conditionId = 7; }
             switch(conditionId)
             {
                 case 0:

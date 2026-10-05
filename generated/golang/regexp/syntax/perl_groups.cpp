@@ -13,7 +13,7 @@
 
 #include "golang/regexp/syntax/parse.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
     namespace rec
     {

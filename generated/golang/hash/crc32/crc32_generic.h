@@ -10,13 +10,13 @@
 #include "gocpp/support.h"
 
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
     struct GoTag_slicing8Table { };
 }
 #include "golang/hash/crc32/crc32.h"
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
     gocpp::array_ptr<Table> simpleMakeTable(uint32_t poly);
     void simplePopulateTable(uint32_t poly, gocpp::array_ptr<Table> t);

@@ -13,7 +13,7 @@
 
 #include "golang/internal/goarch/goarch.h"
 
-namespace golang::goarch
+namespace golang::internal::goarch
 {
     namespace rec
     {

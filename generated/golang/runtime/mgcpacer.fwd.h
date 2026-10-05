@@ -47,6 +47,7 @@ namespace golang::runtime
     // heap goal should have as a percent of the maximum possible heap goal allowed
     // to maintain the memory limit.
     const long memoryLimitHeapGoalHeadroomPercent = 3;
+    struct gcControllerState;
     // These constants determine the bounds on the GC trigger as a fraction
     // of heap bytes allocated between the start of a GC (heapLive == heapMarked)
     // and the end of a GC (heapLive == heapGoal).
@@ -71,15 +72,13 @@ namespace golang::runtime
     // but comes at the cost of increasing mutator latency.
     const double gcGoalUtilization = gcBackgroundUtilization;
 }
-#include "golang/internal/cpu/cpu.fwd.h"
+#include "golang/internal/goexperiment/exp_greenteagc_on.fwd.h"
 #include "golang/internal/goexperiment/exp_heapminimum512kib_off.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/mstats.fwd.h"
 
 namespace golang::runtime
 {
+    namespace goexperiment = golang::internal::goexperiment;
     // defaultHeapMinimum is the value of heapMinimum for GOGC==100.
     const int defaultHeapMinimum = (goexperiment::HeapMinimum512KiBInt) * (512 << 10) +
             (1 - goexperiment::HeapMinimum512KiBInt) * (4 << 20);
-    struct gcControllerState;
 }

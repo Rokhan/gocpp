@@ -8,12 +8,6 @@ namespace golang::runtime
 {
     struct addrRange;
     struct offAddr;
-}
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/mstats.fwd.h"
-
-namespace golang::runtime
-{
     struct atomicOffAddr;
     struct addrRanges;
 }

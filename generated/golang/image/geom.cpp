@@ -13,10 +13,13 @@
 
 #include "golang/image/color/color.h"
 #include "golang/math/bits/bits.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 
 namespace golang::image
 {
+    namespace bits = golang::math::bits;
+    namespace color = golang::image::color;
+    namespace strconv = golang::strconv;
     namespace rec
     {
         using color::rec::RGBA;
@@ -265,7 +268,7 @@ namespace golang::image
         // if max(r0.Min.X, s0.Min.X) >= min(r0.Max.X, s0.Max.X) || likewiseForY { etc }
         if(rec::Empty(gocpp::recv(r)))
         {
-            return ZR;
+            return Rectangle {};
         }
         return r;
     }

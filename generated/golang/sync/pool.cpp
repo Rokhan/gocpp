@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/race/norace.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
 #include "golang/runtime/debug.h"
 #include "golang/sync/atomic/doc.h"
 #include "golang/sync/cond.h"
@@ -20,6 +21,11 @@
 
 namespace golang::sync
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::sync::atomic;
+    namespace race = golang::internal::race;
+    namespace rtatomic = golang::internal::runtime::atomic;
+    namespace runtime = golang::runtime;
     namespace rec
     {
     }
@@ -55,10 +61,12 @@ namespace golang::sync
     //
     // A Pool must not be copied after first use.
     //
-    // In the terminology of the Go memory model, a call to Put(x) “synchronizes before”
-    // a call to Get returning that same value x.
+    // In the terminology of [the Go memory model], a call to Put(x) “synchronizes before”
+    // a call to [Pool.Get] returning that same value x.
     // Similarly, a call to New returning x “synchronizes before”
     // a call to Get returning that same value x.
+    //
+    // [the Go memory model]: https://go.dev/ref/mem
     
     template<typename T> requires gocpp::GoStruct<T>
     Pool::operator T()
@@ -169,6 +177,7 @@ namespace golang::sync
     }
 
     // from runtime
+    //
     //go:linkname runtime_randn runtime.randn
     uint32_t runtime_randn(uint32_t n)
     /* convertBlockStmt, nil block */;
@@ -219,10 +228,10 @@ namespace golang::sync
         }
     }
 
-    // Get selects an arbitrary item from the Pool, removes it from the
+    // Get selects an arbitrary item from the [Pool], removes it from the
     // Pool, and returns it to the caller.
     // Get may choose to ignore the pool and treat it as empty.
-    // Callers should not assume any relation between values passed to Put and
+    // Callers should not assume any relation between values passed to [Pool.Put] and
     // the values returned by Get.
     //
     // If Get would otherwise return nil and p.New is non-nil, Get returns
@@ -267,7 +276,7 @@ namespace golang::sync
     {
         // See the comment in pin regarding ordering of the loads.
         // load-acquire
-        auto size = runtime_LoadAcquintptr(& p->localSize);
+        auto size = rtatomic::LoadAcquintptr(& p->localSize);
         // load-consume
         auto locals = p->local;
         // Try to steal one element from other procs.
@@ -330,7 +339,7 @@ namespace golang::sync
         // Thus here we must observe local at least as large localSize.
         // We can observe a newer/larger local, it is fine (we must observe its zero-initialized-ness).
         // load-acquire
-        auto s = runtime_LoadAcquintptr(& p->localSize);
+        auto s = rtatomic::LoadAcquintptr(& p->localSize);
         // load-consume
         auto l = p->local;
         if(uintptr_t(pid) < s)
@@ -368,7 +377,7 @@ namespace golang::sync
             // store-release
             atomic::StorePointer(& p->local, gocpp::unsafe_pointer(& local[0]));
             // store-release
-            runtime_StoreReluintptr(& p->localSize, uintptr_t(size));
+            rtatomic::StoreReluintptr(& p->localSize, uintptr_t(size));
             return {& local[pid], pid};
         }
         catch(gocpp::GoPanic& gp)
@@ -377,6 +386,16 @@ namespace golang::sync
         }
     }
 
+    // poolCleanup should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/gopkg
+    //   - github.com/songzhibin97/gkit
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname poolCleanup
     void poolCleanup()
     {
         // This function is called with the world stopped, at the beginning of a garbage collection.
@@ -431,14 +450,6 @@ namespace golang::sync
     /* convertBlockStmt, nil block */;
 
     void runtime_procUnpin()
-    /* convertBlockStmt, nil block */;
-
-    //go:linkname runtime_LoadAcquintptr runtime/internal/atomic.LoadAcquintptr
-    uintptr_t runtime_LoadAcquintptr(uintptr_t* ptr)
-    /* convertBlockStmt, nil block */;
-
-    //go:linkname runtime_StoreReluintptr runtime/internal/atomic.StoreReluintptr
-    uintptr_t runtime_StoreReluintptr(uintptr_t* ptr, uintptr_t val)
     /* convertBlockStmt, nil block */;
 
 }

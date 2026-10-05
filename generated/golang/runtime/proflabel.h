@@ -13,6 +13,7 @@
 namespace golang::runtime
 {
     extern uintptr_t labelSync;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     void runtime_setProfLabel(gocpp::unsafe_pointer labels);
     gocpp::unsafe_pointer runtime_getProfLabel();
 

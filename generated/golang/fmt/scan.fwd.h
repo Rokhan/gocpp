@@ -11,7 +11,9 @@ namespace golang::fmt
     using stringReader = gocpp::string;
     struct scanError;
     const long eof = - 1;
+    struct ss;
     struct ssave;
+    struct readRune;
     // Numerical elements
     const gocpp::string binaryDigits = "01"_s;
     const gocpp::string octalDigits = "01234567"_s;
@@ -24,13 +26,4 @@ namespace golang::fmt
     const int hugeWid = 1 << 30;
     const int intBits = 32 << (~ (unsigned int)(0) >> 63);
     const int uintptrBits = 32 << (~ uintptr_t(0) >> 63);
-}
-#include "golang/fmt/print.fwd.h"
-#include "golang/io/io.fwd.h"
-#include "golang/unicode/utf8/utf8.fwd.h"
-
-namespace golang::fmt
-{
-    struct ss;
-    struct readRune;
 }

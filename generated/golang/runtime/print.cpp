@@ -11,20 +11,24 @@
 #include "golang/runtime/print.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/strconv/ctoa.h"
+#include "golang/internal/strconv/ftoa.h"
+#include "golang/internal/strconv/itoa.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/slice.h"
 #include "golang/runtime/string.h"
 #include "golang/runtime/stubs.h"
-#include "golang/runtime/symtab.h"
+#include "golang/runtime/type.h"
+#include "golang/runtime/utf8.h"
 #include "golang/runtime/write_err.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace strconv = golang::internal::strconv;
     namespace rec
     {
         using atomic::rec::Load;
@@ -32,6 +36,8 @@ namespace golang::runtime
 
     // The compiler knows that a print of a value of this type
     // should use printhex instead of printuint (decimal).
+    // The compiler knows that a print of a value of this type should use
+    // printquoted instead of printstring.
     gocpp::slice<unsigned char> bytes(gocpp::string s)
     {
         gocpp::slice<unsigned char> ret;
@@ -145,136 +151,65 @@ namespace golang::runtime
         }
     }
 
-    void printfloat(double v)
+    void printfloat64(double v)
     {
-        //Go switch emulation
-        {
-            int conditionId = -1;
-            if(v != v) { conditionId = 0; }
-            else if(v + v == v && v > 0) { conditionId = 1; }
-            else if(v + v == v && v < 0) { conditionId = 2; }
-            switch(conditionId)
-            {
-                case 0:
-                    printstring("NaN"_s);
-                    return;
-                    break;
-                case 1:
-                    printstring("+Inf"_s);
-                    return;
-                    break;
-                case 2:
-                    printstring("-Inf"_s);
-                    return;
-                    break;
-            }
-        }
-
-        // digits printed
-        auto n = 7;
-        gocpp::array<unsigned char, n + 7> buf = {};
-        buf[0] = '+';
-        // exp
-        auto e = 0;
-        if(v == 0)
-        {
-            if(1 / v < 0)
-            {
-                buf[0] = '-';
-            }
-        }
-        else
-        {
-            if(v < 0)
-            {
-                v = - v;
-                buf[0] = '-';
-            }
-
-            // normalize
-            for(; v >= 10; )
-            {
-                e++;
-                v /= 10;
-            }
-            for(; v < 1; )
-            {
-                e--;
-                v *= 10;
-            }
-
-            // round
-            auto h = 5.0;
-            for(auto i = 0; i < n; i++)
-            {
-                h /= 10;
-            }
-            v += h;
-            if(v >= 10)
-            {
-                e++;
-                v /= 10;
-            }
-        }
-
-        // format +d.dddd+edd
-        for(auto i = 0; i < n; i++)
-        {
-            auto s = int(v);
-            buf[i + 2] = (unsigned char)(s + '0');
-            v -= double(s);
-            v *= 10;
-        }
-        buf[1] = buf[2];
-        buf[2] = '.';
-
-        buf[n + 2] = 'e';
-        buf[n + 3] = '+';
-        if(e < 0)
-        {
-            e = - e;
-            buf[n + 3] = '-';
-        }
-
-        buf[n + 4] = (unsigned char)(e / 100) + '0';
-        buf[n + 5] = (unsigned char)(e / 10) % 10 + '0';
-        buf[n + 6] = (unsigned char)(e % 10) + '0';
-        gwrite(buf.make_slice(0));
+        gocpp::array<unsigned char, float64Bytes> buf = {};
+        gwrite(strconv::AppendFloat(buf.make_slice(0, 0), v, 'g', - 1, 64));
     }
 
-    void printcomplex(struct gocpp::complex128 c)
+    void printfloat32(double v)
     {
-        print("("_s, real(c), imag(c), "i)"_s);
+        gocpp::array<unsigned char, float32Bytes> buf = {};
+        gwrite(strconv::AppendFloat(buf.make_slice(0, 0), double(v), 'g', - 1, 32));
+    }
+
+    void printcomplex128(struct gocpp::complex128 c)
+    {
+        gocpp::array<unsigned char, complex128Bytes> buf = {};
+        gwrite(strconv::AppendComplex(buf.make_slice(0, 0), c, 'g', - 1, 128));
+    }
+
+    void printcomplex64(struct gocpp::complex64 c)
+    {
+        gocpp::array<unsigned char, complex64Bytes> buf = {};
+        gwrite(strconv::AppendComplex(buf.make_slice(0, 0), gocpp::complex128(c), 'g', - 1, 64));
     }
 
     void printuint(uint64_t v)
     {
-        gocpp::array<unsigned char, 100> buf = {};
-        auto i = len(buf);
-        for(i--; i > 0; i--)
-        {
-            buf[i] = (unsigned char)(v % 10 + '0');
-            if(v < 10)
-            {
-                break;
-            }
-            v /= 10;
-        }
+        // Note: Avoiding strconv.AppendUint so that it's clearer
+        // that there are no allocations in this routine.
+        // cmd/link/internal/ld.TestAbstractOriginSanity
+        // sees the append and doesn't realize it doesn't allocate.
+        gocpp::array<unsigned char, 20> buf = {};
+        auto i = strconv::RuntimeFormatBase10(buf.make_slice(0), v);
         gwrite(buf.make_slice(i));
     }
 
     void printint(int64_t v)
     {
-        if(v < 0)
+        // Note: Avoiding strconv.AppendUint so that it's clearer
+        // that there are no allocations in this routine.
+        // cmd/link/internal/ld.TestAbstractOriginSanity
+        // sees the append and doesn't realize it doesn't allocate.
+        auto neg = v < 0;
+        auto u = uint64_t(v);
+        if(neg)
         {
-            printstring("-"_s);
-            v = - v;
+            u = - u;
         }
-        printuint(uint64_t(v));
+        gocpp::array<unsigned char, 20> buf = {};
+        auto i = strconv::RuntimeFormatBase10(buf.make_slice(0), u);
+        if(neg)
+        {
+            i--;
+            buf[i] = '-';
+        }
+        gwrite(buf.make_slice(i));
     }
 
     long minhexdigits = 0;
-    void printhex(uint64_t v)
+    void printhexopts(bool include0x, int mindigits, uint64_t v)
     {
         auto dig = "0123456789abcdef"_s;
         gocpp::array<unsigned char, 100> buf = {};
@@ -282,17 +217,100 @@ namespace golang::runtime
         for(i--; i > 0; i--)
         {
             buf[i] = dig[v % 16];
-            if(v < 16 && len(buf) - i >= minhexdigits)
+            if(v < 16 && len(buf) - i >= mindigits)
             {
                 break;
             }
             v /= 16;
         }
-        i--;
-        buf[i] = 'x';
-        i--;
-        buf[i] = '0';
+        if(include0x)
+        {
+            i--;
+            buf[i] = 'x';
+            i--;
+            buf[i] = '0';
+        }
         gwrite(buf.make_slice(i));
+    }
+
+    void printhex(uint64_t v)
+    {
+        printhexopts(true, minhexdigits, v);
+    }
+
+    void printquoted(gocpp::string s)
+    {
+        printlock();
+        gwrite(gocpp::slice<unsigned char>("\""_s));
+        for(auto [i, r] : s)
+        {
+            //Go switch emulation
+            {
+                auto condition = r;
+                int conditionId = -1;
+                if(condition == '\n') { conditionId = 0; }
+                else if(condition == '\r') { conditionId = 1; }
+                else if(condition == '\t') { conditionId = 2; }
+                else if(condition == '\\') { conditionId = 3; }
+                else if(condition == '"') { conditionId = 4; }
+                else if(condition == runeError) { conditionId = 5; }
+                switch(conditionId)
+                {
+                    case 0:
+                        gwrite(gocpp::slice<unsigned char>("\\n"_s));
+                        continue;
+                        break;
+                    case 1:
+                        gwrite(gocpp::slice<unsigned char>("\\r"_s));
+                        continue;
+                        break;
+                    case 2:
+                        gwrite(gocpp::slice<unsigned char>("\\t"_s));
+                        print();
+                        continue;
+                        break;
+                    case 3:
+                    case 4:
+                        gwrite(gocpp::slice<unsigned char> {(unsigned char)('\\'), (unsigned char)(r)});
+                        continue;
+                        break;
+                    // Fall through to quoting.
+                    case 5:
+                        // Distinguish errors from a valid encoding of U+FFFD.
+                        if(auto [gocpp_id_0, j] = decoderune(s, (unsigned int)(i)); j == (unsigned int)(i + 1))
+                        {
+                            gwrite(bytes("\\x"_s));
+                            printhexopts(false, 2, uint64_t(s[i]));
+                            continue;
+                        }
+                        break;
+                }
+            }
+            // For now, only allow basic printable ascii through unescaped
+            if(r >= ' ' && r <= '~')
+            {
+                gwrite(gocpp::slice<unsigned char> {(unsigned char)(r)});
+            }
+            else
+            if(r < 127)
+            {
+                gwrite(bytes("\\x"_s));
+                printhexopts(false, 2, uint64_t(r));
+            }
+            else
+            if(r < 0x10000)
+            {
+                gwrite(bytes("\\u"_s));
+                printhexopts(false, 4, uint64_t(r));
+            }
+            else
+            {
+                gwrite(bytes("\\U"_s));
+                printhexopts(false, 8, uint64_t(r));
+            }
+        }
+        gwrite(gocpp::slice<unsigned char> {(unsigned char)('"')});
+        printunlock();
     }
 
     void printpointer(gocpp::unsafe_pointer p)
@@ -325,53 +343,6 @@ namespace golang::runtime
     void printiface(iface i)
     {
         print("("_s, i.tab, ","_s, i.data, ")"_s);
-    }
-
-    // hexdumpWords prints a word-oriented hex dump of [p, end).
-    //
-    // If mark != nil, it will be called with each printed word's address
-    // and should return a character mark to appear just before that
-    // word's value. It can return 0 to indicate no mark.
-    void hexdumpWords(uintptr_t p, uintptr_t end, std::function<unsigned char (uintptr_t _1)> mark)
-    {
-        printlock();
-        gocpp::array<unsigned char, 1> markbuf = {};
-        markbuf[0] = ' ';
-        minhexdigits = int(gocpp::Sizeof<uintptr_t>() * 2);
-        for(auto i = uintptr_t(0); p + i < end; i += goarch::PtrSize)
-        {
-            if(i % 16 == 0)
-            {
-                if(i != 0)
-                {
-                    println();
-                }
-                print(hex(p + i), ": "_s);
-            }
-
-            if(mark != nullptr)
-            {
-                markbuf[0] = mark(p + i);
-                if(markbuf[0] == 0)
-                {
-                    markbuf[0] = ' ';
-                }
-            }
-            gwrite(markbuf.make_slice(0));
-            auto val = *(uintptr_t*)(gocpp::unsafe_pointer(p + i));
-            print(hex(val));
-            print(" "_s);
-
-            // Can we symbolize val?
-            auto fn = findfunc(val);
-            if(rec::valid(gocpp::recv(fn)))
-            {
-                print("<"_s, funcname(fn), "+"_s, hex(val - rec::entry(gocpp::recv(fn))), "> "_s);
-            }
-        }
-        minhexdigits = 0;
-        println();
-        printunlock();
     }
 
 }

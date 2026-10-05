@@ -4,15 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
-{
-    struct GoTag_byUniqueMethodName;
-}
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/termlist.fwd.h"
-
-namespace golang::types
+namespace golang::go::types
 {
     struct _TypeSet;
-    using byUniqueMethodName = gocpp::defined<gocpp::slice<Func*>, GoTag_byUniqueMethodName>;
 }

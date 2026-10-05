@@ -131,6 +131,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
     void embededStructDef();
     void main();
+    // Similar to ARM64 and X86 structs in cpu package (internal\cpu\cpu.go)
     extern AnonymousStructStruct AnonymousStruct;
     struct Dummy2
     {

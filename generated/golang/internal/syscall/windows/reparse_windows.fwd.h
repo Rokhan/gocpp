@@ -4,11 +4,14 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
+    // Reparse tag values are taken from
+    // https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/c8e77b37-3909-4fe6-a4ea-2b9d423b1ee4
     const long FSCTL_SET_REPARSE_POINT = 0x000900A4;
     const long IO_REPARSE_TAG_MOUNT_POINT = 0xA0000003;
     const long IO_REPARSE_TAG_DEDUP = 0x80000013;
+    const long IO_REPARSE_TAG_AF_UNIX = 0x80000023;
     const long SYMLINK_FLAG_RELATIVE = 1;
     struct REPARSE_DATA_BUFFER;
     struct REPARSE_DATA_BUFFER_HEADER;

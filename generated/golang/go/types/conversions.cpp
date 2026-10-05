@@ -13,6 +13,7 @@
 
 #include "golang/go/ast/ast.h"
 #include "golang/go/constant/value.h"
+#include "golang/go/types/alias.h"
 #include "golang/go/types/api_predicates.h"
 #include "golang/go/types/array.h"
 #include "golang/go/types/basic.h"
@@ -20,8 +21,8 @@
 #include "golang/go/types/const.h"
 #include "golang/go/types/errors.h"
 #include "golang/go/types/expr.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/operand.h"
-#include "golang/go/types/package.h"
 #include "golang/go/types/pointer.h"
 #include "golang/go/types/predicates.h"
 #include "golang/go/types/slice.h"
@@ -29,31 +30,35 @@
 #include "golang/go/types/typeparam.h"
 #include "golang/go/types/typeterm.h"
 #include "golang/go/types/under.h"
+#include "golang/go/types/universe.h"
+#include "golang/go/types/util.h"
 #include "golang/go/types/version.h"
 #include "golang/internal/types/errors/codes.h"
 #include "golang/unicode/letter.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace constant = golang::go::constant;
+    namespace unicode = golang::unicode;
     namespace rec
     {
     }
 
     // conversion type-checks the conversion T(x).
     // The result is in x.
-    void rec::conversion(Checker* check, operand* x, golang::types::Type T)
+    void rec::conversion(Checker* check, operand* x, golang::go::types::Type T)
     {
-        auto constArg = x->mode == constant_;
+        auto constArg = rec::mode(gocpp::recv(x)) == constant_;
 
-        auto constConvertibleTo = [=](golang::types::Type T, constant::Value* val) mutable -> bool
+        auto constConvertibleTo = [=](golang::go::types::Type T, constant::Value* val) mutable -> bool
         {
             //Go switch emulation
             {
-                auto [t, gocpp_id_0] = gocpp::getValue<Basic*>(under(T));
+                auto [t, gocpp_id_0] = gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(T)));
                 int conditionId = -1;
                 if(t == nullptr) { conditionId = 0; }
                 else if(representableConst(x->val, check, t, val)) { conditionId = 1; }
-                else if(isInteger(x->typ) && isString(t)) { conditionId = 2; }
+                else if(isInteger(rec::typ(gocpp::recv(x))) && isString(t)) { conditionId = 2; }
                 switch(conditionId)
                 {
                     case 0:
@@ -97,10 +102,10 @@ namespace golang::types
                     // A conversion from an integer constant to an integer type
                     // can only fail if there's overflow. Give a concise error.
                     // (go.dev/issue/63563)
-                    if(! ok && isInteger(x->typ) && isInteger(T))
+                    if(! ok && isInteger(rec::typ(gocpp::recv(x))) && isInteger(T))
                     {
                         rec::errorf(gocpp::recv(check), x, InvalidConversion, "constant %s overflows %s"_s, x->val, T);
-                        x->mode = invalid;
+                        rec::invalidate(gocpp::recv(x));
                         return;
                     }
                     break;
@@ -111,7 +116,7 @@ namespace golang::types
                     // If T's type set is empty, or if it doesn't
                     // have specific types, constant x cannot be
                     // converted.
-                    ok = rec::underIs(gocpp::recv(gocpp::getValue<TypeParam*>(T)), [=](golang::types::Type u) mutable -> bool
+                    ok = underIs(T, [=](golang::go::types::Type u) mutable -> bool
                     {
                         // u is nil if there are no specific type terms
                         if(u == nullptr)
@@ -119,13 +124,13 @@ namespace golang::types
                             cause = rec::sprintf(gocpp::recv(check), "%s does not contain specific types"_s, T);
                             return false;
                         }
-                        if(isString(x->typ) && isBytesOrRunes(u))
+                        if(isString(rec::typ(gocpp::recv(x))) && isBytesOrRunes(u))
                         {
                             return true;
                         }
                         if(! constConvertibleTo(u, nullptr))
                         {
-                            if(isInteger(x->typ) && isInteger(u))
+                            if(isInteger(rec::typ(gocpp::recv(x))) && isInteger(u))
                             {
                                 // see comment above on constant conversion
                                 cause = rec::sprintf(gocpp::recv(check), "constant %s overflows %s (in %s)"_s, x->val, u, T);
@@ -138,12 +143,12 @@ namespace golang::types
                         }
                         return true;
                     });
-                    x->mode = value;
+                    x->mode_ = value;
                     break;
                 case 2:
                     // non-constant conversion
                     ok = true;
-                    x->mode = value;
+                    x->mode_ = value;
                     break;
             }
         }
@@ -158,44 +163,50 @@ namespace golang::types
             {
                 rec::errorf(gocpp::recv(check), x, InvalidConversion, "cannot convert %s to type %s"_s, x, T);
             }
-            x->mode = invalid;
+            rec::invalidate(gocpp::recv(x));
             return;
         }
 
         // The conversion argument types are final. For untyped values the
         // conversion provides the type, per the spec: "A constant may be
         // given a type explicitly by a constant declaration or conversion,...".
-        if(isUntyped(x->typ))
+        if(isUntyped(rec::typ(gocpp::recv(x))))
         {
             auto final = T;
-            // - For conversions to interfaces, use the argument's default type.
+            // - For conversions to interfaces, except for untyped nil arguments
+            // and isTypes2, use the argument's default type.
             // - For conversions of untyped constants to non-constant types, also
             // use the default type (e.g., []byte("foo") should report string
             // not []byte as type for the constant "foo").
-            // - Keep untyped nil for untyped nil arguments.
+            // - If !isTypes2, keep untyped nil for untyped nil arguments.
             // - For constant integer to string conversions, keep the argument type.
             // (See also the TODO below.)
-            if(isNonTypeParamInterface(T) || constArg && ! isConstType(T) || rec::isNil(gocpp::recv(x)))
+            if(isTypes2 && rec::typ(gocpp::recv(x)) == Typ[UntypedNil])
             {
-                // default type of untyped nil is untyped nil
-                final = Default(x->typ);
             }
             else
-            if(x->mode == constant_ && isInteger(x->typ) && allString(T))
+            // ok
+            if(isNonTypeParamInterface(T) || constArg && ! isConstType(T) || ! isTypes2 && rec::isNil(gocpp::recv(x)))
             {
-                final = x->typ;
+                // default type of untyped nil is untyped nil
+                final = Default(rec::typ(gocpp::recv(x)));
+            }
+            else
+            if(rec::mode(gocpp::recv(x)) == constant_ && isInteger(rec::typ(gocpp::recv(x))) && allString(T))
+            {
+                final = rec::typ(gocpp::recv(x));
             }
             rec::updateExprType(gocpp::recv(check), x->expr, final, true);
         }
 
-        x->typ = T;
+        x->typ_ = T;
     }
 
     // convertibleTo reports whether T(x) is valid. In the failure case, *cause
     // may be set to the cause for the failure.
     // The check parameter may be nil if convertibleTo is invoked through an
     // exported API call, i.e., when all methods have been type-checked.
-    bool rec::convertibleTo(operand* x, Checker* check, golang::types::Type T, gocpp::string* cause)
+    bool rec::convertibleTo(operand* x, Checker* check, golang::go::types::Type T, gocpp::string* cause)
     {
         // "x is assignable to T"
         if(auto [ok, gocpp_id_1] = rec::assignableTo(gocpp::recv(x), check, T, cause); ok)
@@ -203,13 +214,16 @@ namespace golang::types
             return true;
         }
 
-        // "V and T have identical underlying types if tags are ignored
-        // and V and T are not type parameters"
-        auto V = x->typ;
-        auto Vu = types::under(V);
-        auto Tu = types::under(T);
+        auto origT = T;
+        auto V = Unalias(rec::typ(gocpp::recv(x)));
+        T = Unalias(T);
+        auto Vu = rec::Underlying(gocpp::recv(V));
+        auto Tu = rec::Underlying(gocpp::recv(T));
         auto [Vp, gocpp_id_2] = gocpp::getValue<TypeParam*>(V);
         auto [Tp, gocpp_id_3] = gocpp::getValue<TypeParam*>(T);
+
+        // "V and T have identical underlying types if tags are ignored
+        // and V and T are not type parameters"
         if(IdenticalIgnoreTags(Vu, Tu) && Vp == nullptr && Tp == nullptr)
         {
             return true;
@@ -226,7 +240,7 @@ namespace golang::types
                     auto [T_tmp, ok] = gocpp::getValue<Pointer*>(T);
                     if(auto& T = T_tmp; ok)
                     {
-                        if(IdenticalIgnoreTags(types::under(V->base), types::under(T->base)) && ! isTypeParam(V->base) && ! isTypeParam(T->base))
+                        if(IdenticalIgnoreTags(rec::Underlying(gocpp::recv(V->base)), rec::Underlying(gocpp::recv(T->base))) && ! isTypeParam(V->base) && ! isTypeParam(T->base))
                         {
                             return true;
                         }
@@ -288,7 +302,7 @@ namespace golang::types
                         types::Array* a = gocpp::any_cast<types::Array*>(Tu);
                         if(Identical(rec::Elem(gocpp::recv(s)), rec::Elem(gocpp::recv(a))))
                         {
-                            if(check == nullptr || rec::allowVersion(gocpp::recv(check), check->pkg, x, go1_20))
+                            if(check == nullptr || rec::allowVersion(gocpp::recv(check), go1_20))
                             {
                                 return true;
                             }
@@ -296,7 +310,7 @@ namespace golang::types
                             if(cause != nullptr)
                             {
                                 // TODO(gri) consider restructuring versionErrorf so we can use it here and below
-                                *cause = "conversion of slices to arrays requires go1.20 or later"_s;
+                                *cause = "conversion of slice to array requires go1.20 or later"_s;
                             }
                             return false;
                         }
@@ -306,19 +320,19 @@ namespace golang::types
                     {
                         types::Pointer* a = gocpp::any_cast<types::Pointer*>(Tu);
                         {
-                            auto [a_tmp, gocpp_id_6] = gocpp::getValue<Array*>(types::under(rec::Elem(gocpp::recv(a))));
+                            auto [a_tmp, gocpp_id_6] = gocpp::getValue<Array*>(rec::Underlying(gocpp::recv(rec::Elem(gocpp::recv(a)))));
                             if(auto& a = a_tmp; a != nullptr)
                             {
                                 if(Identical(rec::Elem(gocpp::recv(s)), rec::Elem(gocpp::recv(a))))
                                 {
-                                    if(check == nullptr || rec::allowVersion(gocpp::recv(check), check->pkg, x, go1_17))
+                                    if(check == nullptr || rec::allowVersion(gocpp::recv(check), go1_17))
                                     {
                                         return true;
                                     }
                                     // check != nil
                                     if(cause != nullptr)
                                     {
-                                        *cause = "conversion of slices to array pointers requires go1.17 or later"_s;
+                                        *cause = "conversion of slice to array pointer requires go1.17 or later"_s;
                                     }
                                     return false;
                                 }
@@ -364,15 +378,15 @@ namespace golang::types
                     // don't clobber outer x
                     auto x_tmp = *x;
                     auto& x = x_tmp;
-                    return rec::is(gocpp::recv(Vp), [=](term* V) mutable -> bool
+                    return rec::is(gocpp::recv(Vp), [=](golang::go::types::term* V) mutable -> bool
                     {
                         if(V == nullptr)
                         {
                             // no specific types
                             return false;
                         }
-                        x->typ = V->typ;
-                        return rec::is(gocpp::recv(Tp), [=](term* T) mutable -> bool
+                        x->typ_ = V->typ;
+                        return rec::is(gocpp::recv(Tp), [=](golang::go::types::term* T) mutable -> bool
                         {
                             if(T == nullptr)
                             {
@@ -394,17 +408,17 @@ namespace golang::types
                     // don't clobber outer x
                     auto x_tmp = *x;
                     auto& x = x_tmp;
-                    return rec::is(gocpp::recv(Vp), [=](term* V) mutable -> bool
+                    return rec::is(gocpp::recv(Vp), [=](golang::go::types::term* V) mutable -> bool
                     {
                         if(V == nullptr)
                         {
                             // no specific types
                             return false;
                         }
-                        x->typ = V->typ;
+                        x->typ_ = V->typ;
                         if(! rec::convertibleTo(gocpp::recv(x), check, T, cause))
                         {
-                            errorf("cannot convert %s (in %s) to type %s"_s, V->typ, Vp, T);
+                            errorf("cannot convert %s (in %s) to type %s"_s, V->typ, Vp, origT);
                             return false;
                         }
                         return true;
@@ -412,7 +426,7 @@ namespace golang::types
                     break;
                 }
                 case 2:
-                    return rec::is(gocpp::recv(Tp), [=](term* T) mutable -> bool
+                    return rec::is(gocpp::recv(Tp), [=](golang::go::types::term* T) mutable -> bool
                     {
                         if(T == nullptr)
                         {
@@ -421,7 +435,7 @@ namespace golang::types
                         }
                         if(! rec::convertibleTo(gocpp::recv(x), check, T->typ, cause))
                         {
-                            errorf("cannot convert %s to type %s (in %s)"_s, x->typ, T->typ, Tp);
+                            errorf("cannot convert %s to type %s (in %s)"_s, rec::typ(gocpp::recv(x)), T->typ, Tp);
                             return false;
                         }
                         return true;
@@ -433,29 +447,29 @@ namespace golang::types
         return false;
     }
 
-    bool isUintptr(golang::types::Type typ)
+    bool isUintptr(golang::go::types::Type typ)
     {
-        auto [t, gocpp_id_7] = gocpp::getValue<Basic*>(under(typ));
+        auto [t, gocpp_id_7] = gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(typ)));
         return t != nullptr && t->kind == Uintptr;
     }
 
-    bool isUnsafePointer(golang::types::Type typ)
+    bool isUnsafePointer(golang::go::types::Type typ)
     {
-        auto [t, gocpp_id_8] = gocpp::getValue<Basic*>(under(typ));
+        auto [t, gocpp_id_8] = gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(typ)));
         return t != nullptr && t->kind == UnsafePointer;
     }
 
-    bool isPointer(golang::types::Type typ)
+    bool isPointer(golang::go::types::Type typ)
     {
-        auto [gocpp_id_9, ok] = gocpp::getValue<Pointer*>(under(typ));
+        auto [gocpp_id_9, ok] = gocpp::getValue<Pointer*>(rec::Underlying(gocpp::recv(typ)));
         return ok;
     }
 
-    bool isBytesOrRunes(golang::types::Type typ)
+    bool isBytesOrRunes(golang::go::types::Type typ)
     {
-        if(auto [s, gocpp_id_10] = gocpp::getValue<Slice*>(under(typ)); s != nullptr)
+        if(auto [s, gocpp_id_10] = gocpp::getValue<Slice*>(rec::Underlying(gocpp::recv(typ))); s != nullptr)
         {
-            auto [t, gocpp_id_11] = gocpp::getValue<Basic*>(under(s->elem));
+            auto [t, gocpp_id_11] = gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(s->elem)));
             return t != nullptr && (t->kind == Byte || t->kind == Rune);
         }
         return false;

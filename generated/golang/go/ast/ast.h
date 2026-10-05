@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::ast
+namespace golang::go::ast
 {
     struct CommentGroup
     {
@@ -70,11 +70,41 @@ namespace golang::ast
 
     std::ostream& operator<<(std::ostream& os, const struct FuncDecl& value);
 }
-#include "golang/go/token/position.h"
-#include "golang/go/token/token.h"
 #include "golang/go/ast/scope.fwd.h"
 
-namespace golang::ast
+namespace golang::go::ast
+{
+    struct Package
+    {
+        gocpp::string Name{}; // package name
+        Scope* Scope{}; // package scope across all files
+        gocpp::map<gocpp::string, Object*> Imports{}; // map of package id -> package object
+        gocpp::map<gocpp::string, File*> Files{}; // Go source files by filename
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Package& value);
+}
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
+
+namespace golang::go::ast
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/token/position.h"
+#include "golang/go/token/token.h"
+
+namespace golang::go::ast
 {
     struct Node : virtual gocpp::Interface
     {
@@ -218,6 +248,7 @@ namespace golang::ast
     struct BasicLit
     {
         token::Pos ValuePos{}; // literal position
+        token::Pos ValueEnd{}; // position immediately after the literal
         token::Token Kind{}; // token.INT, token.FLOAT, token.IMAG, token.CHAR, or token.STRING
         gocpp::string Value{}; // literal string; e.g. 42, 0x7f, 3.14, 1e-9, 2.4i, 'a', '\x7f', "foo" or `\m\n\o`
 
@@ -428,25 +459,6 @@ namespace golang::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct BadDecl& value);
-    struct Package
-    {
-        gocpp::string Name{}; // package name
-        Scope* Scope{}; // package scope across all files
-        gocpp::map<gocpp::string, Object*> Imports{}; // map of package id -> package object
-        gocpp::map<gocpp::string, File*> Files{}; // Go source files by filename
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Package& value);
     struct Expr : virtual gocpp::Interface, Node
     {
         using gocpp::Interface::operator==;
@@ -1394,7 +1406,7 @@ namespace golang::ast
         Scope* Scope{}; // package scope (this file only). Deprecated: see Object
         gocpp::slice<ImportSpec*> Imports{}; // imports in this file
         gocpp::slice<Ident*> Unresolved{}; // unresolved identifiers in this file. Deprecated: see Object
-        gocpp::slice<CommentGroup*> Comments{}; // list of all comments in the source file
+        gocpp::slice<CommentGroup*> Comments{}; // comments in the file, in lexical order
         gocpp::string GoVersion{}; // minimum Go version required by //go:build or // +build directives
 
         using isGoStruct = void;
@@ -1416,7 +1428,7 @@ namespace golang::ast
 
 #include "golang/go/token/position.h"
 
-namespace golang::ast
+namespace golang::go::ast
 {
 
     namespace rec

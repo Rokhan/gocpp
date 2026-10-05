@@ -11,6 +11,9 @@
 #include "golang/os/types_windows.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/filepathlite/path.h"
+#include "golang/internal/filepathlite/path_windows.h"
+#include "golang/internal/godebug/godebug.h"
 #include "golang/internal/syscall/windows/reparse_windows.h"
 #include "golang/internal/syscall/windows/symlink_windows.h"
 #include "golang/internal/syscall/windows/syscall_windows.h"
@@ -28,10 +31,18 @@
 
 namespace golang::os
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace filepathlite = golang::internal::filepathlite;
+    namespace godebug = golang::internal::godebug;
+    namespace sync = golang::sync;
+    namespace syscall = golang::syscall;
+    namespace time = golang::time;
+    namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
-        using fs::rec::Error;
         using fs::rec::Sys;
+        using godebug::rec::IncNonDefault;
+        using godebug::rec::Value;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
         using syscall::rec::Nanoseconds;
@@ -126,19 +137,12 @@ namespace golang::os
             }))};
         }
 
-        windows::FILE_ATTRIBUTE_TAG_INFO ti = {};
-        err = windows::GetFileInformationByHandleEx(h, windows::FileAttributeTagInfo, (unsigned char*)(gocpp::unsafe_pointer(& ti)), uint32_t(gocpp::Sizeof<windows::FILE_ATTRIBUTE_TAG_INFO>()));
-        if(err != nullptr)
+        uint32_t reparseTag = {};
+        if(d.FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT != 0)
         {
-            if(auto [errno, ok] = gocpp::getValue<syscall::Errno>(err); ok && errno == windows::ERROR_INVALID_PARAMETER)
-            {
-                // It appears calling GetFileInformationByHandleEx with
-                // FILE_ATTRIBUTE_TAG_INFO fails on FAT file system with
-                // ERROR_INVALID_PARAMETER. Clear ti.ReparseTag in that
-                // instance to indicate no symlinks are possible.
-                ti.ReparseTag = 0;
-            }
-            else
+            windows::FILE_ATTRIBUTE_TAG_INFO ti = {};
+            err = windows::GetFileInformationByHandleEx(h, windows::FileAttributeTagInfo, (unsigned char*)(gocpp::unsafe_pointer(& ti)), uint32_t(gocpp::Sizeof<windows::FILE_ATTRIBUTE_TAG_INFO>()));
+            if(err != nullptr)
             {
                 return {nullptr, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
                     x.Op = "GetFileInformationByHandleEx"_s;
@@ -146,10 +150,11 @@ namespace golang::os
                     x.Err = err;
                 }))};
             }
+            reparseTag = ti.ReparseTag;
         }
 
         return {gocpp::InitPtr<fileStat>([=](auto& x) {
-            x.name = basename(path);
+            x.name = filepathlite::Base(path);
             x.FileAttributes = d.FileAttributes;
             x.CreationTime = d.CreationTime;
             x.LastAccessTime = d.LastAccessTime;
@@ -159,8 +164,22 @@ namespace golang::os
             x.vol = d.VolumeSerialNumber;
             x.idxhi = d.FileIndexHigh;
             x.idxlo = d.FileIndexLow;
-            x.ReparseTag = ti.ReparseTag;
+            x.ReparseTag = reparseTag;
         }), nullptr};
+    }
+
+    // newFileStatFromWin32FileAttributeData copies all required information
+    // from syscall.Win32FileAttributeData d into the newly created fileStat.
+    fileStat* newFileStatFromWin32FileAttributeData(syscall::Win32FileAttributeData* d)
+    {
+        return gocpp::InitPtr<fileStat>([=](auto& x) {
+            x.FileAttributes = d->FileAttributes;
+            x.CreationTime = d->CreationTime;
+            x.LastAccessTime = d->LastAccessTime;
+            x.LastWriteTime = d->LastWriteTime;
+            x.FileSizeHigh = d->FileSizeHigh;
+            x.FileSizeLow = d->FileSizeLow;
+        });
     }
 
     // newFileStatFromFileIDBothDirInfo copies all required information
@@ -230,22 +249,7 @@ namespace golang::os
     bool rec::isReparseTagNameSurrogate(fileStat* fs)
     {
         // True for IO_REPARSE_TAG_SYMLINK and IO_REPARSE_TAG_MOUNT_POINT.
-        return fs->ReparseTag & 0x20000000 != 0;
-    }
-
-    bool rec::isSymlink(fileStat* fs)
-    {
-        // As of https://go.dev/cl/86556, we treat MOUNT_POINT reparse points as
-        // symlinks because otherwise certain directory junction tests in the
-        // path/filepath package would fail.
-        // However,
-        // https://learn.microsoft.com/en-us/windows/win32/fileio/hard-links-and-junctions
-        // seems to suggest that directory junctions should be treated like hard
-        // links, not symlinks.
-        // TODO(bcmills): Get more input from Microsoft on what the behavior ought to
-        // be for MOUNT_POINT reparse points.
-        return fs->ReparseTag == syscall::IO_REPARSE_TAG_SYMLINK ||
-                fs->ReparseTag == windows::IO_REPARSE_TAG_MOUNT_POINT;
+        return fs->FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT != 0 && fs->ReparseTag & 0x20000000 != 0;
     }
 
     int64_t rec::Size(fileStat* fs)
@@ -253,7 +257,23 @@ namespace golang::os
         return (int64_t(fs->FileSizeHigh) << 32) + int64_t(fs->FileSizeLow);
     }
 
+    godebug::Setting* winsymlink = godebug::New("winsymlink"_s);
     FileMode rec::Mode(fileStat* fs)
+    {
+        auto m = rec::mode(gocpp::recv(fs));
+        if(rec::Value(gocpp::recv(winsymlink)) == "0"_s)
+        {
+            auto old = rec::modePreGo1_23(gocpp::recv(fs));
+            if(old != m)
+            {
+                rec::IncNonDefault(gocpp::recv(winsymlink));
+                m = old;
+            }
+        }
+        return m;
+    }
+
+    FileMode rec::mode(fileStat* fs)
     {
         FileMode m;
         if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_READONLY != 0)
@@ -264,7 +284,97 @@ namespace golang::os
         {
             m |= 0666;
         }
-        if(rec::isSymlink(gocpp::recv(fs)))
+
+        // Windows reports the FILE_ATTRIBUTE_DIRECTORY bit for reparse points
+        // that refer to directories, such as symlinks and mount points.
+        // However, we follow symlink POSIX semantics and do not set the mode bits.
+        // This allows users to walk directories without following links
+        // by just calling "fi, err := os.Lstat(name); err == nil && fi.IsDir()".
+        // Note that POSIX only defines the semantics for symlinks, not for
+        // mount points or other surrogate reparse points, but we treat them
+        // the same way for consistency. Also, mount points can contain infinite
+        // loops, so it is not safe to walk them without special handling.
+        if(! rec::isReparseTagNameSurrogate(gocpp::recv(fs)))
+        {
+            if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_DIRECTORY != 0)
+            {
+                m |= ModeDir | 0111;
+            }
+
+            //Go switch emulation
+            {
+                auto condition = fs->filetype;
+                int conditionId = -1;
+                if(condition == syscall::FILE_TYPE_PIPE) { conditionId = 0; }
+                else if(condition == syscall::FILE_TYPE_CHAR) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    case 0:
+                        m |= ModeNamedPipe;
+                        break;
+                    case 1:
+                        m |= ModeDevice | ModeCharDevice;
+                        break;
+                }
+            }
+        }
+
+        if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT != 0)
+        {
+            //Go switch emulation
+            {
+                auto condition = fs->ReparseTag;
+                int conditionId = -1;
+                if(condition == syscall::IO_REPARSE_TAG_SYMLINK) { conditionId = 0; }
+                else if(condition == windows::IO_REPARSE_TAG_AF_UNIX) { conditionId = 1; }
+                else if(condition == windows::IO_REPARSE_TAG_DEDUP) { conditionId = 2; }
+                switch(conditionId)
+                {
+                    case 0:
+                        m |= ModeSymlink;
+                        break;
+                    case 1:
+                        m |= ModeSocket;
+                        break;
+                    case 2:
+                        break;
+                    // If the Data Deduplication service is enabled on Windows Server, its
+                    // Optimization job may convert regular files to IO_REPARSE_TAG_DEDUP
+                    // whenever that job runs.
+                    // However, DEDUP reparse points remain similar in most respects to
+                    // regular files: they continue to support random-access reads and writes
+                    // of persistent data, and they shouldn't add unexpected latency or
+                    // unavailability in the way that a network filesystem might.
+                    // Go programs may use ModeIrregular to filter out unusual files (such as
+                    // raw device files on Linux, POSIX FIFO special files, and so on), so
+                    // to avoid files changing unpredictably from regular to irregular we will
+                    // consider DEDUP files to be close enough to regular to treat as such.
+                    default:
+                        m |= ModeIrregular;
+                        break;
+                }
+            }
+        }
+        return m;
+    }
+
+    // modePreGo1_23 returns the FileMode for the fileStat, using the pre-Go 1.23
+    // logic for determining the file mode.
+    // The logic is subtle and not well-documented, so it is better to keep it
+    // separate from the new logic.
+    FileMode rec::modePreGo1_23(fileStat* fs)
+    {
+        FileMode m;
+        if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_READONLY != 0)
+        {
+            m |= 0444;
+        }
+        else
+        {
+            m |= 0666;
+        }
+        if(fs->ReparseTag == syscall::IO_REPARSE_TAG_SYMLINK ||
+                fs->ReparseTag == windows::IO_REPARSE_TAG_MOUNT_POINT)
         {
             return m | ModeSymlink;
         }
@@ -288,36 +398,23 @@ namespace golang::os
                     break;
             }
         }
-        if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT != 0 && m & ModeType == 0)
+        if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT != 0)
         {
-            if(fs->ReparseTag == windows::IO_REPARSE_TAG_DEDUP)
+            if(fs->ReparseTag == windows::IO_REPARSE_TAG_AF_UNIX)
             {
+                m |= ModeSocket;
             }
-            else
-            // If the Data Deduplication service is enabled on Windows Server, its
-            // Optimization job may convert regular files to IO_REPARSE_TAG_DEDUP
-            // whenever that job runs.
-            // However, DEDUP reparse points remain similar in most respects to
-            // regular files: they continue to support random-access reads and writes
-            // of persistent data, and they shouldn't add unexpected latency or
-            // unavailability in the way that a network filesystem might.
-            // Go programs may use ModeIrregular to filter out unusual files (such as
-            // raw device files on Linux, POSIX FIFO special files, and so on), so
-            // to avoid files changing unpredictably from regular to irregular we will
-            // consider DEDUP files to be close enough to regular to treat as such.
-            // If the Data Deduplication service is enabled on Windows Server, its
-            // Optimization job may convert regular files to IO_REPARSE_TAG_DEDUP
-            // whenever that job runs.
-            // However, DEDUP reparse points remain similar in most respects to
-            // regular files: they continue to support random-access reads and writes
-            // of persistent data, and they shouldn't add unexpected latency or
-            // unavailability in the way that a network filesystem might.
-            // Go programs may use ModeIrregular to filter out unusual files (such as
-            // raw device files on Linux, POSIX FIFO special files, and so on), so
-            // to avoid files changing unpredictably from regular to irregular we will
-            // consider DEDUP files to be close enough to regular to treat as such.
+            if(m & ModeType == 0)
             {
-                m |= ModeIrregular;
+                if(fs->ReparseTag == windows::IO_REPARSE_TAG_DEDUP)
+                {
+                }
+                else
+                // See comment in fs.Mode.
+                // See comment in fs.Mode.
+                {
+                    m |= ModeIrregular;
+                }
             }
         }
         return m;
@@ -411,7 +508,7 @@ namespace golang::os
     gocpp::error rec::saveInfoFromPath(fileStat* fs, gocpp::string path)
     {
         fs->path = path;
-        if(! isAbs(fs->path))
+        if(! filepathlite::IsAbs(fs->path))
         {
             gocpp::error err = {};
             std::tie(fs->path, err) = syscall::FullPath(fs->path);
@@ -424,7 +521,7 @@ namespace golang::os
                 }));
             }
         }
-        fs->name = basename(path);
+        fs->name = filepathlite::Base(path);
         return nullptr;
     }
 

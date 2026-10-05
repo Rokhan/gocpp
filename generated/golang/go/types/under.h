@@ -9,17 +9,70 @@
 #include "golang/go/types/under.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::go::types
+{
+    struct typeError
+    {
+        gocpp::string format_{};
+        gocpp::slice<go_any> args{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct typeError& value);
+    extern typeError emptyTypeError;
+    typeError* typeErrorf(gocpp::string format, gocpp::slice<go_any> args);
+    
+    template<typename... Args>
+    typeError* typeErrorf(gocpp::string format, Args... args)
+    {
+        return typeErrorf(format, gocpp::ToSlice<go_any>(args...));
+    }
+    
+    template<typename... Args>
+    typeError* typeErrorf(gocpp::string format, go_any value, Args... args)
+    {
+        return typeErrorf(format, gocpp::ToSlice<go_any>(value, args...));
+    }
+}
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    golang::types::Type under(golang::types::Type t);
-    golang::types::Type coreType(golang::types::Type t);
-    golang::types::Type coreString(golang::types::Type t);
-    golang::types::Type match(golang::types::Type x, golang::types::Type y);
+    bool underIs(golang::go::types::Type typ, std::function<bool (golang::go::types::Type _1)> f);
+    bool all(golang::go::types::Type t, std::function<bool (golang::go::types::Type t, golang::go::types::Type u)> f);
+    std::tuple<golang::go::types::Type, typeError*> commonUnder(golang::go::types::Type t, std::function<typeError* (golang::go::types::Type t, golang::go::types::Type u)> cond);
+}
+#include "golang/iter/iter.fwd.h"
+
+namespace golang::go::types
+{
+    namespace iter = golang::iter;
+}
+#include "golang/iter/iter.h"
+
+namespace golang::go::types
+{
+    iter::Seq2<golang::go::types::Type, golang::go::types::Type> typeset(golang::go::types::Type t);
+}
+
+#include "golang/go/types/check.h"
+
+namespace golang::go::types
+{
 
     namespace rec
     {
+        gocpp::string format(typeError* err, Checker* check);
     }
 }
 

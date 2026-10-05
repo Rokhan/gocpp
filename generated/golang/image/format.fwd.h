@@ -3,11 +3,15 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/image/image.fwd.h"
-#include "golang/io/io.fwd.h"
 
 namespace golang::image
 {
     struct format;
+}
+#include "golang/io/io.fwd.h"
+
+namespace golang::image
+{
+    namespace io = golang::io;
     struct reader;
 }

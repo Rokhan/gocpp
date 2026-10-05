@@ -10,36 +10,33 @@
 #include "gocpp/support.h"
 
 
-namespace golang::atomic
+namespace golang::sync::atomic
 {
     int32_t SwapInt32(int32_t* addr, int32_t go_new);
-    int64_t SwapInt64(int64_t* addr, int64_t go_new);
     uint32_t SwapUint32(uint32_t* addr, uint32_t go_new);
-    uint64_t SwapUint64(uint64_t* addr, uint64_t go_new);
     uintptr_t SwapUintptr(uintptr_t* addr, uintptr_t go_new);
-    gocpp::unsafe_pointer SwapPointer(gocpp::unsafe_pointer* addr, gocpp::unsafe_pointer go_new);
     bool CompareAndSwapInt32(int32_t* addr, int32_t old, int32_t go_new);
-    bool CompareAndSwapInt64(int64_t* addr, int64_t old, int64_t go_new);
     bool CompareAndSwapUint32(uint32_t* addr, uint32_t old, uint32_t go_new);
-    bool CompareAndSwapUint64(uint64_t* addr, uint64_t old, uint64_t go_new);
     bool CompareAndSwapUintptr(uintptr_t* addr, uintptr_t old, uintptr_t go_new);
-    bool CompareAndSwapPointer(gocpp::unsafe_pointer* addr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
     int32_t AddInt32(int32_t* addr, int32_t delta);
     uint32_t AddUint32(uint32_t* addr, uint32_t delta);
-    int64_t AddInt64(int64_t* addr, int64_t delta);
-    uint64_t AddUint64(uint64_t* addr, uint64_t delta);
     uintptr_t AddUintptr(uintptr_t* addr, uintptr_t delta);
+    int32_t AndInt32(int32_t* addr, int32_t mask);
+    uint32_t AndUint32(uint32_t* addr, uint32_t mask);
+    uintptr_t AndUintptr(uintptr_t* addr, uintptr_t mask);
+    int32_t OrInt32(int32_t* addr, int32_t mask);
+    uint32_t OrUint32(uint32_t* addr, uint32_t mask);
+    uintptr_t OrUintptr(uintptr_t* addr, uintptr_t mask);
     int32_t LoadInt32(int32_t* addr);
-    int64_t LoadInt64(int64_t* addr);
     uint32_t LoadUint32(uint32_t* addr);
-    uint64_t LoadUint64(uint64_t* addr);
     uintptr_t LoadUintptr(uintptr_t* addr);
-    gocpp::unsafe_pointer LoadPointer(gocpp::unsafe_pointer* addr);
     void StoreInt32(int32_t* addr, int32_t val);
-    void StoreInt64(int64_t* addr, int64_t val);
     void StoreUint32(uint32_t* addr, uint32_t val);
-    void StoreUint64(uint64_t* addr, uint64_t val);
     void StoreUintptr(uintptr_t* addr, uintptr_t val);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    gocpp::unsafe_pointer SwapPointer(gocpp::unsafe_pointer* addr, gocpp::unsafe_pointer go_new);
+    bool CompareAndSwapPointer(gocpp::unsafe_pointer* addr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
+    gocpp::unsafe_pointer LoadPointer(gocpp::unsafe_pointer* addr);
     void StorePointer(gocpp::unsafe_pointer* addr, gocpp::unsafe_pointer val);
 
     namespace rec

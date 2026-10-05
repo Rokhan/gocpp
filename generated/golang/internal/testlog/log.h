@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::testlog
+namespace golang::internal::testlog
 {
     struct Interface : virtual gocpp::Interface
     {
@@ -99,11 +99,23 @@ namespace golang::testlog
     void SetLogger(Interface impl);
     Interface Logger();
 }
-#include "golang/sync/atomic/value.h"
+#include "golang/sync/atomic/type.fwd.h"
 
-namespace golang::testlog
+namespace golang::internal::testlog
 {
-    extern atomic::Value logger;
+    namespace atomic = golang::sync::atomic;
+}
+#include "golang/sync/atomic/type.h"
+
+namespace golang::internal::testlog
+{
+    // logger is the current logger Interface.
+    // We use an atomic.Pointer in case test startup
+    // is racing with goroutines started during init.
+    // That must not cause a race detector failure,
+    // although it will still result in limited visibility
+    // into exactly what those goroutines do.
+    extern atomic::Pointer<Interface> logger;
 
     namespace rec
     {

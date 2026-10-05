@@ -4,12 +4,12 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::ast
+namespace golang::go::ast
 {
     struct Scope;
     struct Object;
     using ObjKind = int;
-    // The list of possible Object kinds.
+    // The list of possible [Object] kinds.
     const ObjKind Bad = 0;
     const ObjKind Pkg = 1;
     const ObjKind Con = 2;

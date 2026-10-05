@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
     int Index(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
     int IndexString(gocpp::string a, gocpp::string b);

@@ -5,7 +5,7 @@
 
 #include "golang/sort/sort.fwd.h"
 
-namespace golang::heap
+namespace golang::container::heap
 {
     struct Interface;
 }

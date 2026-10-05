@@ -11,16 +11,18 @@
 #include "golang/runtime/profbuf.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/lock_sema.h"
+#include "golang/runtime/note_other.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proflabel.h"
 #include "golang/runtime/race0.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
         using atomic::rec::CompareAndSwap;
@@ -56,6 +58,10 @@ namespace golang::runtime
     // that data at the next read. The read offset rNext tracks the next offset to
     // be returned by read. By definition, r ≤ rNext ≤ w (before wraparound),
     // and rNext is only used by the reader, so it can be accessed without atomics.
+    //
+    // If the reader is blocked waiting for more data, the writer will wake it up if
+    // either the buffer is more than half full, or when the writer sets the eof
+    // marker or writes overflow entries (described below.)
     //
     // If the writer gets ahead of the reader, so that the buffer fills,
     // future writes are discarded and replaced in the output stream by an
@@ -460,11 +466,8 @@ namespace golang::runtime
         // time stamp
         data[1] = uint64_t(now);
         // header, zero-padded
-        auto i = uintptr_t(copy(data.make_slice(2, 2 + b->hdrsize), hdr));
-        for(; i < b->hdrsize; i++)
-        {
-            data[2 + i] = 0;
-        }
+        auto i = copy(data.make_slice(2, 2 + b->hdrsize), hdr);
+        clear(data.make_slice(2 + i, 2 + b->hdrsize));
         for(auto [i, pc] : stk)
         {
             data[2 + b->hdrsize + uintptr_t(i)] = uint64_t(pc);
@@ -476,13 +479,32 @@ namespace golang::runtime
             // Racing with reader setting flag bits in b.w, to avoid lost wakeups.
             auto old = rec::load(gocpp::recv(b->w));
             auto go_new = rec::addCountsAndClearFlags(gocpp::recv(old), skip + 2 + len(stk) + int(b->hdrsize), 1);
+            // We re-load b.r here to reduce the likelihood of early wakeups
+            // if the reader already consumed some data between the last
+            // time we read b.r and now. This isn't strictly necessary.
+            auto unread = countSub(rec::dataCount(gocpp::recv(go_new)), rec::dataCount(gocpp::recv(rec::load(gocpp::recv(b->r)))));
+            if(unread < 0)
+            {
+                // The new count overflowed and wrapped around.
+                unread += len(b->data);
+            }
+            auto wakeupThreshold = len(b->data) / 2;
+            if(unread < wakeupThreshold)
+            {
+                // Carry over the sleeping flag since we're not planning
+                // to wake the reader yet
+                go_new |= old & profReaderSleeping;
+            }
             if(! rec::cas(gocpp::recv(b->w), old, go_new))
             {
                 continue;
             }
-            // If there was a reader, wake it up.
-            if(old & profReaderSleeping != 0)
+            // If we've hit our high watermark for data in the buffer,
+            // and there is a reader, wake it up.
+            if(unread >= wakeupThreshold && old & profReaderSleeping != 0)
             {
+                // NB: if we reach this point, then the sleeping bit is
+                // cleared in the new b.w value
                 notewakeup(& b->wait);
             }
             break;
@@ -510,6 +532,11 @@ namespace golang::runtime
         {
             auto old = rec::load(gocpp::recv(b->w));
             auto go_new = old | profWriteExtra;
+            // Clear profReaderSleeping. We're going to wake up the reader
+            // if it was sleeping and we don't want double wakeups in case
+            // we, for example, attempt to write into a full buffer multiple
+            // times before the reader wakes up.
+            go_new &^= profReaderSleeping;
             if(! rec::cas(gocpp::recv(b->w), old, go_new))
             {
                 continue;
@@ -576,10 +603,7 @@ namespace golang::runtime
                 auto dst = b->overflowBuf;
                 dst[0] = uint64_t(2 + b->hdrsize + 1);
                 dst[1] = time;
-                for(auto i = uintptr_t(0); i < b->hdrsize; i++)
-                {
-                    dst[2 + i] = 0;
-                }
+                clear(dst.make_slice(2, 2 + b->hdrsize));
                 dst[2 + b->hdrsize] = uint64_t(count);
                 return {dst.make_slice(0, 2 + b->hdrsize + 1), overflowTag.make_slice(0, 1), false};
             }

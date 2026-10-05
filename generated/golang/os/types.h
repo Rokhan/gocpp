@@ -13,8 +13,8 @@
 namespace golang::os
 {
     int Getpagesize();
+    bool SameFile(FileInfo fi1, FileInfo fi2);
 }
-#include "golang/io/fs/fs.h"
 #include "golang/os/file_windows.fwd.h"
 
 namespace golang::os
@@ -35,7 +35,6 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct File& value);
-    bool SameFile(FileInfo fi1, FileInfo fi2);
 }
 
 #include "golang/os/types_windows.h"

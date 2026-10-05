@@ -9,12 +9,22 @@
 #include "golang/internal/poll/errno_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
     extern gocpp::error errERROR_IO_PENDING;
+}
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+
+namespace golang::internal::poll
+{
+    namespace syscall = golang::syscall;
+}
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::internal::poll
+{
     gocpp::error errnoErr(syscall::Errno e);
 
     namespace rec

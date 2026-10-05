@@ -9,14 +9,28 @@
 #include "golang/os/types_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/io/fs/fs.h"
-#include "golang/sync/mutex.h"
-#include "golang/syscall/types_windows.h"
-#include "golang/time/time.h"
-#include "golang/os/types.fwd.h"
+#include "golang/internal/godebug/godebug.fwd.h"
+#include "golang/sync/mutex.fwd.h"
+#include "golang/syscall/exec_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
+#include "golang/time/time.fwd.h"
 
 namespace golang::os
 {
+    namespace syscall = golang::syscall;
+    namespace sync = golang::sync;
+}
+#include "golang/os/types.h"
+#include "golang/sync/mutex.h"
+#include "golang/syscall/types_windows.h"
+#include "golang/time/time.h"
+
+namespace golang::os
+{
+    namespace godebug = golang::internal::godebug;
+    namespace time = golang::time;
     struct fileStat
     {
         gocpp::string name{};
@@ -51,23 +65,32 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fileStat& value);
+    extern godebug::Setting* winsymlink;
     mocklib::Date atime(FileInfo fi);
+}
+#include "golang/internal/syscall/windows/reparse_windows.fwd.h"
+#include "golang/internal/syscall/windows/symlink_windows.fwd.h"
+#include "golang/internal/syscall/windows/syscall_windows.fwd.h"
+#include "golang/internal/syscall/windows/zsyscall_windows.fwd.h"
+
+namespace golang::os
+{
+    fileStat* newFileStatFromWin32FileAttributeData(syscall::Win32FileAttributeData* d);
+    fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d);
     bool sameFile(fileStat* fs1, fileStat* fs2);
+    namespace windows = golang::internal::syscall::windows;
 }
 #include "golang/syscall/syscall_windows.h"
-#include "golang/internal/syscall/windows/syscall_windows.fwd.h"
 
 namespace golang::os
 {
     std::tuple<fileStat*, gocpp::error> newFileStatFromGetFileInformationByHandle(gocpp::string path, syscall::Handle h);
     fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d);
     fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d);
-    fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d);
 }
 
+#include "golang/os/types.h"
 #include "golang/time/time.h"
-
-#include "golang/os/types.fwd.h"
 
 namespace golang::os
 {
@@ -75,9 +98,10 @@ namespace golang::os
     namespace rec
     {
         bool isReparseTagNameSurrogate(fileStat* fs);
-        bool isSymlink(fileStat* fs);
         int64_t Size(fileStat* fs);
         FileMode Mode(fileStat* fs);
+        FileMode mode(fileStat* fs);
+        FileMode modePreGo1_23(fileStat* fs);
         mocklib::Date ModTime(fileStat* fs);
         go_any Sys(fileStat* fs);
         gocpp::error loadFileId(fileStat* fs);

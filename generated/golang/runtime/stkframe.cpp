@@ -15,8 +15,8 @@
 #include "golang/internal/abi/symtab.h"
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
+#include "golang/internal/runtime/sys/consts.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/print.h"
 #include "golang/runtime/runtime2.h"
@@ -24,10 +24,14 @@
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/traceback.h"
-#include "golang/runtime/typekind.h"
+#include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace goarch = golang::internal::goarch;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
     }
@@ -341,7 +345,7 @@ namespace golang::runtime
         }
 
         // stack objects.
-        if((GOARCH == "amd64"_s || GOARCH == "arm64"_s || GOARCH == "loong64"_s || GOARCH == "ppc64"_s || GOARCH == "ppc64le"_s || GOARCH == "riscv64"_s) &&
+        if((GOARCH == "amd64"_s || GOARCH == "arm64"_s || GOARCH == "loong64"_s || GOARCH == "ppc64"_s || GOARCH == "ppc64le"_s || GOARCH == "riscv64"_s || GOARCH == "s390x"_s) &&
                 gocpp::Sizeof<abi::RegArgs>() > 0 && isReflect)
         {
             // For reflect.makeFuncStub and reflect.methodValueCall,
@@ -375,17 +379,13 @@ namespace golang::runtime
     {
         go_any abiRegArgsEface = abi::RegArgs {};
         auto abiRegArgsType = efaceOf(& abiRegArgsEface)->_type;
-        if(abiRegArgsType->Kind_ & kindGCProg != 0)
-        {
-            go_throw("abiRegArgsType needs GC Prog, update methodValueCallFrameObjs"_s);
-        }
         // Set methodValueCallFrameObjs[0].gcdataoff so that
         // stackObjectRecord.gcdata() will work correctly with it.
         auto ptr = uintptr_t(gocpp::unsafe_pointer(& methodValueCallFrameObjs[0]));
         moduledata* mod = {};
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)
         {
-            if(datap->gofunc <= ptr && ptr < datap->end)
+            if(datap->noptrbss <= ptr && ptr < datap->enoptrbss)
             {
                 mod = datap;
                 break;
@@ -398,8 +398,8 @@ namespace golang::runtime
         methodValueCallFrameObjs[0] = gocpp::Init<stackObjectRecord>([=](auto& x) {
             x.off = - int32_t(alignUp(abiRegArgsType->Size_, 8));
             x.size = int32_t(abiRegArgsType->Size_);
-            x._ptrdata = int32_t(abiRegArgsType->PtrBytes);
-            x.gcdataoff = uint32_t(uintptr_t(gocpp::unsafe_pointer(abiRegArgsType->GCData)) - mod->rodata);
+            x.ptrBytes = int32_t(abiRegArgsType->PtrBytes);
+            x.gcdataoff = uint32_t(uintptr_t(gocpp::unsafe_pointer(getGCMask(abiRegArgsType))) - mod->rodata);
         });
     }
 

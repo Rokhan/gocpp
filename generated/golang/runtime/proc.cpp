@@ -15,37 +15,49 @@
 #include "golang/internal/abi/symtab.h"
 #include "golang/internal/cpu/cpu.h"
 #include "golang/internal/goarch/goarch.h"
-#include "golang/internal/goexperiment/exp_exectracer2_on.h"
+#include "golang/internal/goexperiment/exp_runtimesecret_off.h"
 #include "golang/internal/goos/zgoos_windows.h"
-#include "golang/runtime/alg.h"
+#include "golang/internal/profilerecord/profilerecord.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/exithook/hooks.h"
+#include "golang/internal/runtime/maps/runtime_alg.h"
+#include "golang/internal/runtime/sys/consts.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
+#include "golang/internal/runtime/sys/no_dit.h"
+#include "golang/internal/strconv/atoi.h"
+#include "golang/internal/strconv/itoa.h"
+#include "golang/internal/stringslite/strings.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/atomic_pointer.h"
 #include "golang/runtime/cgo.h"
 #include "golang/runtime/cgocall.h"
+#include "golang/runtime/cgroup_stubs.h"
 #include "golang/runtime/chan.h"
 #include "golang/runtime/cpuflags.h"
 #include "golang/runtime/cpuprof.h"
+#include "golang/runtime/debug.h"
 #include "golang/runtime/env_posix.h"
 #include "golang/runtime/error.h"
-#include "golang/runtime/exithook.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/fds_nonunix.h"
 #include "golang/runtime/histogram.h"
 #include "golang/runtime/iface.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/lfstack.h"
+#include "golang/runtime/list_manual.h"
 #include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mcache.h"
+#include "golang/runtime/mcleanup.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mgclimit.h"
+#include "golang/runtime/mgcmark_greenteagc.h"
 #include "golang/runtime/mgcpacer.h"
 #include "golang/runtime/mgcscavenge.h"
 #include "golang/runtime/mgcwork.h"
@@ -58,11 +70,12 @@
 #include "golang/runtime/mwbbuf.h"
 #include "golang/runtime/netpoll.h"
 #include "golang/runtime/netpoll_windows.h"
+#include "golang/runtime/note_other.h"
 #include "golang/runtime/os_windows.h"
-#include "golang/runtime/pagetrace_off.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/pinner.h"
 #include "golang/runtime/preempt.h"
+#include "golang/runtime/preempt_xreg.h"
 #include "golang/runtime/print.h"
 #include "golang/runtime/proflabel.h"
 #include "golang/runtime/race0.h"
@@ -71,6 +84,7 @@
 #include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/rwmutex.h"
+#include "golang/runtime/secret_nosecret.h"
 #include "golang/runtime/security_nonunix.h"
 #include "golang/runtime/sema.h"
 #include "golang/runtime/signal_windows.h"
@@ -78,20 +92,36 @@
 #include "golang/runtime/stkframe.h"
 #include "golang/runtime/string.h"
 #include "golang/runtime/stubs.h"
+#include "golang/runtime/stubs_nonwasm.h"
 #include "golang/runtime/symtab.h"
+#include "golang/runtime/synctest.h"
 #include "golang/runtime/sys_nonppc64x.h"
 #include "golang/runtime/time.h"
 #include "golang/runtime/time_nofake.h"
 #include "golang/runtime/tls_windows_amd64.h"
-#include "golang/runtime/trace2.h"
-#include "golang/runtime/trace2cpu.h"
-#include "golang/runtime/trace2runtime.h"
+#include "golang/runtime/trace.h"
 #include "golang/runtime/traceback.h"
+#include "golang/runtime/tracecpu.h"
+#include "golang/runtime/traceruntime.h"
 #include "golang/runtime/type.h"
+#include "golang/runtime/valgrind0.h"
 #include "golang/runtime/vdso_in_none.h"
+#include "golang/runtime/vgetrandom_unsupported.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace cpu = golang::internal::cpu;
+    namespace exithook = golang::internal::runtime::exithook;
+    namespace goarch = golang::internal::goarch;
+    namespace goexperiment = golang::internal::goexperiment;
+    namespace goos = golang::internal::goos;
+    namespace maps = golang::internal::runtime::maps;
+    namespace strconv = golang::internal::strconv;
+    namespace stringslite = golang::internal::stringslite;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::Add;
@@ -112,11 +142,13 @@ namespace golang::runtime
     // This slice records the initializing tasks that need to be
     // done to start up the runtime. It is built by the linker.
     gocpp::slice<initTask*> runtime_inittasks;
-    // main_init_done is a signal used by cgocallbackg that initialization
-    // has been completed. It is made before _cgo_notify_runtime_init_done,
-    // so all cgo calls can rely on it existing. When main_init is complete,
-    // it is closed, meaning cgocallbackg can reliably receive from it.
-    gocpp::channel<bool> main_init_done;
+    // mainInitDone is a signal used by cgocallbackg that initialization
+    // has been completed. If this is false, wait on mainInitDoneChan.
+    atomic::Bool mainInitDone;
+    // mainInitDoneChan is closed after initialization has been completed.
+    // It is made before _cgo_notify_runtime_init_done, so all cgo
+    // calls can rely on it existing.
+    gocpp::channel<bool> mainInitDoneChan;
     //go:linkname main_main main.main
     void main_main()
     /* convertBlockStmt, nil block */;
@@ -159,9 +191,8 @@ namespace golang::runtime
             // Allow newproc to start new Ms.
             mainStarted = true;
 
-            if(GOARCH != "wasm"_s)
+            if(haveSysmon)
             {
-                // no threads on wasm yet, so no sysmon
                 systemstack([=]() mutable -> void
                 {
                     newm(sysmon, nullptr, - 1);
@@ -209,8 +240,18 @@ namespace golang::runtime
             }(); });
 
             gcenable();
+            // don't STW before runtime initialized.
+            defaultGOMAXPROCSUpdateEnable();
 
-            main_init_done = gocpp::make(gocpp::Tag<gocpp::channel<bool>>());
+            // If we encountered a removed GODEBUG during startup we can panic now.
+            if(auto k = invalidGODEBUG.key; k != ""_s)
+            {
+                auto v = invalidGODEBUG.value;
+                auto r = strconv::Itoa(invalidGODEBUG.removed);
+                fatal("removed GODEBUG \""_s + k + "\" set to old value \""_s + v + "\" in environment (https://go.dev/doc/godebug#go-1"_s + r + ")"_s);
+            }
+
+            mainInitDoneChan = gocpp::make(gocpp::Tag<gocpp::channel<bool>>());
             if(iscgo)
             {
                 if(_cgo_pthread_key_created == nullptr)
@@ -218,12 +259,12 @@ namespace golang::runtime
                     go_throw("_cgo_pthread_key_created missing"_s);
                 }
 
-                if(_cgo_thread_start == nullptr)
-                {
-                    go_throw("_cgo_thread_start missing"_s);
-                }
                 if(GOOS != "windows"_s)
                 {
+                    if(_cgo_thread_start == nullptr)
+                    {
+                        go_throw("_cgo_thread_start missing"_s);
+                    }
                     if(_cgo_setenv == nullptr)
                     {
                         go_throw("_cgo_setenv missing"_s);
@@ -258,16 +299,23 @@ namespace golang::runtime
             // by package plugin). Run through the modules in dependency
             // order (the order they are initialized by the dynamic
             // loader, i.e. they are added to the moduledata linked list).
-            for(auto m = & firstmoduledata; m != nullptr; m = m->next)
+            // grab before loop starts. Any added modules after this point will do their own doInit calls.
+            auto last = lastmoduledatap;
+            for(auto m = & firstmoduledata; true; m = m->next)
             {
                 doInit(m->inittasks);
+                if(m == last)
+                {
+                    break;
+                }
             }
 
             // Disable init tracing after main init done to avoid overhead
             // of collecting statistics in malloc and newproc
             inittrace.active = false;
 
-            close(main_init_done);
+            rec::Store(gocpp::recv(mainInitDone), true);
+            close(mainInitDoneChan);
 
             needUnlock = false;
             unlockOSThread();
@@ -276,16 +324,39 @@ namespace golang::runtime
             {
                 // A program compiled with -buildmode=c-archive or c-shared
                 // has a main, but it is not executed.
+                if(GOARCH == "wasm"_s)
+                {
+                    // On Wasm, pause makes it return to the host.
+                    // Unlike cgo callbacks where Ms are created on demand,
+                    // on Wasm we have only one M. So we keep this M (and this
+                    // G) for callbacks.
+                    // Using the caller's SP unwinds this frame and backs to
+                    // goexit. The -16 is: 8 for goexit's (fake) return PC,
+                    // and pause's epilogue pops 8.
+                    // should not return
+                    pause(sys::GetCallerSP() - 16);
+                    gocpp::panic("unreachable"_s);
+                }
                 return;
             }
             // make an indirect call, as the linker doesn't know the address of the main package when laying down the runtime
             auto fn = main_main;
             fn();
-            if(raceenabled)
+
+            // Check for C memory leaks if using ASAN and we've made cgo calls,
+            // or if we are running as a library in a C program.
+            // We always make one cgo call, above, to notify_runtime_init_done,
+            // so we ignore that one.
+            // No point in leak checking if no cgo calls, since leak checking
+            // just looks for objects allocated using malloc and friends.
+            // Just checking iscgo doesn't help because asan implies iscgo.
+            auto exitHooksRun = false;
+            if(asanenabled && (isarchive || islibrary || NumCgoCall() > 1))
             {
-                // run hooks now, since racefini does not return
+                // lsandoleakcheck may not return
                 runExitHooks(0);
-                racefini();
+                exitHooksRun = true;
+                lsandoleakcheck();
             }
 
             // Make racy client program work: if panicking on
@@ -308,7 +379,15 @@ namespace golang::runtime
             {
                 gopark(nullptr, nullptr, waitReasonPanicWait, traceBlockForever, 1);
             }
-            runExitHooks(0);
+            if(! exitHooksRun)
+            {
+                runExitHooks(0);
+            }
+            if(raceenabled)
+            {
+                // does not return
+                racefini();
+            }
 
             exit(0);
             for(; ; )
@@ -333,6 +412,27 @@ namespace golang::runtime
         {
             racefini();
         }
+
+        // See comment in main, above.
+        if(exitCode == 0 && asanenabled && (isarchive || islibrary || NumCgoCall() > 1))
+        {
+            lsandoleakcheck();
+        }
+    }
+
+    void init()
+    {
+        exithook::Gosched = Gosched;
+        exithook::Goid = [=]() mutable -> uint64_t
+        {
+            return getg()->goid;
+        };
+        exithook::Throw = go_throw;
+    }
+
+    void runExitHooks(int code)
+    {
+        exithook::Run(code);
     }
 
     // start forcegc helper goroutine
@@ -420,6 +520,17 @@ namespace golang::runtime
     // Reason explains why the goroutine has been parked. It is displayed in stack
     // traces and heap dumps. Reasons should be unique and descriptive. Do not
     // re-use reasons, add new ones.
+    //
+    // gopark should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gvisor.dev/gvisor
+    //   - github.com/sagernet/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname gopark
     void gopark(std::function<bool (g* _1, gocpp::unsafe_pointer _2)> unlockf, gocpp::unsafe_pointer lock, waitReason reason, traceBlockReason traceReason, int traceskip)
     {
         if(reason != waitReasonSleep)
@@ -451,6 +562,16 @@ namespace golang::runtime
         gopark(parkunlock_c, gocpp::unsafe_pointer(lock), reason, traceReason, traceskip);
     }
 
+    // goready should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gvisor.dev/gvisor
+    //   - github.com/sagernet/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname goready
     void goready(g* gp, int traceskip)
     {
         systemstack([=]() mutable -> void
@@ -494,7 +615,7 @@ namespace golang::runtime
         auto s = pp->sudogcache[n - 1];
         pp->sudogcache[n - 1] = nullptr;
         pp->sudogcache = pp->sudogcache.make_slice(0, n - 1);
-        if(s->elem != nullptr)
+        if(rec::get(gocpp::recv(s->elem)) != nullptr)
         {
             go_throw("acquireSudog: found s.elem != nil in cache"_s);
         }
@@ -505,7 +626,7 @@ namespace golang::runtime
     //go:nosplit
     void releaseSudog(sudog* s)
     {
-        if(s->elem != nullptr)
+        if(rec::get(gocpp::recv(s->elem)) != nullptr)
         {
             go_throw("runtime: sudog with non-nil elem"_s);
         }
@@ -525,7 +646,7 @@ namespace golang::runtime
         {
             go_throw("runtime: sudog with non-nil waitlink"_s);
         }
-        if(s->c != nullptr)
+        if(rec::get(gocpp::recv(s->c)) != nullptr)
         {
             go_throw("runtime: sudog with non-nil c"_s);
         }
@@ -762,36 +883,6 @@ namespace golang::runtime
     // value of the GODEBUG environment variable.
     void cpuinit(gocpp::string env)
     {
-        //Go switch emulation
-        {
-            auto condition = GOOS;
-            int conditionId = -1;
-            if(condition == "aix"_s) { conditionId = 0; }
-            else if(condition == "darwin"_s) { conditionId = 1; }
-            else if(condition == "ios"_s) { conditionId = 2; }
-            else if(condition == "dragonfly"_s) { conditionId = 3; }
-            else if(condition == "freebsd"_s) { conditionId = 4; }
-            else if(condition == "netbsd"_s) { conditionId = 5; }
-            else if(condition == "openbsd"_s) { conditionId = 6; }
-            else if(condition == "illumos"_s) { conditionId = 7; }
-            else if(condition == "solaris"_s) { conditionId = 8; }
-            else if(condition == "linux"_s) { conditionId = 9; }
-            switch(conditionId)
-            {
-                case 0:
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                case 5:
-                case 6:
-                case 7:
-                case 8:
-                case 9:
-                    cpu::DebugOptions = true;
-                    break;
-            }
-        }
         cpu::Initialize(env);
 
         // Support cpu feature variables are used in code generated by the compiler
@@ -804,13 +895,16 @@ namespace golang::runtime
             else if(condition == "amd64"_s) { conditionId = 1; }
             else if(condition == "arm"_s) { conditionId = 2; }
             else if(condition == "arm64"_s) { conditionId = 3; }
+            else if(condition == "loong64"_s) { conditionId = 4; }
+            else if(condition == "riscv64"_s) { conditionId = 5; }
             switch(conditionId)
             {
                 case 0:
                 case 1:
+                    x86HasAVX = cpu::X86.HasAVX;
+                    x86HasFMA = cpu::X86.HasFMA;
                     x86HasPOPCNT = cpu::X86.HasPOPCNT;
                     x86HasSSE41 = cpu::X86.HasSSE41;
-                    x86HasFMA = cpu::X86.HasFMA;
                     break;
 
                 case 2:
@@ -820,6 +914,17 @@ namespace golang::runtime
                 case 3:
                     arm64HasATOMICS = cpu::ARM64.HasATOMICS;
                     break;
+
+                case 4:
+                    loong64HasLAMCAS = cpu::Loong64.HasLAMCAS;
+                    loong64HasLAM_BH = cpu::Loong64.HasLAM_BH;
+                    loong64HasDBAR_HINTS = cpu::Loong64.HasDBAR_HINTS;
+                    loong64HasLSX = cpu::Loong64.HasLSX;
+                    break;
+
+                case 5:
+                    riscv64HasZbb = cpu::RISCV64.HasZbb;
+                    break;
             }
         }
     }
@@ -827,7 +932,9 @@ namespace golang::runtime
     // getGodebugEarly extracts the environment variable GODEBUG from the environment on
     // Unix-like operating systems and returns it. This function exists to extract GODEBUG
     // early before much of the runtime is initialized.
-    gocpp::string getGodebugEarly()
+    //
+    // Returns nil, false if OS doesn't provide env vars early in the init sequence.
+    std::tuple<gocpp::string, bool> getGodebugEarly()
     {
         auto prefix = "GODEBUG="_s;
         gocpp::string env = {};
@@ -871,17 +978,22 @@ namespace golang::runtime
                         auto p = argv_index(argv, argc + 1 + i);
                         auto s = unsafe::String(p, findnull(p));
 
-                        if(hasPrefix(s, prefix))
+                        if(stringslite::HasPrefix(s, prefix))
                         {
-                            env = gostring(p).make_slice(len(prefix));
+                            env = gostringnocopy(p).make_slice(len(prefix));
                             break;
                         }
                     }
                     break;
+                    break;
                 }
+
+                default:
+                    return {""_s, false};
+                    break;
             }
         }
-        return env;
+        return {env, true};
     }
 
     // The bootstrap sequence is:
@@ -905,6 +1017,7 @@ namespace golang::runtime
         lockInit(& reflectOffs.lock, lockRankReflectOffs);
         lockInit(& finlock, lockRankFin);
         lockInit(& cpuprof.lock, lockRankCpuprof);
+        lockInit(& computeMaxProcsLock, lockRankComputeMaxProcs);
         rec::init(gocpp::recv(allocmLock), lockRankAllocmR, lockRankAllocmRInternal, lockRankAllocmW);
         rec::init(gocpp::recv(execLock), lockRankExecR, lockRankExecRInternal, lockRankExecW);
         traceLockInit();
@@ -912,6 +1025,10 @@ namespace golang::runtime
         // All of this lock's critical sections should be
         // extremely short.
         lockInit(& memstats.heapStats.noPLock, lockRankLeafRank);
+
+        lockVerifyMSize();
+
+        rec::init(gocpp::recv(sched.midle), gocpp::Offsetof<m>(&m::idleNode));
 
         // raceinit must be the first call to race detector.
         // In particular, it must be done before mallocinit below calls racemapshadow.
@@ -922,24 +1039,27 @@ namespace golang::runtime
         }
 
         sched.maxmcount = 10000;
+        rec::Store(gocpp::recv(crashFD), ~ uintptr_t(0));
 
         // The world starts stopped.
         worldStopped();
 
+        auto [godebug, parsedGodebug] = getGodebugEarly();
+        if(parsedGodebug)
+        {
+            parseRuntimeDebugVars(godebug);
+        }
         // run as early as possible
         rec::init(gocpp::recv(ticks));
         moduledataverify();
         stackinit();
-        mallocinit();
-        auto godebug = getGodebugEarly();
-        // must run after mallocinit but before anything allocates
-        initPageTrace(godebug);
-        // must run before alginit
-        cpuinit(godebug);
-        // must run before alginit, mcommoninit
+        // must run before mallocinit, AlgInit, mcommoninit
         randinit();
+        mallocinit();
+        // must run before AlgInit
+        cpuinit(godebug);
         // maps, hash, rand must not be used before this call
-        alginit();
+        maps::AlgInit();
         mcommoninit(gp->m, - 1);
         // provides activeModules
         modulesinit();
@@ -957,7 +1077,13 @@ namespace golang::runtime
         goenvs();
         secure();
         checkfds();
-        parsedebugvars();
+        if(! parsedGodebug)
+        {
+            // Some platforms, e.g., Windows, didn't make env vars available "early",
+            // so try again now.
+            parseRuntimeDebugVars(gogetenv("GODEBUG"_s));
+        }
+        finishDebugVarsSetup();
         gcinit();
 
         // Allocate stack space that can be used when crashing due to bad stack
@@ -975,12 +1101,27 @@ namespace golang::runtime
             MemProfileRate = 0;
         }
 
+        // mcommoninit runs before parsedebugvars, so init profstacks again.
+        mProfStackInit(gp->m);
+        defaultGOMAXPROCSInit();
+
         lock(& sched.lock);
         rec::Store(gocpp::recv(sched.lastpoll), nanotime());
-        auto procs = ncpu;
-        if(auto [n, ok] = atoi32(gogetenv("GOMAXPROCS"_s)); ok && n > 0)
+        int32_t procs = {};
+        if(auto [n, err] = strconv::ParseInt(gogetenv("GOMAXPROCS"_s), 10, 32); err == nullptr && n > 0)
         {
-            procs = n;
+            procs = int32_t(n);
+            sched.customGOMAXPROCS = true;
+        }
+        else
+        {
+            // Use numCPUStartup for initial GOMAXPROCS for two reasons:
+            // 1. We just computed it in osinit, recomputing is (minorly) wasteful.
+            // 2. More importantly, if debug.containermaxprocs == 0 &&
+            // debug.updatemaxprocs == 0, we want to guarantee that
+            // runtime.GOMAXPROCS(0) always equals runtime.NumCPU (which is
+            // just numCPUStartup).
+            procs = defaultGOMAXPROCS(numCPUStartup);
         }
         if(procresize(procs) != nullptr)
         {
@@ -1072,6 +1213,8 @@ namespace golang::runtime
             mp->id = mReserveID();
         }
 
+        mp->self = newMWeakPointer(mp);
+
         mrandinit(mp);
 
         mpreinit(mp);
@@ -1084,7 +1227,7 @@ namespace golang::runtime
         // when it is just in a register or thread-local storage.
         mp->alllink = allm;
 
-        // NumCgoCall() and others iterate over allm w/o schedlock,
+        // NumCgoCall and others iterate over allm w/o schedlock,
         // so we need to publish it safely.
         atomicstorep(gocpp::unsafe_pointer(& allm), gocpp::unsafe_pointer(mp));
         unlock(& sched.lock);
@@ -1094,6 +1237,50 @@ namespace golang::runtime
         {
             mp->cgoCallers = gocpp::array_ptr(new cgoCallers{});
         }
+        mProfStackInit(mp);
+    }
+
+    // mProfStackInit is used to eagerly initialize stack trace buffers for
+    // profiling. Lazy allocation would have to deal with reentrancy issues in
+    // malloc and runtime locks for mLockProfile.
+    // TODO(mknyszek): Implement lazy allocation if this becomes a problem.
+    void mProfStackInit(m* mp)
+    {
+        if(debug.profstackdepth == 0)
+        {
+            // debug.profstack is set to 0 by the user, or we're being called from
+            // schedinit before parsedebugvars.
+            return;
+        }
+        mp->profStack = makeProfStackFP();
+        mp->mLockProfile.stack = makeProfStackFP();
+    }
+
+    // makeProfStackFP creates a buffer large enough to hold a maximum-sized stack
+    // trace as well as any additional frames needed for frame pointer unwinding
+    // with delayed inline expansion.
+    gocpp::slice<uintptr_t> makeProfStackFP()
+    {
+        // The "1" term is to account for the first stack entry being
+        // taken up by a "skip" sentinel value for profilers which
+        // defer inline frame expansion until the profile is reported.
+        // The "maxSkip" term is for frame pointer unwinding, where we
+        // want to end up with debug.profstackdebth frames but will discard
+        // some "physical" frames to account for skipping.
+        return gocpp::make(gocpp::Tag<gocpp::slice<uintptr_t>>(), 1 + maxSkip + debug.profstackdepth);
+    }
+
+    // makeProfStack returns a buffer large enough to hold a maximum-sized stack
+    // trace.
+    gocpp::slice<uintptr_t> makeProfStack()
+    {
+        return gocpp::make(gocpp::Tag<gocpp::slice<uintptr_t>>(), debug.profstackdepth);
+    }
+
+    //go:linkname pprof_makeProfStack
+    gocpp::slice<uintptr_t> pprof_makeProfStack()
+    {
+        return makeProfStack();
     }
 
     void rec::becomeSpinning(m* mp)
@@ -1101,6 +1288,30 @@ namespace golang::runtime
         mp->spinning = true;
         rec::Add(gocpp::recv(sched.nmspinning), 1);
         rec::Store(gocpp::recv(sched.needspinning), 0);
+    }
+
+    // Take a snapshot of allp, for use after dropping the P.
+    //
+    // Must be called with a P, but the returned slice may be used after dropping
+    // the P. The M holds a reference on the snapshot to keep the backing array
+    // alive.
+    //
+    //go:yeswritebarrierrec
+    gocpp::slice<golang::runtime::p*> rec::snapshotAllp(m* mp)
+    {
+        mp->allpSnapshot = allp;
+        return mp->allpSnapshot;
+    }
+
+    // Clear the saved allp snapshot. Should be called as soon as the snapshot is
+    // no longer required.
+    //
+    // Must be called after reacquiring a P, as it requires a write barrier.
+    //
+    //go:yeswritebarrierrec
+    void rec::clearAllpSnapshot(m* mp)
+    {
+        mp->allpSnapshot = nullptr;
     }
 
     bool rec::hasCgoOnStack(m* mp)
@@ -1218,7 +1429,9 @@ namespace golang::runtime
             else if(condition == _Gscanwaiting) { conditionId = 1; }
             else if(condition == _Gscanrunning) { conditionId = 2; }
             else if(condition == _Gscansyscall) { conditionId = 3; }
-            else if(condition == _Gscanpreempted) { conditionId = 4; }
+            else if(condition == _Gscanleaked) { conditionId = 4; }
+            else if(condition == _Gscanpreempted) { conditionId = 5; }
+            else if(condition == _Gscandeadextra) { conditionId = 6; }
             switch(conditionId)
             {
                 default:
@@ -1231,6 +1444,8 @@ namespace golang::runtime
                 case 2:
                 case 3:
                 case 4:
+                case 5:
+                case 6:
                     if(newval == oldval &^ _Gscan)
                     {
                         success = rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), oldval, newval);
@@ -1244,7 +1459,7 @@ namespace golang::runtime
             dumpgstatus(gp);
             go_throw("casfrom_Gscanstatus: gp->status is not in scan state"_s);
         }
-        releaseLockRank(lockRankGscan);
+        releaseLockRankAndM(lockRankGscan);
     }
 
     // This will return false if the gp is not in the expected status and the cas fails.
@@ -1258,19 +1473,23 @@ namespace golang::runtime
             if(condition == _Grunnable) { conditionId = 0; }
             else if(condition == _Grunning) { conditionId = 1; }
             else if(condition == _Gwaiting) { conditionId = 2; }
-            else if(condition == _Gsyscall) { conditionId = 3; }
+            else if(condition == _Gleaked) { conditionId = 3; }
+            else if(condition == _Gsyscall) { conditionId = 4; }
+            else if(condition == _Gdeadextra) { conditionId = 5; }
             switch(conditionId)
             {
                 case 0:
                 case 1:
                 case 2:
                 case 3:
+                case 4:
+                case 5:
                     if(newval == oldval | _Gscan)
                     {
                         auto r = rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), oldval, newval);
                         if(r)
                         {
-                            acquireLockRank(lockRankGscan);
+                            acquireLockRankAndM(lockRankGscan);
                         }
                         return r;
                     }
@@ -1278,8 +1497,8 @@ namespace golang::runtime
             }
         }
         print("runtime: castogscanstatus oldval="_s, hex(oldval), " newval="_s, hex(newval), "\n"_s);
-        go_throw("castogscanstatus"_s);
-        gocpp::panic("not reached"_s);
+        go_throw("bad oldval passed to castogscanstatus"_s);
+        return false;
     }
 
     // casgstatusAlwaysTrack is a debug flag that causes casgstatus to always track
@@ -1297,13 +1516,14 @@ namespace golang::runtime
         {
             systemstack([=]() mutable -> void
             {
+                // Call on the systemstack to prevent print and throw from counting
+                // against the nosplit stack reservation.
                 print("runtime: casgstatus: oldval="_s, hex(oldval), " newval="_s, hex(newval), "\n"_s);
                 go_throw("casgstatus: bad incoming values"_s);
             });
         }
 
-        acquireLockRank(lockRankGscan);
-        releaseLockRank(lockRankGscan);
+        lockWithRankMayAcquire(nullptr, lockRankGscan);
 
         // See https://golang.org/cl/21503 for justification of the yield delay.
         auto yieldDelay = 5 * 1000;
@@ -1315,7 +1535,12 @@ namespace golang::runtime
         {
             if(oldval == _Gwaiting && rec::Load(gocpp::recv(gp->atomicstatus)) == _Grunnable)
             {
-                go_throw("casgstatus: waiting for Gwaiting but is Grunnable"_s);
+                systemstack([=]() mutable -> void
+                {
+                    // Call on the systemstack to prevent throw from counting
+                    // against the nosplit stack reservation.
+                    go_throw("casgstatus: waiting for Gwaiting but is Grunnable"_s);
+                });
             }
             if(i == 0)
             {
@@ -1335,9 +1560,18 @@ namespace golang::runtime
             }
         }
 
-        if(oldval == _Grunning)
+        if(gp->bubble != nullptr)
         {
-            // Track every gTrackingPeriod time a goroutine transitions out of running.
+            systemstack([=]() mutable -> void
+            {
+                rec::changegstatus(gocpp::recv(gp->bubble), gp, oldval, newval);
+            });
+        }
+
+        if((oldval == _Grunning || oldval == _Gsyscall) && (newval != _Grunning && newval != _Gsyscall))
+        {
+            // Track every gTrackingPeriod time a goroutine transitions out of _Grunning or _Gsyscall.
+            // Do not track _Grunning <-> _Gsyscall transitions, since they're two very similar states.
             if(casgstatusAlwaysTrack || gp->trackingSeq % gTrackingPeriod == 0)
             {
                 gp->tracking = true;
@@ -1441,27 +1675,20 @@ namespace golang::runtime
         casgstatus(gp, old, _Gwaiting);
     }
 
-    // casgstatus(gp, oldstatus, Gcopystack), assuming oldstatus is Gwaiting or Grunnable.
-    // Returns old status. Cannot call casgstatus directly, because we are racing with an
-    // async wakeup that might come in from netpoll. If we see Gwaiting from the readgstatus,
-    // it might have become Grunnable by the time we get to the cas. If we called casgstatus,
-    // it would loop waiting for the status to go back to Gwaiting, which it never will.
+    // casGToWaitingForSuspendG transitions gp from old to _Gwaiting, and sets the wait reason.
+    // The wait reason must be a valid isWaitingForSuspendG wait reason.
     //
-    //go:nosplit
-    uint32_t casgcopystack(g* gp)
+    // While a goroutine is in this state, it's stack is effectively pinned.
+    // The garbage collector must not shrink or otherwise mutate the goroutine's stack.
+    //
+    // Use this over casgstatus when possible to ensure that a waitreason is set.
+    void casGToWaitingForSuspendG(g* gp, uint32_t old, waitReason reason)
     {
-        for(; ; )
+        if(! rec::isWaitingForSuspendG(gocpp::recv(reason)))
         {
-            auto oldstatus = readgstatus(gp) &^ _Gscan;
-            if(oldstatus != _Gwaiting && oldstatus != _Grunnable)
-            {
-                go_throw("copystack: bad status, not Gwaiting or Grunnable"_s);
-            }
-            if(rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), oldstatus, _Gcopystack))
-            {
-                return oldstatus;
-            }
+            go_throw("casGToWaitingForSuspendG with non-isWaitingForSuspendG wait reason"_s);
         }
+        casGToWaiting(gp, old, reason);
     }
 
     // casGToPreemptScan transitions gp from _Grunning to _Gscan|_Gpreempted.
@@ -1474,7 +1701,13 @@ namespace golang::runtime
         {
             go_throw("bad g transition"_s);
         }
-        acquireLockRank(lockRankGscan);
+        acquireLockRankAndM(lockRankGscan);
+        // We never notify gp.bubble that the goroutine state has moved
+        // from _Grunning to _Gpreempted. We call bubble.changegstatus
+        // after status changes happen, but doing so here would violate the
+        // ordering between the gscan and synctest locks. The bubble doesn't
+        // distinguish between _Grunning and _Gpreempted anyway, so not
+        // notifying it is fine.
         for(; ! rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), _Grunning, _Gscan | _Gpreempted); )
         {
         }
@@ -1490,7 +1723,15 @@ namespace golang::runtime
             go_throw("bad g transition"_s);
         }
         gp->waitreason = waitReasonPreempted;
-        return rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), _Gpreempted, _Gwaiting);
+        if(! rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), _Gpreempted, _Gwaiting))
+        {
+            return false;
+        }
+        if(auto bubble = gp->bubble; bubble != nullptr)
+        {
+            rec::changegstatus(gocpp::recv(bubble), gp, _Gpreempted, _Gwaiting);
+        }
+        return true;
     }
 
     // stwReason is an enumeration of reasons the world is stopping.
@@ -1534,7 +1775,9 @@ namespace golang::runtime
     {
         T result;
         result.reason = this->reason;
-        result.start = this->start;
+        result.startedStopping = this->startedStopping;
+        result.finishedStopping = this->finishedStopping;
+        result.stoppingCPUTime = this->stoppingCPUTime;
         return result;
     }
 
@@ -1542,7 +1785,9 @@ namespace golang::runtime
     bool worldStop::operator==(const T& ref) const
     {
         if (reason != ref.reason) return false;
-        if (start != ref.start) return false;
+        if (startedStopping != ref.startedStopping) return false;
+        if (finishedStopping != ref.finishedStopping) return false;
+        if (stoppingCPUTime != ref.stoppingCPUTime) return false;
         return true;
     }
 
@@ -1550,7 +1795,9 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << reason;
-        os << " " << start;
+        os << " " << startedStopping;
+        os << " " << finishedStopping;
+        os << " " << stoppingCPUTime;
         os << '}';
         return os;
     }
@@ -1588,23 +1835,8 @@ namespace golang::runtime
         gp->m->preemptoff = rec::String(gocpp::recv(reason));
         systemstack([=]() mutable -> void
         {
-            // Mark the goroutine which called stopTheWorld preemptible so its
-            // stack may be scanned.
-            // This lets a mark worker scan us while we try to stop the world
-            // since otherwise we could get in a mutual preemption deadlock.
-            // We must not modify anything on the G stack because a stack shrink
-            // may occur. A stack shrink is otherwise OK though because in order
-            // to return from this function (and to leave the system stack) we
-            // must have preempted all goroutines, including any attempting
-            // to scan our stack, in which case, any stack shrinking will
-            // have already completed by the time we exit.
-            // N.B. The execution tracer is not aware of this status
-            // transition and handles it specially based on the
-            // wait reason.
-            casGToWaiting(gp, _Grunning, waitReasonStoppingTheWorld);
             // avoid write to stack
             stopTheWorldContext = stopTheWorldWithSema(reason);
-            casgstatus(gp, _Gwaiting, _Grunning);
         });
         return stopTheWorldContext;
     }
@@ -1694,8 +1926,21 @@ namespace golang::runtime
     //
     // Returns the STW context. When starting the world, this context must be
     // passed to startTheWorldWithSema.
+    //
+    //go:systemstack
     worldStop stopTheWorldWithSema(stwReason reason)
     {
+        // Mark the goroutine which called stopTheWorld preemptible so its
+        // stack may be scanned by the GC or observed by the execution tracer.
+        // This lets a mark worker scan us or the execution tracer take our
+        // stack while we try to stop the world since otherwise we could get
+        // in a mutual preemption deadlock.
+        // casGToWaitingForSuspendG marks the goroutine as ineligible for a
+        // stack shrink, effectively pinning the stack in memory for the duration.
+        // N.B. The execution tracer is not aware of this status transition and
+        // handles it specially based on the wait reason.
+        casGToWaitingForSuspendG(getg()->m->curg, _Grunning, waitReasonStoppingTheWorld);
+
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
         {
@@ -1717,32 +1962,24 @@ namespace golang::runtime
         sched.stopwait = gomaxprocs;
         rec::Store(gocpp::recv(sched.gcwaiting), true);
         preemptall();
-        // stop current P
+
+        // Stop current P.
         // Pgcstop is only diagnostic.
         rec::ptr(gocpp::recv(gp->m->p))->status = _Pgcstop;
+        rec::ptr(gocpp::recv(gp->m->p))->gcStopTime = start;
         sched.stopwait--;
-        // try to retake all P's in Psyscall status
-        trace = traceAcquire();
+
+        // Try to retake all P's in syscalls.
         for(auto [gocpp_ignored, pp] : allp)
         {
-            auto s = pp->status;
-            if(s == _Psyscall && atomic::Cas(& pp->status, s, _Pgcstop))
+            if(auto [thread, ok] = setBlockOnExitSyscall(pp); ok)
             {
-                if(rec::ok(gocpp::recv(trace)))
-                {
-                    rec::GoSysBlock(gocpp::recv(trace), pp);
-                    rec::ProcSteal(gocpp::recv(trace), pp, false);
-                }
-                pp->syscalltick++;
-                sched.stopwait--;
+                rec::gcstopP(gocpp::recv(thread));
+                rec::resume(gocpp::recv(thread));
             }
         }
-        if(rec::ok(gocpp::recv(trace)))
-        {
-            traceRelease(trace);
-        }
 
-        // stop idle P's
+        // Stop idle Ps.
         auto now = nanotime();
         for(; ; )
         {
@@ -1752,12 +1989,13 @@ namespace golang::runtime
                 break;
             }
             pp->status = _Pgcstop;
+            pp->gcStopTime = nanotime();
             sched.stopwait--;
         }
         auto wait = sched.stopwait > 0;
         unlock(& sched.lock);
 
-        // wait for remaining P's to stop voluntarily
+        // Wait for remaining Ps to stop voluntarily.
         if(wait)
         {
             for(; ; )
@@ -1772,7 +2010,8 @@ namespace golang::runtime
             }
         }
 
-        auto startTime = nanotime() - start;
+        auto finish = nanotime();
+        auto startTime = finish - start;
         if(rec::isGC(gocpp::recv(reason)))
         {
             rec::record(gocpp::recv(sched.stwStoppingTimeGC), startTime);
@@ -1782,7 +2021,11 @@ namespace golang::runtime
             rec::record(gocpp::recv(sched.stwStoppingTimeOther), startTime);
         }
 
-        // sanity checks
+        // Double-check we actually stopped everything, and all the invariants hold.
+        // Also accumulate all the time spent by each P in _Pgcstop up to the point
+        // where everything was stopped. This will be accumulated into the total pause
+        // CPU time by the caller.
+        auto stoppingCPUTime = int64_t(0);
         auto bad = ""_s;
         if(sched.stopwait != 0)
         {
@@ -1796,6 +2039,12 @@ namespace golang::runtime
                 {
                     bad = "stopTheWorld: not stopped (status != _Pgcstop)"_s;
                 }
+                if(pp->gcStopTime == 0 && bad == ""_s)
+                {
+                    bad = "stopTheWorld: broken CPU time accounting"_s;
+                }
+                stoppingCPUTime += finish - pp->gcStopTime;
+                pp->gcStopTime = 0;
             }
         }
         if(rec::Load(gocpp::recv(freezing)))
@@ -1814,9 +2063,14 @@ namespace golang::runtime
 
         worldStopped();
 
+        // Switch back to _Grunning, now that the world is stopped.
+        casgstatus(getg()->m->curg, _Gwaiting, _Grunning);
+
         return gocpp::Init<worldStop>([=](auto& x) {
             x.reason = reason;
-            x.start = start;
+            x.startedStopping = start;
+            x.finishedStopping = finish;
+            x.stoppingCPUTime = stoppingCPUTime;
         });
     }
 
@@ -1885,7 +2139,7 @@ namespace golang::runtime
         {
             now = nanotime();
         }
-        auto totalTime = now - w.start;
+        auto totalTime = now - w.startedStopping;
         if(rec::isGC(gocpp::recv(w.reason)))
         {
             rec::record(gocpp::recv(sched.stwTotalTimeGC), totalTime);
@@ -1923,9 +2177,9 @@ namespace golang::runtime
             else if(condition == "darwin"_s) { conditionId = 1; }
             else if(condition == "illumos"_s) { conditionId = 2; }
             else if(condition == "ios"_s) { conditionId = 3; }
-            else if(condition == "solaris"_s) { conditionId = 4; }
-            else if(condition == "windows"_s) { conditionId = 5; }
-            else if(condition == "openbsd"_s) { conditionId = 6; }
+            else if(condition == "openbsd"_s) { conditionId = 4; }
+            else if(condition == "solaris"_s) { conditionId = 5; }
+            else if(condition == "windows"_s) { conditionId = 6; }
             switch(conditionId)
             {
                 case 0:
@@ -1934,10 +2188,8 @@ namespace golang::runtime
                 case 3:
                 case 4:
                 case 5:
-                    return true;
-                    break;
                 case 6:
-                    return GOARCH != "mips64"_s;
+                    return true;
                     break;
             }
         }
@@ -1957,9 +2209,9 @@ namespace golang::runtime
             else if(condition == "plan9"_s) { conditionId = 2; }
             else if(condition == "illumos"_s) { conditionId = 3; }
             else if(condition == "ios"_s) { conditionId = 4; }
-            else if(condition == "solaris"_s) { conditionId = 5; }
-            else if(condition == "windows"_s) { conditionId = 6; }
-            else if(condition == "openbsd"_s) { conditionId = 7; }
+            else if(condition == "openbsd"_s) { conditionId = 5; }
+            else if(condition == "solaris"_s) { conditionId = 6; }
+            else if(condition == "windows"_s) { conditionId = 7; }
             switch(conditionId)
             {
                 case 0:
@@ -1969,10 +2221,8 @@ namespace golang::runtime
                 case 4:
                 case 5:
                 case 6:
-                    return true;
-                    break;
                 case 7:
-                    return GOARCH != "mips64"_s;
+                    return true;
                     break;
             }
         }
@@ -2034,7 +2284,7 @@ namespace golang::runtime
         mexit(osStack);
     }
 
-    // The go:noinline is to guarantee the getcallerpc/getcallersp below are safe,
+    // The go:noinline is to guarantee the sys.GetCallerPC/sys.GetCallerSP below are safe,
     // so that we can set up g0.sched to return to the call of mstart1 above.
     //
     //go:noinline
@@ -2054,8 +2304,8 @@ namespace golang::runtime
         // And goexit0 does a gogo that needs to return from mstart1
         // and let mstart0 exit the thread.
         gp->sched.g = guintptr(gocpp::unsafe_pointer(gp));
-        gp->sched.pc = getcallerpc();
-        gp->sched.sp = getcallersp();
+        gp->sched.pc = sys::GetCallerPC();
+        gp->sched.sp = sys::GetCallerSP();
 
         asminit();
         minit();
@@ -2065,6 +2315,11 @@ namespace golang::runtime
         if(gp->m == & m0)
         {
             mstartm0();
+        }
+
+        if(debug.dataindependenttiming == 1)
+        {
+            sys::EnableDIT();
         }
 
         if(auto fn = [&](){ return rec::mstartfn(gp->m); }; fn != nullptr)
@@ -2105,6 +2360,12 @@ namespace golang::runtime
     void mPark()
     {
         auto gp = getg();
+        // This M might stay parked through an entire GC cycle.
+        // Erase any leftovers on the signal stack.
+        if(goexperiment::RuntimeSecret)
+        {
+            eraseSecretsSignalStk();
+        }
         notesleep(& gp->m->park);
         noteclear(& gp->m->park);
     }
@@ -2150,12 +2411,24 @@ namespace golang::runtime
         if(mp->gsignal != nullptr)
         {
             stackfree(mp->gsignal->stack);
+            if(valgrindenabled)
+            {
+                valgrindDeregisterStack(mp->gsignal->valgrindStackID);
+                mp->gsignal->valgrindStackID = 0;
+            }
             // On some platforms, when calling into VDSO (e.g. nanotime)
             // we store our g on the gsignal stack, if there is one.
             // Now the stack is freed, unlink it from the m, so we
             // won't write to it when calling VDSO code.
             mp->gsignal = nullptr;
         }
+
+        // Free vgetrandom state.
+        vgetrandomDestroy(mp);
+
+        // Clear the self pointer so Ps don't access this M after it is freed,
+        // or keep it alive.
+        rec::clear(gocpp::recv(mp->self));
 
         // Remove m from allm.
         lock(& sched.lock);
@@ -2245,14 +2518,16 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             auto gp = getg()->m->curg;
-            // Mark the user stack as preemptible so that it may be scanned.
-            // Otherwise, our attempt to force all P's to a safepoint could
-            // result in a deadlock as we attempt to preempt a worker that's
-            // trying to preempt us (e.g. for a stack scan).
-            // N.B. The execution tracer is not aware of this status
-            // transition and handles it specially based on the
-            // wait reason.
-            casGToWaiting(gp, _Grunning, reason);
+            // Mark the user stack as preemptible so that it may be scanned
+            // by the GC or observed by the execution tracer. Otherwise, our
+            // attempt to force all P's to a safepoint could result in a
+            // deadlock as we attempt to preempt a goroutine that's trying
+            // to preempt us (e.g. for a stack scan).
+            // casGToWaitingForSuspendG marks the goroutine as ineligible for a
+            // stack shrink, effectively pinning the stack in memory for the duration.
+            // N.B. The execution tracer is not aware of this status transition and
+            // handles it specially based on the wait reason.
+            casGToWaitingForSuspendG(gp, _Grunning, reason);
             forEachPInternal(fn);
             casgstatus(gp, _Gwaiting, _Grunning);
         });
@@ -2290,9 +2565,9 @@ namespace golang::runtime
         }
         preemptall();
 
-        // Any P entering _Pidle or _Psyscall from now on will observe
+        // Any P entering _Pidle or a system call from now on will observe
         // p.runSafePointFn == 1 and will call runSafePointFn when
-        // changing its status to _Pidle/_Psyscall.
+        // changing its status to _Pidle.
         // Run safe point function for all idle Ps. sched.pidle will
         // not change because we hold sched.lock.
         for(auto p = rec::ptr(gocpp::recv(sched.pidle)); p != nullptr; p = rec::ptr(gocpp::recv(p->link)))
@@ -2310,31 +2585,20 @@ namespace golang::runtime
         // Run fn for the current P.
         fn(pp);
 
-        // Force Ps currently in _Psyscall into _Pidle and hand them
+        // Force Ps currently in a system call into _Pidle and hand them
         // off to induce safe point function execution.
         for(auto [gocpp_ignored, p2] : allp)
         {
-            auto s = p2->status;
-
-            // We need to be fine-grained about tracing here, since handoffp
-            // might call into the tracer, and the tracer is non-reentrant.
-            auto trace = traceAcquire();
-            if(s == _Psyscall && p2->runSafePointFn == 1 && atomic::Cas(& p2->status, s, _Pidle))
+            if(atomic::Load(& p2->runSafePointFn) != 1)
             {
-                if(rec::ok(gocpp::recv(trace)))
-                {
-                    // It's important that we traceRelease before we call handoffp, which may also traceAcquire.
-                    rec::GoSysBlock(gocpp::recv(trace), p2);
-                    rec::ProcSteal(gocpp::recv(trace), p2, false);
-                    traceRelease(trace);
-                }
-                p2->syscalltick++;
-                handoffp(p2);
+                // Already ran it.
+                continue;
             }
-            else
-            if(rec::ok(gocpp::recv(trace)))
+            if(auto [thread, ok] = setBlockOnExitSyscall(p2); ok)
             {
-                traceRelease(trace);
+                rec::takeP(gocpp::recv(thread));
+                rec::resume(gocpp::recv(thread));
+                handoffp(p2);
             }
         }
 
@@ -2380,9 +2644,9 @@ namespace golang::runtime
     //	}
     //
     // runSafePointFn must be checked on any transition in to _Pidle or
-    // _Psyscall to avoid a race where forEachP sees that the P is running
-    // just before the P goes into _Pidle/_Psyscall and neither forEachP
-    // nor the P run the safe-point function.
+    // when entering a system call to avoid a race where forEachP sees
+    // that the P is running just before the P goes into _Pidle/system call
+    // and neither forEachP nor the P run the safe-point function.
     void runSafePointFn()
     {
         auto p = rec::ptr(gocpp::recv(getg()->m->p));
@@ -2503,6 +2767,11 @@ namespace golang::runtime
                     systemstack([=]() mutable -> void
                     {
                         stackfree(freem->g0->stack);
+                        if(valgrindenabled)
+                        {
+                            valgrindDeregisterStack(freem->g0->valgrindStackID);
+                            freem->g0->valgrindStackID = 0;
+                        }
                     });
                 }
                 freem = freem->freelink;
@@ -2511,7 +2780,7 @@ namespace golang::runtime
             unlock(& sched.lock);
         }
 
-        auto mp = new m{};
+        auto mp = & new mPadded{}->m;
         mp->mstartfn = fn;
         mcommoninit(mp, id);
 
@@ -2625,10 +2894,10 @@ namespace golang::runtime
         // Install g (= m->g0) and set the stack bounds
         // to match the current stack.
         setg(mp->g0);
-        auto sp = getcallersp();
+        auto sp = sys::GetCallerSP();
         callbackUpdateSystemStack(mp, sp, signal);
 
-        // Should mark we are already in Go now.
+        // We must mark that we are already in Go now.
         // Otherwise, we may call needm again when we get a signal, before cgocallbackg1,
         // which means the extram list may be empty, that will cause a deadlock.
         mp->isExtraInC = false;
@@ -2638,20 +2907,29 @@ namespace golang::runtime
         minit();
 
         // Emit a trace event for this dead -> syscall transition,
-        // but only in the new tracer and only if we're not in a signal handler.
+        // but only if we're not in a signal handler.
         // N.B. the tracer can run on a bare M just fine, we just have
         // to make sure to do this before setg(nil) and unminit.
         traceLocker trace = {};
-        if(goexperiment::ExecTracer2 && ! signal)
+        if(! signal)
         {
             trace = traceAcquire();
         }
 
         // mp.curg is now a real goroutine.
-        casgstatus(mp->curg, _Gdead, _Gsyscall);
+        casgstatus(mp->curg, _Gdeadextra, _Gsyscall);
         rec::Add(gocpp::recv(sched.ngsys), - 1);
 
-        if(goexperiment::ExecTracer2 && ! signal)
+        // This is technically inaccurate, but we set isExtraInC to false above,
+        // and so we need to update addGSyscallNoP to keep the two pieces of state
+        // consistent (it's only updated when isExtraInC is false). More specifically,
+        // When we get to cgocallbackg and exitsyscall, we'll be looking for a P, and
+        // since isExtraInC is false, we will decrement this metric.
+        // The inaccuracy is thankfully transient: only until this thread can get a P.
+        // We're going into Go anyway, so it's okay to pretend we're a real goroutine now.
+        addGSyscallNoP(mp);
+
+        if(! signal)
         {
             if(rec::ok(gocpp::recv(trace)))
             {
@@ -2715,11 +2993,10 @@ namespace golang::runtime
         gp->syscallpc = gp->sched.pc;
         gp->syscallsp = gp->sched.sp;
         gp->stktopsp = gp->sched.sp;
-        // malg returns status as _Gidle. Change to _Gdead before
-        // adding to allg where GC can see it. We use _Gdead to hide
-        // this from tracebacks and stack scans since it isn't a
-        // "real" goroutine until needm grabs it.
-        casgstatus(gp, _Gidle, _Gdead);
+        // malg returns status as _Gidle. Change to _Gdeadextra before
+        // adding to allg where GC can see it. _Gdeadextra hides this
+        // from traceback and stack scans.
+        casgstatus(gp, _Gidle, _Gdeadextra);
         gp->m = mp;
         mp->curg = gp;
         mp->isextra = true;
@@ -2732,12 +3009,6 @@ namespace golang::runtime
         if(raceenabled)
         {
             gp->racectx = racegostart(abi::FuncPCABIInternal(newextram) + sys::PCQuantum);
-        }
-        auto trace = traceAcquire();
-        if(rec::ok(gocpp::recv(trace)))
-        {
-            rec::OneNewExtraM(gocpp::recv(trace), gp);
-            traceRelease(trace);
         }
         // put on allg for garbage collector
         allgadd(gp);
@@ -2777,7 +3048,7 @@ namespace golang::runtime
     // So that the destructor would invoke dropm while the non-Go thread is exiting.
     // This is much faster since it avoids expensive signal-related syscalls.
     //
-    // This always runs without a P, so //go:nowritebarrierrec is required.
+    // This may run without a P, so //go:nowritebarrierrec is required.
     //
     // This may run with a different stack than was recorded in g0 (there is no
     // call to callbackUpdateSystemStack prior to dropm), so this must be
@@ -2792,22 +3063,22 @@ namespace golang::runtime
         // with no pointer manipulation.
         auto mp = getg()->m;
 
-        // Emit a trace event for this syscall -> dead transition,
-        // but only in the new tracer.
+        // Emit a trace event for this syscall -> dead transition.
         // N.B. the tracer can run on a bare M just fine, we just have
         // to make sure to do this before setg(nil) and unminit.
         traceLocker trace = {};
-        if(goexperiment::ExecTracer2 && ! mp->isExtraInSig)
+        if(! mp->isExtraInSig)
         {
             trace = traceAcquire();
         }
 
-        // Return mp.curg to dead state.
-        casgstatus(mp->curg, _Gsyscall, _Gdead);
+        // Return mp.curg to _Gdeadextra state.
+        casgstatus(mp->curg, _Gsyscall, _Gdeadextra);
         mp->curg->preemptStop = false;
         rec::Add(gocpp::recv(sched.ngsys), 1);
+        decGSyscallNoP(mp);
 
-        if(goexperiment::ExecTracer2 && ! mp->isExtraInSig)
+        if(! mp->isExtraInSig)
         {
             if(rec::ok(gocpp::recv(trace)))
             {
@@ -2816,21 +3087,18 @@ namespace golang::runtime
             }
         }
 
-        if(goexperiment::ExecTracer2)
-        {
-            // Trash syscalltick so that it doesn't line up with mp.old.syscalltick anymore.
-            // In the new tracer, we model needm and dropm and a goroutine being created and
-            // destroyed respectively. The m then might get reused with a different procid but
-            // still with a reference to oldp, and still with the same syscalltick. The next
-            // time a G is "created" in needm, it'll return and quietly reacquire its P from a
-            // different m with a different procid, which will confuse the trace parser. By
-            // trashing syscalltick, we ensure that it'll appear as if we lost the P to the
-            // tracer parser and that we just reacquired it.
-            // Trash the value by decrementing because that gets us as far away from the value
-            // the syscall exit code expects as possible. Setting to zero is risky because
-            // syscalltick could already be zero (and in fact, is initialized to zero).
-            mp->syscalltick--;
-        }
+        // Trash syscalltick so that it doesn't line up with mp.old.syscalltick anymore.
+        // In the new tracer, we model needm and dropm and a goroutine being created and
+        // destroyed respectively. The m then might get reused with a different procid but
+        // still with a reference to oldp, and still with the same syscalltick. The next
+        // time a G is "created" in needm, it'll return and quietly reacquire its P from a
+        // different m with a different procid, which will confuse the trace parser. By
+        // trashing syscalltick, we ensure that it'll appear as if we lost the P to the
+        // tracer parser and that we just reacquired it.
+        // Trash the value by decrementing because that gets us as far away from the value
+        // the syscall exit code expects as possible. Setting to zero is risky because
+        // syscalltick could already be zero (and in fact, is initialized to zero).
+        mp->syscalltick--;
 
         // Reset trace state unconditionally. This goroutine is being 'destroyed'
         // from the perspective of the tracer.
@@ -2839,9 +3107,7 @@ namespace golang::runtime
         // Flush all the M's buffers. This is necessary because the M might
         // be used on a different thread with a different procid, so we have
         // to make sure we don't write into the same buffer.
-        // N.B. traceThreadDestroy is a no-op in the old tracer, so avoid the
-        // unnecessary acquire/release of the lock.
-        if(goexperiment::ExecTracer2 && (traceEnabled() || traceShuttingDown()))
+        if(traceEnabled() || traceShuttingDown())
         {
             // Acquire sched.lock across thread destruction. One of the invariants of the tracer
             // is that a thread cannot disappear from the tracer's view (allm or freem) without
@@ -2872,6 +3138,7 @@ namespace golang::runtime
         g0->stack.lo = 0;
         g0->stackguard0 = 0;
         g0->stackguard1 = 0;
+        mp->g0StackAccurate = false;
 
         putExtraM(mp);
 
@@ -2916,6 +3183,16 @@ namespace golang::runtime
     }
 
     // A helper function for EnsureDropM.
+    //
+    // getm should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - fortio.org/log
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname getm
     uintptr_t getm()
     {
         return uintptr_t(gocpp::unsafe_pointer(getg()->m));
@@ -3132,13 +3409,9 @@ namespace golang::runtime
 
     void newm1(m* mp)
     {
-        if(iscgo)
+        if(iscgo && _cgo_thread_start != nullptr)
         {
             cgothreadstart ts = {};
-            if(_cgo_thread_start == nullptr)
-            {
-                go_throw("_cgo_thread_start missing"_s);
-            }
             rec::set(gocpp::recv(ts.g), mp->g0);
             ts.tls = (uint64_t*)(gocpp::unsafe_pointer(& mp->tls[0]));
             ts.fn = gocpp::unsafe_pointer(abi::FuncPCABI0(mstart));
@@ -3386,9 +3659,9 @@ namespace golang::runtime
     void handoffp(golang::runtime::p* pp)
     {
         // handoffp must start an M in any situation where
-        // findrunnable would return a G to run on pp.
+        // findRunnable would return a G to run on pp.
         // if it has local work, start it straight away
-        if(! runqempty(pp) || sched.runqsize != 0)
+        if(! runqempty(pp) || ! rec::empty(gocpp::recv(sched.runq)))
         {
             startm(pp, false, false);
             return;
@@ -3400,7 +3673,7 @@ namespace golang::runtime
             return;
         }
         // if it has GC work, start it straight away
-        if(gcBlackenEnabled != 0 && gcMarkWorkAvailable(pp))
+        if(gcBlackenEnabled != 0 && gcShouldScheduleWorker(pp))
         {
             startm(pp, false, false);
             return;
@@ -3418,6 +3691,7 @@ namespace golang::runtime
         if(rec::Load(gocpp::recv(sched.gcwaiting)))
         {
             pp->status = _Pgcstop;
+            pp->gcStopTime = nanotime();
             sched.stopwait--;
             if(sched.stopwait == 0)
             {
@@ -3435,7 +3709,7 @@ namespace golang::runtime
                 notewakeup(& sched.safePointNote);
             }
         }
-        if(sched.runqsize != 0)
+        if(! rec::empty(gocpp::recv(sched.runq)))
         {
             unlock(& sched.lock);
             startm(pp, false, false);
@@ -3452,7 +3726,7 @@ namespace golang::runtime
 
         // The scheduler lock cannot be held when calling wakeNetPoller below
         // because wakeNetPoller may call wakep which may call startm.
-        auto when = nobarrierWakeTime(pp);
+        auto when = rec::wakeTime(gocpp::recv(pp->timers));
         pidleput(pp, 0);
         unlock(& sched.lock);
 
@@ -3465,6 +3739,16 @@ namespace golang::runtime
     // Tries to add one more P to execute G's.
     // Called when a G is made runnable (newproc, ready).
     // Must be called with a P.
+    //
+    // wakep should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gvisor.dev/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname wakep
     void wakep()
     {
         // Be conservative about spinning threads, only start one if none exist
@@ -3580,6 +3864,7 @@ namespace golang::runtime
         auto pp = releasep();
         lock(& sched.lock);
         pp->status = _Pgcstop;
+        pp->gcStopTime = nanotime();
         sched.stopwait--;
         if(sched.stopwait == 0)
         {
@@ -3607,13 +3892,14 @@ namespace golang::runtime
             // Make sure that gp has had its stack written out to the goroutine
             // profile, exactly as it was when the goroutine profiler first stopped
             // the world.
-            tryRecordGoroutineProfile(gp, osyield);
+            tryRecordGoroutineProfile(gp, nullptr, osyield);
         }
 
-        // Assign gp.m before entering _Grunning so running Gs have an
-        // M.
+        // Assign gp.m before entering _Grunning so running Gs have an M.
         mp->curg = gp;
         gp->m = mp;
+        // Clear the flag, which may have been set by morestack.
+        gp->syncSafePoint = false;
         casgstatus(gp, _Grunnable, _Grunning);
         gp->waitsince = 0;
         gp->preempt = false;
@@ -3621,6 +3907,28 @@ namespace golang::runtime
         if(! inheritTime)
         {
             rec::ptr(gocpp::recv(mp->p))->schedtick++;
+        }
+
+        if(sys::DITSupported && debug.dataindependenttiming != 1)
+        {
+            if(gp->ditWanted && ! mp->ditEnabled)
+            {
+                // The current M doesn't have DIT enabled, but the goroutine we're
+                // executing does need it, so turn it on.
+                sys::EnableDIT();
+                mp->ditEnabled = true;
+            }
+            else
+            if(! gp->ditWanted && mp->ditEnabled)
+            {
+                // The current M has DIT enabled, but the goroutine we're executing does
+                // not need it, so turn it off.
+                // NOTE: turning off DIT here means that the scheduler will have DIT enabled
+                // when it runs after this goroutine yields or is preempted. This may have
+                // a minor performance impact on the scheduler.
+                sys::DisableDIT();
+                mp->ditEnabled = false;
+            }
         }
 
         // Check whether the profiler needs to be turned on or off.
@@ -3633,12 +3941,6 @@ namespace golang::runtime
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
         {
-            // GoSysExit has to happen when we have a P, but before GoStart.
-            // So we emit it here.
-            if(! goexperiment::ExecTracer2 && gp->syscallsp != 0)
-            {
-                rec::GoSysExit(gocpp::recv(trace), true);
-            }
             rec::GoStart(gocpp::recv(trace));
             traceRelease(trace);
         }
@@ -3658,9 +3960,14 @@ namespace golang::runtime
         auto mp = getg()->m;
 
         // The conditions here and in handoffp must agree: if
-        // findrunnable would return a G to run, handoffp must start
+        // findRunnable would return a G to run, handoffp must start
         // an M.
         top:
+        // We may have collected an allp snapshot below. The snapshot is only
+        // required in each loop iteration. Clear it to all GC to collect the
+        // slice.
+        rec::clearAllpSnapshot(gocpp::recv(mp));
+
         auto pp = rec::ptr(gocpp::recv(mp->p));
         if(rec::Load(gocpp::recv(sched.gcwaiting)))
         {
@@ -3676,7 +3983,7 @@ namespace golang::runtime
         // which may steal timers. It's important that between now
         // and then, nothing blocks, so these numbers remain mostly
         // relevant.
-        auto [now, pollUntil, gocpp_id_1] = checkTimers(pp, 0);
+        auto [now, pollUntil, gocpp_id_1] = rec::check(gocpp::recv(pp->timers), 0, nullptr);
 
         // Try to schedule the trace reader.
         if(traceEnabled() || traceShuttingDown())
@@ -3709,10 +4016,10 @@ namespace golang::runtime
         // Check the global runnable queue once in a while to ensure fairness.
         // Otherwise two goroutines can completely occupy the local runqueue
         // by constantly respawning each other.
-        if(pp->schedtick % 61 == 0 && sched.runqsize > 0)
+        if(pp->schedtick % 61 == 0 && ! rec::empty(gocpp::recv(sched.runq)))
         {
             lock(& sched.lock);
-            auto gp = globrunqget(pp, 1);
+            auto gp = globrunqget();
             unlock(& sched.lock);
             if(gp != nullptr)
             {
@@ -3728,6 +4035,13 @@ namespace golang::runtime
                 ready(gp, 0, true);
             }
         }
+
+        // Wake up one or more cleanup Gs.
+        if(rec::needsWake(gocpp::recv(gcCleanups)))
+        {
+            rec::wake(gocpp::recv(gcCleanups));
+        }
+
         if(*cgo_yield != nullptr)
         {
             asmcgocall(*cgo_yield, nullptr);
@@ -3740,13 +4054,17 @@ namespace golang::runtime
         }
 
         // global runq
-        if(sched.runqsize != 0)
+        if(! rec::empty(gocpp::recv(sched.runq)))
         {
             lock(& sched.lock);
-            auto gp = globrunqget(pp, 0);
+            auto [gp, q] = globrunqgetbatch(int32_t(len(pp->runq)) / 2);
             unlock(& sched.lock);
             if(gp != nullptr)
             {
+                if(runqputbatch(pp, & q); ! rec::empty(gocpp::recv(q)))
+                {
+                    go_throw("Couldn't put Gs into empty local runq"_s);
+                }
                 return {gp, false, false};
             }
         }
@@ -3758,9 +4076,13 @@ namespace golang::runtime
         // blocked thread (e.g. it has already returned from netpoll, but does
         // not set lastpoll yet), this thread will do blocking netpoll below
         // anyway.
-        if(netpollinited() && netpollAnyWaiters() && rec::Load(gocpp::recv(sched.lastpoll)) != 0)
+        // We only poll from one thread at a time to avoid kernel contention
+        // on machines with many cores.
+        if(netpollinited() && netpollAnyWaiters() && rec::Load(gocpp::recv(sched.lastpoll)) != 0 && rec::Swap(gocpp::recv(sched.pollingNet), 1) == 0)
         {
-            if(auto [list, delta] = netpoll(0); ! rec::empty(gocpp::recv(list)))
+            auto [list, delta] = netpoll(0);
+            rec::Store(gocpp::recv(sched.pollingNet), 0);
+            if(! rec::empty(gocpp::recv(list)))
             {
                 // non-blocking
                 auto gp = rec::pop(gocpp::recv(list));
@@ -3812,7 +4134,7 @@ namespace golang::runtime
         // We have nothing to do.
         // If we're in the GC mark phase, can safely scan and blacken objects,
         // and have work to do, run idle-time marking rather than give up the P.
-        if(gcBlackenEnabled != 0 && gcMarkWorkAvailable(pp) && rec::addIdleMarkWorker(gocpp::recv(gcController)))
+        if(gcBlackenEnabled != 0 && gcShouldScheduleWorker(pp) && rec::addIdleMarkWorker(gocpp::recv(gcController)))
         {
             auto node = (gcBgMarkWorkerNode*)(rec::pop(gocpp::recv(gcBgMarkWorkerPool)));
             if(node != nullptr)
@@ -3858,7 +4180,10 @@ namespace golang::runtime
         // which can change underfoot once we no longer block
         // safe-points. We don't need to snapshot the contents because
         // everything up to cap(allp) is immutable.
-        auto allpSnapshot = allp;
+        // We clear the snapshot from the M after return via
+        // mp.clearAllpSnapshop (in schedule) and on each iteration of the top
+        // loop.
+        auto allpSnapshot = rec::snapshotAllp(gocpp::recv(mp));
         // Also snapshot masks. Value changes are OK, but we can't allow
         // len to change out from under us.
         auto idlepMaskSnapshot = idlepMask;
@@ -3871,10 +4196,18 @@ namespace golang::runtime
             unlock(& sched.lock);
             goto top;
         }
-        if(sched.runqsize != 0)
+        if(! rec::empty(gocpp::recv(sched.runq)))
         {
-            auto gp = globrunqget(pp, 0);
+            auto [gp, q] = globrunqgetbatch(int32_t(len(pp->runq)) / 2);
             unlock(& sched.lock);
+            if(gp == nullptr)
+            {
+                go_throw("global runq empty with non-zero runqsize"_s);
+            }
+            if(runqputbatch(pp, & q); ! rec::empty(gocpp::recv(q)))
+            {
+                go_throw("Couldn't put Gs into empty local runq"_s);
+            }
             return {gp, false, false};
         }
         if(! mp->spinning && rec::Load(gocpp::recv(sched.needspinning)) == 1)
@@ -3886,7 +4219,7 @@ namespace golang::runtime
         }
         if(releasep() != pp)
         {
-            go_throw("findrunnable: wrong p"_s);
+            go_throw("findRunnable: wrong p"_s);
         }
         now = pidleput(pp, now);
         unlock(& sched.lock);
@@ -3927,7 +4260,7 @@ namespace golang::runtime
             mp->spinning = false;
             if(rec::Add(gocpp::recv(sched.nmspinning), - 1) < 0)
             {
-                go_throw("findrunnable: negative nmspinning"_s);
+                go_throw("findRunnable: negative nmspinning"_s);
             }
 
             // Note the for correctness, only the last M transitioning from
@@ -3939,17 +4272,21 @@ namespace golang::runtime
             // See https://go.dev/issue/43997.
             // Check global and P runqueues again.
             lock(& sched.lock);
-            if(sched.runqsize != 0)
+            if(! rec::empty(gocpp::recv(sched.runq)))
             {
                 auto [pp, gocpp_id_2] = pidlegetSpinning(0);
                 if(pp != nullptr)
                 {
-                    auto gp = globrunqget(pp, 0);
+                    auto [gp, q] = globrunqgetbatch(int32_t(len(pp->runq)) / 2);
+                    unlock(& sched.lock);
                     if(gp == nullptr)
                     {
                         go_throw("global runq empty with non-zero runqsize"_s);
                     }
-                    unlock(& sched.lock);
+                    if(runqputbatch(pp, & q); ! rec::empty(gocpp::recv(q)))
+                    {
+                        go_throw("Couldn't put Gs into empty local runq"_s);
+                    }
                     acquirep(pp);
                     rec::becomeSpinning(gocpp::recv(mp));
                     return {gp, false, false};
@@ -3993,17 +4330,19 @@ namespace golang::runtime
             pollUntil = checkTimersNoP(allpSnapshot, timerpMaskSnapshot, pollUntil);
         }
 
+        // We don't need allp anymore at this pointer, but can't clear the
+        // snapshot without a P for the write barrier..
         // Poll network until next timer.
         if(netpollinited() && (netpollAnyWaiters() || pollUntil != 0) && rec::Swap(gocpp::recv(sched.lastpoll), 0) != 0)
         {
             rec::Store(gocpp::recv(sched.pollUntil), pollUntil);
             if(mp->p != 0)
             {
-                go_throw("findrunnable: netpoll with p"_s);
+                go_throw("findRunnable: netpoll with p"_s);
             }
             if(mp->spinning)
             {
-                go_throw("findrunnable: netpoll with spinning"_s);
+                go_throw("findRunnable: netpoll with spinning"_s);
             }
             auto delay = int64_t(- 1);
             if(pollUntil != 0)
@@ -4087,7 +4426,7 @@ namespace golang::runtime
     // conditions checked by the actual scheduler.
     bool pollWork()
     {
-        if(sched.runqsize != 0)
+        if(! rec::empty(gocpp::recv(sched.runq)))
         {
             return true;
         }
@@ -4156,7 +4495,7 @@ namespace golang::runtime
                 // can't, no need to check at all.
                 if(stealTimersOrRunNextG && rec::read(gocpp::recv(timerpMask), rec::position(gocpp::recv(go_enum))))
                 {
-                    auto [tnow, w, ran] = checkTimers(p2, now);
+                    auto [tnow, w, ran] = rec::check(gocpp::recv(p2->timers), now, nullptr);
                     now = tnow;
                     if(w != 0 && (pollUntil == 0 || w < pollUntil))
                     {
@@ -4234,7 +4573,7 @@ namespace golang::runtime
         {
             if(rec::read(gocpp::recv(timerpMaskSnapshot), uint32_t(id)))
             {
-                auto w = nobarrierWakeTime(p2);
+                auto w = rec::wakeTime(gocpp::recv(p2->timers));
                 if(w != 0 && (pollUntil == 0 || w < pollUntil))
                 {
                     pollUntil = w;
@@ -4261,7 +4600,7 @@ namespace golang::runtime
         {
             return {nullptr, nullptr};
         }
-        if(! gcMarkWorkAvailable(nullptr))
+        if(! gcShouldScheduleWorker(nullptr))
         {
             return {nullptr, nullptr};
         }
@@ -4317,7 +4656,7 @@ namespace golang::runtime
     {
         if(rec::Load(gocpp::recv(sched.lastpoll)) == 0)
         {
-            // In findrunnable we ensure that when polling the pollUntil
+            // In findRunnable we ensure that when polling the pollUntil
             // field is either zero or the time to which the current
             // poll is expected to run. This can have a spurious wakeup
             // but should never miss a wakeup.
@@ -4350,7 +4689,7 @@ namespace golang::runtime
         auto nmspinning = rec::Add(gocpp::recv(sched.nmspinning), - 1);
         if(nmspinning < 0)
         {
-            go_throw("findrunnable: negative nmspinning"_s);
+            go_throw("findRunnable: negative nmspinning"_s);
         }
         // M wakeup policy is deliberately somewhat conservative, so check if we
         // need to wakeup another P here. See "Worker thread parking/unparking"
@@ -4372,37 +4711,32 @@ namespace golang::runtime
         {
             return;
         }
-        auto trace = traceAcquire();
-        if(rec::ok(gocpp::recv(trace)))
-        {
-            for(auto gp = rec::ptr(gocpp::recv(glist->head)); gp != nullptr; gp = rec::ptr(gocpp::recv(gp->schedlink)))
-            {
-                rec::GoUnpark(gocpp::recv(trace), gp, 0);
-            }
-            traceRelease(trace);
-        }
 
         // Mark all the goroutines as runnable before we put them
         // on the run queues.
-        auto head = rec::ptr(gocpp::recv(glist->head));
         g* tail = {};
-        auto qsize = 0;
-        for(auto gp = head; gp != nullptr; gp = rec::ptr(gocpp::recv(gp->schedlink)))
+        auto trace = traceAcquire();
+        for(auto gp = rec::ptr(gocpp::recv(glist->head)); gp != nullptr; gp = rec::ptr(gocpp::recv(gp->schedlink)))
         {
             tail = gp;
-            qsize++;
             casgstatus(gp, _Gwaiting, _Grunnable);
+            if(rec::ok(gocpp::recv(trace)))
+            {
+                rec::GoUnpark(gocpp::recv(trace), gp, 0);
+            }
+        }
+        if(rec::ok(gocpp::recv(trace)))
+        {
+            traceRelease(trace);
         }
 
         // Turn the gList into a gQueue.
-        gQueue q = {};
-        rec::set(gocpp::recv(q.head), head);
-        rec::set(gocpp::recv(q.tail), tail);
+        auto q = gQueue {glist->head, rec::guintptr(gocpp::recv(tail)), glist->size};
         *glist = gList {};
 
-        auto startIdle = [=](int n) mutable -> void
+        auto startIdle = [=](int32_t n) mutable -> void
         {
-            for(auto i = 0; i < n; i++)
+            for(; n > 0; n--)
             {
                 // See comment in startm.
                 auto mp = acquirem();
@@ -4425,34 +4759,49 @@ namespace golang::runtime
         auto pp = rec::ptr(gocpp::recv(getg()->m->p));
         if(pp == nullptr)
         {
+            auto n = q.size;
             lock(& sched.lock);
-            globrunqputbatch(& q, int32_t(qsize));
+            globrunqputbatch(& q);
             unlock(& sched.lock);
-            startIdle(qsize);
+            startIdle(n);
             return;
         }
 
-        auto npidle = int(rec::Load(gocpp::recv(sched.npidle)));
         gQueue globq = {};
-        int n = {};
-        for(n = 0; n < npidle && ! rec::empty(gocpp::recv(q)); n++)
+        auto npidle = rec::Load(gocpp::recv(sched.npidle));
+        for(; npidle > 0 && ! rec::empty(gocpp::recv(q)); npidle--)
         {
             auto g = rec::pop(gocpp::recv(q));
             rec::pushBack(gocpp::recv(globq), g);
         }
-        if(n > 0)
+        if(! rec::empty(gocpp::recv(globq)))
         {
+            auto n = globq.size;
             lock(& sched.lock);
-            globrunqputbatch(& globq, int32_t(n));
+            globrunqputbatch(& globq);
             unlock(& sched.lock);
             startIdle(n);
-            qsize -= n;
         }
 
-        if(! rec::empty(gocpp::recv(q)))
+        if(runqputbatch(pp, & q); ! rec::empty(gocpp::recv(q)))
         {
-            runqputbatch(pp, & q, qsize);
+            lock(& sched.lock);
+            globrunqputbatch(& q);
+            unlock(& sched.lock);
         }
+
+        // Some P's might have become idle after we loaded `sched.npidle`
+        // but before any goroutines were added to the queue, which could
+        // lead to idle P's when there is work available in the global queue.
+        // That could potentially last until other goroutines become ready
+        // to run. That said, we need to find a way to hedge
+        // Calling wakep() here is the best bet, it will do nothing in the
+        // common case (no racing on `sched.npidle`), while it could wake one
+        // more P to execute G's, which might end up with >1 P's: the first one
+        // wakes another P and so forth until there is no more work, but this
+        // ought to be an extremely rare case.
+        // Also see "Worker thread parking/unparking" comment at the top of the file for details.
+        wakep();
     }
 
     // One round of scheduler: find a runnable goroutine and execute it.
@@ -4495,6 +4844,22 @@ namespace golang::runtime
         // blocks until work is available
         auto [gp, inheritTime, tryWakeP] = findRunnable();
 
+        // May be on a new P.
+        pp = rec::ptr(gocpp::recv(mp->p));
+
+        // findRunnable may have collected an allp snapshot. The snapshot is
+        // only required within findRunnable. Clear it to all GC to collect the
+        // slice.
+        rec::clearAllpSnapshot(gocpp::recv(mp));
+
+        // If the P was assigned a next GC mark worker but findRunnable
+        // selected anything else, release the worker so another P may run it.
+        // N.B. If this occurs because a higher-priority goroutine was selected
+        // (trace reader), then tryWakeP is set, which will wake another P to
+        // run the worker. If this occurs because the GC is no longer active,
+        // there is no need to wakep.
+        rec::releaseNextGCMarkWorker(gocpp::recv(gcController), pp);
+
         if(debug.dontfreezetheworld > 0 && rec::Load(gocpp::recv(freezing)))
         {
             // See comment in freezetheworld. We don't want to perturb
@@ -4530,7 +4895,6 @@ namespace golang::runtime
             else
             {
                 rec::pushBack(gocpp::recv(sched.disable.runnable), gp);
-                sched.disable.n++;
                 unlock(& sched.lock);
                 goto top;
             }
@@ -4568,86 +4932,6 @@ namespace golang::runtime
         setGNoWB(& gp->m->curg, nullptr);
     }
 
-    // checkTimers runs any timers for the P that are ready.
-    // If now is not 0 it is the current time.
-    // It returns the passed time or the current time if now was passed as 0.
-    // and the time when the next timer should run or 0 if there is no next timer,
-    // and reports whether it ran any timers.
-    // If the time when the next timer should run is not 0,
-    // it is always larger than the returned time.
-    // We pass now in and out to avoid extra calls of nanotime.
-    //
-    //go:yeswritebarrierrec
-    std::tuple<int64_t, int64_t, bool> checkTimers(golang::runtime::p* pp, int64_t now)
-    {
-        int64_t rnow;
-        int64_t pollUntil;
-        bool ran;
-        // If it's not yet time for the first timer, or the first adjusted
-        // timer, then there is nothing to do.
-        auto next = rec::Load(gocpp::recv(pp->timer0When));
-        auto nextAdj = rec::Load(gocpp::recv(pp->timerModifiedEarliest));
-        if(next == 0 || (nextAdj != 0 && nextAdj < next))
-        {
-            next = nextAdj;
-        }
-
-        if(next == 0)
-        {
-            // No timers to run or adjust.
-            return {now, 0, false};
-        }
-
-        if(now == 0)
-        {
-            now = nanotime();
-        }
-        if(now < next)
-        {
-            // Next timer is not ready to run, but keep going
-            // if we would clear deleted timers.
-            // This corresponds to the condition below where
-            // we decide whether to call clearDeletedTimers.
-            if(pp != rec::ptr(gocpp::recv(getg()->m->p)) || int(rec::Load(gocpp::recv(pp->deletedTimers))) <= int(rec::Load(gocpp::recv(pp->numTimers)) / 4))
-            {
-                return {now, next, false};
-            }
-        }
-
-        lock(& pp->timersLock);
-
-        if(len(pp->timers) > 0)
-        {
-            adjusttimers(pp, now);
-            for(; len(pp->timers) > 0; )
-            {
-                // Note that runtimer may temporarily unlock
-                // pp.timersLock.
-                if(auto tw = runtimer(pp, now); tw != 0)
-                {
-                    if(tw > 0)
-                    {
-                        pollUntil = tw;
-                    }
-                    break;
-                }
-                ran = true;
-            }
-        }
-
-        // If this is the local P, and there are a lot of deleted timers,
-        // clear them out. We only do this for the local P to reduce
-        // lock contention on timersLock.
-        if(pp == rec::ptr(gocpp::recv(getg()->m->p)) && int(rec::Load(gocpp::recv(pp->deletedTimers))) > len(pp->timers) / 4)
-        {
-            clearDeletedTimers(pp);
-        }
-
-        unlock(& pp->timersLock);
-
-        return {now, pollUntil, ran};
-    }
-
     bool parkunlock_c(g* gp, gocpp::unsafe_pointer lock)
     {
         unlock((mutex*)(lock));
@@ -4661,12 +4945,28 @@ namespace golang::runtime
 
         auto trace = traceAcquire();
 
+        // If g is in a synctest group, we don't want to let the group
+        // become idle until after the waitunlockf (if any) has confirmed
+        // that the park is happening.
+        // We need to record gp.bubble here, since waitunlockf can change it.
+        auto bubble = gp->bubble;
+        if(bubble != nullptr)
+        {
+            rec::incActive(gocpp::recv(bubble));
+        }
+
+        if(rec::ok(gocpp::recv(trace)))
+        {
+            // Trace the event before the transition. It may take a
+            // stack trace, but we won't own the stack after the
+            // transition anymore.
+            rec::GoPark(gocpp::recv(trace), mp->waitTraceBlockReason, mp->waitTraceSkip);
+        }
         // N.B. Not using casGToWaiting here because the waitreason is
         // set by park_m's caller.
         casgstatus(gp, _Grunning, _Gwaiting);
         if(rec::ok(gocpp::recv(trace)))
         {
-            rec::GoPark(gocpp::recv(trace), mp->waitTraceBlockReason, mp->waitTraceSkip);
             traceRelease(trace);
         }
 
@@ -4681,6 +4981,10 @@ namespace golang::runtime
             {
                 auto trace = traceAcquire();
                 casgstatus(gp, _Gwaiting, _Grunnable);
+                if(bubble != nullptr)
+                {
+                    rec::decActive(gocpp::recv(bubble));
+                }
                 if(rec::ok(gocpp::recv(trace)))
                 {
                     rec::GoUnpark(gocpp::recv(trace), gp, 2);
@@ -4690,11 +4994,18 @@ namespace golang::runtime
                 execute(gp, true);
             }
         }
+
+        if(bubble != nullptr)
+        {
+            rec::decActive(gocpp::recv(bubble));
+        }
+
         schedule();
     }
 
     void goschedImpl(g* gp, bool preempted)
     {
+        auto pp = rec::ptr(gocpp::recv(gp->m->p));
         auto trace = traceAcquire();
         auto status = readgstatus(gp);
         if(status &^ _Gscan != _Grunning)
@@ -4702,9 +5013,11 @@ namespace golang::runtime
             dumpgstatus(gp);
             go_throw("bad g status"_s);
         }
-        casgstatus(gp, _Grunning, _Grunnable);
         if(rec::ok(gocpp::recv(trace)))
         {
+            // Trace the event before the transition. It may take a
+            // stack trace, but we won't own the stack after the
+            // transition anymore.
             if(preempted)
             {
                 rec::GoPreempt(gocpp::recv(trace));
@@ -4713,13 +5026,26 @@ namespace golang::runtime
             {
                 rec::GoSched(gocpp::recv(trace));
             }
+        }
+        casgstatus(gp, _Grunning, _Grunnable);
+        if(rec::ok(gocpp::recv(trace)))
+        {
             traceRelease(trace);
         }
 
         dropg();
-        lock(& sched.lock);
-        globrunqput(gp);
-        unlock(& sched.lock);
+        if(preempted && rec::Load(gocpp::recv(sched.gcwaiting)))
+        {
+            // If preempted for STW, keep the G on the local P in runnext
+            // so it can keep running immediately after the STW.
+            runqput(pp, gp, true);
+        }
+        else
+        {
+            lock(& sched.lock);
+            globrunqput(gp);
+            unlock(& sched.lock);
+        }
 
         if(mainStarted)
         {
@@ -4787,37 +5113,60 @@ namespace golang::runtime
         // up. Hence, we set the scan bit to lock down further
         // transitions until we can dropg.
         casGToPreemptScan(gp, _Grunning, _Gscan | _Gpreempted);
-        dropg();
 
-        // Be careful about how we trace this next event. The ordering
-        // is subtle.
-        // The moment we CAS into _Gpreempted, suspendG could CAS to
-        // _Gwaiting, do its work, and ready the goroutine. All of
+        // Be careful about ownership as we trace this next event.
+        // According to the tracer invariants (trace.go) it's unsafe
+        // for us to emit an event for a goroutine we do not own.
+        // The moment we CAS into _Gpreempted, suspendG could CAS the
+        // goroutine to _Gwaiting, effectively taking ownership. All of
         // this could happen before we even get the chance to emit
         // an event. The end result is that the events could appear
         // out of order, and the tracer generally assumes the scheduler
         // takes care of the ordering between GoPark and GoUnpark.
         // The answer here is simple: emit the event while we still hold
-        // the _Gscan bit on the goroutine. We still need to traceAcquire
-        // and traceRelease across the CAS because the tracer could be
-        // what's calling suspendG in the first place, and we want the
-        // CAS and event emission to appear atomic to the tracer.
+        // the _Gscan bit on the goroutine, since the _Gscan bit means
+        // ownership over transitions.
+        // We still need to traceAcquire and traceRelease across the CAS
+        // because the tracer could be what's calling suspendG in the first
+        // place. This also upholds the tracer invariant that we must hold
+        // traceAcquire/traceRelease across the transition. However, we
+        // specifically *only* emit the event while we still have ownership.
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
         {
             rec::GoPark(gocpp::recv(trace), traceBlockPreempted, 0);
         }
+
+        // Drop the goroutine from the M. Only do this after the tracer has
+        // emitted an event, because it needs the association for GoPark to
+        // work correctly.
+        dropg();
+
+        // Drop the scan bit and release the trace locker if necessary.
         casfrom_Gscanstatus(gp, _Gscan | _Gpreempted, _Gpreempted);
         if(rec::ok(gocpp::recv(trace)))
         {
             traceRelease(trace);
         }
+
+        // All done.
         schedule();
     }
 
     // goyield is like Gosched, but it:
     // - emits a GoPreempt trace event instead of a GoSched trace event
     // - puts the current G on the runq of the current P instead of the globrunq
+    //
+    // goyield should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gvisor.dev/gvisor
+    //   - github.com/sagernet/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname goyield
     void goyield()
     {
         checkTimeouts();
@@ -4828,10 +5177,16 @@ namespace golang::runtime
     {
         auto trace = traceAcquire();
         auto pp = rec::ptr(gocpp::recv(gp->m->p));
+        if(rec::ok(gocpp::recv(trace)))
+        {
+            // Trace the event before the transition. It may take a
+            // stack trace, but we won't own the stack after the
+            // transition anymore.
+            rec::GoPreempt(gocpp::recv(trace));
+        }
         casgstatus(gp, _Grunning, _Grunnable);
         if(rec::ok(gocpp::recv(trace)))
         {
-            rec::GoPreempt(gocpp::recv(trace));
             traceRelease(trace);
         }
         dropg();
@@ -4844,6 +5199,10 @@ namespace golang::runtime
     {
         if(raceenabled)
         {
+            if(auto gp = getg(); gp->bubble != nullptr)
+            {
+                racereleasemergeg(gp, rec::raceaddr(gocpp::recv(gp->bubble)));
+            }
             racegoend();
         }
         auto trace = traceAcquire();
@@ -4858,6 +5217,14 @@ namespace golang::runtime
     // goexit continuation on g0.
     void goexit0(g* gp)
     {
+        if(goexperiment::RuntimeSecret && gp->secret > 0)
+        {
+            // Erase the whole stack. This path only occurs when
+            // runtime.Goexit is called from within a runtime/secret.Do call.
+            // Since this is running on g0, our registers are already zeroed from going through
+            // mcall in secret mode.
+            memclrNoHeapPointers(gocpp::unsafe_pointer(gp->stack.lo), gp->stack.hi - gp->stack.lo);
+        }
         gdestroy(gp);
         schedule();
     }
@@ -4888,6 +5255,9 @@ namespace golang::runtime
         gp->param = nullptr;
         gp->labels = nullptr;
         gp->timer = nullptr;
+        gp->bubble = nullptr;
+        gp->fipsOnlyBypass = false;
+        gp->secret = 0;
 
         if(gcBlackenEnabled != 0 && gp->gcAssistBytes > 0)
         {
@@ -4909,10 +5279,14 @@ namespace golang::runtime
             return;
         }
 
-        if(mp->lockedInt != 0)
+        if(locked && mp->lockedInt != 0)
         {
-            print("invalid m->lockedInt = "_s, mp->lockedInt, "\n"_s);
-            go_throw("internal lockOSThread error"_s);
+            print("runtime: mp.lockedInt = "_s, mp->lockedInt, "\n"_s);
+            if(mp->isextra)
+            {
+                go_throw("runtime.Goexit called in a thread that was not created by the Go runtime"_s);
+            }
+            go_throw("exited a goroutine internally locked to the OS thread"_s);
         }
         gfput(pp, gp);
         if(locked)
@@ -4944,7 +5318,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrierrec
-    void save(uintptr_t pc, uintptr_t sp)
+    void save(uintptr_t pc, uintptr_t sp, uintptr_t bp)
     {
         auto gp = getg();
 
@@ -4961,7 +5335,7 @@ namespace golang::runtime
         gp->sched.pc = pc;
         gp->sched.sp = sp;
         gp->sched.lr = 0;
-        gp->sched.ret = 0;
+        gp->sched.bp = bp;
         // We need to ensure ctxt is zero, but can't have a write
         // barrier here. However, it should always already be zero.
         // Assert that.
@@ -4994,28 +5368,36 @@ namespace golang::runtime
     // must always point to a valid stack frame. entersyscall below is the normal
     // entry point for syscalls, which obtains the SP and PC from the caller.
     //
-    // Syscall tracing (old tracer):
-    // At the start of a syscall we emit traceGoSysCall to capture the stack trace.
-    // If the syscall does not block, that is it, we do not emit any other events.
-    // If the syscall blocks (that is, P is retaken), retaker emits traceGoSysBlock;
-    // when syscall returns we emit traceGoSysExit and when the goroutine starts running
-    // (potentially instantly, if exitsyscallfast returns true) we emit traceGoStart.
-    // To ensure that traceGoSysExit is emitted strictly after traceGoSysBlock,
-    // we remember current value of syscalltick in m (gp.m.syscalltick = gp.m.p.ptr().syscalltick),
-    // whoever emits traceGoSysBlock increments p.syscalltick afterwards;
-    // and we wait for the increment before emitting traceGoSysExit.
-    // Note that the increment is done even if tracing is not enabled,
-    // because tracing can be enabled in the middle of syscall. We don't want the wait to hang.
-    //
     //go:nosplit
-    void reentersyscall(uintptr_t pc, uintptr_t sp)
+    void reentersyscall(uintptr_t pc, uintptr_t sp, uintptr_t bp)
     {
-        auto trace = traceAcquire();
         auto gp = getg();
 
         // Disable preemption because during this function g is in Gsyscall status,
         // but can have inconsistent g->sched, do not let GC observe it.
         gp->m->locks++;
+
+        // This M may have a signal stack that is dirtied with secret information
+        // (see package "runtime/secret"). Since it's about to go into a syscall for
+        // an arbitrary amount of time and the G that put the secret info there
+        // might have returned from secret.Do, we have to zero it out now, lest we
+        // break the guarantee that secrets are purged by the next GC after a return
+        // to secret.Do.
+        // It might be tempting to think that we only need to zero out this if we're
+        // not running in secret mode anymore, but that leaves an ABA problem. The G
+        // that put the secrets onto our signal stack may not be the one that is
+        // currently executing.
+        // Logically, we should erase this when we lose our P, not when we enter the
+        // syscall. This would avoid a zeroing in the case where the call returns
+        // almost immediately. Since we use this path for cgo calls as well, these
+        // fast "syscalls" are quite common. However, since we only erase the signal
+        // stack if we were delivered a signal in secret mode and considering the
+        // cross-thread synchronization cost for the P, it hardly seems worth it.
+        // TODO(dmo): can we encode the goid into mp.signalSecret and avoid the ABA problem?
+        if(goexperiment::RuntimeSecret)
+        {
+            eraseSecretsSignalStk();
+        }
 
         // Entersyscall must not call any function that might split/grow the stack.
         // (See details in comment above.)
@@ -5024,64 +5406,92 @@ namespace golang::runtime
         gp->stackguard0 = stackPreempt;
         gp->throwsplit = true;
 
+        // Copy the syscalltick over so we can identify if the P got stolen later.
+        gp->m->syscalltick = rec::ptr(gocpp::recv(gp->m->p))->syscalltick;
+
+        auto pp = rec::ptr(gocpp::recv(gp->m->p));
+        if(pp->runSafePointFn != 0)
+        {
+            // runSafePointFn may stack split if run on this stack
+            systemstack(runSafePointFn);
+        }
+        rec::set(gocpp::recv(gp->m->oldp), pp);
+
         // Leave SP around for GC and traceback.
-        save(pc, sp);
+        save(pc, sp, bp);
         gp->syscallsp = sp;
         gp->syscallpc = pc;
-        casgstatus(gp, _Grunning, _Gsyscall);
-        if(staticLockRanking)
-        {
-            // When doing static lock ranking casgstatus can call
-            // systemstack which clobbers g.sched.
-            save(pc, sp);
-        }
+        gp->syscallbp = bp;
+
+        // Double-check sp and bp.
         if(gp->syscallsp < gp->stack.lo || gp->stack.hi < gp->syscallsp)
         {
             systemstack([=]() mutable -> void
             {
-                print("entersyscall inconsistent "_s, hex(gp->syscallsp), " ["_s, hex(gp->stack.lo), ","_s, hex(gp->stack.hi), "]\n"_s);
+                print("entersyscall inconsistent sp "_s, hex(gp->syscallsp), " ["_s, hex(gp->stack.lo), ","_s, hex(gp->stack.hi), "]\n"_s);
                 go_throw("entersyscall"_s);
             });
         }
-
-        if(rec::ok(gocpp::recv(trace)))
+        if(gp->syscallbp != 0 && gp->syscallbp < gp->stack.lo || gp->stack.hi < gp->syscallbp)
         {
             systemstack([=]() mutable -> void
             {
-                rec::GoSysCall(gocpp::recv(trace));
-                traceRelease(trace);
+                print("entersyscall inconsistent bp "_s, hex(gp->syscallbp), " ["_s, hex(gp->stack.lo), ","_s, hex(gp->stack.hi), "]\n"_s);
+                go_throw("entersyscall"_s);
             });
-            // systemstack itself clobbers g.sched.{pc,sp} and we might
-            // need them later when the G is genuinely blocked in a
-            // syscall
-            save(pc, sp);
         }
-
-        if(rec::Load(gocpp::recv(sched.sysmonwait)))
+        auto trace = traceAcquire();
+        if(rec::ok(gocpp::recv(trace)))
         {
-            systemstack(entersyscall_sysmon);
-            save(pc, sp);
+            // Emit a trace event. Notably, actually emitting the event must happen before
+            // the casgstatus because it mutates the P, but the traceLocker must be held
+            // across the casgstatus since we're transitioning out of _Grunning
+            // (see trace.go invariants).
+            systemstack([=]() mutable -> void
+            {
+                rec::GoSysCall(gocpp::recv(trace));
+            });
+            // systemstack clobbered gp.sched, so restore it.
+            save(pc, sp, bp);
         }
-
-        if(rec::ptr(gocpp::recv(gp->m->p))->runSafePointFn != 0)
-        {
-            // runSafePointFn may stack split if run on this stack
-            systemstack(runSafePointFn);
-            save(pc, sp);
-        }
-
-        gp->m->syscalltick = rec::ptr(gocpp::recv(gp->m->p))->syscalltick;
-        auto pp = rec::ptr(gocpp::recv(gp->m->p));
-        pp->m = 0;
-        rec::set(gocpp::recv(gp->m->oldp), pp);
-        gp->m->p = 0;
-        atomic::Store(& pp->status, _Psyscall);
         if(rec::Load(gocpp::recv(sched.gcwaiting)))
         {
-            systemstack(entersyscall_gcwait);
-            save(pc, sp);
+            // Optimization: If there's a pending STW, do the equivalent of
+            // entersyscallblock here at the last minute and immediately give
+            // away our P.
+            systemstack([=]() mutable -> void
+            {
+                entersyscallHandleGCWait(trace);
+            });
+            // systemstack clobbered gp.sched, so restore it.
+            save(pc, sp, bp);
         }
-
+        // As soon as we switch to _Gsyscall, we are in danger of losing our P.
+        // We must not touch it after this point.
+        // Try to do a quick CAS to avoid calling into casgstatus in the common case.
+        // If we have a bubble, we need to fall into casgstatus.
+        if(gp->bubble != nullptr || ! rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), _Grunning, _Gsyscall))
+        {
+            casgstatus(gp, _Grunning, _Gsyscall);
+        }
+        if(staticLockRanking)
+        {
+            // casgstatus clobbers gp.sched via systemstack under staticLockRanking. Restore it.
+            save(pc, sp, bp);
+        }
+        if(rec::ok(gocpp::recv(trace)))
+        {
+            // N.B. We don't need to go on the systemstack because traceRelease is very
+            // carefully recursively nosplit. This also means we don't need to worry
+            // about clobbering gp.sched.
+            traceRelease(trace);
+        }
+        if(rec::Load(gocpp::recv(sched.sysmonwait)))
+        {
+            systemstack(entersyscallWakeSysmon);
+            // systemstack clobbered gp.sched, so restore it.
+            save(pc, sp, bp);
+        }
         gp->m->locks--;
     }
 
@@ -5089,14 +5499,27 @@ namespace golang::runtime
     //
     // This is exported via linkname to assembly in the syscall package and x/sys.
     //
+    // Other packages should not be accessing entersyscall directly,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gvisor.dev/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:nosplit
     //go:linkname entersyscall
     void entersyscall()
     {
-        reentersyscall(getcallerpc(), getcallersp());
+        // N.B. getcallerfp cannot be written directly as argument in the call
+        // to reentersyscall because it forces spilling the other arguments to
+        // the stack. This results in exceeding the nosplit stack requirements
+        // on some platforms.
+        auto fp = getcallerfp();
+        reentersyscall(sys::GetCallerPC(), sys::GetCallerSP(), fp);
     }
 
-    void entersyscall_sysmon()
+    void entersyscallWakeSysmon()
     {
         lock(& sched.lock);
         if(rec::Load(gocpp::recv(sched.sysmonwait)))
@@ -5107,52 +5530,44 @@ namespace golang::runtime
         unlock(& sched.lock);
     }
 
-    void entersyscall_gcwait()
+    void entersyscallHandleGCWait(traceLocker trace)
     {
         auto gp = getg();
-        auto pp = rec::ptr(gocpp::recv(gp->m->oldp));
 
         lock(& sched.lock);
-        auto trace = traceAcquire();
-        if(sched.stopwait > 0 && atomic::Cas(& pp->status, _Psyscall, _Pgcstop))
+        if(sched.stopwait > 0)
         {
+            // Set our P to _Pgcstop so the STW can take it.
+            auto pp = rec::ptr(gocpp::recv(gp->m->p));
+            pp->m = 0;
+            gp->m->p = 0;
+            atomic::Store(& pp->status, _Pgcstop);
+
             if(rec::ok(gocpp::recv(trace)))
             {
-                if(goexperiment::ExecTracer2)
-                {
-                    // This is a steal in the new tracer. While it's very likely
-                    // that we were the ones to put this P into _Psyscall, between
-                    // then and now it's totally possible it had been stolen and
-                    // then put back into _Psyscall for us to acquire here. In such
-                    // case ProcStop would be incorrect.
-                    // TODO(mknyszek): Consider emitting a ProcStop instead when
-                    // gp.m.syscalltick == pp.syscalltick, since then we know we never
-                    // lost the P.
-                    rec::ProcSteal(gocpp::recv(trace), pp, true);
-                }
-                else
-                {
-                    rec::GoSysBlock(gocpp::recv(trace), pp);
-                    rec::ProcStop(gocpp::recv(trace), pp);
-                }
-                traceRelease(trace);
+                rec::ProcStop(gocpp::recv(trace), pp);
             }
+            // We gave up our P voluntarily.
+            addGSyscallNoP(gp->m);
+            pp->gcStopTime = nanotime();
             pp->syscalltick++;
             if(sched.stopwait--; sched.stopwait == 0)
             {
                 notewakeup(& sched.stopnote);
             }
         }
-        else
-        if(rec::ok(gocpp::recv(trace)))
-        {
-            traceRelease(trace);
-        }
         unlock(& sched.lock);
     }
 
-    // The same as entersyscall(), but with a hint that the syscall is blocking.
+    // entersyscallblock should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gvisor.dev/gvisor
     //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname entersyscallblock
     //go:nosplit
     void entersyscallblock()
     {
@@ -5166,12 +5581,17 @@ namespace golang::runtime
         gp->m->syscalltick = rec::ptr(gocpp::recv(gp->m->p))->syscalltick;
         rec::ptr(gocpp::recv(gp->m->p))->syscalltick++;
 
+        // We're going to give up our P.
+        addGSyscallNoP(gp->m);
+
         // Leave SP around for GC and traceback.
-        auto pc = getcallerpc();
-        auto sp = getcallersp();
-        save(pc, sp);
+        auto pc = sys::GetCallerPC();
+        auto sp = sys::GetCallerSP();
+        auto bp = getcallerfp();
+        save(pc, sp, bp);
         gp->syscallsp = gp->sched.sp;
         gp->syscallpc = gp->sched.pc;
+        gp->syscallbp = gp->sched.bp;
         if(gp->syscallsp < gp->stack.lo || gp->stack.hi < gp->syscallsp)
         {
             auto sp1 = sp;
@@ -5179,38 +5599,61 @@ namespace golang::runtime
             auto sp3 = gp->syscallsp;
             systemstack([=]() mutable -> void
             {
-                print("entersyscallblock inconsistent "_s, hex(sp1), " "_s, hex(sp2), " "_s, hex(sp3), " ["_s, hex(gp->stack.lo), ","_s, hex(gp->stack.hi), "]\n"_s);
+                print("entersyscallblock inconsistent sp "_s, hex(sp1), " "_s, hex(sp2), " "_s, hex(sp3), " ["_s, hex(gp->stack.lo), ","_s, hex(gp->stack.hi), "]\n"_s);
                 go_throw("entersyscallblock"_s);
             });
+        }
+
+        // Once we switch to _Gsyscall, we can't safely touch
+        // our P anymore, so we need to hand it off beforehand.
+        // The tracer also needs to see the syscall before the P
+        // handoff, so the order here must be (1) trace,
+        // (2) handoff, (3) _Gsyscall switch.
+        auto trace = traceAcquire();
+        systemstack([=]() mutable -> void
+        {
+            if(rec::ok(gocpp::recv(trace)))
+            {
+                rec::GoSysCall(gocpp::recv(trace));
+            }
+            handoffp(releasep());
+        });
+        // <--
+        // Caution: we're in a small window where we are in _Grunning without a P.
+        // -->
+        if(debugExtendGrunningNoP)
+        {
+            usleep(10);
         }
         casgstatus(gp, _Grunning, _Gsyscall);
         if(gp->syscallsp < gp->stack.lo || gp->stack.hi < gp->syscallsp)
         {
             systemstack([=]() mutable -> void
             {
-                print("entersyscallblock inconsistent "_s, hex(sp), " "_s, hex(gp->sched.sp), " "_s, hex(gp->syscallsp), " ["_s, hex(gp->stack.lo), ","_s, hex(gp->stack.hi), "]\n"_s);
+                print("entersyscallblock inconsistent sp "_s, hex(sp), " "_s, hex(gp->sched.sp), " "_s, hex(gp->syscallsp), " ["_s, hex(gp->stack.lo), ","_s, hex(gp->stack.hi), "]\n"_s);
                 go_throw("entersyscallblock"_s);
             });
         }
-
-        systemstack(entersyscallblock_handoff);
-
-        // Resave for traceback during blocked call.
-        save(getcallerpc(), getcallersp());
-
-        gp->m->locks--;
-    }
-
-    void entersyscallblock_handoff()
-    {
-        auto trace = traceAcquire();
+        if(gp->syscallbp != 0 && gp->syscallbp < gp->stack.lo || gp->stack.hi < gp->syscallbp)
+        {
+            systemstack([=]() mutable -> void
+            {
+                print("entersyscallblock inconsistent bp "_s, hex(bp), " "_s, hex(gp->sched.bp), " "_s, hex(gp->syscallbp), " ["_s, hex(gp->stack.lo), ","_s, hex(gp->stack.hi), "]\n"_s);
+                go_throw("entersyscallblock"_s);
+            });
+        }
         if(rec::ok(gocpp::recv(trace)))
         {
-            rec::GoSysCall(gocpp::recv(trace));
-            rec::GoSysBlock(gocpp::recv(trace), rec::ptr(gocpp::recv(getg()->m->p)));
-            traceRelease(trace);
+            systemstack([=]() mutable -> void
+            {
+                traceRelease(trace);
+            });
         }
-        handoffp(releasep());
+
+        // Resave for traceback during blocked call.
+        save(sys::GetCallerPC(), sys::GetCallerSP(), getcallerfp());
+
+        gp->m->locks--;
     }
 
     // The goroutine g exited its system call.
@@ -5222,6 +5665,14 @@ namespace golang::runtime
     //
     // This is exported via linkname to assembly in the syscall package.
     //
+    // exitsyscall should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gvisor.dev/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:nosplit
     //go:nowritebarrierrec
     //go:linkname exitsyscall
@@ -5231,18 +5682,112 @@ namespace golang::runtime
 
         // see comment in entersyscall
         gp->m->locks++;
-        if(getcallersp() > gp->syscallsp)
+        if(sys::GetCallerSP() > gp->syscallsp)
         {
             go_throw("exitsyscall: syscall frame is no longer valid"_s);
         }
-
         gp->waitsince = 0;
-        auto oldp = rec::ptr(gocpp::recv(gp->m->oldp));
-        gp->m->oldp = 0;
-        if(exitsyscallfast(oldp))
+
+        if(sched.stopwait == freezeStopWait)
         {
-            // When exitsyscallfast returns success, we have a P so can now use
-            // write barriers
+            // Wedge ourselves if there's an outstanding freezetheworld.
+            // If we transition to running, we might end up with our traceback
+            // being taken twice.
+            systemstack([=]() mutable -> void
+            {
+                lock(& deadlock);
+                lock(& deadlock);
+            });
+        }
+
+        // Optimistically assume we're going to keep running, and switch to running.
+        // Before this point, our P wiring is not ours. Once we get past this point,
+        // we can access our P if we have it, otherwise we lost it.
+        // N.B. Because we're transitioning to _Grunning here, traceAcquire doesn't
+        // need to be held ahead of time. We're effectively atomic with respect to
+        // the tracer because we're non-preemptible and in the runtime. It can't stop
+        // us to read a bad status.
+        // Try to do a quick CAS to avoid calling into casgstatus in the common case.
+        // If we have a bubble, we need to fall into casgstatus.
+        if(gp->bubble != nullptr || ! rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), _Gsyscall, _Grunning))
+        {
+            casgstatus(gp, _Gsyscall, _Grunning);
+        }
+
+        // Caution: we're in a window where we may be in _Grunning without a P.
+        // Either we will grab a P or call exitsyscall0, where we'll switch to
+        // _Grunnable.
+        if(debugExtendGrunningNoP)
+        {
+            usleep(10);
+        }
+
+        // Grab and clear our old P.
+        auto oldp = rec::ptr(gocpp::recv(gp->m->oldp));
+        rec::set(gocpp::recv(gp->m->oldp), nullptr);
+
+        // Check if we still have a P, and if not, try to acquire an idle P.
+        auto pp = rec::ptr(gocpp::recv(gp->m->p));
+        if(pp != nullptr)
+        {
+            // Fast path: we still have our P. Just emit a syscall exit event.
+            if(auto trace = traceAcquire(); rec::ok(gocpp::recv(trace)))
+            {
+                systemstack([=]() mutable -> void
+                {
+                    // The truth is we truly never lost the P, but syscalltick
+                    // is used to indicate whether the P should be treated as
+                    // lost anyway. For example, when syscalltick is trashed by
+                    // dropm.
+                    // TODO(mknyszek): Consider a more explicit mechanism for this.
+                    // Then syscalltick doesn't need to be trashed, and can be used
+                    // exclusively by sysmon for deciding when it's time to retake.
+                    if(pp->syscalltick == gp->m->syscalltick)
+                    {
+                        rec::GoSysExit(gocpp::recv(trace), false);
+                    }
+                    else
+                    {
+                        // Since we need to pretend we lost the P, but nobody ever
+                        // took it, we need a ProcSteal event to model the loss.
+                        // Then, continue with everything else we'd do if we lost
+                        // the P.
+                        rec::ProcSteal(gocpp::recv(trace), pp);
+                        rec::ProcStart(gocpp::recv(trace));
+                        rec::GoSysExit(gocpp::recv(trace), true);
+                        rec::GoStart(gocpp::recv(trace));
+                    }
+                    traceRelease(trace);
+                });
+            }
+        }
+        else
+        {
+            // Slow path: we lost our P. Try to get another one.
+            systemstack([=]() mutable -> void
+            {
+                // Try to get some other P.
+                if(auto pp = exitsyscallTryGetP(oldp); pp != nullptr)
+                {
+                    // Install the P.
+                    acquirepNoTrace(pp);
+
+                    // We're going to start running again, so emit all the relevant events.
+                    if(auto trace = traceAcquire(); rec::ok(gocpp::recv(trace)))
+                    {
+                        rec::ProcStart(gocpp::recv(trace));
+                        rec::GoSysExit(gocpp::recv(trace), true);
+                        rec::GoStart(gocpp::recv(trace));
+                        traceRelease(trace);
+                    }
+                }
+            });
+            pp = rec::ptr(gocpp::recv(gp->m->p));
+        }
+
+        // If we have a P, clean up and exit.
+        if(pp != nullptr)
+        {
             if(goroutineProfile.active)
             {
                 // Make sure that gp has had its stack written out to the goroutine
@@ -5253,37 +5798,9 @@ namespace golang::runtime
                     tryRecordGoroutineProfileWB(gp);
                 });
             }
-            auto trace = traceAcquire();
-            if(rec::ok(gocpp::recv(trace)))
-            {
-                auto lostP = oldp != rec::ptr(gocpp::recv(gp->m->p)) || gp->m->syscalltick != rec::ptr(gocpp::recv(gp->m->p))->syscalltick;
-                systemstack([=]() mutable -> void
-                {
-                    if(goexperiment::ExecTracer2)
-                    {
-                        // Write out syscall exit eagerly in the experiment.
-                        // It's important that we write this *after* we know whether we
-                        // lost our P or not (determined by exitsyscallfast).
-                        rec::GoSysExit(gocpp::recv(trace), lostP);
-                    }
-                    if(lostP)
-                    {
-                        // We lost the P at some point, even though we got it back here.
-                        // Trace that we're starting again, because there was a traceGoSysBlock
-                        // call somewhere in exitsyscallfast (indicating that this goroutine
-                        // had blocked) and we're about to start running again.
-                        rec::GoStart(gocpp::recv(trace));
-                    }
-                });
-            }
-            // There's a cpu for us, so we can run.
-            rec::ptr(gocpp::recv(gp->m->p))->syscalltick++;
-            // We need to cas the status and scan before resuming...
-            casgstatus(gp, _Gsyscall, _Grunning);
-            if(rec::ok(gocpp::recv(trace)))
-            {
-                traceRelease(trace);
-            }
+
+            // Increment the syscalltick for P, since we're exiting a syscall.
+            pp->syscalltick++;
 
             // Garbage collector isn't running (since we are),
             // so okay to clear syscallsp.
@@ -5291,12 +5808,12 @@ namespace golang::runtime
             gp->m->locks--;
             if(gp->preempt)
             {
-                // restore the preemption request in case we've cleared it in newstack
+                // Restore the preemption request in case we cleared it in newstack.
                 gp->stackguard0 = stackPreempt;
             }
             else
             {
-                // otherwise restore the real stackGuard, we've spoiled it in entersyscall/entersyscallblock
+                // Otherwise restore the real stackGuard, we clobbered it in entersyscall/entersyscallblock.
                 gp->stackguard0 = gp->stack.lo + stackGuard;
             }
             gp->throwsplit = false;
@@ -5306,27 +5823,13 @@ namespace golang::runtime
                 // Scheduling of this goroutine is disabled.
                 Gosched();
             }
-
             return;
         }
-
-        if(! goexperiment::ExecTracer2)
-        {
-            // In the old tracer, because we don't have a P we can't
-            // actually record the true time we exited the syscall.
-            // Record it.
-            auto trace = traceAcquire();
-            if(rec::ok(gocpp::recv(trace)))
-            {
-                rec::RecordSyscallExitedTime(gocpp::recv(trace), gp, oldp);
-                traceRelease(trace);
-            }
-        }
-
+        // Slowest path: We couldn't get a P, so call into the scheduler.
         gp->m->locks--;
 
         // Call the scheduler.
-        mcall(exitsyscall0);
+        mcall(exitsyscallNoP);
 
         // Scheduler returned, so we're allowed to run now.
         // Delete the syscallsp information that we left for
@@ -5339,124 +5842,46 @@ namespace golang::runtime
         gp->throwsplit = false;
     }
 
-    //go:nosplit
-    bool exitsyscallfast(golang::runtime::p* oldp)
+    // exitsyscall's attempt to try to get any P, if it's missing one.
+    // Returns true on success.
+    //
+    // Must execute on the systemstack because exitsyscall is nosplit.
+    //
+    //go:systemstack
+    golang::runtime::p* exitsyscallTryGetP(golang::runtime::p* oldp)
     {
-        auto gp = getg();
-
-        // Freezetheworld sets stopwait but does not retake P's.
-        if(sched.stopwait == freezeStopWait)
+        // Try to steal our old P back.
+        if(oldp != nullptr)
         {
-            return false;
-        }
-
-        // Try to re-acquire the last P.
-        auto trace = traceAcquire();
-        if(oldp != nullptr && oldp->status == _Psyscall && atomic::Cas(& oldp->status, _Psyscall, _Pidle))
-        {
-            // There's a cpu for us, so we can run.
-            wirep(oldp);
-            exitsyscallfast_reacquired(trace);
-            if(rec::ok(gocpp::recv(trace)))
+            if(auto [thread, ok] = setBlockOnExitSyscall(oldp); ok)
             {
-                traceRelease(trace);
+                rec::takeP(gocpp::recv(thread));
+                // We got a P for ourselves.
+                decGSyscallNoP(getg()->m);
+                rec::resume(gocpp::recv(thread));
+                return oldp;
             }
-            return true;
-        }
-        if(rec::ok(gocpp::recv(trace)))
-        {
-            traceRelease(trace);
         }
 
-        // Try to get any other idle P.
+        // Try to get an idle P.
         if(sched.pidle != 0)
         {
-            bool ok = {};
-            systemstack([=]() mutable -> void
+            lock(& sched.lock);
+            auto [pp, gocpp_id_6] = pidleget(0);
+            if(pp != nullptr && rec::Load(gocpp::recv(sched.sysmonwait)))
             {
-                ok = exitsyscallfast_pidle();
-                if(ok && ! goexperiment::ExecTracer2)
-                {
-                    auto trace = traceAcquire();
-                    if(rec::ok(gocpp::recv(trace)))
-                    {
-                        if(oldp != nullptr)
-                        {
-                            // Wait till traceGoSysBlock event is emitted.
-                            // This ensures consistency of the trace (the goroutine is started after it is blocked).
-                            for(; oldp->syscalltick == gp->m->syscalltick; )
-                            {
-                                osyield();
-                            }
-                        }
-                        // In the experiment, we write this in exitsyscall.
-                        // Don't write it here unless the experiment is off.
-                        rec::GoSysExit(gocpp::recv(trace), true);
-                        traceRelease(trace);
-                    }
-                }
-            });
-            if(ok)
+                rec::Store(gocpp::recv(sched.sysmonwait), false);
+                notewakeup(& sched.sysmonnote);
+            }
+            unlock(& sched.lock);
+            if(pp != nullptr)
             {
-                return true;
+                // We got a P for ourselves.
+                decGSyscallNoP(getg()->m);
+                return pp;
             }
         }
-        return false;
-    }
-
-    // exitsyscallfast_reacquired is the exitsyscall path on which this G
-    // has successfully reacquired the P it was running on before the
-    // syscall.
-    //
-    //go:nosplit
-    void exitsyscallfast_reacquired(traceLocker trace)
-    {
-        auto gp = getg();
-        if(gp->m->syscalltick != rec::ptr(gocpp::recv(gp->m->p))->syscalltick)
-        {
-            if(rec::ok(gocpp::recv(trace)))
-            {
-                // The p was retaken and then enter into syscall again (since gp.m.syscalltick has changed).
-                // traceGoSysBlock for this syscall was already emitted,
-                // but here we effectively retake the p from the new syscall running on the same p.
-                systemstack([=]() mutable -> void
-                {
-                    if(goexperiment::ExecTracer2)
-                    {
-                        // In the experiment, we're stealing the P. It's treated
-                        // as if it temporarily stopped running. Then, start running.
-                        rec::ProcSteal(gocpp::recv(trace), rec::ptr(gocpp::recv(gp->m->p)), true);
-                        rec::ProcStart(gocpp::recv(trace));
-                    }
-                    else
-                    {
-                        // Denote blocking of the new syscall.
-                        rec::GoSysBlock(gocpp::recv(trace), rec::ptr(gocpp::recv(gp->m->p)));
-                        // Denote completion of the current syscall.
-                        rec::GoSysExit(gocpp::recv(trace), true);
-                    }
-                });
-            }
-            rec::ptr(gocpp::recv(gp->m->p))->syscalltick++;
-        }
-    }
-
-    bool exitsyscallfast_pidle()
-    {
-        lock(& sched.lock);
-        auto [pp, gocpp_id_6] = pidleget(0);
-        if(pp != nullptr && rec::Load(gocpp::recv(sched.sysmonwait)))
-        {
-            rec::Store(gocpp::recv(sched.sysmonwait), false);
-            notewakeup(& sched.sysmonnote);
-        }
-        unlock(& sched.lock);
-        if(pp != nullptr)
-        {
-            acquirep(pp);
-            return true;
-        }
-        return false;
+        return nullptr;
     }
 
     // exitsyscall slow path on g0.
@@ -5465,27 +5890,21 @@ namespace golang::runtime
     // Called via mcall, so gp is the calling g from this M.
     //
     //go:nowritebarrierrec
-    void exitsyscall0(g* gp)
+    void exitsyscallNoP(g* gp)
     {
-        traceLocker trace = {};
-        if(goexperiment::ExecTracer2)
+        traceExitingSyscall();
+        auto trace = traceAcquire();
+        casgstatus(gp, _Grunning, _Grunnable);
+        traceExitedSyscall();
+        if(rec::ok(gocpp::recv(trace)))
         {
-            traceExitingSyscall();
-            trace = traceAcquire();
+            // Write out syscall exit eagerly.
+            // It's important that we write this *after* we know whether we
+            // lost our P or not (determined by exitsyscallfast).
+            rec::GoSysExit(gocpp::recv(trace), true);
+            traceRelease(trace);
         }
-        casgstatus(gp, _Gsyscall, _Grunnable);
-        if(goexperiment::ExecTracer2)
-        {
-            traceExitedSyscall();
-            if(rec::ok(gocpp::recv(trace)))
-            {
-                // Write out syscall exit eagerly in the experiment.
-                // It's important that we write this *after* we know whether we
-                // lost our P or not (determined by exitsyscallfast).
-                rec::GoSysExit(gocpp::recv(trace), true);
-                traceRelease(trace);
-            }
-        }
+        decGSyscallNoP(getg()->m);
         dropg();
         lock(& sched.lock);
         golang::runtime::p* pp = {};
@@ -5532,7 +5951,54 @@ namespace golang::runtime
         schedule();
     }
 
+    // addGSyscallNoP must be called when a goroutine in a syscall loses its P.
+    // This function updates all relevant accounting.
+    //
+    // nosplit because it's called on the syscall paths.
+    //
+    //go:nosplit
+    void addGSyscallNoP(m* mp)
+    {
+        // It's safe to read isExtraInC here because it's only mutated
+        // outside of _Gsyscall, and we know this thread is attached
+        // to a goroutine in _Gsyscall and blocked from exiting.
+        if(! mp->isExtraInC)
+        {
+            // Increment nGsyscallNoP since we're taking away a P
+            // from a _Gsyscall goroutine, but only if isExtraInC
+            // is not set on the M. If it is, then this thread is
+            // back to being a full C thread, and will just inflate
+            // the count of not-in-go goroutines. See go.dev/issue/76435.
+            rec::Add(gocpp::recv(sched.nGsyscallNoP), 1);
+        }
+    }
+
+    // decGSsyscallNoP must be called whenever a goroutine in a syscall without
+    // a P exits the system call. This function updates all relevant accounting.
+    //
+    // nosplit because it's called from dropm.
+    //
+    //go:nosplit
+    void decGSyscallNoP(m* mp)
+    {
+        // Update nGsyscallNoP, but only if this is not a thread coming
+        // out of C. See the comment in addGSyscallNoP. This logic must match,
+        // to avoid unmatched increments and decrements.
+        if(! mp->isExtraInC)
+        {
+            rec::Add(gocpp::recv(sched.nGsyscallNoP), - 1);
+        }
+    }
+
     // Called from syscall package before fork.
+    //
+    // syscall_runtime_BeforeFork is for package syscall,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gvisor.dev/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
     //
     //go:linkname syscall_runtime_BeforeFork syscall.runtime_BeforeFork
     //go:nosplit
@@ -5555,6 +6021,14 @@ namespace golang::runtime
     }
 
     // Called from syscall package after fork in parent.
+    //
+    // syscall_runtime_AfterFork is for package syscall,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gvisor.dev/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
     //
     //go:linkname syscall_runtime_AfterFork syscall.runtime_AfterFork
     //go:nosplit
@@ -5580,6 +6054,14 @@ namespace golang::runtime
     // Because this might be called during a vfork, and therefore may be
     // temporarily sharing address space with the parent process, this must
     // not change any global variables or calling into C code that may do so.
+    //
+    // syscall_runtime_AfterForkInChild is for package syscall,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gvisor.dev/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
     //
     //go:linkname syscall_runtime_AfterForkInChild syscall.runtime_AfterForkInChild
     //go:nosplit
@@ -5642,6 +6124,10 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 newg->stack = stackalloc(uint32_t(stacksize));
+                if(valgrindenabled)
+                {
+                    newg->valgrindStackID = valgrindRegisterStack(gocpp::unsafe_pointer(newg->stack.lo), gocpp::unsafe_pointer(newg->stack.hi));
+                }
             });
             newg->stackguard0 = newg->stack.lo + stackGuard;
             newg->stackguard1 = ~ uintptr_t(0);
@@ -5658,10 +6144,10 @@ namespace golang::runtime
     void newproc(funcval* fn)
     {
         auto gp = getg();
-        auto pc = getcallerpc();
+        auto pc = sys::GetCallerPC();
         systemstack([=]() mutable -> void
         {
-            auto newg = newproc1(fn, gp, pc);
+            auto newg = newproc1(fn, gp, pc, false, waitReasonZero);
 
             auto pp = rec::ptr(gocpp::recv(getg()->m->p));
             runqput(pp, newg, true);
@@ -5673,10 +6159,10 @@ namespace golang::runtime
         });
     }
 
-    // Create a new g in state _Grunnable, starting at fn. callerpc is the
-    // address of the go statement that created this. The caller is responsible
-    // for adding the new g to the scheduler.
-    g* newproc1(funcval* fn, g* callergp, uintptr_t callerpc)
+    // Create a new g in state _Grunnable (or _Gwaiting if parked is true), starting at fn.
+    // callerpc is the address of the go statement that created this. The caller is responsible
+    // for adding the new g to the scheduler. If parked is true, waitreason must be non-zero.
+    g* newproc1(funcval* fn, g* callergp, uintptr_t callerpc, bool parked, waitReason waitreason)
     {
         if(fn == nullptr)
         {
@@ -5731,13 +6217,15 @@ namespace golang::runtime
         newg->gopc = callerpc;
         newg->ancestors = saveAncestors(callergp);
         newg->startpc = fn->fn;
+        rec::Store(gocpp::recv(newg->runningCleanups), false);
         if(isSystemGoroutine(newg, false))
         {
             rec::Add(gocpp::recv(sched.ngsys), 1);
         }
         else
         {
-            // Only user goroutines inherit pprof labels.
+            // Only user goroutines inherit synctest groups and pprof labels.
+            newg->bubble = callergp->bubble;
             if(mp->curg != nullptr)
             {
                 newg->labels = mp->curg->labels;
@@ -5760,9 +6248,15 @@ namespace golang::runtime
         }
         rec::addScannableStack(gocpp::recv(gcController), pp, int64_t(newg->stack.hi - newg->stack.lo));
 
-        // Get a goid and switch to runnable. Make all this atomic to the tracer.
+        // Get a goid and switch to runnable. This needs to happen under traceAcquire
+        // since it's a goroutine transition. See tracer invariants in trace.go.
         auto trace = traceAcquire();
-        casgstatus(newg, _Gdead, _Grunnable);
+        uint32_t status = _Grunnable;
+        if(parked)
+        {
+            status = _Gwaiting;
+            newg->waitreason = waitreason;
+        }
         if(pp->goidcache == pp->goidcacheend)
         {
             // Sched.goidgen is the last allocated id,
@@ -5773,12 +6267,32 @@ namespace golang::runtime
             pp->goidcacheend = pp->goidcache + _GoidCacheBatch;
         }
         newg->goid = pp->goidcache;
+        casgstatus(newg, _Gdead, status);
         pp->goidcache++;
         rec::reset(gocpp::recv(newg->trace));
         if(rec::ok(gocpp::recv(trace)))
         {
-            rec::GoCreate(gocpp::recv(trace), newg, newg->startpc);
+            rec::GoCreate(gocpp::recv(trace), newg, newg->startpc, parked);
             traceRelease(trace);
+        }
+
+        // fips140 bubble
+        newg->fipsOnlyBypass = callergp->fipsOnlyBypass;
+
+        // dit bubble
+        newg->ditWanted = callergp->ditWanted;
+
+        if(goexperiment::RuntimeSecret && callergp->secret > 0)
+        {
+            // while it might seem weird to have a non-zero gp.secret value
+            // with no calls to secret.Do on the stack, this case is handled
+            // just fine by the cleanup logic in goexit0
+            // TODO: secret mode is invisible to the user if they don't ask about it via secret.Enabled
+            // and can have severe performance penalties (at time of writing, wrapping the entire
+            // tls handshake resulted in a 30% slowdown of the benchmarks).
+            // Whether a goroutine is running in secret mode should be more visible,
+            // maybe with a stack frame or some sort of bubble inspecting mechanism
+            newg->secret = 1;
         }
 
         // Set up race context.
@@ -5793,6 +6307,7 @@ namespace golang::runtime
                 racereleasemergeg(newg, gocpp::unsafe_pointer(& labelSync));
             }
         }
+        pp->goroutinesCreated++;
         releasem(mp);
 
         return newg;
@@ -5854,19 +6369,21 @@ namespace golang::runtime
             gp->stack.lo = 0;
             gp->stack.hi = 0;
             gp->stackguard0 = 0;
+            if(valgrindenabled)
+            {
+                valgrindDeregisterStack(gp->valgrindStackID);
+                gp->valgrindStackID = 0;
+            }
         }
 
         rec::push(gocpp::recv(pp->gFree), gp);
-        pp->gFree.n++;
-        if(pp->gFree.n >= 64)
+        if(pp->gFree.size >= 64)
         {
-            int32_t inc = {};
             gQueue stackQ = {};
             gQueue noStackQ = {};
-            for(; pp->gFree.n >= 32; )
+            for(; pp->gFree.size >= 32; )
             {
                 auto gp = rec::pop(gocpp::recv(pp->gFree));
-                pp->gFree.n--;
                 if(gp->stack.lo == 0)
                 {
                     rec::push(gocpp::recv(noStackQ), gp);
@@ -5875,12 +6392,10 @@ namespace golang::runtime
                 {
                     rec::push(gocpp::recv(stackQ), gp);
                 }
-                inc++;
             }
             lock(& sched.gFree.lock);
             rec::pushAll(gocpp::recv(sched.gFree.noStack), noStackQ);
             rec::pushAll(gocpp::recv(sched.gFree.stack), stackQ);
-            sched.gFree.n += inc;
             unlock(& sched.gFree.lock);
         }
     }
@@ -5894,7 +6409,7 @@ namespace golang::runtime
         {
             lock(& sched.gFree.lock);
             // Move a batch of free Gs to the P.
-            for(; pp->gFree.n < 32; )
+            for(; pp->gFree.size < 32; )
             {
                 // Prefer Gs with stacks.
                 auto gp = rec::pop(gocpp::recv(sched.gFree.stack));
@@ -5906,9 +6421,7 @@ namespace golang::runtime
                         break;
                     }
                 }
-                sched.gFree.n--;
                 rec::push(gocpp::recv(pp->gFree), gp);
-                pp->gFree.n++;
             }
             unlock(& sched.gFree.lock);
             goto retry;
@@ -5918,7 +6431,6 @@ namespace golang::runtime
         {
             return nullptr;
         }
-        pp->gFree.n--;
         if(gp->stack.lo != 0 && gp->stack.hi - gp->stack.lo != uintptr_t(startingStackSize))
         {
             // Deallocate old stack. We kept it in gfput because it was the
@@ -5930,6 +6442,11 @@ namespace golang::runtime
                 gp->stack.lo = 0;
                 gp->stack.hi = 0;
                 gp->stackguard0 = 0;
+                if(valgrindenabled)
+                {
+                    valgrindDeregisterStack(gp->valgrindStackID);
+                    gp->valgrindStackID = 0;
+                }
             });
         }
         if(gp->stack.lo == 0)
@@ -5938,6 +6455,10 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 gp->stack = stackalloc(startingStackSize);
+                if(valgrindenabled)
+                {
+                    gp->valgrindStackID = valgrindRegisterStack(gocpp::unsafe_pointer(gp->stack.lo), gocpp::unsafe_pointer(gp->stack.hi));
+                }
             });
             gp->stackguard0 = gp->stack.lo + stackGuard;
         }
@@ -5962,13 +6483,11 @@ namespace golang::runtime
     // Purge all cached G's from gfree list to the global list.
     void gfpurge(golang::runtime::p* pp)
     {
-        int32_t inc = {};
         gQueue stackQ = {};
         gQueue noStackQ = {};
         for(; ! rec::empty(gocpp::recv(pp->gFree)); )
         {
             auto gp = rec::pop(gocpp::recv(pp->gFree));
-            pp->gFree.n--;
             if(gp->stack.lo == 0)
             {
                 rec::push(gocpp::recv(noStackQ), gp);
@@ -5977,12 +6496,10 @@ namespace golang::runtime
             {
                 rec::push(gocpp::recv(stackQ), gp);
             }
-            inc++;
         }
         lock(& sched.gFree.lock);
         rec::pushAll(gocpp::recv(sched.gFree.noStack), noStackQ);
         rec::pushAll(gocpp::recv(sched.gFree.stack), stackQ);
-        sched.gFree.n += inc;
         unlock(& sched.gFree.lock);
     }
 
@@ -6114,12 +6631,16 @@ namespace golang::runtime
         go_throw("runtime: internal error: misuse of lockOSThread/unlockOSThread"_s);
     }
 
-    int32_t gcount()
+    int32_t gcount(bool includeSys)
     {
-        auto n = int32_t(atomic::Loaduintptr(& allglen)) - sched.gFree.n - rec::Load(gocpp::recv(sched.ngsys));
+        auto n = int32_t(atomic::Loaduintptr(& allglen)) - sched.gFree.stack.size - sched.gFree.noStack.size;
+        if(! includeSys)
+        {
+            n -= rec::Load(gocpp::recv(sched.ngsys));
+        }
         for(auto [gocpp_ignored, pp] : allp)
         {
-            n -= pp->gFree.n;
+            n -= pp->gFree.size;
         }
 
         // All these variables can be changed concurrently, so the result can be inconsistent.
@@ -6129,6 +6650,15 @@ namespace golang::runtime
             n = 1;
         }
         return n;
+    }
+
+    // goroutineleakcount returns the number of leaked goroutines last reported by
+    // the runtime.
+    //
+    //go:linkname goroutineleakcount runtime/pprof.runtime_goroutineleakcount
+    int goroutineleakcount()
+    {
+        return work.goroutineLeak.count;
     }
 
     int32_t mcount()
@@ -6225,7 +6755,7 @@ namespace golang::runtime
         }
 
         // On mips{,le}/arm, 64bit atomics are emulated with spinlocks, in
-        // runtime/internal/atomic. If SIGPROF arrives while the program is inside
+        // internal/runtime/atomic. If SIGPROF arrives while the program is inside
         // the critical section, it creates a deadlock (when writing the sample).
         // As a workaround, create a counter of SIGPROFs while in critical section
         // to store the count, and pass it to sigprof.add() later when SIGPROF is
@@ -6234,7 +6764,7 @@ namespace golang::runtime
         {
             if(auto f = findfunc(pc); rec::valid(gocpp::recv(f)))
             {
-                if(hasPrefix(funcname(f), "runtime/internal/atomic"_s))
+                if(stringslite::HasPrefix(funcname(f), "internal/runtime/atomic"_s))
                 {
                     cpuprof.lostAtomic++;
                     return;
@@ -6242,9 +6772,9 @@ namespace golang::runtime
             }
             if(GOARCH == "arm"_s && goarm < 7 && GOOS == "linux"_s && pc & 0xffff0000 == 0xffff0000)
             {
-                // runtime/internal/atomic functions call into kernel
+                // internal/runtime/atomic functions call into kernel
                 // helpers on arm < 7. See
-                // runtime/internal/atomic/sys_linux_arm.s.
+                // internal/runtime/atomic/sys_linux_arm.s.
                 cpuprof.lostAtomic++;
                 return;
             }
@@ -6405,6 +6935,7 @@ namespace golang::runtime
     void rec::init(golang::runtime::p* pp, int32_t id)
     {
         pp->id = id;
+        pp->gcw.id = id;
         pp->status = _Pgcstop;
         pp->sudogcache = pp->sudogbuf.make_slice(0, 0);
         pp->deferpool = pp->deferpoolbuf.make_slice(0, 0);
@@ -6439,7 +6970,7 @@ namespace golang::runtime
                 pp->raceprocctx = raceproccreate();
             }
         }
-        lockInit(& pp->timersLock, lockRankTimers);
+        lockInit(& pp->timers.mu, lockRankTimers);
 
         // This P may get timers when it starts running. Set the mask here
         // since the P may not go through pidleget (notably P 0 on startup).
@@ -6472,39 +7003,24 @@ namespace golang::runtime
             globrunqputhead(rec::ptr(gocpp::recv(pp->runnext)));
             pp->runnext = 0;
         }
-        if(len(pp->timers) > 0)
+
+        // Move all timers to the local P.
+        rec::take(gocpp::recv(rec::ptr(gocpp::recv(getg()->m->p))->timers), & pp->timers);
+
+        // No need to flush p's write barrier buffer or span queue, as Ps
+        // cannot be destroyed during the mark phase.
+        if(auto phase = gcphase; phase != _GCoff)
         {
-            auto plocal = rec::ptr(gocpp::recv(getg()->m->p));
-            // The world is stopped, but we acquire timersLock to
-            // protect against sysmon calling timeSleepUntil.
-            // This is the only case where we hold the timersLock of
-            // more than one P, so there are no deadlock concerns.
-            runtime::lock(& plocal->timersLock);
-            runtime::lock(& pp->timersLock);
-            moveTimers(plocal, pp->timers);
-            pp->timers = nullptr;
-            rec::Store(gocpp::recv(pp->numTimers), 0);
-            rec::Store(gocpp::recv(pp->deletedTimers), 0);
-            rec::Store(gocpp::recv(pp->timer0When), 0);
-            runtime::unlock(& pp->timersLock);
-            runtime::unlock(& plocal->timersLock);
+            println("runtime: p id"_s, pp->id, "destroyed during GC phase"_s, phase);
+            go_throw("P destroyed while GC is running"_s);
         }
-        // Flush p's write barrier buffer.
-        if(gcphase != _GCoff)
-        {
-            wbBufFlush1(pp);
-            rec::dispose(gocpp::recv(pp->gcw));
-        }
-        for(auto [i, gocpp_ignored] : pp->sudogbuf)
-        {
-            pp->sudogbuf[i] = nullptr;
-        }
+        // We should free the queues though.
+        rec::destroy(gocpp::recv(pp->gcw.spanq));
+
+        clear(pp->sudogbuf.make_slice(0));
         pp->sudogcache = pp->sudogbuf.make_slice(0, 0);
         pp->pinnerCache = nullptr;
-        for(auto [j, gocpp_ignored] : pp->deferpoolbuf)
-        {
-            pp->deferpoolbuf[j] = nullptr;
-        }
+        clear(pp->deferpoolbuf.make_slice(0));
         pp->deferpool = pp->deferpoolbuf.make_slice(0, 0);
         systemstack([=]() mutable -> void
         {
@@ -6521,10 +7037,9 @@ namespace golang::runtime
         freemcache(pp->mcache);
         pp->mcache = nullptr;
         gfpurge(pp);
-        traceProcFree(pp);
         if(raceenabled)
         {
-            if(pp->timerRaceCtx != 0)
+            if(pp->timers.raceCtx != 0)
             {
                 // The race detector code uses a callback to fetch
                 // the proc context, so arrange for that callback
@@ -6535,8 +7050,8 @@ namespace golang::runtime
                 auto phold = rec::ptr(gocpp::recv(mp->p));
                 rec::set(gocpp::recv(mp->p), pp);
 
-                racectxend(pp->timerRaceCtx);
-                pp->timerRaceCtx = 0;
+                racectxend(pp->timers.raceCtx);
+                pp->timers.raceCtx = 0;
 
                 rec::set(gocpp::recv(mp->p), phold);
             }
@@ -6544,6 +7059,11 @@ namespace golang::runtime
             pp->raceprocctx = 0;
         }
         pp->gcAssistTime = 0;
+        gcCleanups.queued += pp->cleanupsQueued;
+        pp->cleanupsQueued = 0;
+        rec::Add(gocpp::recv(sched.goroutinesCreated), int64_t(pp->goroutinesCreated));
+        pp->goroutinesCreated = 0;
+        rec::free(gocpp::recv(pp->xRegs));
         pp->status = _Pdead;
     }
 
@@ -6580,8 +7100,6 @@ namespace golang::runtime
         }
         sched.procresizetime = now;
 
-        auto maskWords = (nprocs + 31) / 32;
-
         // Grow allp if necessary.
         if(nprocs > int32_t(len(allp)))
         {
@@ -6601,22 +7119,9 @@ namespace golang::runtime
                 allp = nallp;
             }
 
-            if(maskWords <= int32_t(cap(idlepMask)))
-            {
-                idlepMask = idlepMask.make_slice(0, maskWords);
-                timerpMask = timerpMask.make_slice(0, maskWords);
-            }
-            else
-            {
-                auto nidlepMask = gocpp::make(gocpp::Tag<gocpp::slice<uint32_t>>(), maskWords);
-                // No need to copy beyond len, old Ps are irrelevant.
-                copy(nidlepMask, idlepMask);
-                idlepMask = nidlepMask;
-
-                auto ntimerpMask = gocpp::make(gocpp::Tag<gocpp::slice<uint32_t>>(), maskWords);
-                copy(ntimerpMask, timerpMask);
-                timerpMask = ntimerpMask;
-            }
+            idlepMask = rec::resize(gocpp::recv(idlepMask), nprocs);
+            timerpMask = rec::resize(gocpp::recv(timerpMask), nprocs);
+            work.spanqMask = rec::resize(gocpp::recv(work.spanqMask), nprocs);
             unlock(& allpLock);
         }
 
@@ -6652,7 +7157,7 @@ namespace golang::runtime
                 {
                     // Pretend that we were descheduled
                     // and then scheduled again to keep
-                    // the trace sane.
+                    // the trace consistent.
                     rec::GoSched(gocpp::recv(trace));
                     rec::ProcStop(gocpp::recv(trace), rec::ptr(gocpp::recv(gp->m->p)));
                     traceRelease(trace);
@@ -6688,12 +7193,16 @@ namespace golang::runtime
         {
             lock(& allpLock);
             allp = allp.make_slice(0, nprocs);
-            idlepMask = idlepMask.make_slice(0, maskWords);
-            timerpMask = timerpMask.make_slice(0, maskWords);
+            idlepMask = rec::resize(gocpp::recv(idlepMask), nprocs);
+            timerpMask = rec::resize(gocpp::recv(timerpMask), nprocs);
+            work.spanqMask = rec::resize(gocpp::recv(work.spanqMask), nprocs);
             unlock(& allpLock);
         }
 
+        // Assign Ms to Ps with runnable goroutines.
         golang::runtime::p* runnablePs = {};
+        golang::runtime::p* runnablePsNeedM = {};
+        golang::runtime::p* idlePs = {};
         for(auto i = nprocs - 1; i >= 0; i--)
         {
             auto pp = allp[i];
@@ -6704,15 +7213,101 @@ namespace golang::runtime
             pp->status = _Pidle;
             if(runqempty(pp))
             {
-                pidleput(pp, now);
+                rec::set(gocpp::recv(pp->link), idlePs);
+                idlePs = pp;
+                continue;
             }
-            else
+
+            // Prefer to run on the most recent M if it is
+            // available.
+            // Ps with no oldm (or for which oldm is already taken
+            // by an earlier P), we delay until all oldm Ps are
+            // handled. Otherwise, mget may return an M that a
+            // later P has in oldm.
+            m* mp = {};
+            if(auto oldm = rec::get(gocpp::recv(pp->oldm)); oldm != nullptr)
             {
-                rec::set(gocpp::recv(pp->m), mget());
+                // Returns nil if oldm is not idle.
+                mp = mgetSpecific(oldm);
+            }
+            if(mp == nullptr)
+            {
+                // Call mget later.
+                rec::set(gocpp::recv(pp->link), runnablePsNeedM);
+                runnablePsNeedM = pp;
+                continue;
+            }
+            rec::set(gocpp::recv(pp->m), mp);
+            rec::set(gocpp::recv(pp->link), runnablePs);
+            runnablePs = pp;
+        }
+        // Assign Ms to remaining runnable Ps without usable oldm. See comment
+        // above.
+        for(; runnablePsNeedM != nullptr; )
+        {
+            auto pp = runnablePsNeedM;
+            runnablePsNeedM = rec::ptr(gocpp::recv(pp->link));
+
+            auto mp = mget();
+            rec::set(gocpp::recv(pp->m), mp);
+            rec::set(gocpp::recv(pp->link), runnablePs);
+            runnablePs = pp;
+        }
+
+        // Now that we've assigned Ms to Ps with runnable goroutines, assign GC
+        // mark workers to remaining idle Ps, if needed.
+        // By assigning GC workers to Ps here, we slightly speed up starting
+        // the world, as we will start enough Ps to run all of the user
+        // goroutines and GC mark workers all at once, rather than using a
+        // sequence of wakep calls as each P's findRunnable realizes it needs
+        // to run a mark worker instead of a user goroutine.
+        // By assigning GC workers to Ps only _after_ previously-running Ps are
+        // assigned Ms, we ensure that goroutines previously running on a P
+        // continue to run on the same P, with GC mark workers preferring
+        // previously-idle Ps. This helps prevent goroutines from shuffling
+        // around too much across STW.
+        // N.B., if there aren't enough Ps left in idlePs for all of the GC
+        // mark workers, then findRunnable will still choose to run mark
+        // workers on Ps assigned above.
+        // N.B., we do this during any STW in the mark phase, not just the
+        // sweep termination STW that starts the mark phase. gcBgMarkWorker
+        // always preempts by removing itself from the P, so even unrelated
+        // STWs during the mark require that Ps reselect mark workers upon
+        // restart.
+        if(gcBlackenEnabled != 0)
+        {
+            for(; idlePs != nullptr; )
+            {
+                auto pp = idlePs;
+
+                auto [ok, gocpp_id_7] = rec::assignWaitingGCWorker(gocpp::recv(gcController), pp, now);
+                if(! ok)
+                {
+                    // No more mark workers needed.
+                    break;
+                }
+
+                // Got a worker, P is now runnable.
+                // mget may return nil if there aren't enough Ms, in
+                // which case startTheWorldWithSema will start one.
+                // N.B. findRunnableGCWorker will make the worker G
+                // itself runnable.
+                idlePs = rec::ptr(gocpp::recv(pp->link));
+                auto mp = mget();
+                rec::set(gocpp::recv(pp->m), mp);
                 rec::set(gocpp::recv(pp->link), runnablePs);
                 runnablePs = pp;
             }
         }
+
+        // Finally, any remaining Ps are truly idle.
+        for(; idlePs != nullptr; )
+        {
+            auto pp = idlePs;
+            idlePs = rec::ptr(gocpp::recv(pp->link));
+            pidleput(pp, now);
+        }
+
         rec::reset(gocpp::recv(stealOrder), uint32_t(nprocs));
         // make compiler check that gomaxprocs is an int32
         int32_t* int32p = & gomaxprocs;
@@ -6733,20 +7328,35 @@ namespace golang::runtime
     //go:yeswritebarrierrec
     void acquirep(golang::runtime::p* pp)
     {
-        // Do the part that isn't allowed to have write barriers.
-        wirep(pp);
+        // Do the work.
+        acquirepNoTrace(pp);
 
-        // Have p; write barriers now allowed.
-        // Perform deferred mcache flush before this P can allocate
-        // from a potentially stale mcache.
-        rec::prepareForSweep(gocpp::recv(pp->mcache));
-
+        // Emit the event.
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
         {
             rec::ProcStart(gocpp::recv(trace));
             traceRelease(trace);
         }
+    }
+
+    // Internals of acquirep, just skipping the trace events.
+    //
+    //go:yeswritebarrierrec
+    void acquirepNoTrace(golang::runtime::p* pp)
+    {
+        // Do the part that isn't allowed to have write barriers.
+        wirep(pp);
+
+        // Have p; write barriers now allowed.
+        // The M we're associating with will be the old M after the next
+        // releasep. We must set this here because write barriers are not
+        // allowed in releasep.
+        pp->oldm = rec::ptr(gocpp::recv(pp->m))->self;
+
+        // Perform deferred mcache flush before this P can allocate
+        // from a potentially stale mcache.
+        rec::prepareForSweep(gocpp::recv(pp->mcache));
     }
 
     // wirep is the first step of acquirep, which actually associates the
@@ -6815,6 +7425,10 @@ namespace golang::runtime
             print("releasep: m="_s, gp->m, " m->p="_s, rec::ptr(gocpp::recv(gp->m->p)), " p->m="_s, hex(pp->m), " p->status="_s, pp->status, "\n"_s);
             go_throw("releasep: invalid p state"_s);
         }
+
+        // P must clear if nextGCMarkWorker if it stops.
+        rec::releaseNextGCMarkWorker(gocpp::recv(gcController), pp);
+
         gp->m->p = 0;
         pp->m = 0;
         pp->status = _Pidle;
@@ -6842,7 +7456,9 @@ namespace golang::runtime
         // For -buildmode=c-shared or -buildmode=c-archive it's OK if
         // there are no running goroutines. The calling program is
         // assumed to be running.
-        if(islibrary || isarchive)
+        // One exception is Wasm, which is single-threaded. If we are
+        // in Go and all goroutines are blocked, it deadlocks.
+        if((islibrary || isarchive) && GOARCH != "wasm"_s)
         {
             return;
         }
@@ -6927,7 +7543,7 @@ namespace golang::runtime
                 faketime = when;
 
                 // Start an M to steal the timer.
-                auto [pp, gocpp_id_7] = pidleget(faketime);
+                auto [pp, gocpp_id_8] = pidleget(faketime);
                 if(pp == nullptr)
                 {
                     // There should always be a free P since
@@ -6957,7 +7573,7 @@ namespace golang::runtime
         // There are no goroutines running, so we can look at the P's.
         for(auto [gocpp_ignored, pp] : allp)
         {
-            if(len(pp->timers) > 0)
+            if(len(pp->timers.heap) > 0)
             {
                 return;
             }
@@ -6974,9 +7590,6 @@ namespace golang::runtime
     //
     // This is a variable for testing purposes. It normally doesn't change.
     int64_t forcegcperiod = 2 * 60 * 1e9;
-    // needSysmonWorkaround is true if the workaround for
-    // golang.org/issue/42515 is needed on NetBSD.
-    bool needSysmonWorkaround = false;
     // Always runs without a P, so write barriers are not allowed.
     //
     //go:nowritebarrierrec
@@ -6987,6 +7600,7 @@ namespace golang::runtime
         checkdead();
         unlock(& sched.lock);
 
+        auto lastgomaxprocs = int64_t(0);
         auto lasttrace = int64_t(0);
         // how many cycles in succession we had not wokeup somebody
         auto idle = 0;
@@ -7099,25 +7713,11 @@ namespace golang::runtime
                     netpollAdjustWaiters(delta);
                 }
             }
-            if(GOOS == "netbsd"_s && needSysmonWorkaround)
+            // Check if we need to update GOMAXPROCS at most once per second.
+            if(debug.updatemaxprocs != 0 && lastgomaxprocs + 1e9 <= now)
             {
-                // netpoll is responsible for waiting for timer
-                // expiration, so we typically don't have to worry
-                // about starting an M to service timers. (Note that
-                // sleep for timeSleepUntil above simply ensures sysmon
-                // starts running again when that timer expiration may
-                // cause Go code to run again).
-                // However, netbsd has a kernel bug that sometimes
-                // misses netpollBreak wake-ups, which can lead to
-                // unbounded delays servicing timers. If we detect this
-                // overrun, then startm to get something to handle the
-                // timer.
-                // See issue 42515 and
-                // https://gnats.netbsd.org/cgi-bin/query-pr-single.pl?number=50094.
-                if(auto next = timeSleepUntil(); next < now)
-                {
-                    startm(nullptr, false, false);
-                }
+                sysmonUpdateGOMAXPROCS();
+                lastgomaxprocs = now;
             }
             if(rec::Load(gocpp::recv(scavenger.sysmonWake)) != 0)
             {
@@ -7162,8 +7762,8 @@ namespace golang::runtime
     {
         T result;
         result.schedtick = this->schedtick;
-        result.schedwhen = this->schedwhen;
         result.syscalltick = this->syscalltick;
+        result.schedwhen = this->schedwhen;
         result.syscallwhen = this->syscallwhen;
         return result;
     }
@@ -7172,8 +7772,8 @@ namespace golang::runtime
     bool sysmontick::operator==(const T& ref) const
     {
         if (schedtick != ref.schedtick) return false;
-        if (schedwhen != ref.schedwhen) return false;
         if (syscalltick != ref.syscalltick) return false;
+        if (schedwhen != ref.schedwhen) return false;
         if (syscallwhen != ref.syscallwhen) return false;
         return true;
     }
@@ -7182,8 +7782,8 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << schedtick;
-        os << " " << schedwhen;
         os << " " << syscalltick;
+        os << " " << schedwhen;
         os << " " << syscallwhen;
         os << '}';
         return os;
@@ -7205,82 +7805,252 @@ namespace golang::runtime
         // allp each time around the loop.
         for(auto i = 0; i < len(allp); i++)
         {
+            // Quickly filter out non-running Ps. Running Ps are either
+            // in a syscall or are actually executing. Idle Ps don't
+            // need to be retaken.
+            // This is best-effort, so it's OK that it's racy. Our target
+            // is to retake Ps that have been running or in a syscall for
+            // a long time (milliseconds), so the state has plenty of time
+            // to stabilize.
             auto pp = allp[i];
-            if(pp == nullptr)
+            if(pp == nullptr || atomic::Load(& pp->status) != _Prunning)
             {
-                // This can happen if procresize has grown
+                // pp can be nil if procresize has grown
                 // allp but not yet created new Ps.
                 continue;
             }
             auto pd = & pp->sysmontick;
-            auto s = pp->status;
             auto sysretake = false;
-            if(s == _Prunning || s == _Psyscall)
+
+            // Preempt G if it's running on the same schedtick for
+            // too long. This could be from a single long-running
+            // goroutine or a sequence of goroutines run via
+            // runnext, which share a single schedtick time slice.
+            auto schedt = int64_t(pp->schedtick);
+            if(int64_t(pd->schedtick) != schedt)
             {
-                // Preempt G if it's running for too long.
-                auto t = int64_t(pp->schedtick);
-                if(int64_t(pd->schedtick) != t)
-                {
-                    pd->schedtick = uint32_t(t);
-                    pd->schedwhen = now;
-                }
-                else
-                if(pd->schedwhen + forcePreemptNS <= now)
-                {
-                    preemptone(pp);
-                    // In case of syscall, preemptone() doesn't
-                    // work, because there is no M wired to P.
-                    sysretake = true;
-                }
+                pd->schedtick = uint32_t(schedt);
+                pd->schedwhen = now;
             }
-            if(s == _Psyscall)
+            else
+            if(pd->schedwhen + forcePreemptNS <= now)
             {
-                // Retake P from syscall if it's there for more than 1 sysmon tick (at least 20us).
-                auto t = int64_t(pp->syscalltick);
-                if(! sysretake && int64_t(pd->syscalltick) != t)
-                {
-                    pd->syscalltick = uint32_t(t);
-                    pd->syscallwhen = now;
-                    continue;
-                }
-                // On the one hand we don't want to retake Ps if there is no other work to do,
-                // but on the other hand we want to retake them eventually
-                // because they can prevent the sysmon thread from deep sleep.
-                if(runqempty(pp) && rec::Load(gocpp::recv(sched.nmspinning)) + rec::Load(gocpp::recv(sched.npidle)) > 0 && pd->syscallwhen + 10 * 1000 * 1000 > now)
-                {
-                    continue;
-                }
-                // Drop allpLock so we can take sched.lock.
-                unlock(& allpLock);
-                // Need to decrement number of idle locked M's
-                // (pretending that one more is running) before the CAS.
-                // Otherwise the M from which we retake can exit the syscall,
-                // increment nmidle and report deadlock.
-                incidlelocked(- 1);
-                auto trace = traceAcquire();
-                if(atomic::Cas(& pp->status, s, _Pidle))
-                {
-                    if(rec::ok(gocpp::recv(trace)))
-                    {
-                        rec::GoSysBlock(gocpp::recv(trace), pp);
-                        rec::ProcSteal(gocpp::recv(trace), pp, false);
-                        traceRelease(trace);
-                    }
-                    n++;
-                    pp->syscalltick++;
-                    handoffp(pp);
-                }
-                else
-                if(rec::ok(gocpp::recv(trace)))
-                {
-                    traceRelease(trace);
-                }
-                incidlelocked(1);
-                lock(& allpLock);
+                preemptone(pp);
+                // If pp is in a syscall, preemptone doesn't work.
+                // The goroutine nor the thread can respond to a
+                // preemption request because they're not in Go code,
+                // so we need to take the P ourselves.
+                sysretake = true;
             }
+
+            // Drop allpLock so we can take sched.lock.
+            unlock(& allpLock);
+
+            // Need to decrement number of idle locked M's (pretending that
+            // one more is running) before we take the P and resume.
+            // Otherwise the M from which we retake can exit the syscall,
+            // increment nmidle and report deadlock.
+            // Can't call incidlelocked once we setBlockOnExitSyscall, due
+            // to a lock ordering violation between sched.lock and _Gscan.
+            incidlelocked(- 1);
+
+            // Try to prevent the P from continuing in the syscall, if it's in one at all.
+            auto [thread, ok] = setBlockOnExitSyscall(pp);
+            if(! ok)
+            {
+                // Not in a syscall, or something changed out from under us.
+                goto done;
+            }
+
+            // Retake the P if it's there for more than 1 sysmon tick (at least 20us).
+            if(auto syst = int64_t(pp->syscalltick); ! sysretake && int64_t(pd->syscalltick) != syst)
+            {
+                pd->syscalltick = uint32_t(syst);
+                pd->syscallwhen = now;
+                rec::resume(gocpp::recv(thread));
+                goto done;
+            }
+
+            // On the one hand we don't want to retake Ps if there is no other work to do,
+            // but on the other hand we want to retake them eventually
+            // because they can prevent the sysmon thread from deep sleep.
+            if(runqempty(pp) && rec::Load(gocpp::recv(sched.nmspinning)) + rec::Load(gocpp::recv(sched.npidle)) > 0 && pd->syscallwhen + 10 * 1000 * 1000 > now)
+            {
+                rec::resume(gocpp::recv(thread));
+                goto done;
+            }
+
+            // Take the P. Note: because we have the scan bit, the goroutine
+            // is at worst stuck spinning in exitsyscall.
+            rec::takeP(gocpp::recv(thread));
+            rec::resume(gocpp::recv(thread));
+            n++;
+
+            // Handoff the P for some other thread to run it.
+            handoffp(pp);
+
+            // The P has been handed off to another thread, so risk of a false
+            // deadlock report while we hold onto it is gone.
+            done:
+            incidlelocked(1);
+            lock(& allpLock);
         }
         unlock(& allpLock);
         return uint32_t(n);
+    }
+
+    // syscallingThread represents a thread in a system call that temporarily
+    // cannot advance out of the system call.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    syscallingThread::operator T()
+    {
+        T result;
+        result.gp = this->gp;
+        result.mp = this->mp;
+        result.pp = this->pp;
+        result.status = this->status;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool syscallingThread::operator==(const T& ref) const
+    {
+        if (gp != ref.gp) return false;
+        if (mp != ref.mp) return false;
+        if (pp != ref.pp) return false;
+        if (status != ref.status) return false;
+        return true;
+    }
+
+    std::ostream& syscallingThread::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << gp;
+        os << " " << mp;
+        os << " " << pp;
+        os << " " << status;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct syscallingThread& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // setBlockOnExitSyscall prevents pp's thread from advancing out of
+    // exitsyscall. On success, returns the g/m/p state of the thread
+    // and true. At that point, the caller owns the g/m/p links referenced,
+    // the goroutine is in _Gsyscall, and prevented from transitioning out
+    // of it. On failure, it returns false, and none of these guarantees are
+    // made.
+    //
+    // Callers must call resume on the resulting thread state once
+    // they're done with thread, otherwise it will remain blocked forever.
+    //
+    // This function races with state changes on pp, and thus may fail
+    // if pp is not in a system call, or exits a system call concurrently
+    // with this function. However, this function is safe to call without
+    // any additional synchronization.
+    std::tuple<syscallingThread, bool> setBlockOnExitSyscall(golang::runtime::p* pp)
+    {
+        if(pp->status != _Prunning)
+        {
+            return {syscallingThread {}, false};
+        }
+        // Be very careful here, these reads are intentionally racy.
+        // Once we notice the G is in _Gsyscall, acquire its scan bit,
+        // and validate that it's still connected to the *same* M and P,
+        // we can actually get to work. Holding the scan bit will prevent
+        // the G from exiting the syscall.
+        // Our goal here is to interrupt long syscalls. If it turns out
+        // that we're wrong and the G switched to another syscall while
+        // we were trying to do this, that's completely fine. It's
+        // probably making more frequent syscalls and the typical
+        // preemption paths should be effective.
+        auto mp = rec::ptr(gocpp::recv(pp->m));
+        if(mp == nullptr)
+        {
+            // Nothing to do.
+            return {syscallingThread {}, false};
+        }
+        auto gp = mp->curg;
+        if(gp == nullptr)
+        {
+            // Nothing to do.
+            return {syscallingThread {}, false};
+        }
+        auto status = readgstatus(gp) &^ _Gscan;
+
+        // A goroutine is considered in a syscall, and may have a corresponding
+        // P, if it's in _Gsyscall *or* _Gdeadextra. In the latter case, it's an
+        // extra M goroutine.
+        if(status != _Gsyscall && status != _Gdeadextra)
+        {
+            // Not in a syscall, nothing to do.
+            return {syscallingThread {}, false};
+        }
+        if(! castogscanstatus(gp, status, status | _Gscan))
+        {
+            // Not in _Gsyscall or _Gdeadextra anymore. Nothing to do.
+            return {syscallingThread {}, false};
+        }
+        if(gp->m != mp || rec::ptr(gocpp::recv(gp->m->p)) != pp)
+        {
+            // This is not what we originally observed. Nothing to do.
+            casfrom_Gscanstatus(gp, status | _Gscan, status);
+            return {syscallingThread {}, false};
+        }
+        return {syscallingThread {gp, mp, pp, status}, true};
+    }
+
+    // gcstopP unwires the P attached to the syscalling thread
+    // and moves it into the _Pgcstop state.
+    //
+    // The caller must be stopping the world.
+    void rec::gcstopP(syscallingThread s)
+    {
+        assertLockHeld(& sched.lock);
+
+        rec::releaseP(gocpp::recv(s), _Pgcstop);
+        s.pp->gcStopTime = nanotime();
+        sched.stopwait--;
+    }
+
+    // takeP unwires the P attached to the syscalling thread
+    // and moves it into the _Pidle state.
+    void rec::takeP(syscallingThread s)
+    {
+        rec::releaseP(gocpp::recv(s), _Pidle);
+    }
+
+    // releaseP unwires the P from the syscalling thread, moving
+    // it to the provided state. Callers should prefer to use
+    // takeP and gcstopP.
+    void rec::releaseP(syscallingThread s, uint32_t state)
+    {
+        if(state != _Pidle && state != _Pgcstop)
+        {
+            go_throw("attempted to release P into a bad state"_s);
+        }
+        auto trace = traceAcquire();
+        s.pp->m = 0;
+        s.mp->p = 0;
+        atomic::Store(& s.pp->status, state);
+        if(rec::ok(gocpp::recv(trace)))
+        {
+            rec::ProcSteal(gocpp::recv(trace), s.pp);
+            traceRelease(trace);
+        }
+        addGSyscallNoP(s.mp);
+        s.pp->syscalltick++;
+    }
+
+    // resume allows a syscalling thread to advance beyond exitsyscall.
+    void rec::resume(syscallingThread s)
+    {
+        casfrom_Gscanstatus(s.gp, s.status | _Gscan, s.status);
     }
 
     // Tell all goroutines that they have been preempted and they should stop.
@@ -7327,6 +8097,11 @@ namespace golang::runtime
         {
             return false;
         }
+        if(readgstatus(gp) &^ _Gscan == _Gsyscall)
+        {
+            // Don't bother trying to preempt a goroutine in a syscall.
+            return false;
+        }
 
         gp->preempt = true;
 
@@ -7356,7 +8131,7 @@ namespace golang::runtime
         }
 
         lock(& sched.lock);
-        print("SCHED "_s, (now - starttime) / 1e6, "ms: gomaxprocs="_s, gomaxprocs, " idleprocs="_s, rec::Load(gocpp::recv(sched.npidle)), " threads="_s, mcount(), " spinningthreads="_s, rec::Load(gocpp::recv(sched.nmspinning)), " needspinning="_s, rec::Load(gocpp::recv(sched.needspinning)), " idlethreads="_s, sched.nmidle, " runqueue="_s, sched.runqsize);
+        print("SCHED "_s, (now - starttime) / 1e6, "ms: gomaxprocs="_s, gomaxprocs, " idleprocs="_s, rec::Load(gocpp::recv(sched.npidle)), " threads="_s, mcount(), " spinningthreads="_s, rec::Load(gocpp::recv(sched.nmspinning)), " needspinning="_s, rec::Load(gocpp::recv(sched.needspinning)), " idlethreads="_s, sched.nmidle, " runqueue="_s, sched.runq.size);
         if(detailed)
         {
             print(" gcwaiting="_s, rec::Load(gocpp::recv(sched.gcwaiting)), " nmidlelocked="_s, sched.nmidlelocked, " stopwait="_s, sched.stopwait, " sysmonwait="_s, rec::Load(gocpp::recv(sched.sysmonwait)), "\n"_s);
@@ -7366,12 +8141,12 @@ namespace golang::runtime
         // E.g. (p->m ? p->m->id : -1) can crash if p->m changes from non-nil to nil.
         for(auto [i, pp] : allp)
         {
-            auto mp = rec::ptr(gocpp::recv(pp->m));
             auto h = atomic::Load(& pp->runqhead);
             auto t = atomic::Load(& pp->runqtail);
             if(detailed)
             {
                 print("  P"_s, i, ": status="_s, pp->status, " schedtick="_s, pp->schedtick, " syscalltick="_s, pp->syscalltick, " m="_s);
+                auto mp = rec::ptr(gocpp::recv(pp->m));
                 if(mp != nullptr)
                 {
                     print(mp->id);
@@ -7380,23 +8155,35 @@ namespace golang::runtime
                 {
                     print("nil"_s);
                 }
-                print(" runqsize="_s, t - h, " gfreecnt="_s, pp->gFree.n, " timerslen="_s, len(pp->timers), "\n"_s);
+                print(" runqsize="_s, t - h, " gfreecnt="_s, pp->gFree.size, " timerslen="_s, len(pp->timers.heap), "\n"_s);
             }
             else
             {
                 // In non-detailed mode format lengths of per-P run queues as:
-                // [len1 len2 len3 len4]
+                // [ len1 len2 len3 len4 ]
                 print(" "_s);
                 if(i == 0)
                 {
-                    print("["_s);
+                    print("[ "_s);
                 }
                 print(t - h);
                 if(i == len(allp) - 1)
                 {
-                    print("]\n"_s);
+                    print(" ]"_s);
                 }
             }
+        }
+
+        if(! detailed)
+        {
+            // Format per-P schedticks as: schedticks=[ tick1 tick2 tick3 tick4 ].
+            print(" schedticks=[ "_s);
+            for(auto [gocpp_ignored, pp] : allp)
+            {
+                print(pp->schedtick);
+                print(" "_s);
+            }
+            print("]\n"_s);
         }
 
         if(! detailed)
@@ -7463,6 +8250,207 @@ namespace golang::runtime
         unlock(& sched.lock);
     }
 
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    updateMaxProcsGState::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.g = this->g;
+        result.idle = this->idle;
+        result.procs = this->procs;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool updateMaxProcsGState::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (g != ref.g) return false;
+        if (idle != ref.idle) return false;
+        if (procs != ref.procs) return false;
+        return true;
+    }
+
+    std::ostream& updateMaxProcsGState::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << g;
+        os << " " << idle;
+        os << " " << procs;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct updateMaxProcsGState& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // GOMAXPROCS update godebug metric. Incremented if automatic
+    // GOMAXPROCS updates actually change the value of GOMAXPROCS.
+    godebugInc* updatemaxprocs = gocpp::InitPtr<godebugInc>([](auto& x) {
+        x.name = "updatemaxprocs"_s;
+    });
+    // Synchronization and state between updateMaxProcsGoroutine and
+    // sysmon.
+    updateMaxProcsGState updateMaxProcsG = gocpp::InitPtr<godebugInc>([](auto& x) {
+        x.name = "updatemaxprocs"_s;
+    });
+    // Synchronization between GOMAXPROCS and sysmon.
+    //
+    // Setting GOMAXPROCS via a call to GOMAXPROCS disables automatic
+    // GOMAXPROCS updates.
+    //
+    // We want to make two guarantees to callers of GOMAXPROCS. After
+    // GOMAXPROCS returns:
+    //
+    // 1. The runtime will not make any automatic changes to GOMAXPROCS.
+    //
+    // 2. The runtime will not perform any of the system calls used to
+    //    determine the appropriate value of GOMAXPROCS (i.e., it won't
+    //    call defaultGOMAXPROCS).
+    //
+    // (1) is the baseline guarantee that everyone needs. The GOMAXPROCS
+    // API isn't useful to anyone if automatic updates may occur after it
+    // returns. This is easily achieved by double-checking the state under
+    // STW before committing an automatic GOMAXPROCS update.
+    //
+    // (2) doesn't matter to most users, as it is isn't observable as long
+    // as (1) holds. However, it can be important to users sandboxing Go.
+    // They want disable these system calls and need some way to know when
+    // they are guaranteed the calls will stop.
+    //
+    // This would be simple to achieve if we simply called
+    // defaultGOMAXPROCS under STW in updateMaxProcsGoroutine below.
+    // However, we would like to avoid scheduling this goroutine every
+    // second when it will almost never do anything. Instead, sysmon calls
+    // defaultGOMAXPROCS to decide whether to schedule
+    // updateMaxProcsGoroutine. Thus we need to synchronize between sysmon
+    // and GOMAXPROCS calls.
+    //
+    // GOMAXPROCS can't hold a runtime mutex across STW. It could hold a
+    // semaphore, but sysmon cannot take semaphores. Instead, we have a
+    // more complex scheme:
+    //
+    // * sysmon holds computeMaxProcsLock while calling defaultGOMAXPROCS.
+    // * sysmon skips the current update if sched.customGOMAXPROCS is
+    //   set.
+    // * GOMAXPROCS sets sched.customGOMAXPROCS once it is committed to
+    //   changing GOMAXPROCS.
+    // * GOMAXPROCS takes computeMaxProcsLock to wait for outstanding
+    //   defaultGOMAXPROCS calls to complete.
+    //
+    // N.B. computeMaxProcsLock could simply be sched.lock, but we want to
+    // avoid holding that lock during the potentially slow
+    // defaultGOMAXPROCS.
+    mutex computeMaxProcsLock = gocpp::InitPtr<godebugInc>([](auto& x) {
+        x.name = "updatemaxprocs"_s;
+    });
+    // Start GOMAXPROCS update helper goroutine.
+    //
+    // This is based on forcegchelper.
+    void defaultGOMAXPROCSUpdateEnable()
+    {
+        if(debug.updatemaxprocs == 0)
+        {
+            // Unconditionally increment the metric when updates are disabled.
+            // It would be more descriptive if we did a dry run of the
+            // complete update, determining the appropriate value of
+            // GOMAXPROCS and the bailing out and just incrementing the
+            // metric if a change would occur.
+            // Not only is that a lot of ongoing work for a disabled
+            // feature, but some users need to be able to completely
+            // disable the update system calls (such as sandboxes).
+            // Currently, updatemaxprocs=0 serves that purpose.
+            rec::IncNonDefault(gocpp::recv(updatemaxprocs));
+            return;
+        }
+
+        gocpp::go([&]{ updateMaxProcsGoroutine(); });
+    }
+
+    void updateMaxProcsGoroutine()
+    {
+        updateMaxProcsG.g = getg();
+        lockInit(& updateMaxProcsG.lock, lockRankUpdateMaxProcsG);
+        for(; ; )
+        {
+            lock(& updateMaxProcsG.lock);
+            if(rec::Load(gocpp::recv(updateMaxProcsG.idle)))
+            {
+                go_throw("updateMaxProcsGoroutine: phase error"_s);
+            }
+            rec::Store(gocpp::recv(updateMaxProcsG.idle), true);
+            // This goroutine is explicitly resumed by sysmon.
+            goparkunlock(& updateMaxProcsG.lock, waitReasonUpdateGOMAXPROCSIdle, traceBlockSystemGoroutine, 1);
+
+
+            auto stw = stopTheWorldGC(stwGOMAXPROCS);
+
+            // Still OK to update?
+            lock(& sched.lock);
+            auto custom = sched.customGOMAXPROCS;
+            unlock(& sched.lock);
+            if(custom)
+            {
+                startTheWorldGC(stw);
+                return;
+            }
+
+            // newprocs will be processed by startTheWorld
+            // TODO(prattmic): this could use a nicer API. Perhaps add it to the
+            // stw parameter?
+            newprocs = updateMaxProcsG.procs;
+            lock(& sched.lock);
+            sched.customGOMAXPROCS = false;
+            unlock(& sched.lock);
+
+            startTheWorldGC(stw);
+        }
+    }
+
+    void sysmonUpdateGOMAXPROCS()
+    {
+        // Synchronize with GOMAXPROCS. See comment on computeMaxProcsLock.
+        lock(& computeMaxProcsLock);
+
+        // No update if GOMAXPROCS was set manually.
+        lock(& sched.lock);
+        auto custom = sched.customGOMAXPROCS;
+        auto curr = gomaxprocs;
+        unlock(& sched.lock);
+        if(custom)
+        {
+            unlock(& computeMaxProcsLock);
+            return;
+        }
+
+        // Don't hold sched.lock while we read the filesystem.
+        auto procs = defaultGOMAXPROCS(0);
+        unlock(& computeMaxProcsLock);
+        if(procs == curr)
+        {
+            // Nothing to do.
+            return;
+        }
+
+        // Sysmon can't directly stop the world. Run the helper to do so on our
+        // behalf. If updateGOMAXPROCS.idle is false, then a previous update is
+        // still pending.
+        if(rec::Load(gocpp::recv(updateMaxProcsG.idle)))
+        {
+            lock(& updateMaxProcsG.lock);
+            updateMaxProcsG.procs = procs;
+            rec::Store(gocpp::recv(updateMaxProcsG.idle), false);
+            gList list = {};
+            rec::push(gocpp::recv(list), updateMaxProcsG.g);
+            injectglist(& list);
+            unlock(& updateMaxProcsG.lock);
+        }
+    }
+
     // schedEnableUser enables or disables the scheduling of user
     // goroutines.
     //
@@ -7479,9 +8467,8 @@ namespace golang::runtime
         sched.disable.user = ! enable;
         if(enable)
         {
-            auto n = sched.disable.n;
-            sched.disable.n = 0;
-            globrunqputbatch(& sched.disable.runnable, n);
+            auto n = sched.disable.runnable.size;
+            globrunqputbatch(& sched.disable.runnable);
             unlock(& sched.lock);
             for(; n != 0 && rec::Load(gocpp::recv(sched.npidle)) != 0; n--)
             {
@@ -7518,8 +8505,7 @@ namespace golang::runtime
     {
         assertLockHeld(& sched.lock);
 
-        mp->schedlink = sched.midle;
-        rec::set(gocpp::recv(sched.midle), mp);
+        rec::push(gocpp::recv(sched.midle), gocpp::unsafe_pointer(mp));
         sched.nmidle++;
         checkdead();
     }
@@ -7533,12 +8519,34 @@ namespace golang::runtime
     {
         assertLockHeld(& sched.lock);
 
-        auto mp = rec::ptr(gocpp::recv(sched.midle));
+        auto mp = (m*)(rec::pop(gocpp::recv(sched.midle)));
         if(mp != nullptr)
         {
-            sched.midle = mp->schedlink;
             sched.nmidle--;
         }
+        return mp;
+    }
+
+    // Try to get a specific m from midle list. Returns nil if it isn't on the
+    // midle list.
+    //
+    // sched.lock must be held.
+    // May run during STW, so write barriers are not allowed.
+    //
+    //go:nowritebarrierrec
+    m* mgetSpecific(m* mp)
+    {
+        assertLockHeld(& sched.lock);
+
+        if(mp->idleNode.prev == 0 && mp->idleNode.next == 0)
+        {
+            // Not on the list.
+            return nullptr;
+        }
+
+        rec::remove(gocpp::recv(sched.midle), gocpp::unsafe_pointer(mp));
+        sched.nmidle--;
+
         return mp;
     }
 
@@ -7552,7 +8560,6 @@ namespace golang::runtime
         assertLockHeld(& sched.lock);
 
         rec::pushBack(gocpp::recv(sched.runq), gp);
-        sched.runqsize++;
     }
 
     // Put gp at the head of the global runnable queue.
@@ -7565,7 +8572,6 @@ namespace golang::runtime
         assertLockHeld(& sched.lock);
 
         rec::push(gocpp::recv(sched.runq), gp);
-        sched.runqsize++;
     }
 
     // Put a batch of runnable goroutines on the global runnable queue.
@@ -7574,50 +8580,52 @@ namespace golang::runtime
     // May run during STW, so write barriers are not allowed.
     //
     //go:nowritebarrierrec
-    void globrunqputbatch(gQueue* batch, int32_t n)
+    void globrunqputbatch(gQueue* batch)
     {
         assertLockHeld(& sched.lock);
 
         rec::pushBackAll(gocpp::recv(sched.runq), *batch);
-        sched.runqsize += n;
         *batch = gQueue {};
     }
 
-    // Try get a batch of G's from the global runnable queue.
+    // Try get a single G from the global runnable queue.
     // sched.lock must be held.
-    g* globrunqget(golang::runtime::p* pp, int32_t max)
+    g* globrunqget()
     {
         assertLockHeld(& sched.lock);
 
-        if(sched.runqsize == 0)
+        if(sched.runq.size == 0)
         {
             return nullptr;
         }
 
-        auto n = sched.runqsize / gomaxprocs + 1;
-        if(n > sched.runqsize)
+        return rec::pop(gocpp::recv(sched.runq));
+    }
+
+    // Try get a batch of G's from the global runnable queue.
+    // sched.lock must be held.
+    std::tuple<g*, gQueue> globrunqgetbatch(int32_t n)
+    {
+        g* gp;
+        gQueue q;
+        assertLockHeld(& sched.lock);
+
+        if(sched.runq.size == 0)
         {
-            n = sched.runqsize;
-        }
-        if(max > 0 && n > max)
-        {
-            n = max;
-        }
-        if(n > int32_t(len(pp->runq)) / 2)
-        {
-            n = int32_t(len(pp->runq)) / 2;
+            return {gp, q};
         }
 
-        sched.runqsize -= n;
+        n = gocpp::min(n, sched.runq.size, sched.runq.size / gomaxprocs + 1);
 
-        auto gp = rec::pop(gocpp::recv(sched.runq));
+        gp = rec::pop(gocpp::recv(sched.runq));
         n--;
+
         for(; n > 0; n--)
         {
             auto gp1 = rec::pop(gocpp::recv(sched.runq));
-            runqput(pp, gp1, false);
+            rec::pushBack(gocpp::recv(q), gp1);
         }
-        return gp;
+        return {gp, q};
     }
 
     // pMask is an atomic bitstring with one bit per P.
@@ -7645,47 +8653,35 @@ namespace golang::runtime
         atomic::And(& p[word], ~ mask);
     }
 
-    // updateTimerPMask clears pp's timer mask if it has no timers on its heap.
-    //
-    // Ideally, the timer mask would be kept immediately consistent on any timer
-    // operations. Unfortunately, updating a shared global data structure in the
-    // timer hot path adds too much overhead in applications frequently switching
-    // between no timers and some timers.
-    //
-    // As a compromise, the timer mask is updated only on pidleget / pidleput. A
-    // running P (returned by pidleget) may add a timer at any time, so its mask
-    // must be set. An idle P (passed to pidleput) cannot add new timers while
-    // idle, so if it has no timers at that time, its mask may be cleared.
-    //
-    // Thus, we get the following effects on timer-stealing in findrunnable:
-    //
-    //   - Idle Ps with no timers when they go idle are never checked in findrunnable
-    //     (for work- or timer-stealing; this is the ideal case).
-    //   - Running Ps must always be checked.
-    //   - Idle Ps whose timers are stolen must continue to be checked until they run
-    //     again, even after timer expiration.
-    //
-    // When the P starts running again, the mask should be set, as a timer may be
-    // added at any time.
-    //
-    // TODO(prattmic): Additional targeted updates may improve the above cases.
-    // e.g., updating the mask when stealing a timer.
-    void updateTimerPMask(golang::runtime::p* pp)
+    // any returns true if any bit in p is set.
+    bool rec::go_any(pMask p)
     {
-        if(rec::Load(gocpp::recv(pp->numTimers)) > 0)
+        for(auto [i, gocpp_ignored] : p)
         {
-            return;
+            if(atomic::Load(& p[i]) != 0)
+            {
+                return true;
+            }
         }
+        return false;
+    }
 
-        // Looks like there are no timers, however another P may transiently
-        // decrement numTimers when handling a timerModified timer in
-        // checkTimers. We must take timersLock to serialize with these changes.
-        lock(& pp->timersLock);
-        if(rec::Load(gocpp::recv(pp->numTimers)) == 0)
+    // resize resizes the pMask and returns a new one.
+    //
+    // The result may alias p, so callers are encouraged to
+    // discard p. Not safe for concurrent use.
+    pMask rec::resize(pMask p, int32_t nprocs)
+    {
+        auto maskWords = (nprocs + 31) / 32;
+
+        if(maskWords <= int32_t(cap(p)))
         {
-            rec::clear(gocpp::recv(timerpMask), pp->id);
+            return p.make_slice(0, maskWords);
         }
-        unlock(& pp->timersLock);
+        auto newMask = gocpp::make(gocpp::Tag<gocpp::slice<uint32_t>>(), maskWords);
+        // No need to copy beyond len, old Ps are irrelevant.
+        copy(newMask, p);
+        return newMask;
     }
 
     // pidleput puts p on the _Pidle list. now must be a relatively recent call
@@ -7711,8 +8707,10 @@ namespace golang::runtime
         {
             now = nanotime();
         }
-        // clear if there are no timers.
-        updateTimerPMask(pp);
+        if(rec::Load(gocpp::recv(pp->timers.len)) == 0)
+        {
+            rec::clear(gocpp::recv(timerpMask), pp->id);
+        }
         rec::set(gocpp::recv(idlepMask), pp->id);
         pp->link = sched.pidle;
         rec::set(gocpp::recv(sched.pidle), pp);
@@ -7770,7 +8768,7 @@ namespace golang::runtime
         auto& now = now_tmp;
         if(pp == nullptr)
         {
-            // See "Delicate dance" comment in findrunnable. We found work
+            // See "Delicate dance" comment in findRunnable. We found work
             // that we cannot take, we must synchronize with non-spinning
             // Ms that may be preparing to drop their P.
             rec::Store(gocpp::recv(sched.needspinning), 1);
@@ -7807,6 +8805,17 @@ namespace golang::runtime
     // Executed only by the owner P.
     void runqput(golang::runtime::p* pp, g* gp, bool next)
     {
+        if(! haveSysmon && next)
+        {
+            // A runnext goroutine shares the same time slice as the
+            // current goroutine (inheritTime from runqget). To prevent a
+            // ping-pong pair of goroutines from starving all others, we
+            // depend on sysmon to preempt "long-running goroutines". That
+            // is, any set of goroutines sharing the same time slice.
+            // If there is no sysmon, we must avoid runnext entirely or
+            // risk starvation.
+            next = false;
+        }
         if(randomizeScheduler && next && randn(2) == 0)
         {
             next = false;
@@ -7885,23 +8894,25 @@ namespace golang::runtime
         {
             rec::set(gocpp::recv(batch[i]->schedlink), batch[i + 1]);
         }
-        gQueue q = {};
-        rec::set(gocpp::recv(q.head), batch[0]);
-        rec::set(gocpp::recv(q.tail), batch[n]);
+
+        auto q = gQueue {rec::guintptr(gocpp::recv(batch[0])), rec::guintptr(gocpp::recv(batch[n])), int32_t(n + 1)};
 
         // Now put the batch on global queue.
         lock(& sched.lock);
-        globrunqputbatch(& q, int32_t(n + 1));
+        globrunqputbatch(& q);
         unlock(& sched.lock);
         return true;
     }
 
     // runqputbatch tries to put all the G's on q on the local runnable queue.
-    // If the queue is full, they are put on the global queue; in that case
-    // this will temporarily acquire the scheduler lock.
+    // If the local runq is full the input queue still contains unqueued Gs.
     // Executed only by the owner P.
-    void runqputbatch(golang::runtime::p* pp, gQueue* q, int qsize)
+    void runqputbatch(golang::runtime::p* pp, gQueue* q)
     {
+        if(rec::empty(gocpp::recv(q)))
+        {
+            return;
+        }
         auto h = atomic::LoadAcq(& pp->runqhead);
         auto t = pp->runqtail;
         auto n = uint32_t(0);
@@ -7912,7 +8923,6 @@ namespace golang::runtime
             t++;
             n++;
         }
-        qsize -= int(n);
 
         if(randomizeScheduler)
         {
@@ -7928,12 +8938,8 @@ namespace golang::runtime
         }
 
         atomic::StoreRel(& pp->runqtail, t);
-        if(! rec::empty(gocpp::recv(q)))
-        {
-            lock(& sched.lock);
-            globrunqputbatch(q, int32_t(qsize));
-            unlock(& sched.lock);
-        }
+
+        return;
     }
 
     // Get g from local runnable queue.
@@ -7974,15 +8980,13 @@ namespace golang::runtime
 
     // runqdrain drains the local runnable queue of pp and returns all goroutines in it.
     // Executed only by the owner P.
-    std::tuple<gQueue, uint32_t> runqdrain(golang::runtime::p* pp)
+    gQueue runqdrain(golang::runtime::p* pp)
     {
         gQueue drainQ;
-        uint32_t n;
         auto oldNext = pp->runnext;
         if(oldNext != 0 && rec::cas(gocpp::recv(pp->runnext), oldNext, 0))
         {
             rec::pushBack(gocpp::recv(drainQ), rec::ptr(gocpp::recv(oldNext)));
-            n++;
         }
 
         // load-acquire, synchronize with other consumers
@@ -7992,7 +8996,7 @@ namespace golang::runtime
         auto qn = t - h;
         if(qn == 0)
         {
-            return {drainQ, n};
+            return drainQ;
         }
         if(qn > uint32_t(len(pp->runq)))
         {
@@ -8017,9 +9021,8 @@ namespace golang::runtime
         {
             auto gp = rec::ptr(gocpp::recv(pp->runq[(h + i) % uint32_t(len(pp->runq))]));
             rec::pushBack(gocpp::recv(drainQ), gp);
-            n++;
         }
-        return {drainQ, n};
+        return drainQ;
     }
 
     // Grabs a batch of goroutines from pp's runnable queue into batch.
@@ -8045,26 +9048,41 @@ namespace golang::runtime
                     {
                         if(pp->status == _Prunning)
                         {
-                            // Sleep to ensure that pp isn't about to run the g
-                            // we are about to steal.
-                            // The important use case here is when the g running
-                            // on pp ready()s another g and then almost
-                            // immediately blocks. Instead of stealing runnext
-                            // in this window, back off to give pp a chance to
-                            // schedule runnext. This will avoid thrashing gs
-                            // between different Ps.
-                            // A sync chan send/recv takes ~50ns as of time of
-                            // writing, so 3us gives ~50x overshoot.
-                            if(! osHasLowResTimer)
+                            if(auto mp = rec::ptr(gocpp::recv(pp->m)); mp != nullptr)
                             {
-                                usleep(3);
-                            }
-                            else
-                            {
-                                // On some platforms system timer granularity is
-                                // 1-15ms, which is way too much for this
-                                // optimization. So just yield.
-                                osyield();
+                                if(auto gp = mp->curg; gp == nullptr || readgstatus(gp) &^ _Gscan != _Gsyscall)
+                                {
+                                    // Sleep to ensure that pp isn't about to run the g
+                                    // we are about to steal.
+                                    // The important use case here is when the g running
+                                    // on pp ready()s another g and then almost
+                                    // immediately blocks. Instead of stealing runnext
+                                    // in this window, back off to give pp a chance to
+                                    // schedule runnext. This will avoid thrashing gs
+                                    // between different Ps.
+                                    // A sync chan send/recv takes ~50ns as of time of
+                                    // writing, so 3us gives ~50x overshoot.
+                                    // If curg is nil, we assume that the P is likely
+                                    // to be in the scheduler. If curg isn't nil and isn't
+                                    // in a syscall, then it's either running, waiting, or
+                                    // runnable. In this case we want to sleep because the
+                                    // P might either call into the scheduler soon (running),
+                                    // or already is (since we found a waiting or runnable
+                                    // goroutine hanging off of a running P, suggesting it
+                                    // either recently transitioned out of running, or will
+                                    // transition to running shortly).
+                                    if(! osHasLowResTimer)
+                                    {
+                                        usleep(3);
+                                    }
+                                    else
+                                    {
+                                        // On some platforms system timer granularity is
+                                        // 1-15ms, which is way too much for this
+                                        // optimization. So just yield.
+                                        osyield();
+                                    }
+                                }
                             }
                         }
                         if(! rec::cas(gocpp::recv(pp->runnext), next, 0))
@@ -8132,6 +9150,7 @@ namespace golang::runtime
         T result;
         result.head = this->head;
         result.tail = this->tail;
+        result.size = this->size;
         return result;
     }
 
@@ -8140,6 +9159,7 @@ namespace golang::runtime
     {
         if (head != ref.head) return false;
         if (tail != ref.tail) return false;
+        if (size != ref.size) return false;
         return true;
     }
 
@@ -8148,6 +9168,7 @@ namespace golang::runtime
         os << '{';
         os << "" << head;
         os << " " << tail;
+        os << " " << size;
         os << '}';
         return os;
     }
@@ -8172,6 +9193,7 @@ namespace golang::runtime
         {
             rec::set(gocpp::recv(q->tail), gp);
         }
+        q->size++;
     }
 
     // pushBack adds gp to the tail of q.
@@ -8187,6 +9209,7 @@ namespace golang::runtime
             rec::set(gocpp::recv(q->head), gp);
         }
         rec::set(gocpp::recv(q->tail), gp);
+        q->size++;
     }
 
     // pushBackAll adds all Gs in q2 to the tail of q. After this q2 must
@@ -8207,6 +9230,7 @@ namespace golang::runtime
             q->head = q2.head;
         }
         q->tail = q2.tail;
+        q->size += q2.size;
     }
 
     // pop removes and returns the head of queue q. It returns nil if
@@ -8221,6 +9245,7 @@ namespace golang::runtime
             {
                 q->tail = 0;
             }
+            q->size--;
         }
         return gp;
     }
@@ -8228,7 +9253,7 @@ namespace golang::runtime
     // popList takes all Gs in q and returns them as a gList.
     gList rec::popList(gQueue* q)
     {
-        auto stack = gList {q->head};
+        auto stack = gList {q->head, q->size};
         *q = gQueue {};
         return stack;
     }
@@ -8241,6 +9266,7 @@ namespace golang::runtime
     {
         T result;
         result.head = this->head;
+        result.size = this->size;
         return result;
     }
 
@@ -8248,6 +9274,7 @@ namespace golang::runtime
     bool gList::operator==(const T& ref) const
     {
         if (head != ref.head) return false;
+        if (size != ref.size) return false;
         return true;
     }
 
@@ -8255,6 +9282,7 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << head;
+        os << " " << size;
         os << '}';
         return os;
     }
@@ -8275,15 +9303,17 @@ namespace golang::runtime
     {
         gp->schedlink = l->head;
         rec::set(gocpp::recv(l->head), gp);
+        l->size++;
     }
 
-    // pushAll prepends all Gs in q to l.
+    // pushAll prepends all Gs in q to l. After this q must not be used.
     void rec::pushAll(gList* l, gQueue q)
     {
         if(! rec::empty(gocpp::recv(q)))
         {
             rec::ptr(gocpp::recv(q.tail))->schedlink = l->head;
             l->head = q.head;
+            l->size += q.size;
         }
     }
 
@@ -8294,6 +9324,7 @@ namespace golang::runtime
         if(gp != nullptr)
         {
             l->head = gp->schedlink;
+            l->size--;
         }
         return gp;
     }
@@ -8318,6 +9349,17 @@ namespace golang::runtime
         return out;
     }
 
+    // procPin should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/gopkg
+    //   - github.com/choleraehyq/pid
+    //   - github.com/songzhibin97/gkit
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname procPin
     //go:nosplit
     int procPin()
     {
@@ -8328,6 +9370,17 @@ namespace golang::runtime
         return int(rec::ptr(gocpp::recv(mp->p))->id);
     }
 
+    // procUnpin should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/gopkg
+    //   - github.com/choleraehyq/pid
+    //   - github.com/songzhibin97/gkit
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname procUnpin
     //go:nosplit
     void procUnpin()
     {
@@ -8365,16 +9418,16 @@ namespace golang::runtime
 
     // Active spinning for sync.Mutex.
     //
-    //go:linkname sync_runtime_canSpin sync.runtime_canSpin
+    //go:linkname internal_sync_runtime_canSpin internal/sync.runtime_canSpin
     //go:nosplit
-    bool sync_runtime_canSpin(int i)
+    bool internal_sync_runtime_canSpin(int i)
     {
         // sync.Mutex is cooperative, so we are conservative with spinning.
         // Spin only few times and only if running on a multicore machine and
         // GOMAXPROCS>1 and there is at least one other running P and local runq is empty.
         // As opposed to runtime mutex we don't do passive spinning here,
         // because there can be work on global runq or on other Ps.
-        if(i >= active_spin || ncpu <= 1 || gomaxprocs <= rec::Load(gocpp::recv(sched.npidle)) + rec::Load(gocpp::recv(sched.nmspinning)) + 1)
+        if(i >= active_spin || numCPUStartup <= 1 || gomaxprocs <= rec::Load(gocpp::recv(sched.npidle)) + rec::Load(gocpp::recv(sched.nmspinning)) + 1)
         {
             return false;
         }
@@ -8385,11 +9438,47 @@ namespace golang::runtime
         return true;
     }
 
+    //go:linkname internal_sync_runtime_doSpin internal/sync.runtime_doSpin
+    //go:nosplit
+    void internal_sync_runtime_doSpin()
+    {
+        procyield(active_spin_cnt);
+    }
+
+    // Active spinning for sync.Mutex.
+    //
+    // sync_runtime_canSpin should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/livekit/protocol
+    //   - github.com/sagernet/gvisor
+    //   - gvisor.dev/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname sync_runtime_canSpin sync.runtime_canSpin
+    //go:nosplit
+    bool sync_runtime_canSpin(int i)
+    {
+        return internal_sync_runtime_canSpin(i);
+    }
+
+    // sync_runtime_doSpin should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/livekit/protocol
+    //   - github.com/sagernet/gvisor
+    //   - gvisor.dev/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname sync_runtime_doSpin sync.runtime_doSpin
     //go:nosplit
     void sync_runtime_doSpin()
     {
-        procyield(active_spin_cnt);
+        internal_sync_runtime_doSpin();
     }
 
     randomOrder stealOrder;

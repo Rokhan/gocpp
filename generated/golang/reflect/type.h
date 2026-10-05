@@ -13,11 +13,7 @@
 namespace golang::reflect
 {
     extern gocpp::slice<gocpp::string> kindNames;
-    gocpp::unsafe_pointer resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
-    gocpp::unsafe_pointer resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
-    gocpp::unsafe_pointer resolveTextOff(gocpp::unsafe_pointer rtype, int32_t off);
-    int32_t addReflectOff(gocpp::unsafe_pointer ptr);
-    gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe);
+    gocpp::array_ptr<gocpp::array<uint64_t, 256>> getStaticuint64s();
     struct fieldScan
     {
         structType* typ{};
@@ -48,11 +44,17 @@ namespace golang::reflect
     {
         return fnv1(x, gocpp::ToSlice<unsigned char>(value, list...));
     }
-    std::tuple<gocpp::slice<gocpp::unsafe_pointer>, gocpp::slice<gocpp::slice<int32_t>>> typelinks();
     gocpp::string funcStr(funcType* ft);
     bool isLetter(gocpp::rune ch);
     bool isValidFieldName(gocpp::string fieldName);
     void embeddedIfaceMethStub();
+    unsigned char* adjustAIXGCData(unsigned char* addr);
+    unsigned char* adjustAIXGCDataForRuntime(unsigned char*);
+    // pinAIXGCData keeps the actual GCData pointer alive on AIX.
+    // On AIX we need to use adjustAIXGCData to convert the GC pointer
+    // to the value that the runtime expects. That means that the rtype
+    // no longer refers to the original pointer. This slice keeps it alive.
+    extern gocpp::slice<unsigned char*> pinAIXGCData;
     gocpp::slice<unsigned char> appendVarint(gocpp::slice<unsigned char> x, uintptr_t v);
     struct bitVector
     {
@@ -71,15 +73,39 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct bitVector& value);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    gocpp::unsafe_pointer resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
+    gocpp::unsafe_pointer resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
+    gocpp::unsafe_pointer resolveTextOff(gocpp::unsafe_pointer rtype, int32_t off);
+    int32_t addReflectOff(gocpp::unsafe_pointer ptr);
+    aTextOff resolveReflectText(gocpp::unsafe_pointer ptr);
+    gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe);
 }
-#include "golang/internal/abi/type.h"
-#include "golang/reflect/abi.h"
-#include "golang/sync/map.h"
-#include "golang/sync/mutex.h"
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+#include "golang/iter/iter.fwd.h"
+#include "golang/sync/map.fwd.h"
+#include "golang/sync/mutex.fwd.h"
 #include "golang/sync/pool.fwd.h"
 
 namespace golang::reflect
 {
+    namespace iter = golang::iter;
+}
+#include "golang/internal/abi/type.h"
+
+namespace golang::reflect
+{
+    namespace abi = golang::internal::abi;
+}
+#include "golang/iter/iter.h"
+#include "golang/reflect/abi.h"
+#include "golang/sync/map.h"
+#include "golang/sync/mutex.h"
+
+namespace golang::reflect
+{
+    namespace sync = golang::sync;
     struct Type : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -123,13 +149,21 @@ namespace golang::reflect
             // For an interface type, the returned Method's Type field gives the
             // method signature, without a receiver, and the Func field is nil.
             // Methods are sorted in lexicographic order.
+            // Calling this method will force the linker to retain all exported methods in all packages.
+            // This may make the executable binary larger but will not affect execution time.
             virtual golang::reflect::Method vMethod(int _1) = 0;
+            // Methods returns an iterator over each method in the type's method set. The sequence is
+            // equivalent to calling Method successively for each index i in the range [0, NumMethod()).
+            virtual iter::Seq<golang::reflect::Method> vMethods() = 0;
             // MethodByName returns the method with that name in the type's
             // method set and a boolean indicating if the method was found.
             // For a non-interface type T or *T, the returned Method's Type and Func
             // fields describe a function whose first argument is the receiver.
             // For an interface type, the returned Method's Type field gives the
             // method signature, without a receiver, and the Func field is nil.
+            // Calling this method will cause the linker to retain all methods with this name in all packages.
+            // If the linker can't determine the name, it will retain all exported methods.
+            // This may make the executable binary larger but will not affect execution time.
             virtual std::tuple<golang::reflect::Method, bool> vMethodByName(gocpp::string _1) = 0;
             // NumMethod returns the number of methods accessible using Method.
             // For a non-interface type, it returns the number of exported methods.
@@ -193,6 +227,10 @@ namespace golang::reflect
             // It panics if the type's Kind is not Struct.
             // It panics if i is not in the range [0, NumField()).
             virtual StructField vField(int i) = 0;
+            // Fields returns an iterator over each struct field for struct type t. The sequence is
+            // equivalent to calling Field successively for each index i in the range [0, NumField()).
+            // It panics if the type's Kind is not Struct.
+            virtual iter::Seq<StructField> vFields() = 0;
             // FieldByIndex returns the nested field corresponding
             // to the index sequence. It is equivalent to calling Field
             // successively for each index i.
@@ -223,6 +261,10 @@ namespace golang::reflect
             // It panics if the type's Kind is not Func.
             // It panics if i is not in the range [0, NumIn()).
             virtual golang::reflect::Type vIn(int i) = 0;
+            // Ins returns an iterator over each input parameter of function type t. The sequence
+            // is equivalent to calling In successively for each index i in the range [0, NumIn()).
+            // It panics if the type's Kind is not Func.
+            virtual iter::Seq<golang::reflect::Type> vIns() = 0;
             // Key returns a map type's key type.
             // It panics if the type's Kind is not Map.
             virtual golang::reflect::Type vKey() = 0;
@@ -242,6 +284,26 @@ namespace golang::reflect
             // It panics if the type's Kind is not Func.
             // It panics if i is not in the range [0, NumOut()).
             virtual golang::reflect::Type vOut(int i) = 0;
+            // Outs returns an iterator over each output parameter of function type t. The sequence
+            // is equivalent to calling Out successively for each index i in the range [0, NumOut()).
+            // It panics if the type's Kind is not Func.
+            virtual iter::Seq<golang::reflect::Type> vOuts() = 0;
+            // OverflowComplex reports whether the complex128 x cannot be represented by type t.
+            // It panics if t's Kind is not Complex64 or Complex128.
+            virtual bool vOverflowComplex(struct gocpp::complex128 x) = 0;
+            // OverflowFloat reports whether the float64 x cannot be represented by type t.
+            // It panics if t's Kind is not Float32 or Float64.
+            virtual bool vOverflowFloat(double x) = 0;
+            // OverflowInt reports whether the int64 x cannot be represented by type t.
+            // It panics if t's Kind is not Int, Int8, Int16, Int32, or Int64.
+            virtual bool vOverflowInt(int64_t x) = 0;
+            // OverflowUint reports whether the uint64 x cannot be represented by type t.
+            // It panics if t's Kind is not Uint, Uintptr, Uint8, Uint16, Uint32, or Uint64.
+            virtual bool vOverflowUint(uint64_t x) = 0;
+            // CanSeq reports whether a [Value] with this type can be iterated over using [Value.Seq].
+            virtual bool vCanSeq() = 0;
+            // CanSeq2 reports whether a [Value] with this type can be iterated over using [Value.Seq2].
+            virtual bool vCanSeq2() = 0;
             virtual abi::Type* vcommon() = 0;
             virtual uncommonType* vuncommon() = 0;
             virtual void* getPtr() = 0;
@@ -260,6 +322,8 @@ namespace golang::reflect
             int vFieldAlign() override;
 
             golang::reflect::Method vMethod(int _1) override;
+
+            iter::Seq<golang::reflect::Method> vMethods() override;
 
             std::tuple<golang::reflect::Method, bool> vMethodByName(gocpp::string _1) override;
 
@@ -293,6 +357,8 @@ namespace golang::reflect
 
             StructField vField(int i) override;
 
+            iter::Seq<StructField> vFields() override;
+
             StructField vFieldByIndex(gocpp::slice<int> index) override;
 
             std::tuple<StructField, bool> vFieldByName(gocpp::string name) override;
@@ -300,6 +366,8 @@ namespace golang::reflect
             std::tuple<StructField, bool> vFieldByNameFunc(std::function<bool (gocpp::string _1)> match) override;
 
             golang::reflect::Type vIn(int i) override;
+
+            iter::Seq<golang::reflect::Type> vIns() override;
 
             golang::reflect::Type vKey() override;
 
@@ -312,6 +380,20 @@ namespace golang::reflect
             int vNumOut() override;
 
             golang::reflect::Type vOut(int i) override;
+
+            iter::Seq<golang::reflect::Type> vOuts() override;
+
+            bool vOverflowComplex(struct gocpp::complex128 x) override;
+
+            bool vOverflowFloat(double x) override;
+
+            bool vOverflowInt(int64_t x) override;
+
+            bool vOverflowUint(uint64_t x) override;
+
+            bool vCanSeq() override;
+
+            bool vCanSeq2() override;
 
             abi::Type* vcommon() override;
 
@@ -340,6 +422,9 @@ namespace golang::reflect
 
         golang::reflect::Method Method(const gocpp::PtrRecv<struct Type, false>& self, int _1);
         golang::reflect::Method Method(const gocpp::ObjRecv<struct Type>& self, int _1);
+
+        iter::Seq<golang::reflect::Method> Methods(const gocpp::PtrRecv<struct Type, false>& self);
+        iter::Seq<golang::reflect::Method> Methods(const gocpp::ObjRecv<struct Type>& self);
 
         std::tuple<golang::reflect::Method, bool> MethodByName(const gocpp::PtrRecv<struct Type, false>& self, gocpp::string _1);
         std::tuple<golang::reflect::Method, bool> MethodByName(const gocpp::ObjRecv<struct Type>& self, gocpp::string _1);
@@ -389,6 +474,9 @@ namespace golang::reflect
         StructField Field(const gocpp::PtrRecv<struct Type, false>& self, int i);
         StructField Field(const gocpp::ObjRecv<struct Type>& self, int i);
 
+        iter::Seq<StructField> Fields(const gocpp::PtrRecv<struct Type, false>& self);
+        iter::Seq<StructField> Fields(const gocpp::ObjRecv<struct Type>& self);
+
         StructField FieldByIndex(const gocpp::PtrRecv<struct Type, false>& self, gocpp::slice<int> index);
         StructField FieldByIndex(const gocpp::ObjRecv<struct Type>& self, gocpp::slice<int> index);
 
@@ -400,6 +488,9 @@ namespace golang::reflect
 
         golang::reflect::Type In(const gocpp::PtrRecv<struct Type, false>& self, int i);
         golang::reflect::Type In(const gocpp::ObjRecv<struct Type>& self, int i);
+
+        iter::Seq<golang::reflect::Type> Ins(const gocpp::PtrRecv<struct Type, false>& self);
+        iter::Seq<golang::reflect::Type> Ins(const gocpp::ObjRecv<struct Type>& self);
 
         golang::reflect::Type Key(const gocpp::PtrRecv<struct Type, false>& self);
         golang::reflect::Type Key(const gocpp::ObjRecv<struct Type>& self);
@@ -418,6 +509,27 @@ namespace golang::reflect
 
         golang::reflect::Type Out(const gocpp::PtrRecv<struct Type, false>& self, int i);
         golang::reflect::Type Out(const gocpp::ObjRecv<struct Type>& self, int i);
+
+        iter::Seq<golang::reflect::Type> Outs(const gocpp::PtrRecv<struct Type, false>& self);
+        iter::Seq<golang::reflect::Type> Outs(const gocpp::ObjRecv<struct Type>& self);
+
+        bool OverflowComplex(const gocpp::PtrRecv<struct Type, false>& self, struct gocpp::complex128 x);
+        bool OverflowComplex(const gocpp::ObjRecv<struct Type>& self, struct gocpp::complex128 x);
+
+        bool OverflowFloat(const gocpp::PtrRecv<struct Type, false>& self, double x);
+        bool OverflowFloat(const gocpp::ObjRecv<struct Type>& self, double x);
+
+        bool OverflowInt(const gocpp::PtrRecv<struct Type, false>& self, int64_t x);
+        bool OverflowInt(const gocpp::ObjRecv<struct Type>& self, int64_t x);
+
+        bool OverflowUint(const gocpp::PtrRecv<struct Type, false>& self, uint64_t x);
+        bool OverflowUint(const gocpp::ObjRecv<struct Type>& self, uint64_t x);
+
+        bool CanSeq(const gocpp::PtrRecv<struct Type, false>& self);
+        bool CanSeq(const gocpp::ObjRecv<struct Type>& self);
+
+        bool CanSeq2(const gocpp::PtrRecv<struct Type, false>& self);
+        bool CanSeq2(const gocpp::ObjRecv<struct Type>& self);
 
         abi::Type* common(const gocpp::PtrRecv<struct Type, false>& self);
         abi::Type* common(const gocpp::ObjRecv<struct Type>& self);
@@ -475,22 +587,6 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct interfaceType& value);
-    struct mapType
-    {
-        abi::MapType MapType{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct mapType& value);
     struct ptrType
     {
         abi::PtrType PtrType{};
@@ -542,8 +638,9 @@ namespace golang::reflect
     gocpp::string pkgPath(abi::Name n);
     abi::Name newName(gocpp::string n, gocpp::string tag, bool exported, bool embedded);
     aNameOff resolveReflectName(abi::Name n);
-    aTextOff resolveReflectText(gocpp::unsafe_pointer ptr);
+    // ptrMap is the cache for PointerTo.
     extern sync::Map ptrMap;
+    // The lookupCache caches ArrayOf, ChanOf, MapOf and SliceOf lookups.
     extern sync::Map lookupCache;
     struct cacheKey
     {
@@ -603,6 +700,8 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct structLookupCacheStruct& value);
+    // pinAIXGCDataMu proects pinAIXGCData.
+    extern mocklib::Mutex pinAIXGCDataMu;
     struct layoutKey
     {
         funcType* ftyp{}; // function signature
@@ -647,6 +746,7 @@ namespace golang::reflect
     gocpp::string nameFor(abi::Type* t);
     rtype* toRType(abi::Type* t);
     abi::Type* elem(abi::Type* t);
+    bool canRangeFunc(abi::Type* t, uint16_t seq);
     struct StructField
     {
         // Name is the field name.
@@ -674,6 +774,9 @@ namespace golang::reflect
 
     std::ostream& operator<<(std::ostream& os, const struct StructField& value);
     golang::reflect::Type TypeOf(go_any i);
+    
+    template<typename T>
+    golang::reflect::Type TypeFor();
     abi::Type* rtypeOf(go_any i);
     golang::reflect::Type PtrTo(golang::reflect::Type t);
     golang::reflect::Type PointerTo(golang::reflect::Type t);
@@ -683,11 +786,14 @@ namespace golang::reflect
     bool directlyAssignable(abi::Type* T, abi::Type* V);
     bool haveIdenticalType(abi::Type* T, abi::Type* V, bool cmpTags);
     bool haveIdenticalUnderlyingType(abi::Type* T, abi::Type* V, bool cmpTags);
+    std::tuple<gocpp::slice<abi::Type*>, gocpp::slice<gocpp::slice<abi::Type*>>> compiledTypelinks();
     abi::Type* rtypeOff(gocpp::unsafe_pointer section, int32_t off);
     gocpp::slice<abi::Type*> typesByString(gocpp::string s);
+    // The funcLookupCache caches FuncOf lookups.
+    // FuncOf does not share the common lookupCache since cacheKey is not
+    // sufficient to represent functions unambiguously.
     extern funcLookupCacheStruct funcLookupCache;
     golang::reflect::Type ChanOf(golang::reflect::ChanDir dir, golang::reflect::Type t);
-    golang::reflect::Type MapOf(golang::reflect::Type key, golang::reflect::Type elem);
     extern gocpp::slice<golang::reflect::Type> funcTypes;
     golang::reflect::Type initFuncTypes(int n);
     golang::reflect::Type FuncOf(gocpp::slice<golang::reflect::Type> in, gocpp::slice<golang::reflect::Type> out, bool variadic);
@@ -695,10 +801,11 @@ namespace golang::reflect
     bool isReflexive(abi::Type* t);
     bool needKeyUpdate(abi::Type* t);
     bool hashMightPanic(abi::Type* t);
-    abi::Type* bucketOf(abi::Type* ktyp, abi::Type* etyp);
     void emitGCMask(gocpp::slice<unsigned char> out, uintptr_t base, abi::Type* typ, uintptr_t n);
-    gocpp::slice<unsigned char> appendGCProg(gocpp::slice<unsigned char> dst, abi::Type* typ);
     golang::reflect::Type SliceOf(golang::reflect::Type t);
+    // The structLookupCache caches StructOf lookups.
+    // StructOf does not share the common lookupCache since we need to pin
+    // the memory associated with *structTypeFixedN.
     extern structLookupCacheStruct structLookupCache;
     struct structTypeUncommon
     {
@@ -717,15 +824,13 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct structTypeUncommon& value);
+    bool isRegularMemory(golang::reflect::Type t);
+    bool isPaddedField(golang::reflect::Type t, int i);
     uintptr_t typeptrdata(abi::Type* t);
     golang::reflect::Type ArrayOf(int length, golang::reflect::Type elem);
     golang::reflect::Type toType(abi::Type* t);
     std::tuple<abi::Type*, sync::Pool*, abiDesc> funcLayout(funcType* t, abi::Type* rcvr);
-    bool ifaceIndir(abi::Type* t);
     void addTypeBits(bitVector* bv, uintptr_t offset, abi::Type* t);
-    
-    template<typename T>
-    golang::reflect::Type TypeFor();
 }
 #include "golang/reflect/value.h"
 
@@ -762,6 +867,7 @@ namespace golang::reflect
 }
 
 #include "golang/internal/abi/type.h"
+#include "golang/iter/iter.h"
 
 namespace golang::reflect
 {
@@ -797,7 +903,6 @@ namespace golang::reflect
         StructField FieldByIndex(rtype* t, gocpp::slice<int> index);
         std::tuple<StructField, bool> FieldByName(rtype* t, gocpp::string name);
         std::tuple<StructField, bool> FieldByNameFunc(rtype* t, std::function<bool (gocpp::string _1)> match);
-        golang::reflect::Type Key(rtype* t);
         int Len(rtype* t);
         int NumField(rtype* t);
         golang::reflect::Type In(rtype* t, int i);
@@ -805,6 +910,16 @@ namespace golang::reflect
         int NumOut(rtype* t);
         golang::reflect::Type Out(rtype* t, int i);
         bool IsVariadic(rtype* t);
+        bool OverflowComplex(rtype* t, struct gocpp::complex128 x);
+        bool OverflowFloat(rtype* t, double x);
+        bool OverflowInt(rtype* t, int64_t x);
+        bool OverflowUint(rtype* t, uint64_t x);
+        bool CanSeq(rtype* t);
+        bool CanSeq2(rtype* t);
+        iter::Seq<StructField> Fields(rtype* t);
+        iter::Seq<golang::reflect::Method> Methods(rtype* t);
+        iter::Seq<golang::reflect::Type> Ins(rtype* t);
+        iter::Seq<golang::reflect::Type> Outs(rtype* t);
         gocpp::string String(golang::reflect::ChanDir d);
         golang::reflect::Method Method(interfaceType* t, int i);
         int NumMethod(interfaceType* t);
@@ -821,7 +936,6 @@ namespace golang::reflect
         bool AssignableTo(rtype* t, golang::reflect::Type u);
         bool ConvertibleTo(rtype* t, golang::reflect::Type u);
         bool Comparable(rtype* t);
-        gocpp::slice<unsigned char> gcSlice(rtype* t, uintptr_t begin, uintptr_t end);
         void append(bitVector* bv, uint8_t bit);
     }
 }

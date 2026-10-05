@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Union;
     struct GoTag_Term;
@@ -13,7 +13,7 @@ namespace golang::types
 }
 #include "golang/go/types/typeterm.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    using Term = gocpp::defined<term, GoTag_Term>;
+    using Term = gocpp::defined<golang::go::types::term, GoTag_Term>;
 }

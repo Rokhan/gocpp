@@ -73,6 +73,7 @@ namespace golang::time
 
     std::ostream& operator<<(std::ostream& os, const struct rule& value);
     std::tuple<int, gocpp::string, bool> tzsetNum(gocpp::string s, int min, int max);
+    extern gocpp::error errLocation;
     extern gocpp::string* zoneinfo;
     bool containsDotDot(gocpp::string s);
     struct Location
@@ -113,24 +114,40 @@ namespace golang::time
     std::ostream& operator<<(std::ostream& os, const struct Location& value);
     std::tuple<rule, gocpp::string, bool> tzsetRule(gocpp::string s);
     int tzruleTime(int year, rule r, int off);
-}
-#include "golang/sync/once.h"
-#include "golang/errors/errors.fwd.h"
-
-namespace golang::time
-{
-    extern sync::Once localOnce;
-    extern sync::Once unnamedFixedZonesOnce;
-    extern gocpp::error errLocation;
-    extern sync::Once zoneinfoOnce;
+    // UTC represents Universal Coordinated Time (UTC).
+    extern golang::time::Location* UTC;
+    // utcLoc is separate so that get can refer to &utcLoc
+    // and ensure that it never returns a nil *Location,
+    // even if a badly behaved client has changed UTC.
     extern golang::time::Location utcLoc;
+    // Local represents the system's local time zone.
+    // On Unix systems, Local consults the TZ environment
+    // variable to find the time zone to use. No TZ means
+    // use the system default /etc/localtime.
+    // TZ="" means use UTC.
+    // TZ="foo" means use file foo in the system timezone directory.
+    extern golang::time::Location* Local;
+    // localLoc is separate so that initLocal can initialize
+    // it even if a client has changed Local.
     extern golang::time::Location localLoc;
     extern gocpp::slice<golang::time::Location*> unnamedFixedZones;
     golang::time::Location* FixedZone(gocpp::string name, int offset);
     golang::time::Location* fixedZone(gocpp::string name, int offset);
     std::tuple<golang::time::Location*, gocpp::error> LoadLocation(gocpp::string name);
-    extern golang::time::Location* UTC;
-    extern golang::time::Location* Local;
+}
+#include "golang/sync/once.fwd.h"
+
+namespace golang::time
+{
+    namespace sync = golang::sync;
+}
+#include "golang/sync/once.h"
+
+namespace golang::time
+{
+    extern sync::Once localOnce;
+    extern sync::Once unnamedFixedZonesOnce;
+    extern sync::Once zoneinfoOnce;
 
     namespace rec
     {

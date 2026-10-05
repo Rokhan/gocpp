@@ -11,7 +11,7 @@
 #include "golang/go/types/type.h"
 #include "gocpp/support.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     namespace rec
     {
@@ -44,7 +44,7 @@ namespace golang::types
     }
 
     template<typename T, typename TStore, typename TInterface>
-    golang::types::Type Type::TypeImpl<T, TStore, TInterface>::vUnderlying()
+    golang::go::types::Type Type::TypeImpl<T, TStore, TInterface>::vUnderlying()
     {
         return rec::Underlying(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -62,12 +62,12 @@ namespace golang::types
 
     namespace rec
     {
-        golang::types::Type Underlying(const gocpp::PtrRecv<struct Type, false>& self)
+        golang::go::types::Type Underlying(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value()->vUnderlying();
         }
 
-        golang::types::Type Underlying(const gocpp::ObjRecv<struct Type>& self)
+        golang::go::types::Type Underlying(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value()->vUnderlying();
         }

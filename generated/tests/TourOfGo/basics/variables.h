@@ -18,6 +18,14 @@ namespace golang::main
     extern int ii;
     extern int jj;
     extern int kk;
+    extern bool debug;
+    extern bool v1;
+    extern gocpp::string v2;
+    extern int v3;
+    extern double v4;
+    extern bool u1;
+    extern gocpp::string u2;
+    extern double u3;
     struct pos
     {
         int x{};
@@ -35,6 +43,8 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pos& value);
+    extern std::function<int (int)> funcVar2;
+    extern std::function<std::tuple<int, gocpp::string> (int)> funcVar3;
     void main();
     std::tuple<int, gocpp::string> withNamedResults();
     void inlineAssign(int i);
@@ -46,22 +56,7 @@ namespace golang::main
     void go_class();
     std::tuple<bool, gocpp::error> ParseBool(gocpp::string str);
     std::tuple<bool, gocpp::string, int, double> FourValues();
-    extern bool debug;
-    extern bool v1;
-    extern gocpp::string v2;
-    extern int v3;
-    extern double v4;
-    extern bool u1;
-    extern gocpp::string u2;
-    extern double u3;
-}
-#include "golang/fmt/print.fwd.h"
-
-namespace golang::main
-{
     extern std::function<void (void)> funcVar1;
-    extern std::function<int (int)> funcVar2;
-    extern std::function<std::tuple<int, gocpp::string> (int)> funcVar3;
 
     namespace rec
     {

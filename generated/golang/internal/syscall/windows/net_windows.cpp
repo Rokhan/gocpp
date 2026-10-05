@@ -11,12 +11,12 @@
 #include "golang/internal/syscall/windows/net_windows.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/oncefunc.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
+    namespace syscall = golang::syscall;
     namespace rec
     {
     }
@@ -62,19 +62,6 @@ namespace golang::windows
     {
         return value.PrintTo(os);
     }
-
-    std::function<bool (void)> Support_TCP_INITIAL_RTO_NO_SYN_RETRANSMISSIONS = sync::OnceValue([]() mutable -> bool
-    {
-        uint32_t maj = {};
-        uint32_t min = {};
-        uint32_t build = {};
-        rtlGetNtVersionNumbers(& maj, & min, & build);
-        return maj >= 10 && build & 0xffff >= 16299;
-    });
-    //go:linkname rtlGetNtVersionNumbers syscall.rtlGetNtVersionNumbers
-    //go:noescape
-    void rtlGetNtVersionNumbers(uint32_t* majorVersion, uint32_t* minorVersion, uint32_t* buildNumber)
-    /* convertBlockStmt, nil block */;
 
 }
 

@@ -13,15 +13,14 @@
 namespace golang::sync
 {
     void runtime_Semacquire(uint32_t* s);
-    void runtime_SemacquireMutex(uint32_t* s, bool lifo, int skipframes);
+    void runtime_SemacquireWaitGroup(uint32_t* s, bool synctestDurable);
     void runtime_SemacquireRWMutexR(uint32_t* s, bool lifo, int skipframes);
     void runtime_SemacquireRWMutex(uint32_t* s, bool lifo, int skipframes);
     void runtime_Semrelease(uint32_t* s, bool handoff, int skipframes);
     void runtime_notifyListCheck(uintptr_t size);
     void init();
-    bool runtime_canSpin(int i);
-    void runtime_doSpin();
-    int64_t runtime_nanotime();
+    void go_throw(gocpp::string);
+    void fatal(gocpp::string);
 }
 #include "golang/sync/runtime2.fwd.h"
 

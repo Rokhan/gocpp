@@ -11,7 +11,7 @@
 #include "golang/image/png/paeth.h"
 #include "gocpp/support.h"
 
-namespace golang::png
+namespace golang::image::png
 {
     namespace rec
     {

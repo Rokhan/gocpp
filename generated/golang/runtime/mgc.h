@@ -15,6 +15,8 @@ namespace golang::runtime
     bool heapObjectsCanMove();
     void gcinit();
     void gcenable();
+    // Garbage collector phase.
+    // Indicates to write barrier and synchronization task to perform.
     extern uint32_t gcphase;
     struct writeBarrierStruct
     {
@@ -34,11 +36,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct writeBarrierStruct& value);
+    // gcBlackenEnabled is 1 if mutator assists and background mark
+    // workers are allowed to blacken objects. This must only be set when
+    // gcphase == _GCmark.
     extern uint32_t gcBlackenEnabled;
     void setGCPhase(uint32_t x);
+    // gcMarkWorkerModeStrings are the strings labels of gcMarkWorkerModes
+    // to use in execution traces.
     extern gocpp::array<gocpp::string, 4> gcMarkWorkerModeStrings;
     bool pollFractionalWorkerExit();
     void GC();
+    void goroutineLeakGC();
     void gcWaitOnMark(uint32_t n);
     struct gcTrigger
     {
@@ -58,39 +66,67 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcTrigger& value);
+    // gcMarkDoneFlushed counts the number of P's with flushed work.
+    //
+    // Ideally this would be a captured local in gcMarkDone, but forEachP
+    // escapes its callback closure, so it can't capture anything.
+    //
+    // This is protected by markDoneSema.
     extern uint32_t gcMarkDoneFlushed;
     void gcMarkDone();
+    bool findMaybeRunnableGoroutines();
+    void setSyncObjectsUntraceable();
+    void gcRestoreSyncObjects();
+    bool findGoroutineLeaks();
     void gcBgMarkStartWorkers();
     void gcBgMarkPrepare();
-    void gcBgMarkWorker();
+    struct gocpp_id_9
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value);
+    bool gcIsMarkDone();
+    void gcBeginWork();
+    bool gcEndWork();
     void gcMark(int64_t startTime);
     bool gcSweep(gcMode mode);
     void gcResetMarkState();
-    extern gocpp::slice<gocpp::unsafe_pointer> boringCaches;
-    void boring_registerCache(gocpp::unsafe_pointer p);
     void clearpools();
     gocpp::slice<unsigned char> itoaDiv(gocpp::slice<unsigned char> buf, uint64_t val, int dec);
     gocpp::slice<unsigned char> fmtNSAsMS(gocpp::slice<unsigned char> buf, uint64_t ns);
     void gcTestMoveStackOnNextCall();
-    uint64_t gcTestIsReachable(gocpp::slice<gocpp::unsafe_pointer> ptrs);
-    
-    template<typename... Args>
-    uint64_t gcTestIsReachable(Args... ptrs)
-    {
-        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(ptrs...));
-    }
-    
-    template<typename... Args>
-    uint64_t gcTestIsReachable(gocpp::unsafe_pointer value, Args... ptrs)
-    {
-        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(value, ptrs...));
-    }
-    gocpp::string gcTestPointerClass(gocpp::unsafe_pointer p);
+    // The compiler knows about this variable.
+    // If you change it, you must change builtin/runtime.go, too.
+    // If you change the first four bytes, you must also change the write
+    // barrier insertion code.
+    //
+    // writeBarrier should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname writeBarrier
     extern writeBarrierStruct writeBarrier;
     void gcStart(gcTrigger trigger);
+    void gcBgMarkWorker(gocpp::channel<gocpp_id_9> ready);
     extern std::function<void ()> poolcleanup;
     void sync_runtime_registerPoolCleanup(std::function<void ()> f);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
+#include "golang/runtime/list_manual.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
@@ -122,7 +158,7 @@ namespace golang::runtime
     struct gocpp_id_1
     {
         mutex lock{};
-        gQueue q{};
+        listHeadManual list{}; // *spanSPMC
 
         using isGoStruct = void;
 
@@ -136,7 +172,24 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
-    struct gocpp_id_2
+    struct gocpp_id_3
+    {
+        mutex lock{};
+        gQueue q{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
+    struct gocpp_id_4
     {
         mutex lock{};
         gList list{};
@@ -152,7 +205,34 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
+    struct gocpp_id_5
+    {
+        // block is a flag set during mark termination that prevents
+        // new weak->strong conversions from executing by blocking the
+        // goroutine and enqueuing it onto q.
+        // Mutated only by one goroutine at a time in gcMarkDone,
+        // with globally-synchronizing events like forEachP and
+        // stopTheWorld.
+        bool block{};
+        // q is a queue of goroutines that attempted to perform a
+        // weak->strong conversion during mark termination.
+        // Protected by lock.
+        mutex lock{};
+        gQueue q{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
     void gcMarkTermination(worldStop stw);
     struct gcBgMarkWorkerNode
     {
@@ -177,10 +257,119 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcBgMarkWorkerNode& value);
-    bool gcMarkWorkAvailable(golang::runtime::p* p);
+    bool gcShouldScheduleWorker(golang::runtime::p* p);
+    extern gocpp::slice<gocpp::unsafe_pointer> boringCaches;
+    void boring_registerCache(gocpp::unsafe_pointer p);
+    uint64_t gcTestIsReachable(gocpp::slice<gocpp::unsafe_pointer> ptrs);
+    
+    template<typename... Args>
+    uint64_t gcTestIsReachable(Args... ptrs)
+    {
+        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(ptrs...));
+    }
+    
+    template<typename... Args>
+    uint64_t gcTestIsReachable(gocpp::unsafe_pointer value, Args... ptrs)
+    {
+        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(value, ptrs...));
+    }
+    gocpp::string gcTestPointerClass(gocpp::unsafe_pointer p);
+}
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/runtime/tagptr.fwd.h"
+
+namespace golang::runtime
+{
+    struct gocpp_id_2
+    {
+        // Once set, it indicates that the GC will perform goroutine leak detection during
+        // the next GC cycle; it is set by goroutineLeakGC and unset during gcStart.
+        atomic::Bool pending{};
+        // Once set, it indicates that the GC has started a goroutine leak detection run;
+        // it is set during gcStart and unset during gcMarkTermination;
+        // Protected by STW.
+        bool enabled{};
+        // Once set, it indicates that the GC has performed goroutine leak detection during
+        // the current GC cycle; it is set during gcMarkDone, right after goroutine leak detection,
+        // and unset during gcMarkTermination;
+        // Protected by STW.
+        bool done{};
+        // The number of leaked goroutines during the last leak detection GC cycle.
+        // Write-protected by STW in findGoroutineLeaks.
+        int count{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    struct gcDebugMarkDoneStruct
+    {
+        // spinAfterRaggedBarrier forces gcMarkDone to spin after it executes
+        // the ragged barrier.
+        atomic::Bool spinAfterRaggedBarrier{};
+        // restartedDueTo27993 indicates that we restarted mark termination
+        // due to the bug described in issue #27993.
+        // Protected by worldsema.
+        bool restartedDueTo27993{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gcDebugMarkDoneStruct& value);
+    struct gcBgMarkWorkerNodePadded
+    {
+        gcBgMarkWorkerNode gcBgMarkWorkerNode{};
+        gocpp::array<unsigned char, tagAlign - gocpp::Sizeof<golang::runtime::gcBgMarkWorkerNode>() - gcBgMarkWorkerNodeRedZoneSize> pad{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gcBgMarkWorkerNodePadded& value);
+}
+#include "golang/internal/cpu/cpu.fwd.h"
+
+namespace golang::runtime
+{
+    // gcDebugMarkDone contains fields used to debug/test mark termination.
+    extern gcDebugMarkDoneStruct gcDebugMarkDone;
 }
 #include "golang/internal/cpu/cpu.h"
-#include "golang/runtime/internal/atomic/types.h"
+
+namespace golang::runtime
+{
+    namespace cpu = golang::internal::cpu;
+}
 #include "golang/runtime/lfstack.h"
 #include "golang/runtime/mstats.h"
 
@@ -191,45 +380,62 @@ namespace golang::runtime
         lfstack full{}; // lock-free list of full blocks workbuf
         cpu::CacheLinePad _1{}; // prevents false-sharing between full and empty
         lfstack empty{}; // lock-free list of empty blocks workbuf
-        cpu::CacheLinePad _2{}; // prevents false-sharing between empty and nproc/nwait
+        cpu::CacheLinePad _2{}; // prevents false-sharing between empty and wbufSpans
         gocpp_id_0 wbufSpans{};
-        // Restore 64-bit alignment on 32-bit.
-        uint32_t _3{};
+        cpu::CacheLinePad _3{}; // prevents false-sharing between wbufSpans and spanWorkMask
+        // spanqMask is a bitmap indicating which Ps have local work worth stealing.
+        // Set or cleared by the owning P, cleared by stealing Ps.
+        // spanqMask is like a proxy for a global queue. An important invariant is that
+        // forced flushing like gcw.dispose must set this bit on any P that has local
+        // span work.
+        pMask spanqMask{};
+        cpu::CacheLinePad _4{}; // prevents false-sharing between spanqMask and everything else
+        // List of all spanSPMCs.
+        // Only used if goexperiment.GreenTeaGC.
+        gocpp_id_1 spanSPMCs{};
         // bytesMarked is the number of bytes marked this cycle. This
         // includes bytes blackened in scanned objects, noscan objects
-        // that go straight to black, and permagrey objects scanned by
-        // markroot during the concurrent scan phase. This is updated
-        // atomically during the cycle. Updates may be batched
-        // arbitrarily, since the value is only read at the end of the
-        // cycle.
+        // that go straight to black, objects allocated as black during
+        // the cycle, and permagrey objects scanned by markroot during
+        // the concurrent scan phase.
+        // This is updated atomically during the cycle. Updates may be batched
+        // arbitrarily, since the value is only read at the end of the cycle.
         // Because of benign races during marking, this number may not
         // be the exact number of marked bytes, but it should be very
         // close.
         // Put this field here because it needs 64-bit atomic access
         // (and thus 8-byte alignment even on 32-bit architectures).
         uint64_t bytesMarked{};
-        uint32_t markrootNext{}; // next markroot job
-        uint32_t markrootJobs{}; // number of markroot jobs
+        atomic::Uint32 markrootNext{}; // next markroot job
+        atomic::Uint32 markrootJobs{}; // number of markroot jobs
         uint32_t nproc{};
         int64_t tstart{};
         uint32_t nwait{};
-        // Number of roots of various root types. Set by gcMarkRootPrepare.
-        // nStackRoots == len(stackRoots), but we have nStackRoots for
-        // consistency.
+        // Number of roots of various root types. Set by gcPrepareMarkRoots.
+        // During normal GC cycle, nStackRoots == nMaybeRunnableStackRoots == len(stackRoots);
+        // during goroutine leak detection, nMaybeRunnableStackRoots is the number of stackRoots
+        // scheduled for marking.
+        // In both variants, nStackRoots == len(stackRoots).
         int nDataRoots{};
         int nBSSRoots{};
         int nSpanRoots{};
         int nStackRoots{};
-        // Base indexes of each root type. Set by gcMarkRootPrepare.
+        int nMaybeRunnableStackRoots{};
+        // The following fields monitor the GC phase of the current cycle during
+        // goroutine leak detection.
+        gocpp_id_2 goroutineLeak{};
+        // Base indexes of each root type. Set by gcPrepareMarkRoots.
         uint32_t baseData{};
         uint32_t baseBSS{};
         uint32_t baseSpans{};
         uint32_t baseStacks{};
         uint32_t baseEnd{};
-        // stackRoots is a snapshot of all of the Gs that existed
-        // before the beginning of concurrent marking. The backing
-        // store of this must not be modified because it might be
-        // shared with allgs.
+        // stackRoots is a snapshot of all of the Gs that existed before the
+        // beginning of concurrent marking.  During goroutine leak detection, stackRoots
+        // is partitioned into two sets; to the left of nMaybeRunnableStackRoots are stackRoots
+        // of running / runnable goroutines and to the right of nMaybeRunnableStackRoots are
+        // stackRoots of unmarked / not runnable goroutines
+        // The stackRoots array is re-partitioned after each marking phase iteration.
         gocpp::slice<g*> stackRoots{};
         // Each type of GC state transition is protected by a lock.
         // Since multiple threads can simultaneously detect the state
@@ -247,7 +453,6 @@ namespace golang::runtime
         uint32_t startSema{};
         // markDoneSema protects transitions from mark to mark termination.
         uint32_t markDoneSema{};
-        note bgMarkReady{}; // signal background mark worker has started
         uint32_t bgMarkDone{}; // cas to 1 when at a background mark completion point
         // mode is the concurrency mode of the current GC cycle.
         gcMode mode{};
@@ -260,10 +465,13 @@ namespace golang::runtime
         // assistQueue is a queue of assists that are blocked because
         // there was neither enough credit to steal or enough work to
         // do.
-        gocpp_id_1 assistQueue{};
+        gocpp_id_3 assistQueue{};
         // sweepWaiters is a list of blocked goroutines to wake when
         // we transition from mark termination to sweep.
-        gocpp_id_2 sweepWaiters{};
+        gocpp_id_4 sweepWaiters{};
+        // strongFromWeak controls how the GC interacts with weak->strong
+        // pointer conversions.
+        gocpp_id_5 strongFromWeak{};
         // cycles is the number of completed GC cycles, where a GC
         // cycle is sweep termination, mark, mark termination, and
         // sweep. This differs from memstats.numgc, which is
@@ -276,7 +484,10 @@ namespace golang::runtime
         int64_t tMark{};
         int64_t tMarkTerm{};
         int64_t tEnd{};
-        int64_t pauseNS{}; // total STW time this cycle
+        // pauseNS is the total STW time this cycle, measured as the time between
+        // when stopping began (just before trying to stop Ps) and just after the
+        // world started again.
+        int64_t pauseNS{};
         // debug.gctrace heap sizes for this cycle.
         uint64_t heap0{};
         uint64_t heap1{};
@@ -297,10 +508,17 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct workType& value);
     extern workType work;
+}
+
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {
         bool test(gcTrigger t);
+        bool isMaybeRunnable(g* gp);
     }
 }
 

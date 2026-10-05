@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     gocpp::string measure(int x, gocpp::string unit);
 }
@@ -18,10 +18,10 @@ namespace golang::types
 #include "golang/go/types/object.fwd.h"
 #include "golang/go/types/operand.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    gocpp::slice<golang::types::Type> operandTypes(gocpp::slice<operand*> list);
-    gocpp::slice<golang::types::Type> varTypes(gocpp::slice<Var*> list);
+    gocpp::slice<golang::go::types::Type> operandTypes(gocpp::slice<operand*> list);
+    gocpp::slice<golang::go::types::Type> varTypes(gocpp::slice<Var*> list);
 }
 
 #include "golang/go/ast/ast.h"
@@ -31,17 +31,18 @@ namespace golang::types
 #include "golang/go/types/operand.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
 
     namespace rec
     {
-        void assignment(Checker* check, operand* x, golang::types::Type T, gocpp::string context);
+        void assignment(Checker* check, operand* x, golang::go::types::Type T, gocpp::string context);
         void initConst(Checker* check, Const* lhs, operand* x);
         void initVar(Checker* check, Var* lhs, operand* x, gocpp::string context);
-        golang::types::Type lhsVar(Checker* check, ast::Expr lhs);
+        golang::go::types::Type lhsVar(Checker* check, ast::Expr lhs);
         void assignVar(Checker* check, ast::Expr lhs, ast::Expr rhs, operand* x, gocpp::string context);
-        gocpp::string typesSummary(Checker* check, gocpp::slice<golang::types::Type> list, bool variadic);
+        gocpp::string typesSummary(Checker* check, gocpp::slice<golang::go::types::Type> list, bool variadic, bool hasDots);
         void assignError(Checker* check, gocpp::slice<ast::Expr> rhs, int l, int r);
         void returnError(Checker* check, positioner at, gocpp::slice<Var*> lhs, gocpp::slice<operand*> rhs);
         void initVars(Checker* check, gocpp::slice<Var*> lhs, gocpp::slice<ast::Expr> orig_rhs, ast::Stmt returnStmt);

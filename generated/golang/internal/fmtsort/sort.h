@@ -10,19 +10,25 @@
 #include "gocpp/support.h"
 
 
-namespace golang::fmtsort
+namespace golang::internal::fmtsort
 {
-    int floatCompare(double a, double b);
-    bool isNaN(double a);
+    struct GoTag_SortedMap { };
+}
+#include "golang/reflect/type.fwd.h"
+#include "golang/reflect/value.fwd.h"
+
+namespace golang::internal::fmtsort
+{
+    namespace reflect = golang::reflect;
 }
 #include "golang/reflect/value.h"
 
-namespace golang::fmtsort
+namespace golang::internal::fmtsort
 {
-    struct SortedMap
+    struct KeyValue
     {
-        gocpp::slice<reflect::Value> Key{};
-        gocpp::slice<reflect::Value> Value{};
+        reflect::Value Key{};
+        reflect::Value Value{};
 
         using isGoStruct = void;
 
@@ -35,16 +41,14 @@ namespace golang::fmtsort
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct SortedMap& value);
+    std::ostream& operator<<(std::ostream& os, const struct KeyValue& value);
     int compare(reflect::Value aVal, reflect::Value bVal);
     std::tuple<int, bool> nilCompare(reflect::Value aVal, reflect::Value bVal);
-    SortedMap* Sort(reflect::Value mapValue);
+    using SortedMap = gocpp::defined<gocpp::slice<KeyValue>, GoTag_SortedMap>;
+    SortedMap Sort(reflect::Value mapValue);
 
     namespace rec
     {
-        int Len(SortedMap* o);
-        bool Less(SortedMap* o, int i, int j);
-        void Swap(SortedMap* o, int i, int j);
     }
 }
 

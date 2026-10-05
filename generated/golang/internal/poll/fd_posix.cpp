@@ -17,8 +17,10 @@
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/zerrors_windows.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
+    namespace io = golang::io;
+    namespace syscall = golang::syscall;
     namespace rec
     {
     }
@@ -133,6 +135,20 @@ namespace golang::poll
             if(err != syscall::go_EINTR)
             {
                 return err;
+            }
+        }
+    }
+
+    // ignoringEINTR2 is ignoringEINTR, but returning an additional value.
+    template<typename T>
+    std::tuple<T, gocpp::error> ignoringEINTR2(std::function<std::tuple<T, gocpp::error> ()> fn)
+    {
+        for(; ; )
+        {
+            auto [v, err] = fn();
+            if(err != syscall::go_EINTR)
+            {
+                return {v, err};
             }
         }
     }

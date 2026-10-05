@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::bits
+namespace golang::math::bits
 {
     const gocpp::string ntz8tab = ""_s +
         "\x08\x00\x01\x00\x02\x00\x01\x00\x03\x00\x01\x00\x02\x00\x01\x00"_s +

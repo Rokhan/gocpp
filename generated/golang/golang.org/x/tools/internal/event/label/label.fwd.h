@@ -4,8 +4,9 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::label
+namespace golang::golang_org::x::tools::internal::event::label
 {
+    struct Key;
     struct Label;
     struct Map;
     struct List;
@@ -13,11 +14,6 @@ namespace golang::label
     struct filter;
     struct listMap;
     struct mapChain;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     using stringptr = gocpp::unsafe_pointer;
-}
-#include "golang/io/io.fwd.h"
-
-namespace golang::label
-{
-    struct Key;
 }

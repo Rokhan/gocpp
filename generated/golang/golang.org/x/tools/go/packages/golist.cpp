@@ -13,7 +13,7 @@
 
 #include "golang/bytes/buffer.h"
 #include "golang/context/context.h"
-#include "golang/encoding/json/stream.h"
+#include "golang/encoding/json/v2_stream.h"
 #include "golang/fmt/errors.h"
 #include "golang/fmt/print.h"
 #include "golang/golang.org/x/tools/go/packages/external.h"
@@ -22,28 +22,45 @@
 #include "golang/golang.org/x/tools/internal/gocommand/invoke.h"
 #include "golang/golang.org/x/tools/internal/gocommand/version.h"
 #include "golang/golang.org/x/tools/internal/packagesinternal/packages.h"
-#include "golang/io/fs/fs.h"
 #include "golang/io/io.h"
 #include "golang/log/log.h"
 #include "golang/os/env.h"
 #include "golang/os/exec/exec.h"
 #include "golang/os/exec/lp_windows.h"
 #include "golang/os/stat.h"
+#include "golang/os/types.h"
 #include "golang/path/filepath/path.h"
-#include "golang/path/filepath/path_windows.h"
 #include "golang/path/path.h"
 #include "golang/reflect/deepequal.h"
 #include "golang/sort/slice.h"
-#include "golang/strconv/atob.h"
+#include "golang/strconv/number.h"
 #include "golang/strconv/quote.h"
+#include "golang/strings/builder.h"
 #include "golang/strings/strings.h"
 #include "golang/sync/once.h"
 #include "golang/unicode/graphic.h"
 #include "golang/unicode/letter.h"
 #include "golang/unicode/tables.h"
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
 {
+    namespace bytes = golang::bytes;
+    namespace context = golang::context;
+    namespace exec = golang::os::exec;
+    namespace filepath = golang::path::filepath;
+    namespace fmt = golang::fmt;
+    namespace gocommand = golang::golang_org::x::tools::internal::gocommand;
+    namespace json = golang::encoding::json;
+    namespace log = golang::log;
+    namespace os = golang::os;
+    namespace packagesinternal = golang::golang_org::x::tools::internal::packagesinternal;
+    namespace path = golang::path;
+    namespace reflect = golang::reflect;
+    namespace sort = golang::sort;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
+    namespace unicode = golang::unicode;
     namespace rec
     {
         using bytes::rec::Read;
@@ -53,6 +70,10 @@ namespace golang::packages
         using json::rec::Decode;
         using json::rec::More;
         using mocklib::rec::Error;
+        using strings::rec::String;
+        using strings::rec::Write;
+        using strings::rec::WriteByte;
+        using strings::rec::WriteString;
         using sync::rec::Do;
     }
 
@@ -162,12 +183,46 @@ namespace golang::packages
 
     void rec::addPackage(responseDeduper* r, Package* p)
     {
-        if(r->seenPackages[p->ID] != nullptr)
+        if(auto prev = r->seenPackages[p->ID]; prev != nullptr)
         {
+            // Package already seen in a previous response. Merge the file lists,
+            // removing duplicates. This can happen when the same package appears
+            // in multiple driver responses that are being merged together.
+            prev->GoFiles = appendUniqueStrings(prev->GoFiles, p->GoFiles);
+            prev->CompiledGoFiles = appendUniqueStrings(prev->CompiledGoFiles, p->CompiledGoFiles);
+            prev->OtherFiles = appendUniqueStrings(prev->OtherFiles, p->OtherFiles);
+            prev->IgnoredFiles = appendUniqueStrings(prev->IgnoredFiles, p->IgnoredFiles);
+            prev->EmbedFiles = appendUniqueStrings(prev->EmbedFiles, p->EmbedFiles);
+            prev->EmbedPatterns = appendUniqueStrings(prev->EmbedPatterns, p->EmbedPatterns);
             return;
         }
         r->seenPackages[p->ID] = p;
         r->dr->Packages = append(r->dr->Packages, p);
+    }
+
+    // appendUniqueStrings appends elements from src to dst, skipping duplicates.
+    gocpp::slice<gocpp::string> appendUniqueStrings(gocpp::slice<gocpp::string> dst, gocpp::slice<gocpp::string> src)
+    {
+        if(len(src) == 0)
+        {
+            return dst;
+        }
+
+        auto seen = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>(), len(dst));
+        for(auto [gocpp_ignored, s] : dst)
+        {
+            seen[s] = true;
+        }
+
+        for(auto [gocpp_ignored, s] : src)
+        {
+            if(! seen[s])
+            {
+                dst = append(dst, s);
+            }
+        }
+
+        return dst;
     }
 
     void rec::addRoot(responseDeduper* r, gocpp::string id)
@@ -187,6 +242,8 @@ namespace golang::packages
         T result;
         result.cfg = this->cfg;
         result.ctx = this->ctx;
+        result.runner = this->runner;
+        result.overlay = this->overlay;
         result.envOnce = this->envOnce;
         result.goEnvError = this->goEnvError;
         result.goEnv = this->goEnv;
@@ -205,6 +262,8 @@ namespace golang::packages
     {
         if (cfg != ref.cfg) return false;
         if (ctx != ref.ctx) return false;
+        if (runner != ref.runner) return false;
+        if (overlay != ref.overlay) return false;
         if (envOnce != ref.envOnce) return false;
         if (goEnvError != ref.goEnvError) return false;
         if (goEnv != ref.goEnv) return false;
@@ -223,6 +282,8 @@ namespace golang::packages
         os << '{';
         os << "" << cfg;
         os << " " << ctx;
+        os << " " << runner;
+        os << " " << overlay;
         os << " " << envOnce;
         os << " " << goEnvError;
         os << " " << goEnv;
@@ -279,7 +340,10 @@ namespace golang::packages
     // goListDriver uses the go list command to interpret the patterns and produce
     // the build system package structure.
     // See driver for more details.
-    std::tuple<DriverResponse*, gocpp::error> goListDriver(Config* cfg, gocpp::slice<gocpp::string> patterns)
+    //
+    // overlay is the JSON file that encodes the cfg.Overlay
+    // mapping, used by 'go list -overlay=...'
+    std::tuple<DriverResponse*, gocpp::error> goListDriver(Config* cfg, gocommand::Runner* runner, gocpp::string overlay, gocpp::slice<gocpp::string> patterns)
     {
         DriverResponse* _1;
         gocpp::error err;
@@ -301,15 +365,17 @@ namespace golang::packages
                 x.cfg = cfg;
                 x.ctx = ctx;
                 x.vendorDirs = gocpp::map<gocpp::string, bool> {};
+                x.overlay = overlay;
+                x.runner = runner;
             });
 
             // Fill in response.Sizes asynchronously if necessary.
-            if(cfg->Mode & NeedTypesSizes != 0 || cfg->Mode & NeedTypes != 0)
+            if(cfg->Mode & NeedTypesSizes != 0 || cfg->Mode & (NeedTypes | NeedTypesInfo) != 0)
             {
                 auto errCh = gocpp::make(gocpp::Tag<gocpp::channel<gocpp::error>>());
                 gocpp::go([&]{ [=]() mutable -> void
                 {
-                    auto [compiler, arch, err] = getSizesForArgs(ctx, rec::cfgInvocation(gocpp::recv(state)), cfg->gocmdRunner);
+                    auto [compiler, arch, err] = getSizesForArgs(ctx, rec::cfgInvocation(gocpp::recv(state)), runner);
                     response->dr->Compiler = compiler;
                     response->dr->Arch = arch;
                     errCh.send(err);
@@ -337,14 +403,13 @@ namespace golang::packages
                 extractQueries_break:
                     break;
                 }
-                auto eqidx = strings::Index(pattern, "="_s);
-                if(eqidx < 0)
+                auto [query, value, ok] = strings::Cut(pattern, "="_s);
+                if(! ok)
                 {
                     restPatterns = append(restPatterns, pattern);
                 }
                 else
                 {
-                    auto [query, value] = std::tuple{pattern.make_slice(0, eqidx), pattern.make_slice(eqidx + len("="_s))};
                     //Go switch emulation
                     {
                         auto condition = query;
@@ -412,6 +477,17 @@ namespace golang::packages
         }
     }
 
+    // abs returns an absolute representation of path, based on cfg.Dir.
+    std::tuple<gocpp::string, gocpp::error> rec::abs(Config* cfg, gocpp::string path)
+    {
+        if(filepath::IsAbs(path))
+        {
+            return {path, nullptr};
+        }
+        // In case cfg.Dir is relative, pass it to filepath.Abs.
+        return filepath::Abs(filepath::Join(cfg->Dir, path));
+    }
+
     gocpp::error rec::runContainsQueries(golistState* state, responseDeduper* response, gocpp::slice<gocpp::string> queries)
     {
         for(auto [gocpp_ignored, query] : queries)
@@ -420,7 +496,7 @@ namespace golang::packages
             auto fdir = filepath::Dir(query);
             // Pass absolute path of directory to go list so that it knows to treat it as a directory,
             // not a package path.
-            auto [pattern, err] = filepath::Abs(fdir);
+            auto [pattern, err] = rec::abs(gocpp::recv(state->cfg), fdir);
             if(err != nullptr)
             {
                 return mocklib::Errorf("could not determine absolute path of file= query path %q: %v"_s, query, err);
@@ -535,6 +611,7 @@ namespace golang::packages
         result.ImportPath = this->ImportPath;
         result.Dir = this->Dir;
         result.Name = this->Name;
+        result.Target = this->Target;
         result.Export = this->Export;
         result.GoFiles = this->GoFiles;
         result.CompiledGoFiles = this->CompiledGoFiles;
@@ -573,6 +650,7 @@ namespace golang::packages
         if (ImportPath != ref.ImportPath) return false;
         if (Dir != ref.Dir) return false;
         if (Name != ref.Name) return false;
+        if (Target != ref.Target) return false;
         if (Export != ref.Export) return false;
         if (GoFiles != ref.GoFiles) return false;
         if (CompiledGoFiles != ref.CompiledGoFiles) return false;
@@ -611,6 +689,7 @@ namespace golang::packages
         os << "" << ImportPath;
         os << " " << Dir;
         os << " " << Name;
+        os << " " << Target;
         os << " " << Export;
         os << " " << GoFiles;
         os << " " << CompiledGoFiles;
@@ -649,41 +728,6 @@ namespace golang::packages
         return value.PrintTo(os);
     }
 
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    jsonPackageError::operator T()
-    {
-        T result;
-        result.ImportStack = this->ImportStack;
-        result.Pos = this->Pos;
-        result.Err = this->Err;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool jsonPackageError::operator==(const T& ref) const
-    {
-        if (ImportStack != ref.ImportStack) return false;
-        if (Pos != ref.Pos) return false;
-        if (Err != ref.Err) return false;
-        return true;
-    }
-
-    std::ostream& jsonPackageError::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << ImportStack;
-        os << " " << Pos;
-        os << " " << Err;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct jsonPackageError& value)
-    {
-        return value.PrintTo(os);
-    }
-
     gocpp::slice<gocpp::slice<gocpp::string>> otherFiles(jsonPackage* p)
     {
         return gocpp::slice<gocpp::slice<gocpp::string>> {p->CFiles, p->CXXFiles, p->MFiles, p->HFiles, p->FFiles, p->SFiles, p->SwigFiles, p->SwigCXXFiles, p->SysoFiles};
@@ -717,7 +761,7 @@ namespace golang::packages
 
         auto seen = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, jsonPackage*>>());
         auto pkgs = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Package*>>());
-        auto additionalErrors = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::slice<golang::packages::Error>>>());
+        auto additionalErrors = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::slice<golang::golang_org::x::tools::go::packages::Error>>>());
         // Decode the JSON and convert it to Package form.
         auto response = gocpp::InitPtr<DriverResponse>([=](auto& x) {
             x.GoVersion = goVersion;
@@ -738,7 +782,7 @@ namespace golang::packages
                 // back a package without any way to refer to it.
                 if(p->Error != nullptr)
                 {
-                    return {nullptr, gocpp::error(gocpp::Init<golang::packages::Error>([=](auto& x) {
+                    return {nullptr, gocpp::error(gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
                         x.Pos = p->Error->Pos;
                         x.Msg = p->Error->Err;
                     }))};
@@ -827,7 +871,7 @@ namespace golang::packages
                             }
                             importingPkg = old->Error->ImportStack[len(old->Error->ImportStack) - 2];
                         }
-                        additionalErrors[importingPkg] = append(additionalErrors[importingPkg], gocpp::Init<golang::packages::Error>([=](auto& x) {
+                        additionalErrors[importingPkg] = append(additionalErrors[importingPkg], gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
                             x.Pos = old->Error->Pos;
                             x.Msg = old->Error->Err;
                             x.Kind = ListError;
@@ -848,13 +892,15 @@ namespace golang::packages
             auto pkg = gocpp::InitPtr<Package>([=](auto& x) {
                 x.Name = p->Name;
                 x.ID = p->ImportPath;
+                x.Dir = p->Dir;
+                x.Target = p->Target;
                 x.GoFiles = absJoin(p->Dir, p->GoFiles, p->CgoFiles);
                 x.CompiledGoFiles = absJoin(p->Dir, p->CompiledGoFiles);
                 x.OtherFiles = absJoin(p->Dir, otherFiles(p));
                 x.EmbedFiles = absJoin(p->Dir, p->EmbedFiles);
                 x.EmbedPatterns = absJoin(p->Dir, p->EmbedPatterns);
                 x.IgnoredFiles = absJoin(p->Dir, p->IgnoredGoFiles, p->IgnoredOtherFiles);
-                x.forTest = p->ForTest;
+                x.ForTest = p->ForTest;
                 x.depsErrors = p->DepsErrors;
                 x.Module = p->Module;
             });
@@ -875,8 +921,19 @@ namespace golang::packages
                 {
                     // golang/go#38990: go list silently fails to do cgo processing
                     pkg->CompiledGoFiles = nullptr;
-                    pkg->Errors = append(pkg->Errors, gocpp::Init<golang::packages::Error>([=](auto& x) {
-                        x.Msg = "go list failed to return CompiledGoFiles. This may indicate failure to perform cgo processing; try building at the command line. See https://golang.org/issue/38990."_s;
+
+                    strings::Builder msg = {};
+                    fmt::Fprintf(& msg, "go list failed to return CompiledGoFiles for %q.\n"_s, p->Name);
+
+                    for(auto [gocpp_ignored, err] : p->DepsErrors)
+                    {
+                        rec::WriteString(gocpp::recv(msg), strings::TrimSpace(err->Err));
+                        rec::WriteByte(gocpp::recv(msg), '\n');
+                    }
+
+                    rec::WriteString(gocpp::recv(msg), "This may indicate failure to perform cgo processing; try building at the command line. See https://golang.org/issue/38990."_s);
+                    pkg->Errors = append(pkg->Errors, gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
+                        x.Msg = rec::String(gocpp::recv(msg));
                         x.Kind = ListError;
                     }));
                 }
@@ -1025,7 +1082,7 @@ namespace golang::packages
                 {
                     msg += mocklib::Sprintf(": import stack: %v"_s, p->Error->ImportStack);
                 }
-                pkg->Errors = append(pkg->Errors, gocpp::Init<golang::packages::Error>([=](auto& x) {
+                pkg->Errors = append(pkg->Errors, gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
                     x.Pos = p->Error->Pos;
                     x.Msg = msg;
                     x.Kind = ListError;
@@ -1086,7 +1143,7 @@ namespace golang::packages
     {
         rec::Do(gocpp::recv(state->goVersionOnce), [=]() mutable -> void
         {
-            std::tie(state->goVersion, state->goVersionError) = gocommand::GoVersion(state->ctx, rec::cfgInvocation(gocpp::recv(state)), state->cfg->gocmdRunner);
+            std::tie(state->goVersion, state->goVersionError) = gocommand::GoVersion(state->ctx, rec::cfgInvocation(gocpp::recv(state)), state->runner);
         });
         return {state->goVersion, state->goVersionError};
     }
@@ -1095,13 +1152,11 @@ namespace golang::packages
     // directory.
     std::tuple<gocpp::string, bool, gocpp::error> rec::getPkgPath(golistState* state, gocpp::string dir)
     {
-        auto [absDir, err] = filepath::Abs(dir);
-        if(err != nullptr)
+        if(! filepath::IsAbs(dir))
         {
-            return {""_s, false, err};
+            gocpp::panic("non-absolute dir passed to getPkgPath"_s);
         }
-        gocpp::map<gocpp::string, gocpp::string> roots;
-        std::tie(roots, err) = rec::determineRootDirs(gocpp::recv(state));
+        auto [roots, err] = rec::determineRootDirs(gocpp::recv(state));
         if(err != nullptr)
         {
             return {""_s, false, err};
@@ -1111,7 +1166,7 @@ namespace golang::packages
         {
             // Make sure that the directory is in the module,
             // to avoid creating a path relative to another module.
-            if(! strings::HasPrefix(absDir, rdir))
+            if(! strings::HasPrefix(dir, rdir))
             {
                 continue;
             }
@@ -1175,7 +1230,7 @@ namespace golang::packages
         };
         // These fields are always needed
         addFields("Name"_s, "ImportPath"_s, "Error"_s);
-        if(cfg->Mode & NeedFiles != 0 || cfg->Mode & NeedTypes != 0)
+        if(cfg->Mode & NeedFiles != 0 || cfg->Mode & (NeedTypes | NeedTypesInfo) != 0)
         {
             addFields("Dir"_s, "GoFiles"_s, "IgnoredGoFiles"_s, "IgnoredOtherFiles"_s, "CFiles"_s, "CgoFiles"_s, "CXXFiles"_s, "MFiles"_s, "HFiles"_s, "FFiles"_s, "SFiles"_s, "SwigFiles"_s, "SwigCXXFiles"_s, "SysoFiles"_s);
             if(cfg->Tests)
@@ -1183,7 +1238,7 @@ namespace golang::packages
                 addFields("TestGoFiles"_s, "XTestGoFiles"_s);
             }
         }
-        if(cfg->Mode & NeedTypes != 0)
+        if(cfg->Mode & (NeedTypes | NeedTypesInfo) != 0)
         {
             // CompiledGoFiles seems to be required for the test case TestCgoNoSyntax,
             // even when -compiled isn't passed in.
@@ -1214,7 +1269,7 @@ namespace golang::packages
             // Request Dir in the unlikely case Export is not absolute.
             addFields("Dir"_s, "Export"_s);
         }
-        if(cfg->Mode & needInternalForTest != 0)
+        if(cfg->Mode & NeedForTest != 0)
         {
             addFields("ForTest"_s);
         }
@@ -1234,6 +1289,10 @@ namespace golang::packages
         {
             addFields("EmbedPatterns"_s);
         }
+        if(cfg->Mode & NeedTarget != 0)
+        {
+            addFields("Target"_s);
+        }
         return "-json="_s + mocklib::StringsJoin(fields, ","_s);
     }
 
@@ -1248,7 +1307,9 @@ namespace golang::packages
             mocklib::Sprintf("-deps=%t"_s, cfg->Mode & NeedImports != 0),
             // go list doesn't let you pass -test and -find together,
             // probably because you'd just get the TestMain.
-            mocklib::Sprintf("-find=%t"_s, ! cfg->Tests && cfg->Mode & findFlags == 0 && ! usesExportData(cfg))
+            mocklib::Sprintf("-find=%t"_s, ! cfg->Tests && cfg->Mode & findFlags == 0 && ! usesExportData(cfg)),
+            // VCS information is not needed when not printing Stale or StaleReason fields
+            "-buildvcs=false"_s
         };
 
         // golang/go#60456: with go1.21 and later, go list serves pgo variants, which
@@ -1272,13 +1333,11 @@ namespace golang::packages
         auto cfg = state->cfg;
         return gocpp::Init<gocommand::Invocation>([=](auto& x) {
             x.BuildFlags = cfg->BuildFlags;
-            x.ModFile = cfg->modFile;
-            x.ModFlag = cfg->modFlag;
             x.CleanEnv = cfg->Env != nullptr;
             x.Env = cfg->Env;
             x.Logf = [&](auto x, auto y){ return rec::Logf(cfg, x, y); };
             x.WorkingDir = cfg->Dir;
-            x.Overlay = cfg->goListOverlayFile;
+            x.Overlay = state->overlay;
         });
     }
 
@@ -1290,12 +1349,8 @@ namespace golang::packages
         auto inv = rec::cfgInvocation(gocpp::recv(state));
         inv.Verb = verb;
         inv.Args = args;
-        auto gocmdRunner = cfg->gocmdRunner;
-        if(gocmdRunner == nullptr)
-        {
-            gocmdRunner = new gocommand::Runner {};
-        }
-        auto [go_stdout, go_stderr, friendlyErr, err] = rec::RunRaw(gocpp::recv(gocmdRunner), cfg->Context, inv);
+
+        auto [go_stdout, go_stderr, friendlyErr, err] = rec::RunRaw(gocpp::recv(state->runner), cfg->Context, inv);
         if(err != nullptr)
         {
             // Check for 'go' executable not being found.
@@ -1320,6 +1375,13 @@ namespace golang::packages
 
             // Related to #24854
             if(len(rec::String(gocpp::recv(go_stderr))) > 0 && strings::Contains(rec::String(gocpp::recv(go_stderr)), "unexpected directory layout"_s))
+            {
+                return {nullptr, friendlyErr};
+            }
+
+            // Return an error if 'go list' failed due to missing tools in
+            // $GOROOT/pkg/tool/$GOOS_$GOARCH (#69606).
+            if(len(rec::String(gocpp::recv(go_stderr))) > 0 && strings::Contains(rec::String(gocpp::recv(go_stderr)), "go: no such tool"_s))
             {
                 return {nullptr, friendlyErr};
             }

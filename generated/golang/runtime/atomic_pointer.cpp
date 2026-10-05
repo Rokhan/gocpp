@@ -12,9 +12,9 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/goexperiment/exp_cgocheck2_off.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/stubs.h"
 #include "golang/runtime/cgocheck.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/stubs.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mwbbuf.h"
 #include "golang/runtime/runtime2.h"
@@ -22,6 +22,9 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace goexperiment = golang::internal::goexperiment;
     namespace rec
     {
     }
@@ -29,6 +32,16 @@ namespace golang::runtime
     // atomicwb performs a write barrier before an atomic pointer write.
     // The caller should guard the call with "if writeBarrier.enabled".
     //
+    // atomicwb should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/gopkg
+    //   - github.com/songzhibin97/gkit
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname atomicwb
     //go:nosplit
     void atomicwb(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new)
     {
@@ -54,21 +67,21 @@ namespace golang::runtime
         atomic::StorepNoWB(noescape(ptr), go_new);
     }
 
-    // atomic_storePointer is the implementation of runtime/internal/UnsafePointer.Store
+    // atomic_storePointer is the implementation of internal/runtime/atomic.UnsafePointer.Store
     // (like StoreNoWB but with the write barrier).
     //
     //go:nosplit
-    //go:linkname atomic_storePointer runtime/internal/atomic.storePointer
+    //go:linkname atomic_storePointer internal/runtime/atomic.storePointer
     void atomic_storePointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new)
     {
         atomicstorep(gocpp::unsafe_pointer(ptr), go_new);
     }
 
-    // atomic_casPointer is the implementation of runtime/internal/UnsafePointer.CompareAndSwap
+    // atomic_casPointer is the implementation of internal/runtime/atomic.UnsafePointer.CompareAndSwap
     // (like CompareAndSwapNoWB but with the write barrier).
     //
     //go:nosplit
-    //go:linkname atomic_casPointer runtime/internal/atomic.casPointer
+    //go:linkname atomic_casPointer internal/runtime/atomic.casPointer
     bool atomic_casPointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new)
     {
         if(writeBarrier.enabled)

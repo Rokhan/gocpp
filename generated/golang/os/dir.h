@@ -12,13 +12,21 @@
 
 namespace golang::os
 {
-    extern bool testingForceReadDirLstat;
+    std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(gocpp::string name);
+}
+#include "golang/io/fs/fs.fwd.h"
+#include "golang/io/fs/readlink.fwd.h"
+#include "golang/io/fs/walk.fwd.h"
+
+namespace golang::os
+{
+    namespace fs = golang::io::fs;
 }
 #include "golang/io/fs/fs.h"
 
 namespace golang::os
 {
-    std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(gocpp::string name);
+    gocpp::error CopyFS(gocpp::string dir, fs::FS fsys);
 }
 
 #include "golang/os/types.h"

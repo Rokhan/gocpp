@@ -19,12 +19,17 @@
 #include "golang/go/types/predicates.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typestring.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 #include "golang/strings/strings.h"
 #include "golang/sync/mutex.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace bytes = golang::bytes;
+    namespace fmt = golang::fmt;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
     namespace rec
     {
         using bytes::rec::String;
@@ -116,14 +121,14 @@ namespace golang::types
     {
         return gocpp::InitPtr<Context>([=](auto& x) {
             x.typeMap = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::slice<ctxtEntry>>>());
-            x.originIDs = gocpp::make(gocpp::Tag<gocpp::map<golang::types::Type, int>>());
+            x.originIDs = gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, int>>());
         });
     }
 
     // instanceHash returns a string representation of typ instantiated with targs.
     // The hash should be a perfect hash, though out of caution the type checker
     // does not assume this. The result is guaranteed to not contain blanks.
-    gocpp::string rec::instanceHash(Context* ctxt, golang::types::Type orig, gocpp::slice<golang::types::Type> targs)
+    gocpp::string rec::instanceHash(Context* ctxt, golang::go::types::Type orig, gocpp::slice<golang::go::types::Type> targs)
     {
         assert(ctxt != nullptr);
         assert(orig != nullptr);
@@ -147,7 +152,7 @@ namespace golang::types
 
     // lookup returns an existing instantiation of orig with targs, if it exists.
     // Otherwise, it returns nil.
-    golang::types::Type rec::lookup(Context* ctxt, gocpp::string h, golang::types::Type orig, gocpp::slice<golang::types::Type> targs)
+    golang::go::types::Type rec::lookup(Context* ctxt, gocpp::string h, golang::go::types::Type orig, gocpp::slice<golang::go::types::Type> targs)
     {
         gocpp::Defer defer;
         try
@@ -176,11 +181,11 @@ namespace golang::types
         }
     }
 
-    // update de-duplicates n against previously seen types with the hash h.  If an
-    // identical type is found with the type hash h, the previously seen type is
-    // returned. Otherwise, n is returned, and recorded in the Context for the hash
-    // h.
-    golang::types::Type rec::update(Context* ctxt, gocpp::string h, golang::types::Type orig, gocpp::slice<golang::types::Type> targs, golang::types::Type inst)
+    // update de-duplicates inst against previously seen types with the hash h.
+    // If an identical type is found with the type hash h, the previously seen
+    // type is returned. Otherwise, inst is returned, and recorded in the Context
+    // for the hash h.
+    golang::go::types::Type rec::update(Context* ctxt, gocpp::string h, golang::go::types::Type orig, gocpp::slice<golang::go::types::Type> targs, golang::go::types::Type inst)
     {
         gocpp::Defer defer;
         try
@@ -218,7 +223,7 @@ namespace golang::types
     }
 
     // getID returns a unique ID for the type t.
-    int rec::getID(Context* ctxt, golang::types::Type t)
+    int rec::getID(Context* ctxt, golang::go::types::Type t)
     {
         gocpp::Defer defer;
         try

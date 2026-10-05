@@ -15,16 +15,34 @@ namespace golang::os
     gocpp::error Chown(gocpp::string name, int uid, int gid);
     gocpp::error Lchown(gocpp::string name, int uid, int gid);
     gocpp::error ignoringEINTR(std::function<gocpp::error ()> fn);
+    
+    template<typename T>
+    std::tuple<T, gocpp::error> ignoringEINTR2(std::function<std::tuple<T, gocpp::error> ()> fn);
 }
-#include "golang/io/fs/fs.h"
-#include "golang/time/time.h"
-#include "golang/os/types.fwd.h"
+#include "golang/os/types.h"
 
 namespace golang::os
 {
     uint32_t syscallMode(FileMode i);
     gocpp::error chmod(gocpp::string name, FileMode mode);
+}
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/time/time.fwd.h"
+
+namespace golang::os
+{
+    namespace syscall = golang::syscall;
+    namespace time = golang::time;
+}
+#include "golang/syscall/syscall_windows.h"
+#include "golang/time/time.h"
+
+namespace golang::os
+{
     gocpp::error Chtimes(gocpp::string name, mocklib::Date atime, mocklib::Date mtime);
+    gocpp::array<syscall::Timespec, 2> chtimesUtimes(mocklib::Date atime, mocklib::Date mtime);
 }
 
 #include "golang/os/types.h"

@@ -7,16 +7,11 @@
 namespace golang::runtime
 {
     const bool debugSelect = false;
+    struct scase;
+    struct runtimeSelect;
     using selectDir = int;
     const selectDir _ = 0;
     const selectDir selectSend = 1;
     const selectDir selectRecv = 2;
     const selectDir selectDefault = 3;
-}
-#include "golang/runtime/chan.fwd.h"
-
-namespace golang::runtime
-{
-    struct scase;
-    struct runtimeSelect;
 }

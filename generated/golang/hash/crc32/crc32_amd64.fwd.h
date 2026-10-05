@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
     const long castagnoliK1 = 168;
     const long castagnoliK2 = 1344;
@@ -12,7 +12,7 @@ namespace golang::crc32
 }
 #include "golang/hash/crc32/crc32.fwd.h"
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
     using sse42Table = gocpp::defined<gocpp::array<Table, 4>, GoTag_sse42Table>;
 }

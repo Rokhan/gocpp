@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::png
+namespace golang::image::png
 {
     // Color type, as per the PNG spec.
     const long ctGrayscale = 0;
@@ -53,15 +53,7 @@ namespace golang::png
     const int dsSeenIDAT = 4;
     const int dsSeenIEND = 5;
     const gocpp::string pngHeader = "\x89PNG\r\n\x1a\n"_s;
+    struct decoder;
     using FormatError = gocpp::string;
     using UnsupportedError = gocpp::string;
-}
-#include "golang/hash/hash.fwd.h"
-#include "golang/image/color/color.fwd.h"
-#include "golang/image/image.fwd.h"
-#include "golang/io/io.fwd.h"
-
-namespace golang::png
-{
-    struct decoder;
 }

@@ -4,8 +4,9 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
+    const long FILE_SUPPORTS_OBJECT_IDS = 0x00010000;
     const long FILE_SUPPORTS_OPEN_BY_FILE_ID = 0x01000000;
     // symlink support for CreateSymbolicLink() starting with Windows 10 (1703, v10.0.14972)
     const long SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE = 0x2;
@@ -13,6 +14,7 @@ namespace golang::windows
     const long FileBasicInfo = 0;
     const long FileStandardInfo = 1;
     const long FileNameInfo = 2;
+    const long FileDispositionInfo = 4;
     const long FileStreamInfo = 7;
     const long FileCompressionInfo = 8;
     const long FileAttributeTagInfo = 9;
@@ -30,7 +32,8 @@ namespace golang::windows
 }
 #include "golang/syscall/syscall_windows.fwd.h"
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
+    namespace syscall = golang::syscall;
     const syscall::Errno ERROR_INVALID_PARAMETER = 87;
 }

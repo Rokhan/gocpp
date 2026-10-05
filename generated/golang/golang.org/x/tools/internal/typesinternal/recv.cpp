@@ -11,14 +11,15 @@
 #include "golang/golang.org/x/tools/internal/typesinternal/recv.h"
 #include "gocpp/support.h"
 
+#include "golang/go/types/alias.h"
 #include "golang/go/types/named.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/pointer.h"
 #include "golang/go/types/type.h"
-#include "golang/golang.org/x/tools/internal/aliases/aliases_go122.h"
 
-namespace golang::typesinternal
+namespace golang::golang_org::x::tools::internal::typesinternal
 {
+    namespace types = golang::go::types;
     namespace rec
     {
         using types::rec::Elem;
@@ -28,17 +29,20 @@ namespace golang::typesinternal
     // ReceiverNamed returns the named type (if any) associated with the
     // type of recv, which may be of the form N or *N, or aliases thereof.
     // It also reports whether a Pointer was present.
+    //
+    // The named result may be nil if recv is from a method on an
+    // anonymous interface or struct types or in ill-typed code.
     std::tuple<bool, types::Named*> ReceiverNamed(types::Var* recv)
     {
         bool isPtr;
         types::Named* named;
         auto t = rec::Type(gocpp::recv(recv));
-        if(auto [ptr, ok] = gocpp::getValue<types::Pointer*>(aliases::Unalias(t)); ok)
+        if(auto [ptr, ok] = gocpp::getValue<types::Pointer*>(types::Unalias(t)); ok)
         {
             isPtr = true;
             t = rec::Elem(gocpp::recv(ptr));
         }
-        std::tie(named, std::ignore) = gocpp::getValue<types::Named*>(aliases::Unalias(t));
+        std::tie(named, std::ignore) = gocpp::getValue<types::Named*>(types::Unalias(t));
         return {isPtr, named};
     }
 
@@ -56,7 +60,7 @@ namespace golang::typesinternal
     // a LOAD instruction).
     types::Type Unpointer(types::Type t)
     {
-        if(auto [ptr, ok] = gocpp::getValue<types::Pointer*>(aliases::Unalias(t)); ok)
+        if(auto [ptr, ok] = gocpp::getValue<types::Pointer*>(types::Unalias(t)); ok)
         {
             return rec::Elem(gocpp::recv(ptr));
         }

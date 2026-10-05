@@ -11,13 +11,15 @@
 #include "golang/internal/reflectlite/type.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/map.h"
 #include "golang/internal/abi/type.h"
-#include "golang/internal/reflectlite/value.h"
 
 // Package reflectlite implements lightweight version of reflect, not using
 // any package except for "runtime", "unsafe", and "internal/abi"
-namespace golang::reflectlite
+namespace golang::internal::reflectlite
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
     namespace rec
     {
         using abi::rec::ArrayType;
@@ -101,17 +103,17 @@ namespace golang::reflectlite
         return rec::Size(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    golang::reflectlite::Kind Type::TypeImpl<T, TStore, TInterface>::vKind()
+    golang::internal::reflectlite::Kind Type::TypeImpl<T, TStore, TInterface>::vKind()
     {
         return rec::Kind(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    bool Type::TypeImpl<T, TStore, TInterface>::vImplements(golang::reflectlite::Type u)
+    bool Type::TypeImpl<T, TStore, TInterface>::vImplements(golang::internal::reflectlite::Type u)
     {
         return rec::Implements(gocpp::PtrRecv<T, false>(value.get()), u);
     }
     template<typename T, typename TStore, typename TInterface>
-    bool Type::TypeImpl<T, TStore, TInterface>::vAssignableTo(golang::reflectlite::Type u)
+    bool Type::TypeImpl<T, TStore, TInterface>::vAssignableTo(golang::internal::reflectlite::Type u)
     {
         return rec::AssignableTo(gocpp::PtrRecv<T, false>(value.get()), u);
     }
@@ -126,7 +128,7 @@ namespace golang::reflectlite
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    golang::reflectlite::Type Type::TypeImpl<T, TStore, TInterface>::vElem()
+    golang::internal::reflectlite::Type Type::TypeImpl<T, TStore, TInterface>::vElem()
     {
         return rec::Elem(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -179,32 +181,32 @@ namespace golang::reflectlite
             return self.obj.value()->vSize();
         }
 
-        golang::reflectlite::Kind Kind(const gocpp::PtrRecv<struct Type, false>& self)
+        golang::internal::reflectlite::Kind Kind(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value()->vKind();
         }
 
-        golang::reflectlite::Kind Kind(const gocpp::ObjRecv<struct Type>& self)
+        golang::internal::reflectlite::Kind Kind(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value()->vKind();
         }
 
-        bool Implements(const gocpp::PtrRecv<struct Type, false>& self, golang::reflectlite::Type u)
+        bool Implements(const gocpp::PtrRecv<struct Type, false>& self, golang::internal::reflectlite::Type u)
         {
             return self.ptr->value()->vImplements(u);
         }
 
-        bool Implements(const gocpp::ObjRecv<struct Type>& self, golang::reflectlite::Type u)
+        bool Implements(const gocpp::ObjRecv<struct Type>& self, golang::internal::reflectlite::Type u)
         {
             return self.obj.value()->vImplements(u);
         }
 
-        bool AssignableTo(const gocpp::PtrRecv<struct Type, false>& self, golang::reflectlite::Type u)
+        bool AssignableTo(const gocpp::PtrRecv<struct Type, false>& self, golang::internal::reflectlite::Type u)
         {
             return self.ptr->value()->vAssignableTo(u);
         }
 
-        bool AssignableTo(const gocpp::ObjRecv<struct Type>& self, golang::reflectlite::Type u)
+        bool AssignableTo(const gocpp::ObjRecv<struct Type>& self, golang::internal::reflectlite::Type u)
         {
             return self.obj.value()->vAssignableTo(u);
         }
@@ -229,12 +231,12 @@ namespace golang::reflectlite
             return self.obj.value()->vString();
         }
 
-        golang::reflectlite::Type Elem(const gocpp::PtrRecv<struct Type, false>& self)
+        golang::internal::reflectlite::Type Elem(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value()->vElem();
         }
 
-        golang::reflectlite::Type Elem(const gocpp::ObjRecv<struct Type>& self)
+        golang::internal::reflectlite::Type Elem(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value()->vElem();
         }
@@ -302,60 +304,6 @@ namespace golang::reflectlite
     // to describe a non-defined type with no methods.
     // arrayType represents a fixed array type.
     // chanType represents a channel type.
-    // mapType represents a map type.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    mapType::operator T()
-    {
-        T result;
-        result.rtype = this->rtype;
-        result.Key = this->Key;
-        result.Elem = this->Elem;
-        result.Bucket = this->Bucket;
-        result.Hasher = this->Hasher;
-        result.KeySize = this->KeySize;
-        result.ValueSize = this->ValueSize;
-        result.BucketSize = this->BucketSize;
-        result.Flags = this->Flags;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool mapType::operator==(const T& ref) const
-    {
-        if (rtype != ref.rtype) return false;
-        if (Key != ref.Key) return false;
-        if (Elem != ref.Elem) return false;
-        if (Bucket != ref.Bucket) return false;
-        if (Hasher != ref.Hasher) return false;
-        if (KeySize != ref.KeySize) return false;
-        if (ValueSize != ref.ValueSize) return false;
-        if (BucketSize != ref.BucketSize) return false;
-        if (Flags != ref.Flags) return false;
-        return true;
-    }
-
-    std::ostream& mapType::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << rtype;
-        os << " " << Key;
-        os << " " << Elem;
-        os << " " << Bucket;
-        os << " " << Hasher;
-        os << " " << KeySize;
-        os << " " << ValueSize;
-        os << " " << BucketSize;
-        os << " " << Flags;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct mapType& value)
-    {
-        return value.PrintTo(os);
-    }
-
     // ptrType represents a pointer type.
     // sliceType represents a slice type.
     // structType represents a struct type.
@@ -411,29 +359,29 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
-    unsigned char* rec::data(golang::reflectlite::name n, int off, gocpp::string whySafe)
+    unsigned char* rec::data(golang::internal::reflectlite::name n, int off, gocpp::string whySafe)
     {
         return (unsigned char*)(add(gocpp::unsafe_pointer(n.bytes), uintptr_t(off), whySafe));
     }
 
-    bool rec::isExported(golang::reflectlite::name n)
+    bool rec::isExported(golang::internal::reflectlite::name n)
     {
         return (*n.bytes) & (1 << 0) != 0;
     }
 
-    bool rec::hasTag(golang::reflectlite::name n)
+    bool rec::hasTag(golang::internal::reflectlite::name n)
     {
         return (*n.bytes) & (1 << 1) != 0;
     }
 
-    bool rec::embedded(golang::reflectlite::name n)
+    bool rec::embedded(golang::internal::reflectlite::name n)
     {
         return (*n.bytes) & (1 << 3) != 0;
     }
 
     // readVarint parses a varint as encoded by encoding/binary.
     // It returns the number of encoded bytes and the encoded value.
-    std::tuple<int, int> rec::readVarint(golang::reflectlite::name n, int off)
+    std::tuple<int, int> rec::readVarint(golang::internal::reflectlite::name n, int off)
     {
         auto v = 0;
         for(auto i = 0; ; i++)
@@ -447,7 +395,7 @@ namespace golang::reflectlite
         }
     }
 
-    gocpp::string rec::name(golang::reflectlite::name n)
+    gocpp::string rec::name(golang::internal::reflectlite::name n)
     {
         if(n.bytes == nullptr)
         {
@@ -457,7 +405,7 @@ namespace golang::reflectlite
         return unsafe::String(rec::data(gocpp::recv(n), 1 + i, "non-empty string"_s), l);
     }
 
-    gocpp::string rec::tag(golang::reflectlite::name n)
+    gocpp::string rec::tag(golang::internal::reflectlite::name n)
     {
         if(! rec::hasTag(gocpp::recv(n)))
         {
@@ -485,7 +433,7 @@ namespace golang::reflectlite
         // Note that this field may not be aligned in memory,
         // so we cannot use a direct int32 assignment here.
         copy((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& nameOff)).make_slice(0), (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"_s))).make_slice(0));
-        auto pkgPathName = golang::reflectlite::name {(unsigned char*)(resolveTypeOff(gocpp::unsafe_pointer(n.Bytes), nameOff))};
+        auto pkgPathName = golang::internal::reflectlite::name {(unsigned char*)(resolveTypeOff(gocpp::unsafe_pointer(n.Bytes), nameOff))};
         return rec::name(gocpp::recv(pkgPathName));
     }
 
@@ -505,14 +453,14 @@ namespace golang::reflectlite
     gocpp::unsafe_pointer resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off)
     /* convertBlockStmt, nil block */;
 
-    abi::Name rec::nameOff(rtype t, golang::reflectlite::nameOff off)
+    abi::Name rec::nameOff(rtype t, golang::internal::reflectlite::nameOff off)
     {
         return gocpp::Init<abi::Name>([=](auto& x) {
             x.Bytes = (unsigned char*)(resolveNameOff(gocpp::unsafe_pointer(t.Type), int32_t(off)));
         });
     }
 
-    abi::Type* rec::typeOff(rtype t, golang::reflectlite::typeOff off)
+    abi::Type* rec::typeOff(rtype t, golang::internal::reflectlite::typeOff off)
     {
         return (abi::Type*)(resolveTypeOff(gocpp::unsafe_pointer(t.Type), int32_t(off)));
     }
@@ -618,12 +566,12 @@ namespace golang::reflectlite
         gocpp::panic("reflect: Elem of invalid type "_s + rec::String(gocpp::recv(toRType(t))));
     }
 
-    golang::reflectlite::Type rec::Elem(rtype t)
+    golang::internal::reflectlite::Type rec::Elem(rtype t)
     {
         return toType(elem(rec::common(gocpp::recv(t))));
     }
 
-    golang::reflectlite::Type rec::In(rtype t, int i)
+    golang::internal::reflectlite::Type rec::In(rtype t, int i)
     {
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -633,7 +581,7 @@ namespace golang::reflectlite
         return toType(rec::InSlice(gocpp::recv(tt))[i]);
     }
 
-    golang::reflectlite::Type rec::Key(rtype t)
+    golang::internal::reflectlite::Type rec::Key(rtype t)
     {
         auto tt = rec::MapType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -683,7 +631,7 @@ namespace golang::reflectlite
         return rec::NumOut(gocpp::recv(tt));
     }
 
-    golang::reflectlite::Type rec::Out(rtype t, int i)
+    golang::internal::reflectlite::Type rec::Out(rtype t, int i)
     {
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -707,15 +655,12 @@ namespace golang::reflectlite
 
     // TypeOf returns the reflection Type that represents the dynamic type of i.
     // If i is a nil interface value, TypeOf returns nil.
-    golang::reflectlite::Type TypeOf(go_any i)
+    golang::internal::reflectlite::Type TypeOf(go_any i)
     {
-        auto eface = *(emptyInterface*)(gocpp::unsafe_pointer(& i));
-        // Noescape so this doesn't make i to escape. See the comment
-        // at Value.typ for why this is safe.
-        return toType((abi::Type*)(noescape(gocpp::unsafe_pointer(eface.typ))));
+        return toType(abi::TypeOf(i));
     }
 
-    bool rec::Implements(rtype t, golang::reflectlite::Type u)
+    bool rec::Implements(rtype t, golang::internal::reflectlite::Type u)
     {
         if(u == nullptr)
         {
@@ -728,7 +673,7 @@ namespace golang::reflectlite
         return implements(rec::common(gocpp::recv(u)), rec::common(gocpp::recv(t)));
     }
 
-    bool rec::AssignableTo(rtype t, golang::reflectlite::Type u)
+    bool rec::AssignableTo(rtype t, golang::internal::reflectlite::Type u)
     {
         if(u == nullptr)
         {
@@ -1040,19 +985,13 @@ namespace golang::reflectlite
     // a nil *rtype must be replaced by a nil Type, but in gccgo this
     // function takes care of ensuring that multiple *rtype for the same
     // type are coalesced into a single Type.
-    golang::reflectlite::Type toType(abi::Type* t)
+    golang::internal::reflectlite::Type toType(abi::Type* t)
     {
         if(t == nullptr)
         {
             return nullptr;
         }
         return toRType(t);
-    }
-
-    // ifaceIndir reports whether t is stored indirectly in an interface value.
-    bool ifaceIndir(abi::Type* t)
-    {
-        return t->Kind_ & abi::KindDirectIface == 0;
     }
 
 }

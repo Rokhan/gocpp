@@ -3,9 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/sync/once.fwd.h"
 
-namespace golang::goroot
+namespace golang::internal::goroot
 {
     struct gccgoDirs;
 }

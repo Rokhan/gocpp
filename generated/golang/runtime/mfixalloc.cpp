@@ -11,7 +11,7 @@
 #include "golang/runtime/mfixalloc.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/sys/nih.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
@@ -19,6 +19,8 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
     }
@@ -37,7 +39,7 @@ namespace golang::runtime
     // smashed by freeing and reallocating.
     //
     // Consider marking fixalloc'd types not in heap by embedding
-    // runtime/internal/sys.NotInHeap.
+    // internal/runtime/sys.NotInHeap.
     
     template<typename T> requires gocpp::GoStruct<T>
     fixalloc::operator T()

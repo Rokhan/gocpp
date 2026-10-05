@@ -4,20 +4,25 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct GoTag_opPredicates;
     using exprKind = int;
+    struct target;
     const exprKind conversion = 0;
     const exprKind expression = 1;
     const exprKind statement = 2;
 }
+#include "golang/go/token/position.fwd.h"
 #include "golang/go/token/token.fwd.h"
-#include "golang/go/types/signature.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+}
 #include "golang/go/types/type.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    using opPredicates = gocpp::defined<gocpp::map<token::Token, std::function<bool (golang::types::Type _1)>>, GoTag_opPredicates>;
-    struct target;
+    using opPredicates = gocpp::defined<gocpp::map<token::Token, std::function<bool (golang::go::types::Type _1)>>, GoTag_opPredicates>;
 }

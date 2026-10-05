@@ -10,14 +10,7 @@ namespace golang::runtime
     struct MemStats;
     struct gocpp_id_1;
     using sysMemStat = uint64_t;
-    struct cpuStats;
-}
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/sizeclasses.fwd.h"
-
-namespace golang::runtime
-{
     struct heapStatsDelta;
     struct consistentHeapStats;
+    struct cpuStats;
 }

@@ -12,37 +12,15 @@
 
 namespace golang::os
 {
-    struct dirInfo
-    {
-        // buf is a slice pointer so the slice header
-        // does not escape to the heap when returning
-        // buf to dirBufPool.
-        gocpp::slice<unsigned char>* buf{}; // buffer for directory I/O
-        int bufp{}; // location of next record in buf
-        uint32_t vol{};
-        uint32_t go_class{}; // type of entries in buf
-        gocpp::string path{}; // absolute directory path, empty if the file system supports FILE_ID_BOTH_DIR_INFO
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct dirInfo& value);
+    // allowReadDirFileID indicates whether File.readdir should try to use FILE_ID_BOTH_DIR_INFO
+    // if the underlying file system supports it.
+    // Useful for testing purposes.
     extern bool allowReadDirFileID;
 }
-#include "golang/sync/pool.h"
 #include "golang/os/types_windows.fwd.h"
 
 namespace golang::os
 {
-    extern sync::Pool dirBufPool;
     struct dirEntry
     {
         fileStat* fs{};
@@ -60,9 +38,54 @@ namespace golang::os
 
     std::ostream& operator<<(std::ostream& os, const struct dirEntry& value);
 }
+#include "golang/sync/mutex.fwd.h"
+#include "golang/sync/pool.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+
+namespace golang::os
+{
+    namespace sync = golang::sync;
+    namespace syscall = golang::syscall;
+}
+#include "golang/sync/mutex.h"
+#include "golang/sync/pool.h"
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::os
+{
+    struct dirInfo
+    {
+        mocklib::Mutex mu{};
+        // buf is a slice pointer so the slice header
+        // does not escape to the heap when returning
+        // buf to dirBufPool.
+        gocpp::slice<unsigned char>* buf{}; // buffer for directory I/O
+        int bufp{}; // location of next record in buf
+        syscall::Handle h{};
+        uint32_t vol{};
+        uint32_t go_class{}; // type of entries in buf
+        gocpp::string path{}; // absolute directory path, empty if the file system supports FILE_ID_BOTH_DIR_INFO
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct dirInfo& value);
+    extern sync::Pool dirBufPool;
+}
 
 #include "golang/os/dir.h"
 #include "golang/os/types.h"
+#include "golang/syscall/syscall_windows.h"
 
 namespace golang::os
 {
@@ -70,6 +93,7 @@ namespace golang::os
     namespace rec
     {
         void close(dirInfo* d);
+        void init(dirInfo* d, syscall::Handle h);
         std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, gocpp::error> readdir(File* file, int n, readdirMode mode);
         gocpp::string Name(dirEntry de);
         bool IsDir(dirEntry de);

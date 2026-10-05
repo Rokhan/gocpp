@@ -11,17 +11,19 @@
 #include "golang/runtime/rwmutex.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
+#include "golang/runtime/note_other.h"
 #include "golang/runtime/panic.h"
-#include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
 
 namespace golang::runtime
 {
+    namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
         using atomic::rec::Add;
@@ -103,13 +105,13 @@ namespace golang::runtime
     // acquire of readRank for the duration of a read lock.
     //
     // The lock ranking must document this ordering:
-    // - readRankInternal is a leaf lock.
-    // - readRank is taken before readRankInternal.
-    // - writeRank is taken before readRankInternal.
-    // - readRank is placed in the lock order wherever a read lock of this rwmutex
-    //   belongs.
-    // - writeRank is placed in the lock order wherever a write lock of this
-    //   rwmutex belongs.
+    //   - readRankInternal is a leaf lock.
+    //   - readRank is taken before readRankInternal.
+    //   - writeRank is taken before readRankInternal.
+    //   - readRank is placed in the lock order wherever a read lock of this rwmutex
+    //     belongs.
+    //   - writeRank is placed in the lock order wherever a write lock of this
+    //     rwmutex belongs.
     void rec::init(rwmutex* rw, lockRank readRank, lockRank readRankInternal, lockRank writeRank)
     {
         rw->readRank = readRank;
@@ -125,9 +127,7 @@ namespace golang::runtime
         // things blocking on the lock may consume all of the Ps and
         // deadlock (issue #20903). Alternatively, we could drop the P
         // while sleeping.
-        acquirem();
-
-        acquireLockRank(rw->readRank);
+        acquireLockRankAndM(rw->readRank);
         lockWithRankMayAcquire(& rw->rLock, getLockRank(& rw->rLock));
 
         if(rec::Add(gocpp::recv(rw->readerCount), 1) < 0)
@@ -179,8 +179,7 @@ namespace golang::runtime
                 runtime::unlock(& rw->rLock);
             }
         }
-        releaseLockRank(rw->readRank);
-        releasem(getg()->m);
+        releaseLockRankAndM(rw->readRank);
     }
 
     // lock locks rw for writing.

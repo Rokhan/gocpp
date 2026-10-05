@@ -95,9 +95,6 @@ namespace golang::slices
     void rotateRight(gocpp::slice<E> s, int r);
     
     template<typename E>
-    void swap(gocpp::slice<E> x, gocpp::slice<E> y);
-    
-    template<typename E>
     bool overlaps(gocpp::slice<E> a, gocpp::slice<E> b);
     
     template<typename E>
@@ -120,6 +117,9 @@ namespace golang::slices
     {
         return Concat(gocpp::ToSlice<S<E>>(value, slices...));
     }
+    
+    template<template<typename> class  S, typename E>
+    S<E> Repeat(S<E> x, int count);
 
     namespace rec
     {

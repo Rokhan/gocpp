@@ -12,6 +12,9 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
+#include "golang/internal/bytealg/count_native.h"
+#include "golang/internal/filepathlite/path.h"
+#include "golang/internal/filepathlite/path_windows.h"
 #include "golang/io/fs/fs.h"
 #include "golang/io/fs/readdir.h"
 #include "golang/io/fs/walk.h"
@@ -24,9 +27,7 @@
 #include "golang/os/types.h"
 #include "golang/path/filepath/path_windows.h"
 #include "golang/path/filepath/symlink_windows.h"
-#include "golang/slices/slices.h"
-#include "golang/sort/sort.h"
-#include "golang/strings/strings.h"
+#include "golang/slices/sort.h"
 
 // Package filepath implements utility routines for manipulating filename paths
 // in a way compatible with the target operating system-defined file paths.
@@ -35,99 +36,20 @@
 // depending on the operating system. To process paths such as URLs
 // that always use forward slashes regardless of the operating
 // system, see the [path] package.
-namespace golang::filepath
+namespace golang::path::filepath
 {
+    namespace bytealg = golang::internal::bytealg;
+    namespace errors = golang::errors;
+    namespace filepathlite = golang::internal::filepathlite;
+    namespace fs = golang::io::fs;
+    namespace os = golang::os;
+    namespace slices = golang::slices;
     namespace rec
     {
         using fs::rec::IsDir;
         using fs::rec::Name;
         using os::rec::Close;
         using os::rec::Readdirnames;
-    }
-
-    // A lazybuf is a lazily constructed path buffer.
-    // It supports append, reading previously appended bytes,
-    // and retrieving the final string. It does not allocate a buffer
-    // to hold the output until that output diverges from s.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    lazybuf::operator T()
-    {
-        T result;
-        result.path = this->path;
-        result.buf = this->buf;
-        result.w = this->w;
-        result.volAndPath = this->volAndPath;
-        result.volLen = this->volLen;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool lazybuf::operator==(const T& ref) const
-    {
-        if (path != ref.path) return false;
-        if (buf != ref.buf) return false;
-        if (w != ref.w) return false;
-        if (volAndPath != ref.volAndPath) return false;
-        if (volLen != ref.volLen) return false;
-        return true;
-    }
-
-    std::ostream& lazybuf::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << path;
-        os << " " << buf;
-        os << " " << w;
-        os << " " << volAndPath;
-        os << " " << volLen;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct lazybuf& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    unsigned char rec::index(lazybuf* b, int i)
-    {
-        if(b->buf != nullptr)
-        {
-            return b->buf[i];
-        }
-        return b->path[i];
-    }
-
-    void rec::append(lazybuf* b, unsigned char c)
-    {
-        if(b->buf == nullptr)
-        {
-            if(b->w < len(b->path) && b->path[b->w] == c)
-            {
-                b->w++;
-                return;
-            }
-            b->buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(b->path));
-            copy(b->buf, b->path.make_slice(0, b->w));
-        }
-        b->buf[b->w] = c;
-        b->w++;
-    }
-
-    void rec::prepend(lazybuf* b, gocpp::slice<unsigned char> prefix)
-    {
-        b->buf = slices::Insert(b->buf, 0, prefix);
-        b->w += len(prefix);
-    }
-
-    gocpp::string rec::string(lazybuf* b)
-    {
-        if(b->buf == nullptr)
-        {
-            return b->volAndPath.make_slice(0, b->volLen + b->w);
-        }
-        return b->volAndPath.make_slice(0, b->volLen) + gocpp::string(b->buf.make_slice(0, b->w));
     }
 
     // Clean returns the shortest path name equivalent to path
@@ -159,113 +81,7 @@ namespace golang::filepath
     // https://9p.io/sys/doc/lexnames.html
     gocpp::string Clean(gocpp::string path)
     {
-        auto originalPath = path;
-        auto volLen = volumeNameLen(path);
-        path = path.make_slice(volLen);
-        if(path == ""_s)
-        {
-            if(volLen > 1 && os::IsPathSeparator(originalPath[0]) && os::IsPathSeparator(originalPath[1]))
-            {
-                // should be UNC
-                return FromSlash(originalPath);
-            }
-            return originalPath + "."_s;
-        }
-        auto rooted = os::IsPathSeparator(path[0]);
-
-        // Invariants:
-        // reading from path; r is index of next byte to process.
-        // writing to buf; w is index of next byte to write.
-        // dotdot is index in buf where .. must stop, either because
-        // it is the leading slash or it is a leading ../../.. prefix.
-        auto n = len(path);
-        auto out = gocpp::Init<lazybuf>([=](auto& x) {
-            x.path = path;
-            x.volAndPath = originalPath;
-            x.volLen = volLen;
-        });
-        auto [r, dotdot] = std::tuple{0, 0};
-        if(rooted)
-        {
-            rec::append(gocpp::recv(out), Separator);
-            std::tie(r, dotdot) = std::tuple{1, 1};
-        }
-
-        for(; r < n; )
-        {
-            //Go switch emulation
-            {
-                int conditionId = -1;
-                if(os::IsPathSeparator(path[r])) { conditionId = 0; }
-                else if(path[r] == '.' && (r + 1 == n || os::IsPathSeparator(path[r + 1]))) { conditionId = 1; }
-                else if(path[r] == '.' && path[r + 1] == '.' && (r + 2 == n || os::IsPathSeparator(path[r + 2]))) { conditionId = 2; }
-                switch(conditionId)
-                {
-                    case 0:
-                        // empty path element
-                        r++;
-                        break;
-                    case 1:
-                        // . element
-                        r++;
-                        break;
-                    case 2:
-                        // .. element: remove to last separator
-                        r += 2;
-                        //Go switch emulation
-                        {
-                            int conditionId = -1;
-                            if(out.w > dotdot) { conditionId = 0; }
-                            else if(! rooted) { conditionId = 1; }
-                            switch(conditionId)
-                            {
-                                case 0:
-                                    // can backtrack
-                                    out.w--;
-                                    for(; out.w > dotdot && ! os::IsPathSeparator(rec::index(gocpp::recv(out), out.w)); )
-                                    {
-                                        out.w--;
-                                    }
-                                    break;
-                                case 1:
-                                    // cannot backtrack, but not rooted, so append .. element.
-                                    if(out.w > 0)
-                                    {
-                                        rec::append(gocpp::recv(out), Separator);
-                                    }
-                                    rec::append(gocpp::recv(out), '.');
-                                    rec::append(gocpp::recv(out), '.');
-                                    dotdot = out.w;
-                                    break;
-                            }
-                        }
-                        break;
-                    default:
-                        // real path element.
-                        // add slash if needed
-                        if(rooted && out.w != 1 || ! rooted && out.w != 0)
-                        {
-                            rec::append(gocpp::recv(out), Separator);
-                        }
-                        // copy element
-                        for(; r < n && ! os::IsPathSeparator(path[r]); r++)
-                        {
-                            rec::append(gocpp::recv(out), path[r]);
-                        }
-                        break;
-                }
-            }
-        }
-
-        // Turn empty string into "."
-        if(out.w == 0)
-        {
-            rec::append(gocpp::recv(out), '.');
-        }
-
-        // avoid creating absolute paths on Windows
-        postClean(& out);
-        return FromSlash(rec::string(gocpp::recv(out)));
+        return filepathlite::Clean(path);
     }
 
     // IsLocal reports whether path, using lexical analysis only, has all of these properties:
@@ -284,35 +100,20 @@ namespace golang::filepath
     // that may exist in the filesystem.
     bool IsLocal(gocpp::string path)
     {
-        return isLocal(path);
+        return filepathlite::IsLocal(path);
     }
 
-    bool unixIsLocal(gocpp::string path)
+    // Localize converts a slash-separated path into an operating system path.
+    // The input path must be a valid path as reported by [io/fs.ValidPath].
+    //
+    // Localize returns an error if the path cannot be represented by the operating system.
+    // For example, the path a\b is rejected on Windows, on which \ is a separator
+    // character and cannot be part of a filename.
+    //
+    // The path returned by Localize will always be local, as reported by IsLocal.
+    std::tuple<gocpp::string, gocpp::error> Localize(gocpp::string path)
     {
-        if(IsAbs(path) || path == ""_s)
-        {
-            return false;
-        }
-        auto hasDots = false;
-        for(auto p = path; p != ""_s; )
-        {
-            gocpp::string part = {};
-            std::tie(part, p, std::ignore) = strings::Cut(p, "/"_s);
-            if(part == "."_s || part == ".."_s)
-            {
-                hasDots = true;
-                break;
-            }
-        }
-        if(hasDots)
-        {
-            path = Clean(path);
-        }
-        if(path == ".."_s || strings::HasPrefix(path, "../"_s))
-        {
-            return false;
-        }
-        return true;
+        return filepathlite::Localize(path);
     }
 
     // ToSlash returns the result of replacing each separator character
@@ -320,23 +121,18 @@ namespace golang::filepath
     // replaced by multiple slashes.
     gocpp::string ToSlash(gocpp::string path)
     {
-        if(Separator == '/')
-        {
-            return path;
-        }
-        return strings::ReplaceAll(path, gocpp::string(Separator), "/"_s);
+        return filepathlite::ToSlash(path);
     }
 
     // FromSlash returns the result of replacing each slash ('/') character
     // in path with a separator character. Multiple slashes are replaced
     // by multiple separators.
+    //
+    // See also the Localize function, which converts a slash-separated path
+    // as used by the io/fs package to an operating system path.
     gocpp::string FromSlash(gocpp::string path)
     {
-        if(Separator == '/')
-        {
-            return path;
-        }
-        return strings::ReplaceAll(path, "/"_s, gocpp::string(Separator));
+        return filepathlite::FromSlash(path);
     }
 
     // SplitList splits a list of paths joined by the OS-specific [ListSeparator],
@@ -357,13 +153,7 @@ namespace golang::filepath
     {
         gocpp::string dir;
         gocpp::string file;
-        auto vol = VolumeName(path);
-        auto i = len(path) - 1;
-        for(; i >= len(vol) && ! os::IsPathSeparator(path[i]); )
-        {
-            i--;
-        }
-        return {path.make_slice(0, i + 1), path.make_slice(i + 1)};
+        return filepathlite::Split(path);
     }
 
     // Join joins any number of path elements into a single path,
@@ -384,14 +174,7 @@ namespace golang::filepath
     // no dot.
     gocpp::string Ext(gocpp::string path)
     {
-        for(auto i = len(path) - 1; i >= 0 && ! os::IsPathSeparator(path[i]); i--)
-        {
-            if(path[i] == '.')
-            {
-                return path.make_slice(i);
-            }
-        }
-        return ""_s;
+        return filepathlite::Ext(path);
     }
 
     // EvalSymlinks returns the path name after the evaluation of any symbolic
@@ -402,6 +185,12 @@ namespace golang::filepath
     std::tuple<gocpp::string, gocpp::error> EvalSymlinks(gocpp::string path)
     {
         return evalSymlinks(path);
+    }
+
+    // IsAbs reports whether the path is absolute.
+    bool IsAbs(gocpp::string path)
+    {
+        return filepathlite::IsAbs(path);
     }
 
     // Abs returns an absolute representation of path.
@@ -428,20 +217,21 @@ namespace golang::filepath
         return {Join(wd, path), nullptr};
     }
 
-    // Rel returns a relative path that is lexically equivalent to targpath when
-    // joined to basepath with an intervening separator. That is,
-    // [Join](basepath, Rel(basepath, targpath)) is equivalent to targpath itself.
-    // On success, the returned path will always be relative to basepath,
-    // even if basepath and targpath share no elements.
-    // An error is returned if targpath can't be made relative to basepath or if
-    // knowing the current working directory would be necessary to compute it.
-    // Rel calls [Clean] on the result.
-    std::tuple<gocpp::string, gocpp::error> Rel(gocpp::string basepath, gocpp::string targpath)
+    // Rel returns a relative path that is lexically equivalent to targPath when
+    // joined to basePath with an intervening separator. That is,
+    // [Join](basePath, Rel(basePath, targPath)) is equivalent to targPath itself.
+    //
+    // The returned path will always be relative to basePath, even if basePath and
+    // targPath share no elements. Rel calls [Clean] on the result.
+    //
+    // An error is returned if targPath can't be made relative to basePath
+    // or if knowing the current working directory would be necessary to compute it.
+    std::tuple<gocpp::string, gocpp::error> Rel(gocpp::string basePath, gocpp::string targPath)
     {
-        auto baseVol = VolumeName(basepath);
-        auto targVol = VolumeName(targpath);
-        auto base = Clean(basepath);
-        auto targ = Clean(targpath);
+        auto baseVol = VolumeName(basePath);
+        auto targVol = VolumeName(targPath);
+        auto base = Clean(basePath);
+        auto targ = Clean(targPath);
         if(sameWord(targ, base))
         {
             return {"."_s, nullptr};
@@ -453,9 +243,9 @@ namespace golang::filepath
             base = ""_s;
         }
         else
-        if(base == ""_s && volumeNameLen(baseVol) > 2)
+        if(base == ""_s && filepathlite::VolumeNameLen(baseVol) > 2)
         {
-            // Treat any targetpath matching `\\host\share` basepath as absolute path.
+            // Treat any targetpath matching `\\host\share` basePath as absolute path.
             base = gocpp::string(Separator);
         }
 
@@ -464,7 +254,7 @@ namespace golang::filepath
         auto targSlashed = len(targ) > 0 && targ[0] == Separator;
         if(baseSlashed != targSlashed || ! sameWord(baseVol, targVol))
         {
-            return {""_s, errors::New("Rel: can't make "_s + targpath + " relative to "_s + basepath)};
+            return {""_s, errors::New("Rel: can't make "_s + targPath + " relative to "_s + basePath)};
         }
         // Position base[b0:bi] and targ[t0:ti] at the first differing elements.
         auto bl = len(base);
@@ -500,12 +290,12 @@ namespace golang::filepath
         }
         if(base.make_slice(b0, bi) == ".."_s)
         {
-            return {""_s, errors::New("Rel: can't make "_s + targpath + " relative to "_s + basepath)};
+            return {""_s, errors::New("Rel: can't make "_s + targPath + " relative to "_s + basePath)};
         }
         if(b0 != bl)
         {
             // Base elements left. Must go up before going down.
-            auto seps = strings::Count(base.make_slice(b0, bl), gocpp::string(Separator));
+            auto seps = bytealg::CountString(base.make_slice(b0, bl), Separator);
             auto size = 2 + seps * 3;
             if(tl != t0)
             {
@@ -524,7 +314,7 @@ namespace golang::filepath
                 buf[n] = Separator;
                 copy(buf.make_slice(n + 1), targ.make_slice(t0));
             }
-            return {gocpp::string(buf), nullptr};
+            return {Clean(gocpp::string(buf)), nullptr};
         }
         return {targ.make_slice(t0), nullptr};
     }
@@ -575,7 +365,7 @@ namespace golang::filepath
     // function with path set to the directory's path, info, set to an
     // [fs.FileInfo] describing the directory, and err set to the error from
     // Readdirnames.
-    std::function<std::tuple<fs::FileInfo, gocpp::error> (gocpp::string)> lstat = os::Lstat;
+    std::function<std::tuple<os::FileInfo, gocpp::error> (gocpp::string)> lstat = os::Lstat;
     // walkDir recursively descends path, calling walkDirFn.
     gocpp::error walkDir(gocpp::string path, fs::DirEntry d, fs::WalkDirFunc walkDirFn)
     {
@@ -751,7 +541,7 @@ namespace golang::filepath
         {
             return {nullptr, err};
         }
-        sort::Strings(names);
+        slices::Sort(names);
         return {names, nullptr};
     }
 
@@ -761,33 +551,7 @@ namespace golang::filepath
     // If the path consists entirely of separators, Base returns a single separator.
     gocpp::string Base(gocpp::string path)
     {
-        if(path == ""_s)
-        {
-            return "."_s;
-        }
-        // Strip trailing slashes.
-        for(; len(path) > 0 && os::IsPathSeparator(path[len(path) - 1]); )
-        {
-            path = path.make_slice(0, len(path) - 1);
-        }
-        // Throw away volume name
-        path = path.make_slice(len(VolumeName(path)));
-        // Find the last element
-        auto i = len(path) - 1;
-        for(; i >= 0 && ! os::IsPathSeparator(path[i]); )
-        {
-            i--;
-        }
-        if(i >= 0)
-        {
-            path = path.make_slice(i + 1);
-        }
-        // If empty now, it had only slashes.
-        if(path == ""_s)
-        {
-            return gocpp::string(Separator);
-        }
-        return path;
+        return filepathlite::Base(path);
     }
 
     // Dir returns all but the last element of path, typically the path's directory.
@@ -796,21 +560,13 @@ namespace golang::filepath
     // If the path is empty, Dir returns ".".
     // If the path consists entirely of separators, Dir returns a single separator.
     // The returned path does not end in a separator unless it is the root directory.
+    //
+    // On Windows, given a volume-only name such as "C:", Dir returns "C:.",
+    // the current directory on drive C. To obtain the drive's root "C:\",
+    // use [VolumeName] combined with a separator.
     gocpp::string Dir(gocpp::string path)
     {
-        auto vol = VolumeName(path);
-        auto i = len(path) - 1;
-        for(; i >= len(vol) && ! os::IsPathSeparator(path[i]); )
-        {
-            i--;
-        }
-        auto dir = Clean(path.make_slice(len(vol), i + 1));
-        if(dir == "."_s && len(vol) > 2)
-        {
-            // must be UNC
-            return vol;
-        }
-        return vol + dir;
+        return filepathlite::Dir(path);
     }
 
     // VolumeName returns leading volume name.
@@ -819,7 +575,7 @@ namespace golang::filepath
     // On other platforms it returns "".
     gocpp::string VolumeName(gocpp::string path)
     {
-        return FromSlash(path.make_slice(0, volumeNameLen(path)));
+        return filepathlite::VolumeName(path);
     }
 
 }

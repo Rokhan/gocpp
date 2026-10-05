@@ -16,12 +16,14 @@
 #include "golang/go/constant/value.h"
 #include "golang/go/token/position.h"
 #include "golang/go/types/alias.h"
+#include "golang/go/types/api_predicates.h"
 #include "golang/go/types/assignments.h"
 #include "golang/go/types/basic.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/context.h"
 #include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
+#include "golang/go/types/instantiate.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/lookup.h"
 #include "golang/go/types/mono.h"
@@ -31,6 +33,7 @@
 #include "golang/go/types/package.h"
 #include "golang/go/types/pointer.h"
 #include "golang/go/types/predicates.h"
+#include "golang/go/types/recording.h"
 #include "golang/go/types/resolver.h"
 #include "golang/go/types/scope.h"
 #include "golang/go/types/slice.h"
@@ -44,15 +47,27 @@
 #include "golang/go/types/typexpr.h"
 #include "golang/go/types/under.h"
 #include "golang/go/types/universe.h"
+#include "golang/go/types/version.h"
 #include "golang/internal/types/errors/codes.h"
+#include "golang/iter/iter.h"
+#include "golang/path/filepath/path.h"
+#include "golang/strings/strings.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace filepath = golang::path::filepath;
+    namespace fmt = golang::fmt;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::End;
+        using ast::rec::NumFields;
         using ast::rec::Pos;
         using ast::rec::exprNode;
+        using token::rec::File;
+        using token::rec::Name;
     }
 
     // A Signature represents a (non-builtin) function or method type.
@@ -66,6 +81,7 @@ namespace golang::types
         result.tparams = this->tparams;
         result.scope = this->scope;
         result.recv = this->recv;
+        result.recvold = this->recvold;
         result.params = this->params;
         result.results = this->results;
         result.variadic = this->variadic;
@@ -79,6 +95,7 @@ namespace golang::types
         if (tparams != ref.tparams) return false;
         if (scope != ref.scope) return false;
         if (recv != ref.recv) return false;
+        if (recvold != ref.recvold) return false;
         if (params != ref.params) return false;
         if (results != ref.results) return false;
         if (variadic != ref.variadic) return false;
@@ -92,6 +109,7 @@ namespace golang::types
         os << " " << tparams;
         os << " " << scope;
         os << " " << recv;
+        os << " " << recvold;
         os << " " << params;
         os << " " << results;
         os << " " << variadic;
@@ -104,24 +122,36 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
+    // sentinel value for detecting method expressions
+    Var* methodExprSentinel = new Var {};
     // NewSignature returns a new function type for the given receiver, parameters,
     // and results, either of which may be nil. If variadic is set, the function
     // is variadic, it must have at least one parameter, and the last parameter
     // must be of unnamed slice type.
     //
     // Deprecated: Use [NewSignatureType] instead which allows for type parameters.
-    Signature* NewSignature(Var* recv, Tuple* params, Tuple* results, bool variadic)
+    //
+    //go:fix inline
+    golang::go::types::Signature* NewSignature(Var* recv, Tuple* params, Tuple* results, bool variadic)
     {
         return NewSignatureType(recv, nullptr, nullptr, params, results, variadic);
     }
 
     // NewSignatureType creates a new function type for the given receiver,
-    // receiver type parameters, type parameters, parameters, and results. If
-    // variadic is set, params must hold at least one parameter and the last
-    // parameter's core type must be of unnamed slice or bytestring type.
-    // If recv is non-nil, typeParams must be empty. If recvTypeParams is
-    // non-empty, recv must be non-nil.
-    Signature* NewSignatureType(Var* recv, gocpp::slice<TypeParam*> recvTypeParams, gocpp::slice<TypeParam*> typeParams, Tuple* params, Tuple* results, bool variadic)
+    // receiver type parameters, type parameters, parameters, and results.
+    //
+    // If variadic is set, params must hold at least one parameter and the
+    // last parameter must be an unnamed slice or a type parameter whose
+    // type set has an unnamed slice as common underlying type.
+    //
+    // As a special case, to support append([]byte, str...), for variadic
+    // signatures the last parameter may also be a string type, or a type
+    // parameter containing a mix of byte slices and string types in its
+    // type set. It may even be a named []byte slice type resulting from
+    // instantiation of such a type parameter.
+    //
+    // If recvTypeParams is non-empty, recv must be non-nil.
+    golang::go::types::Signature* NewSignatureType(Var* recv, gocpp::slice<TypeParam*> recvTypeParams, gocpp::slice<TypeParam*> typeParams, Tuple* params, Tuple* results, bool variadic)
     {
         if(variadic)
         {
@@ -130,13 +160,50 @@ namespace golang::types
             {
                 gocpp::panic("variadic function must have at least one parameter"_s);
             }
-            auto core = coreString(rec::At(gocpp::recv(params), n - 1)->object.typ);
-            if(auto [gocpp_id_0, ok] = gocpp::getValue<Slice*>(core); ! ok && ! isString(core))
+            auto last = rec::At(gocpp::recv(params), n - 1)->object.typ;
+            Slice* S = {};
+            for(auto [t, gocpp_ignored] : typeset(last))
             {
-                gocpp::panic(mocklib::Sprintf("got %s, want variadic parameter with unnamed slice type or string as core type"_s, rec::String(gocpp::recv(core))));
+                if(t == nullptr)
+                {
+                    break;
+                }
+                Slice* s = {};
+                if(isString(t))
+                {
+                    s = NewSlice(universeByte);
+                }
+                else
+                {
+                    // Variadic Go functions have a last parameter of type []T,
+                    // suggesting we should reject a named slice type B here.
+                    // However, a call to built-in append(slice, x...)
+                    // where x has a TypeParam type [T ~string | ~[]byte],
+                    // has the type func([]byte, T). Since a client may
+                    // instantiate this type at T=B, we must permit
+                    // named slice types, even when this results in a
+                    // signature func([]byte, B) where type B []byte.
+                    // (The caller of NewSignatureType may have no way to
+                    // know that it is dealing with the append special case.)
+                    std::tie(s, std::ignore) = gocpp::getValue<Slice*>(rec::Underlying(gocpp::recv(t)));
+                }
+                if(S == nullptr)
+                {
+                    S = s;
+                }
+                else
+                if(s == nullptr || ! Identical(S, s))
+                {
+                    S = nullptr;
+                    break;
+                }
+            }
+            if(S == nullptr)
+            {
+                gocpp::panic(mocklib::Sprintf("got %s, want variadic parameter of slice or string type"_s, last));
             }
         }
-        auto sig = gocpp::InitPtr<Signature>([=](auto& x) {
+        auto sig = gocpp::InitPtr<golang::go::types::Signature>([=](auto& x) {
             x.recv = recv;
             x.params = params;
             x.results = results;
@@ -152,10 +219,6 @@ namespace golang::types
         }
         if(len(typeParams) != 0)
         {
-            if(recv != nullptr)
-            {
-                gocpp::panic("function with type parameters cannot have a receiver"_s);
-            }
             sig->tparams = bindTParams(typeParams);
         }
         return sig;
@@ -167,53 +230,54 @@ namespace golang::types
     // For an abstract method, Recv returns the enclosing interface either
     // as a *[Named] or an *[Interface]. Due to embedding, an interface may
     // contain methods whose receiver type is a different interface.
-    Var* rec::Recv(Signature* s)
+    Var* rec::Recv(golang::go::types::Signature* s)
     {
         return s->recv;
     }
 
     // TypeParams returns the type parameters of signature s, or nil.
-    TypeParamList* rec::TypeParams(Signature* s)
+    TypeParamList* rec::TypeParams(golang::go::types::Signature* s)
     {
         return s->tparams;
     }
 
     // RecvTypeParams returns the receiver type parameters of signature s, or nil.
-    TypeParamList* rec::RecvTypeParams(Signature* s)
+    TypeParamList* rec::RecvTypeParams(golang::go::types::Signature* s)
     {
         return s->rparams;
     }
 
     // Params returns the parameters of signature s, or nil.
-    Tuple* rec::Params(Signature* s)
+    // See [NewSignatureType] for details of variadic functions.
+    Tuple* rec::Params(golang::go::types::Signature* s)
     {
         return s->params;
     }
 
     // Results returns the results of signature s, or nil.
-    Tuple* rec::Results(Signature* s)
+    Tuple* rec::Results(golang::go::types::Signature* s)
     {
         return s->results;
     }
 
     // Variadic reports whether the signature s is variadic.
-    bool rec::Variadic(Signature* s)
+    bool rec::Variadic(golang::go::types::Signature* s)
     {
         return s->variadic;
     }
 
-    golang::types::Type rec::Underlying(Signature* t)
+    golang::go::types::Type rec::Underlying(golang::go::types::Signature* s)
     {
-        return t;
+        return s;
     }
 
-    gocpp::string rec::String(Signature* t)
+    gocpp::string rec::String(golang::go::types::Signature* s)
     {
-        return TypeString(t, nullptr);
+        return TypeString(s, nullptr);
     }
 
     // funcType type-checks a function or method type.
-    void rec::funcType(Checker* check, Signature* sig, ast::FieldList* recvPar, ast::FuncType* ftyp)
+    void rec::funcType(Checker* check, golang::go::types::Signature* sig, ast::FieldList* recvPar, ast::FuncType* ftyp)
     {
         gocpp::Defer defer;
         try
@@ -224,236 +288,44 @@ namespace golang::types
             sig->scope = check->environment.scope;
             defer.push_back([=]{ rec::closeScope(gocpp::recv(check)); });
 
-            if(recvPar != nullptr && len(recvPar->List) > 0)
+            // collect method receiver, if any
+            Var* recv = {};
+            TypeParamList* rparams = {};
+            if(recvPar != nullptr && rec::NumFields(gocpp::recv(recvPar)) > 0)
             {
-                // collect generic receiver type parameters, if any
-                // - a receiver type parameter is like any other type parameter, except that it is declared implicitly
-                // - the receiver specification acts as local declaration for its type parameters, which may be blank
-                auto [gocpp_id_1, rname, rparams] = rec::unpackRecv(gocpp::recv(check), recvPar->List[0]->Type, true);
-                if(len(rparams) > 0)
+                // We have at least one receiver; make sure we don't have more than one.
+                if(auto n = len(recvPar->List); n > 1)
                 {
-                    // The scope of the type parameter T in "func (r T[T]) f()"
-                    // starts after f, not at "r"; see #52038.
-                    auto scopePos = rec::Pos(gocpp::recv(ftyp->Params));
-                    auto tparams = rec::declareTypeParams(gocpp::recv(check), nullptr, rparams, scopePos);
-                    sig->rparams = bindTParams(tparams);
-                    // Blank identifiers don't get declared, so naive type-checking of the
-                    // receiver type expression would fail in Checker.collectParams below,
-                    // when Checker.ident cannot resolve the _ to a type.
-                    // Checker.recvTParamMap maps these blank identifiers to their type parameter
-                    // types, so that they may be resolved in Checker.ident when they fail
-                    // lookup in the scope.
-                    for(auto [i, p] : rparams)
-                    {
-                        if(p->Name == "_"_s)
-                        {
-                            if(check->recvTParamMap == nullptr)
-                            {
-                                check->recvTParamMap = gocpp::make(gocpp::Tag<gocpp::map<ast::Ident*, TypeParam*>>());
-                            }
-                            check->recvTParamMap[p] = tparams[i];
-                        }
-                    }
-                    // determine receiver type to get its type parameters
-                    // and the respective type parameter bounds
-                    gocpp::slice<TypeParam*> recvTParams = {};
-                    if(rname != nullptr)
-                    {
-                        // recv should be a Named type (otherwise an error is reported elsewhere)
-                        // Also: Don't report an error via genericType since it will be reported
-                        // again when we type-check the signature.
-                        // TODO(gri) maybe the receiver should be marked as invalid instead?
-                        if(auto recv = asNamed(rec::genericType(gocpp::recv(check), rname, nullptr)); recv != nullptr)
-                        {
-                            recvTParams = rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(recv))));
-                        }
-                    }
-                    // provide type parameter bounds
-                    if(len(tparams) == len(recvTParams))
-                    {
-                        auto smap = makeRenameMap(recvTParams, tparams);
-                        for(auto [i, tpar] : tparams)
-                        {
-                            auto recvTPar = recvTParams[i];
-                            rec::recordCanon(gocpp::recv(check->mono), tpar, recvTPar);
-                            // recvTPar.bound is (possibly) parameterized in the context of the
-                            // receiver type declaration. Substitute parameters for the current
-                            // context.
-                            tpar->bound = rec::subst(gocpp::recv(check), tpar->obj->object.pos, recvTPar->bound, smap, nullptr, rec::context(gocpp::recv(check)));
-                        }
-                    }
-                    else
-                    if(len(tparams) < len(recvTParams))
-                    {
-                        // Reporting an error here is a stop-gap measure to avoid crashes in the
-                        // compiler when a type parameter/argument cannot be inferred later. It
-                        // may lead to follow-on errors (see issues go.dev/issue/51339, go.dev/issue/51343).
-                        // TODO(gri) find a better solution
-                        auto got = measure(len(tparams), "type parameter"_s);
-                        rec::errorf(gocpp::recv(check), recvPar, BadRecv, "got %s, but receiver base type declares %d"_s, got, len(recvTParams));
-                    }
+                    // continue with first one
+                    rec::error(gocpp::recv(check), recvPar->List[n - 1], InvalidRecv, "method has multiple receivers"_s);
                 }
+                // all type parameters' scopes start after the method name
+                auto scopePos = rec::Pos(gocpp::recv(ftyp));
+                std::tie(recv, rparams) = rec::collectRecv(gocpp::recv(check), recvPar->List[0], scopePos);
             }
 
+            // collect and declare function type parameters
             if(ftyp->TypeParams != nullptr)
             {
                 rec::collectTypeParams(gocpp::recv(check), & sig->tparams, ftyp->TypeParams);
-                // Always type-check method type parameters but complain that they are not allowed.
-                // (A separate check is needed when type-checking interface method signatures because
-                // they don't have a receiver specification.)
-                if(recvPar != nullptr)
-                {
-                    rec::error(gocpp::recv(check), ftyp->TypeParams, InvalidMethodTypeParams, "methods cannot have type parameters"_s);
-                }
             }
 
-            // Use a temporary scope for all parameter declarations and then
-            // squash that scope into the parent scope (and report any
-            // redeclarations at that time).
-            // TODO(adonovan): now that each declaration has the correct
-            // scopePos, there should be no need for scope squashing.
-            // Audit to ensure all lookups honor scopePos and simplify.
-            auto scope = NewScope(check->environment.scope, nopos, nopos, "function body (temp. scope)"_s);
-            // all parameters' scopes start after the signature
+            // collect ordinary and result parameters
+            auto [pnames, params, variadic] = rec::collectParams(gocpp::recv(check), ParamVar, ftyp->Params);
+            auto [rnames, results, gocpp_id_0] = rec::collectParams(gocpp::recv(check), ResultVar, ftyp->Results);
+
+            // declare named receiver, ordinary, and result parameters
+            // all parameter's scopes start after the signature
             auto scopePos = rec::End(gocpp::recv(ftyp));
-            auto [recvList, gocpp_id_2] = rec::collectParams(gocpp::recv(check), scope, recvPar, false, scopePos);
-            auto [params, variadic] = rec::collectParams(gocpp::recv(check), scope, ftyp->Params, true, scopePos);
-            auto [results, gocpp_id_3] = rec::collectParams(gocpp::recv(check), scope, ftyp->Results, false, scopePos);
-            rec::squash(gocpp::recv(scope), [=](Object obj, Object alt) mutable -> void
+            if(recv != nullptr && recv->object.name != ""_s)
             {
-                rec::errorf(gocpp::recv(check), obj, DuplicateDecl, "%s redeclared in this block"_s, rec::Name(gocpp::recv(obj)));
-                rec::reportAltDecl(gocpp::recv(check), alt);
-            });
-
-            if(recvPar != nullptr)
-            {
-                // recv parameter list present (may be empty)
-                // spec: "The receiver is specified via an extra parameter section preceding the
-                // method name. That parameter section must declare a single parameter, the receiver."
-                Var* recv = {};
-                //Go switch emulation
-                {
-                    auto condition = len(recvList);
-                    int conditionId = -1;
-                    if(condition == 0) { conditionId = 0; }
-                    else if(condition == 1) { conditionId = 1; }
-                    switch(conditionId)
-                    {
-                        // ignore recv below
-                        case 0:
-                            // error reported by resolver
-                            recv = NewParam(nopos, nullptr, ""_s, Typ[Invalid]);
-                            break;
-                        // continue with first receiver
-                        default:
-                            // more than one receiver
-                            rec::error(gocpp::recv(check), recvList[len(recvList) - 1], InvalidRecv, "method has multiple receivers"_s);
-                        case 1:
-                            recv = recvList[0];
-                            break;
-                    }
-                }
-                sig->recv = recv;
-
-                // Delay validation of receiver type as it may cause premature expansion
-                // of types the receiver type is dependent on (see issues go.dev/issue/51232, go.dev/issue/51233).
-                rec::describef(gocpp::recv(rec::later(gocpp::recv(check), [=]() mutable -> void
-                {
-                    // spec: "The receiver type must be of the form T or *T where T is a type name."
-                    auto [rtyp, gocpp_id_4] = deref(recv->object.typ);
-                    auto atyp = Unalias(rtyp);
-                    if(! isValid(atyp))
-                    {
-                        // error was reported before
-                        return;
-                    }
-                    // spec: "The type denoted by T is called the receiver base type; it must not
-                    // be a pointer or interface type and it must be declared in the same package
-                    // as the method."
-                    //Go type switch emulation
-                    {
-                        const auto& gocpp_id_5 = gocpp::type_info(atyp);
-                        int conditionId = -1;
-                        if(gocpp_id_5 == typeid(types::Named*)) { conditionId = 0; }
-                        else if(gocpp_id_5 == typeid(types::Basic*)) { conditionId = 1; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                            {
-                                types::Named* T = gocpp::any_cast<types::Named*>(atyp);
-                                // The receiver type may be an instantiated type referred to
-                                // by an alias (which cannot have receiver parameters for now).
-                                if(rec::TypeArgs(gocpp::recv(T)) != nullptr && rec::RecvTypeParams(gocpp::recv(sig)) == nullptr)
-                                {
-                                    rec::errorf(gocpp::recv(check), recv, InvalidRecv, "cannot define new methods on instantiated type %s"_s, rtyp);
-                                    break;
-                                }
-                                if(T->obj->object.pkg != check->pkg)
-                                {
-                                    rec::errorf(gocpp::recv(check), recv, InvalidRecv, "cannot define new methods on non-local type %s"_s, rtyp);
-                                    break;
-                                }
-                                gocpp::string cause = {};
-                                //Go type switch emulation
-                                {
-                                    const auto& gocpp_id_6 = gocpp::type_info(rec::under(gocpp::recv(T)));
-                                    int conditionId = -1;
-                                    if(gocpp_id_6 == typeid(types::Basic*)) { conditionId = 0; }
-                                    else if(gocpp_id_6 == typeid(types::Pointer*)) { conditionId = 1; }
-                                    else if(gocpp_id_6 == typeid(types::Interface*)) { conditionId = 2; }
-                                    else if(gocpp_id_6 == typeid(types::TypeParam*)) { conditionId = 3; }
-                                    switch(conditionId)
-                                    {
-                                        case 0:
-                                        {
-                                            types::Basic* u = gocpp::any_cast<types::Basic*>(rec::under(gocpp::recv(T)));
-                                            // unsafe.Pointer is treated like a regular pointer
-                                            if(u->kind == UnsafePointer)
-                                            {
-                                                cause = "unsafe.Pointer"_s;
-                                            }
-                                            break;
-                                        }
-                                        case 1:
-                                        case 2:
-                                        {
-                                            types::Pointer* u = gocpp::any_cast<types::Pointer*>(rec::under(gocpp::recv(T)));
-                                            cause = "pointer or interface type"_s;
-                                            break;
-                                        }
-                                        case 3:
-                                        {
-                                            types::TypeParam* u = gocpp::any_cast<types::TypeParam*>(rec::under(gocpp::recv(T)));
-                                            // The underlying type of a receiver base type cannot be a
-                                            // type parameter: "type T[P any] P" is not a valid declaration.
-                                            unreachable();
-                                            break;
-                                        }
-                                    }
-                                }
-                                if(cause != ""_s)
-                                {
-                                    rec::errorf(gocpp::recv(check), recv, InvalidRecv, "invalid receiver type %s (%s)"_s, rtyp, cause);
-                                }
-                                break;
-                            }
-                            case 1:
-                            {
-                                types::Basic* T = gocpp::any_cast<types::Basic*>(atyp);
-                                rec::errorf(gocpp::recv(check), recv, InvalidRecv, "cannot define new methods on non-local type %s"_s, rtyp);
-                                break;
-                            }
-                            default:
-                            {
-                                auto T = atyp;
-                                rec::errorf(gocpp::recv(check), recv, InvalidRecv, "invalid receiver type %s"_s, recv->object.typ);
-                                break;
-                            }
-                        }
-                    }
-                })), recv, "validate receiver %s"_s, recv);
+                rec::declare(gocpp::recv(check), check->environment.scope, recvPar->List[0]->Names[0], recv, scopePos);
             }
+            rec::declareParams(gocpp::recv(check), pnames, params, scopePos);
+            rec::declareParams(gocpp::recv(check), rnames, results, scopePos);
 
+            sig->recv = recv;
+            sig->rparams = rparams;
             sig->params = NewTuple(params);
             sig->results = NewTuple(results);
             sig->variadic = variadic;
@@ -464,15 +336,288 @@ namespace golang::types
         }
     }
 
-    // collectParams declares the parameters of list in scope and returns the corresponding
-    // variable list.
-    std::tuple<gocpp::slice<Var*>, bool> rec::collectParams(Checker* check, golang::types::Scope* scope, ast::FieldList* list, bool variadicOk, token::Pos scopePos)
+    // collectRecv extracts the method receiver and its type parameters (if any) from rparam.
+    // It declares the type parameters (but not the receiver) in the current scope, and
+    // returns the receiver variable and its type parameter list (if any).
+    std::tuple<Var*, TypeParamList*> rec::collectRecv(Checker* check, ast::Field* rparam, token::Pos scopePos)
     {
+        // Unpack the receiver parameter which is of the form
+        // "(" [rfield] ["*"] rbase ["[" rtparams "]"] ")"
+        // The receiver name rname, the pointer indirection, and the
+        // receiver type parameters rtparams may not be present.
+        auto [rptr, rbase, rtparams] = rec::unpackRecv(gocpp::recv(check), rparam->Type, true);
+
+        // Determine the receiver base type.
+        golang::go::types::Type recvType = Typ[Invalid];
+        TypeParamList* recvTParamsList = {};
+        if(rtparams == nullptr)
+        {
+            // If there are no type parameters, we can simply typecheck rparam.Type.
+            // If that is a generic type, varType will complain.
+            // Further receiver constraints will be checked later, with validRecv.
+            // We use rparam.Type (rather than base) to correctly record pointer
+            // and parentheses in types.Info (was bug, see go.dev/issue/68639).
+            recvType = rec::varType(gocpp::recv(check), rparam->Type);
+            // Defining new methods on instantiated (alias or defined) types is not permitted.
+            // Follow literal pointer/alias type chain and check.
+            // (Correct code permits at most one pointer indirection, but for this check it
+            // doesn't matter if we have multiple pointers.)
+            // recvType is not generic per above
+            auto [a, gocpp_id_1] = gocpp::getValue<Alias*>(unpointer(recvType));
+            for(; a != nullptr; )
+            {
+                auto baseType = unpointer(a->fromRHS);
+                if(auto [g, gocpp_id_2] = gocpp::getValue<golang::go::types::genericType>(baseType); g != nullptr && rec::TypeParams(gocpp::recv(g)) != nullptr)
+                {
+                    rec::errorf(gocpp::recv(check), rbase, InvalidRecv, "cannot define new methods on instantiated type %s"_s, g);
+                    // avoid follow-on errors by Checker.validRecv
+                    recvType = Typ[Invalid];
+                    break;
+                }
+                std::tie(a, std::ignore) = gocpp::getValue<Alias*>(baseType);
+            }
+        }
+        else
+        {
+            // If there are type parameters, rbase must denote a generic base type.
+            // Important: rbase must be resolved before declaring any receiver type
+            // parameters (which may have the same name, see below).
+            // nil if not valid
+            Named* baseType = {};
+            gocpp::string cause = {};
+            if(auto t = rec::genericType(gocpp::recv(check), rbase, & cause); types::isValid(t))
+            {
+                //Go type switch emulation
+                {
+                    const auto& gocpp_id_3 = gocpp::type_info(t);
+                    const auto& t_ref = t;
+                    int conditionId = -1;
+                    if(gocpp_id_3 == typeid(types::Named*)) { conditionId = 0; }
+                    else if(gocpp_id_3 == typeid(types::Alias*)) { conditionId = 1; }
+                    switch(conditionId)
+                    {
+                        case 0:
+                        {
+                            types::Named* t = gocpp::any_cast<types::Named*>(t_ref);
+                            baseType = t;
+                            break;
+                        }
+                        case 1:
+                        {
+                            types::Alias* t = gocpp::any_cast<types::Alias*>(t_ref);
+                            // Methods on generic aliases are not permitted.
+                            // Only report an error if the alias type is valid.
+                            if(types::isValid(t))
+                            {
+                                rec::errorf(gocpp::recv(check), rbase, InvalidRecv, "cannot define new methods on generic alias type %s"_s, t);
+                            }
+                            break;
+                        }
+                        // Ok to continue but do not set basetype in this case so that
+                        // recvType remains invalid (was bug, see go.dev/issue/70417).
+                        default:
+                        {
+                            auto t = t_ref;
+                            gocpp::panic("unreachable"_s);
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Ok to continue but do not set baseType (see comment above).
+                if(cause != ""_s)
+                {
+                    rec::errorf(gocpp::recv(check), rbase, InvalidRecv, "%s"_s, cause);
+                }
+            }
+
+            // Collect the type parameters declared by the receiver (see also
+            // Checker.collectTypeParams). The scope of the type parameter T in
+            // "func (r T[T]) f() {}" starts after f, not at r, so we declare it
+            // after typechecking rbase (see go.dev/issue/52038).
+            auto recvTParams = gocpp::make(gocpp::Tag<gocpp::slice<TypeParam*>>(), len(rtparams));
+            for(auto [i, rparam] : rtparams)
+            {
+                auto tpar = rec::declareTypeParam(gocpp::recv(check), rparam, scopePos);
+                recvTParams[i] = tpar;
+                // For historic reasons, type parameters in receiver type expressions
+                // are considered both definitions and uses and thus must be recorded
+                // in the Info.Uses and Info.Types maps (see go.dev/issue/68670).
+                rec::recordUse(gocpp::recv(check), rparam, tpar->obj);
+                rec::recordTypeAndValue(gocpp::recv(check), rparam, typexpr, tpar, nullptr);
+            }
+            recvTParamsList = bindTParams(recvTParams);
+
+            // Get the type parameter bounds from the receiver base type
+            // and set them for the respective (local) receiver type parameters.
+            if(baseType != nullptr)
+            {
+                auto baseTParams = rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(baseType))));
+                if(len(recvTParams) == len(baseTParams))
+                {
+                    auto smap = makeRenameMap(baseTParams, recvTParams);
+                    for(auto [i, recvTPar] : recvTParams)
+                    {
+                        auto baseTPar = baseTParams[i];
+                        rec::recordCanon(gocpp::recv(check->mono), recvTPar, baseTPar);
+                        // baseTPar.bound is possibly parameterized by other type parameters
+                        // defined by the generic base type. Substitute those parameters with
+                        // the receiver type parameters declared by the current method.
+                        recvTPar->bound = rec::subst(gocpp::recv(check), recvTPar->obj->object.pos, baseTPar->bound, smap, nullptr, rec::context(gocpp::recv(check)));
+                    }
+                }
+                else
+                {
+                    auto got = measure(len(recvTParams), "type parameter"_s);
+                    rec::errorf(gocpp::recv(check), rbase, BadRecv, "receiver declares %s, but receiver base type declares %d"_s, got, len(baseTParams));
+                }
+
+                // The type parameters declared by the receiver also serve as
+                // type arguments for the receiver type. Instantiate the receiver.
+                rec::verifyVersionf(gocpp::recv(check), rbase, go1_18, "type instantiation"_s);
+                auto targs = gocpp::make(gocpp::Tag<gocpp::slice<golang::go::types::Type>>(), len(recvTParams));
+                for(auto [i, targ] : recvTParams)
+                {
+                    targs[i] = targ;
+                }
+                recvType = rec::instance(gocpp::recv(check), rec::Pos(gocpp::recv(rparam->Type)), baseType, targs, nullptr, rec::context(gocpp::recv(check)));
+                rec::recordInstance(gocpp::recv(check), rbase, targs, recvType);
+
+                // Reestablish pointerness if needed (but avoid a pointer to an invalid type).
+                if(rptr && types::isValid(recvType))
+                {
+                    recvType = NewPointer(recvType);
+                }
+
+                rec::recordParenthesizedRecvTypes(gocpp::recv(check), rparam->Type, recvType);
+            }
+        }
+
+        // Make sure we have no more than one receiver name.
+        ast::Ident* rname = {};
+        if(auto n = len(rparam->Names); n >= 1)
+        {
+            if(n > 1)
+            {
+                rec::error(gocpp::recv(check), rparam->Names[n - 1], InvalidRecv, "method has multiple receivers"_s);
+            }
+            rname = rparam->Names[0];
+        }
+
+        // Create the receiver parameter.
+        // recvType is invalid if baseType was never set.
+        Var* recv = {};
+        if(rname != nullptr && rname->Name != ""_s)
+        {
+            // named receiver
+            recv = newVar(RecvVar, rec::Pos(gocpp::recv(rname)), check->pkg, rname->Name, recvType);
+        }
+        else
+        // In this case, the receiver is declared by the caller
+        // because it must be declared after any type parameters
+        // (otherwise it might shadow one of them).
+        // In this case, the receiver is declared by the caller
+        // because it must be declared after any type parameters
+        // (otherwise it might shadow one of them).
+        {
+            // anonymous receiver
+            recv = newVar(RecvVar, rec::Pos(gocpp::recv(rparam)), check->pkg, ""_s, recvType);
+            rec::recordImplicit(gocpp::recv(check), rparam, recv);
+        }
+
+        // Delay validation of receiver type as it may cause premature expansion of types
+        // the receiver type is dependent on (see go.dev/issue/51232, go.dev/issue/51233).
+        rec::describef(gocpp::recv(rec::later(gocpp::recv(check), [=]() mutable -> void
+        {
+            rec::validRecv(gocpp::recv(check), rbase, recv);
+        })), recv, "validRecv(%s)"_s, recv);
+
+        return {recv, recvTParamsList};
+    }
+
+    golang::go::types::Type unpointer(golang::go::types::Type t)
+    {
+        for(; ; )
+        {
+            auto [p, gocpp_id_4] = gocpp::getValue<Pointer*>(t);
+            if(p == nullptr)
+            {
+                return t;
+            }
+            t = p->base;
+        }
+    }
+
+    // recordParenthesizedRecvTypes records parenthesized intermediate receiver type
+    // expressions that all map to the same type, by recursively unpacking expr and
+    // recording the corresponding type for it. Example:
+    //
+    //	expression  -->  type
+    //	----------------------
+    //	(*(T[P]))        *T[P]
+    //	 *(T[P])         *T[P]
+    //	  (T[P])          T[P]
+    //	   T[P]           T[P]
+    void rec::recordParenthesizedRecvTypes(Checker* check, ast::Expr expr, golang::go::types::Type typ)
+    {
+        for(; ; )
+        {
+            rec::recordTypeAndValue(gocpp::recv(check), expr, typexpr, typ, nullptr);
+            //Go type switch emulation
+            {
+                const auto& gocpp_id_5 = gocpp::type_info(expr);
+                int conditionId = -1;
+                if(gocpp_id_5 == typeid(ast::ParenExpr*)) { conditionId = 0; }
+                else if(gocpp_id_5 == typeid(ast::StarExpr*)) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    case 0:
+                    {
+                        ast::ParenExpr* e = gocpp::any_cast<ast::ParenExpr*>(expr);
+                        expr = e->X;
+                        break;
+                    }
+                    case 1:
+                    {
+                        ast::StarExpr* e = gocpp::any_cast<ast::StarExpr*>(expr);
+                        expr = e->X;
+                        // In a correct program, typ must be an unnamed
+                        // pointer type. But be careful and don't panic.
+                        auto [ptr, gocpp_id_6] = gocpp::getValue<Pointer*>(typ);
+                        if(ptr == nullptr)
+                        {
+                            // something is wrong
+                            return;
+                        }
+                        typ = ptr->base;
+                        break;
+                    }
+                    // cannot unpack any further
+                    default:
+                    {
+                        auto e = expr;
+                        return;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // collectParams collects (but does not declare) all parameter/result
+    // variables of list and returns the list of names and corresponding
+    // variables, and whether the (parameter) list is variadic.
+    // Anonymous parameters are recorded with nil names.
+    std::tuple<gocpp::slice<ast::Ident*>, gocpp::slice<Var*>, bool> rec::collectParams(Checker* check, VarKind kind, ast::FieldList* list)
+    {
+        gocpp::slice<ast::Ident*> names;
         gocpp::slice<Var*> params;
         bool variadic;
         if(list == nullptr)
         {
-            return {params, variadic};
+            return {names, params, variadic};
         }
 
         bool named = {};
@@ -483,14 +628,14 @@ namespace golang::types
             if(auto [t, gocpp_id_7] = gocpp::getValue<ast::Ellipsis*>(ftype); t != nullptr)
             {
                 ftype = t->Elt;
-                if(variadicOk && i == len(list->List) - 1 && len(field->Names) <= 1)
+                if(kind == ParamVar && i == len(list->List) - 1 && len(field->Names) <= 1)
                 {
                     variadic = true;
                 }
                 else
                 {
                     // ignore ... and continue
-                    rec::softErrorf(gocpp::recv(check), t, MisplacedDotDotDot, "can only use ... with final parameter in list"_s);
+                    rec::softErrorf(gocpp::recv(check), t, InvalidSyntaxTree, "invalid use of ..."_s);
                 }
             }
             auto typ = rec::varType(gocpp::recv(check), ftype);
@@ -506,8 +651,9 @@ namespace golang::types
                         // ok to continue
                         rec::error(gocpp::recv(check), name, InvalidSyntaxTree, "anonymous parameter"_s);
                     }
-                    auto par = NewParam(rec::Pos(gocpp::recv(name)), check->pkg, name->Name, typ);
-                    rec::declare(gocpp::recv(check), scope, name, par, scopePos);
+                    auto par = newVar(kind, rec::Pos(gocpp::recv(name)), check->pkg, name->Name, typ);
+                    // named parameter is declared by caller
+                    names = append(names, name);
                     params = append(params, par);
                 }
                 named = true;
@@ -515,8 +661,9 @@ namespace golang::types
             else
             {
                 // anonymous parameter
-                auto par = NewParam(rec::Pos(gocpp::recv(ftype)), check->pkg, ""_s, typ);
+                auto par = newVar(kind, rec::Pos(gocpp::recv(ftype)), check->pkg, ""_s, typ);
                 rec::recordImplicit(gocpp::recv(check), field, par);
+                names = append(names, nullptr);
                 params = append(params, par);
                 anonymous = true;
             }
@@ -540,7 +687,117 @@ namespace golang::types
             rec::recordTypeAndValue(gocpp::recv(check), list->List[len(list->List) - 1]->Type, typexpr, last->object.typ, nullptr);
         }
 
-        return {params, variadic};
+        return {names, params, variadic};
+    }
+
+    // declareParams declares each named parameter in the current scope.
+    void rec::declareParams(Checker* check, gocpp::slice<ast::Ident*> names, gocpp::slice<Var*> params, token::Pos scopePos)
+    {
+        for(auto [i, name] : names)
+        {
+            if(name != nullptr && name->Name != ""_s)
+            {
+                rec::declare(gocpp::recv(check), check->environment.scope, name, params[i], scopePos);
+            }
+        }
+    }
+
+    // validRecv verifies that the receiver satisfies its respective spec requirements
+    // and reports an error otherwise.
+    void rec::validRecv(Checker* check, positioner pos, Var* recv)
+    {
+        // spec: "The receiver type must be of the form T or *T where T is a type name."
+        auto [rtyp, gocpp_id_8] = deref(recv->object.typ);
+        auto atyp = Unalias(rtyp);
+        if(! types::isValid(atyp))
+        {
+            // error was reported before
+            return;
+        }
+        // spec: "The type denoted by T is called the receiver base type; it must not
+        // be a pointer or interface type and it must be declared in the same package
+        // as the method."
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_9 = gocpp::type_info(atyp);
+            int conditionId = -1;
+            if(gocpp_id_9 == typeid(types::Named*)) { conditionId = 0; }
+            else if(gocpp_id_9 == typeid(types::Basic*)) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    types::Named* T = gocpp::any_cast<types::Named*>(atyp);
+                    if(T->obj->object.pkg != check->pkg || isCGoTypeObj(check->fset, T->obj))
+                    {
+                        rec::errorf(gocpp::recv(check), pos, InvalidRecv, "cannot define new methods on non-local type %s"_s, rtyp);
+                        break;
+                    }
+                    gocpp::string cause = {};
+                    //Go type switch emulation
+                    {
+                        const auto& gocpp_id_10 = gocpp::type_info(rec::Underlying(gocpp::recv(T)));
+                        int conditionId = -1;
+                        if(gocpp_id_10 == typeid(types::Basic*)) { conditionId = 0; }
+                        else if(gocpp_id_10 == typeid(types::Pointer*)) { conditionId = 1; }
+                        else if(gocpp_id_10 == typeid(types::Interface*)) { conditionId = 2; }
+                        else if(gocpp_id_10 == typeid(types::TypeParam*)) { conditionId = 3; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                            {
+                                types::Basic* u = gocpp::any_cast<types::Basic*>(rec::Underlying(gocpp::recv(T)));
+                                // unsafe.Pointer is treated like a regular pointer
+                                if(u->kind == UnsafePointer)
+                                {
+                                    cause = "unsafe.Pointer"_s;
+                                }
+                                break;
+                            }
+                            case 1:
+                            case 2:
+                            {
+                                types::Pointer* u = gocpp::any_cast<types::Pointer*>(rec::Underlying(gocpp::recv(T)));
+                                cause = "pointer or interface type"_s;
+                                break;
+                            }
+                            case 3:
+                            {
+                                types::TypeParam* u = gocpp::any_cast<types::TypeParam*>(rec::Underlying(gocpp::recv(T)));
+                                // The underlying type of a receiver base type cannot be a
+                                // type parameter: "type T[P any] P" is not a valid declaration.
+                                gocpp::panic("unreachable"_s);
+                                break;
+                            }
+                        }
+                    }
+                    if(cause != ""_s)
+                    {
+                        rec::errorf(gocpp::recv(check), pos, InvalidRecv, "invalid receiver type %s (%s)"_s, rtyp, cause);
+                    }
+                    break;
+                }
+                case 1:
+                {
+                    types::Basic* T = gocpp::any_cast<types::Basic*>(atyp);
+                    rec::errorf(gocpp::recv(check), pos, InvalidRecv, "cannot define new methods on non-local type %s"_s, rtyp);
+                    break;
+                }
+                default:
+                {
+                    auto T = atyp;
+                    rec::errorf(gocpp::recv(check), pos, InvalidRecv, "invalid receiver type %s"_s, recv->object.typ);
+                    break;
+                }
+            }
+        }
+    }
+
+    // isCGoTypeObj reports whether the given type name was created by cgo.
+    bool isCGoTypeObj(token::FileSet* fset, TypeName* obj)
+    {
+        return strings::HasPrefix(obj->object.name, "_Ctype_"_s) ||
+                strings::HasPrefix(filepath::Base(rec::Name(gocpp::recv(rec::File(gocpp::recv(fset), obj->object.pos)))), "_cgo_"_s);
     }
 
 }

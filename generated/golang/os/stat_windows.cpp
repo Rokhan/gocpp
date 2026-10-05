@@ -11,7 +11,10 @@
 #include "golang/os/stat_windows.h"
 #include "gocpp/support.h"
 
+#include "golang/errors/wrap.h"
+#include "golang/internal/filepathlite/path.h"
 #include "golang/internal/poll/fd_windows.h"
+#include "golang/internal/syscall/windows/symlink_windows.h"
 #include "golang/internal/syscall/windows/syscall_windows.h"
 #include "golang/io/fs/fs.h"
 #include "golang/os/error.h"
@@ -25,13 +28,17 @@
 
 namespace golang::os
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace errors = golang::errors;
+    namespace filepathlite = golang::internal::filepathlite;
+    namespace syscall = golang::syscall;
+    namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
-        using fs::rec::Error;
     }
 
-    // Stat returns the FileInfo structure describing file.
-    // If there is an error, it will be of type *PathError.
+    // Stat returns the [FileInfo] structure describing file.
+    // If there is an error, it will be of type [*PathError].
     std::tuple<FileInfo, gocpp::error> rec::Stat(File* file)
     {
         if(file == nullptr)
@@ -69,6 +76,25 @@ namespace golang::os
             // See https://golang.org/issues/19922#issuecomment-300031421 for details.
             syscall::Win32FileAttributeData fa = {};
             err = syscall::GetFileAttributesEx(namep, syscall::GetFileExInfoStandard, (unsigned char*)(gocpp::unsafe_pointer(& fa)));
+            if(errors::Is(err, ErrNotExist))
+            {
+                return {nullptr, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
+                    x.Op = "GetFileAttributesEx"_s;
+                    x.Path = name;
+                    x.Err = err;
+                }))};
+            }
+            if(err == nullptr && fa.FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT == 0)
+            {
+                // Not a surrogate for another named entity, because it isn't any kind of reparse point.
+                // The information we got from GetFileAttributesEx is good enough for now.
+                auto fs = newFileStatFromWin32FileAttributeData(& fa);
+                if(auto err = rec::saveInfoFromPath(gocpp::recv(fs), name); err != nullptr)
+                {
+                    return {nullptr, err};
+                }
+                return {fs, nullptr};
+            }
 
             // GetFileAttributesEx fails with ERROR_SHARING_VIOLATION error for
             // files like c:\pagefile.sys. Use FindFirstFile for such files.
@@ -97,31 +123,22 @@ namespace golang::os
                 }
             }
 
-            if(err == nullptr && fa.FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT == 0)
-            {
-                // Not a surrogate for another named entity, because it isn't any kind of reparse point.
-                // The information we got from GetFileAttributesEx is good enough for now.
-                auto fs = gocpp::InitPtr<fileStat>([=](auto& x) {
-                    x.FileAttributes = fa.FileAttributes;
-                    x.CreationTime = fa.CreationTime;
-                    x.LastAccessTime = fa.LastAccessTime;
-                    x.LastWriteTime = fa.LastWriteTime;
-                    x.FileSizeHigh = fa.FileSizeHigh;
-                    x.FileSizeLow = fa.FileSizeLow;
-                });
-                if(auto err = rec::saveInfoFromPath(gocpp::recv(fs), name); err != nullptr)
-                {
-                    return {nullptr, err};
-                }
-                return {fs, nullptr};
-            }
-
             // Use CreateFile to determine whether the file is a name surrogate and, if so,
             // save information about the link target.
             // Set FILE_FLAG_BACKUP_SEMANTICS so that CreateFile will create the handle
             // even if name refers to a directory.
+            uint32_t flags = syscall::FILE_FLAG_BACKUP_SEMANTICS | syscall::FILE_FLAG_OPEN_REPARSE_POINT;
             syscall::Handle h;
-            std::tie(h, err) = syscall::CreateFile(namep, 0, 0, nullptr, syscall::OPEN_EXISTING, syscall::FILE_FLAG_BACKUP_SEMANTICS | syscall::FILE_FLAG_OPEN_REPARSE_POINT, 0);
+            std::tie(h, err) = syscall::CreateFile(namep, 0, 0, nullptr, syscall::OPEN_EXISTING, flags, 0);
+
+            if(err == windows::ERROR_INVALID_PARAMETER)
+            {
+                // Console handles, like "\\.\con", require generic read access. See
+                // https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew#consoles.
+                // We haven't set it previously because it is normally not required
+                // to read attributes and some files may not allow it.
+                std::tie(h, err) = syscall::CreateFile(namep, syscall::GENERIC_READ, 0, nullptr, syscall::OPEN_EXISTING, flags, 0);
+            }
             if(err != nullptr)
             {
                 // Since CreateFile failed, we can't determine whether name refers to a
@@ -134,7 +151,7 @@ namespace golang::os
                 }))};
             }
 
-            fs::FileInfo fi;
+            FileInfo fi;
             std::tie(fi, err) = statHandle(name, h);
             syscall::CloseHandle(h);
             if(err == nullptr && followSurrogates && rec::isReparseTagNameSurrogate(gocpp::recv(gocpp::getValue<fileStat*>(fi))))
@@ -185,7 +202,7 @@ namespace golang::os
                 case 0:
                 case 1:
                     return {gocpp::InitPtr<fileStat>([=](auto& x) {
-                        x.name = basename(name);
+                        x.name = filepathlite::Base(name);
                         x.filetype = ft;
                     }), nullptr};
                     break;
@@ -198,7 +215,7 @@ namespace golang::os
             return {nullptr, err};
         }
         fs->filetype = ft;
-        return {fs, err};
+        return {fs, nullptr};
     }
 
     // statNolog implements Stat for Windows.

@@ -9,10 +9,13 @@
 #include "golang/internal/syscall/execenv/execenv_windows.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/syscall/env_windows.fwd.h"
 #include "golang/syscall/exec_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
 
-namespace golang::execenv
+namespace golang::internal::syscall::execenv
 {
+    namespace syscall = golang::syscall;
     std::tuple<gocpp::slice<gocpp::string>, gocpp::error> Default(syscall::SysProcAttr* sys);
 
     namespace rec

@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::objectpath
+namespace golang::golang_org::x::tools::go::types::objectpath
 {
     using Path = gocpp::string;
     // Encoding
@@ -16,7 +16,7 @@ namespace golang::objectpath
     //
     //	PO package->object	Package.Scope.Lookup
     //	OT  object->type 	Object.Type
-    //	TT    type->type 	Type.{Elem,Key,{,{,Recv}Type}Params,Results,Underlying} [EKPRUTrC]
+    //	TT    type->type 	Type.{Elem,Key,{,{,Recv}Type}Params,Results,Underlying,Rhs} [EKPRUTrCa]
     //	TO   type->object	Type.{At,Field,Method,Obj} [AFMO]
     //
     // All valid paths start with a package and end at an object
@@ -28,7 +28,7 @@ namespace golang::objectpath
     //   - The only PO operator is Package.Scope.Lookup, which requires an identifier.
     //   - The only OT operator is Object.Type,
     //     which we encode as '.' because dot cannot appear in an identifier.
-    //   - The TT operators are encoded as [EKPRUTrC];
+    //   - The TT operators are encoded as [EKPRUTrCa];
     //     two of these ({,Recv}TypeParams) require an integer operand,
     //     which is encoded as a string of decimal digits.
     //   - The TO operators are encoded as [AFMO];
@@ -69,16 +69,13 @@ namespace golang::objectpath
     const char opTypeParam = 'T';
     const char opRecvTypeParam = 'r';
     const char opConstraint = 'C';
+    const char opRhs = 'a';
     // type->object operators
     const char opAt = 'A';
     const char opField = 'F';
     const char opMethod = 'M';
     const char opObj = 'O';
-}
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/scope.fwd.h"
-
-namespace golang::objectpath
-{
     struct Encoder;
+    struct traversal;
+    struct pkgIndex;
 }

@@ -11,7 +11,7 @@
 #include "golang/internal/syscall/windows/psapi_windows.h"
 #include "gocpp/support.h"
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
     namespace rec
     {

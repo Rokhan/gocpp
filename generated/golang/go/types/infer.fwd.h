@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     // If enableReverseTypeInference is set, uninstantiated and
     // partially instantiated generic functions may be assigned
@@ -12,12 +12,6 @@ namespace golang::types
     // inference will attempt to infer the missing type arguments.
     // Available with go1.21.
     const bool enableReverseTypeInference = true;
-}
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
-
-namespace golang::types
-{
     struct tpWalker;
     struct cycleFinder;
 }

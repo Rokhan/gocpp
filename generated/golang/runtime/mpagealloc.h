@@ -20,8 +20,6 @@ namespace golang::runtime
     pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end);
     pallocSum mergeSummaries(gocpp::slice<pallocSum> sums, unsigned int logMaxPagesPerSum);
 }
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/mgcscavenge.h"
 #include "golang/runtime/mranges.h"
 
 namespace golang::runtime
@@ -29,6 +27,14 @@ namespace golang::runtime
     offAddr maxSearchAddr();
     int offAddrToLevelIndex(int level, offAddr addr);
     offAddr levelIndexToOffAddr(int level, int idx);
+}
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/runtime/mgcscavenge.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
     struct gocpp_id_0
     {
         // index is an efficient index of chunks that have pages available to
@@ -92,6 +98,7 @@ namespace golang::runtime
         // heapAddrBits | L1 Bits | L2 Bits | L2 Entry Size
         // ------------------------------------------------
         // 32           | 0       | 10      | 128 KiB
+        // 32 (wasm)    | 0       | 13      | 128 KiB
         // 33 (iOS)     | 0       | 11      | 256 KiB
         // 48           | 13      | 13      | 1 MiB
         // There's no reason to use the L1 part of chunks on 32-bit, the
@@ -185,6 +192,7 @@ namespace golang::runtime
         std::tuple<uintptr_t, offAddr> find(pageAlloc* p, uintptr_t npages);
         std::tuple<uintptr_t, uintptr_t> alloc(pageAlloc* p, uintptr_t npages);
         void free(pageAlloc* p, uintptr_t base, uintptr_t npages);
+        void markRandomPaddingPages(pageAlloc* p, uintptr_t base, uintptr_t npages);
         unsigned int start(pallocSum p);
         unsigned int max(pallocSum p);
         unsigned int end(pallocSum p);

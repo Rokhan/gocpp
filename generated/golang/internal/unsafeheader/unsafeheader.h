@@ -10,8 +10,9 @@
 #include "gocpp/support.h"
 
 
-namespace golang::unsafeheader
+namespace golang::internal::unsafeheader
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct Slice
     {
         gocpp::unsafe_pointer Data{};

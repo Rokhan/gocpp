@@ -11,10 +11,5 @@ namespace golang::fmt
     const bool go_signed = true;
     const bool go_unsigned = false;
     struct fmtFlags;
-}
-#include "golang/fmt/print.fwd.h"
-
-namespace golang::fmt
-{
     struct fmt;
 }

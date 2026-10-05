@@ -10,45 +10,38 @@
 #include "gocpp/support.h"
 
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
-    void errorf(gocpp::string format, gocpp::slice<gocpp::go_any> args);
+    void errorf(gocpp::string format, gocpp::slice<go_any> args);
     
     template<typename... Args>
     void errorf(gocpp::string format, Args... args)
     {
-        return errorf(format, gocpp::ToSlice<gocpp::go_any>(args...));
+        return errorf(format, gocpp::ToSlice<go_any>(args...));
     }
     
     template<typename... Args>
-    void errorf(gocpp::string format, gocpp::go_any value, Args... args)
+    void errorf(gocpp::string format, go_any value, Args... args)
     {
-        return errorf(format, gocpp::ToSlice<gocpp::go_any>(value, args...));
+        return errorf(format, gocpp::ToSlice<go_any>(value, args...));
     }
     extern gocpp::slice<int> fakeLines;
-    struct anyType
-    {
+}
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/types/chan.fwd.h"
+#include "golang/sync/once.fwd.h"
 
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct anyType& value);
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace token = golang::go::token;
 }
 #include "golang/go/types/chan.h"
-#include "golang/go/types/type.h"
 #include "golang/sync/once.h"
-#include "golang/go/token/position.fwd.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    namespace sync = golang::sync;
+    namespace types = golang::go::types;
     struct fakeFileSet
     {
         token::FileSet* fset{};
@@ -85,23 +78,17 @@ namespace golang::gcimporter
     std::ostream& operator<<(std::ostream& os, const struct fileInfo& value);
     extern sync::Once fakeLinesOnce;
     types::ChanDir chanDir(int d);
-    extern sync::Once predeclOnce;
-    extern gocpp::slice<types::Type> predecl;
-    gocpp::slice<types::Type> predeclared();
 }
 
 #include "golang/go/token/position.h"
-#include "golang/go/types/type.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
 
     namespace rec
     {
         token::Pos pos(fakeFileSet* s, gocpp::string file, int line, int column);
         void setLines(fakeFileSet* s);
-        types::Type Underlying(anyType t);
-        gocpp::string String(anyType t);
     }
 }
 

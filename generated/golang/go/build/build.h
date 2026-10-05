@@ -10,11 +10,29 @@
 #include "gocpp/support.h"
 
 
-namespace golang::build
+namespace golang::go::build
 {
     std::tuple<gocpp::string, bool> hasSubdir(gocpp::string root, gocpp::string dir);
     gocpp::string defaultGOPATH();
+    // defaultToolTags should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/gopherjs/gopherjs
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname defaultToolTags
     extern gocpp::slice<gocpp::string> defaultToolTags;
+    // defaultReleaseTags should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/gopherjs/gopherjs
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname defaultReleaseTags
     extern gocpp::slice<gocpp::string> defaultReleaseTags;
     gocpp::string envOr(gocpp::string name, gocpp::string def);
     struct NoGoError
@@ -53,7 +71,7 @@ namespace golang::build
     std::ostream& operator<<(std::ostream& os, const struct MultiplePackageError& value);
     gocpp::string nameExt(gocpp::string name);
     gocpp::slice<gocpp::string> uniq(gocpp::slice<gocpp::string> list);
-    bool equal(gocpp::slice<gocpp::string> x, gocpp::slice<gocpp::string> y);
+    extern gocpp::error errNoModules;
     std::tuple<gocpp::string, int> findImportComment(gocpp::slice<unsigned char> data);
     extern gocpp::slice<unsigned char> slashSlash;
     extern gocpp::slice<unsigned char> slashStar;
@@ -63,25 +81,42 @@ namespace golang::build
     std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>> parseWord(gocpp::slice<unsigned char> data);
     extern gocpp::slice<unsigned char> plusBuild;
     extern gocpp::slice<unsigned char> goBuildComment;
+    extern gocpp::error errMultipleGoBuild;
     bool isGoBuildComment(gocpp::slice<unsigned char> line);
+    // Special comment denoting a binary-only package.
+    // See https://golang.org/design/2775-binary-only-packages
+    // for more about the design of binary-only packages.
     extern gocpp::slice<unsigned char> binaryOnlyComment;
     std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>, bool, gocpp::error> parseFileHeader(gocpp::slice<unsigned char> content);
     std::tuple<gocpp::string, bool> expandSrcDir(gocpp::string str, gocpp::string srcdir);
     bool safeCgoName(gocpp::string s);
     std::tuple<gocpp::slice<gocpp::string>, gocpp::error> splitQuoted(gocpp::string s);
+    // ToolDir is the directory containing build tools.
+    extern gocpp::string ToolDir;
     bool IsLocalImport(gocpp::string path);
     std::tuple<gocpp::string, gocpp::error> ArchChar(gocpp::string goarch);
+}
+#include "golang/go/ast/ast.fwd.h"
+#include "golang/go/token/position.fwd.h"
+#include "golang/internal/godebug/godebug.fwd.h"
+#include "golang/io/fs/fs.fwd.h"
+#include "golang/io/fs/readdir.fwd.h"
+#include "golang/io/io.fwd.h"
+
+namespace golang::go::build
+{
+    namespace fs = golang::io::fs;
+    namespace io = golang::io;
 }
 #include "golang/go/token/position.h"
 #include "golang/io/fs/fs.h"
 #include "golang/io/io.h"
-#include "golang/errors/errors.fwd.h"
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/build/gc.fwd.h"
-#include "golang/internal/godebug/godebug.fwd.h"
 
-namespace golang::build
+namespace golang::go::build
 {
+    namespace token = golang::go::token;
+    namespace godebug = golang::internal::godebug;
+    namespace ast = golang::go::ast;
     struct Context
     {
         gocpp::string GOARCH{}; // target architecture
@@ -175,7 +210,6 @@ namespace golang::build
 
     std::ostream& operator<<(std::ostream& os, const struct Directive& value);
     extern godebug::Setting* installgoroot;
-    extern gocpp::error errNoModules;
     struct fileImport
     {
         gocpp::string path{};
@@ -212,8 +246,10 @@ namespace golang::build
 
     std::ostream& operator<<(std::ostream& os, const struct fileEmbed& value);
     std::tuple<gocpp::slice<gocpp::string>, gocpp::map<gocpp::string, gocpp::slice<token::Position>>> cleanDecls(gocpp::map<gocpp::string, gocpp::slice<token::Position>> m);
-    extern gocpp::error errMultipleGoBuild;
-    extern gocpp::string ToolDir;
+    // Default is the default Context for builds.
+    // It uses the GOARCH, GOOS, GOROOT, and GOPATH environment variables
+    // if set, or else the compiled code's GOARCH, GOOS, and GOROOT.
+    extern Context Default;
     Context defaultContext();
     struct Package
     {
@@ -316,7 +352,6 @@ namespace golang::build
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fileInfo& value);
-    extern Context Default;
     gocpp::slice<gocpp::string>* fileListForExt(Package* p, gocpp::string ext);
     extern Package dummyPkg;
     std::tuple<Package*, gocpp::error> Import(gocpp::string path, gocpp::string srcDir, ImportMode mode);
@@ -329,8 +364,9 @@ namespace golang::build
 #include "golang/io/fs/fs.h"
 #include "golang/io/io.h"
 
-namespace golang::build
+namespace golang::go::build
 {
+    namespace constraint = golang::go::build::constraint;
 
     namespace rec
     {

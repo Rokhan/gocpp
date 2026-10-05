@@ -9,19 +9,24 @@
 #include "golang/go/types/interface.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/types/type.h"
 #include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/types/type.h"
 #include "golang/go/types/check.fwd.h"
 #include "golang/go/types/object.fwd.h"
 #include "golang/go/types/typeset.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Interface
     {
         Checker* check{}; // for error reporting; nil once type set is computed
         gocpp::slice<Func*> methods{}; // ordered list of explicitly declared methods
-        gocpp::slice<golang::types::Type> embeddeds{}; // ordered list of explicitly embedded elements
+        gocpp::slice<golang::go::types::Type> embeddeds{}; // ordered list of explicitly embedded elements
         gocpp::slice<token::Pos>* embedPos{}; // positions of embedded elements; or nil (for error messages) - use pointer to save space
         bool implicit{}; // interface is wrapper for type set literal (non-interface T, ~T, or A|B)
         bool complete{}; // indicates that obj, methods, and embeddeds are set and type set can be computed
@@ -39,14 +44,14 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
-    Interface* NewInterfaceType(gocpp::slice<Func*> methods, gocpp::slice<golang::types::Type> embeddeds);
+    // emptyInterface represents the empty (completed) interface
+    extern Interface emptyInterface;
+    Interface* NewInterfaceType(gocpp::slice<Func*> methods, gocpp::slice<golang::go::types::Type> embeddeds);
 }
-#include "golang/go/types/typeset.h"
 #include "golang/go/types/named.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    extern Interface emptyInterface;
     Interface* NewInterface(gocpp::slice<Func*> methods, gocpp::slice<Named*> embeddeds);
 }
 
@@ -57,8 +62,9 @@ namespace golang::types
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeset.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
 
     namespace rec
     {
@@ -69,7 +75,7 @@ namespace golang::types
         Func* ExplicitMethod(Interface* t, int i);
         int NumEmbeddeds(Interface* t);
         Named* Embedded(Interface* t, int i);
-        golang::types::Type EmbeddedType(Interface* t, int i);
+        golang::go::types::Type EmbeddedType(Interface* t, int i);
         int NumMethods(Interface* t);
         Func* Method(Interface* t, int i);
         bool Empty(Interface* t);
@@ -77,7 +83,7 @@ namespace golang::types
         bool IsMethodSet(Interface* t);
         bool IsImplicit(Interface* t);
         Interface* Complete(Interface* t);
-        golang::types::Type Underlying(Interface* t);
+        golang::go::types::Type Underlying(Interface* t);
         gocpp::string String(Interface* t);
         void cleanup(Interface* t);
         void interfaceType(Checker* check, Interface* ityp, ast::InterfaceType* iface, TypeName* def);

@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::binary
+namespace golang::encoding::binary
 {
     // MaxVarintLenN is the maximum length of a varint-encoded N-bit integer.
     const long MaxVarintLen16 = 3;

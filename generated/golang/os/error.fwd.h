@@ -13,5 +13,6 @@ namespace golang::os
 
 namespace golang::os
 {
+    namespace fs = golang::io::fs;
     using PathError = fs::PathError;
 }

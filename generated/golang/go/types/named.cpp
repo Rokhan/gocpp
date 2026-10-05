@@ -19,11 +19,12 @@
 #include "golang/go/types/context.h"
 #include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/interface.h"
-#include "golang/go/types/lookup.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/package.h"
 #include "golang/go/types/pointer.h"
+#include "golang/go/types/predicates.h"
 #include "golang/go/types/signature.h"
 #include "golang/go/types/subst.h"
 #include "golang/go/types/type.h"
@@ -32,11 +33,16 @@
 #include "golang/go/types/typeset.h"
 #include "golang/go/types/typestring.h"
 #include "golang/go/types/universe.h"
+#include "golang/strings/strings.h"
 #include "golang/sync/atomic/doc.h"
 #include "golang/sync/mutex.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace atomic = golang::sync::atomic;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
+    namespace token = golang::go::token;
     namespace rec
     {
         using mocklib::rec::Lock;
@@ -44,6 +50,17 @@ namespace golang::types
     }
 
     // A Named represents a named (defined) type.
+    //
+    // A declaration such as:
+    //
+    //	type S struct { ... }
+    //
+    // creates a defined type whose underlying type is a struct,
+    // and binds this type to the object S, a [TypeName].
+    // Use [Named.Underlying] to access the underlying type.
+    // Use [Named.Obj] to obtain the object S.
+    //
+    // Before type aliases (Go 1.9), the spec called defined types "named types".
     
     template<typename T> requires gocpp::GoStruct<T>
     Named::operator T()
@@ -51,12 +68,14 @@ namespace golang::types
         T result;
         result.check = this->check;
         result.obj = this->obj;
-        result.fromRHS = this->fromRHS;
+        result.allowNilRHS = this->allowNilRHS;
         result.inst = this->inst;
         result.mu = this->mu;
         result.state_ = this->state_;
-        result.underlying = this->underlying;
+        result.fromRHS = this->fromRHS;
         result.tparams = this->tparams;
+        result.underlying = this->underlying;
+        result.varSize = this->varSize;
         result.methods = this->methods;
         result.loader = this->loader;
         return result;
@@ -67,12 +86,14 @@ namespace golang::types
     {
         if (check != ref.check) return false;
         if (obj != ref.obj) return false;
-        if (fromRHS != ref.fromRHS) return false;
+        if (allowNilRHS != ref.allowNilRHS) return false;
         if (inst != ref.inst) return false;
         if (mu != ref.mu) return false;
         if (state_ != ref.state_) return false;
-        if (underlying != ref.underlying) return false;
+        if (fromRHS != ref.fromRHS) return false;
         if (tparams != ref.tparams) return false;
+        if (underlying != ref.underlying) return false;
+        if (varSize != ref.varSize) return false;
         if (methods != ref.methods) return false;
         if (loader != ref.loader) return false;
         return true;
@@ -83,12 +104,14 @@ namespace golang::types
         os << '{';
         os << "" << check;
         os << " " << obj;
-        os << " " << fromRHS;
+        os << " " << allowNilRHS;
         os << " " << inst;
         os << " " << mu;
         os << " " << state_;
-        os << " " << underlying;
+        os << " " << fromRHS;
         os << " " << tparams;
+        os << " " << underlying;
+        os << " " << varSize;
         os << " " << methods;
         os << " " << loader;
         os << '}';
@@ -140,32 +163,84 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
-    // namedState represents the possible states that a named type may assume.
+    // stateMask represents each state in the lifecycle of a named type.
+    //
+    // Each named type begins in the initial state. A named type may transition to a new state
+    // according to the below diagram:
+    //
+    //	initial
+    //	lazyLoaded
+    //	unpacked
+    //	└── hasMethods
+    //	└── hasUnder
+    //	└── hasVarSize
+    //
+    // That is, descent down the tree is mostly linear (initial through unpacked), except upon
+    // reaching the leaves (hasMethods, hasUnder, and hasVarSize). A type may occupy any
+    // combination of the leaf states at once (they are independent states).
+    //
+    // To represent this independence, the set of active states is represented with a bit set. State
+    // transitions are monotonic. Once a state bit is set, it remains set.
+    //
+    // The above constraints significantly narrow the possible bit sets for a named type. With bits
+    // set left-to-right, they are:
+    //
+    //	00000 | initial
+    //	10000 | lazyLoaded
+    //	11000 | unpacked, which implies lazyLoaded
+    //	11100 | hasMethods, which implies unpacked (which in turn implies lazyLoaded)
+    //	11010 | hasUnder, which implies unpacked ...
+    //	11001 | hasVarSize, which implies unpacked ...
+    //	11110 | both hasMethods and hasUnder which implies unpacked ...
+    //	...   | (other combinations of leaf states)
+    //
+    // To read the state of a named type, use [Named.stateHas]; to write, use [Named.setState].
     // NewNamed returns a new named type for the given type name, underlying type, and associated methods.
     // If the given type name obj doesn't have a type yet, its type is set to the returned named type.
     // The underlying type must not be a *Named.
-    Named* NewNamed(TypeName* obj, golang::types::Type underlying, gocpp::slice<Func*> methods)
+    Named* NewNamed(TypeName* obj, golang::go::types::Type underlying, gocpp::slice<Func*> methods)
     {
         if(asNamed(underlying) != nullptr)
         {
             gocpp::panic("underlying type must not be *Named"_s);
         }
-        return rec::newNamed(gocpp::recv((Checker*)(nullptr)), obj, underlying, methods);
+        auto n = rec::newNamed(gocpp::recv((Checker*)(nullptr)), obj, underlying, methods);
+        if(underlying == nullptr)
+        {
+            n->allowNilRHS = true;
+        }
+        else
+        {
+            rec::SetUnderlying(gocpp::recv(n), underlying);
+        }
+        return n;
     }
 
-    // resolve resolves the type parameters, methods, and underlying type of n.
-    // This information may be loaded from a provided loader function, or computed
-    // from an origin type (in the case of instances).
+    // unpack populates the type parameters, methods, and RHS of n.
     //
-    // After resolution, the type parameters, methods, and underlying type of n are
-    // accessible; but if n is an instantiated type, its methods may still be
-    // unexpanded.
-    Named* rec::resolve(Named* n)
+    // For the purposes of unpacking, there are three categories of named types:
+    //  1. Lazy loaded types
+    //  2. Instantiated types
+    //  3. All others
+    //
+    // Note that the above form a partition.
+    //
+    // Lazy loaded types:
+    // Type parameters, methods, and RHS of n become accessible and are fully
+    // expanded.
+    //
+    // Instantiated types:
+    // Type parameters, methods, and RHS of n become accessible, though methods
+    // are lazily populated as needed.
+    //
+    // All others:
+    // Effectively, nothing happens.
+    Named* rec::unpack(Named* n)
     {
         gocpp::Defer defer;
         try
         {
-            if(rec::state(gocpp::recv(n)) >= resolved)
+            if(rec::stateHas(gocpp::recv(n), lazyLoaded | unpacked))
             {
                 // avoid locking below
                 return n;
@@ -176,37 +251,37 @@ namespace golang::types
             rec::Lock(gocpp::recv(n->mu));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(n->mu)); });
 
-            if(rec::state(gocpp::recv(n)) >= resolved)
+            // only atomic for consistency; we are holding the mutex
+            if(rec::stateHas(gocpp::recv(n), lazyLoaded | unpacked))
             {
                 return n;
             }
 
             if(n->inst != nullptr)
             {
-                // n is an unresolved instance
-                assert(n->underlying == nullptr);
-                // instances are created by instantiation, in which case n.loader is nil
+                // instantiated types are not declared types
+                assert(n->fromRHS == nullptr);
+                // cannot import an instantiation
                 assert(n->loader == nullptr);
 
                 auto orig = n->inst->orig;
-                rec::resolve(gocpp::recv(orig));
-                auto underlying = rec::expandUnderlying(gocpp::recv(n));
+                rec::unpack(gocpp::recv(orig));
 
+                n->fromRHS = rec::expandRHS(gocpp::recv(n));
                 n->tparams = orig->tparams;
-                n->underlying = underlying;
-                // for cycle detection
-                n->fromRHS = orig->fromRHS;
 
                 if(len(orig->methods) == 0)
                 {
                     // nothing further to do
-                    rec::setState(gocpp::recv(n), complete);
+                    rec::setState(gocpp::recv(n), lazyLoaded | unpacked | hasMethods);
                     n->inst->ctxt = nullptr;
                 }
                 else
                 {
-                    rec::setState(gocpp::recv(n), resolved);
+                    rec::setState(gocpp::recv(n), lazyLoaded | unpacked);
                 }
+                // underlying comes after unpacking, do not set it
+                assert(! rec::stateHas(gocpp::recv(n), hasUnder));
                 return n;
             }
 
@@ -219,21 +294,34 @@ namespace golang::types
             // also make the API more future-proof towards further extensions.
             if(n->loader != nullptr)
             {
-                assert(n->underlying == nullptr);
-                // instances are created by instantiation, in which case n.loader is nil
-                assert(rec::Len(gocpp::recv(rec::TypeArgs(gocpp::recv(n)))) == 0);
+                // not loaded yet
+                assert(n->fromRHS == nullptr);
+                // cannot import an instantiation
+                assert(n->inst == nullptr);
 
-                auto [tparams, underlying, methods] = n->loader(n);
+                auto [tparams, underlying, methods, delayed] = n->loader(n);
+                n->loader = nullptr;
 
                 n->tparams = bindTParams(tparams);
                 n->underlying = underlying;
                 // for cycle detection
                 n->fromRHS = underlying;
                 n->methods = methods;
-                n->loader = nullptr;
+
+                // Careful: A delayed function could need the underlying type of
+                // the type we are loading, so we must advance to hasUnder to
+                // avoid a deadlock (see go.dev/issue/80258).
+                rec::setState(gocpp::recv(n), lazyLoaded | unpacked | hasMethods | hasUnder);
+                for(auto [gocpp_ignored, f] : delayed)
+                {
+                    f();
+                }
+                return n;
             }
 
-            rec::setState(gocpp::recv(n), complete);
+            // underlying comes after unpacking, do not set it
+            rec::setState(gocpp::recv(n), lazyLoaded | unpacked | hasMethods);
+            assert(! rec::stateHas(gocpp::recv(n), hasUnder));
             return n;
         }
         catch(gocpp::GoPanic& gp)
@@ -242,27 +330,52 @@ namespace golang::types
         }
     }
 
-    // state atomically accesses the current state of the receiver.
-    namedState rec::state(Named* n)
+    // stateHas atomically determines whether the current state includes any active bit in sm.
+    bool rec::stateHas(Named* n, stateMask m)
     {
-        return namedState(atomic::LoadUint32(& n->state_));
+        return stateMask(atomic::LoadUint32(& n->state_)) & m != 0;
     }
 
-    // setState atomically stores the given state for n.
+    // setState atomically sets the current state to include each active bit in sm.
     // Must only be called while holding n.mu.
-    void rec::setState(Named* n, namedState state)
+    void rec::setState(Named* n, stateMask m)
     {
-        atomic::StoreUint32(& n->state_, uint32_t(state));
+        atomic::OrUint32(& n->state_, uint32_t(m));
+        // verify state transitions
+        if(debug)
+        {
+            auto m = stateMask(atomic::LoadUint32(& n->state_));
+            auto u = m & unpacked != 0;
+            // unpacked => lazyLoaded
+            if(u)
+            {
+                assert(m & lazyLoaded != 0);
+            }
+            // hasMethods => unpacked
+            if(m & hasMethods != 0)
+            {
+                assert(u);
+            }
+            // hasUnder => unpacked
+            if(m & hasUnder != 0)
+            {
+                assert(u);
+            }
+            // hasVarSize => unpacked
+            if(m & types::hasVarSize != 0)
+            {
+                assert(u);
+            }
+        }
     }
 
     // newNamed is like NewNamed but with a *Checker receiver.
-    Named* rec::newNamed(Checker* check, TypeName* obj, golang::types::Type underlying, gocpp::slice<Func*> methods)
+    Named* rec::newNamed(Checker* check, TypeName* obj, golang::go::types::Type fromRHS, gocpp::slice<Func*> methods)
     {
         auto typ = gocpp::InitPtr<Named>([=](auto& x) {
             x.check = check;
             x.obj = obj;
-            x.fromRHS = underlying;
-            x.underlying = underlying;
+            x.fromRHS = fromRHS;
             x.methods = methods;
         });
         if(obj->object.typ == nullptr)
@@ -283,12 +396,12 @@ namespace golang::types
     //
     // If set, expanding is the named type instance currently being expanded, that
     // led to the creation of this instance.
-    Named* rec::newNamedInstance(Checker* check, token::Pos pos, Named* orig, gocpp::slice<golang::types::Type> targs, Named* expanding)
+    Named* rec::newNamedInstance(Checker* check, token::Pos pos, Named* orig, gocpp::slice<golang::go::types::Type> targs, Named* expanding)
     {
         assert(len(targs) > 0);
 
         auto obj = NewTypeName(pos, orig->obj->object.pkg, orig->obj->object.name, nullptr);
-        auto inst = gocpp::InitPtr<golang::types::instance>([=](auto& x) {
+        auto inst = gocpp::InitPtr<golang::go::types::instance>([=](auto& x) {
             x.orig = orig;
             x.targs = newTypeList(targs);
         });
@@ -316,41 +429,15 @@ namespace golang::types
         return typ;
     }
 
-    void rec::cleanup(Named* t)
+    void rec::cleanup(Named* n)
     {
-        assert(t->inst == nullptr || t->inst->orig->inst == nullptr);
-        // Ensure that every defined type created in the course of type-checking has
-        // either non-*Named underlying type, or is unexpanded.
-        // This guarantees that we don't leak any types whose underlying type is
-        // *Named, because any unexpanded instances will lazily compute their
-        // underlying type by substituting in the underlying type of their origin.
-        // The origin must have either been imported or type-checked and expanded
-        // here, and in either case its underlying type will be fully expanded.
-        //Go type switch emulation
+        // Instances can have a nil underlying at the end of type checking — they
+        // will lazily expand it as needed. All other types must have one.
+        if(n->inst == nullptr)
         {
-            const auto& gocpp_id_0 = gocpp::type_info(t->underlying);
-            int conditionId = -1;
-            if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
-            else if(gocpp_id_0 == typeid(types::Named*)) { conditionId = 1; }
-            switch(conditionId)
-            {
-                case 0:
-                {
-                    if(rec::Len(gocpp::recv(rec::TypeArgs(gocpp::recv(t)))) == 0)
-                    {
-                        gocpp::panic("nil underlying"_s);
-                    }
-                    break;
-                }
-                // t.under may add entries to check.cleaners
-                case 1:
-                {
-                    rec::under(gocpp::recv(t));
-                    break;
-                }
-            }
+            rec::Underlying(gocpp::recv(n));
         }
-        t->check = nullptr;
+        n->check = nullptr;
     }
 
     // Obj returns the type name for the declaration defining the named type t. For
@@ -379,7 +466,7 @@ namespace golang::types
     // The result is non-nil for an (originally) generic type even if it is instantiated.
     TypeParamList* rec::TypeParams(Named* t)
     {
-        return rec::resolve(gocpp::recv(t))->tparams;
+        return rec::unpack(gocpp::recv(t))->tparams;
     }
 
     // SetTypeParams sets the type parameters of the named type t.
@@ -387,7 +474,7 @@ namespace golang::types
     void rec::SetTypeParams(Named* t, gocpp::slice<TypeParam*> tparams)
     {
         assert(t->inst == nullptr);
-        rec::resolve(gocpp::recv(t))->tparams = bindTParams(tparams);
+        rec::unpack(gocpp::recv(t))->tparams = bindTParams(tparams);
     }
 
     // TypeArgs returns the type arguments used to instantiate the named type t.
@@ -403,27 +490,37 @@ namespace golang::types
     // NumMethods returns the number of explicit methods defined for t.
     int rec::NumMethods(Named* t)
     {
-        return len(rec::resolve(gocpp::recv(rec::Origin(gocpp::recv(t))))->methods);
+        return len(rec::unpack(gocpp::recv(rec::Origin(gocpp::recv(t))))->methods);
     }
 
     // Method returns the i'th method of named type t for 0 <= i < t.NumMethods().
     //
-    // For an ordinary or instantiated type t, the receiver base type of this
-    // method is the named type t. For an uninstantiated generic type t, each
-    // method receiver is instantiated with its receiver type parameters.
+    // For an ordinary or instantiated type t, the receiver base type of this method
+    // is the named type t. The returned Func's Signature will not have receiver
+    // type parameters.
+    //
+    // For an uninstantiated generic type t, each method receiver is instantiated with
+    // its receiver type parameters. The returned Func's Signature will have the
+    // receiver type parameters used to instantiate the receiver.
+    //
+    // Methods are numbered deterministically: given the same list of source files
+    // presented to the type checker, or the same sequence of NewMethod and AddMethod
+    // calls, the mapping from method index to corresponding method remains the same.
+    // But the specific ordering is not specified and must not be relied on as it may
+    // change in the future.
     Func* rec::Method(Named* t, int i)
     {
         gocpp::Defer defer;
         try
         {
-            rec::resolve(gocpp::recv(t));
+            rec::unpack(gocpp::recv(t));
 
-            if(rec::state(gocpp::recv(t)) >= complete)
+            if(rec::stateHas(gocpp::recv(t), hasMethods))
             {
                 return t->methods[i];
             }
 
-            // only instances should have incomplete methods
+            // only instances should have unexpanded methods
             assert(t->inst != nullptr);
             auto orig = t->inst->orig;
 
@@ -444,10 +541,10 @@ namespace golang::types
                 t->inst->expandedMethods++;
 
                 // Check if we've created all methods at this point. If we have, mark the
-                // type as fully expanded.
+                // type as having all of its methods.
                 if(t->inst->expandedMethods == len(orig->methods))
                 {
-                    rec::setState(gocpp::recv(t), complete);
+                    rec::setState(gocpp::recv(t), hasMethods);
                     // no need for a context anymore
                     t->inst->ctxt = nullptr;
                 }
@@ -462,60 +559,58 @@ namespace golang::types
     }
 
     // expandMethod substitutes type arguments in the i'th method for an
-    // instantiated receiver.
+    // instantiated receiver. A returned Func's Signature never has
+    // receiver type parameters.
     Func* rec::expandMethod(Named* t, int i)
     {
-        // t.orig.methods is not lazy. origm is the method instantiated with its
-        // receiver type parameters (the "origin" method).
-        auto origm = rec::Method(gocpp::recv(t->inst->orig), i);
-        assert(origm != nullptr);
+        // t.orig.methods is not lazy. orig is the declared function on t, which
+        // must have receiver type parameters (since t is generic).
+        auto orig = rec::Method(gocpp::recv(t->inst->orig), i);
+        assert(orig != nullptr);
 
         auto check = t->check;
         // Ensure that the original method is type-checked.
         if(check != nullptr)
         {
-            rec::objDecl(gocpp::recv(check), origm, nullptr);
+            rec::objDecl(gocpp::recv(check), orig);
         }
 
-        auto origSig = gocpp::getValue<Signature*>(origm->object.typ);
-        auto [rbase, gocpp_id_1] = deref(rec::Type(gocpp::recv(rec::Recv(gocpp::recv(origSig)))));
+        auto oldSig = gocpp::getValue<golang::go::types::Signature*>(orig->object.typ);
+        auto rtpars = rec::list(gocpp::recv(oldSig->rparams));
+        auto rtargs = rec::list(gocpp::recv(t->inst->targs));
 
-        // If rbase is t, then origm is already the instantiated method we're looking
-        // for. In this case, we return origm to preserve the invariant that
-        // traversing Method->Receiver Type->Method should get back to the same
-        // method.
-        // This occurs if t is instantiated with the receiver type parameters, as in
-        // the use of m in func (r T[_]) m() { r.m() }.
-        if(rbase == t)
-        {
-            return origm;
-        }
-
-        auto sig = origSig;
+        // Consider:
+        // type T[P any] struct{}
+        // func (t T[P]) m() { t.m() }
+        // At t.m, m is expanded for T[P] to get a new Func, which must be different from
+        // the declared Func for the origin method T.m; notably, the Func for t.m lacks
+        // receiver type parameters, since it is instantiated (as opposed to declared)
+        // and thus no longer generic. One must not return the origin method here.
         // We can only substitute if we have a correspondence between type arguments
         // and type parameters. This check is necessary in the presence of invalid
         // code.
-        if(rec::Len(gocpp::recv(rec::RecvTypeParams(gocpp::recv(origSig)))) == rec::Len(gocpp::recv(t->inst->targs)))
+        auto newSig = oldSig;
+        if(len(rtpars) == len(rtargs))
         {
-            auto smap = makeSubstMap(rec::list(gocpp::recv(rec::RecvTypeParams(gocpp::recv(origSig)))), rec::list(gocpp::recv(t->inst->targs)));
+            auto smap = makeSubstMap(rtpars, rtargs);
             Context* ctxt = {};
             if(check != nullptr)
             {
                 ctxt = rec::context(gocpp::recv(check));
             }
-            sig = gocpp::getValue<Signature*>(rec::subst(gocpp::recv(check), origm->object.pos, origSig, smap, t, ctxt));
+            newSig = gocpp::getValue<golang::go::types::Signature*>(rec::subst(gocpp::recv(check), orig->object.pos, oldSig, smap, t, ctxt));
         }
 
-        if(sig == origSig)
+        if(newSig == oldSig)
         {
             // No substitution occurred, but we still need to create a new signature to
             // hold the instantiated receiver.
-            auto copy = *origSig;
-            sig = & copy;
+            auto copy = *oldSig;
+            newSig = & copy;
         }
 
-        golang::types::Type rtyp = {};
-        if(rec::hasPtrRecv(gocpp::recv(origm)))
+        golang::go::types::Type rtyp = {};
+        if(rec::hasPtrRecv(gocpp::recv(orig)))
         {
             rtyp = NewPointer(t);
         }
@@ -524,47 +619,129 @@ namespace golang::types
             rtyp = t;
         }
 
-        sig->recv = substVar(origSig->recv, rtyp);
-        return substFunc(origm, sig);
+        newSig->recv = cloneVar(oldSig->recv, rtyp);
+        newSig->rparams = nullptr;
+
+        return cloneFunc(orig, newSig);
     }
 
     // SetUnderlying sets the underlying type and marks t as complete.
     // t must not have type arguments.
-    void rec::SetUnderlying(Named* t, golang::types::Type underlying)
+    void rec::SetUnderlying(Named* t, golang::go::types::Type u)
     {
-        assert(t->inst == nullptr);
-        if(underlying == nullptr)
+        gocpp::Defer defer;
+        try
         {
-            gocpp::panic("underlying type must not be nil"_s);
+            assert(t->inst == nullptr);
+            if(u == nullptr)
+            {
+                gocpp::panic("underlying type must not be nil"_s);
+            }
+            if(asNamed(u) != nullptr)
+            {
+                gocpp::panic("underlying type must not be *Named"_s);
+            }
+            // be careful to uphold the state invariants
+            rec::Lock(gocpp::recv(t->mu));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(t->mu)); });
+
+            t->fromRHS = u;
+            t->allowNilRHS = false;
+            // TODO(markfreeman): Why hasMethods?
+            rec::setState(gocpp::recv(t), lazyLoaded | unpacked | hasMethods);
+
+            t->underlying = u;
+            rec::setState(gocpp::recv(t), hasUnder);
         }
-        if(asNamed(underlying) != nullptr)
+        catch(gocpp::GoPanic& gp)
         {
-            gocpp::panic("underlying type must not be *Named"_s);
-        }
-        rec::resolve(gocpp::recv(t))->underlying = underlying;
-        if(t->fromRHS == nullptr)
-        {
-            // for cycle detection
-            t->fromRHS = underlying;
+            defer.handlePanic(gp);
         }
     }
 
     // AddMethod adds method m unless it is already in the method list.
-    // t must not have type arguments.
+    // The method must be in the same package as t, and t must not have
+    // type arguments.
     void rec::AddMethod(Named* t, Func* m)
     {
+        assert(samePkg(t->obj->object.pkg, m->object.pkg));
         assert(t->inst == nullptr);
-        rec::resolve(gocpp::recv(t));
-        if(auto [i, gocpp_id_2] = types::lookupMethod(t->methods, m->object.pkg, m->object.name, false); i < 0)
+        rec::unpack(gocpp::recv(t));
+        if(rec::methodIndex(gocpp::recv(t), m->object.name, false) < 0)
         {
             t->methods = append(t->methods, m);
         }
     }
 
-    // TODO(gri) Investigate if Unalias can be moved to where underlying is set.
-    golang::types::Type rec::Underlying(Named* t)
+    // methodIndex returns the index of the method with the given name.
+    // If foldCase is set, capitalization in the name is ignored.
+    // The result is negative if no such method exists.
+    int rec::methodIndex(Named* t, gocpp::string name, bool foldCase)
     {
-        return Unalias(rec::resolve(gocpp::recv(t))->underlying);
+        if(name == "_"_s)
+        {
+            return - 1;
+        }
+        if(foldCase)
+        {
+            for(auto [i, m] : t->methods)
+            {
+                if(strings::EqualFold(m->object.name, name))
+                {
+                    return i;
+                }
+            }
+        }
+        else
+        {
+            for(auto [i, m] : t->methods)
+            {
+                if(m->object.name == name)
+                {
+                    return i;
+                }
+            }
+        }
+        return - 1;
+    }
+
+    // rhs returns [Named.fromRHS].
+    //
+    // In debug mode, it also asserts that n is in an appropriate state.
+    golang::go::types::Type rec::rhs(Named* n)
+    {
+        if(debug)
+        {
+            assert(rec::stateHas(gocpp::recv(n), lazyLoaded | unpacked));
+        }
+        return n->fromRHS;
+    }
+
+    // Underlying returns the [underlying type] of the named type t, resolving all
+    // forwarding declarations. Underlying types are never Named, TypeParam, or
+    // Alias types.
+    //
+    // [underlying type]: https://go.dev/ref/spec#Underlying_types.
+    golang::go::types::Type rec::Underlying(Named* n)
+    {
+        rec::unpack(gocpp::recv(n));
+
+        // The gccimporter depends on writing a nil underlying via NewNamed and
+        // immediately reading it back. Rather than putting that in Named.under
+        // and complicating things there, we just check for that special case here.
+        if(rec::rhs(gocpp::recv(n)) == nullptr)
+        {
+            assert(n->allowNilRHS);
+            return nullptr;
+        }
+
+        if(! rec::stateHas(gocpp::recv(n), hasUnder))
+        {
+            // minor performance optimization
+            rec::resolveUnderlying(gocpp::recv(n));
+        }
+
+        return n->underlying;
     }
 
     gocpp::string rec::String(Named* t)
@@ -572,161 +749,124 @@ namespace golang::types
         return TypeString(t, nullptr);
     }
 
-    // under returns the expanded underlying type of n0; possibly by following
-    // forward chains of named types. If an underlying type is found, resolve
-    // the chain by setting the underlying type for each defined type in the
-    // chain before returning it. If no underlying type is found or a cycle
-    // is detected, the result is Typ[Invalid]. If a cycle is detected and
-    // n0.check != nil, the cycle is reported.
+    // resolveUnderlying computes the underlying type of n. If n already has an
+    // underlying type, nothing happens.
     //
-    // This is necessary because the underlying type of named may be itself a
-    // named type that is incomplete:
+    // It does so by following RHS type chains for alias and named types. If any
+    // other type T is found, each named type in the chain has its underlying
+    // type set to T. Aliases are skipped because their underlying type is
+    // not memoized.
     //
-    //	type (
-    //		A B
-    //		B *C
-    //		C A
-    //	)
-    //
-    // The type of C is the (named) type of A which is incomplete,
-    // and which has as its underlying type the named type B.
-    golang::types::Type rec::under(Named* n0)
+    // resolveUnderlying assumes that there are no direct cycles; if there were
+    // any, they were broken (by setting the respective types to invalid) during
+    // the directCycles check phase.
+    void rec::resolveUnderlying(Named* n)
     {
-        auto u = rec::Underlying(gocpp::recv(n0));
+        assert(rec::stateHas(gocpp::recv(n), lazyLoaded | unpacked));
 
-        // If the underlying type of a defined type is not a defined
-        // (incl. instance) type, then that is the desired underlying
-        // type.
-        Named* n1 = {};
-        //Go type switch emulation
+        // for debugging only
+        gocpp::map<Named*, bool> seen = {};
+        if(debug)
         {
-            const auto& gocpp_id_3 = gocpp::type_info(u);
-            int conditionId = -1;
-            if(gocpp_id_3 == typeid(untyped nil)) { conditionId = 0; }
-            else if(gocpp_id_3 == typeid(types::Named*)) { conditionId = 1; }
-            switch(conditionId)
-            {
-                case 0:
-                {
-                    untyped nil u1 = gocpp::any_cast<untyped nil>(u);
-                    // After expansion via Underlying(), we should never encounter a nil
-                    // underlying.
-                    gocpp::panic("nil underlying"_s);
-                    break;
-                }
-                default:
-                {
-                    auto u1 = u;
-                    // common case
-                    return u;
-                    break;
-                }
-                case 1:
-                {
-                    types::Named* u1 = gocpp::any_cast<types::Named*>(u);
-                    // handled below
-                    n1 = u1;
-                    break;
-                }
-            }
+            seen = gocpp::make(gocpp::Tag<gocpp::map<Named*, bool>>());
         }
 
-        if(n0->check == nullptr)
+        gocpp::slice<Named*> path = {};
+        golang::go::types::Type u = {};
+        for(auto rhs = Type(n); u == nullptr; )
         {
-            gocpp::panic("Named.check == nil but type is incomplete"_s);
-        }
-
-        // Invariant: after this point n0 as well as any named types in its
-        // underlying chain should be set up when this function exits.
-        auto check = n0->check;
-        auto n = n0;
-
-        // types that need their underlying type resolved
-        auto seen = gocpp::make(gocpp::Tag<gocpp::map<Named*, int>>());
-        // objects encountered, for cycle reporting
-        gocpp::slice<Object> path = {};
-
-        loop:
-        for(; ; )
-        {
-            if(false) {
-            loop_continue:
-                continue;
-            loop_break:
-                break;
-            }
-            seen[n] = len(seen);
-            path = append(path, n->obj);
-            n = n1;
-            if(auto [i, ok] = seen[n]; ok)
-            {
-                // cycle
-                rec::cycleError(gocpp::recv(check), path.make_slice(i));
-                u = Typ[Invalid];
-                break;
-            }
-            u = rec::Underlying(gocpp::recv(n));
             //Go type switch emulation
             {
-                const auto& gocpp_id_4 = gocpp::type_info(u);
+                const auto& gocpp_id_0 = gocpp::type_info(rhs);
                 int conditionId = -1;
-                if(gocpp_id_4 == typeid(untyped nil)) { conditionId = 0; }
-                else if(gocpp_id_4 == typeid(types::Named*)) { conditionId = 1; }
+                if(gocpp_id_0 == typeid(types::Alias*)) { conditionId = 0; }
+                else if(gocpp_id_0 == typeid(types::Named*)) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
                     {
-                        untyped nil u1 = gocpp::any_cast<untyped nil>(u);
-                        u = Typ[Invalid];
-                        goto loop_break;
+                        types::Alias* t = gocpp::any_cast<types::Alias*>(rhs);
+                        rhs = unalias(t);
                         break;
                     }
-                    default:
-                    {
-                        auto u1 = u;
-                        goto loop_break;
-                        break;
-                    }
+
                     case 1:
                     {
-                        types::Named* u1 = gocpp::any_cast<types::Named*>(u);
-                        // Continue collecting *Named types in the chain.
-                        n1 = u1;
+                        types::Named* t = gocpp::any_cast<types::Named*>(rhs);
+                        if(debug)
+                        {
+                            assert(! seen[t]);
+                            seen[t] = true;
+                        }
+                        // don't recalculate the underlying
+                        if(rec::stateHas(gocpp::recv(t), hasUnder))
+                        {
+                            u = t->underlying;
+                            break;
+                        }
+                        if(debug)
+                        {
+                            seen[t] = true;
+                        }
+                        path = append(path, t);
+                        rec::unpack(gocpp::recv(t));
+                        rhs = rec::rhs(gocpp::recv(t));
+                        assert(rhs != nullptr);
+                        break;
+                    }
+
+                    // any type literal or predeclared type works
+                    default:
+                    {
+                        auto t = rhs;
+                        u = rhs;
                         break;
                     }
                 }
             }
         }
 
-        for(auto [n, gocpp_ignored] : seen)
+        for(auto [gocpp_ignored, t] : path)
         {
-            // We should never have to update the underlying type of an imported type;
-            // those underlying types should have been resolved during the import.
-            // Also, doing so would lead to a race condition (was go.dev/issue/31749).
-            // Do this check always, not just in debug mode (it's cheap).
-            if(n->obj->object.pkg != check->pkg)
+            [=]() mutable -> void
             {
-                gocpp::panic("imported type with unresolved underlying type"_s);
-            }
-            n->underlying = u;
+                gocpp::Defer defer;
+                try
+                {
+                    rec::Lock(gocpp::recv(t->mu));
+                    defer.push_back([=]{ rec::Unlock(gocpp::recv(t->mu)); });
+                    // Careful, t.underlying has lock-free readers. Since we might be racing
+                    // another call to resolveUnderlying, we have to avoid overwriting
+                    // t.underlying. Otherwise, the race detector will be tripped.
+                    if(! rec::stateHas(gocpp::recv(t), hasUnder))
+                    {
+                        t->underlying = u;
+                        rec::setState(gocpp::recv(t), hasUnder);
+                    }
+                }
+                catch(gocpp::GoPanic& gp)
+                {
+                    defer.handlePanic(gp);
+                }
+            }();
         }
-
-        return u;
     }
 
     std::tuple<int, Func*> rec::lookupMethod(Named* n, Package* pkg, gocpp::string name, bool foldCase)
     {
-        rec::resolve(gocpp::recv(n));
-        // If n is an instance, we may not have yet instantiated all of its methods.
-        // Look up the method index in orig, and only instantiate method at the
-        // matching index (if any).
-        auto [i, gocpp_id_5] = types::lookupMethod(rec::Origin(gocpp::recv(n))->methods, pkg, name, foldCase);
-        if(i < 0)
+        rec::unpack(gocpp::recv(n));
+        if(samePkg(n->obj->object.pkg, pkg) || isExported(name) || foldCase)
         {
-            return {- 1, nullptr};
+            // If n is an instance, we may not have yet instantiated all of its methods.
+            // Look up the method index in orig, and only instantiate method at the
+            // matching index (if any).
+            if(auto i = rec::methodIndex(gocpp::recv(rec::Origin(gocpp::recv(n))), name, foldCase); i >= 0)
+            {
+                // For instances, m.Method(i) will be different from the orig method.
+                return {i, rec::Method(gocpp::recv(n), i)};
+            }
         }
-        // For instances, m.Method(i) will be different from the orig method.
-        return {i, rec::Method(gocpp::recv(n), i)};
+        return {- 1, nullptr};
     }
 
     // context returns the type-checker context.
@@ -739,100 +879,128 @@ namespace golang::types
         return check->ctxt;
     }
 
-    // expandUnderlying substitutes type arguments in the underlying type n.orig,
-    // returning the result. Returns Typ[Invalid] if there was an error.
-    golang::types::Type rec::expandUnderlying(Named* n)
+    // expandRHS crafts a synthetic RHS for an instantiated type using the RHS of
+    // its origin type (which must be a generic type).
+    //
+    // Suppose that we had:
+    //
+    //	type T[P any] struct {
+    //	  f P
+    //	}
+    //
+    //	type U T[int]
+    //
+    // When we go to U, we observe T[int]. Since T[int] is an instantiation, it has no
+    // declaration. Here, we craft a synthetic RHS for T[int] as if it were declared,
+    // somewhat similar to:
+    //
+    //	type T[int] struct {
+    //	  f int
+    //	}
+    //
+    // And note that the synthetic RHS here is the same as the underlying for U. Now,
+    // consider:
+    //
+    //	type T[_ any] U
+    //	type U int
+    //	type V T[U]
+    //
+    // The synthetic RHS for T[U] becomes:
+    //
+    //	type T[U] U
+    //
+    // Whereas the underlying of V is int, not U.
+    golang::go::types::Type rec::expandRHS(Named* n)
     {
+        golang::go::types::Type rhs;
         gocpp::Defer defer;
         try
         {
             auto check = n->check;
             if(check != nullptr && check->conf->_Trace)
             {
-                rec::trace(gocpp::recv(check), n->obj->object.pos, "-- Named.expandUnderlying %s"_s, n);
+                rec::trace(gocpp::recv(check), n->obj->object.pos, "-- Named.expandRHS %s"_s, n);
                 check->indent++;
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &rhs]{ [=]() mutable -> void
                 {
                     check->indent--;
-                    rec::trace(gocpp::recv(check), n->obj->object.pos, "=> %s (tparams = %s, under = %s)"_s, n, rec::list(gocpp::recv(n->tparams)), n->underlying);
+                    rec::trace(gocpp::recv(check), n->obj->object.pos, "=> %s (rhs = %s)"_s, n, rhs);
                 }(); });
             }
 
-            assert(n->inst->orig->underlying != nullptr);
+            assert(! rec::stateHas(gocpp::recv(n), unpacked));
+            assert(rec::stateHas(gocpp::recv(n->inst->orig), lazyLoaded | unpacked));
+
             if(n->inst->ctxt == nullptr)
             {
                 n->inst->ctxt = NewContext();
             }
 
+            auto ctxt = n->inst->ctxt;
             auto orig = n->inst->orig;
+
             auto targs = n->inst->targs;
+            auto tpars = orig->tparams;
 
-            if(asNamed(orig->underlying) != nullptr)
+            if(rec::Len(gocpp::recv(targs)) != rec::Len(gocpp::recv(tpars)))
             {
-                // We should only get a Named underlying type here during type checking
-                // (for example, in recursive type declarations).
-                assert(check != nullptr);
-            }
-
-            if(rec::Len(gocpp::recv(orig->tparams)) != rec::Len(gocpp::recv(targs)))
-            {
-                // Mismatching arg and tparam length may be checked elsewhere.
                 return Typ[Invalid];
             }
 
-            // Ensure that an instance is recorded before substituting, so that we
-            // resolve n for any recursive references.
-            auto h = rec::instanceHash(gocpp::recv(n->inst->ctxt), orig, rec::list(gocpp::recv(targs)));
-            auto n2 = rec::update(gocpp::recv(n->inst->ctxt), h, orig, rec::list(gocpp::recv(rec::TypeArgs(gocpp::recv(n)))), n);
-            assert(n == n2);
+            auto h = rec::instanceHash(gocpp::recv(ctxt), orig, rec::list(gocpp::recv(targs)));
+            // block fixed point infinite instantiation
+            auto u = rec::update(gocpp::recv(ctxt), h, orig, rec::list(gocpp::recv(targs)), n);
+            assert(n == u);
 
-            auto smap = makeSubstMap(rec::list(gocpp::recv(orig->tparams)), rec::list(gocpp::recv(targs)));
-            Context* ctxt = {};
+            auto m = makeSubstMap(rec::list(gocpp::recv(tpars)), rec::list(gocpp::recv(targs)));
             if(check != nullptr)
             {
                 ctxt = rec::context(gocpp::recv(check));
             }
-            auto underlying = rec::subst(gocpp::recv(n->check), n->obj->object.pos, orig->underlying, smap, n, ctxt);
-            // If the underlying type of n is an interface, we need to set the receiver of
-            // its methods accurately -- we set the receiver of interface methods on
-            // the RHS of a type declaration to the defined type.
-            if(auto [iface, gocpp_id_6] = gocpp::getValue<Interface*>(underlying); iface != nullptr)
+
+            rhs = rec::subst(gocpp::recv(check), n->obj->object.pos, rec::rhs(gocpp::recv(orig)), m, n, ctxt);
+
+            // TODO(markfreeman): Can we handle this in substitution?
+            // If the RHS is an interface, we must set the receiver of interface methods
+            // to the named type.
+            if(auto [iface, gocpp_id_1] = gocpp::getValue<Interface*>(rhs); iface != nullptr)
             {
                 if(auto [methods, copied] = replaceRecvType(iface->methods, orig, n); copied)
                 {
-                    // If the underlying type doesn't actually use type parameters, it's
-                    // possible that it wasn't substituted. In this case we need to create
-                    // a new *Interface before modifying receivers.
-                    if(iface == orig->underlying)
+                    // If the RHS doesn't use type parameters, it may not have been
+                    // substituted; we need to craft a new interface first.
+                    if(iface == rec::rhs(gocpp::recv(orig)))
                     {
-                        auto old = iface;
-                        iface = rec::newInterface(gocpp::recv(check));
-                        iface->embeddeds = old->embeddeds;
                         // otherwise we are copying incomplete data
-                        assert(old->complete);
-                        iface->complete = old->complete;
-                        // should be false but be conservative
-                        iface->implicit = old->implicit;
-                        underlying = iface;
+                        assert(iface->complete);
+
+                        auto crafted = rec::newInterface(gocpp::recv(check));
+                        crafted->complete = true;
+                        crafted->implicit = false;
+                        crafted->embeddeds = iface->embeddeds;
+
+                        iface = crafted;
                     }
                     iface->methods = methods;
                     // recompute type set with new methods
                     iface->tset = nullptr;
 
-                    // If check != nil, check.newInterface will have saved the interface for later completion.
+                    // go.dev/issue/61561: We have to complete the interface even without a checker.
                     if(check == nullptr)
                     {
-                        // golang/go#61561: all newly created interfaces must be fully evaluated
                         rec::typeSet(gocpp::recv(iface));
                     }
+
+                    return iface;
                 }
             }
 
-            return underlying;
+            return rhs;
         }
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {rhs};
         }
     }
 
@@ -840,7 +1008,7 @@ namespace golang::types
     // instances, to avoid infinite recursion.
     //
     // TODO(rfindley): eliminate this function or give it a better name.
-    golang::types::Type safeUnderlying(golang::types::Type typ)
+    golang::go::types::Type safeUnderlying(golang::go::types::Type typ)
     {
         if(auto t = asNamed(typ); t != nullptr)
         {

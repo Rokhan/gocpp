@@ -17,8 +17,9 @@
 #include "golang/math/hypot.h"
 #include "golang/math/sqrt.h"
 
-namespace golang::cmplx
+namespace golang::math::cmplx
 {
+    namespace math = golang::math;
     namespace rec
     {
     }

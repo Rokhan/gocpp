@@ -19,6 +19,11 @@ namespace golang::runtime
     {
     }
 
+    dloggerFake dlog1()
+    {
+        return dlogFake();
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     dlogPerM::operator T()
@@ -45,12 +50,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    dlogger* getCachedDlogger()
+    dloggerImpl* getCachedDlogger()
     {
         return nullptr;
     }
 
-    bool putCachedDlogger(dlogger* l)
+    bool putCachedDlogger(dloggerImpl* l)
     {
         return false;
     }

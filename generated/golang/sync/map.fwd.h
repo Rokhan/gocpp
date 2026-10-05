@@ -6,13 +6,5 @@
 
 namespace golang::sync
 {
-    struct readOnly;
-}
-#include "golang/sync/atomic/type.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-
-namespace golang::sync
-{
     struct Map;
-    struct entry;
 }

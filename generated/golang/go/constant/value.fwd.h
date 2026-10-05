@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::constant
+namespace golang::go::constant
 {
     using Kind = int;
     struct Value;
@@ -13,32 +13,24 @@ namespace golang::constant
     const long prec = 512;
     struct unknownVal;
     using boolVal = bool;
+    struct stringVal;
     using int64Val = int64_t;
+    struct intVal;
+    struct ratVal;
+    struct floatVal;
     struct complexVal;
     // Permit fractions with component sizes up to maxExp
     // before switching to using floating-point numbers.
     const int maxExp = 4 << 10;
     const big::Word _log = (_m >> 8) & 1 + (_m >> 16) & 1 + (_m >> 32) & 1;
     // unknown values
-    const golang::constant::Kind Unknown = 0;
+    const golang::go::constant::Kind Unknown = 0;
     // non-numeric values
-    const golang::constant::Kind Bool = 1;
-    const golang::constant::Kind String = 2;
+    const golang::go::constant::Kind Bool = 1;
+    const golang::go::constant::Kind String = 2;
     // numeric values
-    const golang::constant::Kind Int = 3;
-    const golang::constant::Kind Float = 4;
-    const golang::constant::Kind Complex = 5;
+    const golang::go::constant::Kind Int = 3;
+    const golang::go::constant::Kind Float = 4;
+    const golang::go::constant::Kind Complex = 5;
     const int wordSize = 1 << _log;
-}
-#include "golang/math/big/float.fwd.h"
-#include "golang/math/big/int.fwd.h"
-#include "golang/math/big/rat.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-
-namespace golang::constant
-{
-    struct stringVal;
-    struct intVal;
-    struct ratVal;
-    struct floatVal;
 }

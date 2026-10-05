@@ -17,13 +17,16 @@
 
 namespace golang::bytes
 {
+    namespace errors = golang::errors;
+    namespace io = golang::io;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using io::rec::Write;
     }
 
-    // A Reader implements the io.Reader, io.ReaderAt, io.WriterTo, io.Seeker,
-    // io.ByteScanner, and io.RuneScanner interfaces by reading from
+    // A Reader implements the [io.Reader], [io.ReaderAt], [io.WriterTo], [io.Seeker],
+    // [io.ByteScanner], and [io.RuneScanner] interfaces by reading from
     // a byte slice.
     // Unlike a [Buffer], a Reader is read-only and supports seeking.
     // The zero value for Reader operates like a Reader of an empty slice.
@@ -243,13 +246,13 @@ namespace golang::bytes
         return {n, err};
     }
 
-    // Reset resets the [Reader.Reader] to be reading from b.
+    // Reset resets the [Reader] to be reading from b.
     void rec::Reset(Reader* r, gocpp::slice<unsigned char> b)
     {
         *r = Reader {b, 0, - 1};
     }
 
-    // NewReader returns a new [Reader.Reader] reading from b.
+    // NewReader returns a new [Reader] reading from b.
     Reader* NewReader(gocpp::slice<unsigned char> b)
     {
         return new Reader {b, 0, - 1};

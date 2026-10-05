@@ -12,6 +12,18 @@
 
 namespace golang::runtime
 {
+    void panicmakeslicelen();
+    void panicmakeslicecap();
+    int nextslicecap(int newLen, int oldCap);
+    bool isPowerOfTwo(uintptr_t x);
+    gocpp::slice<unsigned char> bytealg_MakeNoZero(int len);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
+#include "golang/runtime/malloc.fwd.h"
+#include "golang/runtime/type.fwd.h"
+
+namespace golang::runtime
+{
     struct slice
     {
         gocpp::unsafe_pointer array{};
@@ -30,18 +42,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct slice& value);
-    void panicmakeslicelen();
-    void panicmakeslicecap();
-    int nextslicecap(int newLen, int oldCap);
-    bool isPowerOfTwo(uintptr_t x);
-    int slicecopy(gocpp::unsafe_pointer toPtr, int toLen, gocpp::unsafe_pointer fromPtr, int fromLen, uintptr_t width);
-    gocpp::slice<unsigned char> bytealg_MakeNoZero(int len);
-}
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/type.fwd.h"
-
-namespace golang::runtime
-{
     struct notInHeapSlice
     {
         notInHeap* array{};
@@ -63,8 +63,16 @@ namespace golang::runtime
     gocpp::unsafe_pointer makeslicecopy(_type* et, int tolen, int fromlen, gocpp::unsafe_pointer from);
     gocpp::unsafe_pointer makeslice(_type* et, int len, int cap);
     gocpp::unsafe_pointer makeslice64(_type* et, int64_t len64, int64_t cap64);
+    int slicecopy(gocpp::unsafe_pointer toPtr, int toLen, gocpp::unsafe_pointer fromPtr, int fromLen, uintptr_t width);
+    std::tuple<gocpp::unsafe_pointer, int, int> moveSlice(_type* et, gocpp::unsafe_pointer old, int len, int cap);
+    std::tuple<gocpp::unsafe_pointer, int, int> moveSliceNoScan(uintptr_t elemSize, gocpp::unsafe_pointer old, int len, int cap);
+    std::tuple<gocpp::unsafe_pointer, int, int> moveSliceNoCap(_type* et, gocpp::unsafe_pointer old, int len);
+    std::tuple<gocpp::unsafe_pointer, int, int> moveSliceNoCapNoScan(uintptr_t elemSize, gocpp::unsafe_pointer old, int len);
     golang::runtime::slice growslice(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et);
+    golang::runtime::slice growsliceNoAlias(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et);
     golang::runtime::slice reflect_growslice(_type* et, golang::runtime::slice old, int num);
+    golang::runtime::slice growsliceBuf(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et, gocpp::unsafe_pointer bufPtr, int bufLen);
+    golang::runtime::slice growsliceBufNoAlias(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et, gocpp::unsafe_pointer bufPtr, int bufLen);
 
     namespace rec
     {

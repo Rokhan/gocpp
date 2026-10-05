@@ -9,16 +9,32 @@
 #include "golang/compress/zlib/reader.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::compress::zlib
+{
+    // ErrChecksum is returned when reading ZLIB data that has an invalid checksum.
+    extern gocpp::error ErrChecksum;
+    // ErrDictionary is returned when reading ZLIB data that has an invalid dictionary.
+    extern gocpp::error ErrDictionary;
+    // ErrHeader is returned when reading ZLIB data that has an invalid header.
+    extern gocpp::error ErrHeader;
+}
+#include "golang/compress/flate/inflate.fwd.h"
+#include "golang/hash/hash.fwd.h"
+#include "golang/io/io.fwd.h"
 #include "golang/compress/flate/inflate.h"
+
+namespace golang::compress::zlib
+{
+    namespace flate = golang::compress::flate;
+    namespace io = golang::io;
+    namespace hash = golang::hash;
+}
 #include "golang/hash/hash.h"
 #include "golang/io/io.h"
-#include "golang/errors/errors.fwd.h"
 
-namespace golang::zlib
+namespace golang::compress::zlib
 {
-    extern gocpp::error ErrChecksum;
-    extern gocpp::error ErrDictionary;
-    extern gocpp::error ErrHeader;
     struct reader
     {
         flate::Reader r{};
@@ -110,7 +126,7 @@ namespace golang::zlib
 
 #include "golang/io/io.h"
 
-namespace golang::zlib
+namespace golang::compress::zlib
 {
 
     namespace rec

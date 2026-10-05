@@ -3,12 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct monoGraph;
     struct monoVertex;

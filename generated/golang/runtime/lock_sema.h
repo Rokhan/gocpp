@@ -14,15 +14,11 @@ namespace golang::runtime
 {
     void checkTimeouts();
 }
+#include "golang/runtime/note_other.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
-    bool mutexContended(mutex* l);
-    void lock(mutex* l);
-    void lock2(mutex* l);
-    void unlock(mutex* l);
-    void unlock2(mutex* l);
     void noteclear(note* n);
     void notewakeup(note* n);
     void notesleep(note* n);

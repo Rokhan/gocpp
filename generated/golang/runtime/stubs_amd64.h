@@ -36,11 +36,12 @@ namespace golang::runtime
     void retpolineR13();
     void retpolineR14();
     void retpolineR15();
-    void asmcgocall_no_g(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer arg);
     void asmcgocall_landingpad();
     void spillArgs();
     void unspillArgs();
     uintptr_t getfp();
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    void asmcgocall_no_g(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer arg);
 
     namespace rec
     {

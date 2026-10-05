@@ -8,5 +8,13 @@ namespace golang::runtime
 {
     using taggedPointer = uint64_t;
     // minTagBits is the minimum number of tag bits that we expect.
-    const long minTagBits = 10;
+    const long minTagBits = 16;
+    // # of bits we can steal from the bottom. We enforce that all pointers
+    // that we tag are aligned to at least this many bits.
+    // Currently the long pole in this tent is pollDesc at 280 bytes. Setting
+    // 9 here rounds those structs up to 512 bytes.
+    // gcBgMarkWorkerNode is also small, but we don't make many of those
+    // so it is ok to waste space on them.
+    const long tagAlignBits = 9;
+    const int tagAlign = 1 << tagAlignBits;
 }

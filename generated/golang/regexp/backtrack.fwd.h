@@ -10,10 +10,5 @@ namespace golang::regexp
     const long visitedBits = 32;
     const long maxBacktrackProg = 500;
     const int maxBacktrackVector = 256 * 1024;
-}
-#include "golang/regexp/exec.fwd.h"
-
-namespace golang::regexp
-{
     struct bitState;
 }

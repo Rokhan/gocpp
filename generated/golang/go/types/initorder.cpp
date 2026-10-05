@@ -11,6 +11,7 @@
 #include "golang/go/types/initorder.h"
 #include "gocpp/support.h"
 
+#include "golang/cmp/cmp.h"
 #include "golang/container/heap/heap.h"
 #include "golang/fmt/print.h"
 #include "golang/go/ast/ast.h"
@@ -24,10 +25,16 @@
 #include "golang/go/types/scope.h"
 #include "golang/go/types/type.h"
 #include "golang/internal/types/errors/codes.h"
+#include "golang/slices/sort.h"
 #include "golang/sort/slice.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace cmp = golang::cmp;
+    namespace fmt = golang::fmt;
+    namespace heap = golang::container::heap;
+    namespace slices = golang::slices;
+    namespace sort = golang::sort;
     namespace rec
     {
     }
@@ -185,7 +192,18 @@ namespace golang::types
         }
         seen[from] = true;
 
+        // sort deps for deterministic result
+        gocpp::slice<Object> deps = {};
         for(auto [d, gocpp_ignored] : objMap[from]->deps)
+        {
+            deps = append(deps, d);
+        }
+        sort::Slice(deps, [=](int i, int j) mutable -> bool
+        {
+            return rec::order(gocpp::recv(deps[i])) < rec::order(gocpp::recv(deps[j]));
+        });
+
+        for(auto [gocpp_ignored, d] : deps)
         {
             if(d == to)
             {
@@ -212,16 +230,16 @@ namespace golang::types
             return;
         }
 
-        rec::errorf(gocpp::recv(check), obj, InvalidInitCycle, "initialization cycle for %s"_s, rec::Name(gocpp::recv(obj)));
-        // subtle loop: print cycle[i] for i = 0, n-1, n-2, ... 1 for len(cycle) = n
-        for(auto i = len(cycle) - 1; i >= 0; i--)
+        auto err = rec::newError(gocpp::recv(check), InvalidInitCycle);
+        rec::addf(gocpp::recv(err), obj, "initialization cycle for %s"_s, rec::Name(gocpp::recv(obj)));
+        // "cycle[i] refers to cycle[j]" for (i,j) = (0,n-1), (n-1,n-2), ..., (1,0) for len(cycle) = n.
+        for(auto j = len(cycle) - 1; j >= 0; j--)
         {
-            // secondary error, \t indented
-            rec::errorf(gocpp::recv(check), obj, InvalidInitCycle, "\t%s refers to"_s, rec::Name(gocpp::recv(obj)));
-            obj = cycle[i];
+            auto next = cycle[j];
+            rec::addf(gocpp::recv(err), obj, "%s refers to %s"_s, rec::Name(gocpp::recv(obj)), rec::Name(gocpp::recv(next)));
+            obj = next;
         }
-        // print cycle[0] again to close the cycle
-        rec::errorf(gocpp::recv(check), obj, InvalidInitCycle, "\t%s"_s, rec::Name(gocpp::recv(obj)));
+        rec::report(gocpp::recv(err));
     }
 
     // A dependency is an object that may be a dependency in an initialization
@@ -356,16 +374,6 @@ namespace golang::types
             return self.obj.value()->vType();
         }
 
-        types::color color(const gocpp::PtrRecv<struct dependency, false>& self)
-        {
-            return self.ptr->value()->vcolor();
-        }
-
-        types::color color(const gocpp::ObjRecv<struct dependency>& self)
-        {
-            return self.obj.value()->vcolor();
-        }
-
         uint32_t order(const gocpp::PtrRecv<struct dependency, false>& self)
         {
             return self.ptr->value()->vorder();
@@ -376,14 +384,14 @@ namespace golang::types
             return self.obj.value()->vorder();
         }
 
-        bool sameId(const gocpp::PtrRecv<struct dependency, false>& self, types::Package* pkg, gocpp::string name)
+        bool sameId(const gocpp::PtrRecv<struct dependency, false>& self, types::Package* pkg, gocpp::string name, bool foldCase)
         {
-            return self.ptr->value()->vsameId(pkg, name);
+            return self.ptr->value()->vsameId(pkg, name, foldCase);
         }
 
-        bool sameId(const gocpp::ObjRecv<struct dependency>& self, types::Package* pkg, gocpp::string name)
+        bool sameId(const gocpp::ObjRecv<struct dependency>& self, types::Package* pkg, gocpp::string name, bool foldCase)
         {
-            return self.obj.value()->vsameId(pkg, name);
+            return self.obj.value()->vsameId(pkg, name, foldCase);
         }
 
         token::Pos scopePos(const gocpp::PtrRecv<struct dependency, false>& self)
@@ -394,16 +402,6 @@ namespace golang::types
         token::Pos scopePos(const gocpp::ObjRecv<struct dependency>& self)
         {
             return self.obj.value()->vscopePos();
-        }
-
-        void setColor(const gocpp::PtrRecv<struct dependency, false>& self, types::color color)
-        {
-            return self.ptr->value()->vsetColor(color);
-        }
-
-        void setColor(const gocpp::ObjRecv<struct dependency>& self, types::color color)
-        {
-            return self.obj.value()->vsetColor(color);
         }
 
         void setOrder(const gocpp::PtrRecv<struct dependency, false>& self, uint32_t param0)
@@ -580,9 +578,9 @@ namespace golang::types
         // throughout the function graph, the cost of removing a function at
         // position X is proportional to cost * (len(funcG)-X). Therefore, we should
         // remove high-cost functions last.
-        sort::Slice(funcG, [=](int i, int j) mutable -> bool
+        slices::SortFunc(funcG, [=](graphNode* a, graphNode* b) mutable -> int
         {
-            return rec::cost(gocpp::recv(funcG[i])) < rec::cost(gocpp::recv(funcG[j]));
+            return cmp::Compare(rec::cost(gocpp::recv(a)), rec::cost(gocpp::recv(b)));
         });
         for(auto [gocpp_ignored, n] : funcG)
         {
@@ -642,6 +640,15 @@ namespace golang::types
     bool rec::Less(nodeQueue a, int i, int j)
     {
         auto [x, y] = std::tuple{a[i], a[j]};
+
+        // Prioritize all constants before non-constants. See go.dev/issue/66575/.
+        auto [gocpp_id_5, xConst] = gocpp::getValue<Const*>(x->obj);
+        auto [gocpp_id_6, yConst] = gocpp::getValue<Const*>(y->obj);
+        if(xConst != yConst)
+        {
+            return xConst;
+        }
+
         // nodes are prioritized by number of incoming dependencies (1st key)
         // and source order (2nd key)
         return x->ndeps < y->ndeps || x->ndeps == y->ndeps && rec::order(gocpp::recv(x->obj)) < rec::order(gocpp::recv(y->obj));

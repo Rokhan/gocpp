@@ -10,8 +10,16 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
+    // Typ contains the predeclared *Basic types indexed by their
+    // corresponding BasicKind.
+    //
+    // The *Basic type for Typ[Byte] will have the name "uint8".
+    // Use Universe.Lookup("byte").Type() to obtain the specific
+    // alias basic type named "byte" (and analogous for "rune").
+    extern gocpp::slice<Basic*> Typ;
+    extern gocpp::array<Basic*, 2> basicAliases;
     void defPredeclaredTypes();
     void defPredeclaredConsts();
     void defPredeclaredNil();
@@ -19,29 +27,38 @@ namespace golang::types
     void DefPredeclaredTestFuncs();
     void init();
 }
-#include "golang/go/constant/value.h"
-#include "golang/go/types/basic.h"
 #include "golang/go/types/expr.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/package.fwd.h"
 #include "golang/go/types/scope.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    extern golang::types::Scope* Universe;
+    // The Universe scope contains all predeclared objects of Go.
+    // It is the outermost scope of any chain of nested scopes.
+    extern golang::go::types::Scope* Universe;
+    // The Unsafe package is the package returned by an importer
+    // for the import path "unsafe".
     extern Package* Unsafe;
     extern Object universeIota;
-    extern golang::types::Type universeByte;
-    extern golang::types::Type universeRune;
+    extern golang::go::types::Type universeBool;
+    extern golang::go::types::Type universeByte;
+    extern golang::go::types::Type universeRune;
+    extern golang::go::types::Type universeError;
     extern Object universeAny;
-    extern golang::types::Type universeError;
     extern Object universeComparable;
-    extern gocpp::slice<Basic*> Typ;
-    extern gocpp::array<Basic*, 2> aliases;
-    extern gocpp::array<gocpp_id_0, 3> predeclaredConsts;
     extern gocpp::array<gocpp_id_1, 28> predeclaredFuncs;
     void def(Object obj);
+}
+#include "golang/go/constant/value.fwd.h"
+#include "golang/go/constant/value.h"
+#include "golang/go/types/basic.h"
+
+namespace golang::go::types
+{
+    namespace constant = golang::go::constant;
+    extern gocpp::array<gocpp_id_0, 3> predeclaredConsts;
 
     namespace rec
     {

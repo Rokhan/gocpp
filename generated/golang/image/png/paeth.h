@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::png
+namespace golang::image::png
 {
     int abs(int x);
     uint8_t paeth(uint8_t a, uint8_t b, uint8_t c);

@@ -3,3 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::go::types
+{
+    const bool isTypes2 = false;
+}

@@ -23,33 +23,33 @@
 //
 // Experiments are exposed to the build in the following ways:
 //
-// - Build tag goexperiment.x is set if experiment x (lower case) is
-// enabled.
+//   - Build tag goexperiment.x is set if experiment x (lower case) is
+//     enabled.
 //
-// - For each experiment x (in camel case), this package contains a
-// boolean constant x and an integer constant xInt.
+//   - For each experiment x (in camel case), this package contains a
+//     boolean constant x and an integer constant xInt.
 //
-// - In runtime assembly, the macro GOEXPERIMENT_x is defined if
-// experiment x (lower case) is enabled.
+//   - In runtime assembly, the macro GOEXPERIMENT_x is defined if
+//     experiment x (lower case) is enabled.
 //
 // In the toolchain, the set of experiments enabled for the current
 // build should be accessed via objabi.Experiment.
 //
-// The set of experiments is included in the output of runtime.Version()
+// The set of experiments is included in the output of [runtime.Version]()
 // and "go version <binary>" if it differs from the default experiments.
 //
 // For the set of experiments supported by the current toolchain, see
 // "go doc goexperiment.Flags".
 //
-// Note that this package defines the set of experiments (in Flags)
+// Note that this package defines the set of experiments (in [Flags])
 // and records the experiments that were enabled when the package
 // was compiled (as boolean and integer constants).
 //
 // Note especially that this package does not itself change behavior
 // at run time based on the GOEXPERIMENT variable.
 // The code used in builds to interpret the GOEXPERIMENT variable
-// is in the separate package internal/buildcfg.
-namespace golang::goexperiment
+// is in the separate package [internal/buildcfg].
+namespace golang::internal::goexperiment
 {
     namespace rec
     {
@@ -62,7 +62,7 @@ namespace golang::goexperiment
     // tags, experiments use the strings.ToLower of their field name.
     //
     // For the baseline experimental configuration, see
-    // objabi.experimentBaseline.
+    // [internal/buildcfg.Experiment].
     //
     // If you change this struct definition, run "go generate".
     
@@ -77,17 +77,19 @@ namespace golang::goexperiment
         result.RegabiWrappers = this->RegabiWrappers;
         result.RegabiArgs = this->RegabiArgs;
         result.HeapMinimum512KiB = this->HeapMinimum512KiB;
-        result.CoverageRedesign = this->CoverageRedesign;
         result.Arenas = this->Arenas;
-        result.PageTrace = this->PageTrace;
         result.CgoCheck2 = this->CgoCheck2;
         result.LoopVar = this->LoopVar;
-        result.CacheProg = this->CacheProg;
         result.NewInliner = this->NewInliner;
-        result.RangeFunc = this->RangeFunc;
-        result.Range = this->Range;
-        result.AllocHeaders = this->AllocHeaders;
-        result.ExecTracer2 = this->ExecTracer2;
+        result.Dwarf5 = this->Dwarf5;
+        result.JSONv2 = this->JSONv2;
+        result.GreenTeaGC = this->GreenTeaGC;
+        result.RandomizedHeapBase64 = this->RandomizedHeapBase64;
+        result.RuntimeFreegc = this->RuntimeFreegc;
+        result.SizeSpecializedMalloc = this->SizeSpecializedMalloc;
+        result.SIMD = this->SIMD;
+        result.RuntimeSecret = this->RuntimeSecret;
+        result.MapSplitGroup = this->MapSplitGroup;
         return result;
     }
 
@@ -101,17 +103,19 @@ namespace golang::goexperiment
         if (RegabiWrappers != ref.RegabiWrappers) return false;
         if (RegabiArgs != ref.RegabiArgs) return false;
         if (HeapMinimum512KiB != ref.HeapMinimum512KiB) return false;
-        if (CoverageRedesign != ref.CoverageRedesign) return false;
         if (Arenas != ref.Arenas) return false;
-        if (PageTrace != ref.PageTrace) return false;
         if (CgoCheck2 != ref.CgoCheck2) return false;
         if (LoopVar != ref.LoopVar) return false;
-        if (CacheProg != ref.CacheProg) return false;
         if (NewInliner != ref.NewInliner) return false;
-        if (RangeFunc != ref.RangeFunc) return false;
-        if (Range != ref.Range) return false;
-        if (AllocHeaders != ref.AllocHeaders) return false;
-        if (ExecTracer2 != ref.ExecTracer2) return false;
+        if (Dwarf5 != ref.Dwarf5) return false;
+        if (JSONv2 != ref.JSONv2) return false;
+        if (GreenTeaGC != ref.GreenTeaGC) return false;
+        if (RandomizedHeapBase64 != ref.RandomizedHeapBase64) return false;
+        if (RuntimeFreegc != ref.RuntimeFreegc) return false;
+        if (SizeSpecializedMalloc != ref.SizeSpecializedMalloc) return false;
+        if (SIMD != ref.SIMD) return false;
+        if (RuntimeSecret != ref.RuntimeSecret) return false;
+        if (MapSplitGroup != ref.MapSplitGroup) return false;
         return true;
     }
 
@@ -125,17 +129,19 @@ namespace golang::goexperiment
         os << " " << RegabiWrappers;
         os << " " << RegabiArgs;
         os << " " << HeapMinimum512KiB;
-        os << " " << CoverageRedesign;
         os << " " << Arenas;
-        os << " " << PageTrace;
         os << " " << CgoCheck2;
         os << " " << LoopVar;
-        os << " " << CacheProg;
         os << " " << NewInliner;
-        os << " " << RangeFunc;
-        os << " " << Range;
-        os << " " << AllocHeaders;
-        os << " " << ExecTracer2;
+        os << " " << Dwarf5;
+        os << " " << JSONv2;
+        os << " " << GreenTeaGC;
+        os << " " << RandomizedHeapBase64;
+        os << " " << RuntimeFreegc;
+        os << " " << SizeSpecializedMalloc;
+        os << " " << SIMD;
+        os << " " << RuntimeSecret;
+        os << " " << MapSplitGroup;
         os << '}';
         return os;
     }

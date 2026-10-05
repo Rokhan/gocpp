@@ -14,8 +14,8 @@ namespace golang::runtime
 {
     void SetCPUProfileRate(int hz);
     gocpp::slice<unsigned char> CPUProfile();
-    int64_t runtime_pprof_runtime_cyclesPerSecond();
-    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<gocpp::unsafe_pointer>, bool> runtime_pprof_readProfile();
+    int64_t pprof_cyclesPerSecond();
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/profbuf.fwd.h"
@@ -55,6 +55,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cpuProfile& value);
+    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<gocpp::unsafe_pointer>, bool> runtime_pprof_readProfile();
     extern cpuProfile cpuprof;
 
     namespace rec

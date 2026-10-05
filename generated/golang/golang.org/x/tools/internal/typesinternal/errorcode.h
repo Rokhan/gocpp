@@ -9,7 +9,7 @@
 #include "golang/golang.org/x/tools/internal/typesinternal/errorcode.fwd.h"
 #include "gocpp/support.h"
 
-namespace golang::typesinternal
+namespace golang::golang_org::x::tools::internal::typesinternal
 {
 
     namespace rec

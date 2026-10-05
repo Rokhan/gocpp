@@ -22,6 +22,7 @@
 #include "golang/go/types/basic.h"
 #include "golang/go/types/chan.h"
 #include "golang/go/types/interface.h"
+#include "golang/go/types/iter.h"
 #include "golang/go/types/map.h"
 #include "golang/go/types/named.h"
 #include "golang/go/types/object.h"
@@ -39,24 +40,38 @@
 #include "golang/go/types/union.h"
 #include "golang/go/types/universe.h"
 #include "golang/golang.org/x/tools/go/types/objectpath/objectpath.h"
-#include "golang/golang.org/x/tools/internal/aliases/aliases_go122.h"
 #include "golang/golang.org/x/tools/internal/gcimporter/bimport.h"
 #include "golang/golang.org/x/tools/internal/gcimporter/gcimporter.h"
 #include "golang/golang.org/x/tools/internal/gcimporter/iimport.h"
-#include "golang/golang.org/x/tools/internal/gcimporter/support_go118.h"
-#include "golang/golang.org/x/tools/internal/tokeninternal/tokeninternal.h"
+#include "golang/golang.org/x/tools/internal/gcimporter/predeclared.h"
 #include "golang/io/io.h"
+#include "golang/iter/iter.h"
 #include "golang/math/big/float.h"
 #include "golang/math/big/floatconv.h"
 #include "golang/math/big/int.h"
 #include "golang/math/big/rat.h"
 #include "golang/reflect/type.h"
+#include "golang/slices/sort.h"
 #include "golang/sort/slice.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 #include "golang/strings/strings.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    namespace big = golang::math::big;
+    namespace binary = golang::encoding::binary;
+    namespace bytes = golang::bytes;
+    namespace constant = golang::go::constant;
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace objectpath = golang::golang_org::x::tools::go::types::objectpath;
+    namespace reflect = golang::reflect;
+    namespace slices = golang::slices;
+    namespace sort = golang::sort;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
+    namespace types = golang::go::types;
     namespace rec
     {
         using big::rec::Bytes;
@@ -84,6 +99,7 @@ namespace golang::gcimporter
         using constant::rec::Kind;
         using objectpath::rec::For;
         using token::rec::File;
+        using token::rec::Lines;
         using token::rec::Name;
         using token::rec::Offset;
         using token::rec::Position;
@@ -124,6 +140,7 @@ namespace golang::gcimporter
         using types::rec::Recv;
         using types::rec::RecvTypeParams;
         using types::rec::Results;
+        using types::rec::Rhs;
         using types::rec::Scope;
         using types::rec::String;
         using types::rec::Tag;
@@ -132,14 +149,13 @@ namespace golang::gcimporter
         using types::rec::Type;
         using types::rec::TypeArgs;
         using types::rec::TypeParams;
+        using types::rec::Types;
         using types::rec::Underlying;
         using types::rec::Val;
         using types::rec::Variadic;
-        using types::rec::color;
         using types::rec::order;
         using types::rec::sameId;
         using types::rec::scopePos;
-        using types::rec::setColor;
         using types::rec::setOrder;
         using types::rec::setParent;
         using types::rec::setScopePos;
@@ -148,15 +164,35 @@ namespace golang::gcimporter
 
     // IExportShallow encodes "shallow" export data for the specified package.
     //
+    // For types, we use "shallow" export data. Historically, the Go
+    // compiler always produced a summary of the types for a given package
+    // that included types from other packages that it indirectly
+    // referenced: "deep" export data. This had the advantage that the
+    // compiler (and analogous tools such as gopls) need only load one
+    // file per direct import.  However, it meant that the files tended to
+    // get larger based on the level of the package in the import
+    // graph. For example, higher-level packages in the kubernetes module
+    // have over 1MB of "deep" export data, even when they have almost no
+    // content of their own, merely because they mention a major type that
+    // references many others. In pathological cases the export data was
+    // 300x larger than the source for a package due to this quadratic
+    // growth.
+    //
+    // "Shallow" export data means that the serialized types describe only
+    // a single package. If those types mention types from other packages,
+    // the type checker may need to request additional packages beyond
+    // just the direct imports. Type information for the entire transitive
+    // closure of imports is provided (lazily) by the DAG.
+    //
     // No promises are made about the encoding other than that it can be decoded by
     // the same version of IIExportShallow. If you plan to save export data in the
     // file system, be sure to include a cryptographic digest of the executable in
     // the key to avoid version skew.
     //
-    // If the provided reportf func is non-nil, it will be used for reporting bugs
-    // encountered during export.
-    // TODO(rfindley): remove reportf when we are confident enough in the new
-    // objectpath encoding.
+    // If the provided reportf func is non-nil, it is used for reporting
+    // bugs (e.g. recovered panics) encountered during export, enabling us
+    // to obtain via telemetry the stack that would otherwise be lost by
+    // merely returning an error.
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> IExportShallow(token::FileSet* fset, types::Package* pkg, ReportFunc reportf)
     {
         // In principle this operation can only fail if out.Write fails,
@@ -167,13 +203,13 @@ namespace golang::gcimporter
         auto bundle = false;
         auto shallow = true;
         bytes::Buffer out = {};
-        auto err = iexportCommon(& out, fset, bundle, shallow, iexportVersion, gocpp::slice<types::Package*> {pkg});
+        auto err = iexportCommon(& out, fset, bundle, shallow, iexportVersion, gocpp::slice<types::Package*> {pkg}, reportf);
         return {rec::Bytes(gocpp::recv(out)), err};
     }
 
     // IImportShallow decodes "shallow" types.Package data encoded by
-    // IExportShallow in the same executable. This function cannot import data from
-    // cmd/compile or gcexportdata.Write.
+    // [IExportShallow] in the same executable. This function cannot import data
+    // from cmd/compile or gcexportdata.Write.
     //
     // The importer calls getPackages to obtain package symbols for all
     // packages mentioned in the export data, including the one being
@@ -205,7 +241,7 @@ namespace golang::gcimporter
     {
         auto bundle = false;
         auto shallow = false;
-        return iexportCommon(out, fset, bundle, shallow, iexportVersion, gocpp::slice<types::Package*> {pkg});
+        return iexportCommon(out, fset, bundle, shallow, iexportVersion, gocpp::slice<types::Package*> {pkg}, nullptr);
     }
 
     // IExportBundle writes an indexed export bundle for pkgs to out.
@@ -213,10 +249,10 @@ namespace golang::gcimporter
     {
         auto bundle = true;
         auto shallow = false;
-        return iexportCommon(out, fset, bundle, shallow, iexportVersion, pkgs);
+        return iexportCommon(out, fset, bundle, shallow, iexportVersion, pkgs, nullptr);
     }
 
-    gocpp::error iexportCommon(io::Writer out, token::FileSet* fset, bool bundle, bool shallow, int version, gocpp::slice<types::Package*> pkgs)
+    gocpp::error iexportCommon(io::Writer out, token::FileSet* fset, bool bundle, bool shallow, int version, gocpp::slice<types::Package*> pkgs, ReportFunc reportf)
     {
         gocpp::error err;
         gocpp::Defer defer;
@@ -228,8 +264,16 @@ namespace golang::gcimporter
                 {
                     if(auto e = gocpp::recover(); e != nullptr)
                     {
+                        // Report the stack via telemetry (see #71067).
+                        if(reportf != nullptr)
+                        {
+                            reportf("panic in exporter"_s);
+                        }
                         if(auto [ierr, ok] = gocpp::getValue<internalError>(e); ok)
                         {
+                            // internalError usually means we exported a
+                            // bad go/types data structure: a violation
+                            // of an implicit precondition of Export.
                             err = ierr;
                             return;
                         }
@@ -378,13 +422,10 @@ namespace golang::gcimporter
         rec::uint64(gocpp::recv(w), size);
 
         // Sort the set of needed offsets. Duplicates are harmless.
-        sort::Slice(needed, [=](int i, int j) mutable -> bool
-        {
-            return needed[i] < needed[j];
-        });
+        slices::Sort(needed);
 
         // byte offset of each line start
-        auto lines = tokeninternal::GetLines(file);
+        auto lines = rec::Lines(gocpp::recv(file));
         rec::uint64(gocpp::recv(w), uint64_t(len(lines)));
 
         // Rather than record the entire array of line start offsets,
@@ -527,7 +568,6 @@ namespace golang::gcimporter
     {
         T result;
         result.fset = this->fset;
-        result.out = this->out;
         result.version = this->version;
         result.shallow = this->shallow;
         result.objEncoder = this->objEncoder;
@@ -550,7 +590,6 @@ namespace golang::gcimporter
     bool iexporter::operator==(const T& ref) const
     {
         if (fset != ref.fset) return false;
-        if (out != ref.out) return false;
         if (version != ref.version) return false;
         if (shallow != ref.shallow) return false;
         if (objEncoder != ref.objEncoder) return false;
@@ -573,7 +612,6 @@ namespace golang::gcimporter
     {
         os << '{';
         os << "" << fset;
-        os << " " << out;
         os << " " << version;
         os << " " << shallow;
         os << " " << objEncoder;
@@ -630,7 +668,7 @@ namespace golang::gcimporter
         return value.PrintTo(os);
     }
 
-    void rec::trace(iexporter* p, gocpp::string format, gocpp::slice<gocpp::go_any> args)
+    void rec::trace(iexporter* p, gocpp::string format, gocpp::slice<go_any> args)
     {
         if(! gcimporter::trace)
         {
@@ -860,7 +898,7 @@ namespace golang::gcimporter
                     {
                         types::TypeName* obj = gocpp::any_cast<types::TypeName*>(obj_ref);
                         auto t = rec::Type(gocpp::recv(obj));
-                        if(auto [tparam, ok] = gocpp::getValue<types::TypeParam*>(aliases::Unalias(t)); ok)
+                        if(auto [tparam, ok] = gocpp::getValue<types::TypeParam*>(types::Unalias(t)); ok)
                         {
                             rec::tag(gocpp::recv(w), typeParamTag);
                             rec::pos(gocpp::recv(w), rec::Pos(gocpp::recv(obj)));
@@ -868,7 +906,7 @@ namespace golang::gcimporter
                             if(p->version >= iexportVersionGo1_18)
                             {
                                 auto implicit = false;
-                                if(auto [iface, gocpp_id_3] = gocpp::getValue<types::Interface*>(aliases::Unalias(constraint)); iface != nullptr)
+                                if(auto [iface, gocpp_id_3] = gocpp::getValue<types::Interface*>(types::Unalias(constraint)); iface != nullptr)
                                 {
                                     implicit = rec::IsImplicit(gocpp::recv(iface));
                                 }
@@ -879,13 +917,32 @@ namespace golang::gcimporter
                         }
                         if(rec::IsAlias(gocpp::recv(obj)))
                         {
-                            rec::tag(gocpp::recv(w), aliasTag);
+                            // perhaps false for certain built-ins?
+                            auto [alias, materialized] = gocpp::getValue<types::Alias*>(t);
+
+                            types::TypeParamList* tparams = {};
+                            if(materialized)
+                            {
+                                tparams = rec::TypeParams(gocpp::recv(alias));
+                            }
+                            if(rec::Len(gocpp::recv(tparams)) == 0)
+                            {
+                                rec::tag(gocpp::recv(w), aliasTag);
+                            }
+                            else
+                            {
+                                rec::tag(gocpp::recv(w), genericAliasTag);
+                            }
                             rec::pos(gocpp::recv(w), rec::Pos(gocpp::recv(obj)));
-                            if(auto [alias, ok] = gocpp::getValue<aliases::Alias*>(t); ok)
+                            if(rec::Len(gocpp::recv(tparams)) > 0)
+                            {
+                                rec::tparamList(gocpp::recv(w), rec::Name(gocpp::recv(obj)), tparams, rec::Pkg(gocpp::recv(obj)));
+                            }
+                            if(materialized)
                             {
                                 // Preserve materialized aliases,
                                 // even of non-exported types.
-                                t = aliases::Rhs(alias);
+                                t = rec::Rhs(gocpp::recv(alias));
                             }
                             rec::typ(gocpp::recv(w), t, rec::Pkg(gocpp::recv(obj)));
                             break;
@@ -919,21 +976,24 @@ namespace golang::gcimporter
                         }
                         auto n = rec::NumMethods(gocpp::recv(named));
                         rec::uint64(gocpp::recv(w), uint64_t(n));
-                        for(auto i = 0; i < n; i++)
+                        for(auto [i, gocpp_ignored] : n)
                         {
                             auto m = rec::Method(gocpp::recv(named), i);
                             rec::pos(gocpp::recv(w), rec::Pos(gocpp::recv(m)));
                             rec::string(gocpp::recv(w), rec::Name(gocpp::recv(m)));
                             auto [sig, gocpp_id_4] = gocpp::getValue<types::Signature*>(rec::Type(gocpp::recv(m)));
+                            if(w->p->version >= iexportVersionGenericMethods && rec::go_bool(gocpp::recv(w), rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))) > 0))
+                            {
+                                rec::tparamList(gocpp::recv(w), rec::Name(gocpp::recv(obj)) + "."_s + rec::Name(gocpp::recv(m)), rec::TypeParams(gocpp::recv(sig)), rec::Pkg(gocpp::recv(obj)));
+                            }
 
                             // Receiver type parameters are type arguments of the receiver type, so
                             // their name must be qualified before exporting recv.
                             if(auto rparams = rec::RecvTypeParams(gocpp::recv(sig)); rec::Len(gocpp::recv(rparams)) > 0)
                             {
                                 auto prefix = rec::Name(gocpp::recv(obj)) + "."_s + rec::Name(gocpp::recv(m));
-                                for(auto i = 0; i < rec::Len(gocpp::recv(rparams)); i++)
+                                for(auto [rparam, gocpp_ignored] : rec::TypeParams(gocpp::recv(rparams)))
                                 {
-                                    auto rparam = rec::At(gocpp::recv(rparams), i);
                                     auto name = tparamExportName(prefix, rparam);
                                     w->p->tparamNames[rec::Obj(gocpp::recv(rparam))] = name;
                                 }
@@ -1082,6 +1142,14 @@ namespace golang::gcimporter
 
     void rec::pkg(exportWriter* w, types::Package* pkg)
     {
+        if(pkg == nullptr)
+        {
+            // [exportWriter.typ] accepts a nil pkg only for types
+            // of constants, which cannot contain named objects
+            // such as fields or methods and thus should never
+            // reach this method (#76222).
+            gocpp::panic("nil package"_s);
+        }
         // Ensure any referenced packages are declared in the main index.
         w->p->allPkgs[pkg] = true;
 
@@ -1098,9 +1166,11 @@ namespace golang::gcimporter
         rec::pkg(gocpp::recv(w), rec::Pkg(gocpp::recv(obj)));
     }
 
-    // TODO(rfindley): what does 'pkg' even mean here? It would be better to pass
-    // it in explicitly into signatures and structs that may use it for
-    // constructing fields.
+    // typ emits the specified type.
+    //
+    // Objects within the type (struct fields and interface methods) are
+    // qualified by pkg. It may be nil if the type cannot contain objects,
+    // such as the type of a constant.
     void rec::typ(exportWriter* w, types::Type t, types::Package* pkg)
     {
         rec::uint64(gocpp::recv(w->data), rec::typOff(gocpp::recv(w->p), t, pkg));
@@ -1138,6 +1208,7 @@ namespace golang::gcimporter
         rec::uint64(gocpp::recv(w->data), uint64_t(k));
     }
 
+    // doTyp is the implementation of [exportWriter.typ].
     void rec::doTyp(exportWriter* w, types::Type t, types::Package* pkg)
     {
         gocpp::Defer defer;
@@ -1175,7 +1246,14 @@ namespace golang::gcimporter
                     case 0:
                     {
                         types::Alias* t = gocpp::any_cast<types::Alias*>(t_ref);
-                        // TODO(adonovan): support parameterized aliases, following *types.Named.
+                        if(auto targs = rec::TypeArgs(gocpp::recv(t)); rec::Len(gocpp::recv(targs)) > 0)
+                        {
+                            rec::startType(gocpp::recv(w), instanceType);
+                            rec::pos(gocpp::recv(w), rec::Pos(gocpp::recv(rec::Obj(gocpp::recv(t)))));
+                            rec::typeList(gocpp::recv(w), targs, pkg);
+                            rec::typ(gocpp::recv(w), rec::Origin(gocpp::recv(t)), pkg);
+                            return;
+                        }
                         rec::startType(gocpp::recv(w), aliasType);
                         rec::qualifiedType(gocpp::recv(w), rec::Obj(gocpp::recv(t)));
                         break;
@@ -1276,6 +1354,7 @@ namespace golang::gcimporter
                     {
                         types::Signature* t = gocpp::any_cast<types::Signature*>(t_ref);
                         rec::startType(gocpp::recv(w), signatureType);
+                        // qualifies param/result vars
                         rec::pkg(gocpp::recv(w), pkg);
                         rec::signature(gocpp::recv(w), t);
                         break;
@@ -1314,7 +1393,7 @@ namespace golang::gcimporter
                         }
                         rec::pkg(gocpp::recv(w), fieldPkg);
                         rec::uint64(gocpp::recv(w), uint64_t(n));
-                        for(auto i = 0; i < n; i++)
+                        for(auto [i, gocpp_ignored] : n)
                         {
                             auto f = rec::Field(gocpp::recv(t), i);
                             if(w->p->shallow)
@@ -1336,22 +1415,23 @@ namespace golang::gcimporter
                     {
                         types::Interface* t = gocpp::any_cast<types::Interface*>(t_ref);
                         rec::startType(gocpp::recv(w), gcimporter::interfaceType);
+                        // qualifies unexported method funcs
                         rec::pkg(gocpp::recv(w), pkg);
                         auto n = rec::NumEmbeddeds(gocpp::recv(t));
                         rec::uint64(gocpp::recv(w), uint64_t(n));
                         for(auto i = 0; i < n; i++)
                         {
                             auto ft = rec::EmbeddedType(gocpp::recv(t), i);
-                            auto tPkg = pkg;
-                            if(auto [named, gocpp_id_6] = gocpp::getValue<types::Named*>(aliases::Unalias(ft)); named != nullptr)
+                            if(auto [named, gocpp_id_6] = gocpp::getValue<types::Named*>(types::Unalias(ft)); named != nullptr)
                             {
                                 rec::pos(gocpp::recv(w), rec::Pos(gocpp::recv(rec::Obj(gocpp::recv(named)))));
                             }
                             else
                             {
+                                // e.g. ~int
                                 rec::pos(gocpp::recv(w), token::NoPos);
                             }
-                            rec::typ(gocpp::recv(w), ft, tPkg);
+                            rec::typ(gocpp::recv(w), ft, pkg);
                         }
                         // See comment for struct fields. In shallow mode we change the encoding
                         // for interface methods that are promoted from other packages.
@@ -1378,7 +1458,7 @@ namespace golang::gcimporter
                         rec::startType(gocpp::recv(w), gcimporter::unionType);
                         auto nt = rec::Len(gocpp::recv(t));
                         rec::uint64(gocpp::recv(w), uint64_t(nt));
-                        for(auto i = 0; i < nt; i++)
+                        for(auto [i, gocpp_ignored] : nt)
                         {
                             auto term = rec::Term(gocpp::recv(t), i);
                             rec::go_bool(gocpp::recv(w), rec::Tilde(gocpp::recv(term)));
@@ -1471,9 +1551,9 @@ namespace golang::gcimporter
     void rec::typeList(exportWriter* w, types::TypeList* ts, types::Package* pkg)
     {
         rec::uint64(gocpp::recv(w), uint64_t(rec::Len(gocpp::recv(ts))));
-        for(auto i = 0; i < rec::Len(gocpp::recv(ts)); i++)
+        for(auto [t, gocpp_ignored] : rec::Types(gocpp::recv(ts)))
         {
-            rec::typ(gocpp::recv(w), rec::At(gocpp::recv(ts), i), pkg);
+            rec::typ(gocpp::recv(w), t, pkg);
         }
     }
 
@@ -1481,13 +1561,12 @@ namespace golang::gcimporter
     {
         auto ll = uint64_t(rec::Len(gocpp::recv(list)));
         rec::uint64(gocpp::recv(w), ll);
-        for(auto i = 0; i < rec::Len(gocpp::recv(list)); i++)
+        for(auto [tparam, gocpp_ignored] : rec::TypeParams(gocpp::recv(list)))
         {
-            auto tparam = rec::At(gocpp::recv(list), i);
             // Set the type parameter exportName before exporting its type.
             auto exportName = tparamExportName(prefix, tparam);
             w->p->tparamNames[rec::Obj(gocpp::recv(tparam))] = exportName;
-            rec::typ(gocpp::recv(w), rec::At(gocpp::recv(list), i), pkg);
+            rec::typ(gocpp::recv(w), tparam, pkg);
         }
     }
 
@@ -1529,7 +1608,7 @@ namespace golang::gcimporter
     {
         auto n = rec::Len(gocpp::recv(tup));
         rec::uint64(gocpp::recv(w), uint64_t(n));
-        for(auto i = 0; i < n; i++)
+        for(auto [i, gocpp_ignored] : n)
         {
             rec::param(gocpp::recv(w), rec::At(gocpp::recv(tup), i));
         }
@@ -1988,7 +2067,7 @@ namespace golang::gcimporter
     // "internalErrorf" as the former is used for bugs, whose cause is
     // internal inconsistency, whereas the latter is used for ordinary
     // situations like bad input, whose cause is external.
-    gocpp::error internalErrorf(gocpp::string format, gocpp::slice<gocpp::go_any> args)
+    gocpp::error internalErrorf(gocpp::string format, gocpp::slice<go_any> args)
     {
         return gocpp::error(internalError(mocklib::Sprintf(format, args)));
     }

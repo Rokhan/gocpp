@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 // Package utf16 implements encoding and decoding of UTF-16 sequences.
-namespace golang::utf16
+namespace golang::unicode::utf16
 {
     namespace rec
     {
@@ -52,6 +52,32 @@ namespace golang::utf16
         return {surr1 + (r >> 10) & 0x3ff, surr2 + r & 0x3ff};
     }
 
+    // RuneLen returns the number of 16-bit words in the UTF-16 encoding of the rune.
+    // It returns -1 if the rune is not a valid value to encode in UTF-16.
+    int RuneLen(gocpp::rune r)
+    {
+        //Go switch emulation
+        {
+            int conditionId = -1;
+            if(0 <= r && r < surr1) { conditionId = 0; }
+            else if(surr3 <= r && r < surrSelf) { conditionId = 1; }
+            else if(surrSelf <= r && r <= maxRune) { conditionId = 2; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                    return 1;
+                    break;
+                case 2:
+                    return 2;
+                    break;
+                default:
+                    return - 1;
+                    break;
+            }
+        }
+    }
+
     // Encode returns the UTF-16 encoding of the Unicode code point sequence s.
     gocpp::slice<uint16_t> Encode(gocpp::slice<gocpp::rune> s)
     {
@@ -70,21 +96,18 @@ namespace golang::utf16
         {
             //Go switch emulation
             {
+                auto condition = RuneLen(v);
                 int conditionId = -1;
-                if(0 <= v && v < surr1) { conditionId = 0; }
-                else if(surr3 <= v && v < surrSelf) { conditionId = 1; }
-                else if(surrSelf <= v && v <= maxRune) { conditionId = 2; }
+                if(condition == 1) { conditionId = 0; }
+                else if(condition == 2) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
-                    case 1:
-                        // normal rune
                         a[n] = uint16_t(v);
                         n++;
                         break;
-                    case 2:
+                    case 1:
                     {
-                        // needs surrogate sequence
                         auto [r1, r2] = EncodeRune(v);
                         a[n] = uint16_t(r1);
                         a[n + 1] = uint16_t(r2);

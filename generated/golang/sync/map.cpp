@@ -11,17 +11,14 @@
 #include "golang/sync/map.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
+#include "golang/internal/sync/hashtriemap.h"
+#include "golang/sync/cond.h"
 
 namespace golang::sync
 {
+    namespace isync = golang::internal::sync;
     namespace rec
     {
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
-        using atomic::rec::Swap;
     }
 
     // Map is like a Go map[any]any but is safe for concurrent use
@@ -36,47 +33,44 @@ namespace golang::sync
     // key is only ever written once but read many times, as in caches that only grow,
     // or (2) when multiple goroutines read, write, and overwrite entries for disjoint
     // sets of keys. In these two cases, use of a Map may significantly reduce lock
-    // contention compared to a Go map paired with a separate Mutex or RWMutex.
+    // contention compared to a Go map paired with a separate [Mutex] or [RWMutex].
     //
     // The zero Map is empty and ready for use. A Map must not be copied after first use.
     //
-    // In the terminology of the Go memory model, Map arranges that a write operation
+    // In the terminology of [the Go memory model], Map arranges that a write operation
     // “synchronizes before” any read operation that observes the effect of the write, where
     // read and write operations are defined as follows.
-    // Load, LoadAndDelete, LoadOrStore, Swap, CompareAndSwap, and CompareAndDelete
-    // are read operations; Delete, LoadAndDelete, Store, and Swap are write operations;
-    // LoadOrStore is a write operation when it returns loaded set to false;
-    // CompareAndSwap is a write operation when it returns swapped set to true;
-    // and CompareAndDelete is a write operation when it returns deleted set to true.
+    // [Map.Load], [Map.LoadAndDelete], [Map.LoadOrStore], [Map.Swap], [Map.CompareAndSwap],
+    // and [Map.CompareAndDelete] are read operations;
+    // [Map.Delete], [Map.LoadAndDelete], [Map.Store], and [Map.Swap] are write operations;
+    // [Map.LoadOrStore] is a write operation when it returns loaded set to false;
+    // [Map.CompareAndSwap] is a write operation when it returns swapped set to true;
+    // and [Map.CompareAndDelete] is a write operation when it returns deleted set to true.
+    //
+    // [the Go memory model]: https://go.dev/ref/mem
     
     template<typename T> requires gocpp::GoStruct<T>
     Map::operator T()
     {
         T result;
-        result.mu = this->mu;
-        result.read = this->read;
-        result.dirty = this->dirty;
-        result.misses = this->misses;
+        result._1 = this->_1;
+        result.m = this->m;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool Map::operator==(const T& ref) const
     {
-        if (mu != ref.mu) return false;
-        if (read != ref.read) return false;
-        if (dirty != ref.dirty) return false;
-        if (misses != ref.misses) return false;
+        if (_1 != ref._1) return false;
+        if (m != ref.m) return false;
         return true;
     }
 
     std::ostream& Map::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << mu;
-        os << " " << read;
-        os << " " << dirty;
-        os << " " << misses;
+        os << "" << _1;
+        os << " " << m;
         os << '}';
         return os;
     }
@@ -86,88 +80,6 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    // readOnly is an immutable struct stored atomically in the Map.read field.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    readOnly::operator T()
-    {
-        T result;
-        result.m = this->m;
-        result.amended = this->amended;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool readOnly::operator==(const T& ref) const
-    {
-        if (m != ref.m) return false;
-        if (amended != ref.amended) return false;
-        return true;
-    }
-
-    std::ostream& readOnly::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << m;
-        os << " " << amended;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct readOnly& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // expunged is an arbitrary pointer that marks entries which have been deleted
-    // from the dirty map.
-    gocpp::go_any* expunged = new gocpp::go_any{};
-    // An entry is a slot in the map corresponding to a particular key.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    entry::operator T()
-    {
-        T result;
-        result.p = this->p;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool entry::operator==(const T& ref) const
-    {
-        if (p != ref.p) return false;
-        return true;
-    }
-
-    std::ostream& entry::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << p;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct entry& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    entry* newEntry(go_any i)
-    {
-        auto e = new entry {};
-        rec::Store<gocpp::go_any>(gocpp::recv(e->p), & i);
-        return e;
-    }
-
-    readOnly rec::loadReadOnly(Map* m)
-    {
-        if(auto p = rec::Load<readOnly>(gocpp::recv(m->read)); p != nullptr)
-        {
-            return *p;
-        }
-        return readOnly {};
-    }
-
     // Load returns the value stored in the map for a key, or nil if no
     // value is present.
     // The ok result indicates whether value was found in the map.
@@ -175,100 +87,19 @@ namespace golang::sync
     {
         go_any value;
         bool ok;
-        auto read = rec::loadReadOnly(gocpp::recv(m));
-        entry* e;
-        std::tie(e, ok) = read.m[key];
-        if(! ok && read.amended)
-        {
-            rec::Lock(gocpp::recv(m->mu));
-            // Avoid reporting a spurious miss if m.dirty got promoted while we were
-            // blocked on m.mu. (If further loads of the same key will not miss, it's
-            // not worth copying the dirty map for this key.)
-            read = rec::loadReadOnly(gocpp::recv(m));
-            std::tie(e, ok) = read.m[key];
-            if(! ok && read.amended)
-            {
-                std::tie(e, ok) = m->dirty[key];
-                // Regardless of whether the entry was present, record a miss: this key
-                // will take the slow path until the dirty map is promoted to the read
-                // map.
-                rec::missLocked(gocpp::recv(m));
-            }
-            rec::Unlock(gocpp::recv(m->mu));
-        }
-        if(! ok)
-        {
-            return {nullptr, false};
-        }
-        return rec::load(gocpp::recv(e));
-    }
-
-    std::tuple<go_any, bool> rec::load(entry* e)
-    {
-        go_any value;
-        bool ok;
-        auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
-        if(p == nullptr || p == expunged)
-        {
-            return {nullptr, false};
-        }
-        return {*p, true};
+        return rec::Load<go_any, go_any>(gocpp::recv(m->m), key);
     }
 
     // Store sets the value for a key.
     void rec::Store(Map* m, go_any key, go_any value)
     {
-        std::tie(std::ignore, std::ignore) = rec::Swap(gocpp::recv(m), key, value);
+        rec::Store<go_any, go_any>(gocpp::recv(m->m), key, value);
     }
 
-    // tryCompareAndSwap compare the entry with the given old value and swaps
-    // it with a new value if the entry is equal to the old value, and the entry
-    // has not been expunged.
-    //
-    // If the entry is expunged, tryCompareAndSwap returns false and leaves
-    // the entry unchanged.
-    bool rec::tryCompareAndSwap(entry* e, go_any old, go_any go_new)
+    // Clear deletes all the entries, resulting in an empty Map.
+    void rec::Clear(Map* m)
     {
-        auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
-        if(p == nullptr || p == expunged || *p != old)
-        {
-            return false;
-        }
-
-        // Copy the interface after the first load to make this method more amenable
-        // to escape analysis: if the comparison fails from the start, we shouldn't
-        // bother heap-allocating an interface value to store.
-        auto nc = go_new;
-        for(; ; )
-        {
-            if(rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), p, & nc))
-            {
-                return true;
-            }
-            p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
-            if(p == nullptr || p == expunged || *p != old)
-            {
-                return false;
-            }
-        }
-    }
-
-    // unexpungeLocked ensures that the entry is not marked as expunged.
-    //
-    // If the entry was previously expunged, it must be added to the dirty map
-    // before m.mu is unlocked.
-    bool rec::unexpungeLocked(entry* e)
-    {
-        bool wasExpunged;
-        return rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), expunged, nullptr);
-    }
-
-    // swapLocked unconditionally swaps a value into the entry.
-    //
-    // The entry must be known not to be expunged.
-    go_any* rec::swapLocked(entry* e, go_any* i)
-    {
-        return rec::Swap<gocpp::go_any>(gocpp::recv(e->p), i);
+        rec::Clear<go_any, go_any>(gocpp::recv(m->m));
     }
 
     // LoadOrStore returns the existing value for the key if present.
@@ -278,93 +109,7 @@ namespace golang::sync
     {
         go_any actual;
         bool loaded;
-        // Avoid locking if it's a clean hit.
-        auto read = rec::loadReadOnly(gocpp::recv(m));
-        if(auto [e, ok] = read.m[key]; ok)
-        {
-            auto [actual, loaded, ok] = rec::tryLoadOrStore(gocpp::recv(e), value);
-            if(ok)
-            {
-                return {actual, loaded};
-            }
-        }
-
-        rec::Lock(gocpp::recv(m->mu));
-        read = rec::loadReadOnly(gocpp::recv(m));
-        if(auto [e, ok] = read.m[key]; ok)
-        {
-            if(rec::unexpungeLocked(gocpp::recv(e)))
-            {
-                m->dirty[key] = e;
-            }
-            std::tie(actual, loaded, std::ignore) = rec::tryLoadOrStore(gocpp::recv(e), value);
-        }
-        else
-        if(auto [e, ok] = m->dirty[key]; ok)
-        {
-            std::tie(actual, loaded, std::ignore) = rec::tryLoadOrStore(gocpp::recv(e), value);
-            rec::missLocked(gocpp::recv(m));
-        }
-        else
-        {
-            if(! read.amended)
-            {
-                // We're adding the first new key to the dirty map.
-                // Make sure it is allocated and mark the read-only map as incomplete.
-                rec::dirtyLocked(gocpp::recv(m));
-                rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
-                    x.m = read.m;
-                    x.amended = true;
-                }));
-            }
-            m->dirty[key] = newEntry(value);
-            std::tie(actual, loaded) = std::tuple{value, false};
-        }
-        rec::Unlock(gocpp::recv(m->mu));
-
-        return {actual, loaded};
-    }
-
-    // tryLoadOrStore atomically loads or stores a value if the entry is not
-    // expunged.
-    //
-    // If the entry is expunged, tryLoadOrStore leaves the entry unchanged and
-    // returns with ok==false.
-    std::tuple<go_any, bool, bool> rec::tryLoadOrStore(entry* e, go_any i)
-    {
-        go_any actual;
-        bool loaded;
-        bool ok;
-        auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
-        if(p == expunged)
-        {
-            return {nullptr, false, false};
-        }
-        if(p != nullptr)
-        {
-            return {*p, true, true};
-        }
-
-        // Copy the interface after the first load to make this method more amenable
-        // to escape analysis: if we hit the "load" path or the entry is expunged, we
-        // shouldn't bother heap-allocating.
-        auto ic = i;
-        for(; ; )
-        {
-            if(rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), nullptr, & ic))
-            {
-                return {i, false, true};
-            }
-            p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
-            if(p == expunged)
-            {
-                return {nullptr, false, false};
-            }
-            if(p != nullptr)
-            {
-                return {*p, true, true};
-            }
-        }
+        return rec::LoadOrStore<go_any, go_any>(gocpp::recv(m->m), key, value);
     }
 
     // LoadAndDelete deletes the value for a key, returning the previous value if any.
@@ -373,73 +118,14 @@ namespace golang::sync
     {
         go_any value;
         bool loaded;
-        auto read = rec::loadReadOnly(gocpp::recv(m));
-        auto [e, ok] = read.m[key];
-        if(! ok && read.amended)
-        {
-            rec::Lock(gocpp::recv(m->mu));
-            read = rec::loadReadOnly(gocpp::recv(m));
-            std::tie(e, ok) = read.m[key];
-            if(! ok && read.amended)
-            {
-                std::tie(e, ok) = m->dirty[key];
-                remove(m->dirty, key);
-                // Regardless of whether the entry was present, record a miss: this key
-                // will take the slow path until the dirty map is promoted to the read
-                // map.
-                rec::missLocked(gocpp::recv(m));
-            }
-            rec::Unlock(gocpp::recv(m->mu));
-        }
-        if(ok)
-        {
-            return rec::go_delete(gocpp::recv(e));
-        }
-        return {nullptr, false};
+        return rec::LoadAndDelete<go_any, go_any>(gocpp::recv(m->m), key);
     }
 
     // Delete deletes the value for a key.
+    // If the key is not in the map, Delete does nothing.
     void rec::Delete(Map* m, go_any key)
     {
-        rec::LoadAndDelete(gocpp::recv(m), key);
-    }
-
-    std::tuple<go_any, bool> rec::go_delete(entry* e)
-    {
-        go_any value;
-        bool ok;
-        for(; ; )
-        {
-            auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
-            if(p == nullptr || p == expunged)
-            {
-                return {nullptr, false};
-            }
-            if(rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), p, nullptr))
-            {
-                return {*p, true};
-            }
-        }
-    }
-
-    // trySwap swaps a value if the entry has not been expunged.
-    //
-    // If the entry is expunged, trySwap returns false and leaves the entry
-    // unchanged.
-    std::tuple<go_any*, bool> rec::trySwap(entry* e, go_any* i)
-    {
-        for(; ; )
-        {
-            auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
-            if(p == expunged)
-            {
-                return {nullptr, false};
-            }
-            if(rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), p, i))
-            {
-                return {p, true};
-            }
-        }
+        rec::Delete<go_any, go_any>(gocpp::recv(m->m), key);
     }
 
     // Swap swaps the value for a key and returns the previous value if any.
@@ -448,60 +134,7 @@ namespace golang::sync
     {
         go_any previous;
         bool loaded;
-        auto read = rec::loadReadOnly(gocpp::recv(m));
-        if(auto [e, ok] = read.m[key]; ok)
-        {
-            if(auto [v, ok] = rec::trySwap(gocpp::recv(e), & value); ok)
-            {
-                if(v == nullptr)
-                {
-                    return {nullptr, false};
-                }
-                return {*v, true};
-            }
-        }
-
-        rec::Lock(gocpp::recv(m->mu));
-        read = rec::loadReadOnly(gocpp::recv(m));
-        if(auto [e, ok] = read.m[key]; ok)
-        {
-            if(rec::unexpungeLocked(gocpp::recv(e)))
-            {
-                // The entry was previously expunged, which implies that there is a
-                // non-nil dirty map and this entry is not in it.
-                m->dirty[key] = e;
-            }
-            if(auto v = rec::swapLocked(gocpp::recv(e), & value); v != nullptr)
-            {
-                loaded = true;
-                previous = *v;
-            }
-        }
-        else
-        if(auto [e, ok] = m->dirty[key]; ok)
-        {
-            if(auto v = rec::swapLocked(gocpp::recv(e), & value); v != nullptr)
-            {
-                loaded = true;
-                previous = *v;
-            }
-        }
-        else
-        {
-            if(! read.amended)
-            {
-                // We're adding the first new key to the dirty map.
-                // Make sure it is allocated and mark the read-only map as incomplete.
-                rec::dirtyLocked(gocpp::recv(m));
-                rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
-                    x.m = read.m;
-                    x.amended = true;
-                }));
-            }
-            m->dirty[key] = newEntry(value);
-        }
-        rec::Unlock(gocpp::recv(m->mu));
-        return {previous, loaded};
+        return rec::Swap<go_any, go_any>(gocpp::recv(m->m), key, value);
     }
 
     // CompareAndSwap swaps the old and new values for key
@@ -509,47 +142,8 @@ namespace golang::sync
     // The old value must be of a comparable type.
     bool rec::CompareAndSwap(Map* m, go_any key, go_any old, go_any go_new)
     {
-        gocpp::Defer defer;
-        try
-        {
-            auto read = rec::loadReadOnly(gocpp::recv(m));
-            if(auto [e, ok] = read.m[key]; ok)
-            {
-                return rec::tryCompareAndSwap(gocpp::recv(e), old, go_new);
-            }
-            else
-            if(! read.amended)
-            {
-                // No existing value for key.
-                return false;
-            }
-
-            rec::Lock(gocpp::recv(m->mu));
-            defer.push_back([=]{ rec::Unlock(gocpp::recv(m->mu)); });
-            read = rec::loadReadOnly(gocpp::recv(m));
-            auto swapped = false;
-            if(auto [e, ok] = read.m[key]; ok)
-            {
-                swapped = rec::tryCompareAndSwap(gocpp::recv(e), old, go_new);
-            }
-            else
-            if(auto [e, ok] = m->dirty[key]; ok)
-            {
-                swapped = rec::tryCompareAndSwap(gocpp::recv(e), old, go_new);
-                // We needed to lock mu in order to load the entry for key,
-                // and the operation didn't change the set of keys in the map
-                // (so it would be made more efficient by promoting the dirty
-                // map to read-only).
-                // Count it as a miss so that we will eventually switch to the
-                // more efficient steady state.
-                rec::missLocked(gocpp::recv(m));
-            }
-            return swapped;
-        }
-        catch(gocpp::GoPanic& gp)
-        {
-            defer.handlePanic(gp);
-        }
+        bool swapped;
+        return rec::CompareAndSwap<go_any, go_any>(gocpp::recv(m->m), key, old, go_new);
     }
 
     // CompareAndDelete deletes the entry for key if its value is equal to old.
@@ -560,39 +154,7 @@ namespace golang::sync
     bool rec::CompareAndDelete(Map* m, go_any key, go_any old)
     {
         bool deleted;
-        auto read = rec::loadReadOnly(gocpp::recv(m));
-        auto [e, ok] = read.m[key];
-        if(! ok && read.amended)
-        {
-            rec::Lock(gocpp::recv(m->mu));
-            read = rec::loadReadOnly(gocpp::recv(m));
-            std::tie(e, ok) = read.m[key];
-            if(! ok && read.amended)
-            {
-                std::tie(e, ok) = m->dirty[key];
-                // Don't delete key from m.dirty: we still need to do the “compare” part
-                // of the operation. The entry will eventually be expunged when the
-                // dirty map is promoted to the read map.
-                // Regardless of whether the entry was present, record a miss: this key
-                // will take the slow path until the dirty map is promoted to the read
-                // map.
-                rec::missLocked(gocpp::recv(m));
-            }
-            rec::Unlock(gocpp::recv(m->mu));
-        }
-        for(; ok; )
-        {
-            auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
-            if(p == nullptr || p == expunged || *p != old)
-            {
-                return false;
-            }
-            if(rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), p, nullptr))
-            {
-                return true;
-            }
-        }
-        return false;
+        return rec::CompareAndDelete<go_any, go_any>(gocpp::recv(m->m), key, old);
     }
 
     // Range calls f sequentially for each key and value present in the map.
@@ -608,91 +170,7 @@ namespace golang::sync
     // false after a constant number of calls.
     void rec::Range(Map* m, std::function<bool (go_any key, go_any value)> f)
     {
-        // We need to be able to iterate over all of the keys that were already
-        // present at the start of the call to Range.
-        // If read.amended is false, then read.m satisfies that property without
-        // requiring us to hold m.mu for a long time.
-        auto read = rec::loadReadOnly(gocpp::recv(m));
-        if(read.amended)
-        {
-            // m.dirty contains keys not in read.m. Fortunately, Range is already O(N)
-            // (assuming the caller does not break out early), so a call to Range
-            // amortizes an entire copy of the map: we can promote the dirty copy
-            // immediately!
-            rec::Lock(gocpp::recv(m->mu));
-            read = rec::loadReadOnly(gocpp::recv(m));
-            if(read.amended)
-            {
-                read = gocpp::Init<readOnly>([=](auto& x) {
-                    x.m = m->dirty;
-                });
-                auto copyRead = read;
-                rec::Store<readOnly>(gocpp::recv(m->read), & copyRead);
-                m->dirty = nullptr;
-                m->misses = 0;
-            }
-            rec::Unlock(gocpp::recv(m->mu));
-        }
-
-        for(auto [k, e] : read.m)
-        {
-            auto [v, ok] = rec::load(gocpp::recv(e));
-            if(! ok)
-            {
-                continue;
-            }
-            if(! f(k, v))
-            {
-                break;
-            }
-        }
-    }
-
-    void rec::missLocked(Map* m)
-    {
-        m->misses++;
-        if(m->misses < len(m->dirty))
-        {
-            return;
-        }
-        rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
-            x.m = m->dirty;
-        }));
-        m->dirty = nullptr;
-        m->misses = 0;
-    }
-
-    void rec::dirtyLocked(Map* m)
-    {
-        if(m->dirty != nullptr)
-        {
-            return;
-        }
-
-        auto read = rec::loadReadOnly(gocpp::recv(m));
-        m->dirty = gocpp::make(gocpp::Tag<gocpp::map<go_any, entry*>>(), len(read.m));
-        for(auto [k, e] : read.m)
-        {
-            if(! rec::tryExpungeLocked(gocpp::recv(e)))
-            {
-                m->dirty[k] = e;
-            }
-        }
-    }
-
-    bool rec::tryExpungeLocked(entry* e)
-    {
-        bool isExpunged;
-        auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
-        for(; p == nullptr; )
-        {
-            if(rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), nullptr, expunged))
-            {
-                return true;
-            }
-            p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
-        }
-        return p == expunged;
+        rec::Range<go_any, go_any>(gocpp::recv(m->m), f);
     }
 
 }

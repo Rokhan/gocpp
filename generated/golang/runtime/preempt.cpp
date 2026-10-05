@@ -14,15 +14,17 @@
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/symtab.h"
 #include "golang/internal/goarch/goarch.h"
+#include "golang/internal/goexperiment/exp_runtimesecret_off.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/stringslite/strings.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
+#include "golang/runtime/preempt_xreg.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
-#include "golang/runtime/string.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/symtabinl.h"
@@ -30,6 +32,10 @@
 
 namespace golang::runtime
 {
+    namespace abi = golang::internal::abi;
+    namespace goarch = golang::internal::goarch;
+    namespace goexperiment = golang::internal::goexperiment;
+    namespace stringslite = golang::internal::stringslite;
     namespace rec
     {
         using atomic::rec::Load;
@@ -126,12 +132,14 @@ namespace golang::runtime
                 auto condition = s;
                 int conditionId = -1;
                 if(condition == _Gdead) { conditionId = 0; }
-                else if(condition == _Gcopystack) { conditionId = 1; }
-                else if(condition == _Gpreempted) { conditionId = 2; }
-                else if(condition == _Grunnable) { conditionId = 3; }
-                else if(condition == _Gsyscall) { conditionId = 4; }
-                else if(condition == _Gwaiting) { conditionId = 5; }
-                else if(condition == _Grunning) { conditionId = 6; }
+                else if(condition == _Gdeadextra) { conditionId = 1; }
+                else if(condition == _Gcopystack) { conditionId = 2; }
+                else if(condition == _Gpreempted) { conditionId = 3; }
+                else if(condition == _Grunnable) { conditionId = 4; }
+                else if(condition == _Gsyscall) { conditionId = 5; }
+                else if(condition == _Gwaiting) { conditionId = 6; }
+                else if(condition == _Gleaked) { conditionId = 7; }
+                else if(condition == _Grunning) { conditionId = 8; }
                 switch(conditionId)
                 {
                     default:
@@ -148,6 +156,7 @@ namespace golang::runtime
                         break;
 
                     case 0:
+                    case 1:
                         // Nothing to suspend.
                         // preemptStop may need to be cleared, but
                         // doing that here could race with goroutine
@@ -159,9 +168,9 @@ namespace golang::runtime
 
                     // The stack is being copied. We need to wait
                     // until this is done.
-                    case 1:
-                        break;
                     case 2:
+                        break;
+                    case 3:
                         // We (or someone else) suspended the G. Claim
                         // ownership of it by transitioning it to
                         // _Gwaiting.
@@ -173,9 +182,10 @@ namespace golang::runtime
                         stopped = true;
                         s = _Gwaiting;
 
-                    case 3:
                     case 4:
                     case 5:
+                    case 6:
+                    case 7:
                         // Claim goroutine by setting scan bit.
                         // This may race with execution or readying of gp.
                         // The scan bit keeps it from transition state.
@@ -206,7 +216,7 @@ namespace golang::runtime
                         });
                         break;
 
-                    case 6:
+                    case 8:
                     {
                         // Optimization: if there is already a pending preemption request
                         // (from the previous loop iteration), don't bother with the atomics.
@@ -295,7 +305,8 @@ namespace golang::runtime
             int conditionId = -1;
             if(condition == _Grunnable | _Gscan) { conditionId = 0; }
             else if(condition == _Gwaiting | _Gscan) { conditionId = 1; }
-            else if(condition == _Gsyscall | _Gscan) { conditionId = 2; }
+            else if(condition == _Gleaked | _Gscan) { conditionId = 2; }
+            else if(condition == _Gsyscall | _Gscan) { conditionId = 3; }
             switch(conditionId)
             {
                 default:
@@ -306,6 +317,7 @@ namespace golang::runtime
                 case 0:
                 case 1:
                 case 2:
+                case 3:
                     casfrom_Gscanstatus(gp, s, s &^ _Gscan);
                     break;
             }
@@ -325,31 +337,62 @@ namespace golang::runtime
     //go:nosplit
     bool canPreemptM(m* mp)
     {
-        return mp->locks == 0 && mp->mallocing == 0 && mp->preemptoff == ""_s && rec::ptr(gocpp::recv(mp->p))->status == _Prunning;
+        return mp->locks == 0 && mp->mallocing == 0 && mp->preemptoff == ""_s && rec::ptr(gocpp::recv(mp->p))->status == _Prunning && mp->curg != nullptr && readgstatus(mp->curg) &^ _Gscan != _Gsyscall;
     }
 
     // asyncPreempt saves all user registers and calls asyncPreempt2.
     //
-    // When stack scanning encounters an asyncPreempt frame, it scans that
+    // It saves GP registers (anything that might contain a pointer) to the G stack.
+    // Hence, when stack scanning encounters an asyncPreempt frame, it scans that
     // frame and its parent frame conservatively.
+    //
+    // On some platforms, it saves large additional scalar-only register state such
+    // as vector registers to an "extended register state" on the P.
     //
     // asyncPreempt is implemented in assembly.
     void asyncPreempt()
     /* convertBlockStmt, nil block */;
 
+    // asyncPreempt2 is the Go continuation of asyncPreempt.
+    //
+    // It must be deeply nosplit because there's untyped data on the stack from
+    // asyncPreempt.
+    //
+    // It must not have any write barriers because we need to limit the amount of
+    // stack it uses.
+    //
     //go:nosplit
+    //go:nowritebarrierrec
     void asyncPreempt2()
     {
+        // We can't grow the stack with untyped data from asyncPreempt, so switch to
+        // the system stack right away.
+        mcall([=](g* gp) mutable -> void
+        {
+            gp->asyncSafePoint = true;
+
+            // Move the extended register state from the P to the G. We do this now that
+            // we're on the system stack to avoid stack splits.
+            xRegSave(gp);
+
+            // The above functions never return.
+            if(gp->preemptStop)
+            {
+                preemptPark(gp);
+            }
+            else
+            {
+                gopreempt_m(gp);
+            }
+        });
+
+        // Do not grow the stack below here!
         auto gp = getg();
-        gp->asyncSafePoint = true;
-        if(gp->preemptStop)
-        {
-            mcall(preemptPark);
-        }
-        else
-        {
-            mcall(gopreempt_m);
-        }
+
+        // Put the extended register state back on the M so resumption can find it.
+        // We can't do this in asyncPreemptM because the park calls never return.
+        xRegRestore(gp);
+
         gp->asyncSafePoint = false;
     }
 
@@ -362,19 +405,14 @@ namespace golang::runtime
         auto total = funcMaxSPDelta(f);
         f = findfunc(abi::FuncPCABIInternal(asyncPreempt2));
         total += funcMaxSPDelta(f);
+        f = findfunc(abi::FuncPCABIInternal(xRegRestore));
+        total += funcMaxSPDelta(f);
         // Add some overhead for return PCs, etc.
         asyncPreemptStack = uintptr_t(total) + 8 * goarch::PtrSize;
         if(asyncPreemptStack > stackNosplit)
         {
-            // We need more than the nosplit limit. This isn't
-            // unsafe, but it may limit asynchronous preemption.
-            // This may be a problem if we start using more
-            // registers. In that case, we should store registers
-            // in a context object. If we pre-allocate one per P,
-            // asyncPreempt can spill just a few registers to the
-            // stack, then grab its context object and spill into
-            // it. When it enters the runtime, it would allocate a
-            // new context for the P.
+            // We need more than the nosplit limit. This isn't unsafe, but it may
+            // limit asynchronous preemption. Consider moving state into xRegState.
             print("runtime: asyncPreemptStack="_s, asyncPreemptStack, "\n"_s);
             go_throw("async stack too large"_s);
         }
@@ -428,6 +466,22 @@ namespace golang::runtime
             return {false, 0};
         }
 
+        // If we're in the middle of a secret computation, we can't
+        // allow any conservative scanning of stacks, as that may lead
+        // to secrets leaking out from the stack into work buffers.
+        // Additionally, the preemption code will store the
+        // machine state (including registers which may contain confidential
+        // information) into the preemption buffers.
+        // TODO(dmo): there's technically nothing stopping us from doing the
+        // preemption, granted that don't conservatively scan and we clean up after
+        // ourselves. This is made slightly harder by the xRegs cached allocations
+        // that can move between Gs and Ps. In any case, for the intended users (cryptography code)
+        // they are unlikely get stuck in unterminating loops.
+        if(goexperiment::RuntimeSecret && gp->secret > 0)
+        {
+            return {false, 0};
+        }
+
         // Check if PC is an unsafe-point.
         auto f = findfunc(pc);
         if(! rec::valid(gocpp::recv(f)))
@@ -468,17 +522,22 @@ namespace golang::runtime
         // Check the inner-most name
         auto [u, uf] = newInlineUnwinder(f, pc);
         auto name = rec::name(gocpp::recv(rec::srcFunc(gocpp::recv(u), uf)));
-        if(hasPrefix(name, "runtime."_s) ||
-                hasPrefix(name, "runtime/internal/"_s) ||
-                hasPrefix(name, "reflect."_s))
+        if(stringslite::HasPrefix(name, "runtime."_s) ||
+                stringslite::HasPrefix(name, "internal/runtime/"_s) ||
+                stringslite::HasPrefix(name, "reflect."_s))
         {
             // For now we never async preempt the runtime or
             // anything closely tied to the runtime. Known issues
             // include: various points in the scheduler ("don't
             // preempt between here and here"), much of the defer
             // implementation (untyped info on stack), bulk write
-            // barriers (write barrier check),
-            // reflect.{makeFuncStub,methodValueCall}.
+            // barriers (write barrier check), atomic functions in
+            // internal/runtime/atomic, reflect.{makeFuncStub,methodValueCall}.
+            // Note that this is a subset of the runtimePkgs in pkgspecial.go
+            // and these checks are theoretically redundant because the compiler
+            // marks "all points" in runtime functions as unsafe for async preemption.
+            // But for some reason, we can't eliminate these checks until https://go.dev/issue/72031
+            // is resolved.
             // TODO(austin): We should improve this, or opt things
             // in incrementally.
             return {false, 0};

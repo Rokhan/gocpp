@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
     const int flagSyncMarkers = 1 << 0;
 }

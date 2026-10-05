@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
     using frameVisitor = std::function<void (gocpp::string file, int line, gocpp::string name, uintptr_t offset)>;
     using SyncMarker = int;
@@ -78,4 +78,7 @@ namespace golang::pkgbits
     const SyncMarker SyncStmtsEnd = 64;
     const SyncMarker SyncLabel = 65;
     const SyncMarker SyncOptLabel = 66;
+    const SyncMarker SyncMultiExpr = 67;
+    const SyncMarker SyncRType = 68;
+    const SyncMarker SyncConvRTTI = 69;
 }

@@ -12,15 +12,18 @@
 #include "gocpp/support.h"
 
 #include "golang/bytes/buffer.h"
-#include "golang/encoding/json/stream.h"
+#include "golang/encoding/json/v2_stream.h"
 #include "golang/golang.org/x/tools/go/packages/golist.h"
+#include "golang/golang.org/x/tools/go/packages/packages.h"
 #include "golang/golang.org/x/tools/internal/gocommand/vendor.h"
 #include "golang/io/io.h"
 #include "golang/path/filepath/path.h"
 #include "golang/sync/once.h"
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
 {
+    namespace filepath = golang::path::filepath;
+    namespace json = golang::encoding::json;
     namespace rec
     {
         using bytes::rec::Read;
@@ -86,7 +89,7 @@ namespace golang::packages
             if(mod->Dir != ""_s && mod->Path != ""_s)
             {
                 // This is a valid module; add it to the map.
-                auto [absDir, err] = filepath::Abs(mod->Dir);
+                auto [absDir, err] = rec::abs(gocpp::recv(state->cfg), mod->Dir);
                 if(err != nullptr)
                 {
                     return {nullptr, err};

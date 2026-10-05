@@ -37,6 +37,7 @@ namespace golang::bytes
 
 namespace golang::bytes
 {
+    namespace io = golang::io;
 
     namespace rec
     {

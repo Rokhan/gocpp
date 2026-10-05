@@ -11,25 +11,25 @@
 #include "golang/runtime/mgcsweep.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/goexperiment/exp_allocheaders_on.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/asan0.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/hexdump.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
 #include "golang/runtime/mcentral.h"
+#include "golang/runtime/mcleanup.h"
 #include "golang/runtime/mem.h"
+#include "golang/runtime/mgcmark_greenteagc.h"
 #include "golang/runtime/mgcpacer.h"
 #include "golang/runtime/mgcscavenge.h"
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagealloc.h"
-#include "golang/runtime/mprof.h"
 #include "golang/runtime/msan0.h"
 #include "golang/runtime/mspanset.h"
 #include "golang/runtime/mstats.h"
@@ -42,10 +42,14 @@
 #include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
-#include "golang/runtime/trace2runtime.h"
+#include "golang/runtime/traceallocfree.h"
+#include "golang/runtime/traceruntime.h"
+#include "golang/runtime/valgrind0.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
         using atomic::rec::Add;
@@ -245,15 +249,18 @@ namespace golang::runtime
             }
             if(rec::CompareAndSwap(gocpp::recv(a->state), state, state - 1))
             {
-                if(state != sweepDrainedMask)
+                if(state - 1 != sweepDrainedMask)
                 {
                     return;
                 }
+                // We're the last sweeper, and there's nothing left to sweep.
                 if(debug.gcpacertrace > 0)
                 {
                     auto live = rec::Load(gocpp::recv(gcController.heapLive));
                     print("pacer: sweep done at heap size "_s, live >> 20, "MB; allocated "_s, (live - mheap_.sweepHeapLiveBasis) >> 20, "MB during sweep; swept "_s, rec::Load(gocpp::recv(mheap_.pagesSwept)), " pages at "_s, mheap_.sweepPagesPerByte, " pages/byte\n"_s);
                 }
+                // Now that sweeping is completely done, flush remaining cleanups.
+                rec::flush(gocpp::recv(gcCleanups));
                 return;
             }
         }
@@ -395,6 +402,7 @@ namespace golang::runtime
                 // N.B. freeSomeWbufs is already batched internally.
                 goschedIfBusy();
             }
+            freeDeadSpanSPMCs();
             lock(& runtime::sweep.lock);
             if(! isSweepDone())
             {
@@ -402,6 +410,10 @@ namespace golang::runtime
                 // gosweepone returning ^0 above
                 // and the lock being acquired.
                 unlock(& runtime::sweep.lock);
+                // This goroutine must preempt when we have no work to do
+                // but isSweepDone returns false because of another existing sweeper.
+                // See issue #73499.
+                goschedIfBusy();
                 continue;
             }
             runtime::sweep.parked = true;
@@ -693,7 +705,7 @@ namespace golang::runtime
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
         {
-            rec::GCSweepSpan(gocpp::recv(trace), s->npages * _PageSize);
+            rec::GCSweepSpan(gocpp::recv(trace), s->npages * pageSize);
             traceRelease(trace);
         }
 
@@ -722,43 +734,60 @@ namespace golang::runtime
         for(; rec::valid(gocpp::recv(siter)); )
         {
             // A finalizer can be set for an inner byte of an object, find object beginning.
-            auto objIndex = uintptr_t(siter.s->offset) / size;
+            auto objIndex = siter.s->offset / size;
             auto p = rec::base(gocpp::recv(s)) + objIndex * size;
             auto mbits = rec::markBitsForIndex(gocpp::recv(s), objIndex);
             if(! rec::isMarked(gocpp::recv(mbits)))
             {
                 // This object is not marked and has at least one special record.
-                // Pass 1: see if it has at least one finalizer.
-                auto hasFin = false;
+                // Pass 1: see if it has a finalizer.
+                auto hasFinAndRevived = false;
                 auto endOffset = p - rec::base(gocpp::recv(s)) + size;
-                for(auto tmp = siter.s; tmp != nullptr && uintptr_t(tmp->offset) < endOffset; tmp = tmp->next)
+                for(auto tmp = siter.s; tmp != nullptr && tmp->offset < endOffset; tmp = tmp->next)
                 {
                     if(tmp->kind == _KindSpecialFinalizer)
                     {
                         // Stop freeing of object if it has a finalizer.
                         rec::setMarkedNonAtomic(gocpp::recv(mbits));
-                        hasFin = true;
+                        hasFinAndRevived = true;
                         break;
                     }
                 }
-                // Pass 2: queue all finalizers _or_ handle profile record.
-                for(; rec::valid(gocpp::recv(siter)) && uintptr_t(siter.s->offset) < endOffset; )
+                if(hasFinAndRevived)
                 {
-                    // Find the exact byte for which the special was setup
-                    // (as opposed to object beginning).
-                    auto special = siter.s;
-                    auto p = rec::base(gocpp::recv(s)) + uintptr_t(special->offset);
-                    if(special->kind == _KindSpecialFinalizer || ! hasFin)
+                    // Pass 2: queue all finalizers and clear any weak handles. Weak handles are cleared
+                    // before finalization as specified by the weak package. See the documentation
+                    // for that package for more details.
+                    for(; rec::valid(gocpp::recv(siter)) && siter.s->offset < endOffset; )
                     {
+                        // Find the exact byte for which the special was setup
+                        // (as opposed to object beginning).
+                        auto special = siter.s;
+                        auto p = rec::base(gocpp::recv(s)) + special->offset;
+                        if(special->kind == _KindSpecialFinalizer || special->kind == _KindSpecialWeakHandle)
+                        {
+                            rec::unlinkAndNext(gocpp::recv(siter));
+                            freeSpecial(special, gocpp::unsafe_pointer(p), size);
+                        }
+                        else
+                        {
+                            // All other specials only apply when an object is freed,
+                            // so just keep the special record.
+                            rec::next(gocpp::recv(siter));
+                        }
+                    }
+                }
+                else
+                {
+                    // Pass 2: the object is truly dead, free (and handle) all specials.
+                    for(; rec::valid(gocpp::recv(siter)) && siter.s->offset < endOffset; )
+                    {
+                        // Find the exact byte for which the special was setup
+                        // (as opposed to object beginning).
+                        auto special = siter.s;
+                        auto p = rec::base(gocpp::recv(s)) + special->offset;
                         rec::unlinkAndNext(gocpp::recv(siter));
                         freeSpecial(special, gocpp::unsafe_pointer(p), size);
-                    }
-                    else
-                    {
-                        // The object has finalizers, so we're keeping it alive.
-                        // All other specials only apply when an object is freed,
-                        // so just keep the special record.
-                        rec::next(gocpp::recv(siter));
                     }
                 }
             }
@@ -783,10 +812,9 @@ namespace golang::runtime
             spanHasNoSpecials(s);
         }
 
-        if(debug.allocfreetrace != 0 || debug.clobberfree != 0 || raceenabled || msanenabled || asanenabled)
+        if(traceAllocFreeEnabled() || debug.clobberfree != 0 || raceenabled || msanenabled || asanenabled)
         {
-            // Find all newly freed objects. This doesn't have to
-            // efficient; allocfreetrace has massive overhead.
+            // Find all newly freed objects.
             auto mbits = rec::markBitsForBase(gocpp::recv(s));
             auto abits = rec::allocBitsForIndex(gocpp::recv(s), 0);
             for(auto i = uintptr_t(0); i < uintptr_t(s->nelems); i++)
@@ -794,9 +822,14 @@ namespace golang::runtime
                 if(! rec::isMarked(gocpp::recv(mbits)) && (abits.index < uintptr_t(s->freeindex) || rec::isMarked(gocpp::recv(abits))))
                 {
                     auto x = rec::base(gocpp::recv(s)) + i * s->elemsize;
-                    if(debug.allocfreetrace != 0)
+                    if(traceAllocFreeEnabled())
                     {
-                        tracefree(gocpp::unsafe_pointer(x), size);
+                        auto trace = traceAcquire();
+                        if(rec::ok(gocpp::recv(trace)))
+                        {
+                            rec::HeapObjectFree(gocpp::recv(trace), x);
+                            traceRelease(trace);
+                        }
                     }
                     if(debug.clobberfree != 0)
                     {
@@ -815,10 +848,20 @@ namespace golang::runtime
                     {
                         asanpoison(gocpp::unsafe_pointer(x), size);
                     }
+                    if(valgrindenabled && ! s->isUserArenaChunk)
+                    {
+                        valgrindFree(gocpp::unsafe_pointer(x));
+                    }
                 }
                 rec::advance(gocpp::recv(mbits));
                 rec::advance(gocpp::recv(abits));
             }
+        }
+
+        // Copy over and clear the inline mark bits if necessary.
+        if(gcUsesSpanInlineMarkBits(s->elemsize))
+        {
+            rec::moveInlineMarks(gocpp::recv(s), s->gcmarkBits);
         }
 
         // Check for zombie objects.
@@ -987,6 +1030,18 @@ namespace golang::runtime
             if(nfreed != 0)
             {
                 // Free large object span to heap.
+                // Count the free in the consistent, external stats.
+                // Do this before freeSpan, which might update heapStats' inHeap
+                // value. If it does so, then metrics that subtract object footprint
+                // from inHeap might overflow. See #67019.
+                auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
+                atomic::Xadd64(& stats->largeFreeCount, 1);
+                atomic::Xadd64(& stats->largeFree, int64_t(size));
+                rec::release(gocpp::recv(memstats.heapStats));
+
+                // Count the free in the inconsistent, internal stats.
+                rec::Add(gocpp::recv(gcController.totalFree), int64_t(size));
+
                 // NOTE(rsc,dvyukov): The original implementation of efence
                 // in CL 22060046 used sysFree instead of sysFault, so that
                 // the operating system would eventually give the memory
@@ -1011,31 +1066,6 @@ namespace golang::runtime
                 {
                     rec::freeSpan(gocpp::recv(mheap_), s);
                 }
-                if(goexperiment::AllocHeaders && s->largeType != nullptr && s->largeType->TFlag & abi::TFlagUnrolledBitmap != 0)
-                {
-                    // In the allocheaders experiment, the unrolled GCProg bitmap is allocated separately.
-                    // Free the space for the unrolled bitmap.
-                    systemstack([=]() mutable -> void
-                    {
-                        auto s_tmp = spanOf(uintptr_t(gocpp::unsafe_pointer(s->largeType)));
-                        auto& s = s_tmp;
-                        rec::freeManual(gocpp::recv(mheap_), s, spanAllocPtrScalarBits);
-                    });
-                    // Make sure to zero this pointer without putting the old
-                    // value in a write buffer, as the old value might be an
-                    // invalid pointer. See arena.go:(*mheap).allocUserArenaChunk.
-                    *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType)) = 0;
-                }
-
-                // Count the free in the consistent, external stats.
-                auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
-                atomic::Xadd64(& stats->largeFreeCount, 1);
-                atomic::Xadd64(& stats->largeFree, int64_t(size));
-                rec::release(gocpp::recv(memstats.heapStats));
-
-                // Count the free in the inconsistent, internal stats.
-                rec::Add(gocpp::recv(gcController.totalFree), int64_t(size));
-
                 return true;
             }
 
@@ -1062,7 +1092,7 @@ namespace golang::runtime
     void rec::reportZombies(mspan* s)
     {
         printlock();
-        print("runtime: marked free object in span "_s, s, ", elemsize="_s, s->elemsize, " freeindex="_s, s->freeindex, " (bad use of unsafe.Pointer? try -d=checkptr)\n"_s);
+        print("runtime: marked free object in span "_s, s, ", elemsize="_s, s->elemsize, " freeindex="_s, s->freeindex, " (bad use of unsafe.Pointer or having race conditions? try -d=checkptr or -race)\n"_s);
         auto mbits = rec::markBitsForBase(gocpp::recv(s));
         auto abits = rec::allocBitsForIndex(gocpp::recv(s), 0);
         for(auto i = uintptr_t(0); i < uintptr_t(s->nelems); i++)
@@ -1099,7 +1129,7 @@ namespace golang::runtime
                 {
                     length = 1024;
                 }
-                hexdumpWords(addr, addr + length, nullptr);
+                hexdumpWords(addr, length, nullptr);
             }
             rec::advance(gocpp::recv(mbits));
             rec::advance(gocpp::recv(abits));
@@ -1222,10 +1252,10 @@ namespace golang::runtime
             // concurrent sweep are less likely to leave pages
             // unswept when GC starts.
             heapDistance -= 1024 * 1024;
-            if(heapDistance < _PageSize)
+            if(heapDistance < pageSize)
             {
                 // Avoid setting the sweep ratio extremely high
-                heapDistance = _PageSize;
+                heapDistance = pageSize;
             }
             auto pagesSwept = rec::Load(gocpp::recv(mheap_.pagesSwept));
             auto pagesInUse = rec::Load(gocpp::recv(mheap_.pagesInUse));

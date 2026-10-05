@@ -13,17 +13,20 @@
 
 #include "golang/go/ast/ast.h"
 #include "golang/go/constant/value.h"
-#include "golang/go/internal/typeparams/typeparams.h"
 #include "golang/go/token/position.h"
 #include "golang/go/types/api.h"
 #include "golang/go/types/assignments.h"
+#include "golang/go/types/basic.h"
 #include "golang/go/types/builtins.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/context.h"
 #include "golang/go/types/conversions.h"
+#include "golang/go/types/cycles.h"
 #include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
+#include "golang/go/types/errsupport.h"
 #include "golang/go/types/expr.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/index.h"
 #include "golang/go/types/infer.h"
 #include "golang/go/types/instantiate.h"
@@ -37,6 +40,7 @@
 #include "golang/go/types/package.h"
 #include "golang/go/types/pointer.h"
 #include "golang/go/types/predicates.h"
+#include "golang/go/types/recording.h"
 #include "golang/go/types/scope.h"
 #include "golang/go/types/selection.h"
 #include "golang/go/types/signature.h"
@@ -49,22 +53,21 @@
 #include "golang/go/types/typexpr.h"
 #include "golang/go/types/under.h"
 #include "golang/go/types/universe.h"
+#include "golang/go/types/util.h"
 #include "golang/go/types/version.h"
 #include "golang/internal/types/errors/codes.h"
 #include "golang/strings/strings.h"
-#include "golang/unicode/letter.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::End;
         using ast::rec::Pos;
         using ast::rec::exprNode;
-        using token::rec::IsValid;
-        using typeparams::rec::End;
-        using typeparams::rec::Pos;
-        using typeparams::rec::exprNode;
     }
 
     // funcInst type-checks a function instantiation.
@@ -81,19 +84,20 @@ namespace golang::types
     //  2. If infer == false and inst provides all type arguments, funcInst
     //     instantiates the function x. The returned results are nil.
     //     If inst doesn't provide enough type arguments, funcInst returns the
-    //     available arguments and the corresponding expression list; x remains
-    //     unchanged.
+    //     available arguments; x remains unchanged.
     //
     // If an error (other than a version error) occurs in any case, it is reported
     // and x.mode is set to invalid.
-    std::tuple<gocpp::slice<golang::types::Type>, gocpp::slice<ast::Expr>> rec::funcInst(Checker* check, target* T, token::Pos pos, operand* x, typeparams::IndexExpr* ix, bool infer)
+    gocpp::slice<golang::go::types::Type> rec::funcInst(Checker* check, target* T, token::Pos pos, operand* x, indexedExpr* ix, bool infer)
     {
         assert(T != nullptr || ix != nullptr);
 
         positioner instErrPos = {};
         if(ix != nullptr)
         {
-            instErrPos = inNode(ix->Orig, ix->IndexListExpr.Lbrack);
+            instErrPos = inNode(ix->orig, ix->lbrack);
+            // if we don't have an index expression, keep the existing expression of x
+            x->expr = ix->orig;
         }
         else
         {
@@ -102,40 +106,38 @@ namespace golang::types
         auto versionErr = ! rec::verifyVersionf(gocpp::recv(check), instErrPos, go1_18, "function instantiation"_s);
 
         // targs and xlist are the type arguments and corresponding type expressions, or nil.
-        gocpp::slice<golang::types::Type> targs = {};
+        gocpp::slice<golang::go::types::Type> targs = {};
         gocpp::slice<ast::Expr> xlist = {};
         if(ix != nullptr)
         {
-            xlist = ix->IndexListExpr.Indices;
+            xlist = ix->indices;
             targs = rec::typeList(gocpp::recv(check), xlist);
             if(targs == nullptr)
             {
-                x->mode = invalid;
-                x->expr = ix;
-                return {nullptr, nullptr};
+                rec::invalidate(gocpp::recv(x));
+                return nullptr;
             }
             assert(len(targs) == len(xlist));
         }
 
         // Check the number of type arguments (got) vs number of type parameters (want).
         // Note that x is a function value, not a type expression, so we don't need to
-        // call under below.
-        auto sig = gocpp::getValue<Signature*>(x->typ);
+        // call Underlying below.
+        auto sig = gocpp::getValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(x)));
         auto [got, want] = std::tuple{len(targs), rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig))))};
         if(got > want)
         {
             // Providing too many type arguments is always an error.
-            rec::errorf(gocpp::recv(check), ix->IndexListExpr.Indices[got - 1], WrongTypeArgCount, "got %d type arguments but want %d"_s, got, want);
-            x->mode = invalid;
-            x->expr = ix->Orig;
-            return {nullptr, nullptr};
+            rec::errorf(gocpp::recv(check), ix->indices[got - 1], WrongTypeArgCount, "got %d type arguments but want %d"_s, got, want);
+            rec::invalidate(gocpp::recv(x));
+            return nullptr;
         }
 
         if(got < want)
         {
             if(! infer)
             {
-                return {targs, xlist};
+                return targs;
             }
 
             // If the uninstantiated or partially instantiated function x is used in
@@ -149,7 +151,7 @@ namespace golang::types
             bool reverse = {};
             if(T != nullptr && sig->tparams != nullptr)
             {
-                if(! versionErr && ! rec::allowVersion(gocpp::recv(check), check->pkg, instErrPos, go1_21))
+                if(! versionErr && ! rec::allowVersion(gocpp::recv(check), go1_21))
                 {
                     if(ix != nullptr)
                     {
@@ -161,7 +163,7 @@ namespace golang::types
                     }
                 }
                 auto gsig = NewSignatureType(nullptr, nullptr, nullptr, sig->params, sig->results, sig->variadic);
-                params = gocpp::slice<Var*> {NewVar(rec::Pos(gocpp::recv(x)), check->pkg, ""_s, gsig)};
+                params = gocpp::slice<Var*> {NewParam(rec::Pos(gocpp::recv(x)), check->pkg, ""_s, gsig)};
                 // The type of the argument operand is tsig, which is the type of the LHS in an assignment
                 // or the result type in a return statement. Create a pseudo-expression for that operand
                 // that makes sense when reported in error messages from infer, below.
@@ -169,9 +171,9 @@ namespace golang::types
                 // correct position
                 expr->NamePos = rec::Pos(gocpp::recv(x));
                 args = gocpp::slice<operand*> {gocpp::Init<>([=](auto& y) {
-                    y.mode = value;
+                    y.mode_ = value;
                     y.expr = expr;
-                    y.typ = T->sig;
+                    y.typ_ = T->sig;
                 })};
                 reverse = true;
             }
@@ -180,37 +182,31 @@ namespace golang::types
             // Note that NewTuple(params...) below is (*Tuple)(nil) if len(params) == 0, as desired.
             auto [tparams, params2] = rec::renameTParams(gocpp::recv(check), pos, rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))), NewTuple(params));
 
-            targs = rec::infer(gocpp::recv(check), atPos(pos), tparams, targs, gocpp::getValue<Tuple*>(params2), args, reverse);
+            auto err = rec::newError(gocpp::recv(check), CannotInferTypeArgs);
+            targs = rec::infer(gocpp::recv(check), atPos(pos), tparams, targs, gocpp::getValue<Tuple*>(params2), args, reverse, err);
             if(targs == nullptr)
             {
-                // error was already reported
-                x->mode = invalid;
-                // TODO(gri) is this correct?
-                x->expr = ix;
-                return {nullptr, nullptr};
+                if(! rec::empty(gocpp::recv(err)))
+                {
+                    rec::report(gocpp::recv(err));
+                }
+                rec::invalidate(gocpp::recv(x));
+                return nullptr;
             }
             got = len(targs);
         }
         assert(got == want);
 
         // instantiate function signature
-        // if we don't have an index expression, keep the existing expression of x
-        auto expr = x->expr;
-        if(ix != nullptr)
-        {
-            expr = ix->Orig;
-        }
-        sig = rec::instantiateSignature(gocpp::recv(check), rec::Pos(gocpp::recv(x)), expr, sig, targs, xlist);
-
-        x->typ = sig;
-        x->mode = value;
-        x->expr = expr;
-        return {nullptr, nullptr};
+        sig = rec::instantiateSignature(gocpp::recv(check), rec::Pos(gocpp::recv(x)), x->expr, sig, targs, xlist);
+        x->typ_ = sig;
+        x->mode_ = value;
+        return nullptr;
     }
 
-    Signature* rec::instantiateSignature(Checker* check, token::Pos pos, ast::Expr expr, Signature* typ, gocpp::slice<golang::types::Type> targs, gocpp::slice<ast::Expr> xlist)
+    golang::go::types::Signature* rec::instantiateSignature(Checker* check, token::Pos pos, ast::Expr expr, golang::go::types::Signature* typ, gocpp::slice<golang::go::types::Type> targs, gocpp::slice<ast::Expr> xlist)
     {
-        Signature* res;
+        golang::go::types::Signature* res;
         gocpp::Defer defer;
         try
         {
@@ -228,7 +224,10 @@ namespace golang::types
                 }(); });
             }
 
-            auto inst = gocpp::getValue<Signature*>(rec::instance(gocpp::recv(check), pos, typ, targs, nullptr, rec::context(gocpp::recv(check))));
+            // For signatures, Checker.instance will always succeed because the type argument
+            // count is correct at this point (see assertion above); hence the type assertion
+            // to *Signature will always succeed.
+            auto inst = gocpp::getValue<golang::go::types::Signature*>(rec::instance(gocpp::recv(check), pos, typ, targs, nullptr, rec::context(gocpp::recv(check))));
             // signature is not generic anymore
             assert(rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(inst)))) == 0);
             rec::recordInstance(gocpp::recv(check), expr, targs, inst);
@@ -238,6 +237,7 @@ namespace golang::types
             rec::describef(gocpp::recv(rec::later(gocpp::recv(check), [=]() mutable -> void
             {
                 auto tparams = rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(typ))));
+                // check type constraints
                 if(auto [i, err] = rec::verify(gocpp::recv(check), pos, tparams, targs, rec::context(gocpp::recv(check))); err != nullptr)
                 {
                     // best position for error reporting
@@ -266,7 +266,7 @@ namespace golang::types
 
     exprKind rec::callExpr(Checker* check, operand* x, ast::CallExpr* call)
     {
-        auto ix = typeparams::UnpackIndexExpr(call->Fun);
+        auto ix = unpackIndexedExpr(call->Fun);
         // x.typ may be generic
         if(ix != nullptr)
         {
@@ -275,7 +275,7 @@ namespace golang::types
                 // Delay function instantiation to argument checking,
                 // where we combine type and value arguments for type
                 // inference.
-                assert(x->mode == value);
+                assert(rec::mode(gocpp::recv(x)) == value);
             }
             else
             {
@@ -292,7 +292,7 @@ namespace golang::types
 
         //Go switch emulation
         {
-            auto condition = x->mode;
+            auto condition = rec::mode(gocpp::recv(x));
             int conditionId = -1;
             if(condition == invalid) { conditionId = 0; }
             else if(condition == typexpr) { conditionId = 1; }
@@ -309,12 +309,18 @@ namespace golang::types
                 {
                     // conversion
                     rec::nonGeneric(gocpp::recv(check), nullptr, x);
-                    if(x->mode == invalid)
+                    if(! rec::isValid(gocpp::recv(x)))
                     {
                         return types::conversion;
                     }
-                    auto T = x->typ;
-                    x->mode = invalid;
+                    auto T = rec::typ(gocpp::recv(x));
+                    rec::invalidate(gocpp::recv(x));
+                    // We cannot convert a value to an incomplete type; make sure it's complete.
+                    if(! rec::isComplete(gocpp::recv(check), T))
+                    {
+                        x->expr = call;
+                        return types::conversion;
+                    }
                     //Go switch emulation
                     {
                         auto n = len(call->Args);
@@ -328,15 +334,15 @@ namespace golang::types
                                 rec::errorf(gocpp::recv(check), inNode(call, call->Rparen), WrongArgCount, "missing argument in conversion to %s"_s, T);
                                 break;
                             case 1:
-                                rec::expr(gocpp::recv(check), nullptr, x, call->Args[0]);
-                                if(x->mode != invalid)
+                                rec::expr(gocpp::recv(check), newTarget(T, "conversion"_s), x, call->Args[0]);
+                                if(rec::isValid(gocpp::recv(x)))
                                 {
-                                    if(rec::IsValid(gocpp::recv(call->Ellipsis)))
+                                    if(hasDots(call))
                                     {
                                         rec::errorf(gocpp::recv(check), call->Args[0], BadDotDotDotSyntax, "invalid use of ... in conversion to %s"_s, T);
                                         break;
                                     }
-                                    if(auto [t, gocpp_id_0] = gocpp::getValue<Interface*>(types::under(T)); t != nullptr && ! isTypeParam(T))
+                                    if(auto [t, gocpp_id_0] = gocpp::getValue<Interface*>(rec::Underlying(gocpp::recv(T))); t != nullptr && ! isTypeParam(T))
                                     {
                                         if(! rec::IsMethodSet(gocpp::recv(t)))
                                         {
@@ -364,11 +370,11 @@ namespace golang::types
                     auto id = x->id;
                     if(! rec::builtin(gocpp::recv(check), x, call, id))
                     {
-                        x->mode = invalid;
+                        rec::invalidate(gocpp::recv(x));
                     }
                     x->expr = call;
                     // a non-constant result implies a function call
-                    if(x->mode != invalid && x->mode != constant_)
+                    if(rec::isValid(gocpp::recv(x)) && rec::mode(gocpp::recv(x)) != constant_)
                     {
                         check->environment.hasCallOrRecv = true;
                     }
@@ -380,32 +386,43 @@ namespace golang::types
 
         // ordinary function/method call
         // signature may be generic
-        auto cgocall = x->mode == cgofunc;
+        auto cgocall = rec::mode(gocpp::recv(x)) == cgofunc;
 
-        // a type parameter may be "called" if all types have the same signature
-        auto [sig, gocpp_id_1] = gocpp::getValue<Signature*>(coreType(x->typ));
-        if(sig == nullptr)
+        // If the operand type is a type parameter, all types in its type set
+        // must have a common underlying type, which must be a signature.
+        auto [u_tmp, err] = commonUnder(rec::typ(gocpp::recv(x)), [=](golang::go::types::Type t, golang::go::types::Type u) mutable -> typeError*
         {
-            rec::errorf(gocpp::recv(check), x, InvalidCall, invalidOp + "cannot call non-function %s"_s, x);
-            x->mode = invalid;
+            if(auto [gocpp_id_1, ok] = gocpp::getValue<golang::go::types::Signature*>(u); u != nullptr && ! ok)
+            {
+                return typeErrorf("%s is not a function"_s, t);
+            }
+            return nullptr;
+        });
+        auto& u = u_tmp;
+        if(err != nullptr)
+        {
+            rec::errorf(gocpp::recv(check), x, InvalidCall, invalidOp + "cannot call %s: %s"_s, x, rec::format(gocpp::recv(err), check));
+            rec::invalidate(gocpp::recv(x));
             x->expr = call;
             return statement;
         }
+        // u must be a signature per the commonUnder condition
+        auto sig = gocpp::getValue<golang::go::types::Signature*>(u);
 
         // Capture wasGeneric before sig is potentially instantiated below.
         auto wasGeneric = rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))) > 0;
 
         // evaluate type arguments, if any
         gocpp::slice<ast::Expr> xlist = {};
-        gocpp::slice<golang::types::Type> targs = {};
+        gocpp::slice<golang::go::types::Type> targs = {};
         if(ix != nullptr)
         {
-            xlist = ix->IndexListExpr.Indices;
+            xlist = ix->indices;
             targs = rec::typeList(gocpp::recv(check), xlist);
             if(targs == nullptr)
             {
                 rec::use(gocpp::recv(check), call->Args);
-                x->mode = invalid;
+                rec::invalidate(gocpp::recv(x));
                 x->expr = call;
                 return statement;
             }
@@ -417,7 +434,7 @@ namespace golang::types
             {
                 rec::errorf(gocpp::recv(check), xlist[want], WrongTypeArgCount, "got %d type arguments but want %d"_s, got, want);
                 rec::use(gocpp::recv(check), call->Args);
-                x->mode = invalid;
+                rec::invalidate(gocpp::recv(x));
                 x->expr = call;
                 return statement;
             }
@@ -429,8 +446,8 @@ namespace golang::types
             // of arguments is supplied).
             if(got == want && want > 0)
             {
-                rec::verifyVersionf(gocpp::recv(check), atPos(ix->IndexListExpr.Lbrack), go1_18, "function instantiation"_s);
-                sig = rec::instantiateSignature(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), ix->Orig, sig, targs, xlist);
+                rec::verifyVersionf(gocpp::recv(check), atPos(ix->lbrack), go1_18, "function instantiation"_s);
+                sig = rec::instantiateSignature(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), ix->orig, sig, targs, xlist);
                 // targs have been consumed; proceed with checking arguments of the
                 // non-generic signature.
                 targs = nullptr;
@@ -439,8 +456,8 @@ namespace golang::types
         }
 
         // evaluate arguments
-        auto [args, atargs, atxlist] = rec::genericExprList(gocpp::recv(check), call->Args);
-        sig = rec::arguments(gocpp::recv(check), call, sig, targs, xlist, args, atargs, atxlist);
+        auto [args, atargs] = rec::genericExprList(gocpp::recv(check), call->Args);
+        sig = rec::arguments(gocpp::recv(check), call, sig, targs, xlist, args, atargs);
 
         if(wasGeneric && rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))) == 0)
         {
@@ -458,23 +475,33 @@ namespace golang::types
             switch(conditionId)
             {
                 case 0:
-                    x->mode = novalue;
+                    x->mode_ = novalue;
                     break;
-                // unpack tuple
                 case 1:
+                {
                     if(cgocall)
                     {
-                        x->mode = commaerr;
+                        x->mode_ = commaerr;
                     }
                     else
                     {
-                        x->mode = value;
+                        x->mode_ = value;
                     }
-                    x->typ = sig->results->vars[0]->object.typ;
+                    // unpack tuple
+                    auto typ = sig->results->vars[0]->object.typ;
+                    // We cannot return a value of an incomplete type; make sure it's complete.
+                    if(! rec::isComplete(gocpp::recv(check), typ))
+                    {
+                        rec::invalidate(gocpp::recv(x));
+                        x->expr = call;
+                        return statement;
+                    }
+                    x->typ_ = typ;
                     break;
+                }
                 default:
-                    x->mode = value;
-                    x->typ = sig->results;
+                    x->mode_ = value;
+                    x->typ_ = sig->results;
                     break;
             }
         }
@@ -483,9 +510,9 @@ namespace golang::types
 
         // if type inference failed, a parameterized result must be invalidated
         // (operands cannot have a parameterized type)
-        if(x->mode == value && rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))) > 0 && types::isParameterized(rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))), x->typ))
+        if(rec::mode(gocpp::recv(x)) == value && rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))) > 0 && types::isParameterized(rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))), rec::typ(gocpp::recv(x))))
         {
-            x->mode = invalid;
+            rec::invalidate(gocpp::recv(x));
         }
 
         return statement;
@@ -519,23 +546,20 @@ namespace golang::types
     // instantiated generic functions (where constraint information is insufficient to infer
     // the missing type arguments) for Go 1.21 and later.
     // For each non-generic or uninstantiated generic operand, the corresponding targsList and
-    // xlistList elements do not exist (targsList and xlistList are nil) or the elements are nil.
-    // For each partially instantiated generic function operand, the corresponding targsList and
-    // xlistList elements are the operand's partial type arguments and type expression lists.
-    std::tuple<gocpp::slice<operand*>, gocpp::slice<gocpp::slice<golang::types::Type>>, gocpp::slice<gocpp::slice<ast::Expr>>> rec::genericExprList(Checker* check, gocpp::slice<ast::Expr> elist)
+    // elements do not exist (targsList is nil) or the elements are nil.
+    // For each partially instantiated generic function operand, the corresponding
+    // targsList elements are the operand's partial type arguments.
+    std::tuple<gocpp::slice<operand*>, gocpp::slice<gocpp::slice<golang::go::types::Type>>> rec::genericExprList(Checker* check, gocpp::slice<ast::Expr> elist)
     {
         gocpp::slice<operand*> resList;
-        gocpp::slice<gocpp::slice<golang::types::Type>> targsList;
-        gocpp::slice<gocpp::slice<ast::Expr>> xlistList;
+        gocpp::slice<gocpp::slice<golang::go::types::Type>> targsList;
         gocpp::Defer defer;
         try
         {
             if(debug)
             {
-                defer.push_back([=, &targsList, &xlistList, &resList]{ [=]() mutable -> void
+                defer.push_back([=, &resList, &targsList]{ [=]() mutable -> void
                 {
-                    // targsList and xlistList must have matching lengths
-                    assert(len(targsList) == len(xlistList));
                     // type arguments must only exist for partially instantiated functions
                     for(auto [i, x] : resList)
                     {
@@ -544,7 +568,7 @@ namespace golang::types
                             if(auto n = len(targsList[i]); n > 0)
                             {
                                 // x must be a partially instantiated function
-                                assert(n < rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(gocpp::getValue<Signature*>(x->typ))))));
+                                assert(n < rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(gocpp::getValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(x))))))));
                             }
                         }
                     }
@@ -552,11 +576,11 @@ namespace golang::types
             }
 
             // Before Go 1.21, uninstantiated or partially instantiated argument functions are
-            // nor permitted. Checker.funcInst must infer missing type arguments in that case.
+            // not permitted. Checker.funcInst must infer missing type arguments in that case.
             // for -lang < go1.21
             auto infer = true;
             auto n = len(elist);
-            if(n > 0 && rec::allowVersion(gocpp::recv(check), check->pkg, elist[0], go1_21))
+            if(n > 0 && rec::allowVersion(gocpp::recv(check), go1_21))
             {
                 infer = false;
             }
@@ -566,17 +590,16 @@ namespace golang::types
                 // single value (possibly a partially instantiated function), or a multi-valued expression
                 auto e = elist[0];
                 operand x = {};
-                if(auto ix = typeparams::UnpackIndexExpr(e); ix != nullptr && rec::indexExpr(gocpp::recv(check), & x, ix))
+                if(auto ix = unpackIndexedExpr(e); ix != nullptr && rec::indexExpr(gocpp::recv(check), & x, ix))
                 {
                     // x is a generic function.
-                    auto [targs, xlist] = rec::funcInst(gocpp::recv(check), nullptr, rec::Pos(gocpp::recv(x)), & x, ix, infer);
+                    auto targs = rec::funcInst(gocpp::recv(check), nullptr, rec::Pos(gocpp::recv(x)), & x, ix, infer);
                     if(targs != nullptr)
                     {
                         // x was not instantiated: collect the (partial) type arguments.
-                        targsList = gocpp::slice<gocpp::slice<golang::types::Type>> {targs};
-                        xlistList = gocpp::slice<gocpp::slice<ast::Expr>> {xlist};
+                        targsList = gocpp::slice<gocpp::slice<golang::go::types::Type>> {targs};
                         // Update x.expr so that we can record the partially instantiated function.
-                        x.expr = ix->Orig;
+                        x.expr = ix->orig;
                     }
                     else
                     {
@@ -591,16 +614,16 @@ namespace golang::types
                     // x is not a function instantiation (it may still be a generic function).
                     rec::rawExpr(gocpp::recv(check), nullptr, & x, e, nullptr, true);
                     rec::exclude(gocpp::recv(check), & x, (1 << novalue) | (1 << types::builtin) | (1 << typexpr));
-                    if(auto [t, ok] = gocpp::getValue<Tuple*>(x.typ); ok && x.mode != invalid)
+                    if(auto [t, ok] = gocpp::getValue<Tuple*>(rec::typ(gocpp::recv(x))); ok && rec::isValid(gocpp::recv(x)))
                     {
                         // x is a function call returning multiple values; it cannot be generic.
                         resList = gocpp::make(gocpp::Tag<gocpp::slice<operand*>>(), rec::Len(gocpp::recv(t)));
                         for(auto [i, v] : t->vars)
                         {
                             resList[i] = gocpp::InitPtr<operand>([=](auto& y) {
-                                y.mode = value;
+                                y.mode_ = value;
                                 y.expr = e;
-                                y.typ = v->object.typ;
+                                y.typ_ = v->object.typ;
                             });
                         }
                     }
@@ -616,22 +639,20 @@ namespace golang::types
             {
                 // multiple values
                 resList = gocpp::make(gocpp::Tag<gocpp::slice<operand*>>(), n);
-                targsList = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<golang::types::Type>>>(), n);
-                xlistList = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<ast::Expr>>>(), n);
+                targsList = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<golang::go::types::Type>>>(), n);
                 for(auto [i, e] : elist)
                 {
                     operand x = {};
-                    if(auto ix = typeparams::UnpackIndexExpr(e); ix != nullptr && rec::indexExpr(gocpp::recv(check), & x, ix))
+                    if(auto ix = unpackIndexedExpr(e); ix != nullptr && rec::indexExpr(gocpp::recv(check), & x, ix))
                     {
                         // x is a generic function.
-                        auto [targs, xlist] = rec::funcInst(gocpp::recv(check), nullptr, rec::Pos(gocpp::recv(x)), & x, ix, infer);
+                        auto targs = rec::funcInst(gocpp::recv(check), nullptr, rec::Pos(gocpp::recv(x)), & x, ix, infer);
                         if(targs != nullptr)
                         {
                             // x was not instantiated: collect the (partial) type arguments.
                             targsList[i] = targs;
-                            xlistList[i] = xlist;
                             // Update x.expr so that we can record the partially instantiated function.
-                            x.expr = ix->Orig;
+                            x.expr = ix->orig;
                         }
                         else
                         {
@@ -643,18 +664,18 @@ namespace golang::types
                     else
                     {
                         // x is exactly one value (possibly invalid or uninstantiated generic function).
-                        rec::genericExpr(gocpp::recv(check), & x, e);
+                        rec::genericExpr(gocpp::recv(check), & x, e, nullptr);
                     }
                     resList[i] = & x;
                 }
             }
 
-            return {resList, targsList, xlistList};
+            return {resList, targsList};
         }
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
-            return {resList, targsList, xlistList};
+            return {resList, targsList};
         }
     }
 
@@ -662,17 +683,16 @@ namespace golang::types
     // The function and its arguments may be generic, and possibly partially instantiated.
     // targs and xlist are the function's type arguments (and corresponding expressions).
     // args are the function arguments. If an argument args[i] is a partially instantiated
-    // generic function, atargs[i] and atxlist[i] are the corresponding type arguments
-    // (and corresponding expressions).
+    // generic function, atargs[i] are the corresponding type arguments.
     // If the callee is variadic, arguments adjusts its signature to match the provided
     // arguments. The type parameters and arguments of the callee and all its arguments
     // are used together to infer any missing type arguments, and the callee and argument
     // functions are instantiated as necessary.
     // The result signature is the (possibly adjusted and instantiated) function signature.
     // If an error occurred, the result signature is the incoming sig.
-    Signature* rec::arguments(Checker* check, ast::CallExpr* call, Signature* sig, gocpp::slice<golang::types::Type> targs, gocpp::slice<ast::Expr> xlist, gocpp::slice<operand*> args, gocpp::slice<gocpp::slice<golang::types::Type>> atargs, gocpp::slice<gocpp::slice<ast::Expr>> atxlist)
+    golang::go::types::Signature* rec::arguments(Checker* check, ast::CallExpr* call, golang::go::types::Signature* sig, gocpp::slice<golang::go::types::Type> targs, gocpp::slice<ast::Expr> xlist, gocpp::slice<operand*> args, gocpp::slice<gocpp::slice<golang::go::types::Type>> atargs)
     {
-        Signature* rsig;
+        golang::go::types::Signature* rsig;
         rsig = sig;
 
         // Function call argument/parameter count requirements
@@ -684,7 +704,7 @@ namespace golang::types
         // --------------+------------------+----------------+
         auto nargs = len(args);
         auto npars = rec::Len(gocpp::recv(sig->params));
-        auto ddd = rec::IsValid(gocpp::recv(call->Ellipsis));
+        auto ddd = hasDots(call);
 
         // set up parameters
         // adjusted for variadic functions (may be nil for empty parameter lists!)
@@ -766,10 +786,11 @@ namespace golang::types
             {
                 params = sig->params->vars;
             }
-            auto err = newErrorf(at, WrongArgCount, "%s arguments in call to %s"_s, qualifier, call->Fun);
-            rec::errorf(gocpp::recv(err), nopos, "have %s"_s, rec::typesSummary(gocpp::recv(check), operandTypes(args), false));
-            rec::errorf(gocpp::recv(err), nopos, "want %s"_s, rec::typesSummary(gocpp::recv(check), varTypes(params), sig->variadic));
-            rec::report(gocpp::recv(check), err);
+            auto err = rec::newError(gocpp::recv(check), WrongArgCount);
+            rec::addf(gocpp::recv(err), at, "%s arguments in call to %s"_s, qualifier, call->Fun);
+            rec::addf(gocpp::recv(err), noposn, "have %s"_s, rec::typesSummary(gocpp::recv(check), operandTypes(args), false, ddd));
+            rec::addf(gocpp::recv(err), noposn, "want %s"_s, rec::typesSummary(gocpp::recv(check), varTypes(params), sig->variadic, false));
+            rec::report(gocpp::recv(err));
             return rsig;
         }
 
@@ -780,7 +801,7 @@ namespace golang::types
         auto n = rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig))));
         if(n > 0)
         {
-            if(! rec::allowVersion(gocpp::recv(check), check->pkg, call, go1_18))
+            if(! rec::allowVersion(gocpp::recv(check), go1_18))
             {
                 //Go type switch emulation
                 {
@@ -793,8 +814,8 @@ namespace golang::types
                         case 0:
                         case 1:
                         {
-                            auto ix = typeparams::UnpackIndexExpr(call->Fun);
-                            rec::versionErrorf(gocpp::recv(check), inNode(call->Fun, ix->IndexListExpr.Lbrack), go1_18, "function instantiation"_s);
+                            auto ix = unpackIndexedExpr(call->Fun);
+                            rec::versionErrorf(gocpp::recv(check), inNode(call->Fun, ix->lbrack), go1_18, "function instantiation"_s);
                             break;
                         }
                         default:
@@ -806,7 +827,7 @@ namespace golang::types
                 }
             }
             // rename type parameters to avoid problems with recursive calls
-            golang::types::Type tmp = {};
+            golang::go::types::Type tmp = {};
             std::tie(tparams, tmp) = rec::renameTParams(gocpp::recv(check), rec::Pos(gocpp::recv(call)), rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))), sigParams);
             sigParams = gocpp::getValue<Tuple*>(tmp);
             // make sure targs and tparams have the same length
@@ -825,7 +846,7 @@ namespace golang::types
             for(auto [i, arg] : args)
             {
                 // generic arguments cannot have a defined (*Named) type - no need for underlying type below
-                if(auto [asig, gocpp_id_3] = gocpp::getValue<Signature*>(arg->typ); asig != nullptr && rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(asig)))) > 0)
+                if(auto [asig, gocpp_id_3] = gocpp::getValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(arg))); asig != nullptr && rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(asig)))) > 0)
                 {
                     // The argument type is a generic function signature. This type is
                     // pointer-identical with (it's copied from) the type of the generic
@@ -839,11 +860,11 @@ namespace golang::types
                     // TODO(gri) Consider only doing this if a function argument appears
                     // multiple times, which is rare (possible optimization).
                     auto [atparams, tmp] = rec::renameTParams(gocpp::recv(check), rec::Pos(gocpp::recv(call)), rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(asig)))), asig);
-                    asig = gocpp::getValue<Signature*>(tmp);
+                    asig = gocpp::getValue<golang::go::types::Signature*>(tmp);
                     // renameTParams doesn't touch associated type parameters
                     asig->tparams = new TypeParamList {atparams};
                     // new type identity for the function argument
-                    arg->typ = asig;
+                    arg->typ_ = asig;
                     tparams = append(tparams, atparams);
                     // add partial list of type arguments, if any
                     if(i < len(atargs))
@@ -870,14 +891,18 @@ namespace golang::types
         // infer missing type arguments of callee and function arguments
         if(len(tparams) > 0)
         {
-            targs = rec::infer(gocpp::recv(check), call, tparams, targs, sigParams, args, false);
+            auto err = rec::newError(gocpp::recv(check), CannotInferTypeArgs);
+            targs = rec::infer(gocpp::recv(check), call, tparams, targs, sigParams, args, false, err);
             if(targs == nullptr)
             {
                 // TODO(gri) If infer inferred the first targs[:n], consider instantiating
                 // the call signature for better error messages/gopls behavior.
                 // Perhaps instantiate as much as we can, also for arguments.
                 // This will require changes to how infer returns its results.
-                // error already reported
+                if(! rec::empty(gocpp::recv(err)))
+                {
+                    rec::errorf(gocpp::recv(check), rec::posn(gocpp::recv(err)), CannotInferTypeArgs, "in call to %s, %s"_s, call->Fun, rec::msg(gocpp::recv(err)));
+                }
                 return rsig;
             }
 
@@ -903,11 +928,11 @@ namespace golang::types
             for(auto [gocpp_ignored, i] : genericArgs)
             {
                 auto arg = args[i];
-                auto asig = gocpp::getValue<Signature*>(arg->typ);
+                auto asig = gocpp::getValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(arg)));
                 auto k = j + rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(asig))));
                 // targs[j:k] are the inferred type arguments for asig
                 // TODO(gri) provide xlist if possible (partial instantiations)
-                arg->typ = rec::instantiateSignature(gocpp::recv(check), rec::Pos(gocpp::recv(call)), arg->expr, asig, targs.make_slice(j, k), nullptr);
+                arg->typ_ = rec::instantiateSignature(gocpp::recv(check), rec::Pos(gocpp::recv(call)), arg->expr, asig, targs.make_slice(j, k), nullptr);
                 // record here because we didn't use the usual expr evaluators
                 rec::record(gocpp::recv(check), arg);
                 j = k;
@@ -937,7 +962,7 @@ namespace golang::types
         "_Cfunc_"_s,
         /* function to evaluate the expanded expression */ "_Cmacro_"_s
     };
-    void rec::selector(Checker* check, operand* x, ast::SelectorExpr* e, TypeName* def, bool wantType)
+    void rec::selector(Checker* check, operand* x, ast::SelectorExpr* e, bool wantType)
     {
         // these must be declared before the "goto Error" statements
         Object obj = {};
@@ -956,7 +981,7 @@ namespace golang::types
             {
                 assert(pname->object.pkg == check->pkg);
                 rec::recordUse(gocpp::recv(check), ident, pname);
-                pname->used = true;
+                check->usedPkgNames[pname] = true;
                 auto pkg = pname->imported;
 
                 Object exp = {};
@@ -978,7 +1003,7 @@ namespace golang::types
                     {
                         // cgo objects are part of the current package (in file
                         // _cgo_gotypes.go). Use regular lookup.
-                        std::tie(std::ignore, exp) = rec::LookupParent(gocpp::recv(check->environment.scope), prefix + sel, check->environment.pos);
+                        exp = rec::lookup(gocpp::recv(check), prefix + sel);
                         if(exp != nullptr)
                         {
                             break;
@@ -986,27 +1011,40 @@ namespace golang::types
                     }
                     if(exp == nullptr)
                     {
-                        // cast to ast.Expr to silence vet
-                        rec::errorf(gocpp::recv(check), e->Sel, UndeclaredImportedName, "undefined: %s"_s, ast::Expr(e));
+                        if(isValidName(sel))
+                        {
+                            // cast to ast.Expr to silence vet
+                            rec::errorf(gocpp::recv(check), e->Sel, UndeclaredImportedName, "undefined: %s"_s, ast::Expr(e));
+                        }
                         goto Error;
                     }
-                    rec::objDecl(gocpp::recv(check), exp, nullptr);
+                    rec::objDecl(gocpp::recv(check), exp);
                 }
                 else
                 {
                     exp = rec::Lookup(gocpp::recv(pkg->scope), sel);
                     if(exp == nullptr)
                     {
-                        if(! pkg->fake)
+                        if(! pkg->fake && isValidName(sel))
                         {
-                            rec::errorf(gocpp::recv(check), e->Sel, UndeclaredImportedName, "undefined: %s"_s, ast::Expr(e));
+                            // Try to give a better error message when selector matches an object name ignoring case.
+                            auto exps = rec::lookupIgnoringCase(gocpp::recv(pkg->scope), sel, true);
+                            if(len(exps) >= 1)
+                            {
+                                // report just the first one
+                                rec::errorf(gocpp::recv(check), e->Sel, UndeclaredImportedName, "undefined: %s (but have %s)"_s, ast::Expr(e), rec::Name(gocpp::recv(exps[0])));
+                            }
+                            else
+                            {
+                                rec::errorf(gocpp::recv(check), e->Sel, UndeclaredImportedName, "undefined: %s"_s, ast::Expr(e));
+                            }
                         }
                         goto Error;
                     }
                     if(! rec::Exported(gocpp::recv(exp)))
                     {
                         // ok to continue
-                        rec::errorf(gocpp::recv(check), e->Sel, UnexportedName, "%s not exported by package %s"_s, sel, pkg->name);
+                        rec::errorf(gocpp::recv(check), e->Sel, UnexportedName, "name %s not exported by package %s"_s, sel, pkg->name);
                     }
                 }
                 rec::recordUse(gocpp::recv(check), e->Sel, exp);
@@ -1029,46 +1067,46 @@ namespace golang::types
                         {
                             types::Const* exp = gocpp::any_cast<types::Const*>(exp_ref);
                             assert(rec::Val(gocpp::recv(exp)) != nullptr);
-                            x->mode = constant_;
-                            x->typ = exp->object.typ;
+                            x->mode_ = constant_;
+                            x->typ_ = exp->object.typ;
                             x->val = exp->val;
                             break;
                         }
                         case 1:
                         {
                             types::TypeName* exp = gocpp::any_cast<types::TypeName*>(exp_ref);
-                            x->mode = typexpr;
-                            x->typ = exp->object.typ;
+                            x->mode_ = typexpr;
+                            x->typ_ = exp->object.typ;
                             break;
                         }
                         case 2:
                         {
                             types::Var* exp = gocpp::any_cast<types::Var*>(exp_ref);
-                            x->mode = variable;
-                            x->typ = exp->object.typ;
+                            x->mode_ = variable;
+                            x->typ_ = exp->object.typ;
                             if(pkg->cgo && strings::HasPrefix(exp->object.name, "_Cvar_"_s))
                             {
-                                x->typ = gocpp::getValue<Pointer*>(x->typ)->base;
+                                x->typ_ = gocpp::getValue<Pointer*>(rec::typ(gocpp::recv(x)))->base;
                             }
                             break;
                         }
                         case 3:
                         {
                             types::Func* exp = gocpp::any_cast<types::Func*>(exp_ref);
-                            x->mode = funcMode;
-                            x->typ = exp->object.typ;
+                            x->mode_ = funcMode;
+                            x->typ_ = exp->object.typ;
                             if(pkg->cgo && strings::HasPrefix(exp->object.name, "_Cmacro_"_s))
                             {
-                                x->mode = value;
-                                x->typ = gocpp::getValue<Signature*>(x->typ)->results->vars[0]->object.typ;
+                                x->mode_ = value;
+                                x->typ_ = gocpp::getValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(x)))->results->vars[0]->object.typ;
                             }
                             break;
                         }
                         case 4:
                         {
                             types::Builtin* exp = gocpp::any_cast<types::Builtin*>(exp_ref);
-                            x->mode = types::builtin;
-                            x->typ = exp->object.typ;
+                            x->mode_ = types::builtin;
+                            x->typ_ = exp->object.typ;
                             x->id = exp->id;
                             break;
                         }
@@ -1076,7 +1114,7 @@ namespace golang::types
                         {
                             auto exp = exp_ref;
                             rec::dump(gocpp::recv(check), "%v: unexpected object %v"_s, rec::Pos(gocpp::recv(e->Sel)), exp);
-                            unreachable();
+                            gocpp::panic("unreachable"_s);
                             break;
                         }
                     }
@@ -1089,53 +1127,55 @@ namespace golang::types
         rec::exprOrType(gocpp::recv(check), x, e->X, false);
         //Go switch emulation
         {
-            auto condition = x->mode;
+            auto condition = rec::mode(gocpp::recv(x));
             int conditionId = -1;
-            if(condition == typexpr) { conditionId = 0; }
-            else if(condition == types::builtin) { conditionId = 1; }
-            else if(condition == invalid) { conditionId = 2; }
+            if(condition == types::builtin) { conditionId = 0; }
+            else if(condition == invalid) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
-                    // don't crash for "type T T.x" (was go.dev/issue/51509)
-                    if(def != nullptr && def->object.typ == x->typ)
-                    {
-                        rec::cycleError(gocpp::recv(check), gocpp::slice<Object> {def});
-                        goto Error;
-                    }
-                    break;
-                case 1:
                     // types2 uses the position of '.' for the error
-                    rec::errorf(gocpp::recv(check), e->Sel, UncalledBuiltin, "cannot select on %s"_s, x);
+                    rec::errorf(gocpp::recv(check), e->Sel, UncalledBuiltin, "invalid use of %s in selector expression"_s, x);
                     goto Error;
                     break;
-                case 2:
+                case 1:
                     goto Error;
                     break;
             }
         }
 
-        // Avoid crashing when checking an invalid selector in a method declaration
-        // (i.e., where def is not set):
+        // We cannot select on an incomplete type; make sure it's complete.
+        if(! rec::isComplete(gocpp::recv(check), rec::typ(gocpp::recv(x))))
+        {
+            goto Error;
+        }
+
+        // Avoid crashing when checking an invalid selector in a method declaration.
         // type S[T any] struct{}
         // type V = S[any]
         // func (fs *S[T]) M(x V.M) {}
         // All codepaths below return a non-type expression. If we get here while
         // expecting a type expression, it is an error.
         // See go.dev/issue/57522 for more details.
-        // TODO(rfindley): We should do better by refusing to check selectors in all cases where
-        // x.typ is incomplete.
         if(wantType)
         {
             rec::errorf(gocpp::recv(check), e->Sel, NotAType, "%s is not a type"_s, ast::Expr(e));
             goto Error;
         }
 
-        std::tie(obj, index, indirect) = LookupFieldOrMethod(x->typ, x->mode == variable, check->pkg, sel);
+        // Additionally, if x.typ is a pointer type, selecting implicitly dereferences the value, meaning
+        // its base type must also be complete.
+        if(auto [p, ok] = gocpp::getValue<Pointer*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))); ok && ! rec::isComplete(gocpp::recv(check), p->base))
+        {
+            goto Error;
+        }
+
+        std::tie(obj, index, indirect) = lookupFieldOrMethod(rec::typ(gocpp::recv(x)), rec::mode(gocpp::recv(x)) == variable, check->pkg, sel, false);
+        // obj != nil
         if(obj == nullptr)
         {
             // Don't report another error if the underlying type was invalid (go.dev/issue/49541).
-            if(! types::isValid(types::under(x->typ)))
+            if(! types::isValid(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))))
             {
                 goto Error;
             }
@@ -1149,144 +1189,122 @@ namespace golang::types
 
             if(indirect)
             {
-                if(x->mode == typexpr)
+                if(rec::mode(gocpp::recv(x)) == typexpr)
                 {
-                    rec::errorf(gocpp::recv(check), e->Sel, InvalidMethodExpr, "invalid method expression %s.%s (needs pointer receiver (*%s).%s)"_s, x->typ, sel, x->typ, sel);
+                    rec::errorf(gocpp::recv(check), e->Sel, InvalidMethodExpr, "invalid method expression %s.%s (needs pointer receiver (*%s).%s)"_s, rec::typ(gocpp::recv(x)), sel, rec::typ(gocpp::recv(x)), sel);
                 }
                 else
                 {
-                    rec::errorf(gocpp::recv(check), e->Sel, InvalidMethodExpr, "cannot call pointer method %s on %s"_s, sel, x->typ);
+                    rec::errorf(gocpp::recv(check), e->Sel, InvalidMethodExpr, "cannot call pointer method %s on %s"_s, sel, rec::typ(gocpp::recv(x)));
                 }
                 goto Error;
             }
 
             gocpp::string why = {};
-            if(isInterfacePtr(x->typ))
+            if(isInterfacePtr(rec::typ(gocpp::recv(x))))
             {
-                why = rec::interfacePtrError(gocpp::recv(check), x->typ);
+                why = rec::interfacePtrError(gocpp::recv(check), rec::typ(gocpp::recv(x)));
             }
             else
             {
-                why = rec::sprintf(gocpp::recv(check), "type %s has no field or method %s"_s, x->typ, sel);
-                // Check if capitalization of sel matters and provide better error message in that case.
-                // TODO(gri) This code only looks at the first character but LookupFieldOrMethod should
-                // have an (internal) mechanism for case-insensitive lookup that we should use
-                // instead (see types2).
-                if(len(sel) > 0)
-                {
-                    gocpp::string changeCase = {};
-                    if(auto r = gocpp::rune(sel[0]); unicode::IsUpper(r))
-                    {
-                        changeCase = gocpp::string(unicode::ToLower(r)) + sel.make_slice(1);
-                    }
-                    else
-                    {
-                        changeCase = gocpp::string(unicode::ToUpper(r)) + sel.make_slice(1);
-                    }
-                    if(std::tie(obj, std::ignore, std::ignore) = LookupFieldOrMethod(x->typ, x->mode == variable, check->pkg, changeCase); obj != nullptr)
-                    {
-                        why += ", but does have "_s + changeCase;
-                    }
-                }
+                auto [alt, gocpp_id_6, gocpp_id_7] = lookupFieldOrMethod(rec::typ(gocpp::recv(x)), rec::mode(gocpp::recv(x)) == variable, check->pkg, sel, true);
+                why = rec::lookupError(gocpp::recv(check), rec::typ(gocpp::recv(x)), sel, alt, false);
             }
             rec::errorf(gocpp::recv(check), e->Sel, MissingFieldOrMethod, "%s.%s undefined (%s)"_s, x->expr, sel, why);
             goto Error;
         }
 
-        // methods may not have a fully set up signature yet
-        if(auto [m, gocpp_id_6] = gocpp::getValue<Func*>(obj); m != nullptr)
+
+        //Go type switch emulation
         {
-            rec::objDecl(gocpp::recv(check), m, nullptr);
-        }
-
-        if(x->mode == typexpr)
-        {
-            // method expression
-            auto [m, gocpp_id_7] = gocpp::getValue<Func*>(obj);
-            if(m == nullptr)
+            const auto& gocpp_id_8 = gocpp::type_info(obj);
+            const auto& obj_ref = obj;
+            int conditionId = -1;
+            if(gocpp_id_8 == typeid(types::Var*)) { conditionId = 0; }
+            else if(gocpp_id_8 == typeid(types::Func*)) { conditionId = 1; }
+            switch(conditionId)
             {
-                // TODO(gri) should check if capitalization of sel matters and provide better error message in that case
-                rec::errorf(gocpp::recv(check), e->Sel, MissingFieldOrMethod, "%s.%s undefined (type %s has no method %s)"_s, x->expr, sel, x->typ, sel);
-                goto Error;
-            }
-
-            rec::recordSelection(gocpp::recv(check), e, MethodExpr, x->typ, m, index, indirect);
-
-            auto sig = gocpp::getValue<Signature*>(m->object.typ);
-            if(sig->recv == nullptr)
-            {
-                rec::error(gocpp::recv(check), e, InvalidDeclCycle, "illegal cycle in method declaration"_s);
-                goto Error;
-            }
-
-            // the receiver type becomes the type of the first function
-            // argument of the method expression's function type
-            gocpp::slice<Var*> params = {};
-            if(sig->params != nullptr)
-            {
-                params = sig->params->vars;
-            }
-            // Be consistent about named/unnamed parameters. This is not needed
-            // for type-checking, but the newly constructed signature may appear
-            // in an error message and then have mixed named/unnamed parameters.
-            // (An alternative would be to not print parameter names in errors,
-            // but it's useful to see them; this is cheap and method expressions
-            // are rare.)
-            auto name = ""_s;
-            if(len(params) > 0 && params[0]->object.name != ""_s)
-            {
-                // name needed
-                name = sig->recv->object.name;
-                if(name == ""_s)
+                case 0:
                 {
-                    name = "_"_s;
-                }
-            }
-            params = append(gocpp::slice<Var*> {NewVar(sig->recv->object.pos, sig->recv->object.pkg, name, x->typ)}, params);
-            x->mode = value;
-            x->typ = gocpp::InitPtr<Signature>([=](auto& y) {
-                y.tparams = sig->tparams;
-                y.params = NewTuple(params);
-                y.results = sig->results;
-                y.variadic = sig->variadic;
-            });
-
-            rec::addDeclDep(gocpp::recv(check), m);
-        }
-        else
-        {
-            // regular selector
-            //Go type switch emulation
-            {
-                const auto& gocpp_id_8 = gocpp::type_info(obj);
-                const auto& obj_ref = obj;
-                int conditionId = -1;
-                if(gocpp_id_8 == typeid(types::Var*)) { conditionId = 0; }
-                else if(gocpp_id_8 == typeid(types::Func*)) { conditionId = 1; }
-                switch(conditionId)
-                {
-                    case 0:
+                    types::Var* obj = gocpp::any_cast<types::Var*>(obj_ref);
+                    if(rec::mode(gocpp::recv(x)) == typexpr)
                     {
-                        types::Var* obj = gocpp::any_cast<types::Var*>(obj_ref);
-                        rec::recordSelection(gocpp::recv(check), e, FieldVal, x->typ, obj, index, indirect);
-                        if(x->mode == variable || indirect)
-                        {
-                            x->mode = variable;
-                        }
-                        else
-                        {
-                            x->mode = value;
-                        }
-                        x->typ = obj->object.typ;
-                        break;
+                        rec::errorf(gocpp::recv(check), e->X, MissingFieldOrMethod, "operand for field selector %s must be value of type %s"_s, sel, rec::typ(gocpp::recv(x)));
+                        goto Error;
                     }
-
-                    case 1:
+                    // field value
+                    rec::recordSelection(gocpp::recv(check), e, FieldVal, rec::typ(gocpp::recv(x)), obj, index, indirect);
+                    if(rec::mode(gocpp::recv(x)) == variable || indirect)
                     {
-                        types::Func* obj = gocpp::any_cast<types::Func*>(obj_ref);
+                        x->mode_ = variable;
+                    }
+                    else
+                    {
+                        x->mode_ = value;
+                    }
+                    x->typ_ = obj->object.typ;
+                    break;
+                }
+
+                case 1:
+                {
+                    types::Func* obj = gocpp::any_cast<types::Func*>(obj_ref);
+                    // ensure fully set-up signature
+                    rec::objDecl(gocpp::recv(check), obj);
+                    // TODO(mark): Assert that sig.rparams is nil here?
+                    rec::addDeclDep(gocpp::recv(check), obj);
+                    if(rec::mode(gocpp::recv(x)) == typexpr)
+                    {
+                        // method expression
+                        rec::recordSelection(gocpp::recv(check), e, MethodExpr, rec::typ(gocpp::recv(x)), obj, index, indirect);
+
+                        auto sig = gocpp::getValue<golang::go::types::Signature*>(obj->object.typ);
+                        if(sig->recv == nullptr)
+                        {
+                            rec::error(gocpp::recv(check), e, InvalidDeclCycle, "illegal cycle in method declaration"_s);
+                            goto Error;
+                        }
+
+                        // The receiver type becomes the type of the first function
+                        // argument of the method expression's function type.
+                        gocpp::slice<Var*> params = {};
+                        if(sig->params != nullptr)
+                        {
+                            params = sig->params->vars;
+                        }
+                        // Be consistent about named/unnamed parameters. This is not needed
+                        // for type-checking, but the newly constructed signature may appear
+                        // in an error message and then have mixed named/unnamed parameters.
+                        // (An alternative would be to not print parameter names in errors,
+                        // but it's useful to see them; this is cheap and method expressions
+                        // are rare.)
+                        auto name = ""_s;
+                        if(len(params) > 0 && params[0]->object.name != ""_s)
+                        {
+                            // name needed
+                            name = sig->recv->object.name;
+                            if(name == ""_s)
+                            {
+                                name = "_"_s;
+                            }
+                        }
+                        params = append(gocpp::slice<Var*> {NewParam(sig->recv->object.pos, sig->recv->object.pkg, name, rec::typ(gocpp::recv(x)))}, params);
+                        x->mode_ = value;
+                        x->typ_ = gocpp::InitPtr<golang::go::types::Signature>([=](auto& y) {
+                            y.tparams = sig->tparams;
+                            y.recvold = methodExprSentinel;
+                            y.params = NewTuple(params);
+                            y.results = sig->results;
+                            y.variadic = sig->variadic;
+                        });
+                    }
+                    else
+                    {
+                        // method value
                         // TODO(gri) If we needed to take into account the receiver's
                         // addressability, should we report the type &(x.typ) instead?
-                        rec::recordSelection(gocpp::recv(check), e, MethodVal, x->typ, obj, index, indirect);
+                        rec::recordSelection(gocpp::recv(check), e, MethodVal, rec::typ(gocpp::recv(x)), obj, index, indirect);
+
                         // TODO(gri) The verification pass below is disabled for now because
                         // method sets don't match method lookup in some cases.
                         // For instance, if we made a copy above when creating a
@@ -1301,8 +1319,8 @@ namespace golang::types
                             // _before_ calling NewMethodSet: LookupFieldOrMethod completes
                             // any incomplete interfaces so they are available to NewMethodSet
                             // (which assumes that interfaces have been completed already).
-                            auto typ = x->typ;
-                            if(x->mode == variable)
+                            auto typ = x->typ_;
+                            if(rec::mode(gocpp::recv(x)) == variable)
                             {
                                 // If typ is not an (unnamed) pointer or an interface,
                                 // use *typ instead, because the method set of *typ
@@ -1337,21 +1355,23 @@ namespace golang::types
                                 gocpp::panic("method sets and lookup don't agree"_s);
                             }
                         }
-                        x->mode = value;
-                        // remove receiver
-                        auto sig = *gocpp::getValue<Signature*>(obj->object.typ);
-                        sig.recv = nullptr;
-                        x->typ = & sig;
-                        rec::addDeclDep(gocpp::recv(check), obj);
-                        break;
-                    }
 
-                    default:
-                    {
-                        auto obj = obj_ref;
-                        unreachable();
-                        break;
+                        x->mode_ = value;
+
+                        // remove/stash receiver
+                        auto sig = *gocpp::getValue<golang::go::types::Signature*>(obj->object.typ);
+                        sig.recvold = sig.recv;
+                        sig.recv = nullptr;
+                        x->typ_ = & sig;
                     }
+                    break;
+                }
+
+                default:
+                {
+                    auto obj = obj_ref;
+                    gocpp::panic("unreachable"_s);
+                    break;
                 }
             }
         }
@@ -1361,7 +1381,8 @@ namespace golang::types
         return;
 
         Error:
-        x->mode = invalid;
+        rec::invalidate(gocpp::recv(x));
+        x->typ_ = Typ[Invalid];
         x->expr = e;
     }
 
@@ -1400,10 +1421,10 @@ namespace golang::types
     {
         operand x = {};
         // anything but invalid
-        x.mode = value;
+        x.mode_ = value;
         //Go type switch emulation
         {
-            const auto& gocpp_id_10 = gocpp::type_info(unparen(e));
+            const auto& gocpp_id_10 = gocpp::type_info(ast::Unparen(e));
             int conditionId = -1;
             if(gocpp_id_10 == typeid(untyped nil)) { conditionId = 0; }
             else if(gocpp_id_10 == typeid(ast::Ident*)) { conditionId = 1; }
@@ -1411,13 +1432,13 @@ namespace golang::types
             {
                 case 0:
                 {
-                    untyped nil n = gocpp::any_cast<untyped nil>(unparen(e));
+                    untyped nil n = gocpp::any_cast<untyped nil>(ast::Unparen(e));
                     break;
                 }
                 // nothing to do
                 case 1:
                 {
-                    ast::Ident* n = gocpp::any_cast<ast::Ident*>(unparen(e));
+                    ast::Ident* n = gocpp::any_cast<ast::Ident*>(ast::Unparen(e));
                     // don't report an error evaluating blank
                     if(n->Name == "_"_s)
                     {
@@ -1430,15 +1451,15 @@ namespace golang::types
                     bool v_used = {};
                     if(lhs)
                     {
-                        if(auto [gocpp_id_11, obj] = rec::LookupParent(gocpp::recv(check->environment.scope), n->Name, nopos); obj != nullptr)
+                        if(auto obj = rec::lookup(gocpp::recv(check), n->Name); obj != nullptr)
                         {
                             // It's ok to mark non-local variables, but ignore variables
                             // from other packages to avoid potential race conditions with
                             // dot-imported variables.
-                            if(auto [w, gocpp_id_12] = gocpp::getValue<Var*>(obj); w != nullptr && w->object.pkg == check->pkg)
+                            if(auto [w, gocpp_id_11] = gocpp::getValue<Var*>(obj); w != nullptr && w->object.pkg == check->pkg)
                             {
                                 v = w;
-                                v_used = v->used;
+                                v_used = check->usedVars[v];
                             }
                         }
                     }
@@ -1446,19 +1467,19 @@ namespace golang::types
                     if(v != nullptr)
                     {
                         // restore v.used
-                        v->used = v_used;
+                        check->usedVars[v] = v_used;
                     }
                     break;
                 }
                 default:
                 {
-                    auto n = unparen(e);
+                    auto n = ast::Unparen(e);
                     rec::rawExpr(gocpp::recv(check), nullptr, & x, e, nullptr, true);
                     break;
                 }
             }
         }
-        return x.mode != invalid;
+        return rec::isValid(gocpp::recv(x));
     }
 
 }

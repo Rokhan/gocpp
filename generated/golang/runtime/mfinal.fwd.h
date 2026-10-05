@@ -6,21 +6,13 @@
 
 namespace golang::runtime
 {
+    const int finBlockSize = 4 * 1024;
+    struct finBlock;
     // finalizer goroutine status.
     const uint32_t fingUninitialized = 0;
     const uint32_t fingCreated = 1 << (1 - 1);
     const uint32_t fingRunningFinalizer = 1 << (2 - 1);
     const uint32_t fingWait = 1 << (3 - 1);
     const uint32_t fingWake = 1 << (4 - 1);
-}
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/mgc.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/type.fwd.h"
-
-namespace golang::runtime
-{
-    struct finblock;
     struct finalizer;
 }

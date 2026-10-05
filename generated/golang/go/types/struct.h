@@ -9,10 +9,9 @@
 #include "golang/go/types/struct.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/ast/ast.h"
 #include "golang/go/types/object.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Struct
     {
@@ -31,8 +30,19 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Struct& value);
-    ast::Ident* embeddedFieldIdent(ast::Expr e);
+}
+#include "golang/go/ast/ast.fwd.h"
+
+namespace golang::go::types
+{
     Struct* NewStruct(gocpp::slice<Var*> fields, gocpp::slice<gocpp::string> tags);
+    namespace ast = golang::go::ast;
+}
+#include "golang/go/ast/ast.h"
+
+namespace golang::go::types
+{
+    ast::Ident* embeddedFieldIdent(ast::Expr e);
 }
 
 #include "golang/go/ast/ast.h"
@@ -42,15 +52,16 @@ namespace golang::types
 #include "golang/go/types/objset.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace token = golang::go::token;
 
     namespace rec
     {
         int NumFields(Struct* s);
         Var* Field(Struct* s, int i);
         gocpp::string Tag(Struct* s, int i);
-        golang::types::Type Underlying(Struct* t);
+        golang::go::types::Type Underlying(Struct* t);
         gocpp::string String(Struct* t);
         void markComplete(Struct* s);
         void structType(Checker* check, Struct* styp, ast::StructType* e);

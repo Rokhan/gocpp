@@ -4,12 +4,18 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::build
+namespace golang::go::build
 {
+    struct Context;
     using ImportMode = unsigned int;
+    struct Package;
+    struct Directive;
     struct NoGoError;
     struct MultiplePackageError;
     struct gocpp_id_2;
+    struct fileInfo;
+    struct fileImport;
+    struct fileEmbed;
     // NOTE: $ is not safe for the shell, but it is allowed here because of linker options like -Wl,$ORIGIN.
     // We never pass these arguments to a shell (just to programs we construct argv for), so this should be okay.
     // See golang.org/issue/6038.
@@ -56,18 +62,4 @@ namespace golang::build
     // are always the exact import paths from the source files:
     // Import makes no attempt to resolve or check those paths.
     const ImportMode IgnoreVendor = 1 << 3;
-}
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/io/fs/fs.fwd.h"
-#include "golang/io/io.fwd.h"
-
-namespace golang::build
-{
-    struct Context;
-    struct Package;
-    struct Directive;
-    struct fileInfo;
-    struct fileImport;
-    struct fileEmbed;
 }

@@ -6,7 +6,7 @@
 
 namespace golang::runtime
 {
-    using lockRank = int;
+    using lockRank = int64_t;
     // Constants representing the ranks of all non-leaf runtime locks, in rank order.
     // Locks with lower rank must be taken before locks with higher rank,
     // in addition to satisfying the partial order in lockPartialOrder.
@@ -15,64 +15,77 @@ namespace golang::runtime
     const lockRank lockRankSysmon = 1;
     const lockRank lockRankScavenge = 2;
     const lockRank lockRankForcegc = 3;
-    const lockRank lockRankDefer = 4;
-    const lockRank lockRankSweepWaiters = 5;
-    const lockRank lockRankAssistQueue = 6;
-    const lockRank lockRankSweep = 7;
-    const lockRank lockRankTestR = 8;
-    const lockRank lockRankTestW = 9;
-    const lockRank lockRankAllocmW = 10;
-    const lockRank lockRankExecW = 11;
-    const lockRank lockRankCpuprof = 12;
-    const lockRank lockRankPollDesc = 13;
-    const lockRank lockRankWakeableSleep = 14;
-    // SCHED
-    const lockRank lockRankAllocmR = 15;
-    const lockRank lockRankExecR = 16;
-    const lockRank lockRankSched = 17;
-    const lockRank lockRankAllg = 18;
-    const lockRank lockRankAllp = 19;
-    const lockRank lockRankTimers = 20;
-    const lockRank lockRankNetpollInit = 21;
+    const lockRank lockRankComputeMaxProcs = 4;
+    const lockRank lockRankUpdateMaxProcsG = 5;
+    const lockRank lockRankDefer = 6;
+    const lockRank lockRankSweepWaiters = 7;
+    const lockRank lockRankAssistQueue = 8;
+    const lockRank lockRankStrongFromWeakQueue = 9;
+    const lockRank lockRankCleanupQueue = 10;
+    const lockRank lockRankSweep = 11;
+    const lockRank lockRankTestR = 12;
+    const lockRank lockRankTestW = 13;
+    const lockRank lockRankVgetrandom = 14;
+    const lockRank lockRankTimerSend = 15;
+    const lockRank lockRankAllocmW = 16;
+    const lockRank lockRankExecW = 17;
+    const lockRank lockRankCpuprof = 18;
+    const lockRank lockRankPollCache = 19;
+    const lockRank lockRankPollDesc = 20;
+    const lockRank lockRankWakeableSleep = 21;
     const lockRank lockRankHchan = 22;
-    const lockRank lockRankNotifyList = 23;
-    const lockRank lockRankSudog = 24;
-    const lockRank lockRankRoot = 25;
-    const lockRank lockRankItab = 26;
-    const lockRank lockRankReflectOffs = 27;
-    const lockRank lockRankUserArenaState = 28;
+    // SCHED
+    const lockRank lockRankAllocmR = 23;
+    const lockRank lockRankExecR = 24;
+    const lockRank lockRankSched = 25;
+    const lockRank lockRankAllg = 26;
+    const lockRank lockRankAllp = 27;
+    const lockRank lockRankNotifyList = 28;
+    const lockRank lockRankSudog = 29;
+    const lockRank lockRankTimers = 30;
+    const lockRank lockRankTimer = 31;
+    const lockRank lockRankNetpollInit = 32;
+    const lockRank lockRankRoot = 33;
+    const lockRank lockRankItab = 34;
+    const lockRank lockRankReflectOffs = 35;
+    const lockRank lockRankTypelinks = 36;
+    const lockRank lockRankSynctest = 37;
+    const lockRank lockRankUserArenaState = 38;
     // TRACEGLOBAL
-    const lockRank lockRankTraceBuf = 29;
-    const lockRank lockRankTraceStrings = 30;
+    const lockRank lockRankTraceBuf = 39;
+    const lockRank lockRankTraceStrings = 40;
     // MALLOC
-    const lockRank lockRankFin = 31;
-    const lockRank lockRankSpanSetSpine = 32;
-    const lockRank lockRankMspanSpecial = 33;
+    const lockRank lockRankFin = 41;
+    const lockRank lockRankSpanSetSpine = 42;
+    const lockRank lockRankMspanSpecial = 43;
+    const lockRank lockRankTraceTypeTab = 44;
     // MPROF
-    const lockRank lockRankGcBitsArenas = 34;
-    const lockRank lockRankProfInsert = 35;
-    const lockRank lockRankProfBlock = 36;
-    const lockRank lockRankProfMemActive = 37;
-    const lockRank lockRankProfMemFuture = 38;
+    const lockRank lockRankGcBitsArenas = 45;
+    const lockRank lockRankProfInsert = 46;
+    const lockRank lockRankProfBlock = 47;
+    const lockRank lockRankProfMemActive = 48;
+    const lockRank lockRankProfMemFuture = 49;
     // STACKGROW
-    const lockRank lockRankGscan = 39;
-    const lockRank lockRankStackpool = 40;
-    const lockRank lockRankStackLarge = 41;
-    const lockRank lockRankHchanLeaf = 42;
+    const lockRank lockRankGscan = 50;
+    const lockRank lockRankStackpool = 51;
+    const lockRank lockRankStackLarge = 52;
+    const lockRank lockRankHchanLeaf = 53;
     // WB
-    const lockRank lockRankWbufSpans = 43;
-    const lockRank lockRankMheap = 44;
-    const lockRank lockRankMheapSpecial = 45;
-    const lockRank lockRankGlobalAlloc = 46;
+    const lockRank lockRankWbufSpans = 54;
+    const lockRank lockRankXRegAlloc = 55;
+    const lockRank lockRankSpanSPMCs = 56;
+    const lockRank lockRankMheap = 57;
+    const lockRank lockRankMheapSpecial = 58;
+    const lockRank lockRankGlobalAlloc = 59;
     // TRACE
-    const lockRank lockRankTrace = 47;
-    const lockRank lockRankTraceStackTab = 48;
-    const lockRank lockRankPanic = 49;
-    const lockRank lockRankDeadlock = 50;
-    const lockRank lockRankRaceFini = 51;
-    const lockRank lockRankAllocmRInternal = 52;
-    const lockRank lockRankExecRInternal = 53;
-    const lockRank lockRankTestRInternal = 54;
+    const lockRank lockRankTrace = 60;
+    const lockRank lockRankTraceStackTab = 61;
+    const lockRank lockRankPanic = 62;
+    const lockRank lockRankDeadlock = 63;
+    const lockRank lockRankRaceFini = 64;
+    const lockRank lockRankAllocmRInternal = 65;
+    const lockRank lockRankExecRInternal = 66;
+    const lockRank lockRankTestRInternal = 67;
     // lockRankLeafRank is the rank of lock that does not have a declared rank,
     // and hence is a leaf lock.
     const lockRank lockRankLeafRank = 1000;

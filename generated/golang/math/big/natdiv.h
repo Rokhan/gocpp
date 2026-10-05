@@ -9,9 +9,16 @@
 #include "golang/math/big/natdiv.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::math::big
+{
+    // divRecursiveThreshold is the number of divisor digits
+    // at which point divRecursive is faster than divBasic.
+    extern long divRecursiveThreshold;
+}
 #include "golang/math/big/arith.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     Word divWVW(gocpp::slice<Word> z, Word xn, gocpp::slice<Word> x, Word y);
     bool greaterThan(Word x1, Word x2, Word y1, Word y2);
@@ -20,19 +27,19 @@ namespace golang::big
 #include "golang/math/big/arith.h"
 #include "golang/math/big/nat.h"
 
-namespace golang::big
+namespace golang::math::big
 {
 
     namespace rec
     {
-        nat rem(golang::big::nat z, nat u, nat v);
-        std::tuple<nat, nat> div(golang::big::nat z, nat z2, nat u, nat v);
-        std::tuple<nat, Word> divW(golang::big::nat z, nat x, Word y);
-        Word modW(golang::big::nat x, Word d);
-        std::tuple<nat, nat> divLarge(golang::big::nat z, nat u, nat uIn, nat vIn);
-        void divBasic(golang::big::nat q, nat u, nat v);
-        void divRecursive(golang::big::nat z, nat u, nat v);
-        void divRecursiveStep(golang::big::nat z, nat u, nat v, int depth, nat* tmp, gocpp::slice<nat*> temps);
+        golang::math::big::nat rem(golang::math::big::nat z, stack* stk, golang::math::big::nat u, golang::math::big::nat v);
+        std::tuple<golang::math::big::nat, golang::math::big::nat> div(golang::math::big::nat z, stack* stk, golang::math::big::nat z2, golang::math::big::nat u, golang::math::big::nat v);
+        std::tuple<golang::math::big::nat, Word> divW(golang::math::big::nat z, golang::math::big::nat x, Word y);
+        Word modW(golang::math::big::nat x, Word d);
+        std::tuple<golang::math::big::nat, golang::math::big::nat> divLarge(golang::math::big::nat z, stack* stk, golang::math::big::nat u, golang::math::big::nat uIn, golang::math::big::nat vIn);
+        void divBasic(golang::math::big::nat q, stack* stk, golang::math::big::nat u, golang::math::big::nat v);
+        void divRecursive(golang::math::big::nat z, stack* stk, golang::math::big::nat u, golang::math::big::nat v);
+        void divRecursiveStep(golang::math::big::nat z, stack* stk, golang::math::big::nat u, golang::math::big::nat v, int depth);
     }
 }
 

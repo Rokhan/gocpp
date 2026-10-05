@@ -12,6 +12,7 @@
 
 namespace golang::sync
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct notifyList
     {
         uint32_t wait{};

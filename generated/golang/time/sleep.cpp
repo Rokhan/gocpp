@@ -15,6 +15,7 @@
 
 namespace golang::time
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
@@ -24,56 +25,10 @@ namespace golang::time
     void Sleep(Duration d)
     /* convertBlockStmt, nil block */;
 
-    // Interface to timers implemented in package runtime.
-    // Must be in sync with ../runtime/time.go:/^type timer
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    runtimeTimer::operator T()
+    // syncTimer returns c as an unsafe.Pointer, for passing to newTimer.
+    gocpp::unsafe_pointer syncTimer(gocpp::channel<Time> c)
     {
-        T result;
-        result.pp = this->pp;
-        result.when = this->when;
-        result.period = this->period;
-        result.f = this->f;
-        result.arg = this->arg;
-        result.seq = this->seq;
-        result.nextwhen = this->nextwhen;
-        result.status = this->status;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool runtimeTimer::operator==(const T& ref) const
-    {
-        if (pp != ref.pp) return false;
-        if (when != ref.when) return false;
-        if (period != ref.period) return false;
-        if (f != ref.f) return false;
-        if (arg != ref.arg) return false;
-        if (seq != ref.seq) return false;
-        if (nextwhen != ref.nextwhen) return false;
-        if (status != ref.status) return false;
-        return true;
-    }
-
-    std::ostream& runtimeTimer::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << pp;
-        os << " " << when;
-        os << " " << period;
-        os << " " << f;
-        os << " " << arg;
-        os << " " << seq;
-        os << " " << nextwhen;
-        os << " " << status;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct runtimeTimer& value)
-    {
-        return value.PrintTo(os);
+        return *(gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& c));
     }
 
     // when is a helper function for setting the 'when' field of a runtimeTimer.
@@ -97,29 +52,33 @@ namespace golang::time
         return t;
     }
 
-    void startTimer(runtimeTimer*)
+    // The arg cp is a chan Time, but the declaration in runtime uses a pointer,
+    // so we use a pointer here too. This keeps some tools that aggressively
+    // compare linknamed symbol definitions happier.
+    //
+    //go:linkname newTimer
+    Timer* newTimer(int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2, int64_t _3)> f, go_any arg, gocpp::unsafe_pointer cp)
     /* convertBlockStmt, nil block */;
 
-    bool stopTimer(runtimeTimer*)
+    //go:linkname stopTimer
+    bool stopTimer(Timer*)
     /* convertBlockStmt, nil block */;
 
-    bool resetTimer(runtimeTimer*, int64_t)
-    /* convertBlockStmt, nil block */;
-
-    void modTimer(runtimeTimer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq)
+    //go:linkname resetTimer
+    bool resetTimer(Timer* t, int64_t when, int64_t period)
     /* convertBlockStmt, nil block */;
 
     // The Timer type represents a single event.
     // When the Timer expires, the current time will be sent on C,
-    // unless the Timer was created by AfterFunc.
-    // A Timer must be created with NewTimer or AfterFunc.
+    // unless the Timer was created by [AfterFunc].
+    // A Timer must be created with [NewTimer] or AfterFunc.
     
     template<typename T> requires gocpp::GoStruct<T>
     Timer::operator T()
     {
         T result;
         result.C = this->C;
-        result.r = this->r;
+        result.initTimer = this->initTimer;
         return result;
     }
 
@@ -127,7 +86,7 @@ namespace golang::time
     bool Timer::operator==(const T& ref) const
     {
         if (C != ref.C) return false;
-        if (r != ref.r) return false;
+        if (initTimer != ref.initTimer) return false;
         return true;
     }
 
@@ -135,7 +94,7 @@ namespace golang::time
     {
         os << '{';
         os << "" << C;
-        os << " " << r;
+        os << " " << initTimer;
         os << '}';
         return os;
     }
@@ -145,51 +104,57 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    // Stop prevents the Timer from firing.
+    // Stop prevents the [Timer] from firing.
     // It returns true if the call stops the timer, false if the timer has already
     // expired or been stopped.
-    // Stop does not close the channel, to prevent a read from the channel succeeding
-    // incorrectly.
     //
-    // To ensure the channel is empty after a call to Stop, check the
-    // return value and drain the channel.
-    // For example, assuming the program has not received from t.C already:
-    //
-    //	if !t.Stop() {
-    //		<-t.C
-    //	}
-    //
-    // This cannot be done concurrent to other receives from the Timer's
-    // channel or other calls to the Timer's Stop method.
-    //
-    // For a timer created with AfterFunc(d, f), if t.Stop returns false, then the timer
-    // has already expired and the function f has been started in its own goroutine;
+    // For a func-based timer created with [AfterFunc](d, f),
+    // if t.Stop returns false, then the timer has already expired
+    // and the function f has been started in its own goroutine;
     // Stop does not wait for f to complete before returning.
-    // If the caller needs to know whether f is completed, it must coordinate
-    // with f explicitly.
+    // If the caller needs to know whether f is completed,
+    // it must coordinate with f explicitly.
+    //
+    // For a chan-based timer created with NewTimer(d), as of Go 1.23,
+    // any receive from t.C after Stop has returned is guaranteed to block
+    // rather than receive a stale time value from before the Stop;
+    // if the program has not received from t.C already and the timer is
+    // running, Stop is guaranteed to return true.
+    // Before Go 1.23, the only safe way to use Stop was insert an extra
+    // <-t.C if Stop returned false to drain a potential stale value.
+    // See the [NewTimer] documentation for more details.
     bool rec::Stop(Timer* t)
     {
-        if(t->r.f == nullptr)
+        if(! t->initTimer)
         {
             gocpp::panic("time: Stop called on uninitialized Timer"_s);
         }
-        return stopTimer(& t->r);
+        return stopTimer(t);
     }
 
     // NewTimer creates a new Timer that will send
     // the current time on its channel after at least duration d.
+    //
+    // Before Go 1.23, the garbage collector did not recover
+    // timers that had not yet expired or been stopped, so code often
+    // immediately deferred t.Stop after calling NewTimer, to make
+    // the timer recoverable when it was no longer needed.
+    // As of Go 1.23, the garbage collector can recover unreferenced
+    // timers, even if they haven't expired or been stopped.
+    // The Stop method is no longer necessary to help the garbage collector.
+    // (Code may of course still want to call Stop to stop the timer for other reasons.)
+    //
+    // Before Go 1.23, the channel associated with a Timer was
+    // asynchronous (buffered, capacity 1), which meant that
+    // stale time values could be received even after [Timer.Stop]
+    // or [Timer.Reset] returned.
+    // As of Go 1.23, the channel is synchronous (unbuffered, capacity 0),
+    // eliminating the possibility of those stale values.
     Timer* NewTimer(Duration d)
     {
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<Time>>(), 1);
-        auto t = gocpp::InitPtr<Timer>([=](auto& x) {
-            x.C = c;
-            x.r = gocpp::Init<runtimeTimer>([=](auto& x) {
-                x.when = when(d);
-                x.f = sendTime;
-                x.arg = c;
-            });
-        });
-        startTimer(& t->r);
+        auto t = newTimer(when(d), 0, sendTime, c, syncTimer(c));
+        t->C = c;
         return t;
     }
 
@@ -197,29 +162,7 @@ namespace golang::time
     // It returns true if the timer had been active, false if the timer had
     // expired or been stopped.
     //
-    // For a Timer created with NewTimer, Reset should be invoked only on
-    // stopped or expired timers with drained channels.
-    //
-    // If a program has already received a value from t.C, the timer is known
-    // to have expired and the channel drained, so t.Reset can be used directly.
-    // If a program has not yet received a value from t.C, however,
-    // the timer must be stopped and—if Stop reports that the timer expired
-    // before being stopped—the channel explicitly drained:
-    //
-    //	if !t.Stop() {
-    //		<-t.C
-    //	}
-    //	t.Reset(d)
-    //
-    // This should not be done concurrent to other receives from the Timer's
-    // channel.
-    //
-    // Note that it is not possible to use Reset's return value correctly, as there
-    // is a race condition between draining the channel and the new timer expiring.
-    // Reset should always be invoked on stopped or expired channels, as described above.
-    // The return value exists to preserve compatibility with existing programs.
-    //
-    // For a Timer created with AfterFunc(d, f), Reset either reschedules
+    // For a func-based timer created with [AfterFunc](d, f), Reset either reschedules
     // when f will run, in which case Reset returns true, or schedules f
     // to run again, in which case it returns false.
     // When Reset returns false, Reset neither waits for the prior f to
@@ -227,23 +170,37 @@ namespace golang::time
     // goroutine running f does not run concurrently with the prior
     // one. If the caller needs to know whether the prior execution of
     // f is completed, it must coordinate with f explicitly.
+    //
+    // For a chan-based timer created with NewTimer, as of Go 1.23,
+    // any receive from t.C after Reset has returned is guaranteed not
+    // to receive a time value corresponding to the previous timer settings;
+    // if the program has not received from t.C already and the timer is
+    // running, Reset is guaranteed to return true.
+    // Before Go 1.23, the only safe way to use Reset was to call [Timer.Stop]
+    // and explicitly drain the timer first.
+    // See the [NewTimer] documentation for more details.
     bool rec::Reset(Timer* t, Duration d)
     {
-        if(t->r.f == nullptr)
+        if(! t->initTimer)
         {
             gocpp::panic("time: Reset called on uninitialized Timer"_s);
         }
         auto w = when(d);
-        return resetTimer(& t->r, w);
+        return resetTimer(t, w, 0);
     }
 
     // sendTime does a non-blocking send of the current time on c.
-    void sendTime(go_any c, uintptr_t seq)
+    void sendTime(go_any c, uintptr_t seq, int64_t delta)
     {
+        // delta is how long ago the channel send was supposed to happen.
+        // The current time can be arbitrarily far into the future, because the runtime
+        // can delay a sendTime call until a goroutine tries to receive from
+        // the channel. Subtract delta to go back to the old time that we
+        // used to send.
         //Go select emulation
         {
             int conditionId = -1;
-            if(gocpp::getValue<gocpp::channel<Time>>(c).trySend(Now())) { conditionId = 0; }
+            if(gocpp::getValue<gocpp::channel<Time>>(c).trySend(rec::Add(gocpp::recv(Now()), Duration(- delta)))) { conditionId = 0; }
             switch(conditionId)
             {
                 case 0:
@@ -257,33 +214,29 @@ namespace golang::time
 
     // After waits for the duration to elapse and then sends the current time
     // on the returned channel.
-    // It is equivalent to NewTimer(d).C.
-    // The underlying Timer is not recovered by the garbage collector
-    // until the timer fires. If efficiency is a concern, use NewTimer
-    // instead and call Timer.Stop if the timer is no longer needed.
+    // It is equivalent to [NewTimer](d).C.
+    //
+    // Before Go 1.23, this documentation warned that the underlying
+    // [Timer] would not be recovered by the garbage collector until the
+    // timer fired, and that if efficiency was a concern, code should use
+    // NewTimer instead and call [Timer.Stop] if the timer is no longer needed.
+    // As of Go 1.23, the garbage collector can recover unreferenced,
+    // unstopped timers. There is no reason to prefer NewTimer when After will do.
     gocpp::channel<Time> After(Duration d)
     {
         return NewTimer(d)->C;
     }
 
     // AfterFunc waits for the duration to elapse and then calls f
-    // in its own goroutine. It returns a Timer that can
+    // in its own goroutine. It returns a [Timer] that can
     // be used to cancel the call using its Stop method.
     // The returned Timer's C field is not used and will be nil.
     Timer* AfterFunc(Duration d, std::function<void ()> f)
     {
-        auto t = gocpp::InitPtr<Timer>([=](auto& x) {
-            x.r = gocpp::Init<runtimeTimer>([=](auto& x) {
-                x.when = when(d);
-                x.f = goFunc;
-                x.arg = f;
-            });
-        });
-        startTimer(& t->r);
-        return t;
+        return newTimer(when(d), 0, goFunc, f, nullptr);
     }
 
-    void goFunc(go_any arg, uintptr_t seq)
+    void goFunc(go_any arg, uintptr_t seq, int64_t delta)
     {
         gocpp::go([&]{ gocpp::getValue<std::function<void ()>>(arg)(); });
     }

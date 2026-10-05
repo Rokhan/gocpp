@@ -16,6 +16,8 @@
 
 namespace golang::main
 {
+    namespace color = golang::image::color;
+    namespace fmt = golang::fmt;
     namespace rec
     {
     }

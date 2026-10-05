@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::chacha8rand
+namespace golang::internal::chacha8rand
 {
     void block(gocpp::array_ptr<gocpp::array<uint64_t, 4>> seed, gocpp::array_ptr<gocpp::array<uint64_t, 32>> blocks, uint32_t counter);
     struct State
@@ -48,12 +48,17 @@ namespace golang::chacha8rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct errUnmarshalChaCha8& value);
-    uint64_t beUint64(gocpp::slice<unsigned char> b);
-    void bePutUint64(gocpp::slice<unsigned char> b, uint64_t v);
-    uint64_t leUint64(gocpp::slice<unsigned char> b);
-    void lePutUint64(gocpp::slice<unsigned char> b, uint64_t v);
     gocpp::slice<unsigned char> Marshal(State* s);
     gocpp::error Unmarshal(State* s, gocpp::slice<unsigned char> data);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
+#include "golang/internal/cpu/cpu.h"
+
+namespace golang::internal::chacha8rand
+{
+    // Offsets into internal/cpu records for use in assembly.
+    const uintptr_t offsetLOONG64HasLSX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLSX);
+    const uintptr_t offsetRISCV64HasV = gocpp::Offsetof<cpu::RISCV64Struct>(&cpu::RISCV64Struct::HasV);
 
     namespace rec
     {

@@ -3,11 +3,15 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/golang.org/x/tools/go/packages/packages.fwd.h"
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
 {
     struct DriverRequest;
     struct DriverResponse;
+}
+#include "golang/golang.org/x/tools/go/packages/packages.fwd.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
     using driver = std::function<std::tuple<DriverResponse*, gocpp::error> (Config* cfg, gocpp::slice<gocpp::string> patterns)>;
 }

@@ -60,16 +60,11 @@ namespace golang::runtime
     const long timeHistMinBucketBits = 9;
     const long timeHistMaxBucketBits = 48;
     const long timeHistSubBucketBits = 2;
+    struct timeHistogram;
     const long fInf = 0x7FF0000000000000;
     const long fNegInf = 0xFFF0000000000000;
     const int timeHistNumSubBuckets = 1 << timeHistSubBucketBits;
     const int timeHistNumBuckets = timeHistMaxBucketBits - timeHistMinBucketBits + 1;
-}
-#include "golang/runtime/internal/atomic/types.fwd.h"
-
-namespace golang::runtime
-{
-    struct timeHistogram;
     // Two extra buckets, one for underflow, one for overflow.
     const int timeHistTotalBuckets = timeHistNumBuckets * timeHistNumSubBuckets + 2;
 }

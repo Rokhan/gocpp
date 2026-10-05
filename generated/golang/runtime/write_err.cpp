@@ -11,7 +11,7 @@
 #include "golang/runtime/write_err.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/time_nofake.h"
+#include "golang/runtime/runtime.h"
 
 namespace golang::runtime
 {
@@ -19,9 +19,13 @@ namespace golang::runtime
     {
     }
 
+    //go:nosplit
     void writeErr(gocpp::slice<unsigned char> b)
     {
-        write(2, gocpp::unsafe_pointer(& b[0]), int32_t(len(b)));
+        if(len(b) > 0)
+        {
+            writeErrData(& b[0], int32_t(len(b)));
+        }
     }
 
 }

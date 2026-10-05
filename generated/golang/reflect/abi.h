@@ -12,6 +12,27 @@
 
 namespace golang::reflect
 {
+    // These variables are used by the register assignment
+    // algorithm in this file.
+    //
+    // They should be modified with care (no other reflect code
+    // may be executing) and are generally only modified
+    // when testing this package.
+    //
+    // They should never be set higher than their internal/abi
+    // constant counterparts, because the system relies on a
+    // structure that is at least large enough to hold the
+    // registers the system supports.
+    //
+    // Currently they're set to zero because using the actual
+    // constants will break every part of the toolchain that
+    // uses reflect to call functions (e.g. go test, or anything
+    // that uses text/template). The values that are currently
+    // commented out there should be the actual values once
+    // we're ready to use the register ABI everywhere.
+    extern int intArgRegs;
+    extern int floatArgRegs;
+    extern uintptr_t floatRegSize;
     struct abiStep
     {
         abiStepKind kind{};
@@ -68,24 +89,20 @@ namespace golang::reflect
 
     std::ostream& operator<<(std::ostream& os, const struct abiSeq& value);
 }
-#include "golang/internal/abi/abi.h"
-#include "golang/internal/abi/abi_amd64.h"
+#include "golang/internal/abi/abi.fwd.h"
+#include "golang/internal/abi/abi_amd64.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
 
 namespace golang::reflect
 {
-    extern int intArgRegs;
-    extern int floatArgRegs;
-    extern uintptr_t floatRegSize;
-    void dumpPtrBitMap(abi::IntArgRegBitmap b);
-    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
-    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
-    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
-    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
+    namespace abi = golang::internal::abi;
 }
+#include "golang/internal/abi/abi.h"
 #include "golang/reflect/type.fwd.h"
 
 namespace golang::reflect
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct abiDesc
     {
         // call and ret represent the translation steps for
@@ -130,11 +147,11 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
-}
-#include "golang/internal/abi/type.fwd.h"
-
-namespace golang::reflect
-{
+    void dumpPtrBitMap(abi::IntArgRegBitmap b);
+    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
+    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
+    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
+    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
     abiDesc newAbiDesc(funcType* t, abi::Type* rcvr);
 }
 

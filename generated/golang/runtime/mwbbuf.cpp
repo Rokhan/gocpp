@@ -12,11 +12,12 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
 #include "golang/runtime/mcheckmark.h"
 #include "golang/runtime/mgcmark.h"
+#include "golang/runtime/mgcmark_greenteagc.h"
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/panic.h"
@@ -25,6 +26,9 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
     }
@@ -227,7 +231,7 @@ namespace golang::runtime
         // Mark all of the pointers in the buffer and record only the
         // pointers we greyed. We use the buffer itself to temporarily
         // record greyed pointers.
-        // TODO: Should scanobject/scanblock just stuff pointers into
+        // TODO: Should scanObject/scanblock just stuff pointers into
         // the wbBuf? Then this would become the sole greying path.
         // TODO: We could avoid shading any of the "new" pointers in
         // the buffer if the stack has been shaded, or even avoid
@@ -247,6 +251,10 @@ namespace golang::runtime
                 // other "obvious" non-heap pointers ASAP.
                 // TODO: Should we filter out nils in the fast
                 // path to reduce the rate of flushes?
+                continue;
+            }
+            if(tryDeferToSpanScan(ptr, gcw))
+            {
                 continue;
             }
             auto [obj, span, objIndex] = findObject(ptr, 0, 0);
@@ -280,7 +288,7 @@ namespace golang::runtime
         }
 
         // Enqueue the greyed objects.
-        rec::putBatch(gocpp::recv(gcw), ptrs.make_slice(0, pos));
+        rec::putObjBatch(gocpp::recv(gcw), ptrs.make_slice(0, pos));
 
         rec::reset(gocpp::recv(pp->wbBuf));
     }

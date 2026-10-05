@@ -20,6 +20,9 @@
 
 namespace golang::regexp
 {
+    namespace io = golang::io;
+    namespace sync = golang::sync;
+    namespace syntax = golang::regexp::syntax;
     namespace rec
     {
         using sync::rec::Get;
@@ -709,7 +712,7 @@ namespace golang::regexp
         rec::Put(gocpp::recv(onePassPool), m);
     }
 
-    // doOnePass implements r.doExecute using the one-pass execution engine.
+    // doOnePass implements r.find using the one-pass execution engine.
     gocpp::slice<int> rec::doOnePass(Regexp* re, io::RuneReader ir, gocpp::slice<unsigned char> ib, gocpp::string is, int pos, int ncap, gocpp::slice<int> dstCap)
     {
         auto startCond = re->cond;
@@ -880,14 +883,14 @@ namespace golang::regexp
     // doMatch reports whether either r, b or s match the regexp.
     bool rec::doMatch(Regexp* re, io::RuneReader r, gocpp::slice<unsigned char> b, gocpp::string s)
     {
-        return rec::doExecute(gocpp::recv(re), r, b, s, 0, 0, nullptr) != nullptr;
+        return rec::find(gocpp::recv(re), r, b, s, 0, 0, nullptr) != nullptr;
     }
 
-    // doExecute finds the leftmost match in the input, appends the position
+    // find finds the leftmost match in the input, appends the position
     // of its subexpressions to dstCap and returns dstCap.
     //
     // nil is returned if no matches are found and non-nil if matches are found.
-    gocpp::slice<int> rec::doExecute(Regexp* re, io::RuneReader r, gocpp::slice<unsigned char> b, gocpp::string s, int pos, int ncap, gocpp::slice<int> dstCap)
+    gocpp::slice<int> rec::find(Regexp* re, io::RuneReader r, gocpp::slice<unsigned char> b, gocpp::string s, int pos, int ncap, gocpp::slice<int> dstCap)
     {
         if(dstCap == nullptr)
         {
@@ -924,7 +927,7 @@ namespace golang::regexp
         return dstCap;
     }
 
-    // arrayNoInts is returned by doExecute match if nil dstCap is passed
+    // arrayNoInts is returned by find match if nil dstCap is passed
     // to it with ncap=0.
     gocpp::array<int, 0> arrayNoInts;
 }

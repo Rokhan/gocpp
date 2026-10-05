@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::gover
+namespace golang::internal::gover
 {
     struct Version;
 }

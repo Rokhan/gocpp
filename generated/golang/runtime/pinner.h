@@ -28,6 +28,34 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Pinner& value);
+    struct pinState
+    {
+        uint8_t* bytep{};
+        uint8_t byteVal{};
+        uint8_t mask{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct pinState& value);
+    struct GoTag_pinnerBits { };
+    // to be able to test that the GC panics when a pinned pointer is leaking, this
+    // panic function is a variable, that can be overwritten by a test.
+    extern std::function<void (void)> pinnerLeakPanic;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
     const uintptr_t pinnerRefStoreSize = (pinnerSize - gocpp::Sizeof<gocpp::slice<gocpp::unsafe_pointer>>()) / gocpp::Sizeof<unsafe::Pointer>();
     struct pinner
     {
@@ -49,34 +77,8 @@ namespace golang::runtime
     gocpp::unsafe_pointer pinnerGetPtr(go_any* i);
     bool isPinned(gocpp::unsafe_pointer ptr);
     bool setPinned(gocpp::unsafe_pointer ptr, bool pin);
-    struct pinState
-    {
-        uint8_t* bytep{};
-        uint8_t byteVal{};
-        uint8_t mask{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct pinState& value);
-    struct GoTag_pinnerBits { };
-    uintptr_t* pinnerGetPinCounter(gocpp::unsafe_pointer addr);
-}
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/error.fwd.h"
-
-namespace golang::runtime
-{
     using pinnerBits = gocpp::defined<gcBits, GoTag_pinnerBits>;
-    extern std::function<void (void)> pinnerLeakPanic;
+    uintptr_t* pinnerGetPinCounter(gocpp::unsafe_pointer addr);
 }
 
 #include "golang/runtime/mheap.h"

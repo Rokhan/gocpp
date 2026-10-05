@@ -3,12 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/scope.fwd.h"
-#include "golang/go/types/tuple.fwd.h"
-#include "golang/go/types/typelists.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Signature;
 }

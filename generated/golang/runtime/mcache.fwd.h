@@ -6,16 +6,8 @@
 
 namespace golang::runtime
 {
+    struct mcache;
     struct gclink;
     using gclinkptr = uintptr_t;
     struct stackfreelist;
-}
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mheap.fwd.h"
-
-namespace golang::runtime
-{
-    struct mcache;
 }

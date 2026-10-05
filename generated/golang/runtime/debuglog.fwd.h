@@ -10,6 +10,8 @@ namespace golang::runtime
     // allocated off-heap to avoid blowing up the M and hence the GC'd
     // heap size.
     const int debugLogBytes = 16 << 10;
+    struct dloggerImpl;
+    struct dloggerFake;
     const int debugLogUnknown = 1 + 0;
     const int debugLogBoolTrue = 1 + 1;
     const int debugLogBoolFalse = 1 + 2;
@@ -19,9 +21,12 @@ namespace golang::runtime
     const int debugLogPtr = 1 + 6;
     const int debugLogString = 1 + 7;
     const int debugLogConstString = 1 + 8;
-    const int debugLogStringOverflow = 1 + 9;
-    const int debugLogPC = 1 + 10;
-    const int debugLogTraceback = 1 + 11;
+    const int debugLogHexdump = 1 + 9;
+    const int debugLogOverflow = 1 + 10;
+    const int debugLogPC = 1 + 11;
+    const int debugLogTraceback = 1 + 12;
+    struct debugLogWriter;
+    struct debugLogBuf;
     // debugLogHeaderSize is the number of bytes in the framing
     // header of every dlog record.
     const long debugLogHeaderSize = 2;
@@ -32,13 +37,4 @@ namespace golang::runtime
     const int debugLogStringLimit = debugLogBytes / 8;
     // debugLogSyncSize is the number of bytes in a sync record.
     const int debugLogSyncSize = debugLogHeaderSize + 2 * 8;
-}
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
-
-namespace golang::runtime
-{
-    struct dlogger;
-    struct debugLogWriter;
-    struct debugLogBuf;
 }

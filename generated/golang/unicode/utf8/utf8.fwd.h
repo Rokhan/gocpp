@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::utf8
+namespace golang::unicode::utf8
 {
     // Numbers fundamental to the encoding.
     const char RuneError = '\uFFFD';
@@ -44,4 +44,9 @@ namespace golang::utf8
     const long s6 = 0x04;
     const long s7 = 0x44;
     struct acceptRange;
+    const int ptrSize = 4 << (~ uintptr_t(0) >> 63);
+    const gocpp::rune runeErrorByte0 = t3 | (RuneError >> 12);
+    const gocpp::rune runeErrorByte1 = tx | (RuneError >> 6) & maskx;
+    const gocpp::rune runeErrorByte2 = tx | RuneError & maskx;
+    const int hiBits = 0x8080808080808080 >> (64 - 8 * ptrSize);
 }

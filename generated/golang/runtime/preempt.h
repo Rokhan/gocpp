@@ -14,6 +14,8 @@ namespace golang::runtime
 {
     void asyncPreempt();
     void asyncPreempt2();
+    // asyncPreemptStack is the bytes of stack space required to inject an
+    // asyncPreempt call.
     extern uintptr_t asyncPreemptStack;
     void init();
 }

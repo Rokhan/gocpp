@@ -9,7 +9,7 @@
 #include "golang/internal/goversion/goversion.fwd.h"
 #include "gocpp/support.h"
 
-namespace golang::goversion
+namespace golang::internal::goversion
 {
 
     namespace rec

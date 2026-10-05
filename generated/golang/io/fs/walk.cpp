@@ -17,8 +17,10 @@
 #include "golang/io/fs/stat.h"
 #include "golang/path/path.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
+    namespace errors = golang::errors;
+    namespace path = golang::path;
     namespace rec
     {
     }

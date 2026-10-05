@@ -3,16 +3,19 @@
 
 #include "gocpp/support.fwd.h"
 
-
-namespace golang::filepath
-{
-    struct lazybuf;
-}
 #include "golang/io/fs/fs.fwd.h"
+#include "golang/io/fs/readdir.fwd.h"
+#include "golang/io/fs/walk.fwd.h"
+#include "golang/os/dir.fwd.h"
+#include "golang/os/file.fwd.h"
+#include "golang/os/getwd.fwd.h"
 #include "golang/os/path_windows.fwd.h"
+#include "golang/os/stat.fwd.h"
 
-namespace golang::filepath
+namespace golang::path::filepath
 {
+    namespace os = golang::os;
+    namespace fs = golang::io::fs;
     const gocpp::rune Separator = os::PathSeparator;
     const gocpp::rune ListSeparator = os::PathListSeparator;
     using WalkFunc = std::function<gocpp::error (gocpp::string path, fs::FileInfo info, gocpp::error err)>;

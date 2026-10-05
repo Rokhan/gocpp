@@ -4,9 +4,10 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     using operandMode = unsigned char;
+    struct operand;
     const operandMode invalid = 0;
     const operandMode novalue = 1;
     const operandMode builtin = 2;
@@ -15,16 +16,8 @@ namespace golang::types
     const operandMode variable = 5;
     const operandMode mapindex = 6;
     const operandMode value = 7;
-    const operandMode commaok = 8;
-    const operandMode commaerr = 9;
-    const operandMode cgofunc = 10;
-}
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/constant/value.fwd.h"
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/universe.fwd.h"
-
-namespace golang::types
-{
-    struct operand;
+    const operandMode nilvalue = 8;
+    const operandMode commaok = 9;
+    const operandMode commaerr = 10;
+    const operandMode cgofunc = 11;
 }

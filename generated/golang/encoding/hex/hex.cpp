@@ -18,8 +18,13 @@
 #include "golang/strings/builder.h"
 
 // Package hex implements hexadecimal encoding and decoding.
-namespace golang::hex
+namespace golang::encoding::hex
 {
+    namespace errors = golang::errors;
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace slices = golang::slices;
+    namespace strings = golang::strings;
     namespace rec
     {
         using io::rec::Close;
@@ -89,11 +94,11 @@ namespace golang::hex
     // of bytes decoded before the error.
     std::tuple<int, gocpp::error> Decode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
-        auto [i, j] = std::tuple{0, 1};
-        for(; j < len(src); j += 2)
+        auto [i, j] = std::tuple{0, 0};
+        for(; j < len(src) - 1; j += 2)
         {
-            auto p = src[j - 1];
-            auto q = src[j];
+            auto p = src[j];
+            auto q = src[j + 1];
 
             auto a = reverseHexTable[p];
             auto b = reverseHexTable[q];
@@ -112,9 +117,9 @@ namespace golang::hex
         {
             // Check for invalid char before reporting bad length,
             // since the invalid char (if present) is an earlier problem.
-            if(reverseHexTable[src[j - 1]] > 0x0f)
+            if(reverseHexTable[src[j]] > 0x0f)
             {
-                return {i, gocpp::error(InvalidByteError(src[j - 1]))};
+                return {i, gocpp::error(InvalidByteError(src[j]))};
             }
             return {i, ErrLength};
         }
@@ -149,11 +154,9 @@ namespace golang::hex
     // the bytes decoded before the error.
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> DecodeString(gocpp::string s)
     {
-        auto src = gocpp::slice<unsigned char>(s);
-        // We can use the source slice itself as the destination
-        // because the decode loop increments by one and then the 'seen' byte is not used anymore.
-        auto [n, err] = Decode(src, src);
-        return {src.make_slice(0, n), err};
+        auto dst = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), DecodedLen(len(s)));
+        auto [n, err] = Decode(dst, gocpp::slice<unsigned char>(s));
+        return {dst.make_slice(0, n), err};
     }
 
     // Dump returns a string that contains a hex dump of the given data. The format

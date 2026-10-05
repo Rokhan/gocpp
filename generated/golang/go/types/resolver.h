@@ -10,21 +10,28 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     std::tuple<gocpp::string, gocpp::error> validatedImportPath(gocpp::string path);
-    struct GoTag_inSourceOrder { };
     gocpp::string dir(gocpp::string path);
+}
+#include "golang/go/ast/ast.fwd.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
 }
 #include "golang/go/ast/ast.h"
 #include "golang/go/types/object.h"
+#include "golang/go/types/version.h"
 #include "golang/go/types/scope.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct declInfo
     {
-        golang::types::Scope* file{}; // scope of file containing this declaration
+        golang::go::types::Scope* file{}; // scope of file containing this declaration
+        goVersion version{}; // Go version of file containing this declaration
         gocpp::slice<Var*> lhs{}; // lhs of n:1 variable declarations, or nil
         ast::Expr vtyp{}; // type, or nil (for const and var declarations only)
         ast::Expr init{}; // init/orig expression, or nil (for const and var declarations only)
@@ -46,7 +53,6 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct declInfo& value);
-    using inSourceOrder = gocpp::defined<gocpp::slice<Object>, GoTag_inSourceOrder>;
 }
 
 #include "golang/go/ast/ast.h"
@@ -54,9 +60,8 @@ namespace golang::types
 #include "golang/go/types/errors.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/package.h"
-#include "golang/go/types/scope.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
@@ -68,12 +73,10 @@ namespace golang::types
         gocpp::string filename(Checker* check, int fileNo);
         Package* importPackage(Checker* check, positioner at, gocpp::string path, gocpp::string dir);
         void collectObjects(Checker* check);
-        std::tuple<bool, ast::Ident*, gocpp::slice<ast::Ident*>> unpackRecv(Checker* check, ast::Expr rtyp, bool unpackParams);
-        std::tuple<bool, TypeName*> resolveBaseTypeName(Checker* check, bool seenPtr, ast::Expr typ, gocpp::slice<golang::types::Scope*> fileScopes);
+        void sortObjects(Checker* check);
+        std::tuple<bool, ast::Expr, gocpp::slice<ast::Ident*>> unpackRecv(Checker* check, ast::Expr rtyp, bool unpackParams);
+        std::tuple<bool, TypeName*> resolveBaseTypeName(Checker* check, bool ptr, ast::Ident* name);
         void packageObjects(Checker* check);
-        int Len(inSourceOrder a);
-        bool Less(inSourceOrder a, int i, int j);
-        void Swap(inSourceOrder a, int i, int j);
         void unusedImports(Checker* check);
         void errorUnusedPkg(Checker* check, PkgName* obj);
     }

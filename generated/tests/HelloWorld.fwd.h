@@ -7,5 +7,6 @@
 
 namespace golang::main
 {
+    namespace color = golang::image::color;
     using Zzz = color::Color;
 }

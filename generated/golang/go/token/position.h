@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::token
+namespace golang::go::token
 {
     struct Position
     {
@@ -54,12 +54,22 @@ namespace golang::token
     int searchInts(gocpp::slice<int> a, int x);
     int searchLineInfos(gocpp::slice<lineInfo> a, int x);
 }
+#include "golang/sync/atomic/type.fwd.h"
+#include "golang/sync/mutex.fwd.h"
+#include "golang/sync/rwmutex.fwd.h"
+
+namespace golang::go::token
+{
+    namespace sync = golang::sync;
+}
+#include "golang/go/token/tree.h"
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/mutex.h"
 #include "golang/sync/rwmutex.h"
 
-namespace golang::token
+namespace golang::go::token
 {
+    namespace atomic = golang::sync::atomic;
     struct File
     {
         gocpp::string name{}; // file name as provided to AddFile
@@ -86,8 +96,8 @@ namespace golang::token
     {
         sync::RWMutex mutex{}; // protects the file set
         int base{}; // base offset for the next file
-        gocpp::slice<golang::token::File*> files{}; // list of files in the order added to the set
-        atomic::Pointer<golang::token::File> last{}; // cache of last file looked up
+        tree tree{}; // tree of files in ascending base order
+        atomic::Pointer<golang::go::token::File> last{}; // cache of last file looked up
 
         using isGoStruct = void;
 
@@ -102,40 +112,55 @@ namespace golang::token
 
     std::ostream& operator<<(std::ostream& os, const struct FileSet& value);
     FileSet* NewFileSet();
-    int searchFiles(gocpp::slice<golang::token::File*> a, int x);
 
     namespace rec
     {
-        bool IsValid(golang::token::Position* pos);
-        gocpp::string String(golang::token::Position pos);
-        bool IsValid(golang::token::Pos p);
-        gocpp::string Name(golang::token::File* f);
-        int Base(golang::token::File* f);
-        int Size(golang::token::File* f);
-        int LineCount(golang::token::File* f);
-        void AddLine(golang::token::File* f, int offset);
-        void MergeLine(golang::token::File* f, int line);
-        gocpp::slice<int> Lines(golang::token::File* f);
-        bool SetLines(golang::token::File* f, gocpp::slice<int> lines);
-        void SetLinesForContent(golang::token::File* f, gocpp::slice<unsigned char> content);
-        golang::token::Pos LineStart(golang::token::File* f, int line);
-        void AddLineInfo(golang::token::File* f, int offset, gocpp::string filename, int line);
-        void AddLineColumnInfo(golang::token::File* f, int offset, gocpp::string filename, int line, int column);
-        golang::token::Pos Pos(golang::token::File* f, int offset);
-        int Offset(golang::token::File* f, golang::token::Pos p);
-        int Line(golang::token::File* f, golang::token::Pos p);
-        std::tuple<gocpp::string, int, int> unpack(golang::token::File* f, int offset, bool adjusted);
-        golang::token::Position position(golang::token::File* f, golang::token::Pos p, bool adjusted);
-        golang::token::Position PositionFor(golang::token::File* f, golang::token::Pos p, bool adjusted);
-        golang::token::Position Position(golang::token::File* f, golang::token::Pos p);
+        bool IsValid(golang::go::token::Position* pos);
+        gocpp::string String(golang::go::token::Position pos);
+        bool IsValid(golang::go::token::Pos p);
+        gocpp::string String(golang::go::token::File* f);
+        gocpp::string Name(golang::go::token::File* f);
+        int Base(golang::go::token::File* f);
+        int Size(golang::go::token::File* f);
+        golang::go::token::Pos End(golang::go::token::File* f);
+        int LineCount(golang::go::token::File* f);
+        void AddLine(golang::go::token::File* f, int offset);
+        void MergeLine(golang::go::token::File* f, int line);
+        gocpp::slice<int> Lines(golang::go::token::File* f);
+        bool SetLines(golang::go::token::File* f, gocpp::slice<int> lines);
+        void SetLinesForContent(golang::go::token::File* f, gocpp::slice<unsigned char> content);
+        golang::go::token::Pos LineStart(golang::go::token::File* f, int line);
+        void AddLineInfo(golang::go::token::File* f, int offset, gocpp::string filename, int line);
+        void AddLineColumnInfo(golang::go::token::File* f, int offset, gocpp::string filename, int line, int column);
+        int fixOffset(golang::go::token::File* f, int offset);
+        golang::go::token::Pos Pos(golang::go::token::File* f, int offset);
+        int Offset(golang::go::token::File* f, golang::go::token::Pos p);
+        int Line(golang::go::token::File* f, golang::go::token::Pos p);
+        std::tuple<gocpp::string, int, int> unpack(golang::go::token::File* f, int offset, bool adjusted);
+        golang::go::token::Position position(golang::go::token::File* f, golang::go::token::Pos p, bool adjusted);
+        golang::go::token::Position PositionFor(golang::go::token::File* f, golang::go::token::Pos p, bool adjusted);
+        golang::go::token::Position Position(golang::go::token::File* f, golang::go::token::Pos p);
         int Base(FileSet* s);
-        golang::token::File* AddFile(FileSet* s, gocpp::string filename, int base, int size);
-        void RemoveFile(FileSet* s, golang::token::File* file);
-        void Iterate(FileSet* s, std::function<bool (golang::token::File* _1)> f);
-        golang::token::File* file(FileSet* s, golang::token::Pos p);
-        golang::token::File* File(FileSet* s, golang::token::Pos p);
-        golang::token::Position PositionFor(FileSet* s, golang::token::Pos p, bool adjusted);
-        golang::token::Position Position(FileSet* s, golang::token::Pos p);
+        golang::go::token::File* AddFile(FileSet* s, gocpp::string filename, int base, int size);
+        void AddExistingFiles(FileSet* s, gocpp::slice<golang::go::token::File*> files);
+        
+        template<typename... Args>
+        void AddExistingFiles(FileSet* s, Args... files)
+        {
+            return AddExistingFiles(s, gocpp::ToSlice<golang::go::token::File*>(files...));
+        }
+        
+        template<typename... Args>
+        void AddExistingFiles(FileSet* s, golang::go::token::File* value, Args... files)
+        {
+            return AddExistingFiles(s, gocpp::ToSlice<golang::go::token::File*>(value, files...));
+        }
+        void RemoveFile(FileSet* s, golang::go::token::File* file);
+        void Iterate(FileSet* s, std::function<bool (golang::go::token::File* _1)> yield);
+        golang::go::token::File* file(FileSet* s, golang::go::token::Pos p);
+        golang::go::token::File* File(FileSet* s, golang::go::token::Pos p);
+        golang::go::token::Position PositionFor(FileSet* s, golang::go::token::Pos p, bool adjusted);
+        golang::go::token::Position Position(FileSet* s, golang::go::token::Pos p);
     }
 }
 

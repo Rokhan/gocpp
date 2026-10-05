@@ -11,8 +11,12 @@
 #include "golang/internal/race/norace.h"
 #include "gocpp/support.h"
 
-namespace golang::race
+#include "golang/internal/abi/type.h"
+
+namespace golang::internal::race
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
     namespace rec
     {
     }
@@ -41,7 +45,23 @@ namespace golang::race
     {
     }
 
+    void ReadPC(gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)
+    {
+    }
+
+    void ReadObjectPC(abi::Type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)
+    {
+    }
+
     void Write(gocpp::unsafe_pointer addr)
+    {
+    }
+
+    void WritePC(gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)
+    {
+    }
+
+    void WriteObjectPC(abi::Type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
     }
 

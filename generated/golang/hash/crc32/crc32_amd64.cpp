@@ -15,8 +15,10 @@
 #include "golang/hash/crc32/crc32_generic.h"
 #include "golang/internal/cpu/cpu.h"
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace cpu = golang::internal::cpu;
     namespace rec
     {
     }

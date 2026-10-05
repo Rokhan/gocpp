@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::tree
+namespace golang::golang_org::x::tour::tree
 {
     struct Tree
     {

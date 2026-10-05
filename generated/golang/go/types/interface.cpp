@@ -20,6 +20,7 @@
 #include "golang/go/types/object.h"
 #include "golang/go/types/package.h"
 #include "golang/go/types/predicates.h"
+#include "golang/go/types/recording.h"
 #include "golang/go/types/signature.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typelists.h"
@@ -29,8 +30,10 @@
 #include "golang/go/types/union.h"
 #include "golang/internal/types/errors/codes.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::Pos;
@@ -102,7 +105,7 @@ namespace golang::types
     // Deprecated: Use NewInterfaceType instead which allows arbitrary embedded types.
     Interface* NewInterface(gocpp::slice<Func*> methods, gocpp::slice<Named*> embeddeds)
     {
-        auto tnames = gocpp::make(gocpp::Tag<gocpp::slice<golang::types::Type>>(), len(embeddeds));
+        auto tnames = gocpp::make(gocpp::Tag<gocpp::slice<golang::go::types::Type>>(), len(embeddeds));
         for(auto [i, t] : embeddeds)
         {
             tnames[i] = t;
@@ -116,7 +119,7 @@ namespace golang::types
     //
     // To avoid race conditions, the interface's type set should be computed before
     // concurrent use of the interface, by explicitly calling Complete.
-    Interface* NewInterfaceType(gocpp::slice<Func*> methods, gocpp::slice<golang::types::Type> embeddeds)
+    Interface* NewInterfaceType(gocpp::slice<Func*> methods, gocpp::slice<golang::go::types::Type> embeddeds)
     {
         if(len(methods) == 0 && len(embeddeds) == 0)
         {
@@ -127,9 +130,9 @@ namespace golang::types
         auto typ = rec::newInterface(gocpp::recv((Checker*)(nullptr)));
         for(auto [gocpp_ignored, m] : methods)
         {
-            if(auto sig = gocpp::getValue<Signature*>(m->object.typ); sig->recv == nullptr)
+            if(auto sig = gocpp::getValue<golang::go::types::Signature*>(m->object.typ); sig->recv == nullptr)
             {
-                sig->recv = NewVar(m->object.pos, m->object.pkg, ""_s, typ);
+                sig->recv = newVar(RecvVar, m->object.pos, m->object.pkg, ""_s, typ);
             }
         }
 
@@ -194,7 +197,7 @@ namespace golang::types
     }
 
     // EmbeddedType returns the i'th embedded type of interface t for 0 <= i < t.NumEmbeddeds().
-    golang::types::Type rec::EmbeddedType(Interface* t, int i)
+    golang::go::types::Type rec::EmbeddedType(Interface* t, int i)
     {
         return t->embeddeds[i];
     }
@@ -255,7 +258,7 @@ namespace golang::types
         return t;
     }
 
-    golang::types::Type rec::Underlying(Interface* t)
+    golang::go::types::Type rec::Underlying(Interface* t)
     {
         return t;
     }
@@ -275,7 +278,7 @@ namespace golang::types
 
     void rec::interfaceType(Checker* check, Interface* ityp, ast::InterfaceType* iface, TypeName* def)
     {
-        auto addEmbedded = [=](token::Pos pos, golang::types::Type typ) mutable -> void
+        auto addEmbedded = [=](token::Pos pos, golang::go::types::Type typ) mutable -> void
         {
             ityp->embeddeds = append(ityp->embeddeds, typ);
             if(ityp->embedPos == nullptr)
@@ -305,7 +308,7 @@ namespace golang::types
             }
 
             auto typ = rec::typ(gocpp::recv(check), f->Type);
-            auto [sig, gocpp_id_0] = gocpp::getValue<Signature*>(typ);
+            auto [sig, gocpp_id_0] = gocpp::getValue<golang::go::types::Signature*>(typ);
             if(sig == nullptr)
             {
                 if(types::isValid(typ))
@@ -316,7 +319,7 @@ namespace golang::types
                 continue;
             }
 
-            // The go/parser doesn't accept method type parameters but an ast.FuncType may have them.
+            // The go/parser doesn't accept interface method type parameters but an ast.FuncType may have them.
             if(sig->tparams != nullptr)
             {
                 positioner at = f->Type;
@@ -324,11 +327,11 @@ namespace golang::types
                 {
                     at = ftyp->TypeParams;
                 }
-                rec::error(gocpp::recv(check), at, InvalidSyntaxTree, "methods cannot have type parameters"_s);
+                rec::error(gocpp::recv(check), at, InvalidSyntaxTree, "interface methods cannot have type parameters"_s);
             }
 
             // use named receiver type if available (for better error messages)
-            golang::types::Type recvTyp = ityp;
+            golang::go::types::Type recvTyp = ityp;
             if(def != nullptr)
             {
                 if(auto named = asNamed(def->object.typ); named != nullptr)
@@ -336,7 +339,7 @@ namespace golang::types
                     recvTyp = named;
                 }
             }
-            sig->recv = NewVar(rec::Pos(gocpp::recv(name)), check->pkg, ""_s, recvTyp);
+            sig->recv = newVar(RecvVar, rec::Pos(gocpp::recv(name)), check->pkg, ""_s, recvTyp);
 
             auto m = NewFunc(rec::Pos(gocpp::recv(name)), check->pkg, name->Name, sig);
             rec::recordDef(gocpp::recv(check), name, m);

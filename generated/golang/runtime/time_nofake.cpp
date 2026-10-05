@@ -17,6 +17,7 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
@@ -26,12 +27,38 @@ namespace golang::runtime
     //
     // Zero means not to use faketime.
     int64_t faketime;
+    // Exported via linkname for use by time and internal/poll.
+    //
+    // Many external packages also linkname nanotime for a fast monotonic time.
+    // Such code should be updated to use:
+    //
+    //	var start = time.Now() // at init time
+    //
+    // and then replace nanotime() with time.Since(start), which is equally fast.
+    //
+    // However, all the code linknaming nanotime is never going to go away.
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname nanotime
     //go:nosplit
     int64_t nanotime()
     {
         return nanotime1();
     }
 
+    // overrideWrite allows write to be redirected externally, by
+    // linkname'ing this and set it to a write function.
+    //
+    // overrideWrite should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - golang.zx2c4.com/wireguard/windows
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname overrideWrite
     std::function<int32_t (uintptr_t fd, gocpp::unsafe_pointer p, int32_t n)> overrideWrite;
     // write must be nosplit on Windows (see write1)
     //

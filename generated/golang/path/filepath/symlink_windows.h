@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::filepath
+namespace golang::path::filepath
 {
     gocpp::string normVolumeName(gocpp::string path);
     std::tuple<gocpp::string, gocpp::error> normBase(gocpp::string path);

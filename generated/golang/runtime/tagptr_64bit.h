@@ -13,6 +13,7 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     taggedPointer taggedPointerPack(gocpp::unsafe_pointer ptr, uintptr_t tag);
 }
 

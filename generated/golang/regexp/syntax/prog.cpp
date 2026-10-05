@@ -12,14 +12,18 @@
 #include "gocpp/support.h"
 
 #include "golang/regexp/syntax/parse.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 #include "golang/strconv/quote.h"
 #include "golang/strings/builder.h"
 #include "golang/unicode/letter.h"
 #include "golang/unicode/utf8/utf8.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using strings::rec::String;
@@ -306,7 +310,7 @@ namespace golang::syntax
     }
 
     // MatchRune reports whether the instruction matches (and consumes) r.
-    // It should only be called when i.Op == InstRune.
+    // It should only be called when i.Op == [InstRune].
     bool rec::MatchRune(Inst* i, gocpp::rune r)
     {
         return rec::MatchRunePos(gocpp::recv(i), r) != noMatch;
@@ -316,7 +320,7 @@ namespace golang::syntax
     // If so, MatchRunePos returns the index of the matching rune pair
     // (or, when len(i.Rune) == 1, rune singleton).
     // If not, MatchRunePos returns -1.
-    // MatchRunePos should only be called when i.Op == InstRune.
+    // MatchRunePos should only be called when i.Op == [InstRune].
     int rec::MatchRunePos(Inst* i, gocpp::rune r)
     {
         auto rune = i->Rune;
@@ -412,7 +416,7 @@ namespace golang::syntax
 
     // MatchEmptyWidth reports whether the instruction matches
     // an empty string between the runes before and after.
-    // It should only be called when i.Op == InstEmptyWidth.
+    // It should only be called when i.Op == [InstEmptyWidth].
     bool rec::MatchEmptyWidth(Inst* i, gocpp::rune before, gocpp::rune after)
     {
         //Go switch emulation

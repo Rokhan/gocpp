@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::png
+namespace golang::image::png
 {
     struct EncoderBufferPool : virtual gocpp::Interface
     {
@@ -146,7 +146,6 @@ namespace golang::png
 
     std::ostream& operator<<(std::ostream& os, const struct opaquer& value);
     int abs8(uint8_t d);
-    void zeroMemory(gocpp::slice<uint8_t> v);
     int levelToZlib(CompressionLevel l);
     struct Encoder
     {
@@ -168,13 +167,28 @@ namespace golang::png
 
     std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
 }
-#include "golang/image/image.h"
-#include "golang/io/io.h"
-#include "golang/bufio/bufio.fwd.h"
-#include "golang/compress/zlib/writer.fwd.h"
 #include "golang/image/png/reader.fwd.h"
 
-namespace golang::png
+namespace golang::image::png
+{
+    int filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int bpp);
+}
+#include "golang/bufio/bufio.fwd.h"
+#include "golang/compress/zlib/writer.fwd.h"
+#include "golang/image/image.fwd.h"
+#include "golang/io/io.fwd.h"
+
+namespace golang::image::png
+{
+    namespace io = golang::io;
+    namespace image = golang::image;
+    namespace zlib = golang::compress::zlib;
+    namespace bufio = golang::bufio;
+}
+#include "golang/image/image.h"
+#include "golang/io/io.h"
+
+namespace golang::image::png
 {
     struct encoder
     {
@@ -205,7 +219,6 @@ namespace golang::png
 
     std::ostream& operator<<(std::ostream& os, const struct encoder& value);
     bool opaque(image::Image m);
-    int filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int bpp);
     gocpp::error Encode(io::Writer w, image::Image m);
     using EncoderBuffer = gocpp::defined<encoder, GoTag_EncoderBuffer>;
 }
@@ -214,8 +227,9 @@ namespace golang::png
 #include "golang/image/image.h"
 #include "golang/io/io.h"
 
-namespace golang::png
+namespace golang::image::png
 {
+    namespace color = golang::image::color;
 
     namespace rec
     {

@@ -11,7 +11,7 @@
 #include "golang/internal/abi/abi_amd64.h"
 #include "gocpp/support.h"
 
-namespace golang::abi
+namespace golang::internal::abi
 {
     namespace rec
     {

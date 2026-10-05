@@ -19,6 +19,8 @@
 
 namespace golang::regexp
 {
+    namespace sync = golang::sync;
+    namespace syntax = golang::regexp::syntax;
     namespace rec
     {
         using sync::rec::Get;

@@ -11,23 +11,37 @@
 #include "golang/runtime/error.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/bounds.h"
 #include "golang/internal/abi/type.h"
 #include "golang/internal/bytealg/indexbyte_native.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/stubs.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/traceback.h"
 #include "golang/runtime/type.h"
-#include "golang/runtime/typekind.h"
 
 namespace golang::runtime
 {
+    namespace abi = golang::internal::abi;
+    namespace bytealg = golang::internal::bytealg;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
+        using abi::rec::Kind;
     }
 
-    // The Error interface identifies a run time error.
+    // Error identifies a runtime error used in panic.
+    //
+    // The Go runtime triggers panics for a variety of cases, as described by the
+    // Go Language Spec, such as out-of-bounds slice/array access, close of nil
+    // channels, type assertion failures, etc.
+    //
+    // When these cases occur, the Go runtime panics with an error that implements
+    // Error. This can be useful when recovering from panics to distinguish between
+    // custom application panics and fundamental runtime panics.
+    //
+    // Packages outside of the Go standard library should not implement Error.
     
     template<typename T>
     Error::Error(T& ref)
@@ -238,6 +252,7 @@ namespace golang::runtime
         return "runtime error: "_s + e.msg;
     }
 
+    gocpp::error _ = errorAddressString {};
     // Addr returns the memory address where a fault occurred.
     // The address provided is best-effort.
     // The veracity of the result may depend on the platform.
@@ -260,6 +275,7 @@ namespace golang::runtime
         return gocpp::string(e);
     }
 
+    gocpp::error _ = plainError(""_s);
     // A boundsError represents an indexing or slicing operation gone wrong.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -299,30 +315,31 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    gocpp::error _ = boundsError {};
     // boundsErrorFmts provide error text for various out-of-bounds panics.
     // Note: if you change these strings, you should adjust the size of the buffer
     // in boundsError.Error below as well.
     gocpp::array<gocpp::string, 9> boundsErrorFmts = gocpp::Init<gocpp::array<gocpp::string, 9>>([](auto& x) {
-        x[boundsIndex] = "index out of range [%x] with length %y"_s;
-        x[boundsSliceAlen] = "slice bounds out of range [:%x] with length %y"_s;
-        x[boundsSliceAcap] = "slice bounds out of range [:%x] with capacity %y"_s;
-        x[boundsSliceB] = "slice bounds out of range [%x:%y]"_s;
-        x[boundsSlice3Alen] = "slice bounds out of range [::%x] with length %y"_s;
-        x[boundsSlice3Acap] = "slice bounds out of range [::%x] with capacity %y"_s;
-        x[boundsSlice3B] = "slice bounds out of range [:%x:%y]"_s;
-        x[boundsSlice3C] = "slice bounds out of range [%x:%y:]"_s;
-        x[boundsConvert] = "cannot convert slice with length %y to array or pointer to array with length %x"_s;
+        x[abi::BoundsIndex] = "index out of range [%x] with length %y"_s;
+        x[abi::BoundsSliceAlen] = "slice bounds out of range [:%x] with length %y"_s;
+        x[abi::BoundsSliceAcap] = "slice bounds out of range [:%x] with capacity %y"_s;
+        x[abi::BoundsSliceB] = "slice bounds out of range [%x:%y]"_s;
+        x[abi::BoundsSlice3Alen] = "slice bounds out of range [::%x] with length %y"_s;
+        x[abi::BoundsSlice3Acap] = "slice bounds out of range [::%x] with capacity %y"_s;
+        x[abi::BoundsSlice3B] = "slice bounds out of range [:%x:%y]"_s;
+        x[abi::BoundsSlice3C] = "slice bounds out of range [%x:%y:]"_s;
+        x[abi::BoundsConvert] = "cannot convert slice with length %y to array or pointer to array with length %x"_s;
     });
     // boundsNegErrorFmts are overriding formats if x is negative. In this case there's no need to report y.
     gocpp::array<gocpp::string, 8> boundsNegErrorFmts = gocpp::Init<gocpp::array<gocpp::string, 8>>([](auto& x) {
-        x[boundsIndex] = "index out of range [%x]"_s;
-        x[boundsSliceAlen] = "slice bounds out of range [:%x]"_s;
-        x[boundsSliceAcap] = "slice bounds out of range [:%x]"_s;
-        x[boundsSliceB] = "slice bounds out of range [%x:]"_s;
-        x[boundsSlice3Alen] = "slice bounds out of range [::%x]"_s;
-        x[boundsSlice3Acap] = "slice bounds out of range [::%x]"_s;
-        x[boundsSlice3B] = "slice bounds out of range [:%x:]"_s;
-        x[boundsSlice3C] = "slice bounds out of range [%x::]"_s;
+        x[abi::BoundsIndex] = "index out of range [%x]"_s;
+        x[abi::BoundsSliceAlen] = "slice bounds out of range [:%x]"_s;
+        x[abi::BoundsSliceAcap] = "slice bounds out of range [:%x]"_s;
+        x[abi::BoundsSliceB] = "slice bounds out of range [%x:]"_s;
+        x[abi::BoundsSlice3Alen] = "slice bounds out of range [::%x]"_s;
+        x[abi::BoundsSlice3Acap] = "slice bounds out of range [::%x]"_s;
+        x[abi::BoundsSlice3B] = "slice bounds out of range [:%x:]"_s;
+        x[abi::BoundsSlice3C] = "slice bounds out of range [%x::]"_s;
     });
     void rec::RuntimeError(boundsError e)
     {
@@ -434,14 +451,20 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    // printany prints an argument passed to panic.
+    // printpanicval prints an argument passed to panic.
     // If panic is called with a value that has a String or Error method,
     // it has already been converted into a string by preprintpanics.
-    void printany(go_any i)
+    //
+    // To ensure that the traceback can be unambiguously parsed even when
+    // the panic value contains "\ngoroutine" and other stack-like
+    // strings, newlines in the string representation of v are replaced by
+    // "\n\t".
+    void printpanicval(go_any v)
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_0 = gocpp::type_info(i);
+            const auto& gocpp_id_0 = gocpp::type_info(v);
+            const auto& v_ref = v;
             int conditionId = -1;
             if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
             else if(gocpp_id_0 == typeid(bool)) { conditionId = 1; }
@@ -465,122 +488,123 @@ namespace golang::runtime
             {
                 case 0:
                 {
-                    untyped nil v = gocpp::any_cast<untyped nil>(i);
+                    untyped nil v = gocpp::any_cast<untyped nil>(v_ref);
                     print("nil"_s);
                     break;
                 }
                 case 1:
                 {
-                    bool v = gocpp::any_cast<bool>(i);
+                    bool v = gocpp::any_cast<bool>(v_ref);
                     print(v);
                     break;
                 }
                 case 2:
                 {
-                    int v = gocpp::any_cast<int>(i);
+                    int v = gocpp::any_cast<int>(v_ref);
                     print(v);
                     break;
                 }
                 case 3:
                 {
-                    int8_t v = gocpp::any_cast<int8_t>(i);
+                    int8_t v = gocpp::any_cast<int8_t>(v_ref);
                     print(v);
                     break;
                 }
                 case 4:
                 {
-                    int16_t v = gocpp::any_cast<int16_t>(i);
+                    int16_t v = gocpp::any_cast<int16_t>(v_ref);
                     print(v);
                     break;
                 }
                 case 5:
                 {
-                    int32_t v = gocpp::any_cast<int32_t>(i);
+                    int32_t v = gocpp::any_cast<int32_t>(v_ref);
                     print(v);
                     break;
                 }
                 case 6:
                 {
-                    int64_t v = gocpp::any_cast<int64_t>(i);
+                    int64_t v = gocpp::any_cast<int64_t>(v_ref);
                     print(v);
                     break;
                 }
                 case 7:
                 {
-                    unsigned int v = gocpp::any_cast<unsigned int>(i);
+                    unsigned int v = gocpp::any_cast<unsigned int>(v_ref);
                     print(v);
                     break;
                 }
                 case 8:
                 {
-                    uint8_t v = gocpp::any_cast<uint8_t>(i);
+                    uint8_t v = gocpp::any_cast<uint8_t>(v_ref);
                     print(v);
                     break;
                 }
                 case 9:
                 {
-                    uint16_t v = gocpp::any_cast<uint16_t>(i);
+                    uint16_t v = gocpp::any_cast<uint16_t>(v_ref);
                     print(v);
                     break;
                 }
                 case 10:
                 {
-                    uint32_t v = gocpp::any_cast<uint32_t>(i);
+                    uint32_t v = gocpp::any_cast<uint32_t>(v_ref);
                     print(v);
                     break;
                 }
                 case 11:
                 {
-                    uint64_t v = gocpp::any_cast<uint64_t>(i);
+                    uint64_t v = gocpp::any_cast<uint64_t>(v_ref);
                     print(v);
                     break;
                 }
                 case 12:
                 {
-                    uintptr_t v = gocpp::any_cast<uintptr_t>(i);
+                    uintptr_t v = gocpp::any_cast<uintptr_t>(v_ref);
                     print(v);
                     break;
                 }
                 case 13:
                 {
-                    float v = gocpp::any_cast<float>(i);
+                    float v = gocpp::any_cast<float>(v_ref);
                     print(v);
                     break;
                 }
                 case 14:
                 {
-                    double v = gocpp::any_cast<double>(i);
+                    double v = gocpp::any_cast<double>(v_ref);
                     print(v);
                     break;
                 }
                 case 15:
                 {
-                    gocpp::complex64 v = gocpp::any_cast<gocpp::complex64>(i);
+                    gocpp::complex64 v = gocpp::any_cast<gocpp::complex64>(v_ref);
                     print(v);
                     break;
                 }
                 case 16:
                 {
-                    gocpp::complex128 v = gocpp::any_cast<gocpp::complex128>(i);
+                    gocpp::complex128 v = gocpp::any_cast<gocpp::complex128>(v_ref);
                     print(v);
                     break;
                 }
                 case 17:
                 {
-                    gocpp::string v = gocpp::any_cast<gocpp::string>(i);
-                    print(v);
+                    gocpp::string v = gocpp::any_cast<gocpp::string>(v_ref);
+                    printindented(v);
                     break;
                 }
                 default:
                 {
-                    auto v = i;
-                    printanycustomtype(i);
+                    auto v = v_ref;
+                    printanycustomtype(v);
                     break;
                 }
             }
         }
     }
 
+    // Invariant: each newline in the string representation is followed by a tab.
     void printanycustomtype(go_any i)
     {
         auto eface = efaceOf(& i);
@@ -588,29 +612,31 @@ namespace golang::runtime
 
         //Go switch emulation
         {
-            auto condition = eface->_type->Kind_;
+            auto condition = rec::Kind(gocpp::recv(eface->_type));
             int conditionId = -1;
-            if(condition == kindString) { conditionId = 0; }
-            else if(condition == kindBool) { conditionId = 1; }
-            else if(condition == kindInt) { conditionId = 2; }
-            else if(condition == kindInt8) { conditionId = 3; }
-            else if(condition == kindInt16) { conditionId = 4; }
-            else if(condition == kindInt32) { conditionId = 5; }
-            else if(condition == kindInt64) { conditionId = 6; }
-            else if(condition == kindUint) { conditionId = 7; }
-            else if(condition == kindUint8) { conditionId = 8; }
-            else if(condition == kindUint16) { conditionId = 9; }
-            else if(condition == kindUint32) { conditionId = 10; }
-            else if(condition == kindUint64) { conditionId = 11; }
-            else if(condition == kindUintptr) { conditionId = 12; }
-            else if(condition == kindFloat32) { conditionId = 13; }
-            else if(condition == kindFloat64) { conditionId = 14; }
-            else if(condition == kindComplex64) { conditionId = 15; }
-            else if(condition == kindComplex128) { conditionId = 16; }
+            if(condition == abi::String) { conditionId = 0; }
+            else if(condition == abi::Bool) { conditionId = 1; }
+            else if(condition == abi::Int) { conditionId = 2; }
+            else if(condition == abi::Int8) { conditionId = 3; }
+            else if(condition == abi::Int16) { conditionId = 4; }
+            else if(condition == abi::Int32) { conditionId = 5; }
+            else if(condition == abi::Int64) { conditionId = 6; }
+            else if(condition == abi::Uint) { conditionId = 7; }
+            else if(condition == abi::Uint8) { conditionId = 8; }
+            else if(condition == abi::Uint16) { conditionId = 9; }
+            else if(condition == abi::Uint32) { conditionId = 10; }
+            else if(condition == abi::Uint64) { conditionId = 11; }
+            else if(condition == abi::Uintptr) { conditionId = 12; }
+            else if(condition == abi::Float32) { conditionId = 13; }
+            else if(condition == abi::Float64) { conditionId = 14; }
+            else if(condition == abi::Complex64) { conditionId = 15; }
+            else if(condition == abi::Complex128) { conditionId = 16; }
             switch(conditionId)
             {
                 case 0:
-                    print(typestring, "(\""_s, *(gocpp::string*)(eface->data), "\")"_s);
+                    print(typestring, "(\""_s);
+                    printindented(*(gocpp::string*)(eface->data));
+                    print("\")"_s);
                     break;
                 case 1:
                     print(typestring, "("_s, *(bool*)(eface->data), ")"_s);
@@ -667,13 +693,31 @@ namespace golang::runtime
         }
     }
 
+    // printindented prints s, replacing "\n" with "\n\t".
+    void printindented(gocpp::string s)
+    {
+        for(; ; )
+        {
+            auto i = bytealg::IndexByteString(s, '\n');
+            if(i < 0)
+            {
+                break;
+            }
+            i += len("\n"_s);
+            print(s.make_slice(0, i));
+            print("\t"_s);
+            s = s.make_slice(i);
+        }
+        print(s);
+    }
+
     // panicwrap generates a panic for a call to a wrapped value method
     // with a nil pointer receiver.
     //
     // It is called from the generated wrapper code.
     void panicwrap()
     {
-        auto pc = getcallerpc();
+        auto pc = sys::GetCallerPC();
         auto name = funcNameForPrint(funcname(findfunc(pc)));
         // name is something like "main.(*T).F".
         // We want to extract pkg ("main"), typ ("T"), and meth ("F").

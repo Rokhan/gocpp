@@ -11,13 +11,19 @@
 #include "golang/runtime/mem.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/runtime/asan0.h"
+#include "golang/runtime/extern.h"
+#include "golang/runtime/mem_nonsbrk.h"
 #include "golang/runtime/mem_windows.h"
 #include "golang/runtime/mgcpacer.h"
 #include "golang/runtime/mstats.h"
+#include "golang/runtime/panic.h"
+#include "golang/runtime/stubs.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
         using atomic::rec::Add;
@@ -34,11 +40,20 @@ namespace golang::runtime
     // which prevents us from allocating more stack.
     //
     //go:nosplit
-    gocpp::unsafe_pointer sysAlloc(uintptr_t n, sysMemStat* sysStat)
+    gocpp::unsafe_pointer sysAlloc(uintptr_t n, sysMemStat* sysStat, gocpp::string vmaName)
     {
         rec::add(gocpp::recv(sysStat), int64_t(n));
         rec::Add(gocpp::recv(gcController.mappedReady), int64_t(n));
-        return sysAllocOS(n);
+        auto p = sysAllocOS(n, vmaName);
+
+        // When using ASAN leak detection, we must tell ASAN about
+        // cases where we store pointers in mmapped memory.
+        if(asanenabled)
+        {
+            lsanregisterrootregion(p, n);
+        }
+
+        return p;
     }
 
     // sysUnused transitions a memory region from Ready to Prepared. It notifies the
@@ -50,6 +65,13 @@ namespace golang::runtime
     {
         rec::Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
         sysUnusedOS(v, n);
+    }
+
+    // needZeroAfterSysUnused reports whether memory returned by sysUnused must be
+    // zeroed for use.
+    bool needZeroAfterSysUnused()
+    {
+        return needZeroAfterSysUnusedOS();
     }
 
     // sysUsed transitions a memory region from Prepared to Ready. It notifies the
@@ -91,14 +113,14 @@ namespace golang::runtime
         sysHugePageCollapseOS(v, n);
     }
 
-    // sysFree transitions a memory region from any state to None. Therefore, it
-    // returns memory unconditionally. It is used if an out-of-memory error has been
-    // detected midway through an allocation or to carve out an aligned section of
-    // the address space. It is okay if sysFree is a no-op only if sysReserve always
-    // returns a memory region aligned to the heap allocator's alignment
-    // restrictions.
+    // sysFree transitions a memory region from Ready to None. Therefore, it
+    // returns memory unconditionally.
     //
     // sysStat must be non-nil.
+    //
+    // The size and start address must exactly match the size and returned address
+    // from the original sysAlloc/sysReserve/sysReserveAligned call. That is,
+    // sysFree cannot be used to free a subset of a memory region.
     //
     // Don't split the stack as this function may be invoked without a valid G,
     // which prevents us from allocating more stack.
@@ -106,6 +128,16 @@ namespace golang::runtime
     //go:nosplit
     void sysFree(gocpp::unsafe_pointer v, uintptr_t n, sysMemStat* sysStat)
     {
+        // When using ASAN leak detection, the memory being freed is known by
+        // the sanitizer. We need to unregister it so it's not accessed by it.
+        // lsanunregisterrootregion matches regions by start address and size,
+        // so it is not possible to unregister a subset of the region. This is
+        // why sysFree requires the full region from the initial allocation.
+        if(asanenabled)
+        {
+            lsanunregisterrootregion(v, n);
+        }
+
         rec::add(gocpp::recv(sysStat), - int64_t(n));
         rec::Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
         sysFreeOS(v, n);
@@ -131,26 +163,146 @@ namespace golang::runtime
     // (either via permissions or not committing the memory). Such a reservation is
     // thus never backed by physical memory.
     //
-    // If the pointer passed to it is non-nil, the caller wants the
-    // reservation there, but sysReserve can still choose another
-    // location if that one is unavailable.
+    // If the pointer passed to it is non-nil, the caller wants the reservation
+    // there, but sysReserve can still choose another location if that one is
+    // unavailable.
     //
-    // NOTE: sysReserve returns OS-aligned memory, but the heap allocator
-    // may use larger alignment, so the caller must be careful to realign the
-    // memory obtained by sysReserve.
-    gocpp::unsafe_pointer sysReserve(gocpp::unsafe_pointer v, uintptr_t n)
+    // sysReserve returns OS-aligned memory. If a larger alignment is required, use
+    // sysReservedAligned.
+    gocpp::unsafe_pointer sysReserve(gocpp::unsafe_pointer v, uintptr_t n, gocpp::string vmaName)
     {
-        return sysReserveOS(v, n);
+        auto p = sysReserveOS(v, n, vmaName);
+
+        // When using ASAN leak detection, we must tell ASAN about
+        // cases where we store pointers in mmapped memory.
+        if(asanenabled)
+        {
+            lsanregisterrootregion(p, n);
+        }
+
+        return p;
+    }
+
+    // sysReserveAligned transitions a memory region from None to Reserved.
+    //
+    // Semantics are equivlent to sysReserve, but the returned pointer is aligned
+    // to align bytes. It may reserve either n or n+align bytes, so it returns the
+    // size that was reserved.
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> sysReserveAligned(gocpp::unsafe_pointer v, uintptr_t size, uintptr_t align, gocpp::string vmaName)
+    {
+        if(isSbrkPlatform)
+        {
+            if(v != nullptr)
+            {
+                go_throw("unexpected heap arena hint on sbrk platform"_s);
+            }
+            return sysReserveAlignedSbrk(size, align);
+        }
+        // Since the alignment is rather large in uses of this
+        // function, we're not likely to get it by chance, so we ask
+        // for a larger region and remove the parts we don't need.
+        auto retries = 0;
+        retry:
+        auto p = uintptr_t(sysReserve(v, size + align, vmaName));
+        //Go switch emulation
+        {
+            int conditionId = -1;
+            if(p == 0) { conditionId = 0; }
+            else if(p & (align - 1) == 0) { conditionId = 1; }
+            else if(GOOS == "windows"_s) { conditionId = 2; }
+            switch(conditionId)
+            {
+                case 0:
+                    return {nullptr, 0};
+                    break;
+                case 1:
+                    return {gocpp::unsafe_pointer(p), size + align};
+                    break;
+                case 2:
+                {
+                    // On Windows we can't release pieces of a
+                    // reservation, so we release the whole thing and
+                    // re-reserve the aligned sub-region. This may race,
+                    // so we may have to try again.
+                    sysUnreserve(gocpp::unsafe_pointer(p), size + align);
+                    p = alignUp(p, align);
+                    auto p2 = sysReserve(gocpp::unsafe_pointer(p), size, vmaName);
+                    if(p != uintptr_t(p2))
+                    {
+                        // Must have raced. Try again.
+                        sysUnreserve(p2, size);
+                        if(retries++; retries == 100)
+                        {
+                            go_throw("failed to allocate aligned heap memory; too many retries"_s);
+                        }
+                        goto retry;
+                    }
+                    // Success.
+                    return {p2, size};
+                    break;
+                }
+                default:
+                {
+                    // Trim off the unaligned parts.
+                    auto pAligned = alignUp(p, align);
+                    auto end = pAligned + size;
+                    auto endLen = (p + size + align) - end;
+                    // sysUnreserve does not allow unreserving a subset of the
+                    // region because LSAN does not allow unregistering a subset.
+                    // So we can't call sysUnreserve. Instead we simply unregister
+                    // the entire region from LSAN and re-register with the smaller
+                    // region before freeing the unecessary portions, which does
+                    // allow subsets of the region.
+                    if(asanenabled)
+                    {
+                        lsanunregisterrootregion(gocpp::unsafe_pointer(p), size + align);
+                        lsanregisterrootregion(gocpp::unsafe_pointer(pAligned), size);
+                    }
+                    sysFreeOS(gocpp::unsafe_pointer(p), pAligned - p);
+                    if(endLen > 0)
+                    {
+                        sysFreeOS(gocpp::unsafe_pointer(end), endLen);
+                    }
+                    return {gocpp::unsafe_pointer(pAligned), size};
+                    break;
+                }
+            }
+        }
+    }
+
+    // sysUnreserve transitions a memory region from Reserved to None.
+    //
+    // The size and start address must exactly match the size and returned address
+    // from sysReserve/sysReserveAligned. That is, sysUnreserve cannot be used to
+    // unreserve a subset of a memory region.
+    //
+    // Don't split the stack as this function may be invoked without a valid G,
+    // which prevents us from allocating more stack.
+    //
+    //go:nosplit
+    void sysUnreserve(gocpp::unsafe_pointer v, uintptr_t n)
+    {
+        // When using ASAN leak detection, the memory being freed is known by
+        // the sanitizer. We need to unregister it so it's not accessed by it.
+        // lsanunregisterrootregion matches regions by start address and size,
+        // so it is not possible to unregister a subset of the region. This is
+        // why sysUnreserve requires the full region from sysReserve.
+        if(asanenabled)
+        {
+            lsanunregisterrootregion(v, n);
+        }
+
+        sysFreeOS(v, n);
     }
 
     // sysMap transitions a memory region from Reserved to Prepared. It ensures the
     // memory region can be efficiently transitioned to Ready.
     //
     // sysStat must be non-nil.
-    void sysMap(gocpp::unsafe_pointer v, uintptr_t n, sysMemStat* sysStat)
+    void sysMap(gocpp::unsafe_pointer v, uintptr_t n, sysMemStat* sysStat, gocpp::string vmaName)
     {
         rec::add(gocpp::recv(sysStat), int64_t(n));
-        sysMapOS(v, n);
+        sysMapOS(v, n, vmaName);
     }
 
 }

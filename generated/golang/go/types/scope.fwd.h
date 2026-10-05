@@ -3,11 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/object.fwd.h"
-#include "golang/sync/once.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Scope;
     struct lazyObject;

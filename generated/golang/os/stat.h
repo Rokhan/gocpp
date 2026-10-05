@@ -9,13 +9,14 @@
 #include "golang/os/stat.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/io/fs/fs.h"
-#include "golang/os/types.fwd.h"
+#include "golang/os/types.h"
 
 namespace golang::os
 {
     std::tuple<FileInfo, gocpp::error> Stat(gocpp::string name);
     std::tuple<FileInfo, gocpp::error> Lstat(gocpp::string name);
+    // stathook is set in tests
+    extern std::function<std::tuple<FileInfo, gocpp::error> (File* f, gocpp::string name)> stathook;
 
     namespace rec
     {

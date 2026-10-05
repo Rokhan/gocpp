@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::ast
+namespace golang::go::ast
 {
     struct Scope
     {
@@ -56,8 +56,9 @@ namespace golang::ast
 
 #include "golang/go/token/position.h"
 
-namespace golang::ast
+namespace golang::go::ast
 {
+    namespace token = golang::go::token;
 
     namespace rec
     {

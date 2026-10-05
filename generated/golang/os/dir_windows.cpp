@@ -21,24 +21,34 @@
 #include "golang/os/dir.h"
 #include "golang/os/error.h"
 #include "golang/os/file_windows.h"
-#include "golang/os/path_windows.h"
 #include "golang/os/stat_windows.h"
 #include "golang/os/types.h"
 #include "golang/os/types_windows.h"
 #include "golang/runtime/mfinal.h"
+#include "golang/sync/atomic/type.h"
+#include "golang/sync/mutex.h"
 #include "golang/sync/pool.h"
-#include "golang/syscall/exec_windows.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/zerrors_windows.h"
 
 namespace golang::os
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace fs = golang::io::fs;
+    namespace io = golang::io;
+    namespace runtime = golang::runtime;
+    namespace sync = golang::sync;
+    namespace syscall = golang::syscall;
+    namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
-        using fs::rec::Error;
+        using atomic::rec::CompareAndSwap;
+        using atomic::rec::Load;
         using fs::rec::IsDir;
         using fs::rec::Type;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
         using sync::rec::Get;
         using sync::rec::Put;
     }
@@ -49,8 +59,10 @@ namespace golang::os
     dirInfo::operator T()
     {
         T result;
+        result.mu = this->mu;
         result.buf = this->buf;
         result.bufp = this->bufp;
+        result.h = this->h;
         result.vol = this->vol;
         result.go_class = this->go_class;
         result.path = this->path;
@@ -60,8 +72,10 @@ namespace golang::os
     template<typename T> requires gocpp::GoStruct<T>
     bool dirInfo::operator==(const T& ref) const
     {
+        if (mu != ref.mu) return false;
         if (buf != ref.buf) return false;
         if (bufp != ref.bufp) return false;
+        if (h != ref.h) return false;
         if (vol != ref.vol) return false;
         if (go_class != ref.go_class) return false;
         if (path != ref.path) return false;
@@ -71,8 +85,10 @@ namespace golang::os
     std::ostream& dirInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << buf;
+        os << "" << mu;
+        os << " " << buf;
         os << " " << bufp;
+        os << " " << h;
         os << " " << vol;
         os << " " << go_class;
         os << " " << path;
@@ -95,6 +111,7 @@ namespace golang::os
     });
     void rec::close(dirInfo* d)
     {
+        d->h = 0;
         if(d->buf != nullptr)
         {
             rec::Put(gocpp::recv(dirBufPool), d->buf);
@@ -106,196 +123,226 @@ namespace golang::os
     // if the underlying file system supports it.
     // Useful for testing purposes.
     bool allowReadDirFileID = true;
+    void rec::init(dirInfo* d, syscall::Handle h)
+    {
+        d->h = h;
+        // The previous settings are enough to read the directory entries.
+        // The following code is only needed to support os.SameFile.
+        d->go_class = windows::FileFullDirectoryRestartInfo;
+
+
+
+        // It is safe to query d.vol once and reuse the value.
+        // Hard links are not allowed to reference files in other volumes.
+        // Junctions and symbolic links can reference files and directories in other volumes,
+        // but the reparse point should still live in the parent volume.
+        uint32_t flags = {};
+        auto err = windows::GetVolumeInformationByHandle(h, nullptr, 0, & d->vol, nullptr, & flags, nullptr, 0);
+        if(err != nullptr)
+        {
+            // Set to zero in case Windows writes garbage to it.
+            d->vol = 0;
+            // If we can't get the volume information, we can't use os.SameFile,
+            // but we can still read the directory entries.
+            return;
+        }
+        if(flags & windows::FILE_SUPPORTS_OBJECT_IDS == 0)
+        {
+            // The file system does not support object IDs, no need to continue.
+            return;
+        }
+        if(allowReadDirFileID && flags & windows::FILE_SUPPORTS_OPEN_BY_FILE_ID != 0)
+        {
+            // Use FileIdBothDirectoryRestartInfo if available as it returns the file ID
+            // without the need to open the file.
+            d->go_class = windows::FileIdBothDirectoryRestartInfo;
+        }
+        else
+        {
+            // If FileIdBothDirectoryRestartInfo is not available but objects IDs are supported,
+            // get the directory path so that os.SameFile can use it to open the file
+            // and retrieve the file ID.
+            std::tie(d->path, std::ignore) = windows::FinalPath(h, windows::FILE_NAME_OPENED);
+        }
+    }
+
     std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, gocpp::error> rec::readdir(File* file, int n, readdirMode mode)
     {
         gocpp::slice<gocpp::string> names;
         gocpp::slice<DirEntry> dirents;
         gocpp::slice<FileInfo> infos;
         gocpp::error err;
-        // If this file has no dirinfo, create one.
-        if(file->file.dirinfo == nullptr)
+        gocpp::Defer defer;
+        try
         {
-            // vol is used by os.SameFile.
-            // It is safe to query it once and reuse the value.
-            // Hard links are not allowed to reference files in other volumes.
-            // Junctions and symbolic links can reference files and directories in other volumes,
-            // but the reparse point should still live in the parent volume.
-            uint32_t vol = {};
-            uint32_t flags = {};
-            err = windows::GetVolumeInformationByHandle(file->file.pfd.Sysfd, nullptr, 0, & vol, nullptr, & flags, nullptr, 0);
-            runtime::KeepAlive(file);
-            if(err != nullptr)
+            // If this file has no dirInfo, create one.
+            dirInfo* d = {};
+            for(; ; )
             {
-                err = gocpp::InitPtr<PathError>([=](auto& x) {
-                    x.Op = "readdir"_s;
-                    x.Path = file->file.name;
-                    x.Err = err;
-                });
-                return {names, dirents, infos, err};
-            }
-            file->file.dirinfo = new dirInfo{};
-            file->file.dirinfo->buf = gocpp::getValue<gocpp::slice<unsigned char>*>(rec::Get(gocpp::recv(dirBufPool)));
-            file->file.dirinfo->vol = vol;
-            if(allowReadDirFileID && flags & windows::FILE_SUPPORTS_OPEN_BY_FILE_ID != 0)
-            {
-                file->file.dirinfo->go_class = windows::FileIdBothDirectoryRestartInfo;
-            }
-            else
-            {
-                file->file.dirinfo->go_class = windows::FileFullDirectoryRestartInfo;
-                // Set the directory path for use by os.SameFile, as it is possible that
-                // the file system supports retrieving the file ID using GetFileInformationByHandle.
-                file->file.dirinfo->path = file->file.name;
-                if(! isAbs(file->file.dirinfo->path))
+                d = rec::Load<dirInfo>(gocpp::recv(file->file.dirinfo));
+                if(d != nullptr)
                 {
-                    // If the path is relative, we need to convert it to an absolute path
-                    // in case the current directory changes between this call and a
-                    // call to os.SameFile.
-                    std::tie(file->file.dirinfo->path, err) = syscall::FullPath(file->file.dirinfo->path);
+                    break;
+                }
+                d = new dirInfo{};
+                rec::init(gocpp::recv(d), file->file.pfd.Sysfd);
+                if(rec::CompareAndSwap<dirInfo>(gocpp::recv(file->file.dirinfo), nullptr, d))
+                {
+                    break;
+                }
+                // We lost the race: try again.
+                rec::close(gocpp::recv(d));
+            }
+            rec::Lock(gocpp::recv(d->mu));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(d->mu)); });
+            if(d->buf == nullptr)
+            {
+                d->buf = gocpp::getValue<gocpp::slice<unsigned char>*>(rec::Get(gocpp::recv(dirBufPool)));
+            }
+
+            auto wantAll = n <= 0;
+            if(wantAll)
+            {
+                n = - 1;
+            }
+            for(; n != 0; )
+            {
+                // Refill the buffer if necessary
+                if(d->bufp == 0)
+                {
+                    err = windows::GetFileInformationByHandleEx(file->file.pfd.Sysfd, d->go_class, (unsigned char*)(gocpp::unsafe_pointer(& (*d->buf)[0])), uint32_t(len(*d->buf)));
+                    runtime::KeepAlive(file);
                     if(err != nullptr)
                     {
-                        err = gocpp::InitPtr<PathError>([=](auto& x) {
-                            x.Op = "readdir"_s;
-                            x.Path = file->file.name;
-                            x.Err = err;
-                        });
+                        if(err == syscall::ERROR_NO_MORE_FILES)
+                        {
+                            // Optimization: we can return the buffer to the pool, there is nothing else to read.
+                            rec::Put(gocpp::recv(dirBufPool), d->buf);
+                            d->buf = nullptr;
+                            break;
+                        }
+                        if(err == syscall::ERROR_FILE_NOT_FOUND &&
+                                            (d->go_class == windows::FileIdBothDirectoryRestartInfo || d->go_class == windows::FileFullDirectoryRestartInfo))
+                        {
+                            // GetFileInformationByHandleEx doesn't document the return error codes when the info class is FileIdBothDirectoryRestartInfo,
+                            // but MS-FSA 2.1.5.6.3 [1] specifies that the underlying file system driver should return STATUS_NO_SUCH_FILE when
+                            // reading an empty root directory, which is mapped to ERROR_FILE_NOT_FOUND by Windows.
+                            // Note that some file system drivers may never return this error code, as the spec allows to return the "." and ".."
+                            // entries in such cases, making the directory appear non-empty.
+                            // The chances of false positive are very low, as we know that the directory exists, else GetVolumeInformationByHandle
+                            // would have failed, and that the handle is still valid, as we haven't closed it.
+                            // See go.dev/issue/61159.
+                            // [1] https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fsa/fa8194e0-53ec-413b-8315-e8fa85396fd8
+                            break;
+                        }
+                        if(auto [s, gocpp_id_0] = rec::Stat(gocpp::recv(file)); s != nullptr && ! rec::IsDir(gocpp::recv(s)))
+                        {
+                            err = gocpp::InitPtr<PathError>([=](auto& x) {
+                                x.Op = "readdir"_s;
+                                x.Path = file->file.name;
+                                x.Err = syscall::go_ENOTDIR;
+                            });
+                        }
+                        else
+                        {
+                            err = gocpp::InitPtr<PathError>([=](auto& x) {
+                                x.Op = "GetFileInformationByHandleEx"_s;
+                                x.Path = file->file.name;
+                                x.Err = err;
+                            });
+                        }
                         return {names, dirents, infos, err};
                     }
-                }
-            }
-        }
-        auto d = file->file.dirinfo;
-        auto wantAll = n <= 0;
-        if(wantAll)
-        {
-            n = - 1;
-        }
-        for(; n != 0; )
-        {
-            // Refill the buffer if necessary
-            if(d->bufp == 0)
-            {
-                err = windows::GetFileInformationByHandleEx(file->file.pfd.Sysfd, d->go_class, (unsigned char*)(gocpp::unsafe_pointer(& (*d->buf)[0])), uint32_t(len(*d->buf)));
-                runtime::KeepAlive(file);
-                if(err != nullptr)
-                {
-                    if(err == syscall::ERROR_NO_MORE_FILES)
+                    if(d->go_class == windows::FileIdBothDirectoryRestartInfo)
                     {
-                        break;
-                    }
-                    if(err == syscall::ERROR_FILE_NOT_FOUND &&
-                                        (d->go_class == windows::FileIdBothDirectoryRestartInfo || d->go_class == windows::FileFullDirectoryRestartInfo))
-                    {
-                        // GetFileInformationByHandleEx doesn't document the return error codes when the info class is FileIdBothDirectoryRestartInfo,
-                        // but MS-FSA 2.1.5.6.3 [1] specifies that the underlying file system driver should return STATUS_NO_SUCH_FILE when
-                        // reading an empty root directory, which is mapped to ERROR_FILE_NOT_FOUND by Windows.
-                        // Note that some file system drivers may never return this error code, as the spec allows to return the "." and ".."
-                        // entries in such cases, making the directory appear non-empty.
-                        // The chances of false positive are very low, as we know that the directory exists, else GetVolumeInformationByHandle
-                        // would have failed, and that the handle is still valid, as we haven't closed it.
-                        // See go.dev/issue/61159.
-                        // [1] https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fsa/fa8194e0-53ec-413b-8315-e8fa85396fd8
-                        break;
-                    }
-                    if(auto [s, gocpp_id_0] = rec::Stat(gocpp::recv(file)); s != nullptr && ! rec::IsDir(gocpp::recv(s)))
-                    {
-                        err = gocpp::InitPtr<PathError>([=](auto& x) {
-                            x.Op = "readdir"_s;
-                            x.Path = file->file.name;
-                            x.Err = syscall::go_ENOTDIR;
-                        });
+                        d->go_class = windows::FileIdBothDirectoryInfo;
                     }
                     else
+                    if(d->go_class == windows::FileFullDirectoryRestartInfo)
                     {
-                        err = gocpp::InitPtr<PathError>([=](auto& x) {
-                            x.Op = "GetFileInformationByHandleEx"_s;
-                            x.Path = file->file.name;
-                            x.Err = err;
-                        });
+                        d->go_class = windows::FileFullDirectoryInfo;
                     }
-                    return {names, dirents, infos, err};
                 }
-                if(d->go_class == windows::FileIdBothDirectoryRestartInfo)
+                // Drain the buffer
+                bool islast = {};
+                for(; n != 0 && ! islast; )
                 {
-                    d->go_class = windows::FileIdBothDirectoryInfo;
-                }
-                else
-                if(d->go_class == windows::FileFullDirectoryRestartInfo)
-                {
-                    d->go_class = windows::FileFullDirectoryInfo;
-                }
-            }
-            // Drain the buffer
-            bool islast = {};
-            for(; n != 0 && ! islast; )
-            {
-                uint32_t nextEntryOffset = {};
-                gocpp::slice<uint16_t> nameslice = {};
-                auto entry = gocpp::unsafe_pointer(& (*d->buf)[d->bufp]);
-                if(d->go_class == windows::FileIdBothDirectoryInfo)
-                {
-                    auto info = (windows::FILE_ID_BOTH_DIR_INFO*)(entry);
-                    nextEntryOffset = info->NextEntryOffset;
-                    nameslice = unsafe::Slice(& info->FileName[0], info->FileNameLength / 2);
-                }
-                else
-                {
-                    auto info = (windows::FILE_FULL_DIR_INFO*)(entry);
-                    nextEntryOffset = info->NextEntryOffset;
-                    nameslice = unsafe::Slice(& info->FileName[0], info->FileNameLength / 2);
-                }
-                d->bufp += int(nextEntryOffset);
-                islast = nextEntryOffset == 0;
-                if(islast)
-                {
-                    d->bufp = 0;
-                }
-                if((len(nameslice) == 1 && nameslice[0] == '.') ||
-                                (len(nameslice) == 2 && nameslice[0] == '.' && nameslice[1] == '.'))
-                {
-                    // Ignore "." and ".." and avoid allocating a string for them.
-                    continue;
-                }
-                auto name = syscall::UTF16ToString(nameslice);
-                if(mode == readdirName)
-                {
-                    names = append(names, name);
-                }
-                else
-                {
-                    fileStat* f = {};
+                    uint32_t nextEntryOffset = {};
+                    gocpp::slice<uint16_t> nameslice = {};
+                    auto entry = gocpp::unsafe_pointer(& (*d->buf)[d->bufp]);
                     if(d->go_class == windows::FileIdBothDirectoryInfo)
                     {
-                        f = newFileStatFromFileIDBothDirInfo((windows::FILE_ID_BOTH_DIR_INFO*)(entry));
+                        auto info = (windows::FILE_ID_BOTH_DIR_INFO*)(entry);
+                        nextEntryOffset = info->NextEntryOffset;
+                        nameslice = unsafe::Slice(& info->FileName[0], info->FileNameLength / 2);
                     }
                     else
                     {
-                        f = newFileStatFromFileFullDirInfo((windows::FILE_FULL_DIR_INFO*)(entry));
-                        // Defer appending the entry name to the parent directory path until
-                        // it is really needed, to avoid allocating a string that may not be used.
-                        // It is currently only used in os.SameFile.
-                        f->appendNameToPath = true;
-                        f->path = d->path;
+                        auto info = (windows::FILE_FULL_DIR_INFO*)(entry);
+                        nextEntryOffset = info->NextEntryOffset;
+                        nameslice = unsafe::Slice(& info->FileName[0], info->FileNameLength / 2);
                     }
-                    f->name = name;
-                    f->vol = d->vol;
-                    if(mode == readdirDirEntry)
+                    d->bufp += int(nextEntryOffset);
+                    islast = nextEntryOffset == 0;
+                    if(islast)
                     {
-                        dirents = append(dirents, dirEntry {f});
+                        d->bufp = 0;
+                    }
+                    if((len(nameslice) == 1 && nameslice[0] == '.') ||
+                                    (len(nameslice) == 2 && nameslice[0] == '.' && nameslice[1] == '.'))
+                    {
+                        // Ignore "." and ".." and avoid allocating a string for them.
+                        continue;
+                    }
+                    auto name = syscall::UTF16ToString(nameslice);
+                    if(mode == readdirName)
+                    {
+                        names = append(names, name);
                     }
                     else
                     {
-                        infos = append(infos, f);
+                        fileStat* f = {};
+                        if(d->go_class == windows::FileIdBothDirectoryInfo)
+                        {
+                            f = newFileStatFromFileIDBothDirInfo((windows::FILE_ID_BOTH_DIR_INFO*)(entry));
+                        }
+                        else
+                        {
+                            f = newFileStatFromFileFullDirInfo((windows::FILE_FULL_DIR_INFO*)(entry));
+                            if(d->path != ""_s)
+                            {
+                                // Defer appending the entry name to the parent directory path until
+                                // it is really needed, to avoid allocating a string that may not be used.
+                                // It is currently only used in os.SameFile.
+                                f->appendNameToPath = true;
+                                f->path = d->path;
+                            }
+                        }
+                        f->name = name;
+                        f->vol = d->vol;
+                        if(mode == readdirDirEntry)
+                        {
+                            dirents = append(dirents, dirEntry {f});
+                        }
+                        else
+                        {
+                            infos = append(infos, f);
+                        }
                     }
+                    n--;
                 }
-                n--;
             }
+            if(! wantAll && len(names) + len(dirents) + len(infos) == 0)
+            {
+                return {nullptr, nullptr, nullptr, io::go_EOF};
+            }
+            return {names, dirents, infos, nullptr};
         }
-        if(! wantAll && len(names) + len(dirents) + len(infos) == 0)
+        catch(gocpp::GoPanic& gp)
         {
-            return {nullptr, nullptr, nullptr, io::go_EOF};
+            defer.handlePanic(gp);
+            return {names, dirents, infos, err};
         }
-        return {names, dirents, infos, nullptr};
     }
 
     

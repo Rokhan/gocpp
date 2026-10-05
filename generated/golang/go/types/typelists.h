@@ -12,7 +12,7 @@
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeparam.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct TypeParamList
     {
@@ -32,7 +32,7 @@ namespace golang::types
     std::ostream& operator<<(std::ostream& os, const struct TypeParamList& value);
     struct TypeList
     {
-        gocpp::slice<golang::types::Type> types{};
+        gocpp::slice<golang::go::types::Type> types{};
 
         using isGoStruct = void;
 
@@ -46,14 +46,14 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeList& value);
-    TypeList* newTypeList(gocpp::slice<golang::types::Type> list);
+    TypeList* newTypeList(gocpp::slice<golang::go::types::Type> list);
     TypeParamList* bindTParams(gocpp::slice<TypeParam*> list);
 }
 
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeparam.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
@@ -61,9 +61,11 @@ namespace golang::types
         int Len(TypeParamList* l);
         TypeParam* At(TypeParamList* l, int i);
         gocpp::slice<TypeParam*> list(TypeParamList* l);
+        gocpp::string String(TypeParamList* l);
         int Len(TypeList* l);
-        golang::types::Type At(TypeList* l, int i);
-        gocpp::slice<golang::types::Type> list(TypeList* l);
+        golang::go::types::Type At(TypeList* l, int i);
+        gocpp::slice<golang::go::types::Type> list(TypeList* l);
+        gocpp::string String(TypeList* l);
     }
 }
 

@@ -11,12 +11,11 @@
 #include "golang/runtime/netpoll.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
@@ -26,14 +25,18 @@
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
+#include "golang/runtime/tagptr.h"
 #include "golang/runtime/tagptr_64bit.h"
 #include "golang/runtime/time.h"
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+#include "golang/runtime/traceruntime.h"
 #include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::Add;
@@ -60,6 +63,8 @@ namespace golang::runtime
         result.wg = this->wg;
         result.lock = this->lock;
         result.closing = this->closing;
+        result.rrun = this->rrun;
+        result.wrun = this->wrun;
         result.user = this->user;
         result.rseq = this->rseq;
         result.rt = this->rt;
@@ -83,6 +88,8 @@ namespace golang::runtime
         if (wg != ref.wg) return false;
         if (lock != ref.lock) return false;
         if (closing != ref.closing) return false;
+        if (rrun != ref.rrun) return false;
+        if (wrun != ref.wrun) return false;
         if (user != ref.user) return false;
         if (rseq != ref.rseq) return false;
         if (rt != ref.rt) return false;
@@ -106,6 +113,8 @@ namespace golang::runtime
         os << " " << wg;
         os << " " << lock;
         os << " " << closing;
+        os << " " << rrun;
+        os << " " << wrun;
         os << " " << user;
         os << " " << rseq;
         os << " " << rt;
@@ -255,6 +264,7 @@ namespace golang::runtime
         if(rec::Load(gocpp::recv(netpollInited)) == 0)
         {
             lockInit(& netpollInitLock, lockRankNetpollInit);
+            lockInit(& pollcache.lock, lockRankPollCache);
             lock(& netpollInitLock);
             if(rec::Load(gocpp::recv(netpollInited)) == 0)
             {
@@ -349,7 +359,7 @@ namespace golang::runtime
         // Increment the fdseq field, so that any currently
         // running netpoll calls will not mark pd as ready.
         auto fdseq = rec::Load(gocpp::recv(pd->fdseq));
-        fdseq = (fdseq + 1) & ((1 << taggedPointerBits) - 1);
+        fdseq = (fdseq + 1) & ((1 << tagBits) - 1);
         rec::Store(gocpp::recv(pd->fdseq), fdseq);
 
         rec::publishInfo(gocpp::recv(pd));
@@ -464,17 +474,15 @@ namespace golang::runtime
         {
             rtf = netpollDeadline;
         }
-        if(pd->rt.f == nullptr)
+        if(! pd->rrun)
         {
             if(pd->rd > 0)
             {
-                pd->rt.f = rtf;
                 // Copy current seq into the timer arg.
                 // Timer func will check the seq against current descriptor seq,
                 // if they differ the descriptor was reused or timers were reset.
-                pd->rt.arg = rec::makeArg(gocpp::recv(pd));
-                pd->rt.seq = pd->rseq;
-                resettimer(& pd->rt, pd->rd);
+                rec::modify(gocpp::recv(pd->rt), pd->rd, 0, rtf, rec::makeArg(gocpp::recv(pd)), pd->rseq);
+                pd->rrun = true;
             }
         }
         else
@@ -484,22 +492,20 @@ namespace golang::runtime
             pd->rseq++;
             if(pd->rd > 0)
             {
-                modtimer(& pd->rt, pd->rd, 0, rtf, rec::makeArg(gocpp::recv(pd)), pd->rseq);
+                rec::modify(gocpp::recv(pd->rt), pd->rd, 0, rtf, rec::makeArg(gocpp::recv(pd)), pd->rseq);
             }
             else
             {
-                deltimer(& pd->rt);
-                pd->rt.f = nullptr;
+                rec::stop(gocpp::recv(pd->rt));
+                pd->rrun = false;
             }
         }
-        if(pd->wt.f == nullptr)
+        if(! pd->wrun)
         {
             if(pd->wd > 0 && ! combo)
             {
-                pd->wt.f = netpollWriteDeadline;
-                pd->wt.arg = rec::makeArg(gocpp::recv(pd));
-                pd->wt.seq = pd->wseq;
-                resettimer(& pd->wt, pd->wd);
+                rec::modify(gocpp::recv(pd->wt), pd->wd, 0, netpollWriteDeadline, rec::makeArg(gocpp::recv(pd)), pd->wseq);
+                pd->wrun = true;
             }
         }
         else
@@ -509,12 +515,12 @@ namespace golang::runtime
             pd->wseq++;
             if(pd->wd > 0 && ! combo)
             {
-                modtimer(& pd->wt, pd->wd, 0, netpollWriteDeadline, rec::makeArg(gocpp::recv(pd)), pd->wseq);
+                rec::modify(gocpp::recv(pd->wt), pd->wd, 0, netpollWriteDeadline, rec::makeArg(gocpp::recv(pd)), pd->wseq);
             }
             else
             {
-                deltimer(& pd->wt);
-                pd->wt.f = nullptr;
+                rec::stop(gocpp::recv(pd->wt));
+                pd->wrun = false;
             }
         }
         // If we set the new deadline in the past, unblock currently pending IO if any.
@@ -559,15 +565,15 @@ namespace golang::runtime
         auto delta = int32_t(0);
         rg = netpollunblock(pd, 'r', false, & delta);
         wg = netpollunblock(pd, 'w', false, & delta);
-        if(pd->rt.f != nullptr)
+        if(pd->rrun)
         {
-            deltimer(& pd->rt);
-            pd->rt.f = nullptr;
+            rec::stop(gocpp::recv(pd->rt));
+            pd->rrun = false;
         }
-        if(pd->wt.f != nullptr)
+        if(pd->wrun)
         {
-            deltimer(& pd->wt);
-            pd->wt.f = nullptr;
+            rec::stop(gocpp::recv(pd->wt));
+            pd->wrun = false;
         }
         unlock(& pd->lock);
         if(rg != nullptr)
@@ -772,7 +778,7 @@ namespace golang::runtime
         g* rg = {};
         if(read)
         {
-            if(pd->rd <= 0 || pd->rt.f == nullptr)
+            if(pd->rd <= 0 || ! pd->rrun)
             {
                 go_throw("runtime: inconsistent read deadline"_s);
             }
@@ -783,7 +789,7 @@ namespace golang::runtime
         g* wg = {};
         if(write)
         {
-            if(pd->wd <= 0 || pd->wt.f == nullptr && ! read)
+            if(pd->wd <= 0 || ! pd->wrun && ! read)
             {
                 go_throw("runtime: inconsistent write deadline"_s);
             }
@@ -803,17 +809,17 @@ namespace golang::runtime
         netpollAdjustWaiters(delta);
     }
 
-    void netpollDeadline(go_any arg, uintptr_t seq)
+    void netpollDeadline(go_any arg, uintptr_t seq, int64_t delta)
     {
         netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, true, true);
     }
 
-    void netpollReadDeadline(go_any arg, uintptr_t seq)
+    void netpollReadDeadline(go_any arg, uintptr_t seq, int64_t delta)
     {
         netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, true, false);
     }
 
-    void netpollWriteDeadline(go_any arg, uintptr_t seq)
+    void netpollWriteDeadline(go_any arg, uintptr_t seq, int64_t delta)
     {
         netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, false, true);
     }
@@ -838,7 +844,23 @@ namespace golang::runtime
         runtime::lock(& c->lock);
         if(c->first == nullptr)
         {
-            auto pdSize = gocpp::Sizeof<pollDesc>();
+            struct pollDescPadded
+            {
+                pollDesc pollDesc{};
+                gocpp::array<unsigned char, tagAlign - gocpp::Sizeof<golang::runtime::pollDesc>()> pad{};
+
+                using isGoStruct = void;
+
+                std::ostream& PrintTo(std::ostream& os) const
+                {
+                    os << '{';
+                    os << "" << pollDesc;
+                    os << " " << pad;
+                    os << '}';
+                    return os;
+                }
+            };
+            auto pdSize = gocpp::Sizeof<pollDescPadded>();
             auto n = pollBlockSize / pdSize;
             if(n == 0)
             {
@@ -846,17 +868,19 @@ namespace golang::runtime
             }
             // Must be in non-GC memory because can be referenced
             // only from epoll/kqueue internals.
-            auto mem = persistentalloc(n * pdSize, 0, & memstats.other_sys);
+            auto mem = persistentalloc(n * pdSize, tagAlign, & memstats.other_sys);
             for(auto i = uintptr_t(0); i < n; i++)
             {
                 auto pd = (pollDesc*)(runtime::add(mem, i * pdSize));
+                lockInit(& pd->lock, lockRankPollDesc);
+                rec::init(gocpp::recv(pd->rt), nullptr, nullptr);
+                rec::init(gocpp::recv(pd->wt), nullptr, nullptr);
                 pd->link = c->first;
                 c->first = pd;
             }
         }
         auto pd = c->first;
         c->first = pd->link;
-        lockInit(& pd->lock, lockRankPollDesc);
         runtime::unlock(& c->lock);
         return pd;
     }
@@ -864,7 +888,7 @@ namespace golang::runtime
     // makeArg converts pd to an interface{}.
     // makeArg does not do any allocation. Normally, such
     // a conversion requires an allocation because pointers to
-    // types which embed runtime/internal/sys.NotInHeap (which pollDesc is)
+    // types which embed internal/runtime/sys.NotInHeap (which pollDesc is)
     // must be stored in interfaces indirectly. See issue 42076.
     go_any rec::makeArg(pollDesc* pd)
     {

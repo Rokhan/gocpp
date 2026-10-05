@@ -10,14 +10,30 @@
 #include "gocpp/support.h"
 
 #include "golang/os/exec.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
 
 namespace golang::os
 {
+    // The only signal values guaranteed to be present in the os package on all
+    // systems are os.Interrupt (send the process an interrupt) and os.Kill (force
+    // the process to exit). On Windows, sending os.Interrupt to a process with
+    // os.Process.Signal is not implemented; it will return an error instead of
+    // sending a signal.
     extern golang::os::Signal Interrupt;
     extern golang::os::Signal Kill;
     std::tuple<Process*, gocpp::error> startProcess(gocpp::string name, gocpp::slice<gocpp::string> argv, ProcAttr* attr);
+}
+#include "golang/syscall/exec_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+
+namespace golang::os
+{
+    namespace syscall = golang::syscall;
+}
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::os
+{
     struct ProcessState
     {
         int pid{}; // The process's id.
@@ -46,6 +62,7 @@ namespace golang::os
     namespace rec
     {
         gocpp::error kill(Process* p);
+        gocpp::error withHandle(Process* p, std::function<void (uintptr_t handle)> f);
         int Pid(ProcessState* p);
         bool exited(ProcessState* p);
         bool success(ProcessState* p);

@@ -12,26 +12,34 @@
 #include "gocpp/support.h"
 
 #include "golang/io/fs/fs.h"
+#include "golang/os/dir.h"
 #include "golang/os/env.h"
 #include "golang/os/exec/exec.h"
-#include "golang/os/exec/lp_windows.h"
+#include "golang/os/exec/lookpath.h"
 #include "golang/os/stat.h"
+#include "golang/os/types.h"
 #include "golang/path/filepath/path.h"
 #include "golang/strings/strings.h"
 #include "golang/sync/once.h"
 
-namespace golang::goroot
+namespace golang::internal::goroot
 {
+    namespace exec = golang::os::exec;
+    namespace filepath = golang::path::filepath;
+    namespace os = golang::os;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
     namespace rec
     {
         using exec::rec::Output;
         using fs::rec::IsDir;
+        using fs::rec::Name;
         using sync::rec::Do;
     }
 
     // IsStandardPackage reports whether path is a standard package,
-    // given goroot and compiler.
-    bool IsStandardPackage(gocpp::string goroot, gocpp::string compiler, gocpp::string path)
+    // given goroot and compiler. readDir accepts OS filesystem paths.
+    bool IsStandardPackage(std::function<std::tuple<gocpp::slice<os::DirEntry>, gocpp::error> (gocpp::string _1)> readDir, gocpp::string goroot, gocpp::string compiler, gocpp::string path)
     {
         //Go switch emulation
         {
@@ -44,8 +52,19 @@ namespace golang::goroot
                 case 0:
                 {
                     auto dir = filepath::Join(goroot, "src"_s, path);
-                    auto [info, err] = os::Stat(dir);
-                    return err == nullptr && rec::IsDir(gocpp::recv(info));
+                    auto [dirents, err] = readDir(dir);
+                    if(err != nullptr)
+                    {
+                        return false;
+                    }
+                    for(auto [gocpp_ignored, dirent] : dirents)
+                    {
+                        if(strings::HasSuffix(rec::Name(gocpp::recv(dirent)), ".go"_s))
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
                     break;
                 }
                 case 1:
@@ -58,7 +77,7 @@ namespace golang::goroot
         }
     }
 
-    // gccgoSearch holds the gccgo search directories.
+    // gccgoDirs holds the gccgo search directories.
     
     template<typename T> requires gocpp::GoStruct<T>
     gccgoDirs::operator T()
@@ -134,9 +153,9 @@ namespace golang::goroot
         gocpp::slice<gocpp::string> dirs = {};
         for(auto [gocpp_ignored, dirEntry] : dirsEntries)
         {
-            if(strings::HasPrefix(dirEntry, prefix))
+            if(auto [after, ok] = strings::CutPrefix(dirEntry, prefix); ok)
             {
-                dirs = filepath::SplitList(strings::TrimPrefix(dirEntry, prefix));
+                dirs = filepath::SplitList(after);
                 break;
             }
         }

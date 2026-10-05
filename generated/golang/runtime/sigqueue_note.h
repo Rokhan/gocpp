@@ -9,7 +9,7 @@
 #include "golang/runtime/sigqueue_note.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/note_other.fwd.h"
 
 namespace golang::runtime
 {

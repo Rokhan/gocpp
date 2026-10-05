@@ -19,14 +19,21 @@
 #include "golang/os/types.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
-#include "golang/strconv/atof.h"
-#include "golang/strconv/atoi.h"
+#include "golang/strconv/number.h"
 #include "golang/strconv/quote.h"
 #include "golang/sync/pool.h"
 #include "golang/unicode/utf8/utf8.h"
 
 namespace golang::fmt
 {
+    namespace errors = golang::errors;
+    namespace io = golang::io;
+    namespace math = golang::math;
+    namespace os = golang::os;
+    namespace reflect = golang::reflect;
+    namespace strconv = golang::strconv;
+    namespace sync = golang::sync;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using io::rec::ReadRune;
@@ -184,7 +191,7 @@ namespace golang::fmt
     // Scanner is implemented by any value that has a Scan method, which scans
     // the input for the representation of a value and stores the result in the
     // receiver, which must be a pointer to be useful. The Scan method is called
-    // for any argument to Scan, Scanf, or Scanln that implements it.
+    // for any argument to [Scan], [Scanf], or [Scanln] that implements it.
     
     template<typename T>
     Scanner::Scanner(T& ref)
@@ -250,7 +257,7 @@ namespace golang::fmt
         return Fscan(os::Stdin, a);
     }
 
-    // Scanln is similar to Scan, but stops scanning at a newline and
+    // Scanln is similar to [Scan], but stops scanning at a newline and
     // after the final item there must be a newline or EOF.
     std::tuple<int, gocpp::error> Scanln(gocpp::slice<go_any> a)
     {
@@ -297,7 +304,7 @@ namespace golang::fmt
         return Fscan((stringReader*)(& str), a);
     }
 
-    // Sscanln is similar to Sscan, but stops scanning at a newline and
+    // Sscanln is similar to [Sscan], but stops scanning at a newline and
     // after the final item there must be a newline or EOF.
     std::tuple<int, gocpp::error> Sscanln(gocpp::string str, gocpp::slice<go_any> a)
     {
@@ -331,7 +338,7 @@ namespace golang::fmt
         return {n, err};
     }
 
-    // Fscanln is similar to Fscan, but stops scanning at a newline and
+    // Fscanln is similar to [Fscan], but stops scanning at a newline and
     // after the final item there must be a newline or EOF.
     std::tuple<int, gocpp::error> Fscanln(io::Reader r, gocpp::slice<go_any> a)
     {
@@ -839,7 +846,7 @@ namespace golang::fmt
 
     // SkipSpace provides Scan methods the ability to skip space and newline
     // characters in keeping with the current scanning mode set by format strings
-    // and Scan/Scanln.
+    // and [Scan]/[Scanln].
     void rec::SkipSpace(ss* s)
     {
         for(; ; )

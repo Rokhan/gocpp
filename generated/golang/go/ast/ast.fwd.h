@@ -4,39 +4,23 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::ast
+namespace golang::go::ast
 {
     struct Expr;
     struct Stmt;
     struct Decl;
+    struct Comment;
     struct CommentGroup;
     struct Field;
-    struct FuncLit;
-    struct SelectorExpr;
-    using ChanDir = int;
-    struct DeclStmt;
-    struct ExprStmt;
-    struct Spec;
-    struct ValueSpec;
-    struct FuncDecl;
-    const ChanDir SEND = 1 << 0;
-    const ChanDir RECV = 1 << 1;
-}
-#include "golang/go/ast/scope.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
-
-namespace golang::ast
-{
-    struct Node;
-    struct Comment;
     struct FieldList;
     struct BadExpr;
     struct Ident;
     struct Ellipsis;
     struct BasicLit;
+    struct FuncLit;
     struct CompositeLit;
     struct ParenExpr;
+    struct SelectorExpr;
     struct IndexExpr;
     struct IndexListExpr;
     struct SliceExpr;
@@ -46,6 +30,7 @@ namespace golang::ast
     struct UnaryExpr;
     struct BinaryExpr;
     struct KeyValueExpr;
+    using ChanDir = int;
     struct ArrayType;
     struct StructType;
     struct FuncType;
@@ -53,8 +38,10 @@ namespace golang::ast
     struct MapType;
     struct ChanType;
     struct BadStmt;
+    struct DeclStmt;
     struct EmptyStmt;
     struct LabeledStmt;
+    struct ExprStmt;
     struct SendStmt;
     struct IncDecStmt;
     struct AssignStmt;
@@ -71,10 +58,23 @@ namespace golang::ast
     struct SelectStmt;
     struct ForStmt;
     struct RangeStmt;
+    struct Spec;
     struct ImportSpec;
+    struct ValueSpec;
     struct TypeSpec;
     struct BadDecl;
     struct GenDecl;
+    struct FuncDecl;
     struct File;
     struct Package;
+    const ChanDir SEND = 1 << 0;
+    const ChanDir RECV = 1 << 1;
+}
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
+
+namespace golang::go::ast
+{
+    namespace token = golang::go::token;
+    struct Node;
 }

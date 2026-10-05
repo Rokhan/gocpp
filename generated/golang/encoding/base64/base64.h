@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::base64
+namespace golang::encoding::base64
 {
     struct Encoding
     {
@@ -31,14 +31,33 @@ namespace golang::base64
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Encoding& value);
+    // StdEncoding is the standard base64 encoding, as defined in RFC 4648.
+    extern base64::Encoding* StdEncoding;
+    // URLEncoding is the alternate base64 encoding defined in RFC 4648.
+    // It is typically used in URLs and file names.
+    extern base64::Encoding* URLEncoding;
+    // RawStdEncoding is the standard raw, unpadded base64 encoding,
+    // as defined in RFC 4648 section 3.2.
+    // This is the same as [StdEncoding] but omits padding characters.
+    extern base64::Encoding* RawStdEncoding;
+    // RawURLEncoding is the unpadded alternate base64 encoding defined in RFC 4648.
+    // It is typically used in URLs and file names.
+    // This is the same as [URLEncoding] but omits padding characters.
+    extern base64::Encoding* RawURLEncoding;
     std::tuple<uint32_t, bool> assemble32(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4);
     std::tuple<uint64_t, bool> assemble64(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4, unsigned char n5, unsigned char n6, unsigned char n7, unsigned char n8);
     int decodedLen(int n, gocpp::rune padChar);
     Encoding* NewEncoding(gocpp::string encoder);
 }
+#include "golang/io/io.fwd.h"
+
+namespace golang::encoding::base64
+{
+    namespace io = golang::io;
+}
 #include "golang/io/io.h"
 
-namespace golang::base64
+namespace golang::encoding::base64
 {
     struct encoder
     {
@@ -102,10 +121,6 @@ namespace golang::base64
 
     std::ostream& operator<<(std::ostream& os, const struct newlineFilteringReader& value);
     io::Reader NewDecoder(Encoding* enc, io::Reader r);
-    extern base64::Encoding* StdEncoding;
-    extern base64::Encoding* URLEncoding;
-    extern base64::Encoding* RawStdEncoding;
-    extern base64::Encoding* RawURLEncoding;
 
     namespace rec
     {

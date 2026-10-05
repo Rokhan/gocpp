@@ -10,20 +10,30 @@
 #include "gocpp/support.h"
 
 
-namespace golang::build
+namespace golang::go::build
 {
     extern gocpp::slice<unsigned char> bom;
     bool isIdent(unsigned char c);
-    extern gocpp::slice<unsigned char> goEmbed;
+    extern gocpp::error errSyntax;
+    extern gocpp::error errNUL;
     bool isValidImport(gocpp::string s);
+}
+#include "golang/bufio/bufio.fwd.h"
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
+#include "golang/io/io.fwd.h"
+
+namespace golang::go::build
+{
+    namespace bufio = golang::bufio;
+    namespace token = golang::go::token;
+    namespace io = golang::io;
 }
 #include "golang/go/build/build.h"
 #include "golang/go/token/position.h"
 #include "golang/io/io.h"
-#include "golang/bufio/bufio.fwd.h"
-#include "golang/errors/errors.fwd.h"
 
-namespace golang::build
+namespace golang::go::build
 {
     struct importReader
     {
@@ -47,21 +57,18 @@ namespace golang::build
     };
 
     std::ostream& operator<<(std::ostream& os, const struct importReader& value);
-    extern gocpp::error errSyntax;
-    extern gocpp::error errNUL;
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> readComments(io::Reader f);
     gocpp::error readGoInfo(io::Reader f, fileInfo* info);
-    std::tuple<gocpp::slice<fileEmbed>, gocpp::error> parseGoEmbed(gocpp::string args, token::Position pos);
+    std::tuple<gocpp::slice<fileEmbed>, gocpp::error> parseGoEmbed(token::FileSet* fset, token::Pos pos, gocpp::string comment);
     importReader* newImportReader(gocpp::string name, io::Reader r);
 
     namespace rec
     {
         void syntaxError(importReader* r);
         unsigned char readByte(importReader* r);
-        unsigned char readByteNoBuf(importReader* r);
+        void readRest(importReader* r);
         unsigned char peekByte(importReader* r, bool skipSpace);
         unsigned char nextByte(importReader* r, bool skipSpace);
-        bool findEmbed(importReader* r, bool first);
         void readKeyword(importReader* r, gocpp::string kw);
         void readIdent(importReader* r);
         void readString(importReader* r);

@@ -9,12 +9,21 @@
 #include "golang/math/big/intconv.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/fmt/errors.fwd.h"
+#include "golang/fmt/print.fwd.h"
+#include "golang/fmt/scan.fwd.h"
+#include "golang/io/io.fwd.h"
+
+namespace golang::math::big
+{
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+}
 #include "golang/fmt/print.h"
 #include "golang/fmt/scan.h"
 #include "golang/io/io.h"
-#include "golang/math/big/int.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     void writeMultiple(fmt::State s, gocpp::string text, int count);
     extern fmt::Formatter _;
@@ -64,19 +73,19 @@ namespace golang::big
 #include "golang/io/io.h"
 #include "golang/math/big/int.h"
 
-namespace golang::big
+namespace golang::math::big
 {
 
     namespace rec
     {
-        gocpp::string Text(golang::big::Int* x, int base);
-        gocpp::slice<unsigned char> Append(golang::big::Int* x, gocpp::slice<unsigned char> buf, int base);
-        gocpp::string String(golang::big::Int* x);
-        void Format(golang::big::Int* x, fmt::State s, gocpp::rune ch);
-        std::tuple<golang::big::Int*, int, gocpp::error> scan(golang::big::Int* z, io::ByteScanner r, int base);
+        gocpp::string Text(golang::math::big::Int* x, int base);
+        gocpp::slice<unsigned char> Append(golang::math::big::Int* x, gocpp::slice<unsigned char> buf, int base);
+        gocpp::string String(golang::math::big::Int* x);
+        void Format(golang::math::big::Int* x, fmt::State s, gocpp::rune ch);
+        std::tuple<golang::math::big::Int*, int, gocpp::error> scan(golang::math::big::Int* z, io::ByteScanner r, int base);
         std::tuple<unsigned char, gocpp::error> ReadByte(byteReader r);
         gocpp::error UnreadByte(byteReader r);
-        gocpp::error Scan(golang::big::Int* z, fmt::ScanState s, gocpp::rune ch);
+        gocpp::error Scan(golang::math::big::Int* z, fmt::ScanState s, gocpp::rune ch);
     }
 }
 

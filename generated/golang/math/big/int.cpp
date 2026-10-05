@@ -18,11 +18,16 @@
 #include "golang/math/big/intconv.h"
 #include "golang/math/big/nat.h"
 #include "golang/math/big/natdiv.h"
+#include "golang/math/big/natmul.h"
 #include "golang/math/rand/rand.h"
 #include "golang/strings/reader.h"
 
-namespace golang::big
+namespace golang::math::big
 {
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace rand = golang::math::rand;
+    namespace strings = golang::strings;
     namespace rec
     {
         using io::rec::ReadByte;
@@ -79,13 +84,12 @@ namespace golang::big
         return value.PrintTo(os);
     }
 
-    golang::big::Int* intOne = new golang::big::Int {false, natOne};
+    golang::math::big::Int* intOne = new golang::math::big::Int {false, natOne};
     // Sign returns:
-    //
-    //	-1 if x <  0
-    //	 0 if x == 0
-    //	+1 if x >  0
-    int rec::Sign(golang::big::Int* x)
+    //   - -1 if x < 0;
+    //   - 0 if x == 0;
+    //   - +1 if x > 0.
+    int rec::Sign(golang::math::big::Int* x)
     {
         // This function is used in cryptographic operations. It must not leak
         // anything but the Int's sign and bit size through side-channels. Any
@@ -102,7 +106,7 @@ namespace golang::big
     }
 
     // SetInt64 sets z to x and returns z.
-    golang::big::Int* rec::SetInt64(golang::big::Int* z, int64_t x)
+    golang::math::big::Int* rec::SetInt64(golang::math::big::Int* z, int64_t x)
     {
         auto neg = false;
         if(x < 0)
@@ -116,7 +120,7 @@ namespace golang::big
     }
 
     // SetUint64 sets z to x and returns z.
-    golang::big::Int* rec::SetUint64(golang::big::Int* z, uint64_t x)
+    golang::math::big::Int* rec::SetUint64(golang::math::big::Int* z, uint64_t x)
     {
         z->abs = rec::setUint64(gocpp::recv(z->abs), x);
         z->neg = false;
@@ -124,7 +128,7 @@ namespace golang::big
     }
 
     // NewInt allocates and returns a new [Int] set to x.
-    golang::big::Int* NewInt(int64_t x)
+    golang::math::big::Int* NewInt(int64_t x)
     {
         // This code is arranged to be inlineable and produce
         // zero allocations when inlined. See issue 29951.
@@ -146,14 +150,14 @@ namespace golang::big
         {
             abs = gocpp::slice<Word> {Word(u)};
         }
-        return gocpp::InitPtr<golang::big::Int>([=](auto& y) {
+        return gocpp::InitPtr<golang::math::big::Int>([=](auto& y) {
             y.neg = x < 0;
             y.abs = abs;
         });
     }
 
     // Set sets z to x and returns z.
-    golang::big::Int* rec::Set(golang::big::Int* z, golang::big::Int* x)
+    golang::math::big::Int* rec::Set(golang::math::big::Int* z, golang::math::big::Int* x)
     {
         if(z != x)
         {
@@ -168,7 +172,7 @@ namespace golang::big
     // the same underlying array.
     // Bits is intended to support implementation of missing low-level [Int]
     // functionality outside this package; it should be avoided otherwise.
-    gocpp::slice<Word> rec::Bits(golang::big::Int* x)
+    gocpp::slice<Word> rec::Bits(golang::math::big::Int* x)
     {
         // This function is used in cryptographic operations. It must not leak
         // anything but the Int's sign and bit size through side-channels. Any
@@ -181,7 +185,7 @@ namespace golang::big
     // z. The result and abs share the same underlying array.
     // SetBits is intended to support implementation of missing low-level [Int]
     // functionality outside this package; it should be avoided otherwise.
-    golang::big::Int* rec::SetBits(golang::big::Int* z, gocpp::slice<Word> abs)
+    golang::math::big::Int* rec::SetBits(golang::math::big::Int* z, gocpp::slice<Word> abs)
     {
         z->abs = rec::norm(gocpp::recv(nat(abs)));
         z->neg = false;
@@ -189,7 +193,7 @@ namespace golang::big
     }
 
     // Abs sets z to |x| (the absolute value of x) and returns z.
-    golang::big::Int* rec::Abs(golang::big::Int* z, golang::big::Int* x)
+    golang::math::big::Int* rec::Abs(golang::math::big::Int* z, golang::math::big::Int* x)
     {
         rec::Set(gocpp::recv(z), x);
         z->neg = false;
@@ -197,7 +201,7 @@ namespace golang::big
     }
 
     // Neg sets z to -x and returns z.
-    golang::big::Int* rec::Neg(golang::big::Int* z, golang::big::Int* x)
+    golang::math::big::Int* rec::Neg(golang::math::big::Int* z, golang::math::big::Int* x)
     {
         rec::Set(gocpp::recv(z), x);
         // 0 has no sign
@@ -206,7 +210,7 @@ namespace golang::big
     }
 
     // Add sets z to the sum x+y and returns z.
-    golang::big::Int* rec::Add(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y)
+    golang::math::big::Int* rec::Add(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y)
     {
         auto neg = x->neg;
         if(x->neg == y->neg)
@@ -235,7 +239,7 @@ namespace golang::big
     }
 
     // Sub sets z to the difference x-y and returns z.
-    golang::big::Int* rec::Sub(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y)
+    golang::math::big::Int* rec::Sub(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y)
     {
         auto neg = x->neg;
         if(x->neg != y->neg)
@@ -264,7 +268,16 @@ namespace golang::big
     }
 
     // Mul sets z to the product x*y and returns z.
-    golang::big::Int* rec::Mul(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y)
+    golang::math::big::Int* rec::Mul(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y)
+    {
+        rec::mul(gocpp::recv(z), nullptr, x, y);
+        return z;
+    }
+
+    // mul is like Mul but takes an explicit stack to use, for internal use.
+    // It does not return a *Int because doing so makes the stack-allocated Ints
+    // used in natmul.go escape to the heap (even though the result is unused).
+    void rec::mul(golang::math::big::Int* z, stack* stk, golang::math::big::Int* x, golang::math::big::Int* y)
     {
         // x * y == x * y
         // x * (-y) == -(x * y)
@@ -272,20 +285,19 @@ namespace golang::big
         // (-x) * (-y) == x * y
         if(x == y)
         {
-            z->abs = rec::sqr(gocpp::recv(z->abs), x->abs);
+            z->abs = rec::sqr(gocpp::recv(z->abs), stk, x->abs);
             z->neg = false;
-            return z;
+            return;
         }
-        z->abs = rec::mul(gocpp::recv(z->abs), x->abs, y->abs);
+        z->abs = rec::mul(gocpp::recv(z->abs), stk, x->abs, y->abs);
         // 0 has no sign
         z->neg = len(z->abs) > 0 && x->neg != y->neg;
-        return z;
     }
 
     // MulRange sets z to the product of all integers
     // in the range [a, b] inclusively and returns z.
     // If a > b (empty range), the result is 1.
-    golang::big::Int* rec::MulRange(golang::big::Int* z, int64_t a, int64_t b)
+    golang::math::big::Int* rec::MulRange(golang::math::big::Int* z, int64_t a, int64_t b)
     {
         // a <= b && (b < 0 || a > 0)
         //Go switch emulation
@@ -314,15 +326,15 @@ namespace golang::big
             std::tie(a, b) = std::tuple{- b, - a};
         }
 
-        z->abs = rec::mulRange(gocpp::recv(z->abs), uint64_t(a), uint64_t(b));
+        z->abs = rec::mulRange(gocpp::recv(z->abs), nullptr, uint64_t(a), uint64_t(b));
         z->neg = neg;
         return z;
     }
 
     // Binomial sets z to the binomial coefficient C(n, k) and returns z.
-    golang::big::Int* rec::Binomial(golang::big::Int* z, int64_t n, int64_t k)
+    golang::math::big::Int* rec::Binomial(golang::math::big::Int* z, int64_t n, int64_t k)
     {
-        if(k > n)
+        if(k > n || k < 0)
         {
             return rec::SetInt64(gocpp::recv(z), 0);
         }
@@ -349,10 +361,10 @@ namespace golang::big
         // i++
         // z /= i
         // }
-        golang::big::Int N = {};
-        golang::big::Int K = {};
-        golang::big::Int i = {};
-        golang::big::Int t = {};
+        golang::math::big::Int N = {};
+        golang::math::big::Int K = {};
+        golang::math::big::Int i = {};
+        golang::math::big::Int t = {};
         rec::SetInt64(gocpp::recv(N), n);
         rec::SetInt64(gocpp::recv(K), k);
         rec::Set(gocpp::recv(z), intOne);
@@ -368,9 +380,9 @@ namespace golang::big
     // Quo sets z to the quotient x/y for y != 0 and returns z.
     // If y == 0, a division-by-zero run-time panic occurs.
     // Quo implements truncated division (like Go); see [Int.QuoRem] for more details.
-    golang::big::Int* rec::Quo(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y)
+    golang::math::big::Int* rec::Quo(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y)
     {
-        std::tie(z->abs, std::ignore) = rec::div(gocpp::recv(z->abs), nullptr, x->abs, y->abs);
+        std::tie(z->abs, std::ignore) = rec::div(gocpp::recv(z->abs), nullptr, nullptr, x->abs, y->abs);
         // 0 has no sign
         z->neg = len(z->abs) > 0 && x->neg != y->neg;
         return z;
@@ -379,9 +391,9 @@ namespace golang::big
     // Rem sets z to the remainder x%y for y != 0 and returns z.
     // If y == 0, a division-by-zero run-time panic occurs.
     // Rem implements truncated modulus (like Go); see [Int.QuoRem] for more details.
-    golang::big::Int* rec::Rem(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y)
+    golang::math::big::Int* rec::Rem(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y)
     {
-        std::tie(std::ignore, z->abs) = rec::div(gocpp::recv(nat(nullptr)), z->abs, x->abs, y->abs);
+        std::tie(std::ignore, z->abs) = rec::div(gocpp::recv(nat(nullptr)), nullptr, z->abs, x->abs, y->abs);
         // 0 has no sign
         z->neg = len(z->abs) > 0 && x->neg;
         return z;
@@ -397,10 +409,10 @@ namespace golang::big
     //	r = x - y*q
     //
     // (See Daan Leijen, “Division and Modulus for Computer Scientists”.)
-    // See DivMod for Euclidean division and modulus (unlike Go).
-    std::tuple<golang::big::Int*, golang::big::Int*> rec::QuoRem(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y, golang::big::Int* r)
+    // See [Int.DivMod] for Euclidean division and modulus (unlike Go).
+    std::tuple<golang::math::big::Int*, golang::math::big::Int*> rec::QuoRem(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* r)
     {
-        std::tie(z->abs, r->abs) = rec::div(gocpp::recv(z->abs), r->abs, x->abs, y->abs);
+        std::tie(z->abs, r->abs) = rec::div(gocpp::recv(z->abs), nullptr, r->abs, x->abs, y->abs);
         // 0 has no sign
         std::tie(z->neg, r->neg) = std::tuple{len(z->abs) > 0 && x->neg != y->neg, len(r->abs) > 0 && x->neg};
         return {z, r};
@@ -409,11 +421,11 @@ namespace golang::big
     // Div sets z to the quotient x/y for y != 0 and returns z.
     // If y == 0, a division-by-zero run-time panic occurs.
     // Div implements Euclidean division (unlike Go); see [Int.DivMod] for more details.
-    golang::big::Int* rec::Div(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y)
+    golang::math::big::Int* rec::Div(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y)
     {
         // z may be an alias for y
         auto y_neg = y->neg;
-        golang::big::Int r = {};
+        golang::math::big::Int r = {};
         rec::QuoRem(gocpp::recv(z), x, y, & r);
         if(r.neg)
         {
@@ -432,7 +444,7 @@ namespace golang::big
     // Mod sets z to the modulus x%y for y != 0 and returns z.
     // If y == 0, a division-by-zero run-time panic occurs.
     // Mod implements Euclidean modulus (unlike Go); see [Int.DivMod] for more details.
-    golang::big::Int* rec::Mod(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y)
+    golang::math::big::Int* rec::Mod(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y)
     {
         // save y
         auto y0 = y;
@@ -440,7 +452,7 @@ namespace golang::big
         {
             y0 = rec::Set(gocpp::recv(new big::Int{}), y);
         }
-        golang::big::Int q = {};
+        golang::math::big::Int q = {};
         rec::QuoRem(gocpp::recv(q), x, y, z);
         if(z->neg)
         {
@@ -470,7 +482,7 @@ namespace golang::big
     // Systems (TOPLAS), 14(2):127-144, New York, NY, USA, 4/1992.
     // ACM press.)
     // See [Int.QuoRem] for T-division and modulus (like Go).
-    std::tuple<golang::big::Int*, golang::big::Int*> rec::DivMod(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y, golang::big::Int* m)
+    std::tuple<golang::math::big::Int*, golang::math::big::Int*> rec::DivMod(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* m)
     {
         // save y
         auto y0 = y;
@@ -495,12 +507,124 @@ namespace golang::big
         return {z, m};
     }
 
-    // Cmp compares x and y and returns:
+    // Divide computes the integer quotient q and remainder r such that
     //
-    //	-1 if x <  y
-    //	 0 if x == y
-    //	+1 if x >  y
-    int rec::Cmp(golang::big::Int* x, golang::big::Int* y)
+    //	q = f(x/y)
+    //	r = x - y*q
+    //
+    // where f is described by the rounding mode,
+    // which must be one of [Trunc], [Floor], [Round] or [Ceil].
+    // Divide sets z to q if z != nil, updates r if r != nil,
+    // and returns the pair (z, r) if y != 0.
+    // If y == 0, a division-by-zero run-time panic occurs.
+    std::tuple<golang::math::big::Int*, golang::math::big::Int*> rec::Divide(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* r, RoundingMode mode)
+    {
+        // TODO: optimize the code where z or r is nil
+        golang::math::big::nat z_abs = {};
+        if(z != nullptr)
+        {
+            z_abs = z->abs;
+        }
+        bool r_neg = {};
+        golang::math::big::nat r_abs = {};
+        if(r != nullptr)
+        {
+            r_abs = r->abs;
+        }
+        // save y
+        auto y_abs = y->abs;
+        if(z == y || alias(z_abs, y->abs))
+        {
+            y_abs = rec::set(gocpp::recv(nat(nullptr)), y->abs);
+        }
+        auto neg = x->neg != y->neg;
+        std::tie(z_abs, r_abs) = rec::div(gocpp::recv(z_abs), nullptr, r_abs, x->abs, y->abs);
+        if(len(r_abs) > 0)
+        {
+            //Go switch emulation
+            {
+                auto condition = mode;
+                int conditionId = -1;
+                if(condition == Trunc) { conditionId = 0; }
+                else if(condition == Floor) { conditionId = 1; }
+                else if(condition == Ceil) { conditionId = 2; }
+                else if(condition == Round) { conditionId = 3; }
+                switch(conditionId)
+                {
+                    case 0:
+                        r_neg = x->neg;
+                        break;
+                    case 1:
+                        r_neg = y->neg;
+                        if(neg)
+                        {
+                            z_abs = rec::add(gocpp::recv(z_abs), z_abs, natOne);
+                            r_abs = rec::sub(gocpp::recv(r_abs), y_abs, r_abs);
+                        }
+                        break;
+                    case 2:
+                        r_neg = ! y->neg;
+                        if(! neg)
+                        {
+                            z_abs = rec::add(gocpp::recv(z_abs), z_abs, natOne);
+                            r_abs = rec::sub(gocpp::recv(r_abs), y_abs, r_abs);
+                        }
+                        break;
+                    case 3:
+                        //Go switch emulation
+                        {
+                            auto condition = rec::cmp(gocpp::recv(rec::mul(gocpp::recv(nat(nullptr)), nullptr, r_abs, natTwo)), y_abs);
+                            int conditionId = -1;
+                            if(condition == - 1) { conditionId = 0; }
+                            else if(condition == 0) { conditionId = 1; }
+                            else if(condition == 1) { conditionId = 2; }
+                            switch(conditionId)
+                            {
+                                case 0:
+                                    r_neg = x->neg;
+                                    break;
+                                case 1:
+                                {
+                                    auto even = len(z_abs) == 0 || z_abs[0] & 1 == 0;
+                                    if(even)
+                                    {
+                                        r_neg = x->neg;
+                                        break;
+                                    }
+                                }
+                                case 2:
+                                    r_neg = ! x->neg;
+                                    z_abs = rec::add(gocpp::recv(z_abs), z_abs, natOne);
+                                    r_abs = rec::sub(gocpp::recv(r_abs), y_abs, r_abs);
+                                    break;
+                            }
+                        }
+                        break;
+                    default:
+                        gocpp::panic("unsupported rounding mode"_s);
+                        break;
+                }
+            }
+        }
+        if(z != nullptr)
+        {
+            z->abs = z_abs;
+            // 0 has no sign
+            z->neg = neg && len(z_abs) > 0;
+        }
+        if(r != nullptr)
+        {
+            r->abs = r_abs;
+            r->neg = r_neg;
+        }
+        return {z, r};
+    }
+
+    // Cmp compares x and y and returns:
+    //   - -1 if x < y;
+    //   - 0 if x == y;
+    //   - +1 if x > y.
+    int rec::Cmp(golang::math::big::Int* x, golang::math::big::Int* y)
     {
         int r;
         // x cmp y == x cmp y
@@ -537,17 +661,16 @@ namespace golang::big
     }
 
     // CmpAbs compares the absolute values of x and y and returns:
-    //
-    //	-1 if |x| <  |y|
-    //	 0 if |x| == |y|
-    //	+1 if |x| >  |y|
-    int rec::CmpAbs(golang::big::Int* x, golang::big::Int* y)
+    //   - -1 if |x| < |y|;
+    //   - 0 if |x| == |y|;
+    //   - +1 if |x| > |y|.
+    int rec::CmpAbs(golang::math::big::Int* x, golang::math::big::Int* y)
     {
         return rec::cmp(gocpp::recv(x->abs), y->abs);
     }
 
     // low32 returns the least significant 32 bits of x.
-    uint32_t low32(nat x)
+    uint32_t low32(golang::math::big::nat x)
     {
         if(len(x) == 0)
         {
@@ -557,7 +680,7 @@ namespace golang::big
     }
 
     // low64 returns the least significant 64 bits of x.
-    uint64_t low64(nat x)
+    uint64_t low64(golang::math::big::nat x)
     {
         if(len(x) == 0)
         {
@@ -573,7 +696,7 @@ namespace golang::big
 
     // Int64 returns the int64 representation of x.
     // If x cannot be represented in an int64, the result is undefined.
-    int64_t rec::Int64(golang::big::Int* x)
+    int64_t rec::Int64(golang::math::big::Int* x)
     {
         auto v = int64_t(low64(x->abs));
         if(x->neg)
@@ -585,13 +708,13 @@ namespace golang::big
 
     // Uint64 returns the uint64 representation of x.
     // If x cannot be represented in a uint64, the result is undefined.
-    uint64_t rec::Uint64(golang::big::Int* x)
+    uint64_t rec::Uint64(golang::math::big::Int* x)
     {
         return low64(x->abs);
     }
 
     // IsInt64 reports whether x can be represented as an int64.
-    bool rec::IsInt64(golang::big::Int* x)
+    bool rec::IsInt64(golang::math::big::Int* x)
     {
         if(len(x->abs) <= 64 / _W)
         {
@@ -602,14 +725,14 @@ namespace golang::big
     }
 
     // IsUint64 reports whether x can be represented as a uint64.
-    bool rec::IsUint64(golang::big::Int* x)
+    bool rec::IsUint64(golang::math::big::Int* x)
     {
         return ! x->neg && len(x->abs) <= 64 / _W;
     }
 
     // Float64 returns the float64 value nearest x,
     // and an indication of any rounding that occurred.
-    std::tuple<double, Accuracy> rec::Float64(golang::big::Int* x)
+    std::tuple<double, Accuracy> rec::Float64(golang::math::big::Int* x)
     {
         // NB: still uses slow crypto impl!
         auto n = rec::bitLen(gocpp::recv(x->abs));
@@ -654,14 +777,14 @@ namespace golang::big
     // Incorrect placement of underscores is reported as an error if there
     // are no other errors. If base != 0, underscores are not recognized
     // and act like any other character that is not a valid digit.
-    std::tuple<golang::big::Int*, bool> rec::SetString(golang::big::Int* z, gocpp::string s, int base)
+    std::tuple<golang::math::big::Int*, bool> rec::SetString(golang::math::big::Int* z, gocpp::string s, int base)
     {
         return rec::setFromScanner(gocpp::recv(z), strings::NewReader(s), base);
     }
 
     // setFromScanner implements SetString given an io.ByteScanner.
     // For documentation see comments of SetString.
-    std::tuple<golang::big::Int*, bool> rec::setFromScanner(golang::big::Int* z, io::ByteScanner r, int base)
+    std::tuple<golang::math::big::Int*, bool> rec::setFromScanner(golang::math::big::Int* z, io::ByteScanner r, int base)
     {
         if(auto [gocpp_id_0, gocpp_id_1, err] = rec::scan(gocpp::recv(z), r, base); err != nullptr)
         {
@@ -678,7 +801,7 @@ namespace golang::big
 
     // SetBytes interprets buf as the bytes of a big-endian unsigned
     // integer, sets z to that value, and returns z.
-    golang::big::Int* rec::SetBytes(golang::big::Int* z, gocpp::slice<unsigned char> buf)
+    golang::math::big::Int* rec::SetBytes(golang::math::big::Int* z, gocpp::slice<unsigned char> buf)
     {
         z->abs = rec::setBytes(gocpp::recv(z->abs), buf);
         z->neg = false;
@@ -688,7 +811,7 @@ namespace golang::big
     // Bytes returns the absolute value of x as a big-endian byte slice.
     //
     // To use a fixed length slice, or a preallocated one, use [Int.FillBytes].
-    gocpp::slice<unsigned char> rec::Bytes(golang::big::Int* x)
+    gocpp::slice<unsigned char> rec::Bytes(golang::math::big::Int* x)
     {
         // This function is used in cryptographic operations. It must not leak
         // anything but the Int's sign and bit size through side-channels. Any
@@ -701,20 +824,17 @@ namespace golang::big
     // big-endian byte slice, and returns buf.
     //
     // If the absolute value of x doesn't fit in buf, FillBytes will panic.
-    gocpp::slice<unsigned char> rec::FillBytes(golang::big::Int* x, gocpp::slice<unsigned char> buf)
+    gocpp::slice<unsigned char> rec::FillBytes(golang::math::big::Int* x, gocpp::slice<unsigned char> buf)
     {
-        // Clear whole buffer. (This gets optimized into a memclr.)
-        for(auto [i, gocpp_ignored] : buf)
-        {
-            buf[i] = 0;
-        }
+        // Clear whole buffer.
+        clear(buf);
         rec::bytes(gocpp::recv(x->abs), buf);
         return buf;
     }
 
     // BitLen returns the length of the absolute value of x in bits.
     // The bit length of 0 is 0.
-    int rec::BitLen(golang::big::Int* x)
+    int rec::BitLen(golang::math::big::Int* x)
     {
         // This function is used in cryptographic operations. It must not leak
         // anything but the Int's sign and bit size through side-channels. Any
@@ -724,7 +844,7 @@ namespace golang::big
 
     // TrailingZeroBits returns the number of consecutive least significant zero
     // bits of |x|.
-    unsigned int rec::TrailingZeroBits(golang::big::Int* x)
+    unsigned int rec::TrailingZeroBits(golang::math::big::Int* x)
     {
         return rec::trailingZeroBits(gocpp::recv(x->abs));
     }
@@ -735,17 +855,17 @@ namespace golang::big
     //
     // Modular exponentiation of inputs of a particular size is not a
     // cryptographically constant-time operation.
-    golang::big::Int* rec::Exp(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y, golang::big::Int* m)
+    golang::math::big::Int* rec::Exp(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* m)
     {
         return rec::exp(gocpp::recv(z), x, y, m, false);
     }
 
-    golang::big::Int* rec::expSlow(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y, golang::big::Int* m)
+    golang::math::big::Int* rec::expSlow(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* m)
     {
         return rec::exp(gocpp::recv(z), x, y, m, true);
     }
 
-    golang::big::Int* rec::exp(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y, golang::big::Int* m, bool slow)
+    golang::math::big::Int* rec::exp(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* m, bool slow)
     {
         // See Knuth, volume 2, section 4.6.3.
         auto xWords = x->abs;
@@ -765,7 +885,7 @@ namespace golang::big
         }
         auto yWords = y->abs;
 
-        nat mWords = {};
+        golang::math::big::nat mWords = {};
         if(m != nullptr)
         {
             if(z == m || alias(z->abs, m->abs))
@@ -776,7 +896,7 @@ namespace golang::big
             mWords = m->abs;
         }
 
-        z->abs = rec::expNN(gocpp::recv(z->abs), xWords, yWords, mWords, slow);
+        z->abs = rec::expNN(gocpp::recv(z->abs), nullptr, xWords, yWords, mWords, slow);
         // 0 has no sign
         z->neg = len(z->abs) > 0 && x->neg && len(yWords) > 0 && yWords[0] & 1 == 1;
         if(z->neg && len(mWords) > 0)
@@ -801,7 +921,7 @@ namespace golang::big
     // If a == 0 and b != 0, GCD sets z = |b|, x = 0, y = sign(b) * 1.
     //
     // If a != 0 and b == 0, GCD sets z = |a|, x = sign(a) * 1, y = 0.
-    golang::big::Int* rec::GCD(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y, golang::big::Int* a, golang::big::Int* b)
+    golang::math::big::Int* rec::GCD(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* a, golang::math::big::Int* b)
     {
         if(len(a->abs) == 0 || len(b->abs) == 0)
         {
@@ -857,7 +977,7 @@ namespace golang::big
     // we use 'even' to track the sign of the cosequences.
     // For even iterations: u0, v1 >= 0 && u1, v0 <= 0
     // For odd  iterations: u0, v1 <= 0 && u1, v0 >= 0
-    std::tuple<Word, Word, Word, Word, bool> lehmerSimulate(golang::big::Int* A, golang::big::Int* B)
+    std::tuple<Word, Word, Word, Word, bool> lehmerSimulate(golang::math::big::Int* A, golang::math::big::Int* B)
     {
         Word u0;
         Word u1;
@@ -932,44 +1052,45 @@ namespace golang::big
     // For even == true: u0, v1 >= 0 && u1, v0 <= 0
     // For even == false: u0, v1 <= 0 && u1, v0 >= 0
     // q, r, s, t are temporary variables to avoid allocations in the multiplication.
-    void lehmerUpdate(golang::big::Int* A, golang::big::Int* B, golang::big::Int* q, golang::big::Int* r, golang::big::Int* s, golang::big::Int* t, Word u0, Word u1, Word v0, Word v1, bool even)
+    void lehmerUpdate(golang::math::big::Int* A, golang::math::big::Int* B, golang::math::big::Int* q, golang::math::big::Int* r, Word u0, Word u1, Word v0, Word v1, bool even)
     {
-        t->abs = rec::setWord(gocpp::recv(t->abs), u0);
-        s->abs = rec::setWord(gocpp::recv(s->abs), v0);
-        t->neg = ! even;
-        s->neg = even;
+        mulW(q, B, even, v0);
+        mulW(r, A, even, u1);
+        mulW(A, A, ! even, u0);
+        mulW(B, B, ! even, v1);
+        rec::Add(gocpp::recv(A), A, q);
+        rec::Add(gocpp::recv(B), B, r);
+    }
 
-        rec::Mul(gocpp::recv(t), A, t);
-        rec::Mul(gocpp::recv(s), B, s);
-
-        r->abs = rec::setWord(gocpp::recv(r->abs), u1);
-        q->abs = rec::setWord(gocpp::recv(q->abs), v1);
-        r->neg = even;
-        q->neg = ! even;
-
-        rec::Mul(gocpp::recv(r), A, r);
-        rec::Mul(gocpp::recv(q), B, q);
-
-        rec::Add(gocpp::recv(A), t, s);
-        rec::Add(gocpp::recv(B), r, q);
+    // mulW sets z = x * (-?)w
+    // where the minus sign is present when neg is true.
+    void mulW(golang::math::big::Int* z, golang::math::big::Int* x, bool neg, Word w)
+    {
+        z->abs = rec::mulAddWW(gocpp::recv(z->abs), x->abs, w, 0);
+        z->neg = x->neg != neg;
     }
 
     // euclidUpdate performs a single step of the Euclidean GCD algorithm
     // if extended is true, it also updates the cosequence Ua, Ub.
-    void euclidUpdate(golang::big::Int* A, golang::big::Int* B, golang::big::Int* Ua, golang::big::Int* Ub, golang::big::Int* q, golang::big::Int* r, golang::big::Int* s, golang::big::Int* t, bool extended)
+    // q and r are used as temporaries; the initial values are ignored.
+    std::tuple<golang::math::big::Int*, golang::math::big::Int*, golang::math::big::Int*, golang::math::big::Int*, golang::math::big::Int*> euclidUpdate(golang::math::big::Int* A, golang::math::big::Int* B, golang::math::big::Int* Ua, golang::math::big::Int* Ub, golang::math::big::Int* q, golang::math::big::Int* r, bool extended)
     {
-        std::tie(q, r) = rec::QuoRem(gocpp::recv(q), A, B, r);
-
-        std::tie(*A, *B, *r) = std::tuple{*B, *r, *A};
+        golang::math::big::Int* nA;
+        golang::math::big::Int* nB;
+        golang::math::big::Int* nr;
+        golang::math::big::Int* nUa;
+        golang::math::big::Int* nUb;
+        rec::QuoRem(gocpp::recv(q), A, B, r);
 
         if(extended)
         {
-            // Ua, Ub = Ub, Ua - q*Ub
-            rec::Set(gocpp::recv(t), Ub);
-            rec::Mul(gocpp::recv(s), Ub, q);
-            rec::Sub(gocpp::recv(Ub), Ua, s);
-            rec::Set(gocpp::recv(Ua), t);
+            // Ua, Ub = Ub, Ua-q*Ub
+            rec::Mul(gocpp::recv(q), q, Ub);
+            std::tie(Ua, Ub) = std::tuple{Ub, Ua};
+            rec::Sub(gocpp::recv(Ub), Ub, q);
         }
+
+        return {B, r, A, Ua, Ub};
     }
 
     // lehmerGCD sets z to the greatest common divisor of a and b,
@@ -982,12 +1103,12 @@ namespace golang::big
     // Design and Implementation of Symbolic Computation Systems, pp 45-58.
     // The cosequences are updated according to Algorithm 10.45 from
     // Cohen et al. "Handbook of Elliptic and Hyperelliptic Curve Cryptography" pp 192.
-    golang::big::Int* rec::lehmerGCD(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y, golang::big::Int* a, golang::big::Int* b)
+    golang::math::big::Int* rec::lehmerGCD(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* a, golang::math::big::Int* b)
     {
-        golang::big::Int* A = {};
-        golang::big::Int* B = {};
-        golang::big::Int* Ua = {};
-        golang::big::Int* Ub = {};
+        golang::math::big::Int* A = {};
+        golang::math::big::Int* B = {};
+        golang::math::big::Int* Ua = {};
+        golang::math::big::Int* Ub = {};
 
         A = rec::Abs(gocpp::recv(new big::Int{}), a);
         B = rec::Abs(gocpp::recv(new big::Int{}), b);
@@ -1004,8 +1125,6 @@ namespace golang::big
         // temp variables for multiprecision update
         auto q = new big::Int{};
         auto r = new big::Int{};
-        auto s = new big::Int{};
-        auto t = new big::Int{};
 
         // ensure A >= B
         if(rec::cmp(gocpp::recv(A->abs), B->abs) < 0)
@@ -1026,20 +1145,20 @@ namespace golang::big
                 // Simulate the effect of the single-precision steps using the cosequences.
                 // A = u0*A + v0*B
                 // B = u1*A + v1*B
-                lehmerUpdate(A, B, q, r, s, t, u0, u1, v0, v1, even);
+                lehmerUpdate(A, B, q, r, u0, u1, v0, v1, even);
 
                 if(extended)
                 {
                     // Ua = u0*Ua + v0*Ub
                     // Ub = u1*Ua + v1*Ub
-                    lehmerUpdate(Ua, Ub, q, r, s, t, u0, u1, v0, v1, even);
+                    lehmerUpdate(Ua, Ub, q, r, u0, u1, v0, v1, even);
                 }
             }
             else
             {
                 // Single-digit calculations failed to simulate any quotients.
                 // Do a standard Euclidean step.
-                euclidUpdate(A, B, Ua, Ub, q, r, s, t, extended);
+                std::tie(A, B, r, Ua, Ub) = euclidUpdate(A, B, Ua, Ub, q, r, extended);
             }
         }
 
@@ -1049,7 +1168,7 @@ namespace golang::big
             if(len(A->abs) > 1)
             {
                 // A is longer than a single Word, so one update is needed.
-                euclidUpdate(A, B, Ua, Ub, q, r, s, t, extended);
+                std::tie(A, B, r, Ua, Ub) = euclidUpdate(A, B, Ua, Ub, q, r, extended);
             }
             if(len(B->abs) > 0)
             {
@@ -1073,15 +1192,9 @@ namespace golang::big
                         even = ! even;
                     }
 
-                    t->abs = rec::setWord(gocpp::recv(t->abs), ua);
-                    s->abs = rec::setWord(gocpp::recv(s->abs), va);
-                    t->neg = ! even;
-                    s->neg = even;
-
-                    rec::Mul(gocpp::recv(t), Ua, t);
-                    rec::Mul(gocpp::recv(s), Ub, s);
-
-                    rec::Add(gocpp::recv(Ua), t, s);
+                    mulW(Ua, Ua, ! even, ua);
+                    mulW(Ub, Ub, even, va);
+                    rec::Add(gocpp::recv(Ua), Ua, Ub);
                 }
                 else
                 {
@@ -1118,14 +1231,14 @@ namespace golang::big
 
         if(x != nullptr)
         {
-            *x = *Ua;
+            rec::Set(gocpp::recv(x), Ua);
             if(negA)
             {
                 x->neg = ! x->neg;
             }
         }
 
-        *z = *A;
+        rec::Set(gocpp::recv(z), A);
 
         return z;
     }
@@ -1134,7 +1247,7 @@ namespace golang::big
     //
     // As this uses the [math/rand] package, it must not be used for
     // security-sensitive work. Use [crypto/rand.Int] instead.
-    golang::big::Int* rec::Rand(golang::big::Int* z, rand::Rand* rnd, golang::big::Int* n)
+    golang::math::big::Int* rec::Rand(golang::math::big::Int* z, rand::Rand* rnd, golang::math::big::Int* n)
     {
         // z.neg is not modified before the if check, because z and n might alias.
         if(n->neg || len(n->abs) == 0)
@@ -1152,21 +1265,21 @@ namespace golang::big
     // and returns z. If g and n are not relatively prime, g has no multiplicative
     // inverse in the ring ℤ/nℤ.  In this case, z is unchanged and the return value
     // is nil. If n == 0, a division-by-zero run-time panic occurs.
-    golang::big::Int* rec::ModInverse(golang::big::Int* z, golang::big::Int* g, golang::big::Int* n)
+    golang::math::big::Int* rec::ModInverse(golang::math::big::Int* z, golang::math::big::Int* g, golang::math::big::Int* n)
     {
         // GCD expects parameters a and b to be > 0.
         if(n->neg)
         {
-            golang::big::Int n2 = {};
+            golang::math::big::Int n2 = {};
             n = rec::Neg(gocpp::recv(n2), n);
         }
         if(g->neg)
         {
-            golang::big::Int g2 = {};
+            golang::math::big::Int g2 = {};
             g = rec::Mod(gocpp::recv(g2), g, n);
         }
-        golang::big::Int d = {};
-        golang::big::Int x = {};
+        golang::math::big::Int d = {};
+        golang::math::big::Int x = {};
         rec::GCD(gocpp::recv(d), & x, nullptr, g, n);
 
         // if and only if d==1, g and n are relatively prime
@@ -1188,21 +1301,21 @@ namespace golang::big
         return z;
     }
 
-    nat rec::modInverse(golang::big::nat z, nat g, nat n)
+    golang::math::big::nat rec::modInverse(golang::math::big::nat z, golang::math::big::nat g, golang::math::big::nat n)
     {
         // TODO(rsc): ModInverse should be implemented in terms of this function.
-        return rec::ModInverse(gocpp::recv((gocpp::InitPtr<golang::big::Int>([=](auto& x) {
+        return rec::ModInverse(gocpp::recv((gocpp::InitPtr<golang::math::big::Int>([=](auto& x) {
             x.abs = z;
-        }))), gocpp::InitPtr<golang::big::Int>([=](auto& x) {
+        }))), gocpp::InitPtr<golang::math::big::Int>([=](auto& x) {
             x.abs = g;
-        }), gocpp::InitPtr<golang::big::Int>([=](auto& x) {
+        }), gocpp::InitPtr<golang::math::big::Int>([=](auto& x) {
             x.abs = n;
         }))->abs;
     }
 
     // Jacobi returns the Jacobi symbol (x/y), either +1, -1, or 0.
     // The y argument must be an odd integer.
-    int Jacobi(golang::big::Int* x, golang::big::Int* y)
+    int Jacobi(golang::math::big::Int* x, golang::math::big::Int* y)
     {
         if(len(y->abs) == 0 || y->abs[0] & 1 == 0)
         {
@@ -1212,9 +1325,9 @@ namespace golang::big
         // We use the formulation described in chapter 2, section 2.4,
         // "The Yacas Book of Algorithms":
         // http://yacas.sourceforge.net/Algo.book.pdf
-        golang::big::Int a = {};
-        golang::big::Int b = {};
-        golang::big::Int c = {};
+        golang::math::big::Int a = {};
+        golang::math::big::Int b = {};
+        golang::math::big::Int c = {};
         rec::Set(gocpp::recv(a), x);
         rec::Set(gocpp::recv(b), y);
         auto j = 1;
@@ -1277,7 +1390,7 @@ namespace golang::big
     //
     // to calculate the square root of any quadratic residue mod p quickly for 3
     // mod 4 primes.
-    golang::big::Int* rec::modSqrt3Mod4Prime(golang::big::Int* z, golang::big::Int* x, golang::big::Int* p)
+    golang::math::big::Int* rec::modSqrt3Mod4Prime(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* p)
     {
         // e = p + 1
         auto e = rec::Add(gocpp::recv(new big::Int{}), p, intOne);
@@ -1296,7 +1409,7 @@ namespace golang::big
     //
     // to calculate the square root of any quadratic residue mod p quickly for 5
     // mod 8 primes.
-    golang::big::Int* rec::modSqrt5Mod8Prime(golang::big::Int* z, golang::big::Int* x, golang::big::Int* p)
+    golang::math::big::Int* rec::modSqrt5Mod8Prime(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* p)
     {
         // p == 5 mod 8 implies p = e*8 + 5
         // e is the quotient and 5 the remainder on division by 8
@@ -1319,16 +1432,16 @@ namespace golang::big
 
     // modSqrtTonelliShanks uses the Tonelli-Shanks algorithm to find the square
     // root of a quadratic residue modulo any prime.
-    golang::big::Int* rec::modSqrtTonelliShanks(golang::big::Int* z, golang::big::Int* x, golang::big::Int* p)
+    golang::math::big::Int* rec::modSqrtTonelliShanks(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* p)
     {
         // Break p-1 into s*2^e such that s is odd.
-        golang::big::Int s = {};
+        golang::math::big::Int s = {};
         rec::Sub(gocpp::recv(s), p, intOne);
         auto e = rec::trailingZeroBits(gocpp::recv(s.abs));
         rec::Rsh(gocpp::recv(s), & s, e);
 
         // find some non-square n
-        golang::big::Int n = {};
+        golang::math::big::Int n = {};
         rec::SetInt64(gocpp::recv(n), 2);
         for(; Jacobi(& n, p) != - 1; )
         {
@@ -1339,10 +1452,10 @@ namespace golang::big
         // section 6 of "Square roots from 1; 24, 51, 10 to Dan Shanks" by Ezra
         // Brown:
         // https://www.maa.org/sites/default/files/pdf/upload_library/22/Polya/07468342.di020786.02p0470a.pdf
-        golang::big::Int y = {};
-        golang::big::Int b = {};
-        golang::big::Int g = {};
-        golang::big::Int t = {};
+        golang::math::big::Int y = {};
+        golang::math::big::Int b = {};
+        golang::math::big::Int g = {};
+        golang::math::big::Int t = {};
         rec::Add(gocpp::recv(y), & s, intOne);
         rec::Rsh(gocpp::recv(y), & y, 1);
         // y = x^((s+1)/2)
@@ -1382,7 +1495,7 @@ namespace golang::big
     // returns z. The modulus p must be an odd prime. If x is not a square mod p,
     // ModSqrt leaves z unchanged and returns nil. This function panics if p is
     // not an odd integer, its behavior is undefined if p is odd but not prime.
-    golang::big::Int* rec::ModSqrt(golang::big::Int* z, golang::big::Int* x, golang::big::Int* p)
+    golang::math::big::Int* rec::ModSqrt(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* p)
     {
         //Go switch emulation
         {
@@ -1436,36 +1549,36 @@ namespace golang::big
     }
 
     // Lsh sets z = x << n and returns z.
-    golang::big::Int* rec::Lsh(golang::big::Int* z, golang::big::Int* x, unsigned int n)
+    golang::math::big::Int* rec::Lsh(golang::math::big::Int* z, golang::math::big::Int* x, unsigned int n)
     {
-        z->abs = rec::shl(gocpp::recv(z->abs), x->abs, n);
+        z->abs = rec::lsh(gocpp::recv(z->abs), x->abs, n);
         z->neg = x->neg;
         return z;
     }
 
     // Rsh sets z = x >> n and returns z.
-    golang::big::Int* rec::Rsh(golang::big::Int* z, golang::big::Int* x, unsigned int n)
+    golang::math::big::Int* rec::Rsh(golang::math::big::Int* z, golang::math::big::Int* x, unsigned int n)
     {
         if(x->neg)
         {
             // (-x) >> s == ^(x-1) >> s == ^((x-1) >> s) == -(((x-1) >> s) + 1)
             // no underflow because |x| > 0
             auto t = rec::sub(gocpp::recv(z->abs), x->abs, natOne);
-            t = rec::shr(gocpp::recv(t), t, n);
+            t = rec::rsh(gocpp::recv(t), t, n);
             z->abs = rec::add(gocpp::recv(t), t, natOne);
             // z cannot be zero if x is negative
             z->neg = true;
             return z;
         }
 
-        z->abs = rec::shr(gocpp::recv(z->abs), x->abs, n);
+        z->abs = rec::rsh(gocpp::recv(z->abs), x->abs, n);
         z->neg = false;
         return z;
     }
 
     // Bit returns the value of the i'th bit of x. That is, it
     // returns (x>>i)&1. The bit index i must be >= 0.
-    unsigned int rec::Bit(golang::big::Int* x, int i)
+    unsigned int rec::Bit(golang::math::big::Int* x, int i)
     {
         if(i == 0)
         {
@@ -1491,10 +1604,11 @@ namespace golang::big
     }
 
     // SetBit sets z to x, with x's i'th bit set to b (0 or 1).
-    // That is, if b is 1 SetBit sets z = x | (1 << i);
-    // if b is 0 SetBit sets z = x &^ (1 << i). If b is not 0 or 1,
-    // SetBit will panic.
-    golang::big::Int* rec::SetBit(golang::big::Int* z, golang::big::Int* x, int i, unsigned int b)
+    // That is,
+    //   - if b is 1, SetBit sets z = x | (1 << i);
+    //   - if b is 0, SetBit sets z = x &^ (1 << i);
+    //   - if b is not 0 or 1, SetBit will panic.
+    golang::math::big::Int* rec::SetBit(golang::math::big::Int* z, golang::math::big::Int* x, int i, unsigned int b)
     {
         if(i < 0)
         {
@@ -1514,7 +1628,7 @@ namespace golang::big
     }
 
     // And sets z = x & y and returns z.
-    golang::big::Int* rec::And(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y)
+    golang::math::big::Int* rec::And(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y)
     {
         if(x->neg == y->neg)
         {
@@ -1550,7 +1664,7 @@ namespace golang::big
     }
 
     // AndNot sets z = x &^ y and returns z.
-    golang::big::Int* rec::AndNot(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y)
+    golang::math::big::Int* rec::AndNot(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y)
     {
         if(x->neg == y->neg)
         {
@@ -1588,7 +1702,7 @@ namespace golang::big
     }
 
     // Or sets z = x | y and returns z.
-    golang::big::Int* rec::Or(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y)
+    golang::math::big::Int* rec::Or(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y)
     {
         if(x->neg == y->neg)
         {
@@ -1625,7 +1739,7 @@ namespace golang::big
     }
 
     // Xor sets z = x ^ y and returns z.
-    golang::big::Int* rec::Xor(golang::big::Int* z, golang::big::Int* x, golang::big::Int* y)
+    golang::math::big::Int* rec::Xor(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y)
     {
         if(x->neg == y->neg)
         {
@@ -1661,7 +1775,7 @@ namespace golang::big
     }
 
     // Not sets z = ^x and returns z.
-    golang::big::Int* rec::Not(golang::big::Int* z, golang::big::Int* x)
+    golang::math::big::Int* rec::Not(golang::math::big::Int* z, golang::math::big::Int* x)
     {
         if(x->neg)
         {
@@ -1680,14 +1794,14 @@ namespace golang::big
 
     // Sqrt sets z to ⌊√x⌋, the largest integer such that z² ≤ x, and returns z.
     // It panics if x is negative.
-    golang::big::Int* rec::Sqrt(golang::big::Int* z, golang::big::Int* x)
+    golang::math::big::Int* rec::Sqrt(golang::math::big::Int* z, golang::math::big::Int* x)
     {
         if(x->neg)
         {
             gocpp::panic("square root of negative number"_s);
         }
         z->neg = false;
-        z->abs = rec::sqrt(gocpp::recv(z->abs), x->abs);
+        z->abs = rec::sqrt(gocpp::recv(z->abs), nullptr, x->abs);
         return z;
     }
 

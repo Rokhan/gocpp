@@ -3,9 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/fmt/scan.fwd.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     struct byteReader;
 }

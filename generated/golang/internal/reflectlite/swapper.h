@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::reflectlite
+namespace golang::internal::reflectlite
 {
     std::function<void (int i, int j)> Swapper(go_any slice);
 

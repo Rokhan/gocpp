@@ -12,13 +12,17 @@
 #include "gocpp/support.h"
 
 #include "golang/fmt/print.h"
-#include "golang/golang.org/x/tools/internal/pkgbits/frames_go17.h"
+#include "golang/runtime/symtab.h"
 #include "golang/strings/strings.h"
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
+    namespace fmt = golang::fmt;
+    namespace runtime = golang::runtime;
+    namespace strings = golang::strings;
     namespace rec
     {
+        using runtime::rec::Next;
     }
 
     // fmtFrames formats a backtrace for reporting reader/writer desyncs.
@@ -33,6 +37,28 @@ namespace golang::pkgbits
             res = append(res, mocklib::Sprintf("%s:%v: %s +0x%v"_s, file, line, name, offset));
         });
         return res;
+    }
+
+    // walkFrames calls visit for each call frame represented by pcs.
+    //
+    // pcs should be a slice of PCs, as returned by runtime.Callers.
+    void walkFrames(gocpp::slice<uintptr_t> pcs, frameVisitor visit)
+    {
+        if(len(pcs) == 0)
+        {
+            return;
+        }
+
+        auto frames = runtime::CallersFrames(pcs);
+        for(; ; )
+        {
+            auto [frame, more] = rec::Next(gocpp::recv(frames));
+            visit(frame.File, frame.Line, frame.Function, frame.PC - frame.Entry);
+            if(! more)
+            {
+                return;
+            }
+        }
     }
 
     // SyncMarker is an enum type that represents markers that may be

@@ -12,6 +12,7 @@
 
 namespace golang::runtime
 {
+    extern itabTableType* itabTable;
     void itabsinit();
     struct GoTag_sliceInterfacePtr { };
     using sliceInterfacePtr = gocpp::defined<gocpp::slice<unsigned char>, GoTag_sliceInterfacePtr>;
@@ -19,17 +20,17 @@ namespace golang::runtime
     extern go_any uint32Eface;
     extern go_any uint64Eface;
     extern go_any stringEface;
-    gocpp::unsafe_pointer convT16(uint16_t val);
-    gocpp::unsafe_pointer convT32(uint32_t val);
-    gocpp::unsafe_pointer convT64(uint64_t val);
-    gocpp::unsafe_pointer convTstring(gocpp::string val);
-    gocpp::unsafe_pointer convTslice(gocpp::slice<unsigned char> val);
-    extern gocpp::array<uint64_t, 256> staticuint64s;
-    void unreachableMethod();
     extern go_any sliceEface;
+    // staticuint64s is used to avoid allocating in convTx for small integer values.
+    // staticuint64s[0] == 0, staticuint64s[1] == 1, and so forth.
+    // It is defined in assembler code so that it is read-only.
+    extern gocpp::array<uint64_t, 256> staticuint64s;
+    gocpp::array_ptr<gocpp::array<uint64_t, 256>> getStaticuint64s();
+    void unreachableMethod();
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/internal/abi/switch.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/symtab.fwd.h"
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
@@ -56,6 +57,8 @@ namespace golang::runtime
     uintptr_t itabHashFunc(interfacetype* inter, _type* typ);
     itab* getitab(interfacetype* inter, _type* typ, bool canfail);
     void itabAdd(itab* m);
+    gocpp::string itabInit(itab* m, bool firstTime);
+    void addModuleItabs(moduledata* md);
     void panicdottypeE(_type* have, _type* want, _type* iface);
     void panicdottypeI(itab* have, _type* want, _type* iface);
     void panicnildottype(_type* want);
@@ -63,27 +66,47 @@ namespace golang::runtime
     extern _type* uint32Type;
     extern _type* uint64Type;
     extern _type* stringType;
+    extern _type* sliceType;
     gocpp::unsafe_pointer convT(_type* t, gocpp::unsafe_pointer v);
     gocpp::unsafe_pointer convTnoptr(_type* t, gocpp::unsafe_pointer v);
+    gocpp::unsafe_pointer convT16(uint16_t val);
+    gocpp::unsafe_pointer convT32(uint32_t val);
+    gocpp::unsafe_pointer convT64(uint64_t val);
+    gocpp::unsafe_pointer convTstring(gocpp::string val);
+    gocpp::unsafe_pointer convTslice(gocpp::slice<unsigned char> val);
     itab* assertE2I(interfacetype* inter, _type* t);
     itab* assertE2I2(interfacetype* inter, _type* t);
-    itab* typeAssert(abi::TypeAssert* s, _type* t);
-    abi::TypeAssertCache* buildTypeAssertCache(abi::TypeAssertCache* oldC, _type* typ, itab* tab);
-    extern abi::TypeAssertCache emptyTypeAssertCache;
-    std::tuple<int, itab*> interfaceSwitch(abi::InterfaceSwitch* s, _type* t);
-    abi::InterfaceSwitchCache* buildInterfaceSwitchCache(abi::InterfaceSwitchCache* oldC, _type* typ, int case_, itab* tab);
-    extern abi::InterfaceSwitchCache emptyInterfaceSwitchCache;
     void reflect_ifaceE2I(interfacetype* inter, eface e, iface* dst);
     void reflectlite_ifaceE2I(interfacetype* inter, eface e, iface* dst);
     void iterate_itabs(std::function<void (itab* _1)> fn);
+}
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/internal/abi/switch.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+
+namespace golang::runtime
+{
     extern itabTableType itabTableInit;
-    extern _type* sliceType;
-    extern itabTableType* itabTable;
+    namespace abi = golang::internal::abi;
+}
+#include "golang/internal/abi/switch.h"
+
+namespace golang::runtime
+{
+    itab* typeAssert(abi::TypeAssert* s, _type* t);
+    abi::TypeAssertCache* buildTypeAssertCache(abi::TypeAssertCache* oldC, _type* typ, itab* tab);
+    // Empty type assert cache. Contains one entry with a nil Typ (which
+    // causes a cache lookup to fail immediately.)
+    extern abi::TypeAssertCache emptyTypeAssertCache;
+    std::tuple<int, itab*> interfaceSwitch(abi::InterfaceSwitch* s, _type* t);
+    abi::InterfaceSwitchCache* buildInterfaceSwitchCache(abi::InterfaceSwitchCache* oldC, _type* typ, int case_, itab* tab);
+    // Empty interface switch cache. Contains one entry with a nil Typ (which
+    // causes a cache lookup to fail immediately.)
+    extern abi::InterfaceSwitchCache emptyInterfaceSwitchCache;
 }
 
 #include "golang/runtime/runtime2.h"
-
-#include "golang/runtime/type.fwd.h"
+#include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
@@ -92,7 +115,6 @@ namespace golang::runtime
     {
         itab* find(itabTableType* t, interfacetype* inter, _type* typ);
         void add(itabTableType* t, itab* m);
-        gocpp::string init(itab* m);
     }
 }
 

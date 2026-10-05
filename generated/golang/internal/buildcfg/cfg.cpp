@@ -16,13 +16,14 @@
 #include "golang/internal/buildcfg/exp.h"
 #include "golang/internal/buildcfg/zbootstrap.h"
 #include "golang/io/io.h"
+#include "golang/iter/iter.h"
 #include "golang/os/env.h"
 #include "golang/os/file.h"
 #include "golang/os/proc.h"
 #include "golang/os/types.h"
 #include "golang/path/filepath/path.h"
-#include "golang/runtime/extern.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
+#include "golang/strings/iter.h"
 #include "golang/strings/strings.h"
 
 // Package buildcfg provides access to the build configuration
@@ -32,25 +33,33 @@
 // Note that it does NOT provide access to the build configuration used to
 // build the currently-running binary. For that, use runtime.GOOS etc
 // as well as internal/goexperiment.
-namespace golang::buildcfg
+namespace golang::internal::buildcfg
 {
+    namespace filepath = golang::path::filepath;
+    namespace fmt = golang::fmt;
+    namespace os = golang::os;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
     namespace rec
     {
         using os::rec::Write;
     }
 
-    gocpp::string GOROOT = runtime::GOROOT();
+    gocpp::string GOROOT = os::Getenv("GOROOT"_s);
     gocpp::string GOARCH = envOr("GOARCH"_s, defaultGOARCH);
     gocpp::string GOOS = envOr("GOOS"_s, defaultGOOS);
-    gocpp::string GO386 = envOr("GO386"_s, defaultGO386);
+    gocpp::string GO386 = envOr("GO386"_s, DefaultGO386);
     int GOAMD64 = goamd64();
-    buildcfg::goarmFeatures GOARM = goarm();
+    buildcfg::GoarmFeatures GOARM = goarm();
+    buildcfg::Goarm64Features GOARM64 = goarm64();
     gocpp::string GOMIPS = gomips();
     gocpp::string GOMIPS64 = gomips64();
     int GOPPC64 = goppc64();
+    int GORISCV64 = goriscv64();
     buildcfg::gowasmFeatures GOWASM = gowasm();
     gocpp::slice<gocpp::string> ToolTags = toolTags();
     gocpp::string GO_LDSO = defaultGO_LDSO;
+    gocpp::string GOFIPS140 = gofips140();
     gocpp::string Version = version;
     // Error is one of the errors found (if any) in the build configuration.
     gocpp::error Error;
@@ -77,7 +86,7 @@ namespace golang::buildcfg
     {
         //Go switch emulation
         {
-            auto v = envOr("GOAMD64"_s, defaultGOAMD64);
+            auto v = envOr("GOAMD64"_s, DefaultGOAMD64);
             auto condition = v;
             int conditionId = -1;
             if(condition == "v1"_s) { conditionId = 0; }
@@ -101,12 +110,93 @@ namespace golang::buildcfg
             }
         }
         Error = mocklib::Errorf("invalid GOAMD64: must be v1, v2, v3, v4"_s);
-        return int(defaultGOAMD64[len("v"_s)] - '0');
+        return int(DefaultGOAMD64[len("v"_s)] - '0');
+    }
+
+    gocpp::string gofips140()
+    {
+        auto v = envOr("GOFIPS140"_s, DefaultGOFIPS140);
+        //Go switch emulation
+        {
+            auto condition = v;
+            int conditionId = -1;
+            if(condition == "off"_s) { conditionId = 0; }
+            else if(condition == "latest"_s) { conditionId = 1; }
+            else if(condition == "inprocess"_s) { conditionId = 2; }
+            else if(condition == "certified"_s) { conditionId = 3; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                    return v;
+                    break;
+            }
+        }
+        if(isFIPSVersion(v))
+        {
+            return v;
+        }
+        Error = mocklib::Errorf("invalid GOFIPS140: must be off, latest, inprocess, certified, or v1.Y.Z"_s);
+        return DefaultGOFIPS140;
+    }
+
+    // isFIPSVersion reports whether v is a valid FIPS version,
+    // of the form v1.Y.Z or v1.Y.Z-hhhhhhhh or v1.Y.Z-rcN.
+    bool isFIPSVersion(gocpp::string v)
+    {
+        auto [v_tmp, ok] = strings::CutPrefix(v, "v1."_s);
+        auto& v = v_tmp;
+        if(! ok)
+        {
+            return false;
+        }
+        if(std::tie(v, ok) = cutNum(v); ! ok)
+        {
+            return false;
+        }
+        if(std::tie(v, ok) = strings::CutPrefix(v, "."_s); ! ok)
+        {
+            return false;
+        }
+        if(std::tie(v, ok) = cutNum(v); ! ok)
+        {
+            return false;
+        }
+        if(v == ""_s)
+        {
+            return true;
+        }
+        if(std::tie(v, ok) = strings::CutPrefix(v, "-rc"_s); ok)
+        {
+            std::tie(v, ok) = cutNum(v);
+            return ok && v == ""_s;
+        }
+        if(std::tie(v, ok) = strings::CutPrefix(v, "-"_s); ok)
+        {
+            return len(v) == 8;
+        }
+        return false;
+    }
+
+    // cutNum skips the leading text matching [0-9]+
+    // in s, returning the rest and whether such text was found.
+    std::tuple<gocpp::string, bool> cutNum(gocpp::string s)
+    {
+        gocpp::string rest;
+        bool ok;
+        auto i = 0;
+        for(; i < len(s) && '0' <= s[i] && s[i] <= '9'; )
+        {
+            i++;
+        }
+        return {s.make_slice(i), i > 0};
     }
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    goarmFeatures::operator T()
+    GoarmFeatures::operator T()
     {
         T result;
         result.Version = this->Version;
@@ -115,14 +205,14 @@ namespace golang::buildcfg
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool goarmFeatures::operator==(const T& ref) const
+    bool GoarmFeatures::operator==(const T& ref) const
     {
         if (Version != ref.Version) return false;
         if (SoftFloat != ref.SoftFloat) return false;
         return true;
     }
 
-    std::ostream& goarmFeatures::PrintTo(std::ostream& os) const
+    std::ostream& GoarmFeatures::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << Version;
@@ -131,12 +221,12 @@ namespace golang::buildcfg
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct goarmFeatures& value)
+    std::ostream& operator<<(std::ostream& os, const struct GoarmFeatures& value)
     {
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::String(goarmFeatures g)
+    gocpp::string rec::String(GoarmFeatures g)
     {
         auto armStr = strconv::Itoa(g.Version);
         if(g.SoftFloat)
@@ -150,12 +240,12 @@ namespace golang::buildcfg
         return armStr;
     }
 
-    goarmFeatures goarm()
+    GoarmFeatures goarm()
     {
-        goarmFeatures g;
+        GoarmFeatures g;
         auto softFloatOpt = ",softfloat"_s;
         auto hardFloatOpt = ",hardfloat"_s;
-        auto def = defaultGOARM;
+        auto def = DefaultGOARM;
         if(GOOS == "android"_s && GOARCH == "arm"_s)
         {
             // Android arm devices always support GOARM=7.
@@ -209,11 +299,190 @@ namespace golang::buildcfg
         return g;
     }
 
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    Goarm64Features::operator T()
+    {
+        T result;
+        result.Version = this->Version;
+        result.LSE = this->LSE;
+        result.Crypto = this->Crypto;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Goarm64Features::operator==(const T& ref) const
+    {
+        if (Version != ref.Version) return false;
+        if (LSE != ref.LSE) return false;
+        if (Crypto != ref.Crypto) return false;
+        return true;
+    }
+
+    std::ostream& Goarm64Features::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Version;
+        os << " " << LSE;
+        os << " " << Crypto;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Goarm64Features& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    gocpp::string rec::String(Goarm64Features g)
+    {
+        auto arm64Str = g.Version;
+        if(g.LSE)
+        {
+            arm64Str += ",lse"_s;
+        }
+        if(g.Crypto)
+        {
+            arm64Str += ",crypto"_s;
+        }
+        return arm64Str;
+    }
+
+    std::tuple<Goarm64Features, gocpp::error> ParseGoarm64(gocpp::string v)
+    {
+        Goarm64Features g;
+        gocpp::error e;
+        auto lseOpt = ",lse"_s;
+        auto cryptoOpt = ",crypto"_s;
+
+        g.LSE = false;
+        g.Crypto = false;
+        // We allow any combination of suffixes, in any order
+        for(; ; )
+        {
+            if(strings::HasSuffix(v, lseOpt))
+            {
+                g.LSE = true;
+                v = v.make_slice(0, len(v) - len(lseOpt));
+                continue;
+            }
+
+            if(strings::HasSuffix(v, cryptoOpt))
+            {
+                g.Crypto = true;
+                v = v.make_slice(0, len(v) - len(cryptoOpt));
+                continue;
+            }
+
+            break;
+        }
+
+        //Go switch emulation
+        {
+            auto condition = v;
+            int conditionId = -1;
+            if(condition == "v8.0"_s) { conditionId = 0; }
+            else if(condition == "v8.1"_s) { conditionId = 1; }
+            else if(condition == "v8.2"_s) { conditionId = 2; }
+            else if(condition == "v8.3"_s) { conditionId = 3; }
+            else if(condition == "v8.4"_s) { conditionId = 4; }
+            else if(condition == "v8.5"_s) { conditionId = 5; }
+            else if(condition == "v8.6"_s) { conditionId = 6; }
+            else if(condition == "v8.7"_s) { conditionId = 7; }
+            else if(condition == "v8.8"_s) { conditionId = 8; }
+            else if(condition == "v8.9"_s) { conditionId = 9; }
+            else if(condition == "v9.0"_s) { conditionId = 10; }
+            else if(condition == "v9.1"_s) { conditionId = 11; }
+            else if(condition == "v9.2"_s) { conditionId = 12; }
+            else if(condition == "v9.3"_s) { conditionId = 13; }
+            else if(condition == "v9.4"_s) { conditionId = 14; }
+            else if(condition == "v9.5"_s) { conditionId = 15; }
+            switch(conditionId)
+            {
+                case 0:
+                    g.Version = v;
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                case 13:
+                case 14:
+                case 15:
+                    g.Version = v;
+                    // LSE extension is mandatory starting from 8.1
+                    g.LSE = true;
+                    break;
+                default:
+                    e = mocklib::Errorf("invalid GOARM64: must start with v8.{0-9} or v9.{0-5} and may optionally end in %q and/or %q"_s, lseOpt, cryptoOpt);
+                    g.Version = DefaultGOARM64;
+                    break;
+            }
+        }
+
+        return {g, e};
+    }
+
+    Goarm64Features goarm64()
+    {
+        Goarm64Features g;
+        std::tie(g, Error) = ParseGoarm64(envOr("GOARM64"_s, DefaultGOARM64));
+        return g;
+    }
+
+    // Returns true if g supports giving ARM64 ISA
+    // Note that this function doesn't accept / test suffixes (like ",lse" or ",crypto")
+    bool rec::Supports(Goarm64Features g, gocpp::string s)
+    {
+        // We only accept "v{8-9}.{0-9}. Everything else is malformed.
+        if(len(s) != 4)
+        {
+            return false;
+        }
+
+        auto major = s[1];
+        auto minor = s[3];
+
+        // We only accept "v{8-9}.{0-9}. Everything else is malformed.
+        if(major < '8' || major > '9' ||
+                minor < '0' || minor > '9' ||
+                s[0] != 'v' || s[2] != '.')
+        {
+            return false;
+        }
+
+        auto g_major = g.Version[1];
+        auto g_minor = g.Version[3];
+
+        if(major == g_major)
+        {
+            return minor <= g_minor;
+        }
+        else
+        if(g_major == '9')
+        {
+            // v9.0 diverged from v8.5. This means we should compare with g_minor increased by five.
+            return minor <= g_minor + 5;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     gocpp::string gomips()
     {
         //Go switch emulation
         {
-            auto v = envOr("GOMIPS"_s, defaultGOMIPS);
+            auto v = envOr("GOMIPS"_s, DefaultGOMIPS);
             auto condition = v;
             int conditionId = -1;
             if(condition == "hardfloat"_s) { conditionId = 0; }
@@ -227,14 +496,14 @@ namespace golang::buildcfg
             }
         }
         Error = mocklib::Errorf("invalid GOMIPS: must be hardfloat, softfloat"_s);
-        return defaultGOMIPS;
+        return DefaultGOMIPS;
     }
 
     gocpp::string gomips64()
     {
         //Go switch emulation
         {
-            auto v = envOr("GOMIPS64"_s, defaultGOMIPS64);
+            auto v = envOr("GOMIPS64"_s, DefaultGOMIPS64);
             auto condition = v;
             int conditionId = -1;
             if(condition == "hardfloat"_s) { conditionId = 0; }
@@ -248,14 +517,14 @@ namespace golang::buildcfg
             }
         }
         Error = mocklib::Errorf("invalid GOMIPS64: must be hardfloat, softfloat"_s);
-        return defaultGOMIPS64;
+        return DefaultGOMIPS64;
     }
 
     int goppc64()
     {
         //Go switch emulation
         {
-            auto v = envOr("GOPPC64"_s, defaultGOPPC64);
+            auto v = envOr("GOPPC64"_s, DefaultGOPPC64);
             auto condition = v;
             int conditionId = -1;
             if(condition == "power8"_s) { conditionId = 0; }
@@ -275,7 +544,40 @@ namespace golang::buildcfg
             }
         }
         Error = mocklib::Errorf("invalid GOPPC64: must be power8, power9, power10"_s);
-        return int(defaultGOPPC64[len("power"_s)] - '0');
+        return int(DefaultGOPPC64[len("power"_s)] - '0');
+    }
+
+    int goriscv64()
+    {
+        //Go switch emulation
+        {
+            auto v = envOr("GORISCV64"_s, DefaultGORISCV64);
+            auto condition = v;
+            int conditionId = -1;
+            if(condition == "rva20u64"_s) { conditionId = 0; }
+            else if(condition == "rva22u64"_s) { conditionId = 1; }
+            else if(condition == "rva23u64"_s) { conditionId = 2; }
+            switch(conditionId)
+            {
+                case 0:
+                    return 20;
+                    break;
+                case 1:
+                    return 22;
+                    break;
+                case 2:
+                    return 23;
+                    break;
+            }
+        }
+        Error = mocklib::Errorf("invalid GORISCV64: must be rva20u64, rva22u64, rva23u64"_s);
+        auto v = DefaultGORISCV64.make_slice(len("rva"_s));
+        auto i = strings::IndexFunc(v, [=](gocpp::rune r) mutable -> bool
+        {
+            return r < '0' || r > '9';
+        });
+        auto [year, gocpp_id_0] = strconv::Atoi(v.make_slice(0, i));
+        return year;
     }
 
     
@@ -283,24 +585,18 @@ namespace golang::buildcfg
     gowasmFeatures::operator T()
     {
         T result;
-        result.SatConv = this->SatConv;
-        result.SignExt = this->SignExt;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool gowasmFeatures::operator==(const T& ref) const
     {
-        if (SatConv != ref.SatConv) return false;
-        if (SignExt != ref.SignExt) return false;
         return true;
     }
 
     std::ostream& gowasmFeatures::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << SatConv;
-        os << " " << SignExt;
         os << '}';
         return os;
     }
@@ -313,21 +609,13 @@ namespace golang::buildcfg
     gocpp::string rec::String(gowasmFeatures f)
     {
         gocpp::slice<gocpp::string> flags = {};
-        if(f.SatConv)
-        {
-            flags = append(flags, "satconv"_s);
-        }
-        if(f.SignExt)
-        {
-            flags = append(flags, "signext"_s);
-        }
         return mocklib::StringsJoin(flags, ","_s);
     }
 
     gowasmFeatures gowasm()
     {
         gowasmFeatures f;
-        for(auto [gocpp_ignored, opt] : strings::Split(envOr("GOWASM"_s, ""_s), ","_s))
+        for(auto [opt, gocpp_ignored] : strings::SplitSeq(envOr("GOWASM"_s, ""_s), ","_s))
         {
             //Go switch emulation
             {
@@ -339,11 +627,11 @@ namespace golang::buildcfg
                 switch(conditionId)
                 {
                     case 0:
-                        f.SatConv = true;
                         break;
+                    // ignore, always enabled
                     case 1:
-                        f.SignExt = true;
                         break;
+                    // ignore, always enabled
                     case 2:
                         break;
                     // ignore
@@ -396,13 +684,15 @@ namespace golang::buildcfg
             if(condition == "386"_s) { conditionId = 0; }
             else if(condition == "amd64"_s) { conditionId = 1; }
             else if(condition == "arm"_s) { conditionId = 2; }
-            else if(condition == "mips"_s) { conditionId = 3; }
-            else if(condition == "mipsle"_s) { conditionId = 4; }
-            else if(condition == "mips64"_s) { conditionId = 5; }
-            else if(condition == "mips64le"_s) { conditionId = 6; }
-            else if(condition == "ppc64"_s) { conditionId = 7; }
-            else if(condition == "ppc64le"_s) { conditionId = 8; }
-            else if(condition == "wasm"_s) { conditionId = 9; }
+            else if(condition == "arm64"_s) { conditionId = 3; }
+            else if(condition == "mips"_s) { conditionId = 4; }
+            else if(condition == "mipsle"_s) { conditionId = 5; }
+            else if(condition == "mips64"_s) { conditionId = 6; }
+            else if(condition == "mips64le"_s) { conditionId = 7; }
+            else if(condition == "ppc64"_s) { conditionId = 8; }
+            else if(condition == "ppc64le"_s) { conditionId = 9; }
+            else if(condition == "riscv64"_s) { conditionId = 10; }
+            else if(condition == "wasm"_s) { conditionId = 11; }
             switch(conditionId)
             {
                 case 0:
@@ -415,18 +705,24 @@ namespace golang::buildcfg
                     return {"GOARM"_s, rec::String(gocpp::recv(GOARM))};
                     break;
                 case 3:
+                    return {"GOARM64"_s, rec::String(gocpp::recv(GOARM64))};
+                    break;
                 case 4:
+                case 5:
                     return {"GOMIPS"_s, GOMIPS};
                     break;
-                case 5:
                 case 6:
+                case 7:
                     return {"GOMIPS64"_s, GOMIPS64};
                     break;
-                case 7:
                 case 8:
+                case 9:
                     return {"GOPPC64"_s, mocklib::Sprintf("power%d"_s, GOPPC64)};
                     break;
-                case 9:
+                case 10:
+                    return {"GORISCV64"_s, mocklib::Sprintf("rva%du64"_s, GORISCV64)};
+                    break;
+                case 11:
                     return {"GOWASM"_s, rec::String(gocpp::recv(GOWASM))};
                     break;
             }
@@ -443,13 +739,15 @@ namespace golang::buildcfg
             if(condition == "386"_s) { conditionId = 0; }
             else if(condition == "amd64"_s) { conditionId = 1; }
             else if(condition == "arm"_s) { conditionId = 2; }
-            else if(condition == "mips"_s) { conditionId = 3; }
-            else if(condition == "mipsle"_s) { conditionId = 4; }
-            else if(condition == "mips64"_s) { conditionId = 5; }
-            else if(condition == "mips64le"_s) { conditionId = 6; }
-            else if(condition == "ppc64"_s) { conditionId = 7; }
-            else if(condition == "ppc64le"_s) { conditionId = 8; }
-            else if(condition == "wasm"_s) { conditionId = 9; }
+            else if(condition == "arm64"_s) { conditionId = 3; }
+            else if(condition == "mips"_s) { conditionId = 4; }
+            else if(condition == "mipsle"_s) { conditionId = 5; }
+            else if(condition == "mips64"_s) { conditionId = 6; }
+            else if(condition == "mips64le"_s) { conditionId = 7; }
+            else if(condition == "ppc64"_s) { conditionId = 8; }
+            else if(condition == "ppc64le"_s) { conditionId = 9; }
+            else if(condition == "riscv64"_s) { conditionId = 10; }
+            else if(condition == "wasm"_s) { conditionId = 11; }
             switch(conditionId)
             {
                 case 0:
@@ -472,15 +770,35 @@ namespace golang::buildcfg
                     return list;
                     break;
                 case 3:
+                {
+                    gocpp::slice<gocpp::string> list = {};
+                    auto major = int(GOARM64.Version[1] - '0');
+                    auto minor = int(GOARM64.Version[3] - '0');
+                    for(auto i = 0; i <= minor; i++)
+                    {
+                        list = append(list, mocklib::Sprintf("%s.v%d.%d"_s, GOARCH, major, i));
+                    }
+                    // ARM64 v9.x also includes support of v8.x+5 (i.e. v9.1 includes v8.(1+5) = v8.6).
+                    if(major == 9)
+                    {
+                        for(auto i = 0; i <= minor + 5 && i <= 9; i++)
+                        {
+                            list = append(list, mocklib::Sprintf("%s.v%d.%d"_s, GOARCH, 8, i));
+                        }
+                    }
+                    return list;
+                    break;
+                }
                 case 4:
+                case 5:
                     return gocpp::slice<gocpp::string> {GOARCH + "."_s + GOMIPS};
                     break;
-                case 5:
                 case 6:
+                case 7:
                     return gocpp::slice<gocpp::string> {GOARCH + "."_s + GOMIPS64};
                     break;
-                case 7:
                 case 8:
+                case 9:
                     gocpp::slice<gocpp::string> list = {};
                     for(auto i = 8; i <= GOPPC64; i++)
                     {
@@ -488,16 +806,26 @@ namespace golang::buildcfg
                     }
                     return list;
                     break;
-                case 9:
+                case 10:
+                {
+                    auto list = gocpp::slice<gocpp::string> {GOARCH + "."_s + "rva20u64"_s};
+                    if(GORISCV64 >= 22)
+                    {
+                        list = append(list, GOARCH + "."_s + "rva22u64"_s);
+                    }
+                    if(GORISCV64 >= 23)
+                    {
+                        list = append(list, GOARCH + "."_s + "rva23u64"_s);
+                    }
+                    return list;
+                    break;
+                }
+                case 11:
                     gocpp::slice<gocpp::string> list = {};
-                    if(GOWASM.SatConv)
-                    {
-                        list = append(list, GOARCH + ".satconv"_s);
-                    }
-                    if(GOWASM.SignExt)
-                    {
-                        list = append(list, GOARCH + ".signext"_s);
-                    }
+                    // SatConv is always enabled
+                    list = append(list, GOARCH + ".satconv"_s);
+                    // SignExt is always enabled
+                    list = append(list, GOARCH + ".signext"_s);
                     return list;
                     break;
             }

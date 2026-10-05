@@ -13,6 +13,8 @@
 namespace golang::runtime
 {
     gocpp::slice<unsigned char> bytes(gocpp::string s);
+    // printBacklog is a circular buffer of messages written with the builtin
+    // print* functions, for use in postmortem analysis of core dumps.
     extern gocpp::array<unsigned char, 512> printBacklog;
     extern int printBacklogIndex;
     void recordForPanic(gocpp::slice<unsigned char> b);
@@ -22,23 +24,27 @@ namespace golang::runtime
     void printsp();
     void printnl();
     void printbool(bool v);
-    void printfloat(double v);
-    void printcomplex(struct gocpp::complex128 c);
+    void printfloat64(double v);
+    void printfloat32(double v);
+    void printcomplex128(struct gocpp::complex128 c);
+    void printcomplex64(struct gocpp::complex64 c);
     void printuint(uint64_t v);
     void printint(int64_t v);
     extern long minhexdigits;
+    void printhexopts(bool include0x, int mindigits, uint64_t v);
     void printhex(uint64_t v);
-    void printpointer(gocpp::unsafe_pointer p);
+    void printquoted(gocpp::string s);
     void printuintptr(uintptr_t p);
     void printstring(gocpp::string s);
     void printslice(gocpp::slice<unsigned char> s);
-    void hexdumpWords(uintptr_t p, uintptr_t end, std::function<unsigned char (uintptr_t _1)> mark);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
     extern mutex debuglock;
+    void printpointer(gocpp::unsafe_pointer p);
     void printeface(eface e);
     void printiface(iface i);
 

@@ -9,20 +9,15 @@
 #include "golang/go/types/typeset.fwd.h"
 #include "gocpp/support.h"
 
-
-namespace golang::types
-{
-    struct GoTag_byUniqueMethodName { };
-}
 #include "golang/go/types/termlist.h"
 #include "golang/go/types/object.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct _TypeSet
     {
         gocpp::slice<Func*> methods{}; // all methods of the interface; sorted by unique ID
-        golang::types::termlist terms{}; // type terms of the type set
+        termlist terms{}; // type terms of the type set
         bool comparable{}; // invariant: !comparable || terms.isAll()
 
         using isGoStruct = void;
@@ -37,19 +32,33 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct _TypeSet& value);
-    std::tuple<golang::types::termlist, bool> intersectTermLists(golang::types::termlist xterms, bool xcomp, golang::types::termlist yterms, bool ycomp);
+    std::tuple<termlist, bool> intersectTermLists(termlist xterms, bool xcomp, termlist yterms, bool ycomp);
+    int compareFunc(Func* a, Func* b);
     void sortMethods(gocpp::slice<Func*> list);
     void assertSortedMethods(gocpp::slice<Func*> list);
-    using byUniqueMethodName = gocpp::defined<gocpp::slice<Func*>, GoTag_byUniqueMethodName>;
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    // topTypeSet may be used as type set for the empty interface.
     extern _TypeSet topTypeSet;
+    // invalidTypeSet is a singleton type set to signal an invalid type set
+    // due to an error. It's also a valid empty type set, so consumers of
+    // type sets may choose to ignore it.
     extern _TypeSet invalidTypeSet;
 }
 #include "golang/go/token/position.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+}
 #include "golang/go/types/check.fwd.h"
 #include "golang/go/types/interface.fwd.h"
 #include "golang/go/types/union.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     _TypeSet* computeInterfaceTypeSet(Checker* check, token::Pos pos, Interface* ityp);
     _TypeSet* computeUnionTypeSet(Checker* check, gocpp::map<Union*, _TypeSet*> unionSets, token::Pos pos, Union* utyp);
@@ -60,7 +69,7 @@ namespace golang::types
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeterm.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
@@ -68,18 +77,15 @@ namespace golang::types
         bool IsEmpty(_TypeSet* s);
         bool IsAll(_TypeSet* s);
         bool IsMethodSet(_TypeSet* s);
-        bool IsComparable(_TypeSet* s, gocpp::map<golang::types::Type, bool> seen);
+        bool IsComparable(_TypeSet* s, gocpp::map<golang::go::types::Type, bool> seen);
         int NumMethods(_TypeSet* s);
         Func* Method(_TypeSet* s, int i);
         std::tuple<int, Func*> LookupMethod(_TypeSet* s, Package* pkg, gocpp::string name, bool foldCase);
         gocpp::string String(_TypeSet* s);
         bool hasTerms(_TypeSet* s);
         bool subsetOf(_TypeSet* s1, _TypeSet* s2);
-        bool is(_TypeSet* s, std::function<bool (term* _1)> f);
-        bool underIs(_TypeSet* s, std::function<bool (golang::types::Type _1)> f);
-        int Len(byUniqueMethodName a);
-        bool Less(byUniqueMethodName a, int i, int j);
-        void Swap(byUniqueMethodName a, int i, int j);
+        bool all(_TypeSet* s, std::function<bool (golang::go::types::Type t, golang::go::types::Type u)> f);
+        bool is(_TypeSet* s, std::function<bool (golang::go::types::term* _1)> f);
     }
 }
 

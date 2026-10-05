@@ -31,8 +31,11 @@
 // This package's outputs might be easily predictable regardless of how it's
 // seeded. For random numbers suitable for security-sensitive work, see the
 // crypto/rand package.
-namespace golang::rand
+namespace golang::math::rand
 {
+    namespace atomic = golang::sync::atomic;
+    namespace godebug = golang::internal::godebug;
+    namespace sync = golang::sync;
     namespace rec
     {
         using atomic::rec::CompareAndSwap;
@@ -557,6 +560,8 @@ namespace golang::rand
     // either explicitly or implicitly via GODEBUG=randautoseed=0.
     atomic::Pointer<Rand> globalRandGenerator;
     godebug::Setting* randautoseed = godebug::New("randautoseed"_s);
+    // randseednop controls whether the global Seed is a no-op.
+    godebug::Setting* randseednop = godebug::New("randseednop"_s);
     // globalRand returns the generator to use for the top-level convenience
     // functions.
     Rand* globalRand()
@@ -672,8 +677,17 @@ namespace golang::rand
     // a random value. Programs that call Seed with a known value to get
     // a specific sequence of results should use New(NewSource(seed)) to
     // obtain a local random generator.
+    //
+    // As of Go 1.24 [Seed] is a no-op. To restore the previous behavior set
+    // GODEBUG=randseednop=0.
     void Seed(int64_t seed)
     {
+        if(rec::Value(gocpp::recv(randseednop)) != "0"_s)
+        {
+            return;
+        }
+        rec::IncNonDefault(gocpp::recv(randseednop));
+
         auto orig = rec::Load<rand::Rand>(gocpp::recv(globalRandGenerator));
 
         // If we are already using a lockedSource, we can just re-seed it.
@@ -794,6 +808,7 @@ namespace golang::rand
     // Read, unlike the [Rand.Read] method, is safe for concurrent use.
     //
     // Deprecated: For almost all use cases, [crypto/rand.Read] is more appropriate.
+    // If a deterministic source is required, use [math/rand/v2.ChaCha8.Read].
     std::tuple<int, gocpp::error> Read(gocpp::slice<unsigned char> p)
     {
         int n;

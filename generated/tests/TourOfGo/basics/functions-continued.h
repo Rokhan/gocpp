@@ -15,13 +15,16 @@ namespace golang::main
     int add(int x, int y);
     extern int* Pointer;
     void main();
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     gocpp::unsafe_pointer toto1(int x, int y);
     gocpp::unsafe_pointer toto2(int x, int y);
 }
+#include "golang/fmt/print.fwd.h"
 #include "golang/fmt/print.h"
 
 namespace golang::main
 {
+    namespace fmt = golang::fmt;
     void Formatter(gocpp::slice<fmt::Formatter> ctx);
     
     template<typename... Args>

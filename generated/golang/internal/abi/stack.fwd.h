@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::abi
+namespace golang::internal::abi
 {
     // StackNosplitBase is the base maximum number of bytes that a chain of
     // NOSPLIT functions can use.

@@ -9,9 +9,8 @@
 #include "golang/internal/oserror/errors.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/errors/errors.fwd.h"
 
-namespace golang::oserror
+namespace golang::internal::oserror
 {
     extern gocpp::error ErrInvalid;
     extern gocpp::error ErrPermission;

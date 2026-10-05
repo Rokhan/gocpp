@@ -21,7 +21,6 @@ namespace golang::bytes
     bool ContainsRune(gocpp::slice<unsigned char> b, gocpp::rune r);
     bool ContainsFunc(gocpp::slice<unsigned char> b, std::function<bool (gocpp::rune _1)> f);
     int IndexByte(gocpp::slice<unsigned char> b, unsigned char c);
-    int indexBytePortable(gocpp::slice<unsigned char> s, unsigned char c);
     int LastIndex(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep);
     int LastIndexByte(gocpp::slice<unsigned char> s, unsigned char c);
     int IndexRune(gocpp::slice<unsigned char> s, gocpp::rune r);
@@ -49,7 +48,8 @@ namespace golang::bytes
     gocpp::slice<unsigned char> TrimPrefix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> prefix);
     gocpp::slice<unsigned char> TrimSuffix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> suffix);
     struct GoTag_asciiSet { };
-    using asciiSet = gocpp::defined<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
+    using asciiSet = gocpp::defined<gocpp::array<bool, 256>, GoTag_asciiSet>;
+    bool shouldUseASCIISet(int bufLen);
     bool containsRune(gocpp::string s, gocpp::rune r);
     gocpp::slice<unsigned char> Trim(gocpp::slice<unsigned char> s, gocpp::string cutset);
     gocpp::slice<unsigned char> TrimLeft(gocpp::slice<unsigned char> s, gocpp::string cutset);
@@ -68,6 +68,7 @@ namespace golang::bytes
     gocpp::slice<unsigned char> Clone(gocpp::slice<unsigned char> b);
     std::tuple<gocpp::slice<unsigned char>, bool> CutPrefix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> prefix);
     std::tuple<gocpp::slice<unsigned char>, bool> CutSuffix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> suffix);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>, bool> CutLast(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep);
     gocpp::slice<unsigned char> TrimLeftFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f);
     gocpp::slice<unsigned char> TrimRightFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f);
     gocpp::slice<unsigned char> TrimFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f);
@@ -79,10 +80,14 @@ namespace golang::bytes
     gocpp::slice<unsigned char> trimLeftASCII(gocpp::slice<unsigned char> s, gocpp::array_ptr<asciiSet> as);
     gocpp::slice<unsigned char> trimRightASCII(gocpp::slice<unsigned char> s, gocpp::array_ptr<asciiSet> as);
 }
+#include "golang/unicode/digit.fwd.h"
+#include "golang/unicode/graphic.fwd.h"
+#include "golang/unicode/letter.fwd.h"
 #include "golang/unicode/letter.h"
 
 namespace golang::bytes
 {
+    namespace unicode = golang::unicode;
     gocpp::slice<unsigned char> ToUpperSpecial(unicode::SpecialCase c, gocpp::slice<unsigned char> s);
     gocpp::slice<unsigned char> ToLowerSpecial(unicode::SpecialCase c, gocpp::slice<unsigned char> s);
     gocpp::slice<unsigned char> ToTitleSpecial(unicode::SpecialCase c, gocpp::slice<unsigned char> s);

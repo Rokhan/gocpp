@@ -12,12 +12,13 @@
 #include "gocpp/support.h"
 
 #include "golang/go/build/constraint/expr.h"
-#include "golang/strconv/atoi.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 #include "golang/strings/strings.h"
 
-namespace golang::constraint
+namespace golang::go::build::constraint
 {
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
     namespace rec
     {
     }
@@ -115,7 +116,11 @@ namespace golang::constraint
                     {
                         return 0;
                     }
-                    auto [gocpp_id_1, v, gocpp_id_2] = strings::Cut(z->Tag, "go1."_s);
+                    auto [gocpp_id_1, v, ok] = strings::Cut(z->Tag, "go1."_s);
+                    if(! ok)
+                    {
+                        return - 1;
+                    }
                     auto [n, err] = strconv::Atoi(v);
                     if(err != nullptr)
                     {

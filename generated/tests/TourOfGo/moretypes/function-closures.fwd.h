@@ -13,5 +13,6 @@ namespace golang::main
 
 namespace golang::main
 {
+    namespace unicode = golang::unicode;
     using SpecialCase = gocpp::defined<gocpp::slice<unicode::CaseRange>, GoTag_SpecialCase>;
 }

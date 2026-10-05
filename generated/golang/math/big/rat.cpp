@@ -16,12 +16,15 @@
 #include "golang/math/big/int.h"
 #include "golang/math/big/nat.h"
 #include "golang/math/big/natdiv.h"
+#include "golang/math/big/natmul.h"
 #include "golang/math/bits.h"
 #include "golang/math/ldexp.h"
 #include "golang/math/unsafe.h"
 
-namespace golang::big
+namespace golang::math::big
 {
+    namespace fmt = golang::fmt;
+    namespace math = golang::math;
     namespace rec
     {
     }
@@ -68,14 +71,14 @@ namespace golang::big
     }
 
     // NewRat creates a new [Rat] with numerator a and denominator b.
-    golang::big::Rat* NewRat(int64_t a, int64_t b)
+    golang::math::big::Rat* NewRat(int64_t a, int64_t b)
     {
         return rec::SetFrac64(gocpp::recv(new big::Rat{}), a, b);
     }
 
     // SetFloat64 sets z to exactly f and returns z.
     // If f is not finite, SetFloat returns nil.
-    golang::big::Rat* rec::SetFloat64(golang::big::Rat* z, double f)
+    golang::math::big::Rat* rec::SetFloat64(golang::math::big::Rat* z, double f)
     {
         auto expMask = (1 << 11) - 1;
         auto bits = math::Float64bits(f);
@@ -130,7 +133,7 @@ namespace golang::big
     // nearest to the quotient a/b, using round-to-even in
     // halfway cases. It does not mutate its arguments.
     // Preconditions: b is non-zero; a and b have no common factors.
-    std::tuple<double, bool> quotToFloat32(nat a, nat b)
+    std::tuple<double, bool> quotToFloat32(stack* stk, golang::math::big::nat a, golang::math::big::nat b)
     {
         double f;
         bool exact;
@@ -162,27 +165,27 @@ namespace golang::big
         // - the high-order 1 is omitted in "normal" representation;
         // - the low-order 1 will be used during rounding then discarded.
         auto exp = alen - blen;
-        nat a2 = {};
-        nat b2 = {};
+        golang::math::big::nat a2 = {};
+        golang::math::big::nat b2 = {};
         a2 = rec::set(gocpp::recv(a2), a);
         b2 = rec::set(gocpp::recv(b2), b);
         if(auto shift = Msize2 - exp; shift > 0)
         {
-            a2 = rec::shl(gocpp::recv(a2), a2, (unsigned int)(shift));
+            a2 = rec::lsh(gocpp::recv(a2), a2, (unsigned int)(shift));
         }
         else
         if(shift < 0)
         {
-            b2 = rec::shl(gocpp::recv(b2), b2, (unsigned int)(- shift));
+            b2 = rec::lsh(gocpp::recv(b2), b2, (unsigned int)(- shift));
         }
 
         // 2. Compute quotient and remainder (q, r).  NB: due to the
         // extra shift, the low-order bit of q is logically the
         // high-order bit of r.
-        nat q = {};
+        golang::math::big::nat q = {};
         // (recycle a2)
         big::nat r;
-        std::tie(q, r) = rec::div(gocpp::recv(q), a2, a2, b2);
+        std::tie(q, r) = rec::div(gocpp::recv(q), stk, a2, a2, b2);
         auto mantissa = low32(q);
         // mantissa&1 && !haveRem => remainder is exactly half
         auto haveRem = len(r) > 0;
@@ -245,7 +248,7 @@ namespace golang::big
     // nearest to the quotient a/b, using round-to-even in
     // halfway cases. It does not mutate its arguments.
     // Preconditions: b is non-zero; a and b have no common factors.
-    std::tuple<double, bool> quotToFloat64(nat a, nat b)
+    std::tuple<double, bool> quotToFloat64(stack* stk, golang::math::big::nat a, golang::math::big::nat b)
     {
         double f;
         bool exact;
@@ -277,27 +280,27 @@ namespace golang::big
         // - the high-order 1 is omitted in "normal" representation;
         // - the low-order 1 will be used during rounding then discarded.
         auto exp = alen - blen;
-        nat a2 = {};
-        nat b2 = {};
+        golang::math::big::nat a2 = {};
+        golang::math::big::nat b2 = {};
         a2 = rec::set(gocpp::recv(a2), a);
         b2 = rec::set(gocpp::recv(b2), b);
         if(auto shift = Msize2 - exp; shift > 0)
         {
-            a2 = rec::shl(gocpp::recv(a2), a2, (unsigned int)(shift));
+            a2 = rec::lsh(gocpp::recv(a2), a2, (unsigned int)(shift));
         }
         else
         if(shift < 0)
         {
-            b2 = rec::shl(gocpp::recv(b2), b2, (unsigned int)(- shift));
+            b2 = rec::lsh(gocpp::recv(b2), b2, (unsigned int)(- shift));
         }
 
         // 2. Compute quotient and remainder (q, r).  NB: due to the
         // extra shift, the low-order bit of q is logically the
         // high-order bit of r.
-        nat q = {};
+        golang::math::big::nat q = {};
         // (recycle a2)
         big::nat r;
-        std::tie(q, r) = rec::div(gocpp::recv(q), a2, a2, b2);
+        std::tie(q, r) = rec::div(gocpp::recv(q), stk, a2, a2, b2);
         auto mantissa = low64(q);
         // mantissa&1 && !haveRem => remainder is exactly half
         auto haveRem = len(r) > 0;
@@ -360,47 +363,69 @@ namespace golang::big
     // whether f represents x exactly. If the magnitude of x is too large to
     // be represented by a float32, f is an infinity and exact is false.
     // The sign of f always matches the sign of x, even if f == 0.
-    std::tuple<double, bool> rec::Float32(golang::big::Rat* x)
+    std::tuple<double, bool> rec::Float32(golang::math::big::Rat* x)
     {
         double f;
         bool exact;
-        auto b = x->b.abs;
-        if(len(b) == 0)
+        gocpp::Defer defer;
+        try
         {
-            b = natOne;
+            auto b = x->b.abs;
+            if(len(b) == 0)
+            {
+                b = natOne;
+            }
+            auto stk = getStack();
+            defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
+            std::tie(f, exact) = quotToFloat32(stk, x->a.abs, b);
+            if(x->a.neg)
+            {
+                f = - f;
+            }
+            return {f, exact};
         }
-        std::tie(f, exact) = quotToFloat32(x->a.abs, b);
-        if(x->a.neg)
+        catch(gocpp::GoPanic& gp)
         {
-            f = - f;
+            defer.handlePanic(gp);
+            return {f, exact};
         }
-        return {f, exact};
     }
 
     // Float64 returns the nearest float64 value for x and a bool indicating
     // whether f represents x exactly. If the magnitude of x is too large to
     // be represented by a float64, f is an infinity and exact is false.
     // The sign of f always matches the sign of x, even if f == 0.
-    std::tuple<double, bool> rec::Float64(golang::big::Rat* x)
+    std::tuple<double, bool> rec::Float64(golang::math::big::Rat* x)
     {
         double f;
         bool exact;
-        auto b = x->b.abs;
-        if(len(b) == 0)
+        gocpp::Defer defer;
+        try
         {
-            b = natOne;
+            auto b = x->b.abs;
+            if(len(b) == 0)
+            {
+                b = natOne;
+            }
+            auto stk = getStack();
+            defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
+            std::tie(f, exact) = quotToFloat64(stk, x->a.abs, b);
+            if(x->a.neg)
+            {
+                f = - f;
+            }
+            return {f, exact};
         }
-        std::tie(f, exact) = quotToFloat64(x->a.abs, b);
-        if(x->a.neg)
+        catch(gocpp::GoPanic& gp)
         {
-            f = - f;
+            defer.handlePanic(gp);
+            return {f, exact};
         }
-        return {f, exact};
     }
 
     // SetFrac sets z to a/b and returns z.
     // If b == 0, SetFrac panics.
-    golang::big::Rat* rec::SetFrac(golang::big::Rat* z, golang::big::Int* a, golang::big::Int* b)
+    golang::math::big::Rat* rec::SetFrac(golang::math::big::Rat* z, golang::math::big::Int* a, golang::math::big::Int* b)
     {
         z->a.neg = a->neg != b->neg;
         auto babs = b->abs;
@@ -420,7 +445,7 @@ namespace golang::big
 
     // SetFrac64 sets z to a/b and returns z.
     // If b == 0, SetFrac64 panics.
-    golang::big::Rat* rec::SetFrac64(golang::big::Rat* z, int64_t a, int64_t b)
+    golang::math::big::Rat* rec::SetFrac64(golang::math::big::Rat* z, int64_t a, int64_t b)
     {
         if(b == 0)
         {
@@ -437,7 +462,7 @@ namespace golang::big
     }
 
     // SetInt sets z to x (by making a copy of x) and returns z.
-    golang::big::Rat* rec::SetInt(golang::big::Rat* z, golang::big::Int* x)
+    golang::math::big::Rat* rec::SetInt(golang::math::big::Rat* z, golang::math::big::Int* x)
     {
         rec::Set(gocpp::recv(z->a), x);
         z->b.abs = rec::setWord(gocpp::recv(z->b.abs), 1);
@@ -445,7 +470,7 @@ namespace golang::big
     }
 
     // SetInt64 sets z to x and returns z.
-    golang::big::Rat* rec::SetInt64(golang::big::Rat* z, int64_t x)
+    golang::math::big::Rat* rec::SetInt64(golang::math::big::Rat* z, int64_t x)
     {
         rec::SetInt64(gocpp::recv(z->a), x);
         z->b.abs = rec::setWord(gocpp::recv(z->b.abs), 1);
@@ -453,7 +478,7 @@ namespace golang::big
     }
 
     // SetUint64 sets z to x and returns z.
-    golang::big::Rat* rec::SetUint64(golang::big::Rat* z, uint64_t x)
+    golang::math::big::Rat* rec::SetUint64(golang::math::big::Rat* z, uint64_t x)
     {
         rec::SetUint64(gocpp::recv(z->a), x);
         z->b.abs = rec::setWord(gocpp::recv(z->b.abs), 1);
@@ -461,7 +486,7 @@ namespace golang::big
     }
 
     // Set sets z to x (by making a copy of x) and returns z.
-    golang::big::Rat* rec::Set(golang::big::Rat* z, golang::big::Rat* x)
+    golang::math::big::Rat* rec::Set(golang::math::big::Rat* z, golang::math::big::Rat* x)
     {
         if(z != x)
         {
@@ -476,7 +501,7 @@ namespace golang::big
     }
 
     // Abs sets z to |x| (the absolute value of x) and returns z.
-    golang::big::Rat* rec::Abs(golang::big::Rat* z, golang::big::Rat* x)
+    golang::math::big::Rat* rec::Abs(golang::math::big::Rat* z, golang::math::big::Rat* x)
     {
         rec::Set(gocpp::recv(z), x);
         z->a.neg = false;
@@ -484,7 +509,7 @@ namespace golang::big
     }
 
     // Neg sets z to -x and returns z.
-    golang::big::Rat* rec::Neg(golang::big::Rat* z, golang::big::Rat* x)
+    golang::math::big::Rat* rec::Neg(golang::math::big::Rat* z, golang::math::big::Rat* x)
     {
         rec::Set(gocpp::recv(z), x);
         // 0 has no sign
@@ -494,7 +519,7 @@ namespace golang::big
 
     // Inv sets z to 1/x and returns z.
     // If x == 0, Inv panics.
-    golang::big::Rat* rec::Inv(golang::big::Rat* z, golang::big::Rat* x)
+    golang::math::big::Rat* rec::Inv(golang::math::big::Rat* z, golang::math::big::Rat* x)
     {
         if(len(x->a.abs) == 0)
         {
@@ -506,17 +531,16 @@ namespace golang::big
     }
 
     // Sign returns:
-    //
-    //	-1 if x <  0
-    //	 0 if x == 0
-    //	+1 if x >  0
-    int rec::Sign(golang::big::Rat* x)
+    //   - -1 if x < 0;
+    //   - 0 if x == 0;
+    //   - +1 if x > 0.
+    int rec::Sign(golang::math::big::Rat* x)
     {
         return rec::Sign(gocpp::recv(x->a));
     }
 
     // IsInt reports whether the denominator of x is 1.
-    bool rec::IsInt(golang::big::Rat* x)
+    bool rec::IsInt(golang::math::big::Rat* x)
     {
         return len(x->b.abs) == 0 || rec::cmp(gocpp::recv(x->b.abs), natOne) == 0;
     }
@@ -525,7 +549,7 @@ namespace golang::big
     // The result is a reference to x's numerator; it
     // may change if a new value is assigned to x, and vice versa.
     // The sign of the numerator corresponds to the sign of x.
-    golang::big::Int* rec::Num(golang::big::Rat* x)
+    golang::math::big::Int* rec::Num(golang::math::big::Rat* x)
     {
         return & x->a;
     }
@@ -537,7 +561,7 @@ namespace golang::big
     // any operation that sets x will do, including x.Set(x).)
     // If the result is a reference to x's denominator it
     // may change if a new value is assigned to x, and vice versa.
-    golang::big::Int* rec::Denom(golang::big::Rat* x)
+    golang::math::big::Int* rec::Denom(golang::math::big::Rat* x)
     {
         // Note that x.b.neg is guaranteed false.
         if(len(x->b.abs) == 0)
@@ -545,52 +569,62 @@ namespace golang::big
             // Note: If this proves problematic, we could
             // panic instead and require the Rat to
             // be explicitly initialized.
-            return gocpp::InitPtr<golang::big::Int>([=](auto& y) {
-                y.abs = nat {1};
+            return gocpp::InitPtr<golang::math::big::Int>([=](auto& y) {
+                y.abs = golang::math::big::nat {1};
             });
         }
         return & x->b;
     }
 
-    golang::big::Rat* rec::norm(golang::big::Rat* z)
+    golang::math::big::Rat* rec::norm(golang::math::big::Rat* z)
     {
-        //Go switch emulation
+        gocpp::Defer defer;
+        try
         {
-            int conditionId = -1;
-            if(len(z->a.abs) == 0) { conditionId = 0; }
-            else if(len(z->b.abs) == 0) { conditionId = 1; }
-            switch(conditionId)
+            //Go switch emulation
             {
-                case 0:
-                    // z == 0; normalize sign and denominator
-                    z->a.neg = false;
-                case 1:
-                    // z is integer; normalize denominator
-                    z->b.abs = rec::setWord(gocpp::recv(z->b.abs), 1);
-                    break;
-                default:
+                int conditionId = -1;
+                if(len(z->a.abs) == 0) { conditionId = 0; }
+                else if(len(z->b.abs) == 0) { conditionId = 1; }
+                switch(conditionId)
                 {
-                    // z is fraction; normalize numerator and denominator
-                    auto neg = z->a.neg;
-                    z->a.neg = false;
-                    z->b.neg = false;
-                    if(auto f = rec::lehmerGCD(gocpp::recv(NewInt(0)), nullptr, nullptr, & z->a, & z->b); rec::Cmp(gocpp::recv(f), intOne) != 0)
+                    case 0:
+                        // z == 0; normalize sign and denominator
+                        z->a.neg = false;
+                    case 1:
+                        // z is integer; normalize denominator
+                        z->b.abs = rec::setWord(gocpp::recv(z->b.abs), 1);
+                        break;
+                    default:
                     {
-                        std::tie(z->a.abs, std::ignore) = rec::div(gocpp::recv(z->a.abs), nullptr, z->a.abs, f->abs);
-                        std::tie(z->b.abs, std::ignore) = rec::div(gocpp::recv(z->b.abs), nullptr, z->b.abs, f->abs);
+                        // z is fraction; normalize numerator and denominator
+                        auto stk = getStack();
+                        defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
+                        auto neg = z->a.neg;
+                        z->a.neg = false;
+                        z->b.neg = false;
+                        if(auto f = rec::lehmerGCD(gocpp::recv(NewInt(0)), nullptr, nullptr, & z->a, & z->b); rec::Cmp(gocpp::recv(f), intOne) != 0)
+                        {
+                            std::tie(z->a.abs, std::ignore) = rec::div(gocpp::recv(z->a.abs), stk, nullptr, z->a.abs, f->abs);
+                            std::tie(z->b.abs, std::ignore) = rec::div(gocpp::recv(z->b.abs), stk, nullptr, z->b.abs, f->abs);
+                        }
+                        z->a.neg = neg;
+                        break;
                     }
-                    z->a.neg = neg;
-                    break;
                 }
             }
+            return z;
         }
-        return z;
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     // mulDenom sets z to the denominator product x*y (by taking into
     // account that 0 values for x or y must be interpreted as 1) and
     // returns z.
-    nat mulDenom(nat z, nat x, nat y)
+    golang::math::big::nat mulDenom(stack* stk, golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
     {
         //Go switch emulation
         {
@@ -611,99 +645,153 @@ namespace golang::big
                     break;
             }
         }
-        return rec::mul(gocpp::recv(z), x, y);
+        return rec::mul(gocpp::recv(z), stk, x, y);
     }
 
     // scaleDenom sets z to the product x*f.
     // If f == 0 (zero value of denominator), z is set to (a copy of) x.
-    void rec::scaleDenom(golang::big::Int* z, golang::big::Int* x, nat f)
+    void rec::scaleDenom(golang::math::big::Int* z, stack* stk, golang::math::big::Int* x, golang::math::big::nat f)
     {
         if(len(f) == 0)
         {
             rec::Set(gocpp::recv(z), x);
             return;
         }
-        z->abs = rec::mul(gocpp::recv(z->abs), x->abs, f);
+        z->abs = rec::mul(gocpp::recv(z->abs), stk, x->abs, f);
         z->neg = x->neg;
     }
 
     // Cmp compares x and y and returns:
-    //
-    //	-1 if x <  y
-    //	 0 if x == y
-    //	+1 if x >  y
-    int rec::Cmp(golang::big::Rat* x, golang::big::Rat* y)
+    //   - -1 if x < y;
+    //   - 0 if x == y;
+    //   - +1 if x > y.
+    int rec::Cmp(golang::math::big::Rat* x, golang::math::big::Rat* y)
     {
-        golang::big::Int a = {};
-        golang::big::Int b = {};
-        rec::scaleDenom(gocpp::recv(a), & x->a, y->b.abs);
-        rec::scaleDenom(gocpp::recv(b), & y->a, x->b.abs);
-        return rec::Cmp(gocpp::recv(a), & b);
+        gocpp::Defer defer;
+        try
+        {
+            golang::math::big::Int a = {};
+            golang::math::big::Int b = {};
+            auto stk = getStack();
+            defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
+            rec::scaleDenom(gocpp::recv(a), stk, & x->a, y->b.abs);
+            rec::scaleDenom(gocpp::recv(b), stk, & y->a, x->b.abs);
+            return rec::Cmp(gocpp::recv(a), & b);
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     // Add sets z to the sum x+y and returns z.
-    golang::big::Rat* rec::Add(golang::big::Rat* z, golang::big::Rat* x, golang::big::Rat* y)
+    golang::math::big::Rat* rec::Add(golang::math::big::Rat* z, golang::math::big::Rat* x, golang::math::big::Rat* y)
     {
-        golang::big::Int a1 = {};
-        golang::big::Int a2 = {};
-        rec::scaleDenom(gocpp::recv(a1), & x->a, y->b.abs);
-        rec::scaleDenom(gocpp::recv(a2), & y->a, x->b.abs);
-        rec::Add(gocpp::recv(z->a), & a1, & a2);
-        z->b.abs = mulDenom(z->b.abs, x->b.abs, y->b.abs);
-        return rec::norm(gocpp::recv(z));
+        gocpp::Defer defer;
+        try
+        {
+            auto stk = getStack();
+            defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
+
+            golang::math::big::Int a1 = {};
+            golang::math::big::Int a2 = {};
+            rec::scaleDenom(gocpp::recv(a1), stk, & x->a, y->b.abs);
+            rec::scaleDenom(gocpp::recv(a2), stk, & y->a, x->b.abs);
+            rec::Add(gocpp::recv(z->a), & a1, & a2);
+            z->b.abs = mulDenom(stk, z->b.abs, x->b.abs, y->b.abs);
+            return rec::norm(gocpp::recv(z));
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     // Sub sets z to the difference x-y and returns z.
-    golang::big::Rat* rec::Sub(golang::big::Rat* z, golang::big::Rat* x, golang::big::Rat* y)
+    golang::math::big::Rat* rec::Sub(golang::math::big::Rat* z, golang::math::big::Rat* x, golang::math::big::Rat* y)
     {
-        golang::big::Int a1 = {};
-        golang::big::Int a2 = {};
-        rec::scaleDenom(gocpp::recv(a1), & x->a, y->b.abs);
-        rec::scaleDenom(gocpp::recv(a2), & y->a, x->b.abs);
-        rec::Sub(gocpp::recv(z->a), & a1, & a2);
-        z->b.abs = mulDenom(z->b.abs, x->b.abs, y->b.abs);
-        return rec::norm(gocpp::recv(z));
+        gocpp::Defer defer;
+        try
+        {
+            auto stk = getStack();
+            defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
+
+            golang::math::big::Int a1 = {};
+            golang::math::big::Int a2 = {};
+            rec::scaleDenom(gocpp::recv(a1), stk, & x->a, y->b.abs);
+            rec::scaleDenom(gocpp::recv(a2), stk, & y->a, x->b.abs);
+            rec::Sub(gocpp::recv(z->a), & a1, & a2);
+            z->b.abs = mulDenom(stk, z->b.abs, x->b.abs, y->b.abs);
+            return rec::norm(gocpp::recv(z));
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     // Mul sets z to the product x*y and returns z.
-    golang::big::Rat* rec::Mul(golang::big::Rat* z, golang::big::Rat* x, golang::big::Rat* y)
+    golang::math::big::Rat* rec::Mul(golang::math::big::Rat* z, golang::math::big::Rat* x, golang::math::big::Rat* y)
     {
-        if(x == y)
+        gocpp::Defer defer;
+        try
         {
-            // a squared Rat is positive and can't be reduced (no need to call norm())
-            z->a.neg = false;
-            z->a.abs = rec::sqr(gocpp::recv(z->a.abs), x->a.abs);
-            if(len(x->b.abs) == 0)
+            auto stk = getStack();
+            defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
+
+            if(x == y)
             {
-                z->b.abs = rec::setWord(gocpp::recv(z->b.abs), 1);
+                // a squared Rat is positive and can't be reduced (no need to call norm())
+                z->a.neg = false;
+                z->a.abs = rec::sqr(gocpp::recv(z->a.abs), stk, x->a.abs);
+                if(len(x->b.abs) == 0)
+                {
+                    z->b.abs = rec::setWord(gocpp::recv(z->b.abs), 1);
+                }
+                else
+                {
+                    z->b.abs = rec::sqr(gocpp::recv(z->b.abs), stk, x->b.abs);
+                }
+                return z;
             }
-            else
-            {
-                z->b.abs = rec::sqr(gocpp::recv(z->b.abs), x->b.abs);
-            }
-            return z;
+
+            rec::mul(gocpp::recv(z->a), stk, & x->a, & y->a);
+            z->b.abs = mulDenom(stk, z->b.abs, x->b.abs, y->b.abs);
+            return rec::norm(gocpp::recv(z));
         }
-        rec::Mul(gocpp::recv(z->a), & x->a, & y->a);
-        z->b.abs = mulDenom(z->b.abs, x->b.abs, y->b.abs);
-        return rec::norm(gocpp::recv(z));
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     // Quo sets z to the quotient x/y and returns z.
     // If y == 0, Quo panics.
-    golang::big::Rat* rec::Quo(golang::big::Rat* z, golang::big::Rat* x, golang::big::Rat* y)
+    golang::math::big::Rat* rec::Quo(golang::math::big::Rat* z, golang::math::big::Rat* x, golang::math::big::Rat* y)
     {
-        if(len(y->a.abs) == 0)
+        gocpp::Defer defer;
+        try
         {
-            gocpp::panic("division by zero"_s);
+            auto stk = getStack();
+            defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
+
+            if(len(y->a.abs) == 0)
+            {
+                gocpp::panic("division by zero"_s);
+            }
+            golang::math::big::Int a = {};
+            golang::math::big::Int b = {};
+            rec::scaleDenom(gocpp::recv(a), stk, & x->a, y->b.abs);
+            rec::scaleDenom(gocpp::recv(b), stk, & y->a, x->b.abs);
+            z->a.abs = a.abs;
+            z->b.abs = b.abs;
+            z->a.neg = a.neg != b.neg;
+            return rec::norm(gocpp::recv(z));
         }
-        golang::big::Int a = {};
-        golang::big::Int b = {};
-        rec::scaleDenom(gocpp::recv(a), & x->a, y->b.abs);
-        rec::scaleDenom(gocpp::recv(b), & y->a, x->b.abs);
-        z->a.abs = a.abs;
-        z->b.abs = b.abs;
-        z->a.neg = a.neg != b.neg;
-        return rec::norm(gocpp::recv(z));
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
 }

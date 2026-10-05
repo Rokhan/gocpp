@@ -11,18 +11,17 @@
 #include "golang/golang.org/x/tools/internal/packagesinternal/packages.h"
 #include "gocpp/support.h"
 
+#include "golang/fmt/print.h"
+
 // Package packagesinternal exposes internal-only fields from go/packages.
-namespace golang::packagesinternal
+namespace golang::golang_org::x::tools::internal::packagesinternal
 {
+    namespace fmt = golang::fmt;
     namespace rec
     {
     }
 
-    std::function<gocpp::string (gocpp::go_any)> GetForTest = [](gocpp::go_any p) mutable -> gocpp::string
-    {
-        return ""_s;
-    };
-    std::function<gocpp::slice<packagesinternal::PackageError*> (gocpp::go_any)> GetDepsErrors = [](gocpp::go_any p) mutable -> gocpp::slice<PackageError*>
+    std::function<gocpp::slice<packagesinternal::PackageError*> (go_any)> GetDepsErrors = [](go_any p) mutable -> gocpp::slice<PackageError*>
     {
         return nullptr;
     };
@@ -61,14 +60,12 @@ namespace golang::packagesinternal
         return value.PrintTo(os);
     }
 
+    gocpp::string rec::String(PackageError err)
+    {
+        return mocklib::Sprintf("%s: %s (import stack: %s)"_s, err.Pos, err.Err, err.ImportStack);
+    }
+
     int TypecheckCgo;
     int DepsErrors;
-    int ForTest;
-    std::function<void (gocpp::go_any, gocpp::string)> SetModFlag = [](gocpp::go_any config, gocpp::string value) mutable -> void
-    {
-    };
-    std::function<void (gocpp::go_any, gocpp::string)> SetModFile = [](gocpp::go_any config, gocpp::string value) mutable -> void
-    {
-    };
 }
 

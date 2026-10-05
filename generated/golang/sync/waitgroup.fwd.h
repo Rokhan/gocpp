@@ -3,10 +3,10 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/sync/atomic/type.fwd.h"
-#include "golang/sync/cond.fwd.h"
 
 namespace golang::sync
 {
     struct WaitGroup;
+    // waitGroupBubbleFlag indicates that a WaitGroup is associated with a synctest bubble.
+    const long waitGroupBubbleFlag = 0x80000000;
 }

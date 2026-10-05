@@ -4,23 +4,13 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::keys
+namespace golang::golang_org::x::tools::internal::event::keys
 {
     struct Value;
     struct Tag;
     struct Int;
-    struct Int8;
-    struct Int16;
-    struct Int32;
-    struct Int64;
-    struct UInt;
-    struct UInt8;
-    struct UInt16;
-    struct UInt32;
-    struct UInt64;
-    struct Float32;
-    struct Float64;
+    struct Uint;
+    struct Float;
     struct String;
-    struct Boolean;
     struct Error;
 }

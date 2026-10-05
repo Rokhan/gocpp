@@ -16,6 +16,7 @@
 
 namespace golang::runtime
 {
+    namespace abi = golang::internal::abi;
     namespace rec
     {
     }
@@ -146,6 +147,16 @@ namespace golang::runtime
     // This unwinder uses non-strict handling of PC because it's assumed this is
     // only ever used for symbolic debugging. If things go really wrong, it'll just
     // fall back to the outermost frame.
+    //
+    // newInlineUnwinder should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/phuslu/log
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname newInlineUnwinder
     std::tuple<inlineUnwinder, inlineFrame> newInlineUnwinder(golang::runtime::funcInfo f, uintptr_t pc)
     {
         auto inldata = funcdata(f, abi::FUNCDATA_InlTree);
@@ -198,6 +209,16 @@ namespace golang::runtime
     }
 
     // srcFunc returns the srcFunc representing the given frame.
+    //
+    // srcFunc should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/phuslu/log
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    // The go:linkname is below.
     golang::runtime::srcFunc rec::srcFunc(inlineUnwinder* u, inlineFrame uf)
     {
         if(uf.index < 0)
@@ -212,6 +233,10 @@ namespace golang::runtime
             t->funcID
         };
     }
+
+    //go:linkname badSrcFunc runtime.(*inlineUnwinder).srcFunc
+    golang::runtime::srcFunc badSrcFunc(inlineUnwinder*, inlineFrame)
+    /* convertBlockStmt, nil block */;
 
     // fileLine returns the file name and line number of the call within the given
     // frame. As a convenience, for the innermost frame, it returns the file and

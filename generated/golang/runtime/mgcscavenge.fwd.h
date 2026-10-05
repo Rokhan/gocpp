@@ -42,6 +42,9 @@ namespace golang::runtime
     // sleep time to maintain our desired utilization is too low to
     // be reliable.
     const double minScavWorkTime = 1e6;
+    struct scavengerState;
+    struct scavengeIndex;
+    struct atomicScavChunkData;
     struct scavChunkData;
     // scavChunkMaxFlags is the maximum number of flags we can have, given how
     // a scavChunkData is packed into 8 bytes.
@@ -55,20 +58,28 @@ namespace golang::runtime
     const scavChunkFlags scavChunkHasFree = 1 << 0;
     const int scavChunkFlagsMask = (1 << scavChunkMaxFlags) - 1;
 }
-#include "golang/internal/goos/zgoos_windows.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
 #include "golang/runtime/mheap.fwd.h"
 #include "golang/runtime/mpagealloc.fwd.h"
-#include "golang/runtime/mranges.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/time.fwd.h"
 
 namespace golang::runtime
 {
     // maxPagesPerPhysPage is the maximum number of supported runtime pages per
     // physical page, based on maxPhysPageSize.
     const int maxPagesPerPhysPage = maxPhysPageSize / pageSize;
+    const uint16_t scavChunkHiOccPages = uint16_t(scavChunkHiOccFrac * pallocChunkPages);
+    // logScavChunkInUseMax is the number of bits needed to represent the number
+    // of pages allocated in a single chunk. This is 1 more than log2 of the
+    // number of pages in the chunk because we need to represent a fully-allocated
+    // chunk.
+    const int logScavChunkInUseMax = logPallocChunkPages + 1;
+}
+#include "golang/internal/goos/zgoos_windows.fwd.h"
+
+namespace golang::runtime
+{
+    const int scavChunkInUseMask = (1 << logScavChunkInUseMax) - 1;
+    namespace goos = golang::internal::goos;
     // scavengeCostRatio is the approximate ratio between the costs of using previously
     // scavenged memory and scavenging memory.
     //
@@ -79,14 +90,4 @@ namespace golang::runtime
     // This ratio is used as part of multiplicative factor to help the scavenger account
     // for the additional costs of using scavenged memory in its pacing.
     const double scavengeCostRatio = 0.7 * (goos::IsDarwin + goos::IsIos);
-    const uint16_t scavChunkHiOccPages = uint16_t(scavChunkHiOccFrac * pallocChunkPages);
-    struct scavengerState;
-    struct scavengeIndex;
-    struct atomicScavChunkData;
-    // logScavChunkInUseMax is the number of bits needed to represent the number
-    // of pages allocated in a single chunk. This is 1 more than log2 of the
-    // number of pages in the chunk because we need to represent a fully-allocated
-    // chunk.
-    const int logScavChunkInUseMax = logPallocChunkPages + 1;
-    const int scavChunkInUseMask = (1 << logScavChunkInUseMax) - 1;
 }

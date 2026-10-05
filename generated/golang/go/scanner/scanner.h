@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::scanner
+namespace golang::go::scanner
 {
     extern gocpp::slice<unsigned char> prefix;
     std::tuple<int, int, bool> trailingDigits(gocpp::slice<unsigned char> text);
@@ -24,9 +24,16 @@ namespace golang::scanner
     int invalidSep(gocpp::string x);
     gocpp::slice<unsigned char> stripCR(gocpp::slice<unsigned char> b, bool comment);
 }
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
+
+namespace golang::go::scanner
+{
+    namespace token = golang::go::token;
+}
 #include "golang/go/token/position.h"
 
-namespace golang::scanner
+namespace golang::go::scanner
 {
     struct Scanner
     {
@@ -43,6 +50,8 @@ namespace golang::scanner
         int lineOffset{}; // current line offset
         bool insertSemi{}; // insert a semicolon before next newline
         token::Pos nlPos{}; // position of newline in preceding comment
+        bool endPosValid{};
+        token::Pos endPos{}; // overrides the offset as the default end position
         // public state - ok to modify
         int ErrorCount{}; // number of errors encountered
 
@@ -63,7 +72,7 @@ namespace golang::scanner
 #include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
 
-namespace golang::scanner
+namespace golang::go::scanner
 {
 
     namespace rec
@@ -98,6 +107,7 @@ namespace golang::scanner
         token::Token switch2(Scanner* s, token::Token tok0, token::Token tok1);
         token::Token switch3(Scanner* s, token::Token tok0, token::Token tok1, gocpp::rune ch2, token::Token tok2);
         token::Token switch4(Scanner* s, token::Token tok0, token::Token tok1, gocpp::rune ch2, token::Token tok2, token::Token tok3);
+        token::Pos End(Scanner* s);
         std::tuple<token::Pos, token::Token, gocpp::string> Scan(Scanner* s);
     }
 }

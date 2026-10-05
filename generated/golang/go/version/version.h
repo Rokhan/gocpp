@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::version
+namespace golang::go::version
 {
     gocpp::string stripGo(gocpp::string v);
     gocpp::string Lang(gocpp::string x);

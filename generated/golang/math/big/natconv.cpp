@@ -18,12 +18,21 @@
 #include "golang/math/big/arith_decl.h"
 #include "golang/math/big/nat.h"
 #include "golang/math/big/natdiv.h"
+#include "golang/math/big/natmul.h"
 #include "golang/math/bits/bits.h"
 #include "golang/math/log10.h"
+#include "golang/slices/slices.h"
 #include "golang/sync/mutex.h"
 
-namespace golang::big
+namespace golang::math::big
 {
+    namespace bits = golang::math::bits;
+    namespace errors = golang::errors;
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace math = golang::math;
+    namespace slices = golang::slices;
+    namespace sync = golang::sync;
     namespace rec
     {
         using io::rec::ReadByte;
@@ -119,13 +128,13 @@ namespace golang::big
     // parsed. A digit count <= 0 indicates the presence of a period (if fracOk
     // is set, only), and -count is the number of fractional digits found.
     // In this case, the actual value of the scanned number is res * b**count.
-    std::tuple<nat, int, int, gocpp::error> rec::scan(golang::big::nat z, io::ByteScanner r, int base, bool fracOk)
+    std::tuple<golang::math::big::nat, int, int, gocpp::error> rec::scan(golang::math::big::nat z, io::ByteScanner r, int base, bool fracOk)
     {
-        nat res;
+        golang::math::big::nat res;
         int b;
         int count;
         gocpp::error err;
-        // reject invalid bases
+        // Reject invalid bases.
         auto baseOk = base == 0 ||
                 ! fracOk && 2 <= base && base <= MaxBase ||
                 fracOk && (base == 2 || base == 8 || base == 10 || base == 16);
@@ -145,12 +154,12 @@ namespace golang::big
         unsigned char ch;
         std::tie(ch, err) = rec::ReadByte(gocpp::recv(r));
 
-        // determine actual base
+        // Determine actual base.
         int prefix;
         std::tie(b, prefix) = std::tuple{base, 0};
         if(base == 0)
         {
-            // actual base is 10 unless there's a base prefix
+            // Actual base is 10 unless there's a base prefix.
             b = 10;
             if(err == nullptr && ch == '0')
             {
@@ -205,14 +214,44 @@ namespace golang::big
             }
         }
 
-        // convert string
-        // Algorithm: Collect digits in groups of at most n digits in di
-        // and then use mulAddWW for every such group to add them to the
-        // result.
+        // Convert string.
+        // Algorithm: Collect digits in groups of at most n digits in di.
+        // For bases that pack exactly into words (2, 4, 16), append di's
+        // directly to the int representation and then reverse at the end (bn==0 marks this case).
+        // For other bases, use mulAddWW for every such group to shift
+        // z up one group and add di to the result.
+        // With more cleverness we could also handle binary bases like 8 and 32
+        // (corresponding to 3-bit and 5-bit chunks) that don't pack nicely into
+        // words, but those are not too important.
         z = z.make_slice(0, 0);
         auto b1 = Word(b);
-        // at most n digits in base b1 fit into Word
-        auto [bn, n] = maxPow(b1);
+        // b1**n (or 0 for the special bit-packing cases b=2,4,16)
+        Word bn = {};
+        // max digits that fit into Word
+        int n = {};
+        //Go switch emulation
+        {
+            auto condition = b;
+            int conditionId = -1;
+            if(condition == 2) { conditionId = 0; }
+            else if(condition == 4) { conditionId = 1; }
+            else if(condition == 16) { conditionId = 2; }
+            switch(conditionId)
+            {
+                case 0:
+                    n = _W;
+                    break;
+                case 1:
+                    n = _W / 2;
+                    break;
+                case 2:
+                    n = _W / 4;
+                    break;
+                default:
+                    std::tie(bn, n) = maxPow(b1);
+                    break;
+            }
+        }
         // 0 <= di < b1**i < bn
         auto di = Word(0);
         // 0 <= i < n
@@ -289,7 +328,14 @@ namespace golang::big
                 // if di is "full", add it to the result
                 if(i == n)
                 {
-                    z = rec::mulAddWW(gocpp::recv(z), z, bn, di);
+                    if(bn == 0)
+                    {
+                        z = append(z, di);
+                    }
+                    else
+                    {
+                        z = rec::mulAddWW(gocpp::recv(z), z, bn, di);
+                    }
                     di = 0;
                     i = 0;
                 }
@@ -322,12 +368,30 @@ namespace golang::big
             err = errNoDigits;
         }
 
-        // add remaining digits to result
-        if(i > 0)
+        if(bn == 0)
         {
-            z = rec::mulAddWW(gocpp::recv(z), z, pow(b1, i), di);
+            if(i > 0)
+            {
+                // Add remaining digit chunk to result.
+                // Left-justify group's digits; will shift back down after reverse.
+                z = append(z, di * pow(b1, n - i));
+            }
+            slices::Reverse(z);
+            z = rec::norm(gocpp::recv(z));
+            if(i > 0)
+            {
+                z = rec::rsh(gocpp::recv(z), z, (unsigned int)(n - i) * (unsigned int)(_W / n));
+            }
         }
-        res = rec::norm(gocpp::recv(z));
+        else
+        {
+            if(i > 0)
+            {
+                // Add remaining digit chunk to result.
+                z = rec::mulAddWW(gocpp::recv(z), z, pow(b1, i), di);
+            }
+        }
+        res = z;
 
         // adjust count for fraction, if any
         if(dp >= 0)
@@ -341,119 +405,130 @@ namespace golang::big
 
     // utoa converts x to an ASCII representation in the given base;
     // base must be between 2 and MaxBase, inclusive.
-    gocpp::slice<unsigned char> rec::utoa(golang::big::nat x, int base)
+    gocpp::slice<unsigned char> rec::utoa(golang::math::big::nat x, int base)
     {
         return rec::itoa(gocpp::recv(x), false, base);
     }
 
     // itoa is like utoa but it prepends a '-' if neg && x != 0.
-    gocpp::slice<unsigned char> rec::itoa(golang::big::nat x, bool neg, int base)
+    gocpp::slice<unsigned char> rec::itoa(golang::math::big::nat x, bool neg, int base)
     {
-        if(base < 2 || base > MaxBase)
+        gocpp::Defer defer;
+        try
         {
-            gocpp::panic("invalid base"_s);
-        }
-
-        // x == 0
-        // len(x) > 0
-        if(len(x) == 0)
-        {
-            return gocpp::slice<unsigned char>("0"_s);
-        }
-
-
-        // allocate buffer for conversion
-        // off by 1 at most
-        auto i = int(double(rec::bitLen(gocpp::recv(x))) / math::Log2(double(base))) + 1;
-        if(neg)
-        {
-            i++;
-        }
-        auto s = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), i);
-
-        // convert power of two and non power of two bases separately
-        if(auto b = Word(base); b == b & - b)
-        {
-            // shift is base b digit size in bits
-            // shift > 0 because b >= 2
-            auto shift = (unsigned int)(bits::TrailingZeros((unsigned int)(b)));
-            auto mask = Word((1 << shift) - 1);
-            // current word
-            auto w = x[0];
-            // number of unprocessed bits in w
-            auto nbits = (unsigned int)(_W);
-
-            // convert less-significant words (include leading zeros)
-            for(auto k = 1; k < len(x); k++)
+            if(base < 2 || base > MaxBase)
             {
-                // convert full digits
-                for(; nbits >= shift; )
+                gocpp::panic("invalid base"_s);
+            }
+
+            // x == 0
+            // len(x) > 0
+            if(len(x) == 0)
+            {
+                return gocpp::slice<unsigned char>("0"_s);
+            }
+
+
+            // allocate buffer for conversion
+            // off by 1 at most
+            auto i = int(double(rec::bitLen(gocpp::recv(x))) / math::Log2(double(base))) + 1;
+            if(neg)
+            {
+                i++;
+            }
+            auto s = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), i);
+
+            // convert power of two and non power of two bases separately
+            if(auto b = Word(base); b == b & - b)
+            {
+                // shift is base b digit size in bits
+                // shift > 0 because b >= 2
+                auto shift = (unsigned int)(bits::TrailingZeros((unsigned int)(b)));
+                auto mask = Word((1 << shift) - 1);
+                // current word
+                auto w = x[0];
+                // number of unprocessed bits in w
+                auto nbits = (unsigned int)(_W);
+
+                // convert less-significant words (include leading zeros)
+                for(auto k = 1; k < len(x); k++)
+                {
+                    // convert full digits
+                    for(; nbits >= shift; )
+                    {
+                        i--;
+                        s[i] = digits[w & mask];
+                        w >>= shift;
+                        nbits -= shift;
+                    }
+
+                    // convert any partial leading digit and advance to next word
+                    if(nbits == 0)
+                    {
+                        // no partial digit remaining, just advance
+                        w = x[k];
+                        nbits = _W;
+                    }
+                    else
+                    {
+                        // partial digit in current word w (== x[k-1]) and next word x[k]
+                        w |= x[k] << nbits;
+                        i--;
+                        s[i] = digits[w & mask];
+
+                        // advance
+                        w = x[k] >> (shift - nbits);
+                        nbits = _W - (shift - nbits);
+                    }
+                }
+
+                // convert digits of most-significant word w (omit leading zeros)
+                for(; w != 0; )
                 {
                     i--;
                     s[i] = digits[w & mask];
                     w >>= shift;
-                    nbits -= shift;
                 }
+            }
+            else
+            {
+                auto stk = getStack();
+                defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
 
-                // convert any partial leading digit and advance to next word
-                if(nbits == 0)
-                {
-                    // no partial digit remaining, just advance
-                    w = x[k];
-                    nbits = _W;
-                }
-                else
-                {
-                    // partial digit in current word w (== x[k-1]) and next word x[k]
-                    w |= x[k] << nbits;
-                    i--;
-                    s[i] = digits[w & mask];
+                auto [bb, ndigits] = maxPow(b);
 
-                    // advance
-                    w = x[k] >> (shift - nbits);
-                    nbits = _W - (shift - nbits);
+                // construct table of successive squares of bb*leafSize to use in subdivisions
+                // result (table != nil) <=> (len(x) > leafSize > 0)
+                auto table = divisors(stk, len(x), b, ndigits, bb);
+
+                // preserve x, create local copy for use by convertWords
+                auto q = rec::set(gocpp::recv(nat(nullptr)), x);
+
+                // convert q to string s in base b
+                rec::convertWords(gocpp::recv(q), stk, s, b, ndigits, bb, table);
+
+                // strip leading zeros
+                // (x != 0; thus s must contain at least one non-zero digit
+                // and the loop will terminate)
+                i = 0;
+                for(; s[i] == '0'; )
+                {
+                    i++;
                 }
             }
 
-            // convert digits of most-significant word w (omit leading zeros)
-            for(; w != 0; )
+            if(neg)
             {
                 i--;
-                s[i] = digits[w & mask];
-                w >>= shift;
+                s[i] = '-';
             }
+
+            return s.make_slice(i);
         }
-        else
+        catch(gocpp::GoPanic& gp)
         {
-            auto [bb, ndigits] = maxPow(b);
-
-            // construct table of successive squares of bb*leafSize to use in subdivisions
-            // result (table != nil) <=> (len(x) > leafSize > 0)
-            auto table = divisors(len(x), b, ndigits, bb);
-
-            // preserve x, create local copy for use by convertWords
-            auto q = rec::set(gocpp::recv(nat(nullptr)), x);
-
-            // convert q to string s in base b
-            rec::convertWords(gocpp::recv(q), s, b, ndigits, bb, table);
-
-            // strip leading zeros
-            // (x != 0; thus s must contain at least one non-zero digit
-            // and the loop will terminate)
-            i = 0;
-            for(; s[i] == '0'; )
-            {
-                i++;
-            }
+            defer.handlePanic(gp);
         }
-
-        if(neg)
-        {
-            i--;
-            s[i] = '-';
-        }
-
-        return s.make_slice(i);
     }
 
     // Convert words of q to base b digits in s. If q is large, it is recursively "split in half"
@@ -471,13 +546,13 @@ namespace golang::big
     // range 2..64 shows that values of 8 and 16 work well, with a 4x speedup at medium lengths and
     // ~30x for 20000 digits. Use nat_test.go's BenchmarkLeafSize tests to optimize leafSize for
     // specific hardware.
-    void rec::convertWords(golang::big::nat q, gocpp::slice<unsigned char> s, Word b, int ndigits, Word bb, gocpp::slice<divisor> table)
+    void rec::convertWords(golang::math::big::nat q, stack* stk, gocpp::slice<unsigned char> s, Word b, int ndigits, Word bb, gocpp::slice<divisor> table)
     {
         // split larger blocks recursively
         if(table != nullptr)
         {
             // len(q) > leafSize > 0
-            nat r = {};
+            golang::math::big::nat r = {};
             auto index = len(table) - 1;
             for(; len(q) > leafSize; )
             {
@@ -501,12 +576,12 @@ namespace golang::big
                 }
 
                 // split q into the two digit number (q'*bbb + r) to form independent subblocks
-                std::tie(q, r) = rec::div(gocpp::recv(q), r, q, table[index].bbb);
+                std::tie(q, r) = rec::div(gocpp::recv(q), stk, r, q, table[index].bbb);
 
                 // convert subblocks and collect results in s[:h] and s[h:]
                 auto h = len(s) - table[index].ndigits;
-                rec::convertWords(gocpp::recv(r), s.make_slice(h), b, ndigits, bb, table.make_slice(0, index));
-                // == q.convertWords(s, b, ndigits, bb, table[0:index+1])
+                rec::convertWords(gocpp::recv(r), stk, s.make_slice(h), b, ndigits, bb, table.make_slice(0, index));
+                // == q.convertWords(stk, s, b, ndigits, bb, table[0:index+1])
                 s = s.make_slice(0, h);
             }
         }
@@ -633,13 +708,13 @@ namespace golang::big
 
     cacheBase10Struct cacheBase10;
     // expWW computes x**y
-    nat rec::expWW(golang::big::nat z, Word x, Word y)
+    golang::math::big::nat rec::expWW(golang::math::big::nat z, stack* stk, Word x, Word y)
     {
-        return rec::expNN(gocpp::recv(z), rec::setWord(gocpp::recv(nat(nullptr)), x), rec::setWord(gocpp::recv(nat(nullptr)), y), nullptr, false);
+        return rec::expNN(gocpp::recv(z), stk, rec::setWord(gocpp::recv(nat(nullptr)), x), rec::setWord(gocpp::recv(nat(nullptr)), y), nullptr, false);
     }
 
     // construct table of powers of bb*leafSize to use in subdivisions.
-    gocpp::slice<divisor> divisors(int m, Word b, int ndigits, Word bb)
+    gocpp::slice<divisor> divisors(stack* stk, int m, Word b, int ndigits, Word bb)
     {
         // only compute table when recursive conversion is enabled and x is large
         if(leafSize == 0 || m <= leafSize)
@@ -673,19 +748,19 @@ namespace golang::big
         if(table[k - 1].ndigits == 0)
         {
             // add new entries as needed
-            nat larger = {};
+            golang::math::big::nat larger = {};
             for(auto i = 0; i < k; i++)
             {
                 if(table[i].ndigits == 0)
                 {
                     if(i == 0)
                     {
-                        table[0].bbb = rec::expWW(gocpp::recv(nat(nullptr)), bb, Word(leafSize));
+                        table[0].bbb = rec::expWW(gocpp::recv(nat(nullptr)), stk, bb, Word(leafSize));
                         table[0].ndigits = ndigits * leafSize;
                     }
                     else
                     {
-                        table[i].bbb = rec::sqr(gocpp::recv(nat(nullptr)), table[i - 1].bbb);
+                        table[i].bbb = rec::sqr(gocpp::recv(nat(nullptr)), stk, table[i - 1].bbb);
                         table[i].ndigits = 2 * table[i - 1].ndigits;
                     }
 

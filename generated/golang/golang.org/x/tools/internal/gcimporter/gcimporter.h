@@ -9,29 +9,25 @@
 #include "golang/golang.org/x/tools/internal/gcimporter/gcimporter.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/types/package.fwd.h"
+#include "golang/go/types/universe.fwd.h"
+#include "golang/io/io.fwd.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
-    std::tuple<gocpp::string, bool> lookupGorootExport(gocpp::string pkgDir);
-    extern gocpp::array<gocpp::string, 2> pkgExts;
-    std::tuple<gocpp::string, gocpp::string> FindPkg(gocpp::string path, gocpp::string srcDir);
-    struct GoTag_byPath { };
+    namespace types = golang::go::types;
+    namespace token = golang::go::token;
+    namespace io = golang::io;
 }
 #include "golang/io/io.h"
-#include "golang/sync/map.h"
-#include "golang/go/types/package.fwd.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
-    extern sync::Map exportMap;
-    std::tuple<types::Package*, gocpp::error> Import(gocpp::map<gocpp::string, types::Package*> packages, gocpp::string path, gocpp::string srcDir, std::function<std::tuple<io::ReadCloser, gocpp::error> (gocpp::string path)> lookup);
-    using byPath = gocpp::defined<gocpp::slice<types::Package*>, GoTag_byPath>;
+    std::tuple<types::Package*, gocpp::error> Import(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> packages, gocpp::string path, gocpp::string srcDir, std::function<std::tuple<io::ReadCloser, gocpp::error> (gocpp::string path)> lookup);
 
     namespace rec
     {
-        int Len(byPath a);
-        void Swap(byPath a, int i, int j);
-        bool Less(byPath a, int i, int j);
     }
 }
 

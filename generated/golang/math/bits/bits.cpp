@@ -22,7 +22,7 @@
 // the code in this package will not be used. Which
 // functions are implemented by the compiler depends on the
 // architecture and the Go release.
-namespace golang::bits
+namespace golang::math::bits
 {
     namespace rec
     {
@@ -349,7 +349,7 @@ namespace golang::bits
             x >>= 8;
             n = 8;
         }
-        return n + int(len8tab[x]);
+        return n + int(len8tab[uint8_t(x)]);
     }
 
     // Len32 returns the minimum number of bits required to represent x; the result is 0 for x == 0.
@@ -366,7 +366,7 @@ namespace golang::bits
             x >>= 8;
             n += 8;
         }
-        return n + int(len8tab[x]);
+        return n + int(len8tab[uint8_t(x)]);
     }
 
     // Len64 returns the minimum number of bits required to represent x; the result is 0 for x == 0.
@@ -388,7 +388,7 @@ namespace golang::bits
             x >>= 8;
             n += 8;
         }
-        return n + int(len8tab[x]);
+        return n + int(len8tab[uint8_t(x)]);
     }
 
     // Add returns the sum with carry of x, y and carry: sum = x + y + carry.

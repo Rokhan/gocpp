@@ -11,73 +11,130 @@
 #include "golang/runtime/netpoll_windows.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/defs_windows.h"
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/goarch/goarch.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/syscall/windows/defs_windows.h"
 #include "golang/runtime/netpoll.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
+#include "golang/runtime/tagptr.h"
+#include "golang/runtime/tagptr_64bit.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace goarch = golang::internal::goarch;
+    namespace windows = golang::internal::runtime::syscall::windows;
     namespace rec
     {
         using atomic::rec::CompareAndSwap;
         using atomic::rec::Store;
     }
 
-    // net_op must be the same as beginning of internal/poll.operation.
+    // packNetpollKey creates a key from a source and a tag.
+    // Bits that don't fit in the result are discarded.
+    uintptr_t packNetpollKey(uint8_t source, pollDesc* pd)
+    {
+        // TODO: Consider combining the source with pd.fdseq to detect stale pollDescs.
+        if(source > (1 << sourceBits) - 1)
+        {
+            // Also fail on 64-bit systems, even though it can hold more bits.
+            go_throw("runtime: source value is too large"_s);
+        }
+        if(goarch::PtrSize == 4)
+        {
+            return (uintptr_t(gocpp::unsafe_pointer(pd)) << sourceBits) | uintptr_t(source);
+        }
+        return uintptr_t(taggedPointerPack(gocpp::unsafe_pointer(pd), uintptr_t(source)));
+    }
+
+    // unpackNetpollSource returns the source packed key.
+    uint8_t unpackNetpollSource(uintptr_t key)
+    {
+        if(goarch::PtrSize == 4)
+        {
+            return uint8_t(key & sourceMasks);
+        }
+        return uint8_t(rec::tag(gocpp::recv(taggedPointer(key))));
+    }
+
+    // pollOperation must be the same as beginning of internal/poll.operation.
     // Keep these in sync.
     
     template<typename T> requires gocpp::GoStruct<T>
-    net_op::operator T()
+    pollOperation::operator T()
     {
         T result;
-        result.o = this->o;
+        result._1 = this->_1;
         result.pd = this->pd;
         result.mode = this->mode;
-        result.errno = this->errno;
-        result.qty = this->qty;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool net_op::operator==(const T& ref) const
+    bool pollOperation::operator==(const T& ref) const
     {
-        if (o != ref.o) return false;
+        if (_1 != ref._1) return false;
         if (pd != ref.pd) return false;
         if (mode != ref.mode) return false;
-        if (errno != ref.errno) return false;
-        if (qty != ref.qty) return false;
         return true;
     }
 
-    std::ostream& net_op::PrintTo(std::ostream& os) const
+    std::ostream& pollOperation::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << o;
+        os << "" << _1;
         os << " " << pd;
         os << " " << mode;
-        os << " " << errno;
-        os << " " << qty;
         os << '}';
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct net_op& value)
+    std::ostream& operator<<(std::ostream& os, const struct pollOperation& value)
     {
         return value.PrintTo(os);
     }
 
+    // pollOperationFromOverlappedEntry returns the pollOperation contained in
+    // e. It can return nil if the entry is not from internal/poll.
+    // See go.dev/issue/58870
+    pollOperation* pollOperationFromOverlappedEntry(overlappedEntry* e)
+    {
+        if(e->ov == nullptr)
+        {
+            return nullptr;
+        }
+        auto op = (pollOperation*)(gocpp::unsafe_pointer(e->ov));
+        // Check that the key matches the pollDesc pointer.
+        bool keyMatch = {};
+        if(goarch::PtrSize == 4)
+        {
+            keyMatch = e->key &^ sourceMasks == (uintptr_t(gocpp::unsafe_pointer(op->pd)) << sourceBits);
+        }
+        else
+        {
+            keyMatch = (pollDesc*)(rec::pointer(gocpp::recv(taggedPointer(e->key)))) == op->pd;
+        }
+        if(! keyMatch)
+        {
+            return nullptr;
+        }
+        return op;
+    }
+
+    // overlappedEntry contains the information returned by a call to GetQueuedCompletionStatusEx.
+    // https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-overlapped_entry
     
     template<typename T> requires gocpp::GoStruct<T>
     overlappedEntry::operator T()
     {
         T result;
         result.key = this->key;
-        result.op = this->op;
+        result.ov = this->ov;
         result.internal = this->internal;
         result.qty = this->qty;
         return result;
@@ -87,7 +144,7 @@ namespace golang::runtime
     bool overlappedEntry::operator==(const T& ref) const
     {
         if (key != ref.key) return false;
-        if (op != ref.op) return false;
+        if (ov != ref.ov) return false;
         if (internal != ref.internal) return false;
         if (qty != ref.qty) return false;
         return true;
@@ -97,7 +154,7 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << key;
-        os << " " << op;
+        os << " " << ov;
         os << " " << internal;
         os << " " << qty;
         os << '}';
@@ -109,11 +166,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    uintptr_t iocphandle = _INVALID_HANDLE_VALUE;
-    atomic::Uint32 netpollWakeSig = _INVALID_HANDLE_VALUE;
+    uintptr_t iocphandle = windows::INVALID_HANDLE_VALUE;
+    atomic::Uint32 netpollWakeSig = windows::INVALID_HANDLE_VALUE;
     void netpollinit()
     {
-        iocphandle = stdcall4(_CreateIoCompletionPort, _INVALID_HANDLE_VALUE, 0, 0, _DWORD_MAX);
+        iocphandle = stdcall(_CreateIoCompletionPort, windows::INVALID_HANDLE_VALUE, 0, 0, windows::DWORD_MAX);
         if(iocphandle == 0)
         {
             println("runtime: CreateIoCompletionPort failed (errno="_s, getlasterror(), ")"_s);
@@ -128,8 +185,8 @@ namespace golang::runtime
 
     int32_t netpollopen(uintptr_t fd, pollDesc* pd)
     {
-        // TODO(iant): Consider using taggedPointer on 64-bit systems.
-        if(stdcall4(_CreateIoCompletionPort, fd, iocphandle, uintptr_t(gocpp::unsafe_pointer(pd)), 0) == 0)
+        auto key = packNetpollKey(netpollSourceReady, pd);
+        if(stdcall(_CreateIoCompletionPort, fd, iocphandle, key, 0) == 0)
         {
             return int32_t(getlasterror());
         }
@@ -155,7 +212,8 @@ namespace golang::runtime
             return;
         }
 
-        if(stdcall4(_PostQueuedCompletionStatus, iocphandle, 0, 0, 0) == 0)
+        auto key = packNetpollKey(netpollSourceBreak, nullptr);
+        if(stdcall(_PostQueuedCompletionStatus, iocphandle, 0, key, 0) == 0)
         {
             println("runtime: netpoll: PostQueuedCompletionStatus failed (errno="_s, getlasterror(), ")"_s);
             go_throw("runtime: netpoll: PostQueuedCompletionStatus failed"_s);
@@ -163,31 +221,51 @@ namespace golang::runtime
     }
 
     // netpoll checks for ready network connections.
-    // Returns list of goroutines that become runnable.
+    // Returns a list of goroutines that become runnable,
+    // and a delta to add to netpollWaiters.
+    // This must never return an empty list with a non-zero delta.
+    //
     // delay < 0: blocks indefinitely
     // delay == 0: does not block, just polls
     // delay > 0: block for up to that many nanoseconds
     std::tuple<gList, int32_t> netpoll(int64_t delay)
     {
-        gocpp::array<overlappedEntry, 64> entries = {};
-        uint32_t wait = {};
-        uint32_t qty = {};
-        uint32_t flags = {};
-        uint32_t n = {};
-        uint32_t i = {};
-        int32_t errno = {};
-        net_op* op = {};
-        gList toRun = {};
-
-        auto mp = getg()->m;
-
-        if(iocphandle == _INVALID_HANDLE_VALUE)
+        if(iocphandle == windows::INVALID_HANDLE_VALUE)
         {
             return {gList {}, 0};
         }
+
+        gocpp::array<overlappedEntry, 64> entries = {};
+        uint32_t wait = {};
+        gList toRun = {};
+        auto mp = getg()->m;
+
+        if(delay >= 1e15)
+        {
+            // An arbitrary cap on how long to wait for a timer.
+            // 1e15 ns == ~11.5 days.
+            delay = 1e15;
+        }
+
+        if(delay > 0 && mp->mOS.waitIocpHandle != 0)
+        {
+            // GetQueuedCompletionStatusEx doesn't use a high resolution timer internally,
+            // so we use a separate higher resolution timer associated with a wait completion
+            // packet to wake up the poller. Note that the completion packet can be delivered
+            // to another thread, and the Go scheduler expects netpoll to only block up to delay,
+            // so we still need to use a timeout with GetQueuedCompletionStatusEx.
+            // TODO: Improve the Go scheduler to support non-blocking timers.
+            auto signaled = netpollQueueTimer(delay);
+            if(signaled)
+            {
+                // There is a small window between the SetWaitableTimer and the NtAssociateWaitCompletionPacket
+                // where the timer can expire. We can return immediately in this case.
+                return {gList {}, 0};
+            }
+        }
         if(delay < 0)
         {
-            wait = _INFINITE;
+            wait = windows::INFINITE;
         }
         else
         if(delay == 0)
@@ -200,18 +278,10 @@ namespace golang::runtime
             wait = 1;
         }
         else
-        if(delay < 1e15)
         {
             wait = uint32_t(delay / 1e6);
         }
-        else
-        {
-            // An arbitrary cap on how long to wait for a timer.
-            // 1e9 ms == ~11.5 days.
-            wait = 1e9;
-        }
-
-        n = uint32_t(len(entries) / int(gomaxprocs));
+        auto n = len(entries) / int(gomaxprocs);
         if(n < 8)
         {
             n = 8;
@@ -220,11 +290,11 @@ namespace golang::runtime
         {
             mp->blocked = true;
         }
-        if(stdcall6(_GetQueuedCompletionStatusEx, iocphandle, uintptr_t(gocpp::unsafe_pointer(& entries[0])), uintptr_t(n), uintptr_t(gocpp::unsafe_pointer(& n)), uintptr_t(wait), 0) == 0)
+        if(stdcall(_GetQueuedCompletionStatusEx, iocphandle, uintptr_t(gocpp::unsafe_pointer(& entries[0])), uintptr_t(n), uintptr_t(gocpp::unsafe_pointer(& n)), uintptr_t(wait), 0) == 0)
         {
             mp->blocked = false;
-            errno = int32_t(getlasterror());
-            if(errno == _WAIT_TIMEOUT)
+            auto errno = getlasterror();
+            if(errno == windows::WAIT_TIMEOUT)
             {
                 return {gList {}, 0};
             }
@@ -233,44 +303,114 @@ namespace golang::runtime
         }
         mp->blocked = false;
         auto delta = int32_t(0);
-        for(i = 0; i < n; i++)
+        for(auto i = 0; i < n; i++)
         {
-            op = entries[i].op;
-            if(op != nullptr && op->pd == entries[i].key)
+            auto e = & entries[i];
+            //Go switch emulation
             {
-                errno = 0;
-                qty = 0;
-                if(stdcall5(_WSAGetOverlappedResult, op->pd->fd, uintptr_t(gocpp::unsafe_pointer(op)), uintptr_t(gocpp::unsafe_pointer(& qty)), 0, uintptr_t(gocpp::unsafe_pointer(& flags))) == 0)
+                auto condition = unpackNetpollSource(e->key);
+                int conditionId = -1;
+                if(condition == netpollSourceReady) { conditionId = 0; }
+                else if(condition == netpollSourceBreak) { conditionId = 1; }
+                else if(condition == netpollSourceTimer) { conditionId = 2; }
+                switch(conditionId)
                 {
-                    errno = int32_t(getlasterror());
-                }
-                delta += handlecompletion(& toRun, op, errno, qty);
-            }
-            else
-            {
-                rec::Store(gocpp::recv(netpollWakeSig), 0);
-                if(delay == 0)
-                {
-                    // Forward the notification to the
-                    // blocked poller.
-                    netpollBreak();
+                    case 0:
+                    {
+                        auto op = pollOperationFromOverlappedEntry(e);
+                        if(op == nullptr)
+                        {
+                            // Entry from outside the Go runtime and internal/poll, ignore.
+                            continue;
+                        }
+                        // Entry from internal/poll.
+                        auto mode = op->mode;
+                        if(mode != 'r' && mode != 'w')
+                        {
+                            println("runtime: GetQueuedCompletionStatusEx returned net_op with invalid mode="_s, mode);
+                            go_throw("runtime: netpoll failed"_s);
+                        }
+                        delta += netpollready(& toRun, op->pd, mode);
+                        break;
+                    }
+                    case 1:
+                        rec::Store(gocpp::recv(netpollWakeSig), 0);
+                        if(delay == 0)
+                        {
+                            // Forward the notification to the blocked poller.
+                            netpollBreak();
+                        }
+                        break;
+                    case 2:
+                        break;
+                    // TODO: We could avoid calling NtCancelWaitCompletionPacket for expired wait completion packets.
+                    default:
+                        println("runtime: GetQueuedCompletionStatusEx returned net_op with invalid key="_s, e->key);
+                        go_throw("runtime: netpoll failed"_s);
+                        break;
                 }
             }
         }
         return {toRun, delta};
     }
 
-    int32_t handlecompletion(gList* toRun, net_op* op, int32_t errno, uint32_t qty)
+    // netpollQueueTimer queues a timer to wake up the poller after the given delay.
+    // It returns true if the timer expired during this call.
+    bool netpollQueueTimer(int64_t delay)
     {
-        auto mode = op->mode;
-        if(mode != 'r' && mode != 'w')
+        bool signaled;
+        auto mp = getg()->m;
+        // A wait completion packet can only be associated with one timer at a time,
+        // so we need to cancel the previous one if it exists. This wouldn't be necessary
+        // if the poller would only be woken up by the timer, in which case the association
+        // would be automatically canceled, but it can also be woken up by other events,
+        // such as a netpollBreak, so we can get to this point with a timer that hasn't
+        // expired yet. In this case, the completion packet can still be picked up by
+        // another thread, so defer the cancellation until it is really necessary.
+        auto errno = stdcall(_NtCancelWaitCompletionPacket, mp->mOS.waitIocpHandle, 1);
+        //Go switch emulation
         {
-            println("runtime: GetQueuedCompletionStatusEx returned invalid mode="_s, mode);
-            go_throw("runtime: netpoll failed"_s);
+            auto condition = errno;
+            int conditionId = -1;
+            if(condition == windows::STATUS_CANCELLED) { conditionId = 0; }
+            else if(condition == windows::STATUS_SUCCESS) { conditionId = 1; }
+            else if(condition == windows::STATUS_PENDING) { conditionId = 2; }
+            switch(conditionId)
+            {
+                case 0:
+                    // STATUS_CANCELLED is returned when the associated timer has already expired,
+                    // in which automatically cancels the wait completion packet.
+                case 1:
+                {
+                    // relative sleep (negative), 100ns units
+                    auto dt = - delay / 100;
+                    if(stdcall(_SetWaitableTimer, mp->mOS.waitIocpTimer, uintptr_t(gocpp::unsafe_pointer(& dt)), 0, 0, 0, 0) == 0)
+                    {
+                        println("runtime: SetWaitableTimer failed; errno="_s, getlasterror());
+                        go_throw("runtime: netpoll failed"_s);
+                    }
+                    auto key = packNetpollKey(netpollSourceTimer, nullptr);
+                    if(auto errno = stdcall(_NtAssociateWaitCompletionPacket, mp->mOS.waitIocpHandle, iocphandle, mp->mOS.waitIocpTimer, key, 0, 0, 0, uintptr_t(gocpp::unsafe_pointer(& signaled))); errno != 0)
+                    {
+                        println("runtime: NtAssociateWaitCompletionPacket failed; errno="_s, errno);
+                        go_throw("runtime: netpoll failed"_s);
+                    }
+                    break;
+                }
+                case 2:
+                    break;
+                // STATUS_PENDING is returned if the wait operation can't be canceled yet.
+                // This can happen if this thread was woken up by another event, such as a netpollBreak,
+                // and the timer expired just while calling NtCancelWaitCompletionPacket, in which case
+                // this call fails to cancel the association to avoid a race condition.
+                // This is a rare case, so we can just avoid using the high resolution timer this time.
+                default:
+                    println("runtime: NtCancelWaitCompletionPacket failed; errno="_s, errno);
+                    go_throw("runtime: netpoll failed"_s);
+                    break;
+            }
         }
-        op->errno = errno;
-        op->qty = qty;
-        return netpollready(toRun, op->pd, mode);
+        return signaled;
     }
 
 }

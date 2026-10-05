@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::token
+namespace golang::go::token
 {
     extern gocpp::array<gocpp::string, 89> tokens;
     extern gocpp::map<gocpp::string, Token> keywords;

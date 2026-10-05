@@ -12,15 +12,15 @@
 
 namespace golang::runtime
 {
-    std::tuple<gocpp::string, gocpp::string, gocpp::string> funcNamePiecesForPrint(gocpp::string name);
+    std::tuple<gocpp::string, gocpp::string, gocpp::string, gocpp::string, gocpp::string> funcNamePiecesForPrint(gocpp::string name);
     gocpp::string funcNameForPrint(gocpp::string name);
     void printFuncName(gocpp::string name);
     int callers(int skip, gocpp::slice<uintptr_t> pcbuf);
     bool isExportedRuntime(gocpp::string name);
-    void SetCgoTraceback(int version, gocpp::unsafe_pointer traceback, gocpp::unsafe_pointer context, gocpp::unsafe_pointer symbolizer);
-    extern gocpp::unsafe_pointer cgoTraceback;
-    extern gocpp::unsafe_pointer cgoContext;
-    extern gocpp::unsafe_pointer cgoSymbolizer;
+    extern gocpp::array<gocpp::string, 12> gStatusStrings;
+    bool tracebackStringNeedsQuoting(gocpp::string s);
+    bool cgoTracebackAvailable();
+    bool cgoSymbolizerAvailable();
     struct cgoTracebackArg
     {
         uintptr_t context{};
@@ -81,12 +81,44 @@ namespace golang::runtime
     void cgoContextPCs(uintptr_t ctxt, gocpp::slice<uintptr_t> buf);
     bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, cgoSymbolizerArg* arg);
     void callCgoSymbolizer(cgoSymbolizerArg* arg);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/internal/abi/symtab.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/stkframe.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/cgocall.fwd.h"
+#include "golang/runtime/stkframe.fwd.h"
+
+namespace golang::runtime
+{
+    void printArgs(golang::runtime::funcInfo f, gocpp::unsafe_pointer argp, uintptr_t pc);
+    void printcreatedby(g* gp);
+    void printcreatedby1(golang::runtime::funcInfo f, uintptr_t pc, uint64_t goid);
+    void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp);
+    void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp);
+    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp, unwindFlags flags);
+    void printAncestorTraceback(ancestorInfo ancestor);
+    void printAncestorTracebackFuncInfo(golang::runtime::funcInfo f, uintptr_t pc);
+    int gcallers(g* gp, int skip, gocpp::slice<uintptr_t> pcbuf);
+    void goroutineheader(g* gp);
+    void tracebackothers(g* me);
+    void tracebacksomeothers(g* me, std::function<bool (g* _1)> showf);
+    void tracebackHexdump(golang::runtime::stack stk, stkframe* frame, uintptr_t bad);
+    bool isSystemGoroutine(g* gp, bool fixed);
+    void SetCgoTraceback(int version, gocpp::unsafe_pointer traceback, gocpp::unsafe_pointer context, gocpp::unsafe_pointer symbolizer);
+    extern gocpp::unsafe_pointer cgoTraceback;
+    extern gocpp::unsafe_pointer cgoContext;
+    extern gocpp::unsafe_pointer cgoSymbolizer;
+    void printCgoTraceback(gocpp::array_ptr<golang::runtime::cgoCallers> callers);
+}
+#include "golang/internal/abi/symtab.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
+}
+#include "golang/internal/abi/symtab.h"
+#include "golang/runtime/stkframe.h"
 
 namespace golang::runtime
 {
@@ -121,24 +153,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct unwinder& value);
-    void printArgs(golang::runtime::funcInfo f, gocpp::unsafe_pointer argp, uintptr_t pc);
-    void printcreatedby(g* gp);
-    void printcreatedby1(golang::runtime::funcInfo f, uintptr_t pc, uint64_t goid);
-    void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp);
-    void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp);
-    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp, unwindFlags flags);
-    void printAncestorTraceback(ancestorInfo ancestor);
-    void printAncestorTracebackFuncInfo(golang::runtime::funcInfo f, uintptr_t pc);
-    int gcallers(g* gp, int skip, gocpp::slice<uintptr_t> pcbuf);
+    bool isInjectedCall(abi::FuncID id);
     bool showframe(golang::runtime::srcFunc sf, g* gp, bool firstFrame, abi::FuncID calleeID);
     bool showfuncinfo(golang::runtime::srcFunc sf, bool firstFrame, abi::FuncID calleeID);
     bool elideWrapperCalling(abi::FuncID id);
-    extern gocpp::array<gocpp::string, 10> gStatusStrings;
-    void goroutineheader(g* gp);
-    void tracebackothers(g* me);
-    void tracebackHexdump(golang::runtime::stack stk, stkframe* frame, uintptr_t bad);
-    bool isSystemGoroutine(g* gp, bool fixed);
-    void printCgoTraceback(gocpp::array_ptr<golang::runtime::cgoCallers> callers);
     int tracebackPCs(unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf);
     std::tuple<int, int> traceback2(unwinder* u, bool showRuntime, int skip, int max);
 }

@@ -18,11 +18,5 @@ namespace golang::runtime
     // goroutine tags associated with each sample. A capacity of 1<<14 means
     // room for 16k samples, or 160 thread-seconds at a 100 Hz sample rate.
     const int profBufTagCount = 1 << 14;
-}
-#include "golang/runtime/profbuf.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-
-namespace golang::runtime
-{
     struct cpuProfile;
 }

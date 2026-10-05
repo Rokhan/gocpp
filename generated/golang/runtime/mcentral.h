@@ -9,7 +9,13 @@
 #include "golang/runtime/mcentral.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/sys/nih.h"
+#include "golang/internal/runtime/sys/nih.fwd.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+}
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mspanset.h"
 

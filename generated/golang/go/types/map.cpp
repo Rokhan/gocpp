@@ -14,7 +14,7 @@
 #include "golang/go/types/type.h"
 #include "golang/go/types/typestring.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     namespace rec
     {
@@ -54,7 +54,7 @@ namespace golang::types
     }
 
     // NewMap returns a new map for the given key and element types.
-    Map* NewMap(golang::types::Type key, golang::types::Type elem)
+    Map* NewMap(golang::go::types::Type key, golang::go::types::Type elem)
     {
         return gocpp::InitPtr<Map>([=](auto& x) {
             x.key = key;
@@ -63,18 +63,18 @@ namespace golang::types
     }
 
     // Key returns the key type of map m.
-    golang::types::Type rec::Key(Map* m)
+    golang::go::types::Type rec::Key(Map* m)
     {
         return m->key;
     }
 
     // Elem returns the element type of map m.
-    golang::types::Type rec::Elem(Map* m)
+    golang::go::types::Type rec::Elem(Map* m)
     {
         return m->elem;
     }
 
-    golang::types::Type rec::Underlying(Map* t)
+    golang::go::types::Type rec::Underlying(Map* t)
     {
         return t;
     }

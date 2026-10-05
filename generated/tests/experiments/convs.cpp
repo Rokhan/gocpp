@@ -24,6 +24,10 @@
 
 namespace golang::main
 {
+    namespace ast = golang::go::ast;
+    namespace fmt = golang::fmt;
+    namespace packages = golang::golang_org::x::tools::go::packages;
+    namespace types = golang::go::types;
     namespace rec
     {
         using ast::rec::End;

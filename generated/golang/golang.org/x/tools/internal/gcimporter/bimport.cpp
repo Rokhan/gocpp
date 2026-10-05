@@ -13,28 +13,24 @@
 
 #include "golang/fmt/print.h"
 #include "golang/go/token/position.h"
-#include "golang/go/types/basic.h"
 #include "golang/go/types/chan.h"
-#include "golang/go/types/object.h"
-#include "golang/go/types/scope.h"
-#include "golang/go/types/type.h"
-#include "golang/go/types/universe.h"
-#include "golang/golang.org/x/tools/internal/gcimporter/support_go118.h"
 #include "golang/sync/once.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    namespace fmt = golang::fmt;
+    namespace sync = golang::sync;
+    namespace token = golang::go::token;
+    namespace types = golang::go::types;
     namespace rec
     {
         using sync::rec::Do;
         using token::rec::AddFile;
         using token::rec::Base;
         using token::rec::SetLines;
-        using types::rec::Lookup;
-        using types::rec::Type;
     }
 
-    void errorf(gocpp::string format, gocpp::slice<gocpp::go_any> args)
+    void errorf(gocpp::string format, gocpp::slice<go_any> args)
     {
         gocpp::panic(mocklib::Sprintf(format, args));
     }
@@ -107,6 +103,8 @@ namespace golang::gcimporter
     token::Pos rec::pos(fakeFileSet* s, gocpp::string file, int line, int column)
     {
         // TODO(mdempsky): Make use of column.
+        _ = column;
+
         // Since we don't know the set of needed file positions, we reserve maxlines
         // positions per file. We delay calling token.File.SetLines until all
         // positions have been calculated (by way of fakeFileSet.setLines), so that
@@ -177,99 +175,6 @@ namespace golang::gcimporter
                     break;
             }
         }
-    }
-
-    sync::Once predeclOnce;
-    gocpp::slice<types::Type> predecl;
-    gocpp::slice<types::Type> predeclared()
-    {
-        rec::Do(gocpp::recv(predeclOnce), [=]() mutable -> void
-        {
-            // initialize lazily to be sure that all
-            // elements have been initialized before
-            predecl = gocpp::slice<types::Type> {
-                types::Typ[types::Bool],
-                types::Typ[types::Int],
-                types::Typ[types::Int8],
-                types::Typ[types::Int16],
-                types::Typ[types::Int32],
-                types::Typ[types::Int64],
-                types::Typ[types::Uint],
-                types::Typ[types::Uint8],
-                types::Typ[types::Uint16],
-                types::Typ[types::Uint32],
-                types::Typ[types::Uint64],
-                types::Typ[types::Uintptr],
-                types::Typ[types::Float32],
-                types::Typ[types::Float64],
-                types::Typ[types::Complex64],
-                types::Typ[types::Complex128],
-                types::Typ[types::String],
-
-                // basic type aliases
-                rec::Type(gocpp::recv(rec::Lookup(gocpp::recv(types::Universe), "byte"_s))),
-                rec::Type(gocpp::recv(rec::Lookup(gocpp::recv(types::Universe), "rune"_s))),
-
-                // error
-                rec::Type(gocpp::recv(rec::Lookup(gocpp::recv(types::Universe), "error"_s))),
-
-                // untyped types
-                types::Typ[types::UntypedBool],
-                types::Typ[types::UntypedInt],
-                types::Typ[types::UntypedRune],
-                types::Typ[types::UntypedFloat],
-                types::Typ[types::UntypedComplex],
-                types::Typ[types::UntypedString],
-                types::Typ[types::UntypedNil],
-
-                // package unsafe
-                types::Typ[types::UnsafePointer],
-
-                // invalid type
-                types::Typ[types::Invalid],
-
-                // used internally by gc; never used by this package or in .a files
-                anyType {}
-            };
-            predecl = append(predecl, additionalPredeclared());
-        });
-        return predecl;
-    }
-
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    anyType::operator T()
-    {
-        T result;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool anyType::operator==(const T& ref) const
-    {
-        return true;
-    }
-
-    std::ostream& anyType::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct anyType& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    types::Type rec::Underlying(anyType t)
-    {
-        return t;
-    }
-
-    gocpp::string rec::String(anyType t)
-    {
-        return "any"_s;
     }
 
 }

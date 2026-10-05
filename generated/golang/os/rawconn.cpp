@@ -20,6 +20,7 @@
 
 namespace golang::os
 {
+    namespace runtime = golang::runtime;
     namespace rec
     {
         using poll::rec::RawControl;

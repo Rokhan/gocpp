@@ -12,13 +12,18 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/syscall/windows/zsyscall_windows.h"
+#include "golang/runtime/mfinal.h"
 #include "golang/syscall/security_windows.h"
 #include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/types_windows.h"
 #include "golang/syscall/zerrors_windows.h"
 #include "golang/syscall/zsyscall_windows.h"
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace runtime = golang::runtime;
+    namespace syscall = golang::syscall;
     namespace rec
     {
     }
@@ -233,6 +238,56 @@ namespace golang::windows
 
     
     template<typename T> requires gocpp::GoStruct<T>
+    UserInfo1::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.Password = this->Password;
+        result.PasswordAge = this->PasswordAge;
+        result.Priv = this->Priv;
+        result.HomeDir = this->HomeDir;
+        result.Comment = this->Comment;
+        result.Flags = this->Flags;
+        result.ScriptPath = this->ScriptPath;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool UserInfo1::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (Password != ref.Password) return false;
+        if (PasswordAge != ref.PasswordAge) return false;
+        if (Priv != ref.Priv) return false;
+        if (HomeDir != ref.HomeDir) return false;
+        if (Comment != ref.Comment) return false;
+        if (Flags != ref.Flags) return false;
+        if (ScriptPath != ref.ScriptPath) return false;
+        return true;
+    }
+
+    std::ostream& UserInfo1::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Name;
+        os << " " << Password;
+        os << " " << PasswordAge;
+        os << " " << Priv;
+        os << " " << HomeDir;
+        os << " " << Comment;
+        os << " " << Flags;
+        os << " " << ScriptPath;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct UserInfo1& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
     UserInfo4::operator T()
     {
         T result;
@@ -350,6 +405,178 @@ namespace golang::windows
     //go:linkname GetSystemDirectory
     gocpp::string GetSystemDirectory()
     /* convertBlockStmt, nil block */;
+
+    // GetUserName retrieves the user name of the current thread
+    // in the specified format.
+    std::tuple<gocpp::string, gocpp::error> GetUserName(uint32_t format)
+    {
+        auto n = uint32_t(50);
+        for(; ; )
+        {
+            auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
+            auto e = syscall::GetUserNameEx(format, & b[0], & n);
+            if(e == nullptr)
+            {
+                return {syscall::UTF16ToString(b.make_slice(0, n)), nullptr};
+            }
+            if(e != syscall::ERROR_MORE_DATA)
+            {
+                return {""_s, e};
+            }
+            if(n <= uint32_t(len(b)))
+            {
+                return {""_s, e};
+            }
+        }
+    }
+
+    // getTokenInfo retrieves a specified type of information about an access token.
+    std::tuple<gocpp::unsafe_pointer, gocpp::error> getTokenInfo(syscall::Token t, uint32_t go_class, int initSize)
+    {
+        auto n = uint32_t(initSize);
+        for(; ; )
+        {
+            auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
+            auto e = syscall::GetTokenInformation(t, go_class, & b[0], uint32_t(len(b)), & n);
+            if(e == nullptr)
+            {
+                return {gocpp::unsafe_pointer(& b[0]), nullptr};
+            }
+            if(e != syscall::ERROR_INSUFFICIENT_BUFFER)
+            {
+                return {nullptr, e};
+            }
+            if(n <= uint32_t(len(b)))
+            {
+                return {nullptr, e};
+            }
+        }
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    TOKEN_GROUPS::operator T()
+    {
+        T result;
+        result.GroupCount = this->GroupCount;
+        result.Groups = this->Groups;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool TOKEN_GROUPS::operator==(const T& ref) const
+    {
+        if (GroupCount != ref.GroupCount) return false;
+        if (Groups != ref.Groups) return false;
+        return true;
+    }
+
+    std::ostream& TOKEN_GROUPS::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << GroupCount;
+        os << " " << Groups;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct TOKEN_GROUPS& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    gocpp::slice<SID_AND_ATTRIBUTES> rec::AllGroups(TOKEN_GROUPS* g)
+    {
+        return (gocpp::array_ptr<gocpp::array<SID_AND_ATTRIBUTES, (1 << 28) - 1>>)(gocpp::unsafe_pointer(& g->Groups[0])).make_slice(0, g->GroupCount, g->GroupCount);
+    }
+
+    std::tuple<TOKEN_GROUPS*, gocpp::error> GetTokenGroups(syscall::Token t)
+    {
+        auto [i, e] = getTokenInfo(t, syscall::TokenGroups, 50);
+        if(e != nullptr)
+        {
+            return {nullptr, e};
+        }
+        return {(TOKEN_GROUPS*)(i), nullptr};
+    }
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-sid_identifier_authority
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    SID_IDENTIFIER_AUTHORITY::operator T()
+    {
+        T result;
+        result.Value = this->Value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SID_IDENTIFIER_AUTHORITY::operator==(const T& ref) const
+    {
+        if (Value != ref.Value) return false;
+        return true;
+    }
+
+    std::ostream& SID_IDENTIFIER_AUTHORITY::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Value;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct SID_IDENTIFIER_AUTHORITY& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    SID_IDENTIFIER_AUTHORITY SECURITY_NT_AUTHORITY = gocpp::Init<SID_IDENTIFIER_AUTHORITY>([](auto& x) {
+        x.Value = gocpp::array<unsigned char, 6> {0, 0, 0, 0, 0, 5};
+    });
+    //go:nocheckptr
+    SID_IDENTIFIER_AUTHORITY GetSidIdentifierAuthority(syscall::SID* sid)
+    {
+        gocpp::Defer defer;
+        try
+        {
+            defer.push_back([=]{ runtime::KeepAlive(sid); });
+            return *(SID_IDENTIFIER_AUTHORITY*)(gocpp::unsafe_pointer(getSidIdentifierAuthority(sid)));
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
+    }
+
+    //go:nocheckptr
+    uint32_t GetSidSubAuthority(syscall::SID* sid, uint32_t subAuthorityIdx)
+    {
+        gocpp::Defer defer;
+        try
+        {
+            defer.push_back([=]{ runtime::KeepAlive(sid); });
+            return *(uint32_t*)(gocpp::unsafe_pointer(getSidSubAuthority(sid, subAuthorityIdx)));
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
+    }
+
+    //go:nocheckptr
+    uint8_t GetSidSubAuthorityCount(syscall::SID* sid)
+    {
+        gocpp::Defer defer;
+        try
+        {
+            defer.push_back([=]{ runtime::KeepAlive(sid); });
+            return *(uint8_t*)(gocpp::unsafe_pointer(getSidSubAuthorityCount(sid)));
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
+    }
 
 }
 

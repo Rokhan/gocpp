@@ -21,10 +21,13 @@
 #include "golang/math/big/intconv.h"
 #include "golang/math/big/nat.h"
 #include "golang/math/big/natconv.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 
-namespace golang::big
+namespace golang::math::big
 {
+    namespace bytes = golang::bytes;
+    namespace fmt = golang::fmt;
+    namespace strconv = golang::strconv;
     namespace rec
     {
         using fmt::rec::Flag;
@@ -63,6 +66,10 @@ namespace golang::big
     // the smallest number of decimal digits necessary to identify the value x uniquely
     // using x.Prec() mantissa bits.
     // The prec value is ignored for the 'b' and 'p' formats.
+    //
+    // Note that Text may return a different result than strconv.FormatFloat for
+    // corresponding arguments if the matching float32 or float64 number provided
+    // to strconv.FormatFloat is a denormalized number.
     gocpp::string rec::Text(Float* x, unsigned char format, int prec)
     {
         // TODO(gri) determine a good/better value here
@@ -279,8 +286,6 @@ namespace golang::big
         // (possibly exclusive) round to x for the given precision of x.
         // Compute the lower and upper bound in decimal form and find the
         // shortest decimal number d such that lower <= d <= upper.
-        // TODO(gri) strconv/ftoa.do describes a shortcut in some cases.
-        // See if we can use it (in adjusted form) here as well.
         // 1) Compute normalized mantissa mant and exponent exp for x such
         // that the lsb of mant corresponds to 1/2 ulp for the precision of
         // x (i.e., for mant we want x.prec + 1 bits).
@@ -295,10 +300,10 @@ namespace golang::big
             switch(conditionId)
             {
                 case 0:
-                    mant = rec::shl(gocpp::recv(mant), mant, (unsigned int)(- s));
+                    mant = rec::lsh(gocpp::recv(mant), mant, (unsigned int)(- s));
                     break;
                 case 1:
-                    mant = rec::shr(gocpp::recv(mant), mant, (unsigned int)(+ s));
+                    mant = rec::rsh(gocpp::recv(mant), mant, (unsigned int)(+ s));
                     break;
             }
         }
@@ -308,7 +313,7 @@ namespace golang::big
 
         // 2) Compute lower bound by subtracting 1/2 ulp.
         decimal lower = {};
-        nat tmp = {};
+        golang::math::big::nat tmp = {};
         rec::init(gocpp::recv(lower), rec::sub(gocpp::recv(tmp), mant, natOne), exp);
 
         // 3) Compute upper bound by adding 1/2 ulp.
@@ -335,7 +340,12 @@ namespace golang::big
 
             // Okay to round up if upper has a different digit and either upper
             // is inclusive or upper is bigger than the result of rounding up.
-            auto okup = m != u && (inclusive || m + 1 < u || i + 1 < len(upper.mant));
+            // The last clause handles digits past upper's trimmed mantissa:
+            // upper.at(i) returns '0' there, but the true upper bound was
+            // determined by earlier digits, so rounding up is valid unless
+            // m == '9' (which would carry onto the exclusive upper bound).
+            // See also go.dev/issue/80206.
+            auto okup = m != u && (inclusive || m + 1 < u || i + 1 < len(upper.mant) || i >= len(upper.mant) && m < '9');
 
             // If it's okay to do either, then round to the nearest one.
             // If it's okay to do only one, do it.
@@ -452,7 +462,7 @@ namespace golang::big
     }
 
     // fmtB appends the string of x in the format mantissa "p" exponent
-    // with a decimal mantissa and a binary exponent, or 0" if x is zero,
+    // with a decimal mantissa and a binary exponent, or "0" if x is zero,
     // and returns the extended buffer.
     // The mantissa is normalized such that is uses x.Prec() bits in binary
     // representation.
@@ -483,10 +493,10 @@ namespace golang::big
             switch(conditionId)
             {
                 case 0:
-                    m = rec::shl(gocpp::recv(nat(nullptr)), m, (unsigned int)(x->prec - w));
+                    m = rec::lsh(gocpp::recv(nat(nullptr)), m, (unsigned int)(x->prec - w));
                     break;
                 case 1:
-                    m = rec::shr(gocpp::recv(nat(nullptr)), m, (unsigned int)(w - x->prec));
+                    m = rec::rsh(gocpp::recv(nat(nullptr)), m, (unsigned int)(w - x->prec));
                     break;
             }
         }
@@ -554,10 +564,10 @@ namespace golang::big
             switch(conditionId)
             {
                 case 0:
-                    m = rec::shl(gocpp::recv(nat(nullptr)), m, n - w);
+                    m = rec::lsh(gocpp::recv(nat(nullptr)), m, n - w);
                     break;
                 case 1:
-                    m = rec::shr(gocpp::recv(nat(nullptr)), m, w - n);
+                    m = rec::rsh(gocpp::recv(nat(nullptr)), m, w - n);
                     break;
             }
         }

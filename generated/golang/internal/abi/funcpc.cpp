@@ -11,7 +11,7 @@
 #include "golang/internal/abi/funcpc.h"
 #include "gocpp/support.h"
 
-namespace golang::abi
+namespace golang::internal::abi
 {
     namespace rec
     {
@@ -22,7 +22,7 @@ namespace golang::abi
     // compile-time error.
     //
     // Implemented as a compile intrinsic.
-    uintptr_t FuncPCABI0(gocpp::go_any f)
+    uintptr_t FuncPCABI0(go_any f)
     /* convertBlockStmt, nil block */;
 
     // FuncPCABIInternal returns the entry PC of the function f. If f is a
@@ -32,7 +32,7 @@ namespace golang::abi
     // the behavior is undefined.
     //
     // Implemented as a compile intrinsic.
-    uintptr_t FuncPCABIInternal(gocpp::go_any f)
+    uintptr_t FuncPCABIInternal(go_any f)
     /* convertBlockStmt, nil block */;
 
 }

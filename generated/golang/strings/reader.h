@@ -37,6 +37,7 @@ namespace golang::strings
 
 namespace golang::strings
 {
+    namespace io = golang::io;
 
     namespace rec
     {

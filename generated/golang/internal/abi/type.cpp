@@ -11,8 +11,15 @@
 #include "golang/internal/abi/type.h"
 #include "gocpp/support.h"
 
-namespace golang::abi
+#include "golang/internal/abi/escape.h"
+#include "golang/internal/abi/iface.h"
+#include "golang/internal/abi/map.h"
+#include "golang/internal/goarch/goarch.h"
+
+namespace golang::internal::abi
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
     }
@@ -93,7 +100,7 @@ namespace golang::abi
     // TypeOff is the offset to a type from moduledata.types.  See resolveTypeOff in runtime.
     // TextOff is an offset from the top of a text section.  See (rtype).textOff in runtime.
     // String returns the name of k.
-    gocpp::string rec::String(golang::abi::Kind k)
+    gocpp::string rec::String(golang::internal::abi::Kind k)
     {
         if(int(k) < len(kindNames))
         {
@@ -131,9 +138,28 @@ namespace golang::abi
         x[Struct] = "struct"_s;
         x[UnsafePointer] = "unsafe.Pointer"_s;
     });
-    golang::abi::Kind rec::Kind(Type* t)
+    // TypeOf returns the abi.Type of some value.
+    Type* TypeOf(go_any a)
     {
-        return Kind(t->Kind_ & KindMask);
+        auto eface = *(EmptyInterface*)(gocpp::unsafe_pointer(& a));
+        // Types are either static (for compiler-created types) or
+        // heap-allocated but always reachable (for reflection-created
+        // types, held in the central map). So there is no need to
+        // escape types. noescape here help avoid unnecessary escape
+        // of v.
+        return (Type*)(NoEscape(gocpp::unsafe_pointer(eface.Type)));
+    }
+
+    // TypeFor returns the abi.Type for a type parameter.
+    template<typename T>
+    Type* TypeFor()
+    {
+        return (PtrType*)(gocpp::unsafe_pointer(TypeOf((T*)(nullptr))))->Elem;
+    }
+
+    golang::internal::abi::Kind rec::Kind(Type* t)
+    {
+        return t->Kind_;
     }
 
     bool rec::HasName(Type* t)
@@ -141,25 +167,24 @@ namespace golang::abi
         return t->TFlag & TFlagNamed != 0;
     }
 
+    // Pointers reports whether t contains pointers.
     bool rec::Pointers(Type* t)
     {
         return t->PtrBytes != 0;
     }
 
-    // IfaceIndir reports whether t is stored indirectly in an interface value.
-    bool rec::IfaceIndir(Type* t)
-    {
-        return t->Kind_ & KindDirectIface == 0;
-    }
-
-    // isDirectIface reports whether t is stored directly in an interface value.
+    // IsDirectIface reports whether t is stored directly in an interface value.
     bool rec::IsDirectIface(Type* t)
     {
-        return t->Kind_ & KindDirectIface != 0;
+        return t->TFlag & TFlagDirectIface != 0;
     }
 
     gocpp::slice<unsigned char> rec::GcSlice(Type* t, uintptr_t begin, uintptr_t end)
     {
+        if(t->TFlag & TFlagGCMaskOnDemand != 0)
+        {
+            gocpp::panic("GcSlice can't handle on-demand gcdata types"_s);
+        }
         return unsafe::Slice(t->GCData, int(end)).make_slice(begin);
     }
 
@@ -354,7 +379,7 @@ namespace golang::abi
     {
         if(rec::Kind(gocpp::recv(t)) == Array)
         {
-            return int((golang::abi::ArrayType*)(gocpp::unsafe_pointer(t))->Len);
+            return int((golang::internal::abi::ArrayType*)(gocpp::unsafe_pointer(t))->Len);
         }
         return 0;
     }
@@ -433,11 +458,11 @@ namespace golang::abi
     }
 
     // ChanDir returns the direction of t if t is a channel type, otherwise InvalidDir (0).
-    golang::abi::ChanDir rec::ChanDir(Type* t)
+    golang::internal::abi::ChanDir rec::ChanDir(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Chan)
         {
-            auto ch = (ChanType*)(gocpp::unsafe_pointer(t));
+            auto ch = (golang::internal::abi::ChanType*)(gocpp::unsafe_pointer(t));
             return ch->Dir;
         }
         return InvalidDir;
@@ -489,7 +514,7 @@ namespace golang::abi
                 case 2:
                     struct u
                     {
-                        golang::abi::FuncType FuncType{};
+                        golang::internal::abi::FuncType FuncType{};
                         UncommonType u{};
 
                         using isGoStruct = void;
@@ -508,7 +533,7 @@ namespace golang::abi
                 case 3:
                     struct u
                     {
-                        SliceType SliceType{};
+                        golang::internal::abi::SliceType SliceType{};
                         UncommonType u{};
 
                         using isGoStruct = void;
@@ -527,7 +552,7 @@ namespace golang::abi
                 case 4:
                     struct u
                     {
-                        golang::abi::ArrayType ArrayType{};
+                        golang::internal::abi::ArrayType ArrayType{};
                         UncommonType u{};
 
                         using isGoStruct = void;
@@ -546,7 +571,7 @@ namespace golang::abi
                 case 5:
                     struct u
                     {
-                        ChanType ChanType{};
+                        golang::internal::abi::ChanType ChanType{};
                         UncommonType u{};
 
                         using isGoStruct = void;
@@ -565,7 +590,7 @@ namespace golang::abi
                 case 6:
                     struct u
                     {
-                        golang::abi::MapType MapType{};
+                        golang::internal::abi::MapType MapType{};
                         UncommonType u{};
 
                         using isGoStruct = void;
@@ -584,7 +609,7 @@ namespace golang::abi
                 case 7:
                     struct u
                     {
-                        golang::abi::InterfaceType InterfaceType{};
+                        golang::internal::abi::InterfaceType InterfaceType{};
                         UncommonType u{};
 
                         using isGoStruct = void;
@@ -639,19 +664,19 @@ namespace golang::abi
             {
                 case 0:
                 {
-                    auto tt = (golang::abi::ArrayType*)(gocpp::unsafe_pointer(t));
+                    auto tt = (golang::internal::abi::ArrayType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
                 }
                 case 1:
                 {
-                    auto tt = (ChanType*)(gocpp::unsafe_pointer(t));
+                    auto tt = (golang::internal::abi::ChanType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
                 }
                 case 2:
                 {
-                    auto tt = (golang::abi::MapType*)(gocpp::unsafe_pointer(t));
+                    auto tt = (golang::internal::abi::MapType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
                 }
@@ -663,7 +688,7 @@ namespace golang::abi
                 }
                 case 4:
                 {
-                    auto tt = (SliceType*)(gocpp::unsafe_pointer(t));
+                    auto tt = (golang::internal::abi::SliceType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
                 }
@@ -673,53 +698,83 @@ namespace golang::abi
     }
 
     // StructType returns t cast to a *StructType, or nil if its tag does not match.
-    golang::abi::StructType* rec::StructType(Type* t)
+    golang::internal::abi::StructType* rec::StructType(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Struct)
         {
             return nullptr;
         }
-        return (golang::abi::StructType*)(gocpp::unsafe_pointer(t));
+        return (golang::internal::abi::StructType*)(gocpp::unsafe_pointer(t));
     }
 
     // MapType returns t cast to a *MapType, or nil if its tag does not match.
-    golang::abi::MapType* rec::MapType(Type* t)
+    golang::internal::abi::MapType* rec::MapType(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Map)
         {
             return nullptr;
         }
-        return (golang::abi::MapType*)(gocpp::unsafe_pointer(t));
+        return (golang::internal::abi::MapType*)(gocpp::unsafe_pointer(t));
+    }
+
+    // PointerType returns t cast to a *PtrType, or nil if its tag does not match.
+    PtrType* rec::PointerType(Type* t)
+    {
+        if(rec::Kind(gocpp::recv(t)) != Pointer)
+        {
+            return nullptr;
+        }
+        return (PtrType*)(gocpp::unsafe_pointer(t));
+    }
+
+    // SliceType returns t cast to a *SliceType, or nil if its tag does not match.
+    golang::internal::abi::SliceType* rec::SliceType(Type* t)
+    {
+        if(rec::Kind(gocpp::recv(t)) != Slice)
+        {
+            return nullptr;
+        }
+        return (golang::internal::abi::SliceType*)(gocpp::unsafe_pointer(t));
     }
 
     // ArrayType returns t cast to a *ArrayType, or nil if its tag does not match.
-    golang::abi::ArrayType* rec::ArrayType(Type* t)
+    golang::internal::abi::ArrayType* rec::ArrayType(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Array)
         {
             return nullptr;
         }
-        return (golang::abi::ArrayType*)(gocpp::unsafe_pointer(t));
+        return (golang::internal::abi::ArrayType*)(gocpp::unsafe_pointer(t));
+    }
+
+    // ChanType returns t cast to a *ChanType, or nil if its tag does not match.
+    golang::internal::abi::ChanType* rec::ChanType(Type* t)
+    {
+        if(rec::Kind(gocpp::recv(t)) != Chan)
+        {
+            return nullptr;
+        }
+        return (golang::internal::abi::ChanType*)(gocpp::unsafe_pointer(t));
     }
 
     // FuncType returns t cast to a *FuncType, or nil if its tag does not match.
-    golang::abi::FuncType* rec::FuncType(Type* t)
+    golang::internal::abi::FuncType* rec::FuncType(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
         {
             return nullptr;
         }
-        return (golang::abi::FuncType*)(gocpp::unsafe_pointer(t));
+        return (golang::internal::abi::FuncType*)(gocpp::unsafe_pointer(t));
     }
 
     // InterfaceType returns t cast to a *InterfaceType, or nil if its tag does not match.
-    golang::abi::InterfaceType* rec::InterfaceType(Type* t)
+    golang::internal::abi::InterfaceType* rec::InterfaceType(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Interface)
         {
             return nullptr;
         }
-        return (golang::abi::InterfaceType*)(gocpp::unsafe_pointer(t));
+        return (golang::internal::abi::InterfaceType*)(gocpp::unsafe_pointer(t));
     }
 
     // Size returns the size of data with type t.
@@ -788,108 +843,23 @@ namespace golang::abi
     {
         if(rec::Kind(gocpp::recv(t)) == Interface)
         {
-            auto tt = (golang::abi::InterfaceType*)(gocpp::unsafe_pointer(t));
+            auto tt = (golang::internal::abi::InterfaceType*)(gocpp::unsafe_pointer(t));
             return rec::NumMethod(gocpp::recv(tt));
         }
         return len(rec::ExportedMethods(gocpp::recv(t)));
     }
 
     // NumMethod returns the number of interface methods in the type's method set.
-    int rec::NumMethod(golang::abi::InterfaceType* t)
+    int rec::NumMethod(golang::internal::abi::InterfaceType* t)
     {
         return len(t->Methods);
-    }
-
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    MapType::operator T()
-    {
-        T result;
-        result.Type = this->Type;
-        result.Key = this->Key;
-        result.Elem = this->Elem;
-        result.Bucket = this->Bucket;
-        result.Hasher = this->Hasher;
-        result.KeySize = this->KeySize;
-        result.ValueSize = this->ValueSize;
-        result.BucketSize = this->BucketSize;
-        result.Flags = this->Flags;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool MapType::operator==(const T& ref) const
-    {
-        if (Type != ref.Type) return false;
-        if (Key != ref.Key) return false;
-        if (Elem != ref.Elem) return false;
-        if (Bucket != ref.Bucket) return false;
-        if (Hasher != ref.Hasher) return false;
-        if (KeySize != ref.KeySize) return false;
-        if (ValueSize != ref.ValueSize) return false;
-        if (BucketSize != ref.BucketSize) return false;
-        if (Flags != ref.Flags) return false;
-        return true;
-    }
-
-    std::ostream& MapType::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << Type;
-        os << " " << Key;
-        os << " " << Elem;
-        os << " " << Bucket;
-        os << " " << Hasher;
-        os << " " << KeySize;
-        os << " " << ValueSize;
-        os << " " << BucketSize;
-        os << " " << Flags;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct MapType& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // Note: flag values must match those used in the TMAP case
-    // in ../cmd/compile/internal/reflectdata/reflect.go:writeType.
-    bool rec::IndirectKey(golang::abi::MapType* mt)
-    {
-        // store ptr to key instead of key itself
-        return mt->Flags & 1 != 0;
-    }
-
-    bool rec::IndirectElem(golang::abi::MapType* mt)
-    {
-        // store ptr to elem instead of elem itself
-        return mt->Flags & 2 != 0;
-    }
-
-    bool rec::ReflexiveKey(golang::abi::MapType* mt)
-    {
-        // true if k==k for all keys
-        return mt->Flags & 4 != 0;
-    }
-
-    bool rec::NeedKeyUpdate(golang::abi::MapType* mt)
-    {
-        // true if we need to update key on an overwrite
-        return mt->Flags & 8 != 0;
-    }
-
-    bool rec::HashMightPanic(golang::abi::MapType* mt)
-    {
-        // true if hash function might panic
-        return mt->Flags & 16 != 0;
     }
 
     Type* rec::Key(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Map)
         {
-            return (golang::abi::MapType*)(gocpp::unsafe_pointer(t))->Key;
+            return (golang::internal::abi::MapType*)(gocpp::unsafe_pointer(t))->Key;
         }
         return nullptr;
     }
@@ -926,7 +896,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    // funcType represents a function type.
+    // FuncType represents a function type.
     //
     // A *Type for each in and out parameter is stored in an array that
     // directly follows the funcType (and possibly its uncommonType). So
@@ -972,27 +942,27 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    Type* rec::In(golang::abi::FuncType* t, int i)
+    Type* rec::In(golang::internal::abi::FuncType* t, int i)
     {
         return rec::InSlice(gocpp::recv(t))[i];
     }
 
-    int rec::NumIn(golang::abi::FuncType* t)
+    int rec::NumIn(golang::internal::abi::FuncType* t)
     {
         return int(t->InCount);
     }
 
-    int rec::NumOut(golang::abi::FuncType* t)
+    int rec::NumOut(golang::internal::abi::FuncType* t)
     {
         return int(t->OutCount & ((1 << 15) - 1));
     }
 
-    Type* rec::Out(golang::abi::FuncType* t, int i)
+    Type* rec::Out(golang::internal::abi::FuncType* t, int i)
     {
         return (rec::OutSlice(gocpp::recv(t))[i]);
     }
 
-    gocpp::slice<Type*> rec::InSlice(golang::abi::FuncType* t)
+    gocpp::slice<Type*> rec::InSlice(golang::internal::abi::FuncType* t)
     {
         auto uadd = gocpp::Sizeof<abi::FuncType>();
         if(t->Type.TFlag & TFlagUncommon != 0)
@@ -1006,7 +976,7 @@ namespace golang::abi
         return (gocpp::array_ptr<gocpp::array<Type*, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "t.inCount > 0"_s)).make_slice(0, t->InCount, t->InCount);
     }
 
-    gocpp::slice<Type*> rec::OutSlice(golang::abi::FuncType* t)
+    gocpp::slice<Type*> rec::OutSlice(golang::internal::abi::FuncType* t)
     {
         auto outCount = uint16_t(rec::NumOut(gocpp::recv(t)));
         if(outCount == 0)
@@ -1021,7 +991,7 @@ namespace golang::abi
         return (gocpp::array_ptr<gocpp::array<Type*, 1 << 17>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "outCount > 0"_s)).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
     }
 
-    bool rec::IsVariadic(golang::abi::FuncType* t)
+    bool rec::IsVariadic(golang::internal::abi::FuncType* t)
     {
         return t->OutCount & (1 << 15) != 0;
     }
@@ -1164,39 +1134,39 @@ namespace golang::abi
 
     // DataChecked does pointer arithmetic on n's Bytes, and that arithmetic is asserted to
     // be safe for the reason in whySafe (which can appear in a backtrace, etc.)
-    unsigned char* rec::DataChecked(golang::abi::Name n, int off, gocpp::string whySafe)
+    unsigned char* rec::DataChecked(golang::internal::abi::Name n, int off, gocpp::string whySafe)
     {
         return (unsigned char*)(addChecked(gocpp::unsafe_pointer(n.Bytes), uintptr_t(off), whySafe));
     }
 
     // Data does pointer arithmetic on n's Bytes, and that arithmetic is asserted to
     // be safe because the runtime made the call (other packages use DataChecked)
-    unsigned char* rec::Data(golang::abi::Name n, int off)
+    unsigned char* rec::Data(golang::internal::abi::Name n, int off)
     {
         return (unsigned char*)(addChecked(gocpp::unsafe_pointer(n.Bytes), uintptr_t(off), "the runtime doesn't need to give you a reason"_s));
     }
 
     // IsExported returns "is n exported?"
-    bool rec::IsExported(golang::abi::Name n)
+    bool rec::IsExported(golang::internal::abi::Name n)
     {
         return (*n.Bytes) & (1 << 0) != 0;
     }
 
     // HasTag returns true iff there is tag data following this name
-    bool rec::HasTag(golang::abi::Name n)
+    bool rec::HasTag(golang::internal::abi::Name n)
     {
         return (*n.Bytes) & (1 << 1) != 0;
     }
 
     // IsEmbedded returns true iff n is embedded (an anonymous field).
-    bool rec::IsEmbedded(golang::abi::Name n)
+    bool rec::IsEmbedded(golang::internal::abi::Name n)
     {
         return (*n.Bytes) & (1 << 3) != 0;
     }
 
     // ReadVarint parses a varint as encoded by encoding/binary.
     // It returns the number of encoded bytes and the encoded value.
-    std::tuple<int, int> rec::ReadVarint(golang::abi::Name n, int off)
+    std::tuple<int, int> rec::ReadVarint(golang::internal::abi::Name n, int off)
     {
         auto v = 0;
         for(auto i = 0; ; i++)
@@ -1211,7 +1181,7 @@ namespace golang::abi
     }
 
     // IsBlank indicates whether n is "_".
-    bool rec::IsBlank(golang::abi::Name n)
+    bool rec::IsBlank(golang::internal::abi::Name n)
     {
         if(n.Bytes == nullptr)
         {
@@ -1239,8 +1209,8 @@ namespace golang::abi
         }
     }
 
-    // Name returns the tag string for n, or empty if there is none.
-    gocpp::string rec::Name(golang::abi::Name n)
+    // Name returns the name of n, or empty if it does not actually have a name.
+    gocpp::string rec::Name(golang::internal::abi::Name n)
     {
         if(n.Bytes == nullptr)
         {
@@ -1251,7 +1221,7 @@ namespace golang::abi
     }
 
     // Tag returns the tag string for n, or empty if there is none.
-    gocpp::string rec::Tag(golang::abi::Name n)
+    gocpp::string rec::Tag(golang::internal::abi::Name n)
     {
         if(! rec::HasTag(gocpp::recv(n)))
         {
@@ -1262,7 +1232,7 @@ namespace golang::abi
         return unsafe::String(rec::DataChecked(gocpp::recv(n), 1 + i + l + i2, "non-empty string"_s), l2);
     }
 
-    golang::abi::Name NewName(gocpp::string n, gocpp::string tag, bool exported, bool embedded)
+    golang::internal::abi::Name NewName(gocpp::string n, gocpp::string tag, bool exported, bool embedded)
     {
         if(len(n) >= (1 << 29))
         {
@@ -1304,9 +1274,188 @@ namespace golang::abi
             copy(tb.make_slice(tagLenLen), tag);
         }
 
-        return gocpp::Init<golang::abi::Name>([=](auto& x) {
+        return gocpp::Init<golang::internal::abi::Name>([=](auto& x) {
             x.Bytes = & b[0];
         });
+    }
+
+    // DescriptorSize returns the contiguous size taken in memory by the
+    // type descriptor. This is the size of the Type struct,
+    // plus other fields used by some type kinds, plus the UncommonType
+    // struct if present, plus other optional information.
+    // This is just the size of the bytes that appear contiguously in memory.
+    // It does not include the size of things like type strings
+    // and field names that appear elsewhere.
+    //
+    // This code must match the data structures build by
+    // cmd/compile/internal/reflectdata/reflect.go:writeType.
+    int rec::DescriptorSize(Type* t)
+    {
+        int baseSize = {};
+        int addSize = {};
+        //Go switch emulation
+        {
+            auto condition = t->Kind_;
+            int conditionId = -1;
+            if(condition == Array) { conditionId = 0; }
+            else if(condition == Chan) { conditionId = 1; }
+            else if(condition == Func) { conditionId = 2; }
+            else if(condition == Interface) { conditionId = 3; }
+            else if(condition == Map) { conditionId = 4; }
+            else if(condition == Pointer) { conditionId = 5; }
+            else if(condition == Slice) { conditionId = 6; }
+            else if(condition == Struct) { conditionId = 7; }
+            else if(condition == Bool) { conditionId = 8; }
+            else if(condition == Int) { conditionId = 9; }
+            else if(condition == Int8) { conditionId = 10; }
+            else if(condition == Int16) { conditionId = 11; }
+            else if(condition == Int32) { conditionId = 12; }
+            else if(condition == Int64) { conditionId = 13; }
+            else if(condition == Uint) { conditionId = 14; }
+            else if(condition == Uint8) { conditionId = 15; }
+            else if(condition == Uint16) { conditionId = 16; }
+            else if(condition == Uint32) { conditionId = 17; }
+            else if(condition == Uint64) { conditionId = 18; }
+            else if(condition == Uintptr) { conditionId = 19; }
+            else if(condition == Float32) { conditionId = 20; }
+            else if(condition == Float64) { conditionId = 21; }
+            else if(condition == Complex64) { conditionId = 22; }
+            else if(condition == Complex128) { conditionId = 23; }
+            else if(condition == abi::String) { conditionId = 24; }
+            else if(condition == UnsafePointer) { conditionId = 25; }
+            switch(conditionId)
+            {
+                case 0:
+                    std::tie(baseSize, addSize) = rec::descriptorSizes(gocpp::recv(rec::ArrayType(gocpp::recv(t))));
+                    break;
+                case 1:
+                    std::tie(baseSize, addSize) = rec::descriptorSizes(gocpp::recv(rec::ChanType(gocpp::recv(t))));
+                    break;
+                case 2:
+                    std::tie(baseSize, addSize) = rec::descriptorSizes(gocpp::recv(rec::FuncType(gocpp::recv(t))));
+                    break;
+                case 3:
+                    std::tie(baseSize, addSize) = rec::descriptorSizes(gocpp::recv(rec::InterfaceType(gocpp::recv(t))));
+                    break;
+                case 4:
+                    std::tie(baseSize, addSize) = rec::descriptorSizes(gocpp::recv(rec::MapType(gocpp::recv(t))));
+                    break;
+                case 5:
+                    std::tie(baseSize, addSize) = rec::descriptorSizes(gocpp::recv(rec::PointerType(gocpp::recv(t))));
+                    break;
+                case 6:
+                    std::tie(baseSize, addSize) = rec::descriptorSizes(gocpp::recv(rec::SliceType(gocpp::recv(t))));
+                    break;
+                case 7:
+                    std::tie(baseSize, addSize) = rec::descriptorSizes(gocpp::recv(rec::StructType(gocpp::recv(t))));
+                    break;
+                case 8:
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                case 13:
+                case 14:
+                case 15:
+                case 16:
+                case 17:
+                case 18:
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
+                case 24:
+                case 25:
+                    baseSize = int(gocpp::Sizeof<abi::Type>());
+                    addSize = 0;
+                    break;
+
+                default:
+                    gocpp::panic("DescriptorSize: invalid type descriptor"_s);
+                    break;
+            }
+        }
+
+        // For clarity, we add the sizes together in the order
+        // they appear in memory.
+        auto ret = baseSize;
+
+        auto mcount = 0;
+        auto ut = rec::Uncommon(gocpp::recv(t));
+        if(ut != nullptr)
+        {
+            ret += int(gocpp::Sizeof<abi::UncommonType>());
+            mcount = int(ut->Mcount);
+        }
+
+        ret += addSize;
+
+        ret += mcount * int(gocpp::Sizeof<Method>());
+
+        return ret;
+    }
+
+    std::tuple<int, int> rec::descriptorSizes(golang::internal::abi::ArrayType* at)
+    {
+        int base;
+        int add;
+        return {int(gocpp::Sizeof<abi::ArrayType>()), 0};
+    }
+
+    std::tuple<int, int> rec::descriptorSizes(golang::internal::abi::ChanType* ct)
+    {
+        int base;
+        int add;
+        return {int(gocpp::Sizeof<abi::ChanType>()), 0};
+    }
+
+    std::tuple<int, int> rec::descriptorSizes(golang::internal::abi::FuncType* ft)
+    {
+        int base;
+        int add;
+        base = int(gocpp::Sizeof<abi::FuncType>());
+        add = (rec::NumIn(gocpp::recv(ft)) + rec::NumOut(gocpp::recv(ft))) * goarch::PtrSize;
+        return {base, add};
+    }
+
+    std::tuple<int, int> rec::descriptorSizes(golang::internal::abi::InterfaceType* it)
+    {
+        int base;
+        int add;
+        base = int(gocpp::Sizeof<abi::InterfaceType>());
+        add = len(it->Methods) * int(gocpp::Sizeof<Imethod>());
+        return {base, add};
+    }
+
+    std::tuple<int, int> rec::descriptorSizes(golang::internal::abi::MapType* mt)
+    {
+        int base;
+        int add;
+        return {int(gocpp::Sizeof<abi::MapType>()), 0};
+    }
+
+    std::tuple<int, int> rec::descriptorSizes(PtrType* pt)
+    {
+        int base;
+        int add;
+        return {int(gocpp::Sizeof<abi::PtrType>()), 0};
+    }
+
+    std::tuple<int, int> rec::descriptorSizes(golang::internal::abi::SliceType* st)
+    {
+        int base;
+        int add;
+        return {int(gocpp::Sizeof<abi::SliceType>()), 0};
+    }
+
+    std::tuple<int, int> rec::descriptorSizes(golang::internal::abi::StructType* st)
+    {
+        int base;
+        int add;
+        base = int(gocpp::Sizeof<abi::StructType>());
+        add = len(st->Fields) * int(gocpp::Sizeof<StructField>());
+        return {base, add};
     }
 
 }

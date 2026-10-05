@@ -35,6 +35,8 @@ namespace golang::main
 
 namespace golang::main
 {
+    namespace color = golang::image::color;
+    namespace image = golang::image;
 
     namespace rec
     {

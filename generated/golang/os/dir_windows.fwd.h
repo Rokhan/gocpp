@@ -14,10 +14,5 @@ namespace golang::os
     // should not be set below 1024 bytes (512+105+safety buffer).
     // Windows 8.1 and earlier only works with buffer sizes up to 64 kB.
     const int dirBufSize = 64 * 1024;
-}
-#include "golang/os/types_windows.fwd.h"
-
-namespace golang::os
-{
     struct dirEntry;
 }

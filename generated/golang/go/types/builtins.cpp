@@ -25,8 +25,10 @@
 #include "golang/go/types/chan.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/const.h"
+#include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
 #include "golang/go/types/expr.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/index.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/lookup.h"
@@ -37,6 +39,7 @@
 #include "golang/go/types/package.h"
 #include "golang/go/types/pointer.h"
 #include "golang/go/types/predicates.h"
+#include "golang/go/types/recording.h"
 #include "golang/go/types/selection.h"
 #include "golang/go/types/signature.h"
 #include "golang/go/types/sizes.h"
@@ -45,23 +48,29 @@
 #include "golang/go/types/tuple.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeparam.h"
-#include "golang/go/types/typeset.h"
 #include "golang/go/types/typeterm.h"
 #include "golang/go/types/typexpr.h"
 #include "golang/go/types/under.h"
 #include "golang/go/types/union.h"
 #include "golang/go/types/universe.h"
+#include "golang/go/types/util.h"
 #include "golang/go/types/version.h"
 #include "golang/internal/types/errors/codes.h"
+#include "golang/iter/iter.h"
+#include "golang/sync/mutex.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace constant = golang::go::constant;
+    namespace errors = golang::internal::types::errors;
+    namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::End;
         using ast::rec::Pos;
         using constant::rec::Kind;
-        using token::rec::IsValid;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
     }
 
     // builtin type-checks a call to the built-in specified by id and
@@ -78,9 +87,9 @@ namespace golang::types
 
             // append is the only built-in that permits the use of ... for the last argument
             auto bin = predeclaredFuncs[id];
-            if(rec::IsValid(gocpp::recv(call->Ellipsis)) && id != _Append)
+            if(hasDots(call) && id != _Append)
             {
-                rec::errorf(gocpp::recv(check), atPos(call->Ellipsis), InvalidDotDotDot, invalidOp + "invalid use of ... with built-in %s"_s, bin.name);
+                rec::errorf(gocpp::recv(check), dddErrPos(call), InvalidDotDotDot, invalidOp + "invalid use of ... with built-in %s"_s, bin.name);
                 rec::use(gocpp::recv(check), argList);
                 return _1;
             }
@@ -121,7 +130,7 @@ namespace golang::types
                         nargs = len(args);
                         for(auto [gocpp_ignored, a] : args)
                         {
-                            if(a->mode == invalid)
+                            if(! rec::isValid(gocpp::recv(a)))
                             {
                                 return _1;
                             }
@@ -157,7 +166,7 @@ namespace golang::types
                 }
                 if(msg != ""_s)
                 {
-                    rec::errorf(gocpp::recv(check), inNode(call, call->Rparen), WrongArgCount, invalidOp + "%s arguments for %s (expected %d, found %d)"_s, msg, call, bin.nargs, nargs);
+                    rec::errorf(gocpp::recv(check), argErrPos(call), WrongArgCount, invalidOp + "%s arguments for %v (expected %d, found %d)"_s, msg, call, bin.nargs, nargs);
                     return _1;
                 }
             }
@@ -196,88 +205,74 @@ namespace golang::types
                 else if(condition == _Trace) { conditionId = 27; }
                 switch(conditionId)
                 {
+                    // x.typ is unchanged
                     case 0:
                     {
-                        // append(s S, x ...T) S, where T is the element type of S
-                        // spec: "The variadic function append appends zero or more values x to s of type
-                        // S, which must be a slice type, and returns the resulting slice, also of type S.
-                        // The values x are passed to a parameter of type ...T where T is the element type
-                        // of S and the respective parameter passing rules apply."
-                        auto S = x->typ;
-                        golang::types::Type T = {};
-                        if(auto [s, gocpp_id_0] = gocpp::getValue<Slice*>(coreType(S)); s != nullptr)
+                        // In either case, the first argument must be a slice; in particular it
+                        // cannot be the predeclared nil value. Note that nil is not excluded by
+                        // the assignability requirement alone for the special case (go.dev/issue/76220).
+                        // spec: "If S is a type parameter, all types in its type set
+                        // must have the same underlying slice type []E."
+                        auto [E, err] = sliceElem(x);
+                        if(err != nullptr)
                         {
-                            T = s->elem;
-                        }
-                        else
-                        {
-                            gocpp::string cause = {};
-                            //Go switch emulation
-                            {
-                                int conditionId = -1;
-                                if(rec::isNil(gocpp::recv(x))) { conditionId = 0; }
-                                else if(isTypeParam(S)) { conditionId = 1; }
-                                switch(conditionId)
-                                {
-                                    case 0:
-                                        cause = "have untyped nil"_s;
-                                        break;
-                                    case 1:
-                                        if(auto u = coreType(S); u != nullptr)
-                                        {
-                                            cause = rec::sprintf(gocpp::recv(check), "%s has core type %s"_s, x, u);
-                                        }
-                                        else
-                                        {
-                                            cause = rec::sprintf(gocpp::recv(check), "%s has no core type"_s, x);
-                                        }
-                                        break;
-                                    default:
-                                        cause = rec::sprintf(gocpp::recv(check), "have %s"_s, x);
-                                        break;
-                                }
-                            }
-                            // don't use invalidArg prefix here as it would repeat "argument" in the error message
-                            rec::errorf(gocpp::recv(check), x, InvalidAppend, "first argument to append must be a slice; %s"_s, cause);
+                            rec::errorf(gocpp::recv(check), x, InvalidAppend, "invalid append: %s"_s, rec::format(gocpp::recv(err), check));
                             return _1;
                         }
-                        // spec: "As a special case, append also accepts a first argument assignable
-                        // to type []byte with a second argument of string type followed by ... .
-                        // This form appends the bytes of the string.
-                        if(nargs == 2 && rec::IsValid(gocpp::recv(call->Ellipsis)))
+                        // Handle append(bytes, y...) special case, where
+                        // the type set of y is {string} or {string, []byte}.
+                        golang::go::types::Signature* sig = {};
+                        if(nargs == 2 && hasDots(call))
                         {
-                            if(auto [ok, gocpp_id_1] = rec::assignableTo(gocpp::recv(x), check, NewSlice(universeByte), nullptr); ok)
+                            if(auto [ok, gocpp_id_0] = rec::assignableTo(gocpp::recv(x), check, NewSlice(universeByte), nullptr); ok)
                             {
                                 auto y = args[1];
-                                if(auto t = coreString(y->typ); t != nullptr && isString(t))
+                                auto hasString = false;
+                                for(auto [gocpp_ignored, u] : types::typeset(rec::typ(gocpp::recv(y))))
                                 {
-                                    if(rec::recordTypes(gocpp::recv(check)))
+                                    if(auto [s, gocpp_id_1] = gocpp::getValue<Slice*>(u); s != nullptr && Identical(s->elem, universeByte))
                                     {
-                                        auto sig = makeSig(S, S, y->typ);
-                                        sig->variadic = true;
-                                        rec::recordBuiltinType(gocpp::recv(check), call->Fun, sig);
                                     }
-                                    x->mode = value;
-                                    x->typ = S;
-                                    break;
+                                    else
+                                    // typeset ⊇ {[]byte}
+                                    if(u != nullptr && isString(u))
+                                    {
+                                        // typeset ⊇ {string}
+                                        hasString = true;
+                                    }
+                                    else
+                                    {
+                                        y = nullptr;
+                                        break;
+                                    }
+                                }
+                                if(y != nullptr && hasString)
+                                {
+                                    // setting the signature also signals that we're done
+                                    sig = makeSig(rec::typ(gocpp::recv(x)), rec::typ(gocpp::recv(x)), rec::typ(gocpp::recv(y)));
+                                    sig->variadic = true;
                                 }
                             }
                         }
-                        // check general case by creating custom signature
-                        // []T required for variadic signature
-                        auto sig = makeSig(S, S, NewSlice(T));
-                        sig->variadic = true;
-                        // discard result (we know the result type)
-                        // ok to continue even if check.arguments reported errors
-                        rec::arguments(gocpp::recv(check), call, sig, nullptr, nullptr, args, nullptr, nullptr);
-                        x->mode = value;
-                        x->typ = S;
+                        // general case
+                        if(sig == nullptr)
+                        {
+                            // check arguments by creating custom signature
+                            // []E required for variadic signature
+                            sig = makeSig(rec::typ(gocpp::recv(x)), rec::typ(gocpp::recv(x)), NewSlice(E));
+                            sig->variadic = true;
+                            // discard result (we know the result type)
+                            // ok to continue even if check.arguments reported errors
+                            rec::arguments(gocpp::recv(check), call, sig, nullptr, nullptr, args, nullptr);
+                        }
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
                             rec::recordBuiltinType(gocpp::recv(check), call->Fun, sig);
                         }
+                        x->mode_ = value;
                         break;
                     }
+
 
                     case 1:
                     case 2:
@@ -288,7 +283,7 @@ namespace golang::types
                         constant::Value val = {};
                         //Go type switch emulation
                         {
-                            const auto& gocpp_id_2 = gocpp::type_info(arrayPtrDeref(types::under(x->typ)));
+                            const auto& gocpp_id_2 = gocpp::type_info(arrayPtrDeref(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))));
                             int conditionId = -1;
                             if(gocpp_id_2 == typeid(types::Basic*)) { conditionId = 0; }
                             else if(gocpp_id_2 == typeid(types::Array*)) { conditionId = 1; }
@@ -300,13 +295,13 @@ namespace golang::types
                             {
                                 case 0:
                                 {
-                                    types::Basic* t = gocpp::any_cast<types::Basic*>(arrayPtrDeref(types::under(x->typ)));
+                                    types::Basic* t = gocpp::any_cast<types::Basic*>(arrayPtrDeref(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))));
                                     if(isString(t) && id == _Len)
                                     {
-                                        if(x->mode == constant_)
+                                        if(rec::mode(gocpp::recv(x)) == constant_)
                                         {
                                             mode = constant_;
-                                            val = constant::MakeInt64(int64_t(len(constant::StringVal(x->val))));
+                                            val = constant::MakeInt64(constant::StringLen(x->val));
                                         }
                                         else
                                         {
@@ -318,7 +313,7 @@ namespace golang::types
 
                                 case 1:
                                 {
-                                    types::Array* t = gocpp::any_cast<types::Array*>(arrayPtrDeref(types::under(x->typ)));
+                                    types::Array* t = gocpp::any_cast<types::Array*>(arrayPtrDeref(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))));
                                     mode = value;
                                     // spec: "The expressions len(s) and cap(s) are constants
                                     // if the type of s is an array or pointer to an array and
@@ -342,14 +337,14 @@ namespace golang::types
                                 case 2:
                                 case 3:
                                 {
-                                    types::Slice* t = gocpp::any_cast<types::Slice*>(arrayPtrDeref(types::under(x->typ)));
+                                    types::Slice* t = gocpp::any_cast<types::Slice*>(arrayPtrDeref(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))));
                                     mode = value;
                                     break;
                                 }
 
                                 case 4:
                                 {
-                                    types::Map* t = gocpp::any_cast<types::Map*>(arrayPtrDeref(types::under(x->typ)));
+                                    types::Map* t = gocpp::any_cast<types::Map*>(arrayPtrDeref(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))));
                                     if(id == _Len)
                                     {
                                         mode = value;
@@ -359,16 +354,16 @@ namespace golang::types
 
                                 case 5:
                                 {
-                                    types::Interface* t = gocpp::any_cast<types::Interface*>(arrayPtrDeref(types::under(x->typ)));
-                                    if(! isTypeParam(x->typ))
+                                    types::Interface* t = gocpp::any_cast<types::Interface*>(arrayPtrDeref(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))));
+                                    if(! isTypeParam(rec::typ(gocpp::recv(x))))
                                     {
                                         break;
                                     }
-                                    if(rec::underIs(gocpp::recv(rec::typeSet(gocpp::recv(t))), [=](golang::types::Type t) mutable -> bool
+                                    if(underIs(rec::typ(gocpp::recv(x)), [=](golang::go::types::Type u) mutable -> bool
                                     {
                                         //Go type switch emulation
                                         {
-                                            const auto& gocpp_id_3 = gocpp::type_info(arrayPtrDeref(t));
+                                            const auto& gocpp_id_3 = gocpp::type_info(arrayPtrDeref(u));
                                             int conditionId = -1;
                                             if(gocpp_id_3 == typeid(types::Basic*)) { conditionId = 0; }
                                             else if(gocpp_id_3 == typeid(types::Array*)) { conditionId = 1; }
@@ -379,7 +374,7 @@ namespace golang::types
                                             {
                                                 case 0:
                                                 {
-                                                    types::Basic* t = gocpp::any_cast<types::Basic*>(arrayPtrDeref(t));
+                                                    types::Basic* t = gocpp::any_cast<types::Basic*>(arrayPtrDeref(u));
                                                     if(isString(t) && id == _Len)
                                                     {
                                                         return true;
@@ -390,13 +385,13 @@ namespace golang::types
                                                 case 2:
                                                 case 3:
                                                 {
-                                                    types::Array* t = gocpp::any_cast<types::Array*>(arrayPtrDeref(t));
+                                                    types::Array* t = gocpp::any_cast<types::Array*>(arrayPtrDeref(u));
                                                     return true;
                                                     break;
                                                 }
                                                 case 4:
                                                 {
-                                                    types::Map* t = gocpp::any_cast<types::Map*>(arrayPtrDeref(t));
+                                                    types::Map* t = gocpp::any_cast<types::Map*>(arrayPtrDeref(u));
                                                     if(id == _Len)
                                                     {
                                                         return true;
@@ -417,24 +412,24 @@ namespace golang::types
                         if(mode == invalid)
                         {
                             // avoid error if underlying type is invalid
-                            if(types::isValid(types::under(x->typ)))
+                            if(types::isValid(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))))
                             {
                                 auto code = InvalidCap;
                                 if(id == _Len)
                                 {
                                     code = InvalidLen;
                                 }
-                                rec::errorf(gocpp::recv(check), x, code, invalidArg + "%s for %s"_s, x, bin.name);
+                                rec::errorf(gocpp::recv(check), x, code, invalidArg + "%s for built-in %s"_s, x, bin.name);
                             }
                             return _1;
                         }
                         // record the signature before changing x.typ
                         if(rec::recordTypes(gocpp::recv(check)) && mode != constant_)
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(Typ[Int], x->typ));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(Typ[Int], rec::typ(gocpp::recv(x))));
                         }
-                        x->mode = mode;
-                        x->typ = Typ[Int];
+                        x->mode_ = mode;
+                        x->typ_ = Typ[Int];
                         x->val = val;
                         break;
                     }
@@ -442,7 +437,7 @@ namespace golang::types
                     case 3:
                         // clear(m)
                         rec::verifyVersionf(gocpp::recv(check), call->Fun, go1_21, "clear"_s);
-                        if(! types::underIs(x->typ, [=](golang::types::Type u) mutable -> bool
+                        if(! underIs(rec::typ(gocpp::recv(x)), [=](golang::go::types::Type u) mutable -> bool
                         {
                             //Go type switch emulation
                             {
@@ -466,16 +461,16 @@ namespace golang::types
                         {
                             return _1;
                         }
-                        x->mode = novalue;
+                        x->mode_ = novalue;
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(nullptr, x->typ));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(nullptr, rec::typ(gocpp::recv(x))));
                         }
                         break;
 
                     case 4:
                         // close(c)
-                        if(! types::underIs(x->typ, [=](golang::types::Type u) mutable -> bool
+                        if(! underIs(rec::typ(gocpp::recv(x)), [=](golang::go::types::Type u) mutable -> bool
                         {
                             auto [uch, gocpp_id_5] = gocpp::getValue<Chan*>(u);
                             if(uch == nullptr)
@@ -493,10 +488,10 @@ namespace golang::types
                         {
                             return _1;
                         }
-                        x->mode = novalue;
+                        x->mode_ = novalue;
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(nullptr, x->typ));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(nullptr, rec::typ(gocpp::recv(x))));
                         }
                         break;
 
@@ -506,11 +501,11 @@ namespace golang::types
                         auto y = args[1];
                         // convert or check untyped arguments
                         auto d = 0;
-                        if(isUntyped(x->typ))
+                        if(isUntyped(rec::typ(gocpp::recv(x))))
                         {
                             d |= 1;
                         }
-                        if(isUntyped(y->typ))
+                        if(isUntyped(rec::typ(gocpp::recv(y))))
                         {
                             d |= 2;
                         }
@@ -529,11 +524,11 @@ namespace golang::types
                                 // x and y are typed => nothing to do
                                 case 1:
                                     // only x is untyped => convert to type of y
-                                    rec::convertUntyped(gocpp::recv(check), x, y->typ);
+                                    rec::convertUntyped(gocpp::recv(check), x, rec::typ(gocpp::recv(y)));
                                     break;
                                 case 2:
                                     // only y is untyped => convert to type of x
-                                    rec::convertUntyped(gocpp::recv(check), y, x->typ);
+                                    rec::convertUntyped(gocpp::recv(check), y, rec::typ(gocpp::recv(x)));
                                     break;
                                 case 3:
                                     // x and y are untyped =>
@@ -544,13 +539,13 @@ namespace golang::types
                                     // both of them to float64 since they must have the
                                     // same type to succeed (this will result in an error
                                     // because shifts of floats are not permitted)
-                                    if(x->mode == constant_ && y->mode == constant_)
+                                    if(rec::mode(gocpp::recv(x)) == constant_ && rec::mode(gocpp::recv(y)) == constant_)
                                     {
                                         auto toFloat = [=](operand* x) mutable -> void
                                         {
-                                            if(isNumeric(x->typ) && constant::Sign(constant::Imag(x->val)) == 0)
+                                            if(isNumeric(rec::typ(gocpp::recv(x))) && constant::Sign(constant::Imag(x->val)) == 0)
                                             {
-                                                x->typ = Typ[UntypedFloat];
+                                                x->typ_ = Typ[UntypedFloat];
                                             }
                                         };
                                         toFloat(x);
@@ -566,22 +561,22 @@ namespace golang::types
                                     break;
                             }
                         }
-                        if(x->mode == invalid || y->mode == invalid)
+                        if(! rec::isValid(gocpp::recv(x)) || ! rec::isValid(gocpp::recv(y)))
                         {
                             return _1;
                         }
                         // both argument types must be identical
-                        if(! Identical(x->typ, y->typ))
+                        if(! Identical(rec::typ(gocpp::recv(x)), rec::typ(gocpp::recv(y))))
                         {
-                            rec::errorf(gocpp::recv(check), x, InvalidComplex, invalidOp + "%v (mismatched types %s and %s)"_s, call, x->typ, y->typ);
+                            rec::errorf(gocpp::recv(check), x, InvalidComplex, invalidOp + "%v (mismatched types %s and %s)"_s, call, rec::typ(gocpp::recv(x)), rec::typ(gocpp::recv(y)));
                             return _1;
                         }
                         // the argument types must be of floating-point type
                         // (applyTypeFunc never calls f with a type parameter)
-                        auto f = [=](golang::types::Type typ) mutable -> golang::types::Type
+                        auto f = [=](golang::go::types::Type typ) mutable -> golang::go::types::Type
                         {
                             assert(! isTypeParam(typ));
-                            if(auto [t, gocpp_id_6] = gocpp::getValue<Basic*>(under(typ)); t != nullptr)
+                            if(auto [t, gocpp_id_6] = gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(typ))); t != nullptr)
                             {
                                 //Go switch emulation
                                 {
@@ -609,53 +604,91 @@ namespace golang::types
                         auto resTyp = rec::applyTypeFunc(gocpp::recv(check), f, x, id);
                         if(resTyp == nullptr)
                         {
-                            rec::errorf(gocpp::recv(check), x, InvalidComplex, invalidArg + "arguments have type %s, expected floating-point"_s, x->typ);
+                            rec::errorf(gocpp::recv(check), x, InvalidComplex, invalidArg + "arguments have type %s, expected floating-point"_s, rec::typ(gocpp::recv(x)));
                             return _1;
                         }
                         // if both arguments are constants, the result is a constant
-                        if(x->mode == constant_ && y->mode == constant_)
+                        if(rec::mode(gocpp::recv(x)) == constant_ && rec::mode(gocpp::recv(y)) == constant_)
                         {
                             x->val = constant::BinaryOp(constant::ToFloat(x->val), token::ADD, constant::MakeImag(constant::ToFloat(y->val)));
                         }
                         else
                         {
-                            x->mode = value;
+                            x->mode_ = value;
                         }
-                        if(rec::recordTypes(gocpp::recv(check)) && x->mode != constant_)
+                        if(rec::recordTypes(gocpp::recv(check)) && rec::mode(gocpp::recv(x)) != constant_)
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(resTyp, x->typ, x->typ));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(resTyp, rec::typ(gocpp::recv(x)), rec::typ(gocpp::recv(x))));
                         }
-                        x->typ = resTyp;
+                        x->typ_ = resTyp;
                         break;
                     }
 
                     case 6:
                     {
-                        // copy(x, y []T) int
-                        auto [dst, gocpp_id_7] = gocpp::getValue<Slice*>(coreType(x->typ));
+                        // In either case, the first argument must be a slice; in particular it
+                        // cannot be the predeclared nil value. Note that nil is not excluded by
+                        // the assignability requirement alone for the special case (go.dev/issue/79687).
+                        // spec: "If the type of one or both arguments is a type parameter, all types
+                        // in their respective type sets must have the same underlying slice type []E."
+                        types::Type dstE;
+                        std::tie(dstE, err) = sliceElem(x);
+                        if(err != nullptr)
+                        {
+                            rec::errorf(gocpp::recv(check), x, InvalidCopy, "invalid copy: %s"_s, rec::format(gocpp::recv(err), check));
+                            return _1;
+                        }
+                        // get special case out of the way
                         auto y = args[1];
-                        auto src0 = coreString(y->typ);
-                        if(src0 != nullptr && isString(src0))
+                        bool special = {};
+                        if(auto [ok, gocpp_id_7] = rec::assignableTo(gocpp::recv(x), check, NewSlice(universeByte), nullptr); ok)
                         {
-                            src0 = NewSlice(universeByte);
+                            special = true;
+                            for(auto [gocpp_ignored, u] : types::typeset(rec::typ(gocpp::recv(y))))
+                            {
+                                if(auto [s, gocpp_id_8] = gocpp::getValue<Slice*>(u); s != nullptr && Identical(s->elem, universeByte))
+                                {
+                                }
+                                else
+                                // typeset ⊇ {[]byte}
+                                if(u != nullptr && isString(u))
+                                {
+                                }
+                                else
+                                // typeset ⊇ {string}
+                                // typeset ⊇ {string}
+                                {
+                                    special = false;
+                                    break;
+                                }
+                            }
                         }
-                        auto [src, gocpp_id_8] = gocpp::getValue<Slice*>(src0);
-                        if(dst == nullptr || src == nullptr)
+                        // general case
+                        if(! special)
                         {
-                            rec::errorf(gocpp::recv(check), x, InvalidCopy, invalidArg + "copy expects slice arguments; found %s and %s"_s, x, y);
-                            return _1;
-                        }
-                        if(! Identical(dst->elem, src->elem))
-                        {
-                            rec::errorf(gocpp::recv(check), x, InvalidCopy, invalidArg + "arguments to copy %s and %s have different element types %s and %s"_s, x, y, dst->elem, src->elem);
-                            return _1;
+                            auto [srcE, err] = sliceElem(y);
+                            if(err != nullptr)
+                            {
+                                // If we have a string, for a better error message proceed with byte element type.
+                                if(! allString(rec::typ(gocpp::recv(y))))
+                                {
+                                    rec::errorf(gocpp::recv(check), y, InvalidCopy, "invalid copy: %s"_s, rec::format(gocpp::recv(err), check));
+                                    return _1;
+                                }
+                                srcE = universeByte;
+                            }
+                            if(! Identical(dstE, srcE))
+                            {
+                                rec::errorf(gocpp::recv(check), x, InvalidCopy, "invalid copy: arguments %s and %s have different element types %s and %s"_s, x, y, dstE, srcE);
+                                return _1;
+                            }
                         }
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(Typ[Int], x->typ, y->typ));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(Typ[Int], rec::typ(gocpp::recv(x)), rec::typ(gocpp::recv(y))));
                         }
-                        x->mode = value;
-                        x->typ = Typ[Int];
+                        x->mode_ = value;
+                        x->typ_ = Typ[Int];
                         break;
                     }
 
@@ -664,9 +697,9 @@ namespace golang::types
                         // delete(map_, key)
                         // map_ must be a map type or a type parameter describing map types.
                         // The key cannot be a type parameter for now.
-                        auto map_ = x->typ;
-                        golang::types::Type key = {};
-                        if(! types::underIs(map_, [=](golang::types::Type u) mutable -> bool
+                        auto map_ = rec::typ(gocpp::recv(x));
+                        golang::go::types::Type key = {};
+                        if(! underIs(map_, [=](golang::go::types::Type u) mutable -> bool
                         {
                             auto [map_, gocpp_id_9] = gocpp::getValue<Map*>(u);
                             if(map_ == nullptr)
@@ -688,11 +721,11 @@ namespace golang::types
                         // key
                         *x = *args[1];
                         rec::assignment(gocpp::recv(check), x, key, "argument to delete"_s);
-                        if(x->mode == invalid)
+                        if(! rec::isValid(gocpp::recv(x)))
                         {
                             return _1;
                         }
-                        x->mode = novalue;
+                        x->mode_ = novalue;
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
                             rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(nullptr, map_, key));
@@ -704,15 +737,15 @@ namespace golang::types
                     case 9:
                     {
                         // convert or check untyped argument
-                        if(isUntyped(x->typ))
+                        if(isUntyped(rec::typ(gocpp::recv(x))))
                         {
-                            if(x->mode == constant_)
+                            if(rec::mode(gocpp::recv(x)) == constant_)
                             {
                                 // an untyped constant number can always be considered
                                 // as a complex constant
-                                if(isNumeric(x->typ))
+                                if(isNumeric(rec::typ(gocpp::recv(x))))
                                 {
-                                    x->typ = Typ[UntypedComplex];
+                                    x->typ_ = Typ[UntypedComplex];
                                 }
                             }
                             else
@@ -723,7 +756,7 @@ namespace golang::types
                                 // result in an error (shift of complex value)
                                 rec::convertUntyped(gocpp::recv(check), x, Typ[Complex128]);
                                 // x should be invalid now, but be conservative and check
-                                if(x->mode == invalid)
+                                if(! rec::isValid(gocpp::recv(x)))
                                 {
                                     return _1;
                                 }
@@ -731,10 +764,10 @@ namespace golang::types
                         }
                         // the argument must be of complex type
                         // (applyTypeFunc never calls f with a type parameter)
-                        auto f = [=](golang::types::Type typ) mutable -> golang::types::Type
+                        auto f = [=](golang::go::types::Type typ) mutable -> golang::go::types::Type
                         {
                             assert(! isTypeParam(typ));
-                            if(auto [t, gocpp_id_10] = gocpp::getValue<Basic*>(under(typ)); t != nullptr)
+                            if(auto [t, gocpp_id_10] = gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(typ))); t != nullptr)
                             {
                                 //Go switch emulation
                                 {
@@ -767,11 +800,11 @@ namespace golang::types
                             {
                                 code = InvalidReal;
                             }
-                            rec::errorf(gocpp::recv(check), x, code, invalidArg + "argument has type %s, expected complex type"_s, x->typ);
+                            rec::errorf(gocpp::recv(check), x, code, invalidArg + "argument has type %s, expected complex type"_s, rec::typ(gocpp::recv(x)));
                             return _1;
                         }
                         // if the argument is a constant, the result is a constant
-                        if(x->mode == constant_)
+                        if(rec::mode(gocpp::recv(x)) == constant_)
                         {
                             if(id == _Real)
                             {
@@ -784,13 +817,13 @@ namespace golang::types
                         }
                         else
                         {
-                            x->mode = value;
+                            x->mode_ = value;
                         }
-                        if(rec::recordTypes(gocpp::recv(check)) && x->mode != constant_)
+                        if(rec::recordTypes(gocpp::recv(check)) && rec::mode(gocpp::recv(x)) != constant_)
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(resTyp, x->typ));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(resTyp, rec::typ(gocpp::recv(x))));
                         }
-                        x->typ = resTyp;
+                        x->typ_ = resTyp;
                         break;
                     }
 
@@ -805,16 +838,54 @@ namespace golang::types
                         {
                             return _1;
                         }
+                        std::tie(u_tmp, err) = commonUnder(T, [=](golang::go::types::Type _1, golang::go::types::Type u) mutable -> typeError*
+                        {
+                            //Go type switch emulation
+                            {
+                                const auto& gocpp_id_11 = gocpp::type_info(u);
+                                int conditionId = -1;
+                                if(gocpp_id_11 == typeid(types::Slice*)) { conditionId = 0; }
+                                else if(gocpp_id_11 == typeid(types::Map*)) { conditionId = 1; }
+                                else if(gocpp_id_11 == typeid(types::Chan*)) { conditionId = 2; }
+                                else if(gocpp_id_11 == typeid(untyped nil)) { conditionId = 3; }
+                                switch(conditionId)
+                                {
+                                    // ok
+                                    case 0:
+                                    case 1:
+                                    case 2:
+                                    {
+                                        return nullptr;
+                                        break;
+                                    }
+                                    case 3:
+                                    {
+                                        return typeErrorf("no specific type"_s);
+                                        break;
+                                    }
+                                    default:
+                                    {
+                                        return typeErrorf("type must be slice, map, or channel"_s);
+                                        break;
+                                    }
+                                }
+                            }
+                        });
+                        auto& u = u_tmp;
+                        if(err != nullptr)
+                        {
+                            rec::errorf(gocpp::recv(check), arg0, InvalidMake, invalidArg + "cannot make %s: %s"_s, arg0, rec::format(gocpp::recv(err), check));
+                            return _1;
+                        }
                         // minimum number of arguments
                         int min = {};
                         //Go type switch emulation
                         {
-                            const auto& gocpp_id_11 = gocpp::type_info(coreType(T));
+                            const auto& gocpp_id_12 = gocpp::type_info(u);
                             int conditionId = -1;
-                            if(gocpp_id_11 == typeid(types::Slice*)) { conditionId = 0; }
-                            else if(gocpp_id_11 == typeid(types::Map*)) { conditionId = 1; }
-                            else if(gocpp_id_11 == typeid(types::Chan*)) { conditionId = 2; }
-                            else if(gocpp_id_11 == typeid(untyped nil)) { conditionId = 3; }
+                            if(gocpp_id_12 == typeid(types::Slice*)) { conditionId = 0; }
+                            else if(gocpp_id_12 == typeid(types::Map*)) { conditionId = 1; }
+                            else if(gocpp_id_12 == typeid(types::Chan*)) { conditionId = 2; }
                             switch(conditionId)
                             {
                                 case 0:
@@ -828,16 +899,10 @@ namespace golang::types
                                     min = 1;
                                     break;
                                 }
-                                case 3:
-                                {
-                                    rec::errorf(gocpp::recv(check), arg0, InvalidMake, invalidArg + "cannot make %s: no core type"_s, arg0);
-                                    return _1;
-                                    break;
-                                }
                                 default:
                                 {
-                                    rec::errorf(gocpp::recv(check), arg0, InvalidMake, invalidArg + "cannot make %s; type must be slice, map, or channel"_s, arg0);
-                                    return _1;
+                                    // any other type was excluded above
+                                    gocpp::panic("unreachable"_s);
                                     break;
                                 }
                             }
@@ -847,7 +912,7 @@ namespace golang::types
                             rec::errorf(gocpp::recv(check), call, WrongArgCount, invalidOp + "%v expects %d or %d arguments; found %d"_s, call, min, min + 1, nargs);
                             return _1;
                         }
-                        auto types = gocpp::slice<golang::types::Type> {T};
+                        auto types = gocpp::slice<golang::go::types::Type> {T};
                         // constant integer arguments, if any
                         gocpp::slice<int64_t> sizes = {};
                         for(auto [gocpp_ignored, arg] : argList.make_slice(1))
@@ -865,11 +930,11 @@ namespace golang::types
                             // safe to continue
                             rec::error(gocpp::recv(check), argList[1], SwappedMakeArgs, invalidArg + "length and capacity swapped"_s);
                         }
-                        x->mode = value;
-                        x->typ = T;
+                        x->mode_ = value;
+                        x->typ_ = T;
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(x->typ, types));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(rec::typ(gocpp::recv(x)), types));
                         }
                         break;
                     }
@@ -879,7 +944,7 @@ namespace golang::types
                     {
                         // max(x, ...)
                         // min(x, ...)
-                        rec::verifyVersionf(gocpp::recv(check), call->Fun, go1_21, bin.name);
+                        rec::verifyVersionf(gocpp::recv(check), call->Fun, go1_21, "built-in %s"_s, bin.name);
                         auto op = token::LSS;
                         if(id == _Max)
                         {
@@ -887,12 +952,12 @@ namespace golang::types
                         }
                         for(auto [i, a] : args)
                         {
-                            if(a->mode == invalid)
+                            if(! rec::isValid(gocpp::recv(a)))
                             {
                                 return _1;
                             }
 
-                            if(! allOrdered(a->typ))
+                            if(! allOrdered(rec::typ(gocpp::recv(a))))
                             {
                                 rec::errorf(gocpp::recv(check), a, InvalidMinMaxOperand, invalidArg + "%s cannot be ordered"_s, a);
                                 return _1;
@@ -902,18 +967,18 @@ namespace golang::types
                             if(i > 0)
                             {
                                 rec::matchTypes(gocpp::recv(check), x, a);
-                                if(x->mode == invalid)
+                                if(! rec::isValid(gocpp::recv(x)))
                                 {
                                     return _1;
                                 }
 
-                                if(! Identical(x->typ, a->typ))
+                                if(! Identical(rec::typ(gocpp::recv(x)), rec::typ(gocpp::recv(a))))
                                 {
-                                    rec::errorf(gocpp::recv(check), a, MismatchedTypes, invalidArg + "mismatched types %s (previous argument) and %s (type of %s)"_s, x->typ, a->typ, a->expr);
+                                    rec::errorf(gocpp::recv(check), a, MismatchedTypes, invalidArg + "mismatched types %s (previous argument) and %s (type of %s)"_s, rec::typ(gocpp::recv(x)), rec::typ(gocpp::recv(a)), a->expr);
                                     return _1;
                                 }
 
-                                if(x->mode == constant_ && a->mode == constant_)
+                                if(rec::mode(gocpp::recv(x)) == constant_ && rec::mode(gocpp::recv(a)) == constant_)
                                 {
                                     if(constant::Compare(a->val, op, x->val))
                                     {
@@ -922,17 +987,17 @@ namespace golang::types
                                 }
                                 else
                                 {
-                                    x->mode = value;
+                                    x->mode_ = value;
                                 }
                             }
                         }
                         // If nargs == 1, make sure x.mode is either a value or a constant.
-                        if(x->mode != constant_)
+                        if(rec::mode(gocpp::recv(x)) != constant_)
                         {
-                            x->mode = value;
+                            x->mode_ = value;
                             // A value must not be untyped.
-                            rec::assignment(gocpp::recv(check), x, & emptyInterface, "argument to "_s + bin.name);
-                            if(x->mode == invalid)
+                            rec::assignment(gocpp::recv(check), x, & emptyInterface, "argument to built-in "_s + bin.name);
+                            if(! rec::isValid(gocpp::recv(x)))
                             {
                                 return _1;
                             }
@@ -940,36 +1005,65 @@ namespace golang::types
                         // Use the final type computed above for all arguments.
                         for(auto [gocpp_ignored, a] : args)
                         {
-                            rec::updateExprType(gocpp::recv(check), a->expr, x->typ, true);
+                            rec::updateExprType(gocpp::recv(check), a->expr, rec::typ(gocpp::recv(x)), true);
                         }
-                        if(rec::recordTypes(gocpp::recv(check)) && x->mode != constant_)
+                        if(rec::recordTypes(gocpp::recv(check)) && rec::mode(gocpp::recv(x)) != constant_)
                         {
-                            auto types = gocpp::make(gocpp::Tag<gocpp::slice<golang::types::Type>>(), nargs);
+                            auto types = gocpp::make(gocpp::Tag<gocpp::slice<golang::go::types::Type>>(), nargs);
                             for(auto [i, gocpp_ignored] : types)
                             {
-                                types[i] = x->typ;
+                                types[i] = rec::typ(gocpp::recv(x));
                             }
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(x->typ, types));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(rec::typ(gocpp::recv(x)), types));
                         }
                         break;
                     }
 
                     case 13:
                     {
-                        // new(T)
+                        // new(T) or new(expr)
                         // (no argument evaluated yet)
-                        auto T = rec::varType(gocpp::recv(check), argList[0]);
-                        if(! types::isValid(T))
+                        auto arg = argList[0];
+                        rec::exprOrType(gocpp::recv(check), x, arg, false);
+                        rec::exclude(gocpp::recv(check), x, (1 << novalue) | (1 << types::builtin));
+                        //Go switch emulation
                         {
-                            return _1;
+                            auto condition = rec::mode(gocpp::recv(x));
+                            int conditionId = -1;
+                            if(condition == invalid) { conditionId = 0; }
+                            else if(condition == typexpr) { conditionId = 1; }
+                            switch(conditionId)
+                            {
+                                case 0:
+                                    return _1;
+                                    break;
+                                case 1:
+                                    // new(T)
+                                    rec::validVarType(gocpp::recv(check), arg, rec::typ(gocpp::recv(x)));
+                                    break;
+                                default:
+                                    // new(expr)
+                                    if(isUntyped(rec::typ(gocpp::recv(x))))
+                                    {
+                                        // check for overflow and untyped nil
+                                        rec::assignment(gocpp::recv(check), x, nullptr, "argument to new"_s);
+                                        if(! rec::isValid(gocpp::recv(x)))
+                                        {
+                                            return _1;
+                                        }
+                                        assert(isTyped(rec::typ(gocpp::recv(x))));
+                                    }
+                                    // report version error only if there are no other errors
+                                    rec::verifyVersionf(gocpp::recv(check), call->Fun, go1_26, "new(%s)"_s, arg);
+                                    break;
+                            }
                         }
-                        x->mode = value;
-                        x->typ = gocpp::InitPtr<Pointer>([=](auto& z) {
-                            z.base = T;
-                        });
+                        auto T = rec::typ(gocpp::recv(x));
+                        x->mode_ = value;
+                        x->typ_ = NewPointer(T);
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(x->typ, T));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(rec::typ(gocpp::recv(x)), T));
                         }
                         break;
                     }
@@ -991,11 +1085,11 @@ namespace golang::types
                             p[call] = true;
                         }
                         rec::assignment(gocpp::recv(check), x, & emptyInterface, "argument to panic"_s);
-                        if(x->mode == invalid)
+                        if(! rec::isValid(gocpp::recv(x)))
                         {
                             return _1;
                         }
-                        x->mode = novalue;
+                        x->mode_ = novalue;
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
                             rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(nullptr, & emptyInterface));
@@ -1006,21 +1100,21 @@ namespace golang::types
                     case 16:
                         // print(x, y, ...)
                         // println(x, y, ...)
-                        gocpp::slice<golang::types::Type> params = {};
+                        gocpp::slice<golang::go::types::Type> params = {};
                         if(nargs > 0)
                         {
-                            params = gocpp::make(gocpp::Tag<gocpp::slice<golang::types::Type>>(), nargs);
+                            params = gocpp::make(gocpp::Tag<gocpp::slice<golang::go::types::Type>>(), nargs);
                             for(auto [i, a] : args)
                             {
-                                rec::assignment(gocpp::recv(check), a, nullptr, "argument to "_s + predeclaredFuncs[id].name);
-                                if(a->mode == invalid)
+                                rec::assignment(gocpp::recv(check), a, nullptr, "argument to built-in "_s + predeclaredFuncs[id].name);
+                                if(! rec::isValid(gocpp::recv(a)))
                                 {
                                     return _1;
                                 }
-                                params[i] = a->typ;
+                                params[i] = rec::typ(gocpp::recv(a));
                             }
                         }
-                        x->mode = novalue;
+                        x->mode_ = novalue;
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
                             rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(nullptr, params));
@@ -1029,11 +1123,11 @@ namespace golang::types
 
                     case 17:
                         // recover() interface{}
-                        x->mode = value;
-                        x->typ = & emptyInterface;
+                        x->mode_ = value;
+                        x->typ_ = & emptyInterface;
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(x->typ));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(rec::typ(gocpp::recv(x))));
                         }
                         break;
 
@@ -1042,7 +1136,7 @@ namespace golang::types
                         // unsafe.Add(ptr unsafe.Pointer, len IntegerType) unsafe.Pointer
                         rec::verifyVersionf(gocpp::recv(check), call->Fun, go1_17, "unsafe.Add"_s);
                         rec::assignment(gocpp::recv(check), x, Typ[UnsafePointer], "argument to unsafe.Add"_s);
-                        if(x->mode == invalid)
+                        if(! rec::isValid(gocpp::recv(x)))
                         {
                             return _1;
                         }
@@ -1051,11 +1145,11 @@ namespace golang::types
                         {
                             return _1;
                         }
-                        x->mode = value;
-                        x->typ = Typ[UnsafePointer];
+                        x->mode_ = value;
+                        x->typ_ = Typ[UnsafePointer];
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(x->typ, x->typ, y->typ));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(rec::typ(gocpp::recv(x)), rec::typ(gocpp::recv(x)), rec::typ(gocpp::recv(y))));
                         }
                         break;
                     }
@@ -1063,25 +1157,25 @@ namespace golang::types
                     case 19:
                         // unsafe.Alignof(x T) uintptr
                         rec::assignment(gocpp::recv(check), x, nullptr, "argument to unsafe.Alignof"_s);
-                        if(x->mode == invalid)
+                        if(! rec::isValid(gocpp::recv(x)))
                         {
                             return _1;
                         }
-                        if(hasVarSize(x->typ, nullptr))
+                        if(rec::hasVarSize(gocpp::recv(check), rec::typ(gocpp::recv(x))))
                         {
-                            x->mode = value;
+                            x->mode_ = value;
                             if(rec::recordTypes(gocpp::recv(check)))
                             {
-                                rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(Typ[Uintptr], x->typ));
+                                rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(Typ[Uintptr], rec::typ(gocpp::recv(x))));
                             }
                         }
                         else
                         {
-                            x->mode = constant_;
+                            x->mode_ = constant_;
                             // result is constant - no need to record signature
-                            x->val = constant::MakeInt64(rec::alignof(gocpp::recv(check->conf), x->typ));
+                            x->val = constant::MakeInt64(rec::go_alignof(gocpp::recv(check->conf), rec::typ(gocpp::recv(x))));
                         }
-                        x->typ = Typ[Uintptr];
+                        x->typ_ = Typ[Uintptr];
                         break;
 
                     case 20:
@@ -1089,7 +1183,7 @@ namespace golang::types
                         // unsafe.Offsetof(x T) uintptr, where x must be a selector
                         // (no argument evaluated yet)
                         auto arg0 = argList[0];
-                        auto [selx, gocpp_id_12] = gocpp::getValue<ast::SelectorExpr*>(unparen(arg0));
+                        auto [selx, gocpp_id_13] = gocpp::getValue<ast::SelectorExpr*>(ast::Unparen(arg0));
                         if(selx == nullptr)
                         {
                             rec::errorf(gocpp::recv(check), arg0, BadOffsetofSyntax, invalidArg + "%s is not a selector expression"_s, arg0);
@@ -1097,19 +1191,19 @@ namespace golang::types
                             return _1;
                         }
                         rec::expr(gocpp::recv(check), nullptr, x, selx->X);
-                        if(x->mode == invalid)
+                        if(! rec::isValid(gocpp::recv(x)))
                         {
                             return _1;
                         }
-                        auto base = derefStructPtr(x->typ);
+                        auto base = derefStructPtr(rec::typ(gocpp::recv(x)));
                         auto sel = selx->Sel->Name;
-                        auto [obj, index, indirect] = LookupFieldOrMethod(base, false, check->pkg, sel);
+                        auto [obj, index, indirect] = lookupFieldOrMethod(base, false, check->pkg, sel, false);
                         //Go type switch emulation
                         {
-                            const auto& gocpp_id_13 = gocpp::type_info(obj);
+                            const auto& gocpp_id_14 = gocpp::type_info(obj);
                             int conditionId = -1;
-                            if(gocpp_id_13 == typeid(untyped nil)) { conditionId = 0; }
-                            else if(gocpp_id_13 == typeid(types::Func*)) { conditionId = 1; }
+                            if(gocpp_id_14 == typeid(untyped nil)) { conditionId = 0; }
+                            else if(gocpp_id_14 == typeid(types::Func*)) { conditionId = 1; }
                             switch(conditionId)
                             {
                                 case 0:
@@ -1141,7 +1235,7 @@ namespace golang::types
                         // record the selector expression (was bug - go.dev/issue/47895)
                         {
                             auto mode = value;
-                            if(x->mode == variable || indirect)
+                            if(rec::mode(gocpp::recv(x)) == variable || indirect)
                             {
                                 mode = variable;
                             }
@@ -1151,9 +1245,9 @@ namespace golang::types
                         // the part of the struct which is variable-sized. This makes both the rules
                         // simpler and also permits (or at least doesn't prevent) a compiler from re-
                         // arranging struct fields if it wanted to.
-                        if(hasVarSize(base, nullptr))
+                        if(rec::hasVarSize(gocpp::recv(check), base))
                         {
-                            x->mode = value;
+                            x->mode_ = value;
                             if(rec::recordTypes(gocpp::recv(check)))
                             {
                                 rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(Typ[Uintptr], rec::Type(gocpp::recv(obj))));
@@ -1161,55 +1255,56 @@ namespace golang::types
                         }
                         else
                         {
-                            auto offs = rec::offsetof(gocpp::recv(check->conf), base, index);
+                            auto offs = rec::go_offsetof(gocpp::recv(check->conf), base, index);
                             if(offs < 0)
                             {
                                 rec::errorf(gocpp::recv(check), x, TypeTooLarge, "%s is too large"_s, x);
                                 return _1;
                             }
-                            x->mode = constant_;
+                            x->mode_ = constant_;
                             // result is constant - no need to record signature
                             x->val = constant::MakeInt64(offs);
                         }
-                        x->typ = Typ[Uintptr];
+                        x->typ_ = Typ[Uintptr];
                         break;
                     }
 
                     case 21:
                         // unsafe.Sizeof(x T) uintptr
                         rec::assignment(gocpp::recv(check), x, nullptr, "argument to unsafe.Sizeof"_s);
-                        if(x->mode == invalid)
+                        if(! rec::isValid(gocpp::recv(x)))
                         {
                             return _1;
                         }
-                        if(hasVarSize(x->typ, nullptr))
+                        if(rec::hasVarSize(gocpp::recv(check), rec::typ(gocpp::recv(x))))
                         {
-                            x->mode = value;
+                            x->mode_ = value;
                             if(rec::recordTypes(gocpp::recv(check)))
                             {
-                                rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(Typ[Uintptr], x->typ));
+                                rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(Typ[Uintptr], rec::typ(gocpp::recv(x))));
                             }
                         }
                         else
                         {
-                            auto size = rec::go_sizeof(gocpp::recv(check->conf), x->typ);
+                            auto size = rec::go_sizeof(gocpp::recv(check->conf), rec::typ(gocpp::recv(x)));
                             if(size < 0)
                             {
                                 rec::errorf(gocpp::recv(check), x, TypeTooLarge, "%s is too large"_s, x);
                                 return _1;
                             }
-                            x->mode = constant_;
+                            x->mode_ = constant_;
                             // result is constant - no need to record signature
                             x->val = constant::MakeInt64(size);
                         }
-                        x->typ = Typ[Uintptr];
+                        x->typ_ = Typ[Uintptr];
                         break;
 
                     case 22:
                     {
                         // unsafe.Slice(ptr *T, len IntegerType) []T
                         rec::verifyVersionf(gocpp::recv(check), call->Fun, go1_17, "unsafe.Slice"_s);
-                        auto [ptr, gocpp_id_14] = gocpp::getValue<Pointer*>(coreType(x->typ));
+                        std::tie(u, std::ignore) = commonUnder(rec::typ(gocpp::recv(x)), nullptr);
+                        auto [ptr, gocpp_id_16] = gocpp::getValue<Pointer*>(u);
                         if(ptr == nullptr)
                         {
                             rec::errorf(gocpp::recv(check), x, InvalidUnsafeSlice, invalidArg + "%s is not a pointer"_s, x);
@@ -1220,11 +1315,11 @@ namespace golang::types
                         {
                             return _1;
                         }
-                        x->mode = value;
-                        x->typ = NewSlice(ptr->base);
+                        x->mode_ = value;
+                        x->typ_ = NewSlice(ptr->base);
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(x->typ, ptr, y->typ));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(rec::typ(gocpp::recv(x)), ptr, rec::typ(gocpp::recv(y))));
                         }
                         break;
                     }
@@ -1233,17 +1328,18 @@ namespace golang::types
                     {
                         // unsafe.SliceData(slice []T) *T
                         rec::verifyVersionf(gocpp::recv(check), call->Fun, go1_20, "unsafe.SliceData"_s);
-                        auto [slice, gocpp_id_15] = gocpp::getValue<Slice*>(coreType(x->typ));
+                        std::tie(u, std::ignore) = commonUnder(rec::typ(gocpp::recv(x)), nullptr);
+                        auto [slice, gocpp_id_18] = gocpp::getValue<Slice*>(u);
                         if(slice == nullptr)
                         {
                             rec::errorf(gocpp::recv(check), x, InvalidUnsafeSliceData, invalidArg + "%s is not a slice"_s, x);
                             return _1;
                         }
-                        x->mode = value;
-                        x->typ = NewPointer(slice->elem);
+                        x->mode_ = value;
+                        x->typ_ = NewPointer(slice->elem);
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(x->typ, slice));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(rec::typ(gocpp::recv(x)), slice));
                         }
                         break;
                     }
@@ -1253,7 +1349,7 @@ namespace golang::types
                         // unsafe.String(ptr *byte, len IntegerType) string
                         rec::verifyVersionf(gocpp::recv(check), call->Fun, go1_20, "unsafe.String"_s);
                         rec::assignment(gocpp::recv(check), x, NewPointer(universeByte), "argument to unsafe.String"_s);
-                        if(x->mode == invalid)
+                        if(! rec::isValid(gocpp::recv(x)))
                         {
                             return _1;
                         }
@@ -1262,11 +1358,11 @@ namespace golang::types
                         {
                             return _1;
                         }
-                        x->mode = value;
-                        x->typ = Typ[types::String];
+                        x->mode_ = value;
+                        x->typ_ = Typ[types::String];
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(x->typ, NewPointer(universeByte), y->typ));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(rec::typ(gocpp::recv(x)), NewPointer(universeByte), rec::typ(gocpp::recv(y))));
                         }
                         break;
                     }
@@ -1275,15 +1371,15 @@ namespace golang::types
                         // unsafe.StringData(str string) *byte
                         rec::verifyVersionf(gocpp::recv(check), call->Fun, go1_20, "unsafe.StringData"_s);
                         rec::assignment(gocpp::recv(check), x, Typ[types::String], "argument to unsafe.StringData"_s);
-                        if(x->mode == invalid)
+                        if(! rec::isValid(gocpp::recv(x)))
                         {
                             return _1;
                         }
-                        x->mode = value;
-                        x->typ = NewPointer(universeByte);
+                        x->mode_ = value;
+                        x->typ_ = NewPointer(universeByte);
                         if(rec::recordTypes(gocpp::recv(check)))
                         {
-                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(x->typ, Typ[types::String]));
+                            rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(rec::typ(gocpp::recv(x)), Typ[types::String]));
                         }
                         break;
 
@@ -1292,7 +1388,7 @@ namespace golang::types
                         // assert(pred) causes a typechecker error if pred is false.
                         // The result of assert is the value of pred if there is no error.
                         // Note: assert is only available in self-test mode.
-                        if(x->mode != constant_ || ! isBoolean(x->typ))
+                        if(rec::mode(gocpp::recv(x)) != constant_ || ! isBoolean(rec::typ(gocpp::recv(x))))
                         {
                             rec::errorf(gocpp::recv(check), x, Test, invalidArg + "%s is not a boolean constant"_s, x);
                             return _1;
@@ -1321,7 +1417,7 @@ namespace golang::types
                         if(nargs == 0)
                         {
                             rec::dump(gocpp::recv(check), "%v: trace() without arguments"_s, rec::Pos(gocpp::recv(call)));
-                            x->mode = novalue;
+                            x->mode_ = novalue;
                             break;
                         }
                         operand t = {};
@@ -1334,7 +1430,7 @@ namespace golang::types
                             // use incoming x only for first argument
                             x1 = & t;
                         }
-                        if(x->mode == invalid)
+                        if(! rec::isValid(gocpp::recv(x)))
                         {
                             return _1;
                         }
@@ -1343,12 +1439,12 @@ namespace golang::types
 
 
                     default:
-                        unreachable();
+                        gocpp::panic("unreachable"_s);
                         break;
                 }
             }
 
-            assert(x->mode != invalid);
+            assert(rec::isValid(gocpp::recv(x)));
             return true;
         }
         catch(gocpp::GoPanic& gp)
@@ -1358,87 +1454,135 @@ namespace golang::types
         }
     }
 
+    // sliceElem returns the slice element type for a slice operand x
+    // or a type error if x is not a slice (or a type set of slices).
+    std::tuple<golang::go::types::Type, typeError*> sliceElem(operand* x)
+    {
+        golang::go::types::Type E = {};
+        for(auto [gocpp_ignored, u] : typeset(rec::typ(gocpp::recv(x))))
+        {
+            auto [s, gocpp_id_19] = gocpp::getValue<Slice*>(u);
+            if(s == nullptr)
+            {
+                if(rec::isNil(gocpp::recv(x)))
+                {
+                    // Printing x in this case would just print "nil".
+                    // Special case this so we can emphasize "untyped".
+                    return {nullptr, typeErrorf("argument must be a slice; have untyped nil"_s)};
+                }
+                else
+                {
+                    return {nullptr, typeErrorf("argument must be a slice; have %s"_s, x)};
+                }
+            }
+            if(E == nullptr)
+            {
+                E = s->elem;
+            }
+            else
+            if(! Identical(E, s->elem))
+            {
+                return {nullptr, typeErrorf("mismatched slice element types %s and %s in %s"_s, E, s->elem, x)};
+            }
+        }
+        return {E, nullptr};
+    }
+
     // hasVarSize reports if the size of type t is variable due to type parameters
     // or if the type is infinitely-sized due to a cycle for which the type has not
     // yet been checked.
-    bool hasVarSize(golang::types::Type t, gocpp::map<Named*, bool> seen)
+    bool rec::hasVarSize(Checker* check, golang::go::types::Type t)
     {
-        bool varSized;
         gocpp::Defer defer;
         try
         {
-            // Cycles are only possible through *Named types.
-            // The seen map is used to detect cycles and track
-            // the results of previously seen types.
-            if(auto named = asNamed(t); named != nullptr)
-            {
-                if(auto [v, ok] = seen[named]; ok)
-                {
-                    return v;
-                }
-                if(seen == nullptr)
-                {
-                    seen = gocpp::make(gocpp::Tag<gocpp::map<Named*, bool>>());
-                }
-                // possibly cyclic until proven otherwise
-                seen[named] = true;
-                defer.push_back([=, &varSized]{ [=]() mutable -> void
-                {
-                    // record final determination for named
-                    seen[named] = varSized;
-                }(); });
-            }
-
+            // Note: We could use Underlying here, but passing through the RHS may yield
+            // better error messages and allows us to stash the result on each traversed
+            // Named type.
             //Go type switch emulation
             {
-                const auto& gocpp_id_16 = gocpp::type_info(under(t));
+                const auto& gocpp_id_20 = gocpp::type_info(Unalias(t));
                 int conditionId = -1;
-                if(gocpp_id_16 == typeid(types::Array*)) { conditionId = 0; }
-                else if(gocpp_id_16 == typeid(types::Struct*)) { conditionId = 1; }
-                else if(gocpp_id_16 == typeid(types::Interface*)) { conditionId = 2; }
-                else if(gocpp_id_16 == typeid(types::Named*)) { conditionId = 3; }
-                else if(gocpp_id_16 == typeid(types::Union*)) { conditionId = 4; }
+                if(gocpp_id_20 == typeid(types::Named*)) { conditionId = 0; }
+                else if(gocpp_id_20 == typeid(types::Array*)) { conditionId = 1; }
+                else if(gocpp_id_20 == typeid(types::Struct*)) { conditionId = 2; }
+                else if(gocpp_id_20 == typeid(types::TypeParam*)) { conditionId = 3; }
                 switch(conditionId)
                 {
                     case 0:
                     {
-                        types::Array* u = gocpp::any_cast<types::Array*>(under(t));
-                        return hasVarSize(u->elem, seen);
+                        types::Named* t = gocpp::any_cast<types::Named*>(Unalias(t));
+                        if(rec::stateHas(gocpp::recv(t), types::hasVarSize))
+                        {
+                            return t->varSize;
+                        }
+                        if(auto [i, ok] = check->objPathIdx[t->obj]; ok)
+                        {
+                            auto cycle = check->objPath.make_slice(i);
+                            rec::cycleError(gocpp::recv(check), cycle, firstInSrc(cycle));
+                            return true;
+                        }
+                        auto obj = t->obj;
+                        rec::push(gocpp::recv(check), obj);
+                        defer.push_back([=]{ rec::pop(gocpp::recv(check)); });
+                        // Careful, we're inspecting t.fromRHS, so we need to unpack first.
+                        rec::unpack(gocpp::recv(t));
+                        auto varSize = rec::hasVarSize(gocpp::recv(check), rec::rhs(gocpp::recv(t)));
+                        // Special case for portable simd types that rewrite to unknown sizes.
+                        if(auto pkg = rec::Pkg(gocpp::recv(obj)); pkg != nullptr && rec::Path(gocpp::recv(pkg)) == "simd"_s && rec::Name(gocpp::recv(obj)) == "_simd"_s)
+                        {
+                            varSize = true;
+                        }
+                        rec::Lock(gocpp::recv(t->mu));
+                        defer.push_back([=]{ rec::Unlock(gocpp::recv(t->mu)); });
+                        // Careful, t.varSize has lock-free readers. Since we might be racing
+                        // another call to hasVarSize, we have to avoid overwriting t.varSize.
+                        // Otherwise, the race detector will be tripped.
+                        if(! rec::stateHas(gocpp::recv(t), types::hasVarSize))
+                        {
+                            t->varSize = varSize;
+                            rec::setState(gocpp::recv(t), types::hasVarSize);
+                        }
+                        return varSize;
                         break;
                     }
+
                     case 1:
                     {
-                        types::Struct* u = gocpp::any_cast<types::Struct*>(under(t));
-                        for(auto [gocpp_ignored, f] : u->fields)
+                        types::Array* t = gocpp::any_cast<types::Array*>(Unalias(t));
+                        // The array length is already computed. If it was a valid length, it
+                        // is constant; else, an error was reported in the computation.
+                        return rec::hasVarSize(gocpp::recv(check), t->elem);
+                        break;
+                    }
+
+                    case 2:
+                    {
+                        types::Struct* t = gocpp::any_cast<types::Struct*>(Unalias(t));
+                        for(auto [gocpp_ignored, f] : t->fields)
                         {
-                            if(hasVarSize(f->object.typ, seen))
+                            if(rec::hasVarSize(gocpp::recv(check), f->object.typ))
                             {
                                 return true;
                             }
                         }
                         break;
                     }
-                    case 2:
-                    {
-                        types::Interface* u = gocpp::any_cast<types::Interface*>(under(t));
-                        return isTypeParam(t);
-                        break;
-                    }
+
                     case 3:
-                    case 4:
                     {
-                        types::Named* u = gocpp::any_cast<types::Named*>(under(t));
-                        unreachable();
+                        types::TypeParam* t = gocpp::any_cast<types::TypeParam*>(Unalias(t));
+                        return true;
                         break;
                     }
                 }
             }
+
             return false;
         }
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
-            return {varSized};
         }
     }
 
@@ -1449,14 +1593,14 @@ namespace golang::types
     // of x. If any of these applications of f return nil,
     // applyTypeFunc returns nil.
     // If x is not a type parameter, the result is f(x).
-    golang::types::Type rec::applyTypeFunc(Checker* check, std::function<golang::types::Type (golang::types::Type _1)> f, operand* x, builtinId id)
+    golang::go::types::Type rec::applyTypeFunc(Checker* check, std::function<golang::go::types::Type (golang::go::types::Type _1)> f, operand* x, builtinId id)
     {
-        if(auto [tp, gocpp_id_17] = gocpp::getValue<TypeParam*>(x->typ); tp != nullptr)
+        if(auto [tp, gocpp_id_21] = gocpp::getValue<TypeParam*>(Unalias(rec::typ(gocpp::recv(x)))); tp != nullptr)
         {
             // Test if t satisfies the requirements for the argument
             // type and collect possible result types at the same time.
-            gocpp::slice<golang::types::Term*> terms = {};
-            if(! rec::is(gocpp::recv(tp), [=](term* t) mutable -> bool
+            gocpp::slice<golang::go::types::Term*> terms = {};
+            if(! rec::is(gocpp::recv(tp), [=](golang::go::types::term* t) mutable -> bool
             {
                 if(t == nullptr)
                 {
@@ -1497,43 +1641,43 @@ namespace golang::types
                         code = InvalidComplex;
                         break;
                     default:
-                        unreachable();
+                        gocpp::panic("unreachable"_s);
                         break;
                 }
             }
-            rec::softErrorf(gocpp::recv(check), x, code, "%s not supported as argument to %s for go1.18 (see go.dev/issue/50937)"_s, x, predeclaredFuncs[id].name);
+            rec::softErrorf(gocpp::recv(check), x, code, "%s not supported as argument to built-in %s for go1.18 (see go.dev/issue/50937)"_s, x, predeclaredFuncs[id].name);
 
             // Construct a suitable new type parameter for the result type.
             // The type parameter is placed in the current package so export/import
             // works as expected.
             auto tpar = NewTypeName(nopos, check->pkg, tp->obj->object.name, nullptr);
             // assigns type to tpar as a side-effect
-            auto ptyp = rec::newTypeParam(gocpp::recv(check), tpar, NewInterfaceType(nullptr, gocpp::slice<golang::types::Type> {NewUnion(terms)}));
+            auto ptyp = rec::newTypeParam(gocpp::recv(check), tpar, NewInterfaceType(nullptr, gocpp::slice<golang::go::types::Type> {NewUnion(terms)}));
             ptyp->index = tp->index;
 
             return ptyp;
         }
 
-        return f(x->typ);
+        return f(rec::typ(gocpp::recv(x)));
     }
 
     // makeSig makes a signature for the given argument and result types.
     // Default types are used for untyped arguments, and res may be nil.
-    Signature* makeSig(golang::types::Type res, gocpp::slice<golang::types::Type> args)
+    golang::go::types::Signature* makeSig(golang::go::types::Type res, gocpp::slice<golang::go::types::Type> args)
     {
         auto list = gocpp::make(gocpp::Tag<gocpp::slice<Var*>>(), len(args));
         for(auto [i, param] : args)
         {
-            list[i] = NewVar(nopos, nullptr, ""_s, Default(param));
+            list[i] = NewParam(nopos, nullptr, ""_s, Default(param));
         }
         auto params = NewTuple(list);
         Tuple* result = {};
         if(res != nullptr)
         {
             assert(! isUntyped(res));
-            result = NewTuple(NewVar(nopos, nullptr, ""_s, res));
+            result = NewTuple(newVar(ResultVar, nopos, nullptr, ""_s, res));
         }
-        return gocpp::InitPtr<Signature>([=](auto& x) {
+        return gocpp::InitPtr<golang::go::types::Signature>([=](auto& x) {
             x.params = params;
             x.results = result;
         });
@@ -1541,21 +1685,16 @@ namespace golang::types
 
     // arrayPtrDeref returns A if typ is of the form *A and A is an array;
     // otherwise it returns typ.
-    golang::types::Type arrayPtrDeref(golang::types::Type typ)
+    golang::go::types::Type arrayPtrDeref(golang::go::types::Type typ)
     {
-        if(auto [p, ok] = gocpp::getValue<Pointer*>(typ); ok)
+        if(auto [p, ok] = gocpp::getValue<Pointer*>(Unalias(typ)); ok)
         {
-            if(auto [a, gocpp_id_18] = gocpp::getValue<Array*>(under(p->base)); a != nullptr)
+            if(auto [a, gocpp_id_22] = gocpp::getValue<Array*>(rec::Underlying(gocpp::recv(p->base))); a != nullptr)
             {
                 return a;
             }
         }
         return typ;
-    }
-
-    ast::Expr unparen(ast::Expr e)
-    {
-        return ast::Unparen(e);
     }
 
 }

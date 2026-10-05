@@ -3,9 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/go/ast/ast.fwd.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
     struct Example;
 }

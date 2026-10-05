@@ -14,9 +14,7 @@
 #include "golang/fmt/print.h"
 #include "golang/go/ast/ast.h"
 #include "golang/go/constant/value.h"
-#include "golang/go/internal/typeparams/typeparams.h"
 #include "golang/go/token/position.h"
-#include "golang/go/types/alias.h"
 #include "golang/go/types/api.h"
 #include "golang/go/types/array.h"
 #include "golang/go/types/basic.h"
@@ -28,6 +26,8 @@
 #include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
 #include "golang/go/types/expr.h"
+#include "golang/go/types/format.h"
+#include "golang/go/types/index.h"
 #include "golang/go/types/instantiate.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/map.h"
@@ -38,6 +38,7 @@
 #include "golang/go/types/package.h"
 #include "golang/go/types/pointer.h"
 #include "golang/go/types/predicates.h"
+#include "golang/go/types/recording.h"
 #include "golang/go/types/scope.h"
 #include "golang/go/types/signature.h"
 #include "golang/go/types/slice.h"
@@ -46,38 +47,34 @@
 #include "golang/go/types/typelists.h"
 #include "golang/go/types/typeparam.h"
 #include "golang/go/types/typeset.h"
-#include "golang/go/types/typestring.h"
-#include "golang/go/types/under.h"
 #include "golang/go/types/universe.h"
-#include "golang/go/types/validtype.h"
 #include "golang/go/types/version.h"
 #include "golang/internal/types/errors/codes.h"
 #include "golang/strings/strings.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace constant = golang::go::constant;
+    namespace fmt = golang::fmt;
+    namespace strings = golang::strings;
     namespace rec
     {
         using ast::rec::End;
         using ast::rec::Pos;
         using ast::rec::exprNode;
         using constant::rec::Kind;
-        using mocklib::rec::Error;
-        using typeparams::rec::Pos;
     }
 
     // ident type-checks identifier e and initializes x with the value or type of e.
     // If an error occurred, x.mode is set to invalid.
-    // For the meaning of def, see Checker.definedType, below.
     // If wantType is set, the identifier e is expected to denote a type.
-    void rec::ident(Checker* check, operand* x, ast::Ident* e, TypeName* def, bool wantType)
+    void rec::ident(Checker* check, operand* x, ast::Ident* e, bool wantType)
     {
-        x->mode = invalid;
+        rec::invalidate(gocpp::recv(x));
         x->expr = e;
 
-        // Note that we cannot use check.lookup here because the returned scope
-        // may be different from obj.Parent(). See also Scope.LookupParent doc.
-        auto [scope, obj] = rec::LookupParent(gocpp::recv(check->environment.scope), e->Name, check->environment.pos);
+        auto [scope, obj] = rec::lookupScope(gocpp::recv(check), e->Name);
         //Go switch emulation
         {
             auto condition = obj;
@@ -90,20 +87,10 @@ namespace golang::types
                 case 0:
                     if(e->Name == "_"_s)
                     {
-                        // Blank identifiers are never declared, but the current identifier may
-                        // be a placeholder for a receiver type parameter. In this case we can
-                        // resolve its type and object from Checker.recvTParamMap.
-                        if(auto tpar = check->recvTParamMap[e]; tpar != nullptr)
-                        {
-                            x->mode = typexpr;
-                            x->typ = tpar;
-                        }
-                        else
-                        {
-                            rec::error(gocpp::recv(check), e, InvalidBlank, "cannot use _ as value or type"_s);
-                        }
+                        rec::error(gocpp::recv(check), e, InvalidBlank, "cannot use _ as value or type"_s);
                     }
                     else
+                    if(isValidName(e->Name))
                     {
                         rec::errorf(gocpp::recv(check), e, UndeclaredName, "undefined: %s"_s, e->Name);
                     }
@@ -121,18 +108,37 @@ namespace golang::types
         }
         rec::recordUse(gocpp::recv(check), e, obj);
 
+        // If we want a type but don't have one, stop right here and avoid potential problems
+        // with missing underlying types. This also gives better error messages in some cases
+        // (see go.dev/issue/65344).
+        auto [gocpp_id_0, gotType] = gocpp::getValue<TypeName*>(obj);
+        if(! gotType && wantType)
+        {
+            rec::errorf(gocpp::recv(check), e, NotAType, "%s (%s) is not a type"_s, rec::Name(gocpp::recv(obj)), objectKind(obj));
+
+            // avoid "declared but not used" errors
+            // (don't use Checker.use - we don't want to evaluate too much)
+            if(auto [v, gocpp_id_1] = gocpp::getValue<Var*>(obj); v != nullptr && v->object.pkg == check->pkg)
+            {
+                check->usedVars[v] = true;
+            }
+            return;
+        }
+
         // Type-check the object.
         // Only call Checker.objDecl if the object doesn't have a type yet
         // (in which case we must actually determine it) or the object is a
-        // TypeName and we also want a type (in which case we might detect
-        // a cycle which needs to be reported). Otherwise we can skip the
-        // call and avoid a possible cycle error in favor of the more
-        // informative "not a type/value" error that this function's caller
-        // will issue (see go.dev/issue/25790).
+        // TypeName from the current package and we also want a type (in which case
+        // we might detect a cycle which needs to be reported). Otherwise we can skip
+        // the call and avoid a possible cycle error in favor of the more informative
+        // "not a type/value" error that this function's caller will issue (see
+        // go.dev/issue/25790).
+        // Note that it is important to avoid calling objDecl on objects from other
+        // packages, to avoid races: see issue #69912.
         auto typ = rec::Type(gocpp::recv(obj));
-        if(auto [gocpp_id_0, gotType] = gocpp::getValue<TypeName*>(obj); typ == nullptr || gotType && wantType)
+        if(typ == nullptr || (gotType && wantType && rec::Pkg(gocpp::recv(obj)) == check->pkg))
         {
-            rec::objDecl(gocpp::recv(check), obj, def);
+            rec::objDecl(gocpp::recv(check), obj);
             // type must have been assigned by Checker.objDecl
             typ = rec::Type(gocpp::recv(obj));
         }
@@ -144,21 +150,21 @@ namespace golang::types
         // we only have to mark variables, see *Var case below).
         if(auto pkgName = check->dotImportMap[dotImportKey {scope, rec::Name(gocpp::recv(obj))}]; pkgName != nullptr)
         {
-            pkgName->used = true;
+            check->usedPkgNames[pkgName] = true;
         }
 
         //Go type switch emulation
         {
-            const auto& gocpp_id_1 = gocpp::type_info(obj);
+            const auto& gocpp_id_2 = gocpp::type_info(obj);
             const auto& obj_ref = obj;
             int conditionId = -1;
-            if(gocpp_id_1 == typeid(types::PkgName*)) { conditionId = 0; }
-            else if(gocpp_id_1 == typeid(types::Const*)) { conditionId = 1; }
-            else if(gocpp_id_1 == typeid(types::TypeName*)) { conditionId = 2; }
-            else if(gocpp_id_1 == typeid(types::Var*)) { conditionId = 3; }
-            else if(gocpp_id_1 == typeid(types::Func*)) { conditionId = 4; }
-            else if(gocpp_id_1 == typeid(types::Builtin*)) { conditionId = 5; }
-            else if(gocpp_id_1 == typeid(types::Nil*)) { conditionId = 6; }
+            if(gocpp_id_2 == typeid(types::PkgName*)) { conditionId = 0; }
+            else if(gocpp_id_2 == typeid(types::Const*)) { conditionId = 1; }
+            else if(gocpp_id_2 == typeid(types::TypeName*)) { conditionId = 2; }
+            else if(gocpp_id_2 == typeid(types::Var*)) { conditionId = 3; }
+            else if(gocpp_id_2 == typeid(types::Func*)) { conditionId = 4; }
+            else if(gocpp_id_2 == typeid(types::Builtin*)) { conditionId = 5; }
+            else if(gocpp_id_2 == typeid(types::Nil*)) { conditionId = 6; }
             switch(conditionId)
             {
                 case 0:
@@ -179,31 +185,26 @@ namespace golang::types
                     }
                     if(obj == universeIota)
                     {
-                        if(check->environment.6 == nullptr)
+                        if(check->environment.5 == nullptr)
                         {
                             rec::error(gocpp::recv(check), e, InvalidIota, "cannot use iota outside constant declaration"_s);
                             return;
                         }
-                        x->val = check->environment.6;
+                        x->val = check->environment.5;
                     }
                     else
                     {
                         x->val = obj->val;
                     }
                     assert(x->val != nullptr);
-                    x->mode = constant_;
+                    x->mode_ = constant_;
                     break;
                 }
 
                 case 2:
                 {
                     types::TypeName* obj = gocpp::any_cast<types::TypeName*>(obj_ref);
-                    if(! check->enableAlias && rec::isBrokenAlias(gocpp::recv(check), obj))
-                    {
-                        rec::errorf(gocpp::recv(check), e, InvalidDeclCycle, "invalid use of type alias %s in recursive type (see go.dev/issue/50729)"_s, obj->object.name);
-                        return;
-                    }
-                    x->mode = typexpr;
+                    x->mode_ = typexpr;
                     break;
                 }
 
@@ -215,14 +216,14 @@ namespace golang::types
                     // dot-imported variables.
                     if(obj->object.pkg == check->pkg)
                     {
-                        obj->used = true;
+                        check->usedVars[obj] = true;
                     }
                     rec::addDeclDep(gocpp::recv(check), obj);
                     if(! types::isValid(typ))
                     {
                         return;
                     }
-                    x->mode = variable;
+                    x->mode_ = variable;
                     break;
                 }
 
@@ -230,7 +231,7 @@ namespace golang::types
                 {
                     types::Func* obj = gocpp::any_cast<types::Func*>(obj_ref);
                     rec::addDeclDep(gocpp::recv(check), obj);
-                    x->mode = value;
+                    x->mode_ = value;
                     break;
                 }
 
@@ -238,49 +239,49 @@ namespace golang::types
                 {
                     types::Builtin* obj = gocpp::any_cast<types::Builtin*>(obj_ref);
                     x->id = obj->id;
-                    x->mode = types::builtin;
+                    x->mode_ = types::builtin;
                     break;
                 }
 
                 case 6:
                 {
                     types::Nil* obj = gocpp::any_cast<types::Nil*>(obj_ref);
-                    x->mode = value;
+                    x->mode_ = value;
                     break;
                 }
 
                 default:
                 {
                     auto obj = obj_ref;
-                    unreachable();
+                    gocpp::panic("unreachable"_s);
                     break;
                 }
             }
         }
 
-        x->typ = typ;
+        x->typ_ = typ;
     }
 
     // typ type-checks the type expression e and returns its type, or Typ[Invalid].
     // The type must not be an (uninstantiated) generic type.
-    golang::types::Type rec::typ(Checker* check, ast::Expr e)
+    golang::go::types::Type rec::typ(Checker* check, ast::Expr e)
     {
-        return rec::definedType(gocpp::recv(check), e, nullptr);
+        return rec::declaredType(gocpp::recv(check), e, nullptr);
     }
 
     // varType type-checks the type expression e and returns its type, or Typ[Invalid].
     // The type must not be an (uninstantiated) generic type and it must not be a
     // constraint interface.
-    golang::types::Type rec::varType(Checker* check, ast::Expr e)
+    golang::go::types::Type rec::varType(Checker* check, ast::Expr e)
     {
-        auto typ = rec::definedType(gocpp::recv(check), e, nullptr);
+        auto typ = rec::declaredType(gocpp::recv(check), e, nullptr);
         rec::validVarType(gocpp::recv(check), e, typ);
         return typ;
     }
 
     // validVarType reports an error if typ is a constraint interface.
     // The expression e is used for error reporting, if any.
-    void rec::validVarType(Checker* check, ast::Expr e, golang::types::Type typ)
+    void rec::validVarType(Checker* check, ast::Expr e, golang::go::types::Type typ)
     {
         // If we have a type parameter there's nothing to do.
         if(isTypeParam(typ))
@@ -288,12 +289,12 @@ namespace golang::types
             return;
         }
 
-        // We don't want to call under() or complete interfaces while we are in
+        // We don't want to call typ.Underlying() or complete interfaces while we are in
         // the middle of type-checking parameter declarations that might belong
         // to interface methods. Delay this check to the end of type-checking.
         rec::describef(gocpp::recv(rec::later(gocpp::recv(check), [=]() mutable -> void
         {
-            if(auto [t, gocpp_id_2] = gocpp::getValue<Interface*>(under(typ)); t != nullptr)
+            if(auto [t, gocpp_id_3] = gocpp::getValue<Interface*>(rec::Underlying(gocpp::recv(typ))); t != nullptr)
             {
                 // TODO(gri) is this the correct position?
                 auto tset = computeInterfaceTypeSet(check, rec::Pos(gocpp::recv(e)), t);
@@ -312,11 +313,11 @@ namespace golang::types
         })), e, "check var type %s"_s, typ);
     }
 
-    // definedType is like typ but also accepts a type name def.
-    // If def != nil, e is the type specification for the type named def, declared
-    // in a type declaration, and def.typ.underlying will be set to the type of e
-    // before any components of e are type-checked.
-    golang::types::Type rec::definedType(Checker* check, ast::Expr e, TypeName* def)
+    // declaredType is like typ but also accepts a type name def.
+    // If def != nil, e is the type specification for the [Alias] or [Named] type
+    // named def, and def.typ.fromRHS will be set to the [Type] of e immediately
+    // after its creation.
+    golang::go::types::Type rec::declaredType(Checker* check, ast::Expr e, TypeName* def)
     {
         auto typ = rec::typInternal(gocpp::recv(check), e, def);
         assert(isTyped(typ));
@@ -332,7 +333,11 @@ namespace golang::types
     // genericType is like typ but the type must be an (uninstantiated) generic
     // type. If cause is non-nil and the type expression was a valid type but not
     // generic, cause will be populated with a message describing the error.
-    golang::types::Type rec::genericType(Checker* check, ast::Expr e, gocpp::string* cause)
+    //
+    // Note: If the type expression was invalid and an error was reported before,
+    // cause will not be populated; thus cause alone cannot be used to determine
+    // if an error occurred.
+    golang::go::types::Type rec::genericType(Checker* check, ast::Expr e, gocpp::string* cause)
     {
         auto typ = rec::typInternal(gocpp::recv(check), e, nullptr);
         assert(isTyped(typ));
@@ -351,16 +356,16 @@ namespace golang::types
 
     // goTypeName returns the Go type name for typ and
     // removes any occurrences of "types." from that name.
-    gocpp::string goTypeName(golang::types::Type typ)
+    gocpp::string goTypeName(golang::go::types::Type typ)
     {
         return strings::ReplaceAll(mocklib::Sprintf("%T"_s, typ), "types."_s, ""_s);
     }
 
     // typInternal drives type checking of types.
-    // Must only be called by definedType or genericType.
-    golang::types::Type rec::typInternal(Checker* check, ast::Expr e0, TypeName* def)
+    // Must only be called by declaredType or genericType.
+    golang::go::types::Type rec::typInternal(Checker* check, ast::Expr e0, TypeName* def)
     {
-        golang::types::Type T;
+        golang::go::types::Type T;
         gocpp::Defer defer;
         try
         {
@@ -371,10 +376,10 @@ namespace golang::types
                 defer.push_back([=, &T]{ [=]() mutable -> void
                 {
                     check->indent--;
-                    golang::types::Type under = {};
+                    golang::go::types::Type under = {};
                     if(T != nullptr)
                     {
-                        // Calling under() here may lead to endless instantiations.
+                        // Calling T.Underlying() here may lead to endless instantiations.
                         // Test case: type T[P any] *T[P]
                         under = safeUnderlying(T);
                     }
@@ -391,22 +396,22 @@ namespace golang::types
 
             //Go type switch emulation
             {
-                const auto& gocpp_id_3 = gocpp::type_info(e0);
+                const auto& gocpp_id_4 = gocpp::type_info(e0);
                 int conditionId = -1;
-                if(gocpp_id_3 == typeid(ast::BadExpr*)) { conditionId = 0; }
-                else if(gocpp_id_3 == typeid(ast::Ident*)) { conditionId = 1; }
-                else if(gocpp_id_3 == typeid(ast::SelectorExpr*)) { conditionId = 2; }
-                else if(gocpp_id_3 == typeid(ast::IndexExpr*)) { conditionId = 3; }
-                else if(gocpp_id_3 == typeid(ast::IndexListExpr*)) { conditionId = 4; }
-                else if(gocpp_id_3 == typeid(ast::ParenExpr*)) { conditionId = 5; }
-                else if(gocpp_id_3 == typeid(ast::ArrayType*)) { conditionId = 6; }
-                else if(gocpp_id_3 == typeid(ast::Ellipsis*)) { conditionId = 7; }
-                else if(gocpp_id_3 == typeid(ast::StructType*)) { conditionId = 8; }
-                else if(gocpp_id_3 == typeid(ast::StarExpr*)) { conditionId = 9; }
-                else if(gocpp_id_3 == typeid(ast::FuncType*)) { conditionId = 10; }
-                else if(gocpp_id_3 == typeid(ast::InterfaceType*)) { conditionId = 11; }
-                else if(gocpp_id_3 == typeid(ast::MapType*)) { conditionId = 12; }
-                else if(gocpp_id_3 == typeid(ast::ChanType*)) { conditionId = 13; }
+                if(gocpp_id_4 == typeid(ast::BadExpr*)) { conditionId = 0; }
+                else if(gocpp_id_4 == typeid(ast::Ident*)) { conditionId = 1; }
+                else if(gocpp_id_4 == typeid(ast::SelectorExpr*)) { conditionId = 2; }
+                else if(gocpp_id_4 == typeid(ast::IndexExpr*)) { conditionId = 3; }
+                else if(gocpp_id_4 == typeid(ast::IndexListExpr*)) { conditionId = 4; }
+                else if(gocpp_id_4 == typeid(ast::ParenExpr*)) { conditionId = 5; }
+                else if(gocpp_id_4 == typeid(ast::ArrayType*)) { conditionId = 6; }
+                else if(gocpp_id_4 == typeid(ast::Ellipsis*)) { conditionId = 7; }
+                else if(gocpp_id_4 == typeid(ast::StructType*)) { conditionId = 8; }
+                else if(gocpp_id_4 == typeid(ast::StarExpr*)) { conditionId = 9; }
+                else if(gocpp_id_4 == typeid(ast::FuncType*)) { conditionId = 10; }
+                else if(gocpp_id_4 == typeid(ast::InterfaceType*)) { conditionId = 11; }
+                else if(gocpp_id_4 == typeid(ast::MapType*)) { conditionId = 12; }
+                else if(gocpp_id_4 == typeid(ast::ChanType*)) { conditionId = 13; }
                 switch(conditionId)
                 {
                     // ignore - error reported before
@@ -419,10 +424,10 @@ namespace golang::types
                     {
                         ast::Ident* e = gocpp::any_cast<ast::Ident*>(e0);
                         operand x = {};
-                        rec::ident(gocpp::recv(check), & x, e, def, true);
+                        rec::ident(gocpp::recv(check), & x, e, true);
                         //Go switch emulation
                         {
-                            auto condition = x.mode;
+                            auto condition = rec::mode(gocpp::recv(x));
                             int conditionId = -1;
                             if(condition == typexpr) { conditionId = 0; }
                             else if(condition == invalid) { conditionId = 1; }
@@ -430,12 +435,8 @@ namespace golang::types
                             switch(conditionId)
                             {
                                 case 0:
-                                {
-                                    auto typ = x.typ;
-                                    setDefType(def, typ);
-                                    return typ;
+                                    return rec::typ(gocpp::recv(x));
                                     break;
-                                }
                                 case 1:
                                     break;
                                 // ignore - error reported before
@@ -454,10 +455,10 @@ namespace golang::types
                     {
                         ast::SelectorExpr* e = gocpp::any_cast<ast::SelectorExpr*>(e0);
                         operand x = {};
-                        rec::selector(gocpp::recv(check), & x, e, def, true);
+                        rec::selector(gocpp::recv(check), & x, e, true);
                         //Go switch emulation
                         {
-                            auto condition = x.mode;
+                            auto condition = rec::mode(gocpp::recv(x));
                             int conditionId = -1;
                             if(condition == typexpr) { conditionId = 0; }
                             else if(condition == invalid) { conditionId = 1; }
@@ -465,12 +466,8 @@ namespace golang::types
                             switch(conditionId)
                             {
                                 case 0:
-                                {
-                                    auto typ = x.typ;
-                                    setDefType(def, typ);
-                                    return typ;
+                                    return rec::typ(gocpp::recv(x));
                                     break;
-                                }
                                 case 1:
                                     break;
                                 // ignore - error reported before
@@ -489,9 +486,9 @@ namespace golang::types
                     case 4:
                     {
                         ast::IndexExpr* e = gocpp::any_cast<ast::IndexExpr*>(e0);
-                        auto ix = typeparams::UnpackIndexExpr(e);
-                        rec::verifyVersionf(gocpp::recv(check), inNode(e, ix->IndexListExpr.Lbrack), go1_18, "type instantiation"_s);
-                        return rec::instantiatedType(gocpp::recv(check), ix, def);
+                        auto ix = unpackIndexedExpr(e);
+                        rec::verifyVersionf(gocpp::recv(check), inNode(e, ix->lbrack), go1_18, "type instantiation"_s);
+                        return rec::instantiatedType(gocpp::recv(check), ix);
                         break;
                     }
 
@@ -500,7 +497,7 @@ namespace golang::types
                         ast::ParenExpr* e = gocpp::any_cast<ast::ParenExpr*>(e0);
                         // Generic types must be instantiated before they can be used in any form.
                         // Consequently, generic types cannot be parenthesized.
-                        return rec::definedType(gocpp::recv(check), e->X, def);
+                        return rec::declaredType(gocpp::recv(check), e->X, def);
                         break;
                     }
 
@@ -511,15 +508,13 @@ namespace golang::types
                         if(e->Len == nullptr)
                         {
                             auto typ = new types::Slice{};
-                            setDefType(def, typ);
                             typ->elem = rec::varType(gocpp::recv(check), e->Elt);
                             return typ;
                         }
                         auto typ = new types::Array{};
-                        setDefType(def, typ);
                         // Provide a more specific error when encountering a [...] array
                         // rather than leaving it to the handling of the ... expression.
-                        if(auto [gocpp_id_4, ok] = gocpp::getValue<ast::Ellipsis*>(e->Len); ok)
+                        if(auto [gocpp_id_5, ok] = gocpp::getValue<ast::Ellipsis*>(e->Len); ok)
                         {
                             rec::error(gocpp::recv(check), e->Len, BadDotDotDotSyntax, "invalid use of [...] array (outside a composite literal)"_s);
                             typ->len = - 1;
@@ -540,10 +535,8 @@ namespace golang::types
                     case 7:
                     {
                         ast::Ellipsis* e = gocpp::any_cast<ast::Ellipsis*>(e0);
-                        // dots are handled explicitly where they are legal
-                        // (array composite literals and parameter lists)
-                        rec::error(gocpp::recv(check), e, InvalidDotDotDot, "invalid use of '...'"_s);
-                        rec::use(gocpp::recv(check), e->Elt);
+                        // dots are handled explicitly where they are valid
+                        rec::error(gocpp::recv(check), e, InvalidSyntaxTree, "invalid use of ..."_s);
                         break;
                     }
 
@@ -551,7 +544,6 @@ namespace golang::types
                     {
                         ast::StructType* e = gocpp::any_cast<ast::StructType*>(e0);
                         auto typ = new types::Struct{};
-                        setDefType(def, typ);
                         rec::structType(gocpp::recv(check), typ, e);
                         return typ;
                         break;
@@ -563,8 +555,15 @@ namespace golang::types
                         auto typ = new types::Pointer{};
                         // avoid nil base in invalid recursive type declaration
                         typ->base = Typ[Invalid];
-                        setDefType(def, typ);
                         typ->base = rec::varType(gocpp::recv(check), e->X);
+                        // If typ.base is invalid, it's unlikely that *base is particularly
+                        // useful - even a valid dereferenciation will lead to an invalid
+                        // type again, and in some cases we get unexpected follow-on errors
+                        // (e.g., go.dev/issue/49005). Return an invalid type instead.
+                        if(! types::isValid(typ->base))
+                        {
+                            return Typ[Invalid];
+                        }
                         return typ;
                         break;
                     }
@@ -573,7 +572,6 @@ namespace golang::types
                     {
                         ast::FuncType* e = gocpp::any_cast<ast::FuncType*>(e0);
                         auto typ = new types::Signature{};
-                        setDefType(def, typ);
                         rec::funcType(gocpp::recv(check), typ, nullptr, e);
                         return typ;
                         break;
@@ -583,7 +581,6 @@ namespace golang::types
                     {
                         ast::InterfaceType* e = gocpp::any_cast<ast::InterfaceType*>(e0);
                         auto typ = rec::newInterface(gocpp::recv(check));
-                        setDefType(def, typ);
                         rec::interfaceType(gocpp::recv(check), typ, e, def);
                         return typ;
                         break;
@@ -593,7 +590,6 @@ namespace golang::types
                     {
                         ast::MapType* e = gocpp::any_cast<ast::MapType*>(e0);
                         auto typ = new types::Map{};
-                        setDefType(def, typ);
                         typ->key = rec::varType(gocpp::recv(check), e->Key);
                         typ->elem = rec::varType(gocpp::recv(check), e->Value);
                         // spec: "The comparison operators == and != must be fully defined
@@ -621,7 +617,6 @@ namespace golang::types
                     {
                         ast::ChanType* e = gocpp::any_cast<ast::ChanType*>(e0);
                         auto typ = new types::Chan{};
-                        setDefType(def, typ);
                         auto dir = SendRecv;
                         //Go switch emulation
                         {
@@ -664,7 +659,6 @@ namespace golang::types
             }
 
             auto typ = Typ[Invalid];
-            setDefType(def, typ);
             return typ;
         }
         catch(gocpp::GoPanic& gp)
@@ -674,63 +668,70 @@ namespace golang::types
         }
     }
 
-    void setDefType(TypeName* def, golang::types::Type typ)
-    {
-        if(def != nullptr)
-        {
-            //Go type switch emulation
+    
+            template<typename T>
+            gocpp_id_8::gocpp_id_8(T& ref)
             {
-                const auto& gocpp_id_5 = gocpp::type_info(def->object.typ);
-                int conditionId = -1;
-                if(gocpp_id_5 == typeid(types::Alias*)) { conditionId = 0; }
-                else if(gocpp_id_5 == typeid(types::Basic*)) { conditionId = 1; }
-                else if(gocpp_id_5 == typeid(types::Named*)) { conditionId = 2; }
-                switch(conditionId)
+                mValue.reset(new gocpp_id_8Impl<T, std::unique_ptr<T>>(new T(ref)));
+            }
+
+            template<typename T>
+            gocpp_id_8::gocpp_id_8(const T& ref)
+            {
+                mValue.reset(new gocpp_id_8Impl<T, std::unique_ptr<T>>(new T(ref)));
+            }
+
+            template<typename T>
+            gocpp_id_8::gocpp_id_8(T* ptr)
+            {
+                mValue.reset(new gocpp_id_8Impl<T, gocpp::ptr<T>>(ptr));
+            }
+
+            std::ostream& gocpp_id_8::PrintTo(std::ostream& os) const
+            {
+                return os;
+            }
+
+            template<typename T, typename TStore, typename TInterface>
+            TypeName* gocpp_id_8::gocpp_id_8Impl<T, TStore, TInterface>::vObj()
+            {
+                return rec::Obj(gocpp::PtrRecv<T, false>(value.get()));
+            }
+
+            inline gocpp_id_8::Igocpp_id_8* gocpp_id_8::value() const
+            {
+                if(auto res = mValue.get()) { return res; }
+                throw gocpp::GoPanic("using nil value for interface 'gocpp_id_8'");
+            }
+
+            namespace rec
+            {
+                TypeName* Obj(const gocpp::PtrRecv<struct gocpp_id_8, false>& self)
                 {
-                    case 0:
-                    {
-                        types::Alias* t = gocpp::any_cast<types::Alias*>(def->object.typ);
-                        // t.fromRHS should always be set, either to an invalid type
-                        // in the beginning, or to typ in certain cyclic declarations.
-                        if(t->fromRHS != Typ[Invalid] && t->fromRHS != typ)
-                        {
-                            gocpp::panic(sprintf(nullptr, nullptr, true, "t.fromRHS = %s, typ = %s\n"_s, t->fromRHS, typ));
-                        }
-                        t->fromRHS = typ;
-                        break;
-                    }
-                    case 1:
-                    {
-                        types::Basic* t = gocpp::any_cast<types::Basic*>(def->object.typ);
-                        assert(t == Typ[Invalid]);
-                        break;
-                    }
-                    case 2:
-                    {
-                        types::Named* t = gocpp::any_cast<types::Named*>(def->object.typ);
-                        t->underlying = typ;
-                        break;
-                    }
-                    default:
-                    {
-                        auto t = def->object.typ;
-                        gocpp::panic(mocklib::Sprintf("unexpected type %T"_s, t));
-                        break;
-                    }
+                    return self.ptr->value()->vObj();
+                }
+
+                TypeName* Obj(const gocpp::ObjRecv<struct gocpp_id_8>& self)
+                {
+                    return self.obj.value()->vObj();
                 }
             }
-        }
-    }
 
-    golang::types::Type rec::instantiatedType(Checker* check, typeparams::IndexExpr* ix, TypeName* def)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value)
+            {
+                return value.PrintTo(os);
+            }
+
+
+    golang::go::types::Type rec::instantiatedType(Checker* check, indexedExpr* ix)
     {
-        golang::types::Type res;
+        golang::go::types::Type res;
         gocpp::Defer defer;
         try
         {
             if(check->conf->_Trace)
             {
-                rec::trace(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), "-- instantiating type %s with %s"_s, ix->IndexListExpr.X, ix->IndexListExpr.Indices);
+                rec::trace(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), "-- instantiating type %s with %s"_s, ix->x, ix->indices);
                 check->indent++;
                 defer.push_back([=, &res]{ [=]() mutable -> void
                 {
@@ -741,67 +742,70 @@ namespace golang::types
             }
 
             gocpp::string cause = {};
-            auto gtyp = rec::genericType(gocpp::recv(check), ix->IndexListExpr.X, & cause);
+            auto typ = rec::genericType(gocpp::recv(check), ix->x, & cause);
             if(cause != ""_s)
             {
-                rec::errorf(gocpp::recv(check), ix->Orig, NotAGenericType, invalidOp + "%s (%s)"_s, ix->Orig, cause);
+                rec::errorf(gocpp::recv(check), ix->orig, NotAGenericType, invalidOp + "%s (%s)"_s, ix->orig, cause);
             }
-            if(! types::isValid(gtyp))
+            if(! types::isValid(typ))
             {
                 // error already reported
-                return gtyp;
+                return typ;
             }
-
-            auto orig = asNamed(gtyp);
-            if(orig == nullptr)
+            // typ must be a generic Alias or Named type (but not a *Signature)
+            if(auto [gocpp_id_6, ok] = gocpp::getValue<golang::go::types::Signature*>(typ); ok)
             {
-                gocpp::panic(mocklib::Sprintf("%v: cannot instantiate %v"_s, rec::Pos(gocpp::recv(ix)), gtyp));
+                gocpp::panic("unexpected generic signature"_s);
             }
+            auto gtyp = gocpp::getValue<golang::go::types::genericType>(typ);
 
             // evaluate arguments
-            auto targs = rec::typeList(gocpp::recv(check), ix->IndexListExpr.Indices);
+            auto targs = rec::typeList(gocpp::recv(check), ix->indices);
             if(targs == nullptr)
             {
-                // avoid errors later due to lazy instantiation
-                setDefType(def, Typ[Invalid]);
                 return Typ[Invalid];
             }
 
-            // create the instance
-            auto inst = asNamed(rec::instance(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), orig, targs, nullptr, rec::context(gocpp::recv(check))));
-            setDefType(def, inst);
+            // create instance
+            // The instance is not generic anymore as it has type arguments, but unless
+            // instantiation failed, it still satisfies the genericType interface because
+            // it has type parameters, too.
+            auto ityp = rec::instance(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), gtyp, targs, nullptr, rec::context(gocpp::recv(check)));
+            auto [inst, gocpp_id_7] = gocpp::getValue<golang::go::types::genericType>(ityp);
+            if(inst == nullptr)
+            {
+                return Typ[Invalid];
+            }
 
-            // orig.tparams may not be set up, so we need to do expansion later.
+            // For Named types, orig.tparams may not be set up, so we need to do expansion later.
             rec::describef(gocpp::recv(rec::later(gocpp::recv(check), [=]() mutable -> void
             {
                 // This is an instance from the source, not from recursive substitution,
                 // and so it must be resolved during type-checking so that we can report
                 // errors.
-                rec::recordInstance(gocpp::recv(check), ix->Orig, rec::list(gocpp::recv(rec::TypeArgs(gocpp::recv(inst)))), inst);
+                rec::recordInstance(gocpp::recv(check), ix->orig, targs, inst);
 
-                if(rec::validateTArgLen(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), inst->obj->object.name, rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(inst)))), rec::Len(gocpp::recv(rec::TypeArgs(gocpp::recv(inst))))))
+                auto name = rec::Obj(gocpp::recv(gocpp::getValue<gocpp_id_8>(inst)))->object.name;
+                auto tparams = rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(inst))));
+                if(rec::validateTArgLen(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), name, len(tparams), len(targs)))
                 {
-                    if(auto [i, err] = rec::verify(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(inst)))), rec::list(gocpp::recv(rec::TypeArgs(gocpp::recv(inst)))), rec::context(gocpp::recv(check))); err != nullptr)
+                    // check type constraints
+                    if(auto [i, err] = rec::verify(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(inst)))), targs, rec::context(gocpp::recv(check))); err != nullptr)
                     {
                         // best position for error reporting
                         auto pos = rec::Pos(gocpp::recv(ix));
-                        if(i < len(ix->IndexListExpr.Indices))
+                        if(i < len(ix->indices))
                         {
-                            pos = rec::Pos(gocpp::recv(ix->IndexListExpr.Indices[i]));
+                            pos = rec::Pos(gocpp::recv(ix->indices[i]));
                         }
-                        rec::softErrorf(gocpp::recv(check), atPos(pos), InvalidTypeArg, rec::Error(gocpp::recv(err)));
+                        rec::softErrorf(gocpp::recv(check), atPos(pos), InvalidTypeArg, "%v"_s, err);
                     }
                     else
                     {
-                        rec::recordInstance(gocpp::recv(check->mono), check->pkg, rec::Pos(gocpp::recv(ix)), rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(inst)))), rec::list(gocpp::recv(rec::TypeArgs(gocpp::recv(inst)))), ix->IndexListExpr.Indices);
+                        rec::recordInstance(gocpp::recv(check->mono), check->pkg, rec::Pos(gocpp::recv(ix)), tparams, targs, ix->indices);
                     }
                 }
-
-                // TODO(rfindley): remove this call: we don't need to call validType here,
-                // as cycles can only occur for types used inside a Named type declaration,
-                // and so it suffices to call validType from declared types.
-                rec::validType(gocpp::recv(check), inst);
-            })), ix, "resolve instance %s"_s, inst);
+            })), ix, "verify instantiation %s"_s, inst);
 
             return inst;
         }
@@ -821,7 +825,7 @@ namespace golang::types
         // attempt at a parameterized type declaration with missing
         // constraint. Provide an error message that mentions array
         // length.
-        if(auto [name, gocpp_id_6] = gocpp::getValue<ast::Ident*>(e); name != nullptr)
+        if(auto [name, gocpp_id_9] = gocpp::getValue<ast::Ident*>(e); name != nullptr)
         {
             auto obj = rec::lookup(gocpp::recv(check), name->Name);
             if(obj == nullptr)
@@ -829,7 +833,7 @@ namespace golang::types
                 rec::errorf(gocpp::recv(check), name, InvalidArrayLen, "undefined array length %s or missing type constraint"_s, name->Name);
                 return - 1;
             }
-            if(auto [gocpp_id_7, ok] = gocpp::getValue<Const*>(obj); ! ok)
+            if(auto [gocpp_id_10, ok] = gocpp::getValue<Const*>(obj); ! ok)
             {
                 rec::errorf(gocpp::recv(check), name, InvalidArrayLen, "invalid array length %s"_s, name->Name);
                 return - 1;
@@ -838,16 +842,16 @@ namespace golang::types
 
         operand x = {};
         rec::expr(gocpp::recv(check), nullptr, & x, e);
-        if(x.mode != constant_)
+        if(rec::mode(gocpp::recv(x)) != constant_)
         {
-            if(x.mode != invalid)
+            if(rec::isValid(gocpp::recv(x)))
             {
                 rec::errorf(gocpp::recv(check), & x, InvalidArrayLen, "array length %s must be constant"_s, & x);
             }
             return - 1;
         }
 
-        if(isUntyped(x.typ) || isInteger(x.typ))
+        if(isUntyped(rec::typ(gocpp::recv(x))) || isInteger(rec::typ(gocpp::recv(x))))
         {
             if(auto val = constant::ToInt(x.val); rec::Kind(gocpp::recv(val)) == constant::Int)
             {
@@ -862,7 +866,7 @@ namespace golang::types
         }
 
         gocpp::string msg = {};
-        if(isInteger(x.typ))
+        if(isInteger(rec::typ(gocpp::recv(x))))
         {
             msg = "invalid array length %s"_s;
         }
@@ -876,10 +880,10 @@ namespace golang::types
 
     // typeList provides the list of types corresponding to the incoming expression list.
     // If an error occurred, the result is nil, but all list elements were type-checked.
-    gocpp::slice<golang::types::Type> rec::typeList(Checker* check, gocpp::slice<ast::Expr> list)
+    gocpp::slice<golang::go::types::Type> rec::typeList(Checker* check, gocpp::slice<ast::Expr> list)
     {
         // res != nil even if len(list) == 0
-        auto res = gocpp::make(gocpp::Tag<gocpp::slice<golang::types::Type>>(), len(list));
+        auto res = gocpp::make(gocpp::Tag<gocpp::slice<golang::go::types::Type>>(), len(list));
         for(auto [i, x] : list)
         {
             auto t = rec::varType(gocpp::recv(check), x);

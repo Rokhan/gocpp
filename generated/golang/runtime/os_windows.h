@@ -12,74 +12,237 @@
 
 namespace golang::runtime
 {
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _AddVectoredContinueHandler;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _AddVectoredExceptionHandler;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _CloseHandle;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _CreateEventA;
-    extern stdFunction _CreateFileA;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _CreateIoCompletionPort;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _CreateThread;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _CreateWaitableTimerA;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _CreateWaitableTimerExW;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _DuplicateHandle;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _ExitProcess;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _FreeEnvironmentStringsW;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _GetConsoleMode;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _GetCurrentThreadId;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _GetEnvironmentStringsW;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _GetErrorMode;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _GetProcAddress;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _GetProcessAffinityMask;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _GetQueuedCompletionStatusEx;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _GetStdHandle;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _GetSystemDirectoryA;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _GetSystemInfo;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _GetThreadContext;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
+    extern stdFunction _IsProcessorFeaturePresent;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _SetThreadContext;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _LoadLibraryExW;
-    extern stdFunction _LoadLibraryW;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _PostQueuedCompletionStatus;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _QueryPerformanceCounter;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
+    extern stdFunction _QueryPerformanceFrequency;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _RaiseFailFastException;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _ResumeThread;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _RtlLookupFunctionEntry;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _RtlVirtualUnwind;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _SetConsoleCtrlHandler;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _SetErrorMode;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _SetEvent;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _SetProcessPriorityBoost;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _SetThreadPriority;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _SetUnhandledExceptionFilter;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _SetWaitableTimer;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _SuspendThread;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _SwitchToThread;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _TlsAlloc;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _VirtualAlloc;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _VirtualFree;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _VirtualQuery;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _WaitForSingleObject;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _WaitForMultipleObjects;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _WerGetFlags;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _WerSetFlags;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _WriteConsoleW;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _WriteFile;
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
     extern stdFunction _;
+    // Use ProcessPrng to generate cryptographically random data.
     extern stdFunction _ProcessPrng;
+    // Load ntdll.dll manually during startup, otherwise Mingw
+    // links wrong printf function to cgo executable (see issue
+    // 12030 for details).
+    extern stdFunction _NtCreateWaitCompletionPacket;
+    extern stdFunction _NtAssociateWaitCompletionPacket;
+    extern stdFunction _NtCancelWaitCompletionPacket;
     extern stdFunction _RtlGetCurrentPeb;
-    extern stdFunction _RtlGetNtVersionNumbers;
+    extern stdFunction _RtlGetVersion;
+    // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
     extern stdFunction _timeBeginPeriod;
+    // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
     extern stdFunction _timeEndPeriod;
-    extern stdFunction _WSAGetOverlappedResult;
+    // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
     extern stdFunction _;
     extern gocpp::array<uint16_t, 21> bcryptprimitivesdll;
     extern gocpp::array<uint16_t, 10> ntdlldll;
     extern gocpp::array<uint16_t, 13> powrprofdll;
     extern gocpp::array<uint16_t, 10> winmmdll;
-    extern gocpp::array<uint16_t, 11> ws2_32dll;
     void wintls();
     int32_t open(unsigned char* name, int32_t mode, int32_t perm);
     int32_t closefd(int32_t fd);
-    int32_t read(int32_t fd, gocpp::unsafe_pointer p, int32_t n);
     struct sigset
     {
 
@@ -95,56 +258,76 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sigset& value);
-    void asmstdcall(gocpp::unsafe_pointer fn);
-    extern gocpp::unsafe_pointer asmstdcallAddr;
     stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name);
     extern gocpp::array<unsigned char, go__MAX_PATH + 1> sysDirectory;
     extern uintptr_t sysDirectoryLen;
     void initSysDirectory();
     gocpp::string windows_GetSystemDirectory();
     uintptr_t windowsLoadSystemLib(gocpp::slice<uint16_t> name);
+    int64_t windows_QueryPerformanceCounter();
+    int64_t windows_QueryPerformanceFrequency();
+    bool cpu_isProcessorFeaturePresent(uint32_t processorFeature);
     void loadOptionalSyscalls();
     void monitorSuspendResume();
-    uintptr_t getLoadLibrary();
-    uintptr_t getLoadLibraryEx();
-    uintptr_t getGetProcAddress();
-    int32_t getproccount();
+    int32_t getCPUCount();
     uintptr_t getPageSize();
     uint32_t getlasterror();
     extern uint32_t timeBeginPeriodRetValue;
     uint32_t osRelax(bool relax);
+    // haveHighResTimer indicates that the CreateWaitableTimerEx
+    // CREATE_WAITABLE_TIMER_HIGH_RESOLUTION flag is available.
     extern bool haveHighResTimer;
+    // haveHighResSleep indicates that NtCreateWaitCompletionPacket
+    // exists and haveHighResTimer is true.
+    // NtCreateWaitCompletionPacket has been available since Windows 10,
+    // but has just been publicly documented, so some platforms, like Wine,
+    // doesn't support it yet.
+    extern bool haveHighResSleep;
     uintptr_t createHighResTimer();
     void initHighResTimer();
+    //go:linkname canUseLongPaths internal/syscall/windows.CanUseLongPaths
     extern bool canUseLongPaths;
-    extern gocpp::array<unsigned char, (go__MAX_PATH + 1) * 2 + 1> longFileName;
     void initLongPathSupport();
     void osinit();
     int readRandom(gocpp::slice<unsigned char> r);
     void goenvs();
+    // exiting is set to non-zero when the process is exiting.
     extern uint32_t exiting;
     void exit(int32_t code);
-    int32_t write1(uintptr_t fd, gocpp::unsafe_pointer buf, int32_t n);
     extern gocpp::array<uint16_t, 1000> utf16ConsoleBack;
-    int writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen);
     void writeConsoleUTF16(uintptr_t handle, gocpp::slice<uint16_t> b);
     int32_t semasleep(int64_t ns);
+    void libpreinit();
     void clearSignalHandlers();
     void sigblock(bool exiting);
     void minit();
     void unminit();
-    void asmstdcall_trampoline(gocpp::unsafe_pointer args);
-    uintptr_t stdcall_no_g(stdFunction fn, int n, uintptr_t args);
-    uintptr_t stdcall(stdFunction fn);
-    uintptr_t stdcall0(stdFunction fn);
-    uintptr_t stdcall1(stdFunction fn, uintptr_t a0);
-    uintptr_t stdcall2(stdFunction fn, uintptr_t a0, uintptr_t a1);
-    uintptr_t stdcall3(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2);
-    uintptr_t stdcall4(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3);
-    uintptr_t stdcall5(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4);
-    uintptr_t stdcall6(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5);
-    uintptr_t stdcall7(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
-    uintptr_t stdcall8(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7);
+    uintptr_t stdcall_no_g(stdFunction fn, gocpp::slice<uintptr_t> args);
+    
+    template<typename... Args>
+    uintptr_t stdcall_no_g(stdFunction fn, Args... args)
+    {
+        return stdcall_no_g(fn, gocpp::ToSlice<uintptr_t>(args...));
+    }
+    
+    template<typename... Args>
+    uintptr_t stdcall_no_g(stdFunction fn, uintptr_t value, Args... args)
+    {
+        return stdcall_no_g(fn, gocpp::ToSlice<uintptr_t>(value, args...));
+    }
+    uintptr_t stdcall(stdFunction fn, gocpp::slice<uintptr_t> args);
+    
+    template<typename... Args>
+    uintptr_t stdcall(stdFunction fn, Args... args)
+    {
+        return stdcall(fn, gocpp::ToSlice<uintptr_t>(args...));
+    }
+    
+    template<typename... Args>
+    uintptr_t stdcall(stdFunction fn, uintptr_t value, Args... args)
+    {
+        return stdcall(fn, gocpp::ToSlice<uintptr_t>(value, args...));
+    }
     void osyield_no_g();
     void osyield();
     void usleep_no_g(uint32_t us);
@@ -157,20 +340,61 @@ namespace golang::runtime
     void setThreadCPUProfiler(int32_t hz);
     void sigsave(sigset* p);
     void msigrestore(sigset sigmask);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
 
 namespace golang::runtime
 {
     void tstart_stdcall(m* newm);
+    int32_t read(int32_t fd, gocpp::unsafe_pointer p, int32_t n);
+    extern gocpp::unsafe_pointer asmstdcallAddr;
+    int32_t write1(uintptr_t fd, gocpp::unsafe_pointer buf, int32_t n);
+    extern mutex utf16ConsoleBackLock;
+    int writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen);
+    void semawakeup(m* mp);
+    void semacreate(m* mp);
+    void newosproc(m* mp);
+    void newosproc0(uintptr_t stacksize, gocpp::unsafe_pointer fn);
+    std::tuple<uintptr_t, uint32_t> createThread(uintptr_t stackSize, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer arg);
+    void mpreinit(m* mp);
+    void mdestroy(m* mp);
+    void profilem(m* mp, uintptr_t thread);
+    g* gFromSP(m* mp, uintptr_t sp);
+    // suspendLock protects simultaneous SuspendThread operations from
+    // suspending each other.
+    extern mutex suspendLock;
+    void preemptM(m* mp);
+    void osPreemptExtEnter(m* mp);
+    void osPreemptExtExit(m* mp);
+}
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/syscall/windows/defs_windows.fwd.h"
+#include "golang/internal/runtime/syscall/windows/defs_windows_amd64.fwd.h"
+#include "golang/internal/runtime/syscall/windows/syscall_windows.fwd.h"
+
+namespace golang::runtime
+{
+    namespace windows = golang::internal::runtime::syscall::windows;
+}
+#include "golang/internal/runtime/syscall/windows/syscall_windows.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
     struct mOS
     {
+        // This is here to avoid using the G stack so the stack can move during the call.
+        windows::StdCallInfo stdCallInfo{};
         mutex threadLock{}; // protects "thread" and prevents closing
         uintptr_t thread{}; // thread handle
         uintptr_t waitsema{}; // semaphore for parking on locks
         uintptr_t resumesema{}; // semaphore to indicate suspend/resume
         uintptr_t highResTimer{}; // high resolution timer handle used in usleep
+        uintptr_t waitIocpTimer{}; // high resolution timer handle used in netpoll
+        uintptr_t waitIocpHandle{}; // wait completion handle used in netpoll
         // preemptExtLock synchronizes preemptM with entry/exit from
         // external C code.
         // This protects against races between preemptM calling
@@ -187,8 +411,8 @@ namespace golang::runtime
         // returning from external code or after a preemption is
         // complete.
         // TODO(austin): We may not need this if preemption were more
-        // tightly synchronized on the G/P status and preemption
-        // blocked transition into _Gsyscall/_Psyscall.
+        // tightly synchronized on the G status and preemption
+        // blocked transition into _Gsyscall.
         uint32_t preemptExtLock{};
 
         using isGoStruct = void;
@@ -203,20 +427,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mOS& value);
-    extern mutex utf16ConsoleBackLock;
-    void semawakeup(m* mp);
-    void semacreate(m* mp);
-    void newosproc(m* mp);
-    void newosproc0(m* mp, gocpp::unsafe_pointer stk);
     void exitThread(atomic::Uint32* wait);
-    void mpreinit(m* mp);
-    void mdestroy(m* mp);
-    void profilem(m* mp, uintptr_t thread);
-    g* gFromSP(m* mp, uintptr_t sp);
-    extern mutex suspendLock;
-    void preemptM(m* mp);
-    void osPreemptExtEnter(m* mp);
-    void osPreemptExtExit(m* mp);
 
     namespace rec
     {

@@ -3,10 +3,14 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::io::fs
+{
+    struct dirInfo;
+}
 #include "golang/io/fs/fs.fwd.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
     struct ReadDirFS;
-    struct dirInfo;
 }

@@ -9,17 +9,18 @@
 #include "golang/runtime/map_faststr.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/map.fwd.h"
-#include "golang/runtime/type.fwd.h"
+#include "golang/internal/abi/map.fwd.h"
+#include "golang/internal/runtime/maps/map.fwd.h"
 
 namespace golang::runtime
 {
-    gocpp::unsafe_pointer mapaccess1_faststr(maptype* t, hmap* h, gocpp::string ky);
-    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2_faststr(maptype* t, hmap* h, gocpp::string ky);
-    gocpp::unsafe_pointer mapassign_faststr(maptype* t, hmap* h, gocpp::string s);
-    void mapdelete_faststr(maptype* t, hmap* h, gocpp::string ky);
-    void growWork_faststr(maptype* t, hmap* h, uintptr_t bucket);
-    void evacuate_faststr(maptype* t, hmap* h, uintptr_t oldbucket);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace maps = golang::internal::runtime::maps;
+    gocpp::unsafe_pointer mapaccess1_faststr(abi::MapType* t, maps::Map* m, gocpp::string ky);
+    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2_faststr(abi::MapType* t, maps::Map* m, gocpp::string ky);
+    gocpp::unsafe_pointer mapassign_faststr(abi::MapType* t, maps::Map* m, gocpp::string s);
+    void mapdelete_faststr(abi::MapType* t, maps::Map* m, gocpp::string ky);
 
     namespace rec
     {

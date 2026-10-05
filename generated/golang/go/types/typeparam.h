@@ -10,25 +10,23 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     uint64_t nextID();
 }
 #include "golang/go/types/type.h"
-#include "golang/sync/atomic/type.h"
 #include "golang/go/types/check.fwd.h"
 #include "golang/go/types/object.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    extern atomic::Uint32 lastID;
     struct TypeParam
     {
         Checker* check{}; // for lazy type bound completion
         uint64_t id{}; // unique id, for debugging only
         TypeName* obj{}; // corresponding type name
         int index{}; // type parameter index in source order, starting at 0
-        golang::types::Type bound{}; // any type, but underlying is eventually *Interface for correct programs (see TypeParam.iface)
+        golang::go::types::Type bound{}; // any type, but underlying is eventually *Interface for correct programs (see TypeParam.iface)
 
         using isGoStruct = void;
 
@@ -42,7 +40,22 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeParam& value);
-    TypeParam* NewTypeParam(TypeName* obj, golang::types::Type constraint);
+}
+#include "golang/sync/atomic/type.fwd.h"
+
+namespace golang::go::types
+{
+    TypeParam* NewTypeParam(TypeName* obj, golang::go::types::Type constraint);
+    namespace atomic = golang::sync::atomic;
+}
+#include "golang/sync/atomic/type.h"
+
+namespace golang::go::types
+{
+    // Note: This is a uint32 rather than a uint64 because the
+    // respective 64 bit atomic instructions are not available
+    // on all platforms.
+    extern atomic::Uint32 lastID;
 }
 
 #include "golang/go/types/check.h"
@@ -51,22 +64,22 @@ namespace golang::types
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeterm.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        TypeParam* newTypeParam(Checker* check, TypeName* obj, golang::types::Type constraint);
+        TypeParam* newTypeParam(Checker* check, TypeName* obj, golang::go::types::Type constraint);
         TypeName* Obj(TypeParam* t);
         int Index(TypeParam* t);
-        golang::types::Type Constraint(TypeParam* t);
-        void SetConstraint(TypeParam* t, golang::types::Type bound);
-        golang::types::Type Underlying(TypeParam* t);
+        golang::go::types::Type Constraint(TypeParam* t);
+        void SetConstraint(TypeParam* t, golang::go::types::Type bound);
+        golang::go::types::Type Underlying(TypeParam* t);
         gocpp::string String(TypeParam* t);
         void cleanup(TypeParam* t);
         Interface* iface(TypeParam* t);
-        bool is(TypeParam* t, std::function<bool (term* _1)> f);
-        bool underIs(TypeParam* t, std::function<bool (golang::types::Type _1)> f);
+        bool is(TypeParam* t, std::function<bool (golang::go::types::term* _1)> f);
+        bool typeset(TypeParam* t, std::function<bool (golang::go::types::Type t, golang::go::types::Type u)> f);
     }
 }
 

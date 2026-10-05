@@ -12,31 +12,49 @@
 #include "gocpp/support.h"
 
 #include "golang/bytes/buffer.h"
+#include "golang/fmt/print.h"
 #include "golang/go/ast/ast.h"
 #include "golang/go/constant/value.h"
 #include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
+#include "golang/go/types/alias.h"
 #include "golang/go/types/api_predicates.h"
+#include "golang/go/types/array.h"
 #include "golang/go/types/basic.h"
 #include "golang/go/types/chan.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/errors.h"
 #include "golang/go/types/expr.h"
 #include "golang/go/types/exprstring.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/instantiate.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/lookup.h"
+#include "golang/go/types/map.h"
+#include "golang/go/types/named.h"
+#include "golang/go/types/pointer.h"
 #include "golang/go/types/predicates.h"
+#include "golang/go/types/signature.h"
+#include "golang/go/types/slice.h"
+#include "golang/go/types/struct.h"
+#include "golang/go/types/tuple.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeparam.h"
 #include "golang/go/types/typestring.h"
 #include "golang/go/types/typeterm.h"
-#include "golang/go/types/under.h"
+#include "golang/go/types/union.h"
 #include "golang/go/types/universe.h"
+#include "golang/go/types/util.h"
 #include "golang/internal/types/errors/codes.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace bytes = golang::bytes;
+    namespace constant = golang::go::constant;
+    namespace errors = golang::internal::types::errors;
+    namespace fmt = golang::fmt;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::Pos;
@@ -48,7 +66,7 @@ namespace golang::types
     }
 
     // An operandMode specifies the (addressing) mode of an operand.
-    gocpp::array<gocpp::string, 11> operandModeString = gocpp::Init<gocpp::array<gocpp::string, 11>>([](auto& x) {
+    gocpp::array<gocpp::string, 12> operandModeString = gocpp::Init<gocpp::array<gocpp::string, 12>>([](auto& x) {
         x[invalid] = "invalid operand"_s;
         x[novalue] = "no value"_s;
         x[types::builtin] = "built-in"_s;
@@ -57,6 +75,7 @@ namespace golang::types
         x[variable] = "variable"_s;
         x[mapindex] = "map index expression"_s;
         x[value] = "value"_s;
+        x[nilvalue] = "nil"_s;
         x[commaok] = "comma, ok expression"_s;
         x[commaerr] = "comma, error expression"_s;
         x[cgofunc] = "cgo function"_s;
@@ -71,9 +90,9 @@ namespace golang::types
     operand::operator T()
     {
         T result;
-        result.mode = this->mode;
+        result.mode_ = this->mode_;
         result.expr = this->expr;
-        result.typ = this->typ;
+        result.typ_ = this->typ_;
         result.val = this->val;
         result.id = this->id;
         return result;
@@ -82,9 +101,9 @@ namespace golang::types
     template<typename T> requires gocpp::GoStruct<T>
     bool operand::operator==(const T& ref) const
     {
-        if (mode != ref.mode) return false;
+        if (mode_ != ref.mode_) return false;
         if (expr != ref.expr) return false;
-        if (typ != ref.typ) return false;
+        if (typ_ != ref.typ_) return false;
         if (val != ref.val) return false;
         if (id != ref.id) return false;
         return true;
@@ -93,9 +112,9 @@ namespace golang::types
     std::ostream& operand::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << mode;
+        os << "" << mode_;
         os << " " << expr;
-        os << " " << typ;
+        os << " " << typ_;
         os << " " << val;
         os << " " << id;
         os << '}';
@@ -105,6 +124,26 @@ namespace golang::types
     std::ostream& operator<<(std::ostream& os, const struct operand& value)
     {
         return value.PrintTo(os);
+    }
+
+    operandMode rec::mode(operand* x)
+    {
+        return x->mode_;
+    }
+
+    golang::go::types::Type rec::typ(operand* x)
+    {
+        return x->typ_;
+    }
+
+    bool rec::isValid(operand* x)
+    {
+        return rec::mode(gocpp::recv(x)) != invalid;
+    }
+
+    void rec::invalidate(operand* x)
+    {
+        x->mode_ = invalid;
     }
 
     // Pos returns the position of the expression corresponding to x.
@@ -144,6 +183,9 @@ namespace golang::types
     // value      <expr> (<untyped kind> <mode>                    )
     // value      <expr> (               <mode>       of type <typ>)
     //
+    // nilvalue   untyped nil
+    // nilvalue   nil    (                            of type <typ>)
+    //
     // commaok    <expr> (<untyped kind> <mode>                    )
     // commaok    <expr> (               <mode>       of type <typ>)
     //
@@ -155,9 +197,40 @@ namespace golang::types
     gocpp::string operandString(operand* x, Qualifier qf)
     {
         // special-case nil
-        if(x->mode == value && x->typ == Typ[UntypedNil])
+        if(isTypes2)
         {
-            return "nil"_s;
+            if(rec::mode(gocpp::recv(x)) == nilvalue)
+            {
+                //Go switch emulation
+                {
+                    auto condition = rec::typ(gocpp::recv(x));
+                    int conditionId = -1;
+                    if(condition == nullptr) { conditionId = 0; }
+                    else if(condition == Typ[Invalid]) { conditionId = 1; }
+                    else if(condition == Typ[UntypedNil]) { conditionId = 2; }
+                    switch(conditionId)
+                    {
+                        case 0:
+                        case 1:
+                            return "nil (with invalid type)"_s;
+                            break;
+                        case 2:
+                            return "nil"_s;
+                            break;
+                        default:
+                            return mocklib::Sprintf("nil (of type %s)"_s, TypeString(rec::typ(gocpp::recv(x)), qf));
+                            break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            // go/types
+            if(rec::mode(gocpp::recv(x)) == value && rec::typ(gocpp::recv(x)) == Typ[UntypedNil])
+            {
+                return "nil"_s;
+            }
         }
 
         bytes::Buffer buf = {};
@@ -171,7 +244,7 @@ namespace golang::types
         {
             //Go switch emulation
             {
-                auto condition = x->mode;
+                auto condition = rec::mode(gocpp::recv(x));
                 int conditionId = -1;
                 if(condition == types::builtin) { conditionId = 0; }
                 else if(condition == typexpr) { conditionId = 1; }
@@ -182,7 +255,7 @@ namespace golang::types
                         expr = predeclaredFuncs[x->id].name;
                         break;
                     case 1:
-                        expr = TypeString(x->typ, qf);
+                        expr = TypeString(rec::typ(gocpp::recv(x)), qf);
                         break;
                     case 2:
                         expr = rec::String(gocpp::recv(x->val));
@@ -202,7 +275,7 @@ namespace golang::types
         auto hasType = false;
         //Go switch emulation
         {
-            auto condition = x->mode;
+            auto condition = rec::mode(gocpp::recv(x));
             int conditionId = -1;
             if(condition == invalid) { conditionId = 0; }
             else if(condition == novalue) { conditionId = 1; }
@@ -218,11 +291,11 @@ namespace golang::types
                 // no type
                 default:
                     // should have a type, but be cautious (don't crash during printing)
-                    if(x->typ != nullptr)
+                    if(rec::typ(gocpp::recv(x)) != nullptr)
                     {
-                        if(isUntyped(x->typ))
+                        if(isUntyped(rec::typ(gocpp::recv(x))))
                         {
-                            rec::WriteString(gocpp::recv(buf), gocpp::getValue<Basic*>(x->typ)->name);
+                            rec::WriteString(gocpp::recv(buf), gocpp::getValue<Basic*>(rec::typ(gocpp::recv(x)))->name);
                             rec::WriteByte(gocpp::recv(buf), ' ');
                             break;
                         }
@@ -233,10 +306,10 @@ namespace golang::types
         }
 
         // <mode>
-        rec::WriteString(gocpp::recv(buf), operandModeString[x->mode]);
+        rec::WriteString(gocpp::recv(buf), operandModeString[rec::mode(gocpp::recv(x))]);
 
         // <val>
-        if(x->mode == constant_)
+        if(rec::mode(gocpp::recv(x)) == constant_)
         {
             if(auto s = rec::String(gocpp::recv(x->val)); s != expr)
             {
@@ -248,20 +321,51 @@ namespace golang::types
         // <typ>
         if(hasType)
         {
-            if(isValid(x->typ))
+            if(isValid(rec::typ(gocpp::recv(x))))
             {
-                gocpp::string intro = {};
-                if(isGeneric(x->typ))
+                gocpp::string desc = {};
+                if(isGeneric(rec::typ(gocpp::recv(x))))
                 {
-                    intro = " of generic type "_s;
+                    desc = "generic "_s;
                 }
-                else
+
+                // Describe the type structure if it is an *Alias or *Named type.
+                // If the type is a renamed basic type, describe the basic type,
+                // as in "int32 type MyInt" for a *Named type MyInt.
+                // If it is a type parameter, describe the constraint instead.
+                auto [tpar, gocpp_id_0] = gocpp::getValue<TypeParam*>(Unalias(rec::typ(gocpp::recv(x))));
+                // desc is "" or has a trailing space at the end
+                if(tpar == nullptr)
                 {
-                    intro = " of type "_s;
+                    //Go type switch emulation
+                    {
+                        const auto& gocpp_id_1 = gocpp::type_info(rec::typ(gocpp::recv(x)));
+                        int conditionId = -1;
+                        if(gocpp_id_1 == typeid(types::Alias*)) { conditionId = 0; }
+                        else if(gocpp_id_1 == typeid(types::Named*)) { conditionId = 1; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                            case 1:
+                            {
+                                auto what = compositeKind(rec::typ(gocpp::recv(x)));
+                                if(what == ""_s)
+                                {
+                                    // x.typ must be basic type
+                                    what = gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))))->name;
+                                }
+                                desc += what + " "_s;
+                                break;
+                            }
+                        }
+                    }
                 }
-                rec::WriteString(gocpp::recv(buf), intro);
-                WriteType(& buf, x->typ, qf);
-                if(auto [tpar, gocpp_id_0] = gocpp::getValue<TypeParam*>(x->typ); tpar != nullptr)
+
+
+                rec::WriteString(gocpp::recv(buf), " of "_s + desc + "type "_s);
+                WriteType(& buf, rec::typ(gocpp::recv(x)), qf);
+
+                if(tpar != nullptr)
                 {
                     rec::WriteString(gocpp::recv(buf), " constrained by "_s);
                     // do not compute interface type sets here
@@ -288,18 +392,104 @@ namespace golang::types
         return rec::String(gocpp::recv(buf));
     }
 
+    // compositeKind returns the kind of the given composite type
+    // ("array", "slice", etc.) or the empty string if typ is not
+    // composite but a basic type.
+    gocpp::string compositeKind(golang::go::types::Type typ)
+    {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_2 = gocpp::type_info(rec::Underlying(gocpp::recv(typ)));
+            int conditionId = -1;
+            if(gocpp_id_2 == typeid(types::Basic*)) { conditionId = 0; }
+            else if(gocpp_id_2 == typeid(types::Array*)) { conditionId = 1; }
+            else if(gocpp_id_2 == typeid(types::Slice*)) { conditionId = 2; }
+            else if(gocpp_id_2 == typeid(types::Struct*)) { conditionId = 3; }
+            else if(gocpp_id_2 == typeid(types::Pointer*)) { conditionId = 4; }
+            else if(gocpp_id_2 == typeid(types::Signature*)) { conditionId = 5; }
+            else if(gocpp_id_2 == typeid(types::Interface*)) { conditionId = 6; }
+            else if(gocpp_id_2 == typeid(types::Map*)) { conditionId = 7; }
+            else if(gocpp_id_2 == typeid(types::Chan*)) { conditionId = 8; }
+            else if(gocpp_id_2 == typeid(types::Tuple*)) { conditionId = 9; }
+            else if(gocpp_id_2 == typeid(types::Union*)) { conditionId = 10; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    return ""_s;
+                    break;
+                }
+                case 1:
+                {
+                    return "array"_s;
+                    break;
+                }
+                case 2:
+                {
+                    return "slice"_s;
+                    break;
+                }
+                case 3:
+                {
+                    return "struct"_s;
+                    break;
+                }
+                case 4:
+                {
+                    return "pointer"_s;
+                    break;
+                }
+                case 5:
+                {
+                    return "func"_s;
+                    break;
+                }
+                case 6:
+                {
+                    return "interface"_s;
+                    break;
+                }
+                case 7:
+                {
+                    return "map"_s;
+                    break;
+                }
+                case 8:
+                {
+                    return "chan"_s;
+                    break;
+                }
+                case 9:
+                {
+                    return "tuple"_s;
+                    break;
+                }
+                case 10:
+                {
+                    return "union"_s;
+                    break;
+                }
+                default:
+                {
+                    gocpp::panic("unreachable"_s);
+                    break;
+                }
+            }
+        }
+    }
+
     gocpp::string rec::String(operand* x)
     {
         return operandString(x, nullptr);
     }
 
     // setConst sets x to the untyped constant for literal lit.
-    void rec::setConst(operand* x, token::Token tok, gocpp::string lit)
+    void rec::setConst(operand* x, token::Token k, gocpp::string lit)
     {
         BasicKind kind = {};
         //Go switch emulation
         {
-            auto condition = tok;
+            auto condition = k;
             int conditionId = -1;
             if(condition == token::INT) { conditionId = 0; }
             else if(condition == token::FLOAT) { conditionId = 1; }
@@ -324,27 +514,35 @@ namespace golang::types
                     kind = UntypedString;
                     break;
                 default:
-                    unreachable();
+                    gocpp::panic("unreachable"_s);
                     break;
             }
         }
 
-        auto val = constant::MakeFromLiteral(lit, tok, 0);
+        auto val = makeFromLiteral(lit, k);
         if(rec::Kind(gocpp::recv(val)) == constant::Unknown)
         {
-            x->mode = invalid;
-            x->typ = Typ[Invalid];
+            rec::invalidate(gocpp::recv(x));
+            x->typ_ = Typ[Invalid];
             return;
         }
-        x->mode = constant_;
-        x->typ = Typ[kind];
+        x->mode_ = constant_;
+        x->typ_ = Typ[kind];
         x->val = val;
     }
 
     // isNil reports whether x is the (untyped) nil value.
     bool rec::isNil(operand* x)
     {
-        return x->mode == value && x->typ == Typ[UntypedNil];
+        if(isTypes2)
+        {
+            return rec::mode(gocpp::recv(x)) == nilvalue;
+        }
+        else
+        {
+            // go/types
+            return rec::mode(gocpp::recv(x)) == value && rec::typ(gocpp::recv(x)) == Typ[UntypedNil];
+        }
     }
 
     // assignableTo reports whether x is assignable to a variable of type T. If the
@@ -353,15 +551,17 @@ namespace golang::types
     // is only valid if the (first) result is false. The check parameter may be nil
     // if assignableTo is invoked through an exported API call, i.e., when all
     // methods have been type-checked.
-    std::tuple<bool, errors::Code> rec::assignableTo(operand* x, Checker* check, golang::types::Type T, gocpp::string* cause)
+    std::tuple<bool, errors::Code> rec::assignableTo(operand* x, Checker* check, golang::go::types::Type T, gocpp::string* cause)
     {
-        if(x->mode == invalid || ! types::isValid(T))
+        if(! rec::isValid(gocpp::recv(x)) || ! types::isValid(T))
         {
             // avoid spurious errors
             return {true, 0};
         }
 
-        auto V = x->typ;
+        auto origT = T;
+        auto V = Unalias(rec::typ(gocpp::recv(x)));
+        T = Unalias(T);
 
         // x's type is identical to T
         if(Identical(V, T))
@@ -369,10 +569,10 @@ namespace golang::types
             return {true, 0};
         }
 
-        auto Vu = types::under(V);
-        auto Tu = types::under(T);
-        auto [Vp, gocpp_id_1] = gocpp::getValue<TypeParam*>(V);
-        auto [Tp, gocpp_id_2] = gocpp::getValue<TypeParam*>(T);
+        auto Vu = rec::Underlying(gocpp::recv(V));
+        auto Tu = rec::Underlying(gocpp::recv(T));
+        auto [Vp, gocpp_id_3] = gocpp::getValue<TypeParam*>(V);
+        auto [Tp, gocpp_id_4] = gocpp::getValue<TypeParam*>(T);
 
         // x is an untyped value representable by a value of type T.
         // Vu is typed
@@ -383,7 +583,7 @@ namespace golang::types
             {
                 // T is a type parameter: x is assignable to T if it is
                 // representable by each specific type in the type set of T.
-                return {rec::is(gocpp::recv(Tp), [=](term* t) mutable -> bool
+                return {rec::is(gocpp::recv(Tp), [=](golang::go::types::term* t) mutable -> bool
                 {
                     if(t == nullptr)
                     {
@@ -392,11 +592,11 @@ namespace golang::types
                     // A term may be a tilde term but the underlying
                     // type of an untyped value doesn't change so we
                     // don't need to do anything special.
-                    auto [newType, gocpp_id_3, gocpp_id_4] = rec::implicitTypeAndValue(gocpp::recv(check), x, t->typ);
+                    auto [newType, gocpp_id_5, gocpp_id_6] = rec::implicitTypeAndValue(gocpp::recv(check), x, t->typ);
                     return newType != nullptr;
                 }), IncompatibleAssign};
             }
-            auto [newType, gocpp_id_5, gocpp_id_6] = rec::implicitTypeAndValue(gocpp::recv(check), x, T);
+            auto [newType, gocpp_id_7, gocpp_id_8] = rec::implicitTypeAndValue(gocpp::recv(check), x, T);
             return {newType != nullptr, IncompatibleAssign};
         }
 
@@ -412,9 +612,9 @@ namespace golang::types
         // T is an interface type, but not a type parameter, and V implements T.
         // Also handle the case where T is a pointer to an interface so that we get
         // the Checker.implements error cause.
-        if(auto [gocpp_id_7, ok] = gocpp::getValue<Interface*>(Tu); ok && Tp == nullptr || isInterfacePtr(Tu))
+        if(auto [gocpp_id_9, ok] = gocpp::getValue<Interface*>(Tu); ok && Tp == nullptr || isInterfacePtr(Tu))
         {
-            if(rec::implements(gocpp::recv(check), rec::Pos(gocpp::recv(x)), V, T, false, cause))
+            if(rec::implements(gocpp::recv(check), V, T, false, cause))
             {
                 return {true, 0};
             }
@@ -431,9 +631,9 @@ namespace golang::types
         }
 
         // If V is an interface, check if a missing type assertion is the problem.
-        if(auto [Vi, gocpp_id_8] = gocpp::getValue<Interface*>(Vu); Vi != nullptr && Vp == nullptr)
+        if(auto [Vi, gocpp_id_10] = gocpp::getValue<Interface*>(Vu); Vi != nullptr && Vp == nullptr)
         {
-            if(rec::implements(gocpp::recv(check), rec::Pos(gocpp::recv(x)), T, V, false, nullptr))
+            if(rec::implements(gocpp::recv(check), T, V, false, nullptr))
             {
                 // T implements V, so give hint about type assertion.
                 if(cause != nullptr)
@@ -480,7 +680,7 @@ namespace golang::types
         {
             auto ok = false;
             auto code = IncompatibleAssign;
-            rec::is(gocpp::recv(Tp), [=](term* T) mutable -> bool
+            rec::is(gocpp::recv(Tp), [=](golang::go::types::term* T) mutable -> bool
             {
                 if(T == nullptr)
                 {
@@ -490,7 +690,7 @@ namespace golang::types
                 std::tie(ok, code) = rec::assignableTo(gocpp::recv(x), check, T->typ, cause);
                 if(! ok)
                 {
-                    errorf("cannot assign %s to %s (in %s)"_s, x->typ, T->typ, Tp);
+                    errorf("cannot assign %s to %s (in %s)"_s, rec::typ(gocpp::recv(x)), T->typ, Tp);
                     return false;
                 }
                 return true;
@@ -508,18 +708,18 @@ namespace golang::types
             auto& x = x_tmp;
             auto ok = false;
             auto code = IncompatibleAssign;
-            rec::is(gocpp::recv(Vp), [=](term* V) mutable -> bool
+            rec::is(gocpp::recv(Vp), [=](golang::go::types::term* V) mutable -> bool
             {
                 if(V == nullptr)
                 {
                     // no specific types
                     return false;
                 }
-                x->typ = V->typ;
+                x->typ_ = V->typ;
                 std::tie(ok, code) = rec::assignableTo(gocpp::recv(x), check, T, cause);
                 if(! ok)
                 {
-                    errorf("cannot assign %s (in %s) to %s"_s, V->typ, Vp, T);
+                    errorf("cannot assign %s (in %s) to %s"_s, V->typ, Vp, origT);
                     return false;
                 }
                 return true;

@@ -338,6 +338,54 @@ namespace golang::unicode
         return isExcludingLatin(Title, r);
     }
 
+    // lookupCaseRange returns the CaseRange mapping for rune r or nil if no
+    // mapping exists for r.
+    CaseRange* lookupCaseRange(gocpp::rune r, gocpp::slice<CaseRange> caseRange)
+    {
+        // binary search over ranges
+        auto lo = 0;
+        auto hi = len(caseRange);
+        for(; lo < hi; )
+        {
+            auto m = int((unsigned int)(lo + hi) >> 1);
+            auto cr = & caseRange[m];
+            if(gocpp::rune(cr->Lo) <= r && r <= gocpp::rune(cr->Hi))
+            {
+                return cr;
+            }
+            if(r < gocpp::rune(cr->Lo))
+            {
+                hi = m;
+            }
+            else
+            {
+                lo = m + 1;
+            }
+        }
+        return nullptr;
+    }
+
+    // convertCase converts r to _case using CaseRange cr.
+    gocpp::rune convertCase(int _case, gocpp::rune r, CaseRange* cr)
+    {
+        auto delta = cr->Delta[_case];
+        if(delta > MaxRune)
+        {
+            // In an Upper-Lower sequence, which always starts with
+            // an UpperCase letter, the real deltas always look like:
+            // {0, 1, 0}    UpperCase (Lower is next)
+            // {-1, 0, -1}  LowerCase (Upper, Title are previous)
+            // The characters at even offsets from the beginning of the
+            // sequence are upper case; the ones at odd offsets are lower.
+            // The correct mapping can be done by clearing or setting the low
+            // bit in the sequence offset.
+            // The constants UpperCase and TitleCase are even while LowerCase
+            // is odd so we take the low bit from _case.
+            return gocpp::rune(cr->Lo) + ((r - gocpp::rune(cr->Lo)) &^ 1 | gocpp::rune(_case & 1));
+        }
+        return r + delta;
+    }
+
     // to maps the rune using the specified case mapping.
     // It additionally reports whether caseRange contained a mapping for r.
     std::tuple<gocpp::rune, bool> to(int _case, gocpp::rune r, gocpp::slice<CaseRange> caseRange)
@@ -349,40 +397,9 @@ namespace golang::unicode
             // as reasonable an error as any
             return {ReplacementChar, false};
         }
-        // binary search over ranges
-        auto lo = 0;
-        auto hi = len(caseRange);
-        for(; lo < hi; )
+        if(auto cr = lookupCaseRange(r, caseRange); cr != nullptr)
         {
-            auto m = int((unsigned int)(lo + hi) >> 1);
-            auto cr = caseRange[m];
-            if(gocpp::rune(cr.Lo) <= r && r <= gocpp::rune(cr.Hi))
-            {
-                auto delta = cr.Delta[_case];
-                if(delta > MaxRune)
-                {
-                    // In an Upper-Lower sequence, which always starts with
-                    // an UpperCase letter, the real deltas always look like:
-                    // {0, 1, 0}    UpperCase (Lower is next)
-                    // {-1, 0, -1}  LowerCase (Upper, Title are previous)
-                    // The characters at even offsets from the beginning of the
-                    // sequence are upper case; the ones at odd offsets are lower.
-                    // The correct mapping can be done by clearing or setting the low
-                    // bit in the sequence offset.
-                    // The constants UpperCase and TitleCase are even while LowerCase
-                    // is odd so we take the low bit from _case.
-                    return {gocpp::rune(cr.Lo) + ((r - gocpp::rune(cr.Lo)) &^ 1 | gocpp::rune(_case & 1)), true};
-                }
-                return {r + delta, true};
-            }
-            if(r < gocpp::rune(cr.Lo))
-            {
-                hi = m;
-            }
-            else
-            {
-                lo = m + 1;
-            }
+            return {convertCase(_case, r, cr), true};
         }
         return {r, false};
     }
@@ -559,11 +576,15 @@ namespace golang::unicode
         // No folding specified. This is a one- or two-element
         // equivalence class containing rune and ToLower(rune)
         // and ToUpper(rune) if they are different from rune.
-        if(auto l = ToLower(r); l != r)
+        if(auto cr = lookupCaseRange(r, CaseRanges); cr != nullptr)
         {
-            return l;
+            if(auto l = convertCase(LowerCase, r, cr); l != r)
+            {
+                return l;
+            }
+            return convertCase(UpperCase, r, cr);
         }
-        return ToUpper(r);
+        return r;
     }
 
 }

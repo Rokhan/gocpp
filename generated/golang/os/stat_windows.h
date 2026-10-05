@@ -9,16 +9,27 @@
 #include "golang/os/stat_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/io/fs/fs.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/os/types.fwd.h"
+#include "golang/os/types.h"
 
 namespace golang::os
 {
     std::tuple<FileInfo, gocpp::error> stat(gocpp::string funcname, gocpp::string name, bool followSurrogates);
-    std::tuple<FileInfo, gocpp::error> statHandle(gocpp::string name, syscall::Handle h);
     std::tuple<FileInfo, gocpp::error> statNolog(gocpp::string name);
     std::tuple<FileInfo, gocpp::error> lstatNolog(gocpp::string name);
+}
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
+
+namespace golang::os
+{
+    namespace syscall = golang::syscall;
+}
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::os
+{
+    std::tuple<FileInfo, gocpp::error> statHandle(gocpp::string name, syscall::Handle h);
 }
 
 #include "golang/os/types.h"

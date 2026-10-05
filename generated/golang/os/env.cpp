@@ -17,12 +17,14 @@
 
 namespace golang::os
 {
+    namespace syscall = golang::syscall;
+    namespace testlog = golang::internal::testlog;
     namespace rec
     {
     }
 
     // Expand replaces ${var} or $var in the string based on the mapping function.
-    // For example, os.ExpandEnv(s) is equivalent to os.Expand(s, os.Getenv).
+    // For example, [os.ExpandEnv](s) is equivalent to [os.Expand](s, [os.Getenv]).
     gocpp::string Expand(gocpp::string s, std::function<gocpp::string (gocpp::string _1)> mapping)
     {
         gocpp::slice<unsigned char> buf = {};
@@ -178,7 +180,7 @@ namespace golang::os
 
     // Getenv retrieves the value of the environment variable named by the key.
     // It returns the value, which will be empty if the variable is not present.
-    // To distinguish between an empty value and an unset value, use LookupEnv.
+    // To distinguish between an empty value and an unset value, use [LookupEnv].
     gocpp::string Getenv(gocpp::string key)
     {
         testlog::Getenv(key);

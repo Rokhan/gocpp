@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::goarch
+namespace golang::internal::goarch
 {
     using ArchFamilyType = int;
     // PtrSize is the size of a pointer in bytes - unsafe.Sizeof(uintptr(0)) but as an ideal constant.
@@ -21,13 +21,15 @@ namespace golang::goarch
     const ArchFamilyType RISCV64 = 8;
     const ArchFamilyType S390X = 9;
     const ArchFamilyType WASM = 10;
+    // PtrBits is bit width of a pointer.
+    const int PtrBits = PtrSize * 8;
     // Int64Align is the required alignment for a 64-bit integer (4 on 32-bit systems, 8 on 64-bit).
     const int Int64Align = PtrSize;
 }
 #include "golang/internal/goarch/goarch_amd64.fwd.h"
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 
-namespace golang::goarch
+namespace golang::internal::goarch
 {
     // ArchFamily is the architecture family (AMD64, ARM, ...)
     const ArchFamilyType ArchFamily = _ArchFamily;

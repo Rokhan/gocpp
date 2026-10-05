@@ -3,3 +3,10 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::runtime
+{
+    const long float64Mask = 0x7FF;
+    const int float64Shift = 64 - 11 - 1;
+    const long float64Bias = 1023;
+}

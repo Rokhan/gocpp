@@ -11,12 +11,22 @@
 #include "golang/go/types/util.h"
 #include "gocpp/support.h"
 
+#include "golang/go/ast/ast.h"
+#include "golang/go/constant/value.h"
 #include "golang/go/token/position.h"
+#include "golang/go/token/token.h"
+#include "golang/go/types/errors.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace constant = golang::go::constant;
+    namespace token = golang::go::token;
     namespace rec
     {
+        using ast::rec::End;
+        using ast::rec::Pos;
+        using token::rec::IsValid;
     }
 
     // cmpPos compares the positions p and q and returns a result r as follows:
@@ -30,6 +40,55 @@ namespace golang::types
     int cmpPos(token::Pos p, token::Pos q)
     {
         return int(p - q);
+    }
+
+    // hasDots reports whether the last argument in the call is followed by ...
+    bool hasDots(ast::CallExpr* call)
+    {
+        return rec::IsValid(gocpp::recv(call->Ellipsis));
+    }
+
+    // dddErrPos returns the positioner for reporting an invalid ... use in a call.
+    positioner dddErrPos(ast::CallExpr* call)
+    {
+        return atPos(call->Ellipsis);
+    }
+
+    // isdddArray reports whether atyp is of the form [...]E.
+    bool isdddArray(ast::ArrayType* atyp)
+    {
+        if(atyp->Len != nullptr)
+        {
+            if(auto [ddd, gocpp_id_0] = gocpp::getValue<ast::Ellipsis*>(atyp->Len); ddd != nullptr && ddd->Elt == nullptr)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // argErrPos returns positioner for reporting an invalid argument count.
+    positioner argErrPos(ast::CallExpr* call)
+    {
+        return inNode(call, call->Rparen);
+    }
+
+    // startPos returns the start position of node n.
+    token::Pos startPos(ast::Node n)
+    {
+        return rec::Pos(gocpp::recv(n));
+    }
+
+    // endPos returns the position of the first character immediately after node n.
+    token::Pos endPos(ast::Node n)
+    {
+        return rec::End(gocpp::recv(n));
+    }
+
+    // makeFromLiteral returns the constant value for the given literal string and kind.
+    constant::Value makeFromLiteral(gocpp::string lit, token::Token kind)
+    {
+        return constant::MakeFromLiteral(lit, kind, 0);
     }
 
 }

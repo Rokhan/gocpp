@@ -11,22 +11,27 @@
 #include "golang/math/big/nat.h"
 #include "gocpp/support.h"
 
-#include "golang/encoding/binary/binary.h"
+#include "golang/internal/byteorder/byteorder.h"
 #include "golang/math/big/arith.h"
 #include "golang/math/big/arith_decl.h"
 #include "golang/math/big/int.h"
 #include "golang/math/big/natconv.h"
 #include "golang/math/big/natdiv.h"
+#include "golang/math/big/natmul.h"
 #include "golang/math/bits/bits.h"
 #include "golang/math/rand/rand.h"
+#include "golang/slices/slices.h"
 #include "golang/sync/pool.h"
 
-namespace golang::big
+namespace golang::math::big
 {
+    namespace bits = golang::math::bits;
+    namespace byteorder = golang::internal::byteorder;
+    namespace rand = golang::math::rand;
+    namespace slices = golang::slices;
+    namespace sync = golang::sync;
     namespace rec
     {
-        using binary::rec::Uint32;
-        using binary::rec::Uint64;
         using rand::rec::Uint32;
         using sync::rec::Get;
         using sync::rec::Put;
@@ -43,24 +48,16 @@ namespace golang::big
     // During arithmetic operations, denormalized values may occur but are
     // always normalized before returning the final result. The normalized
     // representation of 0 is the empty or nil slice (length = 0).
-    nat natOne = nat {1};
-    nat natTwo = nat {2};
-    nat natFive = nat {5};
-    nat natTen = nat {10};
-    gocpp::string rec::String(nat z)
+    golang::math::big::nat natOne = golang::math::big::nat {1};
+    golang::math::big::nat natTwo = golang::math::big::nat {2};
+    golang::math::big::nat natFive = golang::math::big::nat {5};
+    golang::math::big::nat natTen = golang::math::big::nat {10};
+    gocpp::string rec::String(golang::math::big::nat z)
     {
         return "0x"_s + gocpp::string(rec::itoa(gocpp::recv(z), false, 16));
     }
 
-    void rec::clear(nat z)
-    {
-        for(auto [i, gocpp_ignored] : z)
-        {
-            z[i] = 0;
-        }
-    }
-
-    nat rec::norm(nat z)
+    golang::math::big::nat rec::norm(golang::math::big::nat z)
     {
         auto i = len(z);
         for(; i > 0 && z[i - 1] == 0; )
@@ -70,7 +67,7 @@ namespace golang::big
         return z.make_slice(0, i);
     }
 
-    nat rec::make(nat z, int n)
+    golang::math::big::nat rec::make(golang::math::big::nat z, int n)
     {
         if(n <= cap(z))
         {
@@ -89,7 +86,7 @@ namespace golang::big
         return gocpp::make(gocpp::Tag<nat>(), n, n + e);
     }
 
-    nat rec::setWord(nat z, Word x)
+    golang::math::big::nat rec::setWord(golang::math::big::nat z, Word x)
     {
         if(x == 0)
         {
@@ -100,7 +97,7 @@ namespace golang::big
         return z;
     }
 
-    nat rec::setUint64(nat z, uint64_t x)
+    golang::math::big::nat rec::setUint64(golang::math::big::nat z, uint64_t x)
     {
         // single-word value
         if(auto w = Word(x); uint64_t(w) == x)
@@ -114,14 +111,14 @@ namespace golang::big
         return z;
     }
 
-    nat rec::set(nat z, nat x)
+    golang::math::big::nat rec::set(golang::math::big::nat z, golang::math::big::nat x)
     {
         z = rec::make(gocpp::recv(z), len(x));
         copy(z, x);
         return z;
     }
 
-    nat rec::add(nat z, nat x, nat y)
+    golang::math::big::nat rec::add(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
     {
         auto m = len(x);
         auto n = len(y);
@@ -151,7 +148,7 @@ namespace golang::big
 
 
         z = rec::make(gocpp::recv(z), m + 1);
-        auto c = addVV(z.make_slice(0, n), x, y);
+        auto c = addVV(z.make_slice(0, n), x.make_slice(0, n), y.make_slice(0, n));
         if(m > n)
         {
             c = addVW(z.make_slice(n, m), x.make_slice(n), c);
@@ -161,7 +158,7 @@ namespace golang::big
         return rec::norm(gocpp::recv(z));
     }
 
-    nat rec::sub(nat z, nat x, nat y)
+    golang::math::big::nat rec::sub(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
     {
         auto m = len(x);
         auto n = len(y);
@@ -191,7 +188,7 @@ namespace golang::big
 
 
         z = rec::make(gocpp::recv(z), m);
-        auto c = subVV(z.make_slice(0, n), x, y);
+        auto c = subVV(z.make_slice(0, n), x.make_slice(0, n), y.make_slice(0, n));
         if(m > n)
         {
             c = subVW(z.make_slice(n), x.make_slice(n), c);
@@ -204,7 +201,7 @@ namespace golang::big
         return rec::norm(gocpp::recv(z));
     }
 
-    int rec::cmp(nat x, nat y)
+    int rec::cmp(golang::math::big::nat x, golang::math::big::nat y)
     {
         int r;
         auto m = len(x);
@@ -253,38 +250,6 @@ namespace golang::big
         return r;
     }
 
-    nat rec::mulAddWW(nat z, nat x, Word y, Word r)
-    {
-        auto m = len(x);
-        // m > 0
-        if(m == 0 || y == 0)
-        {
-            // result is r
-            return rec::setWord(gocpp::recv(z), r);
-        }
-
-
-        z = rec::make(gocpp::recv(z), m + 1);
-        z[m] = mulAddVWW(z.make_slice(0, m), x, y, r);
-
-        return rec::norm(gocpp::recv(z));
-    }
-
-    // basicMul multiplies x and y and leaves the result in z.
-    // The (non-normalized) result is placed in z[0 : len(x) + len(y)].
-    void basicMul(nat z, nat x, nat y)
-    {
-        // initialize z
-        rec::clear(gocpp::recv(z.make_slice(0, len(x) + len(y))));
-        for(auto [i, d] : y)
-        {
-            if(d != 0)
-            {
-                z[len(x) + i] = addMulVVW(z.make_slice(i, i + len(x)), x, d);
-            }
-        }
-    }
-
     // montgomery computes z mod m = x*y*2**(-n*_W) mod m,
     // assuming k = -1/m mod 2**_W.
     // z is used for storing the result which is returned;
@@ -294,7 +259,7 @@ namespace golang::big
     // In the terminology of that paper, this is an "Almost Montgomery Multiplication":
     // x and y are required to satisfy 0 <= z < 2**(n*_W) and then the result
     // z is guaranteed to satisfy 0 <= z < 2**(n*_W), but it may not be < m.
-    nat rec::montgomery(nat z, nat x, nat y, nat m, Word k, int n)
+    golang::math::big::nat rec::montgomery(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y, golang::math::big::nat m, Word k, int n)
     {
         // This code assumes x, y, m are all the same length, n.
         // (required by addMulVVW and the for loop).
@@ -305,14 +270,14 @@ namespace golang::big
             gocpp::panic("math/big: mismatched montgomery number lengths"_s);
         }
         z = rec::make(gocpp::recv(z), n * 2);
-        rec::clear(gocpp::recv(z));
+        clear(z);
         Word c = {};
         for(auto i = 0; i < n; i++)
         {
             auto d = y[i];
-            auto c2 = addMulVVW(z.make_slice(i, n + i), x, d);
+            auto c2 = addMulVVWW(z.make_slice(i, n + i), z.make_slice(i, n + i), x, d, 0);
             auto t = z[i] * k;
-            auto c3 = addMulVVW(z.make_slice(i, n + i), m, t);
+            auto c3 = addMulVVWW(z.make_slice(i, n + i), z.make_slice(i, n + i), m, t, 0);
             auto cx = c + c2;
             auto cy = cx + c3;
             z[n + i] = cy;
@@ -336,501 +301,272 @@ namespace golang::big
         return z.make_slice(0, n);
     }
 
-    // Fast version of z[0:n+n>>1].add(z[0:n+n>>1], x[0:n]) w/o bounds checks.
-    // Factored out for readability - do not use outside karatsuba.
-    void karatsubaAdd(nat z, nat x, int n)
-    {
-        if(auto c = addVV(z.make_slice(0, n), z, x); c != 0)
-        {
-            addVW(z.make_slice(n, n + (n >> 1)), z.make_slice(n), c);
-        }
-    }
-
-    // Like karatsubaAdd, but does subtract.
-    void karatsubaSub(nat z, nat x, int n)
-    {
-        if(auto c = subVV(z.make_slice(0, n), z, x); c != 0)
-        {
-            subVW(z.make_slice(n, n + (n >> 1)), z.make_slice(n), c);
-        }
-    }
-
-    // Operands that are shorter than karatsubaThreshold are multiplied using
-    // "grade school" multiplication; for longer operands the Karatsuba algorithm
-    // is used.
-    long karatsubaThreshold = 40;
-    // karatsuba multiplies x and y and leaves the result in z.
-    // Both x and y must have the same length n and n must be a
-    // power of 2. The result vector z must have len(z) >= 6*n.
-    // The (non-normalized) result is placed in z[0 : 2*n].
-    void karatsuba(nat z, nat x, nat y)
-    {
-        auto n = len(y);
-
-        // Switch to basic multiplication if numbers are odd or small.
-        // (n is always even if karatsubaThreshold is even, but be
-        // conservative)
-        // n&1 == 0 && n >= karatsubaThreshold && n >= 2
-        if(n & 1 != 0 || n < karatsubaThreshold || n < 2)
-        {
-            basicMul(z, x, y);
-            return;
-        }
-
-
-        // Karatsuba multiplication is based on the observation that
-        // for two numbers x and y with:
-        // x = x1*b + x0
-        // y = y1*b + y0
-        // the product x*y can be obtained with 3 products z2, z1, z0
-        // instead of 4:
-        // x*y = x1*y1*b*b + (x1*y0 + x0*y1)*b + x0*y0
-        // =    z2*b*b +              z1*b +    z0
-        // with:
-        // xd = x1 - x0
-        // yd = y0 - y1
-        // z1 =      xd*yd                    + z2 + z0
-        // = (x1-x0)*(y0 - y1)             + z2 + z0
-        // = x1*y0 - x1*y1 - x0*y0 + x0*y1 + z2 + z0
-        // = x1*y0 -    z2 -    z0 + x0*y1 + z2 + z0
-        // = x1*y0                 + x0*y1
-        // split x, y into "digits"
-        // n2 >= 1
-        auto n2 = n >> 1;
-        // x = x1*b + y0
-        auto [x1, x0] = std::tuple{x.make_slice(n2), x.make_slice(0, n2)};
-        // y = y1*b + y0
-        auto [y1, y0] = std::tuple{y.make_slice(n2), y.make_slice(0, n2)};
-
-        // z is used for the result and temporary storage:
-        // 6*n     5*n     4*n     3*n     2*n     1*n     0*n
-        // z = [z2 copy|z0 copy| xd*yd | yd:xd | x1*y1 | x0*y0 ]
-        // For each recursive call of karatsuba, an unused slice of
-        // z is passed in that has (at least) half the length of the
-        // caller's z.
-        // compute z0 and z2 with the result "in place" in z
-        // z0 = x0*y0
-        karatsuba(z, x0, y0);
-        // z2 = x1*y1
-        karatsuba(z.make_slice(n), x1, y1);
-
-        // compute xd (or the negative value if underflow occurs)
-        // sign of product xd*yd
-        auto s = 1;
-        auto xd = z.make_slice(2 * n, 2 * n + n2);
-        if(subVV(xd, x1, x0) != 0)
-        {
-            // x1-x0
-            s = - s;
-            // x0-x1
-            subVV(xd, x0, x1);
-        }
-
-        // compute yd (or the negative value if underflow occurs)
-        auto yd = z.make_slice(2 * n + n2, 3 * n);
-        if(subVV(yd, y0, y1) != 0)
-        {
-            // y0-y1
-            s = - s;
-            // y1-y0
-            subVV(yd, y1, y0);
-        }
-
-        // p = (x1-x0)*(y0-y1) == x1*y0 - x1*y1 - x0*y0 + x0*y1 for s > 0
-        // p = (x0-x1)*(y0-y1) == x0*y0 - x0*y1 - x1*y0 + x1*y1 for s < 0
-        auto p = z.make_slice(n * 3);
-        karatsuba(p, xd, yd);
-
-        // save original z2:z0
-        // (ok to use upper half of z since we're done recurring)
-        auto r = z.make_slice(n * 4);
-        copy(r, z.make_slice(0, n * 2));
-
-        // add up all partial products
-        // 2*n     n     0
-        // z = [ z2  | z0  ]
-        // +    [ z0  ]
-        // +    [ z2  ]
-        // +    [  p  ]
-        karatsubaAdd(z.make_slice(n2), r, n);
-        karatsubaAdd(z.make_slice(n2), r.make_slice(n), n);
-        if(s > 0)
-        {
-            karatsubaAdd(z.make_slice(n2), p, n);
-        }
-        else
-        {
-            karatsubaSub(z.make_slice(n2), p, n);
-        }
-    }
-
     // alias reports whether x and y share the same base array.
     //
     // Note: alias assumes that the capacity of underlying arrays
     // is never changed for nat values; i.e. that there are
     // no 3-operand slice expressions in this code (or worse,
     // reflect-based operations to the same effect).
-    bool alias(nat x, nat y)
+    bool alias(golang::math::big::nat x, golang::math::big::nat y)
     {
         return cap(x) > 0 && cap(y) > 0 && & x.make_slice(0, cap(x))[cap(x) - 1] == & y.make_slice(0, cap(y))[cap(y) - 1];
     }
 
-    // addAt implements z += x<<(_W*i); z must be long enough.
+    // addTo implements z += x; z must be long enough.
     // (we don't use nat.add because we need z to stay the same
     // slice, and we don't need to normalize z after each addition)
-    void addAt(nat z, nat x, int i)
+    void addTo(golang::math::big::nat z, golang::math::big::nat x)
     {
         if(auto n = len(x); n > 0)
         {
-            if(auto c = addVV(z.make_slice(i, i + n), z.make_slice(i), x); c != 0)
+            if(auto c = addVV(z.make_slice(0, n), z.make_slice(0, n), x.make_slice(0, n)); c != 0)
             {
-                auto j = i + n;
-                if(j < len(z))
+                if(n < len(z))
                 {
-                    addVW(z.make_slice(j), z.make_slice(j), c);
+                    addVW(z.make_slice(n), z.make_slice(n), c);
                 }
             }
         }
-    }
-
-    // karatsubaLen computes an approximation to the maximum k <= n such that
-    // k = p<<i for a number p <= threshold and an i >= 0. Thus, the
-    // result is the largest number that can be divided repeatedly by 2 before
-    // becoming about the value of threshold.
-    int karatsubaLen(int n, int threshold)
-    {
-        auto i = (unsigned int)(0);
-        for(; n > threshold; )
-        {
-            n >>= 1;
-            i++;
-        }
-        return n << i;
-    }
-
-    nat rec::mul(nat z, nat x, nat y)
-    {
-        auto m = len(x);
-        auto n = len(y);
-
-        // m >= n > 1
-        //Go switch emulation
-        {
-            int conditionId = -1;
-            if(m < n) { conditionId = 0; }
-            else if(m == 0 || n == 0) { conditionId = 1; }
-            else if(n == 1) { conditionId = 2; }
-            switch(conditionId)
-            {
-                case 0:
-                    return rec::mul(gocpp::recv(z), y, x);
-                    break;
-                case 1:
-                    return z.make_slice(0, 0);
-                    break;
-                case 2:
-                    return rec::mulAddWW(gocpp::recv(z), x, y[0], 0);
-                    break;
-            }
-        }
-
-
-        // determine if z can be reused
-        if(alias(z, x) || alias(z, y))
-        {
-            // z is an alias for x or y - cannot reuse
-            z = nullptr;
-        }
-
-        // use basic multiplication if the numbers are small
-        // m >= n && n >= karatsubaThreshold && n >= 2
-        if(n < karatsubaThreshold)
-        {
-            z = rec::make(gocpp::recv(z), m + n);
-            basicMul(z, x, y);
-            return rec::norm(gocpp::recv(z));
-        }
-
-
-        // determine Karatsuba length k such that
-        // x = xh*b + x0  (0 <= x0 < b)
-        // y = yh*b + y0  (0 <= y0 < b)
-        // b = 1<<(_W*k)  ("base" of digits xi, yi)
-        // k <= n
-        auto k = karatsubaLen(n, karatsubaThreshold);
-
-
-        // multiply x0 and y0 via Karatsuba
-        // x0 is not normalized
-        auto x0 = x.make_slice(0, k);
-        // y0 is not normalized
-        auto y0 = y.make_slice(0, k);
-        // enough space for karatsuba of x0*y0 and full result of x*y
-        z = rec::make(gocpp::recv(z), gocpp::max(6 * k, m + n));
-        karatsuba(z, x0, y0);
-        // z has final length but may be incomplete
-        z = z.make_slice(0, m + n);
-        // upper portion of z is garbage (and 2*k <= m+n since k <= n <= m)
-        rec::clear(gocpp::recv(z.make_slice(2 * k)));
-
-        // If xh != 0 or yh != 0, add the missing terms to z. For
-        // xh = xi*b^i + ... + x2*b^2 + x1*b (0 <= xi < b)
-        // yh =                         y1*b (0 <= y1 < b)
-        // the missing terms are
-        // x0*y1*b and xi*y0*b^i, xi*y1*b^(i+1) for i > 0
-        // since all the yi for i > 1 are 0 by choice of k: If any of them
-        // were > 0, then yh >= b^2 and thus y >= b^2. Then k' = k*2 would
-        // be a larger valid threshold contradicting the assumption about k.
-        if(k < n || m != n)
-        {
-            auto tp = getNat(3 * k);
-            auto t = *tp;
-
-            // add x0*y1*b
-            auto x0_tmp = rec::norm(gocpp::recv(x0));
-            auto& x0 = x0_tmp;
-            // y1 is normalized because y is
-            auto y1 = y.make_slice(k);
-            // update t so we don't lose t's underlying array
-            t = rec::mul(gocpp::recv(t), x0, y1);
-            addAt(z, t, k);
-
-            // add xi*y0<<i, xi*y1*b<<(i+k)
-            auto y0_tmp = rec::norm(gocpp::recv(y0));
-            auto& y0 = y0_tmp;
-            for(auto i = k; i < len(x); i += k)
-            {
-                auto xi = x.make_slice(i);
-                if(len(xi) > k)
-                {
-                    xi = xi.make_slice(0, k);
-                }
-                xi = rec::norm(gocpp::recv(xi));
-                t = rec::mul(gocpp::recv(t), xi, y0);
-                addAt(z, t, i);
-                t = rec::mul(gocpp::recv(t), xi, y1);
-                addAt(z, t, i + k);
-            }
-
-            putNat(tp);
-        }
-
-        return rec::norm(gocpp::recv(z));
-    }
-
-    // basicSqr sets z = x*x and is asymptotically faster than basicMul
-    // by about a factor of 2, but slower for small arguments due to overhead.
-    // Requirements: len(x) > 0, len(z) == 2*len(x)
-    // The (non-normalized) result is placed in z.
-    void basicSqr(nat z, nat x)
-    {
-        auto n = len(x);
-        auto tp = getNat(2 * n);
-        // temporary variable to hold the products
-        auto t = *tp;
-        rec::clear(gocpp::recv(t));
-        // the initial square
-        std::tie(z[1], z[0]) = mulWW(x[0], x[0]);
-        for(auto i = 1; i < n; i++)
-        {
-            auto d = x[i];
-            // z collects the squares x[i] * x[i]
-            std::tie(z[2 * i + 1], z[2 * i]) = mulWW(d, d);
-            // t collects the products x[i] * x[j] where j < i
-            t[2 * i] = addMulVVW(t.make_slice(i, 2 * i), x.make_slice(0, i), d);
-        }
-        // double the j < i products
-        t[2 * n - 1] = shlVU(t.make_slice(1, 2 * n - 1), t.make_slice(1, 2 * n - 1), 1);
-        // combine the result
-        addVV(z, z, t);
-        putNat(tp);
-    }
-
-    // karatsubaSqr squares x and leaves the result in z.
-    // len(x) must be a power of 2 and len(z) >= 6*len(x).
-    // The (non-normalized) result is placed in z[0 : 2*len(x)].
-    //
-    // The algorithm and the layout of z are the same as for karatsuba.
-    void karatsubaSqr(nat z, nat x)
-    {
-        auto n = len(x);
-
-        if(n & 1 != 0 || n < karatsubaSqrThreshold || n < 2)
-        {
-            basicSqr(z.make_slice(0, 2 * n), x);
-            return;
-        }
-
-        auto n2 = n >> 1;
-        auto [x1, x0] = std::tuple{x.make_slice(n2), x.make_slice(0, n2)};
-
-        karatsubaSqr(z, x0);
-        karatsubaSqr(z.make_slice(n), x1);
-
-        // s = sign(xd*yd) == -1 for xd != 0; s == 1 for xd == 0
-        auto xd = z.make_slice(2 * n, 2 * n + n2);
-        if(subVV(xd, x1, x0) != 0)
-        {
-            subVV(xd, x0, x1);
-        }
-
-        auto p = z.make_slice(n * 3);
-        karatsubaSqr(p, xd);
-
-        auto r = z.make_slice(n * 4);
-        copy(r, z.make_slice(0, n * 2));
-
-        karatsubaAdd(z.make_slice(n2), r, n);
-        karatsubaAdd(z.make_slice(n2), r.make_slice(n), n);
-        // s == -1 for p != 0; s == 1 for p == 0
-        karatsubaSub(z.make_slice(n2), p, n);
-    }
-
-    // Operands that are shorter than basicSqrThreshold are squared using
-    // "grade school" multiplication; for operands longer than karatsubaSqrThreshold
-    // we use the Karatsuba algorithm optimized for x == y.
-    long basicSqrThreshold = 20;
-    long karatsubaSqrThreshold = 260;
-    // z = x*x
-    nat rec::sqr(nat z, nat x)
-    {
-        auto n = len(x);
-        //Go switch emulation
-        {
-            int conditionId = -1;
-            if(n == 0) { conditionId = 0; }
-            else if(n == 1) { conditionId = 1; }
-            switch(conditionId)
-            {
-                case 0:
-                    return z.make_slice(0, 0);
-                    break;
-                case 1:
-                {
-                    auto d = x[0];
-                    z = rec::make(gocpp::recv(z), 2);
-                    std::tie(z[1], z[0]) = mulWW(d, d);
-                    return rec::norm(gocpp::recv(z));
-                    break;
-                }
-            }
-        }
-
-        if(alias(z, x))
-        {
-            // z is an alias for x - cannot reuse
-            z = nullptr;
-        }
-
-        if(n < basicSqrThreshold)
-        {
-            z = rec::make(gocpp::recv(z), 2 * n);
-            basicMul(z, x, x);
-            return rec::norm(gocpp::recv(z));
-        }
-        if(n < karatsubaSqrThreshold)
-        {
-            z = rec::make(gocpp::recv(z), 2 * n);
-            basicSqr(z, x);
-            return rec::norm(gocpp::recv(z));
-        }
-
-        // Use Karatsuba multiplication optimized for x == y.
-        // The algorithm and layout of z are the same as for mul.
-        // z = (x1*b + x0)^2 = x1^2*b^2 + 2*x1*x0*b + x0^2
-        auto k = karatsubaLen(n, karatsubaSqrThreshold);
-
-        auto x0 = x.make_slice(0, k);
-        z = rec::make(gocpp::recv(z), gocpp::max(6 * k, 2 * n));
-        // z = x0^2
-        karatsubaSqr(z, x0);
-        z = z.make_slice(0, 2 * n);
-        rec::clear(gocpp::recv(z.make_slice(2 * k)));
-
-        if(k < n)
-        {
-            auto tp = getNat(2 * k);
-            auto t = *tp;
-            auto x0_tmp = rec::norm(gocpp::recv(x0));
-            auto& x0 = x0_tmp;
-            auto x1 = x.make_slice(k);
-            t = rec::mul(gocpp::recv(t), x0, x1);
-            addAt(z, t, k);
-            // z = 2*x1*x0*b + x0^2
-            addAt(z, t, k);
-            t = rec::sqr(gocpp::recv(t), x1);
-            // z = x1^2*b^2 + 2*x1*x0*b + x0^2
-            addAt(z, t, 2 * k);
-            putNat(tp);
-        }
-
-        return rec::norm(gocpp::recv(z));
     }
 
     // mulRange computes the product of all the unsigned integers in the
     // range [a, b] inclusively. If a > b (empty range), the result is 1.
-    nat rec::mulRange(nat z, uint64_t a, uint64_t b)
+    // The caller may pass stk == nil to request that mulRange obtain and release one itself.
+    golang::math::big::nat rec::mulRange(golang::math::big::nat z, stack* stk, uint64_t a, uint64_t b)
     {
-        //Go switch emulation
+        gocpp::Defer defer;
+        try
         {
-            int conditionId = -1;
-            if(a == 0) { conditionId = 0; }
-            else if(a > b) { conditionId = 1; }
-            else if(a == b) { conditionId = 2; }
-            else if(a + 1 == b) { conditionId = 3; }
-            switch(conditionId)
+            //Go switch emulation
             {
-                case 0:
-                    // cut long ranges short (optimization)
-                    return rec::setUint64(gocpp::recv(z), 0);
-                    break;
-                case 1:
-                    return rec::setUint64(gocpp::recv(z), 1);
-                    break;
-                case 2:
-                    return rec::setUint64(gocpp::recv(z), a);
-                    break;
-                case 3:
-                    return rec::mul(gocpp::recv(z), rec::setUint64(gocpp::recv(nat(nullptr)), a), rec::setUint64(gocpp::recv(nat(nullptr)), b));
-                    break;
+                int conditionId = -1;
+                if(a == 0) { conditionId = 0; }
+                else if(a > b) { conditionId = 1; }
+                else if(a == b) { conditionId = 2; }
+                else if(a + 1 == b) { conditionId = 3; }
+                switch(conditionId)
+                {
+                    case 0:
+                        // cut long ranges short (optimization)
+                        return rec::setUint64(gocpp::recv(z), 0);
+                        break;
+                    case 1:
+                        return rec::setUint64(gocpp::recv(z), 1);
+                        break;
+                    case 2:
+                        return rec::setUint64(gocpp::recv(z), a);
+                        break;
+                    case 3:
+                        return rec::mul(gocpp::recv(z), stk, rec::setUint64(gocpp::recv(nat(nullptr)), a), rec::setUint64(gocpp::recv(nat(nullptr)), b));
+                        break;
+                }
             }
+
+            if(stk == nullptr)
+            {
+                stk = getStack();
+                defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
+            }
+
+            // avoid overflow
+            auto m = a + (b - a) / 2;
+            return rec::mul(gocpp::recv(z), stk, rec::mulRange(gocpp::recv(nat(nullptr)), stk, a, m), rec::mulRange(gocpp::recv(nat(nullptr)), stk, m + 1, b));
         }
-        // avoid overflow
-        auto m = a + (b - a) / 2;
-        return rec::mul(gocpp::recv(z), rec::mulRange(gocpp::recv(nat(nullptr)), a, m), rec::mulRange(gocpp::recv(nat(nullptr)), m + 1, b));
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
-    // getNat returns a *nat of len n. The contents may not be zero.
-    // The pool holds *nat to avoid allocation when converting to interface{}.
-    nat* getNat(int n)
+    // A stackInner provides temporary storage for complex calculations
+    // such as multiplication and division.
+    // It should only be used by [stack], below.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    stackInner::operator T()
     {
-        nat* z = {};
-        if(auto v = rec::Get(gocpp::recv(natPool)); v != nullptr)
+        T result;
+        result.w = this->w;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackInner::operator==(const T& ref) const
+    {
+        if (w != ref.w) return false;
+        return true;
+    }
+
+    std::ostream& stackInner::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << w;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct stackInner& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    sync::Pool stackPool;
+    // getStack returns a temporary stack.
+    // The caller must call [stack.free] to give up use of the stack when finished.
+    stackInner* getStackInner()
+    {
+        auto [s, gocpp_id_0] = gocpp::getValue<stackInner*>(rec::Get(gocpp::recv(stackPool)));
+        if(s == nullptr)
         {
-            z = gocpp::getValue<nat*>(v);
+            s = new big::stackInner{};
         }
-        if(z == nullptr)
-        {
-            z = new big::nat{};
-        }
-        *z = rec::make(gocpp::recv(z), n);
+        return s;
+    }
+
+    // free returns the stack for use by another calculation.
+    void rec::free(stackInner* s)
+    {
+        s->w = s->w.make_slice(0, 0);
+        rec::Put(gocpp::recv(stackPool), s);
+    }
+
+    // save returns the current stack pointer.
+    // A future call to restore with the same value
+    // frees any temporaries allocated on the stack after the call to save.
+    int rec::save(stackInner* s)
+    {
+        return len(s->w);
+    }
+
+    // restore restores the stack pointer to n.
+    // It is almost always invoked as
+    //
+    //	defer stk.restore(stk.save())
+    //
+    // which makes sure to pop any temporaries allocated in the current function
+    // from the stack before returning.
+    void rec::restore(stackInner* s, int n)
+    {
+        s->w = s->w.make_slice(0, n);
+    }
+
+    // nat returns a nat of n words, allocated on the stack.
+    golang::math::big::nat rec::nat(stackInner* s, int n)
+    {
+        // round up to multiple of 4
+        auto nr = (n + 3) &^ 3;
+        auto off = len(s->w);
+        s->w = slices::Grow(s->w, nr);
+        s->w = s->w.make_slice(0, off + nr);
+        auto x = s->w.make_slice(off, off + n, off + n);
         if(n > 0)
         {
-            // break code expecting zero
-            (*z)[0] = 0xfedcb;
+            x[0] = 0xfedcb;
         }
-        return z;
+        return x;
     }
 
-    void putNat(nat* x)
+    // A stack provides temporary storage for complex calculations
+    // such as multiplication and division.
+    // In general, if a function takes a *stack, it expects a non-nil *stack.
+    // However, certain functions may allow passing a nil *stack instead,
+    // so that they can handle trivial stack-free cases without forcing the
+    // caller to obtain and free a stack that will be unused. These functions
+    // document that they accept a nil *stack in their doc comments.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    stack::operator T()
     {
-        rec::Put(gocpp::recv(natPool), x);
+        T result;
+        result.si = this->si;
+        return result;
     }
 
-    sync::Pool natPool;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stack::operator==(const T& ref) const
+    {
+        if (si != ref.si) return false;
+        return true;
+    }
+
+    std::ostream& stack::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << si;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct stack& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    stack* getStack()
+    {
+        return new stack {};
+    }
+
+    void rec::free(stack* s)
+    {
+        auto si = s->si;
+        if(si != nullptr)
+        {
+            rec::free(gocpp::recv(si));
+        }
+    }
+
+    int rec::save(stack* s)
+    {
+        auto si = s->si;
+        if(si == nullptr)
+        {
+            return 0;
+        }
+        return rec::save(gocpp::recv(si));
+    }
+
+    void rec::restore(stack* s, int n)
+    {
+        auto si = s->si;
+        if(si == nullptr)
+        {
+            return;
+        }
+        rec::restore(gocpp::recv(si), n);
+    }
+
+    golang::math::big::nat rec::nat(stack* s, int n)
+    {
+        auto si = s->si;
+        if(si == nullptr)
+        {
+            if(n <= 4)
+            {
+                // For small allocations, just ask the allocator.
+                // It isn't worth pooling these allocations.
+                // See issue 73999.
+                auto r = slices::Grow(nat(nullptr), n);
+                r = r.make_slice(0, n);
+                if(n > 0)
+                {
+                    r[0] = 0xabcdef;
+                }
+                return r;
+            }
+            std::tie(si, std::ignore) = gocpp::getValue<stackInner*>(rec::Get(gocpp::recv(stackPool)));
+            if(si == nullptr)
+            {
+                si = new big::stackInner{};
+            }
+            s->si = si;
+        }
+        return rec::nat(gocpp::recv(si), n);
+    }
+
     // bitLen returns the length of x in bits.
     // Unlike most methods, it works even if x is not normalized.
-    int rec::bitLen(nat x)
+    int rec::bitLen(golang::math::big::nat x)
     {
         // This function is used in cryptographic operations. It must not leak
         // anything but the Int's sign and bit size through side-channels. Any
@@ -855,7 +591,7 @@ namespace golang::big
 
     // trailingZeroBits returns the number of consecutive least significant zero
     // bits of x.
-    unsigned int rec::trailingZeroBits(nat x)
+    unsigned int rec::trailingZeroBits(golang::math::big::nat x)
     {
         if(len(x) == 0)
         {
@@ -871,7 +607,7 @@ namespace golang::big
     }
 
     // isPow2 returns i, true when x == 2**i and 0, false otherwise.
-    std::tuple<unsigned int, bool> rec::isPow2(nat x)
+    std::tuple<unsigned int, bool> rec::isPow2(golang::math::big::nat x)
     {
         unsigned int i = {};
         for(; x[i] == 0; )
@@ -885,13 +621,13 @@ namespace golang::big
         return {0, false};
     }
 
-    bool same(nat x, nat y)
+    bool same(golang::math::big::nat x, golang::math::big::nat y)
     {
         return len(x) == len(y) && len(x) > 0 && & x[0] == & y[0];
     }
 
     // z = x << s
-    nat rec::shl(nat z, nat x, unsigned int s)
+    golang::math::big::nat rec::lsh(golang::math::big::nat z, golang::math::big::nat x, unsigned int s)
     {
         if(s == 0)
         {
@@ -915,14 +651,22 @@ namespace golang::big
 
         auto n = m + int(s / _W);
         z = rec::make(gocpp::recv(z), n + 1);
-        z[n] = shlVU(z.make_slice(n - m, n), x, s % _W);
-        rec::clear(gocpp::recv(z.make_slice(0, n - m)));
+        if(s %= _W; s == 0)
+        {
+            copy(z.make_slice(n - m, n), x);
+            z[n] = 0;
+        }
+        else
+        {
+            z[n] = lshVU(z.make_slice(n - m, n), x, s);
+        }
+        clear(z.make_slice(0, n - m));
 
         return rec::norm(gocpp::recv(z));
     }
 
     // z = x >> s
-    nat rec::shr(nat z, nat x, unsigned int s)
+    golang::math::big::nat rec::rsh(golang::math::big::nat z, golang::math::big::nat x, unsigned int s)
     {
         if(s == 0)
         {
@@ -946,12 +690,19 @@ namespace golang::big
 
 
         z = rec::make(gocpp::recv(z), n);
-        shrVU(z, x.make_slice(m - n), s % _W);
+        if(s %= _W; s == 0)
+        {
+            copy(z, x.make_slice(m - n));
+        }
+        else
+        {
+            rshVU(z, x.make_slice(m - n), s);
+        }
 
         return rec::norm(gocpp::recv(z));
     }
 
-    nat rec::setBit(nat z, nat x, unsigned int i, unsigned int b)
+    golang::math::big::nat rec::setBit(golang::math::big::nat z, golang::math::big::nat x, unsigned int i, unsigned int b)
     {
         auto j = int(i / _W);
         auto m = Word(1) << (i % _W);
@@ -979,7 +730,7 @@ namespace golang::big
                     if(j >= n)
                     {
                         z = rec::make(gocpp::recv(z), j + 1);
-                        rec::clear(gocpp::recv(z.make_slice(n)));
+                        clear(z.make_slice(n));
                     }
                     else
                     {
@@ -996,7 +747,7 @@ namespace golang::big
     }
 
     // bit returns the value of the i'th bit, with lsb == bit 0.
-    unsigned int rec::bit(nat x, unsigned int i)
+    unsigned int rec::bit(golang::math::big::nat x, unsigned int i)
     {
         auto j = i / _W;
         if(j >= (unsigned int)(len(x)))
@@ -1009,7 +760,7 @@ namespace golang::big
 
     // sticky returns 1 if there's a 1 bit within the
     // i least significant bits, otherwise it returns 0.
-    unsigned int rec::sticky(nat x, unsigned int i)
+    unsigned int rec::sticky(golang::math::big::nat x, unsigned int i)
     {
         auto j = i / _W;
         if(j >= (unsigned int)(len(x)))
@@ -1035,7 +786,7 @@ namespace golang::big
         return 0;
     }
 
-    nat rec::and(nat z, nat x, nat y)
+    golang::math::big::nat rec::and(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
     {
         auto m = len(x);
         auto n = len(y);
@@ -1056,7 +807,7 @@ namespace golang::big
     }
 
     // trunc returns z = x mod 2ⁿ.
-    nat rec::trunc(nat z, nat x, unsigned int n)
+    golang::math::big::nat rec::trunc(golang::math::big::nat z, golang::math::big::nat x, unsigned int n)
     {
         auto w = (n + _W - 1) / _W;
         if((unsigned int)(len(x)) < w)
@@ -1072,7 +823,7 @@ namespace golang::big
         return rec::norm(gocpp::recv(z));
     }
 
-    nat rec::andNot(nat z, nat x, nat y)
+    golang::math::big::nat rec::andNot(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
     {
         auto m = len(x);
         auto n = len(y);
@@ -1093,7 +844,7 @@ namespace golang::big
         return rec::norm(gocpp::recv(z));
     }
 
-    nat rec::or(nat z, nat x, nat y)
+    golang::math::big::nat rec::or(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
     {
         auto m = len(x);
         auto n = len(y);
@@ -1116,7 +867,7 @@ namespace golang::big
         return rec::norm(gocpp::recv(z));
     }
 
-    nat rec::xor(nat z, nat x, nat y)
+    golang::math::big::nat rec::xor(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
     {
         auto m = len(x);
         auto n = len(y);
@@ -1141,7 +892,7 @@ namespace golang::big
 
     // random creates a random integer in [0..limit), using the space in z if
     // possible. n is the bit length of limit.
-    nat rec::random(nat z, rand::Rand* rand, nat limit, int n)
+    golang::math::big::nat rec::random(golang::math::big::nat z, rand::Rand* rand, golang::math::big::nat limit, int n)
     {
         if(alias(z, limit))
         {
@@ -1196,145 +947,159 @@ namespace golang::big
 
     // If m != 0 (i.e., len(m) != 0), expNN sets z to x**y mod m;
     // otherwise it sets z to x**y. The result is the value of z.
-    nat rec::expNN(nat z, nat x, nat y, nat m, bool slow)
+    // The caller may pass stk == nil to request that expNN obtain and release one itself.
+    golang::math::big::nat rec::expNN(golang::math::big::nat z, stack* stk, golang::math::big::nat x, golang::math::big::nat y, golang::math::big::nat m, bool slow)
     {
-        if(alias(z, x) || alias(z, y))
+        gocpp::Defer defer;
+        try
         {
-            // We cannot allow in-place modification of x or y.
-            z = nullptr;
-        }
+            if(alias(z, x) || alias(z, y))
+            {
+                // We cannot allow in-place modification of x or y.
+                z = nullptr;
+            }
 
-        // x**y mod 1 == 0
-        // m == 0 || m > 1
-        if(len(m) == 1 && m[0] == 1)
-        {
-            return rec::setWord(gocpp::recv(z), 0);
-        }
-
-
-        // x**0 == 1
-        // y > 0
-        if(len(y) == 0)
-        {
-            return rec::setWord(gocpp::recv(z), 1);
-        }
+            // x**y mod 1 == 0
+            // m == 0 || m > 1
+            if(len(m) == 1 && m[0] == 1)
+            {
+                return rec::setWord(gocpp::recv(z), 0);
+            }
 
 
-        // 0**y = 0
-        // x > 0
-        if(len(x) == 0)
-        {
-            return rec::setWord(gocpp::recv(z), 0);
-        }
+            // x**0 == 1
+            // y > 0
+            if(len(y) == 0)
+            {
+                return rec::setWord(gocpp::recv(z), 1);
+            }
 
 
-        // 1**y = 1
-        // x > 1
-        if(len(x) == 1 && x[0] == 1)
-        {
-            return rec::setWord(gocpp::recv(z), 1);
-        }
+            // 0**y = 0
+            // x > 0
+            if(len(x) == 0)
+            {
+                return rec::setWord(gocpp::recv(z), 0);
+            }
 
 
-        // x**1 == x
-        // y > 1
-        if(len(y) == 1 && y[0] == 1)
-        {
+            // 1**y = 1
+            // x > 1
+            if(len(x) == 1 && x[0] == 1)
+            {
+                return rec::setWord(gocpp::recv(z), 1);
+            }
+
+
+            // x**1 == x
+            if(len(y) == 1 && y[0] == 1 && len(m) == 0)
+            {
+                return rec::set(gocpp::recv(z), x);
+            }
+            if(stk == nullptr)
+            {
+                stk = getStack();
+                defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
+            }
+            if(len(y) == 1 && y[0] == 1)
+            {
+                // len(m) > 0
+                return rec::rem(gocpp::recv(z), stk, x, m);
+            }
+
+            // y > 1
             if(len(m) != 0)
             {
-                return rec::rem(gocpp::recv(z), x, m);
-            }
-            return rec::set(gocpp::recv(z), x);
-        }
+                // We likely end up being as long as the modulus.
+                z = rec::make(gocpp::recv(z), len(m));
 
-
-        if(len(m) != 0)
-        {
-            // We likely end up being as long as the modulus.
-            z = rec::make(gocpp::recv(z), len(m));
-
-            // If the exponent is large, we use the Montgomery method for odd values,
-            // and a 4-bit, windowed exponentiation for powers of two,
-            // and a CRT-decomposed Montgomery method for the remaining values
-            // (even values times non-trivial odd values, which decompose into one
-            // instance of each of the first two cases).
-            if(len(y) > 1 && ! slow)
-            {
-                if(m[0] & 1 == 1)
+                // If the exponent is large, we use the Montgomery method for odd values,
+                // and a 4-bit, windowed exponentiation for powers of two,
+                // and a CRT-decomposed Montgomery method for the remaining values
+                // (even values times non-trivial odd values, which decompose into one
+                // instance of each of the first two cases).
+                if(len(y) > 1 && ! slow)
                 {
-                    return rec::expNNMontgomery(gocpp::recv(z), x, y, m);
+                    if(m[0] & 1 == 1)
+                    {
+                        return rec::expNNMontgomery(gocpp::recv(z), stk, x, y, m);
+                    }
+                    if(auto [logM, ok] = rec::isPow2(gocpp::recv(m)); ok)
+                    {
+                        return rec::expNNWindowed(gocpp::recv(z), stk, x, y, logM);
+                    }
+                    return rec::expNNMontgomeryEven(gocpp::recv(z), stk, x, y, m);
                 }
-                if(auto [logM, ok] = rec::isPow2(gocpp::recv(m)); ok)
-                {
-                    return rec::expNNWindowed(gocpp::recv(z), x, y, logM);
-                }
-                return rec::expNNMontgomeryEven(gocpp::recv(z), x, y, m);
-            }
-        }
-
-        z = rec::set(gocpp::recv(z), x);
-        // v > 0 because y is normalized and y > 0
-        auto v = y[len(y) - 1];
-        auto shift = nlz(v) + 1;
-        v <<= shift;
-        nat q = {};
-
-        auto mask = 1 << (_W - 1);
-
-        // We walk through the bits of the exponent one by one. Each time we
-        // see a bit, we square, thus doubling the power. If the bit is a one,
-        // we also multiply by x, thus adding one to the power.
-        auto w = _W - int(shift);
-        // zz and r are used to avoid allocating in mul and div as
-        // otherwise the arguments would alias.
-        nat zz = {};
-        nat r = {};
-        for(auto j = 0; j < w; j++)
-        {
-            zz = rec::sqr(gocpp::recv(zz), z);
-            std::tie(zz, z) = std::tuple{z, zz};
-
-            if(v & mask != 0)
-            {
-                zz = rec::mul(gocpp::recv(zz), z, x);
-                std::tie(zz, z) = std::tuple{z, zz};
             }
 
-            if(len(m) != 0)
+            z = rec::set(gocpp::recv(z), x);
+            // v > 0 because y is normalized and y > 0
+            auto v = y[len(y) - 1];
+            auto shift = nlz(v) + 1;
+            v <<= shift;
+            nat q = {};
+
+            auto mask = 1 << (_W - 1);
+
+            // We walk through the bits of the exponent one by one. Each time we
+            // see a bit, we square, thus doubling the power. If the bit is a one,
+            // we also multiply by x, thus adding one to the power.
+            auto w = _W - int(shift);
+            // zz and r are used to avoid allocating in mul and div as
+            // otherwise the arguments would alias.
+            nat zz = {};
+            nat r = {};
+            for(auto j = 0; j < w; j++)
             {
-                std::tie(zz, r) = rec::div(gocpp::recv(zz), r, z, m);
-                std::tie(zz, r, q, z) = std::tuple{q, z, zz, r};
-            }
-
-            v <<= 1;
-        }
-
-        for(auto i = len(y) - 2; i >= 0; i--)
-        {
-            v = y[i];
-
-            for(auto j = 0; j < _W; j++)
-            {
-                zz = rec::sqr(gocpp::recv(zz), z);
+                zz = rec::sqr(gocpp::recv(zz), stk, z);
                 std::tie(zz, z) = std::tuple{z, zz};
 
                 if(v & mask != 0)
                 {
-                    zz = rec::mul(gocpp::recv(zz), z, x);
+                    zz = rec::mul(gocpp::recv(zz), stk, z, x);
                     std::tie(zz, z) = std::tuple{z, zz};
                 }
 
                 if(len(m) != 0)
                 {
-                    std::tie(zz, r) = rec::div(gocpp::recv(zz), r, z, m);
+                    std::tie(zz, r) = rec::div(gocpp::recv(zz), stk, r, z, m);
                     std::tie(zz, r, q, z) = std::tuple{q, z, zz, r};
                 }
 
                 v <<= 1;
             }
-        }
 
-        return rec::norm(gocpp::recv(z));
+            for(auto i = len(y) - 2; i >= 0; i--)
+            {
+                v = y[i];
+
+                for(auto j = 0; j < _W; j++)
+                {
+                    zz = rec::sqr(gocpp::recv(zz), stk, z);
+                    std::tie(zz, z) = std::tuple{z, zz};
+
+                    if(v & mask != 0)
+                    {
+                        zz = rec::mul(gocpp::recv(zz), stk, z, x);
+                        std::tie(zz, z) = std::tuple{z, zz};
+                    }
+
+                    if(len(m) != 0)
+                    {
+                        std::tie(zz, r) = rec::div(gocpp::recv(zz), stk, r, z, m);
+                        std::tie(zz, r, q, z) = std::tuple{q, z, zz, r};
+                    }
+
+                    v <<= 1;
+                }
+            }
+
+            return rec::norm(gocpp::recv(z));
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     // expNNMontgomeryEven calculates x**y mod m where m = m1 × m2 for m1 = 2ⁿ and m2 odd.
@@ -1345,12 +1110,12 @@ namespace golang::big
     // For more details, see Ç. K. Koç, “Montgomery Reduction with Even Modulus”,
     // IEE Proceedings: Computers and Digital Techniques, 141(5) 314-316, September 1994.
     // http://www.people.vcu.edu/~jwang3/CMSC691/j34monex.pdf
-    nat rec::expNNMontgomeryEven(nat z, nat x, nat y, nat m)
+    golang::math::big::nat rec::expNNMontgomeryEven(golang::math::big::nat z, stack* stk, golang::math::big::nat x, golang::math::big::nat y, golang::math::big::nat m)
     {
         // Split m = m₁ × m₂ where m₁ = 2ⁿ
         auto n = rec::trailingZeroBits(gocpp::recv(m));
-        auto m1 = rec::shl(gocpp::recv(nat(nullptr)), natOne, n);
-        auto m2 = rec::shr(gocpp::recv(nat(nullptr)), m, n);
+        auto m1 = rec::lsh(gocpp::recv(nat(nullptr)), natOne, n);
+        auto m2 = rec::rsh(gocpp::recv(nat(nullptr)), m, n);
 
         // We want z = x**y mod m.
         // z₁ = x**y mod m1 = (x**y mod m) mod m1 = z mod m1
@@ -1358,8 +1123,8 @@ namespace golang::big
         // (We are using the math/big convention for names here,
         // where the computation is z = x**y mod m, so its parts are z1 and z2.
         // The paper is computing x = a**e mod n; it refers to these as x2 and z1.)
-        auto z1 = rec::expNN(gocpp::recv(nat(nullptr)), x, y, m1, false);
-        auto z2 = rec::expNN(gocpp::recv(nat(nullptr)), x, y, m2, false);
+        auto z1 = rec::expNN(gocpp::recv(nat(nullptr)), stk, x, y, m1, false);
+        auto z2 = rec::expNN(gocpp::recv(nat(nullptr)), stk, x, y, m2, false);
 
         // Reconstruct z from z₁, z₂ using CRT, using algorithm from paper,
         // which uses only a single modInverse (and an easy one at that).
@@ -1378,131 +1143,132 @@ namespace golang::big
 
         // Reuse z2 for p = (z₁ - z₂) [in z1] * m2⁻¹ (mod m₁ [= 2ⁿ]).
         auto m2inv = rec::modInverse(gocpp::recv(nat(nullptr)), m2, m1);
-        z2 = rec::mul(gocpp::recv(z2), z1, m2inv);
+        z2 = rec::mul(gocpp::recv(z2), stk, z1, m2inv);
         z2 = rec::trunc(gocpp::recv(z2), z2, n);
 
         // Reuse z1 for p * m2.
-        z = rec::add(gocpp::recv(z), z, rec::mul(gocpp::recv(z1), z2, m2));
+        z = rec::add(gocpp::recv(z), z, rec::mul(gocpp::recv(z1), stk, z2, m2));
 
         return z;
     }
 
     // expNNWindowed calculates x**y mod m using a fixed, 4-bit window,
     // where m = 2**logM.
-    nat rec::expNNWindowed(nat z, nat x, nat y, unsigned int logM)
+    golang::math::big::nat rec::expNNWindowed(golang::math::big::nat z, stack* stk, golang::math::big::nat x, golang::math::big::nat y, unsigned int logM)
     {
-        if(len(y) <= 1)
+        gocpp::Defer defer;
+        try
         {
-            gocpp::panic("big: misuse of expNNWindowed"_s);
-        }
-        if(x[0] & 1 == 0)
-        {
-            // len(y) > 1, so y  > logM.
-            // x is even, so x**y is a multiple of 2**y which is a multiple of 2**logM.
-            return rec::setWord(gocpp::recv(z), 0);
-        }
-        if(logM == 1)
-        {
-            return rec::setWord(gocpp::recv(z), 1);
-        }
-
-        // zz is used to avoid allocating in mul as otherwise
-        // the arguments would alias.
-        auto w = int((logM + _W - 1) / _W);
-        auto zzp = getNat(w);
-        auto zz = *zzp;
-
-        auto n = 4;
-        // powers[i] contains x^i.
-        gocpp::array<nat*, 1 << n> powers = {};
-        for(auto [i, gocpp_ignored] : powers)
-        {
-            powers[i] = getNat(w);
-        }
-        *powers[0] = rec::set(gocpp::recv(powers[0]), natOne);
-        *powers[1] = rec::trunc(gocpp::recv(powers[1]), x, logM);
-        for(auto i = 2; i < (1 << n); i += 2)
-        {
-            auto [p2, p, p1] = std::tuple{powers[i / 2], powers[i], powers[i + 1]};
-            *p = rec::sqr(gocpp::recv(p), *p2);
-            *p = rec::trunc(gocpp::recv(p), *p, logM);
-            *p1 = rec::mul(gocpp::recv(p1), *p, x);
-            *p1 = rec::trunc(gocpp::recv(p1), *p1, logM);
-        }
-
-        // Because phi(2**logM) = 2**(logM-1), x**(2**(logM-1)) = 1,
-        // so we can compute x**(y mod 2**(logM-1)) instead of x**y.
-        // That is, we can throw away all but the bottom logM-1 bits of y.
-        // Instead of allocating a new y, we start reading y at the right word
-        // and truncate it appropriately at the start of the loop.
-        auto i = len(y) - 1;
-        // -2 because the top word of N bits is the (N-1)/W'th word.
-        auto mtop = int((logM - 2) / _W);
-        auto mmask = ~ Word(0);
-        if(auto mbits = (logM - 1) & (_W - 1); mbits != 0)
-        {
-            mmask = (1 << mbits) - 1;
-        }
-        if(i > mtop)
-        {
-            i = mtop;
-        }
-        auto advance = false;
-        z = rec::setWord(gocpp::recv(z), 1);
-        for(; i >= 0; i--)
-        {
-            auto yi = y[i];
-            if(i == mtop)
+            if(len(y) <= 1)
             {
-                yi &= mmask;
+                gocpp::panic("big: misuse of expNNWindowed"_s);
             }
-            for(auto j = 0; j < _W; j += n)
+            if(x[0] & 1 == 0)
             {
-                if(advance)
+                // len(y) > 1, so y  > logM.
+                // x is even, so x**y is a multiple of 2**y which is a multiple of 2**logM.
+                return rec::setWord(gocpp::recv(z), 0);
+            }
+            if(logM == 1)
+            {
+                return rec::setWord(gocpp::recv(z), 1);
+            }
+
+            // zz is used to avoid allocating in mul as otherwise
+            // the arguments would alias.
+            defer.push_back([=]{ rec::restore(gocpp::recv(stk), rec::save(gocpp::recv(stk))); });
+            auto w = int((logM + _W - 1) / _W);
+            auto zz = rec::nat(gocpp::recv(stk), w);
+
+            auto n = 4;
+            // powers[i] contains x^i.
+            gocpp::array<nat, 1 << n> powers = {};
+            for(auto [i, gocpp_ignored] : powers)
+            {
+                powers[i] = rec::nat(gocpp::recv(stk), w);
+            }
+            powers[0] = rec::set(gocpp::recv(powers[0]), natOne);
+            powers[1] = rec::trunc(gocpp::recv(powers[1]), x, logM);
+            for(auto i = 2; i < (1 << n); i += 2)
+            {
+                auto [p2, p, p1] = std::tuple{& powers[i / 2], & powers[i], & powers[i + 1]};
+                *p = rec::sqr(gocpp::recv(p), stk, *p2);
+                *p = rec::trunc(gocpp::recv(p), *p, logM);
+                *p1 = rec::mul(gocpp::recv(p1), stk, *p, x);
+                *p1 = rec::trunc(gocpp::recv(p1), *p1, logM);
+            }
+
+            // Because phi(2**logM) = 2**(logM-1), x**(2**(logM-1)) = 1,
+            // so we can compute x**(y mod 2**(logM-1)) instead of x**y.
+            // That is, we can throw away all but the bottom logM-1 bits of y.
+            // Instead of allocating a new y, we start reading y at the right word
+            // and truncate it appropriately at the start of the loop.
+            auto i = len(y) - 1;
+            // -2 because the top word of N bits is the (N-1)/W'th word.
+            auto mtop = int((logM - 2) / _W);
+            auto mmask = ~ Word(0);
+            if(auto mbits = (logM - 1) & (_W - 1); mbits != 0)
+            {
+                mmask = (1 << mbits) - 1;
+            }
+            if(i > mtop)
+            {
+                i = mtop;
+            }
+            auto advance = false;
+            z = rec::setWord(gocpp::recv(z), 1);
+            for(; i >= 0; i--)
+            {
+                auto yi = y[i];
+                if(i == mtop)
                 {
-                    // Account for use of 4 bits in previous iteration.
-                    // Unrolled loop for significant performance
-                    // gain. Use go test -bench=".*" in crypto/rsa
-                    // to check performance before making changes.
-                    zz = rec::sqr(gocpp::recv(zz), z);
-                    std::tie(zz, z) = std::tuple{z, zz};
-                    z = rec::trunc(gocpp::recv(z), z, logM);
-
-                    zz = rec::sqr(gocpp::recv(zz), z);
-                    std::tie(zz, z) = std::tuple{z, zz};
-                    z = rec::trunc(gocpp::recv(z), z, logM);
-
-                    zz = rec::sqr(gocpp::recv(zz), z);
-                    std::tie(zz, z) = std::tuple{z, zz};
-                    z = rec::trunc(gocpp::recv(z), z, logM);
-
-                    zz = rec::sqr(gocpp::recv(zz), z);
-                    std::tie(zz, z) = std::tuple{z, zz};
-                    z = rec::trunc(gocpp::recv(z), z, logM);
+                    yi &= mmask;
                 }
+                for(auto j = 0; j < _W; j += n)
+                {
+                    if(advance)
+                    {
+                        // Account for use of 4 bits in previous iteration.
+                        // Unrolled loop for significant performance
+                        // gain. Use go test -bench=".*" in crypto/rsa
+                        // to check performance before making changes.
+                        zz = rec::sqr(gocpp::recv(zz), stk, z);
+                        std::tie(zz, z) = std::tuple{z, zz};
+                        z = rec::trunc(gocpp::recv(z), z, logM);
 
-                zz = rec::mul(gocpp::recv(zz), z, *powers[yi >> (_W - n)]);
-                std::tie(zz, z) = std::tuple{z, zz};
-                z = rec::trunc(gocpp::recv(z), z, logM);
+                        zz = rec::sqr(gocpp::recv(zz), stk, z);
+                        std::tie(zz, z) = std::tuple{z, zz};
+                        z = rec::trunc(gocpp::recv(z), z, logM);
 
-                yi <<= n;
-                advance = true;
+                        zz = rec::sqr(gocpp::recv(zz), stk, z);
+                        std::tie(zz, z) = std::tuple{z, zz};
+                        z = rec::trunc(gocpp::recv(z), z, logM);
+
+                        zz = rec::sqr(gocpp::recv(zz), stk, z);
+                        std::tie(zz, z) = std::tuple{z, zz};
+                        z = rec::trunc(gocpp::recv(z), z, logM);
+                    }
+
+                    zz = rec::mul(gocpp::recv(zz), stk, z, powers[yi >> (_W - n)]);
+                    std::tie(zz, z) = std::tuple{z, zz};
+                    z = rec::trunc(gocpp::recv(z), z, logM);
+
+                    yi <<= n;
+                    advance = true;
+                }
             }
-        }
 
-        *zzp = zz;
-        putNat(zzp);
-        for(auto [i, gocpp_ignored] : powers)
+            return rec::norm(gocpp::recv(z));
+        }
+        catch(gocpp::GoPanic& gp)
         {
-            putNat(powers[i]);
+            defer.handlePanic(gp);
         }
-
-        return rec::norm(gocpp::recv(z));
     }
 
     // expNNMontgomery calculates x**y mod m using a fixed, 4-bit window.
     // Uses Montgomery representation.
-    nat rec::expNNMontgomery(nat z, nat x, nat y, nat m)
+    golang::math::big::nat rec::expNNMontgomery(golang::math::big::nat z, stack* stk, golang::math::big::nat x, golang::math::big::nat y, golang::math::big::nat m)
     {
         auto numWords = len(m);
 
@@ -1511,7 +1277,7 @@ namespace golang::big
         if(len(x) > numWords)
         {
             // Note: now len(x) <= numWords, not guaranteed ==.
-            std::tie(std::ignore, x) = rec::div(gocpp::recv(nat(nullptr)), nullptr, x, m);
+            std::tie(std::ignore, x) = rec::div(gocpp::recv(nat(nullptr)), stk, nullptr, x, m);
         }
         if(len(x) < numWords)
         {
@@ -1534,8 +1300,8 @@ namespace golang::big
 
         // RR = 2**(2*_W*len(m)) mod m
         auto RR = rec::setWord(gocpp::recv(nat(nullptr)), 1);
-        auto zz = rec::shl(gocpp::recv(nat(nullptr)), RR, (unsigned int)(2 * numWords * _W));
-        std::tie(std::ignore, RR) = rec::div(gocpp::recv(nat(nullptr)), RR, zz, m);
+        auto zz = rec::lsh(gocpp::recv(nat(nullptr)), RR, (unsigned int)(2 * numWords * _W));
+        std::tie(std::ignore, RR) = rec::div(gocpp::recv(nat(nullptr)), stk, RR, zz, m);
         if(len(RR) < numWords)
         {
             zz = rec::make(gocpp::recv(zz), numWords);
@@ -1597,7 +1363,7 @@ namespace golang::big
             zz = rec::sub(gocpp::recv(zz), zz, m);
             if(rec::cmp(gocpp::recv(zz), m) >= 0)
             {
-                std::tie(std::ignore, zz) = rec::div(gocpp::recv(nat(nullptr)), nullptr, zz, m);
+                std::tie(std::ignore, zz) = rec::div(gocpp::recv(nat(nullptr)), stk, nullptr, zz, m);
             }
         }
 
@@ -1608,7 +1374,7 @@ namespace golang::big
     // The value of z is encoded in the slice buf[i:]. If the value of z
     // cannot be represented in buf, bytes panics. The number i of unused
     // bytes at the beginning of buf is returned as result.
-    int rec::bytes(nat z, gocpp::slice<unsigned char> buf)
+    int rec::bytes(golang::math::big::nat z, gocpp::slice<unsigned char> buf)
     {
         int i;
         // This function is used in cryptographic operations. It must not leak
@@ -1650,14 +1416,14 @@ namespace golang::big
     {
         if(_W == 64)
         {
-            return Word(rec::Uint64(gocpp::recv(binary::BigEndian), buf));
+            return Word(byteorder::BEUint64(buf));
         }
-        return Word(rec::Uint32(gocpp::recv(binary::BigEndian), buf));
+        return Word(byteorder::BEUint32(buf));
     }
 
     // setBytes interprets buf as the bytes of a big-endian unsigned
     // integer, sets z to that value, and returns z.
-    nat rec::setBytes(nat z, gocpp::slice<unsigned char> buf)
+    golang::math::big::nat rec::setBytes(golang::math::big::nat z, gocpp::slice<unsigned char> buf)
     {
         z = rec::make(gocpp::recv(z), (len(buf) + go_S - 1) / go_S);
 
@@ -1682,49 +1448,64 @@ namespace golang::big
     }
 
     // sqrt sets z = ⌊√x⌋
-    nat rec::sqrt(nat z, nat x)
+    // The caller may pass stk == nil to request that sqrt obtain and release one itself.
+    golang::math::big::nat rec::sqrt(golang::math::big::nat z, stack* stk, golang::math::big::nat x)
     {
-        if(rec::cmp(gocpp::recv(x), natOne) <= 0)
+        gocpp::Defer defer;
+        try
         {
-            return rec::set(gocpp::recv(z), x);
-        }
-        if(alias(z, x))
-        {
-            z = nullptr;
-        }
-
-        // Start with value known to be too large and repeat "z = ⌊(z + ⌊x/z⌋)/2⌋" until it stops getting smaller.
-        // See Brent and Zimmermann, Modern Computer Arithmetic, Algorithm 1.13 (SqrtInt).
-        // https://members.loria.fr/PZimmermann/mca/pub226.html
-        // If x is one less than a perfect square, the sequence oscillates between the correct z and z+1;
-        // otherwise it converges to the correct z and stays there.
-        nat z1 = {};
-        nat z2 = {};
-        z1 = z;
-        z1 = rec::setUint64(gocpp::recv(z1), 1);
-        // must be ≥ √x
-        z1 = rec::shl(gocpp::recv(z1), z1, (unsigned int)(rec::bitLen(gocpp::recv(x)) + 1) / 2);
-        for(auto n = 0; ; n++)
-        {
-            std::tie(z2, std::ignore) = rec::div(gocpp::recv(z2), nullptr, x, z1);
-            z2 = rec::add(gocpp::recv(z2), z2, z1);
-            z2 = rec::shr(gocpp::recv(z2), z2, 1);
-            if(rec::cmp(gocpp::recv(z2), z1) >= 0)
+            if(rec::cmp(gocpp::recv(x), natOne) <= 0)
             {
-                // z1 is answer.
-                // Figure out whether z1 or z2 is currently aliased to z by looking at loop count.
-                if(n & 1 == 0)
-                {
-                    return z1;
-                }
-                return rec::set(gocpp::recv(z), z1);
+                return rec::set(gocpp::recv(z), x);
             }
-            std::tie(z1, z2) = std::tuple{z2, z1};
+            if(alias(z, x))
+            {
+                z = nullptr;
+            }
+
+            if(stk == nullptr)
+            {
+                stk = getStack();
+                defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
+            }
+
+            // Start with value known to be too large and repeat "z = ⌊(z + ⌊x/z⌋)/2⌋" until it stops getting smaller.
+            // See Brent and Zimmermann, Modern Computer Arithmetic, Algorithm 1.13 (SqrtInt).
+            // https://members.loria.fr/PZimmermann/mca/pub226.html
+            // If x is one less than a perfect square, the sequence oscillates between the correct z and z+1;
+            // otherwise it converges to the correct z and stays there.
+            nat z1 = {};
+            nat z2 = {};
+            z1 = z;
+            z1 = rec::setUint64(gocpp::recv(z1), 1);
+            // must be ≥ √x
+            z1 = rec::lsh(gocpp::recv(z1), z1, (unsigned int)(rec::bitLen(gocpp::recv(x)) + 1) / 2);
+            for(auto n = 0; ; n++)
+            {
+                std::tie(z2, std::ignore) = rec::div(gocpp::recv(z2), stk, nullptr, x, z1);
+                z2 = rec::add(gocpp::recv(z2), z2, z1);
+                z2 = rec::rsh(gocpp::recv(z2), z2, 1);
+                if(rec::cmp(gocpp::recv(z2), z1) >= 0)
+                {
+                    // z1 is answer.
+                    // Figure out whether z1 or z2 is currently aliased to z by looking at loop count.
+                    if(n & 1 == 0)
+                    {
+                        return z1;
+                    }
+                    return rec::set(gocpp::recv(z), z1);
+                }
+                std::tie(z1, z2) = std::tuple{z2, z1};
+            }
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
         }
     }
 
     // subMod2N returns z = (x - y) mod 2ⁿ.
-    nat rec::subMod2N(nat z, nat x, nat y, unsigned int n)
+    golang::math::big::nat rec::subMod2N(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y, unsigned int n)
     {
         if((unsigned int)(rec::bitLen(gocpp::recv(x))) > n)
         {

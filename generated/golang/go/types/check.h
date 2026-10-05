@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct importKey
     {
@@ -29,23 +29,6 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct importKey& value);
-    struct action
-    {
-        std::function<void ()> f{}; // action to be executed
-        actionDesc* desc{}; // action description; may be nil, requires debug to be set
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct action& value);
     struct cleaner : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -125,22 +108,94 @@ namespace golang::types
 
     std::ostream& operator<<(std::ostream& os, const struct bailout& value);
 }
+#include "golang/go/types/errors.h"
+#include "golang/go/types/version.h"
+#include "golang/go/types/scope.fwd.h"
+
+namespace golang::go::types
+{
+    extern types::atPos noposn;
+    struct dotImportKey
+    {
+        golang::go::types::Scope* scope{};
+        gocpp::string name{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct dotImportKey& value);
+    struct action
+    {
+        goVersion version{}; // applicable language version
+        std::function<void ()> f{}; // action to be executed
+        actionDesc* desc{}; // action description; may be nil, requires debug to be set
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct action& value);
+    struct actionDesc
+    {
+        positioner pos{};
+        gocpp::string format{};
+        gocpp::slice<go_any> args{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct actionDesc& value);
+    goVersion versionMax(goVersion a, goVersion b);
+}
+#include "golang/go/ast/ast.fwd.h"
+#include "golang/go/constant/value.fwd.h"
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+    namespace constant = golang::go::constant;
+}
 #include "golang/go/ast/ast.h"
 #include "golang/go/constant/value.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+}
 #include "golang/go/token/position.h"
-#include "golang/go/types/errors.h"
 #include "golang/go/types/operand.h"
-#include "golang/errors/errors.fwd.h"
 #include "golang/go/types/basic.fwd.h"
 #include "golang/go/types/resolver.fwd.h"
-#include "golang/go/types/scope.fwd.h"
 #include "golang/go/types/signature.fwd.h"
-#include "golang/internal/godebug/godebug.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    // nopos, noposn indicate an unknown position
     extern token::Pos nopos;
-    extern godebug::Setting* gotypesalias;
     struct exprInfo
     {
         bool isLhs{}; // expression is lhs operand of a shift with delayed type-check
@@ -163,15 +218,17 @@ namespace golang::types
     struct environment
     {
         declInfo* decl{}; // package-level declaration whose init expression/function body is checked
-        golang::types::Scope* scope{}; // top-most scope for lookups
-        token::Pos pos{}; // if valid, identifiers are looked up as if at position pos (used by Eval)
+        golang::go::types::Scope* scope{}; // top-most scope for lookups
+        goVersion version{}; // current accepted language version; changes across files
         constant::Value iota{}; // value of iota in a constant declaration; nil otherwise
         positioner errpos{}; // if set, identifier position of a constant with inherited initializer
         bool inTParamList{}; // set if inside a type parameter list
-        Signature* sig{}; // function signature if inside a function; nil otherwise
+        golang::go::types::Signature* sig{}; // function signature if inside a function; nil otherwise
         gocpp::map<ast::CallExpr*, bool> isPanic{}; // set of panic call expressions (used for termination check)
         bool hasLabel{}; // set if a function makes use of labels (only ~1% of functions); unused outside functions
         bool hasCallOrRecv{}; // set if an expression contains a function call or channel receive operation
+        // go/types only
+        token::Pos exprPos{}; // if valid, identifiers are looked up as if at position pos (used by CheckExpr, Eval)
 
         using isGoStruct = void;
 
@@ -185,73 +242,31 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct environment& value);
-    struct dotImportKey
-    {
-        golang::types::Scope* scope{};
-        gocpp::string name{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct dotImportKey& value);
-    struct actionDesc
-    {
-        positioner pos{};
-        gocpp::string format{};
-        gocpp::slice<go_any> args{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct actionDesc& value);
-    extern gocpp::error errBadCgo;
     ast::Ident* instantiatedIdent(ast::Expr expr);
 }
-#include "golang/go/types/lookup.h"
 #include "golang/go/types/mono.h"
 #include "golang/go/types/object.h"
-#include "golang/go/types/version.h"
 #include "golang/go/types/api.fwd.h"
 #include "golang/go/types/context.fwd.h"
 #include "golang/go/types/package.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
 #include "golang/go/types/typeset.fwd.h"
 #include "golang/go/types/union.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Checker
     {
-        // If EnableAlias is set, alias declarations produce an Alias type.
-        // Otherwise the alias information is only in the type name, which
-        // points directly to the actual (aliased) type.
-        bool enableAlias{};
+        // package information
+        // (initialized by NewChecker, valid for the life-time of checker)
         Config* conf{};
         Context* ctxt{}; // context for de-duplicating instances
         token::FileSet* fset{};
         Package* pkg{};
-        golang::types::Info* Info{};
-        goVersion version{}; // accepted language version
+        golang::go::types::Info* Info{};
         uint64_t nextID{}; // unique Id for type parameters (first valid Id is 1)
         gocpp::map<Object, declInfo*> objMap{}; // maps package-level objects and (non-interface) methods to declaration info
+        gocpp::slice<Object> objList{}; // source-ordered keys of objMap
         gocpp::map<importKey, Package*> impMap{}; // maps (import path, source directory) to (complete or fake) package
-        instanceLookup valids{}; // valid *Named (incl. instantiated) types per the validType check
         // pkgPathMap maps package names to the set of distinct import paths we've
         // seen for that name, anywhere in the import graph. It is used for
         // disambiguating package names in error messages.
@@ -264,23 +279,26 @@ namespace golang::types
         // (initialized by Files, valid only for the duration of check.Files;
         // maps and lists are allocated on demand)
         gocpp::slice<ast::File*> files{}; // package files
-        gocpp::map<ast::File*, gocpp::string> versions{}; // maps files to version strings (each file has an entry)
+        gocpp::map<ast::File*, gocpp::string> versions{}; // maps files to goVersion strings (each file has an entry); shared with Info.FileVersions if present; may be unaltered Config.GoVersion
         gocpp::slice<PkgName*> imports{}; // list of imported packages
         gocpp::map<dotImportKey, PkgName*> dotImportMap{}; // maps dot-imported objects to the package they were dot-imported through
-        gocpp::map<ast::Ident*, TypeParam*> recvTParamMap{}; // maps blank receiver type parameters to their type
         gocpp::map<TypeName*, bool> brokenAliases{}; // set of aliases with broken (not yet determined) types
         gocpp::map<Union*, _TypeSet*> unionTypeSets{}; // computed type sets for union types
+        gocpp::map<Var*, bool> usedVars{}; // set of used variables
+        gocpp::map<PkgName*, bool> usedPkgNames{}; // set of used package names
         monoGraph mono{}; // graph for detecting non-monomorphizable instantiation loops
         gocpp::error firstErr{}; // first error encountered
         gocpp::map<TypeName*, gocpp::slice<Func*>> methods{}; // maps package scope type names to associated non-blank (non-interface) methods
         gocpp::map<ast::Expr, exprInfo> untyped{}; // map of expressions without final type
         gocpp::slice<action> delayed{}; // stack of delayed action segments; segments are processed in FIFO order
-        gocpp::slice<Object> objPath{}; // path of object dependencies during type inference (for cycle reporting)
+        gocpp::slice<Object> objPath{}; // path of object dependencies during type-checking (for cycle reporting)
+        gocpp::map<Object, int> objPathIdx{}; // map of object to object path index during type-checking (for cycle reporting)
         gocpp::slice<cleaner> cleaners{}; // list of types that may need a final cleanup at the end of type-checking
         // environment within which the current object is type-checked (valid only
         // for the duration of type-checking a specific object)
         environment environment{};
         // debugging
+        gocpp::slice<positioner> posStack{}; // stack of source positions seen; used for panic tracing
         int indent{}; // indentation for tracing
 
         using isGoStruct = void;
@@ -295,7 +313,7 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Checker& value);
-    Checker* NewChecker(Config* conf, token::FileSet* fset, Package* pkg, golang::types::Info* info);
+    Checker* NewChecker(Config* conf, token::FileSet* fset, Package* pkg, golang::go::types::Info* info);
 }
 
 #include "golang/go/ast/ast.h"
@@ -305,15 +323,14 @@ namespace golang::types
 #include "golang/go/types/object.h"
 #include "golang/go/types/operand.h"
 #include "golang/go/types/scope.h"
-#include "golang/go/types/selection.h"
-#include "golang/go/types/signature.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
+        std::tuple<golang::go::types::Scope*, Object> lookupScope(environment* env, gocpp::string name);
         Object lookup(environment* env, gocpp::string name);
         void describef(action* a, positioner pos, gocpp::string format, gocpp::slice<go_any> args);
         
@@ -329,31 +346,21 @@ namespace golang::types
             return describef(a, pos, format, gocpp::ToSlice<go_any>(value, args...));
         }
         void addDeclDep(Checker* check, Object to);
-        void brokenAlias(Checker* check, TypeName* alias);
-        void validAlias(Checker* check, TypeName* alias, golang::types::Type typ);
-        bool isBrokenAlias(Checker* check, TypeName* alias);
         void rememberUntyped(Checker* check, ast::Expr e, bool lhs, operandMode mode, Basic* typ, constant::Value val);
         action* later(Checker* check, std::function<void ()> f);
-        int push(Checker* check, Object obj);
-        Object pop(Checker* check);
+        void push(Checker* check, Object obj);
+        void pop(Checker* check);
         void needsCleanup(Checker* check, cleaner c);
         void initFiles(Checker* check, gocpp::slice<ast::File*> files);
+        void pushPos(Checker* check, positioner pos);
+        void popPos(Checker* check);
         void handleBailout(Checker* check, gocpp::error* err);
         gocpp::error Files(Checker* check, gocpp::slice<ast::File*> files);
-        gocpp::error checkFiles(Checker* check, gocpp::slice<ast::File*> files);
+        void checkFiles(Checker* check, gocpp::slice<ast::File*> files);
         void processDelayed(Checker* check, int top);
         void cleanup(Checker* check);
-        void record(Checker* check, operand* x);
-        void recordUntyped(Checker* check);
-        void recordTypeAndValue(Checker* check, ast::Expr x, operandMode mode, golang::types::Type typ, constant::Value val);
-        void recordBuiltinType(Checker* check, ast::Expr f, Signature* sig);
-        void recordCommaOkTypes(Checker* check, ast::Expr x, gocpp::slice<operand*> a);
-        void recordInstance(Checker* check, ast::Expr expr, gocpp::slice<golang::types::Type> targs, golang::types::Type typ);
-        void recordDef(Checker* check, ast::Ident* id, Object obj);
-        void recordUse(Checker* check, ast::Ident* id, Object obj);
-        void recordImplicit(Checker* check, ast::Node node, Object obj);
-        void recordSelection(Checker* check, ast::SelectorExpr* x, SelectionKind kind, golang::types::Type recv, Object obj, gocpp::slice<int> index, bool indirect);
-        void recordScope(Checker* check, ast::Node node, golang::types::Scope* scope);
+        void recordTypeAndValueInSyntax(Checker* check, ast::Expr x, operandMode mode, golang::go::types::Type typ, constant::Value val);
+        void recordCommaOkTypesInSyntax(Checker* check, ast::Expr x, golang::go::types::Type t0, golang::go::types::Type t1);
     }
 }
 

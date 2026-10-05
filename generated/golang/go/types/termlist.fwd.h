@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct GoTag_termlist;
     // termSep is the separator used between individual terms.
@@ -12,7 +12,7 @@ namespace golang::types
 }
 #include "golang/go/types/typeterm.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    using termlist = gocpp::defined<gocpp::slice<term*>, GoTag_termlist>;
+    using termlist = gocpp::defined<gocpp::slice<golang::go::types::term*>, GoTag_termlist>;
 }

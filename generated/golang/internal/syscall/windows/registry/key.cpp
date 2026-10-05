@@ -36,8 +36,10 @@
 //
 // NOTE: This package is a copy of golang.org/x/sys/windows/registry
 // with KeyInfo.ModTime removed to prevent dependency cycles.
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
+    namespace runtime = golang::runtime;
+    namespace syscall = golang::syscall;
     namespace rec
     {
     }
@@ -142,7 +144,13 @@ namespace golang::registry
         gocpp::error err;
         syscall::Handle h = {};
         uint32_t d = {};
-        err = regCreateKeyEx(syscall::Handle(k), syscall::StringToUTF16Ptr(path), 0, nullptr, _REG_OPTION_NON_VOLATILE, access, nullptr, & h, & d);
+        uint16_t* pathp;
+        std::tie(pathp, err) = syscall::UTF16PtrFromString(path);
+        if(err != nullptr)
+        {
+            return {0, false, err};
+        }
+        err = regCreateKeyEx(syscall::Handle(k), pathp, 0, nullptr, _REG_OPTION_NON_VOLATILE, access, nullptr, & h, & d);
         if(err != nullptr)
         {
             return {0, false, err};
@@ -153,7 +161,12 @@ namespace golang::registry
     // DeleteKey deletes the subkey path of key k and its values.
     gocpp::error DeleteKey(Key k, gocpp::string path)
     {
-        return regDeleteKey(syscall::Handle(k), syscall::StringToUTF16Ptr(path));
+        auto [pathp, err] = syscall::UTF16PtrFromString(path);
+        if(err != nullptr)
+        {
+            return err;
+        }
+        return regDeleteKey(syscall::Handle(k), pathp);
     }
 
     // A KeyInfo describes the statistics of a key. It is returned by Stat.

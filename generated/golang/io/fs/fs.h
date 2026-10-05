@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::fs
+namespace golang::io::fs
 {
     struct FS : virtual gocpp::Interface
     {
@@ -42,6 +42,7 @@ namespace golang::fs
         struct IFS
         {
             // Open opens the named file.
+            // [File.Close] must be called to release any associated resources.
             // When Open returns an error, it should be of type *PathError
             // with the Op field set to "open", the Path field set to name,
             // and the Err field describing the problem.
@@ -251,6 +252,16 @@ namespace golang::fs
     }
 
     std::ostream& operator<<(std::ostream& os, const struct DirEntry& value);
+    // Generic file system errors.
+    // Errors returned by file systems can be tested against these errors
+    // using [errors.Is].
+    extern gocpp::error ErrInvalid;
+    extern gocpp::error ErrPermission;
+    extern gocpp::error ErrExist;
+    extern gocpp::error ErrNotExist;
+    // ErrClosed is returned when operations are attempted on a file that
+    // has already been closed, including when Close is called more than once.
+    extern gocpp::error ErrClosed;
     gocpp::error errInvalid();
     gocpp::error errPermission();
     gocpp::error errExist();
@@ -374,7 +385,7 @@ namespace golang::fs
             // a non-nil error explaining why.
             // At the end of a directory, the error is io.EOF.
             // (ReadDir must return io.EOF itself, not an error wrapping io.EOF.)
-            // If n <= 0, ReadDir returns all the DirEntry values from the directory
+            // If n <= 0, ReadDir returns all remaining DirEntry values from the directory
             // in a single slice. In this case, if ReadDir succeeds (reads all the way
             // to the end of the directory), it returns the slice and a nil error.
             // If it encounters an error before the end of the directory,
@@ -422,16 +433,13 @@ namespace golang::fs
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadDirFile& value);
-    extern gocpp::error ErrInvalid;
-    extern gocpp::error ErrPermission;
-    extern gocpp::error ErrExist;
-    extern gocpp::error ErrNotExist;
-    extern gocpp::error ErrClosed;
 }
+#include "golang/time/time.fwd.h"
 #include "golang/time/time.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
+    namespace time = golang::time;
     struct FileInfo : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;

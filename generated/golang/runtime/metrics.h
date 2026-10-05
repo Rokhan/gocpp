@@ -12,6 +12,12 @@
 
 namespace golang::runtime
 {
+    // metrics is a map of runtime/metrics keys to data used by the runtime
+    // to sample each metric's value. metricsInit indicates it has been
+    // initialized.
+    //
+    // These fields are protected by metricsSema which should be
+    // locked/unlocked with metricsLock() / metricsUnlock().
     extern uint32_t metricsSema;
     extern bool metricsInit;
     extern gocpp::slice<double> sizeClassBuckets;
@@ -67,12 +73,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcStatsAggregate& value);
-    double nsToSec(int64_t ns);
-    struct metricValue
+    struct finalStatsAggregate
     {
-        metricKind kind{};
-        uint64_t scalar{}; // contains scalar values for scalar Kinds.
-        gocpp::unsafe_pointer pointer{}; // contains non-scalar values.
+        uint64_t finalizersQueued{};
+        uint64_t finalizersExecuted{};
+        uint64_t cleanupsQueued{};
+        uint64_t cleanupsExecuted{};
 
         using isGoStruct = void;
 
@@ -85,7 +91,30 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct metricValue& value);
+    std::ostream& operator<<(std::ostream& os, const struct finalStatsAggregate& value);
+    struct schedStatsAggregate
+    {
+        uint64_t gTotal{};
+        uint64_t gRunning{};
+        uint64_t gRunnable{};
+        uint64_t gNonGo{};
+        uint64_t gWaiting{};
+        uint64_t gCreated{};
+        uint64_t threads{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct schedStatsAggregate& value);
+    double nsToSec(int64_t ns);
     struct metricFloat64Histogram
     {
         gocpp::slice<uint64_t> counts{};
@@ -121,8 +150,6 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct metricName& value);
     gocpp::slice<gocpp::string> readMetricNames();
-    void readMetrics(gocpp::unsafe_pointer samplesp, int len, int cap);
-    void readMetricsLocked(gocpp::unsafe_pointer samplesp, int len, int cap);
     struct metricData
     {
         // deps is the set of runtime statistics that this metric
@@ -158,28 +185,13 @@ namespace golang::runtime
     {
         return makeStatDepSet(gocpp::ToSlice<statDep>(value, deps...));
     }
-    struct metricSample
-    {
-        gocpp::string name{};
-        metricValue value{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct metricSample& value);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/mstats.h"
 
 namespace golang::runtime
 {
+    extern gocpp::map<gocpp::string, metricData> metrics;
     struct heapStatsAggregate
     {
         heapStatsDelta heapStatsDelta{};
@@ -228,7 +240,26 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cpuStatsAggregate& value);
-    extern gocpp::map<gocpp::string, metricData> metrics;
+    struct metricValue
+    {
+        metricKind kind{};
+        uint64_t scalar{}; // contains scalar values for scalar Kinds.
+        gocpp::unsafe_pointer pointer{}; // contains non-scalar values.
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricValue& value);
+    void readMetrics(gocpp::unsafe_pointer samplesp, int len, int cap);
+    void readMetricsLocked(gocpp::unsafe_pointer samplesp, int len, int cap);
     struct statAggregate
     {
         statDepSet ensured{};
@@ -236,6 +267,8 @@ namespace golang::runtime
         sysStatsAggregate sysStats{};
         cpuStatsAggregate cpuStats{};
         gcStatsAggregate gcStats{};
+        finalStatsAggregate finalStats{};
+        schedStatsAggregate schedStats{};
 
         using isGoStruct = void;
 
@@ -249,7 +282,29 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct statAggregate& value);
+    struct metricSample
+    {
+        gocpp::string name{};
+        metricValue value{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricSample& value);
     void compute0(statAggregate* _1, metricValue* out);
+    // agg is used by readMetrics, and is protected by metricsSema.
+    //
+    // Managed as a global variable because its pointer will be
+    // an argument to a dynamically-defined function, and we'd
+    // like to avoid it escaping to the heap.
     extern statAggregate agg;
 
     namespace rec
@@ -263,6 +318,8 @@ namespace golang::runtime
         void compute(sysStatsAggregate* a);
         void compute(cpuStatsAggregate* a);
         void compute(gcStatsAggregate* a);
+        void compute(finalStatsAggregate* a);
+        void compute(schedStatsAggregate* a);
         void ensure(statAggregate* a, gocpp::array_ptr<statDepSet> deps);
         metricFloat64Histogram* float64HistOrInit(metricValue* v, gocpp::slice<double> buckets);
     }

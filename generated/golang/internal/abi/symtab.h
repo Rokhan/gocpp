@@ -9,7 +9,7 @@
 #include "golang/internal/abi/symtab.fwd.h"
 #include "gocpp/support.h"
 
-namespace golang::abi
+namespace golang::internal::abi
 {
 
     namespace rec

@@ -9,12 +9,19 @@
 #include "golang/go/types/signature.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::go::types
+{
+    // sentinel value for detecting method expressions
+    extern Var* methodExprSentinel;
+}
+#include "golang/go/types/type.h"
 #include "golang/go/types/object.fwd.h"
 #include "golang/go/types/scope.fwd.h"
 #include "golang/go/types/tuple.fwd.h"
 #include "golang/go/types/typelists.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Signature
     {
@@ -24,11 +31,12 @@ namespace golang::types
         // We then unpack the *Signature and use the scope for the literal body.
         TypeParamList* rparams{}; // receiver type parameters from left to right, or nil
         TypeParamList* tparams{}; // type parameters from left to right, or nil
-        golang::types::Scope* scope{}; // function scope for package-local and non-instantiated signatures; nil otherwise
+        golang::go::types::Scope* scope{}; // function scope for package-local and non-instantiated signatures; nil otherwise
         Var* recv{}; // nil if not a method
+        Var* recvold{}; // receiver dropped via method selection; or nil
         Tuple* params{}; // (incoming) parameters from left to right; or nil
         Tuple* results{}; // (outgoing) results from left to right; or nil
-        bool variadic{}; // true if the last parameter's type is of the form ...T (or string, for append built-in only)
+        bool variadic{}; // true if the last parameter's type is of the form ...T
 
         using isGoStruct = void;
 
@@ -42,39 +50,52 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Signature& value);
-    Signature* NewSignature(Var* recv, Tuple* params, Tuple* results, bool variadic);
+    golang::go::types::Type unpointer(golang::go::types::Type t);
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    golang::go::types::Signature* NewSignature(Var* recv, Tuple* params, Tuple* results, bool variadic);
+    namespace token = golang::go::token;
 }
 #include "golang/go/types/typeparam.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    Signature* NewSignatureType(Var* recv, gocpp::slice<TypeParam*> recvTypeParams, gocpp::slice<TypeParam*> typeParams, Tuple* params, Tuple* results, bool variadic);
+    golang::go::types::Signature* NewSignatureType(Var* recv, gocpp::slice<TypeParam*> recvTypeParams, gocpp::slice<TypeParam*> typeParams, Tuple* params, Tuple* results, bool variadic);
+    bool isCGoTypeObj(token::FileSet* fset, TypeName* obj);
 }
 
 #include "golang/go/ast/ast.h"
 #include "golang/go/token/position.h"
 #include "golang/go/types/check.h"
+#include "golang/go/types/errors.h"
 #include "golang/go/types/object.h"
-#include "golang/go/types/scope.h"
 #include "golang/go/types/tuple.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typelists.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
 
     namespace rec
     {
-        Var* Recv(Signature* s);
-        TypeParamList* TypeParams(Signature* s);
-        TypeParamList* RecvTypeParams(Signature* s);
-        Tuple* Params(Signature* s);
-        Tuple* Results(Signature* s);
-        bool Variadic(Signature* s);
-        golang::types::Type Underlying(Signature* t);
-        gocpp::string String(Signature* t);
-        void funcType(Checker* check, Signature* sig, ast::FieldList* recvPar, ast::FuncType* ftyp);
-        std::tuple<gocpp::slice<Var*>, bool> collectParams(Checker* check, golang::types::Scope* scope, ast::FieldList* list, bool variadicOk, token::Pos scopePos);
+        Var* Recv(golang::go::types::Signature* s);
+        TypeParamList* TypeParams(golang::go::types::Signature* s);
+        TypeParamList* RecvTypeParams(golang::go::types::Signature* s);
+        Tuple* Params(golang::go::types::Signature* s);
+        Tuple* Results(golang::go::types::Signature* s);
+        bool Variadic(golang::go::types::Signature* s);
+        golang::go::types::Type Underlying(golang::go::types::Signature* s);
+        gocpp::string String(golang::go::types::Signature* s);
+        void funcType(Checker* check, golang::go::types::Signature* sig, ast::FieldList* recvPar, ast::FuncType* ftyp);
+        std::tuple<Var*, TypeParamList*> collectRecv(Checker* check, ast::Field* rparam, token::Pos scopePos);
+        void recordParenthesizedRecvTypes(Checker* check, ast::Expr expr, golang::go::types::Type typ);
+        std::tuple<gocpp::slice<ast::Ident*>, gocpp::slice<Var*>, bool> collectParams(Checker* check, VarKind kind, ast::FieldList* list);
+        void declareParams(Checker* check, gocpp::slice<ast::Ident*> names, gocpp::slice<Var*> params, token::Pos scopePos);
+        void validRecv(Checker* check, positioner pos, Var* recv);
     }
 }
 

@@ -6,23 +6,26 @@
 
 namespace golang::runtime
 {
+    struct rtype;
+    struct bitCursor;
     struct reflectOffsStruct;
     struct gocpp_id_0;
     struct _typePair;
     struct gocpp_id_3;
 }
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/internal/abi/map.fwd.h"
 #include "golang/internal/abi/type.fwd.h"
 
 namespace golang::runtime
 {
+    namespace abi = golang::internal::abi;
     using nameOff = abi::NameOff;
     using typeOff = abi::TypeOff;
     using textOff = abi::TextOff;
     using _type = abi::Type;
-    struct rtype;
     using uncommontype = abi::UncommonType;
     using interfacetype = abi::InterfaceType;
-    using maptype = abi::MapType;
     using arraytype = abi::ArrayType;
     using chantype = abi::ChanType;
     using slicetype = abi::SliceType;

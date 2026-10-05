@@ -19,7 +19,6 @@
 #include "golang/os/executable.h"
 #include "golang/os/proc.h"
 #include "golang/runtime/mfinal.h"
-#include "golang/sync/atomic/doc.h"
 #include "golang/syscall/security_windows.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
@@ -29,6 +28,11 @@
 
 namespace golang::os
 {
+    namespace errors = golang::errors;
+    namespace runtime = golang::runtime;
+    namespace syscall = golang::syscall;
+    namespace time = golang::time;
+    namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
         using syscall::rec::Error;
@@ -41,7 +45,25 @@ namespace golang::os
         gocpp::Defer defer;
         try
         {
-            auto handle = atomic::LoadUintptr(& p->handle);
+            auto [handle, status] = rec::handleTransientAcquire(gocpp::recv(p));
+            //Go switch emulation
+            {
+                auto condition = status;
+                int conditionId = -1;
+                if(condition == statusDone) { conditionId = 0; }
+                else if(condition == statusReleased) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    case 0:
+                        return {nullptr, ErrProcessDone};
+                        break;
+                    case 1:
+                        return {nullptr, gocpp::error(syscall::go_EINVAL)};
+                        break;
+                }
+            }
+            defer.push_back([=]{ rec::handleTransientRelease(gocpp::recv(p)); });
+
             auto [s, e] = syscall::WaitForSingleObject(syscall::Handle(handle), syscall::INFINITE);
             //Go switch emulation
             {
@@ -74,8 +96,11 @@ namespace golang::os
             {
                 return {nullptr, NewSyscallError("GetProcessTimes"_s, e)};
             }
-            rec::setDone(gocpp::recv(p));
-            defer.push_back([=]{ rec::Release(gocpp::recv(p)); });
+
+            // For compatibility we use statusReleased here rather
+            // than statusDone.
+            rec::doRelease(gocpp::recv(p), statusReleased);
+
             return {new ProcessState {p->Pid, gocpp::Init<syscall::WaitStatus>([=](auto& x) {
                 x.ExitCode = ec;
             }), & u}, nullptr};
@@ -92,15 +117,25 @@ namespace golang::os
         gocpp::Defer defer;
         try
         {
-            auto handle = atomic::LoadUintptr(& p->handle);
-            if(handle == uintptr_t(syscall::InvalidHandle))
+            auto [handle, status] = rec::handleTransientAcquire(gocpp::recv(p));
+            //Go switch emulation
             {
-                return gocpp::error(syscall::go_EINVAL);
+                auto condition = status;
+                int conditionId = -1;
+                if(condition == statusDone) { conditionId = 0; }
+                else if(condition == statusReleased) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    case 0:
+                        return ErrProcessDone;
+                        break;
+                    case 1:
+                        return gocpp::error(syscall::go_EINVAL);
+                        break;
+                }
             }
-            if(rec::done(gocpp::recv(p)))
-            {
-                return ErrProcessDone;
-            }
+            defer.push_back([=]{ rec::handleTransientRelease(gocpp::recv(p)); });
+
             if(sig == os::Kill)
             {
                 syscall::Handle terminationHandle = {};
@@ -123,21 +158,9 @@ namespace golang::os
         }
     }
 
-    gocpp::error rec::release(Process* p)
+    void rec::closeHandle(processHandle* ph)
     {
-        auto handle = atomic::SwapUintptr(& p->handle, uintptr_t(syscall::InvalidHandle));
-        if(handle == uintptr_t(syscall::InvalidHandle))
-        {
-            return gocpp::error(syscall::go_EINVAL);
-        }
-        auto e = syscall::CloseHandle(syscall::Handle(handle));
-        if(e != nullptr)
-        {
-            return NewSyscallError("CloseHandle"_s, e);
-        }
-        // no need for a finalizer anymore
-        runtime::SetFinalizer(p, nullptr);
-        return nullptr;
+        syscall::CloseHandle(syscall::Handle(ph->handle));
     }
 
     std::tuple<Process*, gocpp::error> findProcess(int pid)
@@ -151,7 +174,7 @@ namespace golang::os
         {
             return {nullptr, NewSyscallError("OpenProcess"_s, e)};
         }
-        return {newProcess(pid, uintptr_t(h)), nullptr};
+        return {newHandleProcess(pid, uintptr_t(h)), nullptr};
     }
 
     void init()

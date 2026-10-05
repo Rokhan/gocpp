@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
     struct TCP_INITIAL_RTO_PARAMETERS
     {
@@ -29,17 +29,16 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TCP_INITIAL_RTO_PARAMETERS& value);
-    void rtlGetNtVersionNumbers(uint32_t* majorVersion, uint32_t* minorVersion, uint32_t* buildNumber);
 }
-#include "golang/sync/oncefunc.h"
-#include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/syscall_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/syscall_windows.h"
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
+    namespace syscall = golang::syscall;
     gocpp::error WSASendtoInet4(syscall::Handle s, syscall::WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, syscall::SockaddrInet4* to, syscall::Overlapped* overlapped, unsigned char* croutine);
     gocpp::error WSASendtoInet6(syscall::Handle s, syscall::WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, syscall::SockaddrInet6* to, syscall::Overlapped* overlapped, unsigned char* croutine);
-    extern std::function<bool (void)> Support_TCP_INITIAL_RTO_NO_SYN_RETRANSMISSIONS;
 
     namespace rec
     {

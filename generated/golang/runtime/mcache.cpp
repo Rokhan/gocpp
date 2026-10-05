@@ -11,12 +11,13 @@
 #include "golang/runtime/mcache.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/gc/sizeclasses.h"
+#include "golang/internal/runtime/sys/nih.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/malloc.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
+#include "golang/runtime/mbitmap.h"
 #include "golang/runtime/mcentral.h"
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgcpacer.h"
@@ -27,12 +28,15 @@
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/sizeclasses.h"
 #include "golang/runtime/stack.h"
 #include "golang/runtime/stubs.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace gc = golang::internal::runtime::gc;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::Add;
@@ -53,11 +57,13 @@ namespace golang::runtime
         T result;
         result._1 = this->_1;
         result.nextSample = this->nextSample;
+        result.memProfRate = this->memProfRate;
         result.scanAlloc = this->scanAlloc;
         result.tiny = this->tiny;
         result.tinyoffset = this->tinyoffset;
         result.tinyAllocs = this->tinyAllocs;
         result.alloc = this->alloc;
+        result.reusableNoscan = this->reusableNoscan;
         result.stackcache = this->stackcache;
         result.flushGen = this->flushGen;
         return result;
@@ -68,11 +74,13 @@ namespace golang::runtime
     {
         if (_1 != ref._1) return false;
         if (nextSample != ref.nextSample) return false;
+        if (memProfRate != ref.memProfRate) return false;
         if (scanAlloc != ref.scanAlloc) return false;
         if (tiny != ref.tiny) return false;
         if (tinyoffset != ref.tinyoffset) return false;
         if (tinyAllocs != ref.tinyAllocs) return false;
         if (alloc != ref.alloc) return false;
+        if (reusableNoscan != ref.reusableNoscan) return false;
         if (stackcache != ref.stackcache) return false;
         if (flushGen != ref.flushGen) return false;
         return true;
@@ -83,11 +91,13 @@ namespace golang::runtime
         os << '{';
         os << "" << _1;
         os << " " << nextSample;
+        os << " " << memProfRate;
         os << " " << scanAlloc;
         os << " " << tiny;
         os << " " << tinyoffset;
         os << " " << tinyAllocs;
         os << " " << alloc;
+        os << " " << reusableNoscan;
         os << " " << stackcache;
         os << " " << flushGen;
         os << '}';
@@ -193,6 +203,7 @@ namespace golang::runtime
             c->alloc[i] = & emptymspan;
         }
         c->nextSample = nextSample();
+
         return c;
     }
 
@@ -257,6 +268,18 @@ namespace golang::runtime
         {
             go_throw("refill of span with free space remaining"_s);
         }
+
+        // TODO(thepudds): we might be able to allow mallocgcTiny to reuse 16 byte objects from spc==5,
+        // but for now, just clear our reusable objects for tinySpanClass.
+        if(spc == tinySpanClass)
+        {
+            c->reusableNoscan[spc] = 0;
+        }
+        if(c->reusableNoscan[spc] != 0)
+        {
+            go_throw("refill of span with reusable pointers remaining on pointer free list"_s);
+        }
+
         if(s != & emptymspan)
         {
             // Mark this span as no longer cached.
@@ -326,12 +349,12 @@ namespace golang::runtime
     // allocLarge allocates a span for a large object.
     mspan* rec::allocLarge(mcache* c, uintptr_t size, bool noscan)
     {
-        if(size + _PageSize < size)
+        if(size + pageSize < size)
         {
             go_throw("out of memory"_s);
         }
-        auto npages = size >> _PageShift;
-        if(size & _PageMask != 0)
+        auto npages = size >> gc::PageShift;
+        if(size & pageMask != 0)
         {
             npages++;
         }
@@ -339,7 +362,7 @@ namespace golang::runtime
         // Deduct credit for this span allocation and sweep if
         // necessary. mHeap_Alloc will also sweep npages, so this only
         // pays the debt down to npage pages.
-        deductSweepCredit(npages * _PageSize, npages);
+        deductSweepCredit(npages * pageSize, npages);
 
         auto spc = makeSpanClass(0, noscan);
         auto s = rec::alloc(gocpp::recv(mheap_), npages, spc);
@@ -363,8 +386,15 @@ namespace golang::runtime
         // Put the large span in the mcentral swept list so that it's
         // visible to the background sweeper.
         rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(mheap_.central[spc].mcentral), mheap_.sweepgen)), s);
+
+        // Adjust s.limit down to the object-containing part of the span.
+        // This is just to create a slightly tighter bound on the limit.
+        // It's totally OK if the garbage collector, in particular
+        // conservative scanning, can temporarily observes an inflated
+        // limit. It will simply mark the whole object or just skip it
+        // since we're in the mark phase anyway.
         s->limit = rec::base(gocpp::recv(s)) + size;
-        rec::initHeapBits(gocpp::recv(s), false);
+        rec::initHeapBits(gocpp::recv(s));
         return s;
     }
 
@@ -417,6 +447,13 @@ namespace golang::runtime
         c->tinyAllocs = 0;
         rec::release(gocpp::recv(memstats.heapStats));
 
+        // Clear the reusable linked lists.
+        // For noscan objects, the nodes of the linked lists are the reusable heap objects themselves,
+        // so we can simply clear the linked list head pointers.
+        // TODO(thepudds): consider having debug logging of a non-empty reusable lists getting cleared,
+        // maybe based on the existing debugReusableLog.
+        clear(c->reusableNoscan.make_slice(0));
+
         // Update heapLive and heapScan.
         rec::update(gocpp::recv(gcController), dHeapLive, scanAlloc);
     }
@@ -449,6 +486,32 @@ namespace golang::runtime
         stackcache_clear(c);
         // Synchronizes with gcStart
         rec::Store(gocpp::recv(c->flushGen), mheap_.sweepgen);
+    }
+
+    // addReusableNoscan adds a noscan object pointer to the reusable pointer free list
+    // for a span class.
+    void rec::addReusableNoscan(mcache* c, spanClass spc, uintptr_t ptr)
+    {
+        if(! runtimeFreegcEnabled)
+        {
+            return;
+        }
+
+        // Add to the reusable pointers free list.
+        auto v = gclinkptr(ptr);
+        rec::ptr(gocpp::recv(v))->next = c->reusableNoscan[spc];
+        c->reusableNoscan[spc] = v;
+    }
+
+    // hasReusableNoscan reports whether there is a reusable object available for
+    // a noscan spc.
+    bool rec::hasReusableNoscan(mcache* c, spanClass spc)
+    {
+        if(! runtimeFreegcEnabled)
+        {
+            return false;
+        }
+        return c->reusableNoscan[spc] != 0;
     }
 
 }

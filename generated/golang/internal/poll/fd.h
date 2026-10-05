@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::poll
+namespace golang::internal::poll
 {
     struct errNetClosing
     {
@@ -27,7 +27,16 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct errNetClosing& value);
+    // ErrFileClosing is returned when a file descriptor is used after it
+    // has been closed.
+    extern gocpp::error ErrFileClosing;
+    // ErrNoDeadline is returned when a request is made to set a deadline
+    // on a file type that does not use the poller.
+    extern gocpp::error ErrNoDeadline;
     gocpp::error errClosing(bool isFile);
+    // ErrDeadlineExceeded is returned for an expired deadline.
+    // This is exported by the os package as os.ErrDeadlineExceeded.
+    extern gocpp::error ErrDeadlineExceeded;
     struct DeadlineExceededError
     {
 
@@ -43,18 +52,15 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct DeadlineExceededError& value);
-    void consume(gocpp::slice<gocpp::slice<unsigned char>>* v, int64_t n);
-    extern std::function<void (int)> TestHookDidWritev;
-    extern errNetClosing ErrNetClosing;
-    extern gocpp::error ErrDeadlineExceeded;
-}
-#include "golang/errors/errors.fwd.h"
-
-namespace golang::poll
-{
-    extern gocpp::error ErrFileClosing;
-    extern gocpp::error ErrNoDeadline;
+    // ErrNotPollable is returned when the file or socket is not suitable
+    // for event notification.
     extern gocpp::error ErrNotPollable;
+    void consume(gocpp::slice<gocpp::slice<unsigned char>>* v, int64_t n);
+    // TestHookDidWritev is a hook for testing writev.
+    extern std::function<void (int)> TestHookDidWritev;
+    // ErrNetClosing is returned when a network descriptor is used after
+    // it has been closed.
+    extern errNetClosing ErrNetClosing;
 
     namespace rec
     {

@@ -4,10 +4,11 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     using stmtContext = unsigned int;
     struct GoTag_valueMap;
+    struct valueType;
     // permissible control-flow statements
     const stmtContext breakOk = 1 << 0;
     const stmtContext continueOk = 1 << 1;
@@ -15,12 +16,5 @@ namespace golang::types
     // additional context information
     const stmtContext finalSwitchCase = 1 << 3;
     const stmtContext inTypeSwitch = 1 << 4;
-}
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/type.fwd.h"
-
-namespace golang::types
-{
-    struct valueType;
     using valueMap = gocpp::defined<gocpp::map<go_any, gocpp::slice<valueType>>, GoTag_valueMap>;
 }

@@ -10,15 +10,17 @@
 #include "gocpp/support.h"
 
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
+    // MaxLen is the maximum length of the string to be searched for (argument b) in Index.
+    // If MaxLen is not 0, make sure MaxLen >= 4.
     extern int MaxLen;
     
     template<typename T>
-    std::tuple<uint32_t, uint32_t> HashStr(T sep);
+    std::tuple<uint32_t, uint32_t> hashStr(T sep);
     
     template<typename T>
-    std::tuple<uint32_t, uint32_t> HashStrRev(T sep);
+    std::tuple<uint32_t, uint32_t> hashStrRev(T sep);
     
     template<typename T>
     int IndexRabinKarp(T s, T sep);
@@ -26,17 +28,21 @@ namespace golang::bytealg
     template<typename T>
     int LastIndexRabinKarp(T s, T sep);
     gocpp::slice<unsigned char> MakeNoZero(int n);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/internal/cpu/cpu.h"
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
     // Offsets into internal/cpu records for use in assembly.
+    const uintptr_t offsetPPC64HasPOWER9 = gocpp::Offsetof<cpu::PPC64Struct>(&cpu::PPC64Struct::IsPOWER9);
+    const uintptr_t offsetRISCV64HasV = gocpp::Offsetof<cpu::RISCV64Struct>(&cpu::RISCV64Struct::HasV);
+    const uintptr_t offsetLOONG64HasLSX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLSX);
+    const uintptr_t offsetLOONG64HasLASX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLASX);
+    const uintptr_t offsetS390xHasVX = gocpp::Offsetof<cpu::S390XStruct>(&cpu::S390XStruct::HasVX);
     const uintptr_t offsetX86HasSSE42 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasSSE42);
     const uintptr_t offsetX86HasAVX2 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX2);
     const uintptr_t offsetX86HasPOPCNT = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasPOPCNT);
-    const uintptr_t offsetS390xHasVX = gocpp::Offsetof<cpu::S390XStruct>(&cpu::S390XStruct::HasVX);
-    const uintptr_t offsetPPC64HasPOWER9 = gocpp::Offsetof<cpu::PPC64Struct>(&cpu::PPC64Struct::IsPOWER9);
 
     namespace rec
     {

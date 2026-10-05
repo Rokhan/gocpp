@@ -10,13 +10,13 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct GoTag_methodSet { };
 }
 #include "golang/go/types/selection.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct MethodSet
     {
@@ -35,20 +35,21 @@ namespace golang::types
 
     std::ostream& operator<<(std::ostream& os, const struct MethodSet& value);
     using methodSet = gocpp::defined<gocpp::map<gocpp::string, Selection*>, GoTag_methodSet>;
+    // Shared empty method set.
     extern MethodSet emptyMethodSet;
 }
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    MethodSet* NewMethodSet(golang::types::Type T);
+    MethodSet* NewMethodSet(golang::go::types::Type T);
 }
 
 #include "golang/go/types/object.h"
 #include "golang/go/types/package.h"
 #include "golang/go/types/selection.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec

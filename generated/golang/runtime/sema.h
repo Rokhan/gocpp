@@ -16,20 +16,36 @@ namespace golang::runtime
     void sync_runtime_Semacquire(uint32_t* addr);
     void poll_runtime_Semacquire(uint32_t* addr);
     void sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes);
-    void sync_runtime_SemacquireMutex(uint32_t* addr, bool lifo, int skipframes);
+    void internal_sync_runtime_SemacquireMutex(uint32_t* addr, bool lifo, int skipframes);
     void sync_runtime_SemacquireRWMutexR(uint32_t* addr, bool lifo, int skipframes);
     void sync_runtime_SemacquireRWMutex(uint32_t* addr, bool lifo, int skipframes);
+    void sync_runtime_SemacquireWaitGroup(uint32_t* addr, bool synctestDurable);
     void poll_runtime_Semrelease(uint32_t* addr);
+    void internal_sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes);
     void semacquire(uint32_t* addr);
     void semrelease(uint32_t* addr);
     void semrelease1(uint32_t* addr, bool handoff, int skipframes);
     bool cansemacquire(uint32_t* addr);
     bool less(uint32_t a, uint32_t b);
     void notifyListCheck(uintptr_t sz);
-    int64_t sync_nanotime();
+    int64_t internal_sync_nanotime();
 }
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    void readyWithTime(sudog* s, int traceskip);
+    void semacquire1(uint32_t* addr, bool lifo, semaProfileFlags profile, int skipframes, waitReason reason);
+}
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/types.h"
 
 namespace golang::runtime
 {
@@ -51,8 +67,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct semaRoot& value);
-    void readyWithTime(sudog* s, int traceskip);
-    void semacquire1(uint32_t* addr, bool lifo, semaProfileFlags profile, int skipframes, waitReason reason);
     struct notifyList
     {
         // wait is the ticket number of the next waiter. It is atomically
@@ -82,15 +96,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct notifyList& value);
-    uint32_t notifyListAdd(notifyList* l);
-    void notifyListWait(notifyList* l, uint32_t t);
-    void notifyListNotifyAll(notifyList* l);
-    void notifyListNotifyOne(notifyList* l);
 }
 #include "golang/internal/cpu/cpu_x86.fwd.h"
 
 namespace golang::runtime
 {
+    uint32_t notifyListAdd(notifyList* l);
+    void notifyListWait(notifyList* l, uint32_t t);
+    void notifyListNotifyAll(notifyList* l);
+    void notifyListNotifyOne(notifyList* l);
+    namespace cpu = golang::internal::cpu;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     using semTable = gocpp::defined<gocpp::array<gocpp_id_0, semTabSize>, GoTag_semTable>;
     extern semTable semtable;
 }

@@ -15,6 +15,12 @@ namespace golang::main
     gocpp::error run();
     void main();
 }
+#include "golang/time/time.fwd.h"
+
+namespace golang::main
+{
+    namespace time = golang::time;
+}
 #include "golang/time/time.h"
 
 namespace golang::main

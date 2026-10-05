@@ -12,11 +12,17 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
+#include "golang/internal/filepathlite/path.h"
+#include "golang/internal/filepathlite/path_windows.h"
+#include "golang/internal/godebug/godebug.h"
 #include "golang/internal/poll/fd.h"
 #include "golang/internal/poll/fd_windows.h"
+#include "golang/internal/syscall/windows/at_windows.h"
+#include "golang/internal/syscall/windows/nonblocking_windows.h"
 #include "golang/internal/syscall/windows/reparse_windows.h"
 #include "golang/internal/syscall/windows/symlink_windows.h"
 #include "golang/internal/syscall/windows/syscall_windows.h"
+#include "golang/internal/syscall/windows/types_windows.h"
 #include "golang/internal/syscall/windows/zsyscall_windows.h"
 #include "golang/io/fs/fs.h"
 #include "golang/os/dir_windows.h"
@@ -27,7 +33,8 @@
 #include "golang/os/stat.h"
 #include "golang/os/types.h"
 #include "golang/runtime/mfinal.h"
-#include "golang/sync/once.h"
+#include "golang/sync/atomic/type.h"
+#include "golang/sync/oncefunc.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/zerrors_windows.h"
@@ -35,14 +42,26 @@
 
 namespace golang::os
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::sync::atomic;
+    namespace errors = golang::errors;
+    namespace filepathlite = golang::internal::filepathlite;
+    namespace godebug = golang::internal::godebug;
+    namespace poll = golang::internal::poll;
+    namespace runtime = golang::runtime;
+    namespace sync = golang::sync;
+    namespace syscall = golang::syscall;
+    namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
-        using fs::rec::Error;
+        using atomic::rec::Swap;
         using fs::rec::IsDir;
+        using godebug::rec::IncNonDefault;
+        using godebug::rec::Value;
         using poll::rec::Close;
+        using poll::rec::DisassociateIOCP;
         using poll::rec::Init;
         using poll::rec::Seek;
-        using sync::rec::Do;
         using syscall::rec::Error;
         using windows::rec::Path;
     }
@@ -89,35 +108,82 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    // Fd returns the Windows handle referencing the open file.
-    // If f is closed, the file descriptor becomes invalid.
-    // If f is garbage collected, a finalizer may close the file descriptor,
-    // making it invalid; see runtime.SetFinalizer for more information on when
-    // a finalizer might be run. On Unix systems this will cause the SetDeadline
-    // methods to stop working.
-    uintptr_t rec::Fd(File* file)
+    // fd is the Windows implementation of Fd.
+    uintptr_t rec::fd(File* file)
     {
         if(file == nullptr)
         {
             return uintptr_t(syscall::InvalidHandle);
         }
+        // Try to disassociate the file from the runtime poller.
+        // File.Fd doesn't return an error, so we don't have a way to
+        // report it. We just ignore it. It's up to the caller to call
+        // it when there are no concurrent IO operations.
+        _ = rec::DisassociateIOCP(gocpp::recv(file->file.pfd));
         return uintptr_t(file->file.pfd.Sysfd);
     }
 
+    // newFileKind describes the kind of file to newFile.
     // newFile returns a new File with the given file handle and name.
     // Unlike NewFile, it does not check that h is syscall.InvalidHandle.
-    File* newFile(syscall::Handle h, gocpp::string name, gocpp::string kind)
+    // If nonBlocking is true, it tries to add the file to the runtime poller.
+    File* newFile(syscall::Handle h, gocpp::string name, newFileKind kind, bool nonBlocking)
     {
-        if(kind == "file"_s)
+        auto typ = "file"_s;
+        //Go switch emulation
         {
-            uint32_t m = {};
-            if(syscall::GetConsoleMode(h, & m) == nullptr)
+            auto condition = kind;
+            int conditionId = -1;
+            if(condition == kindNewFile) { conditionId = 0; }
+            else if(condition == kindOpenFile) { conditionId = 1; }
+            else if(condition == kindPipe) { conditionId = 2; }
+            else if(condition == kindSock) { conditionId = 3; }
+            else if(condition == kindConsole) { conditionId = 4; }
+            switch(conditionId)
             {
-                kind = "console"_s;
-            }
-            if(auto [t, err] = syscall::GetFileType(h); err == nullptr && t == syscall::FILE_TYPE_PIPE)
-            {
-                kind = "pipe"_s;
+                case 0:
+                case 1:
+                {
+                    auto [t, err] = syscall::GetFileType(h);
+                    if(err != nullptr || t == syscall::FILE_TYPE_CHAR)
+                    {
+                        uint32_t m = {};
+                        if(syscall::GetConsoleMode(h, & m) == nullptr)
+                        {
+                            typ = "console"_s;
+                            // Console handles are always blocking.
+                            break;
+                        }
+                    }
+                    else
+                    if(t == syscall::FILE_TYPE_PIPE)
+                    {
+                        typ = "pipe"_s;
+                    }
+                    // NewFile doesn't know if a handle is blocking or non-blocking,
+                    // so we try to detect that here. This call may block/ if the handle
+                    // is blocking and there is an outstanding I/O operation.
+                    // Avoid doing this for Stdin, which is almost always blocking and might
+                    // be in use by other process when the "os" package is initializing.
+                    // See go.dev/issue/75949 and go.dev/issue/76391.
+                    if(kind == kindNewFile && h != syscall::Stdin)
+                    {
+                        std::tie(nonBlocking, std::ignore) = windows::IsNonblock(h);
+                    }
+                    break;
+                }
+                case 2:
+                    typ = "pipe"_s;
+                    break;
+                case 3:
+                    typ = "file+net"_s;
+                    break;
+                case 4:
+                    typ = "console"_s;
+                    break;
+                default:
+                    gocpp::panic("newFile with unknown kind"_s);
+                    break;
             }
         }
 
@@ -133,28 +199,39 @@ namespace golang::os
 
         // Ignore initialization errors.
         // Assume any problems will show up in later I/O.
-        rec::Init(gocpp::recv(f->file.pfd), kind, false);
-
+        rec::Init(gocpp::recv(f->file.pfd), typ, nonBlocking);
         return f;
     }
 
     // newConsoleFile creates new File that will be used as console.
     File* newConsoleFile(syscall::Handle h, gocpp::string name)
     {
-        return newFile(h, name, "console"_s);
+        return newFile(h, name, kindConsole, false);
     }
 
-    // NewFile returns a new File with the given file descriptor and
-    // name. The returned value will be nil if fd is not a valid file
-    // descriptor.
-    File* NewFile(uintptr_t fd, gocpp::string name)
+    // newFileFromNewFile is called by [NewFile].
+    File* newFileFromNewFile(uintptr_t fd, gocpp::string name)
     {
         auto h = syscall::Handle(fd);
         if(h == syscall::InvalidHandle)
         {
             return nullptr;
         }
-        return newFile(h, name, "file"_s);
+        return newFile(h, name, kindNewFile, false);
+    }
+
+    // net_newWindowsFile is a hidden entry point called by net.conn.File.
+    // This is used so that the File.pfd.close method calls [syscall.Closesocket]
+    // instead of [syscall.CloseHandle].
+    //
+    //go:linkname net_newWindowsFile net.newWindowsFile
+    File* net_newWindowsFile(syscall::Handle h, gocpp::string name)
+    {
+        if(h == syscall::InvalidHandle)
+        {
+            gocpp::panic("invalid FD"_s);
+        }
+        return newFile(h, name, kindSock, true);
     }
 
     void epipecheck(File* file, gocpp::error e)
@@ -173,40 +250,22 @@ namespace golang::os
             }))};
         }
         auto path = fixLongPath(name);
-        auto [r, e] = syscall::Open(path, flag | syscall::O_CLOEXEC, syscallMode(perm));
-        if(e != nullptr)
-        {
-            // We should return EISDIR when we are trying to open a directory with write access.
-            if(e == syscall::ERROR_ACCESS_DENIED && (flag & O_WRONLY != 0 || flag & O_RDWR != 0))
-            {
-                auto [pathp, e1] = syscall::UTF16PtrFromString(path);
-                if(e1 == nullptr)
-                {
-                    syscall::Win32FileAttributeData fa = {};
-                    e1 = syscall::GetFileAttributesEx(pathp, syscall::GetFileExInfoStandard, (unsigned char*)(gocpp::unsafe_pointer(& fa)));
-                    if(e1 == nullptr && fa.FileAttributes & syscall::FILE_ATTRIBUTE_DIRECTORY != 0)
-                    {
-                        e = syscall::go_EISDIR;
-                    }
-                }
-            }
-            return {nullptr, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
-                x.Op = "open"_s;
-                x.Path = name;
-                x.Err = e;
-            }))};
-        }
-        File* f;
-        std::tie(f, e) = std::tuple{newFile(r, name, "file"_s), nullptr};
-        if(e != nullptr)
+        auto [r, err] = syscall::Open(path, flag | syscall::O_CLOEXEC, syscallMode(perm));
+        if(err != nullptr)
         {
             return {nullptr, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
                 x.Op = "open"_s;
                 x.Path = name;
-                x.Err = e;
+                x.Err = err;
             }))};
         }
-        return {f, nullptr};
+        auto nonblocking = flag & windows::O_FILE_FLAG_OVERLAPPED != 0;
+        return {newFile(r, name, kindOpenFile, nonblocking), nullptr};
+    }
+
+    std::tuple<File*, gocpp::error> openDirNolog(gocpp::string name)
+    {
+        return openFileNolog(name, O_RDONLY | windows::O_DIRECTORY, 0);
     }
 
     gocpp::error rec::close(file* file)
@@ -215,10 +274,9 @@ namespace golang::os
         {
             return gocpp::error(syscall::go_EINVAL);
         }
-        if(file->dirinfo != nullptr)
+        if(auto info = rec::Swap<dirInfo>(gocpp::recv(file->dirinfo), nullptr); info != nullptr)
         {
-            rec::close(gocpp::recv(file->dirinfo));
-            file->dirinfo = nullptr;
+            rec::close(gocpp::recv(info));
         }
         gocpp::error err = {};
         if(auto e = rec::Close(gocpp::recv(file->pfd)); e != nullptr)
@@ -247,12 +305,11 @@ namespace golang::os
     {
         int64_t ret;
         gocpp::error err;
-        if(f->file.dirinfo != nullptr)
+        if(auto info = rec::Swap<dirInfo>(gocpp::recv(f->file.dirinfo), nullptr); info != nullptr)
         {
             // Free cached dirinfo, so we allocate a new one if we
             // access this file as a directory again. See #35767 and #37161.
-            rec::close(gocpp::recv(f->file.dirinfo));
-            f->file.dirinfo = nullptr;
+            rec::close(gocpp::recv(info));
         }
         std::tie(ret, err) = rec::Seek(gocpp::recv(f->file.pfd), offset, whence);
         runtime::KeepAlive(f);
@@ -286,7 +343,7 @@ namespace golang::os
     }
 
     // Remove removes the named file or directory.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     gocpp::error Remove(gocpp::string name)
     {
         auto [p, e] = syscall::UTF16PtrFromString(fixLongPath(name));
@@ -370,19 +427,18 @@ namespace golang::os
         {
             return {nullptr, nullptr, NewSyscallError("pipe"_s, e)};
         }
-        return {newFile(p[0], "|0"_s, "pipe"_s), newFile(p[1], "|1"_s, "pipe"_s), nullptr};
+        // syscall.Pipe always returns a non-blocking handle.
+        return {newFile(p[0], "|0"_s, kindPipe, false), newFile(p[1], "|1"_s, kindPipe, false), nullptr};
     }
 
-    sync::Once useGetTempPath2Once;
-    bool useGetTempPath2;
+    std::function<bool (void)> useGetTempPath2 = sync::OnceValue([]() mutable -> bool
+    {
+        return windows::ErrorLoadingGetTempPath2() == nullptr;
+    });
     gocpp::string tempDir()
     {
-        rec::Do(gocpp::recv(useGetTempPath2Once), [=]() mutable -> void
-        {
-            useGetTempPath2 = (windows::ErrorLoadingGetTempPath2() == nullptr);
-        });
         auto getTempPath = syscall::GetTempPath;
-        if(useGetTempPath2)
+        if(useGetTempPath2())
         {
             getTempPath = windows::GetTempPath2;
         }
@@ -439,16 +495,16 @@ namespace golang::os
     gocpp::error Symlink(gocpp::string oldname, gocpp::string newname)
     {
         // '/' does not work in link's content
-        oldname = fromSlash(oldname);
+        oldname = filepathlite::FromSlash(oldname);
 
         // need the exact location of the oldname when it's relative to determine if it's a directory
         auto destpath = oldname;
-        if(auto v = volumeName(oldname); v == ""_s)
+        if(auto v = filepathlite::VolumeName(oldname); v == ""_s)
         {
             if(len(oldname) > 0 && IsPathSeparator(oldname[0]))
             {
                 // oldname is relative to the volume containing newname.
-                if(v = volumeName(newname); v != ""_s)
+                if(v = filepathlite::VolumeName(newname); v != ""_s)
                 {
                     // Prepend the volume explicitly, because it may be different from the
                     // volume of the current working directory.
@@ -471,8 +527,21 @@ namespace golang::os
         {
             return gocpp::error(new LinkError {"symlink"_s, oldname, newname, err});
         }
-        uint16_t* o;
-        std::tie(o, err) = syscall::UTF16PtrFromString(fixLongPath(oldname));
+        uint16_t* o = {};
+        if(filepathlite::IsAbs(oldname))
+        {
+            std::tie(o, err) = syscall::UTF16PtrFromString(fixLongPath(oldname));
+        }
+        else
+        {
+            // Do not use fixLongPath on oldname for relative symlinks,
+            // as it would turn the name into an absolute path thus making
+            // an absolute symlink instead.
+            // Notice that CreateSymbolicLinkW does not fail for relative
+            // symlinks beyond MAX_PATH, so this does not prevent the
+            // creation of an arbitrary long path name.
+            std::tie(o, err) = syscall::UTF16PtrFromString(oldname);
+        }
         if(err != nullptr)
         {
             return gocpp::error(new LinkError {"symlink"_s, oldname, newname, err});
@@ -521,6 +590,7 @@ namespace golang::os
         return {h, nullptr};
     }
 
+    godebug::Setting* winreadlinkvolume = godebug::New("winreadlinkvolume"_s);
     // normaliseLinkPath converts absolute paths returned by
     // DeviceIoControl(h, FSCTL_GET_REPARSE_POINT, ...)
     // into paths acceptable by all Windows APIs.
@@ -528,7 +598,7 @@ namespace golang::os
     //
     //	\??\C:\foo\bar into C:\foo\bar
     //	\??\UNC\foo\bar into \\foo\bar
-    //	\??\Volume{abc}\ into C:\
+    //	\??\Volume{abc}\ into \\?\Volume{abc}\
     std::tuple<gocpp::string, gocpp::error> normaliseLinkPath(gocpp::string path)
     {
         gocpp::Defer defer;
@@ -557,7 +627,13 @@ namespace golang::os
                 }
             }
 
-            // handle paths, like \??\Volume{abc}\...
+            // \??\Volume{abc}\
+            if(rec::Value(gocpp::recv(winreadlinkvolume)) != "0"_s)
+            {
+                return {"\\\\?\\"_s + path.make_slice(4), nullptr};
+            }
+            rec::IncNonDefault(gocpp::recv(winreadlinkvolume));
+
             auto [h, err] = openSymlink(path);
             if(err != nullptr)
             {
@@ -609,49 +685,53 @@ namespace golang::os
                 return {""_s, err};
             }
             defer.push_back([=]{ syscall::CloseHandle(h); });
-
-            auto rdbbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), syscall::MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
-            uint32_t bytesReturned = {};
-            err = syscall::DeviceIoControl(h, syscall::FSCTL_GET_REPARSE_POINT, nullptr, 0, & rdbbuf[0], uint32_t(len(rdbbuf)), & bytesReturned, nullptr);
-            if(err != nullptr)
-            {
-                return {""_s, err};
-            }
-
-            auto rdb = (windows::REPARSE_DATA_BUFFER*)(gocpp::unsafe_pointer(& rdbbuf[0]));
-            //Go switch emulation
-            {
-                auto condition = rdb->ReparseTag;
-                int conditionId = -1;
-                if(condition == syscall::IO_REPARSE_TAG_SYMLINK) { conditionId = 0; }
-                else if(condition == windows::IO_REPARSE_TAG_MOUNT_POINT) { conditionId = 1; }
-                switch(conditionId)
-                {
-                    case 0:
-                    {
-                        auto rb = (windows::SymbolicLinkReparseBuffer*)(gocpp::unsafe_pointer(& rdb->DUMMYUNIONNAME));
-                        auto s = rec::Path(gocpp::recv(rb));
-                        if(rb->Flags & windows::SYMLINK_FLAG_RELATIVE != 0)
-                        {
-                            return {s, nullptr};
-                        }
-                        return normaliseLinkPath(s);
-                        break;
-                    }
-                    case 1:
-                        return normaliseLinkPath(rec::Path(gocpp::recv((windows::MountPointReparseBuffer*)(gocpp::unsafe_pointer(& rdb->DUMMYUNIONNAME)))));
-                        break;
-                    default:
-                        // the path is not a symlink or junction but another type of reparse
-                        // point
-                        return {""_s, gocpp::error(syscall::go_ENOENT)};
-                        break;
-                }
-            }
+            return readReparseLinkHandle(h);
         }
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+        }
+    }
+
+    std::tuple<gocpp::string, gocpp::error> readReparseLinkHandle(syscall::Handle h)
+    {
+        auto rdbbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), syscall::MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+        uint32_t bytesReturned = {};
+        auto err = syscall::DeviceIoControl(h, syscall::FSCTL_GET_REPARSE_POINT, nullptr, 0, & rdbbuf[0], uint32_t(len(rdbbuf)), & bytesReturned, nullptr);
+        if(err != nullptr)
+        {
+            return {""_s, err};
+        }
+
+        auto rdb = (windows::REPARSE_DATA_BUFFER*)(gocpp::unsafe_pointer(& rdbbuf[0]));
+        //Go switch emulation
+        {
+            auto condition = rdb->ReparseTag;
+            int conditionId = -1;
+            if(condition == syscall::IO_REPARSE_TAG_SYMLINK) { conditionId = 0; }
+            else if(condition == windows::IO_REPARSE_TAG_MOUNT_POINT) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    auto rb = (windows::SymbolicLinkReparseBuffer*)(gocpp::unsafe_pointer(& rdb->DUMMYUNIONNAME));
+                    auto s = rec::Path(gocpp::recv(rb));
+                    if(rb->Flags & windows::SYMLINK_FLAG_RELATIVE != 0)
+                    {
+                        return {s, nullptr};
+                    }
+                    return normaliseLinkPath(s);
+                    break;
+                }
+                case 1:
+                    return normaliseLinkPath(rec::Path(gocpp::recv((windows::MountPointReparseBuffer*)(gocpp::unsafe_pointer(& rdb->DUMMYUNIONNAME)))));
+                    break;
+                default:
+                    // the path is not a symlink or junction but another type of reparse
+                    // point
+                    return {""_s, gocpp::error(syscall::go_ENOENT)};
+                    break;
+            }
         }
     }
 

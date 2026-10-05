@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::flate
+namespace golang::compress::flate
 {
     struct dictDecoder
     {

@@ -16,32 +16,24 @@
 #include "golang/go/types/object.h"
 #include "golang/go/types/package.h"
 #include "golang/go/types/type.h"
-#include "golang/golang.org/x/tools/internal/aliases/aliases_go122.h"
+#include "golang/go/types/typeparam.h"
 
-namespace golang::aliases
+namespace golang::golang_org::x::tools::internal::aliases
 {
+    namespace token = golang::go::token;
+    namespace types = golang::go::types;
     namespace rec
     {
+        using types::rec::SetTypeParams;
     }
 
-    // NewAlias creates a new TypeName in Package pkg that
+    // New creates a new TypeName in Package pkg that
     // is an alias for the type rhs.
-    //
-    // The enabled parameter determines whether the resulting [TypeName]'s
-    // type is an [types.Alias]. Its value must be the result of a call to
-    // [Enabled], which computes the effective value of
-    // GODEBUG=gotypesalias=... by invoking the type checker. The Enabled
-    // function is expensive and should be called once per task (e.g.
-    // package import), not once per call to NewAlias.
-    types::TypeName* NewAlias(bool enabled, token::Pos pos, types::Package* pkg, gocpp::string name, types::Type rhs)
+    types::TypeName* New(token::Pos pos, types::Package* pkg, gocpp::string name, types::Type rhs, gocpp::slice<types::TypeParam*> tparams)
     {
-        if(enabled)
-        {
-            auto tname = types::NewTypeName(pos, pkg, name, nullptr);
-            newAlias(tname, rhs);
-            return tname;
-        }
-        return types::NewTypeName(pos, pkg, name, rhs);
+        auto tname = types::NewTypeName(pos, pkg, name, nullptr);
+        rec::SetTypeParams(gocpp::recv(types::NewAlias(tname, rhs)), tparams);
+        return tname;
     }
 
 }

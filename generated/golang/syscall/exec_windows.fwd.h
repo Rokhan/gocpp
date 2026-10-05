@@ -7,12 +7,5 @@
 namespace golang::syscall
 {
     struct ProcAttr;
-}
-#include "golang/syscall/security_windows.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-
-namespace golang::syscall
-{
     struct SysProcAttr;
 }

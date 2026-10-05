@@ -15,6 +15,7 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }

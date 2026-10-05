@@ -3,10 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/golang.org/x/tools/internal/pkgbits/reloc.fwd.h"
-#include "golang/strings/reader.fwd.h"
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
     struct PkgDecoder;
     struct Decoder;

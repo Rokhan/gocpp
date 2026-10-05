@@ -4,17 +4,24 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
 {
     using LoadMode = int;
+    struct Config;
+    struct Package;
+    struct Module;
     struct ModuleError;
     struct Error;
     using ErrorKind = int;
     struct flatPackage;
-    struct gocpp_id_3;
+    struct loaderPackage;
+    struct loader;
+    struct parseValue;
+    struct gocpp_id_5;
+    struct unit;
     // NeedName adds Name and PkgPath.
     const LoadMode NeedName = 1 << 0;
-    // NeedFiles adds GoFiles and OtherFiles.
+    // NeedFiles adds Dir, GoFiles, OtherFiles, and IgnoredFiles
     const LoadMode NeedFiles = 1 << 1;
     // NeedCompiledGoFiles adds CompiledGoFiles.
     const LoadMode NeedCompiledGoFiles = 1 << 2;
@@ -27,17 +34,18 @@ namespace golang::packages
     const LoadMode NeedExportFile = 1 << 5;
     // NeedTypes adds Types, Fset, and IllTyped.
     const LoadMode NeedTypes = 1 << 6;
-    // NeedSyntax adds Syntax.
+    // NeedSyntax adds Syntax and Fset.
     const LoadMode NeedSyntax = 1 << 7;
-    // NeedTypesInfo adds TypesInfo.
+    // NeedTypesInfo adds TypesInfo and Fset.
     const LoadMode NeedTypesInfo = 1 << 8;
     // NeedTypesSizes adds TypesSizes.
     const LoadMode NeedTypesSizes = 1 << 9;
     // needInternalDepsErrors adds the internal deps errors field for use by gopls.
     const LoadMode needInternalDepsErrors = 1 << 10;
-    // needInternalForTest adds the internal forTest field.
+    // NeedForTest adds ForTest.
+    //
     // Tests must also be set on the context for this field to be populated.
-    const LoadMode needInternalForTest = 1 << 11;
+    const LoadMode NeedForTest = 1 << 11;
     // typecheckCgo enables full support for type checking cgo. Requires Go 1.15+.
     // Modifies CompiledGoFiles and Types, and has no effect on its own.
     const LoadMode typecheckCgo = 1 << 12;
@@ -47,47 +55,38 @@ namespace golang::packages
     const LoadMode NeedEmbedFiles = 1 << 14;
     // NeedEmbedPatterns adds EmbedPatterns.
     const LoadMode NeedEmbedPatterns = 1 << 15;
+    // NeedTarget adds Target.
+    const LoadMode NeedTarget = 1 << 16;
     const ErrorKind UnknownError = 0;
     const ErrorKind ListError = 1;
     const ErrorKind ParseError = 2;
     const ErrorKind TypeError = 3;
-}
-#include "golang/context/context.fwd.h"
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/api.fwd.h"
-#include "golang/go/types/package.fwd.h"
-#include "golang/go/types/sizes.fwd.h"
-#include "golang/golang.org/x/tools/internal/gocommand/invoke.fwd.h"
-#include "golang/golang.org/x/tools/internal/packagesinternal/packages.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-#include "golang/sync/once.fwd.h"
-#include "golang/time/time.fwd.h"
-
-namespace golang::packages
-{
-    struct Config;
-    struct Package;
-    struct Module;
-    struct loaderPackage;
-    struct loader;
-    struct parseValue;
-    using importerFunc = std::function<std::tuple<types::Package*, gocpp::error> (gocpp::string path)>;
-    // Deprecated: LoadFiles exists for historical compatibility
-    // and should not be used. Please directly specify the needed fields using the Need values.
+    // LoadFiles loads the name and file names for the initial packages.
     const packages::LoadMode LoadFiles = NeedName | NeedFiles | NeedCompiledGoFiles;
     // Deprecated: NeedExportsFile is a historical misspelling of NeedExportFile.
+    //
+    //go:fix inline
     const packages::LoadMode NeedExportsFile = NeedExportFile;
-    // Deprecated: LoadImports exists for historical compatibility
-    // and should not be used. Please directly specify the needed fields using the Need values.
+}
+#include "golang/go/types/api.fwd.h"
+#include "golang/go/types/check.fwd.h"
+#include "golang/go/types/object.fwd.h"
+#include "golang/go/types/package.fwd.h"
+#include "golang/go/types/scope.fwd.h"
+#include "golang/go/types/selection.fwd.h"
+#include "golang/go/types/sizes.fwd.h"
+#include "golang/go/types/universe.fwd.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    // LoadImports loads the name, file names, and import mapping for the initial packages.
     const packages::LoadMode LoadImports = LoadFiles | NeedImports;
-    // Deprecated: LoadTypes exists for historical compatibility
-    // and should not be used. Please directly specify the needed fields using the Need values.
+    namespace types = golang::go::types;
+    // LoadTypes loads exported type information for the initial packages.
     const packages::LoadMode LoadTypes = LoadImports | NeedTypes | NeedTypesSizes;
-    // Deprecated: LoadSyntax exists for historical compatibility
-    // and should not be used. Please directly specify the needed fields using the Need values.
+    using importerFunc = std::function<std::tuple<types::Package*, gocpp::error> (gocpp::string path)>;
+    // LoadSyntax loads typed syntax for the initial packages.
     const packages::LoadMode LoadSyntax = LoadTypes | NeedSyntax | NeedTypesInfo;
-    // Deprecated: LoadAllSyntax exists for historical compatibility
-    // and should not be used. Please directly specify the needed fields using the Need values.
+    // LoadAllSyntax loads typed syntax for the initial packages and all dependencies.
     const packages::LoadMode LoadAllSyntax = LoadSyntax | NeedDeps;
 }

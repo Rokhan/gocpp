@@ -16,15 +16,53 @@ namespace golang::runtime
     void netpollGenericInit();
     bool netpollinited();
     bool poll_runtime_isPollServerDescriptor(uintptr_t fd);
-    void netpollDeadline(go_any arg, uintptr_t seq);
-    void netpollReadDeadline(go_any arg, uintptr_t seq);
-    void netpollWriteDeadline(go_any arg, uintptr_t seq);
+    void netpollDeadline(go_any arg, uintptr_t seq, int64_t delta);
+    void netpollReadDeadline(go_any arg, uintptr_t seq, int64_t delta);
+    void netpollWriteDeadline(go_any arg, uintptr_t seq, int64_t delta);
     bool netpollAnyWaiters();
     void netpollAdjustWaiters(int32_t delta);
+    extern go_any pdEface;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/type.fwd.h"
+
+namespace golang::runtime
+{
+    struct pollCache
+    {
+        mutex lock{};
+        pollDesc* first{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct pollCache& value);
+    extern mutex netpollInitLock;
+    bool netpollblockcommit(g* gp, gocpp::unsafe_pointer gpp);
+    void netpollgoready(g* gp, int traceskip);
+    extern _type* pdType;
+}
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/sys/nih.fwd.h"
+
+namespace golang::runtime
+{
+    extern pollCache pollcache;
+    namespace sys = golang::internal::runtime::sys;
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/time.h"
 
 namespace golang::runtime
@@ -57,9 +95,11 @@ namespace golang::runtime
         atomic::Uintptr wg{}; // pdReady, pdWait, G waiting for write or pdNil
         mutex lock{}; // protects the following fields
         bool closing{};
+        bool rrun{}; // whether rt is running
+        bool wrun{}; // whether wt is running
         uint32_t user{}; // user settable cookie
         uintptr_t rseq{}; // protects from stale read timers
-        timer rt{}; // read deadline timer (set if rt.f != nil)
+        timer rt{}; // read deadline timer
         int64_t rd{}; // read deadline (a nanotime in the future, -1 when expired)
         uintptr_t wseq{}; // protects from stale write timers
         timer wt{}; // write deadline timer
@@ -78,29 +118,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pollDesc& value);
-    struct pollCache
-    {
-        mutex lock{};
-        pollDesc* first{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct pollCache& value);
-    extern mutex netpollInitLock;
     extern atomic::Uint32 netpollInited;
     extern atomic::Uint32 netpollWaiters;
-    bool netpollblockcommit(g* gp, gocpp::unsafe_pointer gpp);
-    void netpollgoready(g* gp, int traceskip);
-    extern pollCache pollcache;
     std::tuple<pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd);
     void poll_runtime_pollClose(pollDesc* pd);
     int poll_runtime_pollReset(pollDesc* pd, int mode);
@@ -112,19 +131,12 @@ namespace golang::runtime
     bool netpollblock(pollDesc* pd, int32_t mode, bool waitio);
     g* netpollunblock(pollDesc* pd, int32_t mode, bool ioready, int32_t* delta);
     void netpolldeadlineimpl(pollDesc* pd, uintptr_t seq, bool read, bool write);
-    extern go_any pdEface;
 }
 #include "golang/runtime/proc.fwd.h"
 
 namespace golang::runtime
 {
     int32_t netpollready(gList* toRun, pollDesc* pd, int32_t mode);
-}
-#include "golang/runtime/type.fwd.h"
-
-namespace golang::runtime
-{
-    extern _type* pdType;
 
     namespace rec
     {

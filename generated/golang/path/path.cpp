@@ -22,6 +22,7 @@
 // operating system paths, use the [path/filepath] package.
 namespace golang::path
 {
+    namespace bytealg = golang::internal::bytealg;
     namespace rec
     {
     }

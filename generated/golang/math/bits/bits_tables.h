@@ -9,7 +9,7 @@
 #include "golang/math/bits/bits_tables.fwd.h"
 #include "gocpp/support.h"
 
-namespace golang::bits
+namespace golang::math::bits
 {
 
     namespace rec

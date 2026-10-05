@@ -4,40 +4,19 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     // debugging/development support
     const bool debug = false;
-    struct importKey;
-    struct action;
-    struct cleaner;
-    struct bailout;
-}
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/constant/value.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/api.fwd.h"
-#include "golang/go/types/basic.fwd.h"
-#include "golang/go/types/context.fwd.h"
-#include "golang/go/types/errors.fwd.h"
-#include "golang/go/types/lookup.fwd.h"
-#include "golang/go/types/mono.fwd.h"
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/operand.fwd.h"
-#include "golang/go/types/package.fwd.h"
-#include "golang/go/types/resolver.fwd.h"
-#include "golang/go/types/scope.fwd.h"
-#include "golang/go/types/signature.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
-#include "golang/go/types/typeset.fwd.h"
-#include "golang/go/types/union.fwd.h"
-#include "golang/go/types/version.fwd.h"
-
-namespace golang::types
-{
+    // position tracing for panics during type checking
+    const bool tracePos = true;
     struct exprInfo;
     struct environment;
+    struct importKey;
     struct dotImportKey;
+    struct action;
     struct actionDesc;
     struct Checker;
+    struct cleaner;
+    struct bailout;
 }

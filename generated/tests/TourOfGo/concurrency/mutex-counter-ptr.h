@@ -14,6 +14,12 @@ namespace golang::main
 {
     void main();
 }
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::main
+{
+    namespace sync = golang::sync;
+}
 #include "golang/sync/mutex.h"
 
 namespace golang::main

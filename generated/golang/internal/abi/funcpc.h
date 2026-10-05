@@ -10,10 +10,10 @@
 #include "gocpp/support.h"
 
 
-namespace golang::abi
+namespace golang::internal::abi
 {
-    uintptr_t FuncPCABI0(gocpp::go_any f);
-    uintptr_t FuncPCABIInternal(gocpp::go_any f);
+    uintptr_t FuncPCABI0(go_any f);
+    uintptr_t FuncPCABIInternal(go_any f);
 
     namespace rec
     {

@@ -3,9 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/mspanset.fwd.h"
 
 namespace golang::runtime
 {

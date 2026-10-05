@@ -12,65 +12,71 @@ namespace golang::runtime
     const long minPhysPageSize = 4096;
     // maxPhysPageSize is the maximum page size the runtime supports.
     const int maxPhysPageSize = 512 << 10;
-    // pagesPerReclaimerChunk indicates how many pages to scan from the
-    // pageInUse bitmap at a time. Used by the page reclaimer.
-    //
-    // Higher values reduce contention on scanning indexes (such as
-    // h.reclaimIndex), but increase the minimum latency of the
-    // operation.
-    //
-    // The time required to scan this many pages can vary a lot depending
-    // on how many spans are actually freed. Experimentally, it can
-    // scan for pages at ~300 GB/ms on a 2.6GHz Core i7, but can only
-    // free spans at ~32 MB/ms. Using 512 pages bounds this at
-    // roughly 100µs.
-    //
-    // Must be a multiple of the pageInUse bitmap element size and
-    // must also evenly divide pagesPerArena.
-    const long pagesPerReclaimerChunk = 512;
+    struct mheap;
+    struct heapArena;
+    struct arenaHint;
     using mSpanState = uint8_t;
+    struct mSpanStateBox;
+    struct mspan;
     using spanClass = uint8_t;
     using arenaIdx = unsigned int;
     using spanAllocType = uint8_t;
-    const long _KindSpecialFinalizer = 1;
-    const long _KindSpecialProfile = 2;
+    struct mSpanList;
+    // _KindSpecialTinyBlock indicates that a given allocation is a tiny block.
+    // Ordered before KindSpecialFinalizer and KindSpecialCleanup so that it
+    // always appears first in the specials list.
+    // Used only if debug.checkfinalizers != 0.
+    const long _KindSpecialTinyBlock = 1;
+    // _KindSpecialFinalizer is for tracking finalizers.
+    const long _KindSpecialFinalizer = 2;
+    // _KindSpecialWeakHandle is used for creating weak pointers.
+    const long _KindSpecialWeakHandle = 3;
+    // _KindSpecialProfile is for memory profiling.
+    const long _KindSpecialProfile = 4;
     // _KindSpecialReachable is a special used for tracking
     // reachability during testing.
-    const long _KindSpecialReachable = 3;
+    const long _KindSpecialReachable = 5;
     // _KindSpecialPinCounter is a special used for objects that are pinned
     // multiple times
-    const long _KindSpecialPinCounter = 4;
+    const long _KindSpecialPinCounter = 6;
+    // _KindSpecialCleanup is for tracking cleanups.
+    const long _KindSpecialCleanup = 7;
+    // _KindSpecialCheckFinalizer adds additional context to a finalizer or cleanup.
+    // Used only if debug.checkfinalizers != 0.
+    const long _KindSpecialCheckFinalizer = 8;
+    // _KindSpecialBubble is used to associate objects with synctest bubbles.
+    const long _KindSpecialBubble = 9;
+    // _KindSpecialSecret is a special used to mark an object
+    // as needing zeroing immediately upon freeing.
+    const long _KindSpecialSecret = 10;
+    struct special;
+    struct specialfinalizer;
+    struct specialCleanup;
+    struct specialCheckFinalizer;
+    struct specialTinyBlock;
+    struct specialWeakHandle;
+    struct immortalWeakHandleMap;
+    struct immortalWeakHandle;
+    struct specialprofile;
     struct specialReachable;
     struct specialPinCounter;
+    struct specialSecret;
     struct specialsIter;
+    struct gcBits;
     const uintptr_t gcBitsChunkBytes = uintptr_t(64 << 10);
     struct gcBitsHeader;
+    struct gcBitsArena;
     struct gcBitsArenasStruct;
     const mSpanState mSpanDead = 0;
     const mSpanState mSpanInUse = 1;
     const mSpanState mSpanManual = 2;
     const spanAllocType spanAllocHeap = 0;
     const spanAllocType spanAllocStack = 1;
-    const spanAllocType spanAllocPtrScalarBits = 2;
-    const spanAllocType spanAllocWorkBuf = 3;
+    const spanAllocType spanAllocWorkBuf = 2;
 }
-#include "golang/internal/cpu/cpu.fwd.h"
-#include "golang/internal/cpu/cpu_x86.fwd.h"
 #include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mbitmap_allocheaders.fwd.h"
-#include "golang/runtime/mcache.fwd.h"
-#include "golang/runtime/mcentral.fwd.h"
-#include "golang/runtime/mcheckmark.fwd.h"
-#include "golang/runtime/mfixalloc.fwd.h"
 #include "golang/runtime/mpagealloc.fwd.h"
-#include "golang/runtime/mprof.fwd.h"
-#include "golang/runtime/mranges.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/sizeclasses.fwd.h"
-#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
@@ -81,17 +87,13 @@ namespace golang::runtime
     // physical page aligned. This is a requirement for MAP_STACK on
     // OpenBSD.
     const bool physPageAlignedStacks = GOOS == "openbsd"_s;
-    struct mheap;
-    struct heapArena;
-    struct arenaHint;
-    struct mSpanStateBox;
-    struct mSpanList;
-    struct mspan;
-    const int numSpanClasses = _NumSizeClasses << 1;
     const spanClass tinySpanClass = spanClass((tinySizeClass << 1) | 1);
-    struct special;
-    struct specialfinalizer;
-    struct specialprofile;
-    struct gcBits;
-    struct gcBitsArena;
+}
+#include "golang/internal/runtime/gc/malloc.fwd.h"
+#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
+
+namespace golang::runtime
+{
+    namespace gc = golang::internal::runtime::gc;
+    const int numSpanClasses = gc::NumSizeClasses << 1;
 }

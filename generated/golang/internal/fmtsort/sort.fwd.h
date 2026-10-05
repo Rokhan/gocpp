@@ -3,9 +3,10 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/reflect/value.fwd.h"
 
-namespace golang::fmtsort
+namespace golang::internal::fmtsort
 {
-    struct SortedMap;
+    struct GoTag_SortedMap;
+    struct KeyValue;
+    using SortedMap = gocpp::defined<gocpp::slice<KeyValue>, GoTag_SortedMap>;
 }

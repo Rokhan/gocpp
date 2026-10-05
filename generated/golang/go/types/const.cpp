@@ -25,12 +25,15 @@
 #include "golang/go/types/predicates.h"
 #include "golang/go/types/sizes.h"
 #include "golang/go/types/type.h"
-#include "golang/go/types/under.h"
 #include "golang/internal/types/errors/codes.h"
 #include "golang/math/bits.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace constant = golang::go::constant;
+    namespace errors = golang::internal::types::errors;
+    namespace math = golang::math;
+    namespace token = golang::go::token;
     namespace rec
     {
         using constant::rec::Kind;
@@ -41,7 +44,7 @@ namespace golang::types
     // arbitrarily large.
     void rec::overflow(Checker* check, operand* x, token::Pos opPos)
     {
-        assert(x->mode == constant_);
+        assert(rec::mode(gocpp::recv(x)) == constant_);
 
         if(rec::Kind(gocpp::recv(x->val)) == constant::Unknown)
         {
@@ -56,9 +59,9 @@ namespace golang::types
         // their type after each constant operation.
         // x.typ cannot be a type parameter (type
         // parameters cannot be constant types).
-        if(isTyped(x->typ))
+        if(isTyped(rec::typ(gocpp::recv(x))))
         {
-            rec::representable(gocpp::recv(check), x, gocpp::getValue<Basic*>(types::under(x->typ)));
+            rec::representable(gocpp::recv(check), x, gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))));
             return;
         }
 
@@ -74,6 +77,21 @@ namespace golang::types
             }
             rec::errorf(gocpp::recv(check), atPos(opPos), InvalidConstVal, "constant %soverflow"_s, op);
             x->val = constant::MakeUnknown();
+            return;
+        }
+
+        // String values must not become arbitrarily long (go.dev/issue/78346).
+        // cmd/internal/obj.MaxSymSize
+        auto maxLen = int64_t(2e9);
+        if(rec::Kind(gocpp::recv(x->val)) == constant::String)
+        {
+            auto len = constant::StringLen(x->val);
+            if(len > maxLen)
+            {
+                rec::errorf(gocpp::recv(check), atPos(opPos), InvalidConstVal, "constant string too long (%d bytes > %d bytes)"_s, len, maxLen);
+                x->val = constant::MakeUnknown();
+                return;
+            }
         }
     }
 
@@ -103,7 +121,7 @@ namespace golang::types
             conf = check->conf;
         }
 
-        auto go_sizeof = [=](golang::types::Type T) mutable -> int64_t
+        auto go_sizeof = [=](golang::go::types::Type T) mutable -> int64_t
         {
             auto s = rec::go_sizeof(gocpp::recv(conf), T);
             return s;
@@ -209,7 +227,7 @@ namespace golang::types
                                         return 0 <= x;
                                         break;
                                     default:
-                                        unreachable();
+                                        gocpp::panic("unreachable"_s);
                                         break;
                                 }
                             }
@@ -292,7 +310,7 @@ namespace golang::types
                                 return true;
                                 break;
                             default:
-                                unreachable();
+                                gocpp::panic("unreachable"_s);
                                 break;
                         }
                     }
@@ -350,7 +368,7 @@ namespace golang::types
                                 return true;
                                 break;
                             default:
-                                unreachable();
+                                gocpp::panic("unreachable"_s);
                                 break;
                         }
                     }
@@ -412,7 +430,7 @@ namespace golang::types
         if(code != 0)
         {
             rec::invalidConversion(gocpp::recv(check), code, x, typ);
-            x->mode = invalid;
+            rec::invalidate(gocpp::recv(x));
             return;
         }
         assert(v != nullptr);
@@ -425,18 +443,18 @@ namespace golang::types
     // If no such representation is possible, it returns a non-zero error code.
     std::tuple<constant::Value, errors::Code> rec::representation(Checker* check, operand* x, Basic* typ)
     {
-        assert(x->mode == constant_);
+        assert(rec::mode(gocpp::recv(x)) == constant_);
         auto v = x->val;
         if(! representableConst(x->val, check, typ, & v))
         {
-            if(isNumeric(x->typ) && isNumeric(typ))
+            if(isNumeric(rec::typ(gocpp::recv(x))) && isNumeric(typ))
             {
                 // numeric conversion : error msg
                 // integer -> integer : overflows
                 // integer -> float   : overflows (actually not possible)
                 // float   -> integer : truncated
                 // float   -> float   : overflows
-                if(! isInteger(x->typ) && isInteger(typ))
+                if(! isInteger(rec::typ(gocpp::recv(x))) && isInteger(typ))
                 {
                     return {nullptr, TruncatedFloat};
                 }
@@ -450,7 +468,7 @@ namespace golang::types
         return {v, 0};
     }
 
-    void rec::invalidConversion(Checker* check, errors::Code code, operand* x, golang::types::Type target)
+    void rec::invalidConversion(Checker* check, errors::Code code, operand* x, golang::go::types::Type target)
     {
         auto msg = "cannot convert %s to type %s"_s;
         //Go switch emulation
@@ -473,7 +491,7 @@ namespace golang::types
     }
 
     // convertUntyped attempts to set the type of an untyped value to the target type.
-    void rec::convertUntyped(Checker* check, operand* x, golang::types::Type target)
+    void rec::convertUntyped(Checker* check, operand* x, golang::go::types::Type target)
     {
         auto [newType, val, code] = rec::implicitTypeAndValue(gocpp::recv(check), x, target);
         if(code != 0)
@@ -484,7 +502,7 @@ namespace golang::types
                 t = safeUnderlying(target);
             }
             rec::invalidConversion(gocpp::recv(check), code, x, t);
-            x->mode = invalid;
+            rec::invalidate(gocpp::recv(x));
             return;
         }
         if(val != nullptr)
@@ -492,9 +510,9 @@ namespace golang::types
             x->val = val;
             rec::updateExprVal(gocpp::recv(check), x->expr, val);
         }
-        if(newType != x->typ)
+        if(newType != rec::typ(gocpp::recv(x)))
         {
-            x->typ = newType;
+            x->typ_ = newType;
             rec::updateExprType(gocpp::recv(check), x->expr, newType, false);
         }
     }

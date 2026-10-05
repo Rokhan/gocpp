@@ -19,15 +19,24 @@
 #include "golang/syscall/zerrors_windows.h"
 #include "golang/syscall/zsyscall_windows.h"
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace sync = golang::sync;
+    namespace syscall = golang::syscall;
     namespace rec
     {
+        using mocklib::rec::Error;
         using sync::rec::Do;
         using syscall::rec::Error;
         using syscall::rec::Find;
     }
 
+    // CanUseLongPaths is true when the OS supports opting into
+    // proper long path handling without the need for fixups.
+    //
+    //go:linkname CanUseLongPaths
+    bool CanUseLongPaths;
     // UTF16PtrToString is like UTF16ToString, but takes *uint16
     // as a parameter instead of []uint16.
     gocpp::string UTF16PtrToString(uint16_t* p)
@@ -294,6 +303,82 @@ namespace golang::windows
 
     
     template<typename T> requires gocpp::GoStruct<T>
+    IpAdapterWinsServerAddress::operator T()
+    {
+        T result;
+        result.Length = this->Length;
+        result.Reserved = this->Reserved;
+        result.Next = this->Next;
+        result.Address = this->Address;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool IpAdapterWinsServerAddress::operator==(const T& ref) const
+    {
+        if (Length != ref.Length) return false;
+        if (Reserved != ref.Reserved) return false;
+        if (Next != ref.Next) return false;
+        if (Address != ref.Address) return false;
+        return true;
+    }
+
+    std::ostream& IpAdapterWinsServerAddress::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Length;
+        os << " " << Reserved;
+        os << " " << Next;
+        os << " " << Address;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct IpAdapterWinsServerAddress& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    IpAdapterGatewayAddress::operator T()
+    {
+        T result;
+        result.Length = this->Length;
+        result.Reserved = this->Reserved;
+        result.Next = this->Next;
+        result.Address = this->Address;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool IpAdapterGatewayAddress::operator==(const T& ref) const
+    {
+        if (Length != ref.Length) return false;
+        if (Reserved != ref.Reserved) return false;
+        if (Next != ref.Next) return false;
+        if (Address != ref.Address) return false;
+        return true;
+    }
+
+    std::ostream& IpAdapterGatewayAddress::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Length;
+        os << " " << Reserved;
+        os << " " << Next;
+        os << " " << Address;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct IpAdapterGatewayAddress& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
     IpAdapterAddresses::operator T()
     {
         T result;
@@ -317,6 +402,10 @@ namespace golang::windows
         result.Ipv6IfIndex = this->Ipv6IfIndex;
         result.ZoneIndices = this->ZoneIndices;
         result.FirstPrefix = this->FirstPrefix;
+        result.TransmitLinkSpeed = this->TransmitLinkSpeed;
+        result.ReceiveLinkSpeed = this->ReceiveLinkSpeed;
+        result.FirstWinsServerAddress = this->FirstWinsServerAddress;
+        result.FirstGatewayAddress = this->FirstGatewayAddress;
         return result;
     }
 
@@ -343,6 +432,10 @@ namespace golang::windows
         if (Ipv6IfIndex != ref.Ipv6IfIndex) return false;
         if (ZoneIndices != ref.ZoneIndices) return false;
         if (FirstPrefix != ref.FirstPrefix) return false;
+        if (TransmitLinkSpeed != ref.TransmitLinkSpeed) return false;
+        if (ReceiveLinkSpeed != ref.ReceiveLinkSpeed) return false;
+        if (FirstWinsServerAddress != ref.FirstWinsServerAddress) return false;
+        if (FirstGatewayAddress != ref.FirstGatewayAddress) return false;
         return true;
     }
 
@@ -369,6 +462,10 @@ namespace golang::windows
         os << " " << Ipv6IfIndex;
         os << " " << ZoneIndices;
         os << " " << FirstPrefix;
+        os << " " << TransmitLinkSpeed;
+        os << " " << ReceiveLinkSpeed;
+        os << " " << FirstWinsServerAddress;
+        os << " " << FirstGatewayAddress;
         os << '}';
         return os;
     }
@@ -889,6 +986,41 @@ namespace golang::windows
 
     
     template<typename T> requires gocpp::GoStruct<T>
+    RUNTIME_FUNCTION::operator T()
+    {
+        T result;
+        result.BeginAddress = this->BeginAddress;
+        result.EndAddress = this->EndAddress;
+        result.UnwindData = this->UnwindData;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool RUNTIME_FUNCTION::operator==(const T& ref) const
+    {
+        if (BeginAddress != ref.BeginAddress) return false;
+        if (EndAddress != ref.EndAddress) return false;
+        if (UnwindData != ref.UnwindData) return false;
+        return true;
+    }
+
+    std::ostream& RUNTIME_FUNCTION::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << BeginAddress;
+        os << " " << EndAddress;
+        os << " " << UnwindData;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct RUNTIME_FUNCTION& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
     SERVICE_STATUS::operator T()
     {
         T result;
@@ -930,6 +1062,85 @@ namespace golang::windows
     }
 
     std::ostream& operator<<(std::ostream& os, const struct SERVICE_STATUS& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    std::tuple<gocpp::string, gocpp::error> FinalPath(syscall::Handle h, uint32_t flags)
+    {
+        auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 100);
+        for(; ; )
+        {
+            auto [n, err] = GetFinalPathNameByHandle(h, & buf[0], uint32_t(len(buf)), flags);
+            if(err != nullptr)
+            {
+                return {""_s, err};
+            }
+            if(n < uint32_t(len(buf)))
+            {
+                break;
+            }
+            buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
+        }
+        return {syscall::UTF16ToString(buf), nullptr};
+    }
+
+    // QueryPerformanceCounter retrieves the current value of performance counter.
+    //
+    //go:linkname QueryPerformanceCounter
+    int64_t QueryPerformanceCounter()
+    /* convertBlockStmt, nil block */;
+
+    // QueryPerformanceFrequency retrieves the frequency of the performance counter.
+    // The returned value is represented as counts per second.
+    //
+    //go:linkname QueryPerformanceFrequency
+    int64_t QueryPerformanceFrequency()
+    /* convertBlockStmt, nil block */;
+
+    // NTStatus corresponds with NTSTATUS, error values returned by ntdll.dll and
+    // other native functions.
+    syscall::Errno rec::Errno(NTStatus s)
+    {
+        return rtlNtStatusToDosErrorNoTeb(s);
+    }
+
+    uint32_t langID(uint16_t pri, uint16_t sub)
+    {
+        return (uint32_t(sub) << 10) | uint32_t(pri);
+    }
+
+    gocpp::string rec::Error(NTStatus s)
+    {
+        return rec::Error(gocpp::recv(rec::Errno(gocpp::recv(s))));
+    }
+
+    // https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_mode_information
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    FILE_MODE_INFORMATION::operator T()
+    {
+        T result;
+        result.Mode = this->Mode;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool FILE_MODE_INFORMATION::operator==(const T& ref) const
+    {
+        if (Mode != ref.Mode) return false;
+        return true;
+    }
+
+    std::ostream& FILE_MODE_INFORMATION::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Mode;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct FILE_MODE_INFORMATION& value)
     {
         return value.PrintTo(os);
     }

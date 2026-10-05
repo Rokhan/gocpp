@@ -9,7 +9,13 @@
 #include "golang/runtime/rwmutex.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/runtime2.h"
 

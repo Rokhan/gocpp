@@ -13,10 +13,15 @@
 
 #include "golang/errors/errors.h"
 #include "golang/errors/wrap.h"
+#include "golang/internal/filepathlite/path.h"
+#include "golang/internal/filepathlite/path_windows.h"
 #include "golang/internal/poll/fd.h"
-#include "golang/internal/safefilepath/path.h"
 #include "golang/internal/testlog/log.h"
 #include "golang/io/fs/fs.h"
+#include "golang/io/fs/readdir.h"
+#include "golang/io/fs/readfile.h"
+#include "golang/io/fs/readlink.h"
+#include "golang/io/fs/stat.h"
 #include "golang/io/io.h"
 #include "golang/os/dir.h"
 #include "golang/os/dir_windows.h"
@@ -33,6 +38,9 @@
 #include "golang/os/types.h"
 #include "golang/os/zero_copy_stub.h"
 #include "golang/runtime/extern.h"
+#include "golang/slices/slices.h"
+#include "golang/sync/atomic/type.h"
+#include "golang/sync/mutex.h"
 #include "golang/syscall/net.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
@@ -43,9 +51,9 @@
 // functionality. The design is Unix-like, although the error handling is
 // Go-like; failing calls return values of type error rather than error numbers.
 // Often, more information is available within the error. For example,
-// if a call that takes a file name fails, such as Open or Stat, the error
+// if a call that takes a file name fails, such as [Open] or [Stat], the error
 // will include the failing file name when printed and will be of type
-// *PathError, which may be unpacked for more information.
+// [*PathError], which may be unpacked for more information.
 //
 // The os interface is intended to be uniform across all operating systems.
 // Features not generally available appear in the system-specific package syscall.
@@ -71,22 +79,41 @@
 //	}
 //	fmt.Printf("read %d bytes: %q\n", count, data[:count])
 //
-// Note: The maximum number of concurrent operations on a File may be limited by
-// the OS or the system. The number should be high, but exceeding it may degrade
-// performance or cause other issues.
+// # Concurrency
+//
+// The methods of [File] correspond to file system operations. All are
+// safe for concurrent use. The maximum number of concurrent
+// operations on a File may be limited by the OS or the system. The
+// number should be high, but exceeding it may degrade performance or
+// cause other issues.
 namespace golang::os
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace errors = golang::errors;
+    namespace filepathlite = golang::internal::filepathlite;
+    namespace fs = golang::io::fs;
+    namespace io = golang::io;
+    namespace poll = golang::internal::poll;
+    namespace runtime = golang::runtime;
+    namespace slices = golang::slices;
+    namespace syscall = golang::syscall;
+    namespace testlog = golang::internal::testlog;
+    namespace time = golang::time;
     namespace rec
     {
-        using fs::rec::Error;
+        using atomic::rec::Load;
         using fs::rec::Mode;
         using fs::rec::Size;
         using mocklib::rec::Error;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
         using syscall::rec::Error;
         using testlog::rec::Chdir;
     }
 
     // Name returns the name of the file as presented to Open.
+    //
+    // It is safe to call Name after [Close].
     gocpp::string rec::Name(File* f)
     {
         return f->file.name;
@@ -149,6 +176,26 @@ namespace golang::os
     gocpp::error rec::Unwrap(LinkError* e)
     {
         return e->Err;
+    }
+
+    // NewFile returns a new [File] with the given file descriptor and name.
+    // The returned value will be nil if fd is not a valid file descriptor.
+    //
+    // NewFile's behavior differs on some platforms:
+    //
+    //   - On Unix, if fd is in non-blocking mode, NewFile will attempt to return a pollable file.
+    //   - On Windows, if fd is opened for asynchronous I/O (that is, [syscall.FILE_FLAG_OVERLAPPED]
+    //     has been specified in the [syscall.CreateFile] call), NewFile will attempt to return a pollable
+    //     file by associating fd with the Go runtime I/O completion port.
+    //     The I/O operations will be performed synchronously if the association fails.
+    //
+    // Only pollable files support [File.SetDeadline], [File.SetReadDeadline], and [File.SetWriteDeadline].
+    //
+    // After passing it to NewFile, fd may become invalid under the same conditions described
+    // in the comments of [File.Fd], and the same constraints apply.
+    File* NewFile(uintptr_t fd, gocpp::string name)
+    {
+        return newFileFromNewFile(fd, name);
     }
 
     // Read reads up to len(b) bytes from the File and stores them in b.
@@ -338,7 +385,7 @@ namespace golang::os
     // It returns the number of bytes written and an error, if any.
     // WriteAt returns a non-nil error when n != len(b).
     //
-    // If file was opened with the O_APPEND flag, WriteAt returns an error.
+    // If file was opened with the [O_APPEND] flag, WriteAt returns an error.
     std::tuple<int, gocpp::error> rec::WriteAt(File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
@@ -477,7 +524,7 @@ namespace golang::os
     // according to whence: 0 means relative to the origin of the file, 1 means
     // relative to the current offset, and 2 means relative to the end.
     // It returns the new offset and an error, if any.
-    // The behavior of Seek on a file opened with O_APPEND is not specified.
+    // The behavior of Seek on a file opened with [O_APPEND] is not specified.
     std::tuple<int64_t, gocpp::error> rec::Seek(File* f, int64_t offset, int whence)
     {
         int64_t ret;
@@ -487,7 +534,7 @@ namespace golang::os
             return {0, err};
         }
         auto [r, e] = rec::seek(gocpp::recv(f), offset, whence);
-        if(e == nullptr && f->file.dirinfo != nullptr && r != 0)
+        if(e == nullptr && rec::Load<dirInfo>(gocpp::recv(f->file.dirinfo)) != nullptr && r != 0)
         {
             e = syscall::go_EISDIR;
         }
@@ -510,7 +557,7 @@ namespace golang::os
 
     // Mkdir creates a new directory with the specified name and permission
     // bits (before umask).
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     gocpp::error Mkdir(gocpp::string name, FileMode perm)
     {
         auto longName = fixLongPath(name);
@@ -555,7 +602,7 @@ namespace golang::os
     }
 
     // Chdir changes the current working directory to the named directory.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     gocpp::error Chdir(gocpp::string dir)
     {
         if(auto e = syscall::Chdir(dir); e != nullptr)
@@ -567,6 +614,20 @@ namespace golang::os
                 x.Path = dir;
                 x.Err = e;
             }));
+        }
+        if(mocklib::GOOS == "windows"_s)
+        {
+            auto abs = filepathlite::IsAbs(dir);
+            rec::Lock(gocpp::recv(getwdCache));
+            if(abs)
+            {
+                getwdCache.dir = dir;
+            }
+            else
+            {
+                getwdCache.dir = ""_s;
+            }
+            rec::Unlock(gocpp::recv(getwdCache));
         }
         if(auto log = testlog::Logger(); log != nullptr)
         {
@@ -581,18 +642,19 @@ namespace golang::os
 
     // Open opens the named file for reading. If successful, methods on
     // the returned file can be used for reading; the associated file
-    // descriptor has mode O_RDONLY.
-    // If there is an error, it will be of type *PathError.
+    // descriptor has mode [O_RDONLY].
+    // If there is an error, it will be of type [*PathError].
     std::tuple<File*, gocpp::error> Open(gocpp::string name)
     {
         return OpenFile(name, O_RDONLY, 0);
     }
 
     // Create creates or truncates the named file. If the file already exists,
-    // it is truncated. If the file does not exist, it is created with mode 0666
+    // it is truncated. If the file does not exist, it is created with mode 0o666
     // (before umask). If successful, methods on the returned File can
-    // be used for I/O; the associated file descriptor has mode O_RDWR.
-    // If there is an error, it will be of type *PathError.
+    // be used for I/O; the associated file descriptor has mode [O_RDWR].
+    // The directory containing the file must already exist.
+    // If there is an error, it will be of type [*PathError].
     std::tuple<File*, gocpp::error> Create(gocpp::string name)
     {
         return OpenFile(name, O_RDWR | O_CREATE | O_TRUNC, 0666);
@@ -600,10 +662,11 @@ namespace golang::os
 
     // OpenFile is the generalized open call; most users will use Open
     // or Create instead. It opens the named file with specified flag
-    // (O_RDONLY etc.). If the file does not exist, and the O_CREATE flag
-    // is passed, it is created with mode perm (before umask). If successful,
+    // ([O_RDONLY] etc.). If the file does not exist, and the [O_CREATE] flag
+    // is passed, it is created with mode perm (before umask);
+    // the containing directory must exist. If successful,
     // methods on the returned File can be used for I/O.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     std::tuple<File*, gocpp::error> OpenFile(gocpp::string name, int flag, FileMode perm)
     {
         testlog::Open(name);
@@ -617,10 +680,19 @@ namespace golang::os
         return {f, nullptr};
     }
 
-    // lstat is overridden in tests.
-    std::function<std::tuple<fs::FileInfo, gocpp::error> (gocpp::string)> lstat = Lstat;
+    gocpp::error errPathEscapes = errors::New("path escapes from parent"_s);
+    // openDir opens a file which is assumed to be a directory. As such, it skips
+    // the syscalls that make the file descriptor non-blocking as these take time
+    // and will fail on file descriptors for directories.
+    std::tuple<File*, gocpp::error> openDir(gocpp::string name)
+    {
+        testlog::Open(name);
+        return openDirNolog(name);
+    }
+
     // Rename renames (moves) oldpath to newpath.
     // If newpath already exists and is not a directory, Rename replaces it.
+    // If newpath already exists and is a directory, Rename returns an error.
     // OS-specific restrictions may apply when oldpath and newpath are in different directories.
     // Even within the same directory, on non-Unix platforms Rename is not an atomic operation.
     // If there is an error, it will be of type *LinkError.
@@ -630,7 +702,7 @@ namespace golang::os
     }
 
     // Readlink returns the destination of the named symbolic link.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     //
     // If the link destination is relative, Readlink returns the relative path
     // without resolving it to an absolute one.
@@ -703,8 +775,8 @@ namespace golang::os
     // On Windows, it returns %LocalAppData%.
     // On Plan 9, it returns $home/lib/cache.
     //
-    // If the location cannot be determined (for example, $HOME is not defined),
-    // then it will return an error.
+    // If the location cannot be determined (for example, $HOME is not defined) or
+    // the path in $XDG_CACHE_HOME is relative, then it will return an error.
     std::tuple<gocpp::string, gocpp::error> UserCacheDir()
     {
         gocpp::string dir = {};
@@ -758,6 +830,11 @@ namespace golang::os
                         }
                         dir += "/.cache"_s;
                     }
+                    else
+                    if(! filepathlite::IsAbs(dir))
+                    {
+                        return {""_s, errors::New("path in $XDG_CACHE_HOME is relative"_s)};
+                    }
                     break;
             }
         }
@@ -776,8 +853,8 @@ namespace golang::os
     // On Windows, it returns %AppData%.
     // On Plan 9, it returns $home/lib.
     //
-    // If the location cannot be determined (for example, $HOME is not defined),
-    // then it will return an error.
+    // If the location cannot be determined (for example, $HOME is not defined) or
+    // the path in $XDG_CONFIG_HOME is relative, then it will return an error.
     std::tuple<gocpp::string, gocpp::error> UserConfigDir()
     {
         gocpp::string dir = {};
@@ -831,6 +908,11 @@ namespace golang::os
                         }
                         dir += "/.config"_s;
                     }
+                    else
+                    if(! filepathlite::IsAbs(dir))
+                    {
+                        return {""_s, errors::New("path in $XDG_CONFIG_HOME is relative"_s)};
+                    }
                     break;
             }
         }
@@ -869,7 +951,7 @@ namespace golang::os
         {
             return {v, nullptr};
         }
-        // On some geese the home directory is not always defined.
+        // On some operating systems the home directory is not always defined.
         //Go switch emulation
         {
             auto condition = mocklib::GOOS;
@@ -891,29 +973,29 @@ namespace golang::os
 
     // Chmod changes the mode of the named file to mode.
     // If the file is a symbolic link, it changes the mode of the link's target.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     //
     // A different subset of the mode bits are used, depending on the
     // operating system.
     //
-    // On Unix, the mode's permission bits, ModeSetuid, ModeSetgid, and
-    // ModeSticky are used.
+    // On Unix, the mode's permission bits, [ModeSetuid], [ModeSetgid], and
+    // [ModeSticky] are used.
     //
-    // On Windows, only the 0200 bit (owner writable) of mode is used; it
+    // On Windows, only the 0o200 bit (owner writable) of mode is used; it
     // controls whether the file's read-only attribute is set or cleared.
     // The other bits are currently unused. For compatibility with Go 1.12
-    // and earlier, use a non-zero mode. Use mode 0400 for a read-only
-    // file and 0600 for a readable+writable file.
+    // and earlier, use a non-zero mode. Use mode 0o400 for a read-only
+    // file and 0o600 for a readable+writable file.
     //
-    // On Plan 9, the mode's permission bits, ModeAppend, ModeExclusive,
-    // and ModeTemporary are used.
+    // On Plan 9, the mode's permission bits, [ModeAppend], [ModeExclusive],
+    // and [ModeTemporary] are used.
     gocpp::error Chmod(gocpp::string name, FileMode mode)
     {
         return chmod(name, mode);
     }
 
     // Chmod changes the mode of the file to mode.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     gocpp::error rec::Chmod(File* f, FileMode mode)
     {
         return rec::chmod(gocpp::recv(f), mode);
@@ -979,6 +1061,28 @@ namespace golang::os
         return newRawConn(f);
     }
 
+    // Fd returns the system file descriptor or handle referencing the open file.
+    // If f is closed, the descriptor becomes invalid.
+    // If f is garbage collected, a finalizer may close the descriptor,
+    // making it invalid; see [runtime.SetFinalizer] for more information on when
+    // a finalizer might be run.
+    //
+    // Do not close the returned descriptor; that could cause a later
+    // close of f to close an unrelated descriptor.
+    //
+    // Fd's behavior differs on some platforms:
+    //
+    //   - On Unix and Windows, [File.SetDeadline] methods will stop working.
+    //   - On Windows, the file descriptor will be disassociated from the
+    //     Go runtime I/O completion port if there are no concurrent I/O
+    //     operations on the file.
+    //
+    // For most uses prefer the f.SyscallConn method.
+    uintptr_t rec::Fd(File* f)
+    {
+        return rec::fd(gocpp::recv(f));
+    }
+
     // DirFS returns a file system (an fs.FS) for the tree of files rooted at the directory dir.
     //
     // Note that DirFS("/prefix") only guarantees that the Open calls it makes to the
@@ -990,15 +1094,21 @@ namespace golang::os
     // a general substitute for a chroot-style security mechanism when the directory tree
     // contains arbitrary content.
     //
+    // Use [Root.FS] to obtain a fs.FS that prevents escapes from the tree via symbolic links.
+    //
     // The directory dir must not be "".
     //
-    // The result implements [io/fs.StatFS], [io/fs.ReadFileFS] and
-    // [io/fs.ReadDirFS].
+    // The result implements [io/fs.StatFS], [io/fs.ReadFileFS], [io/fs.ReadDirFS], and
+    // [io/fs.ReadLinkFS].
     fs::FS DirFS(gocpp::string dir)
     {
         return dirFS(dir);
     }
 
+    fs::StatFS _ = dirFS(""_s);
+    fs::ReadFileFS _ = dirFS(""_s);
+    fs::ReadDirFS _ = dirFS(""_s);
+    fs::ReadLinkFS _ = dirFS(""_s);
     std::tuple<fs::File, gocpp::error> rec::Open(dirFS dir, gocpp::string name)
     {
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
@@ -1066,7 +1176,7 @@ namespace golang::os
                 x.Err = err;
             }))};
         }
-        gocpp::slice<fs::DirEntry> entries;
+        gocpp::slice<DirEntry> entries;
         std::tie(entries, err) = os::ReadDir(fullname);
         if(err != nullptr)
         {
@@ -1091,13 +1201,57 @@ namespace golang::os
                 x.Err = err;
             }))};
         }
-        fs::FileInfo f;
+        FileInfo f;
         std::tie(f, err) = os::Stat(fullname);
         if(err != nullptr)
         {
             // See comment in dirFS.Open.
             gocpp::getValue<PathError*>(err)->Path = name;
             return {nullptr, err};
+        }
+        return {f, nullptr};
+    }
+
+    std::tuple<fs::FileInfo, gocpp::error> rec::Lstat(dirFS dir, gocpp::string name)
+    {
+        auto [fullname, err] = rec::join(gocpp::recv(dir), name);
+        if(err != nullptr)
+        {
+            return {nullptr, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
+                x.Op = "lstat"_s;
+                x.Path = name;
+                x.Err = err;
+            }))};
+        }
+        FileInfo f;
+        std::tie(f, err) = os::Lstat(fullname);
+        if(err != nullptr)
+        {
+            // See comment in dirFS.Open.
+            gocpp::getValue<PathError*>(err)->Path = name;
+            return {nullptr, err};
+        }
+        return {f, nullptr};
+    }
+
+    std::tuple<gocpp::string, gocpp::error> rec::ReadLink(dirFS dir, gocpp::string name)
+    {
+        auto [fullname, err] = rec::join(gocpp::recv(dir), name);
+        if(err != nullptr)
+        {
+            return {""_s, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
+                x.Op = "readlink"_s;
+                x.Path = name;
+                x.Err = err;
+            }))};
+        }
+        gocpp::string f;
+        std::tie(f, err) = os::Readlink(fullname);
+        if(err != nullptr)
+        {
+            // See comment in dirFS.Open.
+            gocpp::getValue<PathError*>(err)->Path = name;
+            return {""_s, err};
         }
         return {f, nullptr};
     }
@@ -1109,11 +1263,7 @@ namespace golang::os
         {
             return {""_s, errors::New("os: DirFS with empty root"_s)};
         }
-        if(! fs::ValidPath(name))
-        {
-            return {""_s, ErrInvalid};
-        }
-        auto [name_tmp, err] = safefilepath::FromFS(name);
+        auto [name_tmp, err] = filepathlite::Localize(name);
         auto& name = name_tmp;
         if(err != nullptr)
         {
@@ -1130,6 +1280,7 @@ namespace golang::os
     // A successful call returns err == nil, not err == EOF.
     // Because ReadFile reads the whole file, it does not treat an EOF from Read
     // as an error to be reported.
+    // If there is an error, it will be of type [*PathError].
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadFile(gocpp::string name)
     {
         gocpp::Defer defer;
@@ -1142,51 +1293,74 @@ namespace golang::os
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(f)); });
 
-            int size = {};
-            if(auto [info, err] = rec::Stat(gocpp::recv(f)); err == nullptr)
-            {
-                auto size64 = rec::Size(gocpp::recv(info));
-                if(int64_t(int(size64)) == size64)
-                {
-                    size = int(size64);
-                }
-            }
-            // one byte for final read at EOF
-            size++;
-
-            // If a file claims a small size, read at least 512 bytes.
-            // In particular, files in Linux's /proc claim size 0 but
-            // then do not work right if read in small pieces,
-            // so an initial read of 1 byte would not work correctly.
-            if(size < 512)
-            {
-                size = 512;
-            }
-
-            auto data = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, size);
-            for(; ; )
-            {
-                auto [n, err] = rec::Read(gocpp::recv(f), data.make_slice(len(data), cap(data)));
-                data = data.make_slice(0, len(data) + n);
-                if(err != nullptr)
-                {
-                    if(err == io::go_EOF)
-                    {
-                        err = nullptr;
-                    }
-                    return {data, err};
-                }
-
-                if(len(data) >= cap(data))
-                {
-                    auto d = append(data.make_slice(0, cap(data)), 0);
-                    data = d.make_slice(0, len(data));
-                }
-            }
+            return readFileContents(statOrZero(f), [&](auto x){ return rec::Read(f, x); });
         }
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+        }
+    }
+
+    int64_t statOrZero(File* f)
+    {
+        if(auto [fi, err] = rec::Stat(gocpp::recv(f)); err == nullptr)
+        {
+            return rec::Size(gocpp::recv(fi));
+        }
+        return 0;
+    }
+
+    // readFileContents reads the contents of a file using the provided read function
+    // (*os.File.Read, except in tests) one or more times, until an error is seen.
+    //
+    // The provided size is the stat size of the file, which might be 0 for a
+    // /proc-like file that doesn't report a size.
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> readFileContents(int64_t statSize, std::function<std::tuple<int, gocpp::error> (gocpp::slice<unsigned char> _1)> read)
+    {
+        auto zeroSize = statSize == 0;
+
+        // Figure out how big to make the initial slice. For files with known size
+        // that fit in memory, use that size + 1. Otherwise, use a small buffer and
+        // we'll grow.
+        int size = {};
+        if(int64_t(int(statSize)) == statSize)
+        {
+            size = int(statSize);
+        }
+        // one byte for final read at EOF
+        size++;
+
+        auto minBuf = 512;
+        // If a file claims a small size, read at least 512 bytes. In particular,
+        // files in Linux's /proc claim size 0 but then do not work right if read in
+        // small pieces, so an initial read of 1 byte would not work correctly.
+        if(size < minBuf)
+        {
+            size = minBuf;
+        }
+
+        auto data = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, size);
+        for(; ; )
+        {
+            auto [n, err] = read(data.make_slice(len(data), cap(data)));
+            data = data.make_slice(0, len(data) + n);
+            if(err != nullptr)
+            {
+                if(err == io::go_EOF)
+                {
+                    err = nullptr;
+                }
+                return {data, err};
+            }
+
+            // If we're either out of capacity or if the file was a /proc-like zero
+            // sized file, grow the buffer. Per Issue 72080, we always want to issue
+            // Read calls on zero-length files with a non-tiny buffer size.
+            auto capRemain = cap(data) - len(data);
+            if(capRemain == 0 || (zeroSize && capRemain < minBuf))
+            {
+                data = slices::Grow(data, minBuf);
+            }
         }
     }
 

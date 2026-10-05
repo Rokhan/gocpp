@@ -14,7 +14,7 @@
 #include "golang/go/types/type.h"
 #include "golang/go/types/typestring.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     namespace rec
     {
@@ -76,7 +76,7 @@ namespace golang::types
         return b->name;
     }
 
-    golang::types::Type rec::Underlying(Basic* b)
+    golang::go::types::Type rec::Underlying(Basic* b)
     {
         return b;
     }

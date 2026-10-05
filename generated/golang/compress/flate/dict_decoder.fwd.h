@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::flate
+namespace golang::compress::flate
 {
     struct dictDecoder;
 }

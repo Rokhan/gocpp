@@ -11,25 +11,25 @@
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    bool isUintptr(golang::types::Type typ);
-    bool isUnsafePointer(golang::types::Type typ);
-    bool isPointer(golang::types::Type typ);
-    bool isBytesOrRunes(golang::types::Type typ);
+    bool isUintptr(golang::go::types::Type typ);
+    bool isUnsafePointer(golang::go::types::Type typ);
+    bool isPointer(golang::go::types::Type typ);
+    bool isBytesOrRunes(golang::go::types::Type typ);
 }
 
 #include "golang/go/types/check.h"
 #include "golang/go/types/operand.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        void conversion(Checker* check, operand* x, golang::types::Type T);
-        bool convertibleTo(operand* x, Checker* check, golang::types::Type T, gocpp::string* cause);
+        void conversion(Checker* check, operand* x, golang::go::types::Type T);
+        bool convertibleTo(operand* x, Checker* check, golang::go::types::Type T, gocpp::string* cause);
     }
 }
 

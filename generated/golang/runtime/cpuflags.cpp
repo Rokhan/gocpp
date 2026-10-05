@@ -15,16 +15,23 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
 
     // Set in runtime.cpuinit.
     // TODO: deprecate these; use internal/cpu directly.
+    bool x86HasAVX;
+    bool x86HasFMA;
     bool x86HasPOPCNT;
     bool x86HasSSE41;
-    bool x86HasFMA;
     bool armHasVFPv4;
     bool arm64HasATOMICS;
+    bool loong64HasLAMCAS;
+    bool loong64HasLAM_BH;
+    bool loong64HasDBAR_HINTS;
+    bool loong64HasLSX;
+    bool riscv64HasZbb;
 }
 

@@ -9,7 +9,7 @@
 #include "golang/internal/syscall/windows/registry/syscall.fwd.h"
 #include "gocpp/support.h"
 
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
 
     namespace rec

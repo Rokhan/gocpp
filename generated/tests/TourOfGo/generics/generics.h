@@ -112,7 +112,40 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct entry& value);
     void main();
+    
+    template<typename T>
+    T Identity(T v);
+    
+    template<typename K, typename V>
+    std::tuple<K, V> MakePair(K k, V v);
+    template<typename K, typename V> 
+    struct Pair
+    {
+        K Key{};
+        V Val{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    template<typename K, typename V>
+    std::ostream& operator<<(std::ostream& os, const struct Pair<K, V>& value);
+    int RealIndexing(gocpp::slice<int> arr, int i);
+    std::function<int (int _1)> FuncInstantiationAsValue();
+    int FuncInstantiationCalled();
+    Boxed<int> TypeInstantiationConverted(int x);
+    std::function<std::tuple<int, gocpp::string> (int _1, gocpp::string _2)> FuncInstantiationAsValue2();
+    std::tuple<int, gocpp::string> FuncInstantiationCalled2();
+    BoxedPair<int, gocpp::string> TypeInstantiationConverted2(int x);
     entry* newEntry(go_any i);
+    Pair<int, gocpp::string> NewPair();
 
     namespace rec
     {
@@ -122,6 +155,9 @@ namespace golang::main
         
         template<typename T>
         void Store(Pointer<T>* x, T* val);
+        
+        template<typename K, typename V>
+        std::tuple<V, K> Swap(Pair<K, V>* p);
     }
 }
 

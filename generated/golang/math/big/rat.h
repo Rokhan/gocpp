@@ -12,7 +12,7 @@
 #include "golang/math/big/int.h"
 #include "golang/math/big/nat.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     struct Rat
     {
@@ -21,8 +21,8 @@ namespace golang::big
         // the earliest opportunity (when an assignment to the Rat
         // is made), such uninitialized denominators are set to 1.
         // a.neg determines the sign of the Rat, b.neg is ignored.
-        golang::big::Int a{};
-        golang::big::Int b{};
+        golang::math::big::Int a{};
+        golang::math::big::Int b{};
 
         using isGoStruct = void;
 
@@ -36,43 +36,43 @@ namespace golang::big
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Rat& value);
-    std::tuple<double, bool> quotToFloat32(nat a, nat b);
-    std::tuple<double, bool> quotToFloat64(nat a, nat b);
-    nat mulDenom(nat z, nat x, nat y);
-    golang::big::Rat* NewRat(int64_t a, int64_t b);
+    std::tuple<double, bool> quotToFloat32(stack* stk, golang::math::big::nat a, golang::math::big::nat b);
+    std::tuple<double, bool> quotToFloat64(stack* stk, golang::math::big::nat a, golang::math::big::nat b);
+    golang::math::big::nat mulDenom(stack* stk, golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
+    golang::math::big::Rat* NewRat(int64_t a, int64_t b);
 }
 
 #include "golang/math/big/int.h"
 #include "golang/math/big/nat.h"
 
-namespace golang::big
+namespace golang::math::big
 {
 
     namespace rec
     {
-        golang::big::Rat* SetFloat64(golang::big::Rat* z, double f);
-        std::tuple<double, bool> Float32(golang::big::Rat* x);
-        std::tuple<double, bool> Float64(golang::big::Rat* x);
-        golang::big::Rat* SetFrac(golang::big::Rat* z, golang::big::Int* a, golang::big::Int* b);
-        golang::big::Rat* SetFrac64(golang::big::Rat* z, int64_t a, int64_t b);
-        golang::big::Rat* SetInt(golang::big::Rat* z, golang::big::Int* x);
-        golang::big::Rat* SetInt64(golang::big::Rat* z, int64_t x);
-        golang::big::Rat* SetUint64(golang::big::Rat* z, uint64_t x);
-        golang::big::Rat* Set(golang::big::Rat* z, golang::big::Rat* x);
-        golang::big::Rat* Abs(golang::big::Rat* z, golang::big::Rat* x);
-        golang::big::Rat* Neg(golang::big::Rat* z, golang::big::Rat* x);
-        golang::big::Rat* Inv(golang::big::Rat* z, golang::big::Rat* x);
-        int Sign(golang::big::Rat* x);
-        bool IsInt(golang::big::Rat* x);
-        golang::big::Int* Num(golang::big::Rat* x);
-        golang::big::Int* Denom(golang::big::Rat* x);
-        golang::big::Rat* norm(golang::big::Rat* z);
-        void scaleDenom(golang::big::Int* z, golang::big::Int* x, nat f);
-        int Cmp(golang::big::Rat* x, golang::big::Rat* y);
-        golang::big::Rat* Add(golang::big::Rat* z, golang::big::Rat* x, golang::big::Rat* y);
-        golang::big::Rat* Sub(golang::big::Rat* z, golang::big::Rat* x, golang::big::Rat* y);
-        golang::big::Rat* Mul(golang::big::Rat* z, golang::big::Rat* x, golang::big::Rat* y);
-        golang::big::Rat* Quo(golang::big::Rat* z, golang::big::Rat* x, golang::big::Rat* y);
+        golang::math::big::Rat* SetFloat64(golang::math::big::Rat* z, double f);
+        std::tuple<double, bool> Float32(golang::math::big::Rat* x);
+        std::tuple<double, bool> Float64(golang::math::big::Rat* x);
+        golang::math::big::Rat* SetFrac(golang::math::big::Rat* z, golang::math::big::Int* a, golang::math::big::Int* b);
+        golang::math::big::Rat* SetFrac64(golang::math::big::Rat* z, int64_t a, int64_t b);
+        golang::math::big::Rat* SetInt(golang::math::big::Rat* z, golang::math::big::Int* x);
+        golang::math::big::Rat* SetInt64(golang::math::big::Rat* z, int64_t x);
+        golang::math::big::Rat* SetUint64(golang::math::big::Rat* z, uint64_t x);
+        golang::math::big::Rat* Set(golang::math::big::Rat* z, golang::math::big::Rat* x);
+        golang::math::big::Rat* Abs(golang::math::big::Rat* z, golang::math::big::Rat* x);
+        golang::math::big::Rat* Neg(golang::math::big::Rat* z, golang::math::big::Rat* x);
+        golang::math::big::Rat* Inv(golang::math::big::Rat* z, golang::math::big::Rat* x);
+        int Sign(golang::math::big::Rat* x);
+        bool IsInt(golang::math::big::Rat* x);
+        golang::math::big::Int* Num(golang::math::big::Rat* x);
+        golang::math::big::Int* Denom(golang::math::big::Rat* x);
+        golang::math::big::Rat* norm(golang::math::big::Rat* z);
+        void scaleDenom(golang::math::big::Int* z, stack* stk, golang::math::big::Int* x, golang::math::big::nat f);
+        int Cmp(golang::math::big::Rat* x, golang::math::big::Rat* y);
+        golang::math::big::Rat* Add(golang::math::big::Rat* z, golang::math::big::Rat* x, golang::math::big::Rat* y);
+        golang::math::big::Rat* Sub(golang::math::big::Rat* z, golang::math::big::Rat* x, golang::math::big::Rat* y);
+        golang::math::big::Rat* Mul(golang::math::big::Rat* z, golang::math::big::Rat* x, golang::math::big::Rat* y);
+        golang::math::big::Rat* Quo(golang::math::big::Rat* z, golang::math::big::Rat* x, golang::math::big::Rat* y);
     }
 }
 

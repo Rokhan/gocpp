@@ -11,19 +11,23 @@
 #include "golang/internal/syscall/windows/zsyscall_windows.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/syscall/windows/memory_windows.h"
 #include "golang/internal/syscall/windows/psapi_windows.h"
 #include "golang/internal/syscall/windows/security_windows.h"
 #include "golang/internal/syscall/windows/syscall_windows.h"
 #include "golang/internal/syscall/windows/sysdll/sysdll.h"
+#include "golang/internal/syscall/windows/types_windows.h"
+#include "golang/internal/syscall/windows/version_windows.h"
 #include "golang/syscall/dll_windows.h"
 #include "golang/syscall/security_windows.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/zerrors_windows.h"
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace syscall = golang::syscall;
+    namespace sysdll = golang::internal::syscall::windows::sysdll;
     namespace rec
     {
         using syscall::rec::Addr;
@@ -65,37 +69,53 @@ namespace golang::windows
     syscall::LazyDLL* modiphlpapi = syscall::NewLazyDLL(sysdll::Add("iphlpapi.dll"_s));
     syscall::LazyDLL* modkernel32 = syscall::NewLazyDLL(sysdll::Add("kernel32.dll"_s));
     syscall::LazyDLL* modnetapi32 = syscall::NewLazyDLL(sysdll::Add("netapi32.dll"_s));
+    syscall::LazyDLL* modntdll = syscall::NewLazyDLL(sysdll::Add("ntdll.dll"_s));
     syscall::LazyDLL* modpsapi = syscall::NewLazyDLL(sysdll::Add("psapi.dll"_s));
     syscall::LazyDLL* moduserenv = syscall::NewLazyDLL(sysdll::Add("userenv.dll"_s));
     syscall::LazyDLL* modws2_32 = syscall::NewLazyDLL(sysdll::Add("ws2_32.dll"_s));
     syscall::LazyProc* procAdjustTokenPrivileges = rec::NewProc(gocpp::recv(modadvapi32), "AdjustTokenPrivileges"_s);
     syscall::LazyProc* procDuplicateTokenEx = rec::NewProc(gocpp::recv(modadvapi32), "DuplicateTokenEx"_s);
+    syscall::LazyProc* procGetSidIdentifierAuthority = rec::NewProc(gocpp::recv(modadvapi32), "GetSidIdentifierAuthority"_s);
+    syscall::LazyProc* procGetSidSubAuthority = rec::NewProc(gocpp::recv(modadvapi32), "GetSidSubAuthority"_s);
+    syscall::LazyProc* procGetSidSubAuthorityCount = rec::NewProc(gocpp::recv(modadvapi32), "GetSidSubAuthorityCount"_s);
+    syscall::LazyProc* procImpersonateLoggedOnUser = rec::NewProc(gocpp::recv(modadvapi32), "ImpersonateLoggedOnUser"_s);
     syscall::LazyProc* procImpersonateSelf = rec::NewProc(gocpp::recv(modadvapi32), "ImpersonateSelf"_s);
+    syscall::LazyProc* procIsValidSid = rec::NewProc(gocpp::recv(modadvapi32), "IsValidSid"_s);
+    syscall::LazyProc* procLogonUserW = rec::NewProc(gocpp::recv(modadvapi32), "LogonUserW"_s);
     syscall::LazyProc* procLookupPrivilegeValueW = rec::NewProc(gocpp::recv(modadvapi32), "LookupPrivilegeValueW"_s);
     syscall::LazyProc* procOpenSCManagerW = rec::NewProc(gocpp::recv(modadvapi32), "OpenSCManagerW"_s);
     syscall::LazyProc* procOpenServiceW = rec::NewProc(gocpp::recv(modadvapi32), "OpenServiceW"_s);
     syscall::LazyProc* procOpenThreadToken = rec::NewProc(gocpp::recv(modadvapi32), "OpenThreadToken"_s);
     syscall::LazyProc* procQueryServiceStatus = rec::NewProc(gocpp::recv(modadvapi32), "QueryServiceStatus"_s);
     syscall::LazyProc* procRevertToSelf = rec::NewProc(gocpp::recv(modadvapi32), "RevertToSelf"_s);
+    syscall::LazyProc* procSetEntriesInAclW = rec::NewProc(gocpp::recv(modadvapi32), "SetEntriesInAclW"_s);
+    syscall::LazyProc* procSetNamedSecurityInfoW = rec::NewProc(gocpp::recv(modadvapi32), "SetNamedSecurityInfoW"_s);
     syscall::LazyProc* procSetTokenInformation = rec::NewProc(gocpp::recv(modadvapi32), "SetTokenInformation"_s);
     syscall::LazyProc* procProcessPrng = rec::NewProc(gocpp::recv(modbcryptprimitives), "ProcessPrng"_s);
     syscall::LazyProc* procGetAdaptersAddresses = rec::NewProc(gocpp::recv(modiphlpapi), "GetAdaptersAddresses"_s);
     syscall::LazyProc* procCreateEventW = rec::NewProc(gocpp::recv(modkernel32), "CreateEventW"_s);
+    syscall::LazyProc* procCreateIoCompletionPort = rec::NewProc(gocpp::recv(modkernel32), "CreateIoCompletionPort"_s);
+    syscall::LazyProc* procCreateNamedPipeW = rec::NewProc(gocpp::recv(modkernel32), "CreateNamedPipeW"_s);
     syscall::LazyProc* procGetACP = rec::NewProc(gocpp::recv(modkernel32), "GetACP"_s);
     syscall::LazyProc* procGetComputerNameExW = rec::NewProc(gocpp::recv(modkernel32), "GetComputerNameExW"_s);
     syscall::LazyProc* procGetConsoleCP = rec::NewProc(gocpp::recv(modkernel32), "GetConsoleCP"_s);
     syscall::LazyProc* procGetCurrentThread = rec::NewProc(gocpp::recv(modkernel32), "GetCurrentThread"_s);
     syscall::LazyProc* procGetFileInformationByHandleEx = rec::NewProc(gocpp::recv(modkernel32), "GetFileInformationByHandleEx"_s);
+    syscall::LazyProc* procGetFileSizeEx = rec::NewProc(gocpp::recv(modkernel32), "GetFileSizeEx"_s);
     syscall::LazyProc* procGetFinalPathNameByHandleW = rec::NewProc(gocpp::recv(modkernel32), "GetFinalPathNameByHandleW"_s);
     syscall::LazyProc* procGetModuleFileNameW = rec::NewProc(gocpp::recv(modkernel32), "GetModuleFileNameW"_s);
+    syscall::LazyProc* procGetModuleHandleW = rec::NewProc(gocpp::recv(modkernel32), "GetModuleHandleW"_s);
+    syscall::LazyProc* procGetOverlappedResult = rec::NewProc(gocpp::recv(modkernel32), "GetOverlappedResult"_s);
     syscall::LazyProc* procGetTempPath2W = rec::NewProc(gocpp::recv(modkernel32), "GetTempPath2W"_s);
     syscall::LazyProc* procGetVolumeInformationByHandleW = rec::NewProc(gocpp::recv(modkernel32), "GetVolumeInformationByHandleW"_s);
     syscall::LazyProc* procGetVolumeNameForVolumeMountPointW = rec::NewProc(gocpp::recv(modkernel32), "GetVolumeNameForVolumeMountPointW"_s);
+    syscall::LazyProc* procIsProcessorFeaturePresent = rec::NewProc(gocpp::recv(modkernel32), "IsProcessorFeaturePresent"_s);
     syscall::LazyProc* procLockFileEx = rec::NewProc(gocpp::recv(modkernel32), "LockFileEx"_s);
     syscall::LazyProc* procModule32FirstW = rec::NewProc(gocpp::recv(modkernel32), "Module32FirstW"_s);
     syscall::LazyProc* procModule32NextW = rec::NewProc(gocpp::recv(modkernel32), "Module32NextW"_s);
     syscall::LazyProc* procMoveFileExW = rec::NewProc(gocpp::recv(modkernel32), "MoveFileExW"_s);
     syscall::LazyProc* procMultiByteToWideChar = rec::NewProc(gocpp::recv(modkernel32), "MultiByteToWideChar"_s);
+    syscall::LazyProc* procReOpenFile = rec::NewProc(gocpp::recv(modkernel32), "ReOpenFile"_s);
     syscall::LazyProc* procRtlLookupFunctionEntry = rec::NewProc(gocpp::recv(modkernel32), "RtlLookupFunctionEntry"_s);
     syscall::LazyProc* procRtlVirtualUnwind = rec::NewProc(gocpp::recv(modkernel32), "RtlVirtualUnwind"_s);
     syscall::LazyProc* procSetFileInformationByHandle = rec::NewProc(gocpp::recv(modkernel32), "SetFileInformationByHandle"_s);
@@ -103,11 +123,22 @@ namespace golang::windows
     syscall::LazyProc* procVirtualQuery = rec::NewProc(gocpp::recv(modkernel32), "VirtualQuery"_s);
     syscall::LazyProc* procNetShareAdd = rec::NewProc(gocpp::recv(modnetapi32), "NetShareAdd"_s);
     syscall::LazyProc* procNetShareDel = rec::NewProc(gocpp::recv(modnetapi32), "NetShareDel"_s);
+    syscall::LazyProc* procNetUserAdd = rec::NewProc(gocpp::recv(modnetapi32), "NetUserAdd"_s);
+    syscall::LazyProc* procNetUserDel = rec::NewProc(gocpp::recv(modnetapi32), "NetUserDel"_s);
     syscall::LazyProc* procNetUserGetLocalGroups = rec::NewProc(gocpp::recv(modnetapi32), "NetUserGetLocalGroups"_s);
+    syscall::LazyProc* procNtCreateFile = rec::NewProc(gocpp::recv(modntdll), "NtCreateFile"_s);
+    syscall::LazyProc* procNtOpenFile = rec::NewProc(gocpp::recv(modntdll), "NtOpenFile"_s);
+    syscall::LazyProc* procNtQueryInformationFile = rec::NewProc(gocpp::recv(modntdll), "NtQueryInformationFile"_s);
+    syscall::LazyProc* procNtSetInformationFile = rec::NewProc(gocpp::recv(modntdll), "NtSetInformationFile"_s);
+    syscall::LazyProc* procRtlGetVersion = rec::NewProc(gocpp::recv(modntdll), "RtlGetVersion"_s);
+    syscall::LazyProc* procRtlIsDosDeviceName_U = rec::NewProc(gocpp::recv(modntdll), "RtlIsDosDeviceName_U"_s);
+    syscall::LazyProc* procRtlNtStatusToDosErrorNoTeb = rec::NewProc(gocpp::recv(modntdll), "RtlNtStatusToDosErrorNoTeb"_s);
     syscall::LazyProc* procGetProcessMemoryInfo = rec::NewProc(gocpp::recv(modpsapi), "GetProcessMemoryInfo"_s);
     syscall::LazyProc* procCreateEnvironmentBlock = rec::NewProc(gocpp::recv(moduserenv), "CreateEnvironmentBlock"_s);
     syscall::LazyProc* procDestroyEnvironmentBlock = rec::NewProc(gocpp::recv(moduserenv), "DestroyEnvironmentBlock"_s);
     syscall::LazyProc* procGetProfilesDirectoryW = rec::NewProc(gocpp::recv(moduserenv), "GetProfilesDirectoryW"_s);
+    syscall::LazyProc* procWSADuplicateSocketW = rec::NewProc(gocpp::recv(modws2_32), "WSADuplicateSocketW"_s);
+    syscall::LazyProc* procWSAGetOverlappedResult = rec::NewProc(gocpp::recv(modws2_32), "WSAGetOverlappedResult"_s);
     syscall::LazyProc* procWSASocketW = rec::NewProc(gocpp::recv(modws2_32), "WSASocketW"_s);
     std::tuple<uint32_t, gocpp::error> adjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, TOKEN_PRIVILEGES* newstate, uint32_t buflen, TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen)
     {
@@ -118,7 +149,7 @@ namespace golang::windows
         {
             _p0 = 1;
         }
-        auto [r0, gocpp_id_0, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procAdjustTokenPrivileges)), 6, uintptr_t(token), uintptr_t(_p0), uintptr_t(gocpp::unsafe_pointer(newstate)), uintptr_t(buflen), uintptr_t(gocpp::unsafe_pointer(prevstate)), uintptr_t(gocpp::unsafe_pointer(returnlen)));
+        auto [r0, gocpp_id_0, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procAdjustTokenPrivileges)), uintptr_t(token), uintptr_t(_p0), uintptr_t(gocpp::unsafe_pointer(newstate)), uintptr_t(buflen), uintptr_t(gocpp::unsafe_pointer(prevstate)), uintptr_t(gocpp::unsafe_pointer(returnlen)));
         ret = uint32_t(r0);
         if(true)
         {
@@ -130,7 +161,42 @@ namespace golang::windows
     gocpp::error DuplicateTokenEx(syscall::Token hExistingToken, uint32_t dwDesiredAccess, syscall::SecurityAttributes* lpTokenAttributes, uint32_t impersonationLevel, TokenType tokenType, syscall::Token* phNewToken)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_1, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procDuplicateTokenEx)), 6, uintptr_t(hExistingToken), uintptr_t(dwDesiredAccess), uintptr_t(gocpp::unsafe_pointer(lpTokenAttributes)), uintptr_t(impersonationLevel), uintptr_t(tokenType), uintptr_t(gocpp::unsafe_pointer(phNewToken)));
+        auto [r1, gocpp_id_1, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procDuplicateTokenEx)), uintptr_t(hExistingToken), uintptr_t(dwDesiredAccess), uintptr_t(gocpp::unsafe_pointer(lpTokenAttributes)), uintptr_t(impersonationLevel), uintptr_t(tokenType), uintptr_t(gocpp::unsafe_pointer(phNewToken)));
+        if(r1 == 0)
+        {
+            err = errnoErr(e1);
+        }
+        return err;
+    }
+
+    uintptr_t getSidIdentifierAuthority(syscall::SID* sid)
+    {
+        uintptr_t idauth;
+        auto [r0, gocpp_id_2, gocpp_id_3] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetSidIdentifierAuthority)), uintptr_t(gocpp::unsafe_pointer(sid)));
+        idauth = uintptr_t(r0);
+        return idauth;
+    }
+
+    uintptr_t getSidSubAuthority(syscall::SID* sid, uint32_t subAuthorityIdx)
+    {
+        uintptr_t subAuth;
+        auto [r0, gocpp_id_4, gocpp_id_5] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetSidSubAuthority)), uintptr_t(gocpp::unsafe_pointer(sid)), uintptr_t(subAuthorityIdx));
+        subAuth = uintptr_t(r0);
+        return subAuth;
+    }
+
+    uintptr_t getSidSubAuthorityCount(syscall::SID* sid)
+    {
+        uintptr_t count;
+        auto [r0, gocpp_id_6, gocpp_id_7] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetSidSubAuthorityCount)), uintptr_t(gocpp::unsafe_pointer(sid)));
+        count = uintptr_t(r0);
+        return count;
+    }
+
+    gocpp::error ImpersonateLoggedOnUser(syscall::Token token)
+    {
+        gocpp::error err;
+        auto [r1, gocpp_id_8, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procImpersonateLoggedOnUser)), uintptr_t(token));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -141,7 +207,26 @@ namespace golang::windows
     gocpp::error ImpersonateSelf(uint32_t impersonationlevel)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_2, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procImpersonateSelf)), 1, uintptr_t(impersonationlevel), 0, 0);
+        auto [r1, gocpp_id_9, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procImpersonateSelf)), uintptr_t(impersonationlevel));
+        if(r1 == 0)
+        {
+            err = errnoErr(e1);
+        }
+        return err;
+    }
+
+    bool IsValidSid(syscall::SID* sid)
+    {
+        bool valid;
+        auto [r0, gocpp_id_10, gocpp_id_11] = syscall::SyscallN(rec::Addr(gocpp::recv(procIsValidSid)), uintptr_t(gocpp::unsafe_pointer(sid)));
+        valid = r0 != 0;
+        return valid;
+    }
+
+    gocpp::error LogonUser(uint16_t* username, uint16_t* domain, uint16_t* password, uint32_t logonType, uint32_t logonProvider, syscall::Token* token)
+    {
+        gocpp::error err;
+        auto [r1, gocpp_id_12, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procLogonUserW)), uintptr_t(gocpp::unsafe_pointer(username)), uintptr_t(gocpp::unsafe_pointer(domain)), uintptr_t(gocpp::unsafe_pointer(password)), uintptr_t(logonType), uintptr_t(logonProvider), uintptr_t(gocpp::unsafe_pointer(token)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -152,7 +237,7 @@ namespace golang::windows
     gocpp::error LookupPrivilegeValue(uint16_t* systemname, uint16_t* name, LUID* luid)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_3, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procLookupPrivilegeValueW)), 3, uintptr_t(gocpp::unsafe_pointer(systemname)), uintptr_t(gocpp::unsafe_pointer(name)), uintptr_t(gocpp::unsafe_pointer(luid)));
+        auto [r1, gocpp_id_13, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procLookupPrivilegeValueW)), uintptr_t(gocpp::unsafe_pointer(systemname)), uintptr_t(gocpp::unsafe_pointer(name)), uintptr_t(gocpp::unsafe_pointer(luid)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -164,7 +249,7 @@ namespace golang::windows
     {
         syscall::Handle handle;
         gocpp::error err;
-        auto [r0, gocpp_id_4, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procOpenSCManagerW)), 3, uintptr_t(gocpp::unsafe_pointer(machineName)), uintptr_t(gocpp::unsafe_pointer(databaseName)), uintptr_t(access));
+        auto [r0, gocpp_id_14, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procOpenSCManagerW)), uintptr_t(gocpp::unsafe_pointer(machineName)), uintptr_t(gocpp::unsafe_pointer(databaseName)), uintptr_t(access));
         handle = syscall::Handle(r0);
         if(handle == 0)
         {
@@ -177,7 +262,7 @@ namespace golang::windows
     {
         syscall::Handle handle;
         gocpp::error err;
-        auto [r0, gocpp_id_5, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procOpenServiceW)), 3, uintptr_t(mgr), uintptr_t(gocpp::unsafe_pointer(serviceName)), uintptr_t(access));
+        auto [r0, gocpp_id_15, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procOpenServiceW)), uintptr_t(mgr), uintptr_t(gocpp::unsafe_pointer(serviceName)), uintptr_t(access));
         handle = syscall::Handle(r0);
         if(handle == 0)
         {
@@ -194,7 +279,7 @@ namespace golang::windows
         {
             _p0 = 1;
         }
-        auto [r1, gocpp_id_6, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procOpenThreadToken)), 4, uintptr_t(h), uintptr_t(access), uintptr_t(_p0), uintptr_t(gocpp::unsafe_pointer(token)), 0, 0);
+        auto [r1, gocpp_id_16, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procOpenThreadToken)), uintptr_t(h), uintptr_t(access), uintptr_t(_p0), uintptr_t(gocpp::unsafe_pointer(token)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -205,7 +290,7 @@ namespace golang::windows
     gocpp::error QueryServiceStatus(syscall::Handle hService, SERVICE_STATUS* lpServiceStatus)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_7, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procQueryServiceStatus)), 2, uintptr_t(hService), uintptr_t(gocpp::unsafe_pointer(lpServiceStatus)), 0);
+        auto [r1, gocpp_id_17, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procQueryServiceStatus)), uintptr_t(hService), uintptr_t(gocpp::unsafe_pointer(lpServiceStatus)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -216,7 +301,7 @@ namespace golang::windows
     gocpp::error RevertToSelf()
     {
         gocpp::error err;
-        auto [r1, gocpp_id_8, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procRevertToSelf)), 0, 0, 0, 0);
+        auto [r1, gocpp_id_18, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procRevertToSelf)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -224,10 +309,44 @@ namespace golang::windows
         return err;
     }
 
-    gocpp::error SetTokenInformation(syscall::Token tokenHandle, uint32_t tokenInformationClass, uintptr_t tokenInformation, uint32_t tokenInformationLength)
+    gocpp::error SetEntriesInAcl(uint32_t countExplicitEntries, EXPLICIT_ACCESS* explicitEntries, ACL* oldACL, ACL** newACL)
+    {
+        gocpp::error ret;
+        auto [r0, gocpp_id_19, gocpp_id_20] = syscall::SyscallN(rec::Addr(gocpp::recv(procSetEntriesInAclW)), uintptr_t(countExplicitEntries), uintptr_t(gocpp::unsafe_pointer(explicitEntries)), uintptr_t(gocpp::unsafe_pointer(oldACL)), uintptr_t(gocpp::unsafe_pointer(newACL)));
+        if(r0 != 0)
+        {
+            ret = syscall::Errno(r0);
+        }
+        return ret;
+    }
+
+    gocpp::error SetNamedSecurityInfo(gocpp::string objectName, uint32_t objectType, uint32_t securityInformation, syscall::SID* owner, syscall::SID* group, ACL* dacl, ACL* sacl)
+    {
+        gocpp::error ret;
+        uint16_t* _p0 = {};
+        std::tie(_p0, ret) = syscall::UTF16PtrFromString(objectName);
+        if(ret != nullptr)
+        {
+            return ret;
+        }
+        return _SetNamedSecurityInfo(_p0, objectType, securityInformation, owner, group, dacl, sacl);
+    }
+
+    gocpp::error _SetNamedSecurityInfo(uint16_t* objectName, uint32_t objectType, uint32_t securityInformation, syscall::SID* owner, syscall::SID* group, ACL* dacl, ACL* sacl)
+    {
+        gocpp::error ret;
+        auto [r0, gocpp_id_21, gocpp_id_22] = syscall::SyscallN(rec::Addr(gocpp::recv(procSetNamedSecurityInfoW)), uintptr_t(gocpp::unsafe_pointer(objectName)), uintptr_t(objectType), uintptr_t(securityInformation), uintptr_t(gocpp::unsafe_pointer(owner)), uintptr_t(gocpp::unsafe_pointer(group)), uintptr_t(gocpp::unsafe_pointer(dacl)), uintptr_t(gocpp::unsafe_pointer(sacl)));
+        if(r0 != 0)
+        {
+            ret = syscall::Errno(r0);
+        }
+        return ret;
+    }
+
+    gocpp::error SetTokenInformation(syscall::Token tokenHandle, uint32_t tokenInformationClass, gocpp::unsafe_pointer tokenInformation, uint32_t tokenInformationLength)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_9, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procSetTokenInformation)), 4, uintptr_t(tokenHandle), uintptr_t(tokenInformationClass), uintptr_t(tokenInformation), uintptr_t(tokenInformationLength), 0, 0);
+        auto [r1, gocpp_id_23, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procSetTokenInformation)), uintptr_t(tokenHandle), uintptr_t(tokenInformationClass), uintptr_t(tokenInformation), uintptr_t(tokenInformationLength));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -243,7 +362,7 @@ namespace golang::windows
         {
             _p0 = & buf[0];
         }
-        auto [r1, gocpp_id_10, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procProcessPrng)), 2, uintptr_t(gocpp::unsafe_pointer(_p0)), uintptr_t(len(buf)), 0);
+        auto [r1, gocpp_id_24, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procProcessPrng)), uintptr_t(gocpp::unsafe_pointer(_p0)), uintptr_t(len(buf)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -251,10 +370,10 @@ namespace golang::windows
         return err;
     }
 
-    gocpp::error GetAdaptersAddresses(uint32_t family, uint32_t flags, uintptr_t reserved, IpAdapterAddresses* adapterAddresses, uint32_t* sizePointer)
+    gocpp::error GetAdaptersAddresses(uint32_t family, uint32_t flags, gocpp::unsafe_pointer reserved, IpAdapterAddresses* adapterAddresses, uint32_t* sizePointer)
     {
         gocpp::error errcode;
-        auto [r0, gocpp_id_11, gocpp_id_12] = syscall::Syscall6(rec::Addr(gocpp::recv(procGetAdaptersAddresses)), 5, uintptr_t(family), uintptr_t(flags), uintptr_t(reserved), uintptr_t(gocpp::unsafe_pointer(adapterAddresses)), uintptr_t(gocpp::unsafe_pointer(sizePointer)), 0);
+        auto [r0, gocpp_id_25, gocpp_id_26] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetAdaptersAddresses)), uintptr_t(family), uintptr_t(flags), uintptr_t(reserved), uintptr_t(gocpp::unsafe_pointer(adapterAddresses)), uintptr_t(gocpp::unsafe_pointer(sizePointer)));
         if(r0 != 0)
         {
             errcode = syscall::Errno(r0);
@@ -266,9 +385,35 @@ namespace golang::windows
     {
         syscall::Handle handle;
         gocpp::error err;
-        auto [r0, gocpp_id_13, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procCreateEventW)), 4, uintptr_t(gocpp::unsafe_pointer(eventAttrs)), uintptr_t(manualReset), uintptr_t(initialState), uintptr_t(gocpp::unsafe_pointer(name)), 0, 0);
+        auto [r0, gocpp_id_27, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procCreateEventW)), uintptr_t(gocpp::unsafe_pointer(eventAttrs)), uintptr_t(manualReset), uintptr_t(initialState), uintptr_t(gocpp::unsafe_pointer(name)));
         handle = syscall::Handle(r0);
         if(handle == 0)
+        {
+            err = errnoErr(e1);
+        }
+        return {handle, err};
+    }
+
+    std::tuple<syscall::Handle, gocpp::error> CreateIoCompletionPort(syscall::Handle filehandle, syscall::Handle cphandle, uintptr_t key, uint32_t threadcnt)
+    {
+        syscall::Handle handle;
+        gocpp::error err;
+        auto [r0, gocpp_id_28, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procCreateIoCompletionPort)), uintptr_t(filehandle), uintptr_t(cphandle), uintptr_t(key), uintptr_t(threadcnt));
+        handle = syscall::Handle(r0);
+        if(handle == 0)
+        {
+            err = errnoErr(e1);
+        }
+        return {handle, err};
+    }
+
+    std::tuple<syscall::Handle, gocpp::error> CreateNamedPipe(uint16_t* name, uint32_t flags, uint32_t pipeMode, uint32_t maxInstances, uint32_t outSize, uint32_t inSize, uint32_t defaultTimeout, syscall::SecurityAttributes* sa)
+    {
+        syscall::Handle handle;
+        gocpp::error err;
+        auto [r0, gocpp_id_29, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procCreateNamedPipeW)), uintptr_t(gocpp::unsafe_pointer(name)), uintptr_t(flags), uintptr_t(pipeMode), uintptr_t(maxInstances), uintptr_t(outSize), uintptr_t(inSize), uintptr_t(defaultTimeout), uintptr_t(gocpp::unsafe_pointer(sa)));
+        handle = syscall::Handle(r0);
+        if(handle == syscall::InvalidHandle)
         {
             err = errnoErr(e1);
         }
@@ -278,7 +423,7 @@ namespace golang::windows
     uint32_t GetACP()
     {
         uint32_t acp;
-        auto [r0, gocpp_id_14, gocpp_id_15] = syscall::Syscall(rec::Addr(gocpp::recv(procGetACP)), 0, 0, 0, 0);
+        auto [r0, gocpp_id_30, gocpp_id_31] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetACP)));
         acp = uint32_t(r0);
         return acp;
     }
@@ -286,7 +431,7 @@ namespace golang::windows
     gocpp::error GetComputerNameEx(uint32_t nameformat, uint16_t* buf, uint32_t* n)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_16, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procGetComputerNameExW)), 3, uintptr_t(nameformat), uintptr_t(gocpp::unsafe_pointer(buf)), uintptr_t(gocpp::unsafe_pointer(n)));
+        auto [r1, gocpp_id_32, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetComputerNameExW)), uintptr_t(nameformat), uintptr_t(gocpp::unsafe_pointer(buf)), uintptr_t(gocpp::unsafe_pointer(n)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -297,7 +442,7 @@ namespace golang::windows
     uint32_t GetConsoleCP()
     {
         uint32_t ccp;
-        auto [r0, gocpp_id_17, gocpp_id_18] = syscall::Syscall(rec::Addr(gocpp::recv(procGetConsoleCP)), 0, 0, 0, 0);
+        auto [r0, gocpp_id_33, gocpp_id_34] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetConsoleCP)));
         ccp = uint32_t(r0);
         return ccp;
     }
@@ -306,7 +451,7 @@ namespace golang::windows
     {
         syscall::Handle pseudoHandle;
         gocpp::error err;
-        auto [r0, gocpp_id_19, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procGetCurrentThread)), 0, 0, 0, 0);
+        auto [r0, gocpp_id_35, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetCurrentThread)));
         pseudoHandle = syscall::Handle(r0);
         if(pseudoHandle == 0)
         {
@@ -318,7 +463,18 @@ namespace golang::windows
     gocpp::error GetFileInformationByHandleEx(syscall::Handle handle, uint32_t go_class, unsigned char* info, uint32_t bufsize)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_20, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procGetFileInformationByHandleEx)), 4, uintptr_t(handle), uintptr_t(go_class), uintptr_t(gocpp::unsafe_pointer(info)), uintptr_t(bufsize), 0, 0);
+        auto [r1, gocpp_id_36, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetFileInformationByHandleEx)), uintptr_t(handle), uintptr_t(go_class), uintptr_t(gocpp::unsafe_pointer(info)), uintptr_t(bufsize));
+        if(r1 == 0)
+        {
+            err = errnoErr(e1);
+        }
+        return err;
+    }
+
+    gocpp::error GetFileSizeEx(syscall::Handle handle, int64_t* size)
+    {
+        gocpp::error err;
+        auto [r1, gocpp_id_37, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetFileSizeEx)), uintptr_t(handle), uintptr_t(gocpp::unsafe_pointer(size)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -330,7 +486,7 @@ namespace golang::windows
     {
         uint32_t n;
         gocpp::error err;
-        auto [r0, gocpp_id_21, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procGetFinalPathNameByHandleW)), 4, uintptr_t(file), uintptr_t(gocpp::unsafe_pointer(filePath)), uintptr_t(filePathSize), uintptr_t(flags), 0, 0);
+        auto [r0, gocpp_id_38, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetFinalPathNameByHandleW)), uintptr_t(file), uintptr_t(gocpp::unsafe_pointer(filePath)), uintptr_t(filePathSize), uintptr_t(flags));
         n = uint32_t(r0);
         if(n == 0)
         {
@@ -343,7 +499,7 @@ namespace golang::windows
     {
         uint32_t n;
         gocpp::error err;
-        auto [r0, gocpp_id_22, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procGetModuleFileNameW)), 3, uintptr_t(module), uintptr_t(gocpp::unsafe_pointer(fn)), uintptr_t(len));
+        auto [r0, gocpp_id_39, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetModuleFileNameW)), uintptr_t(module), uintptr_t(gocpp::unsafe_pointer(fn)), uintptr_t(len));
         n = uint32_t(r0);
         if(n == 0)
         {
@@ -352,11 +508,40 @@ namespace golang::windows
         return {n, err};
     }
 
+    std::tuple<syscall::Handle, gocpp::error> GetModuleHandle(uint16_t* modulename)
+    {
+        syscall::Handle handle;
+        gocpp::error err;
+        auto [r0, gocpp_id_40, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetModuleHandleW)), uintptr_t(gocpp::unsafe_pointer(modulename)));
+        handle = syscall::Handle(r0);
+        if(handle == 0)
+        {
+            err = errnoErr(e1);
+        }
+        return {handle, err};
+    }
+
+    gocpp::error GetOverlappedResult(syscall::Handle handle, syscall::Overlapped* overlapped, uint32_t* done, bool wait)
+    {
+        gocpp::error err;
+        uint32_t _p0 = {};
+        if(wait)
+        {
+            _p0 = 1;
+        }
+        auto [r1, gocpp_id_41, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetOverlappedResult)), uintptr_t(handle), uintptr_t(gocpp::unsafe_pointer(overlapped)), uintptr_t(gocpp::unsafe_pointer(done)), uintptr_t(_p0));
+        if(r1 == 0)
+        {
+            err = errnoErr(e1);
+        }
+        return err;
+    }
+
     std::tuple<uint32_t, gocpp::error> GetTempPath2(uint32_t buflen, uint16_t* buf)
     {
         uint32_t n;
         gocpp::error err;
-        auto [r0, gocpp_id_23, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procGetTempPath2W)), 2, uintptr_t(buflen), uintptr_t(gocpp::unsafe_pointer(buf)), 0);
+        auto [r0, gocpp_id_42, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetTempPath2W)), uintptr_t(buflen), uintptr_t(gocpp::unsafe_pointer(buf)));
         n = uint32_t(r0);
         if(n == 0)
         {
@@ -368,7 +553,7 @@ namespace golang::windows
     gocpp::error GetVolumeInformationByHandle(syscall::Handle file, uint16_t* volumeNameBuffer, uint32_t volumeNameSize, uint32_t* volumeNameSerialNumber, uint32_t* maximumComponentLength, uint32_t* fileSystemFlags, uint16_t* fileSystemNameBuffer, uint32_t fileSystemNameSize)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_24, e1] = syscall::Syscall9(rec::Addr(gocpp::recv(procGetVolumeInformationByHandleW)), 8, uintptr_t(file), uintptr_t(gocpp::unsafe_pointer(volumeNameBuffer)), uintptr_t(volumeNameSize), uintptr_t(gocpp::unsafe_pointer(volumeNameSerialNumber)), uintptr_t(gocpp::unsafe_pointer(maximumComponentLength)), uintptr_t(gocpp::unsafe_pointer(fileSystemFlags)), uintptr_t(gocpp::unsafe_pointer(fileSystemNameBuffer)), uintptr_t(fileSystemNameSize), 0);
+        auto [r1, gocpp_id_43, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetVolumeInformationByHandleW)), uintptr_t(file), uintptr_t(gocpp::unsafe_pointer(volumeNameBuffer)), uintptr_t(volumeNameSize), uintptr_t(gocpp::unsafe_pointer(volumeNameSerialNumber)), uintptr_t(gocpp::unsafe_pointer(maximumComponentLength)), uintptr_t(gocpp::unsafe_pointer(fileSystemFlags)), uintptr_t(gocpp::unsafe_pointer(fileSystemNameBuffer)), uintptr_t(fileSystemNameSize));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -379,7 +564,7 @@ namespace golang::windows
     gocpp::error GetVolumeNameForVolumeMountPoint(uint16_t* volumeMountPoint, uint16_t* volumeName, uint32_t bufferlength)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_25, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procGetVolumeNameForVolumeMountPointW)), 3, uintptr_t(gocpp::unsafe_pointer(volumeMountPoint)), uintptr_t(gocpp::unsafe_pointer(volumeName)), uintptr_t(bufferlength));
+        auto [r1, gocpp_id_44, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetVolumeNameForVolumeMountPointW)), uintptr_t(gocpp::unsafe_pointer(volumeMountPoint)), uintptr_t(gocpp::unsafe_pointer(volumeName)), uintptr_t(bufferlength));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -387,10 +572,18 @@ namespace golang::windows
         return err;
     }
 
+    bool IsProcessorFeaturePresent(uint32_t ProcessorFeature)
+    {
+        bool ret;
+        auto [r0, gocpp_id_45, gocpp_id_46] = syscall::SyscallN(rec::Addr(gocpp::recv(procIsProcessorFeaturePresent)), uintptr_t(ProcessorFeature));
+        ret = r0 != 0;
+        return ret;
+    }
+
     gocpp::error LockFileEx(syscall::Handle file, uint32_t flags, uint32_t reserved, uint32_t bytesLow, uint32_t bytesHigh, syscall::Overlapped* overlapped)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_26, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procLockFileEx)), 6, uintptr_t(file), uintptr_t(flags), uintptr_t(reserved), uintptr_t(bytesLow), uintptr_t(bytesHigh), uintptr_t(gocpp::unsafe_pointer(overlapped)));
+        auto [r1, gocpp_id_47, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procLockFileEx)), uintptr_t(file), uintptr_t(flags), uintptr_t(reserved), uintptr_t(bytesLow), uintptr_t(bytesHigh), uintptr_t(gocpp::unsafe_pointer(overlapped)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -401,7 +594,7 @@ namespace golang::windows
     gocpp::error Module32First(syscall::Handle snapshot, ModuleEntry32* moduleEntry)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_27, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procModule32FirstW)), 2, uintptr_t(snapshot), uintptr_t(gocpp::unsafe_pointer(moduleEntry)), 0);
+        auto [r1, gocpp_id_48, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procModule32FirstW)), uintptr_t(snapshot), uintptr_t(gocpp::unsafe_pointer(moduleEntry)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -412,7 +605,7 @@ namespace golang::windows
     gocpp::error Module32Next(syscall::Handle snapshot, ModuleEntry32* moduleEntry)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_28, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procModule32NextW)), 2, uintptr_t(snapshot), uintptr_t(gocpp::unsafe_pointer(moduleEntry)), 0);
+        auto [r1, gocpp_id_49, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procModule32NextW)), uintptr_t(snapshot), uintptr_t(gocpp::unsafe_pointer(moduleEntry)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -423,7 +616,7 @@ namespace golang::windows
     gocpp::error MoveFileEx(uint16_t* from, uint16_t* to, uint32_t flags)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_29, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procMoveFileExW)), 3, uintptr_t(gocpp::unsafe_pointer(from)), uintptr_t(gocpp::unsafe_pointer(to)), uintptr_t(flags));
+        auto [r1, gocpp_id_50, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procMoveFileExW)), uintptr_t(gocpp::unsafe_pointer(from)), uintptr_t(gocpp::unsafe_pointer(to)), uintptr_t(flags));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -435,7 +628,7 @@ namespace golang::windows
     {
         int32_t nwrite;
         gocpp::error err;
-        auto [r0, gocpp_id_30, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procMultiByteToWideChar)), 6, uintptr_t(codePage), uintptr_t(dwFlags), uintptr_t(gocpp::unsafe_pointer(str)), uintptr_t(nstr), uintptr_t(gocpp::unsafe_pointer(wchar)), uintptr_t(nwchar));
+        auto [r0, gocpp_id_51, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procMultiByteToWideChar)), uintptr_t(codePage), uintptr_t(dwFlags), uintptr_t(gocpp::unsafe_pointer(str)), uintptr_t(nstr), uintptr_t(gocpp::unsafe_pointer(wchar)), uintptr_t(nwchar));
         nwrite = int32_t(r0);
         if(nwrite == 0)
         {
@@ -444,18 +637,31 @@ namespace golang::windows
         return {nwrite, err};
     }
 
-    uintptr_t RtlLookupFunctionEntry(uintptr_t pc, uintptr_t* baseAddress, unsigned char* table)
+    std::tuple<syscall::Handle, gocpp::error> ReOpenFile(syscall::Handle filehandle, uint32_t desiredAccess, uint32_t shareMode, uint32_t flagAndAttributes)
     {
-        uintptr_t ret;
-        auto [r0, gocpp_id_31, gocpp_id_32] = syscall::Syscall(rec::Addr(gocpp::recv(procRtlLookupFunctionEntry)), 3, uintptr_t(pc), uintptr_t(gocpp::unsafe_pointer(baseAddress)), uintptr_t(gocpp::unsafe_pointer(table)));
-        ret = uintptr_t(r0);
+        syscall::Handle handle;
+        gocpp::error err;
+        auto [r0, gocpp_id_52, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procReOpenFile)), uintptr_t(filehandle), uintptr_t(desiredAccess), uintptr_t(shareMode), uintptr_t(flagAndAttributes));
+        handle = syscall::Handle(r0);
+        if(handle == syscall::InvalidHandle)
+        {
+            err = errnoErr(e1);
+        }
+        return {handle, err};
+    }
+
+    RUNTIME_FUNCTION* RtlLookupFunctionEntry(uintptr_t pc, uintptr_t* baseAddress, gocpp::unsafe_pointer table)
+    {
+        RUNTIME_FUNCTION* ret;
+        auto [r0, gocpp_id_53, gocpp_id_54] = syscall::SyscallN(rec::Addr(gocpp::recv(procRtlLookupFunctionEntry)), uintptr_t(pc), uintptr_t(gocpp::unsafe_pointer(baseAddress)), uintptr_t(table));
+        ret = (RUNTIME_FUNCTION*)(gocpp::unsafe_pointer(r0));
         return ret;
     }
 
-    uintptr_t RtlVirtualUnwind(uint32_t handlerType, uintptr_t baseAddress, uintptr_t pc, uintptr_t entry, uintptr_t ctxt, uintptr_t* data, uintptr_t* frame, unsigned char* ctxptrs)
+    uintptr_t RtlVirtualUnwind(uint32_t handlerType, uintptr_t baseAddress, uintptr_t pc, RUNTIME_FUNCTION* entry, gocpp::unsafe_pointer ctxt, gocpp::unsafe_pointer data, uintptr_t* frame, gocpp::unsafe_pointer ctxptrs)
     {
         uintptr_t ret;
-        auto [r0, gocpp_id_33, gocpp_id_34] = syscall::Syscall9(rec::Addr(gocpp::recv(procRtlVirtualUnwind)), 8, uintptr_t(handlerType), uintptr_t(baseAddress), uintptr_t(pc), uintptr_t(entry), uintptr_t(ctxt), uintptr_t(gocpp::unsafe_pointer(data)), uintptr_t(gocpp::unsafe_pointer(frame)), uintptr_t(gocpp::unsafe_pointer(ctxptrs)), 0);
+        auto [r0, gocpp_id_55, gocpp_id_56] = syscall::SyscallN(rec::Addr(gocpp::recv(procRtlVirtualUnwind)), uintptr_t(handlerType), uintptr_t(baseAddress), uintptr_t(pc), uintptr_t(gocpp::unsafe_pointer(entry)), uintptr_t(ctxt), uintptr_t(data), uintptr_t(gocpp::unsafe_pointer(frame)), uintptr_t(ctxptrs));
         ret = uintptr_t(r0);
         return ret;
     }
@@ -463,7 +669,7 @@ namespace golang::windows
     gocpp::error SetFileInformationByHandle(syscall::Handle handle, uint32_t fileInformationClass, gocpp::unsafe_pointer buf, uint32_t bufsize)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_35, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procSetFileInformationByHandle)), 4, uintptr_t(handle), uintptr_t(fileInformationClass), uintptr_t(buf), uintptr_t(bufsize), 0, 0);
+        auto [r1, gocpp_id_57, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procSetFileInformationByHandle)), uintptr_t(handle), uintptr_t(fileInformationClass), uintptr_t(buf), uintptr_t(bufsize));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -474,7 +680,7 @@ namespace golang::windows
     gocpp::error UnlockFileEx(syscall::Handle file, uint32_t reserved, uint32_t bytesLow, uint32_t bytesHigh, syscall::Overlapped* overlapped)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_36, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procUnlockFileEx)), 5, uintptr_t(file), uintptr_t(reserved), uintptr_t(bytesLow), uintptr_t(bytesHigh), uintptr_t(gocpp::unsafe_pointer(overlapped)), 0);
+        auto [r1, gocpp_id_58, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procUnlockFileEx)), uintptr_t(file), uintptr_t(reserved), uintptr_t(bytesLow), uintptr_t(bytesHigh), uintptr_t(gocpp::unsafe_pointer(overlapped)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -485,7 +691,7 @@ namespace golang::windows
     gocpp::error VirtualQuery(uintptr_t address, MemoryBasicInformation* buffer, uintptr_t length)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_37, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procVirtualQuery)), 3, uintptr_t(address), uintptr_t(gocpp::unsafe_pointer(buffer)), uintptr_t(length));
+        auto [r1, gocpp_id_59, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procVirtualQuery)), uintptr_t(address), uintptr_t(gocpp::unsafe_pointer(buffer)), uintptr_t(length));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -496,7 +702,7 @@ namespace golang::windows
     gocpp::error NetShareAdd(uint16_t* serverName, uint32_t level, unsigned char* buf, uint16_t* parmErr)
     {
         gocpp::error neterr;
-        auto [r0, gocpp_id_38, gocpp_id_39] = syscall::Syscall6(rec::Addr(gocpp::recv(procNetShareAdd)), 4, uintptr_t(gocpp::unsafe_pointer(serverName)), uintptr_t(level), uintptr_t(gocpp::unsafe_pointer(buf)), uintptr_t(gocpp::unsafe_pointer(parmErr)), 0, 0);
+        auto [r0, gocpp_id_60, gocpp_id_61] = syscall::SyscallN(rec::Addr(gocpp::recv(procNetShareAdd)), uintptr_t(gocpp::unsafe_pointer(serverName)), uintptr_t(level), uintptr_t(gocpp::unsafe_pointer(buf)), uintptr_t(gocpp::unsafe_pointer(parmErr)));
         if(r0 != 0)
         {
             neterr = syscall::Errno(r0);
@@ -507,7 +713,29 @@ namespace golang::windows
     gocpp::error NetShareDel(uint16_t* serverName, uint16_t* netName, uint32_t reserved)
     {
         gocpp::error neterr;
-        auto [r0, gocpp_id_40, gocpp_id_41] = syscall::Syscall(rec::Addr(gocpp::recv(procNetShareDel)), 3, uintptr_t(gocpp::unsafe_pointer(serverName)), uintptr_t(gocpp::unsafe_pointer(netName)), uintptr_t(reserved));
+        auto [r0, gocpp_id_62, gocpp_id_63] = syscall::SyscallN(rec::Addr(gocpp::recv(procNetShareDel)), uintptr_t(gocpp::unsafe_pointer(serverName)), uintptr_t(gocpp::unsafe_pointer(netName)), uintptr_t(reserved));
+        if(r0 != 0)
+        {
+            neterr = syscall::Errno(r0);
+        }
+        return neterr;
+    }
+
+    gocpp::error NetUserAdd(uint16_t* serverName, uint32_t level, unsigned char* buf, uint32_t* parmErr)
+    {
+        gocpp::error neterr;
+        auto [r0, gocpp_id_64, gocpp_id_65] = syscall::SyscallN(rec::Addr(gocpp::recv(procNetUserAdd)), uintptr_t(gocpp::unsafe_pointer(serverName)), uintptr_t(level), uintptr_t(gocpp::unsafe_pointer(buf)), uintptr_t(gocpp::unsafe_pointer(parmErr)));
+        if(r0 != 0)
+        {
+            neterr = syscall::Errno(r0);
+        }
+        return neterr;
+    }
+
+    gocpp::error NetUserDel(uint16_t* serverName, uint16_t* userName)
+    {
+        gocpp::error neterr;
+        auto [r0, gocpp_id_66, gocpp_id_67] = syscall::SyscallN(rec::Addr(gocpp::recv(procNetUserDel)), uintptr_t(gocpp::unsafe_pointer(serverName)), uintptr_t(gocpp::unsafe_pointer(userName)));
         if(r0 != 0)
         {
             neterr = syscall::Errno(r0);
@@ -518,7 +746,7 @@ namespace golang::windows
     gocpp::error NetUserGetLocalGroups(uint16_t* serverName, uint16_t* userName, uint32_t level, uint32_t flags, unsigned char** buf, uint32_t prefMaxLen, uint32_t* entriesRead, uint32_t* totalEntries)
     {
         gocpp::error neterr;
-        auto [r0, gocpp_id_42, gocpp_id_43] = syscall::Syscall9(rec::Addr(gocpp::recv(procNetUserGetLocalGroups)), 8, uintptr_t(gocpp::unsafe_pointer(serverName)), uintptr_t(gocpp::unsafe_pointer(userName)), uintptr_t(level), uintptr_t(flags), uintptr_t(gocpp::unsafe_pointer(buf)), uintptr_t(prefMaxLen), uintptr_t(gocpp::unsafe_pointer(entriesRead)), uintptr_t(gocpp::unsafe_pointer(totalEntries)), 0);
+        auto [r0, gocpp_id_68, gocpp_id_69] = syscall::SyscallN(rec::Addr(gocpp::recv(procNetUserGetLocalGroups)), uintptr_t(gocpp::unsafe_pointer(serverName)), uintptr_t(gocpp::unsafe_pointer(userName)), uintptr_t(level), uintptr_t(flags), uintptr_t(gocpp::unsafe_pointer(buf)), uintptr_t(prefMaxLen), uintptr_t(gocpp::unsafe_pointer(entriesRead)), uintptr_t(gocpp::unsafe_pointer(totalEntries)));
         if(r0 != 0)
         {
             neterr = syscall::Errno(r0);
@@ -526,10 +754,76 @@ namespace golang::windows
         return neterr;
     }
 
+    gocpp::error NtCreateFile(syscall::Handle* handle, uint32_t access, OBJECT_ATTRIBUTES* oa, IO_STATUS_BLOCK* iosb, int64_t* allocationSize, uint32_t attributes, uint32_t share, uint32_t disposition, uint32_t options, gocpp::unsafe_pointer eabuffer, uint32_t ealength)
+    {
+        gocpp::error ntstatus;
+        auto [r0, gocpp_id_70, gocpp_id_71] = syscall::SyscallN(rec::Addr(gocpp::recv(procNtCreateFile)), uintptr_t(gocpp::unsafe_pointer(handle)), uintptr_t(access), uintptr_t(gocpp::unsafe_pointer(oa)), uintptr_t(gocpp::unsafe_pointer(iosb)), uintptr_t(gocpp::unsafe_pointer(allocationSize)), uintptr_t(attributes), uintptr_t(share), uintptr_t(disposition), uintptr_t(options), uintptr_t(eabuffer), uintptr_t(ealength));
+        if(r0 != 0)
+        {
+            ntstatus = NTStatus(r0);
+        }
+        return ntstatus;
+    }
+
+    gocpp::error NtOpenFile(syscall::Handle* handle, uint32_t access, OBJECT_ATTRIBUTES* oa, IO_STATUS_BLOCK* iosb, uint32_t share, uint32_t options)
+    {
+        gocpp::error ntstatus;
+        auto [r0, gocpp_id_72, gocpp_id_73] = syscall::SyscallN(rec::Addr(gocpp::recv(procNtOpenFile)), uintptr_t(gocpp::unsafe_pointer(handle)), uintptr_t(access), uintptr_t(gocpp::unsafe_pointer(oa)), uintptr_t(gocpp::unsafe_pointer(iosb)), uintptr_t(share), uintptr_t(options));
+        if(r0 != 0)
+        {
+            ntstatus = NTStatus(r0);
+        }
+        return ntstatus;
+    }
+
+    gocpp::error NtQueryInformationFile(syscall::Handle handle, IO_STATUS_BLOCK* iosb, gocpp::unsafe_pointer inBuffer, uint32_t inBufferLen, uint32_t go_class)
+    {
+        gocpp::error ntstatus;
+        auto [r0, gocpp_id_74, gocpp_id_75] = syscall::SyscallN(rec::Addr(gocpp::recv(procNtQueryInformationFile)), uintptr_t(handle), uintptr_t(gocpp::unsafe_pointer(iosb)), uintptr_t(inBuffer), uintptr_t(inBufferLen), uintptr_t(go_class));
+        if(r0 != 0)
+        {
+            ntstatus = NTStatus(r0);
+        }
+        return ntstatus;
+    }
+
+    gocpp::error NtSetInformationFile(syscall::Handle handle, IO_STATUS_BLOCK* iosb, gocpp::unsafe_pointer inBuffer, uint32_t inBufferLen, uint32_t go_class)
+    {
+        gocpp::error ntstatus;
+        auto [r0, gocpp_id_76, gocpp_id_77] = syscall::SyscallN(rec::Addr(gocpp::recv(procNtSetInformationFile)), uintptr_t(handle), uintptr_t(gocpp::unsafe_pointer(iosb)), uintptr_t(inBuffer), uintptr_t(inBufferLen), uintptr_t(go_class));
+        if(r0 != 0)
+        {
+            ntstatus = NTStatus(r0);
+        }
+        return ntstatus;
+    }
+
+    void rtlGetVersion(_OSVERSIONINFOEXW* info)
+    {
+        syscall::SyscallN(rec::Addr(gocpp::recv(procRtlGetVersion)), uintptr_t(gocpp::unsafe_pointer(info)));
+        return;
+    }
+
+    uint32_t RtlIsDosDeviceName_U(uint16_t* name)
+    {
+        uint32_t ret;
+        auto [r0, gocpp_id_78, gocpp_id_79] = syscall::SyscallN(rec::Addr(gocpp::recv(procRtlIsDosDeviceName_U)), uintptr_t(gocpp::unsafe_pointer(name)));
+        ret = uint32_t(r0);
+        return ret;
+    }
+
+    syscall::Errno rtlNtStatusToDosErrorNoTeb(NTStatus ntstatus)
+    {
+        syscall::Errno ret;
+        auto [r0, gocpp_id_80, gocpp_id_81] = syscall::SyscallN(rec::Addr(gocpp::recv(procRtlNtStatusToDosErrorNoTeb)), uintptr_t(ntstatus));
+        ret = syscall::Errno(r0);
+        return ret;
+    }
+
     gocpp::error GetProcessMemoryInfo(syscall::Handle handle, PROCESS_MEMORY_COUNTERS* memCounters, uint32_t cb)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_44, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procGetProcessMemoryInfo)), 3, uintptr_t(handle), uintptr_t(gocpp::unsafe_pointer(memCounters)), uintptr_t(cb));
+        auto [r1, gocpp_id_82, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetProcessMemoryInfo)), uintptr_t(handle), uintptr_t(gocpp::unsafe_pointer(memCounters)), uintptr_t(cb));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -545,7 +839,7 @@ namespace golang::windows
         {
             _p0 = 1;
         }
-        auto [r1, gocpp_id_45, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procCreateEnvironmentBlock)), 3, uintptr_t(gocpp::unsafe_pointer(block)), uintptr_t(token), uintptr_t(_p0));
+        auto [r1, gocpp_id_83, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procCreateEnvironmentBlock)), uintptr_t(gocpp::unsafe_pointer(block)), uintptr_t(token), uintptr_t(_p0));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -556,7 +850,7 @@ namespace golang::windows
     gocpp::error DestroyEnvironmentBlock(uint16_t* block)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_46, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procDestroyEnvironmentBlock)), 1, uintptr_t(gocpp::unsafe_pointer(block)), 0, 0);
+        auto [r1, gocpp_id_84, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procDestroyEnvironmentBlock)), uintptr_t(gocpp::unsafe_pointer(block)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -567,7 +861,34 @@ namespace golang::windows
     gocpp::error GetProfilesDirectory(uint16_t* dir, uint32_t* dirLen)
     {
         gocpp::error err;
-        auto [r1, gocpp_id_47, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procGetProfilesDirectoryW)), 2, uintptr_t(gocpp::unsafe_pointer(dir)), uintptr_t(gocpp::unsafe_pointer(dirLen)), 0);
+        auto [r1, gocpp_id_85, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procGetProfilesDirectoryW)), uintptr_t(gocpp::unsafe_pointer(dir)), uintptr_t(gocpp::unsafe_pointer(dirLen)));
+        if(r1 == 0)
+        {
+            err = errnoErr(e1);
+        }
+        return err;
+    }
+
+    gocpp::error WSADuplicateSocket(syscall::Handle s, uint32_t processID, syscall::WSAProtocolInfo* info)
+    {
+        gocpp::error err;
+        auto [r1, gocpp_id_86, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procWSADuplicateSocketW)), uintptr_t(s), uintptr_t(processID), uintptr_t(gocpp::unsafe_pointer(info)));
+        if(r1 != 0)
+        {
+            err = errnoErr(e1);
+        }
+        return err;
+    }
+
+    gocpp::error WSAGetOverlappedResult(syscall::Handle h, syscall::Overlapped* o, uint32_t* bytes, bool wait, uint32_t* flags)
+    {
+        gocpp::error err;
+        uint32_t _p0 = {};
+        if(wait)
+        {
+            _p0 = 1;
+        }
+        auto [r1, gocpp_id_87, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procWSAGetOverlappedResult)), uintptr_t(h), uintptr_t(gocpp::unsafe_pointer(o)), uintptr_t(gocpp::unsafe_pointer(bytes)), uintptr_t(_p0), uintptr_t(gocpp::unsafe_pointer(flags)));
         if(r1 == 0)
         {
             err = errnoErr(e1);
@@ -579,7 +900,7 @@ namespace golang::windows
     {
         syscall::Handle handle;
         gocpp::error err;
-        auto [r0, gocpp_id_48, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procWSASocketW)), 6, uintptr_t(af), uintptr_t(typ), uintptr_t(protocol), uintptr_t(gocpp::unsafe_pointer(protinfo)), uintptr_t(group), uintptr_t(flags));
+        auto [r0, gocpp_id_88, e1] = syscall::SyscallN(rec::Addr(gocpp::recv(procWSASocketW)), uintptr_t(af), uintptr_t(typ), uintptr_t(protocol), uintptr_t(gocpp::unsafe_pointer(protinfo)), uintptr_t(group), uintptr_t(flags));
         handle = syscall::Handle(r0);
         if(handle == syscall::InvalidHandle)
         {

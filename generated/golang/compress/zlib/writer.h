@@ -9,12 +9,21 @@
 #include "golang/compress/zlib/writer.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/compress/flate/deflate.fwd.h"
+#include "golang/hash/hash.fwd.h"
+#include "golang/io/io.fwd.h"
+
+namespace golang::compress::zlib
+{
+    namespace flate = golang::compress::flate;
+}
 #include "golang/hash/hash.h"
 #include "golang/io/io.h"
-#include "golang/compress/flate/deflate.fwd.h"
 
-namespace golang::zlib
+namespace golang::compress::zlib
 {
+    namespace io = golang::io;
+    namespace hash = golang::hash;
     struct Writer
     {
         io::Writer w{};
@@ -45,7 +54,7 @@ namespace golang::zlib
 
 #include "golang/io/io.h"
 
-namespace golang::zlib
+namespace golang::compress::zlib
 {
 
     namespace rec

@@ -4,16 +4,10 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
     const long deltaNewFile = - 64;
-    const int maxlines = 64 * 1024;
-    struct anyType;
-}
-#include "golang/go/token/position.fwd.h"
-
-namespace golang::gcimporter
-{
     struct fakeFileSet;
     struct fileInfo;
+    const int maxlines = 64 * 1024;
 }

@@ -13,9 +13,12 @@
 
 #include "golang/fmt/print.h"
 #include "golang/go/ast/ast.h"
+#include "golang/iter/iter.h"
 
-namespace golang::ast
+namespace golang::go::ast
 {
+    namespace fmt = golang::fmt;
+    namespace iter = golang::iter;
     namespace rec
     {
     }
@@ -77,35 +80,12 @@ namespace golang::ast
         return value.PrintTo(os);
     }
 
-    void walkIdentList(Visitor v, gocpp::slice<Ident*> list)
+    template<typename N>
+    void walkList(Visitor v, gocpp::slice<N> list)
     {
-        for(auto [gocpp_ignored, x] : list)
+        for(auto [gocpp_ignored, node] : list)
         {
-            Walk(v, x);
-        }
-    }
-
-    void walkExprList(Visitor v, gocpp::slice<Expr> list)
-    {
-        for(auto [gocpp_ignored, x] : list)
-        {
-            Walk(v, x);
-        }
-    }
-
-    void walkStmtList(Visitor v, gocpp::slice<Stmt> list)
-    {
-        for(auto [gocpp_ignored, x] : list)
-        {
-            Walk(v, x);
-        }
-    }
-
-    void walkDeclList(Visitor v, gocpp::slice<Decl> list)
-    {
-        for(auto [gocpp_ignored, x] : list)
-        {
-            Walk(v, x);
+            Walk(v, node);
         }
     }
 
@@ -196,10 +176,7 @@ namespace golang::ast
                 case 1:
                 {
                     ast::CommentGroup* n = gocpp::any_cast<ast::CommentGroup*>(node);
-                    for(auto [gocpp_ignored, c] : n->List)
-                    {
-                        Walk(v, c);
-                    }
+                    walkList(v, n->List);
                     break;
                 }
 
@@ -210,7 +187,7 @@ namespace golang::ast
                     {
                         Walk(v, n->Doc);
                     }
-                    walkIdentList(v, n->Names);
+                    walkList(v, n->Names);
                     if(n->Type != nullptr)
                     {
                         Walk(v, n->Type);
@@ -229,10 +206,7 @@ namespace golang::ast
                 case 3:
                 {
                     ast::FieldList* n = gocpp::any_cast<ast::FieldList*>(node);
-                    for(auto [gocpp_ignored, f] : n->List)
-                    {
-                        Walk(v, f);
-                    }
+                    walkList(v, n->List);
                     break;
                 }
 
@@ -270,7 +244,7 @@ namespace golang::ast
                     {
                         Walk(v, n->Type);
                     }
-                    walkExprList(v, n->Elts);
+                    walkList(v, n->Elts);
                     break;
                 }
 
@@ -301,10 +275,7 @@ namespace golang::ast
                 {
                     ast::IndexListExpr* n = gocpp::any_cast<ast::IndexListExpr*>(node);
                     Walk(v, n->X);
-                    for(auto [gocpp_ignored, index] : n->Indices)
-                    {
-                        Walk(v, index);
-                    }
+                    walkList(v, n->Indices);
                     break;
                 }
 
@@ -342,7 +313,7 @@ namespace golang::ast
                 {
                     ast::CallExpr* n = gocpp::any_cast<ast::CallExpr*>(node);
                     Walk(v, n->Fun);
-                    walkExprList(v, n->Args);
+                    walkList(v, n->Args);
                     break;
                 }
 
@@ -488,8 +459,8 @@ namespace golang::ast
                 case 34:
                 {
                     ast::AssignStmt* n = gocpp::any_cast<ast::AssignStmt*>(node);
-                    walkExprList(v, n->Lhs);
-                    walkExprList(v, n->Rhs);
+                    walkList(v, n->Lhs);
+                    walkList(v, n->Rhs);
                     break;
                 }
 
@@ -510,7 +481,7 @@ namespace golang::ast
                 case 37:
                 {
                     ast::ReturnStmt* n = gocpp::any_cast<ast::ReturnStmt*>(node);
-                    walkExprList(v, n->Results);
+                    walkList(v, n->Results);
                     break;
                 }
 
@@ -527,7 +498,7 @@ namespace golang::ast
                 case 39:
                 {
                     ast::BlockStmt* n = gocpp::any_cast<ast::BlockStmt*>(node);
-                    walkStmtList(v, n->List);
+                    walkList(v, n->List);
                     break;
                 }
 
@@ -550,8 +521,8 @@ namespace golang::ast
                 case 41:
                 {
                     ast::CaseClause* n = gocpp::any_cast<ast::CaseClause*>(node);
-                    walkExprList(v, n->List);
-                    walkStmtList(v, n->Body);
+                    walkList(v, n->List);
+                    walkList(v, n->Body);
                     break;
                 }
 
@@ -589,7 +560,7 @@ namespace golang::ast
                     {
                         Walk(v, n->Comm);
                     }
-                    walkStmtList(v, n->Body);
+                    walkList(v, n->Body);
                     break;
                 }
 
@@ -662,12 +633,12 @@ namespace golang::ast
                     {
                         Walk(v, n->Doc);
                     }
-                    walkIdentList(v, n->Names);
+                    walkList(v, n->Names);
                     if(n->Type != nullptr)
                     {
                         Walk(v, n->Type);
                     }
-                    walkExprList(v, n->Values);
+                    walkList(v, n->Values);
                     if(n->Comment != nullptr)
                     {
                         Walk(v, n->Comment);
@@ -708,10 +679,7 @@ namespace golang::ast
                     {
                         Walk(v, n->Doc);
                     }
-                    for(auto [gocpp_ignored, s] : n->Specs)
-                    {
-                        Walk(v, s);
-                    }
+                    walkList(v, n->Specs);
                     break;
                 }
 
@@ -747,7 +715,7 @@ namespace golang::ast
                         Walk(v, n->Doc);
                     }
                     Walk(v, n->Name);
-                    walkDeclList(v, n->Decls);
+                    walkList(v, n->Decls);
                     break;
                 }
 
@@ -789,9 +757,77 @@ namespace golang::ast
     // f(node); node must not be nil. If f returns true, Inspect invokes f
     // recursively for each of the non-nil children of node, followed by a
     // call of f(nil).
+    //
+    // In many cases it may be more convenient to use [Preorder], which
+    // returns an iterator over the sequence of nodes, or [PreorderStack],
+    // which (like [Inspect]) provides control over descent into subtrees,
+    // but additionally reports the stack of enclosing nodes.
     void Inspect(Node node, std::function<bool (Node _1)> f)
     {
         Walk(inspector(f), node);
+    }
+
+    // Preorder returns an iterator over all the nodes of the syntax tree
+    // beneath (and including) the specified root, in depth-first
+    // preorder.
+    //
+    // For greater control over the traversal of each subtree, use
+    // [Inspect] or [PreorderStack].
+    iter::Seq<Node> Preorder(Node root)
+    {
+        return [=](std::function<bool (Node _1)> yield) mutable -> void
+        {
+            auto ok = true;
+            Inspect(root, [=](Node n) mutable -> bool
+            {
+                if(n != nullptr)
+                {
+                    // yield must not be called once ok is false.
+                    ok = ok && yield(n);
+                }
+                return ok;
+            });
+        };
+    }
+
+    // PreorderStack traverses the tree rooted at root,
+    // calling f before visiting each node.
+    //
+    // Each call to f provides the current node and traversal stack,
+    // consisting of the original value of stack appended with all nodes
+    // from root to n, excluding n itself. (This design allows calls
+    // to PreorderStack to be nested without double counting.)
+    //
+    // If f returns false, the traversal skips over that subtree. Unlike
+    // [Inspect], no second call to f is made after visiting node n.
+    // (In practice, the second call is nearly always used only to pop the
+    // stack, and it is surprisingly tricky to do this correctly.)
+    void PreorderStack(Node root, gocpp::slice<Node> stack, std::function<bool (Node n, gocpp::slice<Node> stack)> f)
+    {
+        auto before = len(stack);
+        Inspect(root, [=](Node n) mutable -> bool
+        {
+            if(n != nullptr)
+            {
+                if(! f(n, stack))
+                {
+                    // Do not push, as there will be no corresponding pop.
+                    return false;
+                }
+                // push
+                stack = append(stack, n);
+            }
+            else
+            {
+                // pop
+                stack = stack.make_slice(0, len(stack) - 1);
+            }
+            return true;
+        });
+        if(len(stack) != before)
+        {
+            gocpp::panic("push/pop mismatch"_s);
+        }
     }
 
 }

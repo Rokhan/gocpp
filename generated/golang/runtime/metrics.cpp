@@ -12,11 +12,16 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/godebugs/table.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/gc/sizeclasses.h"
 #include "golang/runtime/debug.h"
 #include "golang/runtime/float.h"
 #include "golang/runtime/histogram.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
+#include "golang/runtime/mcleanup.h"
+#include "golang/runtime/mfinal.h"
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mgclimit.h"
@@ -28,13 +33,16 @@
 #include "golang/runtime/race0.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/sema.h"
-#include "golang/runtime/sizeclasses.h"
 #include "golang/runtime/slice.h"
 #include "golang/runtime/stack.h"
 #include "golang/runtime/stubs.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace gc = golang::internal::runtime::gc;
+    namespace godebugs = golang::internal::godebugs;
     namespace rec
     {
         using atomic::rec::Load;
@@ -114,13 +122,13 @@ namespace golang::runtime
             return;
         }
 
-        sizeClassBuckets = gocpp::make(gocpp::Tag<gocpp::slice<double>>(), _NumSizeClasses, _NumSizeClasses + 1);
+        sizeClassBuckets = gocpp::make(gocpp::Tag<gocpp::slice<double>>(), gc::NumSizeClasses, gc::NumSizeClasses + 1);
         // Skip size class 0 which is a stand-in for large objects, but large
         // objects are tracked separately (and they actually get placed in
         // the last bucket, not the first).
         // The smallest allocation is 1 byte in size.
         sizeClassBuckets[0] = 1;
-        for(auto i = 1; i < _NumSizeClasses; i++)
+        for(auto i = 1; i < gc::NumSizeClasses; i++)
         {
             // Size classes have an inclusive upper-bound
             // and exclusive lower bound (e.g. 48-byte size class is
@@ -132,7 +140,7 @@ namespace golang::runtime
             // value up to 2^53 and size classes are relatively small
             // (nowhere near 2^48 even) so this will give us exact
             // boundaries.
-            sizeClassBuckets[i] = double(class_to_size[i] + 1);
+            sizeClassBuckets[i] = double(gc::SizeClassToSize[i] + 1);
         }
         sizeClassBuckets = append(sizeClassBuckets, float64Inf());
 
@@ -150,7 +158,7 @@ namespace golang::runtime
             x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
-                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.gcAssistTime));
+                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.GCAssistTime));
             };
         }) },
             { "/cpu/classes/gc/mark/dedicated:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
@@ -158,7 +166,7 @@ namespace golang::runtime
             x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
-                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.gcDedicatedTime));
+                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.GCDedicatedTime));
             };
         }) },
             { "/cpu/classes/gc/mark/idle:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
@@ -166,7 +174,7 @@ namespace golang::runtime
             x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
-                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.gcIdleTime));
+                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.GCIdleTime));
             };
         }) },
             { "/cpu/classes/gc/pause:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
@@ -174,7 +182,7 @@ namespace golang::runtime
             x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
-                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.gcPauseTime));
+                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.GCPauseTime));
             };
         }) },
             { "/cpu/classes/gc/total:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
@@ -182,7 +190,7 @@ namespace golang::runtime
             x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
-                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.gcTotalTime));
+                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.GCTotalTime));
             };
         }) },
             { "/cpu/classes/idle:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
@@ -190,7 +198,7 @@ namespace golang::runtime
             x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
-                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.idleTime));
+                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.IdleTime));
             };
         }) },
             { "/cpu/classes/scavenge/assist:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
@@ -198,7 +206,7 @@ namespace golang::runtime
             x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
-                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.scavengeAssistTime));
+                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.ScavengeAssistTime));
             };
         }) },
             { "/cpu/classes/scavenge/background:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
@@ -206,7 +214,7 @@ namespace golang::runtime
             x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
-                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.scavengeBgTime));
+                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.ScavengeBgTime));
             };
         }) },
             { "/cpu/classes/scavenge/total:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
@@ -214,7 +222,7 @@ namespace golang::runtime
             x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
-                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.scavengeTotalTime));
+                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.ScavengeTotalTime));
             };
         }) },
             { "/cpu/classes/total:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
@@ -222,7 +230,7 @@ namespace golang::runtime
             x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
-                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.totalTime));
+                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.TotalTime));
             };
         }) },
             { "/cpu/classes/user:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
@@ -230,7 +238,23 @@ namespace golang::runtime
             x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
-                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.userTime));
+                out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.UserTime));
+            };
+        }) },
+            { "/gc/cleanups/executed:cleanups"_s, gocpp::Init<>([=](auto& x) {
+            x.deps = makeStatDepSet(finalStatsDep);
+            x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
+            {
+                out->kind = metricKindUint64;
+                out->scalar = in->finalStats.cleanupsExecuted;
+            };
+        }) },
+            { "/gc/cleanups/queued:cleanups"_s, gocpp::Init<>([=](auto& x) {
+            x.deps = makeStatDepSet(finalStatsDep);
+            x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
+            {
+                out->kind = metricKindUint64;
+                out->scalar = in->finalStats.cleanupsQueued;
             };
         }) },
             { "/gc/cycles/automatic:gc-cycles"_s, gocpp::Init<>([=](auto& x) {
@@ -255,6 +279,22 @@ namespace golang::runtime
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->sysStats.gcCyclesDone;
+            };
+        }) },
+            { "/gc/finalizers/executed:finalizers"_s, gocpp::Init<>([=](auto& x) {
+            x.deps = makeStatDepSet(finalStatsDep);
+            x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
+            {
+                out->kind = metricKindUint64;
+                out->scalar = in->finalStats.finalizersExecuted;
+            };
+        }) },
+            { "/gc/finalizers/queued:finalizers"_s, gocpp::Init<>([=](auto& x) {
+            x.deps = makeStatDepSet(finalStatsDep);
+            x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
+            {
+                out->kind = metricKindUint64;
+                out->scalar = in->finalStats.finalizersQueued;
             };
         }) },
             { "/gc/scan/globals:bytes"_s, gocpp::Init<>([=](auto& x) {
@@ -422,8 +462,7 @@ namespace golang::runtime
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(in->heapStats.heapStatsDelta.committed - in->heapStats.heapStatsDelta.inHeap -
-                                    in->heapStats.heapStatsDelta.inStacks - in->heapStats.heapStatsDelta.inWorkBufs -
-                                    in->heapStats.heapStatsDelta.inPtrScalarBits);
+                                    in->heapStats.heapStatsDelta.inStacks - in->heapStats.heapStatsDelta.inWorkBufs);
             };
         }) },
             { "/memory/classes/heap/objects:bytes"_s, gocpp::Init<>([=](auto& x) {
@@ -495,7 +534,7 @@ namespace golang::runtime
             x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
-                out->scalar = uint64_t(in->heapStats.heapStatsDelta.inWorkBufs + in->heapStats.heapStatsDelta.inPtrScalarBits) + in->sysStats.gcMiscSys;
+                out->scalar = uint64_t(in->heapStats.heapStatsDelta.inWorkBufs) + in->sysStats.gcMiscSys;
             };
         }) },
             { "/memory/classes/os-stacks:bytes"_s, gocpp::Init<>([=](auto& x) {
@@ -541,10 +580,51 @@ namespace golang::runtime
             };
         }) },
             { "/sched/goroutines:goroutines"_s, gocpp::Init<>([=](auto& x) {
-            x.compute = [=](statAggregate* _1, metricValue* out) mutable -> void
+            x.deps = makeStatDepSet(schedStatsDep);
+            x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
-                out->scalar = uint64_t(gcount());
+                out->scalar = in->schedStats.gTotal;
+            };
+        }) },
+            { "/sched/goroutines/not-in-go:goroutines"_s, gocpp::Init<>([=](auto& x) {
+            x.deps = makeStatDepSet(schedStatsDep);
+            x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
+            {
+                out->kind = metricKindUint64;
+                out->scalar = in->schedStats.gNonGo;
+            };
+        }) },
+            { "/sched/goroutines/running:goroutines"_s, gocpp::Init<>([=](auto& x) {
+            x.deps = makeStatDepSet(schedStatsDep);
+            x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
+            {
+                out->kind = metricKindUint64;
+                out->scalar = in->schedStats.gRunning;
+            };
+        }) },
+            { "/sched/goroutines/runnable:goroutines"_s, gocpp::Init<>([=](auto& x) {
+            x.deps = makeStatDepSet(schedStatsDep);
+            x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
+            {
+                out->kind = metricKindUint64;
+                out->scalar = in->schedStats.gRunnable;
+            };
+        }) },
+            { "/sched/goroutines/waiting:goroutines"_s, gocpp::Init<>([=](auto& x) {
+            x.deps = makeStatDepSet(schedStatsDep);
+            x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
+            {
+                out->kind = metricKindUint64;
+                out->scalar = in->schedStats.gWaiting;
+            };
+        }) },
+            { "/sched/goroutines-created:goroutines"_s, gocpp::Init<>([=](auto& x) {
+            x.deps = makeStatDepSet(schedStatsDep);
+            x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
+            {
+                out->kind = metricKindUint64;
+                out->scalar = in->schedStats.gCreated;
             };
         }) },
             { "/sched/latencies:seconds"_s, gocpp::Init<>([=](auto& x) {
@@ -575,6 +655,14 @@ namespace golang::runtime
             x.compute = [=](statAggregate* _1, metricValue* out) mutable -> void
             {
                 rec::write(gocpp::recv(sched.stwTotalTimeOther), out);
+            };
+        }) },
+            { "/sched/threads/total:threads"_s, gocpp::Init<>([=](auto& x) {
+            x.deps = makeStatDepSet(schedStatsDep);
+            x.compute = [=](statAggregate* in, metricValue* out) mutable -> void
+            {
+                out->kind = metricKindUint64;
+                out->scalar = in->schedStats.threads;
             };
         }) },
             { "/sync/mutex/wait/total:seconds"_s, gocpp::Init<>([=](auto& x) {
@@ -751,8 +839,8 @@ namespace golang::runtime
             auto nf = a->heapStatsDelta.smallFreeCount[i];
             a->totalAllocs += na;
             a->totalFrees += nf;
-            a->totalAllocated += na * uint64_t(class_to_size[i]);
-            a->totalFreed += nf * uint64_t(class_to_size[i]);
+            a->totalAllocated += na * uint64_t(gc::SizeClassToSize[i]);
+            a->totalFreed += nf * uint64_t(gc::SizeClassToSize[i]);
         }
         a->inObjects = a->totalAllocated - a->totalFreed;
         a->numObjects = a->totalAllocs - a->totalFrees;
@@ -936,6 +1024,199 @@ namespace golang::runtime
         a->totalScan = a->heapScan + a->stackScan + a->globalsScan;
     }
 
+    // finalStatsAggregate represents various finalizer/cleanup stats obtained
+    // from the runtime acquired together to avoid skew and inconsistencies.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    finalStatsAggregate::operator T()
+    {
+        T result;
+        result.finalizersQueued = this->finalizersQueued;
+        result.finalizersExecuted = this->finalizersExecuted;
+        result.cleanupsQueued = this->cleanupsQueued;
+        result.cleanupsExecuted = this->cleanupsExecuted;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool finalStatsAggregate::operator==(const T& ref) const
+    {
+        if (finalizersQueued != ref.finalizersQueued) return false;
+        if (finalizersExecuted != ref.finalizersExecuted) return false;
+        if (cleanupsQueued != ref.cleanupsQueued) return false;
+        if (cleanupsExecuted != ref.cleanupsExecuted) return false;
+        return true;
+    }
+
+    std::ostream& finalStatsAggregate::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << finalizersQueued;
+        os << " " << finalizersExecuted;
+        os << " " << cleanupsQueued;
+        os << " " << cleanupsExecuted;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct finalStatsAggregate& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // compute populates the finalStatsAggregate with values from the runtime.
+    void rec::compute(finalStatsAggregate* a)
+    {
+        std::tie(a->finalizersQueued, a->finalizersExecuted) = finReadQueueStats();
+        std::tie(a->cleanupsQueued, a->cleanupsExecuted) = rec::readQueueStats(gocpp::recv(gcCleanups));
+    }
+
+    // schedStatsAggregate contains stats about the scheduler, including
+    // an approximate count of goroutines in each state.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    schedStatsAggregate::operator T()
+    {
+        T result;
+        result.gTotal = this->gTotal;
+        result.gRunning = this->gRunning;
+        result.gRunnable = this->gRunnable;
+        result.gNonGo = this->gNonGo;
+        result.gWaiting = this->gWaiting;
+        result.gCreated = this->gCreated;
+        result.threads = this->threads;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool schedStatsAggregate::operator==(const T& ref) const
+    {
+        if (gTotal != ref.gTotal) return false;
+        if (gRunning != ref.gRunning) return false;
+        if (gRunnable != ref.gRunnable) return false;
+        if (gNonGo != ref.gNonGo) return false;
+        if (gWaiting != ref.gWaiting) return false;
+        if (gCreated != ref.gCreated) return false;
+        if (threads != ref.threads) return false;
+        return true;
+    }
+
+    std::ostream& schedStatsAggregate::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << gTotal;
+        os << " " << gRunning;
+        os << " " << gRunnable;
+        os << " " << gNonGo;
+        os << " " << gWaiting;
+        os << " " << gCreated;
+        os << " " << threads;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct schedStatsAggregate& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // compute populates the schedStatsAggregate with values from the runtime.
+    void rec::compute(schedStatsAggregate* a)
+    {
+        // Lock the scheduler so the global run queue can't change and
+        // the number of Ps can't change. This doesn't prevent the
+        // local run queues from changing, so the results are still
+        // approximate.
+        runtime::lock(& sched.lock);
+
+        // The total count of threads owned by Go is the number of Ms
+        // minus extra Ms on the list or in use.
+        a->threads = uint64_t(mcount()) - uint64_t(rec::Load(gocpp::recv(extraMInUse))) - uint64_t(rec::Load(gocpp::recv(extraMLength)));
+
+        // Collect running/runnable from per-P run queues.
+        a->gCreated += rec::Load(gocpp::recv(sched.goroutinesCreated));
+        for(auto [gocpp_ignored, p] : allp)
+        {
+            if(p == nullptr || p->status == _Pdead)
+            {
+                break;
+            }
+            a->gCreated += p->goroutinesCreated;
+            //Go switch emulation
+            {
+                auto condition = p->status;
+                int conditionId = -1;
+                if(condition == _Prunning) { conditionId = 0; }
+                else if(condition == _Pgcstop) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    case 0:
+                        if(auto [thread, ok] = setBlockOnExitSyscall(p); ok)
+                        {
+                            rec::resume(gocpp::recv(thread));
+                            a->gNonGo++;
+                        }
+                        else
+                        {
+                            a->gRunning++;
+                        }
+                        break;
+                    // The world is stopping or stopped.
+                    // This is fine. The results will be
+                    // slightly odd since nothing else
+                    // is running, but it will be accurate.
+                    case 1:
+                        break;
+                }
+            }
+
+            for(; ; )
+            {
+                auto h = atomic::Load(& p->runqhead);
+                auto t = atomic::Load(& p->runqtail);
+                auto next = atomic::Loaduintptr((uintptr_t*)(& p->runnext));
+                auto runnable = int32_t(t - h);
+                if(atomic::Load(& p->runqhead) != h || runnable < 0)
+                {
+                    continue;
+                }
+                if(next != 0)
+                {
+                    runnable++;
+                }
+                a->gRunnable += uint64_t(runnable);
+                break;
+            }
+        }
+
+        // Global run queue.
+        a->gRunnable += uint64_t(sched.runq.size);
+
+        // Account for Gs that are in _Gsyscall without a P.
+        auto nGsyscallNoP = rec::Load(gocpp::recv(sched.nGsyscallNoP));
+
+        // nGsyscallNoP can go negative during temporary races.
+        if(nGsyscallNoP >= 0)
+        {
+            a->gNonGo += uint64_t(nGsyscallNoP);
+        }
+
+        // Compute the number of blocked goroutines. We have to
+        // include system goroutines in this count because we included
+        // them above.
+        a->gTotal = uint64_t(gcount(true));
+        if(a->gTotal < a->gRunning + a->gRunnable + a->gNonGo)
+        {
+            a->gWaiting = 0;
+        }
+        else
+        {
+            a->gWaiting = a->gTotal - (a->gRunning + a->gRunnable + a->gNonGo);
+        }
+
+        runtime::unlock(& sched.lock);
+    }
+
     // nsToSec takes a duration in nanoseconds and converts it to seconds as
     // a float64.
     double nsToSec(int64_t ns)
@@ -958,6 +1239,8 @@ namespace golang::runtime
         result.sysStats = this->sysStats;
         result.cpuStats = this->cpuStats;
         result.gcStats = this->gcStats;
+        result.finalStats = this->finalStats;
+        result.schedStats = this->schedStats;
         return result;
     }
 
@@ -969,6 +1252,8 @@ namespace golang::runtime
         if (sysStats != ref.sysStats) return false;
         if (cpuStats != ref.cpuStats) return false;
         if (gcStats != ref.gcStats) return false;
+        if (finalStats != ref.finalStats) return false;
+        if (schedStats != ref.schedStats) return false;
         return true;
     }
 
@@ -980,6 +1265,8 @@ namespace golang::runtime
         os << " " << sysStats;
         os << " " << cpuStats;
         os << " " << gcStats;
+        os << " " << finalStats;
+        os << " " << schedStats;
         os << '}';
         return os;
     }
@@ -1012,6 +1299,8 @@ namespace golang::runtime
                 else if(condition == sysStatsDep) { conditionId = 1; }
                 else if(condition == cpuStatsDep) { conditionId = 2; }
                 else if(condition == gcStatsDep) { conditionId = 3; }
+                else if(condition == finalStatsDep) { conditionId = 4; }
+                else if(condition == schedStatsDep) { conditionId = 5; }
                 switch(conditionId)
                 {
                     case 0:
@@ -1025,6 +1314,12 @@ namespace golang::runtime
                         break;
                     case 3:
                         rec::compute(gocpp::recv(a->gcStats));
+                        break;
+                    case 4:
+                        rec::compute(gocpp::recv(a->finalStats));
+                        break;
+                    case 5:
+                        rec::compute(gocpp::recv(a->schedStats));
                         break;
                 }
             }

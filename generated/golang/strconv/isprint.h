@@ -16,6 +16,7 @@ namespace golang::strconv
     extern gocpp::slice<uint16_t> isNotPrint16;
     extern gocpp::slice<uint32_t> isPrint32;
     extern gocpp::slice<uint16_t> isNotPrint32;
+    // isGraphic lists the graphic runes not matched by IsPrint.
     extern gocpp::slice<uint16_t> isGraphic;
 
     namespace rec

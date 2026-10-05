@@ -3,8 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/sync/atomic/type.fwd.h"
-#include "golang/sync/mutex.fwd.h"
 
 namespace golang::sync
 {

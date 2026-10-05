@@ -12,10 +12,14 @@
 #include "gocpp/support.h"
 
 #include "golang/cmp/cmp.h"
+#include "golang/math/bits/bits.h"
 
 // Package slices defines various functions useful with slices of any type.
 namespace golang::slices
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace bits = golang::math::bits;
+    namespace cmp = golang::cmp;
     namespace rec
     {
     }
@@ -24,6 +28,7 @@ namespace golang::slices
     // elements equal. If the lengths are different, Equal returns false.
     // Otherwise, the elements are compared in increasing index order, and the
     // comparison stops at the first unequal pair.
+    // Empty and nil slices are considered equal.
     // Floating point NaNs are not considered equal.
     template<template<typename> class  S, typename E>
     bool Equal(S<E> s1, S<E> s2)
@@ -160,19 +165,21 @@ namespace golang::slices
 
     // ContainsFunc reports whether at least one
     // element e of s satisfies f(e).
+    // It stops as soon as a call to f returns true.
     template<template<typename> class  S, typename E>
     bool ContainsFunc(S<E> s, std::function<bool (E _1)> f)
     {
         return IndexFunc(s, f) >= 0;
     }
 
-    // Insert inserts the values v... into s at index i,
-    // returning the modified slice.
+    // Insert modifies s in place by inserting the values v... at index i,
+    // and returns the modified slice.
     // The elements at s[i:] are shifted up to make room.
     // In the returned slice r, r[i] == v[0],
-    // and r[i+len(v)] == value originally at r[i].
-    // Insert panics if i is out of range.
+    // and, if i < len(s), r[i+len(v)] == value originally at s[i].
+    // Insert panics if i > len(s).
     // This function is O(len(s) + len(v)).
+    // If the result is empty, it has the same nilness as s.
     template<template<typename> class  S, typename E>
     S<E> Insert(S<E> s, int i, gocpp::slice<E> v)
     {
@@ -256,11 +263,13 @@ namespace golang::slices
         return s;
     }
 
-    // Delete removes the elements s[i:j] from s, returning the modified slice.
+    // Delete modifies s in place by removing the elements s[i:j],
+    // and returns the modified slice.
     // Delete panics if j > len(s) or s[i:j] is not a valid slice of s.
     // Delete is O(len(s)-i), so if many items must be deleted, it is better to
     // make a single call deleting them all together than to delete one at a time.
     // Delete zeroes the elements s[len(s)-(j-i):len(s)].
+    // If the result is empty, it has the same nilness as s.
     template<template<typename> class  S, typename E>
     S<E> Delete(S<E> s, int i, int j)
     {
@@ -279,9 +288,10 @@ namespace golang::slices
         return s;
     }
 
-    // DeleteFunc removes any elements from s for which del returns true,
-    // returning the modified slice.
+    // DeleteFunc modifies s in place by removing any elements for which del returns true,
+    // and returns the modified slice.
     // DeleteFunc zeroes the elements between the new length and the original length.
+    // If the result is empty, it has the same nilness as s.
     template<template<typename> class  S, typename E>
     S<E> DeleteFunc(S<E> s, std::function<bool (E _1)> del)
     {
@@ -304,10 +314,11 @@ namespace golang::slices
         return s.make_slice(0, i);
     }
 
-    // Replace replaces the elements s[i:j] by the given v, and returns the
-    // modified slice.
+    // Replace modifies s in place by replacing the elements s[i:j] with the given v,
+    // and returns the modified slice.
     // Replace panics if j > len(s) or s[i:j] is not a valid slice of s.
     // When len(v) < (j-i), Replace zeroes the elements between the new length and the original length.
+    // If the result is empty, it has the same nilness as s.
     template<template<typename> class  S, typename E>
     S<E> Replace(S<E> s, int i, int j, gocpp::slice<E> v)
     {
@@ -320,7 +331,13 @@ namespace golang::slices
         }
         if(j == len(s))
         {
-            return append(s.make_slice(0, i), v);
+            auto s2 = append(s.make_slice(0, i), v);
+            if(len(s2) < len(s))
+            {
+                // zero/nil out the obsolete elements, for GC
+                clear(s.make_slice(len(s2)));
+            }
+            return s2;
         }
 
         auto tot = len(s.make_slice(0, i)) + len(v) + len(s.make_slice(j));
@@ -405,11 +422,19 @@ namespace golang::slices
 
     // Clone returns a copy of the slice.
     // The elements are copied using assignment, so this is a shallow clone.
+    // The result may have additional unused capacity.
+    // The result preserves the nilness of s.
     template<template<typename> class  S, typename E>
     S<E> Clone(S<E> s)
     {
-        // The s[:0:0] preserves nil in case it matters.
-        return append(s.make_slice(0, 0, 0), s);
+        // Preserve nilness in case it matters.
+        if(s == nullptr)
+        {
+            return nullptr;
+        }
+        // Avoid s[:0:0] as it leads to unwanted liveness when cloning a
+        // zero-length slice of a large array; see https://go.dev/issue/68488.
+        return append(S {}, s);
     }
 
     // Compact replaces consecutive runs of equal elements with a single copy.
@@ -417,6 +442,7 @@ namespace golang::slices
     // Compact modifies the contents of the slice s and returns the modified slice,
     // which may have a smaller length.
     // Compact zeroes the elements between the new length and the original length.
+    // The result preserves the nilness of s.
     template<template<typename> class  S, typename E>
     S<E> Compact(S<E> s)
     {
@@ -424,26 +450,32 @@ namespace golang::slices
         {
             return s;
         }
-        auto i = 1;
         for(auto k = 1; k < len(s); k++)
         {
-            if(s[k] != s[k - 1])
+            if(s[k] == s[k - 1])
             {
-                if(i != k)
+                auto s2 = s.make_slice(k);
+                for(auto k2 = 1; k2 < len(s2); k2++)
                 {
-                    s[i] = s[k];
+                    if(s2[k2] != s2[k2 - 1])
+                    {
+                        s[k] = s2[k2];
+                        k++;
+                    }
                 }
-                i++;
+
+                // zero/nil out the obsolete elements, for GC
+                clear(s.make_slice(k));
+                return s.make_slice(0, k);
             }
         }
-        // zero/nil out the obsolete elements, for GC
-        clear(s.make_slice(i));
-        return s.make_slice(0, i);
+        return s;
     }
 
     // CompactFunc is like [Compact] but uses an equality function to compare elements.
     // For runs of elements that compare equal, CompactFunc keeps the first one.
     // CompactFunc zeroes the elements between the new length and the original length.
+    // The result preserves the nilness of s.
     template<template<typename> class  S, typename E>
     S<E> CompactFunc(S<E> s, std::function<bool (E _1, E _2)> eq)
     {
@@ -451,27 +483,33 @@ namespace golang::slices
         {
             return s;
         }
-        auto i = 1;
         for(auto k = 1; k < len(s); k++)
         {
-            if(! eq(s[k], s[k - 1]))
+            if(eq(s[k], s[k - 1]))
             {
-                if(i != k)
+                auto s2 = s.make_slice(k);
+                for(auto k2 = 1; k2 < len(s2); k2++)
                 {
-                    s[i] = s[k];
+                    if(! eq(s2[k2], s2[k2 - 1]))
+                    {
+                        s[k] = s2[k2];
+                        k++;
+                    }
                 }
-                i++;
+
+                // zero/nil out the obsolete elements, for GC
+                clear(s.make_slice(k));
+                return s.make_slice(0, k);
             }
         }
-        // zero/nil out the obsolete elements, for GC
-        clear(s.make_slice(i));
-        return s.make_slice(0, i);
+        return s;
     }
 
     // Grow increases the slice's capacity, if necessary, to guarantee space for
     // another n elements. After Grow(n), at least n elements can be appended
     // to the slice without another allocation. If n is negative or too large to
     // allocate the memory, Grow panics.
+    // The result preserves the nilness of s.
     template<template<typename> class  S, typename E>
     S<E> Grow(S<E> s, int n)
     {
@@ -481,36 +519,28 @@ namespace golang::slices
         }
         if(n -= cap(s) - len(s); n > 0)
         {
+            // This expression allocates only once (see test).
             s = append(s.make_slice(0, cap(s)), gocpp::make(gocpp::Tag<gocpp::slice<E>>(), n)).make_slice(0, len(s));
         }
         return s;
     }
 
     // Clip removes unused capacity from the slice, returning s[:len(s):len(s)].
+    // The result preserves the nilness of s.
     template<template<typename> class  S, typename E>
     S<E> Clip(S<E> s)
     {
         return s.make_slice(0, len(s), len(s));
     }
 
-    // rotateLeft rotates b left by n spaces.
+    // rotateLeft rotates s left by r spaces.
     // s_final[i] = s_orig[i+r], wrapping around.
     template<typename E>
     void rotateLeft(gocpp::slice<E> s, int r)
     {
-        for(; r != 0 && r != len(s); )
-        {
-            if(r * 2 <= len(s))
-            {
-                swap(s.make_slice(0, r), s.make_slice(len(s) - r));
-                s = s.make_slice(0, len(s) - r);
-            }
-            else
-            {
-                swap(s.make_slice(0, len(s) - r), s.make_slice(r));
-                std::tie(s, r) = std::tuple{s.make_slice(len(s) - r), r * 2 - len(s)};
-            }
-        }
+        Reverse(s.make_slice(0, r));
+        Reverse(s.make_slice(r));
+        Reverse(s);
     }
 
     template<typename E>
@@ -519,17 +549,7 @@ namespace golang::slices
         rotateLeft(s, len(s) - r);
     }
 
-    // swap swaps the contents of x and y. x and y must be equal length and disjoint.
-    template<typename E>
-    void swap(gocpp::slice<E> x, gocpp::slice<E> y)
-    {
-        for(auto i = 0; i < len(x); i++)
-        {
-            std::tie(x[i], y[i]) = std::tuple{y[i], x[i]};
-        }
-    }
-
-    // overlaps reports whether the memory ranges a[0:len(a)] and b[0:len(b)] overlap.
+    // overlaps reports whether the memory ranges a[:len(a)] and b[:len(b)] overlap.
     template<typename E>
     bool overlaps(gocpp::slice<E> a, gocpp::slice<E> b)
     {
@@ -543,7 +563,7 @@ namespace golang::slices
             return false;
         }
         // TODO: use a runtime/unsafe facility once one becomes available. See issue 12445.
-        // Also see crypto/internal/alias/alias.go:AnyOverlap
+        // Also see crypto/internal/fips140/alias/alias.go:AnyOverlap
         return uintptr_t(gocpp::unsafe_pointer(& a[0])) <= uintptr_t(gocpp::unsafe_pointer(& b[len(b) - 1])) + (elemSize - 1) &&
                 uintptr_t(gocpp::unsafe_pointer(& b[0])) <= uintptr_t(gocpp::unsafe_pointer(& a[len(a) - 1])) + (elemSize - 1);
     }
@@ -576,6 +596,7 @@ namespace golang::slices
     }
 
     // Concat returns a new slice concatenating the passed in slices.
+    // If the concatenation is empty, the result is nil.
     template<template<typename> class  S, typename E>
     S<E> Concat(gocpp::slice<S<E>> slices)
     {
@@ -588,10 +609,43 @@ namespace golang::slices
                 gocpp::panic("len out of range"_s);
             }
         }
+        // Use Grow, not make, to round up to the size class:
+        // the extra space is otherwise unused and helps
+        // callers that append a few elements to the result.
         auto newslice = Grow<S>(nullptr, size);
         for(auto [gocpp_ignored, s] : slices)
         {
             newslice = append(newslice, s);
+        }
+        return newslice;
+    }
+
+    // Repeat returns a new slice that repeats the provided slice the given number of times.
+    // The result has length and capacity (len(x) * count).
+    // The result is never nil.
+    // Repeat panics if count is negative or if the result of (len(x) * count)
+    // overflows.
+    template<template<typename> class  S, typename E>
+    S<E> Repeat(S<E> x, int count)
+    {
+        if(count < 0)
+        {
+            gocpp::panic("cannot be negative"_s);
+        }
+
+        auto maxInt = ~ (unsigned int)(0) >> 1;
+        auto [hi, lo] = bits::Mul((unsigned int)(len(x)), (unsigned int)(count));
+        if(hi > 0 || lo > maxInt)
+        {
+            gocpp::panic("the result of (len(x) * count) overflows"_s);
+        }
+
+        // lo = len(x) * count
+        auto newslice = gocpp::make(gocpp::Tag<S>(), int(lo));
+        auto n = copy(newslice, x);
+        for(; n < len(newslice); )
+        {
+            n += copy(newslice.make_slice(n), newslice.make_slice(0, n));
         }
         return newslice;
     }

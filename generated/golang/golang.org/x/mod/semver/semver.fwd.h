@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::semver
+namespace golang::golang_org::x::mod::semver
 {
     struct parsed;
     struct GoTag_ByVersion;

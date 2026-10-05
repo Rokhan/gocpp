@@ -3,9 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/malloc.fwd.h"
 
 namespace golang::runtime
 {

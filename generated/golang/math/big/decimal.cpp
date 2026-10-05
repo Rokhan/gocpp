@@ -15,7 +15,7 @@
 #include "golang/math/big/nat.h"
 #include "golang/math/big/natconv.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     namespace rec
     {
@@ -70,7 +70,7 @@ namespace golang::big
 
     // Init initializes x to the decimal representation of m << shift (for
     // shift >= 0), or m >> -shift (for shift < 0).
-    void rec::init(decimal* x, nat m, int shift)
+    void rec::init(decimal* x, golang::math::big::nat m, int shift)
     {
         // special case 0
         if(len(m) == 0)
@@ -92,14 +92,14 @@ namespace golang::big
                 // shift at most ntz bits
                 s = ntz;
             }
-            m = rec::shr(gocpp::recv(nat(nullptr)), m, s);
+            m = rec::rsh(gocpp::recv(nat(nullptr)), m, s);
             shift += int(s);
         }
 
         // Do any shift left in binary representation.
         if(shift > 0)
         {
-            m = rec::shl(gocpp::recv(nat(nullptr)), m, (unsigned int)(shift));
+            m = rec::lsh(gocpp::recv(nat(nullptr)), m, (unsigned int)(shift));
             shift = 0;
         }
 
@@ -120,15 +120,15 @@ namespace golang::big
         {
             for(; shift < - maxShift; )
             {
-                big::shr(x, maxShift);
+                big::rsh(x, maxShift);
                 shift += maxShift;
             }
-            big::shr(x, (unsigned int)(- shift));
+            big::rsh(x, (unsigned int)(- shift));
         }
     }
 
-    // shr implements x >> s, for s <= maxShift.
-    void shr(decimal* x, unsigned int s)
+    // rsh implements x >> s, for s <= maxShift.
+    void rsh(decimal* x, unsigned int s)
     {
         // Division by 1<<s using shift-and-subtract algorithm.
         // pick up enough leading digits to cover first shift

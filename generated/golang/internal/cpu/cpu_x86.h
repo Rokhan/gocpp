@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::cpu
+namespace golang::internal::cpu
 {
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> cpuid(uint32_t eaxArg, uint32_t ecxArg);
     std::tuple<uint32_t, uint32_t> xgetbv();

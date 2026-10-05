@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::big
+namespace golang::math::big
 {
     // Gob codec version. Permits backward-compatible changes to the encoding.
     const unsigned char floatGobVersion = 1;

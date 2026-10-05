@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::flate
+namespace golang::compress::flate
 {
     const long NoCompression = 0;
     const long BestSpeed = 1;
@@ -21,40 +21,30 @@ namespace golang::flate
     // continue to be able to decompress this output.
     const long HuffmanOnly = - 2;
     const long logWindowSize = 15;
-    // The LZ77 step produces a sequence of literal tokens and <length, offset>
-    // pair tokens. The offset is also known as distance. The underlying wire
-    // format limits the range of lengths and offsets. For example, there are
-    // 256 legitimate lengths: those in the range [3, 258]. This package's
-    // compressor uses a higher minimum match length, enabling optimizations
-    // such as finding matches via 32-bit loads and compares.
-    const long baseMatchLength = 3;
     const long minMatchLength = 4;
     const long maxMatchLength = 258;
-    const long baseMatchOffset = 1;
-    const int maxMatchOffset = 1 << 15;
-    // The maximum number of tokens we put into a single flate block, just to
-    // stop things from getting too large.
-    const int maxFlateBlockTokens = 1 << 14;
+    const long minOffsetSize = 1;
+    // The maximum number of tokens we will encode at the time.
+    // Smaller sizes usually creates less optimal blocks.
+    // Bigger can make context switching slow.
+    // We use this for levels 7-9, so we make it big.
+    const int maxFlateBlockTokens = 1 << 15;
     const long maxStoreBlockSize = 65535;
     const long hashBits = 17;
-    const int maxHashOffset = 1 << 24;
+    const int maxHashOffset = 1 << 28;
     struct compressionLevel;
-    const long hashmul = 0x1e35a7bd;
+    struct advancedState;
+    struct compressor;
     struct Writer;
     const int windowSize = 1 << logWindowSize;
     const int hashSize = 1 << hashBits;
     const int hashMask = (1 << hashBits) - 1;
+    const int windowMask = windowSize - 1;
 }
-#include "golang/compress/flate/deflatefast.fwd.h"
-#include "golang/compress/flate/huffman_bit_writer.fwd.h"
-#include "golang/compress/flate/token.fwd.h"
-#include "golang/io/io.fwd.h"
 #include "golang/math/const.fwd.h"
 
-namespace golang::flate
+namespace golang::compress::flate
 {
+    namespace math = golang::math;
     const int skipNever = math::MaxInt32;
-    struct compressor;
-    struct dictWriter;
-    const int windowMask = windowSize - 1;
 }

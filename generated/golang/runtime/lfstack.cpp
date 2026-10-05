@@ -11,17 +11,20 @@
 #include "golang/runtime/lfstack.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/runtime/extern.h"
 #include "golang/runtime/mbitmap.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/panic.h"
-#include "golang/runtime/print.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/stubs.h"
 #include "golang/runtime/tagptr.h"
 #include "golang/runtime/tagptr_64bit.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
     }
@@ -38,11 +41,6 @@ namespace golang::runtime
     {
         node->pushcnt++;
         auto go_new = lfstackPack(node, node->pushcnt);
-        if(auto node1 = lfstackUnpack(go_new); node1 != node)
-        {
-            print("runtime: lfstack.push invalid packing: node="_s, node, " cnt="_s, hex(node->pushcnt), " packed="_s, hex(go_new), " -> node="_s, node1, "\n"_s);
-            go_throw("lfstack.push"_s);
-        }
         for(; ; )
         {
             auto old = atomic::Load64((uint64_t*)(head));
@@ -56,6 +54,12 @@ namespace golang::runtime
 
     gocpp::unsafe_pointer rec::pop(lfstack* head)
     {
+        uint32_t backoff = {};
+        // TODO: tweak backoff parameters on other architectures.
+        if(GOARCH == "arm64"_s)
+        {
+            backoff = 128;
+        }
         for(; ; )
         {
             auto old = atomic::Load64((uint64_t*)(head));
@@ -69,6 +73,15 @@ namespace golang::runtime
             {
                 return gocpp::unsafe_pointer(node);
             }
+
+            // Use a backoff approach to reduce demand to the shared memory location
+            // decreases memory contention and allows for other threads to make quicker
+            // progress.
+            // Read more in this Arm blog post:
+            // https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/multi-threaded-applications-arm
+            procyield(backoff);
+            // Increase backoff time.
+            backoff += backoff / 2;
         }
     }
 
@@ -85,17 +98,12 @@ namespace golang::runtime
         {
             go_throw("lfstack node allocated from the heap"_s);
         }
-        if(lfstackUnpack(lfstackPack(node, ~ uintptr_t(0))) != node)
-        {
-            printlock();
-            println("runtime: bad lfnode address"_s, hex(uintptr_t(gocpp::unsafe_pointer(node))));
-            go_throw("bad lfnode address"_s);
-        }
+        lfstackPack(node, ~ uintptr_t(0));
     }
 
     uint64_t lfstackPack(lfnode* node, uintptr_t cnt)
     {
-        return uint64_t(taggedPointerPack(gocpp::unsafe_pointer(node), cnt));
+        return uint64_t(taggedPointerPack(gocpp::unsafe_pointer(node), cnt & ((1 << tagBits) - 1)));
     }
 
     lfnode* lfstackUnpack(uint64_t val)

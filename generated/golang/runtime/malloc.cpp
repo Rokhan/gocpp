@@ -14,31 +14,40 @@
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goarch/zgoarch_amd64.h"
-#include "golang/internal/goexperiment/exp_allocheaders_on.h"
+#include "golang/internal/goexperiment/exp_randomizedheapbase64_on.h"
+#include "golang/internal/goexperiment/exp_runtimefreegc_off.h"
+#include "golang/internal/goexperiment/exp_runtimesecret_off.h"
+#include "golang/internal/goexperiment/exp_sizespecializedmalloc_on.h"
 #include "golang/internal/goos/zgoos_windows.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/gc/malloc.h"
+#include "golang/internal/runtime/gc/sizeclasses.h"
+#include "golang/internal/runtime/math/math.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/fastlog2.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/math/math.h"
-#include "golang/runtime/internal/sys/intrinsics.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
+#include "golang/runtime/malloc_generated.h"
+#include "golang/runtime/malloc_stubs.h"
+#include "golang/runtime/malloc_tables_generated.h"
 #include "golang/runtime/mbitmap.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
 #include "golang/runtime/mcache.h"
 #include "golang/runtime/mem.h"
+#include "golang/runtime/mem_nonsbrk.h"
 #include "golang/runtime/mem_windows.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mgcmark.h"
 #include "golang/runtime/mgcpacer.h"
+#include "golang/runtime/mgcsweep.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagealloc.h"
 #include "golang/runtime/mprof.h"
@@ -51,21 +60,32 @@
 #include "golang/runtime/rand.h"
 #include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/sizeclasses.h"
+#include "golang/runtime/secret_nosecret.h"
 #include "golang/runtime/slice.h"
 #include "golang/runtime/stack.h"
-#include "golang/runtime/string.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/stubs_nonlinux.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/tagptr.h"
 #include "golang/runtime/tagptr_64bit.h"
+#include "golang/runtime/traceallocfree.h"
+#include "golang/runtime/traceruntime.h"
 #include "golang/runtime/type.h"
+#include "golang/runtime/valgrind0.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace gc = golang::internal::runtime::gc;
+    namespace goarch = golang::internal::goarch;
+    namespace goexperiment = golang::internal::goexperiment;
+    namespace goos = golang::internal::goos;
+    namespace math = golang::internal::runtime::math;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
+        using abi::rec::Pointers;
         using atomic::rec::Store;
     }
 
@@ -90,9 +110,26 @@ namespace golang::runtime
     // performance critical functions.
     uintptr_t physHugePageSize;
     unsigned int physHugePageShift;
+    // heapRandSeed is a random value that is populated in mallocinit if
+    // randomizeHeapBase is set. It is used in mallocinit, and mheap.grow, to
+    // randomize the base heap address.
+    uintptr_t heapRandSeed;
+    int heapRandSeedBitsRemaining;
+    uintptr_t nextHeapRandBits(int bits)
+    {
+        if(bits > heapRandSeedBitsRemaining)
+        {
+            go_throw("not enough heapRandSeed bits remaining"_s);
+        }
+        auto r = heapRandSeed >> (64 - bits);
+        heapRandSeed <<= bits;
+        heapRandSeedBitsRemaining -= bits;
+        return r;
+    }
+
     void mallocinit()
     {
-        if(class_to_size[_TinySizeClass] != _TinySize)
+        if(gc::SizeClassToSize[tinySizeClass] != maxTinySize)
         {
             go_throw("bad TinySizeClass"_s);
         }
@@ -157,35 +194,43 @@ namespace golang::runtime
             print("pagesPerArena ("_s, pagesPerArena, ") is not divisible by pagesPerReclaimerChunk ("_s, pagesPerReclaimerChunk, ")\n"_s);
             go_throw("bad pagesPerReclaimerChunk"_s);
         }
-        if(goexperiment::AllocHeaders)
+        // Check that the minimum size (exclusive) for a malloc header is also
+        // a size class boundary. This is important to making sure checks align
+        // across different parts of the runtime.
+        // While we're here, also check to make sure all these size classes'
+        // span sizes are one page. Some code relies on this.
+        auto minSizeForMallocHeaderIsSizeClass = false;
+        auto sizeClassesUpToMinSizeForMallocHeaderAreOnePage = true;
+        for(auto i = 0; i < len(gc::SizeClassToSize); i++)
         {
-            // Check that the minimum size (exclusive) for a malloc header is also
-            // a size class boundary. This is important to making sure checks align
-            // across different parts of the runtime.
-            auto minSizeForMallocHeaderIsSizeClass = false;
-            for(auto i = 0; i < len(class_to_size); i++)
+            if(gc::SizeClassToNPages[i] > 1)
             {
-                if(minSizeForMallocHeader == uintptr_t(class_to_size[i]))
-                {
-                    minSizeForMallocHeaderIsSizeClass = true;
-                    break;
-                }
+                sizeClassesUpToMinSizeForMallocHeaderAreOnePage = false;
             }
-            if(! minSizeForMallocHeaderIsSizeClass)
+            if(gc::MinSizeForMallocHeader == uintptr_t(gc::SizeClassToSize[i]))
             {
-                go_throw("min size of malloc header is not a size class boundary"_s);
-            }
-            // Check that the pointer bitmap for all small sizes without a malloc header
-            // fits in a word.
-            if(minSizeForMallocHeader / goarch::PtrSize > 8 * goarch::PtrSize)
-            {
-                go_throw("max pointer/scan bitmap size for headerless objects is too large"_s);
+                minSizeForMallocHeaderIsSizeClass = true;
+                break;
             }
         }
-
-        if(minTagBits > taggedPointerBits)
+        if(! minSizeForMallocHeaderIsSizeClass)
         {
-            go_throw("taggedPointerbits too small"_s);
+            go_throw("min size of malloc header is not a size class boundary"_s);
+        }
+        if(! sizeClassesUpToMinSizeForMallocHeaderAreOnePage)
+        {
+            go_throw("expected all size classes up to min size for malloc header to fit in one-page spans"_s);
+        }
+        // Check that the pointer bitmap for all small sizes without a malloc header
+        // fits in a word.
+        if(gc::MinSizeForMallocHeader / goarch::PtrSize > 8 * goarch::PtrSize)
+        {
+            go_throw("max pointer/scan bitmap size for headerless objects is too large"_s);
+        }
+
+        if(minTagBits > tagBits)
+        {
+            go_throw("tagBits too small"_s);
         }
 
         // Initialize the heap.
@@ -202,6 +247,12 @@ namespace golang::runtime
         lockInit(& globalAlloc.mutex, lockRankGlobalAlloc);
 
         // Create initial arena growth hints.
+        if(isSbrkPlatform)
+        {
+        }
+        else
+        // Don't generate hints on sbrk platforms. We can
+        // only grow the break sequentially.
         if(goarch::PtrSize == 8)
         {
             // On a 64-bit machine, we pick the following hints
@@ -237,19 +288,79 @@ namespace golang::runtime
             // allocations and we want to avoid fragmenting the address space.
             // In race mode we have no choice but to just use the same hints because
             // the race detector requires that the heap be mapped contiguously.
+            // If randomizeHeapBase is set, we attempt to randomize the base address
+            // as much as possible. We do this by generating a random uint64 via
+            // bootstrapRand and using it's bits to randomize portions of the base
+            // address as follows:
+            // * We first generate a random heapArenaBytes aligned address that we use for
+            // generating the hints.
+            // * On the first call to mheap.grow, we then generate a random PallocChunkBytes
+            // aligned offset into the mmap'd heap region, which we use as the base for
+            // the heap region.
+            // * We then select a page offset in that PallocChunkBytes region to start the
+            // heap at, and mark all the pages up to that offset as allocated.
+            // Our final randomized "heap base address" becomes the first byte of
+            // the first available page returned by the page allocator. This results
+            // in an address with at least heapAddrBits-gc.PageShift-2-(1*goarch.IsAmd64)
+            // bits of entropy.
+            uintptr_t randHeapBase = {};
+            unsigned char randHeapBasePrefix = {};
+            // heapAddrBits is 48 on most platforms, but we only use 47 of those
+            // bits in order to provide a good amount of room for the heap to grow
+            // contiguously. On amd64, there are 48 bits, but the top bit is sign
+            // extended, so we throw away another bit, just to be safe.
+            auto randHeapAddrBits = heapAddrBits - 1 - (goarch::IsAmd64 * 1);
+            if(randomizeHeapBase)
+            {
+                // Generate a random value, and take the bottom heapAddrBits-logHeapArenaBytes
+                // bits, using them as the top bits for randHeapBase.
+                std::tie(heapRandSeed, heapRandSeedBitsRemaining) = std::tuple{uintptr_t(bootstrapRand()), 64};
+
+                auto topBits = (randHeapAddrBits - logHeapArenaBytes);
+                randHeapBase = nextHeapRandBits(topBits) << (randHeapAddrBits - topBits);
+                randHeapBase = alignUp(randHeapBase, heapArenaBytes);
+                randHeapBasePrefix = (unsigned char)(randHeapBase >> (randHeapAddrBits - 8));
+            }
+
+            int vmaSize = {};
+            if(GOARCH == "riscv64"_s)
+            {
+                // Identify which memory layout is in use based on the system
+                // stack address, knowing that the bottom half of virtual memory
+                // is user space. This should result in 39, 48 or 57. It may be
+                // possible to use RISCV_HWPROBE_KEY_HIGHEST_VIRT_ADDRESS at some
+                // point in the future - for now use the system stack address.
+                vmaSize = sys::Len64(uint64_t(getg()->m->g0->stack.hi)) + 1;
+                if(raceenabled && vmaSize != 39 && vmaSize != 48)
+                {
+                    println("vma size = "_s, vmaSize);
+                    go_throw("riscv64 vma size is unknown and race mode is enabled"_s);
+                }
+            }
+
             for(auto i = 0x7f; i >= 0; i--)
             {
                 uintptr_t p = {};
                 //Go switch emulation
                 {
                     int conditionId = -1;
-                    if(raceenabled) { conditionId = 0; }
-                    else if(GOARCH == "arm64"_s && GOOS == "ios"_s) { conditionId = 1; }
-                    else if(GOARCH == "arm64"_s) { conditionId = 2; }
-                    else if(GOOS == "aix"_s) { conditionId = 3; }
+                    if(raceenabled && GOARCH == "riscv64"_s && vmaSize == 39) { conditionId = 0; }
+                    else if(raceenabled) { conditionId = 1; }
+                    else if(randomizeHeapBase) { conditionId = 2; }
+                    else if(GOARCH == "arm64"_s && GOOS == "ios"_s) { conditionId = 3; }
+                    else if(GOARCH == "arm64"_s) { conditionId = 4; }
+                    else if(GOARCH == "riscv64"_s && vmaSize == 39) { conditionId = 5; }
+                    else if(GOOS == "aix"_s) { conditionId = 6; }
                     switch(conditionId)
                     {
                         case 0:
+                            p = (uintptr_t(i) << 28) | uintptrMask & (0x0013 << 28);
+                            if(p >= uintptrMask & 0x000f00000000)
+                            {
+                                continue;
+                            }
+                            break;
+                        case 1:
                             // The TSAN runtime requires the heap
                             // to be in the range [0x00c000000000,
                             // 0x00e000000000).
@@ -259,13 +370,22 @@ namespace golang::runtime
                                 continue;
                             }
                             break;
-                        case 1:
+                        case 2:
+                        {
+                            auto prefix = uintptr_t(randHeapBasePrefix + (unsigned char)(i)) << (randHeapAddrBits - 8);
+                            p = prefix | (randHeapBase & randHeapBasePrefixMask);
+                            break;
+                        }
+                        case 3:
                             p = (uintptr_t(i) << 40) | uintptrMask & (0x0013 << 28);
                             break;
-                        case 2:
+                        case 4:
                             p = (uintptr_t(i) << 40) | uintptrMask & (0x0040 << 32);
                             break;
-                        case 3:
+                        case 5:
+                            p = (uintptr_t(i) << 32) | uintptrMask & (0x0013 << 28);
+                            break;
+                        case 6:
                             if(i == 0)
                             {
                                 // We don't use addresses directly after 0x0A00000000000000
@@ -308,7 +428,7 @@ namespace golang::runtime
             // 3. We try to stake out a reasonably large initial
             // heap reservation.
             auto arenaMetaSize = (1 << arenaBits) * gocpp::Sizeof<heapArena>();
-            auto meta = uintptr_t(sysReserve(nullptr, arenaMetaSize));
+            auto meta = uintptr_t(sysReserve(nullptr, arenaMetaSize, "heap reservation"_s));
             if(meta != 0)
             {
                 rec::init(gocpp::recv(mheap_.heapArenaAlloc), meta, arenaMetaSize, true);
@@ -349,7 +469,7 @@ namespace golang::runtime
             };
             for(auto [gocpp_ignored, arenaSize] : arenaSizes)
             {
-                auto [a, size] = sysReserveAligned(gocpp::unsafe_pointer(p), arenaSize, heapArenaBytes);
+                auto [a, size] = sysReserveAligned(gocpp::unsafe_pointer(p), arenaSize, heapArenaBytes, "heap reservation"_s);
                 if(a != nullptr)
                 {
                     rec::init(gocpp::recv(mheap_.arena), uintptr_t(a), size, false);
@@ -371,7 +491,7 @@ namespace golang::runtime
         }
         // Initialize the memory limit here because the allocator is going to look at it
         // but we haven't called gcinit yet and we're definitely going to allocate memory before then.
-        rec::Store(gocpp::recv(gcController.memoryLimit), maxInt64);
+        rec::Store(gocpp::recv(gcController.memoryLimit), math::MaxInt64);
     }
 
     // sysAlloc allocates heap arena space for at least n bytes. The
@@ -383,14 +503,13 @@ namespace golang::runtime
     // hintList is a list of hint addresses for where to allocate new
     // heap arenas. It must be non-nil.
     //
-    // register indicates whether the heap arena should be registered
-    // in allArenas.
-    //
     // sysAlloc returns a memory region in the Reserved state. This region must
     // be transitioned to Prepared and then Ready before use.
     //
+    // arenaList is the list the arena should be added to.
+    //
     // h must be locked.
-    std::tuple<gocpp::unsafe_pointer, uintptr_t> rec::sysAlloc(mheap* h, uintptr_t n, arenaHint** hintList, bool go_register)
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> rec::sysAlloc(mheap* h, uintptr_t n, arenaHint** hintList, gocpp::slice<arenaIdx>* arenaList)
     {
         gocpp::unsafe_pointer v;
         uintptr_t size;
@@ -404,7 +523,7 @@ namespace golang::runtime
             // Newly-used mappings are considered released.
             // Only do this if we're using the regular heap arena hints.
             // This behavior is only for the heap.
-            v = rec::alloc(gocpp::recv(h->arena), n, heapArenaBytes, & gcController.heapReleased);
+            v = rec::alloc(gocpp::recv(h->arena), n, heapArenaBytes, & gcController.heapReleased, "heap"_s);
             if(v != nullptr)
             {
                 size = n;
@@ -434,7 +553,7 @@ namespace golang::runtime
             }
             else
             {
-                v = sysReserve(gocpp::unsafe_pointer(p), n);
+                v = sysReserve(gocpp::unsafe_pointer(p), n, "heap reservation"_s);
             }
             if(p == uintptr_t(v))
             {
@@ -454,7 +573,7 @@ namespace golang::runtime
             // it would simplify things there.
             if(v != nullptr)
             {
-                sysFreeOS(v, n);
+                sysUnreserve(v, n);
             }
             *hintList = hint->next;
             rec::free(gocpp::recv(h->arenaHintAlloc), gocpp::unsafe_pointer(hint));
@@ -474,7 +593,7 @@ namespace golang::runtime
             // All of the hints failed, so we'll take any
             // (sufficiently aligned) address the kernel will give
             // us.
-            std::tie(v, size) = sysReserveAligned(nullptr, n, heapArenaBytes);
+            std::tie(v, size) = sysReserveAligned(nullptr, n, heapArenaBytes, "heap"_s);
             if(v == nullptr)
             {
                 return {nullptr, 0};
@@ -523,15 +642,15 @@ namespace golang::runtime
         }
 
         mapped:
+        if(valgrindenabled)
+        {
+            valgrindCreateMempool(v);
+            valgrindMakeMemNoAccess(v, size);
+        }
+
         // Create arena metadata.
         for(auto ri = arenaIndex(uintptr_t(v)); ri <= arenaIndex(uintptr_t(v) + size - 1); ri++)
         {
-            if(false) {
-            mapped_continue:
-                continue;
-            mapped_break:
-                break;
-            }
             auto l2 = h->arenas[rec::l1(gocpp::recv(ri))];
             if(l2 == nullptr)
             {
@@ -542,7 +661,7 @@ namespace golang::runtime
                 // is paged in is too expensive. Trying to account for the whole region means
                 // that it will appear like an enormous memory overhead in statistics, even though
                 // it is not.
-                l2 = (gocpp::array_ptr<gocpp::array<heapArena*, 1 << arenaL2Bits>>)(sysAllocOS(gocpp::Sizeof<gocpp::array<heapArena*, 1048576>>()));
+                l2 = (gocpp::array_ptr<gocpp::array<heapArena*, 1 << arenaL2Bits>>)(sysAllocOS(gocpp::Sizeof<gocpp::array<heapArena*, 1048576>>(), "heap index"_s));
                 if(l2 == nullptr)
                 {
                     go_throw("out of memory allocating heap arena map"_s);
@@ -563,7 +682,7 @@ namespace golang::runtime
                 go_throw("arena already initialized"_s);
             }
             heapArena* r = {};
-            r = (heapArena*)(rec::alloc(gocpp::recv(h->heapArenaAlloc), gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
+            r = (heapArena*)(rec::alloc(gocpp::recv(h->heapArenaAlloc), gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys, "heap metadata"_s));
             if(r == nullptr)
             {
                 r = (heapArena*)(persistentalloc(gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
@@ -574,31 +693,28 @@ namespace golang::runtime
             }
 
             // Register the arena in allArenas if requested.
-            if(go_register)
+            if(len((*arenaList)) == cap((*arenaList)))
             {
-                if(len(h->allArenas) == cap(h->allArenas))
+                auto size = 2 * uintptr_t(cap((*arenaList))) * goarch::PtrSize;
+                if(size == 0)
                 {
-                    auto size = 2 * uintptr_t(cap(h->allArenas)) * goarch::PtrSize;
-                    if(size == 0)
-                    {
-                        size = physPageSize;
-                    }
-                    auto newArray = (notInHeap*)(persistentalloc(size, goarch::PtrSize, & memstats.gcMiscSys));
-                    if(newArray == nullptr)
-                    {
-                        go_throw("out of memory allocating allArenas"_s);
-                    }
-                    auto oldSlice = h->allArenas;
-                    *(notInHeapSlice*)(gocpp::unsafe_pointer(& h->allArenas)) = notInHeapSlice {newArray, len(h->allArenas), int(size / goarch::PtrSize)};
-                    // Do not free the old backing array because
-                    // there may be concurrent readers. Since we
-                    // double the array each time, this can lead
-                    // to at most 2x waste.
-                    copy(h->allArenas, oldSlice);
+                    size = physPageSize;
                 }
-                h->allArenas = h->allArenas.make_slice(0, len(h->allArenas) + 1);
-                h->allArenas[len(h->allArenas) - 1] = ri;
+                auto newArray = (notInHeap*)(persistentalloc(size, goarch::PtrSize, & memstats.gcMiscSys));
+                if(newArray == nullptr)
+                {
+                    go_throw("out of memory allocating allArenas"_s);
+                }
+                auto oldSlice = (*arenaList);
+                *(notInHeapSlice*)(gocpp::unsafe_pointer(& (*arenaList))) = notInHeapSlice {newArray, len((*arenaList)), int(size / goarch::PtrSize)};
+                // Do not free the old backing array because
+                // there may be concurrent readers. Since we
+                // double the array each time, this can lead
+                // to at most 2x waste.
+                copy((*arenaList), oldSlice);
             }
+            (*arenaList) = (*arenaList).make_slice(0, len((*arenaList)) + 1);
+            (*arenaList)[len((*arenaList)) - 1] = ri;
 
             // Store atomically just in case an object from the
             // new heap arena becomes visible before the heap lock
@@ -614,72 +730,6 @@ namespace golang::runtime
         }
 
         return {v, size};
-    }
-
-    // sysReserveAligned is like sysReserve, but the returned pointer is
-    // aligned to align bytes. It may reserve either n or n+align bytes,
-    // so it returns the size that was reserved.
-    std::tuple<gocpp::unsafe_pointer, uintptr_t> sysReserveAligned(gocpp::unsafe_pointer v, uintptr_t size, uintptr_t align)
-    {
-        // Since the alignment is rather large in uses of this
-        // function, we're not likely to get it by chance, so we ask
-        // for a larger region and remove the parts we don't need.
-        auto retries = 0;
-        retry:
-        auto p = uintptr_t(sysReserve(v, size + align));
-        //Go switch emulation
-        {
-            int conditionId = -1;
-            if(p == 0) { conditionId = 0; }
-            else if(p & (align - 1) == 0) { conditionId = 1; }
-            else if(GOOS == "windows"_s) { conditionId = 2; }
-            switch(conditionId)
-            {
-                case 0:
-                    return {nullptr, 0};
-                    break;
-                case 1:
-                    return {gocpp::unsafe_pointer(p), size + align};
-                    break;
-                case 2:
-                {
-                    // On Windows we can't release pieces of a
-                    // reservation, so we release the whole thing and
-                    // re-reserve the aligned sub-region. This may race,
-                    // so we may have to try again.
-                    sysFreeOS(gocpp::unsafe_pointer(p), size + align);
-                    p = alignUp(p, align);
-                    auto p2 = sysReserve(gocpp::unsafe_pointer(p), size);
-                    if(p != uintptr_t(p2))
-                    {
-                        // Must have raced. Try again.
-                        sysFreeOS(p2, size);
-                        if(retries++; retries == 100)
-                        {
-                            go_throw("failed to allocate aligned heap memory; too many retries"_s);
-                        }
-                        goto retry;
-                    }
-                    // Success.
-                    return {p2, size};
-                    break;
-                }
-                default:
-                {
-                    // Trim off the unaligned parts.
-                    auto pAligned = alignUp(p, align);
-                    sysFreeOS(gocpp::unsafe_pointer(p), pAligned - p);
-                    auto end = pAligned + size;
-                    auto endLen = (p + size + align) - end;
-                    if(endLen > 0)
-                    {
-                        sysFreeOS(gocpp::unsafe_pointer(end), endLen);
-                    }
-                    return {gocpp::unsafe_pointer(pAligned), size};
-                    break;
-                }
-            }
-        }
     }
 
     // enableMetadataHugePages enables huge pages for various sources of heap metadata.
@@ -765,9 +815,9 @@ namespace golang::runtime
     {
         gclinkptr v;
         mspan* s;
-        bool shouldhelpgc;
+        bool checkGCTrigger;
         s = c->alloc[spc];
-        shouldhelpgc = false;
+        checkGCTrigger = false;
         auto freeIndex = rec::nextFreeIndex(gocpp::recv(s));
         if(freeIndex == s->nelems)
         {
@@ -778,7 +828,7 @@ namespace golang::runtime
                 go_throw("s.allocCount != s.nelems && freeIndex == s.nelems"_s);
             }
             rec::refill(gocpp::recv(c), spc);
-            shouldhelpgc = true;
+            checkGCTrigger = true;
             s = c->alloc[spc];
 
             freeIndex = rec::nextFreeIndex(gocpp::recv(s));
@@ -796,293 +846,319 @@ namespace golang::runtime
             println("s.allocCount="_s, s->allocCount, "s.nelems="_s, s->nelems);
             go_throw("s.allocCount > s.nelems"_s);
         }
-        return {v, s, shouldhelpgc};
+        return {v, s, checkGCTrigger};
     }
 
     // Allocate an object of size bytes.
     // Small objects are allocated from the per-P cache's free lists.
     // Large objects (> 32 kB) are allocated straight from the heap.
+    //
+    // mallocgc should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/gopkg
+    //   - github.com/bytedance/sonic
+    //   - github.com/cloudwego/frugal
+    //   - github.com/cockroachdb/cockroach
+    //   - github.com/cockroachdb/pebble
+    //   - github.com/ugorji/go/codec
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname mallocgc
     gocpp::unsafe_pointer mallocgc(uintptr_t size, _type* typ, bool needzero)
     {
-        if(gcphase == _GCmarktermination)
+        if(doubleCheckMalloc)
         {
-            go_throw("mallocgc called with gcphase == _GCmarktermination"_s);
+            if(gcphase == _GCmarktermination)
+            {
+                go_throw("mallocgc called with gcphase == _GCmarktermination"_s);
+            }
         }
 
+        // Short-circuit zero-sized allocation requests.
         if(size == 0)
         {
             return gocpp::unsafe_pointer(& zerobase);
         }
 
-        // It's possible for any malloc to trigger sweeping, which may in
-        // turn queue finalizers. Record this dynamic lock edge.
-        lockRankMayQueueFinalizer();
-
-        auto userSize = size;
-        if(asanenabled)
+        if(sizeSpecializedMallocEnabled && size < uintptr_t(len(mallocNoScanTable)))
         {
-            // Refer to ASAN runtime library, the malloc() function allocates extra memory,
-            // the redzone, around the user requested memory region. And the redzones are marked
-            // as unaddressable. We perform the same operations in Go to detect the overflows or
-            // underflows.
-            size += computeRZlog(size);
-        }
-
-        if(debug.malloc)
-        {
-            if(debug.sbrk != 0)
+            if(typ == nullptr || ! rec::Pointers(gocpp::recv(typ)))
             {
-                auto align = uintptr_t(16);
-                if(typ != nullptr)
+                if(size >= maxTinySize)
                 {
-                    // TODO(austin): This should be just
-                    // align = uintptr(typ.align)
-                    // but that's only 4 on 32-bit platforms,
-                    // even if there's a uint64 field in typ (see #599).
-                    // This causes 64-bit atomic accesses to panic.
-                    // Hence, we use stricter alignment that matches
-                    // the normal allocator better.
-                    if(size & 7 == 0)
-                    {
-                        align = 8;
-                    }
-                    else
-                    if(size & 3 == 0)
-                    {
-                        align = 4;
-                    }
-                    else
-                    if(size & 1 == 0)
-                    {
-                        align = 2;
-                    }
-                    else
-                    {
-                        align = 1;
-                    }
+                    return mallocNoScanTable[size](size, typ, needzero);
                 }
-                return persistentalloc(size, align, & memstats.other_sys);
-            }
-
-            if(inittrace.active && inittrace.id == getg()->goid)
-            {
-                // Init functions are executed sequentially in a single goroutine.
-                inittrace.allocs += 1;
-            }
-        }
-
-        // assistG is the G to charge for this allocation, or nil if
-        // GC is not currently active.
-        auto assistG = deductAssistCredit(size);
-
-        // Set mp.mallocing to keep from being preempted by GC.
-        auto mp = acquirem();
-        if(mp->mallocing != 0)
-        {
-            go_throw("malloc deadlock"_s);
-        }
-        if(mp->gsignal == getg())
-        {
-            go_throw("malloc during signal"_s);
-        }
-        mp->mallocing = 1;
-
-        auto shouldhelpgc = false;
-        auto dataSize = userSize;
-        auto c = getMCache(mp);
-        if(c == nullptr)
-        {
-            go_throw("mallocgc called without a P or outside bootstrapping"_s);
-        }
-        mspan* span = {};
-        _type** header = {};
-        gocpp::unsafe_pointer x = {};
-        auto noscan = typ == nullptr || typ->PtrBytes == 0;
-        // In some cases block zeroing can profitably (for latency reduction purposes)
-        // be delayed till preemption is possible; delayedZeroing tracks that state.
-        auto delayedZeroing = false;
-        // Determine if it's a 'small' object that goes into a size-classed span.
-        // Note: This comparison looks a little strange, but it exists to smooth out
-        // the crossover between the largest size class and large objects that have
-        // their own spans. The small window of object sizes between maxSmallSize-mallocHeaderSize
-        // and maxSmallSize will be considered large, even though they might fit in
-        // a size class. In practice this is completely fine, since the largest small
-        // size class has a single object in it already, precisely to make the transition
-        // to large objects smooth.
-        if(size <= maxSmallSize - mallocHeaderSize)
-        {
-            if(noscan && size < maxTinySize)
-            {
-                // Tiny allocator.
-                // Tiny allocator combines several tiny allocation requests
-                // into a single memory block. The resulting memory block
-                // is freed when all subobjects are unreachable. The subobjects
-                // must be noscan (don't have pointers), this ensures that
-                // the amount of potentially wasted memory is bounded.
-                // Size of the memory block used for combining (maxTinySize) is tunable.
-                // Current setting is 16 bytes, which relates to 2x worst case memory
-                // wastage (when all but one subobjects are unreachable).
-                // 8 bytes would result in no wastage at all, but provides less
-                // opportunities for combining.
-                // 32 bytes provides more opportunities for combining,
-                // but can lead to 4x worst case wastage.
-                // The best case winning is 8x regardless of block size.
-                // Objects obtained from tiny allocator must not be freed explicitly.
-                // So when an object will be freed explicitly, we ensure that
-                // its size >= maxTinySize.
-                // SetFinalizer has a special case for objects potentially coming
-                // from tiny allocator, it such case it allows to set finalizers
-                // for an inner byte of a memory block.
-                // The main targets of tiny allocator are small strings and
-                // standalone escaping variables. On a json benchmark
-                // the allocator reduces number of allocations by ~12% and
-                // reduces heap size by ~20%.
-                auto off = c->tinyoffset;
-                // Align tiny pointer for required (conservative) alignment.
-                if(size & 7 == 0)
-                {
-                    off = alignUp(off, 8);
-                }
-                else
-                if(goarch::PtrSize == 4 && size == 12)
-                {
-                    // Conservatively align 12-byte objects to 8 bytes on 32-bit
-                    // systems so that objects whose first field is a 64-bit
-                    // value is aligned to 8 bytes and does not cause a fault on
-                    // atomic access. See issue 37262.
-                    // TODO(mknyszek): Remove this workaround if/when issue 36606
-                    // is resolved.
-                    off = alignUp(off, 8);
-                }
-                else
-                if(size & 3 == 0)
-                {
-                    off = alignUp(off, 4);
-                }
-                else
-                if(size & 1 == 0)
-                {
-                    off = alignUp(off, 2);
-                }
-                if(off + size <= maxTinySize && c->tiny != 0)
-                {
-                    // The object fits into existing tiny block.
-                    x = gocpp::unsafe_pointer(c->tiny + off);
-                    c->tinyoffset = off + size;
-                    c->tinyAllocs++;
-                    mp->mallocing = 0;
-                    releasem(mp);
-                    return x;
-                }
-                // Allocate a new maxTinySize block.
-                span = c->alloc[tinySpanClass];
-                auto v = nextFreeFast(span);
-                if(v == 0)
-                {
-                    std::tie(v, span, shouldhelpgc) = rec::nextFree(gocpp::recv(c), tinySpanClass);
-                }
-                x = gocpp::unsafe_pointer(v);
-                (gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x)[0] = 0;
-                (gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x)[1] = 0;
-                // See if we need to replace the existing tiny block with the new one
-                // based on amount of remaining free space.
-                if(! raceenabled && (size < c->tinyoffset || c->tiny == 0))
-                {
-                    // Note: disabled when race detector is on, see comment near end of this function.
-                    c->tiny = uintptr_t(x);
-                    c->tinyoffset = size;
-                }
-                size = maxTinySize;
+                return mallocgcTinySC2(size, typ, needzero);
             }
             else
             {
-                auto hasHeader = ! noscan && ! heapBitsInSpan(size);
-                if(goexperiment::AllocHeaders && hasHeader)
+                if(! needzero)
                 {
-                    size += mallocHeaderSize;
+                    go_throw("objects with pointers must be zeroed"_s);
                 }
-                uint8_t sizeclass = {};
-                if(size <= smallSizeMax - 8)
+                return mallocScanTable[size](size, typ, needzero);
+            }
+        }
+
+        // It's possible for any malloc to trigger sweeping, which may in
+        // turn queue finalizers. Record this dynamic lock edge.
+        // N.B. Compiled away if lockrank experiment is not enabled.
+        lockRankMayQueueFinalizer();
+
+        // Pre-malloc debug hooks.
+        if(debug.malloc)
+        {
+            if(auto x = preMallocgcDebug(size, typ); x != nullptr)
+            {
+                return x;
+            }
+        }
+
+        // For ASAN, we allocate extra memory around each allocation called the "redzone."
+        // These "redzones" are marked as unaddressable.
+        uintptr_t asanRZ = {};
+        if(asanenabled)
+        {
+            asanRZ = redZoneSize(size);
+            size += asanRZ;
+        }
+
+        // Assist the GC if needed. (On the reuse path, we currently compensate for this;
+        // changes here might require changes there.)
+        if(gcBlackenEnabled != 0)
+        {
+            deductAssistCredit(size);
+        }
+
+        // Actually do the allocation.
+        gocpp::unsafe_pointer x = {};
+        uintptr_t elemsize = {};
+        if(sizeSpecializedMallocEnabled)
+        {
+            if(size <= maxSmallSize - gc::MallocHeaderSize)
+            {
+                if(typ == nullptr || ! rec::Pointers(gocpp::recv(typ)))
                 {
-                    sizeclass = size_to_class8[divRoundUp(size, smallSizeDiv)];
+                    std::tie(x, elemsize) = mallocgcSmallNoscan(size, typ, needzero);
                 }
                 else
                 {
-                    sizeclass = size_to_class128[divRoundUp(size - smallSizeMax, largeSizeDiv)];
+                    if(! needzero)
+                    {
+                        go_throw("objects with pointers must be zeroed"_s);
+                    }
+                    if(heapBitsInSpan(size))
+                    {
+                        std::tie(x, elemsize) = mallocgcSmallScanNoHeader(size, typ);
+                    }
+                    else
+                    {
+                        std::tie(x, elemsize) = mallocgcSmallScanHeader(size, typ);
+                    }
                 }
-                size = uintptr_t(class_to_size[sizeclass]);
-                auto spc = makeSpanClass(sizeclass, noscan);
-                span = c->alloc[spc];
-                auto v = nextFreeFast(span);
-                if(v == 0)
-                {
-                    std::tie(v, span, shouldhelpgc) = rec::nextFree(gocpp::recv(c), spc);
-                }
-                x = gocpp::unsafe_pointer(v);
-                if(needzero && span->needzero != 0)
-                {
-                    memclrNoHeapPointers(x, size);
-                }
-                if(goexperiment::AllocHeaders && hasHeader)
-                {
-                    header = (_type**)(x);
-                    x = add(x, mallocHeaderSize);
-                    size -= mallocHeaderSize;
-                }
+            }
+            else
+            {
+                std::tie(x, elemsize) = mallocgcLarge(size, typ, needzero);
             }
         }
         else
         {
-            shouldhelpgc = true;
-            // For large allocations, keep track of zeroed state so that
-            // bulk zeroing can be happen later in a preemptible context.
-            span = rec::allocLarge(gocpp::recv(c), size, noscan);
-            span->freeindex = 1;
-            span->allocCount = 1;
-            size = span->elemsize;
-            x = gocpp::unsafe_pointer(rec::base(gocpp::recv(span)));
-            if(needzero && span->needzero != 0)
+            if(size <= maxSmallSize - gc::MallocHeaderSize)
             {
-                if(noscan)
+                if(typ == nullptr || ! rec::Pointers(gocpp::recv(typ)))
                 {
-                    delayedZeroing = true;
-                }
-                else
-                {
-                    memclrNoHeapPointers(x, size);
-                }
-            }
-            if(goexperiment::AllocHeaders && ! noscan)
-            {
-                header = & span->largeType;
-            }
-        }
-        if(! noscan)
-        {
-            if(goexperiment::AllocHeaders)
-            {
-                c->scanAlloc += heapSetType(uintptr_t(x), dataSize, typ, header, span);
-            }
-            else
-            {
-                uintptr_t scanSize = {};
-                heapBitsSetType(uintptr_t(x), size, dataSize, typ);
-                if(dataSize > typ->Size_)
-                {
-                    // Array allocation. If there are any
-                    // pointers, GC has to scan to the last
-                    // element.
-                    if(typ->PtrBytes != 0)
+                    // tiny allocations might be kept alive by other co-located values.
+                    // Make sure secret allocations get zeroed by avoiding the tiny allocator
+                    // See go.dev/issue/76356
+                    auto gp = getg();
+                    if(size < maxTinySize && gp->secret == 0)
                     {
-                        scanSize = dataSize - typ->Size_ + typ->PtrBytes;
+                        std::tie(x, elemsize) = mallocgcTiny(size, typ);
+                    }
+                    else
+                    {
+                        std::tie(x, elemsize) = mallocgcSmallNoscan(size, typ, needzero);
                     }
                 }
                 else
                 {
-                    scanSize = typ->PtrBytes;
+                    if(! needzero)
+                    {
+                        go_throw("objects with pointers must be zeroed"_s);
+                    }
+                    if(heapBitsInSpan(size))
+                    {
+                        std::tie(x, elemsize) = mallocgcSmallScanNoHeader(size, typ);
+                    }
+                    else
+                    {
+                        std::tie(x, elemsize) = mallocgcSmallScanHeader(size, typ);
+                    }
                 }
-                c->scanAlloc += scanSize;
             }
+            else
+            {
+                std::tie(x, elemsize) = mallocgcLarge(size, typ, needzero);
+            }
+        }
+
+        auto gp = getg();
+        if(goexperiment::RuntimeSecret && gp->secret > 0)
+        {
+            // Mark any object allocated while in secret mode as secret.
+            // This ensures we zero it immediately when freeing it.
+            addSecret(x, size);
+        }
+
+        // Notify sanitizers, if enabled.
+        if(raceenabled)
+        {
+            racemalloc(x, size - asanRZ);
+        }
+        if(msanenabled)
+        {
+            msanmalloc(x, size - asanRZ);
+        }
+        if(asanenabled)
+        {
+            // Poison the space between the end of the requested size of x
+            // and the end of the slot. Unpoison the requested allocation.
+            auto frag = elemsize - size;
+            if(typ != nullptr && rec::Pointers(gocpp::recv(typ)) && ! heapBitsInSpan(elemsize) && size <= maxSmallSize - gc::MallocHeaderSize)
+            {
+                frag -= gc::MallocHeaderSize;
+            }
+            asanpoison(unsafe::Add(x, size - asanRZ), asanRZ);
+            asanunpoison(x, size - asanRZ);
+        }
+        if(valgrindenabled)
+        {
+            valgrindMalloc(x, size - asanRZ);
+        }
+
+        // Adjust our GC assist debt to account for internal fragmentation.
+        if(gcBlackenEnabled != 0 && elemsize != 0)
+        {
+            if(auto assistG = getg()->m->curg; assistG != nullptr)
+            {
+                assistG->gcAssistBytes -= int64_t(elemsize - size);
+            }
+        }
+
+        // Post-malloc debug hooks.
+        if(debug.malloc)
+        {
+            postMallocgcDebug(x, elemsize, typ);
+        }
+        return x;
+    }
+
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcTiny(uintptr_t size, _type* typ)
+    {
+        // Set mp.mallocing to keep from being preempted by GC.
+        auto mp = acquirem();
+        if(doubleCheckMalloc)
+        {
+            if(mp->mallocing != 0)
+            {
+                go_throw("malloc deadlock"_s);
+            }
+            if(mp->gsignal == getg())
+            {
+                go_throw("malloc during signal"_s);
+            }
+            if(typ != nullptr && rec::Pointers(gocpp::recv(typ)))
+            {
+                go_throw("expected noscan for tiny alloc"_s);
+            }
+        }
+        mp->mallocing = 1;
+
+        // Tiny allocator.
+        // Tiny allocator combines several tiny allocation requests
+        // into a single memory block. The resulting memory block
+        // is freed when all subobjects are unreachable. The subobjects
+        // must be noscan (don't have pointers), this ensures that
+        // the amount of potentially wasted memory is bounded.
+        // Size of the memory block used for combining (maxTinySize) is tunable.
+        // Current setting is 16 bytes, which relates to 2x worst case memory
+        // wastage (when all but one subobjects are unreachable).
+        // 8 bytes would result in no wastage at all, but provides less
+        // opportunities for combining.
+        // 32 bytes provides more opportunities for combining,
+        // but can lead to 4x worst case wastage.
+        // The best case winning is 8x regardless of block size.
+        // Objects obtained from tiny allocator must not be freed explicitly.
+        // So when an object will be freed explicitly, we ensure that
+        // its size >= maxTinySize.
+        // SetFinalizer has a special case for objects potentially coming
+        // from tiny allocator, it such case it allows to set finalizers
+        // for an inner byte of a memory block.
+        // The main targets of tiny allocator are small strings and
+        // standalone escaping variables. On a json benchmark
+        // the allocator reduces number of allocations by ~12% and
+        // reduces heap size by ~20%.
+        auto c = getMCache(mp);
+        auto off = c->tinyoffset;
+        // Align tiny pointer for required (conservative) alignment.
+        if(size & 7 == 0)
+        {
+            off = alignUp(off, 8);
+        }
+        else
+        if(goarch::PtrSize == 4 && size == 12)
+        {
+            // Conservatively align 12-byte objects to 8 bytes on 32-bit
+            // systems so that objects whose first field is a 64-bit
+            // value is aligned to 8 bytes and does not cause a fault on
+            // atomic access. See issue 37262.
+            // TODO(mknyszek): Remove this workaround if/when issue 36606
+            // is resolved.
+            off = alignUp(off, 8);
+        }
+        else
+        if(size & 3 == 0)
+        {
+            off = alignUp(off, 4);
+        }
+        else
+        if(size & 1 == 0)
+        {
+            off = alignUp(off, 2);
+        }
+        if(off + size <= maxTinySize && c->tiny != 0)
+        {
+            // The object fits into existing tiny block.
+            auto x = gocpp::unsafe_pointer(c->tiny + off);
+            c->tinyoffset = off + size;
+            c->tinyAllocs++;
+            mp->mallocing = 0;
+            releasem(mp);
+            return {x, 0};
+        }
+        // Allocate a new maxTinySize block.
+        auto checkGCTrigger = false;
+        auto span = c->alloc[tinySpanClass];
+        auto v = nextFreeFast(span);
+        if(v == 0)
+        {
+            std::tie(v, span, checkGCTrigger) = rec::nextFree(gocpp::recv(c), tinySpanClass);
+        }
+        auto x = gocpp::unsafe_pointer(v);
+        // Always zero
+        (gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x)[0] = 0;
+        (gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x)[1] = 0;
+        // See if we need to replace the existing tiny block with the new one
+        // based on amount of remaining free space.
+        if(! raceenabled && (size < c->tinyoffset || c->tiny == 0))
+        {
+            // Note: disabled when race detector is on, see comment near end of this function.
+            c->tiny = uintptr_t(x);
+            c->tinyoffset = size;
         }
 
         // Ensure that the stores above that initialize x to
@@ -1092,119 +1168,44 @@ namespace golang::runtime
         // the garbage collector could follow a pointer to x,
         // but see uninitialized memory or stale heap bits.
         publicationBarrier();
-        // As x and the heap bits are initialized, update
-        // freeIndexForScan now so x is seen by the GC
-        // (including conservative scan) as an allocated object.
-        // While this pointer can't escape into user code as a
-        // _live_ pointer until we return, conservative scanning
-        // may find a dead pointer that happens to point into this
-        // object. Delaying this update until now ensures that
-        // conservative scanning considers this pointer dead until
-        // this point.
-        span->freeIndexForScan = span->freeindex;
 
-        // Allocate black during GC.
-        // All slots hold nil so no scanning is needed.
-        // This may be racing with GC so do it atomically if there can be
-        // a race marking the bit.
-        if(gcphase != _GCoff)
+        if(writeBarrier.enabled)
         {
+            // Allocate black during GC.
+            // All slots hold nil so no scanning is needed.
+            // This may be racing with GC so do it atomically if there can be
+            // a race marking the bit.
             gcmarknewobject(span, uintptr_t(x));
         }
-
-        if(raceenabled)
+        else
         {
-            racemalloc(x, size);
+            // Track the last free index before the mark phase. This field
+            // is only used by the garbage collector. During the mark phase
+            // this is used by the conservative scanner to filter out objects
+            // that are both free and recently-allocated. It's safe to do that
+            // because we allocate-black if the GC is enabled. The conservative
+            // scanner produces pointers out of thin air, so without additional
+            // synchronization it might otherwise observe a partially-initialized
+            // object, which could crash the program.
+            span->freeIndexForScan = span->freeindex;
         }
 
-        if(msanenabled)
-        {
-            msanmalloc(x, size);
-        }
-
-        if(asanenabled)
-        {
-            // We should only read/write the memory with the size asked by the user.
-            // The rest of the allocated memory should be poisoned, so that we can report
-            // errors when accessing poisoned memory.
-            // The allocated memory is larger than required userSize, it will also include
-            // redzone and some other padding bytes.
-            auto rzBeg = unsafe::Add(x, userSize);
-            asanpoison(rzBeg, size - userSize);
-            asanunpoison(x, userSize);
-        }
-
-        // If !goexperiment.AllocHeaders, "size" doesn't include the
-        // allocation header, so use span.elemsize as the "full" size
-        // for various computations below.
+        // Note cache c only valid while m acquired; see #47302
+        // N.B. Use the full size because that matches how the GC
+        // will update the mem profile on the "free" side.
         // TODO(mknyszek): We should really count the header as part
-        // of gc_sys or something, but it's risky to change the
-        // accounting so much right now. Just pretend its internal
-        // fragmentation and match the GC's accounting by using the
-        // whole allocation slot.
-        auto fullSize = size;
-        if(goexperiment::AllocHeaders)
+        // of gc_sys or something. The code below just pretends it is
+        // internal fragmentation and matches the GC's accounting by
+        // using the whole allocation slot.
+        c->nextSample -= int64_t(span->elemsize);
+        if(c->nextSample < 0 || MemProfileRate != c->memProfRate)
         {
-            fullSize = span->elemsize;
-        }
-        if(auto rate = MemProfileRate; rate > 0)
-        {
-            // Note cache c only valid while m acquired; see #47302
-            // N.B. Use the full size because that matches how the GC
-            // will update the mem profile on the "free" side.
-            if(rate != 1 && fullSize < c->nextSample)
-            {
-                c->nextSample -= fullSize;
-            }
-            else
-            {
-                profilealloc(mp, x, fullSize);
-            }
+            profilealloc(mp, x, span->elemsize);
         }
         mp->mallocing = 0;
         releasem(mp);
 
-        // Pointerfree data can be zeroed late in a context where preemption can occur.
-        // x will keep the memory alive.
-        if(delayedZeroing)
-        {
-            if(! noscan)
-            {
-                go_throw("delayed zeroing on data that may contain pointers"_s);
-            }
-            if(goexperiment::AllocHeaders && header != nullptr)
-            {
-                go_throw("unexpected malloc header in delayed zeroing of large object"_s);
-            }
-            // N.B. size == fullSize always in this case.
-            // This is a possible preemption point: see #47302
-            memclrNoHeapPointersChunked(size, x);
-        }
-
-        if(debug.malloc)
-        {
-            if(debug.allocfreetrace != 0)
-            {
-                tracealloc(x, size, typ);
-            }
-
-            if(inittrace.active && inittrace.id == getg()->goid)
-            {
-                // Init functions are executed sequentially in a single goroutine.
-                inittrace.bytes += uint64_t(fullSize);
-            }
-        }
-
-        if(assistG != nullptr)
-        {
-            // Account for internal fragmentation in the assist
-            // debt now that we know it.
-            // N.B. Use the full size because that's how the rest
-            // of the GC accounts for bytes marked.
-            assistG->gcAssistBytes -= int64_t(fullSize - dataSize);
-        }
-
-        if(shouldhelpgc)
+        if(checkGCTrigger)
         {
             if(auto t = (gocpp::Init<gcTrigger>([=](auto& y) {
                 y.kind = gcTriggerHeap;
@@ -1214,7 +1215,7 @@ namespace golang::runtime
             }
         }
 
-        if(raceenabled && noscan && dataSize < maxTinySize)
+        if(raceenabled)
         {
             // Pad tinysize allocations so they are aligned with the end
             // of the tinyalloc region. This ensures that any arithmetic
@@ -1228,42 +1229,872 @@ namespace golang::runtime
             // TODO: enable this padding for all allocations, not just
             // tinyalloc ones. It's tricky because of pointer maps.
             // Maybe just all noscan objects?
-            x = add(x, size - dataSize);
+            x = add(x, span->elemsize - size);
+        }
+        return {x, span->elemsize};
+    }
+
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcSmallNoscan(uintptr_t size, _type* typ, bool needzero)
+    {
+        // Set mp.mallocing to keep from being preempted by GC.
+        auto mp = acquirem();
+        if(doubleCheckMalloc)
+        {
+            if(mp->mallocing != 0)
+            {
+                go_throw("malloc deadlock"_s);
+            }
+            if(mp->gsignal == getg())
+            {
+                go_throw("malloc during signal"_s);
+            }
+            if(typ != nullptr && rec::Pointers(gocpp::recv(typ)))
+            {
+                go_throw("expected noscan type for noscan alloc"_s);
+            }
+        }
+        mp->mallocing = 1;
+
+        auto checkGCTrigger = false;
+        auto c = getMCache(mp);
+        uint8_t sizeclass = {};
+        if(size <= gc::SmallSizeMax - 8)
+        {
+            sizeclass = gc::SizeToSizeClass8[divRoundUp(size, gc::SmallSizeDiv)];
+        }
+        else
+        {
+            sizeclass = gc::SizeToSizeClass128[divRoundUp(size - gc::SmallSizeMax, gc::LargeSizeDiv)];
+        }
+        size = uintptr_t(gc::SizeClassToSize[sizeclass]);
+        auto spc = makeSpanClass(sizeclass, true);
+        auto span = c->alloc[spc];
+
+        // First, check for a reusable object.
+        if(runtimeFreegcEnabled && rec::hasReusableNoscan(gocpp::recv(c), spc))
+        {
+            // We have a reusable object, use it.
+            auto x = mallocgcSmallNoscanReuse(c, span, spc, size, needzero);
+            mp->mallocing = 0;
+            releasem(mp);
+            return {x, size};
         }
 
+        auto v = nextFreeFast(span);
+        if(v == 0)
+        {
+            std::tie(v, span, checkGCTrigger) = rec::nextFree(gocpp::recv(c), spc);
+        }
+        auto x = gocpp::unsafe_pointer(v);
+        if(needzero && span->needzero != 0)
+        {
+            memclrNoHeapPointers(x, size);
+        }
+
+        // Ensure that the stores above that initialize x to
+        // type-safe memory and set the heap bits occur before
+        // the caller can make x observable to the garbage
+        // collector. Otherwise, on weakly ordered machines,
+        // the garbage collector could follow a pointer to x,
+        // but see uninitialized memory or stale heap bits.
+        publicationBarrier();
+
+        if(writeBarrier.enabled)
+        {
+            // Allocate black during GC.
+            // All slots hold nil so no scanning is needed.
+            // This may be racing with GC so do it atomically if there can be
+            // a race marking the bit.
+            gcmarknewobject(span, uintptr_t(x));
+        }
+        else
+        {
+            // Track the last free index before the mark phase. This field
+            // is only used by the garbage collector. During the mark phase
+            // this is used by the conservative scanner to filter out objects
+            // that are both free and recently-allocated. It's safe to do that
+            // because we allocate-black if the GC is enabled. The conservative
+            // scanner produces pointers out of thin air, so without additional
+            // synchronization it might otherwise observe a partially-initialized
+            // object, which could crash the program.
+            span->freeIndexForScan = span->freeindex;
+        }
+
+        // Note cache c only valid while m acquired; see #47302
+        // N.B. Use the full size because that matches how the GC
+        // will update the mem profile on the "free" side.
+        // TODO(mknyszek): We should really count the header as part
+        // of gc_sys or something. The code below just pretends it is
+        // internal fragmentation and matches the GC's accounting by
+        // using the whole allocation slot.
+        c->nextSample -= int64_t(size);
+        if(c->nextSample < 0 || MemProfileRate != c->memProfRate)
+        {
+            profilealloc(mp, x, size);
+        }
+        mp->mallocing = 0;
+        releasem(mp);
+
+        if(checkGCTrigger)
+        {
+            if(auto t = (gocpp::Init<gcTrigger>([=](auto& y) {
+                y.kind = gcTriggerHeap;
+            })); rec::test(gocpp::recv(t)))
+            {
+                gcStart(t);
+            }
+        }
+        return {x, size};
+    }
+
+    // mallocgcSmallNoscanReuse returns a previously freed noscan object after preparing it for reuse.
+    // It must only be called if hasReusableNoscan returned true.
+    gocpp::unsafe_pointer mallocgcSmallNoscanReuse(mcache* c, mspan* span, spanClass spc, uintptr_t size, bool needzero)
+    {
+        // TODO(thepudds): could nextFreeFast, nextFree and nextReusable return unsafe.Pointer?
+        // Maybe doesn't matter. gclinkptr might be for historical reasons.
+        auto [v, span_tmp] = rec::nextReusableNoScan(gocpp::recv(c), span, spc);
+        auto& span = span_tmp;
+        auto x = gocpp::unsafe_pointer(v);
+
+        // Compensate for the GC assist credit deducted in mallocgc (before calling us and
+        // after we return) because this is not a newly allocated object. We use the full slot
+        // size (elemsize) here because that's what mallocgc deducts overall. Note we only
+        // adjust this when gcBlackenEnabled is true, which follows mallocgc behavior.
+        // TODO(thepudds): a follow-up CL adds a more specific test of our assist credit
+        // handling, including for validating internal fragmentation handling.
+        if(gcBlackenEnabled != 0)
+        {
+            addAssistCredit(size);
+        }
+
+        // This is a previously used object, so only check needzero (and not span.needzero)
+        // for clearing.
+        if(needzero)
+        {
+            memclrNoHeapPointers(x, size);
+        }
+
+        // See publicationBarrier comment in mallocgcSmallNoscan.
+        publicationBarrier();
+
+        // Finish and return. Note that we do not update span.freeIndexForScan, profiling info,
+        // nor do we check gcTrigger.
+        // TODO(thepudds): the current approach is viable for a GOEXPERIMENT, but
+        // means we do not profile reused heap objects. Ultimately, we will need a better
+        // approach for profiling, or at least ensure we are not introducing bias in the
+        // profiled allocations.
+        // TODO(thepudds): related, we probably want to adjust how allocs and frees are counted
+        // in the existing stats. Currently, reused objects are not counted as allocs nor
+        // frees, but instead roughly appear as if the original heap object lived on. We
+        // probably will also want some additional runtime/metrics, and generally think about
+        // user-facing observability & diagnostics, though all this likely can wait for an
+        // official proposal.
+        if(writeBarrier.enabled)
+        {
+            // Allocate black during GC.
+            // All slots hold nil so no scanning is needed.
+            // This may be racing with GC so do it atomically if there can be
+            // a race marking the bit.
+            gcmarknewobject(span, uintptr_t(x));
+        }
         return x;
     }
 
-    // deductAssistCredit reduces the current G's assist credit
-    // by size bytes, and assists the GC if necessary.
-    //
-    // Caller must be preemptible.
-    //
-    // Returns the G for which the assist credit was accounted.
-    g* deductAssistCredit(uintptr_t size)
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcSmallScanNoHeader(uintptr_t size, _type* typ)
     {
-        g* assistG = {};
-        if(gcBlackenEnabled != 0)
+        // Set mp.mallocing to keep from being preempted by GC.
+        auto mp = acquirem();
+        if(doubleCheckMalloc)
         {
-            // Charge the current user G for this allocation.
-            assistG = getg();
-            if(assistG->m->curg != nullptr)
+            if(mp->mallocing != 0)
             {
-                assistG = assistG->m->curg;
+                go_throw("malloc deadlock"_s);
             }
-            // Charge the allocation against the G. We'll account
-            // for internal fragmentation at the end of mallocgc.
-            assistG->gcAssistBytes -= int64_t(size);
-
-            if(assistG->gcAssistBytes < 0)
+            if(mp->gsignal == getg())
             {
-                // This G is in debt. Assist the GC to correct
-                // this before allocating. This must happen
-                // before disabling preemption.
-                gcAssistAlloc(assistG);
+                go_throw("malloc during signal"_s);
+            }
+            if(typ == nullptr || ! rec::Pointers(gocpp::recv(typ)))
+            {
+                go_throw("noscan allocated in scan-only path"_s);
+            }
+            if(! heapBitsInSpan(size))
+            {
+                go_throw("heap bits in not in span for non-header-only path"_s);
             }
         }
-        return assistG;
+        mp->mallocing = 1;
+
+        auto checkGCTrigger = false;
+        auto c = getMCache(mp);
+        auto sizeclass = gc::SizeToSizeClass8[divRoundUp(size, gc::SmallSizeDiv)];
+        auto spc = makeSpanClass(sizeclass, false);
+        auto span = c->alloc[spc];
+        auto v = nextFreeFast(span);
+        if(v == 0)
+        {
+            std::tie(v, span, checkGCTrigger) = rec::nextFree(gocpp::recv(c), spc);
+        }
+        auto x = gocpp::unsafe_pointer(v);
+        if(span->needzero != 0)
+        {
+            memclrNoHeapPointers(x, size);
+        }
+        if(goarch::PtrSize == 8 && sizeclass == 1)
+        {
+            // initHeapBits already set the pointer bits for the 8-byte sizeclass
+            // on 64-bit platforms.
+            c->scanAlloc += 8;
+        }
+        else
+        {
+            c->scanAlloc += heapSetTypeNoHeader(uintptr_t(x), size, typ, span);
+        }
+        size = uintptr_t(gc::SizeClassToSize[sizeclass]);
+
+        // Ensure that the stores above that initialize x to
+        // type-safe memory and set the heap bits occur before
+        // the caller can make x observable to the garbage
+        // collector. Otherwise, on weakly ordered machines,
+        // the garbage collector could follow a pointer to x,
+        // but see uninitialized memory or stale heap bits.
+        publicationBarrier();
+
+        if(writeBarrier.enabled)
+        {
+            // Allocate black during GC.
+            // All slots hold nil so no scanning is needed.
+            // This may be racing with GC so do it atomically if there can be
+            // a race marking the bit.
+            gcmarknewobject(span, uintptr_t(x));
+        }
+        else
+        {
+            // Track the last free index before the mark phase. This field
+            // is only used by the garbage collector. During the mark phase
+            // this is used by the conservative scanner to filter out objects
+            // that are both free and recently-allocated. It's safe to do that
+            // because we allocate-black if the GC is enabled. The conservative
+            // scanner produces pointers out of thin air, so without additional
+            // synchronization it might otherwise observe a partially-initialized
+            // object, which could crash the program.
+            span->freeIndexForScan = span->freeindex;
+        }
+
+        // Note cache c only valid while m acquired; see #47302
+        // N.B. Use the full size because that matches how the GC
+        // will update the mem profile on the "free" side.
+        // TODO(mknyszek): We should really count the header as part
+        // of gc_sys or something. The code below just pretends it is
+        // internal fragmentation and matches the GC's accounting by
+        // using the whole allocation slot.
+        c->nextSample -= int64_t(size);
+        if(c->nextSample < 0 || MemProfileRate != c->memProfRate)
+        {
+            profilealloc(mp, x, size);
+        }
+        mp->mallocing = 0;
+        releasem(mp);
+
+        if(checkGCTrigger)
+        {
+            if(auto t = (gocpp::Init<gcTrigger>([=](auto& y) {
+                y.kind = gcTriggerHeap;
+            })); rec::test(gocpp::recv(t)))
+            {
+                gcStart(t);
+            }
+        }
+        return {x, size};
+    }
+
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcSmallScanHeader(uintptr_t size, _type* typ)
+    {
+        // Set mp.mallocing to keep from being preempted by GC.
+        auto mp = acquirem();
+        if(doubleCheckMalloc)
+        {
+            if(mp->mallocing != 0)
+            {
+                go_throw("malloc deadlock"_s);
+            }
+            if(mp->gsignal == getg())
+            {
+                go_throw("malloc during signal"_s);
+            }
+            if(typ == nullptr || ! rec::Pointers(gocpp::recv(typ)))
+            {
+                go_throw("noscan allocated in scan-only path"_s);
+            }
+            if(heapBitsInSpan(size))
+            {
+                go_throw("heap bits in span for header-only path"_s);
+            }
+        }
+        mp->mallocing = 1;
+
+        auto checkGCTrigger = false;
+        auto c = getMCache(mp);
+        size += gc::MallocHeaderSize;
+        uint8_t sizeclass = {};
+        if(size <= gc::SmallSizeMax - 8)
+        {
+            sizeclass = gc::SizeToSizeClass8[divRoundUp(size, gc::SmallSizeDiv)];
+        }
+        else
+        {
+            sizeclass = gc::SizeToSizeClass128[divRoundUp(size - gc::SmallSizeMax, gc::LargeSizeDiv)];
+        }
+        size = uintptr_t(gc::SizeClassToSize[sizeclass]);
+        auto spc = makeSpanClass(sizeclass, false);
+        auto span = c->alloc[spc];
+        auto v = nextFreeFast(span);
+        if(v == 0)
+        {
+            std::tie(v, span, checkGCTrigger) = rec::nextFree(gocpp::recv(c), spc);
+        }
+        auto x = gocpp::unsafe_pointer(v);
+        if(span->needzero != 0)
+        {
+            memclrNoHeapPointers(x, size);
+        }
+        auto header = (_type**)(x);
+        x = add(x, gc::MallocHeaderSize);
+        c->scanAlloc += heapSetTypeSmallHeader(uintptr_t(x), size - gc::MallocHeaderSize, typ, header, span);
+
+        // Ensure that the stores above that initialize x to
+        // type-safe memory and set the heap bits occur before
+        // the caller can make x observable to the garbage
+        // collector. Otherwise, on weakly ordered machines,
+        // the garbage collector could follow a pointer to x,
+        // but see uninitialized memory or stale heap bits.
+        publicationBarrier();
+
+        if(writeBarrier.enabled)
+        {
+            // Allocate black during GC.
+            // All slots hold nil so no scanning is needed.
+            // This may be racing with GC so do it atomically if there can be
+            // a race marking the bit.
+            gcmarknewobject(span, uintptr_t(x));
+        }
+        else
+        {
+            // Track the last free index before the mark phase. This field
+            // is only used by the garbage collector. During the mark phase
+            // this is used by the conservative scanner to filter out objects
+            // that are both free and recently-allocated. It's safe to do that
+            // because we allocate-black if the GC is enabled. The conservative
+            // scanner produces pointers out of thin air, so without additional
+            // synchronization it might otherwise observe a partially-initialized
+            // object, which could crash the program.
+            span->freeIndexForScan = span->freeindex;
+        }
+
+        // Note cache c only valid while m acquired; see #47302
+        // N.B. Use the full size because that matches how the GC
+        // will update the mem profile on the "free" side.
+        // TODO(mknyszek): We should really count the header as part
+        // of gc_sys or something. The code below just pretends it is
+        // internal fragmentation and matches the GC's accounting by
+        // using the whole allocation slot.
+        c->nextSample -= int64_t(size);
+        if(c->nextSample < 0 || MemProfileRate != c->memProfRate)
+        {
+            profilealloc(mp, x, size);
+        }
+        mp->mallocing = 0;
+        releasem(mp);
+
+        if(checkGCTrigger)
+        {
+            if(auto t = (gocpp::Init<gcTrigger>([=](auto& y) {
+                y.kind = gcTriggerHeap;
+            })); rec::test(gocpp::recv(t)))
+            {
+                gcStart(t);
+            }
+        }
+        return {x, size};
+    }
+
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcLarge(uintptr_t size, _type* typ, bool needzero)
+    {
+        // Set mp.mallocing to keep from being preempted by GC.
+        auto mp = acquirem();
+        if(doubleCheckMalloc)
+        {
+            if(mp->mallocing != 0)
+            {
+                go_throw("malloc deadlock"_s);
+            }
+            if(mp->gsignal == getg())
+            {
+                go_throw("malloc during signal"_s);
+            }
+        }
+        mp->mallocing = 1;
+
+        auto c = getMCache(mp);
+        // For large allocations, keep track of zeroed state so that
+        // bulk zeroing can be happen later in a preemptible context.
+        auto span = rec::allocLarge(gocpp::recv(c), size, typ == nullptr || ! rec::Pointers(gocpp::recv(typ)));
+        span->freeindex = 1;
+        span->allocCount = 1;
+        // Tell the GC not to look at this yet.
+        span->largeType = nullptr;
+        size = span->elemsize;
+        auto x = gocpp::unsafe_pointer(rec::base(gocpp::recv(span)));
+
+        // Ensure that the store above that sets largeType to
+        // nil happens before the caller can make x observable
+        // to the garbage collector.
+        // Otherwise, on weakly ordered machines, the garbage
+        // collector could follow a pointer to x, but see a stale
+        // largeType value.
+        publicationBarrier();
+
+        if(writeBarrier.enabled)
+        {
+            // Allocate black during GC.
+            // All slots hold nil so no scanning is needed.
+            // This may be racing with GC so do it atomically if there can be
+            // a race marking the bit.
+            gcmarknewobject(span, uintptr_t(x));
+        }
+        else
+        {
+            // Track the last free index before the mark phase. This field
+            // is only used by the garbage collector. During the mark phase
+            // this is used by the conservative scanner to filter out objects
+            // that are both free and recently-allocated. It's safe to do that
+            // because we allocate-black if the GC is enabled. The conservative
+            // scanner produces pointers out of thin air, so without additional
+            // synchronization it might otherwise observe a partially-initialized
+            // object, which could crash the program.
+            span->freeIndexForScan = span->freeindex;
+        }
+
+        // Note cache c only valid while m acquired; see #47302
+        // N.B. Use the full size because that matches how the GC
+        // will update the mem profile on the "free" side.
+        // TODO(mknyszek): We should really count the header as part
+        // of gc_sys or something. The code below just pretends it is
+        // internal fragmentation and matches the GC's accounting by
+        // using the whole allocation slot.
+        c->nextSample -= int64_t(size);
+        if(c->nextSample < 0 || MemProfileRate != c->memProfRate)
+        {
+            profilealloc(mp, x, size);
+        }
+        mp->mallocing = 0;
+        releasem(mp);
+
+        // Check to see if we need to trigger the GC.
+        if(auto t = (gocpp::Init<gcTrigger>([=](auto& y) {
+            y.kind = gcTriggerHeap;
+        })); rec::test(gocpp::recv(t)))
+        {
+            gcStart(t);
+        }
+
+        // Objects can be zeroed late in a context where preemption can occur.
+        // x will keep the memory alive.
+        if(needzero && span->needzero != 0)
+        {
+            // N.B. size == fullSize always in this case.
+            // This is a possible preemption point: see #47302
+            memclrNoHeapPointersChunked(size, x);
+        }
+
+        // Set the type and run the publication barrier while non-preemptible. We need to make
+        // sure that between heapSetTypeLarge and publicationBarrier we cannot get preempted,
+        // otherwise the GC could potentially observe non-zeroed memory but largeType set on weak
+        // memory architectures.
+        // The GC can also potentially observe non-zeroed memory if conservative scanning spuriously
+        // observes a partially-allocated object, see the freeIndexForScan update above. This case is
+        // handled by synchronization inside heapSetTypeLarge.
+        mp = acquirem();
+        if(typ != nullptr && rec::Pointers(gocpp::recv(typ)))
+        {
+            // Finish storing the type information, now that we're certain the memory is zeroed.
+            getMCache(mp)->scanAlloc += heapSetTypeLarge(uintptr_t(x), size, typ, span);
+        }
+        // Publish the object again, now with zeroed memory and initialized type information.
+        // Even if we didn't update any type information, this is necessary to ensure that, for example,
+        // x written to a global without any synchronization still results in other goroutines observing
+        // zeroed memory.
+        publicationBarrier();
+        releasem(mp);
+        return {x, size};
+    }
+
+    gocpp::unsafe_pointer preMallocgcDebug(uintptr_t size, _type* typ)
+    {
+        if(debug.sbrk != 0)
+        {
+            auto align = uintptr_t(16);
+            if(typ != nullptr)
+            {
+                // TODO(austin): This should be just
+                // align = uintptr(typ.align)
+                // but that's only 4 on 32-bit platforms,
+                // even if there's a uint64 field in typ (see #599).
+                // This causes 64-bit atomic accesses to panic.
+                // Hence, we use stricter alignment that matches
+                // the normal allocator better.
+                if(size & 7 == 0)
+                {
+                    align = 8;
+                }
+                else
+                if(size & 3 == 0)
+                {
+                    align = 4;
+                }
+                else
+                if(size & 1 == 0)
+                {
+                    align = 2;
+                }
+                else
+                {
+                    align = 1;
+                }
+            }
+            return persistentalloc(size, align, & memstats.other_sys);
+        }
+        if(inittrace.active && inittrace.id == getg()->goid)
+        {
+            // Init functions are executed sequentially in a single goroutine.
+            inittrace.allocs += 1;
+        }
+        return nullptr;
+    }
+
+    void postMallocgcDebug(gocpp::unsafe_pointer x, uintptr_t elemsize, _type* typ)
+    {
+        if(inittrace.active && inittrace.id == getg()->goid)
+        {
+            // Init functions are executed sequentially in a single goroutine.
+            inittrace.bytes += uint64_t(elemsize);
+        }
+
+        if(traceAllocFreeEnabled())
+        {
+            auto trace = traceAcquire();
+            if(rec::ok(gocpp::recv(trace)))
+            {
+                rec::HeapObjectAlloc(gocpp::recv(trace), uintptr_t(x), typ);
+                traceRelease(trace);
+            }
+        }
+
+        // N.B. elemsize == 0 indicates a tiny allocation, since no new slot was
+        // allocated to fulfill this call to mallocgc. This means checkfinalizer
+        // will only flag an error if there is actually any risk. If an allocation
+        // has the tiny block to itself, it will not get flagged, because we won't
+        // mark the block as a tiny block.
+        if(debug.checkfinalizers != 0 && elemsize == 0)
+        {
+            setTinyBlockContext(gocpp::unsafe_pointer(alignDown(uintptr_t(x), maxTinySize)));
+        }
+    }
+
+    // addAssistCredit is like deductAssistCredit,
+    // but adds credit rather than removes,
+    // and never calls gcAssistAlloc.
+    void addAssistCredit(uintptr_t size)
+    {
+        // Credit the current user G.
+        auto assistG = getg();
+        if(assistG->m->curg != nullptr)
+        {
+            // TODO(thepudds): do we need to do this?
+            assistG = assistG->m->curg;
+        }
+        // Credit the size against the G.
+        assistG->gcAssistBytes += int64_t(size);
+    }
+
+    // freegc records that a heap object is reusable and available for
+    // immediate reuse in a subsequent mallocgc allocation, without
+    // needing to wait for the GC cycle to progress.
+    //
+    // The information is recorded in a free list stored in the
+    // current P's mcache. The caller must pass in the user size
+    // and whether the object has pointers, which allows a faster free
+    // operation.
+    //
+    // freegc must be called by the effective owner of ptr who knows
+    // the pointer is logically dead, with no possible aliases that might
+    // be used past that moment. In other words, ptr must be the
+    // last and only pointer to its referent.
+    //
+    // The intended caller is the compiler.
+    //
+    // Note: please do not send changes that attempt to add freegc calls
+    // to the standard library.
+    //
+    // ptr must point to a heap object or into the current g's stack,
+    // in which case freegc is a no-op. In particular, ptr must not point
+    // to memory in the data or bss sections, which is partially enforced.
+    // For objects with a malloc header, ptr should point mallocHeaderSize bytes
+    // past the base; otherwise, ptr should point to the base of the heap object.
+    // In other words, ptr should be the same pointer that was returned by mallocgc.
+    //
+    // In addition, the caller must know that ptr's object has no specials, such
+    // as might have been created by a call to SetFinalizer or AddCleanup.
+    // (Internally, the runtime deals appropriately with internally-created
+    // specials, such as specials for memory profiling).
+    //
+    // If the size of ptr's object is less than 16 bytes or greater than
+    // 32KiB - gc.MallocHeaderSize bytes, freegc is currently a no-op. It must only
+    // be called in alloc-safe places. It currently throws if noscan is false
+    // (support for which is implemented in a later CL in our stack).
+    //
+    // Note that freegc accepts an unsafe.Pointer and hence keeps the pointer
+    // alive. It therefore could be a pessimization in some cases (such
+    // as a long-lived function) if the caller does not call freegc before
+    // or roughly when the liveness analysis of the compiler
+    // would otherwise have determined ptr's object is reclaimable by the GC.
+    bool freegc(gocpp::unsafe_pointer ptr, uintptr_t size, bool noscan)
+    {
+        if(! runtimeFreegcEnabled || ! reusableSize(size))
+        {
+            return false;
+        }
+        if(sizeSpecializedMallocEnabled && ! noscan)
+        {
+            // TODO(thepudds): temporarily disable freegc with SizeSpecializedMalloc for pointer types
+            // until we finish integrating.
+            return false;
+        }
+
+        if(ptr == nullptr)
+        {
+            go_throw("freegc nil"_s);
+        }
+
+        // Set mp.mallocing to keep from being preempted by GC.
+        // Otherwise, the GC could flush our mcache or otherwise cause problems.
+        auto mp = acquirem();
+        if(mp->mallocing != 0)
+        {
+            go_throw("freegc deadlock"_s);
+        }
+        if(mp->gsignal == getg())
+        {
+            go_throw("freegc during signal"_s);
+        }
+        mp->mallocing = 1;
+
+        if(mp->curg->stack.lo <= uintptr_t(ptr) && uintptr_t(ptr) < mp->curg->stack.hi)
+        {
+            // This points into our stack, so free is a no-op.
+            mp->mallocing = 0;
+            releasem(mp);
+            return false;
+        }
+
+        if(doubleCheckReusable)
+        {
+            // TODO(thepudds): we could enforce no free on globals in bss or data. Maybe by
+            // checking span via spanOf or spanOfHeap, or maybe walk from firstmoduledata
+            // like isGoPointerWithoutSpan, or activeModules, or something. If so, we might
+            // be able to delay checking until reuse (e.g., check span just before reusing,
+            // though currently we don't always need to lookup a span on reuse). If we think
+            // no usage patterns could result in globals, maybe enforcement for globals could
+            // be behind -d=checkptr=1 or similar. The compiler can have knowledge of where
+            // a variable is allocated, but stdlib does not, although there are certain
+            // usage patterns that cannot result in a global.
+            // TODO(thepudds): separately, consider a local debugReusableMcacheOnly here
+            // to ignore freed objects if not in mspan in mcache,  maybe when freeing and reading,
+            // by checking something like s.base() <= uintptr(v) && uintptr(v) < s.limit. Or
+            // maybe a GODEBUG or compiler debug flag.
+            auto span = spanOf(uintptr_t(ptr));
+            if(span == nullptr)
+            {
+                go_throw("nextReusable: nil span for pointer in free list"_s);
+            }
+            if(auto state = rec::get(gocpp::recv(span->state)); state != mSpanInUse)
+            {
+                go_throw("nextReusable: span is not in use"_s);
+            }
+        }
+
+        if(debug.clobberfree != 0)
+        {
+            clobberfree(ptr, size);
+        }
+
+        // We first check if p is still in our per-P cache.
+        // Get our per-P cache for small objects.
+        auto c = getMCache(mp);
+        if(c == nullptr)
+        {
+            go_throw("freegc called without a P or outside bootstrapping"_s);
+        }
+
+        auto v = uintptr_t(ptr);
+        if(! noscan && ! heapBitsInSpan(size))
+        {
+            // mallocgcSmallScanHeader expects to get the base address of the object back
+            // from the findReusable funcs (as well as from nextFreeFast and nextFree), and
+            // not mallocHeaderSize bytes into a object, so adjust that here.
+            v -= mallocHeaderSize;
+
+            // The size class lookup wants size to be adjusted by mallocHeaderSize.
+            size += mallocHeaderSize;
+        }
+
+        // TODO(thepudds): should verify (behind doubleCheckReusable constant) that our calculated
+        // sizeclass here matches what's in span found via spanOf(ptr) or findObject(ptr).
+        uint8_t sizeclass = {};
+        if(size <= gc::SmallSizeMax - 8)
+        {
+            sizeclass = gc::SizeToSizeClass8[divRoundUp(size, gc::SmallSizeDiv)];
+        }
+        else
+        {
+            sizeclass = gc::SizeToSizeClass128[divRoundUp(size - gc::SmallSizeMax, gc::LargeSizeDiv)];
+        }
+
+        auto spc = makeSpanClass(sizeclass, noscan);
+        auto s = c->alloc[spc];
+
+        if(debugReusableLog)
+        {
+            if(rec::base(gocpp::recv(s)) <= uintptr_t(v) && uintptr_t(v) < s->limit)
+            {
+                println("freegc [in mcache]:"_s, hex(uintptr_t(v)), "sweepgen:"_s, mheap_.sweepgen, "writeBarrier.enabled:"_s, writeBarrier.enabled);
+            }
+            else
+            {
+                println("freegc [NOT in mcache]:"_s, hex(uintptr_t(v)), "sweepgen:"_s, mheap_.sweepgen, "writeBarrier.enabled:"_s, writeBarrier.enabled);
+            }
+        }
+
+        if(noscan)
+        {
+            rec::addReusableNoscan(gocpp::recv(c), spc, uintptr_t(v));
+        }
+        else
+        {
+            // TODO(thepudds): implemented in later CL in our stack.
+            go_throw("freegc called for object with pointers, not yet implemented"_s);
+        }
+
+        // For stats, for now we leave allocCount alone, roughly pretending to the rest
+        // of the system that this potential reuse never happened.
+        mp->mallocing = 0;
+        releasem(mp);
+
+        return true;
+    }
+
+    // nextReusableNoScan returns the next reusable object for a noscan span,
+    // or 0 if no reusable object is found.
+    std::tuple<gclinkptr, mspan*> rec::nextReusableNoScan(mcache* c, mspan* s, spanClass spc)
+    {
+        if(! runtimeFreegcEnabled)
+        {
+            return {0, s};
+        }
+
+        // Pop a reusable pointer from the free list for this span class.
+        auto v = c->reusableNoscan[spc];
+        if(v == 0)
+        {
+            return {0, s};
+        }
+        c->reusableNoscan[spc] = rec::ptr(gocpp::recv(v))->next;
+
+        if(debugReusableLog)
+        {
+            println("reusing from ptr free list:"_s, hex(v), "sweepgen:"_s, mheap_.sweepgen, "writeBarrier.enabled:"_s, writeBarrier.enabled);
+        }
+        if(doubleCheckReusable)
+        {
+            // debug only sanity check
+            doubleCheckNextReusable(v);
+        }
+
+        // For noscan spans, we only need the span if the write barrier is enabled (so that our caller
+        // can call gcmarknewobject to allocate black). If the write barrier is enabled, we can skip
+        // looking up the span when the pointer is in a span in the mcache.
+        if(! writeBarrier.enabled)
+        {
+            return {v, nullptr};
+        }
+        if(rec::base(gocpp::recv(s)) <= uintptr_t(v) && uintptr_t(v) < s->limit)
+        {
+            // Return the original span.
+            return {v, s};
+        }
+
+        // We must find and return the span.
+        auto span = spanOf(uintptr_t(v));
+        if(span == nullptr)
+        {
+            // TODO(thepudds): construct a test that triggers this throw.
+            go_throw("nextReusableNoScan: nil span for pointer in reusable object free list"_s);
+        }
+
+        return {v, span};
+    }
+
+    // doubleCheckNextReusable checks some invariants.
+    // TODO(thepudds): will probably delete some of this. Can mostly be ignored for review.
+    void doubleCheckNextReusable(gclinkptr v)
+    {
+        // TODO(thepudds): should probably take the spanClass as well to confirm expected
+        // sizeclass match.
+        auto [gocpp_id_0, span, objIndex] = findObject(uintptr_t(v), 0, 0);
+        if(span == nullptr)
+        {
+            go_throw("nextReusable: nil span for pointer in free list"_s);
+        }
+        if(auto state = rec::get(gocpp::recv(span->state)); state != mSpanInUse)
+        {
+            go_throw("nextReusable: span is not in use"_s);
+        }
+        if(uintptr_t(v) < rec::base(gocpp::recv(span)) || uintptr_t(v) >= span->limit)
+        {
+            go_throw("nextReusable: span is not in range"_s);
+        }
+        if(rec::objBase(gocpp::recv(span), uintptr_t(v)) != uintptr_t(v))
+        {
+            print("nextReusable: v="_s, hex(v), " base="_s, hex(rec::objBase(gocpp::recv(span), uintptr_t(v))), "\n"_s);
+            go_throw("nextReusable: v is non-base-address for object found on pointer free list"_s);
+        }
+        if(rec::isFree(gocpp::recv(span), objIndex))
+        {
+            go_throw("nextReusable: pointer on free list is free"_s);
+        }
+
+        auto debugReusableEnsureSwept = false;
+        if(debugReusableEnsureSwept)
+        {
+            // Currently disabled.
+            // Note: ensureSwept here alters behavior (not just an invariant check).
+            rec::ensureSwept(gocpp::recv(span));
+            if(rec::isFree(gocpp::recv(span), objIndex))
+            {
+                go_throw("nextReusable: pointer on free list is free after ensureSwept"_s);
+            }
+        }
+    }
+
+    // reusableSize reports if size is a currently supported size for a reusable object.
+    bool reusableSize(uintptr_t size)
+    {
+        if(size < maxTinySize || size > maxSmallSize - mallocHeaderSize)
+        {
+            return false;
+        }
+        return true;
     }
 
     // memclrNoHeapPointersChunked repeatedly calls memclrNoHeapPointers
@@ -1305,6 +2136,23 @@ namespace golang::runtime
         return mallocgc(typ->Size_, typ, true);
     }
 
+    //go:linkname maps_newobject internal/runtime/maps.newobject
+    gocpp::unsafe_pointer maps_newobject(_type* typ)
+    {
+        return newobject(typ);
+    }
+
+    // reflect_unsafe_New is meant for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gitee.com/quant1x/gox
+    //   - github.com/goccy/json
+    //   - github.com/modern-go/reflect2
+    //   - github.com/v2pro/plz
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname reflect_unsafe_New reflect.unsafe_New
     gocpp::unsafe_pointer reflect_unsafe_New(_type* typ)
     {
@@ -1318,6 +2166,18 @@ namespace golang::runtime
     }
 
     // newarray allocates an array of n elements of type typ.
+    //
+    // newarray should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/RomiChan/protobuf
+    //   - github.com/segmentio/encoding
+    //   - github.com/ugorji/go/codec
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname newarray
     gocpp::unsafe_pointer newarray(_type* typ, int n)
     {
         if(n == 1)
@@ -1332,12 +2192,36 @@ namespace golang::runtime
         return mallocgc(mem, typ, true);
     }
 
+    // reflect_unsafe_NewArray is meant for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gitee.com/quant1x/gox
+    //   - github.com/bytedance/sonic
+    //   - github.com/goccy/json
+    //   - github.com/modern-go/reflect2
+    //   - github.com/segmentio/encoding
+    //   - github.com/segmentio/kafka-go
+    //   - github.com/v2pro/plz
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname reflect_unsafe_NewArray reflect.unsafe_NewArray
     gocpp::unsafe_pointer reflect_unsafe_NewArray(_type* typ, int n)
     {
         return newarray(typ, n);
     }
 
+    //go:linkname maps_newarray internal/runtime/maps.newarray
+    gocpp::unsafe_pointer maps_newarray(_type* typ, int n)
+    {
+        return newarray(typ, n);
+    }
+
+    // profilealloc resets the current mcache's nextSample counter and
+    // records a memory profile sample.
+    //
+    // The caller must be non-preemptible and have a P.
     void profilealloc(m* mp, gocpp::unsafe_pointer x, uintptr_t size)
     {
         auto c = getMCache(mp);
@@ -1345,8 +2229,9 @@ namespace golang::runtime
         {
             go_throw("profilealloc called without a P or outside bootstrapping"_s);
         }
+        c->memProfRate = MemProfileRate;
         c->nextSample = nextSample();
-        mProf_Malloc(x, size);
+        mProf_Malloc(mp, x, size);
     }
 
     // nextSample returns the next sampling point for heap profiling. The goal is
@@ -1356,26 +2241,19 @@ namespace golang::runtime
     // processes, the distance between two samples follows the exponential
     // distribution (exp(MemProfileRate)), so the best return value is a random
     // number taken from an exponential distribution whose mean is MemProfileRate.
-    uintptr_t nextSample()
+    int64_t nextSample()
     {
+        if(MemProfileRate == 0)
+        {
+            // Basically never sample.
+            return math::MaxInt64;
+        }
         if(MemProfileRate == 1)
         {
-            // Callers assign our return value to
-            // mcache.next_sample, but next_sample is not used
-            // when the rate is 1. So avoid the math below and
-            // just return something.
+            // Sample immediately.
             return 0;
         }
-        if(GOOS == "plan9"_s)
-        {
-            // Plan 9 doesn't support floating point in note handler.
-            if(auto gp = getg(); gp == gp->m->gsignal)
-            {
-                return nextSampleNoFP();
-            }
-        }
-
-        return uintptr_t(fastexprand(MemProfileRate));
+        return int64_t(fastexprand(MemProfileRate));
     }
 
     // fastexprand returns a random number from an exponential distribution with
@@ -1418,24 +2296,6 @@ namespace golang::runtime
         // -ln(2)
         auto minusLog2 = - 0.6931471805599453;
         return int32_t(qlog * (minusLog2 * double(mean))) + 1;
-    }
-
-    // nextSampleNoFP is similar to nextSample, but uses older,
-    // simpler code to avoid floating point.
-    uintptr_t nextSampleNoFP()
-    {
-        // Set first allocation sample size.
-        auto rate = MemProfileRate;
-        if(rate > 0x3fffffff)
-        {
-            // make 2*rate not overflow
-            rate = 0x3fffffff;
-        }
-        if(rate != 0)
-        {
-            return uintptr_t(cheaprandn(uint32_t(2 * rate)));
-        }
-        return 0;
     }
 
     
@@ -1516,7 +2376,11 @@ namespace golang::runtime
     // sysStat must be non-nil.
     //
     // Consider marking persistentalloc'd types not in heap by embedding
-    // runtime/internal/sys.NotInHeap.
+    // internal/runtime/sys.NotInHeap.
+    //
+    // nosplit because it is used during write barriers and must not be preempted.
+    //
+    //go:nosplit
     gocpp::unsafe_pointer persistentalloc(uintptr_t size, uintptr_t align, sysMemStat* sysStat)
     {
         notInHeap* p = {};
@@ -1545,7 +2409,7 @@ namespace golang::runtime
             {
                 go_throw("persistentalloc: align is not a power of 2"_s);
             }
-            if(align > _PageSize)
+            if(align > pageSize)
             {
                 go_throw("persistentalloc: align is too large"_s);
             }
@@ -1557,7 +2421,7 @@ namespace golang::runtime
 
         if(size >= maxBlock)
         {
-            return (notInHeap*)(sysAlloc(size, sysStat));
+            return (notInHeap*)(sysAlloc(size, sysStat, "immortal metadata"_s));
         }
 
         auto mp = acquirem();
@@ -1574,7 +2438,7 @@ namespace golang::runtime
         persistent->off = alignUp(persistent->off, align);
         if(persistent->off + size > persistentChunkSize || persistent->base == nullptr)
         {
-            persistent->base = (notInHeap*)(sysAlloc(persistentChunkSize, & memstats.other_sys));
+            persistent->base = (notInHeap*)(sysAlloc(persistentChunkSize, & memstats.other_sys, "immortal metadata"_s));
             if(persistent->base == nullptr)
             {
                 if(persistent == & globalAlloc.persistentAlloc)
@@ -1689,7 +2553,7 @@ namespace golang::runtime
         l->mapMemory = mapMemory;
     }
 
-    gocpp::unsafe_pointer rec::alloc(linearAlloc* l, uintptr_t size, uintptr_t align, sysMemStat* sysStat)
+    gocpp::unsafe_pointer rec::alloc(linearAlloc* l, uintptr_t size, uintptr_t align, sysMemStat* sysStat, gocpp::string vmaName)
     {
         auto p = alignUp(l->next, align);
         if(p + size > l->end)
@@ -1703,7 +2567,7 @@ namespace golang::runtime
             {
                 // Transition from Reserved to Prepared to Ready.
                 auto n = pEnd - l->mapped;
-                sysMap(gocpp::unsafe_pointer(l->mapped), n, sysStat);
+                sysMap(gocpp::unsafe_pointer(l->mapped), n, sysStat, vmaName);
                 sysUsed(gocpp::unsafe_pointer(l->mapped), n, n);
             }
             l->mapped = pEnd;
@@ -1715,7 +2579,7 @@ namespace golang::runtime
     // like sysAlloc or persistentAlloc.
     //
     // In general, it's better to use real types which embed
-    // runtime/internal/sys.NotInHeap, but this serves as a generic type
+    // internal/runtime/sys.NotInHeap, but this serves as a generic type
     // for situations where that isn't possible (like in the allocators).
     //
     // TODO: Use this as the return type of sysAlloc, persistentAlloc, etc?
@@ -1753,9 +2617,9 @@ namespace golang::runtime
         return (notInHeap*)(gocpp::unsafe_pointer(uintptr_t(gocpp::unsafe_pointer(p)) + bytes));
     }
 
-    // computeRZlog computes the size of the redzone.
+    // redZoneSize computes the size of the redzone for a given allocation.
     // Refer to the implementation of the compiler-rt.
-    uintptr_t computeRZlog(uintptr_t userSize)
+    uintptr_t redZoneSize(uintptr_t userSize)
     {
         //Go switch emulation
         {

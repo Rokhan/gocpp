@@ -15,10 +15,29 @@ namespace golang::runtime
     gocpp::string gogetenv(gocpp::string key);
     bool envKeyEqual(gocpp::string a, gocpp::string b);
     unsigned char lowerASCII(unsigned char c);
-    extern gocpp::unsafe_pointer _cgo_setenv;
-    extern gocpp::unsafe_pointer _cgo_unsetenv;
     void setenv_c(gocpp::string k, gocpp::string v);
     void unsetenv_c(gocpp::string k);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    // _cgo_setenv should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ebitengine/purego
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname _cgo_setenv
+    extern gocpp::unsafe_pointer _cgo_setenv;
+    // _cgo_unsetenv should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ebitengine/purego
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname _cgo_unsetenv
+    extern gocpp::unsafe_pointer _cgo_unsetenv;
     gocpp::unsafe_pointer cstring(gocpp::string s);
 
     namespace rec

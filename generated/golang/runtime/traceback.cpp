@@ -12,15 +12,20 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/symtab.h"
+#include "golang/internal/abi/type.h"
 #include "golang/internal/bytealg/indexbyte_native.h"
 #include "golang/internal/goarch/goarch.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/pprof/label/labelset.h"
+#include "golang/internal/runtime/sys/consts.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
+#include "golang/internal/stringslite/strings.h"
 #include "golang/runtime/alg.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/cgo.h"
 #include "golang/runtime/cgocall.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
+#include "golang/runtime/hexdump.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/msan0.h"
 #include "golang/runtime/panic.h"
@@ -33,10 +38,18 @@
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/symtabinl.h"
+#include "golang/runtime/synctest.h"
 #include "golang/runtime/time_nofake.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace bytealg = golang::internal::bytealg;
+    namespace goarch = golang::internal::goarch;
+    namespace label = golang::internal::runtime::pprof::label;
+    namespace stringslite = golang::internal::stringslite;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::Load;
@@ -135,7 +148,7 @@ namespace golang::runtime
             // on another stack. That could confuse callers quite a bit.
             // Instead, we require that initAt and any other function that
             // accepts an sp for the current goroutine (typically obtained by
-            // calling getcallersp) must not run on that goroutine's stack but
+            // calling GetCallerSP) must not run on that goroutine's stack but
             // instead on the g0 stack.
             go_throw("cannot trace user goroutine on its own stack"_s);
         }
@@ -187,8 +200,8 @@ namespace golang::runtime
             }
         }
 
-        // runtime/internal/atomic functions call into kernel helpers on
-        // arm < 7. See runtime/internal/atomic/sys_linux_arm.s.
+        // internal/runtime/atomic functions call into kernel helpers on
+        // arm < 7. See internal/runtime/atomic/sys_linux_arm.s.
         // Start in the caller's frame.
         if(GOARCH == "arm"_s && goarm < 7 && GOOS == "linux"_s && frame.pc & 0xffff0000 == 0xffff0000)
         {
@@ -469,7 +482,7 @@ namespace golang::runtime
             // gp._defer for a defer corresponding to this function, but that
             // is hard to do with defer records on the stack during a stack copy.)
             // Note: the +1 is to offset the -1 that
-            // stack.go:getStackMap does to back up a return
+            // (*stkframe).getStackMap does to back up a return
             // address make sure the pc is in the CALL instruction.
             // Note: this may perhaps keep return variables alive longer than
             // strictly necessary, as we are using "function has a defer statement"
@@ -478,12 +491,17 @@ namespace golang::runtime
             // gp._defer for a defer corresponding to this function, but that
             // is hard to do with defer records on the stack during a stack copy.)
             // Note: the +1 is to offset the -1 that
-            // stack.go:getStackMap does to back up a return
+            // (*stkframe).getStackMap does to back up a return
             // address make sure the pc is in the CALL instruction.
             {
                 frame->continpc = 0;
             }
         }
+    }
+
+    bool isInjectedCall(abi::FuncID id)
+    {
+        return id == abi::FuncID_sigpanic || id == abi::FuncID_asyncPreempt || id == abi::FuncID_debugCallV2;
     }
 
     void rec::next(unwinder* u)
@@ -507,7 +525,7 @@ namespace golang::runtime
             // get everything, so crash loudly.
             auto fail = u->flags & (unwindPrintErrors | unwindSilentErrors) == 0;
             auto doPrint = u->flags & unwindSilentErrors == 0;
-            if(doPrint && gp->m->incgo && f._func.funcID == abi::FuncID_sigpanic)
+            if(doPrint && gp->m != nullptr && gp->m->incgo && f._func.funcID == abi::FuncID_sigpanic)
             {
                 // We can inject sigpanic
                 // calls directly into C code,
@@ -537,7 +555,7 @@ namespace golang::runtime
             go_throw("traceback stuck"_s);
         }
 
-        auto injectedCall = f._func.funcID == abi::FuncID_sigpanic || f._func.funcID == abi::FuncID_asyncPreempt || f._func.funcID == abi::FuncID_debugCallV2;
+        auto injectedCall = isInjectedCall(f._func.funcID);
         if(injectedCall)
         {
             u->flags |= unwindTrap;
@@ -560,6 +578,7 @@ namespace golang::runtime
         if(usesLR && injectedCall)
         {
             auto x = *(uintptr_t*)(gocpp::unsafe_pointer(frame->sp));
+            // same as the size bump used in scanframeworker.
             frame->sp += alignUp(sys::MinFrameSize, sys::StackAlign);
             f = findfunc(frame->pc);
             frame->fn = f;
@@ -656,7 +675,7 @@ namespace golang::runtime
     // unwinder, it returns 0.
     int rec::cgoCallers(unwinder* u, gocpp::slice<uintptr_t> pcBuf)
     {
-        if(cgoTraceback == nullptr || u->frame.fn._func.funcID != abi::FuncID_cgocallback || u->cgoCtxt < 0)
+        if(! cgoTracebackAvailable() || u->frame.fn._func.funcID != abi::FuncID_cgocallback || u->cgoCtxt < 0)
         {
             // We don't have a cgo unwinder (typical case), or we do but we're not
             // in a cgo frame or we're out of cgo context.
@@ -710,8 +729,11 @@ namespace golang::runtime
                 else
                 {
                     // Callers expect the pc buffer to contain return addresses
-                    // and do the -1 themselves, so we add 1 to the call PC to
-                    // create a return PC.
+                    // and do the -1 themselves, so we add 1 to the call pc to
+                    // create a "return pc". Since there is no actual call, here
+                    // "return pc" just means a pc you subtract 1 from to get
+                    // the pc of the "call". The actual no-op we insert may or
+                    // may not be 1 byte.
                     pcBuf[n] = uf.pc + 1;
                     n++;
                 }
@@ -730,21 +752,7 @@ namespace golang::runtime
     // printArgs prints function arguments in traceback.
     void printArgs(golang::runtime::funcInfo f, gocpp::unsafe_pointer argp, uintptr_t pc)
     {
-        // The "instruction" of argument printing is encoded in _FUNCDATA_ArgInfo.
-        // See cmd/compile/internal/ssagen.emitArgInfo for the description of the
-        // encoding.
-        // These constants need to be in sync with the compiler.
-        auto _endSeq = 0xff;
-        auto _startAgg = 0xfe;
-        auto _endAgg = 0xfd;
-        auto _dotdotdot = 0xfc;
-        auto _offsetTooLarge = 0xfb;
-
-        auto limit = 10;
-        auto maxDepth = 5;
-        auto maxLen = (maxDepth * 3 + 2) * limit + 1;
-
-        auto p = (gocpp::array_ptr<gocpp::array<uint8_t, maxLen>>)(funcdata(f, abi::FUNCDATA_ArgInfo));
+        auto p = (gocpp::array_ptr<gocpp::array<uint8_t, abi::TraceArgsMaxLen>>)(funcdata(f, abi::FUNCDATA_ArgInfo));
         if(p == nullptr)
         {
             return;
@@ -823,11 +831,11 @@ namespace golang::runtime
             {
                 auto condition = o;
                 int conditionId = -1;
-                if(condition == _endSeq) { conditionId = 0; }
-                else if(condition == _startAgg) { conditionId = 1; }
-                else if(condition == _endAgg) { conditionId = 2; }
-                else if(condition == _dotdotdot) { conditionId = 3; }
-                else if(condition == _offsetTooLarge) { conditionId = 4; }
+                if(condition == abi::TraceArgsEndSeq) { conditionId = 0; }
+                else if(condition == abi::TraceArgsStartAgg) { conditionId = 1; }
+                else if(condition == abi::TraceArgsEndAgg) { conditionId = 2; }
+                else if(condition == abi::TraceArgsDotdotdot) { conditionId = 3; }
+                else if(condition == abi::TraceArgsOffsetTooLarge) { conditionId = 4; }
                 switch(conditionId)
                 {
                     case 0:
@@ -869,15 +877,15 @@ namespace golang::runtime
     }
 
     // funcNamePiecesForPrint returns the function name for printing to the user.
-    // It returns three pieces so it doesn't need an allocation for string
+    // It returns five pieces so it doesn't need an allocation for string
     // concatenation.
-    std::tuple<gocpp::string, gocpp::string, gocpp::string> funcNamePiecesForPrint(gocpp::string name)
+    std::tuple<gocpp::string, gocpp::string, gocpp::string, gocpp::string, gocpp::string> funcNamePiecesForPrint(gocpp::string name)
     {
         // Replace the shape name in generic function with "...".
         auto i = bytealg::IndexByteString(name, '[');
         if(i < 0)
         {
-            return {name, ""_s, ""_s};
+            return {name, ""_s, ""_s, ""_s, ""_s};
         }
         auto j = len(name) - 1;
         for(; name[j] != ']'; )
@@ -886,16 +894,83 @@ namespace golang::runtime
         }
         if(j <= i)
         {
-            return {name, ""_s, ""_s};
+            return {name, ""_s, ""_s, ""_s, ""_s};
         }
-        return {name.make_slice(0, i), "[...]"_s, name.make_slice(j + 1)};
+
+        // '[' interior ']'
+        auto interior = name.make_slice(i + 1, j);
+        // This is an early-out to skip the more-detailed parsing that
+        // follows -- if there's no '[' in the interior, that implies
+        // (assuming balanced brackets) no ']' in the interior, and thus
+        // this will be the answer. If brackets are not balanced
+        // (malformed input, which was already a risk), this will
+        // eat/hide the unbalanced "]".
+        if(bytealg::IndexByteString(interior, '[') < 0)
+        {
+            return {name.make_slice(0, i), "[...]"_s, name.make_slice(j + 1), ""_s, ""_s};
+        }
+        // Generic method of generic type.
+        // know interior contains at least "...[..."
+        // expect interior contains "...]___[...".
+        // don't know whether "..." contains balanced brackets or not.
+        // or the compiler might have a bug in its naming-things department.
+        // hope to return name[:i], "[...]", ___, "[...]", name[j+1:]
+        // beginning after first "[", looking for balancing "]"
+        auto depth = 1;
+        auto [rbr, lbr] = std::tuple{- 1, - 1};
+        for(auto [k, c] : interior)
+        {
+            if(c == '[')
+            {
+                depth++;
+                if(depth != 1)
+                {
+                    continue;
+                }
+                // rbr != -1 because rbr is only assigned if depth == 0
+                lbr = k;
+                // success, depth == 1, rbr >= 0, lbr > rbr
+                break;
+            }
+            if(c == ']')
+            {
+                depth--;
+                if(depth < 0)
+                {
+                    // malformed "...]...]"
+                    break;
+                }
+                if(depth != 0)
+                {
+                    continue;
+                }
+                // cannot execute this twice; depth == 0 -> { ']' -> malformed, '[' -> success }
+                rbr = k;
+            }
+        }
+        if(depth == 1)
+        {
+            if(rbr >= 0 && lbr > rbr)
+            {
+                return {name.make_slice(0, i), "[...]"_s, interior.make_slice(rbr + 1, lbr), "[...]"_s, name.make_slice(j + 1)};
+            }
+            if(rbr == - 1 && lbr == - 1)
+            {
+                // the bracket seen in the interior must have been balanced in a "[]" pattern, not "]["
+                // return the single-brackets (not a generic method of a generic type) result
+                return {name.make_slice(0, i), "[...]"_s, name.make_slice(j + 1), ""_s, ""_s};
+            }
+        }
+
+        // malformed, return the whole name
+        return {name, ""_s, ""_s, ""_s, ""_s};
     }
 
     // funcNameForPrint returns the function name for printing to the user.
     gocpp::string funcNameForPrint(gocpp::string name)
     {
-        auto [a, b, c] = funcNamePiecesForPrint(name);
-        return a + b + c;
+        auto [a, b, c, d, e] = funcNamePiecesForPrint(name);
+        return a + b + c + d + e;
     }
 
     // printFuncName prints a function name. name is the function name in
@@ -907,8 +982,8 @@ namespace golang::runtime
             print("panic"_s);
             return;
         }
-        auto [a, b, c] = funcNamePiecesForPrint(name);
-        print(a, b, c);
+        auto [a, b, c, d, e] = funcNamePiecesForPrint(name);
+        print(a, b, c, d, e);
     }
 
     void printcreatedby(g* gp)
@@ -952,7 +1027,7 @@ namespace golang::runtime
     }
 
     // tracebacktrap is like traceback but expects that the PC and SP were obtained
-    // from a trap, not from gp->sched or gp->syscallpc/gp->syscallsp or getcallerpc/getcallersp.
+    // from a trap, not from gp->sched or gp->syscallpc/gp->syscallsp or GetCallerPC/GetCallerSP.
     // Because they are from a trap instead of from a saved pair,
     // the initial PC must not be rewound to the previous instruction.
     // (All the saved pairs record a PC that is a return address, so we
@@ -1190,7 +1265,7 @@ namespace golang::runtime
                 auto stop = false;
                 for(auto [gocpp_ignored, pc] : cgoBuf.make_slice(0, cgoN))
                 {
-                    if(cgoSymbolizer == nullptr)
+                    if(! cgoSymbolizerAvailable())
                     {
                         if(auto [pr, stop] = commitFrame(); stop)
                         {
@@ -1273,10 +1348,20 @@ namespace golang::runtime
         print("\n"_s);
     }
 
+    // callers should be an internal detail,
+    // (and is almost identical to Callers),
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/phuslu/log
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname callers
     int callers(int skip, gocpp::slice<uintptr_t> pcbuf)
     {
-        auto sp = getcallersp();
-        auto pc = getcallerpc();
+        auto sp = sys::GetCallerSP();
+        auto pc = sys::GetCallerPC();
         auto gp = getg();
         int n = {};
         systemstack([=]() mutable -> void
@@ -1323,6 +1408,21 @@ namespace golang::runtime
             return false;
         }
 
+        // Always show runtime.runFinalizers and runtime.runCleanups as
+        // context that this goroutine is running finalizers or cleanups,
+        // otherwise there is no obvious indicator.
+        // TODO(prattmic): A more general approach would be to always show the
+        // outermost frame (besides runtime.goexit), even if it is a runtime.
+        // Hiding the outermost frame allows the apparent outermost frame to
+        // change across different traces, which seems impossible.
+        // Unfortunately, implementing this requires looking ahead at the next
+        // frame, which goes against traceback's incremental approach (see big
+        // comment in traceback1).
+        if(sf.funcID == abi::FuncID_runFinalizers || sf.funcID == abi::FuncID_runCleanups)
+        {
+            return true;
+        }
+
         auto name = rec::name(gocpp::recv(sf));
 
         // Special case: always show runtime.gopanic frame
@@ -1335,16 +1435,42 @@ namespace golang::runtime
             return true;
         }
 
-        return bytealg::IndexByteString(name, '.') >= 0 && (! hasPrefix(name, "runtime."_s) || isExportedRuntime(name));
+        return bytealg::IndexByteString(name, '.') >= 0 && (! stringslite::HasPrefix(name, "runtime."_s) || isExportedRuntime(name));
     }
 
     // isExportedRuntime reports whether name is an exported runtime function.
     // It is only for runtime functions, so ASCII A-Z is fine.
-    // TODO: this handles exported functions but not exported methods.
     bool isExportedRuntime(gocpp::string name)
     {
-        auto n = len("runtime."_s);
-        return len(name) > n && name.make_slice(0, n) == "runtime."_s && 'A' <= name[n] && name[n] <= 'Z';
+        // Check and remove package qualifier.
+        auto [name_tmp, found] = stringslite::CutPrefix(name, "runtime."_s);
+        auto& name = name_tmp;
+        if(! found)
+        {
+            return false;
+        }
+        auto rcvr = ""_s;
+
+        // Extract receiver type, if any.
+        // For example, runtime.(*Func).Entry
+        auto i = len(name) - 1;
+        for(; i >= 0 && name[i] != '.'; )
+        {
+            i--;
+        }
+        if(i >= 0)
+        {
+            rcvr = name.make_slice(0, i);
+            name = name.make_slice(i + 1);
+            // Remove parentheses and star for pointer receivers.
+            if(len(rcvr) >= 3 && rcvr[0] == '(' && rcvr[1] == '*' && rcvr[len(rcvr) - 1] == ')')
+            {
+                rcvr = rcvr.make_slice(2, len(rcvr) - 1);
+            }
+        }
+
+        // Exported functions and exported methods on exported types.
+        return len(name) > 0 && 'A' <= name[0] && name[0] <= 'Z' && (len(rcvr) == 0 || 'A' <= rcvr[0] && rcvr[0] <= 'Z');
     }
 
     // elideWrapperCalling reports whether a wrapper function that called
@@ -1356,7 +1482,7 @@ namespace golang::runtime
         return ! (id == abi::FuncID_gopanic || id == abi::FuncID_sigpanic || id == abi::FuncID_panicwrap);
     }
 
-    gocpp::array<gocpp::string, 10> gStatusStrings = gocpp::Init<gocpp::array<gocpp::string, 10>>([](auto& x) {
+    gocpp::array<gocpp::string, 12> gStatusStrings = gocpp::Init<gocpp::array<gocpp::string, 12>>([](auto& x) {
         x[_Gidle] = "idle"_s;
         x[_Grunnable] = "runnable"_s;
         x[_Grunning] = "running"_s;
@@ -1364,7 +1490,9 @@ namespace golang::runtime
         x[_Gwaiting] = "waiting"_s;
         x[_Gdead] = "dead"_s;
         x[_Gcopystack] = "copystack"_s;
+        x[_Gleaked] = "leaked"_s;
         x[_Gpreempted] = "preempted"_s;
+        x[_Gdeadextra] = "waiting for cgo callback"_s;
     });
     void goroutineheader(g* gp)
     {
@@ -1388,7 +1516,7 @@ namespace golang::runtime
         }
 
         // Override.
-        if(gpstatus == _Gwaiting && gp->waitreason != waitReasonZero)
+        if((gpstatus == _Gwaiting || gpstatus == _Gleaked) && gp->waitreason != waitReasonZero)
         {
             status = rec::String(gocpp::recv(gp->waitreason));
         }
@@ -1413,9 +1541,22 @@ namespace golang::runtime
             }
         }
         print(" ["_s, status);
+        if(gpstatus == _Gleaked)
+        {
+            print(" (leaked)"_s);
+        }
         if(isScan)
         {
             print(" (scan)"_s);
+        }
+        if(auto bubble = gp->bubble; bubble != nullptr &&
+                gpstatus == _Gwaiting &&
+                rec::isIdleInSynctest(gocpp::recv(gp->waitreason)) &&
+                ! stringslite::HasSuffix(status, "(durable)"_s))
+        {
+            // If this isn't a status where the name includes a (durable)
+            // suffix to distinguish it from the non-durable form, add it here.
+            print(" (durable)"_s);
         }
         if(waitfor >= 1)
         {
@@ -1425,10 +1566,69 @@ namespace golang::runtime
         {
             print(", locked to thread"_s);
         }
-        print("]:\n"_s);
+        if(auto bubble = gp->bubble; bubble != nullptr)
+        {
+            print(", synctest bubble "_s, bubble->id);
+        }
+        print("]"_s);
+        if(gp->labels != nullptr && rec::Load(gocpp::recv(debug.tracebacklabels)) == 1)
+        {
+            auto labels = (label::Set*)(gp->labels)->List;
+            if(len(labels) > 0)
+            {
+                print(" {"_s);
+                for(auto [i, kv] : labels)
+                {
+                    // Try to be nice and only quote the keys/values if one of them has characters that need quoting or escaping.
+                    auto printq = [=](gocpp::string s) mutable -> void
+                    {
+                        if(tracebackStringNeedsQuoting(s))
+                        {
+                            print(quoted(s));
+                        }
+                        else
+                        {
+                            print(s);
+                        }
+                    };
+                    printq(kv.Key);
+                    print(": "_s);
+                    printq(kv.Value);
+                    if(i < len(labels) - 1)
+                    {
+                        print(", "_s);
+                    }
+                }
+                print("}"_s);
+            }
+        }
+        print(":\n"_s);
+    }
+
+    bool tracebackStringNeedsQuoting(gocpp::string s)
+    {
+        for(auto [gocpp_ignored, r] : s)
+        {
+            if(! ('a' <= r && r <= 'z' ||
+                        'A' <= r && r <= 'Z' ||
+                        '0' <= r && r <= '9' ||
+                        r == '.' || r == '/' || r == '_'))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     void tracebackothers(g* me)
+    {
+        tracebacksomeothers(me, [=](g*) mutable -> bool
+        {
+            return true;
+        });
+    }
+
+    void tracebacksomeothers(g* me, std::function<bool (g* _1)> showf)
     {
         auto [level, gocpp_id_7, gocpp_id_8] = gotraceback();
 
@@ -1449,7 +1649,19 @@ namespace golang::runtime
         // miss Gs created after this loop.
         forEachGRace([=](g* gp) mutable -> void
         {
-            if(gp == me || gp == curgp || readgstatus(gp) == _Gdead || isSystemGoroutine(gp, false) && level < 2)
+            if(gp == me || gp == curgp)
+            {
+                return;
+            }
+            if(auto status = readgstatus(gp); status == _Gdead || status == _Gdeadextra)
+            {
+                return;
+            }
+            if(! showf(gp))
+            {
+                return;
+            }
+            if(isSystemGoroutine(gp, false) && level < 2)
             {
                 return;
             }
@@ -1459,7 +1671,14 @@ namespace golang::runtime
             // from a signal handler initiated during a systemstack call.
             // The original G is still in the running state, and we want to
             // print its stack.
-            if(gp->m != getg()->m && readgstatus(gp) &^ _Gscan == _Grunning)
+            // There's a small window of time in exitsyscall where a goroutine could be
+            // in _Grunning as it's exiting a syscall. This could be the case even if the
+            // world is stopped or frozen.
+            // This is OK because the goroutine will not exit the syscall while the world
+            // is stopped or frozen. This is also why it's safe to check syscallsp here,
+            // and safe to take the goroutine's stack trace. The syscall path mutates
+            // syscallsp only just before exiting the syscall.
+            if(gp->m != getg()->m && readgstatus(gp) &^ _Gscan == _Grunning && gp->syscallsp == 0)
             {
                 print("\tgoroutine running on other thread; stack unavailable\n"_s);
                 printcreatedby(gp);
@@ -1512,36 +1731,31 @@ namespace golang::runtime
 
         // Print the hex dump.
         print("stack: frame={sp:"_s, hex(frame->sp), ", fp:"_s, hex(frame->fp), "} stack=["_s, hex(stk.lo), ","_s, hex(stk.hi), ")\n"_s);
-        hexdumpWords(lo, hi, [=](uintptr_t p) mutable -> unsigned char
+        hexdumpWords(lo, hi - lo, [=](uintptr_t p, hexdumpMarker m) mutable -> void
         {
-            //Go switch emulation
+            if(p == frame->fp)
             {
-                auto condition = p;
-                int conditionId = -1;
-                if(condition == frame->fp) { conditionId = 0; }
-                else if(condition == frame->sp) { conditionId = 1; }
-                else if(condition == bad) { conditionId = 2; }
-                switch(conditionId)
-                {
-                    case 0:
-                        return '>';
-                        break;
-                    case 1:
-                        return '<';
-                        break;
-                    case 2:
-                        return '!';
-                        break;
-                }
+                rec::start(gocpp::recv(m));
+                println("FP"_s);
             }
-            return 0;
+            if(p == frame->sp)
+            {
+                rec::start(gocpp::recv(m));
+                println("SP"_s);
+            }
+            if(p == bad)
+            {
+                rec::start(gocpp::recv(m));
+                println("bad"_s);
+            }
         });
     }
 
     // isSystemGoroutine reports whether the goroutine g must be omitted
     // in stack dumps and deadlock detector. This is any goroutine that
     // starts at a runtime.* entry point, except for runtime.main,
-    // runtime.handleAsyncEvent (wasm only) and sometimes runtime.runfinq.
+    // runtime.handleAsyncEvent (wasm only) and sometimes
+    // runtime.runFinalizers/runtime.runCleanups.
     //
     // If fixed is true, any goroutine that can vary between user and
     // system (that is, the finalizer goroutine) is considered a user
@@ -1558,7 +1772,7 @@ namespace golang::runtime
         {
             return false;
         }
-        if(f._func.funcID == abi::FuncID_runfinq)
+        if(f._func.funcID == abi::FuncID_runFinalizers)
         {
             // We include the finalizer goroutine if it's calling
             // back into user code.
@@ -1570,7 +1784,19 @@ namespace golang::runtime
             }
             return rec::Load(gocpp::recv(fingStatus)) & fingRunningFinalizer == 0;
         }
-        return hasPrefix(funcname(f), "runtime."_s);
+        if(f._func.funcID == abi::FuncID_runCleanups)
+        {
+            // We include the cleanup goroutines if they're calling
+            // back into user code.
+            if(fixed)
+            {
+                // This goroutine can vary. In fixed mode,
+                // always consider it a user goroutine.
+                return false;
+            }
+            return ! rec::Load(gocpp::recv(gp->runningCleanups));
+        }
+        return stringslite::HasPrefix(funcname(f), "runtime."_s);
     }
 
     // SetCgoTraceback records three C functions to use to gather
@@ -1752,17 +1978,52 @@ namespace golang::runtime
         cgoContext = context;
         cgoSymbolizer = symbolizer;
 
-        // The context function is called when a C function calls a Go
-        // function. As such it is only called by C code in runtime/cgo.
-        if(_cgo_set_context_function != nullptr)
+        if(_cgo_set_traceback_functions != nullptr)
         {
-            cgocall(_cgo_set_context_function, context);
+            struct cgoSetTracebackFunctionsArg
+            {
+                gocpp::unsafe_pointer traceback{};
+                gocpp::unsafe_pointer context{};
+                gocpp::unsafe_pointer symbolizer{};
+
+                using isGoStruct = void;
+
+                std::ostream& PrintTo(std::ostream& os) const
+                {
+                    os << '{';
+                    os << "" << traceback;
+                    os << " " << context;
+                    os << " " << symbolizer;
+                    os << '}';
+                    return os;
+                }
+            };
+            auto arg = gocpp::Init<cgoSetTracebackFunctionsArg>([=](auto& x) {
+                x.traceback = traceback;
+                x.context = context;
+                x.symbolizer = symbolizer;
+            });
+            cgocall(_cgo_set_traceback_functions, noescape(gocpp::unsafe_pointer(& arg)));
         }
     }
 
     gocpp::unsafe_pointer cgoTraceback;
     gocpp::unsafe_pointer cgoContext;
     gocpp::unsafe_pointer cgoSymbolizer;
+    bool cgoTracebackAvailable()
+    {
+        // - The traceback function must be registered via SetCgoTraceback.
+        // - This must be a cgo binary (providing _cgo_call_traceback_function).
+        return cgoTraceback != nullptr && _cgo_call_traceback_function != nullptr;
+    }
+
+    bool cgoSymbolizerAvailable()
+    {
+        // - The symbolizer function must be registered via SetCgoTraceback.
+        // - This must be a cgo binary (providing _cgo_call_symbolizer_function).
+        return cgoSymbolizer != nullptr && _cgo_call_symbolizer_function != nullptr;
+    }
+
     // cgoTracebackArg is the type passed to cgoTraceback.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -1883,7 +2144,7 @@ namespace golang::runtime
     // printCgoTraceback prints a traceback of callers.
     void printCgoTraceback(gocpp::array_ptr<golang::runtime::cgoCallers> callers)
     {
-        if(cgoSymbolizer == nullptr)
+        if(! cgoSymbolizerAvailable())
         {
             for(auto [gocpp_ignored, c] : callers)
             {
@@ -1918,6 +2179,8 @@ namespace golang::runtime
     // printOneCgoTraceback prints the traceback of a single cgo caller.
     // This can print more than one line because of inlining.
     // It returns the "stop" result of commitFrame.
+    //
+    // Preconditions: cgoSymbolizerAvailable returns true.
     bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, cgoSymbolizerArg* arg)
     {
         arg->pc = pc;
@@ -1959,6 +2222,8 @@ namespace golang::runtime
     }
 
     // callCgoSymbolizer calls the cgoSymbolizer function.
+    //
+    // Preconditions: cgoSymbolizerAvailable returns true.
     void callCgoSymbolizer(cgoSymbolizerArg* arg)
     {
         auto call = cgocall;
@@ -1976,16 +2241,14 @@ namespace golang::runtime
         {
             asanwrite(gocpp::unsafe_pointer(arg), gocpp::Sizeof<cgoSymbolizerArg>());
         }
-        call(cgoSymbolizer, noescape(gocpp::unsafe_pointer(arg)));
+        call(_cgo_call_symbolizer_function, noescape(gocpp::unsafe_pointer(arg)));
     }
 
     // cgoContextPCs gets the PC values from a cgo traceback.
+    //
+    // Preconditions: cgoTracebackAvailable returns true.
     void cgoContextPCs(uintptr_t ctxt, gocpp::slice<uintptr_t> buf)
     {
-        if(cgoTraceback == nullptr)
-        {
-            return;
-        }
         auto call = cgocall;
         if(rec::Load(gocpp::recv(panicking)) > 0 || getg()->m->curg != getg())
         {
@@ -2006,7 +2269,7 @@ namespace golang::runtime
         {
             asanwrite(gocpp::unsafe_pointer(& arg), gocpp::Sizeof<cgoTracebackArg>());
         }
-        call(cgoTraceback, noescape(gocpp::unsafe_pointer(& arg)));
+        call(_cgo_call_traceback_function, noescape(gocpp::unsafe_pointer(& arg)));
     }
 
 }

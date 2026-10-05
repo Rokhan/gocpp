@@ -10,21 +10,17 @@
 #include "gocpp/support.h"
 
 
-namespace golang::exec
+namespace golang::os::exec
 {
+    // ErrNotFound is the error resulting if a path search failed to find an executable file.
+    extern gocpp::error ErrNotFound;
     gocpp::error chkStat(gocpp::string file);
     bool hasExt(gocpp::string file);
     std::tuple<gocpp::string, gocpp::error> findExecutable(gocpp::string file, gocpp::slice<gocpp::string> exts);
-    std::tuple<gocpp::string, gocpp::error> LookPath(gocpp::string file);
+    std::tuple<gocpp::string, gocpp::error> lookPath(gocpp::string file);
     std::tuple<gocpp::string, gocpp::error> lookExtensions(gocpp::string path, gocpp::string dir);
     gocpp::slice<gocpp::string> pathExt();
-    std::tuple<gocpp::string, gocpp::error> lookPath(gocpp::string file, gocpp::slice<gocpp::string> exts);
-}
-#include "golang/errors/errors.fwd.h"
-
-namespace golang::exec
-{
-    extern gocpp::error ErrNotFound;
+    std::tuple<gocpp::string, gocpp::error> lookPathExts(gocpp::string file, gocpp::slice<gocpp::string> exts);
 
     namespace rec
     {

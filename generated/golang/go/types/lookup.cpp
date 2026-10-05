@@ -12,13 +12,13 @@
 #include "gocpp/support.h"
 
 #include "golang/bytes/buffer.h"
-#include "golang/go/token/position.h"
 #include "golang/go/types/alias.h"
 #include "golang/go/types/api_predicates.h"
 #include "golang/go/types/basic.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/instantiate.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/named.h"
@@ -26,6 +26,7 @@
 #include "golang/go/types/package.h"
 #include "golang/go/types/pointer.h"
 #include "golang/go/types/predicates.h"
+#include "golang/go/types/selection.h"
 #include "golang/go/types/signature.h"
 #include "golang/go/types/struct.h"
 #include "golang/go/types/type.h"
@@ -35,11 +36,75 @@
 #include "golang/go/types/universe.h"
 #include "golang/strings/strings.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace bytes = golang::bytes;
+    namespace strings = golang::strings;
     namespace rec
     {
         using bytes::rec::String;
+    }
+
+    // LookupSelection selects the field or method whose ID is Id(pkg,
+    // name), on a value of type T. If addressable is set, T is the type
+    // of an addressable variable (this matters only for method lookups).
+    // T must not be nil.
+    //
+    // If the selection is valid:
+    //
+    //   - [Selection.Obj] returns the field ([Var]) or method ([Func]);
+    //   - [Selection.Indirect] reports whether there were any pointer
+    //     indirections on the path to the field or method.
+    //   - [Selection.Index] returns the index sequence, defined below.
+    //
+    // The last index entry is the field or method index in the (possibly
+    // embedded) type where the entry was found, either:
+    //
+    //  1. the list of declared methods of a named type; or
+    //  2. the list of all methods (method set) of an interface type; or
+    //  3. the list of fields of a struct type.
+    //
+    // The earlier index entries are the indices of the embedded struct
+    // fields traversed to get to the found entry, starting at depth 0.
+    //
+    // See also [LookupFieldOrMethod], which returns the components separately.
+    std::tuple<Selection, bool> LookupSelection(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name)
+    {
+        auto [obj, index, indirect] = LookupFieldOrMethod(T, addressable, pkg, name);
+        SelectionKind kind = {};
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_0 = gocpp::type_info(obj);
+            int conditionId = -1;
+            if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
+            else if(gocpp_id_0 == typeid(types::Func*)) { conditionId = 1; }
+            else if(gocpp_id_0 == typeid(types::Var*)) { conditionId = 2; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    return {Selection {}, false};
+                    break;
+                }
+                case 1:
+                {
+                    kind = MethodVal;
+                    break;
+                }
+                case 2:
+                {
+                    kind = FieldVal;
+                    break;
+                }
+                // can't happen
+                default:
+                {
+                    gocpp::panic(obj);
+                    break;
+                }
+            }
+        }
+        return {Selection {kind, T, obj, index, indirect}, true};
     }
 
     // LookupFieldOrMethod looks up a field or method with given package and name
@@ -67,7 +132,9 @@ namespace golang::types
     //   - If indirect is set, a method with a pointer receiver type was found
     //     but there was no pointer on the path from the actual receiver type to
     //     the method's formal receiver base type, nor was the receiver addressable.
-    std::tuple<Object, gocpp::slice<int>, bool> LookupFieldOrMethod(golang::types::Type T, bool addressable, Package* pkg, gocpp::string name)
+    //
+    // See also [LookupSelection], which returns the result as a [Selection].
+    std::tuple<Object, gocpp::slice<int>, bool> LookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name)
     {
         Object obj;
         gocpp::slice<int> index;
@@ -76,7 +143,16 @@ namespace golang::types
         {
             gocpp::panic("LookupFieldOrMethod on nil type"_s);
         }
+        return lookupFieldOrMethod(T, addressable, pkg, name, false);
+    }
 
+    // lookupFieldOrMethod is like LookupFieldOrMethod but with the additional foldCase parameter
+    // (see Object.sameId for the meaning of foldCase).
+    std::tuple<Object, gocpp::slice<int>, bool> lookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase)
+    {
+        Object obj;
+        gocpp::slice<int> index;
+        bool indirect;
         // Methods cannot be associated to a named pointer type.
         // (spec: "The type denoted by T is called the receiver base type;
         // it must not be a pointer or interface type and it must be declared
@@ -86,10 +162,10 @@ namespace golang::types
         // not have found it for T (see also go.dev/issue/8590).
         if(auto t = asNamed(T); t != nullptr)
         {
-            if(auto [p, gocpp_id_0] = gocpp::getValue<Pointer*>(rec::Underlying(gocpp::recv(t))); p != nullptr)
+            if(auto [p, gocpp_id_1] = gocpp::getValue<Pointer*>(rec::Underlying(gocpp::recv(t))); p != nullptr)
             {
-                std::tie(obj, index, indirect) = lookupFieldOrMethodImpl(p, false, pkg, name, false);
-                if(auto [gocpp_id_1, ok] = gocpp::getValue<Func*>(obj); ok)
+                std::tie(obj, index, indirect) = lookupFieldOrMethodImpl(p, false, pkg, name, foldCase);
+                if(auto [gocpp_id_2, ok] = gocpp::getValue<Func*>(obj); ok)
                 {
                     return {nullptr, nullptr, false};
                 }
@@ -97,20 +173,20 @@ namespace golang::types
             }
         }
 
-        std::tie(obj, index, indirect) = lookupFieldOrMethodImpl(T, addressable, pkg, name, false);
+        std::tie(obj, index, indirect) = lookupFieldOrMethodImpl(T, addressable, pkg, name, foldCase);
 
-        // If we didn't find anything and if we have a type parameter with a core type,
-        // see if there is a matching field (but not a method, those need to be declared
-        // explicitly in the constraint). If the constraint is a named pointer type (see
-        // above), we are ok here because only fields are accepted as results.
+        // If we didn't find anything and if we have a type parameter with a common underlying
+        // type, see if there is a matching field (but not a method, those need to be declared
+        // explicitly in the constraint). If the constraint is a named pointer type (see above),
+        // we are ok here because only fields are accepted as results.
         // see go.dev/issue/51576
         auto enableTParamFieldLookup = false;
         if(enableTParamFieldLookup && obj == nullptr && isTypeParam(T))
         {
-            if(auto t = coreType(T); t != nullptr)
+            if(auto [t, gocpp_id_3] = commonUnder(T, nullptr); t != nullptr)
             {
-                std::tie(obj, index, indirect) = lookupFieldOrMethodImpl(t, addressable, pkg, name, false);
-                if(auto [gocpp_id_2, ok] = gocpp::getValue<Var*>(obj); ! ok)
+                std::tie(obj, index, indirect) = lookupFieldOrMethodImpl(t, addressable, pkg, name, foldCase);
+                if(auto [gocpp_id_4, ok] = gocpp::getValue<Var*>(obj); ! ok)
                 {
                     // accept fields (variables) only
                     std::tie(obj, index, indirect) = std::tuple{nullptr, nullptr, false};
@@ -120,8 +196,8 @@ namespace golang::types
         return {obj, index, indirect};
     }
 
-    // lookupFieldOrMethodImpl is the implementation of LookupFieldOrMethod.
-    // Notably, in contrast to LookupFieldOrMethod, it won't find struct fields
+    // lookupFieldOrMethodImpl is the implementation of lookupFieldOrMethod.
+    // Notably, in contrast to lookupFieldOrMethod, it won't find struct fields
     // in base types of defined (*Named) pointer types T. For instance, given
     // the declaration:
     //
@@ -130,14 +206,11 @@ namespace golang::types
     // lookupFieldOrMethodImpl won't find the field f in the defined (*Named) type T
     // (methods on T are not permitted in the first place).
     //
-    // Thus, lookupFieldOrMethodImpl should only be called by LookupFieldOrMethod
+    // Thus, lookupFieldOrMethodImpl should only be called by lookupFieldOrMethod
     // and missingMethod (the latter doesn't care about struct fields).
     //
-    // If foldCase is true, method names are considered equal if they are equal
-    // with case folding, irrespective of which package they are in.
-    //
     // The resulting object may not be fully type-checked.
-    std::tuple<Object, gocpp::slice<int>, bool> lookupFieldOrMethodImpl(golang::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase)
+    std::tuple<Object, gocpp::slice<int>, bool> lookupFieldOrMethodImpl(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase)
     {
         Object obj;
         gocpp::slice<int> index;
@@ -149,15 +222,15 @@ namespace golang::types
             return {obj, index, indirect};
         }
 
-        // Importantly, we must not call under before the call to deref below (nor
-        // does deref call under), as doing so could incorrectly result in finding
+        // Importantly, we must not call Underlying before the call to deref below (nor
+        // does deref call Underlying), as doing so could incorrectly result in finding
         // methods of the pointer base type when T is a (*Named) pointer type.
         auto [typ, isPtr] = deref(T);
 
         // *typ where typ is an interface (incl. a type parameter) has no methods.
         if(isPtr)
         {
-            if(auto [gocpp_id_3, ok] = gocpp::getValue<Interface*>(under(typ)); ok)
+            if(auto [gocpp_id_5, ok] = gocpp::getValue<Interface*>(rec::Underlying(gocpp::recv(typ))); ok)
             {
                 return {obj, index, indirect};
             }
@@ -218,19 +291,19 @@ namespace golang::types
 
                 //Go type switch emulation
                 {
-                    const auto& gocpp_id_4 = gocpp::type_info(under(typ));
+                    const auto& gocpp_id_6 = gocpp::type_info(rec::Underlying(gocpp::recv(typ)));
                     int conditionId = -1;
-                    if(gocpp_id_4 == typeid(types::Struct*)) { conditionId = 0; }
-                    else if(gocpp_id_4 == typeid(types::Interface*)) { conditionId = 1; }
+                    if(gocpp_id_6 == typeid(types::Struct*)) { conditionId = 0; }
+                    else if(gocpp_id_6 == typeid(types::Interface*)) { conditionId = 1; }
                     switch(conditionId)
                     {
                         case 0:
                         {
-                            types::Struct* t = gocpp::any_cast<types::Struct*>(under(typ));
+                            types::Struct* t = gocpp::any_cast<types::Struct*>(rec::Underlying(gocpp::recv(typ)));
                             // look for a matching field and collect embedded types
                             for(auto [i, f] : t->fields)
                             {
-                                if(rec::sameId(gocpp::recv(f), pkg, name))
+                                if(rec::sameId(gocpp::recv(f), pkg, name, foldCase))
                                 {
                                     assert(f->object.typ != nullptr);
                                     index = concat(e.index, i);
@@ -267,7 +340,7 @@ namespace golang::types
 
                         case 1:
                         {
-                            types::Interface* t = gocpp::any_cast<types::Interface*>(under(typ));
+                            types::Interface* t = gocpp::any_cast<types::Interface*>(rec::Underlying(gocpp::recv(typ)));
                             // look for a matching method (interface may be a type parameter)
                             if(auto [i, m] = rec::LookupMethod(gocpp::recv(rec::typeSet(gocpp::recv(t))), pkg, name, foldCase); m != nullptr)
                             {
@@ -294,7 +367,7 @@ namespace golang::types
                 // contains m and the argument list can be assigned to the parameter
                 // list of m. If x is addressable and &x's method set contains m, x.m()
                 // is shorthand for (&x).m()".
-                if(auto [f, gocpp_id_5] = gocpp::getValue<Func*>(obj); f != nullptr)
+                if(auto [f, gocpp_id_7] = gocpp::getValue<Func*>(obj); f != nullptr)
                 {
                     // determine if method has a pointer receiver
                     if(rec::hasPtrRecv(gocpp::recv(f)) && ! indirect && ! addressable)
@@ -366,7 +439,7 @@ namespace golang::types
         // number of entries w/ unique type
         auto n = 0;
         // index at which type was previously seen
-        auto prev = gocpp::make(gocpp::Tag<gocpp::map<golang::types::Type, int>>());
+        auto prev = gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, int>>());
         for(auto [gocpp_ignored, e] : list)
         {
             if(auto [i, found] = lookupType(prev, e.typ); found)
@@ -385,7 +458,7 @@ namespace golang::types
         return list.make_slice(0, n);
     }
 
-    std::tuple<int, bool> lookupType(gocpp::map<golang::types::Type, int> m, golang::types::Type typ)
+    std::tuple<int, bool> lookupType(gocpp::map<golang::go::types::Type, int> m, golang::go::types::Type typ)
     {
         // fast path: maybe the types are equal
         if(auto [i, found] = m[typ]; found)
@@ -482,7 +555,7 @@ namespace golang::types
     // is not set), MissingMethod only checks that methods of T which are also
     // present in V have matching types (e.g., for a type assertion x.(T) where
     // x is of interface type V).
-    std::tuple<Func*, bool> MissingMethod(golang::types::Type V, Interface* T, bool go_static)
+    std::tuple<Func*, bool> MissingMethod(golang::go::types::Type V, Interface* T, bool go_static)
     {
         Func* method;
         bool wrongType;
@@ -498,12 +571,12 @@ namespace golang::types
     // lying type) is used for better error messages (reported through *cause).
     // The comparator is used to compare signatures.
     // If a method is missing and cause is not nil, *cause describes the error.
-    std::tuple<Func*, bool> rec::missingMethod(Checker* check, golang::types::Type V, golang::types::Type T, bool go_static, std::function<bool (golang::types::Type x, golang::types::Type y)> equivalent, gocpp::string* cause)
+    std::tuple<Func*, bool> rec::missingMethod(Checker* check, golang::go::types::Type V, golang::go::types::Type T, bool go_static, std::function<bool (golang::go::types::Type x, golang::go::types::Type y)> equivalent, gocpp::string* cause)
     {
         Func* method;
         bool wrongType;
         // T must be an interface
-        auto methods = rec::typeSet(gocpp::recv(gocpp::getValue<Interface*>(types::under(T))))->methods;
+        auto methods = rec::typeSet(gocpp::recv(gocpp::getValue<Interface*>(rec::Underlying(gocpp::recv(T)))))->methods;
         if(len(methods) == 0)
         {
             return {nullptr, false};
@@ -517,6 +590,7 @@ namespace golang::types
         auto ambigSel = 5;
         auto ptrRecv = 6;
         auto field = 7;
+        auto nointerface = 8;
 
         auto state = ok;
         // method on T we're trying to implement
@@ -524,7 +598,7 @@ namespace golang::types
         // method on V, if found (state is one of ok, wrongName, wrongSig)
         Func* f = {};
 
-        if(auto [u, gocpp_id_6] = gocpp::getValue<Interface*>(types::under(V)); u != nullptr)
+        if(auto [u, gocpp_id_8] = gocpp::getValue<Interface*>(rec::Underlying(gocpp::recv(V))); u != nullptr)
         {
             auto tset = rec::typeSet(gocpp::recv(u));
             auto it_0 = std::begin(methods);
@@ -605,7 +679,13 @@ namespace golang::types
                 // methods may not have a fully set up signature yet
                 if(check != nullptr)
                 {
-                    rec::objDecl(gocpp::recv(check), f, nullptr);
+                    rec::objDecl(gocpp::recv(check), f);
+                }
+
+                if(f->nointerface)
+                {
+                    state = nointerface;
+                    break;
                 }
 
                 if(! equivalent(f->object.typ, m->object.typ))
@@ -629,7 +709,7 @@ namespace golang::types
                 // set up signature.
                 if(check != nullptr)
                 {
-                    rec::objDecl(gocpp::recv(check), f, nullptr);
+                    rec::objDecl(gocpp::recv(check), f);
                 }
             }
             //Go switch emulation
@@ -643,6 +723,7 @@ namespace golang::types
                 else if(condition == ambigSel) { conditionId = 4; }
                 else if(condition == ptrRecv) { conditionId = 5; }
                 else if(condition == field) { conditionId = 6; }
+                else if(condition == nointerface) { conditionId = 7; }
                 switch(conditionId)
                 {
                     case 0:
@@ -707,8 +788,11 @@ namespace golang::types
                     case 6:
                         *cause = rec::sprintf(gocpp::recv(check), "(%s.%s is a field, not a method)"_s, V, rec::Name(gocpp::recv(m)));
                         break;
+                    case 7:
+                        *cause = rec::sprintf(gocpp::recv(check), "(%s method is marked 'nointerface')"_s, rec::Name(gocpp::recv(m)));
+                        break;
                     default:
-                        unreachable();
+                        gocpp::panic("unreachable"_s);
                         break;
                 }
             }
@@ -717,17 +801,56 @@ namespace golang::types
         return {m, state == wrongSig || state == ptrRecv};
     }
 
-    bool isInterfacePtr(golang::types::Type T)
+    // hasAllMethods is similar to checkMissingMethod but instead reports whether all methods are present.
+    // If V is not a valid type, or if it is a struct containing embedded fields with invalid types, the
+    // result is true because it is not possible to say with certainty whether a method is missing or not
+    // (an embedded field may have the method in question).
+    // If the result is false and cause is not nil, *cause describes the error.
+    // Use hasAllMethods to avoid follow-on errors due to incorrect types.
+    bool rec::hasAllMethods(Checker* check, golang::go::types::Type V, golang::go::types::Type T, bool go_static, std::function<bool (golang::go::types::Type x, golang::go::types::Type y)> equivalent, gocpp::string* cause)
     {
-        auto [p, gocpp_id_7] = gocpp::getValue<Pointer*>(under(T));
+        if(! types::isValid(V))
+        {
+            // we don't know anything about V, assume it implements T
+            return true;
+        }
+        auto [m, gocpp_id_9] = rec::missingMethod(gocpp::recv(check), V, T, go_static, equivalent, cause);
+        return m == nullptr || hasInvalidEmbeddedFields(V, nullptr);
+    }
+
+    // hasInvalidEmbeddedFields reports whether T is a struct (or a pointer to a struct) that contains
+    // (directly or indirectly) embedded fields with invalid types.
+    bool hasInvalidEmbeddedFields(golang::go::types::Type T, gocpp::map<Struct*, bool> seen)
+    {
+        if(auto [S, gocpp_id_10] = gocpp::getValue<Struct*>(rec::Underlying(gocpp::recv(derefStructPtr(T)))); S != nullptr && ! seen[S])
+        {
+            if(seen == nullptr)
+            {
+                seen = gocpp::make(gocpp::Tag<gocpp::map<Struct*, bool>>());
+            }
+            seen[S] = true;
+            for(auto [gocpp_ignored, f] : S->fields)
+            {
+                if(f->embedded && (! isValid(f->object.typ) || hasInvalidEmbeddedFields(f->object.typ, seen)))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool isInterfacePtr(golang::go::types::Type T)
+    {
+        auto [p, gocpp_id_11] = gocpp::getValue<Pointer*>(rec::Underlying(gocpp::recv(T)));
         return p != nullptr && IsInterface(p->base);
     }
 
     // check may be nil.
-    gocpp::string rec::interfacePtrError(Checker* check, golang::types::Type T)
+    gocpp::string rec::interfacePtrError(Checker* check, golang::go::types::Type T)
     {
         assert(isInterfacePtr(T));
-        if(auto [p, gocpp_id_8] = gocpp::getValue<Pointer*>(types::under(T)); isTypeParam(p->base))
+        if(auto [p, gocpp_id_12] = gocpp::getValue<Pointer*>(rec::Underlying(gocpp::recv(T))); isTypeParam(p->base))
         {
             return rec::sprintf(gocpp::recv(check), "type %s is pointer to type parameter, not type parameter"_s, T);
         }
@@ -747,7 +870,7 @@ namespace golang::types
         auto w = newTypeWriter(buf, qf);
         w->pkgInfo = pkgInfo;
         w->paramNames = false;
-        rec::signature(gocpp::recv(w), gocpp::getValue<Signature*>(f->object.typ));
+        rec::signature(gocpp::recv(w), gocpp::getValue<golang::go::types::Signature*>(f->object.typ));
         return rec::String(gocpp::recv(buf));
     }
 
@@ -757,7 +880,7 @@ namespace golang::types
     // The underlying type of V must be an interface.
     // If the result is false and cause is not nil, *cause describes the error.
     // TODO(gri) replace calls to this function with calls to newAssertableTo.
-    bool rec::assertableTo(Checker* check, golang::types::Type V, golang::types::Type T, gocpp::string* cause)
+    bool rec::assertableTo(Checker* check, golang::go::types::Type V, golang::go::types::Type T, gocpp::string* cause)
     {
         // no static check is required if T is an interface
         // spec: "If T is an interface type, x.(T) asserts that the
@@ -767,8 +890,7 @@ namespace golang::types
             return true;
         }
         // TODO(gri) fix this for generalized interfaces
-        auto [m, gocpp_id_9] = rec::missingMethod(gocpp::recv(check), T, V, false, Identical, cause);
-        return m == nullptr;
+        return rec::hasAllMethods(gocpp::recv(check), T, V, false, Identical, cause);
     }
 
     // newAssertableTo reports whether a value of type V can be asserted to have type T.
@@ -776,7 +898,7 @@ namespace golang::types
     // in constraint position (we have not yet defined that behavior in the spec).
     // The underlying type of V must be an interface.
     // If the result is false and cause is not nil, *cause is set to the error cause.
-    bool rec::newAssertableTo(Checker* check, token::Pos pos, golang::types::Type V, golang::types::Type T, gocpp::string* cause)
+    bool rec::newAssertableTo(Checker* check, golang::go::types::Type V, golang::go::types::Type T, gocpp::string* cause)
     {
         // no static check is required if T is an interface
         // spec: "If T is an interface type, x.(T) asserts that the
@@ -785,15 +907,15 @@ namespace golang::types
         {
             return true;
         }
-        return rec::implements(gocpp::recv(check), pos, T, V, false, cause);
+        return rec::implements(gocpp::recv(check), T, V, false, cause);
     }
 
     // deref dereferences typ if it is a *Pointer (but not a *Named type
     // with an underlying pointer type!) and returns its base and true.
     // Otherwise it returns (typ, false).
-    std::tuple<golang::types::Type, bool> deref(golang::types::Type typ)
+    std::tuple<golang::go::types::Type, bool> deref(golang::go::types::Type typ)
     {
-        if(auto [p, gocpp_id_10] = gocpp::getValue<Pointer*>(Unalias(typ)); p != nullptr)
+        if(auto [p, gocpp_id_13] = gocpp::getValue<Pointer*>(Unalias(typ)); p != nullptr)
         {
             // p.base should never be nil, but be conservative
             if(p->base == nullptr)
@@ -811,11 +933,11 @@ namespace golang::types
 
     // derefStructPtr dereferences typ if it is a (named or unnamed) pointer to a
     // (named or unnamed) struct and returns its base. Otherwise it returns typ.
-    golang::types::Type derefStructPtr(golang::types::Type typ)
+    golang::go::types::Type derefStructPtr(golang::go::types::Type typ)
     {
-        if(auto [p, gocpp_id_11] = gocpp::getValue<Pointer*>(under(typ)); p != nullptr)
+        if(auto [p, gocpp_id_14] = gocpp::getValue<Pointer*>(rec::Underlying(gocpp::recv(typ))); p != nullptr)
         {
-            if(auto [gocpp_id_12, ok] = gocpp::getValue<Struct*>(under(p->base)); ok)
+            if(auto [gocpp_id_15, ok] = gocpp::getValue<Struct*>(rec::Underlying(gocpp::recv(p->base))); ok)
             {
                 return p->base;
             }
@@ -832,38 +954,43 @@ namespace golang::types
         return append(t, i);
     }
 
-    // fieldIndex returns the index for the field with matching package and name, or a value < 0.
-    int fieldIndex(gocpp::slice<Var*> fields, Package* pkg, gocpp::string name)
-    {
-        if(name != "_"_s)
-        {
-            for(auto [i, f] : fields)
-            {
-                if(rec::sameId(gocpp::recv(f), pkg, name))
-                {
-                    return i;
-                }
-            }
-        }
-        return - 1;
-    }
-
-    // lookupMethod returns the index of and method with matching package and name, or (-1, nil).
-    // If foldCase is true, method names are considered equal if they are equal with case folding
-    // and their packages are ignored (e.g., pkg1.m, pkg1.M, pkg2.m, and pkg2.M are all equal).
-    std::tuple<int, Func*> lookupMethod(gocpp::slice<Func*> methods, Package* pkg, gocpp::string name, bool foldCase)
+    // methodIndex returns the index of and method with matching package and name, or (-1, nil).
+    // See Object.sameId for the meaning of foldCase.
+    std::tuple<int, Func*> methodIndex(gocpp::slice<Func*> methods, Package* pkg, gocpp::string name, bool foldCase)
     {
         if(name != "_"_s)
         {
             for(auto [i, m] : methods)
             {
-                if(rec::sameId(gocpp::recv(m), pkg, name) || foldCase && strings::EqualFold(m->object.name, name))
+                if(rec::sameId(gocpp::recv(m), pkg, name, foldCase))
                 {
                     return {i, m};
                 }
             }
         }
         return {- 1, nullptr};
+    }
+
+    // Given a (possibly pointer to a) struct type and field index sequence,
+    // fieldPath returns the dot-separated concatenated field names for the
+    // given index sequence (e.g. "a.b.c").
+    // Use for error reporting etc. where speed is not important.
+    gocpp::string fieldPath(golang::go::types::Type typ, gocpp::slice<int> index)
+    {
+        gocpp::slice<gocpp::string> names = {};
+        for(auto [gocpp_ignored, i] : index)
+        {
+            auto [u, ok] = gocpp::getValue<Struct*>(rec::Underlying(gocpp::recv(derefStructPtr(typ))));
+            if(! ok)
+            {
+                // should not happen if index is valid for typ
+                break;
+            }
+            auto fld = rec::Field(gocpp::recv(u), i);
+            names = append(names, fld->object.name);
+            typ = fld->object.typ;
+        }
+        return mocklib::StringsJoin(names, "."_s);
     }
 
 }

@@ -4,17 +4,12 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
+    struct Chan;
     using ChanDir = int;
     // The direction of a channel is indicated by one of these constants.
     const ChanDir SendRecv = 0;
     const ChanDir SendOnly = 1;
     const ChanDir RecvOnly = 2;
-}
-#include "golang/go/types/type.fwd.h"
-
-namespace golang::types
-{
-    struct Chan;
 }

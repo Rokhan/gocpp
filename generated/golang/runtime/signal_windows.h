@@ -43,23 +43,28 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gsignalStack& value);
 }
-#include "golang/runtime/defs_windows.fwd.h"
-#include "golang/runtime/defs_windows_amd64.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
-    bool isAbort(context* r);
-    bool isgoexception(exceptionrecord* info, context* r);
     g* sigFetchGSafe();
     g* sigFetchG();
-    int32_t sigtrampgo(exceptionpointers* ep, int kind);
-    int32_t exceptionhandler(exceptionrecord* info, context* r, g* gp);
-    int32_t sehhandler(exceptionrecord* _1, uint64_t _2, context* _3, _DISPATCHER_CONTEXT* dctxt);
-    int32_t firstcontinuehandler(exceptionrecord* info, context* r, g* gp);
-    int32_t lastcontinuehandler(exceptionrecord* info, context* r, g* gp);
-    void winthrow(exceptionrecord* info, context* r, g* gp);
-    void dieFromException(exceptionrecord* info, context* r);
+}
+#include "golang/internal/runtime/syscall/windows/defs_windows.fwd.h"
+#include "golang/internal/runtime/syscall/windows/defs_windows_amd64.fwd.h"
+
+namespace golang::runtime
+{
+    namespace windows = golang::internal::runtime::syscall::windows;
+    bool isAbort(windows::Context* r);
+    bool isgoexception(windows::ExceptionRecord* info, windows::Context* r);
+    int32_t sigtrampgo(windows::ExceptionPointers* ep, int kind);
+    int32_t exceptionhandler(windows::ExceptionRecord* info, windows::Context* r, g* gp);
+    int32_t sehhandler(windows::ExceptionRecord* _1, uint64_t _2, windows::Context* _3, windows::DISPATCHER_CONTEXT* dctxt);
+    int32_t firstcontinuehandler(windows::ExceptionRecord* info, windows::Context* r, g* gp);
+    int32_t lastcontinuehandler(windows::ExceptionRecord* info, windows::Context* r, g* gp);
+    void winthrow(windows::ExceptionRecord* info, windows::Context* r, g* gp);
+    void dieFromException(windows::ExceptionRecord* info, windows::Context* r);
 
     namespace rec
     {

@@ -15,10 +15,12 @@
 #include "golang/internal/poll/fd_poll_runtime.h"
 #include "golang/internal/poll/fd_posix.h"
 #include "golang/internal/poll/fd_windows.h"
+#include "golang/internal/testlog/log.h"
 #include "golang/io/fs/fs.h"
 #include "golang/os/error.h"
 #include "golang/os/file.h"
 #include "golang/os/file_windows.h"
+#include "golang/os/getwd.h"
 #include "golang/os/path_windows.h"
 #include "golang/os/types.h"
 #include "golang/runtime/mfinal.h"
@@ -29,9 +31,12 @@
 
 namespace golang::os
 {
+    namespace runtime = golang::runtime;
+    namespace syscall = golang::syscall;
+    namespace testlog = golang::internal::testlog;
+    namespace time = golang::time;
     namespace rec
     {
-        using fs::rec::Error;
         using fs::rec::Perm;
         using poll::rec::Fchdir;
         using poll::rec::Fchmod;
@@ -45,13 +50,14 @@ namespace golang::os
         using poll::rec::SetReadDeadline;
         using poll::rec::SetWriteDeadline;
         using poll::rec::Write;
+        using testlog::rec::Chdir;
         using time::rec::IsZero;
         using time::rec::UnixNano;
     }
 
-    // Close closes the File, rendering it unusable for I/O.
-    // On files that support SetDeadline, any pending I/O operations will
-    // be canceled and return immediately with an ErrClosed error.
+    // Close closes the [File], rendering it unusable for I/O.
+    // On files that support [File.SetDeadline], any pending I/O operations will
+    // be canceled and return immediately with an [ErrClosed] error.
     // Close will return an error if it has already been called.
     gocpp::error rec::Close(File* f)
     {
@@ -164,10 +170,10 @@ namespace golang::os
     // Chown changes the numeric uid and gid of the named file.
     // If the file is a symbolic link, it changes the uid and gid of the link's target.
     // A uid or gid of -1 means to not change that value.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     //
-    // On Windows or Plan 9, Chown always returns the syscall.EWINDOWS or
-    // EPLAN9 error, wrapped in *PathError.
+    // On Windows or Plan 9, Chown always returns the [syscall.EWINDOWS] or
+    // [syscall.EPLAN9] error, wrapped in [*PathError].
     gocpp::error Chown(gocpp::string name, int uid, int gid)
     {
         auto e = ignoringEINTR([=]() mutable -> gocpp::error
@@ -187,10 +193,10 @@ namespace golang::os
 
     // Lchown changes the numeric uid and gid of the named file.
     // If the file is a symbolic link, it changes the uid and gid of the link itself.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     //
-    // On Windows, it always returns the syscall.EWINDOWS error, wrapped
-    // in *PathError.
+    // On Windows, it always returns the [syscall.EWINDOWS] error, wrapped
+    // in [*PathError].
     gocpp::error Lchown(gocpp::string name, int uid, int gid)
     {
         auto e = ignoringEINTR([=]() mutable -> gocpp::error
@@ -209,10 +215,10 @@ namespace golang::os
     }
 
     // Chown changes the numeric uid and gid of the named file.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     //
-    // On Windows, it always returns the syscall.EWINDOWS error, wrapped
-    // in *PathError.
+    // On Windows, it always returns the [syscall.EWINDOWS] error, wrapped
+    // in [*PathError].
     gocpp::error rec::Chown(File* f, int uid, int gid)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chown"_s); err != nullptr)
@@ -228,7 +234,7 @@ namespace golang::os
 
     // Truncate changes the size of the file.
     // It does not change the I/O offset.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     gocpp::error rec::Truncate(File* f, int64_t size)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "truncate"_s); err != nullptr)
@@ -260,12 +266,26 @@ namespace golang::os
 
     // Chtimes changes the access and modification times of the named
     // file, similar to the Unix utime() or utimes() functions.
-    // A zero time.Time value will leave the corresponding file time unchanged.
+    // A zero [time.Time] value will leave the corresponding file time unchanged.
     //
     // The underlying filesystem may truncate or round the values to a
     // less precise time unit.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     gocpp::error Chtimes(gocpp::string name, mocklib::Date atime, mocklib::Date mtime)
+    {
+        auto utimes = chtimesUtimes(atime, mtime);
+        if(auto e = syscall::UtimesNano(fixLongPath(name), utimes.make_slice(0)); e != nullptr)
+        {
+            return gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
+                x.Op = "chtimes"_s;
+                x.Path = name;
+                x.Err = e;
+            }));
+        }
+        return nullptr;
+    }
+
+    gocpp::array<syscall::Timespec, 2> chtimesUtimes(mocklib::Date atime, mocklib::Date mtime)
     {
         gocpp::array<syscall::Timespec, 2> utimes = {};
         auto set = [=](int i, mocklib::Date t) mutable -> void
@@ -284,20 +304,12 @@ namespace golang::os
         };
         set(0, atime);
         set(1, mtime);
-        if(auto e = syscall::UtimesNano(fixLongPath(name), utimes.make_slice(0)); e != nullptr)
-        {
-            return gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
-                x.Op = "chtimes"_s;
-                x.Path = name;
-                x.Err = e;
-            }));
-        }
-        return nullptr;
+        return utimes;
     }
 
     // Chdir changes the current working directory to the file,
     // which must be a directory.
-    // If there is an error, it will be of type *PathError.
+    // If there is an error, it will be of type [*PathError].
     gocpp::error rec::Chdir(File* f)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chdir"_s); err != nullptr)
@@ -307,6 +319,14 @@ namespace golang::os
         if(auto e = rec::Fchdir(gocpp::recv(f->file.pfd)); e != nullptr)
         {
             return rec::wrapErr(gocpp::recv(f), "chdir"_s, e);
+        }
+        if(auto log = testlog::Logger(); log != nullptr)
+        {
+            auto [wd, err] = Getwd();
+            if(err == nullptr)
+            {
+                rec::Chdir(gocpp::recv(log), wd);
+            }
         }
         return nullptr;
     }
@@ -367,6 +387,20 @@ namespace golang::os
             if(err != syscall::go_EINTR)
             {
                 return err;
+            }
+        }
+    }
+
+    // ignoringEINTR2 is ignoringEINTR, but returning an additional value.
+    template<typename T>
+    std::tuple<T, gocpp::error> ignoringEINTR2(std::function<std::tuple<T, gocpp::error> ()> fn)
+    {
+        for(; ; )
+        {
+            auto [v, err] = fn();
+            if(err != syscall::go_EINTR)
+            {
+                return {v, err};
             }
         }
     }

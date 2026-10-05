@@ -10,20 +10,20 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct GoTag_objset { };
 }
 #include "golang/go/types/object.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     using objset = gocpp::defined<gocpp::map<gocpp::string, Object>, GoTag_objset>;
 }
 
 #include "golang/go/types/object.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec

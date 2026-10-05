@@ -48,30 +48,45 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Proc& value);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/sync/mutex.h"
 #include "golang/syscall/syscall_windows.h"
 
 namespace golang::syscall
 {
+    extern gocpp::unsafe_pointer __LoadLibraryExW;
+    extern gocpp::unsafe_pointer __GetProcAddress;
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3);
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall6(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall9(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9);
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall12(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12);
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall15(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15);
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall18(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15, uintptr_t a16, uintptr_t a17, uintptr_t a18);
-    std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args);
+    std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t p, gocpp::slice<uintptr_t> args);
     
     template<typename... Args>
-    std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t trap, Args... args)
+    std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t p, Args... args)
     {
-        return SyscallN(trap, gocpp::ToSlice<uintptr_t>(args...));
+        return SyscallN(p, gocpp::ToSlice<uintptr_t>(args...));
     }
     
     template<typename... Args>
-    std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t trap, uintptr_t value, Args... args)
+    std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t p, uintptr_t value, Args... args)
     {
-        return SyscallN(trap, gocpp::ToSlice<uintptr_t>(value, args...));
+        return SyscallN(p, gocpp::ToSlice<uintptr_t>(value, args...));
+    }
+    std::tuple<uintptr_t, uintptr_t, Errno> syscalln(uintptr_t fn, uintptr_t n, gocpp::slice<uintptr_t> args);
+    
+    template<typename... Args>
+    std::tuple<uintptr_t, uintptr_t, Errno> syscalln(uintptr_t fn, uintptr_t n, Args... args)
+    {
+        return syscalln(fn, n, gocpp::ToSlice<uintptr_t>(args...));
+    }
+    
+    template<typename... Args>
+    std::tuple<uintptr_t, uintptr_t, Errno> syscalln(uintptr_t fn, uintptr_t n, uintptr_t value, Args... args)
+    {
+        return syscalln(fn, n, gocpp::ToSlice<uintptr_t>(value, args...));
     }
     std::tuple<uintptr_t, Errno> loadlibrary(uint16_t* filename);
     std::tuple<uintptr_t, Errno> loadsystemlibrary(uint16_t* filename);
@@ -93,6 +108,19 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct DLL& value);
+}
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::syscall
+{
+    std::tuple<DLL*, gocpp::error> LoadDLL(gocpp::string name);
+    DLL* MustLoadDLL(gocpp::string name);
+}
+#include "golang/sync/mutex.h"
+
+namespace golang::syscall
+{
+    namespace sync = golang::sync;
     struct LazyDLL
     {
         mocklib::Mutex mu{};
@@ -130,8 +158,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct LazyProc& value);
-    std::tuple<DLL*, gocpp::error> LoadDLL(gocpp::string name);
-    DLL* MustLoadDLL(gocpp::string name);
     LazyDLL* NewLazyDLL(gocpp::string name);
 
     namespace rec

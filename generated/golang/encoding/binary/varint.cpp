@@ -14,8 +14,10 @@
 #include "golang/errors/errors.h"
 #include "golang/io/io.h"
 
-namespace golang::binary
+namespace golang::encoding::binary
 {
+    namespace errors = golang::errors;
+    namespace io = golang::io;
     namespace rec
     {
         using io::rec::ReadByte;
@@ -51,10 +53,9 @@ namespace golang::binary
     // Uvarint decodes a uint64 from buf and returns that value and the
     // number of bytes read (> 0). If an error occurred, the value is 0
     // and the number of bytes n is <= 0 meaning:
-    //
-    //	n == 0: buf too small
-    //	n  < 0: value larger than 64 bits (overflow)
-    //	        and -n is the number of bytes read
+    //   - n == 0: buf too small;
+    //   - n < 0: value larger than 64 bits (overflow) and -n is the number of
+    //     bytes read.
     std::tuple<uint64_t, int> Uvarint(gocpp::slice<unsigned char> buf)
     {
         uint64_t x = {};
@@ -110,10 +111,9 @@ namespace golang::binary
     // Varint decodes an int64 from buf and returns that value and the
     // number of bytes read (> 0). If an error occurred, the value is 0
     // and the number of bytes n is <= 0 with the following meaning:
-    //
-    //	n == 0: buf too small
-    //	n  < 0: value larger than 64 bits (overflow)
-    //	        and -n is the number of bytes read
+    //   - n == 0: buf too small;
+    //   - n < 0: value larger than 64 bits (overflow)
+    //     and -n is the number of bytes read.
     std::tuple<int64_t, int> Varint(gocpp::slice<unsigned char> buf)
     {
         // ok to continue in presence of error

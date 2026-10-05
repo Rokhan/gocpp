@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Type : virtual gocpp::Interface
     {
@@ -42,7 +42,9 @@ namespace golang::types
         struct IType
         {
             // Underlying returns the underlying type of a type.
-            virtual golang::types::Type vUnderlying() = 0;
+            // Underlying types are never Named, TypeParam, or Alias types.
+            // See https://go.dev/ref/spec#Underlying_types.
+            virtual golang::go::types::Type vUnderlying() = 0;
             // String returns a string representation of a type.
             virtual gocpp::string vString() = 0;
             virtual void* getPtr() = 0;
@@ -56,7 +58,7 @@ namespace golang::types
                 value.reset(ptr);
             }
 
-            golang::types::Type vUnderlying() override;
+            golang::go::types::Type vUnderlying() override;
 
             gocpp::string vString() override;
 
@@ -75,8 +77,8 @@ namespace golang::types
 
     namespace rec
     {
-        golang::types::Type Underlying(const gocpp::PtrRecv<struct Type, false>& self);
-        golang::types::Type Underlying(const gocpp::ObjRecv<struct Type>& self);
+        golang::go::types::Type Underlying(const gocpp::PtrRecv<struct Type, false>& self);
+        golang::go::types::Type Underlying(const gocpp::ObjRecv<struct Type>& self);
 
         gocpp::string String(const gocpp::PtrRecv<struct Type, false>& self);
         gocpp::string String(const gocpp::ObjRecv<struct Type>& self);

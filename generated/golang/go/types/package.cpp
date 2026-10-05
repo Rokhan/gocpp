@@ -17,8 +17,9 @@
 #include "golang/go/types/scope.h"
 #include "golang/go/types/universe.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace fmt = golang::fmt;
     namespace rec
     {
     }
@@ -117,7 +118,7 @@ namespace golang::types
     // holding the objects declared at package level (TypeNames,
     // Consts, Vars, and Funcs).
     // For a nil pkg receiver, Scope returns the Universe scope.
-    golang::types::Scope* rec::Scope(Package* pkg)
+    golang::go::types::Scope* rec::Scope(Package* pkg)
     {
         if(pkg != nullptr)
         {

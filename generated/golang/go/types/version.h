@@ -10,9 +10,10 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     goVersion asGoVersion(gocpp::string v);
+    // Go versions that introduced language changes
     extern types::goVersion go1_9;
     extern types::goVersion go1_13;
     extern types::goVersion go1_14;
@@ -21,44 +22,37 @@ namespace golang::types
     extern types::goVersion go1_20;
     extern types::goVersion go1_21;
     extern types::goVersion go1_22;
-}
-#include "golang/internal/goversion/goversion.h"
-#include "golang/fmt/print.fwd.h"
-
-namespace golang::types
-{
+    extern types::goVersion go1_23;
+    extern types::goVersion go1_26;
+    extern types::goVersion go1_27;
+    // current (deployed) Go version
     extern types::goVersion go_current;
 }
 
-#include "golang/go/ast/ast.h"
-#include "golang/go/token/position.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/errors.h"
-#include "golang/go/types/package.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
         bool isValid(goVersion v);
         int cmp(goVersion x, goVersion y);
-        void langCompat(Checker* check, ast::BasicLit* lit);
-        bool allowVersion(Checker* check, Package* pkg, positioner at, goVersion v);
-        bool verifyVersionf(Checker* check, positioner at, goVersion v, gocpp::string format, gocpp::slice<gocpp::go_any> args);
+        bool allowVersion(Checker* check, goVersion want);
+        bool verifyVersionf(Checker* check, positioner at, goVersion v, gocpp::string format, gocpp::slice<go_any> args);
         
         template<typename... Args>
         bool verifyVersionf(Checker* check, positioner at, goVersion v, gocpp::string format, Args... args)
         {
-            return verifyVersionf(check, at, v, format, gocpp::ToSlice<gocpp::go_any>(args...));
+            return verifyVersionf(check, at, v, format, gocpp::ToSlice<go_any>(args...));
         }
         
         template<typename... Args>
-        bool verifyVersionf(Checker* check, positioner at, goVersion v, gocpp::string format, gocpp::go_any value, Args... args)
+        bool verifyVersionf(Checker* check, positioner at, goVersion v, gocpp::string format, go_any value, Args... args)
         {
-            return verifyVersionf(check, at, v, format, gocpp::ToSlice<gocpp::go_any>(value, args...));
+            return verifyVersionf(check, at, v, format, gocpp::ToSlice<go_any>(value, args...));
         }
-        ast::File* fileFor(Checker* check, token::Pos pos);
     }
 }
 

@@ -9,13 +9,26 @@
 #include "golang/runtime/mpagealloc_64bit.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/mpagealloc.h"
 
 namespace golang::runtime
 {
+    // levelBits is the number of bits in the radix for a given level in the super summary
+    // structure.
+    //
+    // The sum of all the entries of levelBits should equal heapAddrBits.
     extern gocpp::array<unsigned int, summaryLevels> levelBits;
+    // levelShift is the number of bits to shift to acquire the radix for a given level
+    // in the super summary structure.
+    //
+    // With levelShift, one can compute the index of the summary at level l related to a
+    // pointer p by doing:
+    //
+    //	p >> levelShift[l]
     extern gocpp::array<unsigned int, summaryLevels> levelShift;
+    // levelLogPages is log2 the maximum number of runtime pages in the address space
+    // a summary in the given level represents.
+    //
+    // The leaf level always represents exactly log2 of 1 chunk's worth of pages.
     extern gocpp::array<unsigned int, summaryLevels> levelLogPages;
 }
 

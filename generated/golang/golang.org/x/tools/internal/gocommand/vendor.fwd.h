@@ -3,9 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/time/time.fwd.h"
 
-namespace golang::gocommand
+namespace golang::golang_org::x::tools::internal::gocommand
 {
     struct ModuleJSON;
 }

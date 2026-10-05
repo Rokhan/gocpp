@@ -7,10 +7,5 @@
 namespace golang::runtime
 {
     struct slice;
-}
-#include "golang/runtime/malloc.fwd.h"
-
-namespace golang::runtime
-{
     struct notInHeapSlice;
 }

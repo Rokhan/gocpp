@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 // Package color implements a basic color library.
-namespace golang::color
+namespace golang::image::color
 {
     namespace rec
     {
@@ -117,7 +117,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::RGBA c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::image::color::RGBA c)
     {
         uint32_t r;
         uint32_t g;
@@ -581,12 +581,12 @@ namespace golang::color
     Model Gray16Model = ModelFunc(gray16Model);
     Color rgbaModel(Color c)
     {
-        if(auto [gocpp_id_0, ok] = gocpp::getValue<golang::color::RGBA>(c); ok)
+        if(auto [gocpp_id_0, ok] = gocpp::getValue<golang::image::color::RGBA>(c); ok)
         {
             return c;
         }
         auto [r, g, b, a] = rec::RGBA(gocpp::recv(c));
-        return golang::color::RGBA {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8), uint8_t(a >> 8)};
+        return golang::image::color::RGBA {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8), uint8_t(a >> 8)};
     }
 
     Color rgba64Model(Color c)

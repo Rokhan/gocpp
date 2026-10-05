@@ -14,19 +14,19 @@
 #include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
-#include "golang/internal/goexperiment/exp_allocheaders_on.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/gc/malloc.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/arena.h"
 #include "golang/runtime/cgo.h"
 #include "golang/runtime/iface.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mstats.h"
@@ -38,17 +38,24 @@
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+#include "golang/runtime/traceruntime.h"
 #include "golang/runtime/type.h"
-#include "golang/runtime/typekind.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace gc = golang::internal::runtime::gc;
+    namespace goarch = golang::internal::goarch;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using abi::rec::InSlice;
         using abi::rec::IsVariadic;
+        using abi::rec::Kind;
         using abi::rec::OutSlice;
+        using abi::rec::Pointers;
         using abi::rec::Uncommon;
         using atomic::rec::And;
         using atomic::rec::CompareAndSwap;
@@ -56,15 +63,15 @@ namespace golang::runtime
         using atomic::rec::Or;
     }
 
-    // finblock is an array of finalizers to be executed. finblocks are
-    // arranged in a linked list for the finalizer queue.
+    // finBlock is an block of finalizers to be executed. finBlocks
+    // are arranged in a linked list for the finalizer queue.
     //
-    // finblock is allocated from non-GC'd memory, so any heap pointers
+    // finBlock is allocated from non-GC'd memory, so any heap pointers
     // must be specially handled. GC currently assumes that the finalizer
     // queue does not grow during marking (but it can shrink).
     
     template<typename T> requires gocpp::GoStruct<T>
-    finblock::operator T()
+    finBlock::operator T()
     {
         T result;
         result._1 = this->_1;
@@ -77,7 +84,7 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool finblock::operator==(const T& ref) const
+    bool finBlock::operator==(const T& ref) const
     {
         if (_1 != ref._1) return false;
         if (alllink != ref.alllink) return false;
@@ -88,7 +95,7 @@ namespace golang::runtime
         return true;
     }
 
-    std::ostream& finblock::PrintTo(std::ostream& os) const
+    std::ostream& finBlock::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << _1;
@@ -101,7 +108,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct finblock& value)
+    std::ostream& operator<<(std::ostream& os, const struct finBlock& value)
     {
         return value.PrintTo(os);
     }
@@ -109,10 +116,12 @@ namespace golang::runtime
     atomic::Uint32 fingStatus;
     mutex finlock;
     g* fing;
-    finblock* finq;
-    finblock* finc;
-    gocpp::array<unsigned char, _FinBlockSize / goarch::PtrSize / 8> finptrmask;
-    finblock* allfin;
+    finBlock* finq;
+    finBlock* finc;
+    gocpp::array<unsigned char, finBlockSize / goarch::PtrSize / 8> finptrmask;
+    uint64_t finqueued;
+    uint64_t finexecuted;
+    finBlock* allfin;
     // NOTE: Layout known to queuefinalizer.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -201,11 +210,12 @@ namespace golang::runtime
         }
 
         lock(& finlock);
+
         if(finq == nullptr || finq->cnt == uint32_t(len(finq->fin)))
         {
             if(finc == nullptr)
             {
-                finc = (finblock*)(persistentalloc(_FinBlockSize, 0, & memstats.gcMiscSys));
+                finc = (finBlock*)(persistentalloc(finBlockSize, 0, & memstats.gcMiscSys));
                 finc->alllink = allfin;
                 allfin = finc;
                 if(finptrmask[0] == 0)
@@ -240,6 +250,7 @@ namespace golang::runtime
         f->fint = fint;
         f->ot = ot;
         f->arg = p;
+        finqueued++;
         unlock(& finlock);
         rec::Or(gocpp::recv(fingStatus), fingWake);
     }
@@ -271,7 +282,7 @@ namespace golang::runtime
         // start the finalizer goroutine exactly once
         if(rec::Load(gocpp::recv(fingStatus)) == fingUninitialized && rec::CompareAndSwap(gocpp::recv(fingStatus), fingUninitialized, fingCreated))
         {
-            gocpp::go([&]{ runfinq(); });
+            gocpp::go([&]{ runFinalizers(); });
         }
     }
 
@@ -284,8 +295,19 @@ namespace golang::runtime
         return true;
     }
 
+    std::tuple<uint64_t, uint64_t> finReadQueueStats()
+    {
+        uint64_t queued;
+        uint64_t executed;
+        lock(& finlock);
+        queued = finqueued;
+        executed = finexecuted;
+        unlock(& finlock);
+        return {queued, executed};
+    }
+
     // This is the goroutine that runs all of the finalizers.
-    void runfinq()
+    void runFinalizers()
     {
         gocpp::unsafe_pointer frame = {};
         uintptr_t framecap = {};
@@ -314,7 +336,8 @@ namespace golang::runtime
             }
             for(; fb != nullptr; )
             {
-                for(auto i = fb->cnt; i > 0; i--)
+                auto n = fb->cnt;
+                for(auto i = n; i > 0; i--)
                 {
                     auto f = & fb->fin[i - 1];
 
@@ -336,10 +359,9 @@ namespace golang::runtime
                         frame = mallocgc(framesz, nullptr, true);
                         framecap = framesz;
                     }
-
                     if(f->fint == nullptr)
                     {
-                        go_throw("missing type in runfinq"_s);
+                        go_throw("missing type in finalizer"_s);
                     }
                     auto r = frame;
                     if(argRegs > 0)
@@ -356,10 +378,10 @@ namespace golang::runtime
                     }
                     //Go switch emulation
                     {
-                        auto condition = f->fint->Kind_ & kindMask;
+                        auto condition = rec::Kind(gocpp::recv(f->fint));
                         int conditionId = -1;
-                        if(condition == kindPtr) { conditionId = 0; }
-                        else if(condition == kindInterface) { conditionId = 1; }
+                        if(condition == abi::Pointer) { conditionId = 0; }
+                        else if(condition == abi::Interface) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:
@@ -381,7 +403,7 @@ namespace golang::runtime
                                 break;
                             }
                             default:
-                                go_throw("bad kind in runfinq"_s);
+                                go_throw("bad type kind in finalizer"_s);
                                 break;
                         }
                     }
@@ -400,6 +422,7 @@ namespace golang::runtime
                 }
                 auto next = fb->next;
                 lock(& finlock);
+                finexecuted += uint64_t(n);
                 fb->next = finc;
                 finc = fb;
                 unlock(& finlock);
@@ -440,7 +463,7 @@ namespace golang::runtime
     // blockUntilEmptyFinalizerQueue blocks until either the finalizer
     // queue is emptied (and the finalizers have executed) or the timeout
     // is reached. Returns true if the finalizer queue was emptied.
-    // This is used by the runtime and sync tests.
+    // This is used by the runtime, sync, and unique tests.
     bool blockUntilEmptyFinalizerQueue(int64_t timeout)
     {
         auto start = nanotime();
@@ -470,6 +493,9 @@ namespace golang::runtime
     // that obj is unreachable, it will free obj.
     //
     // SetFinalizer(obj, nil) clears any finalizer associated with obj.
+    //
+    // New Go code should consider using [AddCleanup] instead, which is much
+    // less error-prone than SetFinalizer.
     //
     // The argument obj must be a pointer to an object allocated by calling
     // new, by taking the address of a composite literal, or by taking the
@@ -518,9 +544,11 @@ namespace golang::runtime
     // In order to use finalizers correctly, the program must ensure that
     // the object is reachable until it is no longer required.
     // Objects stored in global variables, or that can be found by tracing
-    // pointers from a global variable, are reachable. For other objects,
-    // pass the object to a call of the [KeepAlive] function to mark the
-    // last point in the function where the object must be reachable.
+    // pointers from a global variable, are reachable. A function argument or
+    // receiver may become unreachable at the last point where the function
+    // mentions it. To make an unreachable object reachable, pass the object
+    // to a call of the [KeepAlive] function to mark the last point in the
+    // function where the object must be reachable.
     //
     // For example, if p points to a struct, such as os.File, that contains
     // a file descriptor d, and p has a finalizer that closes that file
@@ -549,19 +577,13 @@ namespace golang::runtime
     // to avoid read-write races.
     void SetFinalizer(go_any obj, go_any finalizer)
     {
-        if(debug.sbrk != 0)
-        {
-            // debug.sbrk never frees memory, so no finalizers run
-            // (and we don't have the data structures to record them).
-            return;
-        }
         auto e = efaceOf(& obj);
         auto etyp = e->_type;
         if(etyp == nullptr)
         {
             go_throw("runtime.SetFinalizer: first argument is nil"_s);
         }
-        if(etyp->Kind_ & kindMask != kindPtr)
+        if(rec::Kind(gocpp::recv(etyp)) != abi::Pointer)
         {
             go_throw("runtime.SetFinalizer: first argument is "_s + rec::string(gocpp::recv(toRType(etyp))) + ", not pointer"_s);
         }
@@ -570,11 +592,16 @@ namespace golang::runtime
         {
             go_throw("nil elem type!"_s);
         }
-
         if(inUserArenaChunk(uintptr_t(e->data)))
         {
             // Arena-allocated objects are not eligible for finalizers.
             go_throw("runtime.SetFinalizer: first argument was allocated into an arena"_s);
+        }
+        if(debug.sbrk != 0)
+        {
+            // debug.sbrk never frees memory, so no finalizers run
+            // (and we don't have the data structures to record them).
+            return;
         }
 
         // find the containing object
@@ -590,16 +617,16 @@ namespace golang::runtime
         }
 
         // Move base forward if we've got an allocation header.
-        if(goexperiment::AllocHeaders && ! rec::noscan(gocpp::recv(span->spanclass)) && ! heapBitsInSpan(span->elemsize) && rec::sizeclass(gocpp::recv(span->spanclass)) != 0)
+        if(! rec::noscan(gocpp::recv(span->spanclass)) && ! heapBitsInSpan(span->elemsize) && rec::sizeclass(gocpp::recv(span->spanclass)) != 0)
         {
-            base += mallocHeaderSize;
+            base += gc::MallocHeaderSize;
         }
 
         if(uintptr_t(e->data) != base)
         {
             // As an implementation detail we allow to set finalizers for an inner byte
             // of an object if it could come from tiny alloc (see mallocgc for details).
-            if(ot->Elem == nullptr || ot->Elem->PtrBytes != 0 || ot->Elem->Size_ >= maxTinySize)
+            if(ot->Elem == nullptr || rec::Pointers(gocpp::recv(ot->Elem)) || ot->Elem->Size_ >= maxTinySize)
             {
                 go_throw("runtime.SetFinalizer: pointer not at beginning of allocated block"_s);
             }
@@ -613,11 +640,17 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 removefinalizer(e->data);
+
+                if(debug.checkfinalizers != 0)
+                {
+                    clearFinalizerContext(uintptr_t(e->data));
+                    KeepAlive(e->data);
+                }
             });
             return;
         }
 
-        if(ftyp->Kind_ & kindMask != kindFunc)
+        if(rec::Kind(gocpp::recv(ftyp)) != abi::Func)
         {
             go_throw("runtime.SetFinalizer: second argument is "_s + rec::string(gocpp::recv(toRType(ftyp))) + ", not a function"_s);
         }
@@ -635,8 +668,8 @@ namespace golang::runtime
         {
             int conditionId = -1;
             if(fint == etyp) { conditionId = 0; }
-            else if(fint->Kind_ & kindMask == kindPtr) { conditionId = 1; }
-            else if(fint->Kind_ & kindMask == kindInterface) { conditionId = 2; }
+            else if(rec::Kind(gocpp::recv(fint)) == abi::Pointer) { conditionId = 1; }
+            else if(rec::Kind(gocpp::recv(fint)) == abi::Interface) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -680,11 +713,16 @@ namespace golang::runtime
         // make sure we have a finalizer goroutine
         createfing();
 
+        auto callerpc = sys::GetCallerPC();
         systemstack([=]() mutable -> void
         {
             if(! addfinalizer(e->data, (funcval*)(f->data), nret, fint, ot))
             {
                 go_throw("runtime.SetFinalizer: finalizer already set"_s);
+            }
+            if(debug.checkfinalizers != 0)
+            {
+                setFinalizerContext(e->data, ot->Elem, callerpc, (funcval*)(f->data)->fn);
             }
         });
     }

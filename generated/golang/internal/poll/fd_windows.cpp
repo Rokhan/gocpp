@@ -21,9 +21,12 @@
 #include "golang/internal/syscall/windows/net_windows.h"
 #include "golang/internal/syscall/windows/symlink_windows.h"
 #include "golang/internal/syscall/windows/syscall_windows.h"
+#include "golang/internal/syscall/windows/types_windows.h"
 #include "golang/internal/syscall/windows/zsyscall_windows.h"
 #include "golang/io/io.h"
-#include "golang/sync/mutex.h"
+#include "golang/runtime/pinner.h"
+#include "golang/sync/oncefunc.h"
+#include "golang/sync/pool.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/types_windows_amd64.h"
@@ -32,51 +35,79 @@
 #include "golang/unicode/utf16/utf16.h"
 #include "golang/unicode/utf8/utf8.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace errors = golang::errors;
+    namespace io = golang::io;
+    namespace race = golang::internal::race;
+    namespace runtime = golang::runtime;
+    namespace sync = golang::sync;
+    namespace syscall = golang::syscall;
+    namespace utf16 = golang::unicode::utf16;
+    namespace utf8 = golang::unicode::utf8;
+    namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
         using mocklib::rec::Error;
-        using mocklib::rec::Lock;
-        using mocklib::rec::Unlock;
+        using runtime::rec::Pin;
+        using runtime::rec::Unpin;
+        using sync::rec::Get;
+        using sync::rec::Put;
         using syscall::rec::Error;
         using syscall::rec::Sockaddr;
     }
 
     gocpp::error initErr;
     uint64_t ioSync;
-    bool useSetFileCompletionNotificationModes;
-    // checkSetFileCompletionNotificationModes verifies that
-    // SetFileCompletionNotificationModes Windows API is present
-    // on the system and is safe to use.
+    // ifsHandlesOnly returns true if the system only has IFS handles for TCP sockets.
     // See https://support.microsoft.com/kb/2568167 for details.
-    void checkSetFileCompletionNotificationModes()
+    std::function<bool (void)> ifsHandlesOnly = sync::OnceValue([]() mutable -> bool
     {
-        auto err = syscall::LoadSetFileCompletionNotificationModes();
-        if(err != nullptr)
-        {
-            return;
-        }
         auto protos = gocpp::array<int32_t, 2> {syscall::IPPROTO_TCP, 0};
         gocpp::array<syscall::WSAProtocolInfo, 32> buf = {};
         auto len = uint32_t(gocpp::Sizeof<gocpp::array<syscall::WSAProtocolInfo, 32>>());
-        int32_t n;
-        std::tie(n, err) = syscall::WSAEnumProtocols(& protos[0], & buf[0], & len);
+        auto [n, err] = syscall::WSAEnumProtocols(& protos[0], & buf[0], & len);
         if(err != nullptr)
         {
-            return;
+            return false;
         }
-        for(auto i = int32_t(0); i < n; i++)
+        for(auto [i, gocpp_ignored] : n)
         {
             if(buf[i].ServiceFlags1 & syscall::XP1_IFS_HANDLES == 0)
             {
-                return;
+                return false;
             }
         }
-        useSetFileCompletionNotificationModes = true;
+        return true;
+    });
+    // canSkipCompletionPortOnSuccess returns true if we use FILE_SKIP_COMPLETION_PORT_ON_SUCCESS for the given handle.
+    // See https://support.microsoft.com/kb/2568167 for details.
+    bool canSkipCompletionPortOnSuccess(syscall::Handle h, bool isSocket)
+    {
+        if(! isSocket)
+        {
+            // Non-socket handles can use SetFileCompletionNotificationModes without problems.
+            return true;
+        }
+        if(ifsHandlesOnly())
+        {
+            // If the system only has IFS handles for TCP sockets, then there is nothing else to check.
+            return true;
+        }
+        syscall::WSAProtocolInfo info = {};
+        auto size = int32_t(gocpp::Sizeof<syscall::WSAProtocolInfo>());
+        if(syscall::Getsockopt(h, syscall::SOL_SOCKET, windows::SO_PROTOCOL_INFOW, (unsigned char*)(gocpp::unsafe_pointer(& info)), & size) != nullptr)
+        {
+            return false;
+        }
+        return info.ServiceFlags1 & syscall::XP1_IFS_HANDLES != 0;
     }
 
-    void init()
+    // InitWSA initiates the use of the Winsock DLL by the current process.
+    // It is called from the net package at init time to avoid
+    // loading ws2_32.dll when net is not used.
+    std::function<void (void)> InitWSA = sync::OnceFunc([]() mutable -> void
     {
         syscall::WSAData d = {};
         auto e = syscall::WSAStartup(uint32_t(0x202), & d);
@@ -84,9 +115,7 @@ namespace golang::poll
         {
             initErr = e;
         }
-        checkSetFileCompletionNotificationModes();
-    }
-
+    });
     // operation contains superset of data necessary to perform all async IO.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -96,17 +125,6 @@ namespace golang::poll
         result.o = this->o;
         result.runtimeCtx = this->runtimeCtx;
         result.mode = this->mode;
-        result.errno = this->errno;
-        result.qty = this->qty;
-        result.fd = this->fd;
-        result.buf = this->buf;
-        result.msg = this->msg;
-        result.sa = this->sa;
-        result.rsa = this->rsa;
-        result.rsan = this->rsan;
-        result.handle = this->handle;
-        result.flags = this->flags;
-        result.bufs = this->bufs;
         return result;
     }
 
@@ -116,17 +134,6 @@ namespace golang::poll
         if (o != ref.o) return false;
         if (runtimeCtx != ref.runtimeCtx) return false;
         if (mode != ref.mode) return false;
-        if (errno != ref.errno) return false;
-        if (qty != ref.qty) return false;
-        if (fd != ref.fd) return false;
-        if (buf != ref.buf) return false;
-        if (msg != ref.msg) return false;
-        if (sa != ref.sa) return false;
-        if (rsa != ref.rsa) return false;
-        if (rsan != ref.rsan) return false;
-        if (handle != ref.handle) return false;
-        if (flags != ref.flags) return false;
-        if (bufs != ref.bufs) return false;
         return true;
     }
 
@@ -136,17 +143,6 @@ namespace golang::poll
         os << "" << o;
         os << " " << runtimeCtx;
         os << " " << mode;
-        os << " " << errno;
-        os << " " << qty;
-        os << " " << fd;
-        os << " " << buf;
-        os << " " << msg;
-        os << " " << sa;
-        os << " " << rsa;
-        os << " " << rsan;
-        os << " " << handle;
-        os << " " << flags;
-        os << " " << bufs;
         os << '}';
         return os;
     }
@@ -156,36 +152,54 @@ namespace golang::poll
         return value.PrintTo(os);
     }
 
-    void rec::InitBuf(operation* o, gocpp::slice<unsigned char> buf)
+    void rec::setOffset(operation* o, int64_t off)
     {
-        o->buf.Len = uint32_t(len(buf));
-        o->buf.Buf = nullptr;
-        if(len(buf) != 0)
-        {
-            o->buf.Buf = & buf[0];
-        }
+        o->o.OffsetHigh = uint32_t(off >> 32);
+        o->o.Offset = uint32_t(off);
     }
 
-    void rec::InitBufs(operation* o, gocpp::slice<gocpp::slice<unsigned char>>* buf)
+    syscall::Overlapped* rec::overlapped(FD* fd, operation* o)
     {
-        if(o->bufs == nullptr)
+        if(fd->isBlocking)
         {
-            o->bufs = gocpp::make(gocpp::Tag<gocpp::slice<syscall::WSABuf>>(), 0, len(*buf));
+            // Don't return the overlapped object if the file handle
+            // doesn't use overlapped I/O. It could be used, but
+            // that would then use the file pointer stored in the
+            // overlapped object rather than the real file pointer.
+            return nullptr;
         }
-        else
+        return & o->o;
+    }
+
+    syscall::WSABuf* newWsaBuf(gocpp::slice<unsigned char> b)
+    {
+        return gocpp::InitPtr<syscall::WSABuf>([=](auto& x) {
+            x.Buf = unsafe::SliceData(b);
+            x.Len = uint32_t(len(b));
+        });
+    }
+
+    sync::Pool wsaBufsPool = gocpp::Init<sync::Pool>([](auto& x) {
+        x.New = []() mutable -> go_any
         {
-            o->bufs = o->bufs.make_slice(0, 0);
-        }
+            auto buf = gocpp::make(gocpp::Tag<gocpp::slice<syscall::WSABuf>>(), 0, 16);
+            return & buf;
+        };
+    });
+    gocpp::slice<syscall::WSABuf>* newWSABufs(gocpp::slice<gocpp::slice<unsigned char>>* buf)
+    {
+        auto bufsPtr = gocpp::getValue<gocpp::slice<syscall::WSABuf>*>(rec::Get(gocpp::recv(wsaBufsPool)));
+        *bufsPtr = (*bufsPtr).make_slice(0, 0);
         for(auto [gocpp_ignored, b] : *buf)
         {
             if(len(b) == 0)
             {
-                o->bufs = append(o->bufs, syscall::WSABuf {});
+                *bufsPtr = append(*bufsPtr, syscall::WSABuf {});
                 continue;
             }
             for(; len(b) > maxRW; )
             {
-                o->bufs = append(o->bufs, gocpp::Init<syscall::WSABuf>([=](auto& x) {
+                *bufsPtr = append(*bufsPtr, gocpp::Init<syscall::WSABuf>([=](auto& x) {
                     x.Len = maxRW;
                     x.Buf = & b[0];
                 }));
@@ -193,151 +207,309 @@ namespace golang::poll
             }
             if(len(b) > 0)
             {
-                o->bufs = append(o->bufs, gocpp::Init<syscall::WSABuf>([=](auto& x) {
+                *bufsPtr = append(*bufsPtr, gocpp::Init<syscall::WSABuf>([=](auto& x) {
                     x.Len = uint32_t(len(b));
                     x.Buf = & b[0];
                 }));
             }
         }
+        return bufsPtr;
     }
 
-    // ClearBufs clears all pointers to Buffers parameter captured
-    // by InitBufs, so it can be released by garbage collector.
-    void rec::ClearBufs(operation* o)
+    void freeWSABufs(gocpp::slice<syscall::WSABuf>* bufsPtr)
     {
-        for(auto [i, gocpp_ignored] : o->bufs)
+        // Clear pointers to buffers so they can be released by garbage collector.
+        auto bufs = *bufsPtr;
+        for(auto [i, gocpp_ignored] : bufs)
         {
-            o->bufs[i].Buf = nullptr;
+            bufs[i].Buf = nullptr;
         }
-        o->bufs = o->bufs.make_slice(0, 0);
+        // Proper usage of a sync.Pool requires each entry to have approximately
+        // the same memory cost. To obtain this property when the stored type
+        // contains a variably-sized buffer, we add a hard limit on the maximum buffer
+        // to place back in the pool.
+        // See https://go.dev/issue/23199
+        if(cap(*bufsPtr) > 128)
+        {
+            *bufsPtr = nullptr;
+        }
+        rec::Put(gocpp::recv(wsaBufsPool), bufsPtr);
     }
 
-    void rec::InitMsg(operation* o, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob)
-    {
-        rec::InitBuf(gocpp::recv(o), p);
-        o->msg.Buffers = & o->buf;
-        o->msg.BufferCount = 1;
-
-        o->msg.Name = nullptr;
-        o->msg.Namelen = 0;
-
-        o->msg.Flags = 0;
-        o->msg.Control.Len = uint32_t(len(oob));
-        o->msg.Control.Buf = nullptr;
-        if(len(oob) != 0)
+    // wsaMsgPool is a pool of WSAMsg structures that can only hold a single WSABuf.
+    sync::Pool wsaMsgPool = gocpp::Init<sync::Pool>([](auto& x) {
+        x.New = []() mutable -> go_any
         {
-            o->msg.Control.Buf = & oob[0];
+            return gocpp::InitPtr<windows::WSAMsg>([=](auto& x) {
+                x.Buffers = new syscall::WSABuf {};
+                x.BufferCount = 1;
+            });
+        };
+    });
+    // newWSAMsg creates a new WSAMsg with the provided parameters.
+    // Use [freeWSAMsg] to free it.
+    windows::WSAMsg* newWSAMsg(gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, wsaRsa* rsa)
+    {
+        // The returned object can't be allocated in the stack because it is accessed asynchronously
+        // by Windows in between several system calls. If the stack frame is moved while that happens,
+        // then Windows may access invalid memory.
+        // Use a pool to reuse allocations.
+        auto msg = gocpp::getValue<windows::WSAMsg*>(rec::Get(gocpp::recv(wsaMsgPool)));
+        msg->Buffers->Len = uint32_t(len(p));
+        msg->Buffers->Buf = unsafe::SliceData(p);
+        if(len(oob) > 0)
+        {
+            msg->Control = gocpp::Init<syscall::WSABuf>([=](auto& x) {
+                x.Len = uint32_t(len(oob));
+                x.Buf = unsafe::SliceData(oob);
+            });
         }
+        msg->Flags = uint32_t(flags);
+        if(rsa != nullptr)
+        {
+            msg->Name = & rsa->name;
+            msg->Namelen = rsa->namelen;
+        }
+        return msg;
     }
 
-    // execIO executes a single IO operation o. It submits and cancels
-    // IO in the current thread for systems where Windows CancelIoEx API
-    // is available. Alternatively, it passes the request onto
-    // runtime netpoll and waits for completion or cancels request.
-    std::tuple<int, gocpp::error> execIO(operation* o, std::function<gocpp::error (operation* o)> submit)
+    void freeWSAMsg(windows::WSAMsg* msg)
     {
-        if(o->fd->pd.runtimeCtx == 0)
-        {
-            return {0, errors::New("internal error: polling on unsupported descriptor type"_s)};
-        }
+        // Clear pointers to buffers so they can be released by garbage collector.
+        msg->Name = nullptr;
+        msg->Namelen = 0;
+        msg->Buffers->Len = 0;
+        msg->Buffers->Buf = nullptr;
+        msg->Control.Len = 0;
+        msg->Control.Buf = nullptr;
+        rec::Put(gocpp::recv(wsaMsgPool), msg);
+    }
 
-        auto fd = o->fd;
-        // Notify runtime netpoll about starting IO.
-        auto err = rec::prepare(gocpp::recv(fd->pd), int(o->mode), fd->isFile);
-        if(err != nullptr)
+    // wsaRsa bundles a [syscall.RawSockaddrAny] with its length for efficient caching.
+    //
+    // When used by WSARecvFrom, wsaRsa must be on the heap. See
+    // https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsarecvfrom.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    wsaRsa::operator T()
+    {
+        T result;
+        result.name = this->name;
+        result.namelen = this->namelen;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool wsaRsa::operator==(const T& ref) const
+    {
+        if (name != ref.name) return false;
+        if (namelen != ref.namelen) return false;
+        return true;
+    }
+
+    std::ostream& wsaRsa::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << name;
+        os << " " << namelen;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct wsaRsa& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    sync::Pool wsaRsaPool = gocpp::Init<sync::Pool>([](auto& x) {
+        x.New = []() mutable -> go_any
         {
-            return {0, err};
+            return new poll::wsaRsa{};
+        };
+    });
+    wsaRsa* newWSARsa()
+    {
+        auto rsa = gocpp::getValue<wsaRsa*>(rec::Get(gocpp::recv(wsaRsaPool)));
+        rsa->name = syscall::RawSockaddrAny {};
+        rsa->namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
+        return rsa;
+    }
+
+    sync::Pool operationPool = gocpp::Init<sync::Pool>([](auto& x) {
+        x.New = []() mutable -> go_any
+        {
+            return new poll::operation{};
+        };
+    });
+    // waitIO waits for the IO operation to complete,
+    // handling cancellation if necessary.
+    gocpp::error rec::waitIO(FD* fd, operation* o)
+    {
+        if(o->o.HEvent != 0)
+        {
+            // The overlapped handle is not added to the runtime poller,
+            // the only way to wait for the IO to complete is block until
+            // the overlapped event is signaled.
+            auto [gocpp_id_0, err] = syscall::WaitForSingleObject(o->o.HEvent, syscall::INFINITE);
+            return err;
         }
-        // Start IO.
-        err = submit(o);
+        // Wait for our request to complete.
+        auto err = rec::wait(gocpp::recv(fd->pd), int(o->mode), fd->isFile);
         //Go switch emulation
         {
             auto condition = err;
             int conditionId = -1;
             if(condition == nullptr) { conditionId = 0; }
-            else if(condition == syscall::ERROR_IO_PENDING) { conditionId = 1; }
+            else if(condition == ErrNetClosing) { conditionId = 1; }
+            else if(condition == ErrFileClosing) { conditionId = 2; }
+            else if(condition == ErrDeadlineExceeded) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
-                    // IO completed immediately
-                    if(o->fd->skipSyncNotif)
-                    {
-                        // No completion message will follow, so return immediately.
-                        return {int(o->qty), nullptr};
-                    }
                     break;
-                // Need to get our completion message anyway.
-                case 1:
-                    // IO started, and we have to wait for its completion.
-                    err = nullptr;
-                    break;
-                default:
-                    return {0, err};
-                    break;
-            }
-        }
-        // Wait for our request to complete.
-        err = rec::wait(gocpp::recv(fd->pd), int(o->mode), fd->isFile);
-        if(err == nullptr)
-        {
-            // All is good. Extract our IO results and return.
-            if(o->errno != 0)
-            {
-                err = syscall::Errno(o->errno);
-                // More data available. Return back the size of received data.
-                if(err == syscall::ERROR_MORE_DATA || err == windows::WSAEMSGSIZE)
-                {
-                    return {int(o->qty), err};
-                }
-                return {0, err};
-            }
-            return {int(o->qty), nullptr};
-        }
-        // IO is interrupted by "close" or "timeout"
-        auto netpollErr = err;
-        //Go switch emulation
-        {
-            auto condition = netpollErr;
-            int conditionId = -1;
-            if(condition == ErrNetClosing) { conditionId = 0; }
-            else if(condition == ErrFileClosing) { conditionId = 1; }
-            else if(condition == ErrDeadlineExceeded) { conditionId = 2; }
-            switch(conditionId)
-            {
-                case 0:
+                // IO completed successfully.
                 case 1:
                 case 2:
+                case 3:
+                    // IO interrupted by "close" or "timeout", cancel our request.
+                    // ERROR_NOT_FOUND can be returned when the request succeded
+                    // between the time wait returned and CancelIoEx was executed.
+                    if(auto err = syscall::CancelIoEx(fd->Sysfd, & o->o); err != nullptr && err != syscall::ERROR_NOT_FOUND)
+                    {
+                        // TODO(brainman): maybe do something else, but panic.
+                        gocpp::panic(err);
+                    }
+                    rec::waitCanceled(gocpp::recv(fd->pd), int(o->mode));
                     break;
-                // will deal with those.
                 default:
-                    gocpp::panic("unexpected runtime.netpoll error: "_s + rec::Error(gocpp::recv(netpollErr)));
+                    // No other error is expected.
+                    gocpp::panic("unexpected runtime.netpoll error: "_s + rec::Error(gocpp::recv(err)));
                     break;
             }
         }
-        // Cancel our request.
-        err = syscall::CancelIoEx(fd->Sysfd, & o->o);
-        // Assuming ERROR_NOT_FOUND is returned, if IO is completed.
-        if(err != nullptr && err != syscall::ERROR_NOT_FOUND)
+        return err;
+    }
+
+    // execIO executes a single IO operation o.
+    // It supports both synchronous and asynchronous IO.
+    // pinPtrs is a list of pointers that will be pinned to a fixed location in memory
+    // during the lifetime of the operation.
+    std::tuple<int, gocpp::error> rec::execIO(FD* fd, int mode, std::function<std::tuple<uint32_t, gocpp::error> (operation* o)> submit, gocpp::slice<go_any> pinPtrs)
+    {
+        gocpp::Defer defer;
+        try
         {
-            // TODO(brainman): maybe do something else, but panic.
-            gocpp::panic(err);
-        }
-        // Wait for cancellation to complete.
-        rec::waitCanceled(gocpp::recv(fd->pd), int(o->mode));
-        if(o->errno != 0)
-        {
-            err = syscall::Errno(o->errno);
-            if(err == syscall::ERROR_OPERATION_ABORTED)
+            // Notify runtime netpoll about starting IO.
+            auto err = rec::prepare(gocpp::recv(fd->pd), mode, fd->isFile);
+            if(err != nullptr)
             {
-                // IO Canceled
-                err = netpollErr;
+                return {0, err};
             }
-            return {0, err};
+            auto o = gocpp::getValue<operation*>(rec::Get(gocpp::recv(operationPool)));
+            defer.push_back([=]{ rec::Put(gocpp::recv(operationPool), o); });
+            *o = gocpp::Init<operation>([=](auto& x) {
+                x.runtimeCtx = fd->pd.runtimeCtx;
+                x.mode = int32_t(mode);
+            });
+            rec::setOffset(gocpp::recv(o), fd->offset);
+            if(! fd->isBlocking)
+            {
+                runtime::Pinner* pinner = {};
+                if(mode == 'r')
+                {
+                    pinner = & fd->readPinner;
+                }
+                else
+                {
+                    pinner = & fd->writePinner;
+                }
+                defer.push_back([=]{ rec::Unpin(gocpp::recv(pinner)); });
+
+                rec::Pin(gocpp::recv(pinner), o);
+                for(auto [gocpp_ignored, ptr] : pinPtrs)
+                {
+                    rec::Pin(gocpp::recv(pinner), ptr);
+                }
+
+                if(! fd->associated)
+                {
+                    // If the handle is opened for overlapped IO but we can't
+                    // use the runtime poller, then we need to use an
+                    // event to wait for the IO to complete.
+                    auto [h, err] = windows::CreateEvent(nullptr, 0, 0, nullptr);
+                    if(err != nullptr)
+                    {
+                        // This shouldn't happen when all CreateEvent arguments are zero.
+                        gocpp::panic(err);
+                    }
+                    // Set the low bit so that the external IOCP doesn't receive the completion packet.
+                    o->o.HEvent = h | 1;
+                    defer.push_back([=]{ syscall::CloseHandle(h); });
+                }
+            }
+            // Start IO.
+            uint32_t qty;
+            std::tie(qty, err) = submit(o);
+            gocpp::error waitErr = {};
+            // Blocking operations shouldn't return ERROR_IO_PENDING.
+            // Continue without waiting if that happens.
+            if(! fd->isBlocking && (err == syscall::ERROR_IO_PENDING || (err == nullptr && fd->waitOnSuccess)))
+            {
+                // IO started asynchronously or completed synchronously but
+                // a sync notification is required. Wait for it to complete.
+                waitErr = rec::waitIO(gocpp::recv(fd), o);
+                if(fd->isFile)
+                {
+                    err = windows::GetOverlappedResult(fd->Sysfd, & o->o, & qty, false);
+                }
+                else
+                {
+                    uint32_t flags = {};
+                    err = windows::WSAGetOverlappedResult(fd->Sysfd, & o->o, & qty, false, & flags);
+                }
+            }
+            //Go switch emulation
+            {
+                auto condition = err;
+                int conditionId = -1;
+                if(condition == syscall::ERROR_OPERATION_ABORTED) { conditionId = 0; }
+                else if(condition == windows::ERROR_IO_INCOMPLETE) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    case 0:
+                        // ERROR_OPERATION_ABORTED may have been caused by us. In that case,
+                        // map it to our own error. Don't do more than that, each submitted
+                        // function may have its own meaning for each error.
+                        if(waitErr != nullptr)
+                        {
+                            // IO canceled by the poller while waiting for completion.
+                            err = waitErr;
+                        }
+                        else
+                        if(fd->kind == kindPipe && rec::closing(gocpp::recv(fd)))
+                        {
+                            // Close uses CancelIoEx to interrupt concurrent I/O for pipes.
+                            // If the fd is a pipe and the Write was interrupted by CancelIoEx,
+                            // we assume it is interrupted by Close.
+                            err = errClosing(fd->isFile);
+                        }
+                        break;
+                    case 1:
+                        // waitIO couldn't wait for the IO to complete.
+                        if(waitErr != nullptr)
+                        {
+                            // The wait error will be more informative.
+                            err = waitErr;
+                        }
+                        break;
+                }
+            }
+            return {int(qty), err};
         }
-        // We issued a cancellation request. But, it seems, IO operation succeeded
-        // before the cancellation request run. We need to treat the IO operation as
-        // succeeded (the bytes are actually sent/recv from network).
-        return {int(o->qty), nullptr};
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     // FD is a file descriptor. The net and os packages embed this type in
@@ -349,20 +521,22 @@ namespace golang::poll
         T result;
         result.fdmu = this->fdmu;
         result.Sysfd = this->Sysfd;
-        result.rop = this->rop;
-        result.wop = this->wop;
         result.pd = this->pd;
-        result.l = this->l;
+        result.offset = this->offset;
         result.lastbits = this->lastbits;
         result.readuint16 = this->readuint16;
         result.readbyte = this->readbyte;
         result.readbyteOffset = this->readbyteOffset;
         result.csema = this->csema;
-        result.skipSyncNotif = this->skipSyncNotif;
+        result.waitOnSuccess = this->waitOnSuccess;
         result.IsStream = this->IsStream;
         result.ZeroReadIsEOF = this->ZeroReadIsEOF;
         result.isFile = this->isFile;
         result.kind = this->kind;
+        result.isBlocking = this->isBlocking;
+        result.associated = this->associated;
+        result.readPinner = this->readPinner;
+        result.writePinner = this->writePinner;
         return result;
     }
 
@@ -371,20 +545,22 @@ namespace golang::poll
     {
         if (fdmu != ref.fdmu) return false;
         if (Sysfd != ref.Sysfd) return false;
-        if (rop != ref.rop) return false;
-        if (wop != ref.wop) return false;
         if (pd != ref.pd) return false;
-        if (l != ref.l) return false;
+        if (offset != ref.offset) return false;
         if (lastbits != ref.lastbits) return false;
         if (readuint16 != ref.readuint16) return false;
         if (readbyte != ref.readbyte) return false;
         if (readbyteOffset != ref.readbyteOffset) return false;
         if (csema != ref.csema) return false;
-        if (skipSyncNotif != ref.skipSyncNotif) return false;
+        if (waitOnSuccess != ref.waitOnSuccess) return false;
         if (IsStream != ref.IsStream) return false;
         if (ZeroReadIsEOF != ref.ZeroReadIsEOF) return false;
         if (isFile != ref.isFile) return false;
         if (kind != ref.kind) return false;
+        if (isBlocking != ref.isBlocking) return false;
+        if (associated != ref.associated) return false;
+        if (readPinner != ref.readPinner) return false;
+        if (writePinner != ref.writePinner) return false;
         return true;
     }
 
@@ -393,20 +569,22 @@ namespace golang::poll
         os << '{';
         os << "" << fdmu;
         os << " " << Sysfd;
-        os << " " << rop;
-        os << " " << wop;
         os << " " << pd;
-        os << " " << l;
+        os << " " << offset;
         os << " " << lastbits;
         os << " " << readuint16;
         os << " " << readbyte;
         os << " " << readbyteOffset;
         os << " " << csema;
-        os << " " << skipSyncNotif;
+        os << " " << waitOnSuccess;
         os << " " << IsStream;
         os << " " << ZeroReadIsEOF;
         os << " " << isFile;
         os << " " << kind;
+        os << " " << isBlocking;
+        os << " " << associated;
+        os << " " << readPinner;
+        os << " " << writePinner;
         os << '}';
         return os;
     }
@@ -416,19 +594,42 @@ namespace golang::poll
         return value.PrintTo(os);
     }
 
+    // setOffset sets the offset fields of the overlapped object
+    // to the given offset. The fd read/write lock must be held.
+    //
+    // Overlapped IO operations don't update the offset fields
+    // of the overlapped object nor the file pointer automatically,
+    // so we do that manually here.
+    // Note that this is a best effort that only works if the file
+    // pointer is completely owned by this operation. We could
+    // call seek to allow other processes or other operations on the
+    // same file to see the updated offset. That would be inefficient
+    // and won't work for concurrent operations anyway. If concurrent
+    // operations are needed, then the caller should serialize them
+    // using an external mechanism.
+    void rec::setOffset(FD* fd, int64_t off)
+    {
+        fd->offset = off;
+    }
+
+    // addOffset adds the given offset to the current offset.
+    void rec::addOffset(FD* fd, int off)
+    {
+        fd->offset += int64_t(off);
+    }
+
     // fileKind describes the kind of file.
-    // logInitFD is set by tests to enable file descriptor initialization logging.
-    std::function<void (gocpp::string net, FD* fd, gocpp::error err)> logInitFD;
     // Init initializes the FD. The Sysfd field should already be set.
     // This can be called multiple times on a single FD.
     // The net argument is a network name from the net package (e.g., "tcp"),
     // or "file" or "console" or "dir".
     // Set pollable to true if fd should be managed by runtime netpoll.
-    std::tuple<gocpp::string, gocpp::error> rec::Init(FD* fd, gocpp::string net, bool pollable)
+    // Pollable must be set to true for overlapped fds.
+    gocpp::error rec::Init(FD* fd, gocpp::string net, bool pollable)
     {
         if(initErr != nullptr)
         {
-            return {""_s, initErr};
+            return initErr;
         }
 
         //Go switch emulation
@@ -436,143 +637,110 @@ namespace golang::poll
             auto condition = net;
             int conditionId = -1;
             if(condition == "file"_s) { conditionId = 0; }
-            else if(condition == "dir"_s) { conditionId = 1; }
-            else if(condition == "console"_s) { conditionId = 2; }
-            else if(condition == "pipe"_s) { conditionId = 3; }
-            else if(condition == "tcp"_s) { conditionId = 4; }
-            else if(condition == "tcp4"_s) { conditionId = 5; }
-            else if(condition == "tcp6"_s) { conditionId = 6; }
-            else if(condition == "udp"_s) { conditionId = 7; }
-            else if(condition == "udp4"_s) { conditionId = 8; }
-            else if(condition == "udp6"_s) { conditionId = 9; }
-            else if(condition == "ip"_s) { conditionId = 10; }
-            else if(condition == "ip4"_s) { conditionId = 11; }
-            else if(condition == "ip6"_s) { conditionId = 12; }
-            else if(condition == "unix"_s) { conditionId = 13; }
-            else if(condition == "unixgram"_s) { conditionId = 14; }
-            else if(condition == "unixpacket"_s) { conditionId = 15; }
+            else if(condition == "console"_s) { conditionId = 1; }
+            else if(condition == "pipe"_s) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
-                case 1:
                     fd->kind = kindFile;
                     break;
-                case 2:
+                case 1:
                     fd->kind = kindConsole;
                     break;
-                case 3:
+                case 2:
                     fd->kind = kindPipe;
                     break;
-                case 4:
-                case 5:
-                case 6:
-                case 7:
-                case 8:
-                case 9:
-                case 10:
-                case 11:
-                case 12:
-                case 13:
-                case 14:
-                case 15:
-                    fd->kind = kindNet;
-                    break;
                 default:
-                    return {""_s, errors::New("internal error: unknown network type "_s + net)};
+                    // We don't actually care about the various network types.
+                    fd->kind = kindNet;
                     break;
             }
         }
         fd->isFile = fd->kind != kindNet;
+        fd->isBlocking = ! pollable;
 
-        gocpp::error err = {};
-        if(pollable)
+        if(! pollable)
         {
-            // Only call init for a network socket.
-            // This means that we don't add files to the runtime poller.
-            // Adding files to the runtime poller can confuse matters
-            // if the user is doing their own overlapped I/O.
-            // See issue #21172.
-            // In general the code below avoids calling the execIO
-            // function for non-network sockets. If some method does
-            // somehow call execIO, then execIO, and therefore the
-            // calling method, will return an error, because
-            // fd.pd.runtimeCtx will be 0.
-            err = rec::init(gocpp::recv(fd->pd), fd);
+            return nullptr;
         }
-        if(logInitFD != nullptr)
-        {
-            logInitFD(net, fd, err);
-        }
+
+        // The default behavior of the Windows I/O manager is to queue a completion
+        // port entry for successful operations that complete synchronously when
+        // the handle is opened for overlapped I/O. We will try to disable that
+        // behavior below, as it requires an extra syscall.
+        fd->waitOnSuccess = true;
+
+        // It is safe to add overlapped handles that also perform I/O
+        // outside of the runtime poller. The runtime poller will ignore
+        // I/O completion notifications not initiated by us.
+        auto err = rec::init(gocpp::recv(fd->pd), fd);
         if(err != nullptr)
         {
-            return {""_s, err};
+            return err;
         }
-        if(pollable && useSetFileCompletionNotificationModes)
+        fd->associated = true;
+
+        // FILE_SKIP_SET_EVENT_ON_HANDLE is always safe to use. We don't use that feature
+        // and it adds some overhead to the Windows I/O manager.
+        // See https://devblogs.microsoft.com/oldnewthing/20200221-00/?p=103466.
+        auto modes = uint8_t(syscall::FILE_SKIP_SET_EVENT_ON_HANDLE);
+        if(canSkipCompletionPortOnSuccess(fd->Sysfd, fd->kind == kindNet))
         {
-            // We do not use events, so we can skip them always.
-            auto flags = uint8_t(syscall::FILE_SKIP_SET_EVENT_ON_HANDLE);
-            //Go switch emulation
-            {
-                auto condition = net;
-                int conditionId = -1;
-                if(condition == "tcp"_s) { conditionId = 0; }
-                else if(condition == "tcp4"_s) { conditionId = 1; }
-                else if(condition == "tcp6"_s) { conditionId = 2; }
-                else if(condition == "udp"_s) { conditionId = 3; }
-                else if(condition == "udp4"_s) { conditionId = 4; }
-                else if(condition == "udp6"_s) { conditionId = 5; }
-                switch(conditionId)
-                {
-                    case 0:
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 5:
-                        flags |= syscall::FILE_SKIP_COMPLETION_PORT_ON_SUCCESS;
-                        break;
-                }
-            }
-            auto err = syscall::SetFileCompletionNotificationModes(fd->Sysfd, flags);
-            if(err == nullptr && flags & syscall::FILE_SKIP_COMPLETION_PORT_ON_SUCCESS != 0)
-            {
-                fd->skipSyncNotif = true;
-            }
+            modes |= syscall::FILE_SKIP_COMPLETION_PORT_ON_SUCCESS;
         }
-        // Disable SIO_UDP_CONNRESET behavior.
-        // http://support.microsoft.com/kb/263823
-        //Go switch emulation
+        if(syscall::SetFileCompletionNotificationModes(fd->Sysfd, modes) == nullptr)
         {
-            auto condition = net;
-            int conditionId = -1;
-            if(condition == "udp"_s) { conditionId = 0; }
-            else if(condition == "udp4"_s) { conditionId = 1; }
-            else if(condition == "udp6"_s) { conditionId = 2; }
-            switch(conditionId)
+            if(modes & syscall::FILE_SKIP_COMPLETION_PORT_ON_SUCCESS != 0)
             {
-                case 0:
-                case 1:
-                case 2:
-                {
-                    auto ret = uint32_t(0);
-                    auto flag = uint32_t(0);
-                    auto size = uint32_t(gocpp::Sizeof<uint32_t>());
-                    auto err = syscall::WSAIoctl(fd->Sysfd, syscall::SIO_UDP_CONNRESET, (unsigned char*)(gocpp::unsafe_pointer(& flag)), size, nullptr, 0, & ret, nullptr, 0);
-                    if(err != nullptr)
-                    {
-                        return {"wsaioctl"_s, err};
-                    }
-                    break;
-                }
+                fd->waitOnSuccess = false;
             }
         }
-        fd->rop.mode = 'r';
-        fd->wop.mode = 'w';
-        fd->rop.fd = fd;
-        fd->wop.fd = fd;
-        fd->rop.runtimeCtx = fd->pd.runtimeCtx;
-        fd->wop.runtimeCtx = fd->pd.runtimeCtx;
-        return {""_s, nullptr};
+        return nullptr;
+    }
+
+    // DisassociateIOCP disassociates the file handle from the IOCP.
+    // The disassociate operation will not succeed if there is any
+    // in-progress I/O operation on the file handle.
+    gocpp::error rec::DisassociateIOCP(FD* fd)
+    {
+        gocpp::Defer defer;
+        try
+        {
+            // There is a small race window between execIO checking fd.disassociated and
+            // DisassociateIOCP setting it. NtSetInformationFile will fail anyway if
+            // there is any in-progress I/O operation, so just take a read-write lock
+            // to ensure there is no in-progress I/O and fail early if we can't get the lock.
+            if(auto [ok, err] = rec::tryReadWriteLock(gocpp::recv(fd)); err != nullptr || ! ok)
+            {
+                if(err == nullptr)
+                {
+                    err = errors::New("can't disassociate the handle while there is in-progress I/O"_s);
+                }
+                return err;
+            }
+            defer.push_back([=]{ rec::readWriteUnlock(gocpp::recv(fd)); });
+
+            if(! fd->associated)
+            {
+                // Nothing to disassociate.
+                return nullptr;
+            }
+
+            auto info = windows::FILE_COMPLETION_INFORMATION {};
+            if(auto err = windows::NtSetInformationFile(fd->Sysfd, new windows::IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& info), uint32_t(gocpp::Sizeof<windows::FILE_COMPLETION_INFORMATION>()), windows::FileReplaceCompletionInformation); err != nullptr)
+            {
+                return err;
+            }
+            // tryReadWriteLock means we have exclusive access to fd.
+            fd->associated = false;
+            // Don't call fd.pd.close(), it would be too racy.
+            // There is no harm on leaving fd.pd open until Close is called.
+            return nullptr;
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     gocpp::error rec::destroy(FD* fd)
@@ -614,6 +782,7 @@ namespace golang::poll
         {
             return errClosing(fd->isFile);
         }
+
         if(fd->kind == kindPipe)
         {
             syscall::CancelIoEx(fd->Sysfd, nullptr);
@@ -627,17 +796,37 @@ namespace golang::poll
         return err;
     }
 
+    gocpp::slice<go_any> pinPtrsFromBuf(gocpp::slice<unsigned char> buf)
+    {
+        if(len(buf) == 0)
+        {
+            return nullptr;
+        }
+        return gocpp::slice<go_any> {unsafe::SliceData(buf)};
+    }
+
     // Read implements io.Reader.
     std::tuple<int, gocpp::error> rec::Read(FD* fd, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = rec::readLock(gocpp::recv(fd)); err != nullptr)
+            if(fd->kind == kindFile)
             {
-                return {0, err};
+                if(auto err = rec::readWriteLock(gocpp::recv(fd)); err != nullptr)
+                {
+                    return {0, err};
+                }
+                defer.push_back([=]{ rec::readWriteUnlock(gocpp::recv(fd)); });
             }
-            defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
+            else
+            {
+                if(auto err = rec::readLock(gocpp::recv(fd)); err != nullptr)
+                {
+                    return {0, err};
+                }
+                defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
+            }
 
             if(len(buf) > maxRW)
             {
@@ -646,48 +835,64 @@ namespace golang::poll
 
             int n = {};
             gocpp::error err = {};
-            if(fd->isFile)
+            //Go switch emulation
             {
-                rec::Lock(gocpp::recv(fd->l));
-                defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
-                //Go switch emulation
+                auto condition = fd->kind;
+                int conditionId = -1;
+                if(condition == kindConsole) { conditionId = 0; }
+                else if(condition == kindFile) { conditionId = 1; }
+                else if(condition == kindPipe) { conditionId = 2; }
+                else if(condition == kindNet) { conditionId = 3; }
+                switch(conditionId)
                 {
-                    auto condition = fd->kind;
-                    int conditionId = -1;
-                    if(condition == kindConsole) { conditionId = 0; }
-                    switch(conditionId)
-                    {
-                        case 0:
-                            std::tie(n, err) = rec::readConsole(gocpp::recv(fd), buf);
-                            break;
-                        default:
-                            std::tie(n, err) = syscall::Read(fd->Sysfd, buf);
-                            if(fd->kind == kindPipe && err == syscall::ERROR_OPERATION_ABORTED)
+                    case 0:
+                        std::tie(n, err) = rec::readConsole(gocpp::recv(fd), buf);
+                        break;
+                    case 1:
+                    case 2:
+                        std::tie(n, err) = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
+                        {
+                            uint32_t qty;
+                            gocpp::error err;
+                            err = syscall::ReadFile(fd->Sysfd, buf, & qty, rec::overlapped(gocpp::recv(fd), o));
+                            return {qty, err};
+                        }, pinPtrsFromBuf(buf));
+                        rec::addOffset(gocpp::recv(fd), n);
+                        //Go switch emulation
+                        {
+                            auto condition = err;
+                            int conditionId = -1;
+                            if(condition == syscall::ERROR_HANDLE_EOF) { conditionId = 0; }
+                            else if(condition == syscall::ERROR_BROKEN_PIPE) { conditionId = 1; }
+                            switch(conditionId)
                             {
-                                // Close uses CancelIoEx to interrupt concurrent I/O for pipes.
-                                // If the fd is a pipe and the Read was interrupted by CancelIoEx,
-                                // we assume it is interrupted by Close.
-                                err = ErrFileClosing;
+                                case 0:
+                                    err = io::go_EOF;
+                                    break;
+                                case 1:
+                                    // ReadFile only documents ERROR_BROKEN_PIPE for pipes.
+                                    if(fd->kind == kindPipe)
+                                    {
+                                        err = io::go_EOF;
+                                    }
+                                    break;
                             }
-                            break;
-                    }
-                }
-                if(err != nullptr)
-                {
-                    n = 0;
-                }
-            }
-            else
-            {
-                auto o = & fd->rop;
-                rec::InitBuf(gocpp::recv(o), buf);
-                std::tie(n, err) = execIO(o, [=](operation* o) mutable -> gocpp::error
-                {
-                    return syscall::WSARecv(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, & o->o, nullptr);
-                });
-                if(race::Enabled)
-                {
-                    race::Acquire(gocpp::unsafe_pointer(& ioSync));
+                        }
+                        break;
+                    case 3:
+                        std::tie(n, err) = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
+                        {
+                            uint32_t qty;
+                            gocpp::error err;
+                            uint32_t flags = {};
+                            err = syscall::WSARecv(fd->Sysfd, newWsaBuf(buf), 1, & qty, & flags, & o->o, nullptr);
+                            return {qty, err};
+                        }, pinPtrsFromBuf(buf));
+                        if(race::Enabled)
+                        {
+                            race::Acquire(gocpp::unsafe_pointer(& ioSync));
+                        }
+                        break;
                 }
             }
             if(len(buf) != 0)
@@ -794,7 +999,7 @@ namespace golang::poll
     }
 
     // Pread emulates the Unix pread system call.
-    std::tuple<int, gocpp::error> rec::Pread(FD* fd, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, gocpp::error> rec::Pread(FD* fd, gocpp::slice<unsigned char> buf, int64_t off)
     {
         gocpp::Defer defer;
         try
@@ -804,46 +1009,60 @@ namespace golang::poll
                 // Pread does not work with pipes
                 return {0, gocpp::error(syscall::go_ESPIPE)};
             }
-            // Call incref, not readLock, because since pread specifies the
-            // offset it is independent from other reads.
-            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
+
+            if(auto err = rec::readWriteLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::readWriteUnlock(gocpp::recv(fd)); });
 
-            if(len(b) > maxRW)
+            if(len(buf) > maxRW)
             {
-                b = b.make_slice(0, maxRW);
+                buf = buf.make_slice(0, maxRW);
             }
 
-            rec::Lock(gocpp::recv(fd->l));
-            defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
-            auto [curoffset, e] = syscall::Seek(fd->Sysfd, 0, io::SeekCurrent);
-            if(e != nullptr)
+            auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
             {
-                return {0, e};
-            }
-            defer.push_back([=]{ syscall::Seek(fd->Sysfd, curoffset, io::SeekStart); });
-            auto o = gocpp::Init<syscall::Overlapped>([=](auto& x) {
-                x.OffsetHigh = uint32_t(off >> 32);
-                x.Offset = uint32_t(off);
-            });
-            uint32_t done = {};
-            e = syscall::ReadFile(fd->Sysfd, b, & done, & o);
-            if(e != nullptr)
-            {
-                done = 0;
-                if(e == syscall::ERROR_HANDLE_EOF)
+                uint32_t qty;
+                gocpp::error err;
+                gocpp::Defer defer;
+                try
                 {
-                    e = io::go_EOF;
+                    // Overlapped handles don't have the file pointer updated
+                    // when performing I/O operations, so there is no need to
+                    // call Seek to reset the file pointer.
+                    // Also, some overlapped file handles don't support seeking.
+                    // See https://go.dev/issues/74951.
+                    if(fd->isBlocking)
+                    {
+                        auto [curoffset, err] = syscall::Seek(fd->Sysfd, 0, io::SeekCurrent);
+                        if(err != nullptr)
+                        {
+                            return {0, err};
+                        }
+                        defer.push_back([=]{ syscall::Seek(fd->Sysfd, curoffset, io::SeekStart); });
+                    }
+                    rec::setOffset(gocpp::recv(o), off);
+
+                    err = syscall::ReadFile(fd->Sysfd, buf, & qty, & o->o);
+                    return {qty, err};
                 }
-            }
-            if(len(b) != 0)
+                catch(gocpp::GoPanic& gp)
+                {
+                    defer.handlePanic(gp);
+                    return {qty, err};
+                }
+            }, pinPtrsFromBuf(buf));
+            auto& err = err_tmp;
+            if(err == syscall::ERROR_HANDLE_EOF)
             {
-                e = rec::eofError(gocpp::recv(fd), int(done), e);
+                err = io::go_EOF;
             }
-            return {int(done), e};
+            if(len(buf) != 0)
+            {
+                err = rec::eofError(gocpp::recv(fd), n, err);
+            }
+            return {n, err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -870,23 +1089,24 @@ namespace golang::poll
                 return {0, nullptr, err};
             }
             defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
-            auto o = & fd->rop;
-            rec::InitBuf(gocpp::recv(o), buf);
-            auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+
+            auto rsa = newWSARsa();
+            defer.push_back([=]{ rec::Put(gocpp::recv(wsaRsaPool), rsa); });
+            auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
             {
-                if(o->rsa == nullptr)
-                {
-                    o->rsa = new syscall::RawSockaddrAny{};
-                }
-                o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
-                return syscall::WSARecvFrom(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, o->rsa, & o->rsan, & o->o, nullptr);
-            });
+                uint32_t qty;
+                gocpp::error err;
+                uint32_t flags = {};
+                err = syscall::WSARecvFrom(fd->Sysfd, newWsaBuf(buf), 1, & qty, & flags, & rsa->name, & rsa->namelen, & o->o, nullptr);
+                return {qty, err};
+            }, unsafe::SliceData(buf), rsa);
+            auto& err = err_tmp;
             err = rec::eofError(gocpp::recv(fd), n, err);
             if(err != nullptr)
             {
                 return {n, nullptr, err};
             }
-            auto [sa, gocpp_id_0] = rec::Sockaddr(gocpp::recv(o->rsa));
+            auto [sa, gocpp_id_1] = rec::Sockaddr(gocpp::recv(rsa->name));
             return {n, sa, nullptr};
         }
         catch(gocpp::GoPanic& gp)
@@ -914,23 +1134,24 @@ namespace golang::poll
                 return {0, err};
             }
             defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
-            auto o = & fd->rop;
-            rec::InitBuf(gocpp::recv(o), buf);
-            auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+
+            auto rsa = newWSARsa();
+            defer.push_back([=]{ rec::Put(gocpp::recv(wsaRsaPool), rsa); });
+            auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
             {
-                if(o->rsa == nullptr)
-                {
-                    o->rsa = new syscall::RawSockaddrAny{};
-                }
-                o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
-                return syscall::WSARecvFrom(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, o->rsa, & o->rsan, & o->o, nullptr);
-            });
+                uint32_t qty;
+                gocpp::error err;
+                uint32_t flags = {};
+                err = syscall::WSARecvFrom(fd->Sysfd, newWsaBuf(buf), 1, & qty, & flags, & rsa->name, & rsa->namelen, & o->o, nullptr);
+                return {qty, err};
+            }, unsafe::SliceData(buf), rsa);
+            auto& err = err_tmp;
             err = rec::eofError(gocpp::recv(fd), n, err);
             if(err != nullptr)
             {
                 return {n, err};
             }
-            rawToSockaddrInet4(o->rsa, sa4);
+            rawToSockaddrInet4(& rsa->name, sa4);
             return {n, err};
         }
         catch(gocpp::GoPanic& gp)
@@ -958,23 +1179,24 @@ namespace golang::poll
                 return {0, err};
             }
             defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
-            auto o = & fd->rop;
-            rec::InitBuf(gocpp::recv(o), buf);
-            auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+
+            auto rsa = newWSARsa();
+            defer.push_back([=]{ rec::Put(gocpp::recv(wsaRsaPool), rsa); });
+            auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
             {
-                if(o->rsa == nullptr)
-                {
-                    o->rsa = new syscall::RawSockaddrAny{};
-                }
-                o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
-                return syscall::WSARecvFrom(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, o->rsa, & o->rsan, & o->o, nullptr);
-            });
+                uint32_t qty;
+                gocpp::error err;
+                uint32_t flags = {};
+                err = syscall::WSARecvFrom(fd->Sysfd, newWsaBuf(buf), 1, & qty, & flags, & rsa->name, & rsa->namelen, & o->o, nullptr);
+                return {qty, err};
+            }, unsafe::SliceData(buf), rsa);
+            auto& err = err_tmp;
             err = rec::eofError(gocpp::recv(fd), n, err);
             if(err != nullptr)
             {
                 return {n, err};
             }
-            rawToSockaddrInet6(o->rsa, sa6);
+            rawToSockaddrInet6(& rsa->name, sa6);
             return {n, err};
         }
         catch(gocpp::GoPanic& gp)
@@ -989,77 +1211,83 @@ namespace golang::poll
         gocpp::Defer defer;
         try
         {
-            if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
+            if(fd->kind == kindFile)
             {
-                return {0, err};
+                if(auto err = rec::readWriteLock(gocpp::recv(fd)); err != nullptr)
+                {
+                    return {0, err};
+                }
+                defer.push_back([=]{ rec::readWriteUnlock(gocpp::recv(fd)); });
             }
-            defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
-            if(fd->isFile)
+            else
             {
-                rec::Lock(gocpp::recv(fd->l));
-                defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
+                if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
+                {
+                    return {0, err};
+                }
+                defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             }
 
-            auto ntotal = 0;
-            for(; len(buf) > 0; )
+            int ntotal = {};
+            for(; ; )
             {
-                auto b = buf;
-                if(len(b) > maxRW)
+                auto max = len(buf);
+                if(max - ntotal > maxRW)
                 {
-                    b = b.make_slice(0, maxRW);
+                    max = ntotal + maxRW;
                 }
+                auto b = buf.make_slice(ntotal, max);
                 int n = {};
                 gocpp::error err = {};
-                if(fd->isFile)
+                //Go switch emulation
                 {
-                    //Go switch emulation
+                    auto condition = fd->kind;
+                    int conditionId = -1;
+                    if(condition == kindConsole) { conditionId = 0; }
+                    else if(condition == kindPipe) { conditionId = 1; }
+                    else if(condition == kindFile) { conditionId = 2; }
+                    else if(condition == kindNet) { conditionId = 3; }
+                    switch(conditionId)
                     {
-                        auto condition = fd->kind;
-                        int conditionId = -1;
-                        if(condition == kindConsole) { conditionId = 0; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                                std::tie(n, err) = rec::writeConsole(gocpp::recv(fd), b);
-                                break;
-                            default:
-                                std::tie(n, err) = syscall::Write(fd->Sysfd, b);
-                                if(fd->kind == kindPipe && err == syscall::ERROR_OPERATION_ABORTED)
-                                {
-                                    // Close uses CancelIoEx to interrupt concurrent I/O for pipes.
-                                    // If the fd is a pipe and the Write was interrupted by CancelIoEx,
-                                    // we assume it is interrupted by Close.
-                                    err = ErrFileClosing;
-                                }
-                                break;
-                        }
+                        case 0:
+                            std::tie(n, err) = rec::writeConsole(gocpp::recv(fd), b);
+                            break;
+                        case 1:
+                        case 2:
+                            std::tie(n, err) = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
+                            {
+                                uint32_t qty;
+                                gocpp::error err;
+                                err = syscall::WriteFile(fd->Sysfd, b, & qty, rec::overlapped(gocpp::recv(fd), o));
+                                return {qty, err};
+                            }, pinPtrsFromBuf(b));
+                            rec::addOffset(gocpp::recv(fd), n);
+                            break;
+                        case 3:
+                            if(race::Enabled)
+                            {
+                                race::ReleaseMerge(gocpp::unsafe_pointer(& ioSync));
+                            }
+                            std::tie(n, err) = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
+                            {
+                                uint32_t qty;
+                                gocpp::error err;
+                                err = syscall::WSASend(fd->Sysfd, newWsaBuf(b), 1, & qty, 0, & o->o, nullptr);
+                                return {qty, err};
+                            }, pinPtrsFromBuf(b));
+                            break;
                     }
-                    if(err != nullptr)
-                    {
-                        n = 0;
-                    }
-                }
-                else
-                {
-                    if(race::Enabled)
-                    {
-                        race::ReleaseMerge(gocpp::unsafe_pointer(& ioSync));
-                    }
-                    auto o = & fd->wop;
-                    rec::InitBuf(gocpp::recv(o), b);
-                    std::tie(n, err) = execIO(o, [=](operation* o) mutable -> gocpp::error
-                    {
-                        return syscall::WSASend(o->fd->Sysfd, & o->buf, 1, & o->qty, 0, & o->o, nullptr);
-                    });
                 }
                 ntotal += n;
-                if(err != nullptr)
+                if(ntotal == len(buf) || err != nullptr)
                 {
                     return {ntotal, err};
                 }
-                buf = buf.make_slice(n);
+                if(n == 0)
+                {
+                    return {ntotal, io::ErrUnexpectedEOF};
+                }
             }
-            return {ntotal, nullptr};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1128,46 +1356,68 @@ namespace golang::poll
                 // Pwrite does not work with pipes
                 return {0, gocpp::error(syscall::go_ESPIPE)};
             }
-            // Call incref, not writeLock, because since pwrite specifies the
-            // offset it is independent from other writes.
-            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
+
+            if(auto err = rec::readWriteLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::readWriteUnlock(gocpp::recv(fd)); });
 
-            rec::Lock(gocpp::recv(fd->l));
-            defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
-            auto [curoffset, e] = syscall::Seek(fd->Sysfd, 0, io::SeekCurrent);
-            if(e != nullptr)
+            int ntotal = {};
+            for(; ; )
             {
-                return {0, e};
-            }
-            defer.push_back([=]{ syscall::Seek(fd->Sysfd, curoffset, io::SeekStart); });
+                auto max = len(buf);
+                if(max - ntotal > maxRW)
+                {
+                    max = ntotal + maxRW;
+                }
+                auto b = buf.make_slice(ntotal, max);
+                auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
+                {
+                    uint32_t qty;
+                    gocpp::error err;
+                    gocpp::Defer defer;
+                    try
+                    {
+                        // Overlapped handles don't have the file pointer updated
+                        // when performing I/O operations, so there is no need to
+                        // call Seek to reset the file pointer.
+                        // Also, some overlapped file handles don't support seeking.
+                        // See https://go.dev/issues/74951.
+                        if(fd->isBlocking)
+                        {
+                            auto [curoffset, err] = syscall::Seek(fd->Sysfd, 0, io::SeekCurrent);
+                            if(err != nullptr)
+                            {
+                                return {0, err};
+                            }
+                            defer.push_back([=]{ syscall::Seek(fd->Sysfd, curoffset, io::SeekStart); });
+                        }
+                        rec::setOffset(gocpp::recv(o), off + int64_t(ntotal));
 
-            auto ntotal = 0;
-            for(; len(buf) > 0; )
-            {
-                auto b = buf;
-                if(len(b) > maxRW)
+                        err = syscall::WriteFile(fd->Sysfd, b, & qty, & o->o);
+                        return {qty, err};
+                    }
+                    catch(gocpp::GoPanic& gp)
+                    {
+                        defer.handlePanic(gp);
+                        return {qty, err};
+                    }
+                }, pinPtrsFromBuf(b));
+                auto& err = err_tmp;
+                if(n > 0)
                 {
-                    b = b.make_slice(0, maxRW);
+                    ntotal += n;
                 }
-                uint32_t n = {};
-                auto o = gocpp::Init<syscall::Overlapped>([=](auto& x) {
-                    x.OffsetHigh = uint32_t(off >> 32);
-                    x.Offset = uint32_t(off);
-                });
-                e = syscall::WriteFile(fd->Sysfd, b, & n, & o);
-                ntotal += int(n);
-                if(e != nullptr)
+                if(ntotal == len(buf) || err != nullptr)
                 {
-                    return {ntotal, e};
+                    return {ntotal, err};
                 }
-                buf = buf.make_slice(n);
-                off += int64_t(n);
+                if(n == 0)
+                {
+                    return {ntotal, io::ErrUnexpectedEOF};
+                }
             }
-            return {ntotal, nullptr};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1194,13 +1444,16 @@ namespace golang::poll
             {
                 race::ReleaseMerge(gocpp::unsafe_pointer(& ioSync));
             }
-            auto o = & fd->wop;
-            rec::InitBufs(gocpp::recv(o), buf);
-            auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+            auto bufs = newWSABufs(buf);
+            defer.push_back([=]{ freeWSABufs(bufs); });
+            auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
             {
-                return syscall::WSASend(o->fd->Sysfd, & o->bufs[0], uint32_t(len(o->bufs)), & o->qty, 0, & o->o, nullptr);
+                uint32_t qty;
+                gocpp::error err;
+                err = syscall::WSASend(fd->Sysfd, & (*bufs)[0], uint32_t(len(*bufs)), & qty, 0, & o->o, nullptr);
+                return {qty, err};
             });
-            rec::ClearBufs(gocpp::recv(o));
+            auto& err = err_tmp;
             TestHookDidWritev(n);
             consume(buf, int64_t(n));
             return {int64_t(n), err};
@@ -1226,13 +1479,14 @@ namespace golang::poll
             if(len(buf) == 0)
             {
                 // handle zero-byte payload
-                auto o = & fd->wop;
-                rec::InitBuf(gocpp::recv(o), buf);
-                o->sa = sa;
-                auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+                auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
                 {
-                    return syscall::WSASendto(o->fd->Sysfd, & o->buf, 1, & o->qty, 0, o->sa, & o->o, nullptr);
+                    uint32_t qty;
+                    gocpp::error err;
+                    err = syscall::WSASendto(fd->Sysfd, new syscall::WSABuf {}, 1, & qty, 0, sa, & o->o, nullptr);
+                    return {qty, err};
                 });
+                auto& err = err_tmp;
                 return {n, err};
             }
 
@@ -1244,13 +1498,14 @@ namespace golang::poll
                 {
                     b = b.make_slice(0, maxRW);
                 }
-                auto o = & fd->wop;
-                rec::InitBuf(gocpp::recv(o), b);
-                o->sa = sa;
-                auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+                auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
                 {
-                    return syscall::WSASendto(o->fd->Sysfd, & o->buf, 1, & o->qty, 0, o->sa, & o->o, nullptr);
-                });
+                    uint32_t qty;
+                    gocpp::error err;
+                    err = syscall::WSASendto(fd->Sysfd, newWsaBuf(b), 1, & qty, 0, sa, & o->o, nullptr);
+                    return {qty, err};
+                }, unsafe::SliceData(b));
+                auto& err = err_tmp;
                 ntotal += int(n);
                 if(err != nullptr)
                 {
@@ -1281,12 +1536,14 @@ namespace golang::poll
             if(len(buf) == 0)
             {
                 // handle zero-byte payload
-                auto o = & fd->wop;
-                rec::InitBuf(gocpp::recv(o), buf);
-                auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+                auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
                 {
-                    return windows::WSASendtoInet4(o->fd->Sysfd, & o->buf, 1, & o->qty, 0, sa4, & o->o, nullptr);
+                    uint32_t qty;
+                    gocpp::error err;
+                    err = windows::WSASendtoInet4(fd->Sysfd, new syscall::WSABuf {}, 1, & qty, 0, sa4, & o->o, nullptr);
+                    return {qty, err};
                 });
+                auto& err = err_tmp;
                 return {n, err};
             }
 
@@ -1298,12 +1555,14 @@ namespace golang::poll
                 {
                     b = b.make_slice(0, maxRW);
                 }
-                auto o = & fd->wop;
-                rec::InitBuf(gocpp::recv(o), b);
-                auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+                auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
                 {
-                    return windows::WSASendtoInet4(o->fd->Sysfd, & o->buf, 1, & o->qty, 0, sa4, & o->o, nullptr);
-                });
+                    uint32_t qty;
+                    gocpp::error err;
+                    err = windows::WSASendtoInet4(fd->Sysfd, newWsaBuf(b), 1, & qty, 0, sa4, & o->o, nullptr);
+                    return {qty, err};
+                }, unsafe::SliceData(b));
+                auto& err = err_tmp;
                 ntotal += int(n);
                 if(err != nullptr)
                 {
@@ -1334,12 +1593,14 @@ namespace golang::poll
             if(len(buf) == 0)
             {
                 // handle zero-byte payload
-                auto o = & fd->wop;
-                rec::InitBuf(gocpp::recv(o), buf);
-                auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+                auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
                 {
-                    return windows::WSASendtoInet6(o->fd->Sysfd, & o->buf, 1, & o->qty, 0, sa6, & o->o, nullptr);
+                    uint32_t qty;
+                    gocpp::error err;
+                    err = windows::WSASendtoInet6(fd->Sysfd, new syscall::WSABuf {}, 1, & qty, 0, sa6, & o->o, nullptr);
+                    return {qty, err};
                 });
+                auto& err = err_tmp;
                 return {n, err};
             }
 
@@ -1351,12 +1612,14 @@ namespace golang::poll
                 {
                     b = b.make_slice(0, maxRW);
                 }
-                auto o = & fd->wop;
-                rec::InitBuf(gocpp::recv(o), b);
-                auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+                auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
                 {
-                    return windows::WSASendtoInet6(o->fd->Sysfd, & o->buf, 1, & o->qty, 0, sa6, & o->o, nullptr);
-                });
+                    uint32_t qty;
+                    gocpp::error err;
+                    err = windows::WSASendtoInet6(fd->Sysfd, newWsaBuf(b), 1, & qty, 0, sa6, & o->o, nullptr);
+                    return {qty, err};
+                }, unsafe::SliceData(b));
+                auto& err = err_tmp;
                 ntotal += int(n);
                 if(err != nullptr)
                 {
@@ -1377,24 +1640,25 @@ namespace golang::poll
     // than in the net package so that it can use fd.wop.
     gocpp::error rec::ConnectEx(FD* fd, syscall::Sockaddr ra)
     {
-        auto o = & fd->wop;
-        o->sa = ra;
-        auto [gocpp_id_1, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+        auto [gocpp_id_2, err] = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
         {
-            return ConnectExFunc(o->fd->Sysfd, o->sa, nullptr, 0, nullptr, & o->o);
+            return {0, ConnectExFunc(fd->Sysfd, ra, nullptr, 0, nullptr, & o->o)};
         });
         return err;
     }
 
-    std::tuple<gocpp::string, gocpp::error> rec::acceptOne(FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa, operation* o)
+    std::tuple<gocpp::string, gocpp::error> rec::acceptOne(FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa)
     {
         // Submit accept request.
-        o->handle = s;
-        o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
-        auto [gocpp_id_2, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+        auto rsan = uint32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
+        auto [gocpp_id_3, err_tmp] = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
         {
-            return AcceptFunc(o->fd->Sysfd, o->handle, (unsigned char*)(gocpp::unsafe_pointer(& rawsa[0])), 0, uint32_t(o->rsan), uint32_t(o->rsan), & o->qty, & o->o);
+            uint32_t qty;
+            gocpp::error err;
+            err = AcceptFunc(fd->Sysfd, s, (unsigned char*)(gocpp::unsafe_pointer(& rawsa[0])), 0, rsan, rsan, & qty, & o->o);
+            return {qty, err};
         });
+        auto& err = err_tmp;
         if(err != nullptr)
         {
             CloseFunc(s);
@@ -1425,7 +1689,6 @@ namespace golang::poll
             }
             defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
 
-            auto o = & fd->rop;
             gocpp::array<syscall::RawSockaddrAny, 2> rawsa = {};
             for(; ; )
             {
@@ -1436,10 +1699,10 @@ namespace golang::poll
                 }
 
                 gocpp::string errcall;
-                std::tie(errcall, err) = rec::acceptOne(gocpp::recv(fd), s, rawsa.make_slice(0), o);
+                std::tie(errcall, err) = rec::acceptOne(gocpp::recv(fd), s, rawsa.make_slice(0));
                 if(err == nullptr)
                 {
-                    return {s, rawsa.make_slice(0), uint32_t(o->rsan), ""_s, nullptr};
+                    return {s, rawsa.make_slice(0), uint32_t(gocpp::Sizeof<syscall::RawSockaddrAny>()), ""_s, nullptr};
                 }
 
                 // Sometimes we see WSAECONNRESET and ERROR_NETNAME_DELETED is
@@ -1487,16 +1750,55 @@ namespace golang::poll
             {
                 return {0, gocpp::error(syscall::go_ESPIPE)};
             }
-            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::readWriteLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::readWriteUnlock(gocpp::recv(fd)); });
 
-            rec::Lock(gocpp::recv(fd->l));
-            defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
-
-            return syscall::Seek(fd->Sysfd, offset, whence);
+            if(! fd->isBlocking)
+            {
+                // Windows doesn't use the file pointer for overlapped file handles,
+                // there is no point on calling syscall.Seek.
+                int64_t newOffset = {};
+                //Go switch emulation
+                {
+                    auto condition = whence;
+                    int conditionId = -1;
+                    if(condition == io::SeekStart) { conditionId = 0; }
+                    else if(condition == io::SeekCurrent) { conditionId = 1; }
+                    else if(condition == io::SeekEnd) { conditionId = 2; }
+                    switch(conditionId)
+                    {
+                        case 0:
+                            newOffset = offset;
+                            break;
+                        case 1:
+                            newOffset = fd->offset + offset;
+                            break;
+                        case 2:
+                            int64_t size = {};
+                            if(auto err = windows::GetFileSizeEx(fd->Sysfd, & size); err != nullptr)
+                            {
+                                return {0, err};
+                            }
+                            newOffset = size + offset;
+                            break;
+                        default:
+                            return {0, gocpp::error(windows::ERROR_INVALID_PARAMETER)};
+                            break;
+                    }
+                }
+                if(newOffset < 0)
+                {
+                    return {0, gocpp::error(windows::ERROR_NEGATIVE_SEEK)};
+                }
+                rec::setOffset(gocpp::recv(fd), newOffset);
+                return {newOffset, nullptr};
+            }
+            auto [n, err] = syscall::Seek(fd->Sysfd, offset, whence);
+            rec::setOffset(gocpp::recv(fd), n);
+            return {n, err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1622,16 +1924,19 @@ namespace golang::poll
 
                 // Use a zero-byte read as a way to get notified when this
                 // socket is readable. h/t https://stackoverflow.com/a/42019668/332798
-                auto o = & fd->rop;
-                rec::InitBuf(gocpp::recv(o), nullptr);
-                if(! fd->IsStream)
+                auto [gocpp_id_4, err_tmp] = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
                 {
-                    o->flags |= windows::MSG_PEEK;
-                }
-                auto [gocpp_id_3, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
-                {
-                    return syscall::WSARecv(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, & o->o, nullptr);
+                    uint32_t qty;
+                    gocpp::error err;
+                    uint32_t flags = {};
+                    if(! fd->IsStream)
+                    {
+                        flags |= windows::MSG_PEEK;
+                    }
+                    err = syscall::WSARecv(fd->Sysfd, new syscall::WSABuf {}, 1, & qty, & flags, & o->o, nullptr);
+                    return {qty, err};
                 });
+                auto& err = err_tmp;
                 if(err == windows::WSAEMSGSIZE)
                 {
                 }
@@ -1721,11 +2026,11 @@ namespace golang::poll
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_4 = gocpp::type_info(sa);
+            const auto& gocpp_id_5 = gocpp::type_info(sa);
             const auto& sa_ref = sa;
             int conditionId = -1;
-            if(gocpp_id_4 == typeid(syscall::SockaddrInet4*)) { conditionId = 0; }
-            else if(gocpp_id_4 == typeid(syscall::SockaddrInet6*)) { conditionId = 1; }
+            if(gocpp_id_5 == typeid(syscall::SockaddrInet4*)) { conditionId = 0; }
+            else if(gocpp_id_5 == typeid(syscall::SockaddrInet6*)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -1769,26 +2074,25 @@ namespace golang::poll
                 p = p.make_slice(0, maxRW);
             }
 
-            auto o = & fd->rop;
-            rec::InitMsg(gocpp::recv(o), p, oob);
-            if(o->rsa == nullptr)
+            auto rsa = newWSARsa();
+            defer.push_back([=]{ rec::Put(gocpp::recv(wsaRsaPool), rsa); });
+            auto msg = newWSAMsg(p, oob, flags, rsa);
+            defer.push_back([=]{ freeWSAMsg(msg); });
+            auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
             {
-                o->rsa = new syscall::RawSockaddrAny{};
-            }
-            o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
-            o->msg.Namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
-            o->msg.Flags = uint32_t(flags);
-            auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
-            {
-                return windows::WSARecvMsg(o->fd->Sysfd, & o->msg, & o->qty, & o->o, nullptr);
-            });
+                uint32_t qty;
+                gocpp::error err;
+                err = windows::WSARecvMsg(fd->Sysfd, msg, & qty, & o->o, nullptr);
+                return {qty, err};
+            }, rsa, msg);
+            auto& err = err_tmp;
             err = rec::eofError(gocpp::recv(fd), n, err);
             syscall::Sockaddr sa = {};
             if(err == nullptr)
             {
-                std::tie(sa, err) = rec::Sockaddr(gocpp::recv(o->rsa));
+                std::tie(sa, err) = rec::Sockaddr(gocpp::recv(msg->Name));
             }
-            return {n, int(o->msg.Control.Len), int(o->msg.Flags), sa, err};
+            return {n, int(msg->Control.Len), int(msg->Flags), sa, err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1813,25 +2117,24 @@ namespace golang::poll
                 p = p.make_slice(0, maxRW);
             }
 
-            auto o = & fd->rop;
-            rec::InitMsg(gocpp::recv(o), p, oob);
-            if(o->rsa == nullptr)
+            auto rsa = newWSARsa();
+            defer.push_back([=]{ rec::Put(gocpp::recv(wsaRsaPool), rsa); });
+            auto msg = newWSAMsg(p, oob, flags, rsa);
+            defer.push_back([=]{ freeWSAMsg(msg); });
+            auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
             {
-                o->rsa = new syscall::RawSockaddrAny{};
-            }
-            o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
-            o->msg.Namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
-            o->msg.Flags = uint32_t(flags);
-            auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
-            {
-                return windows::WSARecvMsg(o->fd->Sysfd, & o->msg, & o->qty, & o->o, nullptr);
-            });
+                uint32_t qty;
+                gocpp::error err;
+                err = windows::WSARecvMsg(fd->Sysfd, msg, & qty, & o->o, nullptr);
+                return {qty, err};
+            }, rsa, msg);
+            auto& err = err_tmp;
             err = rec::eofError(gocpp::recv(fd), n, err);
             if(err == nullptr)
             {
-                rawToSockaddrInet4(o->rsa, sa4);
+                rawToSockaddrInet4(msg->Name, sa4);
             }
-            return {n, int(o->msg.Control.Len), int(o->msg.Flags), err};
+            return {n, int(msg->Control.Len), int(msg->Flags), err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1856,25 +2159,24 @@ namespace golang::poll
                 p = p.make_slice(0, maxRW);
             }
 
-            auto o = & fd->rop;
-            rec::InitMsg(gocpp::recv(o), p, oob);
-            if(o->rsa == nullptr)
+            auto rsa = newWSARsa();
+            defer.push_back([=]{ rec::Put(gocpp::recv(wsaRsaPool), rsa); });
+            auto msg = newWSAMsg(p, oob, flags, rsa);
+            defer.push_back([=]{ freeWSAMsg(msg); });
+            auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
             {
-                o->rsa = new syscall::RawSockaddrAny{};
-            }
-            o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
-            o->msg.Namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
-            o->msg.Flags = uint32_t(flags);
-            auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
-            {
-                return windows::WSARecvMsg(o->fd->Sysfd, & o->msg, & o->qty, & o->o, nullptr);
-            });
+                uint32_t qty;
+                gocpp::error err;
+                err = windows::WSARecvMsg(fd->Sysfd, msg, & qty, & o->o, nullptr);
+                return {qty, err};
+            }, rsa, msg);
+            auto& err = err_tmp;
             err = rec::eofError(gocpp::recv(fd), n, err);
             if(err == nullptr)
             {
-                rawToSockaddrInet6(o->rsa, sa6);
+                rawToSockaddrInet6(msg->Name, sa6);
             }
-            return {n, int(o->msg.Control.Len), int(o->msg.Flags), err};
+            return {n, int(msg->Control.Len), int(msg->Flags), err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1899,27 +2201,29 @@ namespace golang::poll
             }
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
 
-            auto o = & fd->wop;
-            rec::InitMsg(gocpp::recv(o), p, oob);
+            wsaRsa* rsa = {};
             if(sa != nullptr)
             {
-                if(o->rsa == nullptr)
-                {
-                    o->rsa = new syscall::RawSockaddrAny{};
-                }
-                auto [len, err] = sockaddrToRaw(o->rsa, sa);
+                rsa = newWSARsa();
+                defer.push_back([=]{ rec::Put(gocpp::recv(wsaRsaPool), rsa); });
+                gocpp::error err = {};
+                std::tie(rsa->namelen, err) = sockaddrToRaw(& rsa->name, sa);
                 if(err != nullptr)
                 {
                     return {0, 0, err};
                 }
-                o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
-                o->msg.Namelen = len;
             }
-            auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+            auto msg = newWSAMsg(p, oob, 0, rsa);
+            defer.push_back([=]{ freeWSAMsg(msg); });
+            auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
             {
-                return windows::WSASendMsg(o->fd->Sysfd, & o->msg, 0, & o->qty, & o->o, nullptr);
-            });
-            return {n, int(o->msg.Control.Len), err};
+                uint32_t qty;
+                gocpp::error err;
+                err = windows::WSASendMsg(fd->Sysfd, msg, 0, nullptr, & o->o, nullptr);
+                return {qty, err};
+            }, rsa, msg);
+            auto& err = err_tmp;
+            return {n, int(msg->Control.Len), err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1944,20 +2248,24 @@ namespace golang::poll
             }
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
 
-            auto o = & fd->wop;
-            rec::InitMsg(gocpp::recv(o), p, oob);
-            if(o->rsa == nullptr)
+            wsaRsa* rsa = {};
+            if(sa != nullptr)
             {
-                o->rsa = new syscall::RawSockaddrAny{};
+                rsa = newWSARsa();
+                defer.push_back([=]{ rec::Put(gocpp::recv(wsaRsaPool), rsa); });
+                rsa->namelen = sockaddrInet4ToRaw(& rsa->name, sa);
             }
-            auto len = sockaddrInet4ToRaw(o->rsa, sa);
-            o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
-            o->msg.Namelen = len;
-            auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+            auto msg = newWSAMsg(p, oob, 0, rsa);
+            defer.push_back([=]{ freeWSAMsg(msg); });
+            auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
             {
-                return windows::WSASendMsg(o->fd->Sysfd, & o->msg, 0, & o->qty, & o->o, nullptr);
-            });
-            return {n, int(o->msg.Control.Len), err};
+                uint32_t qty;
+                gocpp::error err;
+                err = windows::WSASendMsg(fd->Sysfd, msg, 0, nullptr, & o->o, nullptr);
+                return {qty, err};
+            }, rsa, msg);
+            auto& err = err_tmp;
+            return {n, int(msg->Control.Len), err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1982,25 +2290,47 @@ namespace golang::poll
             }
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
 
-            auto o = & fd->wop;
-            rec::InitMsg(gocpp::recv(o), p, oob);
-            if(o->rsa == nullptr)
+            wsaRsa* rsa = {};
+            if(sa != nullptr)
             {
-                o->rsa = new syscall::RawSockaddrAny{};
+                rsa = newWSARsa();
+                defer.push_back([=]{ rec::Put(gocpp::recv(wsaRsaPool), rsa); });
+                rsa->namelen = sockaddrInet6ToRaw(& rsa->name, sa);
             }
-            auto len = sockaddrInet6ToRaw(o->rsa, sa);
-            o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
-            o->msg.Namelen = len;
-            auto [n, err] = execIO(o, [=](operation* o) mutable -> gocpp::error
+            auto msg = newWSAMsg(p, oob, 0, rsa);
+            defer.push_back([=]{ freeWSAMsg(msg); });
+            auto [n, err_tmp] = rec::execIO(gocpp::recv(fd), 'w', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
             {
-                return windows::WSASendMsg(o->fd->Sysfd, & o->msg, 0, & o->qty, & o->o, nullptr);
-            });
-            return {n, int(o->msg.Control.Len), err};
+                uint32_t qty;
+                gocpp::error err;
+                err = windows::WSASendMsg(fd->Sysfd, msg, 0, nullptr, & o->o, nullptr);
+                return {qty, err};
+            }, rsa, msg);
+            auto& err = err_tmp;
+            return {n, int(msg->Control.Len), err};
         }
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
         }
+    }
+
+    std::tuple<int, gocpp::string, gocpp::error> DupCloseOnExec(int fd)
+    {
+        auto [proc, err] = syscall::GetCurrentProcess();
+        if(err != nullptr)
+        {
+            return {0, "GetCurrentProcess"_s, err};
+        }
+
+        syscall::Handle nfd = {};
+        // analogous to CLOEXEC
+        auto inherit = false;
+        if(auto err = syscall::DuplicateHandle(proc, syscall::Handle(fd), proc, & nfd, 0, inherit, syscall::DUPLICATE_SAME_ACCESS); err != nullptr)
+        {
+            return {0, "DuplicateHandle"_s, err};
+        }
+        return {int(nfd), ""_s, nullptr};
     }
 
 }

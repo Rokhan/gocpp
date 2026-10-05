@@ -12,6 +12,19 @@
 
 namespace golang::os
 {
+    // Portable analogs of some common system call errors.
+    //
+    // Errors returned from this package may be tested against these errors
+    // with [errors.Is].
+    // ErrInvalid indicates an invalid argument.
+    // Methods on File will return this error when the receiver is nil.
+    extern gocpp::error ErrInvalid;
+    extern gocpp::error ErrPermission;
+    extern gocpp::error ErrExist;
+    extern gocpp::error ErrNotExist;
+    extern gocpp::error ErrClosed;
+    extern gocpp::error ErrNoDeadline;
+    extern gocpp::error ErrDeadlineExceeded;
     gocpp::error errNoDeadline();
     gocpp::error errDeadlineExceeded();
     struct timeout : virtual gocpp::Interface
@@ -101,18 +114,6 @@ namespace golang::os
     bool IsTimeout(gocpp::error err);
     bool underlyingErrorIs(gocpp::error err, gocpp::error target);
     gocpp::error underlyingError(gocpp::error err);
-    extern gocpp::error ErrNoDeadline;
-    extern gocpp::error ErrDeadlineExceeded;
-}
-#include "golang/io/fs/fs.h"
-
-namespace golang::os
-{
-    extern gocpp::error ErrInvalid;
-    extern gocpp::error ErrPermission;
-    extern gocpp::error ErrExist;
-    extern gocpp::error ErrNotExist;
-    extern gocpp::error ErrClosed;
 
     namespace rec
     {

@@ -28,12 +28,13 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct dlogPerM& value);
 }
-#include "golang/runtime/debuglog.fwd.h"
+#include "golang/runtime/debuglog.h"
 
 namespace golang::runtime
 {
-    dlogger* getCachedDlogger();
-    bool putCachedDlogger(dlogger* l);
+    dloggerFake dlog1();
+    dloggerImpl* getCachedDlogger();
+    bool putCachedDlogger(dloggerImpl* l);
 
     namespace rec
     {

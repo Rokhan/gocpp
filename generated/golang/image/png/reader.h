@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::png
+namespace golang::image::png
 {
     bool cbPaletted(int cb);
     bool cbTrueColor(int cb);
@@ -35,15 +35,27 @@ namespace golang::png
     std::ostream& operator<<(std::ostream& os, const struct interlaceScan& value);
     extern png::FormatError chunkOrderError;
     void init();
+    // interlacing defines Adam7 interlacing, with 7 passes of reduced images.
+    // See https://www.w3.org/TR/PNG/#8Interlace
     extern gocpp::slice<interlaceScan> interlacing;
 }
+#include "golang/hash/hash.fwd.h"
+#include "golang/image/color/color.fwd.h"
+#include "golang/image/format.fwd.h"
+#include "golang/image/geom.fwd.h"
+#include "golang/image/image.fwd.h"
+#include "golang/io/io.fwd.h"
 #include "golang/hash/hash.h"
 #include "golang/image/color/color.h"
 #include "golang/image/image.h"
 #include "golang/io/io.h"
 
-namespace golang::png
+namespace golang::image::png
 {
+    namespace io = golang::io;
+    namespace image = golang::image;
+    namespace hash = golang::hash;
+    namespace color = golang::image::color;
     struct decoder
     {
         io::Reader r{};
@@ -82,7 +94,7 @@ namespace golang::png
 #include "golang/image/image.h"
 #include "golang/io/io.h"
 
-namespace golang::png
+namespace golang::image::png
 {
 
     namespace rec

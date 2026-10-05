@@ -4,17 +4,16 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::zlib
+namespace golang::compress::zlib
 {
     const long zlibDeflate = 8;
     const long zlibMaxWindow = 7;
+    struct reader;
 }
-#include "golang/compress/flate/inflate.fwd.h"
-#include "golang/hash/hash.fwd.h"
 #include "golang/io/io.fwd.h"
 
-namespace golang::zlib
+namespace golang::compress::zlib
 {
-    struct reader;
+    namespace io = golang::io;
     struct Resetter;
 }

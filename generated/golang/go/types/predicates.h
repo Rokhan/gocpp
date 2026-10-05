@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct comparer
     {
@@ -32,45 +32,50 @@ namespace golang::types
     
     template<template<typename> class  P, typename T>
     P<T> clone(P<T> p);
+    bool isValidName(gocpp::string s);
 }
 #include "golang/go/types/basic.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/interface.fwd.h"
 #include "golang/go/types/named.fwd.h"
+#include "golang/go/types/package.fwd.h"
+#include "golang/go/types/under.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    bool isValid(golang::types::Type t);
-    bool isBoolean(golang::types::Type t);
-    bool isInteger(golang::types::Type t);
-    bool isUnsigned(golang::types::Type t);
-    bool isFloat(golang::types::Type t);
-    bool isComplex(golang::types::Type t);
-    bool isNumeric(golang::types::Type t);
-    bool isString(golang::types::Type t);
-    bool isIntegerOrFloat(golang::types::Type t);
-    bool isConstType(golang::types::Type t);
-    bool isBasic(golang::types::Type t, BasicInfo info);
-    bool allBoolean(golang::types::Type t);
-    bool allInteger(golang::types::Type t);
-    bool allUnsigned(golang::types::Type t);
-    bool allNumeric(golang::types::Type t);
-    bool allString(golang::types::Type t);
-    bool allOrdered(golang::types::Type t);
-    bool allNumericOrString(golang::types::Type t);
-    bool allBasic(golang::types::Type t, BasicInfo info);
-    bool hasName(golang::types::Type t);
-    bool isTypeLit(golang::types::Type t);
-    bool isTyped(golang::types::Type t);
-    bool isUntyped(golang::types::Type t);
-    bool IsInterface(golang::types::Type t);
-    bool isNonTypeParamInterface(golang::types::Type t);
-    bool isTypeParam(golang::types::Type t);
-    bool hasEmptyTypeset(golang::types::Type t);
-    bool isGeneric(golang::types::Type t);
-    bool Comparable(golang::types::Type T);
-    bool comparable(golang::types::Type T, bool dynamic, gocpp::map<golang::types::Type, bool> seen, std::function<void (gocpp::string _1, gocpp::slice<gocpp::go_any> _2)> reportf);
-    bool hasNil(golang::types::Type t);
+    bool isValid(golang::go::types::Type t);
+    bool isBoolean(golang::go::types::Type t);
+    bool isInteger(golang::go::types::Type t);
+    bool isUnsigned(golang::go::types::Type t);
+    bool isFloat(golang::go::types::Type t);
+    bool isComplex(golang::go::types::Type t);
+    bool isNumeric(golang::go::types::Type t);
+    bool isString(golang::go::types::Type t);
+    bool isIntegerOrFloat(golang::go::types::Type t);
+    bool isConstType(golang::go::types::Type t);
+    bool isBasic(golang::go::types::Type t, BasicInfo info);
+    bool allBoolean(golang::go::types::Type t);
+    bool allInteger(golang::go::types::Type t);
+    bool allUnsigned(golang::go::types::Type t);
+    bool allNumeric(golang::go::types::Type t);
+    bool allString(golang::go::types::Type t);
+    bool allOrdered(golang::go::types::Type t);
+    bool allNumericOrString(golang::go::types::Type t);
+    bool allBasic(golang::go::types::Type t, BasicInfo info);
+    bool hasName(golang::go::types::Type t);
+    bool isTypeLit(golang::go::types::Type t);
+    bool isTyped(golang::go::types::Type t);
+    bool isUntyped(golang::go::types::Type t);
+    bool isUntypedNumeric(golang::go::types::Type t);
+    bool IsInterface(golang::go::types::Type t);
+    bool isNonTypeParamInterface(golang::go::types::Type t);
+    bool isTypeParam(golang::go::types::Type t);
+    bool hasEmptyTypeset(golang::go::types::Type t);
+    bool isGeneric(golang::go::types::Type t);
+    bool Comparable(golang::go::types::Type T);
+    typeError* comparableType(golang::go::types::Type T, bool dynamic, gocpp::map<golang::go::types::Type, bool> seen);
+    bool hasNil(golang::go::types::Type t);
+    bool samePkg(Package* a, Package* b);
     struct ifacePair
     {
         Interface* x{};
@@ -90,20 +95,20 @@ namespace golang::types
 
     std::ostream& operator<<(std::ostream& os, const struct ifacePair& value);
     bool identicalOrigin(Named* x, Named* y);
-    bool identicalInstance(golang::types::Type xorig, gocpp::slice<golang::types::Type> xargs, golang::types::Type yorig, gocpp::slice<golang::types::Type> yargs);
-    golang::types::Type Default(golang::types::Type t);
-    golang::types::Type maxType(golang::types::Type x, golang::types::Type y);
+    bool identicalInstance(golang::go::types::Type xorig, gocpp::slice<golang::go::types::Type> xargs, golang::go::types::Type yorig, gocpp::slice<golang::go::types::Type> yargs);
+    golang::go::types::Type Default(golang::go::types::Type t);
+    golang::go::types::Type maxType(golang::go::types::Type x, golang::go::types::Type y);
 }
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
         bool identical(ifacePair* p, ifacePair* q);
-        bool identical(comparer* c, golang::types::Type x, golang::types::Type y, ifacePair* p);
+        bool identical(comparer* c, golang::go::types::Type x, golang::go::types::Type y, ifacePair* p);
     }
 }
 

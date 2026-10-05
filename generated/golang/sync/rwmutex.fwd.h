@@ -6,14 +6,8 @@
 
 namespace golang::sync
 {
+    struct RWMutex;
     const int rwmutexMaxReaders = 1 << 30;
     struct GoTag_rlocker;
-}
-#include "golang/sync/atomic/type.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-
-namespace golang::sync
-{
-    struct RWMutex;
     using rlocker = gocpp::defined<RWMutex, GoTag_rlocker>;
 }

@@ -13,6 +13,7 @@
 namespace golang::reflect
 {
     bool DeepEqual(go_any x, go_any y);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/reflect/type.h"
 

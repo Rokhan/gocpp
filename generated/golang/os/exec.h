@@ -12,6 +12,12 @@
 
 namespace golang::os
 {
+    // ErrProcessDone indicates a [Process] has finished.
+    extern gocpp::error ErrProcessDone;
+    // errProcessReleased indicates a [Process] has been released.
+    extern gocpp::error errProcessReleased;
+    // ErrNoHandle indicates a [Process] does not have a handle.
+    extern gocpp::error ErrNoHandle;
     struct Signal : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -84,21 +90,51 @@ namespace golang::os
     int Getpid();
     int Getppid();
 }
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/rwmutex.h"
-#include "golang/errors/errors.fwd.h"
-#include "golang/os/types.fwd.h"
+#include "golang/runtime/extern.fwd.h"
+#include "golang/runtime/mcleanup.fwd.h"
+#include "golang/sync/atomic/type.fwd.h"
+#include "golang/sync/rwmutex.fwd.h"
 #include "golang/syscall/exec_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::os
 {
-    extern gocpp::error ErrProcessDone;
+    namespace atomic = golang::sync::atomic;
+    namespace sync = golang::sync;
+    namespace runtime = golang::runtime;
+}
+#include "golang/runtime/mcleanup.h"
+#include "golang/sync/atomic/type.h"
+#include "golang/sync/rwmutex.h"
+
+namespace golang::os
+{
+    namespace syscall = golang::syscall;
+}
+#include "golang/os/types.fwd.h"
+
+namespace golang::os
+{
     struct Process
     {
+        // Pid is the operating system process ID.
         int Pid{};
-        uintptr_t handle{}; // handle is accessed atomically on Windows
-        atomic::Bool isdone{}; // process has been successfully waited on
+        // state contains the atomic process state.
+        // This consists of the processStatus fields,
+        // which indicate if the process is done/released.
+        atomic::Uint32 state{};
+        // Used only when handle is nil
         sync::RWMutex sigMu{}; // avoid race between wait and signal
+        // handle, if not nil, is a pointer to a struct
+        // that holds the OS-specific process handle.
+        // This pointer is set when Process is created,
+        // and never changed afterward.
+        // This is a pointer to a separate memory allocation
+        // so that we can use runtime.AddCleanup.
+        processHandle* handle{};
+        // cleanup is used to clean up the process handle.
+        runtime::Cleanup cleanup{};
 
         using isGoStruct = void;
 
@@ -112,6 +148,29 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Process& value);
+    struct processHandle
+    {
+        // The actual handle. This field should not be used directly.
+        // Instead, use the acquire and release methods.
+        // On Windows this is a handle returned by OpenProcess.
+        // On Linux this is a pidfd.
+        uintptr_t handle{};
+        // Number of active references. When this drops to zero
+        // the handle is closed.
+        atomic::Int32 refs{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct processHandle& value);
     struct ProcAttr
     {
         // If Dir is non-empty, the child changes into the directory before
@@ -148,7 +207,9 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ProcAttr& value);
-    Process* newProcess(int pid, uintptr_t handle);
+    Process* newPIDProcess(int pid);
+    Process* newHandleProcess(int pid, uintptr_t handle);
+    Process* newDoneProcess(int pid);
     std::tuple<Process*, gocpp::error> FindProcess(int pid);
     std::tuple<Process*, gocpp::error> StartProcess(gocpp::string name, gocpp::slice<gocpp::string> argv, ProcAttr* attr);
 }
@@ -158,15 +219,21 @@ namespace golang::os
 
 namespace golang::os
 {
+    namespace time = golang::time;
 
     namespace rec
     {
-        void setDone(Process* p);
-        bool done(Process* p);
+        std::tuple<uintptr_t, bool> acquire(processHandle* ph);
+        void release(processHandle* ph);
+        std::tuple<uintptr_t, processStatus> handleTransientAcquire(Process* p);
+        void handleTransientRelease(Process* p);
+        processStatus pidStatus(Process* p);
         gocpp::error Release(Process* p);
+        processStatus doRelease(Process* p, processStatus newStatus);
         gocpp::error Kill(Process* p);
         std::tuple<ProcessState*, gocpp::error> Wait(Process* p);
         gocpp::error Signal(Process* p, golang::os::Signal sig);
+        gocpp::error WithHandle(Process* p, std::function<void (uintptr_t handle)> f);
         time::Duration UserTime(ProcessState* p);
         time::Duration SystemTime(ProcessState* p);
         bool Exited(ProcessState* p);

@@ -11,24 +11,29 @@
 #include "golang/runtime/runtime2.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/iface.h"
 #include "golang/internal/abi/symtab.h"
-#include "golang/internal/abi/type.h"
 #include "golang/internal/chacha8rand/chacha8.h"
 #include "golang/internal/goarch/goarch.h"
+#include "golang/internal/goarch/zgoarch_amd64.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/nih.h"
+#include "golang/runtime/asan0.h"
 #include "golang/runtime/cgocall.h"
 #include "golang/runtime/chan.h"
 #include "golang/runtime/coro.h"
 #include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/histogram.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/lfstack.h"
+#include "golang/runtime/list_manual.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mcache.h"
+#include "golang/runtime/mcleanup.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mgclimit.h"
 #include "golang/runtime/mgcwork.h"
@@ -36,21 +41,32 @@
 #include "golang/runtime/mpagecache.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/mwbbuf.h"
+#include "golang/runtime/note_other.h"
 #include "golang/runtime/os_windows.h"
-#include "golang/runtime/pagetrace_off.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/pinner.h"
+#include "golang/runtime/preempt_xreg.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/signal_windows.h"
+#include "golang/runtime/stubs_amd64.h"
 #include "golang/runtime/symtab.h"
+#include "golang/runtime/synctest.h"
 #include "golang/runtime/time.h"
-#include "golang/runtime/trace2runtime.h"
+#include "golang/runtime/traceruntime.h"
 #include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace chacha8rand = golang::internal::chacha8rand;
+    namespace goarch = golang::internal::goarch;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
+        using atomic::rec::Load;
+        using atomic::rec::Store;
     }
 
     // Mutual exclusion locks.  In the uncontended case,
@@ -86,55 +102,6 @@ namespace golang::runtime
     }
 
     std::ostream& operator<<(std::ostream& os, const struct mutex& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    // sleep and wakeup on one-time events.
-    // before any calls to notesleep or notewakeup,
-    // must call noteclear to initialize the Note.
-    // then, exactly one thread can call notesleep
-    // and exactly one thread can call notewakeup (once).
-    // once notewakeup has been called, the notesleep
-    // will return.  future notesleep will return immediately.
-    // subsequent noteclear must be called only after
-    // previous notesleep has returned, e.g. it's disallowed
-    // to call noteclear straight after notewakeup.
-    //
-    // notetsleep is like notesleep but wakes up after
-    // a given number of nanoseconds even if the event
-    // has not yet happened.  if a goroutine uses notetsleep to
-    // wake up early, it must wait to call noteclear until it
-    // can be sure that no other goroutine is calling
-    // notewakeup.
-    //
-    // notesleep/notetsleep are generally called on g0,
-    // notetsleepg is similar to notetsleep but is called on user g.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    note::operator T()
-    {
-        T result;
-        result.key = this->key;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool note::operator==(const T& ref) const
-    {
-        if (key != ref.key) return false;
-        return true;
-    }
-
-    std::ostream& note::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << key;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct note& value)
     {
         return value.PrintTo(os);
     }
@@ -344,7 +311,6 @@ namespace golang::runtime
         result.pc = this->pc;
         result.g = this->g;
         result.ctxt = this->ctxt;
-        result.ret = this->ret;
         result.lr = this->lr;
         result.bp = this->bp;
         return result;
@@ -357,7 +323,6 @@ namespace golang::runtime
         if (pc != ref.pc) return false;
         if (g != ref.g) return false;
         if (ctxt != ref.ctxt) return false;
-        if (ret != ref.ret) return false;
         if (lr != ref.lr) return false;
         if (bp != ref.bp) return false;
         return true;
@@ -370,7 +335,6 @@ namespace golang::runtime
         os << " " << pc;
         os << " " << g;
         os << " " << ctxt;
-        os << " " << ret;
         os << " " << lr;
         os << " " << bp;
         os << '}';
@@ -380,6 +344,137 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gobuf& value)
     {
         return value.PrintTo(os);
+    }
+
+    // maybeTraceablePtr is a special pointer that is conditionally trackable
+    // by the GC. It consists of an address as a uintptr (vu) and a pointer
+    // to a data element (vp).
+    //
+    // maybeTraceablePtr values can be in one of three states:
+    // 1. Unset: vu == 0 && vp == nil
+    // 2. Untracked: vu != 0 && vp == nil
+    // 3. Tracked: vu != 0 && vp != nil
+    //
+    // Do not set fields manually. Use methods instead.
+    // Extend this type with additional methods if needed.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    maybeTraceablePtr::operator T()
+    {
+        T result;
+        result.vp = this->vp;
+        result.vu = this->vu;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool maybeTraceablePtr::operator==(const T& ref) const
+    {
+        if (vp != ref.vp) return false;
+        if (vu != ref.vu) return false;
+        return true;
+    }
+
+    std::ostream& maybeTraceablePtr::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << vp;
+        os << " " << vu;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct maybeTraceablePtr& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // untrack unsets the pointer but preserves the address.
+    // This is used to hide the pointer from the GC.
+    //
+    //go:nosplit
+    void rec::setUntraceable(maybeTraceablePtr* p)
+    {
+        p->vp = nullptr;
+    }
+
+    // setTraceable resets the pointer to the stored address.
+    // This is used to make the pointer visible to the GC.
+    //
+    //go:nosplit
+    void rec::setTraceable(maybeTraceablePtr* p)
+    {
+        p->vp = gocpp::unsafe_pointer(p->vu);
+    }
+
+    // set sets the pointer to the data element and updates the address.
+    //
+    //go:nosplit
+    void rec::set(maybeTraceablePtr* p, gocpp::unsafe_pointer v)
+    {
+        p->vp = v;
+        p->vu = uintptr_t(v);
+    }
+
+    // get retrieves the pointer to the data element.
+    //
+    //go:nosplit
+    gocpp::unsafe_pointer rec::get(maybeTraceablePtr* p)
+    {
+        return gocpp::unsafe_pointer(p->vu);
+    }
+
+    // uintptr returns the uintptr address of the pointer.
+    //
+    //go:nosplit
+    uintptr_t rec::uintptr(maybeTraceablePtr* p)
+    {
+        return p->vu;
+    }
+
+    // maybeTraceableChan extends conditionally trackable pointers (maybeTraceablePtr)
+    // to track hchan pointers.
+    //
+    // Do not set fields manually. Use methods instead.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    maybeTraceableChan::operator T()
+    {
+        T result;
+        result.maybeTraceablePtr = this->maybeTraceablePtr;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool maybeTraceableChan::operator==(const T& ref) const
+    {
+        if (maybeTraceablePtr != ref.maybeTraceablePtr) return false;
+        return true;
+    }
+
+    std::ostream& maybeTraceableChan::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << maybeTraceablePtr;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct maybeTraceableChan& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    //go:nosplit
+    void rec::set(maybeTraceableChan* p, golang::runtime::hchan* c)
+    {
+        rec::set(gocpp::recv(p->maybeTraceablePtr), gocpp::unsafe_pointer(c));
+    }
+
+    //go:nosplit
+    golang::runtime::hchan* rec::get(maybeTraceableChan* p)
+    {
+        return (golang::runtime::hchan*)(rec::get(gocpp::recv(p->maybeTraceablePtr)));
     }
 
     // sudog (pseudo-g) represents a g in a wait list, such as for sending/receiving
@@ -586,6 +681,7 @@ namespace golang::runtime
         result.sched = this->sched;
         result.syscallsp = this->syscallsp;
         result.syscallpc = this->syscallpc;
+        result.syscallbp = this->syscallbp;
         result.stktopsp = this->stktopsp;
         result.param = this->param;
         result.atomicstatus = this->atomicstatus;
@@ -612,7 +708,13 @@ namespace golang::runtime
         result.trackingStamp = this->trackingStamp;
         result.runnableTime = this->runnableTime;
         result.lockedm = this->lockedm;
+        result.fipsIndicator = this->fipsIndicator;
+        result.fipsOnlyBypass = this->fipsOnlyBypass;
+        result.ditWanted = this->ditWanted;
+        result.syncSafePoint = this->syncSafePoint;
+        result.runningCleanups = this->runningCleanups;
         result.sig = this->sig;
+        result.secret = this->secret;
         result.writebuf = this->writebuf;
         result.sigcode0 = this->sigcode0;
         result.sigcode1 = this->sigcode1;
@@ -626,11 +728,15 @@ namespace golang::runtime
         result.cgoCtxt = this->cgoCtxt;
         result.labels = this->labels;
         result.timer = this->timer;
+        result.sleepWhen = this->sleepWhen;
         result.selectDone = this->selectDone;
-        result.coroarg = this->coroarg;
         result.goroutineProfiled = this->goroutineProfiled;
+        result.coroarg = this->coroarg;
+        result.bubble = this->bubble;
+        result.xRegs = this->xRegs;
         result.trace = this->trace;
         result.gcAssistBytes = this->gcAssistBytes;
+        result.valgrindStackID = this->valgrindStackID;
         return result;
     }
 
@@ -646,6 +752,7 @@ namespace golang::runtime
         if (sched != ref.sched) return false;
         if (syscallsp != ref.syscallsp) return false;
         if (syscallpc != ref.syscallpc) return false;
+        if (syscallbp != ref.syscallbp) return false;
         if (stktopsp != ref.stktopsp) return false;
         if (param != ref.param) return false;
         if (atomicstatus != ref.atomicstatus) return false;
@@ -672,7 +779,13 @@ namespace golang::runtime
         if (trackingStamp != ref.trackingStamp) return false;
         if (runnableTime != ref.runnableTime) return false;
         if (lockedm != ref.lockedm) return false;
+        if (fipsIndicator != ref.fipsIndicator) return false;
+        if (fipsOnlyBypass != ref.fipsOnlyBypass) return false;
+        if (ditWanted != ref.ditWanted) return false;
+        if (syncSafePoint != ref.syncSafePoint) return false;
+        if (runningCleanups != ref.runningCleanups) return false;
         if (sig != ref.sig) return false;
+        if (secret != ref.secret) return false;
         if (writebuf != ref.writebuf) return false;
         if (sigcode0 != ref.sigcode0) return false;
         if (sigcode1 != ref.sigcode1) return false;
@@ -686,11 +799,15 @@ namespace golang::runtime
         if (cgoCtxt != ref.cgoCtxt) return false;
         if (labels != ref.labels) return false;
         if (timer != ref.timer) return false;
+        if (sleepWhen != ref.sleepWhen) return false;
         if (selectDone != ref.selectDone) return false;
-        if (coroarg != ref.coroarg) return false;
         if (goroutineProfiled != ref.goroutineProfiled) return false;
+        if (coroarg != ref.coroarg) return false;
+        if (bubble != ref.bubble) return false;
+        if (xRegs != ref.xRegs) return false;
         if (trace != ref.trace) return false;
         if (gcAssistBytes != ref.gcAssistBytes) return false;
+        if (valgrindStackID != ref.valgrindStackID) return false;
         return true;
     }
 
@@ -706,6 +823,7 @@ namespace golang::runtime
         os << " " << sched;
         os << " " << syscallsp;
         os << " " << syscallpc;
+        os << " " << syscallbp;
         os << " " << stktopsp;
         os << " " << param;
         os << " " << atomicstatus;
@@ -732,7 +850,13 @@ namespace golang::runtime
         os << " " << trackingStamp;
         os << " " << runnableTime;
         os << " " << lockedm;
+        os << " " << fipsIndicator;
+        os << " " << fipsOnlyBypass;
+        os << " " << ditWanted;
+        os << " " << syncSafePoint;
+        os << " " << runningCleanups;
         os << " " << sig;
+        os << " " << secret;
         os << " " << writebuf;
         os << " " << sigcode0;
         os << " " << sigcode1;
@@ -746,11 +870,15 @@ namespace golang::runtime
         os << " " << cgoCtxt;
         os << " " << labels;
         os << " " << timer;
+        os << " " << sleepWhen;
         os << " " << selectDone;
-        os << " " << coroarg;
         os << " " << goroutineProfiled;
+        os << " " << coroarg;
+        os << " " << bubble;
+        os << " " << xRegs;
         os << " " << trace;
         os << " " << gcAssistBytes;
+        os << " " << valgrindStackID;
         os << '}';
         return os;
     }
@@ -768,7 +896,6 @@ namespace golang::runtime
         result.g0 = this->g0;
         result.morebuf = this->morebuf;
         result.divmod = this->divmod;
-        result._1 = this->_1;
         result.procid = this->procid;
         result.gsignal = this->gsignal;
         result.goSigStack = this->goSigStack;
@@ -777,6 +904,7 @@ namespace golang::runtime
         result.mstartfn = this->mstartfn;
         result.curg = this->curg;
         result.caughtsig = this->caughtsig;
+        result.signalSecret = this->signalSecret;
         result.p = this->p;
         result.nextp = this->nextp;
         result.oldp = this->oldp;
@@ -797,7 +925,9 @@ namespace golang::runtime
         result.isExtraInSig = this->isExtraInSig;
         result.freeWait = this->freeWait;
         result.needextram = this->needextram;
+        result.g0StackAccurate = this->g0StackAccurate;
         result.traceback = this->traceback;
+        result.allpSnapshot = this->allpSnapshot;
         result.ncgocall = this->ncgocall;
         result.ncgo = this->ncgo;
         result.cgoCallersUse = this->cgoCallersUse;
@@ -805,24 +935,26 @@ namespace golang::runtime
         result.park = this->park;
         result.alllink = this->alllink;
         result.schedlink = this->schedlink;
+        result.idleNode = this->idleNode;
         result.lockedg = this->lockedg;
         result.createstack = this->createstack;
         result.lockedExt = this->lockedExt;
         result.lockedInt = this->lockedInt;
-        result.nextwaitm = this->nextwaitm;
+        result.mWaitList = this->mWaitList;
+        result.ditEnabled = this->ditEnabled;
         result.mLockProfile = this->mLockProfile;
+        result.profStack = this->profStack;
         result.waitunlockf = this->waitunlockf;
         result.waitlock = this->waitlock;
-        result.waitTraceBlockReason = this->waitTraceBlockReason;
         result.waitTraceSkip = this->waitTraceSkip;
+        result.waitTraceBlockReason = this->waitTraceBlockReason;
         result.syscalltick = this->syscalltick;
         result.freelink = this->freelink;
         result.trace = this->trace;
-        result.libcall = this->libcall;
         result.libcallpc = this->libcallpc;
         result.libcallsp = this->libcallsp;
         result.libcallg = this->libcallg;
-        result.syscall = this->syscall;
+        result.winsyscall = this->winsyscall;
         result.vdsoSP = this->vdsoSP;
         result.vdsoPC = this->vdsoPC;
         result.preemptGen = this->preemptGen;
@@ -832,8 +964,10 @@ namespace golang::runtime
         result.mOS = this->mOS;
         result.chacha8 = this->chacha8;
         result.cheaprand = this->cheaprand;
+        result.cheaprand64 = this->cheaprand64;
         result.locksHeldLen = this->locksHeldLen;
         result.locksHeld = this->locksHeld;
+        result.self = this->self;
         return result;
     }
 
@@ -843,7 +977,6 @@ namespace golang::runtime
         if (g0 != ref.g0) return false;
         if (morebuf != ref.morebuf) return false;
         if (divmod != ref.divmod) return false;
-        if (_1 != ref._1) return false;
         if (procid != ref.procid) return false;
         if (gsignal != ref.gsignal) return false;
         if (goSigStack != ref.goSigStack) return false;
@@ -852,6 +985,7 @@ namespace golang::runtime
         if (mstartfn != ref.mstartfn) return false;
         if (curg != ref.curg) return false;
         if (caughtsig != ref.caughtsig) return false;
+        if (signalSecret != ref.signalSecret) return false;
         if (p != ref.p) return false;
         if (nextp != ref.nextp) return false;
         if (oldp != ref.oldp) return false;
@@ -872,7 +1006,9 @@ namespace golang::runtime
         if (isExtraInSig != ref.isExtraInSig) return false;
         if (freeWait != ref.freeWait) return false;
         if (needextram != ref.needextram) return false;
+        if (g0StackAccurate != ref.g0StackAccurate) return false;
         if (traceback != ref.traceback) return false;
+        if (allpSnapshot != ref.allpSnapshot) return false;
         if (ncgocall != ref.ncgocall) return false;
         if (ncgo != ref.ncgo) return false;
         if (cgoCallersUse != ref.cgoCallersUse) return false;
@@ -880,24 +1016,26 @@ namespace golang::runtime
         if (park != ref.park) return false;
         if (alllink != ref.alllink) return false;
         if (schedlink != ref.schedlink) return false;
+        if (idleNode != ref.idleNode) return false;
         if (lockedg != ref.lockedg) return false;
         if (createstack != ref.createstack) return false;
         if (lockedExt != ref.lockedExt) return false;
         if (lockedInt != ref.lockedInt) return false;
-        if (nextwaitm != ref.nextwaitm) return false;
+        if (mWaitList != ref.mWaitList) return false;
+        if (ditEnabled != ref.ditEnabled) return false;
         if (mLockProfile != ref.mLockProfile) return false;
+        if (profStack != ref.profStack) return false;
         if (waitunlockf != ref.waitunlockf) return false;
         if (waitlock != ref.waitlock) return false;
-        if (waitTraceBlockReason != ref.waitTraceBlockReason) return false;
         if (waitTraceSkip != ref.waitTraceSkip) return false;
+        if (waitTraceBlockReason != ref.waitTraceBlockReason) return false;
         if (syscalltick != ref.syscalltick) return false;
         if (freelink != ref.freelink) return false;
         if (trace != ref.trace) return false;
-        if (libcall != ref.libcall) return false;
         if (libcallpc != ref.libcallpc) return false;
         if (libcallsp != ref.libcallsp) return false;
         if (libcallg != ref.libcallg) return false;
-        if (syscall != ref.syscall) return false;
+        if (winsyscall != ref.winsyscall) return false;
         if (vdsoSP != ref.vdsoSP) return false;
         if (vdsoPC != ref.vdsoPC) return false;
         if (preemptGen != ref.preemptGen) return false;
@@ -907,8 +1045,10 @@ namespace golang::runtime
         if (mOS != ref.mOS) return false;
         if (chacha8 != ref.chacha8) return false;
         if (cheaprand != ref.cheaprand) return false;
+        if (cheaprand64 != ref.cheaprand64) return false;
         if (locksHeldLen != ref.locksHeldLen) return false;
         if (locksHeld != ref.locksHeld) return false;
+        if (self != ref.self) return false;
         return true;
     }
 
@@ -918,7 +1058,6 @@ namespace golang::runtime
         os << "" << g0;
         os << " " << morebuf;
         os << " " << divmod;
-        os << " " << _1;
         os << " " << procid;
         os << " " << gsignal;
         os << " " << goSigStack;
@@ -927,6 +1066,7 @@ namespace golang::runtime
         os << " " << mstartfn;
         os << " " << curg;
         os << " " << caughtsig;
+        os << " " << signalSecret;
         os << " " << p;
         os << " " << nextp;
         os << " " << oldp;
@@ -947,7 +1087,9 @@ namespace golang::runtime
         os << " " << isExtraInSig;
         os << " " << freeWait;
         os << " " << needextram;
+        os << " " << g0StackAccurate;
         os << " " << traceback;
+        os << " " << allpSnapshot;
         os << " " << ncgocall;
         os << " " << ncgo;
         os << " " << cgoCallersUse;
@@ -955,24 +1097,26 @@ namespace golang::runtime
         os << " " << park;
         os << " " << alllink;
         os << " " << schedlink;
+        os << " " << idleNode;
         os << " " << lockedg;
         os << " " << createstack;
         os << " " << lockedExt;
         os << " " << lockedInt;
-        os << " " << nextwaitm;
+        os << " " << mWaitList;
+        os << " " << ditEnabled;
         os << " " << mLockProfile;
+        os << " " << profStack;
         os << " " << waitunlockf;
         os << " " << waitlock;
-        os << " " << waitTraceBlockReason;
         os << " " << waitTraceSkip;
+        os << " " << waitTraceBlockReason;
         os << " " << syscalltick;
         os << " " << freelink;
         os << " " << trace;
-        os << " " << libcall;
         os << " " << libcallpc;
         os << " " << libcallsp;
         os << " " << libcallg;
-        os << " " << syscall;
+        os << " " << winsyscall;
         os << " " << vdsoSP;
         os << " " << vdsoPC;
         os << " " << preemptGen;
@@ -982,8 +1126,10 @@ namespace golang::runtime
         os << " " << mOS;
         os << " " << chacha8;
         os << " " << cheaprand;
+        os << " " << cheaprand64;
         os << " " << locksHeldLen;
         os << " " << locksHeld;
+        os << " " << self;
         os << '}';
         return os;
     }
@@ -995,40 +1141,101 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
+    mPadded::operator T()
     {
         T result;
-        result.gList = this->gList;
-        result.n = this->n;
+        result.m = this->m;
+        result._1 = this->_1;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
+    bool mPadded::operator==(const T& ref) const
     {
-        if (gList != ref.gList) return false;
-        if (n != ref.n) return false;
+        if (m != ref.m) return false;
+        if (_1 != ref._1) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    std::ostream& mPadded::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << gList;
-        os << " " << n;
+        os << "" << m;
+        os << " " << _1;
         os << '}';
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct mPadded& value)
     {
         return value.PrintTo(os);
     }
 
+    // mWeakPointer is a "weak" pointer to an M. A weak pointer for each M is
+    // available as m.self. Users may copy mWeakPointer arbitrarily, and get will
+    // return the M if it is still live, or nil after mexit.
+    //
+    // The zero value is treated as a nil pointer.
+    //
+    // Note that get may race with M exit. A successful get will keep the m object
+    // alive, but the M itself may be exited and thus not actually usable.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    mWeakPointer::operator T()
+    {
+        T result;
+        result.m = this->m;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mWeakPointer::operator==(const T& ref) const
+    {
+        if (m != ref.m) return false;
+        return true;
+    }
+
+    std::ostream& mWeakPointer::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << m;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct mWeakPointer& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    mWeakPointer newMWeakPointer(m* mp)
+    {
+        auto w = gocpp::Init<mWeakPointer>([=](auto& x) {
+            x.m = new atomic::Pointer[runtime::m]{};
+        });
+        rec::Store<m>(gocpp::recv(w.m), mp);
+        return w;
+    }
+
+    m* rec::get(mWeakPointer w)
+    {
+        if(w.m == nullptr)
+        {
+            return nullptr;
+        }
+        return rec::Load<m>(gocpp::recv(w.m));
+    }
+
+    // clear sets the weak pointer to nil. It cannot be used on zero value
+    // mWeakPointers.
+    void rec::clear(mWeakPointer w)
+    {
+        rec::Store<m>(gocpp::recv(w.m), nullptr);
+    }
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_1::operator T()
+    gocpp_id_0::operator T()
     {
         T result;
         result.len = this->len;
@@ -1037,14 +1244,14 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_1::operator==(const T& ref) const
+    bool gocpp_id_0::operator==(const T& ref) const
     {
         if (len != ref.len) return false;
         if (buf != ref.buf) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << len;
@@ -1053,7 +1260,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
     {
         return value.PrintTo(os);
     }
@@ -1074,6 +1281,7 @@ namespace golang::runtime
         result.mcache = this->mcache;
         result.pcache = this->pcache;
         result.raceprocctx = this->raceprocctx;
+        result.oldm = this->oldm;
         result.deferpool = this->deferpool;
         result.deferpoolbuf = this->deferpoolbuf;
         result.goidcache = this->goidcache;
@@ -1089,27 +1297,26 @@ namespace golang::runtime
         result.pinnerCache = this->pinnerCache;
         result.trace = this->trace;
         result.palloc = this->palloc;
-        result.timer0When = this->timer0When;
-        result.timerModifiedEarliest = this->timerModifiedEarliest;
         result.gcAssistTime = this->gcAssistTime;
         result.gcFractionalMarkTime = this->gcFractionalMarkTime;
         result.limiterEvent = this->limiterEvent;
         result.gcMarkWorkerMode = this->gcMarkWorkerMode;
         result.gcMarkWorkerStartTime = this->gcMarkWorkerStartTime;
+        result.nextGCMarkWorker = this->nextGCMarkWorker;
         result.gcw = this->gcw;
         result.wbBuf = this->wbBuf;
         result.runSafePointFn = this->runSafePointFn;
         result.statsSeq = this->statsSeq;
-        result.timersLock = this->timersLock;
         result.timers = this->timers;
-        result.numTimers = this->numTimers;
-        result.deletedTimers = this->deletedTimers;
-        result.timerRaceCtx = this->timerRaceCtx;
+        result.cleanups = this->cleanups;
+        result.cleanupsQueued = this->cleanupsQueued;
         result.maxStackScanDelta = this->maxStackScanDelta;
         result.scannedStackSize = this->scannedStackSize;
         result.scannedStacks = this->scannedStacks;
         result.preempt = this->preempt;
-        result.pageTraceBuf = this->pageTraceBuf;
+        result.gcStopTime = this->gcStopTime;
+        result.goroutinesCreated = this->goroutinesCreated;
+        result.xRegs = this->xRegs;
         return result;
     }
 
@@ -1126,6 +1333,7 @@ namespace golang::runtime
         if (mcache != ref.mcache) return false;
         if (pcache != ref.pcache) return false;
         if (raceprocctx != ref.raceprocctx) return false;
+        if (oldm != ref.oldm) return false;
         if (deferpool != ref.deferpool) return false;
         if (deferpoolbuf != ref.deferpoolbuf) return false;
         if (goidcache != ref.goidcache) return false;
@@ -1141,27 +1349,26 @@ namespace golang::runtime
         if (pinnerCache != ref.pinnerCache) return false;
         if (trace != ref.trace) return false;
         if (palloc != ref.palloc) return false;
-        if (timer0When != ref.timer0When) return false;
-        if (timerModifiedEarliest != ref.timerModifiedEarliest) return false;
         if (gcAssistTime != ref.gcAssistTime) return false;
         if (gcFractionalMarkTime != ref.gcFractionalMarkTime) return false;
         if (limiterEvent != ref.limiterEvent) return false;
         if (gcMarkWorkerMode != ref.gcMarkWorkerMode) return false;
         if (gcMarkWorkerStartTime != ref.gcMarkWorkerStartTime) return false;
+        if (nextGCMarkWorker != ref.nextGCMarkWorker) return false;
         if (gcw != ref.gcw) return false;
         if (wbBuf != ref.wbBuf) return false;
         if (runSafePointFn != ref.runSafePointFn) return false;
         if (statsSeq != ref.statsSeq) return false;
-        if (timersLock != ref.timersLock) return false;
         if (timers != ref.timers) return false;
-        if (numTimers != ref.numTimers) return false;
-        if (deletedTimers != ref.deletedTimers) return false;
-        if (timerRaceCtx != ref.timerRaceCtx) return false;
+        if (cleanups != ref.cleanups) return false;
+        if (cleanupsQueued != ref.cleanupsQueued) return false;
         if (maxStackScanDelta != ref.maxStackScanDelta) return false;
         if (scannedStackSize != ref.scannedStackSize) return false;
         if (scannedStacks != ref.scannedStacks) return false;
         if (preempt != ref.preempt) return false;
-        if (pageTraceBuf != ref.pageTraceBuf) return false;
+        if (gcStopTime != ref.gcStopTime) return false;
+        if (goroutinesCreated != ref.goroutinesCreated) return false;
+        if (xRegs != ref.xRegs) return false;
         return true;
     }
 
@@ -1178,6 +1385,7 @@ namespace golang::runtime
         os << " " << mcache;
         os << " " << pcache;
         os << " " << raceprocctx;
+        os << " " << oldm;
         os << " " << deferpool;
         os << " " << deferpoolbuf;
         os << " " << goidcache;
@@ -1193,27 +1401,26 @@ namespace golang::runtime
         os << " " << pinnerCache;
         os << " " << trace;
         os << " " << palloc;
-        os << " " << timer0When;
-        os << " " << timerModifiedEarliest;
         os << " " << gcAssistTime;
         os << " " << gcFractionalMarkTime;
         os << " " << limiterEvent;
         os << " " << gcMarkWorkerMode;
         os << " " << gcMarkWorkerStartTime;
+        os << " " << nextGCMarkWorker;
         os << " " << gcw;
         os << " " << wbBuf;
         os << " " << runSafePointFn;
         os << " " << statsSeq;
-        os << " " << timersLock;
         os << " " << timers;
-        os << " " << numTimers;
-        os << " " << deletedTimers;
-        os << " " << timerRaceCtx;
+        os << " " << cleanups;
+        os << " " << cleanupsQueued;
         os << " " << maxStackScanDelta;
         os << " " << scannedStackSize;
         os << " " << scannedStacks;
         os << " " << preempt;
-        os << " " << pageTraceBuf;
+        os << " " << gcStopTime;
+        os << " " << goroutinesCreated;
+        os << " " << xRegs;
         os << '}';
         return os;
     }
@@ -1225,35 +1432,32 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_2::operator T()
+    gocpp_id_1::operator T()
     {
         T result;
         result.user = this->user;
         result.runnable = this->runnable;
-        result.n = this->n;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_2::operator==(const T& ref) const
+    bool gocpp_id_1::operator==(const T& ref) const
     {
         if (user != ref.user) return false;
         if (runnable != ref.runnable) return false;
-        if (n != ref.n) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << user;
         os << " " << runnable;
-        os << " " << n;
         os << '}';
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
     {
         return value.PrintTo(os);
     }
@@ -1261,38 +1465,35 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_3::operator T()
+    gocpp_id_2::operator T()
     {
         T result;
         result.lock = this->lock;
         result.stack = this->stack;
         result.noStack = this->noStack;
-        result.n = this->n;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_3::operator==(const T& ref) const
+    bool gocpp_id_2::operator==(const T& ref) const
     {
         if (lock != ref.lock) return false;
         if (stack != ref.stack) return false;
         if (noStack != ref.noStack) return false;
-        if (n != ref.n) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_3::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << lock;
         os << " " << stack;
         os << " " << noStack;
-        os << " " << n;
         os << '}';
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
     {
         return value.PrintTo(os);
     }
@@ -1306,6 +1507,7 @@ namespace golang::runtime
         result.goidgen = this->goidgen;
         result.lastpoll = this->lastpoll;
         result.pollUntil = this->pollUntil;
+        result.pollingNet = this->pollingNet;
         result.lock = this->lock;
         result.midle = this->midle;
         result.nmidle = this->nmidle;
@@ -1315,12 +1517,12 @@ namespace golang::runtime
         result.nmsys = this->nmsys;
         result.nmfreed = this->nmfreed;
         result.ngsys = this->ngsys;
+        result.nGsyscallNoP = this->nGsyscallNoP;
         result.pidle = this->pidle;
         result.npidle = this->npidle;
         result.nmspinning = this->nmspinning;
         result.needspinning = this->needspinning;
         result.runq = this->runq;
-        result.runqsize = this->runqsize;
         result.disable = this->disable;
         result.gFree = this->gFree;
         result.sudoglock = this->sudoglock;
@@ -1339,6 +1541,7 @@ namespace golang::runtime
         result.profilehz = this->profilehz;
         result.procresizetime = this->procresizetime;
         result.totaltime = this->totaltime;
+        result.customGOMAXPROCS = this->customGOMAXPROCS;
         result.sysmonlock = this->sysmonlock;
         result.timeToRun = this->timeToRun;
         result.idleTime = this->idleTime;
@@ -1348,6 +1551,7 @@ namespace golang::runtime
         result.stwTotalTimeGC = this->stwTotalTimeGC;
         result.stwTotalTimeOther = this->stwTotalTimeOther;
         result.totalRuntimeLockWaitTime = this->totalRuntimeLockWaitTime;
+        result.goroutinesCreated = this->goroutinesCreated;
         return result;
     }
 
@@ -1357,6 +1561,7 @@ namespace golang::runtime
         if (goidgen != ref.goidgen) return false;
         if (lastpoll != ref.lastpoll) return false;
         if (pollUntil != ref.pollUntil) return false;
+        if (pollingNet != ref.pollingNet) return false;
         if (lock != ref.lock) return false;
         if (midle != ref.midle) return false;
         if (nmidle != ref.nmidle) return false;
@@ -1366,12 +1571,12 @@ namespace golang::runtime
         if (nmsys != ref.nmsys) return false;
         if (nmfreed != ref.nmfreed) return false;
         if (ngsys != ref.ngsys) return false;
+        if (nGsyscallNoP != ref.nGsyscallNoP) return false;
         if (pidle != ref.pidle) return false;
         if (npidle != ref.npidle) return false;
         if (nmspinning != ref.nmspinning) return false;
         if (needspinning != ref.needspinning) return false;
         if (runq != ref.runq) return false;
-        if (runqsize != ref.runqsize) return false;
         if (disable != ref.disable) return false;
         if (gFree != ref.gFree) return false;
         if (sudoglock != ref.sudoglock) return false;
@@ -1390,6 +1595,7 @@ namespace golang::runtime
         if (profilehz != ref.profilehz) return false;
         if (procresizetime != ref.procresizetime) return false;
         if (totaltime != ref.totaltime) return false;
+        if (customGOMAXPROCS != ref.customGOMAXPROCS) return false;
         if (sysmonlock != ref.sysmonlock) return false;
         if (timeToRun != ref.timeToRun) return false;
         if (idleTime != ref.idleTime) return false;
@@ -1399,6 +1605,7 @@ namespace golang::runtime
         if (stwTotalTimeGC != ref.stwTotalTimeGC) return false;
         if (stwTotalTimeOther != ref.stwTotalTimeOther) return false;
         if (totalRuntimeLockWaitTime != ref.totalRuntimeLockWaitTime) return false;
+        if (goroutinesCreated != ref.goroutinesCreated) return false;
         return true;
     }
 
@@ -1408,6 +1615,7 @@ namespace golang::runtime
         os << "" << goidgen;
         os << " " << lastpoll;
         os << " " << pollUntil;
+        os << " " << pollingNet;
         os << " " << lock;
         os << " " << midle;
         os << " " << nmidle;
@@ -1417,12 +1625,12 @@ namespace golang::runtime
         os << " " << nmsys;
         os << " " << nmfreed;
         os << " " << ngsys;
+        os << " " << nGsyscallNoP;
         os << " " << pidle;
         os << " " << npidle;
         os << " " << nmspinning;
         os << " " << needspinning;
         os << " " << runq;
-        os << " " << runqsize;
         os << " " << disable;
         os << " " << gFree;
         os << " " << sudoglock;
@@ -1441,6 +1649,7 @@ namespace golang::runtime
         os << " " << profilehz;
         os << " " << procresizetime;
         os << " " << totaltime;
+        os << " " << customGOMAXPROCS;
         os << " " << sysmonlock;
         os << " " << timeToRun;
         os << " " << idleTime;
@@ -1450,6 +1659,7 @@ namespace golang::runtime
         os << " " << stwTotalTimeGC;
         os << " " << stwTotalTimeOther;
         os << " " << totalRuntimeLockWaitTime;
+        os << " " << goroutinesCreated;
         os << '}';
         return os;
     }
@@ -1583,51 +1793,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    // layout of Itab known to compilers
-    // allocated in non-garbage-collected memory
-    // Needs to be in sync with
-    // ../cmd/compile/internal/reflectdata/reflect.go:/^func.WritePluginTable.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    itab::operator T()
-    {
-        T result;
-        result.inter = this->inter;
-        result._type = this->_type;
-        result.hash = this->hash;
-        result._1 = this->_1;
-        result.fun = this->fun;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool itab::operator==(const T& ref) const
-    {
-        if (inter != ref.inter) return false;
-        if (_type != ref._type) return false;
-        if (hash != ref.hash) return false;
-        if (_1 != ref._1) return false;
-        if (fun != ref.fun) return false;
-        return true;
-    }
-
-    std::ostream& itab::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << inter;
-        os << " " << _type;
-        os << " " << hash;
-        os << " " << _1;
-        os << " " << fun;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct itab& value)
-    {
-        return value.PrintTo(os);
-    }
-
     // Lock-free stack node.
     // Also known to export_test.go.
     
@@ -1756,7 +1921,7 @@ namespace golang::runtime
     //
     // A _panic value must only ever live on the stack.
     //
-    // The argp and link fields are stack pointers, but don't need special
+    // The gopanicFP and link fields are stack pointers, but don't need special
     // handling during stack growth: because they are pointer-typed and
     // _panic values only live on the stack, regular stack pointer
     // adjustment takes care of them.
@@ -1765,18 +1930,18 @@ namespace golang::runtime
     _panic::operator T()
     {
         T result;
-        result.argp = this->argp;
         result.arg = this->arg;
         result.link = this->link;
         result.startPC = this->startPC;
         result.startSP = this->startSP;
+        result.pc = this->pc;
         result.sp = this->sp;
-        result.lr = this->lr;
         result.fp = this->fp;
         result.retpc = this->retpc;
         result.deferBitsPtr = this->deferBitsPtr;
         result.slotsPtr = this->slotsPtr;
         result.recovered = this->recovered;
+        result.repanicked = this->repanicked;
         result.goexit = this->goexit;
         result.deferreturn = this->deferreturn;
         return result;
@@ -1785,18 +1950,18 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool _panic::operator==(const T& ref) const
     {
-        if (argp != ref.argp) return false;
         if (arg != ref.arg) return false;
         if (link != ref.link) return false;
         if (startPC != ref.startPC) return false;
         if (startSP != ref.startSP) return false;
+        if (pc != ref.pc) return false;
         if (sp != ref.sp) return false;
-        if (lr != ref.lr) return false;
         if (fp != ref.fp) return false;
         if (retpc != ref.retpc) return false;
         if (deferBitsPtr != ref.deferBitsPtr) return false;
         if (slotsPtr != ref.slotsPtr) return false;
         if (recovered != ref.recovered) return false;
+        if (repanicked != ref.repanicked) return false;
         if (goexit != ref.goexit) return false;
         if (deferreturn != ref.deferreturn) return false;
         return true;
@@ -1805,18 +1970,18 @@ namespace golang::runtime
     std::ostream& _panic::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << argp;
-        os << " " << arg;
+        os << "" << arg;
         os << " " << link;
         os << " " << startPC;
         os << " " << startSP;
+        os << " " << pc;
         os << " " << sp;
-        os << " " << lr;
         os << " " << fp;
         os << " " << retpc;
         os << " " << deferBitsPtr;
         os << " " << slotsPtr;
         os << " " << recovered;
+        os << " " << repanicked;
         os << " " << goexit;
         os << " " << deferreturn;
         os << '}';
@@ -1904,7 +2069,7 @@ namespace golang::runtime
 
     // A waitReason explains why a goroutine has been stopped.
     // See gopark. Do not re-use waitReasons, add new ones.
-    gocpp::array<gocpp::string, 37> waitReasonStrings = gocpp::Init<gocpp::array<gocpp::string, 37>>([](auto& x) {
+    gocpp::array<gocpp::string, 47> waitReasonStrings = gocpp::Init<gocpp::array<gocpp::string, 47>>([](auto& x) {
         x[waitReasonZero] = ""_s;
         x[waitReasonGCAssistMarking] = "GC assist marking"_s;
         x[waitReasonIOWait] = "IO wait"_s;
@@ -1923,12 +2088,14 @@ namespace golang::runtime
         x[waitReasonChanSend] = "chan send"_s;
         x[waitReasonFinalizerWait] = "finalizer wait"_s;
         x[waitReasonForceGCIdle] = "force gc (idle)"_s;
+        x[waitReasonUpdateGOMAXPROCSIdle] = "GOMAXPROCS updater (idle)"_s;
         x[waitReasonSemacquire] = "semacquire"_s;
         x[waitReasonSleep] = "sleep"_s;
         x[waitReasonSyncCondWait] = "sync.Cond.Wait"_s;
         x[waitReasonSyncMutexLock] = "sync.Mutex.Lock"_s;
         x[waitReasonSyncRWMutexRLock] = "sync.RWMutex.RLock"_s;
         x[waitReasonSyncRWMutexLock] = "sync.RWMutex.Lock"_s;
+        x[waitReasonSyncWaitGroupWait] = "sync.WaitGroup.Wait"_s;
         x[waitReasonTraceReaderBlocked] = "trace reader (blocked)"_s;
         x[waitReasonWaitForGCCycle] = "wait for GC cycle"_s;
         x[waitReasonGCWorkerIdle] = "GC worker (idle)"_s;
@@ -1942,6 +2109,14 @@ namespace golang::runtime
         x[waitReasonTraceProcStatus] = "trace proc status"_s;
         x[waitReasonPageTraceFlush] = "page trace flush"_s;
         x[waitReasonCoroutine] = "coroutine"_s;
+        x[waitReasonGCWeakToStrongWait] = "GC weak to strong wait"_s;
+        x[waitReasonSynctestRun] = "synctest.Run"_s;
+        x[waitReasonSynctestWait] = "synctest.Wait"_s;
+        x[waitReasonSynctestChanReceive] = "chan receive (durable)"_s;
+        x[waitReasonSynctestChanSend] = "chan send (durable)"_s;
+        x[waitReasonSynctestSelect] = "select (durable)"_s;
+        x[waitReasonSynctestWaitGroupWait] = "sync.WaitGroup.Wait (durable)"_s;
+        x[waitReasonCleanupWait] = "cleanup wait"_s;
     });
     gocpp::string rec::String(waitReason w)
     {
@@ -1952,6 +2127,10 @@ namespace golang::runtime
         return waitReasonStrings[w];
     }
 
+    // isMutexWait returns true if the goroutine is blocked because of
+    // sync.Mutex.Lock or sync.RWMutex.[R]Lock.
+    //
+    //go:nosplit
     bool rec::isMutexWait(waitReason w)
     {
         return w == waitReasonSyncMutexLock ||
@@ -1959,9 +2138,73 @@ namespace golang::runtime
                 w == waitReasonSyncRWMutexLock;
     }
 
+    // isSyncWait returns true if the goroutine is blocked because of
+    // sync library primitive operations.
+    //
+    //go:nosplit
+    bool rec::isSyncWait(waitReason w)
+    {
+        return waitReasonSyncCondWait <= w && w <= waitReasonSyncWaitGroupWait;
+    }
+
+    // isChanWait is true if the goroutine is blocked because of non-nil
+    // channel operations or a select statement with at least one case.
+    //
+    //go:nosplit
+    bool rec::isChanWait(waitReason w)
+    {
+        return w == waitReasonSelect ||
+                w == waitReasonChanReceive ||
+                w == waitReasonChanSend;
+    }
+
+    bool rec::isWaitingForSuspendG(waitReason w)
+    {
+        return runtime::isWaitingForSuspendG[w];
+    }
+
+    // isWaitingForSuspendG indicates that a goroutine is only entering _Gwaiting and
+    // setting a waitReason because it needs to be able to let the suspendG
+    // (used by the GC and the execution tracer) take ownership of its stack.
+    // The G is always actually executing on the system stack in these cases.
+    //
+    // TODO(mknyszek): Consider replacing this with a new dedicated G status.
+    gocpp::array<bool, len(waitReasonStrings)> isWaitingForSuspendG = gocpp::Init<gocpp::array<bool, len(waitReasonStrings)>>([](auto& x) {
+        x[waitReasonStoppingTheWorld] = true;
+        x[waitReasonGCMarkTermination] = true;
+        x[waitReasonGarbageCollection] = true;
+        x[waitReasonGarbageCollectionScan] = true;
+        x[waitReasonTraceGoroutineStatus] = true;
+        x[waitReasonTraceProcStatus] = true;
+        x[waitReasonPageTraceFlush] = true;
+        x[waitReasonGCAssistMarking] = true;
+        x[waitReasonGCWorkerActive] = true;
+        x[waitReasonFlushProcCaches] = true;
+    });
+    bool rec::isIdleInSynctest(waitReason w)
+    {
+        return runtime::isIdleInSynctest[w];
+    }
+
+    // isIdleInSynctest indicates that a goroutine is considered idle by synctest.Wait.
+    gocpp::array<bool, len(waitReasonStrings)> isIdleInSynctest = gocpp::Init<gocpp::array<bool, len(waitReasonStrings)>>([](auto& x) {
+        x[waitReasonChanReceiveNilChan] = true;
+        x[waitReasonChanSendNilChan] = true;
+        x[waitReasonSelectNoCases] = true;
+        x[waitReasonSleep] = true;
+        x[waitReasonSyncCondWait] = true;
+        x[waitReasonSynctestWaitGroupWait] = true;
+        x[waitReasonCoroutine] = true;
+        x[waitReasonSynctestRun] = true;
+        x[waitReasonSynctestWait] = true;
+        x[waitReasonSynctestChanReceive] = true;
+        x[waitReasonSynctestChanSend] = true;
+        x[waitReasonSynctestSelect] = true;
+    });
+    // Linked-list of all Ms. Written under sched.lock, read atomically.
     m* allm;
     int32_t gomaxprocs;
-    int32_t ncpu;
+    int32_t numCPUStartup;
     forcegcstate forcegc;
     schedt sched;
     int32_t newprocs;
@@ -1975,7 +2218,7 @@ namespace golang::runtime
     // be atomic. Length may change at safe points.
     //
     // Each P must update only its own bit. In order to maintain
-    // consistency, a P going idle must the idle mask simultaneously with
+    // consistency, a P going idle must set the idle mask simultaneously with
     // updates to the idle P list under the sched.lock, otherwise a racing
     // pidleget may clear the mask before pidleput sets the mask,
     // corrupting the bitmap.
@@ -1984,6 +2227,30 @@ namespace golang::runtime
     pMask idlepMask;
     // Bitmask of Ps that may have a timer, one bit per P. Reads and writes
     // must be atomic. Length may change at safe points.
+    //
+    // Ideally, the timer mask would be kept immediately consistent on any timer
+    // operations. Unfortunately, updating a shared global data structure in the
+    // timer hot path adds too much overhead in applications frequently switching
+    // between no timers and some timers.
+    //
+    // As a compromise, the timer mask is updated only on pidleget / pidleput. A
+    // running P (returned by pidleget) may add a timer at any time, so its mask
+    // must be set. An idle P (passed to pidleput) cannot add new timers while
+    // idle, so if it has no timers at that time, its mask may be cleared.
+    //
+    // Thus, we get the following effects on timer-stealing in findRunnable:
+    //
+    //   - Idle Ps with no timers when they go idle are never checked in findRunnable
+    //     (for work- or timer-stealing; this is the ideal case).
+    //   - Running Ps must always be checked.
+    //   - Idle Ps whose timers are stolen must continue to be checked until they run
+    //     again, even after timer expiration.
+    //
+    // When the P starts running again, the mask should be set, as a timer may be
+    // added at any time.
+    //
+    // TODO(prattmic): Additional targeted updates may improve the above cases.
+    // e.g., updating the mask when stealing a timer.
     pMask timerpMask;
     // Pool of GC parked background workers. Entries are type
     // *gcBgMarkWorkerNode.
@@ -1997,10 +2264,40 @@ namespace golang::runtime
     uint32_t processorVersionInfo;
     bool isIntel;
     // set by cmd/link on arm systems
+    // accessed using linkname by internal/runtime/atomic.
+    //
+    // goarm should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/creativeprojects/go-selfupdate
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname goarm
     uint8_t goarm;
     uint8_t goarmsoftfp;
     // Set by the linker so the runtime can determine the buildmode.
     bool islibrary;
     bool isarchive;
+    // getcallerfp returns the frame pointer of the caller of the caller
+    // of this function.
+    //
+    //go:nosplit
+    //go:noinline
+    uintptr_t getcallerfp()
+    {
+        // This frame's FP.
+        auto fp = getfp();
+        if(fp != 0)
+        {
+            // The caller's FP.
+            fp = *(uintptr_t*)(gocpp::unsafe_pointer(fp));
+            // The caller's caller's FP.
+            fp = *(uintptr_t*)(gocpp::unsafe_pointer(fp));
+        }
+        return fp;
+    }
+
 }
 

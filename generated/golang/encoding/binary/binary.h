@@ -10,8 +10,9 @@
 #include "gocpp/support.h"
 
 
-namespace golang::binary
+namespace golang::encoding::binary
 {
+    extern gocpp::error errBufferTooSmall;
     struct ByteOrder : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -225,9 +226,17 @@ namespace golang::binary
     int Size(go_any v);
     struct GoTag_decoder { };
     struct GoTag_encoder { };
-    int intDataSize(go_any data);
+    std::tuple<int, gocpp::slice<unsigned char>> intDataSize(go_any data);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>> ensure(gocpp::slice<unsigned char> buf, int n);
+    // LittleEndian is the little-endian implementation of [ByteOrder] and [AppendByteOrder].
     extern littleEndian LittleEndian;
+    // BigEndian is the big-endian implementation of [ByteOrder] and [AppendByteOrder].
     extern bigEndian BigEndian;
+    std::tuple<int, gocpp::error> Decode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data);
+    bool decodeFast(gocpp::slice<unsigned char> bs, ByteOrder order, go_any data);
+    std::tuple<int, gocpp::error> Encode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> Append(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data);
+    void encodeFast(gocpp::slice<unsigned char> bs, ByteOrder order, go_any data);
     struct coder
     {
         ByteOrder order{};
@@ -246,27 +255,42 @@ namespace golang::binary
     };
 
     std::ostream& operator<<(std::ostream& os, const struct coder& value);
+    using decoder = gocpp::defined<coder, GoTag_decoder>;
+    using encoder = gocpp::defined<coder, GoTag_encoder>;
+}
+#include "golang/io/io.fwd.h"
+#include "golang/reflect/type.fwd.h"
+#include "golang/reflect/value.fwd.h"
+#include "golang/sync/map.fwd.h"
+
+namespace golang::encoding::binary
+{
+    namespace io = golang::io;
 }
 #include "golang/io/io.h"
+
+namespace golang::encoding::binary
+{
+    namespace reflect = golang::reflect;
+}
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
 #include "golang/sync/map.h"
 
-namespace golang::binary
+namespace golang::encoding::binary
 {
+    namespace sync = golang::sync;
     gocpp::error Read(io::Reader r, ByteOrder order, go_any data);
     gocpp::error Write(io::Writer w, ByteOrder order, go_any data);
     extern sync::Map structSize;
     int dataSize(reflect::Value v);
     int go_sizeof(reflect::Type t);
-    using decoder = gocpp::defined<coder, GoTag_decoder>;
-    using encoder = gocpp::defined<coder, GoTag_encoder>;
 }
 
 #include "golang/encoding/binary/native_endian_little.h"
 #include "golang/reflect/value.h"
 
-namespace golang::binary
+namespace golang::encoding::binary
 {
 
     namespace rec

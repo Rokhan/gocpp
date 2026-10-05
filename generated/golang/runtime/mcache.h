@@ -46,9 +46,24 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct stackfreelist& value);
 }
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
+    // dummy mspan that contains no free objects.
+    extern mspan emptymspan;
+}
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/sys/nih.fwd.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/malloc.fwd.h"
 
 namespace golang::runtime
@@ -58,7 +73,8 @@ namespace golang::runtime
         sys::NotInHeap _1{};
         // The following members are accessed on every malloc,
         // so they are grouped here for better caching.
-        uintptr_t nextSample{}; // trigger heap sample after allocating this many bytes
+        int64_t nextSample{}; // trigger heap sample after allocating this many bytes
+        int memProfRate{}; // cached mem profile rate, used to detect changes
         uintptr_t scanAlloc{}; // bytes of scannable heap allocated
         // tiny points to the beginning of the current tiny block, or
         // nil if there is no current tiny block.
@@ -70,11 +86,15 @@ namespace golang::runtime
         uintptr_t tiny{};
         uintptr_t tinyoffset{};
         uintptr_t tinyAllocs{};
-        gocpp::array<mspan*, numSpanClasses> alloc{}; // spans to allocate from, indexed by spanClass
+        // alloc contains spans to allocate from, indexed by spanClass.
+        gocpp::array<mspan*, numSpanClasses> alloc{};
+        // reusableNoscan contains linked lists of reusable noscan heap objects, indexed by spanClass.
+        // The next pointers are stored in the first word of the heap objects.
+        gocpp::array<gclinkptr, numSpanClasses> reusableNoscan{};
         gocpp::array<stackfreelist, _NumStackOrders> stackcache{};
         // flushGen indicates the sweepgen during which this mcache
         // was last flushed. If flushGen != mheap_.sweepgen, the spans
-        // in this mcache are stale and need to the flushed so they
+        // in this mcache are stale and need to be flushed so they
         // can be swept. This is done in acquirep.
         atomic::Uint32 flushGen{};
 
@@ -90,7 +110,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mcache& value);
-    extern mspan emptymspan;
     mcache* allocmcache();
     void freemcache(mcache* c);
 }
@@ -113,6 +132,8 @@ namespace golang::runtime
         mspan* allocLarge(mcache* c, uintptr_t size, bool noscan);
         void releaseAll(mcache* c);
         void prepareForSweep(mcache* c);
+        void addReusableNoscan(mcache* c, spanClass spc, uintptr_t ptr);
+        bool hasReusableNoscan(mcache* c, spanClass spc);
     }
 }
 

@@ -13,7 +13,7 @@
 
 #include "golang/golang.org/x/tools/go/packages/golist.h"
 
-namespace golang::packages
+namespace golang::golang_org::x::tools::go::packages
 {
 
     namespace rec

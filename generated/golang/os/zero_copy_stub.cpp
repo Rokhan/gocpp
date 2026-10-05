@@ -16,6 +16,7 @@
 
 namespace golang::os
 {
+    namespace io = golang::io;
     namespace rec
     {
     }

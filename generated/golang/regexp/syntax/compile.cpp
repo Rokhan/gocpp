@@ -16,8 +16,9 @@
 #include "golang/regexp/syntax/regexp.h"
 #include "golang/unicode/letter.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
+    namespace unicode = golang::unicode;
     namespace rec
     {
     }

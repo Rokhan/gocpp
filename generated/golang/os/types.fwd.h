@@ -3,15 +3,19 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/io/fs/fs.fwd.h"
-#include "golang/os/file_windows.fwd.h"
 
 namespace golang::os
 {
     struct File;
+}
+#include "golang/io/fs/fs.fwd.h"
+
+namespace golang::os
+{
+    namespace fs = golang::io::fs;
     using FileInfo = fs::FileInfo;
     using FileMode = fs::FileMode;
-    // The defined file mode bits are the most significant bits of the FileMode.
+    // The defined file mode bits are the most significant bits of the [FileMode].
     // The nine least-significant bits are the standard Unix rwxrwxrwx permissions.
     // The values of these bits should be considered part of the public API and
     // may be used in wire protocols or disk representations: they must not be

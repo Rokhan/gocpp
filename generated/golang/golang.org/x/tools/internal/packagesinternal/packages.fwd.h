@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::packagesinternal
+namespace golang::golang_org::x::tools::internal::packagesinternal
 {
     struct PackageError;
 }

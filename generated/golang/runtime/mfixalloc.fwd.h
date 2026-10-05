@@ -3,8 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/mstats.fwd.h"
 
 namespace golang::runtime
 {

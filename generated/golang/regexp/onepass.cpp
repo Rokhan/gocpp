@@ -13,13 +13,18 @@
 
 #include "golang/regexp/syntax/parse.h"
 #include "golang/regexp/syntax/prog.h"
-#include "golang/sort/sort.h"
+#include "golang/slices/sort.h"
 #include "golang/strings/builder.h"
 #include "golang/unicode/letter.h"
 #include "golang/unicode/utf8/utf8.h"
 
 namespace golang::regexp
 {
+    namespace slices = golang::slices;
+    namespace strings = golang::strings;
+    namespace syntax = golang::regexp::syntax;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using strings::rec::String;
@@ -491,22 +496,6 @@ namespace golang::regexp
         return p;
     }
 
-    // runeSlice exists to permit sorting the case-folded rune sets.
-    int rec::Len(runeSlice p)
-    {
-        return len(p);
-    }
-
-    bool rec::Less(runeSlice p, int i, int j)
-    {
-        return p[i] < p[j];
-    }
-
-    void rec::Swap(runeSlice p, int i, int j)
-    {
-        std::tie(p[i], p[j]) = std::tuple{p[j], p[i]};
-    }
-
     gocpp::slice<gocpp::rune> anyRuneNotNL = gocpp::slice<gocpp::rune> {0, '\n' - 1, '\n' + 1, unicode::MaxRune};
     gocpp::slice<gocpp::rune> anyRune = gocpp::slice<gocpp::rune> {0, unicode::MaxRune};
     // makeOnePass creates a onepass Prog, if possible. It is possible if at any alt,
@@ -637,7 +626,7 @@ namespace golang::regexp
                             {
                                 runes = append(runes, r1, r1);
                             }
-                            sort::Sort(runeSlice(runes));
+                            slices::Sort(runes);
                         }
                         else
                         {
@@ -670,7 +659,7 @@ namespace golang::regexp
                             {
                                 runes = append(runes, r1, r1);
                             }
-                            sort::Sort(runeSlice(runes));
+                            slices::Sort(runes);
                         }
                         else
                         {
@@ -754,7 +743,17 @@ namespace golang::regexp
         {
             return nullptr;
         }
-        // every instruction leading to InstMatch must be EmptyEndText
+        auto hasAlt = false;
+        for(auto [gocpp_ignored, inst] : prog->Inst)
+        {
+            if(inst.Op == syntax::InstAlt || inst.Op == syntax::InstAltMatch)
+            {
+                hasAlt = true;
+                break;
+            }
+        }
+        // If we have alternates, every instruction leading to InstMatch must be EmptyEndText.
+        // Also, any match on empty text must be $.
         for(auto [gocpp_ignored, inst] : prog->Inst)
         {
             auto opOut = prog->Inst[inst.Out].Op;
@@ -768,7 +767,7 @@ namespace golang::regexp
                 switch(conditionId)
                 {
                     default:
-                        if(opOut == syntax::InstMatch)
+                        if(opOut == syntax::InstMatch && hasAlt)
                         {
                             return nullptr;
                         }

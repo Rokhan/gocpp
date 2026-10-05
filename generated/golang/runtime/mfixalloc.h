@@ -9,7 +9,11 @@
 #include "golang/runtime/mfixalloc.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/sys/nih.h"
+
+namespace golang::runtime
+{
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
 #include "golang/runtime/mstats.fwd.h"
 
 namespace golang::runtime
@@ -39,6 +43,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fixalloc& value);
+}
+#include "golang/internal/runtime/sys/nih.fwd.h"
+#include "golang/internal/runtime/sys/nih.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
     struct mlink
     {
         sys::NotInHeap _1{};

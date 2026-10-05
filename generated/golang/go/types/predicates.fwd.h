@@ -4,13 +4,8 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
-{
-    struct comparer;
-}
-#include "golang/go/types/interface.fwd.h"
-
-namespace golang::types
+namespace golang::go::types
 {
     struct ifacePair;
+    struct comparer;
 }

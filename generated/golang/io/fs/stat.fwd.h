@@ -5,7 +5,7 @@
 
 #include "golang/io/fs/fs.fwd.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
     struct StatFS;
 }

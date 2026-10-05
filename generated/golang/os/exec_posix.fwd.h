@@ -3,7 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/syscall/syscall_windows.fwd.h"
 
 namespace golang::os
 {

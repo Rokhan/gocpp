@@ -9,7 +9,6 @@
 #include "golang/time/tick.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/time/sleep.h"
 #include "golang/time/time.h"
 
 namespace golang::time
@@ -17,7 +16,7 @@ namespace golang::time
     struct Ticker
     {
         gocpp::channel<Time> C{}; // The channel on which the ticks are delivered.
-        runtimeTimer r{};
+        bool initTicker{};
 
         using isGoStruct = void;
 

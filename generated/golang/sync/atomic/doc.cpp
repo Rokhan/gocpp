@@ -46,43 +46,45 @@
 // functions, are the atomic equivalents of "return *addr" and
 // "*addr = val".
 //
-// In the terminology of the Go memory model, if the effect of
+// In the terminology of [the Go memory model], if the effect of
 // an atomic operation A is observed by atomic operation B,
 // then A “synchronizes before” B.
 // Additionally, all the atomic operations executed in a program
 // behave as though executed in some sequentially consistent order.
 // This definition provides the same semantics as
 // C++'s sequentially consistent atomics and Java's volatile variables.
-namespace golang::atomic
+//
+// Only a few integer sizes are supported: on many architectures,
+// atomic operations on non-word-sized integers are inefficient or
+// infeasible. For example, a [Bool] may be larger than a built-in bool.
+//
+// [the Go memory model]: https://go.dev/ref/mem
+namespace golang::sync::atomic
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
 
     // SwapInt32 atomically stores new into *addr and returns the previous *addr value.
     // Consider using the more ergonomic and less error-prone [Int32.Swap] instead.
+    //
+    //go:noescape
     int32_t SwapInt32(int32_t* addr, int32_t go_new)
-    /* convertBlockStmt, nil block */;
-
-    // SwapInt64 atomically stores new into *addr and returns the previous *addr value.
-    // Consider using the more ergonomic and less error-prone [Int64.Swap] instead
-    // (particularly if you target 32-bit platforms; see the bugs section).
-    int64_t SwapInt64(int64_t* addr, int64_t go_new)
     /* convertBlockStmt, nil block */;
 
     // SwapUint32 atomically stores new into *addr and returns the previous *addr value.
     // Consider using the more ergonomic and less error-prone [Uint32.Swap] instead.
+    //
+    //go:noescape
     uint32_t SwapUint32(uint32_t* addr, uint32_t go_new)
-    /* convertBlockStmt, nil block */;
-
-    // SwapUint64 atomically stores new into *addr and returns the previous *addr value.
-    // Consider using the more ergonomic and less error-prone [Uint64.Swap] instead
-    // (particularly if you target 32-bit platforms; see the bugs section).
-    uint64_t SwapUint64(uint64_t* addr, uint64_t go_new)
     /* convertBlockStmt, nil block */;
 
     // SwapUintptr atomically stores new into *addr and returns the previous *addr value.
     // Consider using the more ergonomic and less error-prone [Uintptr.Swap] instead.
+    //
+    //go:noescape
+    //go:linknamestd SwapUintptr
     uintptr_t SwapUintptr(uintptr_t* addr, uintptr_t go_new)
     /* convertBlockStmt, nil block */;
 
@@ -93,28 +95,23 @@ namespace golang::atomic
 
     // CompareAndSwapInt32 executes the compare-and-swap operation for an int32 value.
     // Consider using the more ergonomic and less error-prone [Int32.CompareAndSwap] instead.
+    //
+    //go:noescape
     bool CompareAndSwapInt32(int32_t* addr, int32_t old, int32_t go_new)
-    /* convertBlockStmt, nil block */;
-
-    // CompareAndSwapInt64 executes the compare-and-swap operation for an int64 value.
-    // Consider using the more ergonomic and less error-prone [Int64.CompareAndSwap] instead
-    // (particularly if you target 32-bit platforms; see the bugs section).
-    bool CompareAndSwapInt64(int64_t* addr, int64_t old, int64_t go_new)
     /* convertBlockStmt, nil block */;
 
     // CompareAndSwapUint32 executes the compare-and-swap operation for a uint32 value.
     // Consider using the more ergonomic and less error-prone [Uint32.CompareAndSwap] instead.
+    //
+    //go:noescape
     bool CompareAndSwapUint32(uint32_t* addr, uint32_t old, uint32_t go_new)
-    /* convertBlockStmt, nil block */;
-
-    // CompareAndSwapUint64 executes the compare-and-swap operation for a uint64 value.
-    // Consider using the more ergonomic and less error-prone [Uint64.CompareAndSwap] instead
-    // (particularly if you target 32-bit platforms; see the bugs section).
-    bool CompareAndSwapUint64(uint64_t* addr, uint64_t old, uint64_t go_new)
     /* convertBlockStmt, nil block */;
 
     // CompareAndSwapUintptr executes the compare-and-swap operation for a uintptr value.
     // Consider using the more ergonomic and less error-prone [Uintptr.CompareAndSwap] instead.
+    //
+    //go:noescape
+    //go:linknamestd CompareAndSwapUintptr
     bool CompareAndSwapUintptr(uintptr_t* addr, uintptr_t old, uintptr_t go_new)
     /* convertBlockStmt, nil block */;
 
@@ -125,6 +122,8 @@ namespace golang::atomic
 
     // AddInt32 atomically adds delta to *addr and returns the new value.
     // Consider using the more ergonomic and less error-prone [Int32.Add] instead.
+    //
+    //go:noescape
     int32_t AddInt32(int32_t* addr, int32_t delta)
     /* convertBlockStmt, nil block */;
 
@@ -132,52 +131,84 @@ namespace golang::atomic
     // To subtract a signed positive constant value c from x, do AddUint32(&x, ^uint32(c-1)).
     // In particular, to decrement x, do AddUint32(&x, ^uint32(0)).
     // Consider using the more ergonomic and less error-prone [Uint32.Add] instead.
+    //
+    //go:noescape
     uint32_t AddUint32(uint32_t* addr, uint32_t delta)
-    /* convertBlockStmt, nil block */;
-
-    // AddInt64 atomically adds delta to *addr and returns the new value.
-    // Consider using the more ergonomic and less error-prone [Int64.Add] instead
-    // (particularly if you target 32-bit platforms; see the bugs section).
-    int64_t AddInt64(int64_t* addr, int64_t delta)
-    /* convertBlockStmt, nil block */;
-
-    // AddUint64 atomically adds delta to *addr and returns the new value.
-    // To subtract a signed positive constant value c from x, do AddUint64(&x, ^uint64(c-1)).
-    // In particular, to decrement x, do AddUint64(&x, ^uint64(0)).
-    // Consider using the more ergonomic and less error-prone [Uint64.Add] instead
-    // (particularly if you target 32-bit platforms; see the bugs section).
-    uint64_t AddUint64(uint64_t* addr, uint64_t delta)
     /* convertBlockStmt, nil block */;
 
     // AddUintptr atomically adds delta to *addr and returns the new value.
     // Consider using the more ergonomic and less error-prone [Uintptr.Add] instead.
+    //
+    //go:noescape
     uintptr_t AddUintptr(uintptr_t* addr, uintptr_t delta)
+    /* convertBlockStmt, nil block */;
+
+    // AndInt32 atomically performs a bitwise AND operation on *addr using the bitmask provided as mask
+    // and returns the old value.
+    // Consider using the more ergonomic and less error-prone [Int32.And] instead.
+    //
+    //go:noescape
+    int32_t AndInt32(int32_t* addr, int32_t mask)
+    /* convertBlockStmt, nil block */;
+
+    // AndUint32 atomically performs a bitwise AND operation on *addr using the bitmask provided as mask
+    // and returns the old value.
+    // Consider using the more ergonomic and less error-prone [Uint32.And] instead.
+    //
+    //go:noescape
+    uint32_t AndUint32(uint32_t* addr, uint32_t mask)
+    /* convertBlockStmt, nil block */;
+
+    // AndUintptr atomically performs a bitwise AND operation on *addr using the bitmask provided as mask
+    // and returns the old value.
+    // Consider using the more ergonomic and less error-prone [Uintptr.And] instead.
+    //
+    //go:noescape
+    uintptr_t AndUintptr(uintptr_t* addr, uintptr_t mask)
+    /* convertBlockStmt, nil block */;
+
+    // OrInt32 atomically performs a bitwise OR operation on *addr using the bitmask provided as mask
+    // and returns the old value.
+    // Consider using the more ergonomic and less error-prone [Int32.Or] instead.
+    //
+    //go:noescape
+    int32_t OrInt32(int32_t* addr, int32_t mask)
+    /* convertBlockStmt, nil block */;
+
+    // OrUint32 atomically performs a bitwise OR operation on *addr using the bitmask provided as mask
+    // and returns the old value.
+    // Consider using the more ergonomic and less error-prone [Uint32.Or] instead.
+    //
+    //go:noescape
+    uint32_t OrUint32(uint32_t* addr, uint32_t mask)
+    /* convertBlockStmt, nil block */;
+
+    // OrUintptr atomically performs a bitwise OR operation on *addr using the bitmask provided as mask
+    // and returns the old value.
+    // Consider using the more ergonomic and less error-prone [Uintptr.Or] instead.
+    //
+    //go:noescape
+    uintptr_t OrUintptr(uintptr_t* addr, uintptr_t mask)
     /* convertBlockStmt, nil block */;
 
     // LoadInt32 atomically loads *addr.
     // Consider using the more ergonomic and less error-prone [Int32.Load] instead.
+    //
+    //go:noescape
     int32_t LoadInt32(int32_t* addr)
-    /* convertBlockStmt, nil block */;
-
-    // LoadInt64 atomically loads *addr.
-    // Consider using the more ergonomic and less error-prone [Int64.Load] instead
-    // (particularly if you target 32-bit platforms; see the bugs section).
-    int64_t LoadInt64(int64_t* addr)
     /* convertBlockStmt, nil block */;
 
     // LoadUint32 atomically loads *addr.
     // Consider using the more ergonomic and less error-prone [Uint32.Load] instead.
+    //
+    //go:noescape
     uint32_t LoadUint32(uint32_t* addr)
-    /* convertBlockStmt, nil block */;
-
-    // LoadUint64 atomically loads *addr.
-    // Consider using the more ergonomic and less error-prone [Uint64.Load] instead
-    // (particularly if you target 32-bit platforms; see the bugs section).
-    uint64_t LoadUint64(uint64_t* addr)
     /* convertBlockStmt, nil block */;
 
     // LoadUintptr atomically loads *addr.
     // Consider using the more ergonomic and less error-prone [Uintptr.Load] instead.
+    //
+    //go:noescape
     uintptr_t LoadUintptr(uintptr_t* addr)
     /* convertBlockStmt, nil block */;
 
@@ -188,28 +219,23 @@ namespace golang::atomic
 
     // StoreInt32 atomically stores val into *addr.
     // Consider using the more ergonomic and less error-prone [Int32.Store] instead.
+    //
+    //go:noescape
     void StoreInt32(int32_t* addr, int32_t val)
-    /* convertBlockStmt, nil block */;
-
-    // StoreInt64 atomically stores val into *addr.
-    // Consider using the more ergonomic and less error-prone [Int64.Store] instead
-    // (particularly if you target 32-bit platforms; see the bugs section).
-    void StoreInt64(int64_t* addr, int64_t val)
     /* convertBlockStmt, nil block */;
 
     // StoreUint32 atomically stores val into *addr.
     // Consider using the more ergonomic and less error-prone [Uint32.Store] instead.
+    //
+    //go:noescape
     void StoreUint32(uint32_t* addr, uint32_t val)
-    /* convertBlockStmt, nil block */;
-
-    // StoreUint64 atomically stores val into *addr.
-    // Consider using the more ergonomic and less error-prone [Uint64.Store] instead
-    // (particularly if you target 32-bit platforms; see the bugs section).
-    void StoreUint64(uint64_t* addr, uint64_t val)
     /* convertBlockStmt, nil block */;
 
     // StoreUintptr atomically stores val into *addr.
     // Consider using the more ergonomic and less error-prone [Uintptr.Store] instead.
+    //
+    //go:noescape
+    //go:linknamestd StoreUintptr
     void StoreUintptr(uintptr_t* addr, uintptr_t val)
     /* convertBlockStmt, nil block */;
 

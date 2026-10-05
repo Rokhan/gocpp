@@ -12,46 +12,21 @@
 
 namespace golang::time
 {
-    struct runtimeTimer
-    {
-        uintptr_t pp{};
-        int64_t when{};
-        int64_t period{};
-        std::function<void (go_any _1, uintptr_t _2)> f{}; // NOTE: must not be closure
-        go_any arg{};
-        uintptr_t seq{};
-        int64_t nextwhen{};
-        uint32_t status{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct runtimeTimer& value);
-    void sendTime(go_any c, uintptr_t seq);
-    void goFunc(go_any arg, uintptr_t seq);
-    void startTimer(runtimeTimer*);
-    bool stopTimer(runtimeTimer*);
-    bool resetTimer(runtimeTimer*, int64_t);
-    void modTimer(runtimeTimer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
+    void sendTime(go_any c, uintptr_t seq, int64_t delta);
+    void goFunc(go_any arg, uintptr_t seq, int64_t delta);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/time/time.h"
 
 namespace golang::time
 {
     void Sleep(Duration d);
+    gocpp::unsafe_pointer syncTimer(gocpp::channel<Time> c);
     int64_t when(Duration d);
     struct Timer
     {
         gocpp::channel<Time> C{};
-        runtimeTimer r{};
+        bool initTimer{};
 
         using isGoStruct = void;
 
@@ -66,6 +41,9 @@ namespace golang::time
 
     std::ostream& operator<<(std::ostream& os, const struct Timer& value);
     gocpp::channel<Time> After(Duration d);
+    Timer* newTimer(int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2, int64_t _3)> f, go_any arg, gocpp::unsafe_pointer cp);
+    bool stopTimer(Timer*);
+    bool resetTimer(Timer* t, int64_t when, int64_t period);
     Timer* NewTimer(Duration d);
     Timer* AfterFunc(Duration d, std::function<void ()> f);
 }

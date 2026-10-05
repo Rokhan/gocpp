@@ -11,21 +11,22 @@
 #include "golang/math/big/floatmarsh.h"
 #include "gocpp/support.h"
 
-#include "golang/encoding/binary/binary.h"
 #include "golang/errors/errors.h"
 #include "golang/fmt/errors.h"
+#include "golang/internal/byteorder/byteorder.h"
 #include "golang/math/big/arith.h"
 #include "golang/math/big/float.h"
 #include "golang/math/big/floatconv.h"
 #include "golang/math/big/ftoa.h"
 #include "golang/math/big/nat.h"
 
-namespace golang::big
+namespace golang::math::big
 {
+    namespace byteorder = golang::internal::byteorder;
+    namespace errors = golang::errors;
+    namespace fmt = golang::fmt;
     namespace rec
     {
-        using binary::rec::PutUint32;
-        using binary::rec::Uint32;
     }
 
     // GobEncode implements the [encoding/gob.GobEncoder] interface.
@@ -70,11 +71,11 @@ namespace golang::big
             b |= 1;
         }
         buf[1] = b;
-        rec::PutUint32(gocpp::recv(binary::BigEndian), buf.make_slice(2), x->prec);
+        byteorder::BEPutUint32(buf.make_slice(2), x->prec);
 
         if(x->form == finite)
         {
-            rec::PutUint32(gocpp::recv(binary::BigEndian), buf.make_slice(6), uint32_t(x->exp));
+            byteorder::BEPutUint32(buf.make_slice(6), uint32_t(x->exp));
             // cut off unused trailing words
             rec::bytes(gocpp::recv(x->mant.make_slice(len(x->mant) - n)), buf.make_slice(10));
         }
@@ -112,7 +113,7 @@ namespace golang::big
         z->acc = Accuracy((b >> 3) & 3) - 1;
         z->form = form((b >> 1) & 3);
         z->neg = b & 1 != 0;
-        z->prec = rec::Uint32(gocpp::recv(binary::BigEndian), buf.make_slice(2));
+        z->prec = byteorder::BEUint32(buf.make_slice(2));
 
         if(z->form == finite)
         {
@@ -120,7 +121,7 @@ namespace golang::big
             {
                 return errors::New("Float.GobDecode: buffer too small for finite form float"_s);
             }
-            z->exp = int32_t(rec::Uint32(gocpp::recv(binary::BigEndian), buf.make_slice(6)));
+            z->exp = int32_t(byteorder::BEUint32(buf.make_slice(6)));
             z->mant = rec::setBytes(gocpp::recv(z->mant), buf.make_slice(10));
         }
 
@@ -138,6 +139,18 @@ namespace golang::big
         return nullptr;
     }
 
+    // AppendText implements the [encoding.TextAppender] interface.
+    // Only the [Float] value is marshaled (in full precision), other
+    // attributes such as precision or accuracy are ignored.
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::AppendText(Float* x, gocpp::slice<unsigned char> b)
+    {
+        if(x == nullptr)
+        {
+            return {append(b, "<nil>"_s), nullptr};
+        }
+        return {rec::Append(gocpp::recv(x), b, 'g', - 1), nullptr};
+    }
+
     // MarshalText implements the [encoding.TextMarshaler] interface.
     // Only the [Float] value is marshaled (in full precision), other
     // attributes such as precision or accuracy are ignored.
@@ -145,12 +158,7 @@ namespace golang::big
     {
         gocpp::slice<unsigned char> text;
         gocpp::error err;
-        if(x == nullptr)
-        {
-            return {gocpp::slice<unsigned char>("<nil>"_s), nullptr};
-        }
-        gocpp::slice<unsigned char> buf = {};
-        return {rec::Append(gocpp::recv(x), buf, 'g', - 1), nullptr};
+        return rec::AppendText(gocpp::recv(x), nullptr);
     }
 
     // UnmarshalText implements the [encoding.TextUnmarshaler] interface.

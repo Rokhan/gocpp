@@ -17,8 +17,11 @@
 #include "golang/io/io.h"
 #include "golang/strings/builder.h"
 
-namespace golang::ast
+namespace golang::go::ast
 {
+    namespace fmt = golang::fmt;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
     namespace rec
     {
         using strings::rec::String;
@@ -125,11 +128,11 @@ namespace golang::ast
     // refers to a field of T, whereas for the other types it refers to a
     // value in the environment.
     //
-    // New programs should set the [parser.SkipObjectResolution] parser
+    // New programs should set the [go/parser.SkipObjectResolution] parser
     // flag to disable syntactic object resolution (which also saves CPU
     // and memory), and instead use the type checker [go/types] if object
     // resolution is desired. See the Defs, Uses, and Implicits fields of
-    // the [types.Info] struct for details.
+    // the [go/types.Info] struct for details.
     
     template<typename T> requires gocpp::GoStruct<T>
     Object::operator T()
@@ -284,7 +287,7 @@ namespace golang::ast
         return token::NoPos;
     }
 
-    // ObjKind describes what an object represents.
+    // ObjKind describes what an [Object] represents.
     gocpp::array<gocpp::string, 7> objKindStrings = gocpp::Init<gocpp::array<gocpp::string, 7>>([](auto& x) {
         x[Bad] = "bad"_s;
         x[Pkg] = "package"_s;

@@ -35,11 +35,40 @@ namespace golang::runtime
     uintptr_t sweepone();
     bool isSweepDone();
     void deductSweepCredit(uintptr_t spanBytes, uintptr_t callerSweepPages);
-    void clobberfree(gocpp::unsafe_pointer x, uintptr_t size);
     void gcPaceSweeper(uint64_t trigger);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/mheap.fwd.h"
+
+namespace golang::runtime
+{
+    struct sweepLocked
+    {
+        mspan* mspan{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct sweepLocked& value);
+    void clobberfree(gocpp::unsafe_pointer x, uintptr_t size);
+}
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/types.h"
 
 namespace golang::runtime
 {
@@ -65,22 +94,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct activeSweep& value);
-    struct sweepLocked
-    {
-        mspan* mspan{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct sweepLocked& value);
 }
 #include "golang/runtime/runtime2.h"
 

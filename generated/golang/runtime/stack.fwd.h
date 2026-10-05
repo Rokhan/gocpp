@@ -20,33 +20,37 @@ namespace golang::runtime
     // check the BP links during traceback.
     const bool debugCheckBP = false;
     struct stackpoolStruct;
+    struct stackpoolItem;
     struct stackLargeStruct;
+    struct adjustinfo;
     struct bitvector;
     struct stackObjectRecord;
 }
+#include "golang/internal/abi/funcpc.fwd.h"
 #include "golang/internal/abi/stack.fwd.h"
 #include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 #include "golang/internal/goos/zgoos_windows.fwd.h"
-#include "golang/runtime/internal/sys/consts.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
+#include "golang/internal/runtime/sys/consts.fwd.h"
+#include "golang/internal/runtime/sys/intrinsics.fwd.h"
+#include "golang/internal/runtime/sys/nih.fwd.h"
 
 namespace golang::runtime
 {
+    namespace goos = golang::internal::goos;
+    namespace goarch = golang::internal::goarch;
+    namespace abi = golang::internal::abi;
+    namespace sys = golang::internal::runtime::sys;
     // stackSystem is a number of additional bytes to add
     // to each stack below the usual guard area for OS-specific
     // purposes like signal handling. Used on Windows, Plan 9,
     // and iOS because they do not use a separate stack.
-    const int stackSystem = goos::IsWindows * 512 * goarch::PtrSize + goos::IsPlan9 * 512 + goos::IsIos * goarch::IsArm64 * 1024;
+    const int stackSystem = goos::IsWindows * 4096 + goos::IsPlan9 * 512 + goos::IsIos * goarch::IsArm64 * 1024;
     // stackNosplit is the maximum number of bytes that a chain of NOSPLIT
     // functions can use.
     // This arithmetic must match that in cmd/internal/objabi/stack.go:StackNosplit.
     const int stackNosplit = abi::StackNosplitBase * sys::StackGuardMultiplier;
     const int uintptrMask = (1 << (8 * goarch::PtrSize)) - 1;
-    struct stackpoolItem;
-    struct adjustinfo;
     // The minimum stack size to allocate.
     // The hackery here rounds fixedStack0 up to a power of 2.
     const int fixedStack0 = stackMin + stackSystem;

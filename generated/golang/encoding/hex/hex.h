@@ -10,11 +10,15 @@
 #include "gocpp/support.h"
 
 
-namespace golang::hex
+namespace golang::encoding::hex
 {
     int EncodedLen(int n);
     int Encode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     gocpp::slice<unsigned char> AppendEncode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
+    // ErrLength reports an attempt to decode an odd-length input
+    // using [Decode] or [DecodeString].
+    // The stream-based Decoder returns [io.ErrUnexpectedEOF] instead of ErrLength.
+    extern gocpp::error ErrLength;
     int DecodedLen(int x);
     std::tuple<int, gocpp::error> Decode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendDecode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
@@ -23,12 +27,12 @@ namespace golang::hex
     gocpp::string Dump(gocpp::slice<unsigned char> data);
     unsigned char toChar(unsigned char b);
 }
+#include "golang/io/io.fwd.h"
 #include "golang/io/io.h"
-#include "golang/errors/errors.fwd.h"
 
-namespace golang::hex
+namespace golang::encoding::hex
 {
-    extern gocpp::error ErrLength;
+    namespace io = golang::io;
     struct encoder
     {
         io::Writer w{};

@@ -26,8 +26,16 @@
 // Package png implements a PNG image decoder and encoder.
 //
 // The PNG specification is at https://www.w3.org/TR/PNG/.
-namespace golang::png
+namespace golang::image::png
 {
+    namespace binary = golang::encoding::binary;
+    namespace color = golang::image::color;
+    namespace crc32 = golang::hash::crc32;
+    namespace fmt = golang::fmt;
+    namespace hash = golang::hash;
+    namespace image = golang::image;
+    namespace io = golang::io;
+    namespace zlib = golang::compress::zlib;
     namespace rec
     {
         using binary::rec::Uint32;

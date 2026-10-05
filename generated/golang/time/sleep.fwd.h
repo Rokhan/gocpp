@@ -6,11 +6,5 @@
 
 namespace golang::time
 {
-    struct runtimeTimer;
-}
-#include "golang/time/time.fwd.h"
-
-namespace golang::time
-{
     struct Timer;
 }

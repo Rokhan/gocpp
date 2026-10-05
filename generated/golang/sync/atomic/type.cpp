@@ -12,15 +12,19 @@
 #include "gocpp/support.h"
 
 #include "golang/sync/atomic/doc.h"
+#include "golang/sync/atomic/doc_64.h"
 
-namespace golang::atomic
+namespace golang::sync::atomic
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
 
     // A Bool is an atomic boolean value.
     // The zero value is false.
+    //
+    // Bool must not be copied after first use.
     
     template<typename T> requires gocpp::GoStruct<T>
     Bool::operator T()
@@ -93,6 +97,8 @@ namespace golang::atomic
     // Keep in sync with cmd/compile/internal/test/inl_test.go:TestIntendedInlining.
     Pointer<int>* gocpp_id_0 = new Pointer<int> {};
     // A Pointer is an atomic pointer of type *T. The zero value is a nil *T.
+    //
+    // Pointer must not be copied after first use.
     
     template<typename T>
     template<typename U> requires gocpp::GoStruct<U>
@@ -163,6 +169,8 @@ namespace golang::atomic
     }
 
     // An Int32 is an atomic int32. The zero value is zero.
+    //
+    // Int32 must not be copied after first use.
     
     template<typename T> requires gocpp::GoStruct<T>
     Int32::operator T()
@@ -228,7 +236,25 @@ namespace golang::atomic
         return AddInt32(& x->v, delta);
     }
 
+    // And atomically performs a bitwise AND operation on x using the bitmask
+    // provided as mask and returns the old value.
+    int32_t rec::And(Int32* x, int32_t mask)
+    {
+        int32_t old;
+        return AndInt32(& x->v, mask);
+    }
+
+    // Or atomically performs a bitwise OR operation on x using the bitmask
+    // provided as mask and returns the old value.
+    int32_t rec::Or(Int32* x, int32_t mask)
+    {
+        int32_t old;
+        return OrInt32(& x->v, mask);
+    }
+
     // An Int64 is an atomic int64. The zero value is zero.
+    //
+    // Int64 must not be copied after first use.
     
     template<typename T> requires gocpp::GoStruct<T>
     Int64::operator T()
@@ -297,7 +323,25 @@ namespace golang::atomic
         return AddInt64(& x->v, delta);
     }
 
+    // And atomically performs a bitwise AND operation on x using the bitmask
+    // provided as mask and returns the old value.
+    int64_t rec::And(Int64* x, int64_t mask)
+    {
+        int64_t old;
+        return AndInt64(& x->v, mask);
+    }
+
+    // Or atomically performs a bitwise OR operation on x using the bitmask
+    // provided as mask and returns the old value.
+    int64_t rec::Or(Int64* x, int64_t mask)
+    {
+        int64_t old;
+        return OrInt64(& x->v, mask);
+    }
+
     // A Uint32 is an atomic uint32. The zero value is zero.
+    //
+    // Uint32 must not be copied after first use.
     
     template<typename T> requires gocpp::GoStruct<T>
     Uint32::operator T()
@@ -363,7 +407,25 @@ namespace golang::atomic
         return AddUint32(& x->v, delta);
     }
 
+    // And atomically performs a bitwise AND operation on x using the bitmask
+    // provided as mask and returns the old value.
+    uint32_t rec::And(Uint32* x, uint32_t mask)
+    {
+        uint32_t old;
+        return AndUint32(& x->v, mask);
+    }
+
+    // Or atomically performs a bitwise OR operation on x using the bitmask
+    // provided as mask and returns the old value.
+    uint32_t rec::Or(Uint32* x, uint32_t mask)
+    {
+        uint32_t old;
+        return OrUint32(& x->v, mask);
+    }
+
     // A Uint64 is an atomic uint64. The zero value is zero.
+    //
+    // Uint64 must not be copied after first use.
     
     template<typename T> requires gocpp::GoStruct<T>
     Uint64::operator T()
@@ -432,7 +494,25 @@ namespace golang::atomic
         return AddUint64(& x->v, delta);
     }
 
+    // And atomically performs a bitwise AND operation on x using the bitmask
+    // provided as mask and returns the old value.
+    uint64_t rec::And(Uint64* x, uint64_t mask)
+    {
+        uint64_t old;
+        return AndUint64(& x->v, mask);
+    }
+
+    // Or atomically performs a bitwise OR operation on x using the bitmask
+    // provided as mask and returns the old value.
+    uint64_t rec::Or(Uint64* x, uint64_t mask)
+    {
+        uint64_t old;
+        return OrUint64(& x->v, mask);
+    }
+
     // A Uintptr is an atomic uintptr. The zero value is zero.
+    //
+    // Uintptr must not be copied after first use.
     
     template<typename T> requires gocpp::GoStruct<T>
     Uintptr::operator T()
@@ -496,6 +576,22 @@ namespace golang::atomic
     {
         uintptr_t go_new;
         return AddUintptr(& x->v, delta);
+    }
+
+    // And atomically performs a bitwise AND operation on x using the bitmask
+    // provided as mask and returns the old value.
+    uintptr_t rec::And(Uintptr* x, uintptr_t mask)
+    {
+        uintptr_t old;
+        return AndUintptr(& x->v, mask);
+    }
+
+    // Or atomically performs a bitwise OR operation on x using the bitmask
+    // provided as mask and returns the old value.
+    uintptr_t rec::Or(Uintptr* x, uintptr_t mask)
+    {
+        uintptr_t old;
+        return OrUintptr(& x->v, mask);
     }
 
     // noCopy may be added to structs which must not be copied

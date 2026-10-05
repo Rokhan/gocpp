@@ -13,15 +13,14 @@
 #include "golang/go/types/typeparam.fwd.h"
 #include "golang/go/types/typeterm.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    bool containsNil(gocpp::slice<golang::types::Type> list);
     gocpp::string typeParamsString(gocpp::slice<TypeParam*> list);
-    bool isParameterized(gocpp::slice<TypeParam*> tparams, golang::types::Type typ);
+    bool isParameterized(gocpp::slice<TypeParam*> tparams, golang::go::types::Type typ);
     struct tpWalker
     {
         gocpp::slice<TypeParam*> tparams{};
-        gocpp::map<golang::types::Type, bool> seen{};
+        gocpp::map<golang::go::types::Type, bool> seen{};
 
         using isGoStruct = void;
 
@@ -35,13 +34,13 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct tpWalker& value);
-    std::tuple<term*, bool> coreTerm(TypeParam* tpar);
-    void killCycles(gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::types::Type> inferred);
+    std::tuple<golang::go::types::term*, bool> coreTerm(TypeParam* tpar);
+    void killCycles(gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> inferred);
     struct cycleFinder
     {
         gocpp::slice<TypeParam*> tparams{};
-        gocpp::slice<golang::types::Type> inferred{};
-        gocpp::map<golang::types::Type, bool> seen{};
+        gocpp::slice<golang::go::types::Type> inferred{};
+        gocpp::map<golang::go::types::Type, bool> seen{};
 
         using isGoStruct = void;
 
@@ -55,7 +54,6 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cycleFinder& value);
-    int tparamIndex(gocpp::slice<TypeParam*> list, TypeParam* tpar);
 }
 
 #include "golang/go/token/position.h"
@@ -67,16 +65,17 @@ namespace golang::types
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeparam.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace token = golang::go::token;
 
     namespace rec
     {
-        gocpp::slice<golang::types::Type> infer(Checker* check, positioner posn, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::types::Type> targs, Tuple* params, gocpp::slice<operand*> args, bool reverse);
-        std::tuple<gocpp::slice<TypeParam*>, golang::types::Type> renameTParams(Checker* check, token::Pos pos, gocpp::slice<TypeParam*> tparams, golang::types::Type typ);
-        bool isParameterized(tpWalker* w, golang::types::Type typ);
+        gocpp::slice<golang::go::types::Type> infer(Checker* check, positioner posn, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> targs, Tuple* params, gocpp::slice<operand*> args, bool reverse, error_* err);
+        std::tuple<gocpp::slice<TypeParam*>, golang::go::types::Type> renameTParams(Checker* check, token::Pos pos, gocpp::slice<TypeParam*> tparams, golang::go::types::Type typ);
+        bool isParameterized(tpWalker* w, golang::go::types::Type typ);
         bool varList(tpWalker* w, gocpp::slice<Var*> list);
-        void typ(cycleFinder* w, golang::types::Type typ);
+        void typ(cycleFinder* w, golang::go::types::Type typ);
         void varList(cycleFinder* w, gocpp::slice<Var*> list);
     }
 }

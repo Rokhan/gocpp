@@ -12,22 +12,24 @@
 #include "golang/go/types/object.h"
 #include "golang/go/types/named.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     gocpp::slice<Object> makeObjList(gocpp::slice<Named*> tlist);
 }
 
+#include "golang/go/token/position.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/named.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace token = golang::go::token;
 
     namespace rec
     {
         void validType(Checker* check, Named* typ);
-        bool validType0(Checker* check, golang::types::Type typ, gocpp::slice<Named*> nest, gocpp::slice<Named*> path);
+        bool validType0(Checker* check, token::Pos pos, golang::go::types::Type typ, gocpp::slice<Named*> nest, gocpp::slice<Named*> path);
     }
 }
 

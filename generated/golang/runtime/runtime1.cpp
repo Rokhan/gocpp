@@ -14,12 +14,14 @@
 #include "golang/internal/abi/type.h"
 #include "golang/internal/bytealg/indexbyte_native.h"
 #include "golang/internal/goarch/goarch.h"
+#include "golang/internal/godebugs/table.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/strconv/atoi.h"
 #include "golang/runtime/auxv_none.h"
 #include "golang/runtime/env_posix.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime.h"
@@ -29,11 +31,18 @@
 #include "golang/runtime/string.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/symtab.h"
-#include "golang/runtime/trace2.h"
+#include "golang/runtime/trace.h"
 #include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace bytealg = golang::internal::bytealg;
+    namespace goarch = golang::internal::goarch;
+    namespace godebugs = golang::internal::godebugs;
+    namespace strconv = golang::internal::strconv;
     namespace rec
     {
         using atomic::rec::Store;
@@ -58,7 +67,7 @@ namespace golang::runtime
         auto gp = getg();
         auto t = atomic::Load(& traceback_cache);
         crash = t & tracebackCrash != 0;
-        all = gp->m->throwing >= throwTypeUser || t & tracebackAll != 0;
+        all = gp->m->throwing > throwTypeUser || t & tracebackAll != 0;
         if(gp->m->traceback != 0)
         {
             level = int32_t(gp->m->traceback);
@@ -295,11 +304,6 @@ namespace golang::runtime
             go_throw("bad unsafe.Sizeof y1"_s);
         }
 
-        if(timediv(12345 * 1000000000 + 54321, 1000000000, & e) != 12345 || e != 54321)
-        {
-            go_throw("bad timediv"_s);
-        }
-
         uint32_t z = {};
         z = 1;
         if(! atomic::Cas(& z, 1, 2))
@@ -391,11 +395,6 @@ namespace golang::runtime
         {
             go_throw("FixedStack is not power-of-2"_s);
         }
-
-        if(! checkASM())
-        {
-            go_throw("assembly checks failed"_s);
-        }
     }
 
     
@@ -443,6 +442,8 @@ namespace golang::runtime
         T result;
         result.cgocheck = this->cgocheck;
         result.clobberfree = this->clobberfree;
+        result.containermaxprocs = this->containermaxprocs;
+        result.decoratemappings = this->decoratemappings;
         result.disablethp = this->disablethp;
         result.dontfreezetheworld = this->dontfreezetheworld;
         result.efence = this->efence;
@@ -453,21 +454,26 @@ namespace golang::runtime
         result.gctrace = this->gctrace;
         result.invalidptr = this->invalidptr;
         result.madvdontneed = this->madvdontneed;
-        result.runtimeContentionStacks = this->runtimeContentionStacks;
         result.scavtrace = this->scavtrace;
         result.scheddetail = this->scheddetail;
         result.schedtrace = this->schedtrace;
         result.tracebackancestors = this->tracebackancestors;
+        result.updatemaxprocs = this->updatemaxprocs;
         result.asyncpreemptoff = this->asyncpreemptoff;
         result.harddecommit = this->harddecommit;
         result.adaptivestackstart = this->adaptivestackstart;
         result.tracefpunwindoff = this->tracefpunwindoff;
         result.traceadvanceperiod = this->traceadvanceperiod;
+        result.traceCheckStackOwnership = this->traceCheckStackOwnership;
+        result.profstackdepth = this->profstackdepth;
+        result.dataindependenttiming = this->dataindependenttiming;
         result.malloc = this->malloc;
-        result.allocfreetrace = this->allocfreetrace;
         result.inittrace = this->inittrace;
         result.sbrk = this->sbrk;
+        result.checkfinalizers = this->checkfinalizers;
+        result.traceallocfree = this->traceallocfree;
         result.panicnil = this->panicnil;
+        result.tracebacklabels = this->tracebacklabels;
         return result;
     }
 
@@ -476,6 +482,8 @@ namespace golang::runtime
     {
         if (cgocheck != ref.cgocheck) return false;
         if (clobberfree != ref.clobberfree) return false;
+        if (containermaxprocs != ref.containermaxprocs) return false;
+        if (decoratemappings != ref.decoratemappings) return false;
         if (disablethp != ref.disablethp) return false;
         if (dontfreezetheworld != ref.dontfreezetheworld) return false;
         if (efence != ref.efence) return false;
@@ -486,21 +494,26 @@ namespace golang::runtime
         if (gctrace != ref.gctrace) return false;
         if (invalidptr != ref.invalidptr) return false;
         if (madvdontneed != ref.madvdontneed) return false;
-        if (runtimeContentionStacks != ref.runtimeContentionStacks) return false;
         if (scavtrace != ref.scavtrace) return false;
         if (scheddetail != ref.scheddetail) return false;
         if (schedtrace != ref.schedtrace) return false;
         if (tracebackancestors != ref.tracebackancestors) return false;
+        if (updatemaxprocs != ref.updatemaxprocs) return false;
         if (asyncpreemptoff != ref.asyncpreemptoff) return false;
         if (harddecommit != ref.harddecommit) return false;
         if (adaptivestackstart != ref.adaptivestackstart) return false;
         if (tracefpunwindoff != ref.tracefpunwindoff) return false;
         if (traceadvanceperiod != ref.traceadvanceperiod) return false;
+        if (traceCheckStackOwnership != ref.traceCheckStackOwnership) return false;
+        if (profstackdepth != ref.profstackdepth) return false;
+        if (dataindependenttiming != ref.dataindependenttiming) return false;
         if (malloc != ref.malloc) return false;
-        if (allocfreetrace != ref.allocfreetrace) return false;
         if (inittrace != ref.inittrace) return false;
         if (sbrk != ref.sbrk) return false;
+        if (checkfinalizers != ref.checkfinalizers) return false;
+        if (traceallocfree != ref.traceallocfree) return false;
         if (panicnil != ref.panicnil) return false;
+        if (tracebacklabels != ref.tracebacklabels) return false;
         return true;
     }
 
@@ -509,6 +522,8 @@ namespace golang::runtime
         os << '{';
         os << "" << cgocheck;
         os << " " << clobberfree;
+        os << " " << containermaxprocs;
+        os << " " << decoratemappings;
         os << " " << disablethp;
         os << " " << dontfreezetheworld;
         os << " " << efence;
@@ -519,21 +534,26 @@ namespace golang::runtime
         os << " " << gctrace;
         os << " " << invalidptr;
         os << " " << madvdontneed;
-        os << " " << runtimeContentionStacks;
         os << " " << scavtrace;
         os << " " << scheddetail;
         os << " " << schedtrace;
         os << " " << tracebackancestors;
+        os << " " << updatemaxprocs;
         os << " " << asyncpreemptoff;
         os << " " << harddecommit;
         os << " " << adaptivestackstart;
         os << " " << tracefpunwindoff;
         os << " " << traceadvanceperiod;
+        os << " " << traceCheckStackOwnership;
+        os << " " << profstackdepth;
+        os << " " << dataindependenttiming;
         os << " " << malloc;
-        os << " " << allocfreetrace;
         os << " " << inittrace;
         os << " " << sbrk;
+        os << " " << checkfinalizers;
+        os << " " << traceallocfree;
         os << " " << panicnil;
+        os << " " << tracebacklabels;
         os << '}';
         return os;
     }
@@ -551,16 +571,34 @@ namespace golang::runtime
     debugStruct debug;
     gocpp::slice<dbgVar*> dbgvars = gocpp::slice<dbgVar*> {
         gocpp::Init<>([](auto& x) {
-        x.name = "allocfreetrace"_s;
-        x.value = & debug.allocfreetrace;
+        x.name = "adaptivestackstart"_s;
+        x.value = & debug.adaptivestackstart;
+    }),
+        gocpp::Init<>([](auto& x) {
+        x.name = "asyncpreemptoff"_s;
+        x.value = & debug.asyncpreemptoff;
+    }),
+        gocpp::Init<>([](auto& x) {
+        x.name = "cgocheck"_s;
+        x.value = & debug.cgocheck;
     }),
         gocpp::Init<>([](auto& x) {
         x.name = "clobberfree"_s;
         x.value = & debug.clobberfree;
     }),
         gocpp::Init<>([](auto& x) {
-        x.name = "cgocheck"_s;
-        x.value = & debug.cgocheck;
+        x.name = "containermaxprocs"_s;
+        x.value = & debug.containermaxprocs;
+        x.def = 1;
+    }),
+        gocpp::Init<>([](auto& x) {
+        x.name = "dataindependenttiming"_s;
+        x.value = & debug.dataindependenttiming;
+    }),
+        gocpp::Init<>([](auto& x) {
+        x.name = "decoratemappings"_s;
+        x.value = & debug.decoratemappings;
+        x.def = 1;
     }),
         gocpp::Init<>([](auto& x) {
         x.name = "disablethp"_s;
@@ -569,6 +607,10 @@ namespace golang::runtime
         gocpp::Init<>([](auto& x) {
         x.name = "dontfreezetheworld"_s;
         x.value = & debug.dontfreezetheworld;
+    }),
+        gocpp::Init<>([](auto& x) {
+        x.name = "checkfinalizers"_s;
+        x.value = & debug.checkfinalizers;
     }),
         gocpp::Init<>([](auto& x) {
         x.name = "efence"_s;
@@ -595,6 +637,14 @@ namespace golang::runtime
         x.value = & debug.gctrace;
     }),
         gocpp::Init<>([](auto& x) {
+        x.name = "harddecommit"_s;
+        x.value = & debug.harddecommit;
+    }),
+        gocpp::Init<>([](auto& x) {
+        x.name = "inittrace"_s;
+        x.value = & debug.inittrace;
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "invalidptr"_s;
         x.value = & debug.invalidptr;
     }),
@@ -603,8 +653,13 @@ namespace golang::runtime
         x.value = & debug.madvdontneed;
     }),
         gocpp::Init<>([](auto& x) {
-        x.name = "runtimecontentionstacks"_s;
-        x.atomic = & debug.runtimeContentionStacks;
+        x.name = "panicnil"_s;
+        x.atomic = & debug.panicnil;
+    }),
+        gocpp::Init<>([](auto& x) {
+        x.name = "profstackdepth"_s;
+        x.value = & debug.profstackdepth;
+        x.def = 128;
     }),
         gocpp::Init<>([](auto& x) {
         x.name = "sbrk"_s;
@@ -623,39 +678,37 @@ namespace golang::runtime
         x.value = & debug.schedtrace;
     }),
         gocpp::Init<>([](auto& x) {
+        x.name = "traceadvanceperiod"_s;
+        x.value = & debug.traceadvanceperiod;
+    }),
+        gocpp::Init<>([](auto& x) {
+        x.name = "traceallocfree"_s;
+        x.atomic = & debug.traceallocfree;
+    }),
+        gocpp::Init<>([](auto& x) {
+        x.name = "tracecheckstackownership"_s;
+        x.value = & debug.traceCheckStackOwnership;
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "tracebackancestors"_s;
         x.value = & debug.tracebackancestors;
     }),
         gocpp::Init<>([](auto& x) {
-        x.name = "asyncpreemptoff"_s;
-        x.value = & debug.asyncpreemptoff;
-    }),
-        gocpp::Init<>([](auto& x) {
-        x.name = "inittrace"_s;
-        x.value = & debug.inittrace;
-    }),
-        gocpp::Init<>([](auto& x) {
-        x.name = "harddecommit"_s;
-        x.value = & debug.harddecommit;
-    }),
-        gocpp::Init<>([](auto& x) {
-        x.name = "adaptivestackstart"_s;
-        x.value = & debug.adaptivestackstart;
+        x.name = "tracebacklabels"_s;
+        x.atomic = & debug.tracebacklabels;
+        x.def = 1;
     }),
         gocpp::Init<>([](auto& x) {
         x.name = "tracefpunwindoff"_s;
         x.value = & debug.tracefpunwindoff;
     }),
         gocpp::Init<>([](auto& x) {
-        x.name = "panicnil"_s;
-        x.atomic = & debug.panicnil;
-    }),
-        gocpp::Init<>([](auto& x) {
-        x.name = "traceadvanceperiod"_s;
-        x.value = & debug.traceadvanceperiod;
+        x.name = "updatemaxprocs"_s;
+        x.value = & debug.updatemaxprocs;
+        x.def = 1;
     })
     };
-    void parsedebugvars()
+    void parseRuntimeDebugVars(gocpp::string godebug)
     {
         // defaults
         debug.cgocheck = 1;
@@ -676,12 +729,6 @@ namespace golang::runtime
         }
         debug.traceadvanceperiod = defaultTraceAdvancePeriod;
 
-        auto godebug = gogetenv("GODEBUG"_s);
-
-        auto p = new gocpp::string{};
-        *p = godebug;
-        rec::Store<gocpp::string>(gocpp::recv(godebugEnv), p);
-
         // apply runtime defaults, if any
         for(auto [gocpp_ignored, v] : dbgvars)
         {
@@ -699,14 +746,37 @@ namespace golang::runtime
                 }
             }
         }
-
         // apply compile-time GODEBUG settings
         parsegodebug(godebugDefault, nullptr);
 
         // apply environment settings
         parsegodebug(godebug, nullptr);
 
-        debug.malloc = (debug.allocfreetrace | debug.inittrace | debug.sbrk) != 0;
+        debug.malloc = (debug.inittrace | debug.sbrk | debug.checkfinalizers) != 0;
+        debug.profstackdepth = gocpp::min(debug.profstackdepth, maxProfStackDepth);
+
+        // Disable async preemption in checkmark mode. The following situation is
+        // problematic with checkmark mode:
+        // - The GC doesn't mark object A because it is truly dead.
+        // - The GC stops the world, asynchronously preempting G1 which has a reference
+        // to A in its top stack frame
+        // - During the stop the world, we run the second checkmark GC. It marks the roots
+        // and discovers A through G1.
+        // - Checkmark mode reports a failure since there's a discrepancy in mark metadata.
+        // We could disable just conservative scanning during the checkmark scan, which is
+        // safe but makes checkmark slightly less powerful, but that's a lot more invasive
+        // than just disabling async preemption altogether.
+        if(debug.gccheckmark > 0)
+        {
+            debug.asyncpreemptoff = 1;
+        }
+    }
+
+    void finishDebugVarsSetup()
+    {
+        auto p = new gocpp::string{};
+        *p = gogetenv("GODEBUG"_s);
+        rec::Store<gocpp::string>(gocpp::recv(godebugEnv), p);
 
         setTraceback(gogetenv("GOTRACEBACK"_s));
         traceback_env = traceback_cache;
@@ -731,6 +801,46 @@ namespace golang::runtime
         }
     }
 
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    invalidGODEBUGStruct::operator T()
+    {
+        T result;
+        result.key = this->key;
+        result.value = this->value;
+        result.removed = this->removed;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool invalidGODEBUGStruct::operator==(const T& ref) const
+    {
+        if (key != ref.key) return false;
+        if (value != ref.value) return false;
+        if (removed != ref.removed) return false;
+        return true;
+    }
+
+    std::ostream& invalidGODEBUGStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << key;
+        os << " " << value;
+        os << " " << removed;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct invalidGODEBUGStruct& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    // If an invalid GODEBUG setting is found during startup time,
+    // invalidGODEBUG is set to that setting so it can be reported
+    // when initialization has progressed sufficiently.
+    invalidGODEBUGStruct invalidGODEBUG;
     // parsegodebug parses the godebug string, updating variables listed in dbgvars.
     // If seen == nil, this is startup time and we process the string left to right
     // overwriting older settings with newer ones.
@@ -782,6 +892,28 @@ namespace golang::runtime
                 continue;
             }
             auto [key, value] = std::tuple{field.make_slice(0, i), field.make_slice(i + 1)};
+
+            // Setting a removed GODEBUG is ok unless it's set to an old value.
+            // We only check at startup time per go.dev/issue/76163.
+            if(seen == nullptr)
+            {
+                for(auto [gocpp_ignored, info] : godebugs::Removed)
+                {
+                    if(info.Name == key)
+                    {
+                        if(info.Old(value))
+                        {
+                            invalidGODEBUG.key = key;
+                            invalidGODEBUG.value = value;
+                            invalidGODEBUG.removed = info.Removed;
+                            // this skips the cgocheck below but we're about to fatal anyway
+                            return;
+                        }
+                        break;
+                    }
+                }
+            }
+
             if(seen[key])
             {
                 continue;
@@ -796,7 +928,7 @@ namespace golang::runtime
             // if specified in GODEBUG.
             if(seen == nullptr && key == "memprofilerate"_s)
             {
-                if(auto [n, ok] = atoi(value); ok)
+                if(auto [n, err] = strconv::Atoi(value); err == nullptr)
                 {
                     MemProfileRate = n;
                 }
@@ -807,16 +939,16 @@ namespace golang::runtime
                 {
                     if(v->name == key)
                     {
-                        if(auto [n, ok] = atoi32(value); ok)
+                        if(auto [n, err] = strconv::ParseInt(value, 10, 32); err == nullptr)
                         {
                             if(seen == nullptr && v->value != nullptr)
                             {
-                                *v->value = n;
+                                *v->value = int32_t(n);
                             }
                             else
                             if(v->atomic != nullptr)
                             {
-                                rec::Store(gocpp::recv(v->atomic), n);
+                                rec::Store(gocpp::recv(v->atomic), int32_t(n));
                             }
                         }
                     }
@@ -872,7 +1004,7 @@ namespace golang::runtime
                     }
                 default:
                     t = tracebackAll;
-                    if(auto [n, ok] = atoi(level); ok && n == int(uint32_t(n)))
+                    if(auto [n, err] = strconv::Atoi(level); err == nullptr && n == int(uint32_t(n)))
                     {
                         t |= uint32_t(n) << tracebackShift;
                     }
@@ -889,41 +1021,6 @@ namespace golang::runtime
         t |= traceback_env;
 
         atomic::Store(& traceback_cache, t);
-    }
-
-    // Poor mans 64-bit division.
-    // This is a very special function, do not use it if you are not sure what you are doing.
-    // int64 division is lowered into _divv() call on 386, which does not fit into nosplit functions.
-    // Handles overflow in a time-specific manner.
-    // This keeps us within no-split stack limits on 32-bit processors.
-    //
-    //go:nosplit
-    int32_t timediv(int64_t v, int32_t div, int32_t* rem)
-    {
-        auto res = int32_t(0);
-        for(auto bit = 30; bit >= 0; bit--)
-        {
-            if(v >= (int64_t(div) << (unsigned int)(bit)))
-            {
-                v = v - (int64_t(div) << (unsigned int)(bit));
-                // Before this for loop, res was 0, thus all these
-                // power of 2 increments are now just bitsets.
-                res |= 1 << (unsigned int)(bit);
-            }
-        }
-        if(v >= int64_t(div))
-        {
-            if(rem != nullptr)
-            {
-                *rem = 0;
-            }
-            return 0x7fffffff;
-        }
-        if(rem != nullptr)
-        {
-            *rem = int32_t(v);
-        }
-        return res;
     }
 
     //go:nosplit
@@ -946,21 +1043,77 @@ namespace golang::runtime
         }
     }
 
+    // reflect_typelinks is meant for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gitee.com/quant1x/gox
+    //   - github.com/goccy/json
+    //   - github.com/modern-go/reflect2
+    //   - github.com/vmware/govmomi
+    //   - github.com/pinpoint-apm/pinpoint-go-agent
+    //   - github.com/timandy/routine
+    //   - github.com/v2pro/plz
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    // This is obsolete and only remains for external packages.
+    // New code should use reflect_compiledTypelinks.
+    //
     //go:linkname reflect_typelinks reflect.typelinks
     std::tuple<gocpp::slice<gocpp::unsafe_pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks()
     {
         auto modules = activeModules();
+
+        auto typesToOffsets = [=](moduledata* md) mutable -> gocpp::slice<int32_t>
+        {
+            auto types = moduleTypelinks(md);
+            auto ret = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), 0, len(types));
+            for(auto [gocpp_ignored, typ] : types)
+            {
+                ret = append(ret, int32_t(uintptr_t(gocpp::unsafe_pointer(typ)) - md->types));
+            }
+            return ret;
+        };
+
         auto sections = gocpp::slice<gocpp::unsafe_pointer> {gocpp::unsafe_pointer(modules[0]->types)};
-        auto ret = gocpp::slice<gocpp::slice<int32_t>> {modules[0]->typelinks};
+        auto ret = gocpp::slice<gocpp::slice<int32_t>> {typesToOffsets(modules[0])};
         for(auto [gocpp_ignored, md] : modules.make_slice(1))
         {
             sections = append(sections, gocpp::unsafe_pointer(md->types));
-            ret = append(ret, md->typelinks);
+            ret = append(ret, typesToOffsets(md));
         }
         return {sections, ret};
     }
 
+    // reflect_compiledTypelinks returns the typelink types
+    // generated by the compiler for all current modules.
+    // The normal case is a single module, so this returns one
+    // slice for the main module, and a slice of slices, normally nil,
+    // for other modules.
+    //
+    //go:linknamestd reflect_compiledTypelinks reflect.compiledTypelinks
+    std::tuple<gocpp::slice<abi::Type*>, gocpp::slice<gocpp::slice<abi::Type*>>> reflect_compiledTypelinks()
+    {
+        auto modules = activeModules();
+        auto firstTypes = moduleTypelinks(modules[0]);
+        gocpp::slice<gocpp::slice<abi::Type*>> rest = {};
+        for(auto [gocpp_ignored, md] : modules.make_slice(1))
+        {
+            rest = append(rest, moduleTypelinks(md));
+        }
+        return {firstTypes, rest};
+    }
+
     // reflect_resolveNameOff resolves a name offset from a base pointer.
+    //
+    // reflect_resolveNameOff is for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/agiledragon/gomonkey/v2
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
     //
     //go:linkname reflect_resolveNameOff reflect.resolveNameOff
     gocpp::unsafe_pointer reflect_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off)
@@ -970,6 +1123,17 @@ namespace golang::runtime
 
     // reflect_resolveTypeOff resolves an *rtype offset from a base type.
     //
+    // reflect_resolveTypeOff is meant for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gitee.com/quant1x/gox
+    //   - github.com/modern-go/reflect2
+    //   - github.com/v2pro/plz
+    //   - github.com/timandy/routine
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname reflect_resolveTypeOff reflect.resolveTypeOff
     gocpp::unsafe_pointer reflect_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off)
     {
@@ -977,6 +1141,14 @@ namespace golang::runtime
     }
 
     // reflect_resolveTextOff resolves a function pointer offset from a base type.
+    //
+    // reflect_resolveTextOff is for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/agiledragon/gomonkey/v2
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
     //
     //go:linkname reflect_resolveTextOff reflect.resolveTextOff
     gocpp::unsafe_pointer reflect_resolveTextOff(gocpp::unsafe_pointer rtype, int32_t off)
@@ -1023,6 +1195,28 @@ namespace golang::runtime
         }
         reflectOffsUnlock();
         return id;
+    }
+
+    // reflect_adjustAIXGCDataForRuntime takes a type.GCData address and returns
+    // the new address to use. This is only called on AIX.
+    // See getGCMaskOnDemand.
+    //
+    //go:linknamestd reflect_adjustAIXGCDataForRuntime reflect.adjustAIXGCDataForRuntime
+    unsigned char* reflect_adjustAIXGCDataForRuntime(unsigned char* addr)
+    {
+        return (unsigned char*)(add(gocpp::unsafe_pointer(addr), aixStaticDataBase - firstmoduledata.data));
+    }
+
+    //go:linkname fips_getIndicator crypto/internal/fips140.getIndicator
+    uint8_t fips_getIndicator()
+    {
+        return getg()->fipsIndicator;
+    }
+
+    //go:linkname fips_setIndicator crypto/internal/fips140.setIndicator
+    void fips_setIndicator(uint8_t indicator)
+    {
+        getg()->fipsIndicator = indicator;
     }
 
 }

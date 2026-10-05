@@ -7,4 +7,13 @@
 namespace golang::runtime
 {
     using hex = uint64_t;
+    using quoted = gocpp::string;
+    // float64 requires 1+17+1+1+1+3 = 24 bytes max (sign+digits+decimal point+e+sign+exponent digits).
+    const long float64Bytes = 24;
+    // float32 requires 1+9+1+1+1+2 = 15 bytes max (sign+digits+decimal point+e+sign+exponent digits).
+    const long float32Bytes = 15;
+    // complex128 requires 24+24+1+1+1 = 51 bytes max (paren+float64+float64+i+paren).
+    const int complex128Bytes = 2 * float64Bytes + 3;
+    // complex64 requires 15+15+1+1+1 = 33 bytes max (paren+float32+float32+i+paren).
+    const int complex64Bytes = 2 * float32Bytes + 3;
 }

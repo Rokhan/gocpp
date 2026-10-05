@@ -11,8 +11,9 @@
 
 #include "golang/go/ast/ast.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
     struct block
     {
         block* parent{}; // enclosing block
@@ -37,7 +38,7 @@ namespace golang::types
 #include "golang/go/types/check.h"
 #include "golang/go/types/scope.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
@@ -46,7 +47,7 @@ namespace golang::types
         void insert(block* b, ast::LabeledStmt* s);
         ast::LabeledStmt* gotoTarget(block* b, gocpp::string name);
         ast::LabeledStmt* enclosingTarget(block* b, gocpp::string name);
-        gocpp::slice<ast::BranchStmt*> blockBranches(Checker* check, golang::types::Scope* all, block* parent, ast::LabeledStmt* lstmt, gocpp::slice<ast::Stmt> list);
+        gocpp::slice<ast::BranchStmt*> blockBranches(Checker* check, golang::go::types::Scope* all, block* parent, ast::LabeledStmt* lstmt, gocpp::slice<ast::Stmt> list);
     }
 }
 

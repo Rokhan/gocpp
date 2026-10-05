@@ -11,11 +11,11 @@
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Slice
     {
-        golang::types::Type elem{};
+        golang::go::types::Type elem{};
 
         using isGoStruct = void;
 
@@ -29,18 +29,18 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Slice& value);
-    Slice* NewSlice(golang::types::Type elem);
+    Slice* NewSlice(golang::go::types::Type elem);
 }
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        golang::types::Type Elem(Slice* s);
-        golang::types::Type Underlying(Slice* s);
+        golang::go::types::Type Elem(Slice* s);
+        golang::go::types::Type Underlying(Slice* s);
         gocpp::string String(Slice* s);
     }
 }

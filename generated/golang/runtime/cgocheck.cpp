@@ -13,27 +13,24 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
-#include "golang/internal/goexperiment/exp_allocheaders_on.h"
 #include "golang/runtime/cgocall.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
-#include "golang/runtime/mheap.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/pinner.h"
 #include "golang/runtime/print.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/stack.h"
 #include "golang/runtime/stubs.h"
-#include "golang/runtime/symtab.h"
 #include "golang/runtime/type.h"
-#include "golang/runtime/typekind.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
+        using abi::rec::Pointers;
     }
 
     // cgoCheckPtrWrite is called whenever a pointer is stored into memory.
@@ -122,7 +119,7 @@ namespace golang::runtime
     //go:nowritebarrier
     void cgoCheckMemmove2(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size)
     {
-        if(typ->PtrBytes == 0)
+        if(! rec::Pointers(gocpp::recv(typ)))
         {
             return;
         }
@@ -147,7 +144,7 @@ namespace golang::runtime
     //go:nowritebarrier
     void cgoCheckSliceCopy(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, int n)
     {
-        if(typ->PtrBytes == 0)
+        if(! rec::Pointers(gocpp::recv(typ)))
         {
             return;
         }
@@ -185,81 +182,7 @@ namespace golang::runtime
             size = ptrdataSize;
         }
 
-        if(typ->Kind_ & kindGCProg == 0)
-        {
-            cgoCheckBits(src, typ->GCData, off, size);
-            return;
-        }
-
-        // The type has a GC program. Try to find GC bits somewhere else.
-        for(auto [gocpp_ignored, datap] : activeModules())
-        {
-            if(cgoInRange(src, datap->data, datap->edata))
-            {
-                auto doff = uintptr_t(src) - datap->data;
-                cgoCheckBits(add(src, - doff), datap->gcdatamask.bytedata, off + doff, size);
-                return;
-            }
-            if(cgoInRange(src, datap->bss, datap->ebss))
-            {
-                auto boff = uintptr_t(src) - datap->bss;
-                cgoCheckBits(add(src, - boff), datap->gcbssmask.bytedata, off + boff, size);
-                return;
-            }
-        }
-
-        auto s = spanOfUnchecked(uintptr_t(src));
-        if(rec::get(gocpp::recv(s->state)) == mSpanManual)
-        {
-            // There are no heap bits for value stored on the stack.
-            // For a channel receive src might be on the stack of some
-            // other goroutine, so we can't unwind the stack even if
-            // we wanted to.
-            // We can't expand the GC program without extra storage
-            // space we can't easily get.
-            // Fortunately we have the type information.
-            systemstack([=]() mutable -> void
-            {
-                cgoCheckUsingType(typ, src, off, size);
-            });
-            return;
-        }
-
-        // src must be in the regular heap.
-        if(goexperiment::AllocHeaders)
-        {
-            auto tp = rec::typePointersOf(gocpp::recv(s), uintptr_t(src), size);
-            for(; ; )
-            {
-                uintptr_t addr = {};
-                if(std::tie(tp, addr) = rec::next(gocpp::recv(tp), uintptr_t(src) + size); addr == 0)
-                {
-                    break;
-                }
-                auto v = *(gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(addr));
-                if(cgoIsGoPointer(v) && ! isPinned(v))
-                {
-                    go_throw(cgoWriteBarrierFail);
-                }
-            }
-        }
-        else
-        {
-            auto hbits = heapBitsForAddr(uintptr_t(src), size);
-            for(; ; )
-            {
-                uintptr_t addr = {};
-                if(std::tie(hbits, addr) = rec::next(gocpp::recv(hbits)); addr == 0)
-                {
-                    break;
-                }
-                auto v = *(gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(addr));
-                if(cgoIsGoPointer(v) && ! isPinned(v))
-                {
-                    go_throw(cgoWriteBarrierFail);
-                }
-            }
-        }
+        cgoCheckBits(src, getGCMask(typ), off, size);
     }
 
     // cgoCheckBits checks the block of memory at src, for up to size
@@ -301,101 +224,6 @@ namespace golang::runtime
                     {
                         go_throw(cgoWriteBarrierFail);
                     }
-                }
-            }
-        }
-    }
-
-    // cgoCheckUsingType is like cgoCheckTypedBlock, but is a last ditch
-    // fall back to look for pointers in src using the type information.
-    // We only use this when looking at a value on the stack when the type
-    // uses a GC program, because otherwise it's more efficient to use the
-    // GC bits. This is called on the system stack.
-    //
-    //go:nowritebarrier
-    //go:systemstack
-    void cgoCheckUsingType(_type* typ, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size)
-    {
-        if(typ->PtrBytes == 0)
-        {
-            return;
-        }
-
-        // Anything past typ.PtrBytes is not a pointer.
-        if(typ->PtrBytes <= off)
-        {
-            return;
-        }
-        if(auto ptrdataSize = typ->PtrBytes - off; size > ptrdataSize)
-        {
-            size = ptrdataSize;
-        }
-
-        if(typ->Kind_ & kindGCProg == 0)
-        {
-            cgoCheckBits(src, typ->GCData, off, size);
-            return;
-        }
-        //Go switch emulation
-        {
-            auto condition = typ->Kind_ & kindMask;
-            int conditionId = -1;
-            if(condition == kindArray) { conditionId = 0; }
-            else if(condition == kindStruct) { conditionId = 1; }
-            switch(conditionId)
-            {
-                default:
-                    go_throw("can't happen"_s);
-                    break;
-                case 0:
-                {
-                    auto at = (arraytype*)(gocpp::unsafe_pointer(typ));
-                    for(auto i = uintptr_t(0); i < at->Len; i++)
-                    {
-                        if(off < at->Elem->Size_)
-                        {
-                            cgoCheckUsingType(at->Elem, src, off, size);
-                        }
-                        src = add(src, at->Elem->Size_);
-                        auto skipped = off;
-                        if(skipped > at->Elem->Size_)
-                        {
-                            skipped = at->Elem->Size_;
-                        }
-                        auto checked = at->Elem->Size_ - skipped;
-                        off -= skipped;
-                        if(size <= checked)
-                        {
-                            return;
-                        }
-                        size -= checked;
-                    }
-                    break;
-                }
-                case 1:
-                {
-                    auto st = (structtype*)(gocpp::unsafe_pointer(typ));
-                    for(auto [gocpp_ignored, f] : st->Fields)
-                    {
-                        if(off < f.Typ->Size_)
-                        {
-                            cgoCheckUsingType(f.Typ, src, off, size);
-                        }
-                        src = add(src, f.Typ->Size_);
-                        auto skipped = off;
-                        if(skipped > f.Typ->Size_)
-                        {
-                            skipped = f.Typ->Size_;
-                        }
-                        auto checked = f.Typ->Size_ - skipped;
-                        off -= skipped;
-                        if(size <= checked)
-                        {
-                            return;
-                        }
-                        size -= checked;
-                    }
-                    break;
                 }
             }
         }

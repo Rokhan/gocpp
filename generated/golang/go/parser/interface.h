@@ -10,16 +10,27 @@
 #include "gocpp/support.h"
 
 
-namespace golang::parser
+namespace golang::go::parser
 {
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> readSource(gocpp::string filename, go_any src);
 }
-#include "golang/go/ast/ast.h"
-#include "golang/io/fs/fs.h"
+#include "golang/go/ast/ast.fwd.h"
+#include "golang/go/ast/scope.fwd.h"
 #include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
+#include "golang/io/fs/fs.fwd.h"
+#include "golang/go/ast/ast.h"
 
-namespace golang::parser
+namespace golang::go::parser
 {
+    namespace ast = golang::go::ast;
+    namespace token = golang::go::token;
+}
+#include "golang/io/fs/fs.h"
+
+namespace golang::go::parser
+{
+    namespace fs = golang::io::fs;
     std::tuple<ast::File*, gocpp::error> ParseFile(token::FileSet* fset, gocpp::string filename, go_any src, Mode mode);
     std::tuple<gocpp::map<gocpp::string, ast::Package*>, gocpp::error> ParseDir(token::FileSet* fset, gocpp::string path, std::function<bool (fs::FileInfo _1)> filter, Mode mode);
     std::tuple<ast::Expr, gocpp::error> ParseExprFrom(token::FileSet* fset, gocpp::string filename, go_any src, Mode mode);

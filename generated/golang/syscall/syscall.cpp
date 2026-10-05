@@ -30,7 +30,7 @@
 // the manuals for the appropriate operating system.
 // These calls return err == nil to indicate success; otherwise
 // err is an operating system error describing the failure.
-// On most systems, that error has type syscall.Errno.
+// On most systems, that error has type [Errno].
 //
 // NOTE: Most of the functions, types, and constants defined in
 // this package are also available in the [golang.org/x/sys] package.
@@ -39,6 +39,7 @@
 // See https://golang.org/s/go1.4-syscall for more information.
 namespace golang::syscall
 {
+    namespace bytealg = golang::internal::bytealg;
     namespace rec
     {
     }
@@ -60,7 +61,7 @@ namespace golang::syscall
 
     // ByteSliceFromString returns a NUL-terminated slice of bytes
     // containing the text of s. If s contains a NUL byte at any
-    // location, it returns (nil, EINVAL).
+    // location, it returns (nil, [EINVAL]).
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> ByteSliceFromString(gocpp::string s)
     {
         if(bytealg::IndexByteString(s, 0) != - 1)
@@ -76,7 +77,7 @@ namespace golang::syscall
     // If s contains a NUL byte this function panics instead of returning
     // an error.
     //
-    // Deprecated: Use BytePtrFromString instead.
+    // Deprecated: Use [BytePtrFromString] instead.
     unsigned char* StringBytePtr(gocpp::string s)
     {
         return & StringByteSlice(s)[0];
@@ -84,7 +85,7 @@ namespace golang::syscall
 
     // BytePtrFromString returns a pointer to a NUL-terminated array of
     // bytes containing the text of s. If s contains a NUL byte at any
-    // location, it returns (nil, EINVAL).
+    // location, it returns (nil, [EINVAL]).
     std::tuple<unsigned char*, gocpp::error> BytePtrFromString(gocpp::string s)
     {
         auto [a, err] = ByteSliceFromString(s);
@@ -137,6 +138,11 @@ namespace golang::syscall
     /* convertBlockStmt, nil block */;
 
     void runtimeUnsetenv(gocpp::string k)
+    /* convertBlockStmt, nil block */;
+
+    // runtimeClearenv is provided by the runtime (on platforms without
+    // clearenv(3), it is just a wrapper around runtimeUnsetenv).
+    void runtimeClearenv(gocpp::map<gocpp::string, int> env)
     /* convertBlockStmt, nil block */;
 
 }

@@ -14,10 +14,9 @@ namespace golang::runtime
 {
     bool inRange(uintptr_t r0, uintptr_t r1, uintptr_t v0, uintptr_t v1);
 }
-#include "golang/internal/abi/type.h"
+#include "golang/runtime/type.h"
 #include "golang/runtime/proc.fwd.h"
 #include "golang/runtime/symtab.fwd.h"
-#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

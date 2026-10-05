@@ -9,12 +9,9 @@
 #include "golang/go/doc/doc.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/token/position.h"
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/ast/scope.fwd.h"
 #include "golang/go/doc/example.fwd.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
     struct Package
     {
@@ -51,6 +48,20 @@ namespace golang::doc
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Package& value);
+}
+#include "golang/go/ast/ast.fwd.h"
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
+
+namespace golang::go::doc
+{
+    namespace ast = golang::go::ast;
+    namespace token = golang::go::token;
+}
+#include "golang/go/token/position.h"
+
+namespace golang::go::doc
+{
     struct Value
     {
         gocpp::string Doc{};
@@ -143,7 +154,6 @@ namespace golang::doc
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Note& value);
-    std::tuple<ast::Object*, gocpp::error> simpleImporter(gocpp::map<gocpp::string, ast::Object*> imports, gocpp::string path);
     Package* New(ast::Package* pkg, gocpp::string importPath, Mode mode);
     std::tuple<Package*, gocpp::error> NewFromFiles(token::FileSet* fset, gocpp::slice<ast::File*> files, gocpp::string importPath, gocpp::slice<go_any> opts);
     
@@ -163,14 +173,17 @@ namespace golang::doc
 #include "golang/go/doc/comment/parse.h"
 #include "golang/go/doc/comment/print.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
+    namespace comment = golang::go::doc::comment;
 
     namespace rec
     {
         void collectValues(Package* p, gocpp::slice<Value*> values);
         void collectTypes(Package* p, gocpp::slice<Type*> types);
         void collectFuncs(Package* p, gocpp::slice<Func*> funcs);
+        void collectInterfaceMethods(Package* p, Type* t);
+        void collectStructFields(Package* p, Type* t);
         bool lookupSym(Package* p, gocpp::string recv, gocpp::string name);
         std::tuple<gocpp::string, bool> lookupPackage(Package* p, gocpp::string name);
         comment::Parser* Parser(Package* p);

@@ -3,8 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/sync/mutex.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::os
 {

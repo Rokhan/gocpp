@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
     struct Prog;
     using InstOp = uint8_t;

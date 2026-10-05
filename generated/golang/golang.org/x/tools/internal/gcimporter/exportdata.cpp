@@ -12,122 +12,549 @@
 #include "gocpp/support.h"
 
 #include "golang/bufio/bufio.h"
+#include "golang/bytes/bytes.h"
+#include "golang/errors/errors.h"
 #include "golang/fmt/errors.h"
 #include "golang/fmt/print.h"
+#include "golang/go/build/build.h"
+#include "golang/golang.org/x/tools/internal/gcimporter/support.h"
+#include "golang/io/fs/fs.h"
 #include "golang/io/io.h"
-#include "golang/strconv/atoi.h"
+#include "golang/os/env.h"
+#include "golang/os/exec/exec.h"
+#include "golang/os/stat.h"
+#include "golang/os/types.h"
+#include "golang/path/filepath/path.h"
 #include "golang/strings/strings.h"
+#include "golang/sync/map.h"
+#include "golang/sync/once.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    namespace bufio = golang::bufio;
+    namespace build = golang::go::build;
+    namespace bytes = golang::bytes;
+    namespace errors = golang::errors;
+    namespace exec = golang::os::exec;
+    namespace filepath = golang::path::filepath;
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace os = golang::os;
+    namespace strings = golang::strings;
+    namespace sync = golang::sync;
     namespace rec
     {
+        using bufio::rec::Peek;
         using bufio::rec::Read;
+        using bufio::rec::ReadByte;
         using bufio::rec::ReadSlice;
-    }
-
-    std::tuple<gocpp::string, int64_t, gocpp::error> readGopackHeader(bufio::Reader* r)
-    {
-        gocpp::string name;
-        int64_t size;
-        gocpp::error err;
-        // See $GOROOT/include/ar.h.
-        auto hdr = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 16 + 12 + 6 + 6 + 8 + 10 + 2);
-        std::tie(std::ignore, err) = io::ReadFull(r, hdr);
-        if(err != nullptr)
-        {
-            return {name, size, err};
-        }
-        // leave for debugging
-        if(false)
-        {
-            mocklib::Printf("header: %s"_s, hdr);
-        }
-        auto s = strings::TrimSpace(gocpp::string(hdr.make_slice(16 + 12 + 6 + 6 + 8).make_slice(0, 10)));
-        int length;
-        std::tie(length, err) = strconv::Atoi(s);
-        size = int64_t(length);
-        if(err != nullptr || hdr[len(hdr) - 2] != '`' || hdr[len(hdr) - 1] != '\n')
-        {
-            err = mocklib::Errorf("invalid archive header"_s);
-            return {name, size, err};
-        }
-        name = strings::TrimSpace(gocpp::string(hdr.make_slice(0, 16)));
-        return {name, size, err};
+        using exec::rec::Output;
+        using fs::rec::IsDir;
+        using sync::rec::Do;
+        using sync::rec::Load;
+        using sync::rec::LoadOrStore;
     }
 
     // FindExportData positions the reader r at the beginning of the
-    // export data section of an underlying GC-created object/archive
+    // export data section of an underlying cmd/compile created archive
     // file by reading from it. The reader must be positioned at the
-    // start of the file before calling this function. The hdr result
-    // is the string before the export data, either "$$" or "$$B".
-    // The size result is the length of the export data in bytes, or -1 if not known.
-    std::tuple<gocpp::string, int64_t, gocpp::error> FindExportData(bufio::Reader* r)
+    // start of the file before calling this function.
+    // This returns the length of the export data in bytes.
+    //
+    // This function is needed by [gcexportdata.Read], which must
+    // accept inputs produced by the last two releases of cmd/compile,
+    // plus tip.
+    std::tuple<int64_t, gocpp::error> FindExportData(bufio::Reader* r)
     {
-        gocpp::string hdr;
         int64_t size;
         gocpp::error err;
+        int arsize;
+        std::tie(arsize, err) = FindPackageDefinition(r);
+        if(err != nullptr)
+        {
+            return {size, err};
+        }
+        size = int64_t(arsize);
+
+        gocpp::string objapi;
+        gocpp::slice<gocpp::string> headers;
+        std::tie(objapi, headers, err) = ReadObjectHeaders(r);
+        if(err != nullptr)
+        {
+            return {size, err};
+        }
+        size -= int64_t(len(objapi));
+        for(auto [gocpp_ignored, h] : headers)
+        {
+            size -= int64_t(len(h));
+        }
+
+        // Check for the binary export data section header "$$B\n".
+        // TODO(taking): Unify with ReadExportDataHeader so that it stops at the 'u' instead of reading
+        gocpp::slice<unsigned char> line;
+        std::tie(line, err) = rec::ReadSlice(gocpp::recv(r), '\n');
+        if(err != nullptr)
+        {
+            return {size, err};
+        }
+        auto hdr = gocpp::string(line);
+        if(hdr != "$$B\n"_s)
+        {
+            err = mocklib::Errorf("unknown export data header: %q"_s, hdr);
+            return {size, err};
+        }
+        size -= int64_t(len(hdr));
+
+        // For files with a binary export data header "$$B\n",
+        // these are always terminated by an end-of-section marker "\n$$\n".
+        // So the last bytes must always be this constant.
+        // The end-of-section marker is not a part of the export data itself.
+        // Do not include these in size.
+        // It would be nice to have sanity check that the final bytes after
+        // the export data are indeed the end-of-section marker. The split
+        // of gcexportdata.NewReader and gcexportdata.Read make checking this
+        // ugly so gcimporter gives up enforcing this. The compiler and go/types
+        // importer do enforce this, which seems good enough.
+        auto endofsection = "\n$$\n"_s;
+        size -= int64_t(len(endofsection));
+
+        if(size < 0)
+        {
+            err = mocklib::Errorf("invalid size (%d) in the archive file: %d bytes remain without section headers (recompile package)"_s, arsize, size);
+            return {size, err};
+        }
+
+        return {size, err};
+    }
+
+    // ReadUnified reads the contents of the unified export data from a reader r
+    // that contains the contents of a GC-created archive file.
+    //
+    // On success, the reader will be positioned after the end-of-section marker "\n$$\n".
+    //
+    // Supported GC-created archive files have 4 layers of nesting:
+    //   - An archive file containing a package definition file.
+    //   - The package definition file contains headers followed by a data section.
+    //     Headers are lines (≤ 4kb) that do not start with "$$".
+    //   - The data section starts with "$$B\n" followed by export data followed
+    //     by an end of section marker "\n$$\n". (The section start "$$\n" is no
+    //     longer supported.)
+    //   - The export data starts with a format byte ('u') followed by the <data> in
+    //     the given format. (See ReadExportDataHeader for older formats.)
+    //
+    // Putting this together, the bytes in a GC-created archive files are expected
+    // to look like the following.
+    // See cmd/internal/archive for more details on ar file headers.
+    //
+    // | <!arch>\n             | ar file signature
+    // | __.PKGDEF...size...\n | ar header for __.PKGDEF including size.
+    // | go object <...>\n     | objabi header
+    // | <optional headers>\n  | other headers such as build id
+    // | $$B\n                 | binary format marker
+    // | u<data>\n             | unified export <data>
+    // | $$\n                  | end-of-section marker
+    // | [optional padding]    | padding byte (0x0A) if size is odd
+    // | [ar file header]      | other ar files
+    // | [ar file data]        |
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadUnified(bufio::Reader* r)
+    {
+        gocpp::slice<unsigned char> data;
+        gocpp::error err;
+        // We historically guaranteed headers at the default buffer size (4096) work.
+        // This ensures we can use ReadSlice throughout.
+        auto minBufferSize = 4096;
+        r = bufio::NewReaderSize(r, minBufferSize);
+
+        int size;
+        std::tie(size, err) = FindPackageDefinition(r);
+        if(err != nullptr)
+        {
+            return {data, err};
+        }
+        auto n = size;
+
+        gocpp::string objapi;
+        gocpp::slice<gocpp::string> headers;
+        std::tie(objapi, headers, err) = ReadObjectHeaders(r);
+        if(err != nullptr)
+        {
+            return {data, err};
+        }
+        n -= len(objapi);
+        for(auto [gocpp_ignored, h] : headers)
+        {
+            n -= len(h);
+        }
+
+        int hdrlen;
+        std::tie(hdrlen, err) = ReadExportDataHeader(r);
+        if(err != nullptr)
+        {
+            return {data, err};
+        }
+        n -= hdrlen;
+
+        // size also includes the end of section marker. Remove that many bytes from the end.
+        auto marker = "\n$$\n"_s;
+        n -= len(marker);
+
+        if(n < 0)
+        {
+            err = mocklib::Errorf("invalid size (%d) in the archive file: %d bytes remain without section headers (recompile package)"_s, size, n);
+            return {data, err};
+        }
+
+        // Read n bytes from buf.
+        data = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
+        std::tie(std::ignore, err) = io::ReadFull(r, data);
+        if(err != nullptr)
+        {
+            return {data, err};
+        }
+
+        // Check for marker at the end.
+        gocpp::array<unsigned char, len(marker)> suffix = {};
+        std::tie(std::ignore, err) = io::ReadFull(r, suffix.make_slice(0));
+        if(err != nullptr)
+        {
+            return {data, err};
+        }
+        if(auto s = gocpp::string(suffix.make_slice(0)); s != marker)
+        {
+            err = mocklib::Errorf("read %q instead of end-of-section marker (%q)"_s, s, marker);
+            return {data, err};
+        }
+
+        return {data, err};
+    }
+
+    // FindPackageDefinition positions the reader r at the beginning of a package
+    // definition file ("__.PKGDEF") within a GC-created archive by reading
+    // from it, and returns the size of the package definition file in the archive.
+    //
+    // The reader must be positioned at the start of the archive file before calling
+    // this function, and "__.PKGDEF" is assumed to be the first file in the archive.
+    //
+    // See cmd/internal/archive for details on the archive format.
+    std::tuple<int, gocpp::error> FindPackageDefinition(bufio::Reader* r)
+    {
+        int size;
+        gocpp::error err;
+        // Uses ReadSlice to limit risk of malformed inputs.
         // Read first line to make sure this is an object file.
         gocpp::slice<unsigned char> line;
         std::tie(line, err) = rec::ReadSlice(gocpp::recv(r), '\n');
         if(err != nullptr)
         {
             err = mocklib::Errorf("can't find export data (%v)"_s, err);
-            return {hdr, size, err};
+            return {size, err};
         }
 
-        if(gocpp::string(line) == "!<arch>\n"_s)
+        // Is the first line an archive file signature?
+        if(gocpp::string(line) != "!<arch>\n"_s)
         {
-            // Archive file. Scan to __.PKGDEF.
-            gocpp::string name = {};
-            if(std::tie(name, size, err) = readGopackHeader(r); err != nullptr)
+            err = mocklib::Errorf("not the start of an archive file (%q)"_s, line);
+            return {size, err};
+        }
+
+        // package export block should be first
+        size = readArchiveHeader(r, "__.PKGDEF"_s);
+        if(size <= 0)
+        {
+            err = mocklib::Errorf("not a package file"_s);
+            return {size, err};
+        }
+
+        return {size, err};
+    }
+
+    // ReadObjectHeaders reads object headers from the reader. Object headers are
+    // lines that do not start with an end-of-section marker "$$". The first header
+    // is the objabi header. On success, the reader will be positioned at the beginning
+    // of the end-of-section marker.
+    //
+    // It returns an error if any header does not fit in r.Size() bytes.
+    std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> ReadObjectHeaders(bufio::Reader* r)
+    {
+        gocpp::string objapi;
+        gocpp::slice<gocpp::string> headers;
+        gocpp::error err;
+        // line is a temporary buffer for headers.
+        // Use bounded reads (ReadSlice, Peek) to limit risk of malformed inputs.
+        gocpp::slice<unsigned char> line = {};
+
+        // objapi header should be the first line
+        if(std::tie(line, err) = rec::ReadSlice(gocpp::recv(r), '\n'); err != nullptr)
+        {
+            err = mocklib::Errorf("can't find export data (%v)"_s, err);
+            return {objapi, headers, err};
+        }
+        objapi = gocpp::string(line);
+
+        // objapi header begins with "go object ".
+        if(! strings::HasPrefix(objapi, "go object "_s))
+        {
+            err = mocklib::Errorf("not a go object file: %s"_s, objapi);
+            return {objapi, headers, err};
+        }
+
+        // process remaining object header lines
+        for(; ; )
+        {
+            // check for an end of section marker "$$"
+            std::tie(line, err) = rec::Peek(gocpp::recv(r), 2);
+            if(err != nullptr)
             {
-                return {hdr, size, err};
+                return {objapi, headers, err};
+            }
+            if(gocpp::string(line) == "$$"_s)
+            {
+                // stop
+                return {objapi, headers, err};
             }
 
-            // First entry should be __.PKGDEF.
-            if(name != "__.PKGDEF"_s)
+            // read next header
+            std::tie(line, err) = rec::ReadSlice(gocpp::recv(r), '\n');
+            if(err != nullptr)
             {
-                err = mocklib::Errorf("go archive is missing __.PKGDEF"_s);
-                return {hdr, size, err};
+                return {objapi, headers, err};
             }
+            headers = append(headers, gocpp::string(line));
+        }
+    }
 
-            // Read first line of __.PKGDEF data, so that line
-            // is once again the first line of the input.
-            if(std::tie(line, err) = rec::ReadSlice(gocpp::recv(r), '\n'); err != nullptr)
+    // ReadExportDataHeader reads the export data header and format from r.
+    // It returns the number of bytes read, or an error if the format is no longer
+    // supported or it failed to read.
+    //
+    // The only currently supported format is binary export data in the
+    // unified export format.
+    std::tuple<int, gocpp::error> ReadExportDataHeader(bufio::Reader* r)
+    {
+        int n;
+        gocpp::error err;
+        // Read export data header.
+        gocpp::slice<unsigned char> line;
+        std::tie(line, err) = rec::ReadSlice(gocpp::recv(r), '\n');
+        if(err != nullptr)
+        {
+            return {n, err};
+        }
+
+        auto hdr = gocpp::string(line);
+        //Go switch emulation
+        {
+            auto condition = hdr;
+            int conditionId = -1;
+            if(condition == "$$\n"_s) { conditionId = 0; }
+            else if(condition == "$$B\n"_s) { conditionId = 1; }
+            switch(conditionId)
             {
-                err = mocklib::Errorf("can't find export data (%v)"_s, err);
-                return {hdr, size, err};
+                case 0:
+                    err = mocklib::Errorf("old textual export format no longer supported (recompile package)"_s);
+                    return {n, err};
+                    break;
+
+                case 1:
+                    unsigned char format = {};
+                    std::tie(format, err) = rec::ReadByte(gocpp::recv(r));
+                    if(err != nullptr)
+                    {
+                        return {n, err};
+                    }
+                    // The unified export format starts with a 'u'.
+                    //Go switch emulation
+                    {
+                        auto condition = format;
+                        int conditionId = -1;
+                        if(condition == 'u') { conditionId = 0; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                                break;
+                            default:
+                                // Older no longer supported export formats include:
+                                // indexed export format which started with an 'i'; and
+                                // the older binary export format which started with a 'c',
+                                // 'd', or 'v' (from "version").
+                                err = mocklib::Errorf("binary export format %q is no longer supported (recompile package)"_s, format);
+                                return {n, err};
+                                break;
+                        }
+                    }
+                    break;
+
+                default:
+                    err = mocklib::Errorf("unknown export data header: %q"_s, hdr);
+                    return {n, err};
+                    break;
             }
-            size -= int64_t(len(line));
         }
 
-        // Now at __.PKGDEF in archive or still at beginning of file.
-        // Either way, line should begin with "go object ".
-        if(! strings::HasPrefix(gocpp::string(line), "go object "_s))
+        // + 1 is for 'u'
+        n = len(hdr) + 1;
+        return {n, err};
+    }
+
+    // FindPkg returns the filename and unique package id for an import
+    // path based on package information provided by build.Import (using
+    // the build.Default build.Context). A relative srcDir is interpreted
+    // relative to the current working directory.
+    //
+    // FindPkg is only used in tests within x/tools.
+    std::tuple<gocpp::string, gocpp::string, gocpp::error> FindPkg(gocpp::string path, gocpp::string srcDir)
+    {
+        gocpp::string filename;
+        gocpp::string id;
+        gocpp::error err;
+        // TODO(taking): Move internal/exportdata.FindPkg into its own file,
+        // and then this copy into a _test package.
+        if(path == ""_s)
         {
-            err = mocklib::Errorf("not a Go object file"_s);
-            return {hdr, size, err};
+            return {""_s, ""_s, errors::New("path is empty"_s)};
         }
 
-        // Skip over object header to export data.
-        // Begins after first line starting with $$.
-        for(; line[0] != '$'; )
+        gocpp::string noext = {};
+        //Go switch emulation
         {
-            if(std::tie(line, err) = rec::ReadSlice(gocpp::recv(r), '\n'); err != nullptr)
+            int conditionId = -1;
+            if(build::IsLocalImport(path)) { conditionId = 0; }
+            else if(filepath::IsAbs(path)) { conditionId = 1; }
+            switch(conditionId)
             {
-                err = mocklib::Errorf("can't find export data (%v)"_s, err);
-                return {hdr, size, err};
+                default:
+                    // "x" -> "$GOPATH/pkg/$GOOS_$GOARCH/x.ext", "x"
+                    // Don't require the source files to be present.
+                    if(auto [abs, err] = filepath::Abs(srcDir); err == nullptr)
+                    {
+                        // see issue 14282
+                        srcDir = abs;
+                    }
+                    build::Package* bp = {};
+                    std::tie(bp, err) = build::Import(path, srcDir, build::FindOnly | build::AllowBinary);
+                    if(bp->PkgObj == ""_s)
+                    {
+                        if(bp->Goroot && bp->Dir != ""_s)
+                        {
+                            std::tie(filename, err) = lookupGorootExport(bp->Dir);
+                            if(err == nullptr)
+                            {
+                                std::tie(std::ignore, err) = os::Stat(filename);
+                            }
+                            if(err == nullptr)
+                            {
+                                return {filename, bp->ImportPath, nullptr};
+                            }
+                        }
+                        goto notfound;
+                    }
+                    else
+                    {
+                        noext = strings::TrimSuffix(bp->PkgObj, ".a"_s);
+                    }
+                    id = bp->ImportPath;
+                    break;
+
+                case 0:
+                    // "./x" -> "/this/directory/x.ext", "/this/directory/x"
+                    noext = filepath::Join(srcDir, path);
+                    id = noext;
+                    break;
+
+                case 1:
+                    // for completeness only - go/build.Import
+                    // does not support absolute imports
+                    // "/x" -> "/x.ext", "/x"
+                    noext = path;
+                    id = path;
+                    break;
             }
-            size -= int64_t(len(line));
-        }
-        hdr = gocpp::string(line);
-        if(size < 0)
-        {
-            size = - 1;
         }
 
-        return {hdr, size, err};
+        if(false)
+        {
+            // for debugging
+            if(path != id)
+            {
+                mocklib::Printf("%s -> %s\n"_s, path, id);
+            }
+        }
+
+        // try extensions
+        for(auto [gocpp_ignored, ext] : pkgExts)
+        {
+            filename = noext + ext;
+            auto [f, statErr] = os::Stat(filename);
+            if(statErr == nullptr && ! rec::IsDir(gocpp::recv(f)))
+            {
+                return {filename, id, nullptr};
+            }
+            if(err == nullptr)
+            {
+                err = statErr;
+            }
+        }
+
+        notfound:
+        if(err == nullptr)
+        {
+            return {""_s, path, mocklib::Errorf("can't find import: %q"_s, path)};
+        }
+        return {""_s, path, mocklib::Errorf("can't find import: %q: %w"_s, path, err)};
+    }
+
+    gocpp::array<gocpp::string, 2> pkgExts = gocpp::array<gocpp::string, 2> {".a"_s, ".o"_s};
+    sync::Map exportMap;
+    // lookupGorootExport returns the location of the export data
+    // (normally found in the build cache, but located in GOROOT/pkg
+    // in prior Go releases) for the package located in pkgDir.
+    //
+    // (We use the package's directory instead of its import path
+    // mainly to simplify handling of the packages in src/vendor
+    // and cmd/vendor.)
+    //
+    // lookupGorootExport is only used in tests within x/tools.
+    std::tuple<gocpp::string, gocpp::error> lookupGorootExport(gocpp::string pkgDir)
+    {
+        auto [f, ok] = rec::Load(gocpp::recv(exportMap), pkgDir);
+        if(! ok)
+        {
+            sync::Once listOnce = {};
+            gocpp::string exportPath = {};
+            gocpp::error err = {};
+            std::tie(f, std::ignore) = rec::LoadOrStore(gocpp::recv(exportMap), pkgDir, [=]() mutable -> std::tuple<gocpp::string, gocpp::error>
+            {
+                rec::Do(gocpp::recv(listOnce), [=]() mutable -> void
+                {
+                    auto cmd = exec::Command(filepath::Join(build::Default.GOROOT, "bin"_s, "go"_s), "list"_s, "-export"_s, "-f"_s, "{{.Export}}"_s, pkgDir);
+                    cmd->Dir = build::Default.GOROOT;
+                    cmd->Env = append(os::Environ(), "PWD="_s + cmd->Dir, "GOROOT="_s + build::Default.GOROOT);
+                    gocpp::slice<unsigned char> output = {};
+                    std::tie(output, err) = rec::Output(gocpp::recv(cmd));
+                    if(err != nullptr)
+                    {
+                        if(auto [ee, ok] = gocpp::getValue<exec::ExitError*>(err); ok && len(ee->Stderr) > 0)
+                        {
+                            err = errors::New(gocpp::string(ee->Stderr));
+                        }
+                        return;
+                    }
+
+                    auto exports = strings::Split(gocpp::string(bytes::TrimSpace(output)), "\n"_s);
+                    if(len(exports) != 1)
+                    {
+                        err = mocklib::Errorf("go list reported %d exports; expected 1"_s, len(exports));
+                        return;
+                    }
+
+                    exportPath = exports[0];
+                });
+
+                return {exportPath, err};
+            });
+        }
+
+        return gocpp::getValue<std::function<std::tuple<gocpp::string, gocpp::error> ()>>(f)();
     }
 
 }

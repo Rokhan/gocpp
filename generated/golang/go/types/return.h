@@ -9,9 +9,15 @@
 #include "golang/go/types/return.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/go/ast/ast.fwd.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+}
 #include "golang/go/ast/ast.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     bool hasBreak(ast::Stmt s, gocpp::string label, bool implicit);
     bool hasBreakList(gocpp::slice<ast::Stmt> list, gocpp::string label, bool implicit);
@@ -20,7 +26,7 @@ namespace golang::types
 #include "golang/go/ast/ast.h"
 #include "golang/go/types/check.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec

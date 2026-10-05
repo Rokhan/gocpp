@@ -9,6 +9,7 @@ namespace golang::runtime
     struct GoTag_cgoCallers;
     using cgoCallers = gocpp::defined<gocpp::array<uintptr_t, 32>, GoTag_cgoCallers>;
     struct argset;
-    const gocpp::string cgoCheckPointerFail = "cgo argument has Go pointer to unpinned Go pointer"_s;
-    const gocpp::string cgoResultFail = "cgo result is unpinned Go pointer or points to unpinned Go pointer"_s;
+    using cgoErrorMsg = int;
+    const cgoErrorMsg cgoCheckPointerFail = 0;
+    const cgoErrorMsg cgoResultFail = 1;
 }

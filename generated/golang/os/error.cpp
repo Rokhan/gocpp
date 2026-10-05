@@ -19,6 +19,8 @@
 
 namespace golang::os
 {
+    namespace fs = golang::io::fs;
+    namespace poll = golang::internal::poll;
     namespace rec
     {
         using mocklib::rec::Error;
@@ -28,7 +30,7 @@ namespace golang::os
     // Portable analogs of some common system call errors.
     //
     // Errors returned from this package may be tested against these errors
-    // with errors.Is.
+    // with [errors.Is].
     // ErrInvalid indicates an invalid argument.
     // Methods on File will return this error when the receiver is nil.
     gocpp::error ErrInvalid = fs::ErrInvalid;
@@ -160,7 +162,7 @@ namespace golang::os
         return ok && rec::Timeout(gocpp::recv(t));
     }
 
-    // NewSyscallError returns, as an error, a new SyscallError
+    // NewSyscallError returns, as an error, a new [SyscallError]
     // with the given system call name and error details.
     // As a convenience, if err is nil, NewSyscallError returns nil.
     gocpp::error NewSyscallError(gocpp::string syscall, gocpp::error err)
@@ -172,47 +174,47 @@ namespace golang::os
         return gocpp::error(new SyscallError {syscall, err});
     }
 
-    // IsExist returns a boolean indicating whether the error is known to report
-    // that a file or directory already exists. It is satisfied by ErrExist as
+    // IsExist returns a boolean indicating whether its argument is known to report
+    // that a file or directory already exists. It is satisfied by [ErrExist] as
     // well as some syscall errors.
     //
-    // This function predates errors.Is. It only supports errors returned by
+    // This function predates [errors.Is]. It only supports errors returned by
     // the os package. New code should use errors.Is(err, fs.ErrExist).
     bool IsExist(gocpp::error err)
     {
         return underlyingErrorIs(err, ErrExist);
     }
 
-    // IsNotExist returns a boolean indicating whether the error is known to
+    // IsNotExist returns a boolean indicating whether its argument is known to
     // report that a file or directory does not exist. It is satisfied by
-    // ErrNotExist as well as some syscall errors.
+    // [ErrNotExist] as well as some syscall errors.
     //
-    // This function predates errors.Is. It only supports errors returned by
+    // This function predates [errors.Is]. It only supports errors returned by
     // the os package. New code should use errors.Is(err, fs.ErrNotExist).
     bool IsNotExist(gocpp::error err)
     {
         return underlyingErrorIs(err, ErrNotExist);
     }
 
-    // IsPermission returns a boolean indicating whether the error is known to
-    // report that permission is denied. It is satisfied by ErrPermission as well
+    // IsPermission returns a boolean indicating whether its argument is known to
+    // report that permission is denied. It is satisfied by [ErrPermission] as well
     // as some syscall errors.
     //
-    // This function predates errors.Is. It only supports errors returned by
+    // This function predates [errors.Is]. It only supports errors returned by
     // the os package. New code should use errors.Is(err, fs.ErrPermission).
     bool IsPermission(gocpp::error err)
     {
         return underlyingErrorIs(err, ErrPermission);
     }
 
-    // IsTimeout returns a boolean indicating whether the error is known
+    // IsTimeout returns a boolean indicating whether its argument is known
     // to report that a timeout occurred.
     //
-    // This function predates errors.Is, and the notion of whether an
+    // This function predates [errors.Is], and the notion of whether an
     // error indicates a timeout can be ambiguous. For example, the Unix
     // error EWOULDBLOCK sometimes indicates a timeout and sometimes does not.
     // New code should use errors.Is with a value appropriate to the call
-    // returning the error, such as os.ErrDeadlineExceeded.
+    // returning the error, such as [os.ErrDeadlineExceeded].
     bool IsTimeout(gocpp::error err)
     {
         auto [terr, ok] = gocpp::getValue<timeout>(underlyingError(err));
@@ -242,14 +244,14 @@ namespace golang::os
             const auto& gocpp_id_0 = gocpp::type_info(err);
             const auto& err_ref = err;
             int conditionId = -1;
-            if(gocpp_id_0 == typeid(fs::PathError*)) { conditionId = 0; }
+            if(gocpp_id_0 == typeid(PathError*)) { conditionId = 0; }
             else if(gocpp_id_0 == typeid(LinkError*)) { conditionId = 1; }
             else if(gocpp_id_0 == typeid(SyscallError*)) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
                 {
-                    fs::PathError* err = gocpp::any_cast<fs::PathError*>(err_ref);
+                    PathError* err = gocpp::any_cast<PathError*>(err_ref);
                     return err->Err;
                     break;
                 }

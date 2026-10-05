@@ -16,8 +16,7 @@
 #include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
 #include "golang/path/filepath/path.h"
-#include "golang/path/filepath/path_windows.h"
-#include "golang/strconv/atoi.h"
+#include "golang/strconv/number.h"
 #include "golang/unicode/digit.h"
 #include "golang/unicode/graphic.h"
 #include "golang/unicode/letter.h"
@@ -26,8 +25,15 @@
 // Package scanner implements a scanner for Go source text.
 // It takes a []byte as source which can then be tokenized
 // through repeated calls to the Scan method.
-namespace golang::scanner
+namespace golang::go::scanner
 {
+    namespace bytes = golang::bytes;
+    namespace filepath = golang::path::filepath;
+    namespace fmt = golang::fmt;
+    namespace strconv = golang::strconv;
+    namespace token = golang::go::token;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using token::rec::AddLine;
@@ -63,6 +69,8 @@ namespace golang::scanner
         result.lineOffset = this->lineOffset;
         result.insertSemi = this->insertSemi;
         result.nlPos = this->nlPos;
+        result.endPosValid = this->endPosValid;
+        result.endPos = this->endPos;
         result.ErrorCount = this->ErrorCount;
         return result;
     }
@@ -81,6 +89,8 @@ namespace golang::scanner
         if (lineOffset != ref.lineOffset) return false;
         if (insertSemi != ref.insertSemi) return false;
         if (nlPos != ref.nlPos) return false;
+        if (endPosValid != ref.endPosValid) return false;
+        if (endPos != ref.endPos) return false;
         if (ErrorCount != ref.ErrorCount) return false;
         return true;
     }
@@ -99,6 +109,8 @@ namespace golang::scanner
         os << " " << lineOffset;
         os << " " << insertSemi;
         os << " " << nlPos;
+        os << " " << endPosValid;
+        os << " " << endPos;
         os << " " << ErrorCount;
         os << '}';
         return os;
@@ -140,7 +152,21 @@ namespace golang::scanner
                         std::tie(r, w) = utf8::DecodeRune(s->src.make_slice(s->rdOffset));
                         if(r == utf8::RuneError && w == 1)
                         {
-                            rec::error(gocpp::recv(s), s->offset, "illegal UTF-8 encoding"_s);
+                            auto in = s->src.make_slice(s->rdOffset);
+                            if(s->offset == 0 &&
+                                                len(in) >= 2 &&
+                                                (in[0] == 0xFF && in[1] == 0xFE || in[0] == 0xFE && in[1] == 0xFF))
+                            {
+                                // U+FEFF BOM at start of file, encoded as big- or little-endian
+                                // UCS-2 (i.e. 2-byte UTF-16). Give specific error (go.dev/issue/71950).
+                                rec::error(gocpp::recv(s), s->offset, "illegal UTF-8 encoding (got UTF-16)"_s);
+                                // consume all input to avoid error cascade
+                                s->rdOffset += len(in);
+                            }
+                            else
+                            {
+                                rec::error(gocpp::recv(s), s->offset, "illegal UTF-8 encoding"_s);
+                            }
                         }
                         else
                         if(r == bom && s->offset > 0)
@@ -176,7 +202,7 @@ namespace golang::scanner
         return 0;
     }
 
-    // A mode value is a set of flags (or 0).
+    // A Mode value is a set of flags (or 0).
     // They control scanner behavior.
     // Init prepares the scanner s to tokenize the text src by setting the
     // scanner at the beginning of src. The scanner uses the file set file
@@ -199,18 +225,19 @@ namespace golang::scanner
         {
             gocpp::panic(mocklib::Sprintf("file size (%d) does not match src len (%d)"_s, rec::Size(gocpp::recv(file)), len(src)));
         }
-        s->file = file;
-        std::tie(s->dir, std::ignore) = filepath::Split(rec::Name(gocpp::recv(file)));
-        s->src = src;
-        s->err = err;
-        s->mode = mode;
 
-        s->ch = ' ';
-        s->offset = 0;
-        s->rdOffset = 0;
-        s->lineOffset = 0;
-        s->insertSemi = false;
-        s->ErrorCount = 0;
+        auto [dir, gocpp_id_0] = filepath::Split(rec::Name(gocpp::recv(file)));
+
+        *s = gocpp::Init<Scanner>([=](auto& x) {
+            x.file = file;
+            x.dir = dir;
+            x.src = src;
+            x.err = err;
+            x.mode = mode;
+            x.ch = ' ';
+            x.endPosValid = true;
+            x.endPos = token::NoPos;
+        });
 
         rec::next(gocpp::recv(s));
         if(s->ch == bom)
@@ -1077,6 +1104,23 @@ namespace golang::scanner
         return tok0;
     }
 
+    // End returns the position immediately after the last scanned token.
+    // If [Scanner.Scan] has not been called yet, End returns [token.NoPos].
+    token::Pos rec::End(Scanner* s)
+    {
+        // Handles special case:
+        // - Makes sure we return [token.NoPos], even when [Scanner.Init] has consumed a BOM.
+        // - When the previous token was a synthetic [token.SEMICOLON] inside a multi-line
+        // comment, we make sure End returns its ending position (i.e. prevPos+len("\n")).
+        if(s->endPosValid)
+        {
+            return s->endPos;
+        }
+
+        // Normal case: s.file.Pos(s.offset) represents the end of the token
+        return rec::Pos(gocpp::recv(s->file), s->offset);
+    }
+
     // Scan scans the next token and returns the token position, the token,
     // and its literal string if applicable. The source end is indicated by
     // [token.EOF].
@@ -1090,7 +1134,9 @@ namespace golang::scanner
     // If the returned token is [token.SEMICOLON], the corresponding
     // literal string is ";" if the semicolon was present in the source,
     // and "\n" if the semicolon was inserted because of a newline or
-    // at EOF.
+    // at EOF. If the newline is within a /*...*/ comment, the SEMICOLON token
+    // is synthesized immediately after the COMMENT token; its position is that
+    // of the actual newline within the comment.
     //
     // If the returned token is [token.ILLEGAL], the literal string is the
     // offending character.
@@ -1113,11 +1159,14 @@ namespace golang::scanner
         token::Token tok;
         gocpp::string lit;
         scanAgain:
+        s->endPosValid = false;
         if(rec::IsValid(gocpp::recv(s->nlPos)))
         {
             // Return artificial ';' token after /*...*/ comment
             // containing newline, at position of first newline.
             std::tie(pos, tok, lit) = std::tuple{s->nlPos, token::SEMICOLON, "\n"_s};
+            s->endPos = pos + 1;
+            s->endPosValid = true;
             s->nlPos = token::NoPos;
             return {pos, tok, lit};
         }

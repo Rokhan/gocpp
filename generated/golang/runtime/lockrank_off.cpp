@@ -11,9 +11,11 @@
 #include "golang/runtime/lockrank_off.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
+#include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/stubs.h"
 
 namespace golang::runtime
 {
@@ -66,8 +68,11 @@ namespace golang::runtime
     // This function may be called in nosplit context and thus must be nosplit.
     //
     //go:nosplit
-    void acquireLockRank(lockRank rank)
+    void acquireLockRankAndM(lockRank rank)
     {
+        auto mp = acquirem();
+        // not safe to profile right now
+        mp->locks += mutexMLocksDelta;
     }
 
     void unlockWithRank(mutex* l)
@@ -78,10 +83,16 @@ namespace golang::runtime
     // This function may be called in nosplit context and thus must be nosplit.
     //
     //go:nosplit
-    void releaseLockRank(lockRank rank)
+    void releaseLockRankAndM(lockRank rank)
     {
+        auto mp = getg()->m;
+        mp->locks -= mutexMLocksDelta;
+        releasem(mp);
     }
 
+    // This function may be called in nosplit context and thus must be nosplit.
+    //
+    //go:nosplit
     void lockWithRankMayAcquire(mutex* l, lockRank rank)
     {
     }

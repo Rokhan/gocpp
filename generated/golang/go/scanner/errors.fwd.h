@@ -4,14 +4,9 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::scanner
-{
-    struct GoTag_ErrorList;
-}
-#include "golang/go/token/position.fwd.h"
-
-namespace golang::scanner
+namespace golang::go::scanner
 {
     struct Error;
-    using ErrorList = gocpp::defined<gocpp::slice<golang::scanner::Error*>, GoTag_ErrorList>;
+    struct GoTag_ErrorList;
+    using ErrorList = gocpp::defined<gocpp::slice<golang::go::scanner::Error*>, GoTag_ErrorList>;
 }

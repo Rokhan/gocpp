@@ -14,7 +14,7 @@
 #include "golang/go/types/type.h"
 #include "golang/go/types/typestring.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     namespace rec
     {
@@ -55,7 +55,7 @@ namespace golang::types
 
     // A ChanDir value indicates a channel direction.
     // NewChan returns a new channel type for the given direction and element type.
-    Chan* NewChan(ChanDir dir, golang::types::Type elem)
+    Chan* NewChan(ChanDir dir, golang::go::types::Type elem)
     {
         return gocpp::InitPtr<Chan>([=](auto& x) {
             x.dir = dir;
@@ -70,12 +70,12 @@ namespace golang::types
     }
 
     // Elem returns the element type of channel c.
-    golang::types::Type rec::Elem(Chan* c)
+    golang::go::types::Type rec::Elem(Chan* c)
     {
         return c->elem;
     }
 
-    golang::types::Type rec::Underlying(Chan* c)
+    golang::go::types::Type rec::Underlying(Chan* c)
     {
         return c;
     }

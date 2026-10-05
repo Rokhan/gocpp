@@ -10,18 +10,32 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct GoTag_valueMap { };
 }
+#include "golang/go/ast/ast.fwd.h"
+#include "golang/go/constant/value.fwd.h"
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
 #include "golang/go/ast/ast.h"
 #include "golang/go/constant/value.h"
 #include "golang/go/token/position.h"
-#include "golang/go/token/token.h"
-#include "golang/go/types/type.h"
-#include "golang/go/types/version.h"
 
-namespace golang::types
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+    namespace constant = golang::go::constant;
+}
+#include "golang/go/token/token.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
 {
     gocpp::slice<ast::Stmt> trimTrailingEmptyStmts(gocpp::slice<ast::Stmt> list);
     token::Token assignOp(token::Token op);
@@ -29,7 +43,7 @@ namespace golang::types
     struct valueType
     {
         token::Pos pos{};
-        golang::types::Type typ{};
+        golang::go::types::Type typ{};
 
         using isGoStruct = void;
 
@@ -43,26 +57,26 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct valueType& value);
-    std::tuple<golang::types::Type, golang::types::Type, gocpp::string, bool, bool> rangeKeyVal(golang::types::Type typ, std::function<bool (goVersion _1)> allowVersion);
     using valueMap = gocpp::defined<gocpp::map<go_any, gocpp::slice<valueType>>, GoTag_valueMap>;
 }
 
 #include "golang/go/ast/ast.h"
 #include "golang/go/constant/value.h"
 #include "golang/go/types/check.h"
+#include "golang/go/types/interface.h"
 #include "golang/go/types/operand.h"
 #include "golang/go/types/resolver.h"
 #include "golang/go/types/scope.h"
 #include "golang/go/types/signature.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        void funcBody(Checker* check, declInfo* decl, gocpp::string name, Signature* sig, ast::BlockStmt* body, constant::Value iota);
-        void usage(Checker* check, golang::types::Scope* scope);
+        void funcBody(Checker* check, declInfo* decl, gocpp::string name, golang::go::types::Signature* sig, ast::BlockStmt* body, constant::Value iota);
+        void usage(Checker* check, golang::go::types::Scope* scope);
         void simpleStmt(Checker* check, ast::Stmt s);
         void stmtList(Checker* check, stmtContext ctxt, gocpp::slice<ast::Stmt> list);
         void multipleDefaults(Checker* check, gocpp::slice<ast::Stmt> list);
@@ -71,9 +85,9 @@ namespace golang::types
         void suspendedCall(Checker* check, gocpp::string keyword, ast::CallExpr* call);
         void caseValues(Checker* check, operand* x, gocpp::slice<ast::Expr> values, valueMap seen);
         bool isNil(Checker* check, ast::Expr e);
-        golang::types::Type caseTypes(Checker* check, operand* x, gocpp::slice<ast::Expr> types, gocpp::map<golang::types::Type, ast::Expr> seen);
+        golang::go::types::Type caseTypes(Checker* check, operand* x, gocpp::slice<ast::Expr> types, gocpp::map<golang::go::types::Type, ast::Expr> seen);
+        golang::go::types::Type caseTypes_currently_unused(Checker* check, operand* x, Interface* xtyp, gocpp::slice<ast::Expr> types, gocpp::map<gocpp::string, ast::Expr> seen);
         void stmt(Checker* check, stmtContext ctxt, ast::Stmt s);
-        void rangeStmt(Checker* check, stmtContext inner, ast::RangeStmt* s);
     }
 }
 

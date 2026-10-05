@@ -13,7 +13,7 @@
 
 #include "golang/internal/poll/fd_windows.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
 
     namespace rec

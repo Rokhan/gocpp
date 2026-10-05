@@ -412,18 +412,12 @@ namespace golang::fmt
     gocpp::string FormatString(State state, gocpp::rune verb);
 }
 #include "golang/fmt/format.h"
-#include "golang/io/io.h"
-#include "golang/reflect/value.h"
 
 namespace golang::fmt
 {
     struct pp
     {
         buffer buf{};
-        // arg holds the current item, as an interface{}.
-        go_any arg{};
-        // value is used instead of arg for reflect values.
-        reflect::Value value{};
         // fmt is used to format basic items such as integers or strings.
         golang::fmt::fmt fmt{};
         // reordered records whether the format string used argument reordering.
@@ -451,6 +445,30 @@ namespace golang::fmt
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pp& value);
+}
+#include "golang/io/io.fwd.h"
+#include "golang/reflect/type.fwd.h"
+#include "golang/reflect/value.fwd.h"
+#include "golang/sync/pool.fwd.h"
+
+namespace golang::fmt
+{
+    pp* newPrinter();
+}
+#include "golang/io/io.h"
+
+namespace golang::fmt
+{
+    namespace sync = golang::sync;
+    namespace io = golang::io;
+}
+#include "golang/reflect/value.h"
+#include "golang/sync/pool.h"
+
+namespace golang::fmt
+{
+    namespace reflect = golang::reflect;
+    extern sync::Pool ppFree;
     std::tuple<int, gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a);
     
     template<typename... Args>
@@ -491,13 +509,6 @@ namespace golang::fmt
         return Fprintln(w, gocpp::ToSlice<go_any>(value, a...));
     }
     reflect::Value getField(reflect::Value v, int i);
-    pp* newPrinter();
-}
-#include "golang/sync/pool.h"
-
-namespace golang::fmt
-{
-    extern sync::Pool ppFree;
 }
 
 #include "golang/reflect/value.h"
@@ -518,17 +529,17 @@ namespace golang::fmt
         std::tuple<int, gocpp::error> Write(pp* p, gocpp::slice<unsigned char> b);
         std::tuple<int, gocpp::error> WriteString(pp* p, gocpp::string s);
         void unknownType(pp* p, reflect::Value v);
-        void badVerb(pp* p, gocpp::rune verb);
-        void fmtBool(pp* p, bool v, gocpp::rune verb);
+        void badVerb(pp* p, go_any arg, reflect::Value value, gocpp::rune verb);
+        void fmtBool(pp* p, go_any arg, reflect::Value value, bool v, gocpp::rune verb);
         void fmt0x64(pp* p, uint64_t v, bool leading0x);
-        void fmtInteger(pp* p, uint64_t v, bool isSigned, gocpp::rune verb);
-        void fmtFloat(pp* p, double v, int size, gocpp::rune verb);
-        void fmtComplex(pp* p, struct gocpp::complex128 v, int size, gocpp::rune verb);
-        void fmtString(pp* p, gocpp::string v, gocpp::rune verb);
+        void fmtInteger(pp* p, go_any arg, reflect::Value value, uint64_t v, bool isSigned, gocpp::rune verb);
+        void fmtFloat(pp* p, go_any arg, reflect::Value value, double v, int size, gocpp::rune verb);
+        void fmtComplex(pp* p, go_any arg, reflect::Value value, struct gocpp::complex128 v, int size, gocpp::rune verb);
+        void fmtString(pp* p, go_any arg, reflect::Value value, gocpp::string v, gocpp::rune verb);
         void fmtBytes(pp* p, gocpp::slice<unsigned char> v, gocpp::rune verb, gocpp::string typeString);
-        void fmtPointer(pp* p, reflect::Value value, gocpp::rune verb);
+        void fmtPointer(pp* p, go_any arg, reflect::Value value, gocpp::rune verb);
         void catchPanic(pp* p, go_any arg, gocpp::rune verb, gocpp::string method);
-        bool handleMethods(pp* p, gocpp::rune verb);
+        bool handleMethods(pp* p, go_any arg, reflect::Value value, gocpp::rune verb);
         void printArg(pp* p, go_any arg, gocpp::rune verb);
         void printValue(pp* p, reflect::Value value, gocpp::rune verb, int depth);
         std::tuple<int, int, bool> argNumber(pp* p, int argNum, gocpp::string format, int i, int numArgs);

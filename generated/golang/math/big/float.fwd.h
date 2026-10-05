@@ -4,9 +4,10 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::big
+namespace golang::math::big
 {
     const bool debugFloat = false;
+    struct Float;
     struct ErrNaN;
     using form = unsigned char;
     using RoundingMode = unsigned char;
@@ -27,12 +28,15 @@ namespace golang::big
     const Accuracy Exact = 0;
     const Accuracy Above = + 1;
 }
-#include "golang/math/big/nat.fwd.h"
+#include "golang/math/bits.fwd.h"
 #include "golang/math/const.fwd.h"
+#include "golang/math/frexp.fwd.h"
+#include "golang/math/signbit.fwd.h"
+#include "golang/math/unsafe.fwd.h"
 
-namespace golang::big
+namespace golang::math::big
 {
-    struct Float;
+    namespace math = golang::math;
     // Exponent and precision limits.
     const int MaxExp = math::MaxInt32;
     const int MinExp = math::MinInt32;

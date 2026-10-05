@@ -13,7 +13,8 @@
 
 #include "golang/runtime/extern.h"
 #include "golang/runtime/symtab.h"
-#include "golang/sync/atomic/doc.h"
+#include "golang/sync/atomic/doc_64.h"
+#include "golang/sync/atomic/type.h"
 #include "golang/sync/mutex.h"
 
 // Package bisect can be used by compilers and other programs
@@ -188,13 +189,17 @@
 // When the textual description is expensive to compute,
 // checking [Matcher.Visible] can help the avoid that expense
 // in most runs.
-namespace golang::bisect
+namespace golang::internal::bisect
 {
+    namespace atomic = golang::sync::atomic;
+    namespace runtime = golang::runtime;
+    namespace sync = golang::sync;
     namespace rec
     {
+        using atomic::rec::CompareAndSwap;
+        using atomic::rec::Load;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
-        using runtime::rec::Name;
         using runtime::rec::Next;
     }
 
@@ -442,48 +447,6 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    // atomicPointerDedup is an atomic.Pointer[dedup],
-    // but we are avoiding using Go 1.19's atomic.Pointer
-    // until the bootstrap toolchain can be relied upon to have it.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    atomicPointerDedup::operator T()
-    {
-        T result;
-        result.p = this->p;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool atomicPointerDedup::operator==(const T& ref) const
-    {
-        if (p != ref.p) return false;
-        return true;
-    }
-
-    std::ostream& atomicPointerDedup::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << p;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct atomicPointerDedup& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    dedup* rec::Load(atomicPointerDedup* p)
-    {
-        return (dedup*)(atomic::LoadPointer(& p->p));
-    }
-
-    bool rec::CompareAndSwap(atomicPointerDedup* p, dedup* old, dedup* go_new)
-    {
-        return atomic::CompareAndSwapPointer(& p->p, gocpp::unsafe_pointer(old), gocpp::unsafe_pointer(go_new));
-    }
-
     // A cond is a single condition in the matcher.
     // Given an input id, if id&mask == bits, return the result.
     
@@ -668,13 +631,13 @@ namespace golang::bisect
             dedup* d = {};
             for(; ; )
             {
-                d = rec::Load(gocpp::recv(m->dedup));
+                d = rec::Load<bisect::dedup>(gocpp::recv(m->dedup));
                 if(d != nullptr)
                 {
                     break;
                 }
                 d = new bisect::dedup{};
-                if(rec::CompareAndSwap(gocpp::recv(m->dedup), nullptr, d))
+                if(rec::CompareAndSwap<bisect::dedup>(gocpp::recv(m->dedup), nullptr, d))
                 {
                     break;
                 }
@@ -784,7 +747,7 @@ namespace golang::bisect
         {
             auto [f, more] = rec::Next(gocpp::recv(frames));
             buf = append(buf, prefix);
-            buf = append(buf, rec::Name(gocpp::recv(f.Func)));
+            buf = append(buf, f.Function);
             buf = append(buf, "()\n"_s);
             buf = append(buf, prefix);
             buf = append(buf, '\t');

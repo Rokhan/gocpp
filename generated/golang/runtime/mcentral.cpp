@@ -11,23 +11,25 @@
 #include "golang/runtime/mcentral.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/sys/nih.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/gc/sizeclasses.h"
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
 #include "golang/runtime/mgcsweep.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mspanset.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/sizeclasses.h"
-#include "golang/runtime/trace2runtime.h"
+#include "golang/runtime/traceruntime.h"
 
 namespace golang::runtime
 {
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace gc = golang::internal::runtime::gc;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
     }
@@ -113,7 +115,7 @@ namespace golang::runtime
     mspan* rec::cacheSpan(mcentral* c)
     {
         // Deduct credit for this span allocation and sweep if necessary.
-        auto spanBytes = uintptr_t(class_to_allocnpages[rec::sizeclass(gocpp::recv(c->spanclass))]) * _PageSize;
+        auto spanBytes = uintptr_t(gc::SizeClassToNPages[rec::sizeclass(gocpp::recv(c->spanclass))]) * pageSize;
         deductSweepCredit(spanBytes, 0);
 
         auto traceDone = false;
@@ -311,20 +313,13 @@ namespace golang::runtime
     // grow allocates a new empty span from the heap and initializes it for c's size class.
     mspan* rec::grow(mcentral* c)
     {
-        auto npages = uintptr_t(class_to_allocnpages[rec::sizeclass(gocpp::recv(c->spanclass))]);
-        auto size = uintptr_t(class_to_size[rec::sizeclass(gocpp::recv(c->spanclass))]);
-
+        auto npages = uintptr_t(gc::SizeClassToNPages[rec::sizeclass(gocpp::recv(c->spanclass))]);
         auto s = rec::alloc(gocpp::recv(mheap_), npages, c->spanclass);
         if(s == nullptr)
         {
             return nullptr;
         }
-
-        // Use division by multiplication and shifts to quickly compute:
-        // n := (npages << _PageShift) / size
-        auto n = rec::divideByElemSize(gocpp::recv(s), npages << _PageShift);
-        s->limit = rec::base(gocpp::recv(s)) + size * n;
-        rec::initHeapBits(gocpp::recv(s), false);
+        rec::initHeapBits(gocpp::recv(s));
         return s;
     }
 

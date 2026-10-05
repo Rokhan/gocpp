@@ -11,7 +11,7 @@
 #include "golang/internal/types/errors/codes.h"
 #include "gocpp/support.h"
 
-namespace golang::errors
+namespace golang::internal::types::errors
 {
     namespace rec
     {

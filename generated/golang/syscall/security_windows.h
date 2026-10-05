@@ -99,6 +99,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Tokenuser& value);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 
     namespace rec
     {

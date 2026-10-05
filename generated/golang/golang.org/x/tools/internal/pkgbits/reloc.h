@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
     struct RelocEnt
     {

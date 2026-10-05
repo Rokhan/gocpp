@@ -3,9 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/math/big/int.fwd.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     struct Rat;
 }

@@ -3,10 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct TypeParamList;
     struct TypeList;

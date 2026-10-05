@@ -12,10 +12,12 @@
 
 namespace golang::runtime
 {
+    extern uintptr_t chansendpc;
+    extern uintptr_t chanrecvpc;
     void selectsetpc(uintptr_t* pc);
     void block();
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/internal/abi/funcpc.fwd.h"
 #include "golang/runtime/chan.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 
@@ -23,7 +25,7 @@ namespace golang::runtime
 {
     struct scase
     {
-        hchan* c{}; // chan
+        golang::runtime::hchan* c{}; // chan
         gocpp::unsafe_pointer elem{}; // data element
 
         using isGoStruct = void;
@@ -38,14 +40,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scase& value);
-    extern uintptr_t chansendpc;
-    extern uintptr_t chanrecvpc;
     bool selparkcommit(g* gp, gocpp::unsafe_pointer _1);
     struct runtimeSelect
     {
         selectDir dir{};
         gocpp::unsafe_pointer typ{}; // channel type (not used here)
-        hchan* ch{}; // channel
+        golang::runtime::hchan* ch{}; // channel
         gocpp::unsafe_pointer val{}; // ptr to data (SendDir) or ptr to receive buffer (RecvDir)
 
         using isGoStruct = void;
@@ -74,7 +74,7 @@ namespace golang::runtime
 
     namespace rec
     {
-        uintptr_t sortkey(hchan* c);
+        uintptr_t sortkey(golang::runtime::hchan* c);
         void dequeueSudoG(waitq* q, sudog* sgp);
     }
 }

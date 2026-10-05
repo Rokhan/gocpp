@@ -12,14 +12,19 @@
 #include "gocpp/support.h"
 
 #include "golang/regexp/syntax/parse.h"
-#include "golang/strconv/itoa.h"
+#include "golang/slices/slices.h"
+#include "golang/strconv/number.h"
 #include "golang/strings/builder.h"
 #include "golang/strings/strings.h"
 #include "golang/unicode/graphic.h"
 #include "golang/unicode/letter.h"
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
+    namespace slices = golang::slices;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace unicode = golang::unicode;
     namespace rec
     {
         using strings::rec::String;
@@ -122,32 +127,12 @@ namespace golang::syntax
 
                 case 1:
                 case 2:
-                    if(len(x->Rune) != len(y->Rune))
-                    {
-                        return false;
-                    }
-                    for(auto [i, r] : x->Rune)
-                    {
-                        if(r != y->Rune[i])
-                        {
-                            return false;
-                        }
-                    }
+                    return x->Flags & FoldCase == y->Flags & FoldCase && slices::Equal(x->Rune, y->Rune);
                     break;
 
                 case 3:
                 case 4:
-                    if(len(x->Sub) != len(y->Sub))
-                    {
-                        return false;
-                    }
-                    for(auto [i, sub] : x->Sub)
-                    {
-                        if(! rec::Equal(gocpp::recv(sub), y->Sub[i]))
-                        {
-                            return false;
-                        }
-                    }
+                    return slices::EqualFunc(x->Sub, y->Sub, [&](auto z, auto t){ return rec::Equal(z, t); });
                     break;
 
                 case 5:

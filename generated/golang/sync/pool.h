@@ -14,14 +14,12 @@ namespace golang::sync
 {
     uint32_t runtime_randn(uint32_t n);
     extern gocpp::array<uint64_t, 128> poolRaceHash;
-    gocpp::unsafe_pointer poolRaceAddr(go_any x);
     void poolCleanup();
     void init();
     int runtime_procPin();
     void runtime_procUnpin();
-    uintptr_t runtime_LoadAcquintptr(uintptr_t* ptr);
-    uintptr_t runtime_StoreReluintptr(uintptr_t* ptr, uintptr_t val);
     void runtime_registerPoolCleanup(std::function<void ()> cleanup);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/sync/cond.h"
 #include "golang/sync/mutex.h"
@@ -70,6 +68,7 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolLocalInternal& value);
+    gocpp::unsafe_pointer poolRaceAddr(go_any x);
     extern Mutex allPoolsMu;
     struct poolLocal
     {
@@ -90,7 +89,12 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolLocal& value);
+    // allPools is the set of pools that have non-empty primary
+    // caches. Protected by either 1) allPoolsMu and pinning or 2)
+    // STW.
     extern gocpp::slice<Pool*> allPools;
+    // oldPools is the set of pools that may have non-empty victim
+    // caches. Protected by STW.
     extern gocpp::slice<Pool*> oldPools;
     poolLocal* indexLocal(gocpp::unsafe_pointer l, int i);
 

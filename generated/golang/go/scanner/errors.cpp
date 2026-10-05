@@ -16,8 +16,12 @@
 #include "golang/io/io.h"
 #include "golang/sort/sort.h"
 
-namespace golang::scanner
+namespace golang::go::scanner
 {
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace sort = golang::sort;
+    namespace token = golang::go::token;
     namespace rec
     {
         using mocklib::rec::Error;
@@ -61,8 +65,9 @@ namespace golang::scanner
         return value.PrintTo(os);
     }
 
+    gocpp::error _ = (golang::go::scanner::Error*)(nullptr);
     // Error implements the error interface.
-    gocpp::string rec::Error(golang::scanner::Error e)
+    gocpp::string rec::Error(golang::go::scanner::Error e)
     {
         if(e.Pos.Filename != ""_s || rec::IsValid(gocpp::recv(e.Pos)))
         {
@@ -78,7 +83,7 @@ namespace golang::scanner
     // Add adds an [Error] with given position and error message to an [ErrorList].
     void rec::Add(ErrorList* p, token::Position pos, gocpp::string msg)
     {
-        *p = append(*p, new golang::scanner::Error {pos, msg});
+        *p = append(*p, new golang::go::scanner::Error {pos, msg});
     }
 
     // Reset resets an [ErrorList] to no errors.

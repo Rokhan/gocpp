@@ -72,7 +72,14 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct piController& value);
     scavChunkData unpackScavChunkData(uint64_t sc);
 }
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/time.fwd.h"
 
@@ -117,12 +124,15 @@ namespace golang::runtime
         mutex lock{};
         // g is the goroutine the scavenger is bound to.
         g* g{};
-        // parked is whether or not the scavenger is parked.
-        bool parked{};
         // timer is the timer used for the scavenger to sleep.
         timer* timer{};
         // sysmonWake signals to sysmon that it should wake the scavenger.
         atomic::Uint32 sysmonWake{};
+        // parked is whether or not the scavenger is parked.
+        bool parked{};
+        // printControllerReset instructs printScavTrace to signal that
+        // the controller was reset.
+        bool printControllerReset{};
         // targetCPUFraction is the target CPU overhead for the scavenger.
         double targetCPUFraction{};
         // sleepRatio is the ratio of time spent doing scavenging work to
@@ -139,9 +149,6 @@ namespace golang::runtime
         // using the controller and we hold sleepRatio at a conservative
         // value. Used if the controller's assumptions fail to hold.
         int64_t controllerCooldown{};
-        // printControllerReset instructs printScavTrace to signal that
-        // the controller was reset.
-        bool printControllerReset{};
         // sleepStub is a stub used for testing to avoid actually having
         // the scavenger sleep.
         // Unlike the other stubs, this is not populated if left nil
@@ -197,6 +204,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct atomicScavChunkData& value);
     extern scavengeStruct scavenge;
+    // Sleep/wait state of the background scavenger.
     extern scavengerState scavenger;
 }
 #include "golang/runtime/mranges.h"

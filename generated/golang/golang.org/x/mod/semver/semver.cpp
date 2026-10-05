@@ -11,7 +11,8 @@
 #include "golang/golang.org/x/mod/semver/semver.h"
 #include "gocpp/support.h"
 
-#include "golang/sort/sort.h"
+#include "golang/slices/sort.h"
+#include "golang/strings/compare.h"
 
 // Package semver implements comparison of semantic version strings.
 // In this package, semantic version strings must begin with a leading "v",
@@ -31,8 +32,10 @@
 // with two exceptions. First, it requires the "v" prefix. Second, it recognizes
 // vMAJOR and vMAJOR.MINOR (with no prerelease or build suffixes)
 // as shorthands for vMAJOR.0.0 and vMAJOR.MINOR.0.
-namespace golang::semver
+namespace golang::golang_org::x::mod::semver
 {
+    namespace slices = golang::slices;
+    namespace strings = golang::strings;
     namespace rec
     {
     }
@@ -91,8 +94,8 @@ namespace golang::semver
 
     // Canonical returns the canonical formatting of the semantic version v.
     // It fills in any missing .MINOR or .PATCH and discards build metadata.
-    // Two semantic versions compare equal only if their canonical formattings
-    // are identical strings.
+    // Two semantic versions compare equal only if their canonical formatting
+    // is an identical string.
     // The canonical invalid semantic version is the empty string.
     gocpp::string Canonical(gocpp::string v)
     {
@@ -235,18 +238,24 @@ namespace golang::semver
 
     bool rec::Less(ByVersion vs, int i, int j)
     {
-        auto cmp = Compare(vs[i], vs[j]);
-        if(cmp != 0)
-        {
-            return cmp < 0;
-        }
-        return vs[i] < vs[j];
+        return compareVersion(vs[i], vs[j]) < 0;
     }
 
-    // Sort sorts a list of semantic version strings using [ByVersion].
+    // Sort sorts a list of semantic version strings using [Compare] and falls back
+    // to use [strings.Compare] if both versions are considered equal.
     void Sort(gocpp::slice<gocpp::string> list)
     {
-        sort::Sort(ByVersion(list));
+        slices::SortFunc(list, compareVersion);
+    }
+
+    int compareVersion(gocpp::string a, gocpp::string b)
+    {
+        auto cmp = Compare(a, b);
+        if(cmp != 0)
+        {
+            return cmp;
+        }
+        return strings::Compare(a, b);
     }
 
     std::tuple<parsed, bool> parse(gocpp::string v)

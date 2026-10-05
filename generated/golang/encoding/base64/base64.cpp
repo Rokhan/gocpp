@@ -11,19 +11,20 @@
 #include "golang/encoding/base64/base64.h"
 #include "gocpp/support.h"
 
-#include "golang/encoding/binary/binary.h"
+#include "golang/internal/byteorder/byteorder.h"
 #include "golang/io/io.h"
 #include "golang/slices/slices.h"
-#include "golang/strconv/atoi.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 
 // Package base64 implements base64 encoding as specified by RFC 4648.
-namespace golang::base64
+namespace golang::encoding::base64
 {
+    namespace byteorder = golang::internal::byteorder;
+    namespace io = golang::io;
+    namespace slices = golang::slices;
+    namespace strconv = golang::strconv;
     namespace rec
     {
-        using binary::rec::PutUint32;
-        using binary::rec::PutUint64;
         using io::rec::Read;
         using io::rec::Write;
     }
@@ -185,59 +186,59 @@ namespace golang::base64
         // outside of the loop to speed up the encoder.
         _ = enc->encode;
 
-        auto [di, si] = std::tuple{0, 0};
-        auto n = (len(src) / 3) * 3;
-        for(; si < n; )
+        for(; len(src) >= 3; )
         {
             // Convert 3x 8bit source bytes into 4 bytes
-            auto val = ((unsigned int)(src[si + 0]) << 16) | ((unsigned int)(src[si + 1]) << 8) | (unsigned int)(src[si + 2]);
+            auto val = ((unsigned int)(src[0]) << 16) | ((unsigned int)(src[1]) << 8) | (unsigned int)(src[2]);
 
-            dst[di + 0] = enc->encode[(val >> 18) & 0x3F];
-            dst[di + 1] = enc->encode[(val >> 12) & 0x3F];
-            dst[di + 2] = enc->encode[(val >> 6) & 0x3F];
-            dst[di + 3] = enc->encode[val & 0x3F];
+            // Eliminate bounds checks below.
+            _ = dst[3];
+            dst[0] = enc->encode[(val >> 18) & 0x3F];
+            dst[1] = enc->encode[(val >> 12) & 0x3F];
+            dst[2] = enc->encode[(val >> 6) & 0x3F];
+            dst[3] = enc->encode[val & 0x3F];
 
-            si += 3;
-            di += 4;
+            src = src.make_slice(3);
+            dst = dst.make_slice(4);
         }
 
-        auto remain = len(src) - si;
-        if(remain == 0)
-        {
-            return;
-        }
-        // Add the remaining small block
-        auto val = (unsigned int)(src[si + 0]) << 16;
-        if(remain == 2)
-        {
-            val |= (unsigned int)(src[si + 1]) << 8;
-        }
-
-        dst[di + 0] = enc->encode[(val >> 18) & 0x3F];
-        dst[di + 1] = enc->encode[(val >> 12) & 0x3F];
-
+        // Add the remaining small block (if any).
         //Go switch emulation
         {
-            auto condition = remain;
+            auto condition = len(src);
             int conditionId = -1;
-            if(condition == 2) { conditionId = 0; }
+            if(condition == 0) { conditionId = 0; }
             else if(condition == 1) { conditionId = 1; }
+            else if(condition == 2) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
-                    dst[di + 2] = enc->encode[(val >> 6) & 0x3F];
-                    if(enc->padChar != NoPadding)
-                    {
-                        dst[di + 3] = (unsigned char)(enc->padChar);
-                    }
+                    return;
                     break;
                 case 1:
+                {
+                    auto val = (unsigned int)(src[0]) << 16;
+                    dst[0] = enc->encode[(val >> 18) & 0x3F];
+                    dst[1] = enc->encode[(val >> 12) & 0x3F];
                     if(enc->padChar != NoPadding)
                     {
-                        dst[di + 2] = (unsigned char)(enc->padChar);
-                        dst[di + 3] = (unsigned char)(enc->padChar);
+                        dst[2] = (unsigned char)(enc->padChar);
+                        dst[3] = (unsigned char)(enc->padChar);
                     }
                     break;
+                }
+                case 2:
+                {
+                    auto val = ((unsigned int)(src[0]) << 16) | ((unsigned int)(src[1]) << 8);
+                    dst[0] = enc->encode[(val >> 18) & 0x3F];
+                    dst[1] = enc->encode[(val >> 12) & 0x3F];
+                    dst[2] = enc->encode[(val >> 6) & 0x3F];
+                    if(enc->padChar != NoPadding)
+                    {
+                        dst[3] = (unsigned char)(enc->padChar);
+                    }
+                    break;
+                }
             }
         }
     }
@@ -557,6 +558,7 @@ namespace golang::base64
     // AppendDecode appends the base64 decoded src to dst
     // and returns the extended buffer.
     // If the input is malformed, it returns the partially decoded src and an error.
+    // New line characters (\r and \n) are ignored.
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::AppendDecode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         // Compute the output size without padding to avoid over allocating.
@@ -574,6 +576,8 @@ namespace golang::base64
     }
 
     // DecodeString returns the bytes represented by the base64 string s.
+    // If the input is malformed, it returns the partially decoded data and
+    // [CorruptInputError]. New line characters (\r and \n) are ignored.
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::DecodeString(Encoding* enc, gocpp::string s)
     {
         auto dbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), rec::DecodedLen(gocpp::recv(enc), len(s)));
@@ -714,7 +718,8 @@ namespace golang::base64
 
     // Decode decodes src using the encoding enc. It writes at most
     // [Encoding.DecodedLen](len(src)) bytes to dst and returns the number of bytes
-    // written. If src contains invalid base64 data, it will return the
+    // written. The caller must ensure that dst is large enough to hold all
+    // the decoded data. If src contains invalid base64 data, it will return the
     // number of bytes successfully written and [CorruptInputError].
     // New line characters (\r and \n) are ignored.
     std::tuple<int, gocpp::error> rec::Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
@@ -737,7 +742,7 @@ namespace golang::base64
             auto src2 = src.make_slice(si, si + 8);
             if(auto [dn, ok] = assemble64(enc->decodeMap[src2[0]], enc->decodeMap[src2[1]], enc->decodeMap[src2[2]], enc->decodeMap[src2[3]], enc->decodeMap[src2[4]], enc->decodeMap[src2[5]], enc->decodeMap[src2[6]], enc->decodeMap[src2[7]]); ok)
             {
-                rec::PutUint64(gocpp::recv(binary::BigEndian), dst.make_slice(n), dn);
+                byteorder::BEPutUint64(dst.make_slice(n), dn);
                 n += 6;
                 si += 8;
             }
@@ -758,7 +763,7 @@ namespace golang::base64
             auto src2 = src.make_slice(si, si + 4);
             if(auto [dn, ok] = assemble32(enc->decodeMap[src2[0]], enc->decodeMap[src2[1]], enc->decodeMap[src2[2]], enc->decodeMap[src2[3]]); ok)
             {
-                rec::PutUint32(gocpp::recv(binary::BigEndian), dst.make_slice(n), dn);
+                byteorder::BEPutUint32(dst.make_slice(n), dn);
                 n += 3;
                 si += 4;
             }

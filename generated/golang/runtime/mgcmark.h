@@ -12,17 +12,20 @@
 
 namespace golang::runtime
 {
-    void gcMarkRootPrepare();
+    void gcPrepareMarkRoots();
     void gcMarkRootCheck();
+    // oneptrmask for an allocation containing a single pointer.
     extern gocpp::array<uint8_t, 1> oneptrmask;
     void markrootFreeGStacks();
     void gcWakeAllAssists();
     bool gcParkAssist();
     void gcFlushBgCredit(int64_t scanWork);
+    std::tuple<uint32_t, bool> gcNextMarkRoot();
     void shade(uintptr_t b);
     void gcDumpObject(gocpp::string label, uintptr_t obj, uintptr_t off);
     void gcMarkTinyAllocs();
 }
+#include "golang/runtime/malloc.h"
 #include "golang/runtime/mgcstack.fwd.h"
 #include "golang/runtime/mgcwork.fwd.h"
 #include "golang/runtime/mheap.fwd.h"
@@ -31,9 +34,21 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
+    // pagesPerSpanRoot indicates how many pages to scan from a span root
+    // at a time. Used by special root marking.
+    //
+    // Higher values improve throughput by increasing locality, but
+    // increase the minimum latency of a marking operation.
+    //
+    // Must be a multiple of the pageInUse bitmap element size and
+    // must also evenly divide pagesPerArena.
+    const int pagesPerSpanRoot = gocpp::min(512, pagesPerArena);
+    std::tuple<gocpp::slice<g*>, int> allGsSnapshotSortedForGC();
     int64_t markroot(gcWork* gcw, uint32_t i, bool flushBgCredit);
     int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, gcWork* gcw, int shard);
     void markrootSpans(gcWork* gcw, int shard);
+    void gcScanFinalizer(specialfinalizer* spf, mspan* s, gcWork* gcw);
+    void gcScanCleanup(specialCleanup* spc, gcWork* gcw);
     void gcAssistAlloc(g* gp);
     void gcAssistAlloc1(g* gp, int64_t scanWork);
     int64_t scanstack(g* gp, gcWork* gcw);
@@ -44,13 +59,19 @@ namespace golang::runtime
     void gcDrain(gcWork* gcw, gcDrainFlags flags);
     int64_t gcDrainN(gcWork* gcw, int64_t scanWork);
     void scanblock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask, gcWork* gcw, stackScanState* stk);
-    void scanobject(uintptr_t b, gcWork* gcw);
     void scanConservative(uintptr_t b, uintptr_t n, uint8_t* ptrmask, gcWork* gcw, stackScanState* state);
     void greyobject(uintptr_t obj, uintptr_t base, uintptr_t off, mspan* span, gcWork* gcw, uintptr_t objIndex);
     void gcmarknewobject(mspan* span, uintptr_t obj);
+}
+
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {
+        bool internalBlocked(g* gp);
     }
 }
 

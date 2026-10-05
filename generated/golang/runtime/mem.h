@@ -12,21 +12,25 @@
 
 namespace golang::runtime
 {
-    void sysUnused(gocpp::unsafe_pointer v, uintptr_t n);
-    void sysUsed(gocpp::unsafe_pointer v, uintptr_t n, uintptr_t prepared);
-    void sysHugePage(gocpp::unsafe_pointer v, uintptr_t n);
-    void sysNoHugePage(gocpp::unsafe_pointer v, uintptr_t n);
-    void sysHugePageCollapse(gocpp::unsafe_pointer v, uintptr_t n);
-    void sysFault(gocpp::unsafe_pointer v, uintptr_t n);
-    gocpp::unsafe_pointer sysReserve(gocpp::unsafe_pointer v, uintptr_t n);
+    bool needZeroAfterSysUnused();
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/mstats.fwd.h"
 
 namespace golang::runtime
 {
-    gocpp::unsafe_pointer sysAlloc(uintptr_t n, sysMemStat* sysStat);
+    gocpp::unsafe_pointer sysAlloc(uintptr_t n, sysMemStat* sysStat, gocpp::string vmaName);
+    void sysUnused(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysUsed(gocpp::unsafe_pointer v, uintptr_t n, uintptr_t prepared);
+    void sysHugePage(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysNoHugePage(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysHugePageCollapse(gocpp::unsafe_pointer v, uintptr_t n);
     void sysFree(gocpp::unsafe_pointer v, uintptr_t n, sysMemStat* sysStat);
-    void sysMap(gocpp::unsafe_pointer v, uintptr_t n, sysMemStat* sysStat);
+    void sysFault(gocpp::unsafe_pointer v, uintptr_t n);
+    gocpp::unsafe_pointer sysReserve(gocpp::unsafe_pointer v, uintptr_t n, gocpp::string vmaName);
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> sysReserveAligned(gocpp::unsafe_pointer v, uintptr_t size, uintptr_t align, gocpp::string vmaName);
+    void sysUnreserve(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysMap(gocpp::unsafe_pointer v, uintptr_t n, sysMemStat* sysStat, gocpp::string vmaName);
 
     namespace rec
     {

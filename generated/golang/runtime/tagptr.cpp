@@ -19,7 +19,7 @@ namespace golang::runtime
 
     // taggedPointer is a pointer with a numeric tag.
     // The size of the numeric tag is GOARCH-dependent,
-    // currently at least 10 bits.
+    // currently at least 16 bits.
     // This should only be used with pointers allocated outside the Go heap.
 }
 

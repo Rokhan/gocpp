@@ -12,7 +12,13 @@
 
 namespace golang::runtime
 {
+    // lockNames gives the names associated with each of the above ranks.
     extern gocpp::slice<gocpp::string> lockNames;
+    // lockPartialOrder is the transitive closure of the lock rank graph.
+    // An entry for rank X lists all of the ranks that can already be held
+    // when rank X is acquired.
+    //
+    // Lock ranks that allow self-cycles list themselves.
     extern gocpp::slice<gocpp::slice<lockRank>> lockPartialOrder;
 
     namespace rec

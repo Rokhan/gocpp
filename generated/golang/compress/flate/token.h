@@ -10,20 +10,57 @@
 #include "gocpp/support.h"
 
 
-namespace golang::flate
+namespace golang::compress::flate
 {
-    extern gocpp::array<uint32_t, 256> lengthCodes;
+    // The length code for length X (MIN_MATCH_LENGTH <= X <= MAX_MATCH_LENGTH)
+    // is lengthCodes[length - MIN_MATCH_LENGTH]
+    extern gocpp::array<uint8_t, 256> lengthCodes;
+    // lengthCodes1 is length codes, but starting at 1.
+    extern gocpp::array<uint8_t, 256> lengthCodes1;
     extern gocpp::array<uint32_t, 256> offsetCodes;
-    token literalToken(uint32_t literal);
-    token matchToken(uint32_t xlength, uint32_t xoffset);
-    uint32_t lengthCode(uint32_t len);
+    // offsetCodes14 are offsetCodes, but with 14 added.
+    extern gocpp::array<uint32_t, 256> offsetCodes14;
+    struct tokens
+    {
+        gocpp::array<uint16_t, 32> extraHist{}; // codes 256->maxnumlit
+        gocpp::array<uint16_t, 32> offHist{}; // offset codes
+        gocpp::array<uint16_t, 256> litHist{}; // codes 0->255
+        int nFilled{};
+        uint16_t n{}; // Must be able to contain maxStoreBlockSize
+        gocpp::array<token, 65536> tokens{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct tokens& value);
+    double mFastLog2(double val);
+    uint8_t lengthCode(uint8_t len);
     uint32_t offsetCode(uint32_t off);
+    tokens indexTokens(gocpp::slice<token> in);
+    void emitLiterals(tokens* dst, gocpp::slice<unsigned char> lit);
 
     namespace rec
     {
-        uint32_t literal(token t);
+        void Reset(tokens* t);
+        void indexTokens(tokens* t, gocpp::slice<token> in);
+        void AddLiteral(tokens* t, unsigned char lit);
+        int EstimatedBits(tokens* t);
+        void AddMatch(tokens* t, uint32_t xlength, uint32_t xoffset);
+        void AddMatchLong(tokens* t, int32_t xlength, uint32_t xoffset);
+        void AddEOB(tokens* t);
+        gocpp::slice<token> Slice(tokens* t);
+        uint32_t typ(token t);
+        uint8_t literal(token t);
         uint32_t offset(token t);
-        uint32_t length(token t);
+        uint8_t length(token t);
     }
 }
 

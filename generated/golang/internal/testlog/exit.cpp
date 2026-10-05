@@ -13,8 +13,9 @@
 
 #include "golang/sync/mutex.h"
 
-namespace golang::testlog
+namespace golang::internal::testlog
 {
+    namespace sync = golang::sync;
     namespace rec
     {
         using mocklib::rec::Lock;
@@ -79,6 +80,15 @@ namespace golang::testlog
     // with calls to os.Exit
     panicOnExit0Struct panicOnExit0;
     // SetPanicOnExit0 sets panicOnExit0 to v.
+    //
+    // SetPanicOnExit0 should be an internal detail,
+    // but alternate implementations of go test in other
+    // build systems may need to access it using linkname.
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname SetPanicOnExit0
     void SetPanicOnExit0(bool v)
     {
         gocpp::Defer defer;

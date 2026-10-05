@@ -36,8 +36,9 @@ namespace golang::strconv
     std::tuple<gocpp::string, gocpp::error> QuotedPrefix(gocpp::string s);
     std::tuple<gocpp::string, gocpp::error> Unquote(gocpp::string s);
     std::tuple<gocpp::string, gocpp::string, gocpp::error> unquote(gocpp::string in, bool unescape);
-    int bsearch16(gocpp::slice<uint16_t> a, uint16_t x);
-    int bsearch32(gocpp::slice<uint32_t> a, uint32_t x);
+    
+    template<template<typename> class  S, typename E>
+    std::tuple<int, bool> bsearch(S<E> s, E v);
     bool IsPrint(gocpp::rune r);
     bool IsGraphic(gocpp::rune r);
     bool isInGraphicList(gocpp::rune r);

@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Basic
     {
@@ -34,7 +34,7 @@ namespace golang::types
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
@@ -42,7 +42,7 @@ namespace golang::types
         BasicKind Kind(Basic* b);
         BasicInfo Info(Basic* b);
         gocpp::string Name(Basic* b);
-        golang::types::Type Underlying(Basic* b);
+        golang::go::types::Type Underlying(Basic* b);
         gocpp::string String(Basic* b);
     }
 }

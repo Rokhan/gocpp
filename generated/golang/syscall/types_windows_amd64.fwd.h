@@ -6,11 +6,6 @@
 
 namespace golang::syscall
 {
-    struct Servent;
-}
-#include "golang/syscall/types_windows.fwd.h"
-
-namespace golang::syscall
-{
     struct WSAData;
+    struct Servent;
 }

@@ -10,14 +10,20 @@
 #include "gocpp/support.h"
 
 
-namespace golang::gocommand
+namespace golang::golang_org::x::tools::internal::gocommand
 {
     gocpp::string ParseGoVersionOutput(gocpp::string data);
+}
+#include "golang/context/context.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gocommand
+{
+    namespace context = golang::context;
 }
 #include "golang/context/context.h"
 #include "golang/golang.org/x/tools/internal/gocommand/invoke.h"
 
-namespace golang::gocommand
+namespace golang::golang_org::x::tools::internal::gocommand
 {
     std::tuple<int, gocpp::error> GoVersion(context::Context ctx, Invocation inv, Runner* r);
     std::tuple<gocpp::string, gocpp::error> GoVersionOutput(context::Context ctx, Invocation inv, Runner* r);

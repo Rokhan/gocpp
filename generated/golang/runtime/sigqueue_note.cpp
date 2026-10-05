@@ -11,8 +11,8 @@
 #include "golang/runtime/sigqueue_note.h"
 #include "gocpp/support.h"
 
+#include "golang/runtime/note_other.h"
 #include "golang/runtime/panic.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {

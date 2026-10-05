@@ -9,19 +9,27 @@
 #include "golang/sync/once.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/sync/atomic/type.fwd.h"
+
+namespace golang::sync
+{
+    namespace atomic = golang::sync::atomic;
+}
 #include "golang/sync/atomic/type.h"
+#include "golang/sync/cond.h"
 #include "golang/sync/mutex.h"
 
 namespace golang::sync
 {
     struct Once
     {
+        noCopy _1{};
         // done indicates whether the action has been performed.
         // It is first in the struct because it is used in the hot path.
         // The hot path is inlined at every call site.
         // Placing done first allows more compact instructions on some architectures (amd64/386),
         // and fewer instructions (to calculate offset) on other architectures.
-        atomic::Uint32 done{};
+        atomic::Bool done{};
         Mutex m{};
 
         using isGoStruct = void;

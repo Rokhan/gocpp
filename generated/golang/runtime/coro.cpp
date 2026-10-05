@@ -11,14 +11,22 @@
 #include "golang/runtime/coro.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/profilerecord/profilerecord.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
+#include "golang/runtime/mprof.h"
+#include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
+#include "golang/runtime/synctest.h"
+#include "golang/runtime/traceruntime.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using atomic::rec::CompareAndSwap;
@@ -46,6 +54,9 @@ namespace golang::runtime
         T result;
         result.gp = this->gp;
         result.f = this->f;
+        result.mp = this->mp;
+        result.lockedExt = this->lockedExt;
+        result.lockedInt = this->lockedInt;
         return result;
     }
 
@@ -54,6 +65,9 @@ namespace golang::runtime
     {
         if (gp != ref.gp) return false;
         if (f != ref.f) return false;
+        if (mp != ref.mp) return false;
+        if (lockedExt != ref.lockedExt) return false;
+        if (lockedInt != ref.lockedInt) return false;
         return true;
     }
 
@@ -62,6 +76,9 @@ namespace golang::runtime
         os << '{';
         os << "" << gp;
         os << " " << f;
+        os << " " << mp;
+        os << " " << lockedExt;
+        os << " " << lockedInt;
         os << '}';
         return os;
     }
@@ -78,17 +95,25 @@ namespace golang::runtime
     {
         auto c = new coro{};
         c->f = f;
-        auto pc = getcallerpc();
+        auto pc = sys::GetCallerPC();
         auto gp = getg();
         systemstack([=]() mutable -> void
         {
+            auto mp = gp->m;
             auto start = corostart;
             auto startfv = *(funcval**)(gocpp::unsafe_pointer(& start));
-            gp = newproc1(startfv, gp, pc);
+            gp = newproc1(startfv, gp, pc, true, waitReasonCoroutine);
+
+            // Scribble down locked thread state if needed and/or donate
+            // thread-lock state to the new goroutine.
+            if(mp->lockedExt + mp->lockedInt != 0)
+            {
+                c->mp = mp;
+                c->lockedExt = mp->lockedExt;
+                c->lockedInt = mp->lockedInt;
+            }
         });
         gp->coroarg = c;
-        gp->waitreason = waitReasonCoroutine;
-        casgstatus(gp, _Grunnable, _Gwaiting);
         rec::set(gocpp::recv(c->gp), gp);
         return c;
     }
@@ -98,12 +123,20 @@ namespace golang::runtime
     // and then calls coroexit to remove the extra concurrency.
     void corostart()
     {
-        auto gp = getg();
-        auto c = gp->coroarg;
-        gp->coroarg = nullptr;
+        gocpp::Defer defer;
+        try
+        {
+            auto gp = getg();
+            auto c = gp->coroarg;
+            gp->coroarg = nullptr;
 
-        c->f(c);
-        coroexit(c);
+            defer.push_back([=]{ coroexit(c); });
+            c->f(c);
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     // coroexit is like coroswitch but closes the coro
@@ -139,19 +172,61 @@ namespace golang::runtime
     // expensive operations to the fast path.
     void coroswitch_m(g* gp)
     {
-        // TODO(rsc,mknyszek): add tracing support in a lightweight manner.
-        // Probably the tracer will need a global bool (set and cleared during STW)
-        // that this code can check to decide whether to use trace.gen.Load();
-        // we do not want to do the atomic load all the time, especially when
-        // tracer use is relatively rare.
         auto c = gp->coroarg;
         gp->coroarg = nullptr;
         auto exit = gp->coroexit;
         gp->coroexit = false;
         auto mp = gp->m;
 
+        // Track and validate thread-lock interactions.
+        // The rules with thread-lock interactions are simple. When a coro goroutine is switched to,
+        // the same thread must be used, and the locked state must match with the thread-lock state of
+        // the goroutine which called newcoro. Thread-lock state consists of the thread and the number
+        // of internal (cgo callback, etc.) and external (LockOSThread) thread locks.
+        auto locked = gp->lockedm != 0;
+        if(c->mp != nullptr || locked)
+        {
+            if(mp != c->mp || mp->lockedInt != c->lockedInt || mp->lockedExt != c->lockedExt)
+            {
+                print("coro: got thread "_s, gocpp::unsafe_pointer(mp), ", want "_s, gocpp::unsafe_pointer(c->mp), "\n"_s);
+                print("coro: got lock internal "_s, mp->lockedInt, ", want "_s, c->lockedInt, "\n"_s);
+                print("coro: got lock external "_s, mp->lockedExt, ", want "_s, c->lockedExt, "\n"_s);
+                go_throw("coro: OS thread locking must match locking at coroutine creation"_s);
+            }
+        }
+
+        // Acquire tracer for writing for the duration of this call.
+        // There's a lot of state manipulation performed with shortcuts
+        // but we need to make sure the tracer can only observe the
+        // start and end states to maintain a coherent model and avoid
+        // emitting an event for every single transition.
+        auto trace = traceAcquire();
+
+        auto canCAS = true;
+        auto bubble = gp->bubble;
+        if(bubble != nullptr)
+        {
+            // If we're in a synctest group, always use casgstatus (which tracks
+            // group idleness) rather than directly CASing. Mark the group as active
+            // while we're in the process of transferring control.
+            canCAS = false;
+            rec::incActive(gocpp::recv(bubble));
+        }
+
+        if(locked)
+        {
+            // Detach the goroutine from the thread; we'll attach to the goroutine we're
+            // switching to before returning.
+            rec::set(gocpp::recv(gp->lockedm), nullptr);
+        }
+
         if(exit)
         {
+            // The M might have a non-zero OS thread lock count when we get here, gdestroy
+            // will avoid destroying the M if the G isn't explicitly locked to it via lockedm,
+            // which we cleared above. It's fine to gdestroy here also, even when locked to
+            // the thread, because we'll be switching back to another goroutine anyway, which
+            // will take back its thread-lock state before returning.
             gdestroy(gp);
             gp = nullptr;
         }
@@ -160,7 +235,7 @@ namespace golang::runtime
             // If we can CAS ourselves directly from running to waiting, so do,
             // keeping the control transfer as lightweight as possible.
             gp->waitreason = waitReasonCoroutine;
-            if(! rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), _Grunning, _Gwaiting))
+            if(! canCAS || ! rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), _Grunning, _Gwaiting))
             {
                 // The CAS failed: use casgstatus, which will take care of
                 // coordinating with the garbage collector about the state change.
@@ -200,17 +275,64 @@ namespace golang::runtime
             }
         }
 
+        // Check if we're switching to ourselves. This case is able to break our
+        // thread-lock invariants and an unbuffered channel implementation of
+        // coroswitch would deadlock. It's clear that this case should just not
+        // work.
+        if(gnext == gp)
+        {
+            go_throw("coroswitch of a goroutine to itself"_s);
+        }
+
+        // Emit the trace event after getting gnext but before changing curg.
+        // GoSwitch expects that the current G is running and that we haven't
+        // switched yet for correct status emission.
+        if(rec::ok(gocpp::recv(trace)))
+        {
+            rec::GoSwitch(gocpp::recv(trace), gnext, exit);
+        }
+
         // Start running next, without heavy scheduling machinery.
         // Set mp.curg and gnext.m and then update scheduling state
         // directly if possible.
         setGNoWB(& mp->curg, gnext);
         setMNoWB(& gnext->m, mp);
-        if(! rec::CompareAndSwap(gocpp::recv(gnext->atomicstatus), _Gwaiting, _Grunning))
+
+        // Synchronize with any out-standing goroutine profile. We're about to start
+        // executing, and an invariant of the profiler is that we tryRecordGoroutineProfile
+        // whenever a goroutine is about to start running.
+        // N.B. We must do this before transitioning to _Grunning but after installing gnext
+        // in curg, so that we have a valid curg for allocation (tryRecordGoroutineProfile
+        // may allocate).
+        if(goroutineProfile.active)
+        {
+            tryRecordGoroutineProfile(gnext, nullptr, osyield);
+        }
+
+        if(! canCAS || ! rec::CompareAndSwap(gocpp::recv(gnext->atomicstatus), _Gwaiting, _Grunning))
         {
             // The CAS failed: use casgstatus, which will take care of
             // coordinating with the garbage collector about the state change.
             casgstatus(gnext, _Gwaiting, _Grunnable);
             casgstatus(gnext, _Grunnable, _Grunning);
+        }
+
+        // Donate locked state.
+        if(locked)
+        {
+            rec::set(gocpp::recv(mp->lockedg), gnext);
+            rec::set(gocpp::recv(gnext->lockedm), mp);
+        }
+
+        // Release the trace locker. We've completed all the necessary transitions..
+        if(rec::ok(gocpp::recv(trace)))
+        {
+            traceRelease(trace);
+        }
+
+        if(bubble != nullptr)
+        {
+            rec::decActive(gocpp::recv(bubble));
         }
 
         // Switch to gnext. Does not return.

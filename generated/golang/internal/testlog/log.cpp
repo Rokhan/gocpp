@@ -11,17 +11,18 @@
 #include "golang/internal/testlog/log.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/atomic/value.h"
+#include "golang/sync/atomic/type.h"
 
 // Package testlog provides a back-channel communication path
 // between tests and package os, so that cmd/go can see which
 // environment variables and files a test consults.
-namespace golang::testlog
+namespace golang::internal::testlog
 {
+    namespace atomic = golang::sync::atomic;
     namespace rec
     {
+        using atomic::rec::CompareAndSwap;
         using atomic::rec::Load;
-        using atomic::rec::Store;
     }
 
     // Interface is the interface required of test loggers.
@@ -128,33 +129,32 @@ namespace golang::testlog
     }
 
     // logger is the current logger Interface.
-    // We use an atomic.Value in case test startup
+    // We use an atomic.Pointer in case test startup
     // is racing with goroutines started during init.
     // That must not cause a race detector failure,
     // although it will still result in limited visibility
     // into exactly what those goroutines do.
-    atomic::Value logger;
+    atomic::Pointer<Interface> logger;
     // SetLogger sets the test logger implementation for the current process.
     // It must be called only once, at process startup.
     void SetLogger(Interface impl)
     {
-        if(rec::Load(gocpp::recv(logger)) != nullptr)
+        if(! rec::CompareAndSwap<testlog::Interface>(gocpp::recv(logger), nullptr, & impl))
         {
             gocpp::panic("testlog: SetLogger must be called only once"_s);
         }
-        rec::Store(gocpp::recv(logger), & impl);
     }
 
     // Logger returns the current test logger implementation.
     // It returns nil if there is no logger.
     Interface Logger()
     {
-        auto impl = rec::Load(gocpp::recv(logger));
+        auto impl = rec::Load<testlog::Interface>(gocpp::recv(logger));
         if(impl == nullptr)
         {
             return nullptr;
         }
-        return *gocpp::getValue<Interface*>(impl);
+        return *impl;
     }
 
     // Getenv calls Logger().Getenv, if a logger has been set.

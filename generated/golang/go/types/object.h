@@ -10,17 +10,30 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     bool isExported(gocpp::string name);
+    extern gocpp::array<gocpp::string, 7> varKindNames;
+}
+#include "golang/go/types/typestring.h"
+#include "golang/go/types/package.fwd.h"
+
+namespace golang::go::types
+{
+    gocpp::string Id(Package* pkg, gocpp::string name);
+    gocpp::string packagePrefix(Package* pkg, Qualifier qf);
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
 }
 #include "golang/go/token/position.h"
 #include "golang/go/types/type.h"
-#include "golang/go/types/typestring.h"
-#include "golang/go/types/package.fwd.h"
 #include "golang/go/types/scope.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Object : virtual gocpp::Interface
     {
@@ -51,32 +64,31 @@ namespace golang::types
 
         struct IObject
         {
-            virtual golang::types::Scope* vParent() = 0; // scope in which this object is declared; nil for methods and struct fields
+            virtual golang::go::types::Scope* vParent() = 0; // scope in which this object is declared; nil for methods and struct fields
             virtual token::Pos vPos() = 0; // position of object identifier in declaration
             virtual Package* vPkg() = 0; // package to which this object belongs; nil for labels and objects in the Universe scope
             virtual gocpp::string vName() = 0; // package local object name
-            virtual golang::types::Type vType() = 0; // object type
+            virtual golang::go::types::Type vType() = 0; // object type
             virtual bool vExported() = 0; // reports whether the name starts with a capital letter
             virtual gocpp::string vId() = 0; // object name if exported, qualified name if not exported (see func Id)
             // String returns a human-readable string of the object.
+            // Use [ObjectString] to control how package names are formatted in the string.
             virtual gocpp::string vString() = 0;
             // order reflects a package-level object's source order: if object
             // a is before object b in the source, then a.order() < b.order().
             // order returns a value > 0 for package-level objects; it returns
             // 0 for all other objects (including objects in file scopes).
             virtual uint32_t vorder() = 0;
-            // color returns the object's color.
-            virtual golang::types::color vcolor() = 0;
             // setType sets the type of the object.
-            virtual void vsetType(golang::types::Type _1) = 0;
+            virtual void vsetType(golang::go::types::Type _1) = 0;
             // setOrder sets the order number of the object. It must be > 0.
             virtual void vsetOrder(uint32_t _1) = 0;
-            // setColor sets the object's color. It must not be white.
-            virtual void vsetColor(golang::types::color color) = 0;
             // setParent sets the parent scope of the object.
-            virtual void vsetParent(golang::types::Scope* _1) = 0;
+            virtual void vsetParent(golang::go::types::Scope* _1) = 0;
             // sameId reports whether obj.Id() and Id(pkg, name) are the same.
-            virtual bool vsameId(Package* pkg, gocpp::string name) = 0;
+            // If foldCase is true, names are considered equal if they are equal with case folding
+            // and their packages are ignored (e.g., pkg1.m, pkg1.M, pkg2.m, and pkg2.M are all equal).
+            virtual bool vsameId(Package* pkg, gocpp::string name, bool foldCase) = 0;
             // scopePos returns the start position of the scope of this Object
             virtual token::Pos vscopePos() = 0;
             // setScopePos sets the start position of the scope for this Object.
@@ -92,7 +104,7 @@ namespace golang::types
                 value.reset(ptr);
             }
 
-            golang::types::Scope* vParent() override;
+            golang::go::types::Scope* vParent() override;
 
             token::Pos vPos() override;
 
@@ -100,7 +112,7 @@ namespace golang::types
 
             gocpp::string vName() override;
 
-            golang::types::Type vType() override;
+            golang::go::types::Type vType() override;
 
             bool vExported() override;
 
@@ -110,17 +122,13 @@ namespace golang::types
 
             uint32_t vorder() override;
 
-            golang::types::color vcolor() override;
-
-            void vsetType(golang::types::Type _1) override;
+            void vsetType(golang::go::types::Type _1) override;
 
             void vsetOrder(uint32_t _1) override;
 
-            void vsetColor(golang::types::color color) override;
+            void vsetParent(golang::go::types::Scope* _1) override;
 
-            void vsetParent(golang::types::Scope* _1) override;
-
-            bool vsameId(Package* pkg, gocpp::string name) override;
+            bool vsameId(Package* pkg, gocpp::string name, bool foldCase) override;
 
             token::Pos vscopePos() override;
 
@@ -141,8 +149,8 @@ namespace golang::types
 
     namespace rec
     {
-        golang::types::Scope* Parent(const gocpp::PtrRecv<struct Object, false>& self);
-        golang::types::Scope* Parent(const gocpp::ObjRecv<struct Object>& self);
+        golang::go::types::Scope* Parent(const gocpp::PtrRecv<struct Object, false>& self);
+        golang::go::types::Scope* Parent(const gocpp::ObjRecv<struct Object>& self);
 
         token::Pos Pos(const gocpp::PtrRecv<struct Object, false>& self);
         token::Pos Pos(const gocpp::ObjRecv<struct Object>& self);
@@ -153,8 +161,8 @@ namespace golang::types
         gocpp::string Name(const gocpp::PtrRecv<struct Object, false>& self);
         gocpp::string Name(const gocpp::ObjRecv<struct Object>& self);
 
-        golang::types::Type Type(const gocpp::PtrRecv<struct Object, false>& self);
-        golang::types::Type Type(const gocpp::ObjRecv<struct Object>& self);
+        golang::go::types::Type Type(const gocpp::PtrRecv<struct Object, false>& self);
+        golang::go::types::Type Type(const gocpp::ObjRecv<struct Object>& self);
 
         bool Exported(const gocpp::PtrRecv<struct Object, false>& self);
         bool Exported(const gocpp::ObjRecv<struct Object>& self);
@@ -168,23 +176,17 @@ namespace golang::types
         uint32_t order(const gocpp::PtrRecv<struct Object, false>& self);
         uint32_t order(const gocpp::ObjRecv<struct Object>& self);
 
-        golang::types::color color(const gocpp::PtrRecv<struct Object, false>& self);
-        golang::types::color color(const gocpp::ObjRecv<struct Object>& self);
-
-        void setType(const gocpp::PtrRecv<struct Object, false>& self, golang::types::Type _1);
-        void setType(const gocpp::ObjRecv<struct Object>& self, golang::types::Type _1);
+        void setType(const gocpp::PtrRecv<struct Object, false>& self, golang::go::types::Type _1);
+        void setType(const gocpp::ObjRecv<struct Object>& self, golang::go::types::Type _1);
 
         void setOrder(const gocpp::PtrRecv<struct Object, false>& self, uint32_t _1);
         void setOrder(const gocpp::ObjRecv<struct Object>& self, uint32_t _1);
 
-        void setColor(const gocpp::PtrRecv<struct Object, false>& self, golang::types::color color);
-        void setColor(const gocpp::ObjRecv<struct Object>& self, golang::types::color color);
+        void setParent(const gocpp::PtrRecv<struct Object, false>& self, golang::go::types::Scope* _1);
+        void setParent(const gocpp::ObjRecv<struct Object>& self, golang::go::types::Scope* _1);
 
-        void setParent(const gocpp::PtrRecv<struct Object, false>& self, golang::types::Scope* _1);
-        void setParent(const gocpp::ObjRecv<struct Object>& self, golang::types::Scope* _1);
-
-        bool sameId(const gocpp::PtrRecv<struct Object, false>& self, Package* pkg, gocpp::string name);
-        bool sameId(const gocpp::ObjRecv<struct Object>& self, Package* pkg, gocpp::string name);
+        bool sameId(const gocpp::PtrRecv<struct Object, false>& self, Package* pkg, gocpp::string name, bool foldCase);
+        bool sameId(const gocpp::ObjRecv<struct Object>& self, Package* pkg, gocpp::string name, bool foldCase);
 
         token::Pos scopePos(const gocpp::PtrRecv<struct Object, false>& self);
         token::Pos scopePos(const gocpp::ObjRecv<struct Object>& self);
@@ -194,16 +196,14 @@ namespace golang::types
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Object& value);
-    gocpp::string Id(Package* pkg, gocpp::string name);
     struct object
     {
-        golang::types::Scope* parent{};
+        golang::go::types::Scope* parent{};
         token::Pos pos{};
         Package* pkg{};
         gocpp::string name{};
-        golang::types::Type typ{};
+        golang::go::types::Type typ{};
         uint32_t order_{};
-        golang::types::color color_{};
         token::Pos scopePos_{};
 
         using isGoStruct = void;
@@ -218,13 +218,16 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct object& value);
-    golang::types::color colorFor(golang::types::Type t);
-    gocpp::string packagePrefix(Package* pkg, Qualifier qf);
+}
+#include "golang/bytes/buffer.fwd.h"
+#include "golang/go/constant/value.fwd.h"
+
+namespace golang::go::types
+{
     struct PkgName
     {
         object object{};
         Package* imported{};
-        bool used{}; // set if the package was used
 
         using isGoStruct = void;
 
@@ -257,10 +260,9 @@ namespace golang::types
     struct Var
     {
         object object{};
-        bool embedded{}; // if set, the variable is an embedded struct field, and name is the type name
-        bool isField{}; // var is struct field
-        bool used{}; // set if the variable was used
         Var* origin{}; // if non-nil, the Var from which this one was instantiated
+        VarKind kind{};
+        bool embedded{}; // if set, the variable is an embedded struct field, and name is the type name
 
         using isGoStruct = void;
 
@@ -277,8 +279,9 @@ namespace golang::types
     struct Func
     {
         object object{};
-        bool hasPtrRecv_{}; // only valid for methods that don't have a type yet; use hasPtrRecv() to read
         Func* origin{}; // if non-nil, the Func from which this one was instantiated
+        bool hasPtrRecv_{}; // only valid for methods that don't have a type yet; use hasPtrRecv() to read
+        bool nointerface{};
 
         using isGoStruct = void;
 
@@ -326,13 +329,20 @@ namespace golang::types
 
     std::ostream& operator<<(std::ostream& os, const struct Nil& value);
     gocpp::string ObjectString(Object obj, Qualifier qf);
+    gocpp::string objectKind(Object obj);
 }
 #include "golang/go/constant/value.h"
-#include "golang/go/types/universe.h"
-#include "golang/bytes/buffer.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace constant = golang::go::constant;
+}
+#include "golang/go/types/universe.h"
+
+namespace golang::go::types
+{
+    namespace bytes = golang::bytes;
+    PkgName* NewPkgName(token::Pos pos, Package* pkg, gocpp::string name, Package* imported);
     struct Const
     {
         object object{};
@@ -350,6 +360,12 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Const& value);
+    TypeName* NewTypeName(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ);
+    Var* NewVar(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ);
+    Var* NewParam(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ);
+    Var* NewField(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ, bool embedded);
+    Var* newVar(VarKind kind, token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ);
+    Label* NewLabel(token::Pos pos, Package* pkg, gocpp::string name);
     struct Builtin
     {
         object object{};
@@ -368,67 +384,63 @@ namespace golang::types
 
     std::ostream& operator<<(std::ostream& os, const struct Builtin& value);
     void writeObject(bytes::Buffer* buf, Object obj, Qualifier qf);
-    PkgName* NewPkgName(token::Pos pos, Package* pkg, gocpp::string name, Package* imported);
-    Const* NewConst(token::Pos pos, Package* pkg, gocpp::string name, golang::types::Type typ, constant::Value val);
-    TypeName* NewTypeName(token::Pos pos, Package* pkg, gocpp::string name, golang::types::Type typ);
-    Var* NewVar(token::Pos pos, Package* pkg, gocpp::string name, golang::types::Type typ);
-    Var* NewParam(token::Pos pos, Package* pkg, gocpp::string name, golang::types::Type typ);
-    Var* NewField(token::Pos pos, Package* pkg, gocpp::string name, golang::types::Type typ, bool embedded);
-    Label* NewLabel(token::Pos pos, Package* pkg, gocpp::string name);
-    Builtin* newBuiltin(builtinId id);
     void writeFuncName(bytes::Buffer* buf, Func* f, Qualifier qf);
+    Const* NewConst(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ, constant::Value val);
+    Builtin* newBuiltin(builtinId id);
 }
 #include "golang/go/types/named.fwd.h"
 #include "golang/go/types/signature.fwd.h"
 #include "golang/go/types/typeparam.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    TypeName* _NewTypeNameLazy(token::Pos pos, Package* pkg, gocpp::string name, std::function<std::tuple<gocpp::slice<TypeParam*>, golang::types::Type, gocpp::slice<Func*>> (Named* named)> load);
-    Func* NewFunc(token::Pos pos, Package* pkg, gocpp::string name, Signature* sig);
+    TypeName* _NewTypeNameLazy(token::Pos pos, Package* pkg, gocpp::string name, std::function<std::tuple<gocpp::slice<TypeParam*>, golang::go::types::Type, gocpp::slice<Func*>, gocpp::slice<std::function<void ()>>> (Named* _1)> load);
+    Func* NewFunc(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Signature* sig);
 }
 
 #include "golang/go/constant/value.h"
 #include "golang/go/token/position.h"
 #include "golang/go/types/package.h"
 #include "golang/go/types/scope.h"
+#include "golang/go/types/signature.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        gocpp::string String(golang::types::color c);
-        golang::types::Scope* Parent(object* obj);
+        golang::go::types::Scope* Parent(object* obj);
         token::Pos Pos(object* obj);
         Package* Pkg(object* obj);
         gocpp::string Name(object* obj);
-        golang::types::Type Type(object* obj);
+        golang::go::types::Type Type(object* obj);
         bool Exported(object* obj);
         gocpp::string Id(object* obj);
         gocpp::string String(object* obj);
         uint32_t order(object* obj);
-        golang::types::color color(object* obj);
         token::Pos scopePos(object* obj);
-        void setParent(object* obj, golang::types::Scope* parent);
-        void setType(object* obj, golang::types::Type typ);
+        void setParent(object* obj, golang::go::types::Scope* parent);
+        void setType(object* obj, golang::go::types::Type typ);
         void setOrder(object* obj, uint32_t order);
-        void setColor(object* obj, golang::types::color color);
         void setScopePos(object* obj, token::Pos pos);
-        bool sameId(object* obj, Package* pkg, gocpp::string name);
-        bool less(object* a, object* b);
+        bool sameId(object* obj, Package* pkg, gocpp::string name, bool foldCase);
+        int cmp(object* a, object* b);
         Package* Imported(PkgName* obj);
         constant::Value Val(Const* obj);
         void isDependency(Const*);
         bool IsAlias(TypeName* obj);
+        gocpp::string String(VarKind kind);
+        VarKind Kind(Var* v);
+        void SetKind(Var* v, VarKind kind);
         bool Anonymous(Var* obj);
         bool Embedded(Var* obj);
         bool IsField(Var* obj);
         Var* Origin(Var* obj);
         void isDependency(Var*);
+        golang::go::types::Signature* Signature(Func* obj);
         gocpp::string FullName(Func* obj);
-        golang::types::Scope* Scope(Func* obj);
+        golang::go::types::Scope* Scope(Func* obj);
         Func* Origin(Func* obj);
         Package* Pkg(Func* obj);
         bool hasPtrRecv(Func* obj);

@@ -3,7 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/os/types.fwd.h"
 
 namespace golang::os
 {

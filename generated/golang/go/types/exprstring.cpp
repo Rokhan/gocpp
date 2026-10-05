@@ -14,13 +14,16 @@
 #include "golang/bytes/buffer.h"
 #include "golang/fmt/print.h"
 #include "golang/go/ast/ast.h"
-#include "golang/go/internal/typeparams/typeparams.h"
-#include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
+#include "golang/go/types/index.h"
+#include "golang/go/types/util.h"
 #include "golang/io/io.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace bytes = golang::bytes;
+    namespace fmt = golang::fmt;
     namespace rec
     {
         using ast::rec::End;
@@ -31,7 +34,6 @@ namespace golang::types
         using bytes::rec::Write;
         using bytes::rec::WriteByte;
         using bytes::rec::WriteString;
-        using token::rec::IsValid;
         using token::rec::String;
     }
 
@@ -160,10 +162,10 @@ namespace golang::types
                 case 8:
                 {
                     ast::IndexExpr* x = gocpp::any_cast<ast::IndexExpr*>(x_ref);
-                    auto ix = typeparams::UnpackIndexExpr(x);
-                    WriteExpr(buf, ix->IndexListExpr.X);
+                    auto ix = unpackIndexedExpr(x);
+                    WriteExpr(buf, ix->x);
                     rec::WriteByte(gocpp::recv(buf), '[');
-                    writeExprList(buf, ix->IndexListExpr.Indices);
+                    writeExprList(buf, ix->indices);
                     rec::WriteByte(gocpp::recv(buf), ']');
                     break;
                 }
@@ -210,7 +212,7 @@ namespace golang::types
                     WriteExpr(buf, x->Fun);
                     rec::WriteByte(gocpp::recv(buf), '(');
                     writeExprList(buf, x->Args);
-                    if(rec::IsValid(gocpp::recv(x->Ellipsis)))
+                    if(hasDots(x))
                     {
                         rec::WriteString(gocpp::recv(buf), "..."_s);
                     }

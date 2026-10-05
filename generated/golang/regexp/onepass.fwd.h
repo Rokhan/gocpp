@@ -7,6 +7,7 @@
 namespace golang::regexp
 {
     struct onePassProg;
+    struct onePassInst;
     struct queueOnePass;
     // mergeRuneSets merges two non-intersecting runesets, and returns the merged result,
     // and a NextIp array. The idea is that if a rune matches the OnePassRunes at index
@@ -14,12 +15,4 @@ namespace golang::regexp
     // NextIp array with the single element mergeFailed is returned.
     // The code assumes that both inputs contain ordered and non-intersecting rune pairs.
     const uint32_t mergeFailed = uint32_t(0xffffffff);
-    struct GoTag_runeSlice;
-    using runeSlice = gocpp::defined<gocpp::slice<gocpp::rune>, GoTag_runeSlice>;
-}
-#include "golang/regexp/syntax/prog.fwd.h"
-
-namespace golang::regexp
-{
-    struct onePassInst;
 }

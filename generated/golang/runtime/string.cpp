@@ -12,25 +12,37 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
-#include "golang/internal/abi/type.h"
 #include "golang/internal/bytealg/indexbyte_native.h"
 #include "golang/internal/goarch/goarch.h"
+#include "golang/internal/goos/zgoos_windows.h"
+#include "golang/internal/runtime/math/math.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
+#include "golang/internal/strconv/atoi.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/iface.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/msan0.h"
-#include "golang/runtime/msize_allocheaders.h"
+#include "golang/runtime/msize.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/race0.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/slice.h"
 #include "golang/runtime/stubs.h"
+#include "golang/runtime/type.h"
 #include "golang/runtime/utf8.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace bytealg = golang::internal::bytealg;
+    namespace goarch = golang::internal::goarch;
+    namespace goos = golang::internal::goos;
+    namespace math = golang::internal::runtime::math;
+    namespace strconv = golang::internal::strconv;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
     }
@@ -75,12 +87,15 @@ namespace golang::runtime
         auto [s, b] = rawstringtmp(buf, l);
         for(auto [gocpp_ignored, x] : a)
         {
-            copy(b, x);
-            b = b.make_slice(len(x));
+            auto n = copy(b, x);
+            b = b.make_slice(n);
         }
         return s;
     }
 
+    // concatstring2 helps make the callsite smaller (compared to concatstrings),
+    // and we think this is currently more valuable than omitting one call in the
+    // chain, the same goes for concatstring{3,4,5}.
     gocpp::string concatstring2(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1)
     {
         return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1});
@@ -101,6 +116,70 @@ namespace golang::runtime
         return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1, a2, a3, a4});
     }
 
+    // concatbytes implements a Go string concatenation x+y+z+... returning a slice
+    // of bytes.
+    // The operands are passed in the slice a.
+    gocpp::slice<unsigned char> concatbytes(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::string> a)
+    {
+        auto l = 0;
+        for(auto [gocpp_ignored, x] : a)
+        {
+            auto n = len(x);
+            if(l + n < l)
+            {
+                go_throw("string concatenation too long"_s);
+            }
+            l += n;
+        }
+        if(l == 0)
+        {
+            // This is to match the return type of the non-optimized concatenation.
+            return gocpp::slice<unsigned char> {};
+        }
+
+        gocpp::slice<unsigned char> b = {};
+        if(buf != nullptr && l <= len(buf))
+        {
+            *buf = tmpBuf {};
+            b = buf.make_slice(0, l);
+        }
+        else
+        {
+            b = rawbyteslice(l);
+        }
+        auto offset = 0;
+        for(auto [gocpp_ignored, x] : a)
+        {
+            copy(b.make_slice(offset), x);
+            offset += len(x);
+        }
+
+        return b;
+    }
+
+    // concatbyte2 helps make the callsite smaller (compared to concatbytes),
+    // and we think this is currently more valuable than omitting one call in
+    // the chain, the same goes for concatbyte{3,4,5}.
+    gocpp::slice<unsigned char> concatbyte2(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1)
+    {
+        return concatbytes(buf, gocpp::slice<gocpp::string> {a0, a1});
+    }
+
+    gocpp::slice<unsigned char> concatbyte3(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2)
+    {
+        return concatbytes(buf, gocpp::slice<gocpp::string> {a0, a1, a2});
+    }
+
+    gocpp::slice<unsigned char> concatbyte4(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3)
+    {
+        return concatbytes(buf, gocpp::slice<gocpp::string> {a0, a1, a2, a3});
+    }
+
+    gocpp::slice<unsigned char> concatbyte5(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4)
+    {
+        return concatbytes(buf, gocpp::slice<gocpp::string> {a0, a1, a2, a3, a4});
+    }
+
     // slicebytetostring converts a byte slice to a string.
     // It is inserted by the compiler into generated code.
     // ptr is a pointer to the first element of the slice;
@@ -118,7 +197,7 @@ namespace golang::runtime
         }
         if(raceenabled)
         {
-            racereadrangepc(gocpp::unsafe_pointer(ptr), uintptr_t(n), getcallerpc(), abi::FuncPCABIInternal(slicebytetostring));
+            racereadrangepc(gocpp::unsafe_pointer(ptr), uintptr_t(n), sys::GetCallerPC(), abi::FuncPCABIInternal(slicebytetostring));
         }
         if(msanenabled)
         {
@@ -194,7 +273,7 @@ namespace golang::runtime
     {
         if(raceenabled && n > 0)
         {
-            racereadrangepc(gocpp::unsafe_pointer(ptr), uintptr_t(n), getcallerpc(), abi::FuncPCABIInternal(slicebytetostringtmp));
+            racereadrangepc(gocpp::unsafe_pointer(ptr), uintptr_t(n), sys::GetCallerPC(), abi::FuncPCABIInternal(slicebytetostringtmp));
         }
         if(msanenabled && n > 0)
         {
@@ -257,7 +336,7 @@ namespace golang::runtime
     {
         if(raceenabled && len(a) > 0)
         {
-            racereadrangepc(gocpp::unsafe_pointer(& a[0]), uintptr_t(len(a)) * gocpp::Sizeof<gocpp::rune>(), getcallerpc(), abi::FuncPCABIInternal(slicerunetostring));
+            racereadrangepc(gocpp::unsafe_pointer(& a[0]), uintptr_t(len(a)) * gocpp::Sizeof<gocpp::rune>(), sys::GetCallerPC(), abi::FuncPCABIInternal(slicerunetostring));
         }
         if(msanenabled && len(a) > 0)
         {
@@ -445,7 +524,7 @@ namespace golang::runtime
         return b;
     }
 
-    // This is exported via linkname to assembly in syscall (for Plan9).
+    // This is exported via linkname to assembly in syscall (for Plan9) and cgo.
     //
     //go:linkname gostring
     gocpp::string gostring(unsigned char* p)
@@ -479,96 +558,6 @@ namespace golang::runtime
         return s;
     }
 
-    bool hasPrefix(gocpp::string s, gocpp::string prefix)
-    {
-        return len(s) >= len(prefix) && s.make_slice(0, len(prefix)) == prefix;
-    }
-
-    bool hasSuffix(gocpp::string s, gocpp::string suffix)
-    {
-        return len(s) >= len(suffix) && s.make_slice(len(s) - len(suffix)) == suffix;
-    }
-
-    // atoi64 parses an int64 from a string s.
-    // The bool result reports whether s is a number
-    // representable by a value of type int64.
-    std::tuple<int64_t, bool> atoi64(gocpp::string s)
-    {
-        if(s == ""_s)
-        {
-            return {0, false};
-        }
-
-        auto neg = false;
-        if(s[0] == '-')
-        {
-            neg = true;
-            s = s.make_slice(1);
-        }
-
-        auto un = uint64_t(0);
-        for(auto i = 0; i < len(s); i++)
-        {
-            auto c = s[i];
-            if(c < '0' || c > '9')
-            {
-                return {0, false};
-            }
-            if(un > maxUint64 / 10)
-            {
-                // overflow
-                return {0, false};
-            }
-            un *= 10;
-            auto un1 = un + uint64_t(c) - '0';
-            if(un1 < un)
-            {
-                // overflow
-                return {0, false};
-            }
-            un = un1;
-        }
-
-        if(! neg && un > uint64_t(maxInt64))
-        {
-            return {0, false};
-        }
-        if(neg && un > uint64_t(maxInt64) + 1)
-        {
-            return {0, false};
-        }
-
-        auto n = int64_t(un);
-        if(neg)
-        {
-            n = - n;
-        }
-
-        return {n, true};
-    }
-
-    // atoi is like atoi64 but for integers
-    // that fit into an int.
-    std::tuple<int, bool> atoi(gocpp::string s)
-    {
-        if(auto [n, ok] = atoi64(s); n == int64_t(int(n)))
-        {
-            return {int(n), ok};
-        }
-        return {0, false};
-    }
-
-    // atoi32 is like atoi but for integers
-    // that fit into an int32.
-    std::tuple<int32_t, bool> atoi32(gocpp::string s)
-    {
-        if(auto [n, ok] = atoi64(s); n == int64_t(int32_t(n)))
-        {
-            return {int32_t(n), ok};
-        }
-        return {0, false};
-    }
-
     // parseByteCount parses a string that represents a count of bytes.
     //
     // s must match the following regular expression:
@@ -593,12 +582,12 @@ namespace golang::runtime
         auto last = s[len(s) - 1];
         if(last >= '0' && last <= '9')
         {
-            auto [n, ok] = atoi64(s);
-            if(! ok || n < 0)
+            auto [n, err] = strconv::ParseInt(s, 10, 64);
+            if(err != nullptr || n < 0)
             {
                 return {0, false};
             }
-            return {n, ok};
+            return {n, true};
         }
         // Failing a trailing digit, this must always end in 'B'.
         // Also at this point there must be at least one digit before
@@ -611,12 +600,12 @@ namespace golang::runtime
         if(auto c = s[len(s) - 2]; c >= '0' && c <= '9')
         {
             // Trivial 'B' suffix.
-            auto [n, ok] = atoi64(s.make_slice(0, len(s) - 1));
-            if(! ok || n < 0)
+            auto [n, err] = strconv::ParseInt(s.make_slice(0, len(s) - 1), 10, 64);
+            if(err != nullptr || n < 0)
             {
                 return {0, false};
             }
-            return {n, ok};
+            return {n, true};
         }
         else
         if(c != 'i')
@@ -663,19 +652,19 @@ namespace golang::runtime
         {
             m *= 1024;
         }
-        auto [n, ok] = atoi64(s.make_slice(0, len(s) - 3));
-        if(! ok || n < 0)
+        auto [n, err] = strconv::ParseInt(s.make_slice(0, len(s) - 3), 10, 64);
+        if(err != nullptr || n < 0)
         {
             return {0, false};
         }
         auto un = uint64_t(n);
-        if(un > maxUint64 / m)
+        if(un > math::MaxUint64 / m)
         {
             // Overflow.
             return {0, false};
         }
         un *= m;
-        if(un > uint64_t(maxInt64))
+        if(un > uint64_t(math::MaxInt64))
         {
             // Overflow.
             return {0, false};
@@ -709,7 +698,9 @@ namespace golang::runtime
         // It must be the minimum page size for any architecture Go
         // runs on. It's okay (just a minor performance loss) if the
         // actual system page size is larger than this value.
-        auto pageSize = 4096;
+        // For Android, we set the page size to the MTE size, as MTE
+        // might be enforced. See issue 59090.
+        auto pageSize = 4096 * (1 - goos::IsAndroid) + 16 * goos::IsAndroid;
 
         auto offset = 0;
         auto ptr = gocpp::unsafe_pointer(s);

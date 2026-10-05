@@ -18,6 +18,9 @@
 
 namespace golang::main
 {
+    namespace color = golang::image::color;
+    namespace image = golang::image;
+    namespace pic = golang::golang_org::x::tour::pic;
     namespace rec
     {
     }

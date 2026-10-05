@@ -21,8 +21,16 @@ namespace golang::runtime
     void sigInitIgnored(uint32_t s);
     bool signal_ignored(uint32_t s);
 }
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/runtime2.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/runtime/note_other.h"
 #include "golang/runtime/os_windows.fwd.h"
 
 namespace golang::runtime
@@ -50,6 +58,22 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sigStruct& value);
+}
+#include "golang/runtime/os_windows.h"
+
+namespace golang::runtime
+{
+    // sig handles communication between the signal handler and os/signal.
+    // Other than the inuse and recv fields, the fields are accessed atomically.
+    //
+    // The wanted and ignored fields are only written by one goroutine at
+    // a time; access is controlled by the handlers Mutex in os/signal.
+    // The fields are only read by that one goroutine and by the signal handler.
+    // We access them atomically to minimize the race between setting them
+    // in the goroutine calling os/signal and the signal handler,
+    // which may be running in a different thread. That race is unavoidable,
+    // as there is no connection between handling a signal and receiving one,
+    // but atomic instructions should minimize it.
     extern sigStruct sig;
 
     namespace rec

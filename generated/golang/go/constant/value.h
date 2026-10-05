@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::constant
+namespace golang::go::constant
 {
     struct Value : virtual gocpp::Interface
     {
@@ -42,7 +42,7 @@ namespace golang::constant
         struct IValue
         {
             // Kind returns the value kind.
-            virtual golang::constant::Kind vKind() = 0;
+            virtual golang::go::constant::Kind vKind() = 0;
             // String returns a short, quoted (human-readable) form of the value.
             // For numeric values, the result may be an approximation;
             // for String values the result may be a shortened string.
@@ -64,7 +64,7 @@ namespace golang::constant
                 value.reset(ptr);
             }
 
-            golang::constant::Kind vKind() override;
+            golang::go::constant::Kind vKind() override;
 
             gocpp::string vString() override;
 
@@ -87,8 +87,8 @@ namespace golang::constant
 
     namespace rec
     {
-        golang::constant::Kind Kind(const gocpp::PtrRecv<struct Value, false>& self);
-        golang::constant::Kind Kind(const gocpp::ObjRecv<struct Value>& self);
+        golang::go::constant::Kind Kind(const gocpp::PtrRecv<struct Value, false>& self);
+        golang::go::constant::Kind Kind(const gocpp::ObjRecv<struct Value>& self);
 
         gocpp::string String(const gocpp::PtrRecv<struct Value, false>& self);
         gocpp::string String(const gocpp::ObjRecv<struct Value>& self);
@@ -152,6 +152,7 @@ namespace golang::constant
     std::tuple<double, bool> Float32Val(Value x);
     std::tuple<double, bool> Float64Val(Value x);
     go_any Val(Value x);
+    int64_t StringLen(Value x);
     Value Make(go_any x);
     int BitLen(Value x);
     int Sign(Value x);
@@ -172,16 +173,27 @@ namespace golang::constant
     Value sub(Value x, Value y);
     Value mul(Value x, Value y);
     Value quo(Value x, Value y);
+    complexVal vtoc(Value x);
+}
+#include "golang/go/token/token.fwd.h"
+#include "golang/math/big/arith.fwd.h"
+#include "golang/math/big/float.fwd.h"
+#include "golang/math/big/int.fwd.h"
+#include "golang/math/big/rat.fwd.h"
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::go::constant
+{
+    namespace sync = golang::sync;
+    namespace big = golang::math::big;
 }
 #include "golang/go/token/token.h"
 #include "golang/math/big/arith.h"
 #include "golang/sync/mutex.h"
-#include "golang/math/big/float.fwd.h"
-#include "golang/math/big/int.fwd.h"
-#include "golang/math/big/rat.fwd.h"
 
-namespace golang::constant
+namespace golang::go::constant
 {
+    namespace token = golang::go::token;
     struct stringVal
     {
         // Lazy value: either a string (l,r==nil) or an addition (l,r!=nil).
@@ -272,20 +284,19 @@ namespace golang::constant
     ratVal itor(intVal x);
     floatVal itof(intVal x);
     floatVal rtof(ratVal x);
-    complexVal vtoc(Value x);
     extern floatVal floatVal0;
     extern stringVal emptyString;
 
     namespace rec
     {
-        golang::constant::Kind Kind(unknownVal);
-        golang::constant::Kind Kind(boolVal);
-        golang::constant::Kind Kind(stringVal*);
-        golang::constant::Kind Kind(int64Val);
-        golang::constant::Kind Kind(intVal);
-        golang::constant::Kind Kind(ratVal);
-        golang::constant::Kind Kind(floatVal);
-        golang::constant::Kind Kind(complexVal);
+        golang::go::constant::Kind Kind(unknownVal);
+        golang::go::constant::Kind Kind(boolVal);
+        golang::go::constant::Kind Kind(stringVal*);
+        golang::go::constant::Kind Kind(int64Val);
+        golang::go::constant::Kind Kind(intVal);
+        golang::go::constant::Kind Kind(ratVal);
+        golang::go::constant::Kind Kind(floatVal);
+        golang::go::constant::Kind Kind(complexVal);
         gocpp::string String(unknownVal);
         gocpp::string String(boolVal x);
         gocpp::string String(stringVal* x);
@@ -312,6 +323,7 @@ namespace golang::constant
         void implementsValue(intVal);
         void implementsValue(floatVal);
         void implementsValue(complexVal);
+        int64_t len(stringVal* x);
     }
 }
 

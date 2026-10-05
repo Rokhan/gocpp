@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::big
+namespace golang::math::big
 {
     struct decimal
     {
@@ -30,20 +30,20 @@ namespace golang::big
 
     std::ostream& operator<<(std::ostream& os, const struct decimal& value);
     gocpp::slice<unsigned char> appendZeros(gocpp::slice<unsigned char> buf, int n);
-    void shr(decimal* x, unsigned int s);
+    void rsh(decimal* x, unsigned int s);
     bool shouldRoundUp(decimal* x, int n);
     void trim(decimal* x);
 }
 
 #include "golang/math/big/nat.h"
 
-namespace golang::big
+namespace golang::math::big
 {
 
     namespace rec
     {
         unsigned char at(decimal* d, int i);
-        void init(decimal* x, nat m, int shift);
+        void init(decimal* x, golang::math::big::nat m, int shift);
         gocpp::string String(decimal* x);
         void round(decimal* x, int n);
         void roundUp(decimal* x, int n);

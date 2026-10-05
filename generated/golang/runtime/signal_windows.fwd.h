@@ -6,10 +6,6 @@
 
 namespace golang::runtime
 {
-    const long _SEM_FAILCRITICALERRORS = 0x0001;
-    const long _SEM_NOGPFAULTERRORBOX = 0x0002;
-    const long _SEM_NOOPENFILEERRORBOX = 0x8000;
-    const long _WER_FAULT_REPORTING_NO_UI = 0x0020;
     const int callbackVEH = 0;
     const int callbackFirstVCH = 1;
     const int callbackLastVCH = 2;

@@ -31,35 +31,32 @@ namespace golang::runtime
     void goPanicSlice3C(int x, int y);
     void goPanicSlice3CU(unsigned int x, int y);
     void goPanicSliceConvert(int x, int y);
-    void panicIndex(int x, int y);
-    void panicIndexU(unsigned int x, int y);
-    void panicSliceAlen(int x, int y);
-    void panicSliceAlenU(unsigned int x, int y);
-    void panicSliceAcap(int x, int y);
-    void panicSliceAcapU(unsigned int x, int y);
-    void panicSliceB(int x, int y);
-    void panicSliceBU(unsigned int x, int y);
-    void panicSlice3Alen(int x, int y);
-    void panicSlice3AlenU(unsigned int x, int y);
-    void panicSlice3Acap(int x, int y);
-    void panicSlice3AcapU(unsigned int x, int y);
-    void panicSlice3B(int x, int y);
-    void panicSlice3BU(unsigned int x, int y);
-    void panicSlice3C(int x, int y);
-    void panicSlice3CU(unsigned int x, int y);
-    void panicSliceConvert(int x, int y);
+    void panicBounds();
+    void panicExtend();
+    void panicBounds64(uintptr_t pc, gocpp::array_ptr<gocpp::array<int64_t, 16>> regs);
+    void panicBounds32(uintptr_t pc, gocpp::array_ptr<gocpp::array<int32_t, 16>> regs);
+    void panicBounds32X(uintptr_t pc, gocpp::array_ptr<gocpp::array<int32_t, 16>> regs);
+    extern gocpp::error shiftError;
     void panicshift();
+    extern gocpp::error divideError;
     void panicdivide();
+    extern gocpp::error overflowError;
     void panicoverflow();
+    extern gocpp::error floatError;
     void panicfloat();
+    extern gocpp::error memoryError;
     void panicmem();
     void panicmemAddr(uintptr_t addr);
-    void panicrangeexit();
+    extern gocpp::error simdImmError;
+    void panicSimdImm();
+    extern gocpp::error rangeDoneError;
+    extern gocpp::error rangePanicError;
+    extern gocpp::error rangeExhaustedError;
+    extern gocpp::error rangeMissingPanicError;
+    void panicrangestate(int state);
     go_any deferrangefunc();
-    void freedeferfn();
     void deferreturn();
     void Goexit();
-    std::tuple<uint32_t, gocpp::unsafe_pointer> readvarintUnsafe(gocpp::unsafe_pointer fd);
     struct PanicNilError
     {
         // This field makes PanicNilError structurally different from
@@ -82,10 +79,18 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct PanicNilError& value);
+    extern godebugInc* panicnil;
     void gopanic(go_any e);
-    go_any gorecover(uintptr_t argp);
+    go_any gorecover();
     void sync_throw(gocpp::string s);
     void sync_fatal(gocpp::string s);
+    void rand_fatal(gocpp::string s);
+    void sysrand_fatal(gocpp::string s);
+    void fips_fatal(gocpp::string s);
+    void maps_fatal(gocpp::string s);
+    void internal_sync_throw(gocpp::string s);
+    void internal_sync_fatal(gocpp::string s);
+    void cgroup_throw(gocpp::string s);
     void go_throw(gocpp::string s);
     void fatal(gocpp::string s);
     void fatalthrow(throwType t);
@@ -93,38 +98,53 @@ namespace golang::runtime
     extern bool didothers;
     bool canpanic();
     bool isAbortPC(uintptr_t pc);
+    gocpp::string pcName(uintptr_t pc);
     void deferproc(std::function<void ()> fn);
     void deferprocat(std::function<void ()> fn, go_any frame);
+    gocpp::string fnName(std::function<void ()> fn);
 }
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/runtime.h"
+#include "golang/runtime/print.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/error.fwd.h"
 
 namespace golang::runtime
 {
-    extern gocpp::error shiftError;
-    extern gocpp::error divideError;
-    extern gocpp::error overflowError;
-    extern gocpp::error floatError;
-    extern gocpp::error memoryError;
-    extern gocpp::error rangeExitError;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
+#include "golang/runtime/synctest.fwd.h"
+
+namespace golang::runtime
+{
     _defer* badDefer();
-    _defer* deferconvert(_defer* d);
+    void deferconvert(_defer* d0);
     void deferprocStack(_defer* d);
     _defer* newdefer();
-    void freedefer(_defer* d);
+    void popDefer(g* gp);
     void preprintpanics(_panic* p);
     void printpanics(_panic* p);
-    extern godebugInc* panicnil;
-    extern atomic::Uint32 runningPanicDefers;
-    extern atomic::Uint32 panicking;
+    std::tuple<uint32_t, gocpp::unsafe_pointer> readvarintUnsafe(gocpp::unsafe_pointer fd);
+    void printPreFatalDeferPanic(_panic* p);
+    // paniclk is held while printing the panic information and stack trace,
+    // so that two concurrent panics don't overlap their output.
     extern mutex paniclk;
     void recovery(g* gp);
     void fatalpanic(_panic* msgs);
     extern mutex deadlock;
-    bool dopanic_m(g* gp, uintptr_t pc, uintptr_t sp);
+    bool dopanic_m(g* gp, uintptr_t pc, uintptr_t sp, synctestBubble* bubble);
     bool shouldPushSigpanic(g* gp, uintptr_t pc, uintptr_t lr);
+    void dumpPanicDeferState(gocpp::string where, g* gp);
+    golang::runtime::hex pcOff(uintptr_t pc);
+}
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+    // runningPanicDefers is non-zero while running deferred functions for panic.
+    // This is used to try hard to get a panic stack trace out when exiting.
+    extern atomic::Uint32 runningPanicDefers;
+    // panicking is non-zero when crashing the program for an unrecovered panic.
+    extern atomic::Uint32 panicking;
 }
 
 #include "golang/runtime/runtime2.h"

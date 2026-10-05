@@ -4,16 +4,9 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::parser
+namespace golang::go::parser
 {
     const bool debugResolve = false;
     const int maxScopeDepth = 1e3;
-}
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/ast/scope.fwd.h"
-#include "golang/go/token/position.fwd.h"
-
-namespace golang::parser
-{
     struct resolver;
 }

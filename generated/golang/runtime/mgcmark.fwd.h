@@ -8,7 +8,8 @@ namespace golang::runtime
 {
     const int fixedRootFinalizers = 0;
     const int fixedRootFreeGStacks = 1;
-    const int fixedRootCount = 2;
+    const int fixedRootCleanups = 2;
+    const int fixedRootCount = 3;
     // rootBlockBytes is the number of bytes to scan per data or
     // BSS root.
     const int rootBlockBytes = 256 << 10;
@@ -27,15 +28,6 @@ namespace golang::runtime
     // a syscall, so its overhead is nontrivial). Higher values
     // make the system less responsive to incoming work.
     const long drainCheckThreshold = 100000;
-    // pagesPerSpanRoot indicates how many pages to scan from a span root
-    // at a time. Used by special root marking.
-    //
-    // Higher values improve throughput by increasing locality, but
-    // increase the minimum latency of a marking operation.
-    //
-    // Must be a multiple of the pageInUse bitmap element size and
-    // must also evenly divide pagesPerArena.
-    const long pagesPerSpanRoot = 512;
     using gcDrainFlags = int;
     const gcDrainFlags gcDrainUntilPreempt = 1 << 0;
     const gcDrainFlags gcDrainFlushBgCredit = 1 << 1;

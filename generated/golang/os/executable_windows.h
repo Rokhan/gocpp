@@ -14,6 +14,12 @@ namespace golang::os
 {
     std::tuple<gocpp::string, gocpp::error> executable();
 }
+#include "golang/syscall/syscall_windows.fwd.h"
+
+namespace golang::os
+{
+    namespace syscall = golang::syscall;
+}
 #include "golang/syscall/syscall_windows.h"
 
 namespace golang::os

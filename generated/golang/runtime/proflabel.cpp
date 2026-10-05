@@ -17,11 +17,20 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
 
     uintptr_t labelSync;
+    // runtime_setProfLabel should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/cloudwego/localsession
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname runtime_setProfLabel runtime/pprof.runtime_setProfLabel
     void runtime_setProfLabel(gocpp::unsafe_pointer labels)
     {
@@ -48,6 +57,14 @@ namespace golang::runtime
         getg()->labels = labels;
     }
 
+    // runtime_getProfLabel should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/cloudwego/localsession
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
     //go:linkname runtime_getProfLabel runtime/pprof.runtime_getProfLabel
     gocpp::unsafe_pointer runtime_getProfLabel()
     {

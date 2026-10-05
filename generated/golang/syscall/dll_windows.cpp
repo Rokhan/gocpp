@@ -20,6 +20,10 @@
 
 namespace golang::syscall
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::sync::atomic;
+    namespace sync = golang::sync;
+    namespace sysdll = golang::internal::syscall::windows::sysdll;
     namespace rec
     {
         using mocklib::rec::Error;
@@ -27,6 +31,8 @@ namespace golang::syscall
         using mocklib::rec::Unlock;
     }
 
+    gocpp::unsafe_pointer __LoadLibraryExW;
+    gocpp::unsafe_pointer __GetProcAddress;
     // DLLError describes reasons for DLL load failures.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -73,41 +79,131 @@ namespace golang::syscall
         return e->Err;
     }
 
-    // Deprecated: Use SyscallN instead.
+    // Deprecated: Use [SyscallN] instead.
+    //
+    //go:nosplit
+    //go:uintptrkeepalive
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3)
-    /* convertBlockStmt, nil block */;
+    {
+        uintptr_t r1;
+        uintptr_t r2;
+        Errno err;
+        return syscalln(trap, nargs, a1, a2, a3);
+    }
 
-    // Deprecated: Use SyscallN instead.
+    // Deprecated: Use [SyscallN] instead.
+    //
+    //go:nosplit
+    //go:uintptrkeepalive
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall6(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6)
-    /* convertBlockStmt, nil block */;
+    {
+        uintptr_t r1;
+        uintptr_t r2;
+        Errno err;
+        return syscalln(trap, nargs, a1, a2, a3, a4, a5, a6);
+    }
 
-    // Deprecated: Use SyscallN instead.
+    // Deprecated: Use [SyscallN] instead.
+    //
+    //go:nosplit
+    //go:uintptrkeepalive
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall9(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9)
-    /* convertBlockStmt, nil block */;
+    {
+        uintptr_t r1;
+        uintptr_t r2;
+        Errno err;
+        return syscalln(trap, nargs, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    }
 
-    // Deprecated: Use SyscallN instead.
+    // Deprecated: Use [SyscallN] instead.
+    //
+    //go:nosplit
+    //go:uintptrkeepalive
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall12(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12)
-    /* convertBlockStmt, nil block */;
+    {
+        uintptr_t r1;
+        uintptr_t r2;
+        Errno err;
+        return syscalln(trap, nargs, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
+    }
 
-    // Deprecated: Use SyscallN instead.
+    // Deprecated: Use [SyscallN] instead.
+    //
+    //go:nosplit
+    //go:uintptrkeepalive
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall15(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15)
-    /* convertBlockStmt, nil block */;
+    {
+        uintptr_t r1;
+        uintptr_t r2;
+        Errno err;
+        return syscalln(trap, nargs, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+    }
 
-    // Deprecated: Use SyscallN instead.
+    // Deprecated: Use [SyscallN] instead.
+    //
+    //go:nosplit
+    //go:uintptrkeepalive
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall18(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15, uintptr_t a16, uintptr_t a17, uintptr_t a18)
+    {
+        uintptr_t r1;
+        uintptr_t r2;
+        Errno err;
+        return syscalln(trap, nargs, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18);
+    }
+
+    // SyscallN executes procedure p with arguments args.
+    //
+    // See [Proc.Call] for more information.
+    //
+    //go:nosplit
+    //go:uintptrkeepalive
+    std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t p, gocpp::slice<uintptr_t> args)
+    {
+        uintptr_t r1;
+        uintptr_t r2;
+        Errno err;
+        return syscalln(p, uintptr_t(len(args)), args);
+    }
+
+    // syscalln is implemented in runtime/syscall_windows.go.
+    //
+    //go:noescape
+    std::tuple<uintptr_t, uintptr_t, Errno> syscalln(uintptr_t fn, uintptr_t n, gocpp::slice<uintptr_t> args)
     /* convertBlockStmt, nil block */;
 
-    std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args)
-    /* convertBlockStmt, nil block */;
-
+    //go:linkname loadlibrary
     std::tuple<uintptr_t, Errno> loadlibrary(uint16_t* filename)
-    /* convertBlockStmt, nil block */;
+    {
+        auto [handle, gocpp_id_0, err] = SyscallN(uintptr_t(__LoadLibraryExW), uintptr_t(gocpp::unsafe_pointer(filename)), 0, 0);
+        if(handle != 0)
+        {
+            err = 0;
+        }
+        return {handle, err};
+    }
 
+    //go:linkname loadsystemlibrary
     std::tuple<uintptr_t, Errno> loadsystemlibrary(uint16_t* filename)
-    /* convertBlockStmt, nil block */;
+    {
+        auto _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
+        auto [handle, gocpp_id_1, err] = SyscallN(uintptr_t(__LoadLibraryExW), uintptr_t(gocpp::unsafe_pointer(filename)), 0, _LOAD_LIBRARY_SEARCH_SYSTEM32);
+        if(handle != 0)
+        {
+            err = 0;
+        }
+        return {handle, err};
+    }
 
+    //go:linkname getprocaddress
     std::tuple<uintptr_t, Errno> getprocaddress(uintptr_t handle, uint8_t* procname)
-    /* convertBlockStmt, nil block */;
+    {
+        auto [proc, gocpp_id_2, err] = SyscallN(uintptr_t(__GetProcAddress), handle, uintptr_t(gocpp::unsafe_pointer(procname)));
+        if(proc != 0)
+        {
+            err = 0;
+        }
+        return {proc, err};
+    }
 
     // A DLL implements access to a single DLL.
     
@@ -148,7 +244,7 @@ namespace golang::syscall
     // Go, Windows will search for the named DLL in many locations, causing
     // potential DLL preloading attacks.
     //
-    // Use LazyDLL in golang.org/x/sys/windows for a secure way to
+    // Use [LazyDLL] in golang.org/x/sys/windows for a secure way to
     // load system DLLs.
     std::tuple<DLL*, gocpp::error> LoadDLL(gocpp::string name)
     {
@@ -182,7 +278,7 @@ namespace golang::syscall
         return {d, nullptr};
     }
 
-    // MustLoadDLL is like LoadDLL but panics if load operation fails.
+    // MustLoadDLL is like [LoadDLL] but panics if load operation fails.
     DLL* MustLoadDLL(gocpp::string name)
     {
         auto [d, e] = LoadDLL(name);
@@ -193,7 +289,7 @@ namespace golang::syscall
         return d;
     }
 
-    // FindProc searches DLL d for procedure named name and returns *Proc
+    // FindProc searches [DLL] d for procedure named name and returns [*Proc]
     // if found. It returns an error if search fails.
     std::tuple<Proc*, gocpp::error> rec::FindProc(DLL* d, gocpp::string name)
     {
@@ -222,7 +318,7 @@ namespace golang::syscall
         return {p, nullptr};
     }
 
-    // MustFindProc is like FindProc but panics if search fails.
+    // MustFindProc is like [DLL.FindProc] but panics if search fails.
     Proc* rec::MustFindProc(DLL* d, gocpp::string name)
     {
         auto [p, e] = rec::FindProc(gocpp::recv(d), name);
@@ -233,14 +329,14 @@ namespace golang::syscall
         return p;
     }
 
-    // Release unloads DLL d from memory.
+    // Release unloads [DLL] d from memory.
     gocpp::error rec::Release(DLL* d)
     {
         gocpp::error err;
         return FreeLibrary(d->Handle);
     }
 
-    // A Proc implements access to a procedure inside a DLL.
+    // A Proc implements access to a procedure inside a [DLL].
     
     template<typename T> requires gocpp::GoStruct<T>
     Proc::operator T()
@@ -288,15 +384,15 @@ namespace golang::syscall
     // The returned error is always non-nil, constructed from the result of GetLastError.
     // Callers must inspect the primary return value to decide whether an error occurred
     // (according to the semantics of the specific function being called) before consulting
-    // the error. The error always has type syscall.Errno.
+    // the error. The error always has type [Errno].
     //
     // On amd64, Call can pass and return floating-point values. To pass
     // an argument x with C type "float", use
     // uintptr(math.Float32bits(x)). To pass an argument with C type
     // "double", use uintptr(math.Float64bits(x)). Floating-point return
     // values are returned in r2. The return value for C type "float" is
-    // math.Float32frombits(uint32(r2)). For C type "double", it is
-    // math.Float64frombits(uint64(r2)).
+    // [math.Float32frombits](uint32(r2)). For C type "double", it is
+    // [math.Float64frombits](uint64(r2)).
     //
     //go:uintptrescapes
     std::tuple<uintptr_t, uintptr_t, gocpp::error> rec::Call(Proc* p, gocpp::slice<uintptr_t> a)
@@ -304,13 +400,13 @@ namespace golang::syscall
         return SyscallN(rec::Addr(gocpp::recv(p)), a);
     }
 
-    // A LazyDLL implements access to a single DLL.
+    // A LazyDLL implements access to a single [DLL].
     // It will delay the load of the DLL until the first
-    // call to its Handle method or to one of its
-    // LazyProc's Addr method.
+    // call to its [LazyDLL.Handle] method or to one of its
+    // [LazyProc]'s Addr method.
     //
     // LazyDLL is subject to the same DLL preloading attacks as documented
-    // on LoadDLL.
+    // on [LoadDLL].
     //
     // Use LazyDLL in golang.org/x/sys/windows for a secure way to
     // load system DLLs.
@@ -399,7 +495,7 @@ namespace golang::syscall
         return uintptr_t(d->dll->Handle);
     }
 
-    // NewProc returns a LazyProc for accessing the named procedure in the DLL d.
+    // NewProc returns a [LazyProc] for accessing the named procedure in the [DLL] d.
     LazyProc* rec::NewProc(LazyDLL* d, gocpp::string name)
     {
         return gocpp::InitPtr<LazyProc>([=](auto& x) {
@@ -408,7 +504,7 @@ namespace golang::syscall
         });
     }
 
-    // NewLazyDLL creates new LazyDLL associated with DLL file.
+    // NewLazyDLL creates new [LazyDLL] associated with [DLL] file.
     LazyDLL* NewLazyDLL(gocpp::string name)
     {
         return gocpp::InitPtr<LazyDLL>([=](auto& x) {
@@ -416,8 +512,8 @@ namespace golang::syscall
         });
     }
 
-    // A LazyProc implements access to a procedure inside a LazyDLL.
-    // It delays the lookup until the Addr, Call, or Find method is called.
+    // A LazyProc implements access to a procedure inside a [LazyDLL].
+    // It delays the lookup until the [LazyProc.Addr], [LazyProc.Call], or [LazyProc.Find] method is called.
     
     template<typename T> requires gocpp::GoStruct<T>
     LazyProc::operator T()
@@ -456,7 +552,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    // Find searches DLL for procedure named p.Name. It returns
+    // Find searches [DLL] for procedure named p.Name. It returns
     // an error if search fails. Find will not search procedure,
     // if it is already found and loaded into memory.
     gocpp::error rec::Find(LazyProc* p)

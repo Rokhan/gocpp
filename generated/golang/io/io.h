@@ -12,6 +12,28 @@
 
 namespace golang::io
 {
+    // ErrShortWrite means that a write accepted fewer bytes than requested
+    // but failed to return an explicit error.
+    extern gocpp::error ErrShortWrite;
+    // errInvalidWrite means that a write returned an impossible count.
+    extern gocpp::error errInvalidWrite;
+    // ErrShortBuffer means that a read required a longer buffer than was provided.
+    extern gocpp::error ErrShortBuffer;
+    // EOF is the error returned by Read when no more input is available.
+    // (Read must return EOF itself, not an error wrapping EOF,
+    // because callers will test for EOF using ==.)
+    // Functions should return EOF only to signal a graceful end of input.
+    // If the EOF occurs unexpectedly in a structured data stream,
+    // the appropriate error is either [ErrUnexpectedEOF] or some other error
+    // giving more detail.
+    extern gocpp::error go_EOF;
+    // ErrUnexpectedEOF means that EOF was encountered in the
+    // middle of reading a fixed-size block or data structure.
+    extern gocpp::error ErrUnexpectedEOF;
+    // ErrNoProgress is returned by some clients of a [Reader] when
+    // many calls to Read have failed to return any data or error,
+    // usually the sign of a broken [Reader] implementation.
+    extern gocpp::error ErrNoProgress;
     struct Reader : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -768,6 +790,8 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct StringWriter& value);
+    extern gocpp::error errWhence;
+    extern gocpp::error errOffset;
     struct discard
     {
 
@@ -1509,7 +1533,11 @@ namespace golang::io
     };
 
     std::ostream& operator<<(std::ostream& os, const struct teeReader& value);
+    // Discard is a [Writer] on which all Write calls succeed
+    // without doing anything.
     extern Writer Discard;
+    // discard implements ReaderFrom as an optimization so Copy to
+    // io.Discard can avoid doing unnecessary work.
     extern ReaderFrom _;
     struct nopCloser
     {
@@ -1556,24 +1584,17 @@ namespace golang::io
 
     std::ostream& operator<<(std::ostream& os, const struct nopCloserWriterTo& value);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadAll(Reader r);
-}
-#include "golang/sync/pool.h"
-#include "golang/errors/errors.fwd.h"
-
-namespace golang::io
-{
-    extern gocpp::error ErrShortWrite;
-    extern gocpp::error errInvalidWrite;
-    extern gocpp::error ErrShortBuffer;
-    extern gocpp::error go_EOF;
-    extern gocpp::error ErrUnexpectedEOF;
-    extern gocpp::error ErrNoProgress;
-    extern gocpp::error errWhence;
-    extern gocpp::error errOffset;
-    extern sync::Pool blackHolePool;
     SectionReader* NewSectionReader(ReaderAt r, int64_t off, int64_t n);
     OffsetWriter* NewOffsetWriter(WriterAt w, int64_t off);
     ReadCloser NopCloser(Reader r);
+}
+#include "golang/sync/pool.fwd.h"
+#include "golang/sync/pool.h"
+
+namespace golang::io
+{
+    namespace sync = golang::sync;
+    extern sync::Pool blackHolePool;
 
     namespace rec
     {

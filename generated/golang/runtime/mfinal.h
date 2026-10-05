@@ -12,27 +12,25 @@
 
 namespace golang::runtime
 {
+    extern uint64_t finqueued;
+    extern uint64_t finexecuted;
     extern gocpp::array<unsigned char, 5> finalizer1;
     void lockRankMayQueueFinalizer();
     void createfing();
-    void runfinq();
-    bool isGoPointerWithoutSpan(gocpp::unsafe_pointer p);
+    std::tuple<uint64_t, uint64_t> finReadQueueStats();
+    void runFinalizers();
     bool blockUntilEmptyFinalizerQueue(int64_t timeout);
     void SetFinalizer(go_any obj, go_any finalizer);
     void KeepAlive(go_any x);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/mgc.fwd.h"
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
-    extern atomic::Uint32 fingStatus;
     extern mutex finlock;
     extern g* fing;
-    extern gocpp::array<unsigned char, _FinBlockSize / goarch::PtrSize / 8> finptrmask;
     struct finalizer
     {
         funcval* fn{}; // function to call (may be a heap pointer)
@@ -57,19 +55,38 @@ namespace golang::runtime
     void iterate_finq(std::function<void (funcval* _1, gocpp::unsafe_pointer _2, uintptr_t _3, _type* _4, ptrtype* _5)> callback);
     g* wakefing();
     bool finalizercommit(g* gp, gocpp::unsafe_pointer lock);
+    bool isGoPointerWithoutSpan(gocpp::unsafe_pointer p);
 }
-#include "golang/runtime/internal/sys/nih.h"
+#include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/sys/intrinsics.fwd.h"
+#include "golang/internal/runtime/sys/nih.fwd.h"
 
 namespace golang::runtime
 {
-    struct finblock
+    namespace sys = golang::internal::runtime::sys;
+    namespace goarch = golang::internal::goarch;
+}
+#include "golang/internal/goarch/goarch.h"
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/sys/nih.h"
+
+namespace golang::runtime
+{
+    struct finBlock
     {
         sys::NotInHeap _1{};
-        finblock* alllink{};
-        finblock* next{};
+        finBlock* alllink{};
+        finBlock* next{};
         uint32_t cnt{};
         int32_t _2{};
-        gocpp::array<finalizer, (_FinBlockSize - 2 * goarch::PtrSize - 2 * 4) / gocpp::Sizeof<finalizer>()> fin{};
+        gocpp::array<finalizer, (finBlockSize - 2 * goarch::PtrSize - 2 * 4) / gocpp::Sizeof<finalizer>()> fin{};
 
         using isGoStruct = void;
 
@@ -82,10 +99,12 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct finblock& value);
-    extern finblock* finq;
-    extern finblock* finc;
-    extern finblock* allfin;
+    std::ostream& operator<<(std::ostream& os, const struct finBlock& value);
+    extern atomic::Uint32 fingStatus;
+    extern gocpp::array<unsigned char, finBlockSize / goarch::PtrSize / 8> finptrmask;
+    extern finBlock* finq;
+    extern finBlock* finc;
+    extern finBlock* allfin;
 
     namespace rec
     {

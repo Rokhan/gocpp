@@ -11,57 +11,55 @@
 #include "golang/go/types/check.h"
 #include "gocpp/support.h"
 
-#include "golang/errors/errors.h"
-#include "golang/fmt/errors.h"
 #include "golang/fmt/print.h"
 #include "golang/go/ast/ast.h"
-#include "golang/go/ast/print.h"
 #include "golang/go/constant/value.h"
 #include "golang/go/token/position.h"
 #include "golang/go/types/api.h"
 #include "golang/go/types/basic.h"
 #include "golang/go/types/context.h"
+#include "golang/go/types/cycles.h"
 #include "golang/go/types/errors.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/initorder.h"
-#include "golang/go/types/lookup.h"
 #include "golang/go/types/mono.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/operand.h"
 #include "golang/go/types/package.h"
-#include "golang/go/types/predicates.h"
+#include "golang/go/types/recording.h"
 #include "golang/go/types/resolver.h"
 #include "golang/go/types/scope.h"
-#include "golang/go/types/selection.h"
 #include "golang/go/types/signature.h"
-#include "golang/go/types/tuple.h"
 #include "golang/go/types/type.h"
-#include "golang/go/types/typelists.h"
-#include "golang/go/types/typeparam.h"
 #include "golang/go/types/typeset.h"
+#include "golang/go/types/typestring.h"
 #include "golang/go/types/union.h"
 #include "golang/go/types/universe.h"
+#include "golang/go/types/util.h"
 #include "golang/go/types/version.h"
-#include "golang/internal/godebug/godebug.h"
 #include "golang/internal/types/errors/codes.h"
 #include "golang/io/io.h"
-#include "golang/reflect/value.h"
-#include "golang/strings/builder.h"
+#include "golang/os/file.h"
+#include "golang/os/types.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace constant = golang::go::constant;
+    namespace fmt = golang::fmt;
+    namespace os = golang::os;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::Pos;
-        using godebug::rec::Value;
-        using strings::rec::String;
-        using strings::rec::Write;
-        using strings::rec::WriteString;
+        using os::rec::Write;
+        using token::rec::IsValid;
+        using token::rec::Position;
     }
 
-    // nopos indicates an unknown position
+    // nopos, noposn indicate an unknown position
     token::Pos nopos;
-    // gotypesalias controls the use of Alias types
-    godebug::Setting* gotypesalias = godebug::New("gotypesalias"_s);
+    types::atPos noposn = atPos(nopos);
     // exprInfo stores information about an untyped expression.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -110,7 +108,7 @@ namespace golang::types
         T result;
         result.decl = this->decl;
         result.scope = this->scope;
-        result.pos = this->pos;
+        result.version = this->version;
         result.iota = this->iota;
         result.errpos = this->errpos;
         result.inTParamList = this->inTParamList;
@@ -118,6 +116,7 @@ namespace golang::types
         result.isPanic = this->isPanic;
         result.hasLabel = this->hasLabel;
         result.hasCallOrRecv = this->hasCallOrRecv;
+        result.exprPos = this->exprPos;
         return result;
     }
 
@@ -126,7 +125,7 @@ namespace golang::types
     {
         if (decl != ref.decl) return false;
         if (scope != ref.scope) return false;
-        if (pos != ref.pos) return false;
+        if (version != ref.version) return false;
         if (iota != ref.iota) return false;
         if (errpos != ref.errpos) return false;
         if (inTParamList != ref.inTParamList) return false;
@@ -134,6 +133,7 @@ namespace golang::types
         if (isPanic != ref.isPanic) return false;
         if (hasLabel != ref.hasLabel) return false;
         if (hasCallOrRecv != ref.hasCallOrRecv) return false;
+        if (exprPos != ref.exprPos) return false;
         return true;
     }
 
@@ -142,7 +142,7 @@ namespace golang::types
         os << '{';
         os << "" << decl;
         os << " " << scope;
-        os << " " << pos;
+        os << " " << version;
         os << " " << iota;
         os << " " << errpos;
         os << " " << inTParamList;
@@ -150,6 +150,7 @@ namespace golang::types
         os << " " << isPanic;
         os << " " << hasLabel;
         os << " " << hasCallOrRecv;
+        os << " " << exprPos;
         os << '}';
         return os;
     }
@@ -159,10 +160,30 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
-    // lookup looks up name in the current environment and returns the matching object, or nil.
+    // lookupScope looks up name in the current environment and if an object
+    // is found it returns the scope containing the object and the object.
+    // Otherwise it returns (nil, nil).
+    //
+    // Note that obj.Parent() may be different from the returned scope if the
+    // object was inserted into the scope and already had a parent at that
+    // time (see Scope.Insert). This can only happen for dot-imported objects
+    // whose parent is the scope of the package that exported them.
+    std::tuple<golang::go::types::Scope*, Object> rec::lookupScope(environment* env, gocpp::string name)
+    {
+        for(auto s = env->scope; s != nullptr; s = s->parent)
+        {
+            if(auto obj = rec::Lookup(gocpp::recv(s), name); obj != nullptr && (! rec::IsValid(gocpp::recv(env->exprPos)) || cmpPos(rec::scopePos(gocpp::recv(obj)), env->exprPos) <= 0))
+            {
+                return {s, obj};
+            }
+        }
+        return {nullptr, nullptr};
+    }
+
+    // lookup is like lookupScope but it only returns the object (or nil).
     Object rec::lookup(environment* env, gocpp::string name)
     {
-        auto [gocpp_id_0, obj] = rec::LookupParent(gocpp::recv(env->scope), name, env->pos);
+        auto [gocpp_id_0, obj] = rec::lookupScope(gocpp::recv(env), name);
         return obj;
     }
 
@@ -243,6 +264,7 @@ namespace golang::types
     action::operator T()
     {
         T result;
+        result.version = this->version;
         result.f = this->f;
         result.desc = this->desc;
         return result;
@@ -251,6 +273,7 @@ namespace golang::types
     template<typename T> requires gocpp::GoStruct<T>
     bool action::operator==(const T& ref) const
     {
+        if (version != ref.version) return false;
         if (f != ref.f) return false;
         if (desc != ref.desc) return false;
         return true;
@@ -259,7 +282,8 @@ namespace golang::types
     std::ostream& action::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << f;
+        os << "" << version;
+        os << " " << f;
         os << " " << desc;
         os << '}';
         return os;
@@ -324,34 +348,35 @@ namespace golang::types
     Checker::operator T()
     {
         T result;
-        result.enableAlias = this->enableAlias;
         result.conf = this->conf;
         result.ctxt = this->ctxt;
         result.fset = this->fset;
         result.pkg = this->pkg;
         result.Info = this->Info;
-        result.version = this->version;
         result.nextID = this->nextID;
         result.objMap = this->objMap;
+        result.objList = this->objList;
         result.impMap = this->impMap;
-        result.valids = this->valids;
         result.pkgPathMap = this->pkgPathMap;
         result.seenPkgMap = this->seenPkgMap;
         result.files = this->files;
         result.versions = this->versions;
         result.imports = this->imports;
         result.dotImportMap = this->dotImportMap;
-        result.recvTParamMap = this->recvTParamMap;
         result.brokenAliases = this->brokenAliases;
         result.unionTypeSets = this->unionTypeSets;
+        result.usedVars = this->usedVars;
+        result.usedPkgNames = this->usedPkgNames;
         result.mono = this->mono;
         result.firstErr = this->firstErr;
         result.methods = this->methods;
         result.untyped = this->untyped;
         result.delayed = this->delayed;
         result.objPath = this->objPath;
+        result.objPathIdx = this->objPathIdx;
         result.cleaners = this->cleaners;
         result.environment = this->environment;
+        result.posStack = this->posStack;
         result.indent = this->indent;
         return result;
     }
@@ -359,34 +384,35 @@ namespace golang::types
     template<typename T> requires gocpp::GoStruct<T>
     bool Checker::operator==(const T& ref) const
     {
-        if (enableAlias != ref.enableAlias) return false;
         if (conf != ref.conf) return false;
         if (ctxt != ref.ctxt) return false;
         if (fset != ref.fset) return false;
         if (pkg != ref.pkg) return false;
         if (Info != ref.Info) return false;
-        if (version != ref.version) return false;
         if (nextID != ref.nextID) return false;
         if (objMap != ref.objMap) return false;
+        if (objList != ref.objList) return false;
         if (impMap != ref.impMap) return false;
-        if (valids != ref.valids) return false;
         if (pkgPathMap != ref.pkgPathMap) return false;
         if (seenPkgMap != ref.seenPkgMap) return false;
         if (files != ref.files) return false;
         if (versions != ref.versions) return false;
         if (imports != ref.imports) return false;
         if (dotImportMap != ref.dotImportMap) return false;
-        if (recvTParamMap != ref.recvTParamMap) return false;
         if (brokenAliases != ref.brokenAliases) return false;
         if (unionTypeSets != ref.unionTypeSets) return false;
+        if (usedVars != ref.usedVars) return false;
+        if (usedPkgNames != ref.usedPkgNames) return false;
         if (mono != ref.mono) return false;
         if (firstErr != ref.firstErr) return false;
         if (methods != ref.methods) return false;
         if (untyped != ref.untyped) return false;
         if (delayed != ref.delayed) return false;
         if (objPath != ref.objPath) return false;
+        if (objPathIdx != ref.objPathIdx) return false;
         if (cleaners != ref.cleaners) return false;
         if (environment != ref.environment) return false;
+        if (posStack != ref.posStack) return false;
         if (indent != ref.indent) return false;
         return true;
     }
@@ -394,34 +420,35 @@ namespace golang::types
     std::ostream& Checker::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << enableAlias;
-        os << " " << conf;
+        os << "" << conf;
         os << " " << ctxt;
         os << " " << fset;
         os << " " << pkg;
         os << " " << Info;
-        os << " " << version;
         os << " " << nextID;
         os << " " << objMap;
+        os << " " << objList;
         os << " " << impMap;
-        os << " " << valids;
         os << " " << pkgPathMap;
         os << " " << seenPkgMap;
         os << " " << files;
         os << " " << versions;
         os << " " << imports;
         os << " " << dotImportMap;
-        os << " " << recvTParamMap;
         os << " " << brokenAliases;
         os << " " << unionTypeSets;
+        os << " " << usedVars;
+        os << " " << usedPkgNames;
         os << " " << mono;
         os << " " << firstErr;
         os << " " << methods;
         os << " " << untyped;
         os << " " << delayed;
         os << " " << objPath;
+        os << " " << objPathIdx;
         os << " " << cleaners;
         os << " " << environment;
+        os << " " << posStack;
         os << " " << indent;
         os << '}';
         return os;
@@ -449,35 +476,6 @@ namespace golang::types
         rec::addDep(gocpp::recv(from), to);
     }
 
-    // brokenAlias records that alias doesn't have a determined type yet.
-    // It also sets alias.typ to Typ[Invalid].
-    // Not used if check.enableAlias is set.
-    void rec::brokenAlias(Checker* check, TypeName* alias)
-    {
-        assert(! check->enableAlias);
-        if(check->brokenAliases == nullptr)
-        {
-            check->brokenAliases = gocpp::make(gocpp::Tag<gocpp::map<TypeName*, bool>>());
-        }
-        check->brokenAliases[alias] = true;
-        alias->object.typ = Typ[Invalid];
-    }
-
-    // validAlias records that alias has the valid type typ (possibly Typ[Invalid]).
-    void rec::validAlias(Checker* check, TypeName* alias, golang::types::Type typ)
-    {
-        assert(! check->enableAlias);
-        remove(check->brokenAliases, alias);
-        alias->object.typ = typ;
-    }
-
-    // isBrokenAlias reports whether alias doesn't have a determined type yet.
-    bool rec::isBrokenAlias(Checker* check, TypeName* alias)
-    {
-        assert(! check->enableAlias);
-        return check->brokenAliases[alias];
-    }
-
     void rec::rememberUntyped(Checker* check, ast::Expr e, bool lhs, operandMode mode, Basic* typ, constant::Value val)
     {
         auto m = check->untyped;
@@ -499,26 +497,32 @@ namespace golang::types
     {
         auto i = len(check->delayed);
         check->delayed = append(check->delayed, gocpp::Init<action>([=](auto& x) {
+            x.version = check->environment.version;
             x.f = f;
         }));
         return & check->delayed[i];
     }
 
-    // push pushes obj onto the object path and returns its index in the path.
-    int rec::push(Checker* check, Object obj)
+    // push pushes obj onto the object path and records its index in the path index map.
+    void rec::push(Checker* check, Object obj)
     {
+        if(check->objPathIdx == nullptr)
+        {
+            check->objPathIdx = gocpp::make(gocpp::Tag<gocpp::map<Object, int>>());
+        }
+        check->objPathIdx[obj] = len(check->objPath);
         check->objPath = append(check->objPath, obj);
-        return len(check->objPath) - 1;
     }
 
-    // pop pops and returns the topmost object from the object path.
-    Object rec::pop(Checker* check)
+    // pop pops an object from the object path and removes it from the path index map.
+    void rec::pop(Checker* check)
     {
         auto i = len(check->objPath) - 1;
         auto obj = check->objPath[i];
+        // help the garbage collector
         check->objPath[i] = nullptr;
         check->objPath = check->objPath.make_slice(0, i);
-        return obj;
+        remove(check->objPathIdx, obj);
     }
 
     
@@ -584,7 +588,7 @@ namespace golang::types
 
     // NewChecker returns a new [Checker] instance for a given package.
     // [Package] files may be added incrementally via checker.Files.
-    Checker* NewChecker(Config* conf, token::FileSet* fset, Package* pkg, golang::types::Info* info)
+    Checker* NewChecker(Config* conf, token::FileSet* fset, Package* pkg, golang::go::types::Info* info)
     {
         // make sure we have a configuration
         if(conf == nullptr)
@@ -603,15 +607,15 @@ namespace golang::types
         // mutate *pkg.
         // (previously, pkg.goVersion was mutated here: go.dev/issue/61212)
         return gocpp::InitPtr<Checker>([=](auto& x) {
-            x.enableAlias = rec::Value(gocpp::recv(gotypesalias)) == "1"_s;
             x.conf = conf;
             x.ctxt = conf->Context;
             x.fset = fset;
             x.pkg = pkg;
             x.Info = info;
-            x.version = asGoVersion(conf->GoVersion);
             x.objMap = gocpp::make(gocpp::Tag<gocpp::map<Object, declInfo*>>());
             x.impMap = gocpp::make(gocpp::Tag<gocpp::map<importKey, Package*>>());
+            x.usedVars = gocpp::make(gocpp::Tag<gocpp::map<Var*, bool>>());
+            x.usedPkgNames = gocpp::make(gocpp::Tag<gocpp::map<PkgName*, bool>>());
         });
     }
 
@@ -620,6 +624,8 @@ namespace golang::types
     void rec::initFiles(Checker* check, gocpp::slice<ast::File*> files)
     {
         // start with a clean slate (check.Files may be called multiple times)
+        // TODO(gri): what determines which fields are zeroed out here, vs at the end
+        // of checkFiles?
         check->files = nullptr;
         check->imports = nullptr;
         check->dotImportMap = nullptr;
@@ -629,7 +635,15 @@ namespace golang::types
         check->untyped = nullptr;
         check->delayed = nullptr;
         check->objPath = nullptr;
+        check->objPathIdx = nullptr;
         check->cleaners = nullptr;
+
+        // We must initialize usedVars and usedPkgNames both here and in NewChecker,
+        // because initFiles is not called in the CheckExpr or Eval codepaths, yet we
+        // want to free this memory at the end of Files ('used' predicates are
+        // only needed in the context of a given file).
+        check->usedVars = gocpp::make(gocpp::Tag<gocpp::map<Var*, bool>>());
+        check->usedPkgNames = gocpp::make(gocpp::Tag<gocpp::map<PkgName*, bool>>());
 
         // determine package name and collect valid files
         auto pkg = check->pkg;
@@ -660,7 +674,7 @@ namespace golang::types
 
                     // ignore this file
                     default:
-                        rec::errorf(gocpp::recv(check), atPos(file->Package), MismatchedPkgName, "package %s; expected %s"_s, name, pkg->name);
+                        rec::errorf(gocpp::recv(check), atPos(file->Package), MismatchedPkgName, "package %s; expected package %s"_s, name, pkg->name);
                         break;
                 }
             }
@@ -674,8 +688,11 @@ namespace golang::types
         }
         check->versions = versions;
 
-        auto pkgVersionOk = rec::isValid(gocpp::recv(check->version));
-        auto downgradeOk = rec::cmp(gocpp::recv(check->version), go1_21) >= 0;
+        auto pkgVersion = asGoVersion(check->conf->GoVersion);
+        if(rec::isValid(gocpp::recv(pkgVersion)) && len(files) > 0 && rec::cmp(gocpp::recv(pkgVersion), go_current) > 0)
+        {
+            rec::errorf(gocpp::recv(check), files[0], TooNew, "package requires newer Go version %v (application built with %v)"_s, pkgVersion, go_current);
+        }
 
         // determine Go version for each file
         for(auto [gocpp_ignored, file] : check->files)
@@ -684,37 +701,54 @@ namespace golang::types
             // (This version string may contain dot-release numbers as in go1.20.1,
             // unlike file versions which are Go language versions only, if valid.)
             auto v = check->conf->GoVersion;
-            // use the file version, if applicable
-            // (file versions are either the empty string or of the form go1.dd)
-            if(pkgVersionOk)
+
+            // If the file specifies a version, use max(fileVersion, go1.21).
+            if(auto fileVersion = asGoVersion(file->GoVersion); rec::isValid(gocpp::recv(fileVersion)))
             {
-                auto fileVersion = asGoVersion(file->GoVersion);
-                if(rec::isValid(gocpp::recv(fileVersion)))
+                // Go 1.21 introduced the feature of setting the go.mod
+                // go line to an early version of Go and allowing //go:build lines
+                // to set the Go version in a given file. Versions Go 1.21 and later
+                // can be set backwards compatibly as that was the first version
+                // files with go1.21 or later build tags could be built with.
+                // Set the version to max(fileVersion, go1.21): That will allow a
+                // downgrade to a version before go1.22, where the for loop semantics
+                // change was made, while being backwards compatible with versions of
+                // go before the new //go:build semantics were introduced.
+                v = gocpp::string(versionMax(fileVersion, go1_21));
+
+                // Report a specific error for each tagged file that's too new.
+                // (Normally the build system will have filtered files by version,
+                // but clients can present arbitrary files to the type checker.)
+                if(rec::cmp(gocpp::recv(fileVersion), go_current) > 0)
                 {
-                    auto cmp = rec::cmp(gocpp::recv(fileVersion), check->version);
-                    // Go 1.21 introduced the feature of setting the go.mod
-                    // go line to an early version of Go and allowing //go:build lines
-                    // to “upgrade” (cmp > 0) the Go version in a given file.
-                    // We can do that backwards compatibly.
-                    // Go 1.21 also introduced the feature of allowing //go:build lines
-                    // to “downgrade” (cmp < 0) the Go version in a given file.
-                    // That can't be done compatibly in general, since before the
-                    // build lines were ignored and code got the module's Go version.
-                    // To work around this, downgrades are only allowed when the
-                    // module's Go version is Go 1.21 or later.
-                    // If there is no valid check.version, then we don't really know what
-                    // Go version to apply.
-                    // Legacy tools may do this, and they historically have accepted everything.
-                    // Preserve that behavior by ignoring //go:build constraints entirely in that
-                    // case (!pkgVersionOk).
-                    if(cmp > 0 || cmp < 0 && downgradeOk)
-                    {
-                        v = file->GoVersion;
-                    }
+                    // Use position of 'package [p]' for types/types2 consistency.
+                    // (Ideally we would use the //build tag itself.)
+                    rec::errorf(gocpp::recv(check), file->Name, TooNew, "file requires newer Go version %v (application built with %v)"_s, fileVersion, go_current);
                 }
             }
             versions[file] = v;
         }
+    }
+
+    goVersion versionMax(goVersion a, goVersion b)
+    {
+        if(rec::cmp(gocpp::recv(a), b) < 0)
+        {
+            return b;
+        }
+        return a;
+    }
+
+    // pushPos pushes pos onto the pos stack.
+    void rec::pushPos(Checker* check, positioner pos)
+    {
+        check->posStack = append(check->posStack, pos);
+    }
+
+    // popPos pops from the pos stack.
+    void rec::popPos(Checker* check)
+    {
+        check->posStack = check->posStack.make_slice(0, len(check->posStack) - 1);
     }
 
     // A bailout panic is used for early termination.
@@ -765,6 +799,29 @@ namespace golang::types
                 default:
                 {
                     auto p = gocpp::recover();
+                    if(len(check->posStack) > 0)
+                    {
+                        auto doPrint = [=](gocpp::slice<positioner> ps) mutable -> void
+                        {
+                            for(auto i = len(ps) - 1; i >= 0; i--)
+                            {
+                                fmt::Fprintf(os::Stderr, "\t%v\n"_s, rec::Position(gocpp::recv(check->fset), rec::Pos(gocpp::recv(ps[i]))));
+                            }
+                        };
+
+                        fmt::Fprintln(os::Stderr, "The following panic happened checking types near:"_s);
+                        if(len(check->posStack) <= 10)
+                        {
+                            doPrint(check->posStack);
+                        }
+                        else
+                        {
+                            // if it's long, truncate the middle; it's least likely to help
+                            doPrint(check->posStack.make_slice(len(check->posStack) - 5));
+                            fmt::Fprintln(os::Stderr, "\t..."_s);
+                            doPrint(check->posStack.make_slice(0, 5));
+                        }
+                    }
                     // re-panic
                     gocpp::panic(p);
                     break;
@@ -775,12 +832,6 @@ namespace golang::types
 
     // Files checks the provided files as part of the checker's package.
     gocpp::error rec::Files(Checker* check, gocpp::slice<ast::File*> files)
-    {
-        return rec::checkFiles(gocpp::recv(check), files);
-    }
-
-    gocpp::error errBadCgo = errors::New("cannot use FakeImportC and go115UsesCgo together"_s);
-    gocpp::error rec::checkFiles(Checker* check, gocpp::slice<ast::File*> files)
     {
         gocpp::error err;
         gocpp::Defer defer;
@@ -794,75 +845,11 @@ namespace golang::types
                 return nullptr;
             }
 
-            // Note: NewChecker doesn't return an error, so we need to check the version here.
-            if(rec::cmp(gocpp::recv(check->version), go_current) > 0)
-            {
-                return mocklib::Errorf("package requires newer Go version %v"_s, check->version);
-            }
-            if(check->conf->FakeImportC && check->conf->go115UsesCgo)
-            {
-                return errBadCgo;
-            }
-
+            // Avoid early returns here! Nearly all errors can be
+            // localized to a piece of syntax and needn't prevent
+            // type-checking of the rest of the package.
             defer.push_back([=, &err]{ rec::handleBailout(gocpp::recv(check), & err); });
-
-            auto print = [=](gocpp::string msg) mutable -> void
-            {
-                if(check->conf->_Trace)
-                {
-                    mocklib::Println();
-                    mocklib::Println(msg);
-                }
-            };
-
-            print("== initFiles =="_s);
-            rec::initFiles(gocpp::recv(check), files);
-
-            print("== collectObjects =="_s);
-            rec::collectObjects(gocpp::recv(check));
-
-            print("== packageObjects =="_s);
-            rec::packageObjects(gocpp::recv(check));
-
-            print("== processDelayed =="_s);
-            // incl. all functions
-            rec::processDelayed(gocpp::recv(check), 0);
-
-            print("== cleanup =="_s);
-            rec::cleanup(gocpp::recv(check));
-
-            print("== initOrder =="_s);
-            rec::initOrder(gocpp::recv(check));
-
-            if(! check->conf->DisableUnusedImportCheck)
-            {
-                print("== unusedImports =="_s);
-                rec::unusedImports(gocpp::recv(check));
-            }
-
-            print("== recordUntyped =="_s);
-            rec::recordUntyped(gocpp::recv(check));
-
-            if(check->firstErr == nullptr)
-            {
-                // TODO(mdempsky): Ensure monomorph is safe when errors exist.
-                rec::monomorph(gocpp::recv(check));
-            }
-
-            check->pkg->goVersion = check->conf->GoVersion;
-            check->pkg->complete = true;
-
-            // no longer needed - release memory
-            check->imports = nullptr;
-            check->dotImportMap = nullptr;
-            check->pkgPathMap = nullptr;
-            check->seenPkgMap = nullptr;
-            check->recvTParamMap = nullptr;
-            check->brokenAliases = nullptr;
-            check->unionTypeSets = nullptr;
-            check->ctxt = nullptr;
-
-            // TODO(rFindley) There's more memory we should release at this point.
+            rec::checkFiles(gocpp::recv(check), files);
             return err;
         }
         catch(gocpp::GoPanic& gp)
@@ -870,6 +857,76 @@ namespace golang::types
             defer.handlePanic(gp);
             return {err};
         }
+    }
+
+    // checkFiles type-checks the specified files. Errors are reported as
+    // a side effect, not by returning early, to ensure that well-formed
+    // syntax is properly type annotated even in a package containing
+    // errors.
+    void rec::checkFiles(Checker* check, gocpp::slice<ast::File*> files)
+    {
+        auto print = [=](gocpp::string msg) mutable -> void
+        {
+            if(check->conf->_Trace)
+            {
+                mocklib::Println();
+                mocklib::Println(msg);
+            }
+        };
+
+        print("== initFiles =="_s);
+        rec::initFiles(gocpp::recv(check), files);
+
+        print("== collectObjects =="_s);
+        rec::collectObjects(gocpp::recv(check));
+
+        print("== sortObjects =="_s);
+        rec::sortObjects(gocpp::recv(check));
+
+        print("== directCycles =="_s);
+        rec::directCycles(gocpp::recv(check));
+
+        print("== packageObjects =="_s);
+        rec::packageObjects(gocpp::recv(check));
+
+        print("== processDelayed =="_s);
+        // incl. all functions
+        rec::processDelayed(gocpp::recv(check), 0);
+
+        print("== cleanup =="_s);
+        rec::cleanup(gocpp::recv(check));
+
+        print("== initOrder =="_s);
+        rec::initOrder(gocpp::recv(check));
+
+        if(! check->conf->DisableUnusedImportCheck)
+        {
+            print("== unusedImports =="_s);
+            rec::unusedImports(gocpp::recv(check));
+        }
+
+        print("== recordUntyped =="_s);
+        rec::recordUntyped(gocpp::recv(check));
+
+        if(check->firstErr == nullptr)
+        {
+            // TODO(mdempsky): Ensure monomorph is safe when errors exist.
+            rec::monomorph(gocpp::recv(check));
+        }
+
+        check->pkg->goVersion = check->conf->GoVersion;
+        check->pkg->complete = true;
+
+        // no longer needed - release memory
+        check->imports = nullptr;
+        check->dotImportMap = nullptr;
+        check->pkgPathMap = nullptr;
+        check->seenPkgMap = nullptr;
+        check->brokenAliases = nullptr;
+        check->unionTypeSets = nullptr;
+        check->usedVars = nullptr;
+        check->usedPkgNames = nullptr;
+        check->ctxt = nullptr;
     }
 
     // processDelayed processes all delayed actions pushed after top.
@@ -881,6 +938,7 @@ namespace golang::types
         // are processed in a delayed fashion) that may
         // add more actions (such as nested functions), so
         // this is a sufficiently bounded process.
+        auto savedVersion = check->environment.version;
         for(auto i = top; i < len(check->delayed); i++)
         {
             auto a = & check->delayed[i];
@@ -895,8 +953,11 @@ namespace golang::types
                     rec::trace(gocpp::recv(check), nopos, "-- delayed %p"_s, [&](){ return rec::f(a); });
                 }
             }
+            // reestablish the effective Go version captured earlier
+            check->environment.version = a->version;
             // may append to check.delayed
             a->f();
+
             if(check->conf->_Trace)
             {
                 mocklib::Println();
@@ -905,6 +966,7 @@ namespace golang::types
         // stack must not have shrunk
         assert(top <= len(check->delayed));
         check->delayed = check->delayed.make_slice(0, top);
+        check->environment.version = savedVersion;
     }
 
     // cleanup runs cleanup for all collected cleaners.
@@ -918,195 +980,31 @@ namespace golang::types
         check->cleaners = nullptr;
     }
 
-    void rec::record(Checker* check, operand* x)
+    // go/types doesn't support recording of types directly in the AST.
+    // dummy function to match types2 code.
+    void rec::recordTypeAndValueInSyntax(Checker* check, ast::Expr x, operandMode mode, golang::go::types::Type typ, constant::Value val)
     {
-        // convert x into a user-friendly set of values
-        // TODO(gri) this code can be simplified
-        golang::types::Type typ = {};
-        constant::Value val = {};
-        //Go switch emulation
-        {
-            auto condition = x->mode;
-            int conditionId = -1;
-            if(condition == invalid) { conditionId = 0; }
-            else if(condition == novalue) { conditionId = 1; }
-            else if(condition == constant_) { conditionId = 2; }
-            switch(conditionId)
-            {
-                case 0:
-                    typ = Typ[Invalid];
-                    break;
-                case 1:
-                    typ = (Tuple*)(nullptr);
-                    break;
-                case 2:
-                    typ = x->typ;
-                    val = x->val;
-                    break;
-                default:
-                    typ = x->typ;
-                    break;
-            }
-        }
-        assert(x->expr != nullptr && typ != nullptr);
-
-        if(isUntyped(typ))
-        {
-            // delay type and value recording until we know the type
-            // or until the end of type checking
-            rec::rememberUntyped(gocpp::recv(check), x->expr, false, x->mode, gocpp::getValue<Basic*>(typ), val);
-        }
-        else
-        {
-            rec::recordTypeAndValue(gocpp::recv(check), x->expr, x->mode, typ, val);
-        }
     }
 
-    void rec::recordUntyped(Checker* check)
+    // go/types doesn't support recording of types directly in the AST.
+    // dummy function to match types2 code.
+    void rec::recordCommaOkTypesInSyntax(Checker* check, ast::Expr x, golang::go::types::Type t0, golang::go::types::Type t1)
     {
-        if(! debug && check->Info.Types == nullptr)
-        {
-            // nothing to do
-            return;
-        }
-
-        for(auto [x, info] : check->untyped)
-        {
-            if(debug && isTyped(info.typ))
-            {
-                rec::dump(gocpp::recv(check), "%v: %s (type %s) is typed"_s, rec::Pos(gocpp::recv(x)), x, info.typ);
-                unreachable();
-            }
-            rec::recordTypeAndValue(gocpp::recv(check), x, info.mode, info.typ, info.val);
-        }
     }
 
-    void rec::recordTypeAndValue(Checker* check, ast::Expr x, operandMode mode, golang::types::Type typ, constant::Value val)
-    {
-        assert(x != nullptr);
-        assert(typ != nullptr);
-        if(mode == invalid)
-        {
-            // omit
-            return;
-        }
-        if(mode == constant_)
-        {
-            assert(val != nullptr);
-            // We check allBasic(typ, IsConstType) here as constant expressions may be
-            // recorded as type parameters.
-            assert(! types::isValid(typ) || allBasic(typ, IsConstType));
-        }
-        if(auto m = check->Info.Types; m != nullptr)
-        {
-            m[x] = TypeAndValue {mode, typ, val};
-        }
-    }
-
-    void rec::recordBuiltinType(Checker* check, ast::Expr f, Signature* sig)
-    {
-        // f must be a (possibly parenthesized, possibly qualified)
-        // identifier denoting a built-in (including unsafe's non-constant
-        // functions Add and Slice): record the signature for f and possible
-        // children.
-        for(; ; )
-        {
-            rec::recordTypeAndValue(gocpp::recv(check), f, types::builtin, sig, nullptr);
-            //Go type switch emulation
-            {
-                const auto& gocpp_id_3 = gocpp::type_info(f);
-                int conditionId = -1;
-                if(gocpp_id_3 == typeid(ast::Ident*)) { conditionId = 0; }
-                else if(gocpp_id_3 == typeid(ast::SelectorExpr*)) { conditionId = 1; }
-                else if(gocpp_id_3 == typeid(ast::ParenExpr*)) { conditionId = 2; }
-                switch(conditionId)
-                {
-                    // we're done
-                    case 0:
-                    case 1:
-                    {
-                        ast::Ident* p = gocpp::any_cast<ast::Ident*>(f);
-                        return;
-                        break;
-                    }
-                    case 2:
-                    {
-                        ast::ParenExpr* p = gocpp::any_cast<ast::ParenExpr*>(f);
-                        f = p->X;
-                        break;
-                    }
-                    default:
-                    {
-                        auto p = f;
-                        unreachable();
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    // recordCommaOkTypes updates recorded types to reflect that x is used in a commaOk context
-    // (and therefore has tuple type).
-    void rec::recordCommaOkTypes(Checker* check, ast::Expr x, gocpp::slice<operand*> a)
-    {
-        assert(x != nullptr);
-        assert(len(a) == 2);
-        if(a[0]->mode == invalid)
-        {
-            return;
-        }
-        auto [t0, t1] = std::tuple{a[0]->typ, a[1]->typ};
-        assert(isTyped(t0) && isTyped(t1) && (isBoolean(t1) || t1 == universeError));
-        if(auto m = check->Info.Types; m != nullptr)
-        {
-            for(; ; )
-            {
-                auto tv = m[x];
-                // should have been recorded already
-                assert(tv.Type != nullptr);
-                auto pos = rec::Pos(gocpp::recv(x));
-                tv.Type = NewTuple(NewVar(pos, check->pkg, ""_s, t0), NewVar(pos, check->pkg, ""_s, t1));
-                m[x] = tv;
-                // if x is a parenthesized expression (p.X), update p.X
-                auto [p, gocpp_id_4] = gocpp::getValue<ast::ParenExpr*>(x);
-                if(p == nullptr)
-                {
-                    break;
-                }
-                x = p->X;
-            }
-        }
-    }
-
-    // recordInstance records instantiation information into check.Info, if the
-    // Instances map is non-nil. The given expr must be an ident, selector, or
-    // index (list) expr with ident or selector operand.
-    //
-    // TODO(rfindley): the expr parameter is fragile. See if we can access the
-    // instantiated identifier in some other way.
-    void rec::recordInstance(Checker* check, ast::Expr expr, gocpp::slice<golang::types::Type> targs, golang::types::Type typ)
-    {
-        auto ident = instantiatedIdent(expr);
-        assert(ident != nullptr);
-        assert(typ != nullptr);
-        if(auto m = check->Info.Instances; m != nullptr)
-        {
-            m[ident] = Instance {newTypeList(targs), typ};
-        }
-    }
-
+    // instantiatedIdent determines the identifier of the type instantiated in expr.
+    // Helper function for recordInstance in recording.go.
     ast::Ident* instantiatedIdent(ast::Expr expr)
     {
         ast::Expr selOrIdent = {};
         //Go type switch emulation
         {
-            const auto& gocpp_id_5 = gocpp::type_info(expr);
+            const auto& gocpp_id_3 = gocpp::type_info(expr);
             int conditionId = -1;
-            if(gocpp_id_5 == typeid(ast::IndexExpr*)) { conditionId = 0; }
-            else if(gocpp_id_5 == typeid(ast::IndexListExpr*)) { conditionId = 1; }
-            else if(gocpp_id_5 == typeid(ast::SelectorExpr*)) { conditionId = 2; }
-            else if(gocpp_id_5 == typeid(ast::Ident*)) { conditionId = 3; }
+            if(gocpp_id_3 == typeid(ast::IndexExpr*)) { conditionId = 0; }
+            else if(gocpp_id_3 == typeid(ast::IndexListExpr*)) { conditionId = 1; }
+            else if(gocpp_id_3 == typeid(ast::SelectorExpr*)) { conditionId = 2; }
+            else if(gocpp_id_3 == typeid(ast::Ident*)) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
@@ -1132,10 +1030,10 @@ namespace golang::types
         }
         //Go type switch emulation
         {
-            const auto& gocpp_id_6 = gocpp::type_info(selOrIdent);
+            const auto& gocpp_id_4 = gocpp::type_info(selOrIdent);
             int conditionId = -1;
-            if(gocpp_id_6 == typeid(ast::Ident*)) { conditionId = 0; }
-            else if(gocpp_id_6 == typeid(ast::SelectorExpr*)) { conditionId = 1; }
+            if(gocpp_id_4 == typeid(ast::Ident*)) { conditionId = 0; }
+            else if(gocpp_id_4 == typeid(ast::SelectorExpr*)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -1153,60 +1051,8 @@ namespace golang::types
             }
         }
 
-        // extra debugging of #63933
-        strings::Builder buf = {};
-        rec::WriteString(gocpp::recv(buf), "instantiated ident not found; please report: "_s);
-        ast::Fprint(& buf, token::NewFileSet(), expr, ast::NotNilFilter);
-        gocpp::panic(rec::String(gocpp::recv(buf)));
-    }
-
-    void rec::recordDef(Checker* check, ast::Ident* id, Object obj)
-    {
-        assert(id != nullptr);
-        if(auto m = check->Info.Defs; m != nullptr)
-        {
-            m[id] = obj;
-        }
-    }
-
-    void rec::recordUse(Checker* check, ast::Ident* id, Object obj)
-    {
-        assert(id != nullptr);
-        assert(obj != nullptr);
-        if(auto m = check->Info.Uses; m != nullptr)
-        {
-            m[id] = obj;
-        }
-    }
-
-    void rec::recordImplicit(Checker* check, ast::Node node, Object obj)
-    {
-        assert(node != nullptr);
-        assert(obj != nullptr);
-        if(auto m = check->Info.Implicits; m != nullptr)
-        {
-            m[node] = obj;
-        }
-    }
-
-    void rec::recordSelection(Checker* check, ast::SelectorExpr* x, SelectionKind kind, golang::types::Type recv, Object obj, gocpp::slice<int> index, bool indirect)
-    {
-        assert(obj != nullptr && (recv == nullptr || len(index) > 0));
-        rec::recordUse(gocpp::recv(check), x->Sel, obj);
-        if(auto m = check->Info.Selections; m != nullptr)
-        {
-            m[x] = new Selection {kind, recv, obj, index, indirect};
-        }
-    }
-
-    void rec::recordScope(Checker* check, ast::Node node, golang::types::Scope* scope)
-    {
-        assert(node != nullptr);
-        assert(scope != nullptr);
-        if(auto m = check->Info.Scopes; m != nullptr)
-        {
-            m[node] = scope;
-        }
+        // extra debugging of go.dev/issue/63933
+        gocpp::panic(sprintf(nullptr, nullptr, true, "instantiated ident not found; please report: %s"_s, expr));
     }
 
 }

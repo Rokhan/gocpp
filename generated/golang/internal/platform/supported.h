@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::platform
+namespace golang::internal::platform
 {
     struct OSArch
     {

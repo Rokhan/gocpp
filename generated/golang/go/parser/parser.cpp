@@ -15,7 +15,6 @@
 #include "golang/go/ast/ast.h"
 #include "golang/go/build/constraint/expr.h"
 #include "golang/go/build/constraint/vers.h"
-#include "golang/go/internal/typeparams/typeparams.h"
 #include "golang/go/parser/interface.h"
 #include "golang/go/parser/resolver.h"
 #include "golang/go/scanner/errors.h"
@@ -24,10 +23,14 @@
 #include "golang/go/token/token.h"
 #include "golang/strings/strings.h"
 
-// Package parser implements a parser for Go source files. Input may be
-// provided in a variety of forms (see the various Parse* functions); the
-// output is an abstract syntax tree (AST) representing the Go source. The
-// parser is invoked through one of the Parse* functions.
+// Package parser implements a parser for Go source files.
+//
+// The [ParseFile] function reads file input from a string, []byte, or
+// io.Reader, and produces an [ast.File] representing the complete
+// abstract syntax tree of the file.
+//
+// The [ParseExprFrom] function reads a single source-level expression and
+// produces an [ast.Expr], the syntax tree of the expression.
 //
 // The parser accepts a larger language than is syntactically permitted by
 // the Go spec, for simplicity, and for improved robustness in the presence
@@ -35,32 +38,39 @@
 // treated like an ordinary parameter list and thus may contain multiple
 // entries where the spec permits exactly one. Consequently, the corresponding
 // field in the AST (ast.FuncDecl.Recv) field is not restricted to one entry.
-namespace golang::parser
+//
+// Applications that need to parse one or more complete packages of Go
+// source code may find it more convenient not to interact directly
+// with the parser but instead to use the Load function in package
+// [golang.org/x/tools/go/packages].
+namespace golang::go::parser
 {
+    namespace ast = golang::go::ast;
+    namespace constraint = golang::go::build::constraint;
+    namespace fmt = golang::fmt;
+    namespace scanner = golang::go::scanner;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::End;
-        using ast::rec::NumFields;
         using ast::rec::Pos;
         using ast::rec::declNode;
         using ast::rec::exprNode;
         using ast::rec::specNode;
         using ast::rec::stmtNode;
         using scanner::rec::Add;
+        using scanner::rec::End;
         using scanner::rec::Init;
         using scanner::rec::Len;
         using scanner::rec::Scan;
-        using token::rec::AddFile;
-        using token::rec::Base;
         using token::rec::IsKeyword;
         using token::rec::IsLiteral;
         using token::rec::IsOperator;
         using token::rec::IsValid;
-        using token::rec::Line;
-        using token::rec::Offset;
         using token::rec::Position;
+        using token::rec::PositionFor;
         using token::rec::Precedence;
-        using token::rec::Size;
         using token::rec::String;
     }
 
@@ -151,9 +161,9 @@ namespace golang::parser
         return value.PrintTo(os);
     }
 
-    void rec::init(golang::parser::parser* p, token::FileSet* fset, gocpp::string filename, gocpp::slice<unsigned char> src, Mode mode)
+    void rec::init(golang::go::parser::parser* p, token::File* file, gocpp::slice<unsigned char> src, Mode mode)
     {
-        p->file = rec::AddFile(gocpp::recv(fset), filename, - 1, len(src));
+        p->file = file;
         auto eh = [=](token::Position pos, gocpp::string msg) mutable -> void
         {
             rec::Add(gocpp::recv(p->errors), pos, msg);
@@ -167,7 +177,13 @@ namespace golang::parser
         rec::next(gocpp::recv(p));
     }
 
-    void rec::printTrace(golang::parser::parser* p, gocpp::slice<go_any> a)
+    // end returns the end position of the current token
+    token::Pos rec::end(golang::go::parser::parser* p)
+    {
+        return rec::End(gocpp::recv(p->scanner));
+    }
+
+    void rec::printTrace(golang::go::parser::parser* p, gocpp::slice<go_any> a)
     {
         auto dots = ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . "_s;
         auto n = len(dots);
@@ -184,7 +200,7 @@ namespace golang::parser
         mocklib::Println(a);
     }
 
-    golang::parser::parser* trace(golang::parser::parser* p, gocpp::string msg)
+    golang::go::parser::parser* trace(golang::go::parser::parser* p, gocpp::string msg)
     {
         rec::printTrace(gocpp::recv(p), msg, "("_s);
         p->indent++;
@@ -192,13 +208,13 @@ namespace golang::parser
     }
 
     // Usage pattern: defer un(trace(p, "..."))
-    void un(golang::parser::parser* p)
+    void un(golang::go::parser::parser* p)
     {
         p->indent--;
         rec::printTrace(gocpp::recv(p), ")"_s);
     }
 
-    golang::parser::parser* incNestLev(golang::parser::parser* p)
+    golang::go::parser::parser* incNestLev(golang::go::parser::parser* p)
     {
         p->nestLev++;
         if(p->nestLev > maxNestLev)
@@ -211,13 +227,13 @@ namespace golang::parser
 
     // decNestLev is used to track nesting depth during parsing to prevent stack exhaustion.
     // It is used along with incNestLev in a similar fashion to how un and trace are used.
-    void decNestLev(golang::parser::parser* p)
+    void decNestLev(golang::go::parser::parser* p)
     {
         p->nestLev--;
     }
 
     // Advance to the next token.
-    void rec::next0(golang::parser::parser* p)
+    void rec::next0(golang::go::parser::parser* p)
     {
         // Because of one-token look-ahead, print the previous token
         // when tracing as it provides a more readable output. The
@@ -274,14 +290,20 @@ namespace golang::parser
         }
     }
 
+    // lineFor returns the line of pos, ignoring line directive adjustments.
+    int rec::lineFor(golang::go::parser::parser* p, token::Pos pos)
+    {
+        return rec::PositionFor(gocpp::recv(p->file), pos, false).Line;
+    }
+
     // Consume a comment and return it and the line on which it ends.
-    std::tuple<ast::Comment*, int> rec::consumeComment(golang::parser::parser* p)
+    std::tuple<ast::Comment*, int> rec::consumeComment(golang::go::parser::parser* p)
     {
         ast::Comment* comment;
         int endline;
         // /*-style comments may end on a different line than where they start.
         // Scan the comment for '\n' chars and adjust endline accordingly.
-        endline = rec::Line(gocpp::recv(p->file), p->pos);
+        endline = rec::lineFor(gocpp::recv(p), p->pos);
         if(p->lit[1] == '*')
         {
             // don't use range here - no need to decode Unicode code points
@@ -307,13 +329,13 @@ namespace golang::parser
     // comments list, and return it together with the line at which
     // the last comment in the group ends. A non-comment token or n
     // empty lines terminate a comment group.
-    std::tuple<ast::CommentGroup*, int> rec::consumeCommentGroup(golang::parser::parser* p, int n)
+    std::tuple<ast::CommentGroup*, int> rec::consumeCommentGroup(golang::go::parser::parser* p, int n)
     {
         ast::CommentGroup* comments;
         int endline;
         gocpp::slice<ast::Comment*> list = {};
-        endline = rec::Line(gocpp::recv(p->file), p->pos);
-        for(; p->tok == token::COMMENT && rec::Line(gocpp::recv(p->file), p->pos) <= endline + n; )
+        endline = rec::lineFor(gocpp::recv(p), p->pos);
+        for(; p->tok == token::COMMENT && rec::lineFor(gocpp::recv(p), p->pos) <= endline + n; )
         {
             ast::Comment* comment = {};
             std::tie(comment, endline) = rec::consumeComment(gocpp::recv(p));
@@ -343,7 +365,7 @@ namespace golang::parser
     //
     // Lead and line comments may be considered documentation that is
     // stored in the AST.
-    void rec::next(golang::parser::parser* p)
+    void rec::next(golang::go::parser::parser* p)
     {
         p->leadComment = nullptr;
         p->lineComment = nullptr;
@@ -355,12 +377,12 @@ namespace golang::parser
             ast::CommentGroup* comment = {};
             int endline = {};
 
-            if(rec::Line(gocpp::recv(p->file), p->pos) == rec::Line(gocpp::recv(p->file), prev))
+            if(rec::lineFor(gocpp::recv(p), p->pos) == rec::lineFor(gocpp::recv(p), prev))
             {
                 // The comment is on same line as the previous token; it
                 // cannot be a lead comment but may be a line comment.
                 std::tie(comment, endline) = rec::consumeCommentGroup(gocpp::recv(p), 0);
-                if(rec::Line(gocpp::recv(p->file), p->pos) != endline || p->tok == token::SEMICOLON || p->tok == token::go_EOF)
+                if(rec::lineFor(gocpp::recv(p), p->pos) != endline || p->tok == token::SEMICOLON || p->tok == token::go_EOF)
                 {
                     // The next token is on a different line, thus
                     // the last comment group is a line comment.
@@ -375,7 +397,7 @@ namespace golang::parser
                 std::tie(comment, endline) = rec::consumeCommentGroup(gocpp::recv(p), 1);
             }
 
-            if(endline + 1 == rec::Line(gocpp::recv(p->file), p->pos))
+            if(endline + 1 == rec::lineFor(gocpp::recv(p), p->pos))
             {
                 // The next token is following on the line immediately after the
                 // comment group, thus the last comment group is a lead comment.
@@ -418,7 +440,7 @@ namespace golang::parser
         return value.PrintTo(os);
     }
 
-    void rec::error(golang::parser::parser* p, token::Pos pos, gocpp::string msg)
+    void rec::error(golang::go::parser::parser* p, token::Pos pos, gocpp::string msg)
     {
         gocpp::Defer defer;
         try
@@ -455,7 +477,7 @@ namespace golang::parser
         }
     }
 
-    void rec::errorExpected(golang::parser::parser* p, token::Pos pos, gocpp::string msg)
+    void rec::errorExpected(golang::go::parser::parser* p, token::Pos pos, gocpp::string msg)
     {
         msg = "expected "_s + msg;
         if(pos == p->pos)
@@ -485,7 +507,7 @@ namespace golang::parser
         rec::error(gocpp::recv(p), pos, msg);
     }
 
-    token::Pos rec::expect(golang::parser::parser* p, token::Token tok)
+    token::Pos rec::expect(golang::go::parser::parser* p, token::Token tok)
     {
         auto pos = p->pos;
         if(p->tok != tok)
@@ -499,7 +521,7 @@ namespace golang::parser
 
     // expect2 is like expect, but it returns an invalid position
     // if the expected token is not found.
-    token::Pos rec::expect2(golang::parser::parser* p, token::Token tok)
+    token::Pos rec::expect2(golang::go::parser::parser* p, token::Token tok)
     {
         token::Pos pos;
         if(p->tok == tok)
@@ -517,7 +539,7 @@ namespace golang::parser
 
     // expectClosing is like expect but provides a better error message
     // for the common case of a missing comma before a newline.
-    token::Pos rec::expectClosing(golang::parser::parser* p, token::Token tok, gocpp::string context)
+    token::Pos rec::expectClosing(golang::go::parser::parser* p, token::Token tok, gocpp::string context)
     {
         if(p->tok != tok && p->tok == token::SEMICOLON && p->lit == "\n"_s)
         {
@@ -528,51 +550,54 @@ namespace golang::parser
     }
 
     // expectSemi consumes a semicolon and returns the applicable line comment.
-    ast::CommentGroup* rec::expectSemi(golang::parser::parser* p)
+    ast::CommentGroup* rec::expectSemi(golang::go::parser::parser* p)
     {
         ast::CommentGroup* comment;
-        // semicolon is optional before a closing ')' or '}'
-        if(p->tok != token::RPAREN && p->tok != token::RBRACE)
+        //Go switch emulation
         {
-            //Go switch emulation
+            auto condition = p->tok;
+            int conditionId = -1;
+            if(condition == token::RPAREN) { conditionId = 0; }
+            else if(condition == token::RBRACE) { conditionId = 1; }
+            else if(condition == token::COMMA) { conditionId = 2; }
+            else if(condition == token::SEMICOLON) { conditionId = 3; }
+            switch(conditionId)
             {
-                auto condition = p->tok;
-                int conditionId = -1;
-                if(condition == token::COMMA) { conditionId = 0; }
-                else if(condition == token::SEMICOLON) { conditionId = 1; }
-                switch(conditionId)
-                {
-                    case 0:
-                        // permit a ',' instead of a ';' but complain
-                        rec::errorExpected(gocpp::recv(p), p->pos, "';'"_s);
-                    case 1:
-                        if(p->lit == ";"_s)
-                        {
-                            // explicit semicolon
-                            rec::next(gocpp::recv(p));
-                            // use following comments
-                            comment = p->lineComment;
-                        }
-                        else
-                        {
-                            // artificial semicolon
-                            // use preceding comments
-                            comment = p->lineComment;
-                            rec::next(gocpp::recv(p));
-                        }
-                        return comment;
-                        break;
-                    default:
-                        rec::errorExpected(gocpp::recv(p), p->pos, "';'"_s);
-                        rec::advance(gocpp::recv(p), stmtStart);
-                        break;
-                }
+                // semicolon is optional before a closing ')' or '}'
+                case 0:
+                case 1:
+                    return nullptr;
+                    break;
+                case 2:
+                    // permit a ',' instead of a ';' but complain
+                    rec::errorExpected(gocpp::recv(p), p->pos, "';'"_s);
+                case 3:
+                    if(p->lit == ";"_s)
+                    {
+                        // explicit semicolon
+                        rec::next(gocpp::recv(p));
+                        // use following comments
+                        comment = p->lineComment;
+                    }
+                    else
+                    {
+                        // artificial semicolon
+                        // use preceding comments
+                        comment = p->lineComment;
+                        rec::next(gocpp::recv(p));
+                    }
+                    return comment;
+                    break;
+                default:
+                    rec::errorExpected(gocpp::recv(p), p->pos, "';'"_s);
+                    rec::advance(gocpp::recv(p), stmtStart);
+                    return nullptr;
+                    break;
             }
         }
-        return nullptr;
     }
 
-    bool rec::atComma(golang::parser::parser* p, gocpp::string context, token::Token follow)
+    bool rec::atComma(golang::go::parser::parser* p, gocpp::string context, token::Token follow)
     {
         if(p->tok == token::COMMA)
         {
@@ -602,7 +627,7 @@ namespace golang::parser
 
     // advance consumes tokens until the current token p.tok
     // is in the 'to' set, or token.EOF. For error recovery.
-    void rec::advance(golang::parser::parser* p, gocpp::map<token::Token, bool> to)
+    void rec::advance(golang::go::parser::parser* p, gocpp::map<token::Token, bool> to)
     {
         for(; p->tok != token::go_EOF; rec::next(gocpp::recv(p)))
         {
@@ -665,41 +690,7 @@ namespace golang::parser
         { token::RBRACK, true },
         { token::RBRACE, true }
     };
-    // safePos returns a valid file position for a given position: If pos
-    // is valid to begin with, safePos returns pos. If pos is out-of-range,
-    // safePos returns the EOF position.
-    //
-    // This is hack to work around "artificial" end positions in the AST which
-    // are computed by adding 1 to (presumably valid) token positions. If the
-    // token positions are invalid due to parse errors, the resulting end position
-    // may be past the file's EOF position, which would lead to panics if used
-    // later on.
-    token::Pos rec::safePos(golang::parser::parser* p, token::Pos pos)
-    {
-        token::Pos res;
-        gocpp::Defer defer;
-        try
-        {
-            defer.push_back([=, &res]{ [=]() mutable -> void
-            {
-                if(gocpp::recover() != nullptr)
-                {
-                    // EOF position
-                    res = token::Pos(rec::Base(gocpp::recv(p->file)) + rec::Size(gocpp::recv(p->file)));
-                }
-            }(); });
-            // trigger a panic if position is out-of-range
-            _ = rec::Offset(gocpp::recv(p->file), pos);
-            return pos;
-        }
-        catch(gocpp::GoPanic& gp)
-        {
-            defer.handlePanic(gp);
-            return {res};
-        }
-    }
-
-    ast::Ident* rec::parseIdent(golang::parser::parser* p)
+    ast::Ident* rec::parseIdent(golang::go::parser::parser* p)
     {
         auto pos = p->pos;
         auto name = "_"_s;
@@ -719,7 +710,7 @@ namespace golang::parser
         });
     }
 
-    gocpp::slice<ast::Ident*> rec::parseIdentList(golang::parser::parser* p)
+    gocpp::slice<ast::Ident*> rec::parseIdentList(golang::go::parser::parser* p)
     {
         gocpp::slice<ast::Ident*> list;
         gocpp::Defer defer;
@@ -747,7 +738,7 @@ namespace golang::parser
     }
 
     // If lhs is set, result list elements which are identifiers are not resolved.
-    gocpp::slice<ast::Expr> rec::parseExprList(golang::parser::parser* p)
+    gocpp::slice<ast::Expr> rec::parseExprList(golang::go::parser::parser* p)
     {
         gocpp::slice<ast::Expr> list;
         gocpp::Defer defer;
@@ -774,7 +765,7 @@ namespace golang::parser
         }
     }
 
-    gocpp::slice<ast::Expr> rec::parseList(golang::parser::parser* p, bool inRhs)
+    gocpp::slice<ast::Expr> rec::parseList(golang::go::parser::parser* p, bool inRhs)
     {
         auto old = p->inRhs;
         p->inRhs = inRhs;
@@ -783,7 +774,7 @@ namespace golang::parser
         return list;
     }
 
-    ast::Expr rec::parseType(golang::parser::parser* p)
+    ast::Expr rec::parseType(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -814,7 +805,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::parseQualifiedIdent(golang::parser::parser* p, ast::Ident* ident)
+    ast::Expr rec::parseQualifiedIdent(golang::go::parser::parser* p, ast::Ident* ident)
     {
         gocpp::Defer defer;
         try
@@ -839,7 +830,7 @@ namespace golang::parser
     }
 
     // If the result is an identifier, it is not resolved.
-    ast::Expr rec::parseTypeName(golang::parser::parser* p, ast::Ident* ident)
+    ast::Expr rec::parseTypeName(golang::go::parser::parser* p, ast::Ident* ident)
     {
         gocpp::Defer defer;
         try
@@ -875,7 +866,7 @@ namespace golang::parser
 
     // "[" has already been consumed, and lbrack is its position.
     // If len != nil it is the already consumed array length.
-    ast::ArrayType* rec::parseArrayType(golang::parser::parser* p, token::Pos lbrack, ast::Expr len)
+    ast::ArrayType* rec::parseArrayType(golang::go::parser::parser* p, token::Pos lbrack, ast::Expr len)
     {
         gocpp::Defer defer;
         try
@@ -925,7 +916,7 @@ namespace golang::parser
         }
     }
 
-    std::tuple<ast::Ident*, ast::Expr> rec::parseArrayFieldOrTypeInstance(golang::parser::parser* p, ast::Ident* x)
+    std::tuple<ast::Ident*, ast::Expr> rec::parseArrayFieldOrTypeInstance(golang::go::parser::parser* p, ast::Ident* x)
     {
         gocpp::Defer defer;
         try
@@ -989,7 +980,7 @@ namespace golang::parser
             }
 
             // x[P], x[P1, P2], ...
-            return {nullptr, typeparams::PackIndexExpr(x, lbrack, args, rbrack)};
+            return {nullptr, packIndexExpr(x, lbrack, args, rbrack)};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -997,7 +988,7 @@ namespace golang::parser
         }
     }
 
-    ast::Field* rec::parseFieldDecl(golang::parser::parser* p)
+    ast::Field* rec::parseFieldDecl(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -1131,6 +1122,7 @@ namespace golang::parser
             {
                 tag = gocpp::InitPtr<ast::BasicLit>([=](auto& x) {
                     x.ValuePos = p->pos;
+                    x.ValueEnd = rec::end(gocpp::recv(p));
                     x.Kind = p->tok;
                     x.Value = p->lit;
                 });
@@ -1154,7 +1146,7 @@ namespace golang::parser
         }
     }
 
-    ast::StructType* rec::parseStructType(golang::parser::parser* p)
+    ast::StructType* rec::parseStructType(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -1191,7 +1183,7 @@ namespace golang::parser
         }
     }
 
-    ast::StarExpr* rec::parsePointerType(golang::parser::parser* p)
+    ast::StarExpr* rec::parsePointerType(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -1215,7 +1207,7 @@ namespace golang::parser
         }
     }
 
-    ast::Ellipsis* rec::parseDotsType(golang::parser::parser* p)
+    ast::Ellipsis* rec::parseDotsType(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -1271,7 +1263,7 @@ namespace golang::parser
         return value.PrintTo(os);
     }
 
-    field rec::parseParamDecl(golang::parser::parser* p, ast::Ident* name, bool typeSetsOK)
+    field rec::parseParamDecl(golang::go::parser::parser* p, ast::Ident* name, bool typeSetsOK)
     {
         field f;
         gocpp::Defer defer;
@@ -1281,7 +1273,7 @@ namespace golang::parser
             // package
             if(p->trace)
             {
-                defer.push_back([=]{ un(parser::trace(p, "ParamDeclOrNil"_s)); });
+                defer.push_back([=]{ un(parser::trace(p, "ParamDecl"_s)); });
             }
 
             auto ptok = p->tok;
@@ -1442,7 +1434,7 @@ namespace golang::parser
         }
     }
 
-    gocpp::slice<ast::Field*> rec::parseParameterList(golang::parser::parser* p, ast::Ident* name0, ast::Expr typ0, token::Token closing)
+    gocpp::slice<ast::Field*> rec::parseParameterList(golang::go::parser::parser* p, ast::Ident* name0, ast::Expr typ0, token::Token closing, bool dddok)
     {
         gocpp::slice<ast::Field*> params;
         gocpp::Defer defer;
@@ -1526,7 +1518,7 @@ namespace golang::parser
             if(named == 0)
             {
                 // all unnamed => found names are type names
-                for(auto i = 0; i < len(list); i++)
+                for(auto [i, gocpp_ignored] : list)
                 {
                     auto par = & list[i];
                     if(auto typ = par->name; typ != nullptr)
@@ -1568,9 +1560,9 @@ namespace golang::parser
                 token::Pos errPos = {};
                 // current type (from right to left)
                 ast::Expr typ = {};
-                for(auto i = len(list) - 1; i >= 0; i--)
+                for(auto [i, gocpp_ignored] : list)
                 {
-                    if(auto par = & list[i]; par->typ != nullptr)
+                    if(auto par = & list[len(list) - i - 1]; par->typ != nullptr)
                     {
                         typ = par->typ;
                         if(par->name == nullptr)
@@ -1599,22 +1591,29 @@ namespace golang::parser
                 }
                 if(rec::IsValid(gocpp::recv(errPos)))
                 {
+                    // Not all parameters are named because named != len(list).
+                    // If named == typed, there must be parameters that have no types.
+                    // They must be at the end of the parameter list, otherwise types
+                    // would have been filled in by the right-to-left sweep above and
+                    // there would be no error.
+                    // If tparams is set, the parameter list is a type parameter list.
                     gocpp::string msg = {};
-                    if(tparams)
+                    if(named == typed)
                     {
-                        // Not all parameters are named because named != len(list).
-                        // If named == typed we must have parameters that have no types,
-                        // and they must be at the end of the parameter list, otherwise
-                        // the types would have been filled in by the right-to-left sweep
-                        // above and we wouldn't have an error. Since we are in a type
-                        // parameter list, the missing types are constraints.
-                        if(named == typed)
+                        // position error at closing token ) or ]
+                        errPos = p->pos;
+                        if(tparams)
                         {
-                            // position error at closing ]
-                            errPos = p->pos;
                             msg = "missing type constraint"_s;
                         }
                         else
+                        {
+                            msg = "missing parameter type"_s;
+                        }
+                    }
+                    else
+                    {
+                        if(tparams)
                         {
                             msg = "missing type parameter name"_s;
                             // go.dev/issue/60812
@@ -1623,12 +1622,42 @@ namespace golang::parser
                                 msg += " or invalid array length"_s;
                             }
                         }
-                    }
-                    else
-                    {
-                        msg = "mixed named and unnamed parameters"_s;
+                        else
+                        {
+                            msg = "missing parameter name"_s;
+                        }
                     }
                     rec::error(gocpp::recv(p), errPos, msg);
+                }
+            }
+
+            // check use of ...
+            // only report first occurrence
+            auto first = true;
+            for(auto [i, _] : list)
+            {
+                auto f = & list[i];
+                if(auto [t, gocpp_id_0] = gocpp::getValue<ast::Ellipsis*>(f->typ); t != nullptr && (! dddok || i + 1 < len(list)))
+                {
+                    if(first)
+                    {
+                        first = false;
+                        if(dddok)
+                        {
+                            rec::error(gocpp::recv(p), t->Ellipsis, "can only use ... with final parameter"_s);
+                        }
+                        else
+                        {
+                            rec::error(gocpp::recv(p), t->Ellipsis, "invalid use of ..."_s);
+                        }
+                    }
+                    // use T instead of invalid ...T
+                    // TODO(gri) would like to use `f.typ = t.Elt` but that causes problems
+                    // with the resolver in cases of reuse of the same identifier
+                    f->typ = gocpp::InitPtr<ast::BadExpr>([=](auto& x) {
+                        x.From = rec::Pos(gocpp::recv(t));
+                        x.To = rec::End(gocpp::recv(t));
+                    });
                 }
             }
 
@@ -1686,10 +1715,45 @@ namespace golang::parser
         }
     }
 
-    std::tuple<ast::FieldList*, ast::FieldList*> rec::parseParameters(golang::parser::parser* p, bool acceptTParams)
+    ast::FieldList* rec::parseTypeParameters(golang::go::parser::parser* p)
     {
-        ast::FieldList* tparams;
-        ast::FieldList* params;
+        gocpp::Defer defer;
+        try
+        {
+            if(p->trace)
+            {
+                defer.push_back([=]{ un(parser::trace(p, "TypeParameters"_s)); });
+            }
+
+            auto lbrack = rec::expect(gocpp::recv(p), token::LBRACK);
+            gocpp::slice<ast::Field*> list = {};
+            if(p->tok != token::RBRACK)
+            {
+                list = rec::parseParameterList(gocpp::recv(p), nullptr, nullptr, token::RBRACK, false);
+            }
+            auto rbrack = rec::expect(gocpp::recv(p), token::RBRACK);
+
+            if(len(list) == 0)
+            {
+                rec::error(gocpp::recv(p), rbrack, "empty type parameter list"_s);
+                // avoid follow-on errors
+                return nullptr;
+            }
+
+            return gocpp::InitPtr<ast::FieldList>([=](auto& x) {
+                x.Opening = lbrack;
+                x.List = list;
+                x.Closing = rbrack;
+            });
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
+    }
+
+    ast::FieldList* rec::parseParameters(golang::go::parser::parser* p, bool result)
+    {
         gocpp::Defer defer;
         try
         {
@@ -1698,69 +1762,23 @@ namespace golang::parser
                 defer.push_back([=]{ un(parser::trace(p, "Parameters"_s)); });
             }
 
-            if(acceptTParams && p->tok == token::LBRACK)
+            if(! result || p->tok == token::LPAREN)
             {
-                auto opening = p->pos;
-                rec::next(gocpp::recv(p));
-                // [T any](params) syntax
-                auto list = rec::parseParameterList(gocpp::recv(p), nullptr, nullptr, token::RBRACK);
-                auto rbrack = rec::expect(gocpp::recv(p), token::RBRACK);
-                tparams = gocpp::InitPtr<ast::FieldList>([=](auto& x) {
-                    x.Opening = opening;
-                    x.List = list;
-                    x.Closing = rbrack;
-                });
-                // Type parameter lists must not be empty.
-                if(rec::NumFields(gocpp::recv(tparams)) == 0)
+                auto lparen = rec::expect(gocpp::recv(p), token::LPAREN);
+                gocpp::slice<ast::Field*> list = {};
+                if(p->tok != token::RPAREN)
                 {
-                    rec::error(gocpp::recv(p), tparams->Closing, "empty type parameter list"_s);
-                    // avoid follow-on errors
-                    tparams = nullptr;
+                    list = rec::parseParameterList(gocpp::recv(p), nullptr, nullptr, token::RPAREN, ! result);
                 }
+                auto rparen = rec::expect(gocpp::recv(p), token::RPAREN);
+                return gocpp::InitPtr<ast::FieldList>([=](auto& x) {
+                    x.Opening = lparen;
+                    x.List = list;
+                    x.Closing = rparen;
+                });
             }
 
-            auto opening = rec::expect(gocpp::recv(p), token::LPAREN);
-
-            gocpp::slice<ast::Field*> fields = {};
-            if(p->tok != token::RPAREN)
-            {
-                fields = rec::parseParameterList(gocpp::recv(p), nullptr, nullptr, token::RPAREN);
-            }
-
-            auto rparen = rec::expect(gocpp::recv(p), token::RPAREN);
-            params = gocpp::InitPtr<ast::FieldList>([=](auto& x) {
-                x.Opening = opening;
-                x.List = fields;
-                x.Closing = rparen;
-            });
-
-            return {tparams, params};
-        }
-        catch(gocpp::GoPanic& gp)
-        {
-            defer.handlePanic(gp);
-            return {tparams, params};
-        }
-    }
-
-    ast::FieldList* rec::parseResult(golang::parser::parser* p)
-    {
-        gocpp::Defer defer;
-        try
-        {
-            if(p->trace)
-            {
-                defer.push_back([=]{ un(parser::trace(p, "Result"_s)); });
-            }
-
-            if(p->tok == token::LPAREN)
-            {
-                auto [gocpp_id_0, results] = rec::parseParameters(gocpp::recv(p), false);
-                return results;
-            }
-
-            auto typ = rec::tryIdentOrType(gocpp::recv(p));
-            if(typ != nullptr)
+            if(auto typ = rec::tryIdentOrType(gocpp::recv(p)); typ != nullptr)
             {
                 auto list = gocpp::make(gocpp::Tag<gocpp::slice<ast::Field*>>(), 1);
                 list[0] = gocpp::InitPtr<ast::Field>([=](auto& x) {
@@ -1779,7 +1797,7 @@ namespace golang::parser
         }
     }
 
-    ast::FuncType* rec::parseFuncType(golang::parser::parser* p)
+    ast::FuncType* rec::parseFuncType(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -1790,12 +1808,17 @@ namespace golang::parser
             }
 
             auto pos = rec::expect(gocpp::recv(p), token::FUNC);
-            auto [tparams, params] = rec::parseParameters(gocpp::recv(p), true);
-            if(tparams != nullptr)
+            // accept type parameters for more tolerant parsing but complain
+            if(p->tok == token::LBRACK)
             {
-                rec::error(gocpp::recv(p), rec::Pos(gocpp::recv(tparams)), "function type must have no type parameters"_s);
+                auto tparams = rec::parseTypeParameters(gocpp::recv(p));
+                if(tparams != nullptr)
+                {
+                    rec::error(gocpp::recv(p), tparams->Opening, "function type must have no type parameters"_s);
+                }
             }
-            auto results = rec::parseResult(gocpp::recv(p));
+            auto params = rec::parseParameters(gocpp::recv(p), false);
+            auto results = rec::parseParameters(gocpp::recv(p), true);
 
             return gocpp::InitPtr<ast::FuncType>([=](auto& x) {
                 x.Func = pos;
@@ -1809,7 +1832,7 @@ namespace golang::parser
         }
     }
 
-    ast::Field* rec::parseMethodSpec(golang::parser::parser* p)
+    ast::Field* rec::parseMethodSpec(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -1845,13 +1868,13 @@ namespace golang::parser
                                 // generic method m[T any]
                                 // Interface methods do not have type parameters. We parse them for a
                                 // better error message and improved error recovery.
-                                _ = rec::parseParameterList(gocpp::recv(p), name0, nullptr, token::RBRACK);
+                                _ = rec::parseParameterList(gocpp::recv(p), name0, nullptr, token::RBRACK, false);
                                 _ = rec::expect(gocpp::recv(p), token::RBRACK);
                                 rec::error(gocpp::recv(p), lbrack, "interface method must have no type parameters"_s);
 
                                 // TODO(rfindley) refactor to share code with parseFuncType.
-                                auto [gocpp_id_3, params] = rec::parseParameters(gocpp::recv(p), false);
-                                auto results = rec::parseResult(gocpp::recv(p));
+                                auto params = rec::parseParameters(gocpp::recv(p), false);
+                                auto results = rec::parseParameters(gocpp::recv(p), true);
                                 idents = gocpp::slice<ast::Ident*> {ident};
                                 typ = gocpp::InitPtr<ast::FuncType>([=](auto& y) {
                                     y.Func = token::NoPos;
@@ -1880,7 +1903,7 @@ namespace golang::parser
                                     p->exprLev--;
                                 }
                                 auto rbrack = rec::expectClosing(gocpp::recv(p), token::RBRACK, "type argument list"_s);
-                                typ = typeparams::PackIndexExpr(ident, lbrack, list, rbrack);
+                                typ = packIndexExpr(ident, lbrack, list, rbrack);
                             }
                             break;
                         }
@@ -1888,8 +1911,8 @@ namespace golang::parser
                         {
                             // ordinary method
                             // TODO(rfindley) refactor to share code with parseFuncType.
-                            auto [gocpp_id_4, params] = rec::parseParameters(gocpp::recv(p), false);
-                            auto results = rec::parseResult(gocpp::recv(p));
+                            auto params = rec::parseParameters(gocpp::recv(p), false);
+                            auto results = rec::parseParameters(gocpp::recv(p), true);
                             idents = gocpp::slice<ast::Ident*> {ident};
                             typ = gocpp::InitPtr<ast::FuncType>([=](auto& y) {
                                 y.Func = token::NoPos;
@@ -1932,7 +1955,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::embeddedElem(golang::parser::parser* p, ast::Expr x)
+    ast::Expr rec::embeddedElem(golang::go::parser::parser* p, ast::Expr x)
     {
         gocpp::Defer defer;
         try
@@ -1963,7 +1986,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::embeddedTerm(golang::parser::parser* p)
+    ast::Expr rec::embeddedTerm(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -2002,7 +2025,7 @@ namespace golang::parser
         }
     }
 
-    ast::InterfaceType* rec::parseInterfaceType(golang::parser::parser* p)
+    ast::InterfaceType* rec::parseInterfaceType(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -2092,7 +2115,7 @@ namespace golang::parser
         }
     }
 
-    ast::MapType* rec::parseMapType(golang::parser::parser* p)
+    ast::MapType* rec::parseMapType(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -2120,7 +2143,7 @@ namespace golang::parser
         }
     }
 
-    ast::ChanType* rec::parseChanType(golang::parser::parser* p)
+    ast::ChanType* rec::parseChanType(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -2164,7 +2187,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::parseTypeInstance(golang::parser::parser* p, ast::Expr typ)
+    ast::Expr rec::parseTypeInstance(golang::go::parser::parser* p, ast::Expr typ)
     {
         gocpp::Defer defer;
         try
@@ -2204,7 +2227,7 @@ namespace golang::parser
                 });
             }
 
-            return typeparams::PackIndexExpr(typ, opening, list, closing);
+            return packIndexExpr(typ, opening, list, closing);
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -2212,7 +2235,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::tryIdentOrType(golang::parser::parser* p)
+    ast::Expr rec::tryIdentOrType(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -2295,7 +2318,7 @@ namespace golang::parser
         }
     }
 
-    gocpp::slice<ast::Stmt> rec::parseStmtList(golang::parser::parser* p)
+    gocpp::slice<ast::Stmt> rec::parseStmtList(golang::go::parser::parser* p)
     {
         gocpp::slice<ast::Stmt> list;
         gocpp::Defer defer;
@@ -2320,7 +2343,7 @@ namespace golang::parser
         }
     }
 
-    ast::BlockStmt* rec::parseBody(golang::parser::parser* p)
+    ast::BlockStmt* rec::parseBody(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -2346,7 +2369,7 @@ namespace golang::parser
         }
     }
 
-    ast::BlockStmt* rec::parseBlockStmt(golang::parser::parser* p)
+    ast::BlockStmt* rec::parseBlockStmt(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -2372,7 +2395,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::parseFuncTypeOrLit(golang::parser::parser* p)
+    ast::Expr rec::parseFuncTypeOrLit(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -2406,7 +2429,7 @@ namespace golang::parser
 
     // parseOperand may return an expression or a raw type (incl. array
     // types of the form [...]T). Callers must verify the result.
-    ast::Expr rec::parseOperand(golang::parser::parser* p)
+    ast::Expr rec::parseOperand(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -2445,6 +2468,7 @@ namespace golang::parser
                     {
                         auto x = gocpp::InitPtr<ast::BasicLit>([=](auto& y) {
                             y.ValuePos = p->pos;
+                            y.ValueEnd = rec::end(gocpp::recv(p));
                             y.Kind = p->tok;
                             y.Value = p->lit;
                         });
@@ -2480,7 +2504,7 @@ namespace golang::parser
             {
                 // do not consume trailing type parameters
                 // could be type for composite literal or conversion
-                auto [gocpp_id_5, isIdent] = gocpp::getValue<ast::Ident*>(typ);
+                auto [gocpp_id_3, isIdent] = gocpp::getValue<ast::Ident*>(typ);
                 assert(! isIdent, "type cannot be identifier"_s);
                 return typ;
             }
@@ -2500,7 +2524,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::parseSelector(golang::parser::parser* p, ast::Expr x)
+    ast::Expr rec::parseSelector(golang::go::parser::parser* p, ast::Expr x)
     {
         gocpp::Defer defer;
         try
@@ -2523,7 +2547,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::parseTypeAssertion(golang::parser::parser* p, ast::Expr x)
+    ast::Expr rec::parseTypeAssertion(golang::go::parser::parser* p, ast::Expr x)
     {
         gocpp::Defer defer;
         try
@@ -2559,7 +2583,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::parseIndexOrSliceOrInstance(golang::parser::parser* p, ast::Expr x)
+    ast::Expr rec::parseIndexOrSliceOrInstance(golang::go::parser::parser* p, ast::Expr x)
     {
         gocpp::Defer defer;
         try
@@ -2689,7 +2713,7 @@ namespace golang::parser
             }
 
             // instance expression
-            return typeparams::PackIndexExpr(x, lbrack, args, rbrack);
+            return packIndexExpr(x, lbrack, args, rbrack);
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -2697,7 +2721,7 @@ namespace golang::parser
         }
     }
 
-    ast::CallExpr* rec::parseCallOrConversion(golang::parser::parser* p, ast::Expr fun)
+    ast::CallExpr* rec::parseCallOrConversion(golang::go::parser::parser* p, ast::Expr fun)
     {
         gocpp::Defer defer;
         try
@@ -2743,7 +2767,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::parseValue(golang::parser::parser* p)
+    ast::Expr rec::parseValue(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -2768,7 +2792,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::parseElement(golang::parser::parser* p)
+    ast::Expr rec::parseElement(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -2798,7 +2822,7 @@ namespace golang::parser
         }
     }
 
-    gocpp::slice<ast::Expr> rec::parseElementList(golang::parser::parser* p)
+    gocpp::slice<ast::Expr> rec::parseElementList(golang::go::parser::parser* p)
     {
         gocpp::slice<ast::Expr> list;
         gocpp::Defer defer;
@@ -2828,11 +2852,13 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::parseLiteralValue(golang::parser::parser* p, ast::Expr typ)
+    ast::Expr rec::parseLiteralValue(golang::go::parser::parser* p, ast::Expr typ)
     {
         gocpp::Defer defer;
         try
         {
+            defer.push_back([=]{ decNestLev(incNestLev(p)); });
+
             if(p->trace)
             {
                 defer.push_back([=]{ un(parser::trace(p, "LiteralValue"_s)); });
@@ -2860,7 +2886,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::parsePrimaryExpr(golang::parser::parser* p, ast::Expr x)
+    ast::Expr rec::parsePrimaryExpr(golang::go::parser::parser* p, ast::Expr x)
     {
         gocpp::Defer defer;
         try
@@ -2952,16 +2978,16 @@ namespace golang::parser
                             // determine if '{' belongs to a composite literal or a block statement
                             //Go type switch emulation
                             {
-                                const auto& gocpp_id_6 = gocpp::type_info(t);
+                                const auto& gocpp_id_4 = gocpp::type_info(t);
                                 int conditionId = -1;
-                                if(gocpp_id_6 == typeid(ast::BadExpr*)) { conditionId = 0; }
-                                else if(gocpp_id_6 == typeid(ast::Ident*)) { conditionId = 1; }
-                                else if(gocpp_id_6 == typeid(ast::SelectorExpr*)) { conditionId = 2; }
-                                else if(gocpp_id_6 == typeid(ast::IndexExpr*)) { conditionId = 3; }
-                                else if(gocpp_id_6 == typeid(ast::IndexListExpr*)) { conditionId = 4; }
-                                else if(gocpp_id_6 == typeid(ast::ArrayType*)) { conditionId = 5; }
-                                else if(gocpp_id_6 == typeid(ast::StructType*)) { conditionId = 6; }
-                                else if(gocpp_id_6 == typeid(ast::MapType*)) { conditionId = 7; }
+                                if(gocpp_id_4 == typeid(ast::BadExpr*)) { conditionId = 0; }
+                                else if(gocpp_id_4 == typeid(ast::Ident*)) { conditionId = 1; }
+                                else if(gocpp_id_4 == typeid(ast::SelectorExpr*)) { conditionId = 2; }
+                                else if(gocpp_id_4 == typeid(ast::IndexExpr*)) { conditionId = 3; }
+                                else if(gocpp_id_4 == typeid(ast::IndexListExpr*)) { conditionId = 4; }
+                                else if(gocpp_id_4 == typeid(ast::ArrayType*)) { conditionId = 5; }
+                                else if(gocpp_id_4 == typeid(ast::StructType*)) { conditionId = 6; }
+                                else if(gocpp_id_4 == typeid(ast::MapType*)) { conditionId = 7; }
                                 switch(conditionId)
                                 {
                                     case 0:
@@ -3020,7 +3046,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::parseUnaryExpr(golang::parser::parser* p)
+    ast::Expr rec::parseUnaryExpr(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -3136,7 +3162,7 @@ namespace golang::parser
         }
     }
 
-    std::tuple<token::Token, int> rec::tokPrec(golang::parser::parser* p)
+    std::tuple<token::Token, int> rec::tokPrec(golang::go::parser::parser* p)
     {
         auto tok = p->tok;
         if(p->inRhs && tok == token::ASSIGN)
@@ -3150,7 +3176,7 @@ namespace golang::parser
     // If x is non-nil, it is used as the left operand.
     //
     // TODO(rfindley): parseBinaryExpr has become overloaded. Consider refactoring.
-    ast::Expr rec::parseBinaryExpr(golang::parser::parser* p, ast::Expr x, int prec1)
+    ast::Expr rec::parseBinaryExpr(golang::go::parser::parser* p, ast::Expr x, int prec1)
     {
         gocpp::Defer defer;
         try
@@ -3197,7 +3223,7 @@ namespace golang::parser
     }
 
     // The result may be a type or even a raw type ([...]int).
-    ast::Expr rec::parseExpr(golang::parser::parser* p)
+    ast::Expr rec::parseExpr(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -3215,7 +3241,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::parseRhs(golang::parser::parser* p)
+    ast::Expr rec::parseRhs(golang::go::parser::parser* p)
     {
         auto old = p->inRhs;
         p->inRhs = true;
@@ -3228,7 +3254,7 @@ namespace golang::parser
     // of a range clause (with mode == rangeOk). The returned statement is an
     // assignment with a right-hand side that is a single unary expression of
     // the form "range x". No guarantees are given for the left-hand side.
-    std::tuple<ast::Stmt, bool> rec::parseSimpleStmt(golang::parser::parser* p, int mode)
+    std::tuple<ast::Stmt, bool> rec::parseSimpleStmt(golang::go::parser::parser* p, int mode)
     {
         gocpp::Defer defer;
         try
@@ -3392,7 +3418,7 @@ namespace golang::parser
         }
     }
 
-    ast::CallExpr* rec::parseCallExpr(golang::parser::parser* p, gocpp::string callType)
+    ast::CallExpr* rec::parseCallExpr(golang::go::parser::parser* p, gocpp::string callType)
     {
         // could be a conversion: (some type)(x)
         auto x = rec::parseRhs(gocpp::recv(p));
@@ -3405,15 +3431,15 @@ namespace golang::parser
         {
             return call;
         }
-        if(auto [gocpp_id_7, isBad] = gocpp::getValue<ast::BadExpr*>(x); ! isBad)
+        if(auto [gocpp_id_5, isBad] = gocpp::getValue<ast::BadExpr*>(x); ! isBad)
         {
             // only report error if it's a new one
-            rec::error(gocpp::recv(p), rec::safePos(gocpp::recv(p), rec::End(gocpp::recv(x))), mocklib::Sprintf("expression in %s must be function call"_s, callType));
+            rec::error(gocpp::recv(p), rec::End(gocpp::recv(x)), mocklib::Sprintf("expression in %s must be function call"_s, callType));
         }
         return nullptr;
     }
 
-    ast::Stmt rec::parseGoStmt(golang::parser::parser* p)
+    ast::Stmt rec::parseGoStmt(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -3446,7 +3472,7 @@ namespace golang::parser
         }
     }
 
-    ast::Stmt rec::parseDeferStmt(golang::parser::parser* p)
+    ast::Stmt rec::parseDeferStmt(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -3479,7 +3505,7 @@ namespace golang::parser
         }
     }
 
-    ast::ReturnStmt* rec::parseReturnStmt(golang::parser::parser* p)
+    ast::ReturnStmt* rec::parseReturnStmt(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -3509,7 +3535,7 @@ namespace golang::parser
         }
     }
 
-    ast::BranchStmt* rec::parseBranchStmt(golang::parser::parser* p, token::Token tok)
+    ast::BranchStmt* rec::parseBranchStmt(golang::go::parser::parser* p, token::Token tok)
     {
         gocpp::Defer defer;
         try
@@ -3521,7 +3547,7 @@ namespace golang::parser
 
             auto pos = rec::expect(gocpp::recv(p), tok);
             ast::Ident* label = {};
-            if(tok != token::FALLTHROUGH && p->tok == token::IDENT)
+            if(tok == token::GOTO || ((tok == token::CONTINUE || tok == token::BREAK) && p->tok == token::IDENT))
             {
                 label = rec::parseIdent(gocpp::recv(p));
             }
@@ -3539,7 +3565,7 @@ namespace golang::parser
         }
     }
 
-    ast::Expr rec::makeExpr(golang::parser::parser* p, ast::Stmt s, gocpp::string want)
+    ast::Expr rec::makeExpr(golang::go::parser::parser* p, ast::Stmt s, gocpp::string want)
     {
         if(s == nullptr)
         {
@@ -3550,18 +3576,18 @@ namespace golang::parser
             return es->X;
         }
         auto found = "simple statement"_s;
-        if(auto [gocpp_id_8, isAss] = gocpp::getValue<ast::AssignStmt*>(s); isAss)
+        if(auto [gocpp_id_6, isAss] = gocpp::getValue<ast::AssignStmt*>(s); isAss)
         {
             found = "assignment"_s;
         }
         rec::error(gocpp::recv(p), rec::Pos(gocpp::recv(s)), mocklib::Sprintf("expected %s, found %s (missing parentheses around composite literal?)"_s, want, found));
         return gocpp::InitPtr<ast::BadExpr>([=](auto& x) {
             x.From = rec::Pos(gocpp::recv(s));
-            x.To = rec::safePos(gocpp::recv(p), rec::End(gocpp::recv(s)));
+            x.To = rec::End(gocpp::recv(s));
         });
     }
 
-    struct gocpp_id_9
+    struct gocpp_id_7
         {
             token::Pos pos{};
             gocpp::string lit{}; // ";" or "\n"; valid if pos.IsValid()
@@ -3595,7 +3621,7 @@ namespace golang::parser
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
         {
             return value.PrintTo(os);
         }
@@ -3604,7 +3630,7 @@ namespace golang::parser
     // parseIfHeader is an adjusted version of parser.header
     // in cmd/compile/internal/syntax/parser.go, which has
     // been tuned for better error handling.
-    std::tuple<ast::Stmt, ast::Expr> rec::parseIfHeader(golang::parser::parser* p)
+    std::tuple<ast::Stmt, ast::Expr> rec::parseIfHeader(golang::go::parser::parser* p)
     {
         ast::Stmt init;
         ast::Expr cond;
@@ -3635,7 +3661,7 @@ namespace golang::parser
         }
 
         ast::Stmt condStmt = {};
-        gocpp_id_9 semi = {};
+        gocpp_id_7 semi = {};
         if(p->tok != token::LBRACE)
         {
             if(p->tok == token::SEMICOLON)
@@ -3689,7 +3715,7 @@ namespace golang::parser
         return {init, cond};
     }
 
-    ast::IfStmt* rec::parseIfStmt(golang::parser::parser* p)
+    ast::IfStmt* rec::parseIfStmt(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -3754,7 +3780,7 @@ namespace golang::parser
         }
     }
 
-    ast::CaseClause* rec::parseCaseClause(golang::parser::parser* p)
+    ast::CaseClause* rec::parseCaseClause(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -3798,14 +3824,14 @@ namespace golang::parser
         return ok && a->Type == nullptr;
     }
 
-    bool rec::isTypeSwitchGuard(golang::parser::parser* p, ast::Stmt s)
+    bool rec::isTypeSwitchGuard(golang::go::parser::parser* p, ast::Stmt s)
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_10 = gocpp::type_info(s);
+            const auto& gocpp_id_8 = gocpp::type_info(s);
             int conditionId = -1;
-            if(gocpp_id_10 == typeid(ast::ExprStmt*)) { conditionId = 0; }
-            else if(gocpp_id_10 == typeid(ast::AssignStmt*)) { conditionId = 1; }
+            if(gocpp_id_8 == typeid(ast::ExprStmt*)) { conditionId = 0; }
+            else if(gocpp_id_8 == typeid(ast::AssignStmt*)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -3845,7 +3871,7 @@ namespace golang::parser
         return false;
     }
 
-    ast::Stmt rec::parseSwitchStmt(golang::parser::parser* p)
+    ast::Stmt rec::parseSwitchStmt(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -3927,7 +3953,7 @@ namespace golang::parser
         }
     }
 
-    ast::CommClause* rec::parseCommClause(golang::parser::parser* p)
+    ast::CommClause* rec::parseCommClause(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -4017,7 +4043,7 @@ namespace golang::parser
         }
     }
 
-    ast::SelectStmt* rec::parseSelectStmt(golang::parser::parser* p)
+    ast::SelectStmt* rec::parseSelectStmt(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -4053,7 +4079,7 @@ namespace golang::parser
         }
     }
 
-    ast::Stmt rec::parseForStmt(golang::parser::parser* p)
+    ast::Stmt rec::parseForStmt(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -4144,7 +4170,7 @@ namespace golang::parser
                             rec::errorExpected(gocpp::recv(p), rec::Pos(gocpp::recv(as->Lhs[len(as->Lhs) - 1])), "at most 2 expressions"_s);
                             return gocpp::InitPtr<ast::BadStmt>([=](auto& x) {
                                 x.From = pos;
-                                x.To = rec::safePos(gocpp::recv(p), rec::End(gocpp::recv(body)));
+                                x.To = rec::End(gocpp::recv(body));
                             });
                             break;
                     }
@@ -4179,7 +4205,7 @@ namespace golang::parser
         }
     }
 
-    ast::Stmt rec::parseStmt(golang::parser::parser* p)
+    ast::Stmt rec::parseStmt(golang::go::parser::parser* p)
     {
         ast::Stmt s;
         gocpp::Defer defer;
@@ -4266,7 +4292,7 @@ namespace golang::parser
                         // because of the required look-ahead, labeled statements are
                         // parsed by parseSimpleStmt - don't expect a semicolon after
                         // them
-                        if(auto [gocpp_id_11, isLabeledStmt] = gocpp::getValue<ast::LabeledStmt*>(s); ! isLabeledStmt)
+                        if(auto [gocpp_id_9, isLabeledStmt] = gocpp::getValue<ast::LabeledStmt*>(s); ! isLabeledStmt)
                         {
                             rec::expectSemi(gocpp::recv(p));
                         }
@@ -4343,7 +4369,7 @@ namespace golang::parser
         }
     }
 
-    ast::Spec rec::parseImportSpec(golang::parser::parser* p, ast::CommentGroup* doc, token::Token _1, int _2)
+    ast::Spec rec::parseImportSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token _1, int _2)
     {
         gocpp::Defer defer;
         try
@@ -4376,10 +4402,12 @@ namespace golang::parser
             }
 
             auto pos = p->pos;
+            auto end = p->pos;
             gocpp::string path = {};
             if(p->tok == token::STRING)
             {
                 path = p->lit;
+                end = rec::end(gocpp::recv(p));
                 rec::next(gocpp::recv(p));
             }
             else
@@ -4401,6 +4429,7 @@ namespace golang::parser
                 x.Name = ident;
                 x.Path = gocpp::InitPtr<ast::BasicLit>([=](auto& x) {
                     x.ValuePos = pos;
+                    x.ValueEnd = end;
                     x.Kind = token::STRING;
                     x.Value = path;
                 });
@@ -4416,7 +4445,7 @@ namespace golang::parser
         }
     }
 
-    ast::Spec rec::parseValueSpec(golang::parser::parser* p, ast::CommentGroup* doc, token::Token keyword, int iota)
+    ast::Spec rec::parseValueSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token keyword, int iota)
     {
         gocpp::Defer defer;
         try
@@ -4482,7 +4511,7 @@ namespace golang::parser
         }
     }
 
-    void rec::parseGenericType(golang::parser::parser* p, ast::TypeSpec* spec, token::Pos openPos, ast::Ident* name0, ast::Expr typ0)
+    void rec::parseGenericType(golang::go::parser::parser* p, ast::TypeSpec* spec, token::Pos openPos, ast::Ident* name0, ast::Expr typ0)
     {
         gocpp::Defer defer;
         try
@@ -4492,15 +4521,13 @@ namespace golang::parser
                 defer.push_back([=]{ un(parser::trace(p, "parseGenericType"_s)); });
             }
 
-            auto list = rec::parseParameterList(gocpp::recv(p), name0, typ0, token::RBRACK);
+            auto list = rec::parseParameterList(gocpp::recv(p), name0, typ0, token::RBRACK, false);
             auto closePos = rec::expect(gocpp::recv(p), token::RBRACK);
             spec->TypeParams = gocpp::InitPtr<ast::FieldList>([=](auto& x) {
                 x.Opening = openPos;
                 x.List = list;
                 x.Closing = closePos;
             });
-            // Let the type checker decide whether to accept type parameters on aliases:
-            // see go.dev/issue/46477.
             if(p->tok == token::ASSIGN)
             {
                 // type alias
@@ -4515,7 +4542,7 @@ namespace golang::parser
         }
     }
 
-    ast::Spec rec::parseTypeSpec(golang::parser::parser* p, ast::CommentGroup* doc, token::Token _1, int _2)
+    ast::Spec rec::parseTypeSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token _1, int _2)
     {
         gocpp::Defer defer;
         try
@@ -4626,8 +4653,8 @@ namespace golang::parser
     //	P*[]int     T/F      P       *[]int
     //	P*E         T        P       *E
     //	P*E         F        nil     P*E
-    //	P([]int)    T/F      P       []int
-    //	P(E)        T        P       E
+    //	P([]int)    T/F      P       ([]int)
+    //	P(E)        T        P       (E)
     //	P(E)        F        nil     P(E)
     //	P*E|F|~G    T/F      P       *E|F|~G
     //	P*E|F|G     T        P       *E|F|G
@@ -4636,12 +4663,12 @@ namespace golang::parser
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_12 = gocpp::type_info(x);
+            const auto& gocpp_id_10 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_12 == typeid(ast::Ident*)) { conditionId = 0; }
-            else if(gocpp_id_12 == typeid(ast::BinaryExpr*)) { conditionId = 1; }
-            else if(gocpp_id_12 == typeid(ast::CallExpr*)) { conditionId = 2; }
+            if(gocpp_id_10 == typeid(ast::Ident*)) { conditionId = 0; }
+            else if(gocpp_id_10 == typeid(ast::BinaryExpr*)) { conditionId = 1; }
+            else if(gocpp_id_10 == typeid(ast::CallExpr*)) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -4662,7 +4689,7 @@ namespace golang::parser
                         switch(conditionId)
                         {
                             case 0:
-                                if(auto [name, gocpp_id_13] = gocpp::getValue<ast::Ident*>(x->X); name != nullptr && (force || isTypeElem(x->Y)))
+                                if(auto [name, gocpp_id_11] = gocpp::getValue<ast::Ident*>(x->X); name != nullptr && (force || isTypeElem(x->Y)))
                                 {
                                     // x = name *x.Y
                                     return {name, gocpp::InitPtr<ast::StarExpr>([=](auto& y) {
@@ -4687,12 +4714,18 @@ namespace golang::parser
                 case 2:
                 {
                     ast::CallExpr* x = gocpp::any_cast<ast::CallExpr*>(x_ref);
-                    if(auto [name, gocpp_id_14] = gocpp::getValue<ast::Ident*>(x->Fun); name != nullptr)
+                    if(auto [name, gocpp_id_12] = gocpp::getValue<ast::Ident*>(x->Fun); name != nullptr)
                     {
                         if(len(x->Args) == 1 && x->Ellipsis == token::NoPos && (force || isTypeElem(x->Args[0])))
                         {
-                            // x = name "(" x.ArgList[0] ")"
-                            return {name, x->Args[0]};
+                            // x = name (x.Args[0])
+                            // (Note that the cmd/compile/internal/syntax parser does not care
+                            // about syntax tree fidelity and does not preserve parentheses here.)
+                            return {name, gocpp::InitPtr<ast::ParenExpr>([=](auto& y) {
+                                y.Lparen = x->Lparen;
+                                y.X = x->Args[0];
+                                y.Rparen = x->Rparen;
+                            })};
                         }
                     }
                     break;
@@ -4708,18 +4741,18 @@ namespace golang::parser
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_15 = gocpp::type_info(x);
+            const auto& gocpp_id_13 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_15 == typeid(ast::ArrayType*)) { conditionId = 0; }
-            else if(gocpp_id_15 == typeid(ast::StructType*)) { conditionId = 1; }
-            else if(gocpp_id_15 == typeid(ast::FuncType*)) { conditionId = 2; }
-            else if(gocpp_id_15 == typeid(ast::InterfaceType*)) { conditionId = 3; }
-            else if(gocpp_id_15 == typeid(ast::MapType*)) { conditionId = 4; }
-            else if(gocpp_id_15 == typeid(ast::ChanType*)) { conditionId = 5; }
-            else if(gocpp_id_15 == typeid(ast::BinaryExpr*)) { conditionId = 6; }
-            else if(gocpp_id_15 == typeid(ast::UnaryExpr*)) { conditionId = 7; }
-            else if(gocpp_id_15 == typeid(ast::ParenExpr*)) { conditionId = 8; }
+            if(gocpp_id_13 == typeid(ast::ArrayType*)) { conditionId = 0; }
+            else if(gocpp_id_13 == typeid(ast::StructType*)) { conditionId = 1; }
+            else if(gocpp_id_13 == typeid(ast::FuncType*)) { conditionId = 2; }
+            else if(gocpp_id_13 == typeid(ast::InterfaceType*)) { conditionId = 3; }
+            else if(gocpp_id_13 == typeid(ast::MapType*)) { conditionId = 4; }
+            else if(gocpp_id_13 == typeid(ast::ChanType*)) { conditionId = 5; }
+            else if(gocpp_id_13 == typeid(ast::BinaryExpr*)) { conditionId = 6; }
+            else if(gocpp_id_13 == typeid(ast::UnaryExpr*)) { conditionId = 7; }
+            else if(gocpp_id_13 == typeid(ast::ParenExpr*)) { conditionId = 8; }
             switch(conditionId)
             {
                 case 0:
@@ -4756,7 +4789,7 @@ namespace golang::parser
         return false;
     }
 
-    ast::GenDecl* rec::parseGenDecl(golang::parser::parser* p, token::Token keyword, parseSpecFunction f)
+    ast::GenDecl* rec::parseGenDecl(golang::go::parser::parser* p, token::Token keyword, parseSpecFunction f)
     {
         gocpp::Defer defer;
         try
@@ -4802,7 +4835,7 @@ namespace golang::parser
         }
     }
 
-    ast::FuncDecl* rec::parseFuncDecl(golang::parser::parser* p)
+    ast::FuncDecl* rec::parseFuncDecl(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -4818,20 +4851,18 @@ namespace golang::parser
             ast::FieldList* recv = {};
             if(p->tok == token::LPAREN)
             {
-                std::tie(std::ignore, recv) = rec::parseParameters(gocpp::recv(p), false);
+                recv = rec::parseParameters(gocpp::recv(p), false);
             }
 
             auto ident = rec::parseIdent(gocpp::recv(p));
 
-            auto [tparams, params] = rec::parseParameters(gocpp::recv(p), true);
-            if(recv != nullptr && tparams != nullptr)
+            ast::FieldList* tparams = {};
+            if(p->tok == token::LBRACK)
             {
-                // Method declarations do not have type parameters. We parse them for a
-                // better error message and improved error recovery.
-                rec::error(gocpp::recv(p), tparams->Opening, "method must have no type parameters"_s);
-                tparams = nullptr;
+                tparams = rec::parseTypeParameters(gocpp::recv(p));
             }
-            auto results = rec::parseResult(gocpp::recv(p));
+            auto params = rec::parseParameters(gocpp::recv(p), false);
+            auto results = rec::parseParameters(gocpp::recv(p), true);
 
             ast::BlockStmt* body = {};
             //Go switch emulation
@@ -4882,7 +4913,7 @@ namespace golang::parser
         }
     }
 
-    ast::Decl rec::parseDecl(golang::parser::parser* p, gocpp::map<token::Token, bool> sync)
+    ast::Decl rec::parseDecl(golang::go::parser::parser* p, gocpp::map<token::Token, bool> sync)
     {
         gocpp::Defer defer;
         try
@@ -4943,7 +4974,7 @@ namespace golang::parser
         }
     }
 
-    ast::File* rec::parseFile(golang::parser::parser* p)
+    ast::File* rec::parseFile(golang::go::parser::parser* p)
     {
         gocpp::Defer defer;
         try
@@ -5011,8 +5042,6 @@ namespace golang::parser
                 x.Package = pos;
                 x.Name = ident;
                 x.Decls = decls;
-                x.FileStart = token::Pos(rec::Base(gocpp::recv(p->file)));
-                x.FileEnd = token::Pos(rec::Base(gocpp::recv(p->file)) + rec::Size(gocpp::recv(p->file)));
                 x.Imports = p->imports;
                 x.Comments = p->comments;
                 x.GoVersion = p->goVersion;
@@ -5032,6 +5061,40 @@ namespace golang::parser
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+        }
+    }
+
+    // packIndexExpr returns an IndexExpr x[expr0] or IndexListExpr x[expr0, ...].
+    ast::Expr packIndexExpr(ast::Expr x, token::Pos lbrack, gocpp::slice<ast::Expr> exprs, token::Pos rbrack)
+    {
+        //Go switch emulation
+        {
+            auto condition = len(exprs);
+            int conditionId = -1;
+            if(condition == 0) { conditionId = 0; }
+            else if(condition == 1) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    gocpp::panic("internal error: packIndexExpr with empty expr slice"_s);
+                    break;
+                case 1:
+                    return gocpp::InitPtr<ast::IndexExpr>([=](auto& y) {
+                        y.X = x;
+                        y.Lbrack = lbrack;
+                        y.Index = exprs[0];
+                        y.Rbrack = rbrack;
+                    });
+                    break;
+                default:
+                    return gocpp::InitPtr<ast::IndexListExpr>([=](auto& y) {
+                        y.X = x;
+                        y.Lbrack = lbrack;
+                        y.Indices = exprs;
+                        y.Rbrack = rbrack;
+                    });
+                    break;
+            }
         }
     }
 

@@ -15,17 +15,18 @@
 #include "golang/fmt/errors.h"
 #include "golang/fmt/print.h"
 #include "golang/go/token/position.h"
+#include "golang/go/types/alias.h"
 #include "golang/go/types/api.h"
 #include "golang/go/types/api_predicates.h"
 #include "golang/go/types/basic.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/context.h"
 #include "golang/go/types/errors.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/lookup.h"
 #include "golang/go/types/named.h"
 #include "golang/go/types/object.h"
-#include "golang/go/types/package.h"
 #include "golang/go/types/pointer.h"
 #include "golang/go/types/predicates.h"
 #include "golang/go/types/signature.h"
@@ -35,6 +36,7 @@
 #include "golang/go/types/typelists.h"
 #include "golang/go/types/typeparam.h"
 #include "golang/go/types/typeset.h"
+#include "golang/go/types/typestring.h"
 #include "golang/go/types/typeterm.h"
 #include "golang/go/types/under.h"
 #include "golang/go/types/union.h"
@@ -42,18 +44,98 @@
 #include "golang/go/types/version.h"
 #include "golang/internal/types/errors/codes.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace errors = golang::errors;
+    namespace fmt = golang::fmt;
+    namespace token = golang::go::token;
     namespace rec
     {
     }
 
+    // A genericType implements access to its type parameters.
+    
+    template<typename T>
+    genericType::genericType(T& ref)
+    {
+        mValue.reset(new genericTypeImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    genericType::genericType(const T& ref)
+    {
+        mValue.reset(new genericTypeImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    genericType::genericType(T* ptr)
+    {
+        mValue.reset(new genericTypeImpl<T, gocpp::ptr<T>>(ptr));
+    }
+
+    std::ostream& genericType::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
+
+    template<typename T, typename TStore, typename TInterface>
+    TypeParamList* genericType::genericTypeImpl<T, TStore, TInterface>::vTypeParams()
+    {
+        return rec::TypeParams(gocpp::PtrRecv<T, false>(value.get()));
+    }
+
+    inline genericType::IgenericType* genericType::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'genericType'");
+    }
+
+    namespace rec
+    {
+        TypeParamList* TypeParams(const gocpp::PtrRecv<struct genericType, false>& self)
+        {
+            return self.ptr->value()->vTypeParams();
+        }
+
+        TypeParamList* TypeParams(const gocpp::ObjRecv<struct genericType>& self)
+        {
+            return self.obj.value()->vTypeParams();
+        }
+
+        gocpp::string String(const gocpp::PtrRecv<struct genericType, false>& self)
+        {
+            return self.ptr->value()->vString();
+        }
+
+        gocpp::string String(const gocpp::ObjRecv<struct genericType>& self)
+        {
+            return self.obj.value()->vString();
+        }
+
+        types::Type Underlying(const gocpp::PtrRecv<struct genericType, false>& self)
+        {
+            return self.ptr->value()->vUnderlying();
+        }
+
+        types::Type Underlying(const gocpp::ObjRecv<struct genericType>& self)
+        {
+            return self.obj.value()->vUnderlying();
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct genericType& value)
+    {
+        return value.PrintTo(os);
+    }
+
     // Instantiate instantiates the type orig with the given type arguments targs.
-    // orig must be a *Named or a *Signature type. If there is no error, the
-    // resulting Type is an instantiated type of the same kind (either a *Named or
-    // a *Signature). Methods attached to a *Named type are also instantiated, and
-    // associated with a new *Func that has the same position as the original
-    // method, but nil function scope.
+    // orig must be a generic *Alias, *Named, or *Signature type. If there is no error,
+    // the resulting Type is an instantiated type of the same kind (*Alias, *Named
+    // or *Signature, respectively).
+    //
+    // Methods attached to a *Named type are also instantiated, and associated with
+    // a new *Func that has the same position as the original method, but nil function
+    // scope.
     //
     // If ctxt is non-nil, it may be used to de-duplicate the instance against
     // previous instances with the same identity. As a special case, generic
@@ -62,52 +144,45 @@ namespace golang::types
     // signatures will yield different instances. The use of a shared context does
     // not guarantee that identical instances are deduplicated in all cases.
     //
-    // If validate is set, Instantiate verifies that the number of type arguments
-    // and parameters match, and that the type arguments satisfy their
-    // corresponding type constraints. If verification fails, the resulting error
-    // may wrap an *ArgumentError indicating which type argument did not satisfy
-    // its corresponding type parameter constraint, and why.
+    // If validate is set, Instantiate verifies that the type orig is in fact generic,
+    // that the number of type arguments and parameters match, and that the type arguments
+    // satisfy their respective type constraints.
+    // If verification fails, the resulting error may wrap an *ArgumentError indicating
+    // which type argument did not satisfy its type parameter constraint, and why.
     //
-    // If validate is not set, Instantiate does not verify the type argument count
-    // or whether the type arguments satisfy their constraints. Instantiate is
-    // guaranteed to not return an error, but may panic. Specifically, for
-    // *Signature types, Instantiate will panic immediately if the type argument
+    // If validate is not set, Instantiate does not check if orig is generic, verify the
+    // type argument count, or check whether the type arguments satisfy their constraints.
+    // Instantiate is guaranteed to not return an error, but may panic. Specifically,
+    // for *Signature types, Instantiate will panic immediately if the type argument
     // count is incorrect; for *Named types, a panic may occur later inside the
     // *Named API.
-    std::tuple<golang::types::Type, gocpp::error> Instantiate(Context* ctxt, golang::types::Type orig, gocpp::slice<golang::types::Type> targs, bool validate)
+    std::tuple<golang::go::types::Type, gocpp::error> Instantiate(Context* ctxt, golang::go::types::Type orig, gocpp::slice<golang::go::types::Type> targs, bool validate)
     {
         if(ctxt == nullptr)
         {
             ctxt = NewContext();
         }
+        // signature of Instantiate must not change for backward-compatibility
+        auto [orig_, ok] = gocpp::getValue<golang::go::types::genericType>(orig);
+        if(! ok)
+        {
+            gocpp::panic(sprintf(nullptr, nullptr, false, "cannot instantiate non-generic %s: expected *Named, *Alias, or *Signature"_s, orig));
+        }
+        if(len(targs) == 0)
+        {
+            gocpp::panic(sprintf(nullptr, nullptr, false, "cannot instantiate %s: empty type argument list"_s, orig));
+        }
+
         if(validate)
         {
-            gocpp::slice<TypeParam*> tparams = {};
-            //Go type switch emulation
+            auto tparams = rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(orig_))));
+            if(len(tparams) == 0)
             {
-                const auto& gocpp_id_0 = gocpp::type_info(orig);
-                int conditionId = -1;
-                if(gocpp_id_0 == typeid(types::Named*)) { conditionId = 0; }
-                else if(gocpp_id_0 == typeid(types::Signature*)) { conditionId = 1; }
-                switch(conditionId)
-                {
-                    case 0:
-                    {
-                        types::Named* t = gocpp::any_cast<types::Named*>(orig);
-                        tparams = rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(t))));
-                        break;
-                    }
-                    case 1:
-                    {
-                        types::Signature* t = gocpp::any_cast<types::Signature*>(orig);
-                        tparams = rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(t))));
-                        break;
-                    }
-                }
+                return {nullptr, mocklib::Errorf("cannot instantiate non-generic %s: has no type parameters"_s, orig)};
             }
             if(len(targs) != len(tparams))
             {
-                return {nullptr, mocklib::Errorf("got %d type arguments but %s has %d type parameters"_s, len(targs), orig, len(tparams))};
+                return {nullptr, mocklib::Errorf("cannot instantiate %s: got %d type arguments but have %d type parameters"_s, orig, len(targs), len(tparams))};
             }
             if(auto [i, err] = rec::verify(gocpp::recv((Checker*)(nullptr)), nopos, tparams, targs, ctxt); err != nullptr)
             {
@@ -115,14 +190,15 @@ namespace golang::types
             }
         }
 
-        auto inst = rec::instance(gocpp::recv((Checker*)(nullptr)), nopos, orig, targs, nullptr, ctxt);
+        auto inst = rec::instance(gocpp::recv((Checker*)(nullptr)), nopos, orig_, targs, nullptr, ctxt);
         return {inst, nullptr};
     }
 
     // instance instantiates the given original (generic) function or type with the
     // provided type arguments and returns the resulting instance. If an identical
     // instance exists already in the given contexts, it returns that instance,
-    // otherwise it creates a new one.
+    // otherwise it creates a new one. If there is an error (such as wrong number
+    // of type arguments), the result is Typ[Invalid].
     //
     // If expanding is non-nil, it is the Named instance type currently being
     // expanded. If ctxt is non-nil, it is the context associated with the current
@@ -130,9 +206,11 @@ namespace golang::types
     // must be non-nil.
     //
     // For Named types the resulting instance may be unexpanded.
-    golang::types::Type rec::instance(Checker* check, token::Pos pos, golang::types::Type orig, gocpp::slice<golang::types::Type> targs, Named* expanding, Context* ctxt)
+    //
+    // check may be nil (when not type-checking syntax); pos is used only if check is non-nil.
+    golang::go::types::Type rec::instance(Checker* check, token::Pos pos, golang::go::types::genericType orig, gocpp::slice<golang::go::types::Type> targs, Named* expanding, Context* ctxt)
     {
-        golang::types::Type res;
+        golang::go::types::Type res;
         // The order of the contexts below matters: we always prefer instances in the
         // expanding instance context in order to preserve reference cycles.
         // Invariant: if expanding != nil, the returned instance will be the instance
@@ -156,9 +234,10 @@ namespace golang::types
             hashes[i] = rec::instanceHash(gocpp::recv(ctxt), orig, targs);
         }
 
-        // If local is non-nil, updateContexts return the type recorded in
-        // local.
-        auto updateContexts = [=](golang::types::Type res) mutable -> golang::types::Type
+        // Record the result in all contexts.
+        // Prefer to re-use existing types from expanding context, if it exists, to reduce
+        // the memory pinned by the Named type.
+        auto updateContexts = [=](golang::go::types::Type res) mutable -> golang::go::types::Type
         {
             for(auto i = len(ctxts) - 1; i >= 0; i--)
             {
@@ -179,11 +258,12 @@ namespace golang::types
 
         //Go type switch emulation
         {
-            const auto& gocpp_id_1 = gocpp::type_info(orig);
+            const auto& gocpp_id_0 = gocpp::type_info(orig);
             const auto& orig_ref = orig;
             int conditionId = -1;
-            if(gocpp_id_1 == typeid(types::Named*)) { conditionId = 0; }
-            else if(gocpp_id_1 == typeid(types::Signature*)) { conditionId = 1; }
+            if(gocpp_id_0 == typeid(types::Named*)) { conditionId = 0; }
+            else if(gocpp_id_0 == typeid(types::Alias*)) { conditionId = 1; }
+            else if(gocpp_id_0 == typeid(types::Signature*)) { conditionId = 2; }
             switch(conditionId)
             {
                 // substituted lazily
@@ -196,9 +276,36 @@ namespace golang::types
 
                 case 1:
                 {
+                    types::Alias* orig = gocpp::any_cast<types::Alias*>(orig_ref);
+                    // verify type parameter count (see go.dev/issue/71198 for a test case)
+                    auto tparams = rec::TypeParams(gocpp::recv(orig));
+                    if(! rec::validateTArgLen(gocpp::recv(check), pos, rec::Name(gocpp::recv(orig->obj)), rec::Len(gocpp::recv(tparams)), len(targs)))
+                    {
+                        // TODO(gri) Consider returning a valid alias instance with invalid
+                        // underlying (aliased) type to match behavior of *Named
+                        // types. Then this function will never return an invalid
+                        // result.
+                        return Typ[Invalid];
+                    }
+                    if(rec::Len(gocpp::recv(tparams)) == 0)
+                    {
+                        // nothing to do (minor optimization)
+                        return orig;
+                    }
+                    res = rec::newAliasInstance(gocpp::recv(check), pos, orig, targs, expanding, ctxt);
+                    break;
+                }
+
+                case 2:
+                {
                     types::Signature* orig = gocpp::any_cast<types::Signature*>(orig_ref);
                     // function instances cannot be reached from Named types
                     assert(expanding == nullptr);
+                    // Note that orig may be a generic method on a generic type. In that case, orig
+                    // is an instantiated type. It will not have receiver type parameters, but will
+                    // still have ordinary type parameters.
+                    assert(rec::RecvTypeParams(gocpp::recv(orig)) == nullptr);
+                    assert(rec::TypeParams(gocpp::recv(orig)) != nullptr);
                     auto tparams = rec::TypeParams(gocpp::recv(orig));
                     // TODO(gri) investigate if this is needed (type argument and parameter count seem to be correct here)
                     if(! rec::validateTArgLen(gocpp::recv(check), pos, rec::String(gocpp::recv(orig)), rec::Len(gocpp::recv(tparams)), len(targs)))
@@ -210,7 +317,7 @@ namespace golang::types
                         // nothing to do (minor optimization)
                         return orig;
                     }
-                    auto sig = gocpp::getValue<Signature*>(rec::subst(gocpp::recv(check), pos, orig, makeSubstMap(rec::list(gocpp::recv(tparams)), targs), nullptr, ctxt));
+                    auto sig = gocpp::getValue<golang::go::types::Signature*>(rec::subst(gocpp::recv(check), pos, orig, makeSubstMap(rec::list(gocpp::recv(tparams)), targs), nullptr, ctxt));
                     // If the signature doesn't use its type parameters, subst
                     // will not make a copy. In that case, make a copy now (so
                     // we can set tparams to nil w/o causing side-effects).
@@ -275,7 +382,8 @@ namespace golang::types
         gocpp::panic(mocklib::Sprintf("%v: %s"_s, pos, msg));
     }
 
-    std::tuple<int, gocpp::error> rec::verify(Checker* check, token::Pos pos, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::types::Type> targs, Context* ctxt)
+    // check may be nil; pos is used only if check is non-nil.
+    std::tuple<int, gocpp::error> rec::verify(Checker* check, token::Pos pos, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> targs, Context* ctxt)
     {
         auto smap = makeSubstMap(tparams, targs);
         for(auto [i, tpar] : tparams)
@@ -288,7 +396,7 @@ namespace golang::types
             // the parameterized type.
             auto bound = rec::subst(gocpp::recv(check), pos, tpar->bound, smap, nullptr, ctxt);
             gocpp::string cause = {};
-            if(! rec::implements(gocpp::recv(check), pos, targs[i], bound, true, & cause))
+            if(! rec::implements(gocpp::recv(check), targs[i], bound, true, & cause))
             {
                 return {i, errors::New(cause)};
             }
@@ -302,16 +410,16 @@ namespace golang::types
     //
     // If the provided cause is non-nil, it may be set to an error string
     // explaining why V does not implement (or satisfy, for constraints) T.
-    bool rec::implements(Checker* check, token::Pos pos, golang::types::Type V, golang::types::Type T, bool constraint, gocpp::string* cause)
+    bool rec::implements(Checker* check, golang::go::types::Type V, golang::go::types::Type T, bool constraint, gocpp::string* cause)
     {
-        auto Vu = types::under(V);
-        auto Tu = types::under(T);
+        auto Vu = rec::Underlying(gocpp::recv(V));
+        auto Tu = rec::Underlying(gocpp::recv(T));
         if(! types::isValid(Vu) || ! types::isValid(Tu))
         {
             // avoid follow-on errors
             return true;
         }
-        if(auto [p, gocpp_id_2] = gocpp::getValue<Pointer*>(Vu); p != nullptr && ! types::isValid(types::under(p->base)))
+        if(auto [p, gocpp_id_1] = gocpp::getValue<Pointer*>(Vu); p != nullptr && ! types::isValid(rec::Underlying(gocpp::recv(p->base))))
         {
             // avoid follow-on errors (see go.dev/issue/49541 for an example)
             return true;
@@ -323,7 +431,7 @@ namespace golang::types
             verb = "satisfy"_s;
         }
 
-        auto [Ti, gocpp_id_3] = gocpp::getValue<Interface*>(Tu);
+        auto [Ti, gocpp_id_2] = gocpp::getValue<Interface*>(Tu);
         if(Ti == nullptr)
         {
             if(cause != nullptr)
@@ -331,7 +439,7 @@ namespace golang::types
                 gocpp::string detail = {};
                 if(isInterfacePtr(Tu))
                 {
-                    detail = rec::sprintf(gocpp::recv(check), "type %s is pointer to interface, not interface"_s, T);
+                    detail = rec::interfacePtrError(gocpp::recv(check), T);
                 }
                 else
                 {
@@ -352,7 +460,7 @@ namespace golang::types
 
         // An interface V with an empty type set satisfies any interface.
         // (The empty set is a subset of any set.)
-        auto [Vi, gocpp_id_4] = gocpp::getValue<Interface*>(Vu);
+        auto [Vi, gocpp_id_3] = gocpp::getValue<Interface*>(Vu);
         // type set of V is not empty
         if(Vi != nullptr && rec::IsEmpty(gocpp::recv(rec::typeSet(gocpp::recv(Vi)))))
         {
@@ -371,7 +479,7 @@ namespace golang::types
         }
 
         // V must implement T's methods, if any.
-        if(auto [m, gocpp_id_5] = rec::missingMethod(gocpp::recv(check), V, T, true, Identical, cause); m != nullptr)
+        if(! rec::hasAllMethods(gocpp::recv(check), V, T, true, Identical, cause))
         {
             if(cause != nullptr)
             {
@@ -389,18 +497,17 @@ namespace golang::types
             }
             // If T is comparable, V must be comparable.
             // If V is strictly comparable, we're done.
-            if(comparable(V, false, nullptr, nullptr))
+            if(comparableType(V, false, nullptr) == nullptr)
             {
                 return true;
             }
             // For constraint satisfaction, use dynamic (spec) comparability
             // so that ordinary, non-type parameter interfaces implement comparable.
-            if(constraint && comparable(V, true, nullptr, nullptr))
+            if(constraint && comparableType(V, true, nullptr) == nullptr)
             {
                 // V is comparable if we are at Go 1.20 or higher.
-                if(check == nullptr || rec::allowVersion(gocpp::recv(check), check->pkg, atPos(pos), go1_20))
+                if(check == nullptr || rec::allowVersion(gocpp::recv(check), go1_20))
                 {
-                    // atPos needed so that go/types generate passes
                     return true;
                 }
                 if(cause != nullptr)
@@ -442,15 +549,15 @@ namespace golang::types
         }
 
         // Otherwise, V's type must be included in the iface type set.
-        golang::types::Type alt = {};
-        if(rec::is(gocpp::recv(rec::typeSet(gocpp::recv(Ti))), [=](term* t) mutable -> bool
+        golang::go::types::Type alt = {};
+        if(rec::is(gocpp::recv(rec::typeSet(gocpp::recv(Ti))), [=](golang::go::types::term* t) mutable -> bool
         {
             if(! rec::includes(gocpp::recv(t), V))
             {
                 // If V ∉ t.typ but V ∈ ~t.typ then remember this type
                 // so we can suggest it as an alternative in the error
                 // message.
-                if(alt == nullptr && ! t->tilde && Identical(t->typ, under(t->typ)))
+                if(alt == nullptr && ! t->tilde && Identical(t->typ, rec::Underlying(gocpp::recv(t->typ))))
                 {
                     auto tt = *t;
                     tt.tilde = true;
@@ -495,15 +602,15 @@ namespace golang::types
 
     // mentions reports whether type T "mentions" typ in an (embedded) element or term
     // of T (whether typ is in the type set of T or not). For better error messages.
-    bool mentions(golang::types::Type T, golang::types::Type typ)
+    bool mentions(golang::go::types::Type T, golang::go::types::Type typ)
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_6 = gocpp::type_info(T);
+            const auto& gocpp_id_4 = gocpp::type_info(T);
             const auto& T_ref = T;
             int conditionId = -1;
-            if(gocpp_id_6 == typeid(types::Interface*)) { conditionId = 0; }
-            else if(gocpp_id_6 == typeid(types::Union*)) { conditionId = 1; }
+            if(gocpp_id_4 == typeid(types::Interface*)) { conditionId = 0; }
+            else if(gocpp_id_4 == typeid(types::Union*)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:

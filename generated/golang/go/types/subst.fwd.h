@@ -4,19 +4,15 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct GoTag_substMap;
+    struct subster;
 }
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/check.fwd.h"
-#include "golang/go/types/context.fwd.h"
-#include "golang/go/types/named.fwd.h"
 #include "golang/go/types/type.fwd.h"
 #include "golang/go/types/typeparam.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    using substMap = gocpp::defined<gocpp::map<TypeParam*, golang::types::Type>, GoTag_substMap>;
-    struct subster;
+    using substMap = gocpp::defined<gocpp::map<TypeParam*, golang::go::types::Type>, GoTag_substMap>;
 }

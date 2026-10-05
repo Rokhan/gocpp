@@ -9,12 +9,22 @@
 #include "golang/internal/lazyregexp/lazyre.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/os/proc.h"
-#include "golang/sync/once.h"
-#include "golang/regexp/regexp.fwd.h"
-#include "golang/strings/strings.fwd.h"
 
-namespace golang::lazyregexp
+namespace golang::internal::lazyregexp
+{
+    extern bool inTest;
+}
+#include "golang/regexp/regexp.fwd.h"
+#include "golang/sync/once.fwd.h"
+
+namespace golang::internal::lazyregexp
+{
+    namespace sync = golang::sync;
+    namespace regexp = golang::regexp;
+}
+#include "golang/sync/once.h"
+
+namespace golang::internal::lazyregexp
 {
     struct Regexp
     {
@@ -34,13 +44,12 @@ namespace golang::lazyregexp
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Regexp& value);
-    extern bool inTest;
     Regexp* New(gocpp::string str);
 }
 
 #include "golang/regexp/regexp.h"
 
-namespace golang::lazyregexp
+namespace golang::internal::lazyregexp
 {
 
     namespace rec
@@ -50,6 +59,7 @@ namespace golang::lazyregexp
         gocpp::slice<gocpp::slice<unsigned char>> FindSubmatch(Regexp* r, gocpp::slice<unsigned char> s);
         gocpp::slice<gocpp::string> FindStringSubmatch(Regexp* r, gocpp::string s);
         gocpp::slice<int> FindStringSubmatchIndex(Regexp* r, gocpp::string s);
+        gocpp::slice<unsigned char> ReplaceAll(Regexp* r, gocpp::slice<unsigned char> src, gocpp::slice<unsigned char> repl);
         gocpp::string ReplaceAllString(Regexp* r, gocpp::string src, gocpp::string repl);
         gocpp::string FindString(Regexp* r, gocpp::string s);
         gocpp::slice<gocpp::string> FindAllString(Regexp* r, gocpp::string s, int n);

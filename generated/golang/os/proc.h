@@ -12,6 +12,7 @@
 
 namespace golang::os
 {
+    // Args hold the command-line arguments, starting with the program name.
     extern gocpp::slice<gocpp::string> Args;
     void init();
     gocpp::slice<gocpp::string> runtime_args();

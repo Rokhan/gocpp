@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::build
+namespace golang::go::build
 {
     gocpp::string getToolDir();
 

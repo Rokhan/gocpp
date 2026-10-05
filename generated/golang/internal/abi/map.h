@@ -9,11 +9,59 @@
 #include "golang/internal/abi/map.fwd.h"
 #include "gocpp/support.h"
 
-namespace golang::abi
+#include "golang/internal/abi/type.h"
+
+namespace golang::internal::abi
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    struct MapType
+    {
+        Type Type{};
+        golang::internal::abi::Type* Key{};
+        golang::internal::abi::Type* Elem{};
+        golang::internal::abi::Type* Group{}; // internal type representing a slot group
+        // function for hashing keys (ptr to key, seed) -> hash
+        std::function<uintptr_t (gocpp::unsafe_pointer _1, uintptr_t _2)> Hasher{};
+        uintptr_t GroupSize{}; // == Group.Size_
+        // These fields describe how to access keys and elems within a group.
+        // The formulas key(i) = KeysOff + i*KeyStride and
+        // elem(i) = ElemsOff + i*ElemStride work for both group layouts:
+        // With GOEXPERIMENT=mapsplitgroup (split arrays KKKKVVVV):
+        // KeysOff    = offset of keys array in group
+        // KeyStride  = size of a single key
+        // ElemsOff   = offset of elems array in group
+        // ElemStride = size of a single elem
+        // Without (interleaved slots KVKVKVKV):
+        // KeysOff    = offset of slots array in group
+        // KeyStride  = size of a key/elem slot (stride between keys)
+        // ElemsOff   = offset of first elem (slots offset + elem offset within slot)
+        // ElemStride = size of a key/elem slot (stride between elems)
+        uintptr_t KeysOff{};
+        uintptr_t KeyStride{};
+        uintptr_t ElemsOff{};
+        uintptr_t ElemStride{};
+        uintptr_t ElemOff{}; // GOEXPERIMENT=nomapsplitgroup only
+        uint32_t Flags{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct MapType& value);
 
     namespace rec
     {
+        bool NeedKeyUpdate(golang::internal::abi::MapType* mt);
+        bool HashMightPanic(golang::internal::abi::MapType* mt);
+        bool IndirectKey(golang::internal::abi::MapType* mt);
+        bool IndirectElem(golang::internal::abi::MapType* mt);
     }
 }
 

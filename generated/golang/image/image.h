@@ -9,110 +9,10 @@
 #include "golang/image/image.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/image/color/color.h"
 #include "golang/image/geom.h"
 
 namespace golang::image
 {
-    struct Config
-    {
-        color::Model ColorModel{};
-        int Width{};
-        int Height{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Config& value);
-    struct Image : virtual gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        Image(){}
-        Image(Image& i) = default;
-        Image(const Image& i) = default;
-        Image& operator=(Image& i) = default;
-        Image& operator=(const Image& i) = default;
-
-        inline Image(nullptr_t) {};
-        Image& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        Image(T& ref);
-
-        template<typename T>
-        Image(const T& ref);
-
-        template<typename T>
-        Image(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IImage
-        {
-            // ColorModel returns the Image's color model.
-            virtual color::Model vColorModel() = 0;
-            // Bounds returns the domain for which At can return non-zero color.
-            // The bounds do not necessarily contain the point (0, 0).
-            virtual Rectangle vBounds() = 0;
-            // At returns the color of the pixel at (x, y).
-            // At(Bounds().Min.X, Bounds().Min.Y) returns the upper-left pixel of the grid.
-            // At(Bounds().Max.X-1, Bounds().Max.Y-1) returns the lower-right one.
-            virtual color::Color vAt(int x, int y) = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IImage>
-        struct ImageImpl : virtual TInterface
-        {
-            explicit ImageImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            color::Model vColorModel() override;
-
-            Rectangle vBounds() override;
-
-            color::Color vAt(int x, int y) override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IImage* value() const;
-
-        std::shared_ptr<IImage> mValue;
-    };
-
-    namespace rec
-    {
-        color::Model ColorModel(const gocpp::PtrRecv<struct Image, false>& self);
-        color::Model ColorModel(const gocpp::ObjRecv<struct Image>& self);
-
-        Rectangle Bounds(const gocpp::PtrRecv<struct Image, false>& self);
-        Rectangle Bounds(const gocpp::ObjRecv<struct Image>& self);
-
-        color::Color At(const gocpp::PtrRecv<struct Image, false>& self, int x, int y);
-        color::Color At(const gocpp::ObjRecv<struct Image>& self, int x, int y);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Image& value);
     int pixelBufferLength(int bytesPerPixel, Rectangle r, gocpp::string imageTypeName);
     struct RGBA
     {
@@ -312,6 +212,126 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CMYK& value);
+}
+#include "golang/image/color/color.fwd.h"
+#include "golang/image/color/ycbcr.fwd.h"
+
+namespace golang::image
+{
+    golang::image::RGBA* NewRGBA(Rectangle r);
+    RGBA64* NewRGBA64(Rectangle r);
+    NRGBA* NewNRGBA(Rectangle r);
+    NRGBA64* NewNRGBA64(Rectangle r);
+    Alpha* NewAlpha(Rectangle r);
+    Alpha16* NewAlpha16(Rectangle r);
+    Gray* NewGray(Rectangle r);
+    Gray16* NewGray16(Rectangle r);
+    CMYK* NewCMYK(Rectangle r);
+    namespace color = golang::image::color;
+}
+#include "golang/image/color/color.h"
+
+namespace golang::image
+{
+    struct Config
+    {
+        color::Model ColorModel{};
+        int Width{};
+        int Height{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Config& value);
+    struct Image : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        Image(){}
+        Image(Image& i) = default;
+        Image(const Image& i) = default;
+        Image& operator=(Image& i) = default;
+        Image& operator=(const Image& i) = default;
+
+        inline Image(nullptr_t) {};
+        Image& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        Image(T& ref);
+
+        template<typename T>
+        Image(const T& ref);
+
+        template<typename T>
+        Image(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IImage
+        {
+            // ColorModel returns the Image's color model.
+            virtual color::Model vColorModel() = 0;
+            // Bounds returns the domain for which At can return non-zero color.
+            // The bounds do not necessarily contain the point (0, 0).
+            virtual Rectangle vBounds() = 0;
+            // At returns the color of the pixel at (x, y).
+            // At(Bounds().Min.X, Bounds().Min.Y) returns the upper-left pixel of the grid.
+            // At(Bounds().Max.X-1, Bounds().Max.Y-1) returns the lower-right one.
+            virtual color::Color vAt(int x, int y) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IImage>
+        struct ImageImpl : virtual TInterface
+        {
+            explicit ImageImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            color::Model vColorModel() override;
+
+            Rectangle vBounds() override;
+
+            color::Color vAt(int x, int y) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IImage* value() const;
+
+        std::shared_ptr<IImage> mValue;
+    };
+
+    namespace rec
+    {
+        color::Model ColorModel(const gocpp::PtrRecv<struct Image, false>& self);
+        color::Model ColorModel(const gocpp::ObjRecv<struct Image>& self);
+
+        Rectangle Bounds(const gocpp::PtrRecv<struct Image, false>& self);
+        Rectangle Bounds(const gocpp::ObjRecv<struct Image>& self);
+
+        color::Color At(const gocpp::PtrRecv<struct Image, false>& self, int x, int y);
+        color::Color At(const gocpp::ObjRecv<struct Image>& self, int x, int y);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Image& value);
     struct Paletted
     {
         // Pix holds the image's pixels, as palette indices. The pixel at
@@ -485,15 +505,6 @@ namespace golang::image
     }
 
     std::ostream& operator<<(std::ostream& os, const struct PalettedImage& value);
-    golang::image::RGBA* NewRGBA(Rectangle r);
-    RGBA64* NewRGBA64(Rectangle r);
-    NRGBA* NewNRGBA(Rectangle r);
-    NRGBA64* NewNRGBA64(Rectangle r);
-    Alpha* NewAlpha(Rectangle r);
-    Alpha16* NewAlpha16(Rectangle r);
-    Gray* NewGray(Rectangle r);
-    Gray16* NewGray16(Rectangle r);
-    CMYK* NewCMYK(Rectangle r);
     Paletted* NewPaletted(Rectangle r, color::Palette p);
 }
 

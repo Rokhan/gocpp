@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
     using CodeVal = int;
     using CodeType = int;
@@ -36,7 +36,7 @@ namespace golang::pkgbits
 }
 #include "golang/golang.org/x/tools/internal/pkgbits/sync.fwd.h"
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
     struct Code;
 }

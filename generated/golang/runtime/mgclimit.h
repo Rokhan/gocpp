@@ -35,18 +35,16 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now);
 }
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/atomic/types.h"
 
 namespace golang::runtime
 {
+    namespace atomic = golang::internal::runtime::atomic;
     struct gcCPULimiterState
     {
         atomic::Uint32 lock{};
         atomic::Bool enabled{};
-        gocpp_id_0 bucket{};
-        // overflow is the cumulative amount of GC CPU time that we tried to fill the
-        // bucket with but exceeded its capacity.
-        uint64_t overflow{};
         // gcEnabled is an internal copy of gcBlackenEnabled that determines
         // whether the limiter tracks total assist time.
         // gcBlackenEnabled isn't used directly so as to keep this structure
@@ -55,6 +53,12 @@ namespace golang::runtime
         // transitioning is true when the GC is in a STW and transitioning between
         // the mark and sweep phases.
         bool transitioning{};
+        // test indicates whether this instance of the struct was made for testing purposes.
+        bool test{};
+        gocpp_id_0 bucket{};
+        // overflow is the cumulative amount of GC CPU time that we tried to fill the
+        // bucket with but exceeded its capacity.
+        uint64_t overflow{};
         // assistTimePool is the accumulated assist time since the last update.
         atomic::Int64 assistTimePool{};
         // idleMarkTimePool is the accumulated idle mark time since the last update.
@@ -70,8 +74,6 @@ namespace golang::runtime
         // CPU time.
         // gomaxprocs isn't used directly so as to keep this structure unit-testable.
         int32_t nprocs{};
-        // test indicates whether this instance of the struct was made for testing purposes.
-        bool test{};
 
         using isGoStruct = void;
 
@@ -101,6 +103,27 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct limiterEvent& value);
+    // gcCPULimiter is a mechanism to limit GC CPU utilization in situations
+    // where it might become excessive and inhibit application progress (e.g.
+    // a death spiral).
+    //
+    // The core of the limiter is a leaky bucket mechanism that fills with GC
+    // CPU time and drains with mutator time. Because the bucket fills and
+    // drains with time directly (i.e. without any weighting), this effectively
+    // sets a very conservative limit of 50%. This limit could be enforced directly,
+    // however, but the purpose of the bucket is to accommodate spikes in GC CPU
+    // utilization without hurting throughput.
+    //
+    // Note that the bucket in the leaky bucket mechanism can never go negative,
+    // so the GC never gets credit for a lot of CPU time spent without the GC
+    // running. This is intentional, as an application that stays idle for, say,
+    // an entire day, could build up enough credit to fail to prevent a death
+    // spiral the following day. The bucket's capacity is the GC's only leeway.
+    //
+    // The capacity thus also sets the window the limiter considers. For example,
+    // if the capacity of the bucket is 1 cpu-second, then the limiter will not
+    // kick in until at least 1 full cpu-second in the last 2 cpu-second window
+    // is spent on GC CPU time.
     extern gcCPULimiterState gcCPULimiter;
 
     namespace rec

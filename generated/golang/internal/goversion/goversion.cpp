@@ -11,7 +11,7 @@
 #include "golang/internal/goversion/goversion.h"
 #include "gocpp/support.h"
 
-namespace golang::goversion
+namespace golang::internal::goversion
 {
     namespace rec
     {

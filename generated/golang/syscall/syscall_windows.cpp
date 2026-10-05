@@ -12,15 +12,16 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
+#include "golang/internal/asan/noasan.h"
 #include "golang/internal/bytealg/indexbyte_native.h"
-#include "golang/internal/itoa/itoa.h"
+#include "golang/internal/msan/nomsan.h"
 #include "golang/internal/oserror/errors.h"
 #include "golang/internal/race/norace.h"
-#include "golang/runtime/extern.h"
+#include "golang/internal/strconv/itoa.h"
+#include "golang/sync/map.h"
 #include "golang/sync/once.h"
-#include "golang/syscall/asan0.h"
 #include "golang/syscall/dll_windows.h"
-#include "golang/syscall/msan0.h"
+#include "golang/syscall/security_windows.h"
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/wtf8_windows.h"
 #include "golang/syscall/zerrors_windows.h"
@@ -28,17 +29,28 @@
 
 namespace golang::syscall
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace asan = golang::internal::asan;
+    namespace bytealg = golang::internal::bytealg;
+    namespace errorspkg = golang::errors;
+    namespace msan = golang::internal::msan;
+    namespace oserror = golang::internal::oserror;
+    namespace race = golang::internal::race;
+    namespace strconv = golang::internal::strconv;
+    namespace sync = golang::sync;
     namespace rec
     {
         using mocklib::rec::Error;
         using sync::rec::Do;
+        using sync::rec::Load;
+        using sync::rec::Store;
     }
 
     // StringToUTF16 returns the UTF-16 encoding of the UTF-8 string s,
     // with a terminating NUL added. If s contains a NUL byte this
     // function panics instead of returning an error.
     //
-    // Deprecated: Use UTF16FromString instead.
+    // Deprecated: Use [UTF16FromString] instead.
     gocpp::slice<uint16_t> StringToUTF16(gocpp::string s)
     {
         auto [a, err] = UTF16FromString(s);
@@ -51,7 +63,7 @@ namespace golang::syscall
 
     // UTF16FromString returns the UTF-16 encoding of the UTF-8 string
     // s, with a terminating NUL added. If s contains a NUL byte at any
-    // location, it returns (nil, EINVAL). Unpaired surrogates
+    // location, it returns (nil, [EINVAL]). Unpaired surrogates
     // are encoded using WTF-8.
     std::tuple<gocpp::slice<uint16_t>, gocpp::error> UTF16FromString(gocpp::string s)
     {
@@ -135,7 +147,7 @@ namespace golang::syscall
     // contains a NUL byte this function panics instead of
     // returning an error.
     //
-    // Deprecated: Use UTF16PtrFromString instead.
+    // Deprecated: Use [UTF16PtrFromString] instead.
     uint16_t* StringToUTF16Ptr(gocpp::string s)
     {
         return & StringToUTF16(s)[0];
@@ -157,7 +169,7 @@ namespace golang::syscall
 
     // Errno is the Windows error number.
     //
-    // Errno values can be tested against error values using errors.Is.
+    // Errno values can be tested against error values using [errors.Is].
     // For example:
     //
     //	_, _, err := syscall.Syscall(...)
@@ -178,6 +190,7 @@ namespace golang::syscall
         return formatMessage(flags, uintptr_t(msgsrc), msgid, langid, buf, args);
     }
 
+    sync::Map errnoErrorCache;
     gocpp::string rec::Error(Errno e)
     {
         // deal with special go errors
@@ -186,6 +199,37 @@ namespace golang::syscall
         {
             return errors[idx];
         }
+
+        auto cache = false;
+        //Go switch emulation
+        {
+            auto condition = e;
+            int conditionId = -1;
+            if(condition == ERROR_FILE_NOT_FOUND) { conditionId = 0; }
+            else if(condition == ERROR_PATH_NOT_FOUND) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                    if(auto [cached, ok] = rec::Load(gocpp::recv(errnoErrorCache), e); ok)
+                    {
+                        return gocpp::getValue<gocpp::string>(cached);
+                    }
+                    cache = true;
+                    break;
+            }
+        }
+
+        auto result = rec::error(gocpp::recv(e));
+        if(cache)
+        {
+            rec::Store(gocpp::recv(errnoErrorCache), e, result);
+        }
+        return result;
+    }
+
+    gocpp::string rec::error(Errno e)
+    {
         // ask windows for the remaining errors
         uint32_t flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_IGNORE_INSERTS;
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 300);
@@ -195,7 +239,7 @@ namespace golang::syscall
             std::tie(n, err) = formatMessage(flags, 0, uint32_t(e), 0, b, nullptr);
             if(err != nullptr)
             {
-                return "winapi error #"_s + itoa::Itoa(int(e));
+                return "winapi error #"_s + strconv::Itoa(int(e));
             }
         }
         // trim terminating \r and \n
@@ -292,24 +336,25 @@ namespace golang::syscall
         return & sa;
     }
 
-    std::tuple<golang::syscall::Handle, gocpp::error> Open(gocpp::string path, int mode, uint32_t perm)
+    std::tuple<golang::syscall::Handle, gocpp::error> Open(gocpp::string name, int flag, uint32_t perm)
     {
         golang::syscall::Handle fd;
         gocpp::error err;
-        if(len(path) == 0)
+        if(len(name) == 0)
         {
             return {InvalidHandle, gocpp::error(ERROR_FILE_NOT_FOUND)};
         }
-        uint16_t* pathp;
-        std::tie(pathp, err) = UTF16PtrFromString(path);
+        uint16_t* namep;
+        std::tie(namep, err) = UTF16PtrFromString(name);
         if(err != nullptr)
         {
             return {InvalidHandle, err};
         }
+        auto accessFlags = flag & (O_RDONLY | O_WRONLY | O_RDWR);
         uint32_t access = {};
         //Go switch emulation
         {
-            auto condition = mode & (O_RDONLY | O_WRONLY | O_RDWR);
+            auto condition = accessFlags;
             int conditionId = -1;
             if(condition == O_RDONLY) { conditionId = 0; }
             else if(condition == O_WRONLY) { conditionId = 1; }
@@ -327,98 +372,150 @@ namespace golang::syscall
                     break;
             }
         }
-        if(mode & O_CREAT != 0)
+        if(flag & O_CREAT != 0)
         {
             access |= GENERIC_WRITE;
         }
-        if(mode & O_APPEND != 0)
+        if(flag & O_APPEND != 0)
         {
-            access &^= GENERIC_WRITE;
-            access |= FILE_APPEND_DATA;
+            // Remove GENERIC_WRITE unless O_TRUNC is set, in which case we need it to truncate the file.
+            // We can't just remove FILE_WRITE_DATA because GENERIC_WRITE without FILE_WRITE_DATA
+            // starts appending at the beginning of the file rather than at the end.
+            if(flag & O_TRUNC == 0)
+            {
+                access &^= GENERIC_WRITE;
+            }
+            // Set all access rights granted by GENERIC_WRITE except for FILE_WRITE_DATA.
+            access |= FILE_APPEND_DATA | FILE_WRITE_ATTRIBUTES | _FILE_WRITE_EA | STANDARD_RIGHTS_WRITE | SYNCHRONIZE;
         }
         auto sharemode = uint32_t(FILE_SHARE_READ | FILE_SHARE_WRITE);
         SecurityAttributes* sa = {};
-        if(mode & O_CLOEXEC == 0)
+        if(flag & O_CLOEXEC == 0)
         {
             sa = makeInheritSa();
         }
+        uint32_t attrs = FILE_ATTRIBUTE_NORMAL;
+        if(perm & S_IWRITE == 0)
+        {
+            attrs = FILE_ATTRIBUTE_READONLY;
+        }
+        // fileFlags contains the high 12 bits of flag.
+        // This bit range can be used by the caller to specify the file flags
+        // passed to CreateFile. It is an error to use if the bits can't be
+        // mapped to the supported FILE_FLAG_* constants.
+        if(auto fileFlags = uint32_t(flag) & fileFlagsMask; fileFlags &^ validFileFlagsMask == 0)
+        {
+            attrs |= fileFlags;
+        }
+        else
+        {
+            return {InvalidHandle, oserror::ErrInvalid};
+        }
+
+        //Go switch emulation
+        {
+            auto condition = accessFlags;
+            int conditionId = -1;
+            if(condition == O_WRONLY) { conditionId = 0; }
+            else if(condition == O_RDWR) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                    break;
+                // Unix doesn't allow opening a directory with O_WRONLY
+                // or O_RDWR, so we don't set the flag in that case,
+                // which will make CreateFile fail with ERROR_ACCESS_DENIED.
+                // We will map that to EISDIR if the file is a directory.
+                default:
+                    // We might be opening a directory for reading,
+                    // and CreateFile requires FILE_FLAG_BACKUP_SEMANTICS
+                    // to work with directories.
+                    attrs |= FILE_FLAG_BACKUP_SEMANTICS;
+                    break;
+            }
+        }
+        if(flag & O_SYNC != 0)
+        {
+            attrs |= _FILE_FLAG_WRITE_THROUGH;
+        }
+        // We don't use CREATE_ALWAYS, because when opening a file with
+        // FILE_ATTRIBUTE_READONLY these will replace an existing file
+        // with a new, read-only one. See https://go.dev/issue/38225.
+        // Instead, we ftruncate the file after opening when O_TRUNC is set.
         uint32_t createmode = {};
         //Go switch emulation
         {
             int conditionId = -1;
-            if(mode & (O_CREAT | O_EXCL) == (O_CREAT | O_EXCL)) { conditionId = 0; }
-            else if(mode & (O_CREAT | O_TRUNC) == (O_CREAT | O_TRUNC)) { conditionId = 1; }
-            else if(mode & O_CREAT == O_CREAT) { conditionId = 2; }
-            else if(mode & O_TRUNC == O_TRUNC) { conditionId = 3; }
+            if(flag & (O_CREAT | O_EXCL) == (O_CREAT | O_EXCL)) { conditionId = 0; }
+            else if(flag & O_CREAT == O_CREAT) { conditionId = 1; }
             switch(conditionId)
             {
+                // don't follow symlinks
                 case 0:
                     createmode = CREATE_NEW;
+                    attrs |= FILE_FLAG_OPEN_REPARSE_POINT;
                     break;
                 case 1:
-                    createmode = CREATE_ALWAYS;
-                    break;
-                case 2:
                     createmode = OPEN_ALWAYS;
-                    break;
-                case 3:
-                    createmode = TRUNCATE_EXISTING;
                     break;
                 default:
                     createmode = OPEN_EXISTING;
                     break;
             }
         }
-        uint32_t attrs = FILE_ATTRIBUTE_NORMAL;
-        if(perm & S_IWRITE == 0)
+        Handle h;
+        std::tie(h, err) = createFile(namep, access, sharemode, sa, createmode, attrs, 0);
+        if(h == InvalidHandle)
         {
-            attrs = FILE_ATTRIBUTE_READONLY;
-            if(createmode == CREATE_ALWAYS)
+            if(err == ERROR_ACCESS_DENIED && (attrs & FILE_FLAG_BACKUP_SEMANTICS == 0))
             {
-                // We have been asked to create a read-only file.
-                // If the file already exists, the semantics of
-                // the Unix open system call is to preserve the
-                // existing permissions. If we pass CREATE_ALWAYS
-                // and FILE_ATTRIBUTE_READONLY to CreateFile,
-                // and the file already exists, CreateFile will
-                // change the file permissions.
-                // Avoid that to preserve the Unix semantics.
-                auto [h, e] = CreateFile(pathp, access, sharemode, sa, TRUNCATE_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-                //Go switch emulation
+                // We should return EISDIR when we are trying to open a directory with write access.
+                auto [fa, e1] = GetFileAttributes(namep);
+                if(e1 == nullptr && fa & FILE_ATTRIBUTE_DIRECTORY != 0)
                 {
-                    auto condition = e;
-                    int conditionId = -1;
-                    if(condition == ERROR_FILE_NOT_FOUND) { conditionId = 0; }
-                    else if(condition == _ERROR_BAD_NETPATH) { conditionId = 1; }
-                    else if(condition == ERROR_PATH_NOT_FOUND) { conditionId = 2; }
-                    switch(conditionId)
-                    {
-                        case 0:
-                        case 1:
-                        case 2:
-                            break;
-                        // File does not exist. These are the same
-                        // errors as Errno.Is checks for ErrNotExist.
-                        // Carry on to create the file.
-                        default:
-                            // Success or some different error.
-                            return {h, e};
-                            break;
-                    }
+                    err = go_EISDIR;
                 }
             }
+            return {h, err};
         }
-        if(createmode == OPEN_EXISTING && access == GENERIC_READ)
+        if(flag & o_DIRECTORY != 0)
         {
-            // Necessary for opening directory handles.
-            attrs |= FILE_FLAG_BACKUP_SEMANTICS;
+            // Check if the file is a directory, else return ENOTDIR.
+            ByHandleFileInformation fi = {};
+            if(auto err = GetFileInformationByHandle(h, & fi); err != nullptr)
+            {
+                CloseHandle(h);
+                return {InvalidHandle, err};
+            }
+            if(fi.FileAttributes & FILE_ATTRIBUTE_DIRECTORY == 0)
+            {
+                CloseHandle(h);
+                return {InvalidHandle, gocpp::error(go_ENOTDIR)};
+            }
         }
-        if(mode & O_SYNC != 0)
+        // Ignore O_TRUNC if the file has just been created.
+        if(flag & O_TRUNC == O_TRUNC &&
+                (createmode == OPEN_EXISTING || (createmode == OPEN_ALWAYS && err == ERROR_ALREADY_EXISTS)))
         {
-            auto _FILE_FLAG_WRITE_THROUGH = 0x80000000;
-            attrs |= _FILE_FLAG_WRITE_THROUGH;
+            err = Ftruncate(h, 0);
+            if(err == _ERROR_INVALID_PARAMETER)
+            {
+                // ERROR_INVALID_PARAMETER means truncation is not supported on this file handle.
+                // Unix's O_TRUNC specification says to ignore O_TRUNC on named pipes and terminal devices.
+                // We do the same here.
+                if(auto [t, err1] = GetFileType(h); err1 == nullptr && (t == FILE_TYPE_PIPE || t == FILE_TYPE_CHAR))
+                {
+                    err = nullptr;
+                }
+            }
+            if(err != nullptr)
+            {
+                CloseHandle(h);
+                return {InvalidHandle, err};
+            }
         }
-        return CreateFile(pathp, access, sharemode, sa, createmode, attrs, 0);
+        return {h, nullptr};
     }
 
     std::tuple<int, gocpp::error> Read(golang::syscall::Handle fd, gocpp::slice<unsigned char> p)
@@ -463,13 +560,13 @@ namespace golang::syscall
             }
             race::Acquire(gocpp::unsafe_pointer(& ioSync));
         }
-        if(msanenabled && *done > 0)
+        if(msan::Enabled && *done > 0)
         {
-            msanWrite(gocpp::unsafe_pointer(& p[0]), int(*done));
+            msan::Write(gocpp::unsafe_pointer(& p[0]), uintptr_t(*done));
         }
-        if(asanenabled && *done > 0)
+        if(asan::Enabled && *done > 0)
         {
-            asanWrite(gocpp::unsafe_pointer(& p[0]), int(*done));
+            asan::Write(gocpp::unsafe_pointer(& p[0]), uintptr_t(*done));
         }
         return err;
     }
@@ -485,13 +582,13 @@ namespace golang::syscall
         {
             race::ReadRange(gocpp::unsafe_pointer(& p[0]), int(*done));
         }
-        if(msanenabled && *done > 0)
+        if(msan::Enabled && *done > 0)
         {
-            msanRead(gocpp::unsafe_pointer(& p[0]), int(*done));
+            msan::Read(gocpp::unsafe_pointer(& p[0]), uintptr_t(*done));
         }
-        if(asanenabled && *done > 0)
+        if(asan::Enabled && *done > 0)
         {
-            asanRead(gocpp::unsafe_pointer(& p[0]), int(*done));
+            asan::Read(gocpp::unsafe_pointer(& p[0]), uintptr_t(*done));
         }
         return err;
     }
@@ -509,29 +606,8 @@ namespace golang::syscall
         }
         else
         {
-            // Different 32-bit systems disgaree about whether distToMove starts 8-byte aligned.
-            //Go switch emulation
-            {
-                auto condition = runtime::GOARCH;
-                int conditionId = -1;
-                if(condition == "386"_s) { conditionId = 0; }
-                else if(condition == "arm"_s) { conditionId = 1; }
-                switch(conditionId)
-                {
-                    default:
-                        gocpp::panic("unsupported 32-bit architecture"_s);
-                        break;
-                    case 0:
-                        // distToMove is a LARGE_INTEGER, which is 64 bits.
-                        std::tie(std::ignore, std::ignore, e1) = Syscall6(rec::Addr(gocpp::recv(procSetFilePointerEx)), 5, uintptr_t(handle), uintptr_t(distToMove), uintptr_t(distToMove >> 32), uintptr_t(gocpp::unsafe_pointer(newFilePointer)), uintptr_t(whence), 0);
-                        break;
-                    case 1:
-                        // distToMove must be 8-byte aligned per ARM calling convention
-                        // https://docs.microsoft.com/en-us/cpp/build/overview-of-arm-abi-conventions#stage-c-assignment-of-arguments-to-registers-and-stack
-                        std::tie(std::ignore, std::ignore, e1) = Syscall6(rec::Addr(gocpp::recv(procSetFilePointerEx)), 6, uintptr_t(handle), 0, uintptr_t(distToMove), uintptr_t(distToMove >> 32), uintptr_t(gocpp::unsafe_pointer(newFilePointer)), uintptr_t(whence));
-                        break;
-                }
-            }
+            // distToMove is a LARGE_INTEGER, which is 64 bits.
+            std::tie(std::ignore, std::ignore, e1) = Syscall6(rec::Addr(gocpp::recv(procSetFilePointerEx)), 5, uintptr_t(handle), uintptr_t(distToMove), uintptr_t(distToMove >> 32), uintptr_t(gocpp::unsafe_pointer(newFilePointer)), uintptr_t(whence), 0);
         }
         if(e1 != 0)
         {
@@ -693,32 +769,24 @@ namespace golang::syscall
     gocpp::error Ftruncate(golang::syscall::Handle fd, int64_t length)
     {
         gocpp::error err;
-        gocpp::Defer defer;
-        try
+        struct _FILE_END_OF_FILE_INFO
         {
-            auto [curoffset, e] = Seek(fd, 0, 1);
-            if(e != nullptr)
+            int64_t EndOfFile{};
+
+            using isGoStruct = void;
+
+            std::ostream& PrintTo(std::ostream& os) const
             {
-                return e;
+                os << '{';
+                os << "" << EndOfFile;
+                os << '}';
+                return os;
             }
-            defer.push_back([=]{ Seek(fd, curoffset, 0); });
-            std::tie(std::ignore, e) = Seek(fd, length, 0);
-            if(e != nullptr)
-            {
-                return e;
-            }
-            e = SetEndOfFile(fd);
-            if(e != nullptr)
-            {
-                return e;
-            }
-            return nullptr;
-        }
-        catch(gocpp::GoPanic& gp)
-        {
-            defer.handlePanic(gp);
-            return {err};
-        }
+        };
+        auto FileEndOfFileInfo = 6;
+        _FILE_END_OF_FILE_INFO info = {};
+        info.EndOfFile = length;
+        return setFileInformationByHandle(fd, FileEndOfFileInfo, gocpp::unsafe_pointer(& info), uint32_t(gocpp::Sizeof<_FILE_END_OF_FILE_INFO>()));
     }
 
     gocpp::error Gettimeofday(Timeval* tv)
@@ -777,7 +845,7 @@ namespace golang::syscall
             {
                 a = NsecToFiletime(rec::Nanoseconds(gocpp::recv(tv[0])));
             }
-            if(rec::Nanoseconds(gocpp::recv(tv[0])) != 0)
+            if(rec::Nanoseconds(gocpp::recv(tv[1])) != 0)
             {
                 w = NsecToFiletime(rec::Nanoseconds(gocpp::recv(tv[1])));
             }
@@ -873,7 +941,7 @@ namespace golang::syscall
     }
 
     // For testing: clients can set this flag to force
-    // creation of IPv6 sockets to return EAFNOSUPPORT.
+    // creation of IPv6 sockets to return [EAFNOSUPPORT].
     bool SocketDisableIPv6;
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -1246,7 +1314,13 @@ namespace golang::syscall
         {
             return {nullptr, 0, gocpp::error(go_EINVAL)};
         }
-        if(n == len(sa->raw.Path) && name[0] != '@')
+        // Abstract addresses start with NUL.
+        // '@' is also a valid way to specify abstract addresses.
+        auto isAbstract = n > 0 && (name[0] == '@' || name[0] == '\x00');
+
+        // Non-abstract named addresses are NUL terminated.
+        // The length can't use the full capacity as we need to add NUL.
+        if(n == len(sa->raw.Path) && ! isAbstract)
         {
             return {nullptr, 0, gocpp::error(go_EINVAL)};
         }
@@ -1255,18 +1329,20 @@ namespace golang::syscall
         {
             sa->raw.Path[i] = int8_t(name[i]);
         }
-        // length is family (uint16), name, NUL.
-        auto sl = int32_t(2);
+        // Length is family + name (+ NUL if non-abstract).
+        // Family is of type uint16 (2 bytes).
+        auto sl = int32_t(2 + n);
+        if(isAbstract)
+        {
+            // Abstract addresses are not NUL terminated.
+            // We rewrite '@' prefix to NUL here.
+            sa->raw.Path[0] = 0;
+        }
+        else
         if(n > 0)
         {
-            sl += int32_t(n) + 1;
-        }
-        if(sa->raw.Path[0] == '@' || (sa->raw.Path[0] == 0 && sl > 3))
-        {
-            // Check sl > 3 so we don't change unnamed socket behavior.
-            sa->raw.Path[0] = 0;
-            // Don't count trailing NUL for abstract address.
-            sl--;
+            // Add NUL for non-abstract named addresses.
+            sl++;
         }
 
         return {gocpp::unsafe_pointer(& sa->raw), sl, nullptr};
@@ -1918,7 +1994,10 @@ namespace golang::syscall
 
     std::tuple<int, gocpp::error> GetsockoptInt(golang::syscall::Handle fd, int level, int opt)
     {
-        return {- 1, gocpp::error(go_EWINDOWS)};
+        auto optval = int32_t(0);
+        auto optlen = int32_t(gocpp::Sizeof<int32_t>());
+        auto err = Getsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(gocpp::unsafe_pointer(& optval)), & optlen);
+        return {int(optval), err};
     }
 
     gocpp::error SetsockoptLinger(golang::syscall::Handle fd, int level, int opt, Linger* l)
@@ -1946,7 +2025,7 @@ namespace golang::syscall
     gocpp::error SetsockoptIPv6Mreq(golang::syscall::Handle fd, int level, int opt, IPv6Mreq* mreq)
     {
         gocpp::error err;
-        return gocpp::error(go_EWINDOWS);
+        return Setsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(gocpp::unsafe_pointer(mreq)), int32_t(gocpp::Sizeof<IPv6Mreq>()));
     }
 
     int Getpid()
@@ -2066,7 +2145,7 @@ namespace golang::syscall
         {
             return err;
         }
-        // When using VOLUME_NAME_DOS, the path is always pefixed by "\\?\".
+        // When using VOLUME_NAME_DOS, the path is always prefixed by "\\?\".
         // That prefix tells the Windows APIs to disable all string parsing and to send
         // the string that follows it straight to the file system.
         // Although SetCurrentDirectory and GetCurrentDirectory do support the "\\?\" prefix,
@@ -2164,7 +2243,7 @@ namespace golang::syscall
                 return str;
             }
         }
-        return "signal "_s + itoa::Itoa(int(s));
+        return "signal "_s + strconv::Itoa(int(s));
     }
 
     gocpp::error LoadCreateSymbolicLink()
@@ -2180,8 +2259,14 @@ namespace golang::syscall
         gocpp::Defer defer;
         try
         {
+            uint16_t* pathp;
+            std::tie(pathp, err) = UTF16PtrFromString(path);
+            if(err != nullptr)
+            {
+                return {- 1, err};
+            }
             Handle fd;
-            std::tie(fd, err) = CreateFile(StringToUTF16Ptr(path), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, 0);
+            std::tie(fd, err) = CreateFile(pathp, GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, 0);
             if(err != nullptr)
             {
                 return {- 1, err};
@@ -2311,10 +2396,8 @@ namespace golang::syscall
         return postQueuedCompletionStatus(cphandle, qty, uintptr_t(key), overlapped);
     }
 
-    // newProcThreadAttributeList allocates new PROC_THREAD_ATTRIBUTE_LIST, with
-    // the requested maximum number of attributes, which must be cleaned up by
-    // deleteProcThreadAttributeList.
-    std::tuple<_PROC_THREAD_ATTRIBUTE_LIST*, gocpp::error> newProcThreadAttributeList(uint32_t maxAttrCount)
+    // newProcThreadAttributeList allocates a new [procThreadAttributeListContainer], with the requested maximum number of attributes.
+    std::tuple<procThreadAttributeListContainer*, gocpp::error> newProcThreadAttributeList(uint32_t maxAttrCount)
     {
         uintptr_t size = {};
         auto err = initializeProcThreadAttributeList(nullptr, maxAttrCount, 0, & size);
@@ -2326,14 +2409,46 @@ namespace golang::syscall
             }
             return {nullptr, err};
         }
-        // size is guaranteed to be ≥1 by initializeProcThreadAttributeList.
-        auto al = (_PROC_THREAD_ATTRIBUTE_LIST*)(gocpp::unsafe_pointer(& gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size)[0]));
-        err = initializeProcThreadAttributeList(al, maxAttrCount, 0, & size);
+        auto LMEM_FIXED = 0;
+        uintptr_t alloc;
+        std::tie(alloc, err) = localAlloc(LMEM_FIXED, uint32_t(size));
         if(err != nullptr)
         {
             return {nullptr, err};
         }
-        return {al, nullptr};
+        // size is guaranteed to be ≥1 by InitializeProcThreadAttributeList.
+        auto al = gocpp::InitPtr<procThreadAttributeListContainer>([=](auto& x) {
+            x.data = (_PROC_THREAD_ATTRIBUTE_LIST*)(gocpp::unsafe_pointer(alloc));
+        });
+        err = initializeProcThreadAttributeList(al->data, maxAttrCount, 0, & size);
+        if(err != nullptr)
+        {
+            return {nullptr, err};
+        }
+        al->pointers = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::unsafe_pointer>>(), 0, maxAttrCount);
+        return {al, err};
+    }
+
+    // Update modifies the ProcThreadAttributeList using UpdateProcThreadAttribute.
+    gocpp::error rec::update(procThreadAttributeListContainer* al, uintptr_t attribute, gocpp::unsafe_pointer value, uintptr_t size)
+    {
+        al->pointers = append(al->pointers, value);
+        return updateProcThreadAttribute(al->data, 0, attribute, value, size, nullptr, nullptr);
+    }
+
+    // Delete frees ProcThreadAttributeList's resources.
+    void rec::go_delete(procThreadAttributeListContainer* al)
+    {
+        deleteProcThreadAttributeList(al->data);
+        LocalFree(Handle(gocpp::unsafe_pointer(al->data)));
+        al->data = nullptr;
+        al->pointers = nullptr;
+    }
+
+    // List returns the actual ProcThreadAttributeList to be passed to StartupInfoEx.
+    _PROC_THREAD_ATTRIBUTE_LIST* rec::list(procThreadAttributeListContainer* al)
+    {
+        return al->data;
     }
 
     // RegEnumKeyEx enumerates the subkeys of an open registry key.
@@ -2359,7 +2474,7 @@ namespace golang::syscall
     // decrementing until index 0 is enumerated.
     //
     // Successive calls to this API must happen on the same OS thread,
-    // so call runtime.LockOSThread before calling this function.
+    // so call [runtime.LockOSThread] before calling this function.
     gocpp::error RegEnumKeyEx(golang::syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint16_t* go_class, uint32_t* classLen, Filetime* lastWriteTime)
     {
         gocpp::error regerrno;
@@ -2370,6 +2485,20 @@ namespace golang::syscall
     {
         getStartupInfo(startupInfo);
         return nullptr;
+    }
+
+    std::tuple<golang::syscall::Handle, gocpp::error> CreateFile(uint16_t* name, uint32_t access, uint32_t mode, SecurityAttributes* sa, uint32_t createmode, uint32_t attrs, int32_t templatefile)
+    {
+        golang::syscall::Handle handle;
+        gocpp::error err;
+        std::tie(handle, err) = createFile(name, access, mode, sa, createmode, attrs, templatefile);
+        if(handle != InvalidHandle)
+        {
+            // CreateFileW can return ERROR_ALREADY_EXISTS with a valid handle.
+            // We only want to return an error if the handle is invalid.
+            err = nullptr;
+        }
+        return {handle, err};
     }
 
 }

@@ -16,6 +16,7 @@
 
 namespace golang::main
 {
+    namespace reader = golang::golang_org::x::tour::reader;
     namespace rec
     {
     }

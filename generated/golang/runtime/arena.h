@@ -12,24 +12,80 @@
 
 namespace golang::runtime
 {
-    gocpp::unsafe_pointer arena_newArena();
-    go_any arena_arena_New(gocpp::unsafe_pointer arena, go_any typ);
-    void arena_arena_Slice(gocpp::unsafe_pointer arena, go_any slice, int cap);
-    void arena_arena_Free(gocpp::unsafe_pointer arena);
     go_any arena_heapify(go_any s);
     void init();
     uintptr_t userArenaChunkReserveBytes();
+    struct writeUserArenaHeapBits
+    {
+        uintptr_t offset{}; // offset in span that the low bit of mask represents the pointer state of.
+        uintptr_t mask{}; // some pointer bits starting at the address addr.
+        uintptr_t valid{}; // number of bits in buf that are valid (including low)
+        uintptr_t low{}; // number of low-order bits to not overwrite
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct writeUserArenaHeapBits& value);
+    uintptr_t bswapIfBigEndian(uintptr_t x);
     bool inUserArenaChunk(uintptr_t p);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/mheap.fwd.h"
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
+    gocpp::unsafe_pointer arena_newArena();
+    go_any arena_arena_New(gocpp::unsafe_pointer arena, go_any typ);
+    void arena_arena_Slice(gocpp::unsafe_pointer arena, go_any slice, int cap);
+    void arena_arena_Free(gocpp::unsafe_pointer arena);
+    struct liveUserArenaChunk
+    {
+        mspan* mspan{}; // Must represent a user arena chunk.
+        // Reference to mspan.base() to keep the chunk alive.
+        gocpp::unsafe_pointer x{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct liveUserArenaChunk& value);
+    void userArenaHeapBitsSetSliceType(_type* typ, int n, gocpp::unsafe_pointer ptr, mspan* s);
+    void userArenaHeapBitsSetType(_type* typ, gocpp::unsafe_pointer ptr, mspan* s);
+    std::tuple<gocpp::unsafe_pointer, mspan*> newUserArenaChunk();
+    void freeUserArenaChunk(mspan* s, gocpp::unsafe_pointer x);
+}
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     struct userArena
     {
-        // full is a list of full chunks that have not enough free memory left, and
+        // fullList is a list of full chunks that have not enough free memory left, and
         // that we'll free once this user arena is freed.
         // Can't use mSpanList here because it's not-in-heap.
         mspan* fullList{};
@@ -59,33 +115,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct userArena& value);
-    struct liveUserArenaChunk
-    {
-        mspan* mspan{}; // Must represent a user arena chunk.
-        // Reference to mspan.base() to keep the chunk alive.
-        gocpp::unsafe_pointer x{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct liveUserArenaChunk& value);
-    void userArenaHeapBitsSetSliceType(_type* typ, int n, gocpp::unsafe_pointer ptr, mspan* s);
-    std::tuple<gocpp::unsafe_pointer, mspan*> newUserArenaChunk();
-    void freeUserArenaChunk(mspan* s, gocpp::unsafe_pointer x);
-    userArena* newUserArena();
-}
-#include "golang/runtime/runtime2.h"
-
-namespace golang::runtime
-{
     struct userArenaStateStruct
     {
         mutex lock{};
@@ -110,12 +139,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct userArenaStateStruct& value);
+    userArena* newUserArena();
     extern userArenaStateStruct userArenaState;
 }
 
 #include "golang/runtime/mheap.h"
-
-#include "golang/runtime/type.fwd.h"
+#include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
@@ -128,6 +157,10 @@ namespace golang::runtime
         gocpp::unsafe_pointer alloc(userArena* a, _type* typ, int cap);
         mspan* refill(userArena* a);
         gocpp::unsafe_pointer userArenaNextFree(mspan* s, _type* typ, int cap);
+        golang::runtime::writeUserArenaHeapBits writeUserArenaHeapBits(mspan* s, uintptr_t addr);
+        golang::runtime::writeUserArenaHeapBits write(golang::runtime::writeUserArenaHeapBits h, mspan* s, uintptr_t bits, uintptr_t valid);
+        golang::runtime::writeUserArenaHeapBits pad(golang::runtime::writeUserArenaHeapBits h, mspan* s, uintptr_t size);
+        void flush(golang::runtime::writeUserArenaHeapBits h, mspan* s, uintptr_t addr, uintptr_t size);
         bool isUnusedUserArenaChunk(mspan* s);
         void setUserArenaChunkToFault(mspan* s);
         mspan* allocUserArenaChunk(mheap* h);

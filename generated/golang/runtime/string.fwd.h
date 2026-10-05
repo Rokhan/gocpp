@@ -13,6 +13,4 @@ namespace golang::runtime
     using tmpBuf = gocpp::defined<gocpp::array<unsigned char, tmpStringBufSize>, GoTag_tmpBuf>;
     struct stringStruct;
     struct stringStructDWARF;
-    const uint64_t maxUint64 = ~ uint64_t(0);
-    const int64_t maxInt64 = int64_t(maxUint64 >> 1);
 }

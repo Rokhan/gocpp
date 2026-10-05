@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::atomic
+namespace golang::sync::atomic
 {
     uint32_t b32(bool b);
     struct noCopy
@@ -60,29 +60,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Bool& value);
-    template<typename T> 
-    struct Pointer
-    {
-        // Mention *T in a field to disallow conversion between Pointer types.
-        // See go.dev/issue/56603 for more details.
-        // Use *T, not T, to avoid spurious recursive type definition errors.
-        gocpp::array<T*, 0> _1{};
-        noCopy _2{};
-        gocpp::unsafe_pointer v{};
-
-        using isGoStruct = void;
-
-        template<typename U> requires gocpp::GoStruct<U>
-        operator U();
-
-        template<typename U> requires gocpp::GoStruct<U>
-        bool operator==(const U& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    template<typename T>
-    std::ostream& operator<<(std::ostream& os, const struct Pointer<T>& value);
     struct Int32
     {
         noCopy _1{};
@@ -170,6 +147,30 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Uintptr& value);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    template<typename T> 
+    struct Pointer
+    {
+        // Mention *T in a field to disallow conversion between Pointer types.
+        // See go.dev/issue/56603 for more details.
+        // Use *T, not T, to avoid spurious recursive type definition errors.
+        gocpp::array<T*, 0> _1{};
+        noCopy _2{};
+        gocpp::unsafe_pointer v{};
+
+        using isGoStruct = void;
+
+        template<typename U> requires gocpp::GoStruct<U>
+        operator U();
+
+        template<typename U> requires gocpp::GoStruct<U>
+        bool operator==(const U& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, const struct Pointer<T>& value);
 
     namespace rec
     {
@@ -194,26 +195,36 @@ namespace golang::atomic
         int32_t Swap(Int32* x, int32_t go_new);
         bool CompareAndSwap(Int32* x, int32_t old, int32_t go_new);
         int32_t Add(Int32* x, int32_t delta);
+        int32_t And(Int32* x, int32_t mask);
+        int32_t Or(Int32* x, int32_t mask);
         int64_t Load(Int64* x);
         void Store(Int64* x, int64_t val);
         int64_t Swap(Int64* x, int64_t go_new);
         bool CompareAndSwap(Int64* x, int64_t old, int64_t go_new);
         int64_t Add(Int64* x, int64_t delta);
+        int64_t And(Int64* x, int64_t mask);
+        int64_t Or(Int64* x, int64_t mask);
         uint32_t Load(Uint32* x);
         void Store(Uint32* x, uint32_t val);
         uint32_t Swap(Uint32* x, uint32_t go_new);
         bool CompareAndSwap(Uint32* x, uint32_t old, uint32_t go_new);
         uint32_t Add(Uint32* x, uint32_t delta);
+        uint32_t And(Uint32* x, uint32_t mask);
+        uint32_t Or(Uint32* x, uint32_t mask);
         uint64_t Load(Uint64* x);
         void Store(Uint64* x, uint64_t val);
         uint64_t Swap(Uint64* x, uint64_t go_new);
         bool CompareAndSwap(Uint64* x, uint64_t old, uint64_t go_new);
         uint64_t Add(Uint64* x, uint64_t delta);
+        uint64_t And(Uint64* x, uint64_t mask);
+        uint64_t Or(Uint64* x, uint64_t mask);
         uintptr_t Load(Uintptr* x);
         void Store(Uintptr* x, uintptr_t val);
         uintptr_t Swap(Uintptr* x, uintptr_t go_new);
         bool CompareAndSwap(Uintptr* x, uintptr_t old, uintptr_t go_new);
         uintptr_t Add(Uintptr* x, uintptr_t delta);
+        uintptr_t And(Uintptr* x, uintptr_t mask);
+        uintptr_t Or(Uintptr* x, uintptr_t mask);
         void Lock(noCopy*);
         void Unlock(noCopy*);
     }

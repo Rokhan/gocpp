@@ -9,13 +9,23 @@
 #include "golang/go/types/decl.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/ast/ast.h"
 #include "golang/go/types/object.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     gocpp::string pathString(gocpp::slice<Object> path);
     int firstInSrc(gocpp::slice<Object> path);
+}
+#include "golang/go/ast/ast.fwd.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+}
+#include "golang/go/ast/ast.h"
+
+namespace golang::go::types
+{
     struct decl : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -176,30 +186,30 @@ namespace golang::types
 #include "golang/go/types/typelists.h"
 #include "golang/go/types/typeparam.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace token = golang::go::token;
 
     namespace rec
     {
-        void reportAltDecl(Checker* check, Object obj);
-        void declare(Checker* check, golang::types::Scope* scope, ast::Ident* id, Object obj, token::Pos pos);
-        void objDecl(Checker* check, Object obj, TypeName* def);
+        void declare(Checker* check, golang::go::types::Scope* scope, ast::Ident* id, Object obj, token::Pos pos);
+        void objDecl(Checker* check, Object obj);
         bool validCycle(Checker* check, Object obj);
-        void cycleError(Checker* check, gocpp::slice<Object> cycle);
+        void cycleError(Checker* check, gocpp::slice<Object> cycle, int start);
         ast::Node node(importDecl d);
-        ast::Node node(golang::types::constDecl d);
-        ast::Node node(golang::types::varDecl d);
-        ast::Node node(golang::types::typeDecl d);
-        ast::Node node(golang::types::funcDecl d);
+        ast::Node node(golang::go::types::constDecl d);
+        ast::Node node(golang::go::types::varDecl d);
+        ast::Node node(golang::go::types::typeDecl d);
+        ast::Node node(golang::go::types::funcDecl d);
         void walkDecls(Checker* check, gocpp::slice<ast::Decl> decls, std::function<void (decl _1)> f);
         void walkDecl(Checker* check, ast::Decl d, std::function<void (decl _1)> f);
         void constDecl(Checker* check, Const* obj, ast::Expr typ, ast::Expr init, bool inherited);
         void varDecl(Checker* check, Var* obj, gocpp::slice<Var*> lhs, ast::Expr typ, ast::Expr init);
-        bool isImportedConstraint(Checker* check, golang::types::Type typ);
-        void typeDecl(Checker* check, TypeName* obj, ast::TypeSpec* tdecl, TypeName* def);
+        bool isImportedConstraint(Checker* check, golang::go::types::Type typ);
+        void typeDecl(Checker* check, TypeName* obj, ast::TypeSpec* tdecl);
         void collectTypeParams(Checker* check, TypeParamList** dst, ast::FieldList* list);
-        golang::types::Type bound(Checker* check, ast::Expr x);
-        gocpp::slice<TypeParam*> declareTypeParams(Checker* check, gocpp::slice<TypeParam*> tparams, gocpp::slice<ast::Ident*> names, token::Pos scopePos);
+        golang::go::types::Type bound(Checker* check, ast::Expr x);
+        TypeParam* declareTypeParam(Checker* check, ast::Ident* name, token::Pos scopePos);
         void collectMethods(Checker* check, TypeName* obj);
         void checkFieldUniqueness(Checker* check, Named* base);
         void funcDecl(Checker* check, Func* obj, declInfo* decl);

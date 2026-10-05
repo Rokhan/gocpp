@@ -22,6 +22,9 @@
 
 namespace golang::time
 {
+    namespace errors = golang::errors;
+    namespace sync = golang::sync;
+    namespace syscall = golang::syscall;
     namespace rec
     {
         using sync::rec::Do;
@@ -190,7 +193,7 @@ namespace golang::time
     }
 
     // String returns a descriptive name for the time zone information,
-    // corresponding to the name argument to LoadLocation or FixedZone.
+    // corresponding to the name argument to [LoadLocation] or [FixedZone].
     gocpp::string rec::String(golang::time::Location* l)
     {
         return rec::get(gocpp::recv(l))->name;
@@ -198,7 +201,7 @@ namespace golang::time
 
     gocpp::slice<golang::time::Location*> unnamedFixedZones;
     sync::Once unnamedFixedZonesOnce;
-    // FixedZone returns a Location that always uses
+    // FixedZone returns a [Location] that always uses
     // the given zone name and offset (seconds east of UTC).
     golang::time::Location* FixedZone(gocpp::string name, int offset)
     {
@@ -476,14 +479,11 @@ namespace golang::time
             return {""_s, 0, 0, 0, false, false};
         }
 
-        auto [year, gocpp_id_0, gocpp_id_1, yday] = absDate(uint64_t(sec + unixToInternal + internalToAbsolute), false);
-
-        auto ysec = int64_t(yday * secondsPerDay) + sec % secondsPerDay;
-
-        // Compute start of year in seconds since Unix epoch.
-        auto d = daysSinceEpoch(year);
-        auto abs = int64_t(d * secondsPerDay);
-        abs += absoluteToInternal + internalToUnix;
+        // Compute start of year in seconds since Unix epoch,
+        // and seconds since then to get to sec.
+        auto [year, yday] = rec::yearYday(gocpp::recv(rec::days(gocpp::recv(absSeconds(sec + unixToInternal + internalToAbsolute)))));
+        auto ysec = int64_t((yday - 1) * secondsPerDay) + sec % secondsPerDay;
+        auto ystart = sec - ysec;
 
         auto startSec = int64_t(tzruleTime(year, startRule, stdOffset));
         auto endSec = int64_t(tzruleTime(year, endRule, dstOffset));
@@ -505,16 +505,16 @@ namespace golang::time
         // the only caller that cares, which is Date.
         if(ysec < startSec)
         {
-            return {stdName, stdOffset, abs, startSec + abs, stdIsDST, true};
+            return {stdName, stdOffset, ystart, startSec + ystart, stdIsDST, true};
         }
         else
         if(ysec >= endSec)
         {
-            return {stdName, stdOffset, endSec + abs, abs + 365 * secondsPerDay, stdIsDST, true};
+            return {stdName, stdOffset, endSec + ystart, ystart + 365 * secondsPerDay, stdIsDST, true};
         }
         else
         {
-            return {dstName, dstOffset, startSec + abs, endSec + abs, dstIsDST, true};
+            return {dstName, dstOffset, startSec + ystart, endSec + ystart, dstIsDST, true};
         }
     }
 
@@ -877,7 +877,7 @@ namespace golang::time
                         }
                         d += 7;
                     }
-                    d += int(daysBefore[r.mon - 1]);
+                    d += daysBefore(Month(r.mon));
                     if(isLeap(year) && r.mon > 2)
                     {
                         d++;
@@ -911,7 +911,7 @@ namespace golang::time
             auto zone = & l->zone[i];
             if(zone->name == name)
             {
-                auto [nam, offset, gocpp_id_2, gocpp_id_3, gocpp_id_4] = rec::lookup(gocpp::recv(l), unix - int64_t(zone->offset));
+                auto [nam, offset, gocpp_id_0, gocpp_id_1, gocpp_id_2] = rec::lookup(gocpp::recv(l), unix - int64_t(zone->offset));
                 if(nam == zone->name)
                 {
                     return {offset, true};
@@ -936,12 +936,13 @@ namespace golang::time
     gocpp::error errLocation = errors::New("time: invalid location name"_s);
     gocpp::string* zoneinfo;
     sync::Once zoneinfoOnce;
-    // LoadLocation returns the Location with the given name.
+    // LoadLocation returns a [Location] with the given name.
     //
-    // If the name is "" or "UTC", LoadLocation returns UTC.
-    // If the name is "Local", LoadLocation returns Local.
+    // If the name is "" or "UTC", LoadLocation returns [UTC].
+    // If the name is "Local", LoadLocation returns [Local].
     //
-    // Otherwise, the name is taken to be a location name corresponding to a file
+    // Otherwise, a new [Location] is created where the name is taken
+    // to be a location name corresponding to a file
     // in the IANA Time Zone database, such as "America/New_York".
     //
     // LoadLocation looks for the IANA Time Zone database in the following
@@ -969,7 +970,7 @@ namespace golang::time
         }
         rec::Do(gocpp::recv(zoneinfoOnce), [=]() mutable -> void
         {
-            auto [env, gocpp_id_5] = syscall::Getenv("ZONEINFO"_s);
+            auto [env, gocpp_id_3] = syscall::Getenv("ZONEINFO"_s);
             zoneinfo = & env;
         });
         gocpp::error firstErr = {};

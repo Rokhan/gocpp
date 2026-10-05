@@ -7,28 +7,20 @@
 namespace golang::runtime
 {
     struct cbsStruct;
+    struct winCallback;
     using abiPartKind = int;
     struct abiPart;
     struct abiDesc;
+    struct winCallbackKey;
     struct callbackArgs;
-    const long _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
-    struct gocpp_id_0;
-    // maxArgs should be divisible by 2, as Windows stack
-    // must be kept 16-byte aligned on syscall entry.
-    //
-    // Although it only permits maximum 42 parameters, it
-    // is arguably large enough.
-    const long maxArgs = 42;
     const abiPartKind abiPartBad = 0;
     const abiPartKind abiPartStack = 1;
     const abiPartKind abiPartReg = 2;
 }
 #include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
-    struct winCallback;
-    struct winCallbackKey;
+    namespace goarch = golang::internal::goarch;
     const int callbackMaxFrame = 64 * goarch::PtrSize;
 }

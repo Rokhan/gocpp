@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
     gocpp::slice<gocpp::string> fmtFrames(gocpp::slice<uintptr_t> pcs);
     
@@ -25,6 +25,7 @@ namespace golang::pkgbits
     {
         return fmtFrames(gocpp::ToSlice<uintptr_t>(value, pcs...));
     }
+    void walkFrames(gocpp::slice<uintptr_t> pcs, frameVisitor visit);
 
     namespace rec
     {

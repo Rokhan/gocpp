@@ -4,8 +4,9 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::buildcfg
+namespace golang::internal::buildcfg
 {
-    struct goarmFeatures;
+    struct GoarmFeatures;
+    struct Goarm64Features;
     struct gowasmFeatures;
 }

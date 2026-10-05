@@ -4,33 +4,33 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::reflectlite
+namespace golang::internal::reflectlite
 {
+    struct rtype;
     struct name;
 }
 #include "golang/internal/abi/type.fwd.h"
 
-namespace golang::reflectlite
+namespace golang::internal::reflectlite
 {
+    namespace abi = golang::internal::abi;
     struct Type;
     using Kind = abi::Kind;
-    using nameOff = abi::NameOff;
-    using typeOff = abi::TypeOff;
-    using textOff = abi::TextOff;
-    struct rtype;
-    using uncommonType = abi::UncommonType;
-    using arrayType = abi::ArrayType;
-    using chanType = abi::ChanType;
-    using funcType = abi::FuncType;
-    using interfaceType = abi::InterfaceType;
-    struct mapType;
-    using ptrType = abi::PtrType;
-    using sliceType = abi::SliceType;
-    using structType = abi::StructType;
     const abi::Kind Ptr = abi::Pointer;
     // Import-and-export these constants as necessary
     const abi::Kind Interface = abi::Interface;
     const abi::Kind Slice = abi::Slice;
     const abi::Kind String = abi::String;
     const abi::Kind Struct = abi::Struct;
+    using nameOff = abi::NameOff;
+    using typeOff = abi::TypeOff;
+    using textOff = abi::TextOff;
+    using uncommonType = abi::UncommonType;
+    using arrayType = abi::ArrayType;
+    using chanType = abi::ChanType;
+    using funcType = abi::FuncType;
+    using interfaceType = abi::InterfaceType;
+    using ptrType = abi::PtrType;
+    using sliceType = abi::SliceType;
+    using structType = abi::StructType;
 }

@@ -14,33 +14,41 @@
 #include "golang/context/context.h"
 #include "golang/golang.org/x/tools/internal/event/core/event.h"
 #include "golang/golang.org/x/tools/internal/event/label/label.h"
-#include "golang/sync/atomic/doc.h"
+#include "golang/sync/atomic/type.h"
 #include "golang/time/time.h"
 
-namespace golang::core
+namespace golang::golang_org::x::tools::internal::event::core
 {
+    namespace atomic = golang::sync::atomic;
+    namespace context = golang::context;
+    namespace label = golang::golang_org::x::tools::internal::event::label;
+    namespace time = golang::time;
     namespace rec
     {
+        using atomic::rec::Load;
+        using atomic::rec::Store;
     }
 
     // Exporter is a function that handles events.
     // It may return a modified context and event.
-    gocpp::unsafe_pointer exporter;
+    atomic::Pointer<Exporter> exporter;
     // SetExporter sets the global exporter function that handles all events.
     // The exporter is called synchronously from the event call site, so it should
     // return quickly so as not to hold up user code.
     void SetExporter(Exporter e)
     {
-        auto p = gocpp::unsafe_pointer(& e);
         if(e == nullptr)
         {
             // &e is always valid, and so p is always valid, but for the early abort
             // of ProcessEvent to be efficient it needs to make the nil check on the
             // pointer without having to dereference it, so we make the nil function
             // also a nil pointer
-            p = nullptr;
+            rec::Store<core::Exporter>(gocpp::recv(exporter), nullptr);
         }
-        atomic::StorePointer(& exporter, p);
+        else
+        {
+            rec::Store<core::Exporter>(gocpp::recv(exporter), & e);
+        }
     }
 
     // deliver is called to deliver an event to the supplied exporter.
@@ -57,7 +65,7 @@ namespace golang::core
     context::Context Export(context::Context ctx, Event ev)
     {
         // get the global exporter and abort early if there is not one
-        auto exporterPtr = (Exporter*)(atomic::LoadPointer(& exporter));
+        auto exporterPtr = rec::Load<core::Exporter>(gocpp::recv(exporter));
         if(exporterPtr == nullptr)
         {
             return ctx;
@@ -72,7 +80,7 @@ namespace golang::core
     std::tuple<context::Context, std::function<void ()>> ExportPair(context::Context ctx, Event begin, Event end)
     {
         // get the global exporter and abort early if there is not one
-        auto exporterPtr = (Exporter*)(atomic::LoadPointer(& exporter));
+        auto exporterPtr = rec::Load<core::Exporter>(gocpp::recv(exporter));
         if(exporterPtr == nullptr)
         {
             return {ctx, [=]() mutable -> void

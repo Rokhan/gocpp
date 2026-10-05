@@ -11,26 +11,34 @@
 #include "golang/runtime/runtime.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/runtime.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/runtime/cgroup_stubs.h"
 #include "golang/runtime/cputicks.h"
 #include "golang/runtime/env_posix.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/os_windows.h"
+#include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/race0.h"
 #include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/stubs.h"
 #include "golang/runtime/time.h"
 #include "golang/runtime/time_nofake.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
         using atomic::rec::CompareAndSwap;
         using atomic::rec::Load;
         using atomic::rec::Store;
+        using atomic::rec::Swap;
     }
 
     ticksType ticks;
@@ -198,6 +206,7 @@ namespace golang::runtime
         auto p = new std::function<std::function<void (void)> (gocpp::string)>{};
         *p = newIncNonDefault;
         rec::Store<std::function<std::function<void (void)> (gocpp::string)>>(gocpp::recv(godebugNewIncNonDefault), p);
+        defaultGOMAXPROCSUpdateGODEBUG();
     }
 
     // A godebugInc provides access to internal/godebug's IncNonDefault function
@@ -306,23 +315,104 @@ namespace golang::runtime
     }
 
     // writeErrStr writes a string to descriptor 2.
+    // If SetCrashOutput(f) was called, it also writes to f.
     //
     //go:nosplit
     void writeErrStr(gocpp::string s)
     {
-        write(2, gocpp::unsafe_pointer(unsafe::StringData(s)), int32_t(len(s)));
+        writeErrData(unsafe::StringData(s), int32_t(len(s)));
+    }
+
+    // writeErrData is the common parts of writeErr{,Str}.
+    //
+    //go:nosplit
+    void writeErrData(unsigned char* data, int32_t n)
+    {
+        write(2, gocpp::unsafe_pointer(data), n);
+
+        // If crashing, print a copy to the SetCrashOutput fd.
+        auto gp = getg();
+        if(gp != nullptr && gp->m->dying > 0 ||
+                gp == nullptr && rec::Load(gocpp::recv(panicking)) > 0)
+        {
+            if(auto fd = rec::Load(gocpp::recv(crashFD)); fd != ~ uintptr_t(0))
+            {
+                write(fd, gocpp::unsafe_pointer(data), n);
+            }
+        }
+    }
+
+    // crashFD is an optional file descriptor to use for fatal panics, as
+    // set by debug.SetCrashOutput (see #42888). If it is a valid fd (not
+    // all ones), writeErr and related functions write to it in addition
+    // to standard error.
+    //
+    // Initialized to -1 in schedinit.
+    atomic::Uintptr crashFD;
+    //go:linkname setCrashFD
+    uintptr_t setCrashFD(uintptr_t fd)
+    {
+        // Don't change the crash FD if a crash is already in progress.
+        // Unlike the case below, this is not required for correctness, but it
+        // is generally nicer to have all of the crash output go to the same
+        // place rather than getting split across two different FDs.
+        if(rec::Load(gocpp::recv(panicking)) > 0)
+        {
+            return ~ uintptr_t(0);
+        }
+
+        auto old = rec::Swap(gocpp::recv(crashFD), fd);
+
+        // If we are panicking, don't return the old FD to runtime/debug for
+        // closing. writeErrData may have already read the old FD from crashFD
+        // before the swap and closing it would cause the write to be lost [1].
+        // The old FD will never be closed, but we are about to crash anyway.
+        // On the writeErrData thread, panicking.Add(1) happens-before
+        // crashFD.Load() [2].
+        // On this thread, swapping old FD for new in crashFD happens-before
+        // panicking.Load() > 0.
+        // Therefore, if panicking.Load() == 0 here (old FD will be closed), it
+        // is impossible for the writeErrData thread to observe
+        // crashFD.Load() == old FD.
+        // [1] Or, if really unlucky, another concurrent open could reuse the
+        // FD, sending the write into an unrelated file.
+        // [2] If gp != nil, it occurs when incrementing gp.m.dying in
+        // startpanic_m. If gp == nil, we read panicking.Load() > 0, so an Add
+        // must have happened-before.
+        if(rec::Load(gocpp::recv(panicking)) > 0)
+        {
+            return ~ uintptr_t(0);
+        }
+        return old;
     }
 
     // auxv is populated on relevant platforms but defined here for all platforms
-    // so x/sys/cpu can assume the getAuxv symbol exists without keeping its list
-    // of auxv-using GOOS build tags in sync.
+    // so x/sys/cpu and x/sys/unix can assume the getAuxv symbol exists without
+    // keeping its list of auxv-using GOOS build tags in sync.
     //
     // It contains an even number of elements, (tag, value) pairs.
     gocpp::slice<uintptr_t> auxv;
+    // golang.org/x/sys/cpu and golang.org/x/sys/unix use getAuxv via linkname.
+    // Do not remove or change the type signature.
+    // See go.dev/issue/57336 and go.dev/issue/67401.
+    //
+    //go:linkname getAuxv
     gocpp::slice<uintptr_t> getAuxv()
     {
         return auxv;
     }
 
+    // zeroVal is used by reflect via linkname.
+    //
+    // zeroVal should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ugorji/go/codec
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname zeroVal
+    gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
 }
 

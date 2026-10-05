@@ -9,18 +9,20 @@
 #include "golang/golang.org/x/tools/internal/pkgbits/decoder.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/golang.org/x/tools/internal/pkgbits/reloc.h"
-#include "golang/strings/reader.h"
-#include "golang/errors/errors.fwd.h"
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
+{
+    extern gocpp::error overflow;
+}
+#include "golang/golang.org/x/tools/internal/pkgbits/reloc.h"
+#include "golang/golang.org/x/tools/internal/pkgbits/version.h"
+
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
     struct PkgDecoder
     {
         // version is the file format version.
-        uint32_t version{};
-        // aliases determines whether types.Aliases should be created
-        bool aliases{};
+        golang::golang_org::x::tools::internal::pkgbits::Version version{};
         // sync indicates whether the file uses sync markers.
         bool sync{};
         // pkgPath is the package path for the package to be decoded.
@@ -56,6 +58,18 @@ namespace golang::pkgbits
     };
 
     std::ostream& operator<<(std::ostream& os, const struct PkgDecoder& value);
+}
+#include "golang/strings/reader.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::pkgbits
+{
+    PkgDecoder NewPkgDecoder(gocpp::string pkgPath, gocpp::string input);
+    namespace strings = golang::strings;
+}
+#include "golang/strings/reader.h"
+
+namespace golang::golang_org::x::tools::internal::pkgbits
+{
     struct Decoder
     {
         PkgDecoder* common{};
@@ -77,19 +91,20 @@ namespace golang::pkgbits
 
     std::ostream& operator<<(std::ostream& os, const struct Decoder& value);
     std::tuple<uint64_t, gocpp::error> readUvarint(strings::Reader* r);
-    extern gocpp::error overflow;
-    PkgDecoder NewPkgDecoder(gocpp::string pkgPath, gocpp::string input);
 }
 
 #include "golang/go/constant/value.h"
 #include "golang/golang.org/x/tools/internal/pkgbits/codes.h"
 #include "golang/golang.org/x/tools/internal/pkgbits/reloc.h"
 #include "golang/golang.org/x/tools/internal/pkgbits/sync.h"
+#include "golang/golang.org/x/tools/internal/pkgbits/version.h"
 #include "golang/math/big/float.h"
 #include "golang/math/big/int.h"
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
+    namespace big = golang::math::big;
+    namespace constant = golang::go::constant;
 
     namespace rec
     {
@@ -127,6 +142,7 @@ namespace golang::pkgbits
         big::Float* bigFloat(Decoder* r);
         gocpp::string PeekPkgPath(PkgDecoder* pr, Index idx);
         std::tuple<gocpp::string, gocpp::string, CodeObj> PeekObj(PkgDecoder* pr, Index idx);
+        golang::golang_org::x::tools::internal::pkgbits::Version Version(Decoder* w);
     }
 }
 

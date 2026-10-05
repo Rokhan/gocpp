@@ -3,8 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/stack.fwd.h"
-#include "golang/runtime/symtab.fwd.h"
 
 namespace golang::runtime
 {

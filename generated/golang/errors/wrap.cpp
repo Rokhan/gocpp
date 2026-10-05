@@ -17,6 +17,7 @@
 
 namespace golang::errors
 {
+    namespace reflectlite = golang::internal::reflectlite;
     namespace rec
     {
         using reflectlite::rec::AssignableTo;
@@ -101,6 +102,7 @@ namespace golang::errors
     }
 
     // Is reports whether any error in err's tree matches target.
+    // The target must be comparable.
     //
     // The tree consists of err itself, followed by the errors obtained by repeatedly
     // calling its Unwrap() error or Unwrap() []error method. When err wraps multiple
@@ -119,7 +121,7 @@ namespace golang::errors
     // compare err and the target and not call [Unwrap] on either.
     bool Is(gocpp::error err, gocpp::error target)
     {
-        if(target == nullptr)
+        if(err == nullptr || target == nullptr)
         {
             return err == target;
         }
@@ -350,12 +352,16 @@ namespace golang::errors
     // As finds the first error in err's tree that matches target, and if one is found, sets
     // target to that error value and returns true. Otherwise, it returns false.
     //
+    // For most uses, prefer [AsType]. As is equivalent to [AsType] but sets its target
+    // argument rather than returning the matching error and doesn't require its target
+    // argument to implement error.
+    //
     // The tree consists of err itself, followed by the errors obtained by repeatedly
     // calling its Unwrap() error or Unwrap() []error method. When err wraps multiple
     // errors, As examines err followed by a depth-first traversal of its children.
     //
     // An error matches target if the error's concrete value is assignable to the value
-    // pointed to by target, or if the error has a method As(interface{}) bool such that
+    // pointed to by target, or if the error has a method As(any) bool such that
     // As(target) returns true. In the latter case, the As method is responsible for
     // setting target.
     //
@@ -613,5 +619,264 @@ namespace golang::errors
     }
 
     reflectlite::Type errorType = rec::Elem(gocpp::recv(reflectlite::TypeOf((gocpp::error*)(nullptr))));
+    // AsType finds the first error in err's tree that matches the type E, and
+    // if one is found, returns that error value and true. Otherwise, it
+    // returns the zero value of E and false.
+    //
+    // The tree consists of err itself, followed by the errors obtained by
+    // repeatedly calling its Unwrap() error or Unwrap() []error method. When
+    // err wraps multiple errors, AsType examines err followed by a
+    // depth-first traversal of its children.
+    //
+    // An error err matches the type E if the type assertion err.(E) holds,
+    // or if the error has a method As(any) bool such that err.As(target)
+    // returns true when target is a non-nil *E. In the latter case, the As
+    // method is responsible for setting target.
+    template<typename E>
+    std::tuple<E, bool> AsType(gocpp::error err)
+    {
+        if(err == nullptr)
+        {
+            E zero = {};
+            return {zero, false};
+        }
+        // lazily initialized
+        E* pe = {};
+        return asType(err, & pe);
+    }
+
+    
+            template<typename T>
+            gocpp_id_9::gocpp_id_9(T& ref)
+            {
+                mValue.reset(new gocpp_id_9Impl<T, std::unique_ptr<T>>(new T(ref)));
+            }
+
+            template<typename T>
+            gocpp_id_9::gocpp_id_9(const T& ref)
+            {
+                mValue.reset(new gocpp_id_9Impl<T, std::unique_ptr<T>>(new T(ref)));
+            }
+
+            template<typename T>
+            gocpp_id_9::gocpp_id_9(T* ptr)
+            {
+                mValue.reset(new gocpp_id_9Impl<T, gocpp::ptr<T>>(ptr));
+            }
+
+            std::ostream& gocpp_id_9::PrintTo(std::ostream& os) const
+            {
+                return os;
+            }
+
+            template<typename T, typename TStore, typename TInterface>
+            bool gocpp_id_9::gocpp_id_9Impl<T, TStore, TInterface>::vAs(go_any _1)
+            {
+                return rec::As(gocpp::PtrRecv<T, false>(value.get()), _1);
+            }
+
+            inline gocpp_id_9::Igocpp_id_9* gocpp_id_9::value() const
+            {
+                if(auto res = mValue.get()) { return res; }
+                throw gocpp::GoPanic("using nil value for interface 'gocpp_id_9'");
+            }
+
+            namespace rec
+            {
+                bool As(const gocpp::PtrRecv<struct gocpp_id_9, false>& self, go_any _1)
+                {
+                    return self.ptr->value()->vAs(_1);
+                }
+
+                bool As(const gocpp::ObjRecv<struct gocpp_id_9>& self, go_any _1)
+                {
+                    return self.obj.value()->vAs(_1);
+                }
+            }
+
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value)
+            {
+                return value.PrintTo(os);
+            }
+
+
+    
+                template<typename T>
+                gocpp_id_11::gocpp_id_11(T& ref)
+                {
+                    mValue.reset(new gocpp_id_11Impl<T, std::unique_ptr<T>>(new T(ref)));
+                }
+
+                template<typename T>
+                gocpp_id_11::gocpp_id_11(const T& ref)
+                {
+                    mValue.reset(new gocpp_id_11Impl<T, std::unique_ptr<T>>(new T(ref)));
+                }
+
+                template<typename T>
+                gocpp_id_11::gocpp_id_11(T* ptr)
+                {
+                    mValue.reset(new gocpp_id_11Impl<T, gocpp::ptr<T>>(ptr));
+                }
+
+                std::ostream& gocpp_id_11::PrintTo(std::ostream& os) const
+                {
+                    return os;
+                }
+
+                template<typename T, typename TStore, typename TInterface>
+                gocpp::error gocpp_id_11::gocpp_id_11Impl<T, TStore, TInterface>::vUnwrap()
+                {
+                    return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
+                }
+
+                inline gocpp_id_11::Igocpp_id_11* gocpp_id_11::value() const
+                {
+                    if(auto res = mValue.get()) { return res; }
+                    throw gocpp::GoPanic("using nil value for interface 'gocpp_id_11'");
+                }
+
+                namespace rec
+                {
+                    gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_11, false>& self)
+                    {
+                        return self.ptr->value()->vUnwrap();
+                    }
+
+                    gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_11>& self)
+                    {
+                        return self.obj.value()->vUnwrap();
+                    }
+                }
+
+                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_11& value)
+                {
+                    return value.PrintTo(os);
+                }
+
+
+    
+                template<typename T>
+                gocpp_id_12::gocpp_id_12(T& ref)
+                {
+                    mValue.reset(new gocpp_id_12Impl<T, std::unique_ptr<T>>(new T(ref)));
+                }
+
+                template<typename T>
+                gocpp_id_12::gocpp_id_12(const T& ref)
+                {
+                    mValue.reset(new gocpp_id_12Impl<T, std::unique_ptr<T>>(new T(ref)));
+                }
+
+                template<typename T>
+                gocpp_id_12::gocpp_id_12(T* ptr)
+                {
+                    mValue.reset(new gocpp_id_12Impl<T, gocpp::ptr<T>>(ptr));
+                }
+
+                std::ostream& gocpp_id_12::PrintTo(std::ostream& os) const
+                {
+                    return os;
+                }
+
+                template<typename T, typename TStore, typename TInterface>
+                gocpp::slice<gocpp::error> gocpp_id_12::gocpp_id_12Impl<T, TStore, TInterface>::vUnwrap()
+                {
+                    return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
+                }
+
+                inline gocpp_id_12::Igocpp_id_12* gocpp_id_12::value() const
+                {
+                    if(auto res = mValue.get()) { return res; }
+                    throw gocpp::GoPanic("using nil value for interface 'gocpp_id_12'");
+                }
+
+                namespace rec
+                {
+                    gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_id_12, false>& self)
+                    {
+                        return self.ptr->value()->vUnwrap();
+                    }
+
+                    gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_id_12>& self)
+                    {
+                        return self.obj.value()->vUnwrap();
+                    }
+                }
+
+                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_12& value)
+                {
+                    return value.PrintTo(os);
+                }
+
+
+    template<typename E>
+    std::tuple<E, bool> asType(gocpp::error err, E** ppe)
+    {
+        E _1;
+        bool _2;
+        for(; ; )
+        {
+            if(auto [e, ok] = gocpp::getValue<E>(err); ok)
+            {
+                return {e, true};
+            }
+            if(auto [x, ok] = gocpp::getValue<gocpp_id_9>(err); ok)
+            {
+                if(*ppe == nullptr)
+                {
+                    *ppe = new E{};
+                }
+                if(rec::As(gocpp::recv(x), *ppe))
+                {
+                    return {**ppe, true};
+                }
+            }
+            //Go type switch emulation
+            {
+                const auto& gocpp_id_10 = gocpp::type_info(err);
+                int conditionId = -1;
+                if(gocpp_id_10 == typeid(gocpp_id_11)) { conditionId = 0; }
+                else if(gocpp_id_10 == typeid(gocpp_id_12)) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    case 0:
+                    {
+                        gocpp_id_11 x = gocpp::any_cast<gocpp_id_11>(err);
+                        err = rec::Unwrap(gocpp::recv(x));
+                        if(err == nullptr)
+                        {
+                            return {_1, _2};
+                        }
+                        break;
+                    }
+                    case 1:
+                    {
+                        gocpp_id_12 x = gocpp::any_cast<gocpp_id_12>(err);
+                        for(auto [gocpp_ignored, err] : rec::Unwrap(gocpp::recv(x)))
+                        {
+                            if(err == nullptr)
+                            {
+                                continue;
+                            }
+                            if(auto [x, ok] = asType(err, ppe); ok)
+                            {
+                                return {x, true};
+                            }
+                        }
+                        return {_1, _2};
+                        break;
+                    }
+                    default:
+                    {
+                        auto x = err;
+                        return {_1, _2};
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
 }
 

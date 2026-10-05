@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
     // Registry key security and access rights.
     // See https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-key-security-and-access-rights
@@ -21,14 +21,16 @@ namespace golang::registry
     const long WOW64_32KEY = 0x00200;
     const long WOW64_64KEY = 0x00100;
     const long WRITE = 0x20006;
+    struct KeyInfo;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
 
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
+    namespace syscall = golang::syscall;
     using Key = syscall::Handle;
-    struct KeyInfo;
     // Windows defines some predefined root keys that are always open.
     // An application can use these keys as entry points to the registry.
     // Normally these keys are used in OpenKey to open new keys,

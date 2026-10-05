@@ -10,23 +10,27 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     gocpp::slice<int> concat(gocpp::slice<int> list, int i);
 }
 #include "golang/go/types/object.h"
+#include "golang/go/types/selection.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/interface.fwd.h"
 #include "golang/go/types/named.fwd.h"
 #include "golang/go/types/package.fwd.h"
+#include "golang/go/types/struct.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    std::tuple<Object, gocpp::slice<int>, bool> LookupFieldOrMethod(golang::types::Type T, bool addressable, Package* pkg, gocpp::string name);
-    std::tuple<Object, gocpp::slice<int>, bool> lookupFieldOrMethodImpl(golang::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase);
+    std::tuple<Selection, bool> LookupSelection(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name);
+    std::tuple<Object, gocpp::slice<int>, bool> LookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name);
+    std::tuple<Object, gocpp::slice<int>, bool> lookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase);
+    std::tuple<Object, gocpp::slice<int>, bool> lookupFieldOrMethodImpl(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase);
     struct embeddedType
     {
-        golang::types::Type typ{};
+        golang::go::types::Type typ{};
         gocpp::slice<int> index{}; // embedded field indices, starting with index at depth 0
         bool indirect{}; // if set, there was a pointer indirection on the path to this field
         bool multiples{}; // if set, typ appears multiple times at this depth
@@ -43,7 +47,7 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct embeddedType& value);
-    std::tuple<int, bool> lookupType(gocpp::map<golang::types::Type, int> m, golang::types::Type typ);
+    std::tuple<int, bool> lookupType(gocpp::map<golang::go::types::Type, int> m, golang::go::types::Type typ);
     struct instanceLookup
     {
         // buf is used to avoid allocating the map m in the common case of a small
@@ -63,33 +67,34 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct instanceLookup& value);
-    std::tuple<Func*, bool> MissingMethod(golang::types::Type V, Interface* T, bool go_static);
-    bool isInterfacePtr(golang::types::Type T);
-    std::tuple<golang::types::Type, bool> deref(golang::types::Type typ);
-    golang::types::Type derefStructPtr(golang::types::Type typ);
-    int fieldIndex(gocpp::slice<Var*> fields, Package* pkg, gocpp::string name);
-    std::tuple<int, Func*> lookupMethod(gocpp::slice<Func*> methods, Package* pkg, gocpp::string name, bool foldCase);
+    std::tuple<Func*, bool> MissingMethod(golang::go::types::Type V, Interface* T, bool go_static);
+    bool hasInvalidEmbeddedFields(golang::go::types::Type T, gocpp::map<Struct*, bool> seen);
+    bool isInterfacePtr(golang::go::types::Type T);
+    std::tuple<golang::go::types::Type, bool> deref(golang::go::types::Type typ);
+    golang::go::types::Type derefStructPtr(golang::go::types::Type typ);
+    std::tuple<int, Func*> methodIndex(gocpp::slice<Func*> methods, Package* pkg, gocpp::string name, bool foldCase);
+    gocpp::string fieldPath(golang::go::types::Type typ, gocpp::slice<int> index);
     gocpp::slice<embeddedType> consolidateMultiples(gocpp::slice<embeddedType> list);
 }
 
-#include "golang/go/token/position.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/named.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
         Named* lookup(instanceLookup* l, Named* inst);
         void add(instanceLookup* l, Named* inst);
-        std::tuple<Func*, bool> missingMethod(Checker* check, golang::types::Type V, golang::types::Type T, bool go_static, std::function<bool (golang::types::Type x, golang::types::Type y)> equivalent, gocpp::string* cause);
-        gocpp::string interfacePtrError(Checker* check, golang::types::Type T);
+        std::tuple<Func*, bool> missingMethod(Checker* check, golang::go::types::Type V, golang::go::types::Type T, bool go_static, std::function<bool (golang::go::types::Type x, golang::go::types::Type y)> equivalent, gocpp::string* cause);
+        bool hasAllMethods(Checker* check, golang::go::types::Type V, golang::go::types::Type T, bool go_static, std::function<bool (golang::go::types::Type x, golang::go::types::Type y)> equivalent, gocpp::string* cause);
+        gocpp::string interfacePtrError(Checker* check, golang::go::types::Type T);
         gocpp::string funcString(Checker* check, Func* f, bool pkgInfo);
-        bool assertableTo(Checker* check, golang::types::Type V, golang::types::Type T, gocpp::string* cause);
-        bool newAssertableTo(Checker* check, token::Pos pos, golang::types::Type V, golang::types::Type T, gocpp::string* cause);
+        bool assertableTo(Checker* check, golang::go::types::Type V, golang::go::types::Type T, gocpp::string* cause);
+        bool newAssertableTo(Checker* check, golang::go::types::Type V, golang::go::types::Type T, gocpp::string* cause);
     }
 }
 

@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::abi
+namespace golang::internal::abi
 {
     // RAX, RBX, RCX, RDI, RSI, R8, R9, R10, R11.
     const long IntArgRegs = 9;

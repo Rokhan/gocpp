@@ -9,16 +9,22 @@
 #include "golang/golang.org/x/tools/internal/event/keys/standard.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/golang.org/x/tools/internal/event/keys/keys.fwd.h"
 
-namespace golang::keys
+namespace golang::golang_org::x::tools::internal::event::keys
 {
+    // Msg is a key used to add message strings to label lists.
     extern keys::String* Msg;
+    // Label is a key used to indicate an event adds labels to the context.
     extern keys::Tag* Label;
+    // Start is used for things like traces that have a name.
     extern keys::String* Start;
+    // Metric is a key used to indicate an event records metrics.
     extern keys::Tag* End;
+    // Metric is a key used to indicate an event records metrics.
     extern keys::Tag* Detach;
+    // Err is a key used to add error values to label lists.
     extern keys::Error* Err;
+    // Metric is a key used to indicate an event records metrics.
     extern keys::Tag* Metric;
 
     namespace rec

@@ -14,7 +14,7 @@
 #include "golang/go/types/type.h"
 #include "golang/go/types/typestring.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     namespace rec
     {
@@ -55,7 +55,7 @@ namespace golang::types
 
     // NewArray returns a new array type for the given element type and length.
     // A negative length indicates an unknown length.
-    Array* NewArray(golang::types::Type elem, int64_t len)
+    Array* NewArray(golang::go::types::Type elem, int64_t len)
     {
         return gocpp::InitPtr<Array>([=](auto& x) {
             x.len = len;
@@ -71,12 +71,12 @@ namespace golang::types
     }
 
     // Elem returns element type of array a.
-    golang::types::Type rec::Elem(Array* a)
+    golang::go::types::Type rec::Elem(Array* a)
     {
         return a->elem;
     }
 
-    golang::types::Type rec::Underlying(Array* a)
+    golang::go::types::Type rec::Underlying(Array* a)
     {
         return a;
     }

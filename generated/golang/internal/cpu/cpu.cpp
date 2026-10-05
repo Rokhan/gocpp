@@ -15,16 +15,12 @@
 
 // Package cpu implements processor feature detection
 // used by the Go standard library.
-namespace golang::cpu
+namespace golang::internal::cpu
 {
     namespace rec
     {
     }
 
-    // DebugOptions is set to true by the runtime if the OS supports reading
-    // GODEBUG early in runtime startup.
-    // This should not be changed after it is initialized.
-    bool DebugOptions;
     // CacheLinePad is used to pad structs to avoid false sharing.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -68,14 +64,28 @@ namespace golang::cpu
         result.HasAES = this->HasAES;
         result.HasADX = this->HasADX;
         result.HasAVX = this->HasAVX;
+        result.HasAVXVNNI = this->HasAVXVNNI;
         result.HasAVX2 = this->HasAVX2;
+        result.HasAVX512 = this->HasAVX512;
         result.HasAVX512F = this->HasAVX512F;
+        result.HasAVX512CD = this->HasAVX512CD;
         result.HasAVX512BW = this->HasAVX512BW;
+        result.HasAVX512DQ = this->HasAVX512DQ;
         result.HasAVX512VL = this->HasAVX512VL;
+        result.HasAVX512GFNI = this->HasAVX512GFNI;
+        result.HasAVX512VAES = this->HasAVX512VAES;
+        result.HasAVX512VNNI = this->HasAVX512VNNI;
+        result.HasAVX512VBMI = this->HasAVX512VBMI;
+        result.HasAVX512VBMI2 = this->HasAVX512VBMI2;
+        result.HasAVX512BITALG = this->HasAVX512BITALG;
+        result.HasAVX512VPOPCNTDQ = this->HasAVX512VPOPCNTDQ;
+        result.HasAVX512VPCLMULQDQ = this->HasAVX512VPCLMULQDQ;
         result.HasBMI1 = this->HasBMI1;
         result.HasBMI2 = this->HasBMI2;
         result.HasERMS = this->HasERMS;
+        result.HasFSRM = this->HasFSRM;
         result.HasFMA = this->HasFMA;
+        result.HasGFNI = this->HasGFNI;
         result.HasOSXSAVE = this->HasOSXSAVE;
         result.HasPCLMULQDQ = this->HasPCLMULQDQ;
         result.HasPOPCNT = this->HasPOPCNT;
@@ -85,6 +95,8 @@ namespace golang::cpu
         result.HasSSSE3 = this->HasSSSE3;
         result.HasSSE41 = this->HasSSE41;
         result.HasSSE42 = this->HasSSE42;
+        result.HasVAES = this->HasVAES;
+        result.HasVPCLMULQDQ = this->HasVPCLMULQDQ;
         result._2 = this->_2;
         return result;
     }
@@ -96,14 +108,28 @@ namespace golang::cpu
         if (HasAES != ref.HasAES) return false;
         if (HasADX != ref.HasADX) return false;
         if (HasAVX != ref.HasAVX) return false;
+        if (HasAVXVNNI != ref.HasAVXVNNI) return false;
         if (HasAVX2 != ref.HasAVX2) return false;
+        if (HasAVX512 != ref.HasAVX512) return false;
         if (HasAVX512F != ref.HasAVX512F) return false;
+        if (HasAVX512CD != ref.HasAVX512CD) return false;
         if (HasAVX512BW != ref.HasAVX512BW) return false;
+        if (HasAVX512DQ != ref.HasAVX512DQ) return false;
         if (HasAVX512VL != ref.HasAVX512VL) return false;
+        if (HasAVX512GFNI != ref.HasAVX512GFNI) return false;
+        if (HasAVX512VAES != ref.HasAVX512VAES) return false;
+        if (HasAVX512VNNI != ref.HasAVX512VNNI) return false;
+        if (HasAVX512VBMI != ref.HasAVX512VBMI) return false;
+        if (HasAVX512VBMI2 != ref.HasAVX512VBMI2) return false;
+        if (HasAVX512BITALG != ref.HasAVX512BITALG) return false;
+        if (HasAVX512VPOPCNTDQ != ref.HasAVX512VPOPCNTDQ) return false;
+        if (HasAVX512VPCLMULQDQ != ref.HasAVX512VPCLMULQDQ) return false;
         if (HasBMI1 != ref.HasBMI1) return false;
         if (HasBMI2 != ref.HasBMI2) return false;
         if (HasERMS != ref.HasERMS) return false;
+        if (HasFSRM != ref.HasFSRM) return false;
         if (HasFMA != ref.HasFMA) return false;
+        if (HasGFNI != ref.HasGFNI) return false;
         if (HasOSXSAVE != ref.HasOSXSAVE) return false;
         if (HasPCLMULQDQ != ref.HasPCLMULQDQ) return false;
         if (HasPOPCNT != ref.HasPOPCNT) return false;
@@ -113,6 +139,8 @@ namespace golang::cpu
         if (HasSSSE3 != ref.HasSSSE3) return false;
         if (HasSSE41 != ref.HasSSE41) return false;
         if (HasSSE42 != ref.HasSSE42) return false;
+        if (HasVAES != ref.HasVAES) return false;
+        if (HasVPCLMULQDQ != ref.HasVPCLMULQDQ) return false;
         if (_2 != ref._2) return false;
         return true;
     }
@@ -124,14 +152,28 @@ namespace golang::cpu
         os << " " << HasAES;
         os << " " << HasADX;
         os << " " << HasAVX;
+        os << " " << HasAVXVNNI;
         os << " " << HasAVX2;
+        os << " " << HasAVX512;
         os << " " << HasAVX512F;
+        os << " " << HasAVX512CD;
         os << " " << HasAVX512BW;
+        os << " " << HasAVX512DQ;
         os << " " << HasAVX512VL;
+        os << " " << HasAVX512GFNI;
+        os << " " << HasAVX512VAES;
+        os << " " << HasAVX512VNNI;
+        os << " " << HasAVX512VBMI;
+        os << " " << HasAVX512VBMI2;
+        os << " " << HasAVX512BITALG;
+        os << " " << HasAVX512VPOPCNTDQ;
+        os << " " << HasAVX512VPCLMULQDQ;
         os << " " << HasBMI1;
         os << " " << HasBMI2;
         os << " " << HasERMS;
+        os << " " << HasFSRM;
         os << " " << HasFMA;
+        os << " " << HasGFNI;
         os << " " << HasOSXSAVE;
         os << " " << HasPCLMULQDQ;
         os << " " << HasPOPCNT;
@@ -141,6 +183,8 @@ namespace golang::cpu
         os << " " << HasSSSE3;
         os << " " << HasSSE41;
         os << " " << HasSSE42;
+        os << " " << HasVAES;
+        os << " " << HasVPCLMULQDQ;
         os << " " << _2;
         os << '}';
         return os;
@@ -213,9 +257,12 @@ namespace golang::cpu
         result.HasSHA1 = this->HasSHA1;
         result.HasSHA2 = this->HasSHA2;
         result.HasSHA512 = this->HasSHA512;
+        result.HasSHA3 = this->HasSHA3;
         result.HasCRC32 = this->HasCRC32;
         result.HasATOMICS = this->HasATOMICS;
         result.HasCPUID = this->HasCPUID;
+        result.HasDIT = this->HasDIT;
+        result.HasSB = this->HasSB;
         result.IsNeoverse = this->IsNeoverse;
         result._2 = this->_2;
         return result;
@@ -230,9 +277,12 @@ namespace golang::cpu
         if (HasSHA1 != ref.HasSHA1) return false;
         if (HasSHA2 != ref.HasSHA2) return false;
         if (HasSHA512 != ref.HasSHA512) return false;
+        if (HasSHA3 != ref.HasSHA3) return false;
         if (HasCRC32 != ref.HasCRC32) return false;
         if (HasATOMICS != ref.HasATOMICS) return false;
         if (HasCPUID != ref.HasCPUID) return false;
+        if (HasDIT != ref.HasDIT) return false;
+        if (HasSB != ref.HasSB) return false;
         if (IsNeoverse != ref.IsNeoverse) return false;
         if (_2 != ref._2) return false;
         return true;
@@ -247,9 +297,12 @@ namespace golang::cpu
         os << " " << HasSHA1;
         os << " " << HasSHA2;
         os << " " << HasSHA512;
+        os << " " << HasSHA3;
         os << " " << HasCRC32;
         os << " " << HasATOMICS;
         os << " " << HasCPUID;
+        os << " " << HasDIT;
+        os << " " << HasSB;
         os << " " << IsNeoverse;
         os << " " << _2;
         os << '}';
@@ -265,6 +318,66 @@ namespace golang::cpu
     // The booleans in ARM64 contain the correspondingly named cpu feature bit.
     // The struct is padded to avoid false sharing.
     ARM64Struct ARM64;
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    Loong64Struct::operator T()
+    {
+        T result;
+        result._1 = this->_1;
+        result.HasLSX = this->HasLSX;
+        result.HasLASX = this->HasLASX;
+        result.HasCRC32 = this->HasCRC32;
+        result.HasLAMCAS = this->HasLAMCAS;
+        result.HasLAM_BH = this->HasLAM_BH;
+        result.HasLLACQ_SCREL = this->HasLLACQ_SCREL;
+        result.HasSCQ = this->HasSCQ;
+        result.HasDBAR_HINTS = this->HasDBAR_HINTS;
+        result._2 = this->_2;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Loong64Struct::operator==(const T& ref) const
+    {
+        if (_1 != ref._1) return false;
+        if (HasLSX != ref.HasLSX) return false;
+        if (HasLASX != ref.HasLASX) return false;
+        if (HasCRC32 != ref.HasCRC32) return false;
+        if (HasLAMCAS != ref.HasLAMCAS) return false;
+        if (HasLAM_BH != ref.HasLAM_BH) return false;
+        if (HasLLACQ_SCREL != ref.HasLLACQ_SCREL) return false;
+        if (HasSCQ != ref.HasSCQ) return false;
+        if (HasDBAR_HINTS != ref.HasDBAR_HINTS) return false;
+        if (_2 != ref._2) return false;
+        return true;
+    }
+
+    std::ostream& Loong64Struct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << _1;
+        os << " " << HasLSX;
+        os << " " << HasLASX;
+        os << " " << HasCRC32;
+        os << " " << HasLAMCAS;
+        os << " " << HasLAM_BH;
+        os << " " << HasLLACQ_SCREL;
+        os << " " << HasSCQ;
+        os << " " << HasDBAR_HINTS;
+        os << " " << _2;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Loong64Struct& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    // The booleans in Loong64 contain the correspondingly named cpu feature bit.
+    // The struct is padded to avoid false sharing.
+    Loong64Struct Loong64;
     
     template<typename T> requires gocpp::GoStruct<T>
     MIPS64XStruct::operator T()
@@ -453,6 +566,86 @@ namespace golang::cpu
 
 
     S390XStruct S390X;
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    RISCV64Struct::operator T()
+    {
+        T result;
+        result._1 = this->_1;
+        result.HasFastMisaligned = this->HasFastMisaligned;
+        result.HasV = this->HasV;
+        result.HasZbb = this->HasZbb;
+        result.HasZbc = this->HasZbc;
+        result.HasZvbb = this->HasZvbb;
+        result.HasZvbc = this->HasZvbc;
+        result.HasZvkg = this->HasZvkg;
+        result.HasZvkned = this->HasZvkned;
+        result.HasZvknha = this->HasZvknha;
+        result.HasZvknhb = this->HasZvknhb;
+        result.HasZvksed = this->HasZvksed;
+        result.HasZvksh = this->HasZvksh;
+        result.HasZvkt = this->HasZvkt;
+        result._2 = this->_2;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool RISCV64Struct::operator==(const T& ref) const
+    {
+        if (_1 != ref._1) return false;
+        if (HasFastMisaligned != ref.HasFastMisaligned) return false;
+        if (HasV != ref.HasV) return false;
+        if (HasZbb != ref.HasZbb) return false;
+        if (HasZbc != ref.HasZbc) return false;
+        if (HasZvbb != ref.HasZvbb) return false;
+        if (HasZvbc != ref.HasZvbc) return false;
+        if (HasZvkg != ref.HasZvkg) return false;
+        if (HasZvkned != ref.HasZvkned) return false;
+        if (HasZvknha != ref.HasZvknha) return false;
+        if (HasZvknhb != ref.HasZvknhb) return false;
+        if (HasZvksed != ref.HasZvksed) return false;
+        if (HasZvksh != ref.HasZvksh) return false;
+        if (HasZvkt != ref.HasZvkt) return false;
+        if (_2 != ref._2) return false;
+        return true;
+    }
+
+    std::ostream& RISCV64Struct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << _1;
+        os << " " << HasFastMisaligned;
+        os << " " << HasV;
+        os << " " << HasZbb;
+        os << " " << HasZbc;
+        os << " " << HasZvbb;
+        os << " " << HasZvbc;
+        os << " " << HasZvkg;
+        os << " " << HasZvkned;
+        os << " " << HasZvknha;
+        os << " " << HasZvknhb;
+        os << " " << HasZvksed;
+        os << " " << HasZvksh;
+        os << " " << HasZvkt;
+        os << " " << _2;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct RISCV64Struct& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    // RISCV64 contains the supported CPU features and performance characteristics for riscv64
+    // platforms. The booleans in RISCV64, with the exception of HasFastMisaligned, indicate
+    // the presence of RISC-V extensions.
+    // The struct is padded to avoid false sharing.
+    RISCV64Struct RISCV64;
+    // doDerived, if non-nil, is called after processing GODEBUG to set "derived"
+    // feature flags.
+    std::function<void ()> doDerived;
     // Initialize examines the processor and sets the relevant variables above.
     // This is called by the runtime package early in program initialization,
     // before normal init functions are run. env is set by runtime if the OS supports
@@ -461,6 +654,10 @@ namespace golang::cpu
     {
         doinit();
         processOptions(env);
+        if(doDerived != nullptr)
+        {
+            doDerived();
+        }
     }
 
     // options contains the cpu debug options that can be used in GODEBUG.

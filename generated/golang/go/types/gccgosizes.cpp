@@ -13,7 +13,7 @@
 
 #include "golang/go/types/sizes.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     namespace rec
     {

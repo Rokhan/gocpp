@@ -14,6 +14,12 @@ namespace golang::os
 {
     std::tuple<gocpp::string, gocpp::error> Getwd();
 }
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::os
+{
+    namespace sync = golang::sync;
+}
 #include "golang/sync/mutex.h"
 
 namespace golang::os

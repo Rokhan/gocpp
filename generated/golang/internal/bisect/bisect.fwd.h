@@ -4,19 +4,13 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::bisect
+namespace golang::internal::bisect
 {
     struct Matcher;
-    struct atomicPointerDedup;
     struct cond;
     struct Writer;
     struct parseError;
     const uint64_t offset64 = 14695981039346656037;
     const uint64_t prime64 = 1099511628211;
-}
-#include "golang/sync/mutex.fwd.h"
-
-namespace golang::bisect
-{
     struct dedup;
 }

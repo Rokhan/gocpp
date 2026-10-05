@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
+#include "golang/internal/bytealg/indexbyte_native.h"
 #include "golang/runtime/extern.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/zerrors_windows.h"
@@ -22,6 +23,10 @@
 
 namespace golang::time
 {
+    namespace bytealg = golang::internal::bytealg;
+    namespace errors = golang::errors;
+    namespace runtime = golang::runtime;
+    namespace syscall = golang::syscall;
     namespace rec
     {
         using syscall::rec::Error;
@@ -29,6 +34,8 @@ namespace golang::time
 
     // registerLoadFromEmbeddedTZData is called by the time/tzdata package,
     // if it is imported.
+    //
+    //go:linkname registerLoadFromEmbeddedTZData
     void registerLoadFromEmbeddedTZData(std::function<std::tuple<gocpp::string, gocpp::error> (gocpp::string _1)> f)
     {
         loadFromEmbeddedTZData = f;
@@ -141,18 +148,15 @@ namespace golang::time
     // Make a string by stopping at the first NUL
     gocpp::string byteString(gocpp::slice<unsigned char> p)
     {
-        for(auto i = 0; i < len(p); i++)
+        if(auto i = bytealg::IndexByte(p, 0); i != - 1)
         {
-            if(p[i] == 0)
-            {
-                return gocpp::string(p.make_slice(0, i));
-            }
+            p = p.make_slice(0, i);
         }
         return gocpp::string(p);
     }
 
     gocpp::error errBadData = errors::New("malformed time zone information"_s);
-    // LoadLocationFromTZData returns a Location with the given name
+    // LoadLocationFromTZData returns a new [Location] with the given name
     // initialized from the IANA Time Zone database-formatted data.
     // The data should be in the format of a standard IANA time zone file
     // (for example, the content of /etc/localtime on Unix systems).
@@ -417,7 +421,7 @@ namespace golang::time
 
         // Fill in the cache with information about right now,
         // since that will be the most common lookup.
-        auto [sec, gocpp_id_0, gocpp_id_1] = now();
+        auto [sec, gocpp_id_0, gocpp_id_1] = runtimeNow();
         for(auto [i, gocpp_ignored] : tx)
         {
             if(tx[i].when <= sec && (i + 1 == len(tx) || sec < tx[i + 1].when))

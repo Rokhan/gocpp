@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::chacha8rand
+namespace golang::internal::chacha8rand
 {
     const long ctrInc = 4;
     const long ctrMax = 16;

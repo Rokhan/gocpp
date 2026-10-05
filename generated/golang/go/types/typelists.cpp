@@ -11,13 +11,19 @@
 #include "golang/go/types/typelists.h"
 #include "gocpp/support.h"
 
+#include "golang/bytes/buffer.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeparam.h"
+#include "golang/go/types/typestring.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace bytes = golang::bytes;
     namespace rec
     {
+        using bytes::rec::String;
+        using bytes::rec::WriteByte;
+        using bytes::rec::WriteString;
     }
 
     // TypeParamList holds a list of type parameters.
@@ -75,6 +81,22 @@ namespace golang::types
         return l->tparams;
     }
 
+    gocpp::string rec::String(TypeParamList* l)
+    {
+        bytes::Buffer buf = {};
+        rec::WriteByte(gocpp::recv(buf), '[');
+        for(auto [i, tparam] : l->tparams)
+        {
+            if(i > 0)
+            {
+                rec::WriteString(gocpp::recv(buf), ", "_s);
+            }
+            WriteType(& buf, tparam, nullptr);
+        }
+        rec::WriteByte(gocpp::recv(buf), ']');
+        return rec::String(gocpp::recv(buf));
+    }
+
     // TypeList holds a list of types.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -106,7 +128,7 @@ namespace golang::types
     }
 
     // newTypeList returns a new TypeList with the types in list.
-    TypeList* newTypeList(gocpp::slice<golang::types::Type> list)
+    TypeList* newTypeList(gocpp::slice<golang::go::types::Type> list)
     {
         if(len(list) == 0)
         {
@@ -123,7 +145,7 @@ namespace golang::types
     }
 
     // At returns the i'th type in the list.
-    golang::types::Type rec::At(TypeList* l, int i)
+    golang::go::types::Type rec::At(TypeList* l, int i)
     {
         return l->types[i];
     }
@@ -131,13 +153,29 @@ namespace golang::types
     // list is for internal use where we expect a []Type.
     // TODO(rfindley): list should probably be eliminated: we can pass around a
     // TypeList instead.
-    gocpp::slice<golang::types::Type> rec::list(TypeList* l)
+    gocpp::slice<golang::go::types::Type> rec::list(TypeList* l)
     {
         if(l == nullptr)
         {
             return nullptr;
         }
         return l->types;
+    }
+
+    gocpp::string rec::String(TypeList* l)
+    {
+        bytes::Buffer buf = {};
+        rec::WriteByte(gocpp::recv(buf), '[');
+        for(auto [i, t] : l->types)
+        {
+            if(i > 0)
+            {
+                rec::WriteString(gocpp::recv(buf), ", "_s);
+            }
+            WriteType(& buf, t, nullptr);
+        }
+        rec::WriteByte(gocpp::recv(buf), ']');
+        return rec::String(gocpp::recv(buf));
     }
 
     TypeParamList* bindTParams(gocpp::slice<TypeParam*> list)

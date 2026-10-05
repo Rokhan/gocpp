@@ -12,12 +12,16 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
+#include "golang/internal/bytealg/compare_native.h"
 #include "golang/io/fs/format.h"
 #include "golang/io/fs/fs.h"
-#include "golang/sort/slice.h"
+#include "golang/slices/sort.h"
 
-namespace golang::fs
+namespace golang::io::fs
 {
+    namespace bytealg = golang::internal::bytealg;
+    namespace errors = golang::errors;
+    namespace slices = golang::slices;
     namespace rec
     {
     }
@@ -91,9 +95,9 @@ namespace golang::fs
     // ReadDir reads the named directory
     // and returns a list of directory entries sorted by filename.
     //
-    // If fs implements [ReadDirFS], ReadDir calls fs.ReadDir.
-    // Otherwise ReadDir calls fs.Open and uses ReadDir and Close
-    // on the returned file.
+    // If fsys implements [ReadDirFS], ReadDir calls fsys.ReadDir.
+    // Otherwise ReadDir calls fsys.Open and uses ReadDir and Close
+    // on the returned [ReadDirFile].
     std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(FS fsys, gocpp::string name)
     {
         gocpp::Defer defer;
@@ -126,9 +130,9 @@ namespace golang::fs
 
             gocpp::slice<fs::DirEntry> list;
             std::tie(list, err) = rec::ReadDir(gocpp::recv(dir), - 1);
-            sort::Slice(list, [=](int i, int j) mutable -> bool
+            slices::SortFunc(list, [=](DirEntry a, DirEntry b) mutable -> int
             {
-                return rec::Name(gocpp::recv(list[i])) < rec::Name(gocpp::recv(list[j]));
+                return bytealg::CompareString(rec::Name(gocpp::recv(a)), rec::Name(gocpp::recv(b)));
             });
             return {list, err};
         }

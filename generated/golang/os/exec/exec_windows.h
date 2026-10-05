@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::exec
+namespace golang::os::exec
 {
     bool skipStdinCopyError(gocpp::error err);
 

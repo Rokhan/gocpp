@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
     bool Equal(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
 

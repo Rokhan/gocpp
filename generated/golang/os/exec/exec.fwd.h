@@ -4,24 +4,12 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::exec
+namespace golang::os::exec
 {
     struct Error;
     struct wrappedError;
-    struct prefixSuffixSaver;
-}
-#include "golang/context/context.fwd.h"
-#include "golang/io/io.fwd.h"
-#include "golang/os/exec.fwd.h"
-#include "golang/os/exec_posix.fwd.h"
-#include "golang/os/types.fwd.h"
-#include "golang/syscall/exec_windows.fwd.h"
-#include "golang/time/sleep.fwd.h"
-#include "golang/time/time.fwd.h"
-
-namespace golang::exec
-{
     struct Cmd;
     struct ctxResult;
     struct ExitError;
+    struct prefixSuffixSaver;
 }

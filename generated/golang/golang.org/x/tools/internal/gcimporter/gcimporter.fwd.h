@@ -4,18 +4,11 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
     // Enable debug during development: it adds some additional checks, and
     // prevents errors from being recovered.
     const bool debug = false;
     // If trace is set, debugging output is printed to std out.
     const bool trace = false;
-    struct GoTag_byPath;
-}
-#include "golang/go/types/package.fwd.h"
-
-namespace golang::gcimporter
-{
-    using byPath = gocpp::defined<gocpp::slice<types::Package*>, GoTag_byPath>;
 }

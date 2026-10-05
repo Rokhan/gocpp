@@ -15,6 +15,7 @@
 
 namespace golang::strconv
 {
+    namespace bytealg = golang::internal::bytealg;
     namespace rec
     {
     }

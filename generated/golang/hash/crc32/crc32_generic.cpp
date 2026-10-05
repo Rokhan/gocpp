@@ -12,9 +12,11 @@
 #include "gocpp/support.h"
 
 #include "golang/hash/crc32/crc32.h"
+#include "golang/internal/byteorder/byteorder.h"
 
-namespace golang::crc32
+namespace golang::hash::crc32
 {
+    namespace byteorder = golang::internal::byteorder;
     namespace rec
     {
     }
@@ -91,7 +93,7 @@ namespace golang::crc32
             crc = ~ crc;
             for(; len(p) > 8; )
             {
-                crc ^= uint32_t(p[0]) | (uint32_t(p[1]) << 8) | (uint32_t(p[2]) << 16) | (uint32_t(p[3]) << 24);
+                crc ^= byteorder::LEUint32(p);
                 crc = tab[0][p[7]] ^ tab[1][p[6]] ^ tab[2][p[5]] ^ tab[3][p[4]] ^
                                 tab[4][crc >> 24] ^ tab[5][(crc >> 16) & 0xFF] ^
                                 tab[6][(crc >> 8) & 0xFF] ^ tab[7][crc & 0xFF];

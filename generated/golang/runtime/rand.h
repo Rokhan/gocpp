@@ -12,21 +12,39 @@
 
 namespace golang::runtime
 {
+    // OS-specific startup can set startupRand if the OS passes
+    // random data to the process at startup time.
+    // For example Linux passes 16 bytes in the auxv vector.
     extern gocpp::slice<unsigned char> startupRand;
     extern bool readRandomFailed;
     void randinit();
     void readTimeRandom(gocpp::slice<unsigned char> r);
+    bool allZero(gocpp::slice<unsigned char> b);
     uint64_t bootstrapRand();
     void bootstrapRandReseed();
     uint32_t rand32();
     uint64_t rand();
+    uint64_t maps_rand();
     uint32_t randn(uint32_t n);
     uint32_t cheaprand();
     int64_t cheaprand64();
+    uint64_t cheaprandu64();
     uint32_t cheaprandn(uint32_t n);
     uint32_t legacy_fastrand();
     uint32_t legacy_fastrandn(uint32_t n);
     uint64_t legacy_fastrand64();
+}
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    void mrandinit(m* mp);
+}
+#include "golang/internal/chacha8rand/chacha8.fwd.h"
+
+namespace golang::runtime
+{
+    namespace chacha8rand = golang::internal::chacha8rand;
 }
 #include "golang/internal/chacha8rand/chacha8.h"
 #include "golang/runtime/runtime2.h"
@@ -52,7 +70,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct globalRandStruct& value);
-    void mrandinit(m* mp);
+    // globalRand holds the global random state.
+    // It is only used at startup and for creating new m's.
+    // Otherwise the per-m random state should be used
+    // by calling goodrand.
     extern globalRandStruct globalRand;
 
     namespace rec

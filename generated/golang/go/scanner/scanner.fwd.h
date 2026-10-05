@@ -4,8 +4,9 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::scanner
+namespace golang::go::scanner
 {
+    struct Scanner;
     const long bom = 0xFEFF;
     const long eof = - 1;
     using Mode = unsigned int;
@@ -13,9 +14,10 @@ namespace golang::scanner
     const Mode dontInsertSemis = 1 << 1;
 }
 #include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
 
-namespace golang::scanner
+namespace golang::go::scanner
 {
+    namespace token = golang::go::token;
     using ErrorHandler = std::function<void (token::Position pos, gocpp::string msg)>;
-    struct Scanner;
 }

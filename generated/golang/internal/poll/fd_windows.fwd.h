@@ -4,8 +4,11 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::poll
+namespace golang::internal::poll
 {
+    struct operation;
+    struct wsaRsa;
+    struct FD;
     using fileKind = unsigned char;
     // Windows ReadFile and WSARecv use DWORD (uint32) parameter to pass buffer length.
     // This prevents us reading blocks larger than 4GB.
@@ -15,16 +18,4 @@ namespace golang::poll
     const fileKind kindFile = 1;
     const fileKind kindConsole = 2;
     const fileKind kindPipe = 3;
-}
-#include "golang/internal/poll/fd_mutex.fwd.h"
-#include "golang/internal/poll/fd_poll_runtime.fwd.h"
-#include "golang/internal/syscall/windows/syscall_windows.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-
-namespace golang::poll
-{
-    struct operation;
-    struct FD;
 }

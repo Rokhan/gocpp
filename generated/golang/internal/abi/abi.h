@@ -10,15 +10,16 @@
 #include "gocpp/support.h"
 
 
-namespace golang::abi
+namespace golang::internal::abi
 {
     struct GoTag_IntArgRegBitmap { };
 }
 #include "golang/internal/abi/abi_amd64.fwd.h"
 
-namespace golang::abi
+namespace golang::internal::abi
 {
     using IntArgRegBitmap = gocpp::defined<gocpp::array<uint8_t, (IntArgRegs + 7) / 8>, GoTag_IntArgRegBitmap>;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct RegArgs
     {
         // Values in these slots should be precisely the bit-by-bit

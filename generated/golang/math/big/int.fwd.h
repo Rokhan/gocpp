@@ -3,9 +3,19 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/math/big/nat.fwd.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     struct Int;
+}
+#include "golang/math/big/float.fwd.h"
+
+namespace golang::math::big
+{
+    // Rounding modes that determine how the integer quotient is adjusted in an integer division.
+    // See Daan Leijen, “Division and Modulus for Computer Scientists”, for details.
+    const big::RoundingMode Trunc = ToZero;
+    const big::RoundingMode Floor = ToNegativeInf;
+    const big::RoundingMode Round = ToNearestEven;
+    const big::RoundingMode Ceil = ToPositiveInf;
 }

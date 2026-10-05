@@ -10,22 +10,35 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
-    extern gocpp::array<gocpp::string, 11> operandModeString;
+    extern gocpp::array<gocpp::string, 12> operandModeString;
 }
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    gocpp::string compositeKind(golang::go::types::Type typ);
+}
+#include "golang/go/ast/ast.fwd.h"
+#include "golang/go/constant/value.fwd.h"
 #include "golang/go/ast/ast.h"
 #include "golang/go/constant/value.h"
-#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+    namespace constant = golang::go::constant;
+}
 #include "golang/go/types/universe.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct operand
     {
-        operandMode mode{};
+        operandMode mode_{};
         ast::Expr expr{};
-        golang::types::Type typ{};
+        golang::go::types::Type typ_{};
         constant::Value val{};
         builtinId id{};
 
@@ -44,7 +57,7 @@ namespace golang::types
 }
 #include "golang/go/types/typestring.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     gocpp::string operandString(operand* x, Qualifier qf);
 }
@@ -55,16 +68,21 @@ namespace golang::types
 #include "golang/go/types/type.h"
 #include "golang/internal/types/errors/codes.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace token = golang::go::token;
 
     namespace rec
     {
+        operandMode mode(operand* x);
+        golang::go::types::Type typ(operand* x);
+        bool isValid(operand* x);
+        void invalidate(operand* x);
         token::Pos Pos(operand* x);
         gocpp::string String(operand* x);
-        void setConst(operand* x, token::Token tok, gocpp::string lit);
+        void setConst(operand* x, token::Token k, gocpp::string lit);
         bool isNil(operand* x);
-        std::tuple<bool, errors::Code> assignableTo(operand* x, Checker* check, golang::types::Type T, gocpp::string* cause);
+        std::tuple<bool, errors::Code> assignableTo(operand* x, Checker* check, golang::go::types::Type T, gocpp::string* cause);
     }
 }
 

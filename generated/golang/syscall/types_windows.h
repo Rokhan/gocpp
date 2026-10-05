@@ -89,7 +89,6 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Filetime& value);
     struct _PROC_THREAD_ATTRIBUTE_LIST
     {
-        gocpp::array<unsigned char, 1> _1{};
 
         using isGoStruct = void;
 
@@ -938,6 +937,7 @@ namespace golang::syscall
 
 namespace golang::syscall
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct Overlapped
     {
         uintptr_t Internal{};
@@ -958,6 +958,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Overlapped& value);
+    void copyFindData(Win32finddata* dst, win32finddata1* src);
     struct StartupInfo
     {
         uint32_t Cb{};
@@ -991,6 +992,23 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct StartupInfo& value);
+    struct procThreadAttributeListContainer
+    {
+        _PROC_THREAD_ATTRIBUTE_LIST* data{};
+        gocpp::slice<gocpp::unsafe_pointer> pointers{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct procThreadAttributeListContainer& value);
     struct ProcessInformation
     {
         golang::syscall::Handle Process{};
@@ -1010,6 +1028,25 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ProcessInformation& value);
+    struct IpAddrString
+    {
+        IpAddrString* Next{};
+        IpAddressString IpAddress{};
+        IpMaskString IpMask{};
+        uint32_t Context{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct IpAddrString& value);
     struct CertContext
     {
         uint32_t EncodingType{};
@@ -1030,43 +1067,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CertContext& value);
-    void copyFindData(Win32finddata* dst, win32finddata1* src);
-    struct _STARTUPINFOEXW
-    {
-        StartupInfo StartupInfo{};
-        _PROC_THREAD_ATTRIBUTE_LIST* ProcThreadAttributeList{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct _STARTUPINFOEXW& value);
-    struct IpAddrString
-    {
-        IpAddrString* Next{};
-        IpAddressString IpAddress{};
-        IpMaskString IpMask{};
-        uint32_t Context{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct IpAddrString& value);
     struct CertChainPara
     {
         uint32_t Size{};
@@ -1089,6 +1089,23 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CertChainPara& value);
+    struct _STARTUPINFOEXW
+    {
+        StartupInfo StartupInfo{};
+        _PROC_THREAD_ATTRIBUTE_LIST* ProcThreadAttributeList{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct _STARTUPINFOEXW& value);
     struct IpAdapterInfo
     {
         IpAdapterInfo* Next{};

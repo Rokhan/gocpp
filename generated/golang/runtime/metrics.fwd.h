@@ -11,8 +11,12 @@ namespace golang::runtime
     using statDep = unsigned int;
     struct GoTag_statDepSet;
     using statDepSet = gocpp::defined<gocpp::array<uint64_t, 1>, GoTag_statDepSet>;
+    struct heapStatsAggregate;
     struct sysStatsAggregate;
+    struct cpuStatsAggregate;
     struct gcStatsAggregate;
+    struct finalStatsAggregate;
+    struct schedStatsAggregate;
     struct statAggregate;
     using metricKind = int;
     struct metricSample;
@@ -23,18 +27,13 @@ namespace golang::runtime
     const statDep sysStatsDep = 1;
     const statDep cpuStatsDep = 2;
     const statDep gcStatsDep = 3;
-    const statDep numStatsDeps = 4;
+    const statDep finalStatsDep = 4;
+    const statDep schedStatsDep = 5;
+    const statDep numStatsDeps = 6;
     // These values must be kept identical to their corresponding Kind* values
     // in the runtime/metrics package.
     const metricKind metricKindBad = 0;
     const metricKind metricKindUint64 = 1;
     const metricKind metricKindFloat64 = 2;
     const metricKind metricKindFloat64Histogram = 3;
-}
-#include "golang/runtime/mstats.fwd.h"
-
-namespace golang::runtime
-{
-    struct heapStatsAggregate;
-    struct cpuStatsAggregate;
 }

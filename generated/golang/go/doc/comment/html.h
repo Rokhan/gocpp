@@ -10,13 +10,13 @@
 #include "gocpp/support.h"
 
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     gocpp::string inc(gocpp::string s);
 }
 #include "golang/go/doc/comment/print.fwd.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     struct htmlPrinter
     {
@@ -41,14 +41,15 @@ namespace golang::comment
 #include "golang/go/doc/comment/parse.h"
 #include "golang/go/doc/comment/print.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
+    namespace bytes = golang::bytes;
 
     namespace rec
     {
         gocpp::slice<unsigned char> HTML(Printer* p, Doc* d);
         void block(htmlPrinter* p, bytes::Buffer* out, Block x);
-        void text(htmlPrinter* p, bytes::Buffer* out, gocpp::slice<golang::comment::Text> x);
+        void text(htmlPrinter* p, bytes::Buffer* out, gocpp::slice<golang::go::doc::comment::Text> x);
         void escape(htmlPrinter* p, bytes::Buffer* out, gocpp::string s);
     }
 }

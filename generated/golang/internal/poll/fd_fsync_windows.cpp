@@ -15,8 +15,9 @@
 #include "golang/internal/poll/fd_windows.h"
 #include "golang/syscall/syscall_windows.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
+    namespace syscall = golang::syscall;
     namespace rec
     {
     }

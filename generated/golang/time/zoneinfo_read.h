@@ -13,6 +13,10 @@
 namespace golang::time
 {
     void registerLoadFromEmbeddedTZData(std::function<std::tuple<gocpp::string, gocpp::error> (gocpp::string _1)> f);
+    // loadFromEmbeddedTZData is used to load a specific tzdata file
+    // from tzdata information embedded in the binary itself.
+    // This is set when the time/tzdata package is imported,
+    // via registerLoadFromEmbeddedTzdata.
     extern std::function<std::tuple<gocpp::string, gocpp::error> (gocpp::string zipname)> loadFromEmbeddedTZData;
     struct dataIO
     {
@@ -32,20 +36,22 @@ namespace golang::time
 
     std::ostream& operator<<(std::ostream& os, const struct dataIO& value);
     gocpp::string byteString(gocpp::slice<unsigned char> p);
+    extern gocpp::error errBadData;
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfoFromDirOrZip(gocpp::string dir, gocpp::string name);
     int get4(gocpp::slice<unsigned char> b);
     int get2(gocpp::slice<unsigned char> b);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfoFromZip(gocpp::string zipfile, gocpp::string name);
+    // loadTzinfoFromTzdata returns the time zone information of the time zone
+    // with the given name, from a tzdata database file as they are typically
+    // found on android.
     extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::string file, gocpp::string name)> loadTzinfoFromTzdata;
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfo(gocpp::string name, gocpp::string source);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> readFile(gocpp::string name);
 }
 #include "golang/time/zoneinfo.h"
-#include "golang/errors/errors.fwd.h"
 
 namespace golang::time
 {
-    extern gocpp::error errBadData;
     std::tuple<golang::time::Location*, gocpp::error> LoadLocationFromTZData(gocpp::string name, gocpp::slice<unsigned char> data);
     int findZone(gocpp::slice<zone> zones, gocpp::string name, int offset, bool isDST);
     std::tuple<golang::time::Location*, gocpp::error> loadLocation(gocpp::string name, gocpp::slice<gocpp::string> sources);

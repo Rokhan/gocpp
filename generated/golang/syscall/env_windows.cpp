@@ -18,6 +18,7 @@
 
 namespace golang::syscall
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }

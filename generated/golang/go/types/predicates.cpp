@@ -19,7 +19,6 @@
 #include "golang/go/types/chan.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/context.h"
-#include "golang/go/types/errors.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/map.h"
 #include "golang/go/types/named.h"
@@ -40,117 +39,121 @@
 #include "golang/go/types/under.h"
 #include "golang/go/types/union.h"
 #include "golang/go/types/universe.h"
+#include "golang/slices/slices.h"
+#include "golang/unicode/digit.h"
+#include "golang/unicode/graphic.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace slices = golang::slices;
+    namespace unicode = golang::unicode;
     namespace rec
     {
     }
 
     // isValid reports whether t is a valid type.
-    bool isValid(golang::types::Type t)
+    bool isValid(golang::go::types::Type t)
     {
         return Unalias(t) != Typ[Invalid];
     }
 
-    bool isBoolean(golang::types::Type t)
+    bool isBoolean(golang::go::types::Type t)
     {
         return isBasic(t, IsBoolean);
     }
 
-    bool isInteger(golang::types::Type t)
+    bool isInteger(golang::go::types::Type t)
     {
         return isBasic(t, IsInteger);
     }
 
-    bool isUnsigned(golang::types::Type t)
+    bool isUnsigned(golang::go::types::Type t)
     {
         return isBasic(t, IsUnsigned);
     }
 
-    bool isFloat(golang::types::Type t)
+    bool isFloat(golang::go::types::Type t)
     {
         return isBasic(t, IsFloat);
     }
 
-    bool isComplex(golang::types::Type t)
+    bool isComplex(golang::go::types::Type t)
     {
         return isBasic(t, IsComplex);
     }
 
-    bool isNumeric(golang::types::Type t)
+    bool isNumeric(golang::go::types::Type t)
     {
         return isBasic(t, IsNumeric);
     }
 
-    bool isString(golang::types::Type t)
+    bool isString(golang::go::types::Type t)
     {
         return isBasic(t, IsString);
     }
 
-    bool isIntegerOrFloat(golang::types::Type t)
+    bool isIntegerOrFloat(golang::go::types::Type t)
     {
         return isBasic(t, IsInteger | IsFloat);
     }
 
-    bool isConstType(golang::types::Type t)
+    bool isConstType(golang::go::types::Type t)
     {
         return isBasic(t, IsConstType);
     }
 
-    // isBasic reports whether under(t) is a basic type with the specified info.
+    // isBasic reports whether t.Underlying() is a basic type with the specified info.
     // If t is a type parameter the result is false; i.e.,
     // isBasic does not look inside a type parameter.
-    bool isBasic(golang::types::Type t, BasicInfo info)
+    bool isBasic(golang::go::types::Type t, BasicInfo info)
     {
-        auto [u, gocpp_id_0] = gocpp::getValue<Basic*>(under(t));
+        auto [u, gocpp_id_0] = gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(t)));
         return u != nullptr && u->info & info != 0;
     }
 
-    bool allBoolean(golang::types::Type t)
+    bool allBoolean(golang::go::types::Type t)
     {
         return allBasic(t, IsBoolean);
     }
 
-    bool allInteger(golang::types::Type t)
+    bool allInteger(golang::go::types::Type t)
     {
         return allBasic(t, IsInteger);
     }
 
-    bool allUnsigned(golang::types::Type t)
+    bool allUnsigned(golang::go::types::Type t)
     {
         return allBasic(t, IsUnsigned);
     }
 
-    bool allNumeric(golang::types::Type t)
+    bool allNumeric(golang::go::types::Type t)
     {
         return allBasic(t, IsNumeric);
     }
 
-    bool allString(golang::types::Type t)
+    bool allString(golang::go::types::Type t)
     {
         return allBasic(t, IsString);
     }
 
-    bool allOrdered(golang::types::Type t)
+    bool allOrdered(golang::go::types::Type t)
     {
         return allBasic(t, IsOrdered);
     }
 
-    bool allNumericOrString(golang::types::Type t)
+    bool allNumericOrString(golang::go::types::Type t)
     {
         return allBasic(t, IsNumeric | IsString);
     }
 
-    // allBasic reports whether under(t) is a basic type with the specified info.
+    // allBasic reports whether t.Underlying() is a basic type with the specified info.
     // If t is a type parameter, the result is true if isBasic(t, info) is true
     // for all specific types of the type parameter's type set.
-    // allBasic(t, info) is an optimized version of isBasic(coreType(t), info).
-    bool allBasic(golang::types::Type t, BasicInfo info)
+    bool allBasic(golang::go::types::Type t, BasicInfo info)
     {
         if(auto [tpar, gocpp_id_1] = gocpp::getValue<TypeParam*>(Unalias(t)); tpar != nullptr)
         {
-            return rec::is(gocpp::recv(tpar), [=](term* t) mutable -> bool
+            return rec::is(gocpp::recv(tpar), [=](golang::go::types::term* t) mutable -> bool
             {
                 return t != nullptr && isBasic(t->typ, info);
             });
@@ -161,7 +164,7 @@ namespace golang::types
     // hasName reports whether t has a name. This includes
     // predeclared types, defined types, and type parameters.
     // hasName may be called with types that are not fully set up.
-    bool hasName(golang::types::Type t)
+    bool hasName(golang::go::types::Type t)
     {
         //Go type switch emulation
         {
@@ -187,7 +190,7 @@ namespace golang::types
     // isTypeLit reports whether t is a type literal.
     // This includes all non-defined types, but also basic types.
     // isTypeLit may be called with types that are not fully set up.
-    bool isTypeLit(golang::types::Type t)
+    bool isTypeLit(golang::go::types::Type t)
     {
         //Go type switch emulation
         {
@@ -209,41 +212,50 @@ namespace golang::types
     }
 
     // isTyped reports whether t is typed; i.e., not an untyped
-    // constant or boolean. isTyped may be called with types that
-    // are not fully set up.
-    bool isTyped(golang::types::Type t)
+    // constant or boolean.
+    // Safe to call from types that are not fully set up.
+    bool isTyped(golang::go::types::Type t)
     {
-        // Alias or Named types cannot denote untyped types,
-        // thus we don't need to call Unalias or under
-        // (which would be unsafe to do for types that are
-        // not fully set up).
+        // Alias and named types cannot denote untyped types
+        // so there's no need to call Unalias or Underlying, below.
         auto [b, gocpp_id_4] = gocpp::getValue<Basic*>(t);
         return b == nullptr || b->info & IsUntyped == 0;
     }
 
     // isUntyped(t) is the same as !isTyped(t).
-    bool isUntyped(golang::types::Type t)
+    // Safe to call from types that are not fully set up.
+    bool isUntyped(golang::go::types::Type t)
     {
         return ! isTyped(t);
     }
 
-    // IsInterface reports whether t is an interface type.
-    bool IsInterface(golang::types::Type t)
+    // isUntypedNumeric reports whether t is an untyped numeric type.
+    // Safe to call from types that are not fully set up.
+    bool isUntypedNumeric(golang::go::types::Type t)
     {
-        auto [gocpp_id_5, ok] = gocpp::getValue<Interface*>(under(t));
+        // Alias and named types cannot denote untyped types
+        // so there's no need to call Unalias or Underlying, below.
+        auto [b, gocpp_id_5] = gocpp::getValue<Basic*>(t);
+        return b != nullptr && b->info & IsUntyped != 0 && b->info & IsNumeric != 0;
+    }
+
+    // IsInterface reports whether t is an interface type.
+    bool IsInterface(golang::go::types::Type t)
+    {
+        auto [gocpp_id_6, ok] = gocpp::getValue<Interface*>(rec::Underlying(gocpp::recv(t)));
         return ok;
     }
 
     // isNonTypeParamInterface reports whether t is an interface type but not a type parameter.
-    bool isNonTypeParamInterface(golang::types::Type t)
+    bool isNonTypeParamInterface(golang::go::types::Type t)
     {
         return ! isTypeParam(t) && IsInterface(t);
     }
 
     // isTypeParam reports whether t is a type parameter.
-    bool isTypeParam(golang::types::Type t)
+    bool isTypeParam(golang::go::types::Type t)
     {
-        auto [gocpp_id_6, ok] = gocpp::getValue<TypeParam*>(Unalias(t));
+        auto [gocpp_id_7, ok] = gocpp::getValue<TypeParam*>(Unalias(t));
         return ok;
     }
 
@@ -251,11 +263,11 @@ namespace golang::types
     // The function does not force the computation of the type set and so is safe to
     // use anywhere, but it may report a false negative if the type set has not been
     // computed yet.
-    bool hasEmptyTypeset(golang::types::Type t)
+    bool hasEmptyTypeset(golang::go::types::Type t)
     {
-        if(auto [tpar, gocpp_id_7] = gocpp::getValue<TypeParam*>(Unalias(t)); tpar != nullptr && tpar->bound != nullptr)
+        if(auto [tpar, gocpp_id_8] = gocpp::getValue<TypeParam*>(Unalias(t)); tpar != nullptr && tpar->bound != nullptr)
         {
-            auto [iface, gocpp_id_8] = gocpp::getValue<Interface*>(safeUnderlying(tpar->bound));
+            auto [iface, gocpp_id_9] = gocpp::getValue<Interface*>(safeUnderlying(tpar->bound));
             return iface != nullptr && iface->tset != nullptr && rec::IsEmpty(gocpp::recv(iface->tset));
         }
         return false;
@@ -264,136 +276,142 @@ namespace golang::types
     // isGeneric reports whether a type is a generic, uninstantiated type
     // (generic signatures are not included).
     // TODO(gri) should we include signatures or assert that they are not present?
-    bool isGeneric(golang::types::Type t)
+    bool isGeneric(golang::go::types::Type t)
     {
         // A parameterized type is only generic if it doesn't have an instantiation already.
+        if(auto [alias, gocpp_id_10] = gocpp::getValue<Alias*>(t); alias != nullptr && alias->tparams != nullptr && alias->targs == nullptr)
+        {
+            return true;
+        }
         auto named = asNamed(t);
         return named != nullptr && named->obj != nullptr && named->inst == nullptr && rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(named)))) > 0;
     }
 
     // Comparable reports whether values of type T are comparable.
-    bool Comparable(golang::types::Type T)
+    bool Comparable(golang::go::types::Type T)
     {
-        return comparable(T, true, nullptr, nullptr);
+        return comparableType(T, true, nullptr) == nullptr;
     }
 
+    // If T is comparable, comparableType returns nil.
+    // Otherwise it returns a type error explaining why T is not comparable.
     // If dynamic is set, non-type parameter interfaces are always comparable.
-    // If reportf != nil, it may be used to report why T is not comparable.
-    bool comparable(golang::types::Type T, bool dynamic, gocpp::map<golang::types::Type, bool> seen, std::function<void (gocpp::string _1, gocpp::slice<gocpp::go_any> _2)> reportf)
+    typeError* comparableType(golang::go::types::Type T, bool dynamic, gocpp::map<golang::go::types::Type, bool> seen)
     {
         if(seen[T])
         {
-            return true;
+            return nullptr;
         }
         if(seen == nullptr)
         {
-            seen = gocpp::make(gocpp::Tag<gocpp::map<golang::types::Type, bool>>());
+            seen = gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, bool>>());
         }
         seen[T] = true;
 
         //Go type switch emulation
         {
-            const auto& gocpp_id_9 = gocpp::type_info(under(T));
+            const auto& gocpp_id_11 = gocpp::type_info(rec::Underlying(gocpp::recv(T)));
             int conditionId = -1;
-            if(gocpp_id_9 == typeid(types::Basic*)) { conditionId = 0; }
-            else if(gocpp_id_9 == typeid(types::Pointer*)) { conditionId = 1; }
-            else if(gocpp_id_9 == typeid(types::Chan*)) { conditionId = 2; }
-            else if(gocpp_id_9 == typeid(types::Struct*)) { conditionId = 3; }
-            else if(gocpp_id_9 == typeid(types::Array*)) { conditionId = 4; }
-            else if(gocpp_id_9 == typeid(types::Interface*)) { conditionId = 5; }
+            if(gocpp_id_11 == typeid(types::Basic*)) { conditionId = 0; }
+            else if(gocpp_id_11 == typeid(types::Pointer*)) { conditionId = 1; }
+            else if(gocpp_id_11 == typeid(types::Chan*)) { conditionId = 2; }
+            else if(gocpp_id_11 == typeid(types::Struct*)) { conditionId = 3; }
+            else if(gocpp_id_11 == typeid(types::Array*)) { conditionId = 4; }
+            else if(gocpp_id_11 == typeid(types::Interface*)) { conditionId = 5; }
             switch(conditionId)
             {
                 case 0:
                 {
-                    types::Basic* t = gocpp::any_cast<types::Basic*>(under(T));
-                    // assume invalid types to be comparable
-                    // to avoid follow-up errors
-                    return t->kind != UntypedNil;
+                    types::Basic* t = gocpp::any_cast<types::Basic*>(rec::Underlying(gocpp::recv(T)));
+                    // assume invalid types to be comparable to avoid follow-up errors
+                    if(t->kind == UntypedNil)
+                    {
+                        return typeErrorf(""_s);
+                    }
                     break;
                 }
+
+                // always comparable
                 case 1:
                 case 2:
                 {
-                    types::Pointer* t = gocpp::any_cast<types::Pointer*>(under(T));
-                    return true;
+                    types::Pointer* t = gocpp::any_cast<types::Pointer*>(rec::Underlying(gocpp::recv(T)));
                     break;
                 }
                 case 3:
                 {
-                    types::Struct* t = gocpp::any_cast<types::Struct*>(under(T));
+                    types::Struct* t = gocpp::any_cast<types::Struct*>(rec::Underlying(gocpp::recv(T)));
                     for(auto [gocpp_ignored, f] : t->fields)
                     {
-                        if(! comparable(f->object.typ, dynamic, seen, nullptr))
+                        if(comparableType(f->object.typ, dynamic, seen) != nullptr)
                         {
-                            if(reportf != nullptr)
-                            {
-                                reportf("struct containing %s cannot be compared"_s, f->object.typ);
-                            }
-                            return false;
+                            return typeErrorf("struct containing %s cannot be compared"_s, f->object.typ);
                         }
                     }
-                    return true;
                     break;
                 }
+
                 case 4:
                 {
-                    types::Array* t = gocpp::any_cast<types::Array*>(under(T));
-                    if(! comparable(t->elem, dynamic, seen, nullptr))
+                    types::Array* t = gocpp::any_cast<types::Array*>(rec::Underlying(gocpp::recv(T)));
+                    if(comparableType(t->elem, dynamic, seen) != nullptr)
                     {
-                        if(reportf != nullptr)
-                        {
-                            reportf("%s cannot be compared"_s, t);
-                        }
-                        return false;
+                        return typeErrorf("%s cannot be compared"_s, T);
                     }
-                    return true;
                     break;
                 }
-                // fallthrough
+
                 case 5:
                 {
-                    types::Interface* t = gocpp::any_cast<types::Interface*>(under(T));
+                    types::Interface* t = gocpp::any_cast<types::Interface*>(rec::Underlying(gocpp::recv(T)));
                     if(dynamic && ! isTypeParam(T) || rec::IsComparable(gocpp::recv(rec::typeSet(gocpp::recv(t))), seen))
                     {
-                        return true;
+                        return nullptr;
                     }
-                    if(reportf != nullptr)
+                    gocpp::string cause = {};
+                    if(rec::IsEmpty(gocpp::recv(rec::typeSet(gocpp::recv(t)))))
                     {
-                        if(rec::IsEmpty(gocpp::recv(rec::typeSet(gocpp::recv(t)))))
-                        {
-                            reportf("empty type set"_s);
-                        }
-                        else
-                        {
-                            reportf("incomparable types in type set"_s);
-                        }
+                        cause = "empty type set"_s;
                     }
+                    else
+                    {
+                        cause = "incomparable types in type set"_s;
+                    }
+                    return typeErrorf(cause);
+                    break;
+                }
+
+                default:
+                {
+                    auto t = rec::Underlying(gocpp::recv(T));
+                    return typeErrorf(""_s);
                     break;
                 }
             }
         }
-        return false;
+
+        return nullptr;
     }
 
     // hasNil reports whether type t includes the nil value.
-    bool hasNil(golang::types::Type t)
+    bool hasNil(golang::go::types::Type t)
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_10 = gocpp::type_info(under(t));
+            const auto& gocpp_id_12 = gocpp::type_info(rec::Underlying(gocpp::recv(t)));
             int conditionId = -1;
-            if(gocpp_id_10 == typeid(types::Basic*)) { conditionId = 0; }
-            else if(gocpp_id_10 == typeid(types::Slice*)) { conditionId = 1; }
-            else if(gocpp_id_10 == typeid(types::Pointer*)) { conditionId = 2; }
-            else if(gocpp_id_10 == typeid(types::Signature*)) { conditionId = 3; }
-            else if(gocpp_id_10 == typeid(types::Map*)) { conditionId = 4; }
-            else if(gocpp_id_10 == typeid(types::Chan*)) { conditionId = 5; }
-            else if(gocpp_id_10 == typeid(types::Interface*)) { conditionId = 6; }
+            if(gocpp_id_12 == typeid(types::Basic*)) { conditionId = 0; }
+            else if(gocpp_id_12 == typeid(types::Slice*)) { conditionId = 1; }
+            else if(gocpp_id_12 == typeid(types::Pointer*)) { conditionId = 2; }
+            else if(gocpp_id_12 == typeid(types::Signature*)) { conditionId = 3; }
+            else if(gocpp_id_12 == typeid(types::Map*)) { conditionId = 4; }
+            else if(gocpp_id_12 == typeid(types::Chan*)) { conditionId = 5; }
+            else if(gocpp_id_12 == typeid(types::Interface*)) { conditionId = 6; }
             switch(conditionId)
             {
                 case 0:
                 {
-                    types::Basic* u = gocpp::any_cast<types::Basic*>(under(t));
+                    types::Basic* u = gocpp::any_cast<types::Basic*>(rec::Underlying(gocpp::recv(t)));
                     return u->kind == UnsafePointer;
                     break;
                 }
@@ -403,14 +421,14 @@ namespace golang::types
                 case 4:
                 case 5:
                 {
-                    types::Slice* u = gocpp::any_cast<types::Slice*>(under(t));
+                    types::Slice* u = gocpp::any_cast<types::Slice*>(rec::Underlying(gocpp::recv(t)));
                     return true;
                     break;
                 }
                 case 6:
                 {
-                    types::Interface* u = gocpp::any_cast<types::Interface*>(under(t));
-                    return ! isTypeParam(t) || rec::underIs(gocpp::recv(rec::typeSet(gocpp::recv(u))), [=](golang::types::Type u) mutable -> bool
+                    types::Interface* u = gocpp::any_cast<types::Interface*>(rec::Underlying(gocpp::recv(t)));
+                    return ! isTypeParam(t) || underIs(t, [=](golang::go::types::Type u) mutable -> bool
                     {
                         return u != nullptr && hasNil(u);
                     });
@@ -419,6 +437,18 @@ namespace golang::types
             }
         }
         return false;
+    }
+
+    // samePkg reports whether packages a and b are the same.
+    bool samePkg(Package* a, Package* b)
+    {
+        // package is nil for objects in universe scope
+        if(a == nullptr || b == nullptr)
+        {
+            return a == b;
+        }
+        // a != nil && b != nil
+        return a->path == b->path;
     }
 
     // An ifacePair is a node in a stack of interface type pairs compared for identity.
@@ -496,7 +526,7 @@ namespace golang::types
     }
 
     // For changes to this code the corresponding changes should be made to unifier.nify.
-    bool rec::identical(comparer* c, golang::types::Type x, golang::types::Type y, ifacePair* p)
+    bool rec::identical(comparer* c, golang::go::types::Type x, golang::go::types::Type y, ifacePair* p)
     {
         x = Unalias(x);
         y = Unalias(y);
@@ -513,23 +543,23 @@ namespace golang::types
 
         //Go type switch emulation
         {
-            const auto& gocpp_id_11 = gocpp::type_info(x);
+            const auto& gocpp_id_13 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_11 == typeid(types::Basic*)) { conditionId = 0; }
-            else if(gocpp_id_11 == typeid(types::Array*)) { conditionId = 1; }
-            else if(gocpp_id_11 == typeid(types::Slice*)) { conditionId = 2; }
-            else if(gocpp_id_11 == typeid(types::Struct*)) { conditionId = 3; }
-            else if(gocpp_id_11 == typeid(types::Pointer*)) { conditionId = 4; }
-            else if(gocpp_id_11 == typeid(types::Tuple*)) { conditionId = 5; }
-            else if(gocpp_id_11 == typeid(types::Signature*)) { conditionId = 6; }
-            else if(gocpp_id_11 == typeid(types::Union*)) { conditionId = 7; }
-            else if(gocpp_id_11 == typeid(types::Interface*)) { conditionId = 8; }
-            else if(gocpp_id_11 == typeid(types::Map*)) { conditionId = 9; }
-            else if(gocpp_id_11 == typeid(types::Chan*)) { conditionId = 10; }
-            else if(gocpp_id_11 == typeid(types::Named*)) { conditionId = 11; }
-            else if(gocpp_id_11 == typeid(types::TypeParam*)) { conditionId = 12; }
-            else if(gocpp_id_11 == typeid(untyped nil)) { conditionId = 13; }
+            if(gocpp_id_13 == typeid(types::Basic*)) { conditionId = 0; }
+            else if(gocpp_id_13 == typeid(types::Array*)) { conditionId = 1; }
+            else if(gocpp_id_13 == typeid(types::Slice*)) { conditionId = 2; }
+            else if(gocpp_id_13 == typeid(types::Struct*)) { conditionId = 3; }
+            else if(gocpp_id_13 == typeid(types::Pointer*)) { conditionId = 4; }
+            else if(gocpp_id_13 == typeid(types::Tuple*)) { conditionId = 5; }
+            else if(gocpp_id_13 == typeid(types::Signature*)) { conditionId = 6; }
+            else if(gocpp_id_13 == typeid(types::Union*)) { conditionId = 7; }
+            else if(gocpp_id_13 == typeid(types::Interface*)) { conditionId = 8; }
+            else if(gocpp_id_13 == typeid(types::Map*)) { conditionId = 9; }
+            else if(gocpp_id_13 == typeid(types::Chan*)) { conditionId = 10; }
+            else if(gocpp_id_13 == typeid(types::Named*)) { conditionId = 11; }
+            else if(gocpp_id_13 == typeid(types::TypeParam*)) { conditionId = 12; }
+            else if(gocpp_id_13 == typeid(untyped nil)) { conditionId = 13; }
             switch(conditionId)
             {
                 case 0:
@@ -597,7 +627,7 @@ namespace golang::types
                                     auto g = y->fields[i];
                                     if(f->embedded != g->embedded ||
                                                             ! c->ignoreTags && rec::Tag(gocpp::recv(x), i) != rec::Tag(gocpp::recv(y), i) ||
-                                                            ! rec::sameId(gocpp::recv(f), g->object.pkg, g->object.name) ||
+                                                            ! rec::sameId(gocpp::recv(f), g->object.pkg, g->object.name, false) ||
                                                             ! rec::identical(gocpp::recv(c), f->object.typ, g->object.typ, p))
                                     {
                                         return false;
@@ -656,7 +686,7 @@ namespace golang::types
                 case 6:
                 {
                     types::Signature* x = gocpp::any_cast<types::Signature*>(x_ref);
-                    auto [y_tmp, gocpp_id_12] = gocpp::getValue<Signature*>(y);
+                    auto [y_tmp, gocpp_id_14] = gocpp::getValue<golang::go::types::Signature*>(y);
                     auto& y = y_tmp;
                     if(y == nullptr)
                     {
@@ -682,7 +712,7 @@ namespace golang::types
                         auto xtparams = rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(x))));
                         auto ytparams = rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(y))));
 
-                        gocpp::slice<golang::types::Type> targs = {};
+                        gocpp::slice<golang::go::types::Type> targs = {};
                         for(auto [i, gocpp_ignored] : xtparams)
                         {
                             targs = append(targs, rec::At(gocpp::recv(rec::TypeParams(gocpp::recv(x))), i));
@@ -717,7 +747,7 @@ namespace golang::types
                 {
                     types::Union* x = gocpp::any_cast<types::Union*>(x_ref);
                     {
-                        auto [y_tmp, gocpp_id_13] = gocpp::getValue<Union*>(y);
+                        auto [y_tmp, gocpp_id_15] = gocpp::getValue<Union*>(y);
                         if(auto& y = y_tmp; y != nullptr)
                         {
                             // TODO(rfindley): can this be reached during type checking? If so,
@@ -882,7 +912,7 @@ namespace golang::types
                 default:
                 {
                     auto x = x_ref;
-                    unreachable();
+                    gocpp::panic("unreachable"_s);
                     break;
                 }
             }
@@ -901,19 +931,11 @@ namespace golang::types
     // identicalInstance reports if two type instantiations are identical.
     // Instantiations are identical if their origin and type arguments are
     // identical.
-    bool identicalInstance(golang::types::Type xorig, gocpp::slice<golang::types::Type> xargs, golang::types::Type yorig, gocpp::slice<golang::types::Type> yargs)
+    bool identicalInstance(golang::go::types::Type xorig, gocpp::slice<golang::go::types::Type> xargs, golang::go::types::Type yorig, gocpp::slice<golang::go::types::Type> yargs)
     {
-        if(len(xargs) != len(yargs))
+        if(! slices::EqualFunc(xargs, yargs, Identical))
         {
             return false;
-        }
-
-        for(auto [i, xa] : xargs)
-        {
-            if(! Identical(xa, yargs[i]))
-            {
-                return false;
-            }
         }
 
         return Identical(xorig, yorig);
@@ -922,11 +944,13 @@ namespace golang::types
     // Default returns the default "typed" type for an "untyped" type;
     // it returns the incoming type for all other types. The default type
     // for untyped nil is untyped nil.
-    golang::types::Type Default(golang::types::Type t)
+    golang::go::types::Type Default(golang::go::types::Type t)
     {
+        // Alias and named types cannot denote untyped types
+        // so there's no need to call Unalias or Underlying, below.
         {
-            auto [t_tmp, ok] = gocpp::getValue<Basic*>(Unalias(t));
-            if(auto& t = t_tmp; ok)
+            auto [t_tmp, gocpp_id_16] = gocpp::getValue<Basic*>(t);
+            if(auto& t = t_tmp; t != nullptr)
             {
                 //Go switch emulation
                 {
@@ -970,7 +994,7 @@ namespace golang::types
     // If x and y are different untyped numeric types, the result is the type of x or y
     // that appears later in this list: integer, rune, floating-point, complex.
     // Otherwise, if x != y, the result is nil.
-    golang::types::Type maxType(golang::types::Type x, golang::types::Type y)
+    golang::go::types::Type maxType(golang::go::types::Type x, golang::go::types::Type y)
     {
         // We only care about untyped types (for now), so == is good enough.
         // TODO(gri) investigate generalizing this function to simplify code elsewhere
@@ -978,7 +1002,7 @@ namespace golang::types
         {
             return x;
         }
-        if(isUntyped(x) && isUntyped(y) && isNumeric(x) && isNumeric(y))
+        if(isUntypedNumeric(x) && isUntypedNumeric(y))
         {
             // untyped types are basic types
             if(gocpp::getValue<Basic*>(x)->kind > gocpp::getValue<Basic*>(y)->kind)
@@ -996,6 +1020,19 @@ namespace golang::types
     {
         auto c = *p;
         return & c;
+    }
+
+    // isValidName reports whether s is a valid Go identifier.
+    bool isValidName(gocpp::string s)
+    {
+        for(auto [i, ch] : s)
+        {
+            if(! (unicode::IsLetter(ch) || ch == '_' || i > 0 && unicode::IsDigit(ch)))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

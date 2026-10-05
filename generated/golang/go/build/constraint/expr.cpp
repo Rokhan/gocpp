@@ -12,6 +12,9 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
+#include "golang/iter/iter.h"
+#include "golang/strings/builder.h"
+#include "golang/strings/iter.h"
 #include "golang/strings/strings.h"
 #include "golang/unicode/digit.h"
 #include "golang/unicode/graphic.h"
@@ -22,10 +25,16 @@
 //
 // This package parses both the original “// +build” syntax and the “//go:build” syntax that was added in Go 1.17.
 // See https://golang.org/design/draft-gobuild for details about the “//go:build” syntax.
-namespace golang::constraint
+namespace golang::go::build::constraint
 {
+    namespace errors = golang::errors;
+    namespace strings = golang::strings;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
+        using strings::rec::String;
+        using strings::rec::WriteString;
     }
 
     // An Expr is a build tag constraint expression.
@@ -408,7 +417,7 @@ namespace golang::constraint
         }
         if(auto [text, ok] = splitPlusBuild(line); ok)
         {
-            return {parsePlusBuildExpr(text), nullptr};
+            return parsePlusBuildExpr(text);
         }
         return {nullptr, errNotConstraint};
     }
@@ -469,6 +478,7 @@ namespace golang::constraint
         result.tok = this->tok;
         result.isTag = this->isTag;
         result.pos = this->pos;
+        result.size = this->size;
         return result;
     }
 
@@ -480,6 +490,7 @@ namespace golang::constraint
         if (tok != ref.tok) return false;
         if (isTag != ref.isTag) return false;
         if (pos != ref.pos) return false;
+        if (size != ref.size) return false;
         return true;
     }
 
@@ -491,6 +502,7 @@ namespace golang::constraint
         os << " " << tok;
         os << " " << isTag;
         os << " " << pos;
+        os << " " << size;
         os << '}';
         return os;
     }
@@ -576,6 +588,14 @@ namespace golang::constraint
     // On exit, the next input token has been lexed and is in p.tok.
     Expr rec::not(exprParser* p)
     {
+        p->size++;
+        if(p->size > maxSize)
+        {
+            gocpp::panic(gocpp::InitPtr<SyntaxError>([=](auto& x) {
+                x.Offset = p->pos;
+                x.Err = "build expression too large"_s;
+            }));
+        }
         rec::lex(gocpp::recv(p));
         if(p->tok == "!"_s)
         {
@@ -786,13 +806,19 @@ namespace golang::constraint
     }
 
     // parsePlusBuildExpr parses a legacy build tag expression (as used with “// +build”).
-    Expr parsePlusBuildExpr(gocpp::string text)
+    std::tuple<Expr, gocpp::error> parsePlusBuildExpr(gocpp::string text)
     {
+        // Only allow up to 100 AND/OR operators for "old" syntax.
+        // This is much less than the limit for "new" syntax,
+        // but uses of old syntax were always very simple.
+        auto maxOldSize = 100;
+        auto size = 0;
+
         Expr x = {};
-        for(auto [gocpp_ignored, clause] : mocklib::StringsFields(text))
+        for(auto [clause, gocpp_ignored] : strings::FieldsSeq(text))
         {
             Expr y = {};
-            for(auto [gocpp_ignored, lit] : strings::Split(clause, ","_s))
+            for(auto [lit, gocpp_ignored] : strings::SplitSeq(clause, ","_s))
             {
                 Expr z = {};
                 bool neg = {};
@@ -826,6 +852,10 @@ namespace golang::constraint
                 }
                 else
                 {
+                    if(size++; size > maxOldSize)
+                    {
+                        return {nullptr, errComplex};
+                    }
                     y = and(y, z);
                 }
             }
@@ -835,6 +865,10 @@ namespace golang::constraint
             }
             else
             {
+                if(size++; size > maxOldSize)
+                {
+                    return {nullptr, errComplex};
+                }
                 x = or(x, y);
             }
         }
@@ -842,7 +876,7 @@ namespace golang::constraint
         {
             x = tag("ignore"_s);
         }
-        return x;
+        return {x, nullptr};
     }
 
     // isValidTag reports whether the word is a valid build tag.
@@ -936,21 +970,21 @@ namespace golang::constraint
         gocpp::slice<gocpp::string> lines = {};
         for(auto [gocpp_ignored, or] : split)
         {
-            auto line = "// +build"_s;
+            strings::Builder line = {};
+            rec::WriteString(gocpp::recv(line), "// +build"_s);
             for(auto [gocpp_ignored, and] : or)
             {
-                auto clause = ""_s;
+                rec::WriteString(gocpp::recv(line), " "_s);
                 for(auto [i, lit] : and)
                 {
                     if(i > 0)
                     {
-                        clause += ","_s;
+                        rec::WriteString(gocpp::recv(line), ","_s);
                     }
-                    clause += rec::String(gocpp::recv(lit));
+                    rec::WriteString(gocpp::recv(line), rec::String(gocpp::recv(lit)));
                 }
-                line += " "_s + clause;
             }
-            lines = append(lines, line);
+            lines = append(lines, rec::String(gocpp::recv(line)));
         }
 
         return {lines, nullptr};

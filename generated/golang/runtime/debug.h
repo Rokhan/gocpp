@@ -13,6 +13,7 @@
 namespace golang::runtime
 {
     int GOMAXPROCS(int n);
+    void SetDefaultGOMAXPROCS();
     int NumCPU();
     int64_t NumCgoCall();
     int64_t totalMutexWaitTimeNanos();
@@ -20,6 +21,14 @@ namespace golang::runtime
     gocpp::string debug_modinfo();
     void mayMoreStackPreempt();
     void mayMoreStackMove();
+    // debugPinnerKeepUnpin is used to make runtime.(*Pinner).Unpin reachable.
+    extern bool debugPinnerKeepUnpin;
+}
+#include "golang/runtime/pinner.fwd.h"
+
+namespace golang::runtime
+{
+    Pinner* debugPinnerV1();
 
     namespace rec
     {

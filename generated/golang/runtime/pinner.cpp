@@ -12,11 +12,11 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
 #include "golang/runtime/arena.h"
 #include "golang/runtime/atomic_pointer.h"
 #include "golang/runtime/error.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/mbitmap.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mfixalloc.h"
@@ -27,17 +27,38 @@
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/type.h"
-#include "golang/runtime/typekind.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
+        using abi::rec::Kind;
     }
 
     // A Pinner is a set of Go objects each pinned to a fixed location in memory. The
     // [Pinner.Pin] method pins one object, while [Pinner.Unpin] unpins all pinned
-    // objects. See their comments for more information.
+    // objects.
+    //
+    // The purpose of a Pinner is two-fold.
+    // First, it allows C code to safely use Go pointers that have not been passed
+    // explicitly to the C code via a cgo call.
+    // For example, for safely interacting with a pointer stored inside of a struct
+    // whose pointer is passed to a C function.
+    // Second, it allows C memory to safely retain that Go pointer even after the
+    // cgo call returns, provided the object remains pinned.
+    //
+    // A Pinner arranges for its objects to be automatically unpinned some time after
+    // it becomes unreachable, so its referents will not leak. However, this means the
+    // Pinner itself must be kept alive across a cgo call, or as long as C retains a
+    // reference to the pinned Go pointers.
+    //
+    // Reusing a Pinner is safe, and in fact encouraged, to avoid the cost of
+    // initializing new Pinners on first use.
+    //
+    // The zero value of Pinner is ready to use.
     
     template<typename T> requires gocpp::GoStruct<T>
     Pinner::operator T()
@@ -76,6 +97,7 @@ namespace golang::runtime
     // are going to be accessed from C code.
     //
     // The argument must be a pointer of any type or an [unsafe.Pointer].
+    //
     // It's safe to call Pin on non-Go pointers, in which case Pin will do nothing.
     void rec::Pin(Pinner* p, go_any pointer)
     {
@@ -121,6 +143,7 @@ namespace golang::runtime
     }
 
     // Unpin unpins all pinned objects of the [Pinner].
+    // It's safe and encouraged to reuse a Pinner after calling Unpin.
     void rec::Unpin(Pinner* p)
     {
         rec::unpin(gocpp::recv(p->pinner));
@@ -195,7 +218,7 @@ namespace golang::runtime
         {
             gocpp::panic(errorString("runtime.Pinner: argument is nil"_s));
         }
-        if(auto kind = etyp->Kind_ & kindMask; kind != kindPtr && kind != kindUnsafePointer)
+        if(auto kind = rec::Kind(gocpp::recv(etyp)); kind != abi::Pointer && kind != abi::UnsafePointer)
         {
             gocpp::panic(errorString("runtime.Pinner: argument is not a pointer: "_s + rec::string(gocpp::recv(toRType(etyp)))));
         }
@@ -236,8 +259,8 @@ namespace golang::runtime
     }
 
     // setPinned marks or unmarks a Go pointer as pinned, when the ptr is a Go pointer.
-    // It will be ignored while try to pin a non-Go pointer,
-    // and it will be panic while try to unpin a non-Go pointer,
+    // It will be ignored while trying to pin a non-Go pointer.
+    // It will panic while trying to unpin a non-Go pointer,
     // which should not happen in normal usage.
     bool setPinned(gocpp::unsafe_pointer ptr, bool pin)
     {
@@ -424,7 +447,7 @@ namespace golang::runtime
     }
 
     // newPinnerBits returns a pointer to 8 byte aligned bytes to be used for this
-    // span's pinner bits. newPinneBits is used to mark objects that are pinned.
+    // span's pinner bits. newPinnerBits is used to mark objects that are pinned.
     // They are copied when the span is swept.
     pinnerBits* rec::newPinnerBits(mspan* s)
     {
@@ -495,7 +518,7 @@ namespace golang::runtime
             rec = (specialPinCounter*)(rec::alloc(gocpp::recv(mheap_.specialPinCounterAlloc)));
             runtime::unlock(& mheap_.speciallock);
             // splice in record, fill in offset.
-            rec->special.offset = uint16_t(offset);
+            rec->special.offset = offset;
             rec->special.kind = _KindSpecialPinCounter;
             rec->special.next = *ref;
             *ref = (special*)(gocpp::unsafe_pointer(rec));

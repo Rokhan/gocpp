@@ -9,14 +9,23 @@
 #include "golang/internal/poll/hook_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/syscall_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"
 #include "golang/syscall/zsyscall_windows.fwd.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
+    namespace syscall = golang::syscall;
+}
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::internal::poll
+{
+    // CloseFunc is used to hook the close call.
     extern std::function<gocpp::error (syscall::Handle _1)> CloseFunc;
+    // AcceptFunc is used to hook the accept call.
     extern std::function<gocpp::error (syscall::Handle _1, syscall::Handle _2, unsigned char* _3, uint32_t _4, uint32_t _5, uint32_t _6, uint32_t* _7, syscall::Overlapped* _8)> AcceptFunc;
+    // ConnectExFunc is used to hook the ConnectEx call.
     extern std::function<gocpp::error (syscall::Handle _1, syscall::Sockaddr _2, unsigned char* _3, uint32_t _4, uint32_t* _5, syscall::Overlapped* _6)> ConnectExFunc;
 
     namespace rec

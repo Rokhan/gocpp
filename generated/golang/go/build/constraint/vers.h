@@ -10,14 +10,14 @@
 #include "gocpp/support.h"
 
 
-namespace golang::constraint
+namespace golang::go::build::constraint
 {
     int andVersion(int x, int y);
     int orVersion(int x, int y);
 }
 #include "golang/go/build/constraint/expr.h"
 
-namespace golang::constraint
+namespace golang::go::build::constraint
 {
     gocpp::string GoVersion(Expr x);
     int minVersion(Expr z, int sign);

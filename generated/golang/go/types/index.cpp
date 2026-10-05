@@ -13,7 +13,6 @@
 
 #include "golang/go/ast/ast.h"
 #include "golang/go/constant/value.h"
-#include "golang/go/internal/typeparams/typeparams.h"
 #include "golang/go/token/position.h"
 #include "golang/go/types/api_predicates.h"
 #include "golang/go/types/array.h"
@@ -22,6 +21,7 @@
 #include "golang/go/types/call.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/const.h"
+#include "golang/go/types/cycles.h"
 #include "golang/go/types/errors.h"
 #include "golang/go/types/expr.h"
 #include "golang/go/types/interface.h"
@@ -33,14 +33,18 @@
 #include "golang/go/types/slice.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typelists.h"
-#include "golang/go/types/typeset.h"
 #include "golang/go/types/typexpr.h"
 #include "golang/go/types/under.h"
 #include "golang/go/types/universe.h"
 #include "golang/internal/types/errors/codes.h"
+#include "golang/iter/iter.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace constant = golang::go::constant;
+    namespace errors = golang::internal::types::errors;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::End;
@@ -48,24 +52,21 @@ namespace golang::types
         using ast::rec::exprNode;
         using constant::rec::Kind;
         using constant::rec::String;
-        using typeparams::rec::End;
-        using typeparams::rec::Pos;
-        using typeparams::rec::exprNode;
     }
 
     // If e is a valid function instantiation, indexExpr returns true.
     // In that case x represents the uninstantiated function value and
     // it is the caller's responsibility to instantiate the function.
-    bool rec::indexExpr(Checker* check, operand* x, typeparams::IndexExpr* e)
+    bool rec::indexExpr(Checker* check, operand* x, indexedExpr* e)
     {
         bool isFuncInst;
         // x may be generic
-        rec::exprOrType(gocpp::recv(check), x, e->IndexListExpr.X, true);
+        rec::exprOrType(gocpp::recv(check), x, e->x, true);
 
 
         //Go switch emulation
         {
-            auto condition = x->mode;
+            auto condition = rec::mode(gocpp::recv(x));
             int conditionId = -1;
             if(condition == invalid) { conditionId = 0; }
             else if(condition == typexpr) { conditionId = 1; }
@@ -73,24 +74,24 @@ namespace golang::types
             switch(conditionId)
             {
                 case 0:
-                    rec::use(gocpp::recv(check), e->IndexListExpr.Indices);
+                    rec::use(gocpp::recv(check), e->indices);
                     return false;
                     break;
 
                 case 1:
                     // type instantiation
-                    x->mode = invalid;
+                    rec::invalidate(gocpp::recv(x));
                     // TODO(gri) here we re-evaluate e.X - try to avoid this
-                    x->typ = rec::varType(gocpp::recv(check), e->Orig);
-                    if(types::isValid(x->typ))
+                    x->typ_ = rec::varType(gocpp::recv(check), e->orig);
+                    if(types::isValid(rec::typ(gocpp::recv(x))))
                     {
-                        x->mode = typexpr;
+                        x->mode_ = typexpr;
                     }
                     return false;
                     break;
 
                 case 2:
-                    if(auto [sig, gocpp_id_0] = gocpp::getValue<Signature*>(types::under(x->typ)); sig != nullptr && rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))) > 0)
+                    if(auto [sig, gocpp_id_0] = gocpp::getValue<golang::go::types::Signature*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))); sig != nullptr && rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))) > 0)
                     {
                         // function instantiation
                         return true;
@@ -101,9 +102,50 @@ namespace golang::types
 
         // x should not be generic at this point, but be safe and check
         rec::nonGeneric(gocpp::recv(check), nullptr, x);
-        if(x->mode == invalid)
+        if(! rec::isValid(gocpp::recv(x)))
         {
             return false;
+        }
+
+        // We cannot index on an incomplete type; make sure it's complete.
+        if(! rec::isComplete(gocpp::recv(check), rec::typ(gocpp::recv(x))))
+        {
+            rec::invalidate(gocpp::recv(x));
+            return false;
+        }
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_1 = gocpp::type_info(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))));
+            int conditionId = -1;
+            if(gocpp_id_1 == typeid(types::Pointer*)) { conditionId = 0; }
+            else if(gocpp_id_1 == typeid(types::Map*)) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    types::Pointer* typ = gocpp::any_cast<types::Pointer*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))));
+                    // Additionally, if x.typ is a pointer to an array type, indexing implicitly dereferences the value, meaning
+                    // its base type must also be complete.
+                    if(! rec::isComplete(gocpp::recv(check), typ->base))
+                    {
+                        rec::invalidate(gocpp::recv(x));
+                        return false;
+                    }
+                    break;
+                }
+                case 1:
+                {
+                    types::Map* typ = gocpp::any_cast<types::Map*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))));
+                    // Lastly, if x.typ is a map type, indexing must produce a value of a complete type, meaning
+                    // its element type must also be complete.
+                    if(! rec::isComplete(gocpp::recv(check), typ->elem))
+                    {
+                        rec::invalidate(gocpp::recv(x));
+                        return false;
+                    }
+                    break;
+                }
+            }
         }
 
         // ordinary index expression
@@ -112,60 +154,60 @@ namespace golang::types
         auto length = int64_t(- 1);
         //Go type switch emulation
         {
-            const auto& gocpp_id_1 = gocpp::type_info(types::under(x->typ));
+            const auto& gocpp_id_2 = gocpp::type_info(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))));
             int conditionId = -1;
-            if(gocpp_id_1 == typeid(types::Basic*)) { conditionId = 0; }
-            else if(gocpp_id_1 == typeid(types::Array*)) { conditionId = 1; }
-            else if(gocpp_id_1 == typeid(types::Pointer*)) { conditionId = 2; }
-            else if(gocpp_id_1 == typeid(types::Slice*)) { conditionId = 3; }
-            else if(gocpp_id_1 == typeid(types::Map*)) { conditionId = 4; }
-            else if(gocpp_id_1 == typeid(types::Interface*)) { conditionId = 5; }
+            if(gocpp_id_2 == typeid(types::Basic*)) { conditionId = 0; }
+            else if(gocpp_id_2 == typeid(types::Array*)) { conditionId = 1; }
+            else if(gocpp_id_2 == typeid(types::Pointer*)) { conditionId = 2; }
+            else if(gocpp_id_2 == typeid(types::Slice*)) { conditionId = 3; }
+            else if(gocpp_id_2 == typeid(types::Map*)) { conditionId = 4; }
+            else if(gocpp_id_2 == typeid(types::Interface*)) { conditionId = 5; }
             switch(conditionId)
             {
                 case 0:
                 {
-                    types::Basic* typ = gocpp::any_cast<types::Basic*>(types::under(x->typ));
+                    types::Basic* typ = gocpp::any_cast<types::Basic*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))));
                     if(isString(typ))
                     {
                         valid = true;
-                        if(x->mode == constant_)
+                        if(rec::mode(gocpp::recv(x)) == constant_)
                         {
-                            length = int64_t(len(constant::StringVal(x->val)));
+                            length = constant::StringLen(x->val);
                         }
                         // an indexed string always yields a byte value
                         // (not a constant) even if the string and the
                         // index are constant
-                        x->mode = value;
+                        x->mode_ = value;
                         // use 'byte' name
-                        x->typ = universeByte;
+                        x->typ_ = universeByte;
                     }
                     break;
                 }
 
                 case 1:
                 {
-                    types::Array* typ = gocpp::any_cast<types::Array*>(types::under(x->typ));
+                    types::Array* typ = gocpp::any_cast<types::Array*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))));
                     valid = true;
                     length = typ->len;
-                    if(x->mode != variable)
+                    if(rec::mode(gocpp::recv(x)) != variable)
                     {
-                        x->mode = value;
+                        x->mode_ = value;
                     }
-                    x->typ = typ->elem;
+                    x->typ_ = typ->elem;
                     break;
                 }
 
                 case 2:
                 {
-                    types::Pointer* typ = gocpp::any_cast<types::Pointer*>(types::under(x->typ));
+                    types::Pointer* typ = gocpp::any_cast<types::Pointer*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))));
                     {
-                        auto [typ_tmp, gocpp_id_2] = gocpp::getValue<Array*>(types::under(typ->base));
+                        auto [typ_tmp, gocpp_id_3] = gocpp::getValue<Array*>(rec::Underlying(gocpp::recv(typ->base)));
                         if(auto& typ = typ_tmp; typ != nullptr)
                         {
                             valid = true;
                             length = typ->len;
-                            x->mode = variable;
-                            x->typ = typ->elem;
+                            x->mode_ = variable;
+                            x->typ_ = typ->elem;
                         }
                     }
                     break;
@@ -173,63 +215,63 @@ namespace golang::types
 
                 case 3:
                 {
-                    types::Slice* typ = gocpp::any_cast<types::Slice*>(types::under(x->typ));
+                    types::Slice* typ = gocpp::any_cast<types::Slice*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))));
                     valid = true;
-                    x->mode = variable;
-                    x->typ = typ->elem;
+                    x->mode_ = variable;
+                    x->typ_ = typ->elem;
                     break;
                 }
 
                 case 4:
                 {
-                    types::Map* typ = gocpp::any_cast<types::Map*>(types::under(x->typ));
+                    types::Map* typ = gocpp::any_cast<types::Map*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))));
                     auto index = rec::singleIndex(gocpp::recv(check), e);
                     if(index == nullptr)
                     {
-                        x->mode = invalid;
+                        rec::invalidate(gocpp::recv(x));
                         return false;
                     }
                     operand key = {};
-                    rec::expr(gocpp::recv(check), nullptr, & key, index);
+                    rec::genericExpr(gocpp::recv(check), & key, index, nullptr);
                     rec::assignment(gocpp::recv(check), & key, typ->key, "map index"_s);
                     // ok to continue even if indexing failed - map element type is known
-                    x->mode = mapindex;
-                    x->typ = typ->elem;
-                    x->expr = e->Orig;
+                    x->mode_ = mapindex;
+                    x->typ_ = typ->elem;
+                    x->expr = e->orig;
                     return false;
                     break;
                 }
 
                 case 5:
                 {
-                    types::Interface* typ = gocpp::any_cast<types::Interface*>(types::under(x->typ));
-                    if(! isTypeParam(x->typ))
+                    types::Interface* typ = gocpp::any_cast<types::Interface*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))));
+                    if(! isTypeParam(rec::typ(gocpp::recv(x))))
                     {
                         break;
                     }
                     // TODO(gri) report detailed failure cause for better error messages
                     // key != nil: we must have all maps
-                    golang::types::Type key = {};
-                    golang::types::Type elem = {};
+                    golang::go::types::Type key = {};
+                    golang::go::types::Type elem = {};
                     // non-maps result mode
                     auto mode = variable;
                     // TODO(gri) factor out closure and use it for non-typeparam cases as well
-                    if(rec::underIs(gocpp::recv(rec::typeSet(gocpp::recv(typ))), [=](golang::types::Type u) mutable -> bool
+                    if(underIs(rec::typ(gocpp::recv(x)), [=](golang::go::types::Type u) mutable -> bool
                     {
                         // valid if >= 0
                         auto l = int64_t(- 1);
                         // k is only set for maps
-                        golang::types::Type k = {};
-                        golang::types::Type e = {};
+                        golang::go::types::Type k = {};
+                        golang::go::types::Type e = {};
                         //Go type switch emulation
                         {
-                            const auto& gocpp_id_3 = gocpp::type_info(u);
+                            const auto& gocpp_id_4 = gocpp::type_info(u);
                             int conditionId = -1;
-                            if(gocpp_id_3 == typeid(types::Basic*)) { conditionId = 0; }
-                            else if(gocpp_id_3 == typeid(types::Array*)) { conditionId = 1; }
-                            else if(gocpp_id_3 == typeid(types::Pointer*)) { conditionId = 2; }
-                            else if(gocpp_id_3 == typeid(types::Slice*)) { conditionId = 3; }
-                            else if(gocpp_id_3 == typeid(types::Map*)) { conditionId = 4; }
+                            if(gocpp_id_4 == typeid(types::Basic*)) { conditionId = 0; }
+                            else if(gocpp_id_4 == typeid(types::Array*)) { conditionId = 1; }
+                            else if(gocpp_id_4 == typeid(types::Pointer*)) { conditionId = 2; }
+                            else if(gocpp_id_4 == typeid(types::Slice*)) { conditionId = 3; }
+                            else if(gocpp_id_4 == typeid(types::Map*)) { conditionId = 4; }
                             switch(conditionId)
                             {
                                 case 0:
@@ -247,7 +289,7 @@ namespace golang::types
                                     types::Array* t = gocpp::any_cast<types::Array*>(u);
                                     l = t->len;
                                     e = t->elem;
-                                    if(x->mode != variable)
+                                    if(rec::mode(gocpp::recv(x)) != variable)
                                     {
                                         mode = value;
                                     }
@@ -257,7 +299,7 @@ namespace golang::types
                                 {
                                     types::Pointer* t = gocpp::any_cast<types::Pointer*>(u);
                                     {
-                                        auto [t_tmp, gocpp_id_4] = gocpp::getValue<Array*>(under(t->base));
+                                        auto [t_tmp, gocpp_id_5] = gocpp::getValue<Array*>(rec::Underlying(gocpp::recv(t->base)));
                                         if(auto& t = t_tmp; t != nullptr)
                                         {
                                             l = t->len;
@@ -317,23 +359,23 @@ namespace golang::types
                             auto index = rec::singleIndex(gocpp::recv(check), e);
                             if(index == nullptr)
                             {
-                                x->mode = invalid;
+                                rec::invalidate(gocpp::recv(x));
                                 return false;
                             }
                             operand k = {};
-                            rec::expr(gocpp::recv(check), nullptr, & k, index);
+                            rec::genericExpr(gocpp::recv(check), & k, index, nullptr);
                             rec::assignment(gocpp::recv(check), & k, key, "map index"_s);
                             // ok to continue even if indexing failed - map element type is known
-                            x->mode = mapindex;
-                            x->typ = elem;
-                            x->expr = e;
+                            x->mode_ = mapindex;
+                            x->typ_ = elem;
+                            x->expr = e->orig;
                             return false;
                         }
 
                         // no maps
                         valid = true;
-                        x->mode = mode;
-                        x->typ = elem;
+                        x->mode_ = mode;
+                        x->typ_ = elem;
                     }
                     break;
                 }
@@ -343,25 +385,25 @@ namespace golang::types
         if(! valid)
         {
             // types2 uses the position of '[' for the error
-            rec::errorf(gocpp::recv(check), x, NonIndexableOperand, invalidOp + "cannot index %s"_s, x);
-            rec::use(gocpp::recv(check), e->IndexListExpr.Indices);
-            x->mode = invalid;
+            rec::errorf(gocpp::recv(check), x, NonIndexableOperand, "cannot index %s"_s, x);
+            rec::use(gocpp::recv(check), e->indices);
+            rec::invalidate(gocpp::recv(x));
             return false;
         }
 
         auto index = rec::singleIndex(gocpp::recv(check), e);
         if(index == nullptr)
         {
-            x->mode = invalid;
+            rec::invalidate(gocpp::recv(x));
             return false;
         }
 
         // In pathological (invalid) cases (e.g.: type T1 [][[]T1{}[0][0]]T0)
         // the element type may be accessed before it's set. Make sure we have
         // a valid type.
-        if(x->typ == nullptr)
+        if(rec::typ(gocpp::recv(x)) == nullptr)
         {
-            x->typ = Typ[Invalid];
+            x->typ_ = Typ[Invalid];
         }
 
         rec::index(gocpp::recv(check), index, length);
@@ -371,9 +413,69 @@ namespace golang::types
     void rec::sliceExpr(Checker* check, operand* x, ast::SliceExpr* e)
     {
         rec::expr(gocpp::recv(check), nullptr, x, e->X);
-        if(x->mode == invalid)
+        if(! rec::isValid(gocpp::recv(x)))
         {
             rec::use(gocpp::recv(check), e->Low, e->High, e->Max);
+            return;
+        }
+
+        // determine common underlying type cu
+        // type and respective common underlying type
+        golang::go::types::Type ct = {};
+        golang::go::types::Type cu = {};
+        bool hasString = {};
+        // TODO(adonovan): use go1.23 "range typeset()".
+        types::typeset(rec::typ(gocpp::recv(x)))([=](golang::go::types::Type t, golang::go::types::Type u) mutable -> bool
+        {
+            if(u == nullptr)
+            {
+                rec::errorf(gocpp::recv(check), x, NonSliceableOperand, "cannot slice %s: no specific type in %s"_s, x, rec::typ(gocpp::recv(x)));
+                cu = nullptr;
+                return false;
+            }
+
+            // Treat strings like byte slices but remember that we saw a string.
+            if(isString(u))
+            {
+                u = NewSlice(universeByte);
+                hasString = true;
+            }
+
+            // If this is the first type we're seeing, we're done.
+            if(cu == nullptr)
+            {
+                std::tie(ct, cu) = std::tuple{t, u};
+                return true;
+            }
+
+            // Otherwise, the current type must have the same underlying type as all previous types.
+            if(! Identical(cu, u))
+            {
+                rec::errorf(gocpp::recv(check), x, NonSliceableOperand, "cannot slice %s: %s and %s have different underlying types"_s, x, ct, t);
+                cu = nullptr;
+                return false;
+            }
+
+            return true;
+        });
+        if(hasString)
+        {
+            // If we saw a string, proceed with string type,
+            // but don't go from untyped string to string.
+            cu = Typ[types::String];
+            if(! isTypeParam(rec::typ(gocpp::recv(x))))
+            {
+                // untyped string remains untyped
+                cu = rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))));
+            }
+        }
+
+        // Note that we don't permit slice expressions where x is a type expression, so we don't check for that here.
+        // However, if x.typ is a pointer to an array type, slicing implicitly dereferences the value, meaning
+        // its base type must also be complete.
+        if(auto [p, ok] = gocpp::getValue<Pointer*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))); ok && ! rec::isComplete(gocpp::recv(check), p->base))
+        {
+            rec::invalidate(gocpp::recv(x));
             return;
         }
 
@@ -382,27 +484,27 @@ namespace golang::types
         auto length = int64_t(- 1);
         //Go type switch emulation
         {
-            const auto& gocpp_id_5 = gocpp::type_info(coreString(x->typ));
+            const auto& gocpp_id_6 = gocpp::type_info(cu);
             int conditionId = -1;
-            if(gocpp_id_5 == typeid(untyped nil)) { conditionId = 0; }
-            else if(gocpp_id_5 == typeid(types::Basic*)) { conditionId = 1; }
-            else if(gocpp_id_5 == typeid(types::Array*)) { conditionId = 2; }
-            else if(gocpp_id_5 == typeid(types::Pointer*)) { conditionId = 3; }
-            else if(gocpp_id_5 == typeid(types::Slice*)) { conditionId = 4; }
+            if(gocpp_id_6 == typeid(untyped nil)) { conditionId = 0; }
+            else if(gocpp_id_6 == typeid(types::Basic*)) { conditionId = 1; }
+            else if(gocpp_id_6 == typeid(types::Array*)) { conditionId = 2; }
+            else if(gocpp_id_6 == typeid(types::Pointer*)) { conditionId = 3; }
+            else if(gocpp_id_6 == typeid(types::Slice*)) { conditionId = 4; }
             switch(conditionId)
             {
                 case 0:
                 {
-                    untyped nil u = gocpp::any_cast<untyped nil>(coreString(x->typ));
-                    rec::errorf(gocpp::recv(check), x, NonSliceableOperand, invalidOp + "cannot slice %s: %s has no core type"_s, x, x->typ);
-                    x->mode = invalid;
+                    untyped nil u = gocpp::any_cast<untyped nil>(cu);
+                    // error reported above
+                    rec::invalidate(gocpp::recv(x));
                     return;
                     break;
                 }
 
                 case 1:
                 {
-                    types::Basic* u = gocpp::any_cast<types::Basic*>(coreString(x->typ));
+                    types::Basic* u = gocpp::any_cast<types::Basic*>(cu);
                     if(isString(u))
                     {
                         if(e->Slice3)
@@ -414,19 +516,19 @@ namespace golang::types
                                 at = e;
                             }
                             rec::error(gocpp::recv(check), at, InvalidSliceExpr, invalidOp + "3-index slice of string"_s);
-                            x->mode = invalid;
+                            rec::invalidate(gocpp::recv(x));
                             return;
                         }
                         valid = true;
-                        if(x->mode == constant_)
+                        if(rec::mode(gocpp::recv(x)) == constant_)
                         {
-                            length = int64_t(len(constant::StringVal(x->val)));
+                            length = constant::StringLen(x->val);
                         }
                         // spec: "For untyped string operands the result
                         // is a non-constant value of type string."
-                        if(isUntyped(x->typ))
+                        if(isUntyped(rec::typ(gocpp::recv(x))))
                         {
-                            x->typ = Typ[types::String];
+                            x->typ_ = Typ[types::String];
                         }
                     }
                     break;
@@ -434,16 +536,16 @@ namespace golang::types
 
                 case 2:
                 {
-                    types::Array* u = gocpp::any_cast<types::Array*>(coreString(x->typ));
+                    types::Array* u = gocpp::any_cast<types::Array*>(cu);
                     valid = true;
                     length = u->len;
-                    if(x->mode != variable)
+                    if(rec::mode(gocpp::recv(x)) != variable)
                     {
-                        rec::errorf(gocpp::recv(check), x, NonSliceableOperand, invalidOp + "cannot slice %s (value not addressable)"_s, x);
-                        x->mode = invalid;
+                        rec::errorf(gocpp::recv(check), x, NonSliceableOperand, "cannot slice unaddressable value %s"_s, x);
+                        rec::invalidate(gocpp::recv(x));
                         return;
                     }
-                    x->typ = gocpp::InitPtr<Slice>([=](auto& y) {
+                    x->typ_ = gocpp::InitPtr<Slice>([=](auto& y) {
                         y.elem = u->elem;
                     });
                     break;
@@ -451,14 +553,14 @@ namespace golang::types
 
                 case 3:
                 {
-                    types::Pointer* u = gocpp::any_cast<types::Pointer*>(coreString(x->typ));
+                    types::Pointer* u = gocpp::any_cast<types::Pointer*>(cu);
                     {
-                        auto [u_tmp, gocpp_id_6] = gocpp::getValue<Array*>(types::under(u->base));
+                        auto [u_tmp, gocpp_id_7] = gocpp::getValue<Array*>(rec::Underlying(gocpp::recv(u->base)));
                         if(auto& u = u_tmp; u != nullptr)
                         {
                             valid = true;
                             length = u->len;
-                            x->typ = gocpp::InitPtr<Slice>([=](auto& y) {
+                            x->typ_ = gocpp::InitPtr<Slice>([=](auto& y) {
                                 y.elem = u->elem;
                             });
                         }
@@ -469,7 +571,7 @@ namespace golang::types
                 // x.typ doesn't change
                 case 4:
                 {
-                    types::Slice* u = gocpp::any_cast<types::Slice*>(coreString(x->typ));
+                    types::Slice* u = gocpp::any_cast<types::Slice*>(cu);
                     valid = true;
                     break;
                 }
@@ -478,18 +580,18 @@ namespace golang::types
 
         if(! valid)
         {
-            rec::errorf(gocpp::recv(check), x, NonSliceableOperand, invalidOp + "cannot slice %s"_s, x);
-            x->mode = invalid;
+            rec::errorf(gocpp::recv(check), x, NonSliceableOperand, "cannot slice %s"_s, x);
+            rec::invalidate(gocpp::recv(x));
             return;
         }
 
-        x->mode = value;
+        x->mode_ = value;
 
         // spec: "Only the first index may be omitted; it defaults to 0."
         if(e->Slice3 && (e->High == nullptr || e->Max == nullptr))
         {
             rec::error(gocpp::recv(check), inNode(e, e->Rbrack), InvalidSyntaxTree, "2nd and 3rd index required in 3-index slice"_s);
-            x->mode = invalid;
+            rec::invalidate(gocpp::recv(x));
             return;
         }
 
@@ -516,7 +618,7 @@ namespace golang::types
                         {
                             max = length + 1;
                         }
-                        if(auto [gocpp_id_7, v] = rec::index(gocpp::recv(check), expr, max); v >= 0)
+                        if(auto [gocpp_id_8, v] = rec::index(gocpp::recv(check), expr, max); v >= 0)
                         {
                             x = v;
                         }
@@ -568,28 +670,28 @@ namespace golang::types
     // singleIndex returns the (single) index from the index expression e.
     // If the index is missing, or if there are multiple indices, an error
     // is reported and the result is nil.
-    ast::Expr rec::singleIndex(Checker* check, typeparams::IndexExpr* expr)
+    ast::Expr rec::singleIndex(Checker* check, indexedExpr* expr)
     {
-        if(len(expr->IndexListExpr.Indices) == 0)
+        if(len(expr->indices) == 0)
         {
-            rec::errorf(gocpp::recv(check), expr->Orig, InvalidSyntaxTree, "index expression %v with 0 indices"_s, expr);
+            rec::errorf(gocpp::recv(check), expr->orig, InvalidSyntaxTree, "index expression %v with 0 indices"_s, expr);
             return nullptr;
         }
-        if(len(expr->IndexListExpr.Indices) > 1)
+        if(len(expr->indices) > 1)
         {
             // TODO(rFindley) should this get a distinct error code?
-            rec::error(gocpp::recv(check), expr->IndexListExpr.Indices[1], InvalidIndex, invalidOp + "more than one index"_s);
+            rec::error(gocpp::recv(check), expr->indices[1], InvalidIndex, invalidOp + "more than one index"_s);
         }
-        return expr->IndexListExpr.Indices[0];
+        return expr->indices[0];
     }
 
     // index checks an index expression for validity.
     // If max >= 0, it is the upper bound for index.
     // If the result typ is != Typ[Invalid], index is valid and typ is its (possibly named) integer type.
     // If the result val >= 0, index is valid and val is its constant int value.
-    std::tuple<golang::types::Type, int64_t> rec::index(Checker* check, ast::Expr index, int64_t max)
+    std::tuple<golang::go::types::Type, int64_t> rec::index(Checker* check, ast::Expr index, int64_t max)
     {
-        golang::types::Type typ;
+        golang::go::types::Type typ;
         int64_t val;
         typ = Typ[Invalid];
         val = - 1;
@@ -601,9 +703,9 @@ namespace golang::types
             return {typ, val};
         }
 
-        if(x.mode != constant_)
+        if(rec::mode(gocpp::recv(x)) != constant_)
         {
-            return {x.typ, - 1};
+            return {rec::typ(gocpp::recv(x)), - 1};
         }
 
         if(rec::Kind(gocpp::recv(x.val)) == constant::Unknown)
@@ -620,31 +722,31 @@ namespace golang::types
         }
 
         // 0 <= v [ && v < max ]
-        return {x.typ, v};
+        return {rec::typ(gocpp::recv(x)), v};
     }
 
     bool rec::isValidIndex(Checker* check, operand* x, errors::Code code, gocpp::string what, bool allowNegative)
     {
-        if(x->mode == invalid)
+        if(! rec::isValid(gocpp::recv(x)))
         {
             return false;
         }
 
         // spec: "a constant index that is untyped is given type int"
         rec::convertUntyped(gocpp::recv(check), x, Typ[Int]);
-        if(x->mode == invalid)
+        if(! rec::isValid(gocpp::recv(x)))
         {
             return false;
         }
 
         // spec: "the index x must be of integer type or an untyped constant"
-        if(! allInteger(x->typ))
+        if(! allInteger(rec::typ(gocpp::recv(x))))
         {
             rec::errorf(gocpp::recv(check), x, code, invalidArg + "%s %s must be integer"_s, what, x);
             return false;
         }
 
-        if(x->mode == constant_)
+        if(rec::mode(gocpp::recv(x)) == constant_)
         {
             // spec: "a constant index must be non-negative ..."
             if(! allowNegative && constant::Sign(x->val) < 0)
@@ -664,67 +766,98 @@ namespace golang::types
         return true;
     }
 
-    // indexedElts checks the elements (elts) of an array or slice composite literal
-    // against the literal's element type (typ), and the element indices against
-    // the literal length if known (length >= 0). It returns the length of the
-    // literal (maximum index value + 1).
-    int64_t rec::indexedElts(Checker* check, gocpp::slice<ast::Expr> elts, golang::types::Type typ, int64_t length)
+    // indexedExpr wraps an ast.IndexExpr or ast.IndexListExpr.
+    //
+    // Orig holds the original ast.Expr from which this indexedExpr was derived.
+    //
+    // Note: indexedExpr (intentionally) does not wrap ast.Expr, as that leads to
+    // accidental misuse such as encountered in golang/go#63933.
+    //
+    // TODO(rfindley): remove this helper, in favor of just having a helper
+    // function that returns indices.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    indexedExpr::operator T()
     {
-        auto visited = gocpp::make(gocpp::Tag<gocpp::map<int64_t, bool>>(), len(elts));
-        int64_t index = {};
-        int64_t max = {};
-        for(auto [gocpp_ignored, e] : elts)
+        T result;
+        result.orig = this->orig;
+        result.x = this->x;
+        result.lbrack = this->lbrack;
+        result.indices = this->indices;
+        result.rbrack = this->rbrack;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool indexedExpr::operator==(const T& ref) const
+    {
+        if (orig != ref.orig) return false;
+        if (x != ref.x) return false;
+        if (lbrack != ref.lbrack) return false;
+        if (indices != ref.indices) return false;
+        if (rbrack != ref.rbrack) return false;
+        return true;
+    }
+
+    std::ostream& indexedExpr::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << orig;
+        os << " " << x;
+        os << " " << lbrack;
+        os << " " << indices;
+        os << " " << rbrack;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct indexedExpr& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    token::Pos rec::Pos(indexedExpr* x)
+    {
+        return rec::Pos(gocpp::recv(x->orig));
+    }
+
+    indexedExpr* unpackIndexedExpr(ast::Node n)
+    {
+        //Go type switch emulation
         {
-            // determine and check index
-            auto validIndex = false;
-            auto eval = e;
-            if(auto [kv, gocpp_id_8] = gocpp::getValue<ast::KeyValueExpr*>(e); kv != nullptr)
+            const auto& gocpp_id_9 = gocpp::type_info(n);
+            int conditionId = -1;
+            if(gocpp_id_9 == typeid(ast::IndexExpr*)) { conditionId = 0; }
+            else if(gocpp_id_9 == typeid(ast::IndexListExpr*)) { conditionId = 1; }
+            switch(conditionId)
             {
-                if(auto [typ, i] = rec::index(gocpp::recv(check), kv->Key, length); types::isValid(typ))
+                case 0:
                 {
-                    if(i >= 0)
-                    {
-                        index = i;
-                        validIndex = true;
-                    }
-                    else
-                    {
-                        rec::errorf(gocpp::recv(check), e, InvalidLitIndex, "index %s must be integer constant"_s, kv->Key);
-                    }
+                    ast::IndexExpr* e = gocpp::any_cast<ast::IndexExpr*>(n);
+                    return gocpp::InitPtr<indexedExpr>([=](auto& x) {
+                        x.orig = e;
+                        x.x = e->X;
+                        x.lbrack = e->Lbrack;
+                        x.indices = gocpp::slice<ast::Expr> {e->Index};
+                        x.rbrack = e->Rbrack;
+                    });
+                    break;
                 }
-                eval = kv->Value;
-            }
-            else
-            if(length >= 0 && index >= length)
-            {
-                rec::errorf(gocpp::recv(check), e, OversizeArrayLit, "index %d is out of bounds (>= %d)"_s, index, length);
-            }
-            else
-            {
-                validIndex = true;
-            }
-
-            // if we have a valid index, check for duplicate entries
-            if(validIndex)
-            {
-                if(visited[index])
+                case 1:
                 {
-                    rec::errorf(gocpp::recv(check), e, DuplicateLitKey, "duplicate index %d in array or slice literal"_s, index);
+                    ast::IndexListExpr* e = gocpp::any_cast<ast::IndexListExpr*>(n);
+                    return gocpp::InitPtr<indexedExpr>([=](auto& x) {
+                        x.orig = e;
+                        x.x = e->X;
+                        x.lbrack = e->Lbrack;
+                        x.indices = e->Indices;
+                        x.rbrack = e->Rbrack;
+                    });
+                    break;
                 }
-                visited[index] = true;
             }
-            index++;
-            if(index > max)
-            {
-                max = index;
-            }
-
-            // check element against composite literal element type
-            operand x = {};
-            rec::exprWithHint(gocpp::recv(check), & x, eval, typ);
-            rec::assignment(gocpp::recv(check), & x, typ, "array or slice literal"_s);
         }
-        return max;
+        return nullptr;
     }
 
 }

@@ -10,30 +10,16 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     void assert(bool p);
-    void unreachable();
-    gocpp::string stripAnnotations(gocpp::string s);
 }
+#include "golang/go/token/position.fwd.h"
 #include "golang/go/token/position.h"
-#include "golang/go/types/typestring.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    gocpp::string sprintf(token::FileSet* fset, Qualifier qf, bool tpSubscripts, gocpp::string format, gocpp::slice<go_any> args);
-    
-    template<typename... Args>
-    gocpp::string sprintf(token::FileSet* fset, Qualifier qf, bool tpSubscripts, gocpp::string format, Args... args)
-    {
-        return sprintf(fset, qf, tpSubscripts, format, gocpp::ToSlice<go_any>(args...));
-    }
-    
-    template<typename... Args>
-    gocpp::string sprintf(token::FileSet* fset, Qualifier qf, bool tpSubscripts, gocpp::string format, go_any value, Args... args)
-    {
-        return sprintf(fset, qf, tpSubscripts, format, gocpp::ToSlice<go_any>(value, args...));
-    }
+    namespace token = golang::go::token;
     struct positioner : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -115,11 +101,15 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct posSpan& value);
+}
+#include "golang/go/ast/ast.fwd.h"
+
+namespace golang::go::types
+{
     struct errorDesc
     {
         positioner posn{};
-        gocpp::string format{};
-        gocpp::slice<gocpp::go_any> args{};
+        gocpp::string msg{};
 
         using isGoStruct = void;
 
@@ -137,16 +127,20 @@ namespace golang::types
 }
 #include "golang/go/ast/ast.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
     posSpan inNode(ast::Node node, token::Pos pos);
+    namespace errors = golang::internal::types::errors;
 }
 #include "golang/internal/types/errors/codes.h"
+#include "golang/go/types/check.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct error_
     {
+        Checker* check{};
         gocpp::slice<errorDesc> desc{};
         errors::Code code{};
         bool soft{}; // TODO(gri) eventually determine this from an error code
@@ -163,92 +157,39 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct error_& value);
-    error_* newErrorf(positioner at, errors::Code code, gocpp::string format, gocpp::slice<go_any> args);
-    
-    template<typename... Args>
-    error_* newErrorf(positioner at, errors::Code code, gocpp::string format, Args... args)
-    {
-        return newErrorf(at, code, format, gocpp::ToSlice<go_any>(args...));
-    }
-    
-    template<typename... Args>
-    error_* newErrorf(positioner at, errors::Code code, gocpp::string format, go_any value, Args... args)
-    {
-        return newErrorf(at, code, format, gocpp::ToSlice<go_any>(value, args...));
-    }
 }
 
 #include "golang/go/token/position.h"
 #include "golang/go/types/check.h"
-#include "golang/go/types/package.h"
-#include "golang/go/types/typestring.h"
+#include "golang/go/types/object.h"
 #include "golang/go/types/version.h"
 #include "golang/internal/types/errors/codes.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
+        error_* newError(Checker* check, errors::Code code);
+        void addf(error_* err, positioner at, gocpp::string format, gocpp::slice<go_any> args);
+        
+        template<typename... Args>
+        void addf(error_* err, positioner at, gocpp::string format, Args... args)
+        {
+            return addf(err, at, format, gocpp::ToSlice<go_any>(args...));
+        }
+        
+        template<typename... Args>
+        void addf(error_* err, positioner at, gocpp::string format, go_any value, Args... args)
+        {
+            return addf(err, at, format, gocpp::ToSlice<go_any>(value, args...));
+        }
+        void addAltDecl(error_* err, Object obj);
         bool empty(error_* err);
-        token::Pos pos(error_* err);
-        gocpp::string msg(error_* err, token::FileSet* fset, Qualifier qf);
-        gocpp::string String(error_* err);
-        void errorf(error_* err, token::Pos at, gocpp::string format, gocpp::slice<gocpp::go_any> args);
-        
-        template<typename... Args>
-        void errorf(error_* err, token::Pos at, gocpp::string format, Args... args)
-        {
-            return errorf(err, at, format, gocpp::ToSlice<gocpp::go_any>(args...));
-        }
-        
-        template<typename... Args>
-        void errorf(error_* err, token::Pos at, gocpp::string format, gocpp::go_any value, Args... args)
-        {
-            return errorf(err, at, format, gocpp::ToSlice<gocpp::go_any>(value, args...));
-        }
-        gocpp::string qualifier(Checker* check, Package* pkg);
-        void markImports(Checker* check, Package* pkg);
-        gocpp::string sprintf(Checker* check, gocpp::string format, gocpp::slice<go_any> args);
-        
-        template<typename... Args>
-        gocpp::string sprintf(Checker* check, gocpp::string format, Args... args)
-        {
-            return sprintf(check, format, gocpp::ToSlice<go_any>(args...));
-        }
-        
-        template<typename... Args>
-        gocpp::string sprintf(Checker* check, gocpp::string format, go_any value, Args... args)
-        {
-            return sprintf(check, format, gocpp::ToSlice<go_any>(value, args...));
-        }
-        void trace(Checker* check, token::Pos pos, gocpp::string format, gocpp::slice<go_any> args);
-        
-        template<typename... Args>
-        void trace(Checker* check, token::Pos pos, gocpp::string format, Args... args)
-        {
-            return trace(check, pos, format, gocpp::ToSlice<go_any>(args...));
-        }
-        
-        template<typename... Args>
-        void trace(Checker* check, token::Pos pos, gocpp::string format, go_any value, Args... args)
-        {
-            return trace(check, pos, format, gocpp::ToSlice<go_any>(value, args...));
-        }
-        void dump(Checker* check, gocpp::string format, gocpp::slice<go_any> args);
-        
-        template<typename... Args>
-        void dump(Checker* check, gocpp::string format, Args... args)
-        {
-            return dump(check, format, gocpp::ToSlice<go_any>(args...));
-        }
-        
-        template<typename... Args>
-        void dump(Checker* check, gocpp::string format, go_any value, Args... args)
-        {
-            return dump(check, format, gocpp::ToSlice<go_any>(value, args...));
-        }
-        void report(Checker* check, error_* errp);
+        positioner posn(error_* err);
+        gocpp::string msg(error_* err);
+        void report(error_* err);
+        void handleError(Checker* check, int index, positioner posn, errors::Code code, gocpp::string msg, bool soft);
         void error(Checker* check, positioner at, errors::Code code, gocpp::string msg);
         void errorf(Checker* check, positioner at, errors::Code code, gocpp::string format, gocpp::slice<go_any> args);
         
@@ -276,21 +217,21 @@ namespace golang::types
         {
             return softErrorf(check, at, code, format, gocpp::ToSlice<go_any>(value, args...));
         }
-        void versionErrorf(Checker* check, positioner at, goVersion v, gocpp::string format, gocpp::slice<gocpp::go_any> args);
+        void versionErrorf(Checker* check, positioner at, goVersion v, gocpp::string format, gocpp::slice<go_any> args);
         
         template<typename... Args>
         void versionErrorf(Checker* check, positioner at, goVersion v, gocpp::string format, Args... args)
         {
-            return versionErrorf(check, at, v, format, gocpp::ToSlice<gocpp::go_any>(args...));
+            return versionErrorf(check, at, v, format, gocpp::ToSlice<go_any>(args...));
         }
         
         template<typename... Args>
-        void versionErrorf(Checker* check, positioner at, goVersion v, gocpp::string format, gocpp::go_any value, Args... args)
+        void versionErrorf(Checker* check, positioner at, goVersion v, gocpp::string format, go_any value, Args... args)
         {
-            return versionErrorf(check, at, v, format, gocpp::ToSlice<gocpp::go_any>(value, args...));
+            return versionErrorf(check, at, v, format, gocpp::ToSlice<go_any>(value, args...));
         }
-        token::Pos Pos(posSpan e);
         token::Pos Pos(atPos s);
+        token::Pos Pos(posSpan e);
     }
 }
 

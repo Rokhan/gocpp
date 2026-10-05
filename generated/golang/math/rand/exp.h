@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::rand
+namespace golang::math::rand
 {
     extern gocpp::array<uint32_t, 256> ke;
     extern gocpp::array<float, 256> we;
@@ -19,7 +19,7 @@ namespace golang::rand
 
 #include "golang/math/rand/rand.h"
 
-namespace golang::rand
+namespace golang::math::rand
 {
 
     namespace rec

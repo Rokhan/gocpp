@@ -19,13 +19,23 @@
 #include "golang/golang.org/x/tools/internal/gocommand/invoke.h"
 #include "golang/io/fs/fs.h"
 #include "golang/os/stat.h"
+#include "golang/os/types.h"
 #include "golang/path/filepath/path.h"
 #include "golang/regexp/regexp.h"
 #include "golang/strings/strings.h"
 #include "golang/time/time.h"
 
-namespace golang::gocommand
+namespace golang::golang_org::x::tools::internal::gocommand
 {
+    namespace bytes = golang::bytes;
+    namespace context = golang::context;
+    namespace filepath = golang::path::filepath;
+    namespace fmt = golang::fmt;
+    namespace os = golang::os;
+    namespace regexp = golang::regexp;
+    namespace semver = golang::golang_org::x::mod::semver;
+    namespace strings = golang::strings;
+    namespace time = golang::time;
     namespace rec
     {
         using bytes::rec::Bytes;

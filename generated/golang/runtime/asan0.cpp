@@ -15,6 +15,7 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
@@ -40,6 +41,21 @@ namespace golang::runtime
     }
 
     void asanregisterglobals(gocpp::unsafe_pointer addr, uintptr_t sz)
+    {
+        go_throw("asan"_s);
+    }
+
+    void lsanregisterrootregion(gocpp::unsafe_pointer, uintptr_t)
+    {
+        go_throw("asan"_s);
+    }
+
+    void lsanunregisterrootregion(gocpp::unsafe_pointer, uintptr_t)
+    {
+        go_throw("asan"_s);
+    }
+
+    void lsandoleakcheck()
     {
         go_throw("asan"_s);
     }

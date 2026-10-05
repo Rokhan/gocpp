@@ -11,13 +11,13 @@
 #include "golang/runtime/race0.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
     }
@@ -148,6 +148,12 @@ namespace golang::runtime
     void racegoend()
     {
         go_throw("race"_s);
+    }
+
+    uintptr_t racectxstart(uintptr_t spawnctx, uintptr_t racectx)
+    {
+        go_throw("race"_s);
+        return 0;
     }
 
     void racectxend(uintptr_t racectx)

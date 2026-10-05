@@ -11,44 +11,40 @@
 #include "golang/go/types/errors.h"
 #include "gocpp/support.h"
 
-#include "golang/bytes/buffer.h"
 #include "golang/fmt/print.h"
 #include "golang/go/ast/ast.h"
+#include "golang/go/constant/value.h"
 #include "golang/go/token/position.h"
 #include "golang/go/types/api.h"
 #include "golang/go/types/check.h"
-#include "golang/go/types/exprstring.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/operand.h"
-#include "golang/go/types/package.h"
-#include "golang/go/types/type.h"
-#include "golang/go/types/typeparam.h"
-#include "golang/go/types/typestring.h"
+#include "golang/go/types/util.h"
 #include "golang/go/types/version.h"
 #include "golang/internal/types/errors/codes.h"
 #include "golang/io/io.h"
 #include "golang/runtime/extern.h"
-#include "golang/strconv/quote.h"
 #include "golang/strings/builder.h"
 #include "golang/strings/strings.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace errors = golang::internal::types::errors;
+    namespace fmt = golang::fmt;
+    namespace runtime = golang::runtime;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
     namespace rec
     {
         using ast::rec::End;
         using ast::rec::Pos;
-        using bytes::rec::String;
-        using bytes::rec::WriteByte;
-        using bytes::rec::WriteString;
-        using strings::rec::Len;
         using strings::rec::String;
         using strings::rec::Write;
-        using strings::rec::WriteRune;
         using strings::rec::WriteString;
         using token::rec::IsValid;
         using token::rec::Position;
-        using token::rec::String;
     }
 
     void assert(bool p)
@@ -66,18 +62,48 @@ namespace golang::types
         }
     }
 
-    void unreachable()
+    // An errorDesc describes part of a type-checking error.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    errorDesc::operator T()
     {
-        gocpp::panic("unreachable"_s);
+        T result;
+        result.posn = this->posn;
+        result.msg = this->msg;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool errorDesc::operator==(const T& ref) const
+    {
+        if (posn != ref.posn) return false;
+        if (msg != ref.msg) return false;
+        return true;
+    }
+
+    std::ostream& errorDesc::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << posn;
+        os << " " << msg;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct errorDesc& value)
+    {
+        return value.PrintTo(os);
     }
 
     // An error_ represents a type-checking error.
-    // To report an error_, call Checker.report.
+    // A new error_ is created with Checker.newError.
+    // To report an error_, call error_.report.
     
     template<typename T> requires gocpp::GoStruct<T>
     error_::operator T()
     {
         T result;
+        result.check = this->check;
         result.desc = this->desc;
         result.code = this->code;
         result.soft = this->soft;
@@ -87,6 +113,7 @@ namespace golang::types
     template<typename T> requires gocpp::GoStruct<T>
     bool error_::operator==(const T& ref) const
     {
+        if (check != ref.check) return false;
         if (desc != ref.desc) return false;
         if (code != ref.code) return false;
         if (soft != ref.soft) return false;
@@ -96,7 +123,8 @@ namespace golang::types
     std::ostream& error_::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << desc;
+        os << "" << check;
+        os << " " << desc;
         os << " " << code;
         os << " " << soft;
         os << '}';
@@ -108,40 +136,40 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
-    // An errorDesc describes part of a type-checking error.
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    errorDesc::operator T()
+    // newError returns a new error_ with the given error code.
+    error_* rec::newError(Checker* check, errors::Code code)
     {
-        T result;
-        result.posn = this->posn;
-        result.format = this->format;
-        result.args = this->args;
-        return result;
+        if(code == 0)
+        {
+            gocpp::panic("error code must not be 0"_s);
+        }
+        return gocpp::InitPtr<error_>([=](auto& x) {
+            x.check = check;
+            x.code = code;
+        });
     }
 
-    template<typename T> requires gocpp::GoStruct<T>
-    bool errorDesc::operator==(const T& ref) const
+    // addf adds formatted error information to err.
+    // It may be called multiple times to provide additional information.
+    // The position of the first call to addf determines the position of the reported Error.
+    // Subsequent calls to addf provide additional information in the form of additional lines
+    // in the error message (types2) or continuation errors identified by a tab-indented error
+    // message (go/types).
+    void rec::addf(error_* err, positioner at, gocpp::string format, gocpp::slice<go_any> args)
     {
-        if (posn != ref.posn) return false;
-        if (format != ref.format) return false;
-        if (args != ref.args) return false;
-        return true;
+        err->desc = append(err->desc, errorDesc {at, rec::sprintf(gocpp::recv(err->check), format, args)});
     }
 
-    std::ostream& errorDesc::PrintTo(std::ostream& os) const
+    // addAltDecl is a specialized form of addf reporting another declaration of obj.
+    void rec::addAltDecl(error_* err, Object obj)
     {
-        os << '{';
-        os << "" << posn;
-        os << " " << format;
-        os << " " << args;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct errorDesc& value)
-    {
-        return value.PrintTo(os);
+        if(auto pos = rec::Pos(gocpp::recv(obj)); rec::IsValid(gocpp::recv(pos)))
+        {
+            // We use "other" rather than "previous" here because
+            // the first declaration seen may not be textually
+            // earlier in the source.
+            rec::addf(gocpp::recv(err), obj, "other declaration of %s"_s, rec::Name(gocpp::recv(obj)));
+        }
     }
 
     bool rec::empty(error_* err)
@@ -149,21 +177,23 @@ namespace golang::types
         return err->desc == nullptr;
     }
 
-    token::Pos rec::pos(error_* err)
+    positioner rec::posn(error_* err)
     {
         if(rec::empty(gocpp::recv(err)))
         {
-            return nopos;
+            return noposn;
         }
-        return rec::Pos(gocpp::recv(err->desc[0].posn));
+        return err->desc[0].posn;
     }
 
-    gocpp::string rec::msg(error_* err, token::FileSet* fset, Qualifier qf)
+    // msg returns the formatted error message without the primary error position pos().
+    gocpp::string rec::msg(error_* err)
     {
         if(rec::empty(gocpp::recv(err)))
         {
             return "no error"_s;
         }
+
         strings::Builder buf = {};
         for(auto [i, gocpp_ignored] : err->desc)
         {
@@ -173,288 +203,133 @@ namespace golang::types
                 fmt::Fprint(& buf, "\n\t"_s);
                 if(rec::IsValid(gocpp::recv(rec::Pos(gocpp::recv(p->posn)))))
                 {
-                    fmt::Fprintf(& buf, "%s: "_s, rec::Position(gocpp::recv(fset), rec::Pos(gocpp::recv(p->posn))));
+                    fmt::Fprintf(& buf, "%s: "_s, rec::Position(gocpp::recv(err->check->fset), rec::Pos(gocpp::recv(p->posn))));
                 }
             }
-            rec::WriteString(gocpp::recv(buf), types::sprintf(fset, qf, false, p->format, p->args));
+            rec::WriteString(gocpp::recv(buf), p->msg);
         }
         return rec::String(gocpp::recv(buf));
     }
 
-    // String is for testing.
-    gocpp::string rec::String(error_* err)
+    // report reports the error err, setting check.firstError if necessary.
+    void rec::report(error_* err)
     {
         if(rec::empty(gocpp::recv(err)))
         {
-            return "no error"_s;
+            gocpp::panic("no error"_s);
         }
-        return mocklib::Sprintf("%d: %s"_s, rec::pos(gocpp::recv(err)), rec::msg(gocpp::recv(err), nullptr, nullptr));
-    }
-
-    // errorf adds formatted error information to err.
-    // It may be called multiple times to provide additional information.
-    void rec::errorf(error_* err, token::Pos at, gocpp::string format, gocpp::slice<gocpp::go_any> args)
-    {
-        err->desc = append(err->desc, errorDesc {atPos(at), format, args});
-    }
-
-    gocpp::string rec::qualifier(Checker* check, Package* pkg)
-    {
-        // Qualify the package unless it's the package being type-checked.
-        if(pkg != check->pkg)
-        {
-            if(check->pkgPathMap == nullptr)
-            {
-                check->pkgPathMap = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::map<gocpp::string, bool>>>());
-                check->seenPkgMap = gocpp::make(gocpp::Tag<gocpp::map<Package*, bool>>());
-                rec::markImports(gocpp::recv(check), check->pkg);
-            }
-            // If the same package name was used by multiple packages, display the full path.
-            if(len(check->pkgPathMap[pkg->name]) > 1)
-            {
-                return strconv::Quote(pkg->path);
-            }
-            return pkg->name;
-        }
-        return ""_s;
-    }
-
-    // markImports recursively walks pkg and its imports, to record unique import
-    // paths in pkgPathMap.
-    void rec::markImports(Checker* check, Package* pkg)
-    {
-        if(check->seenPkgMap[pkg])
-        {
-            return;
-        }
-        check->seenPkgMap[pkg] = true;
-
-        auto [forName, ok] = check->pkgPathMap[pkg->name];
-        if(! ok)
-        {
-            forName = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>());
-            check->pkgPathMap[pkg->name] = forName;
-        }
-        forName[pkg->path] = true;
-
-        for(auto [gocpp_ignored, imp] : pkg->imports)
-        {
-            rec::markImports(gocpp::recv(check), imp);
-        }
-    }
-
-    // check may be nil.
-    gocpp::string rec::sprintf(Checker* check, gocpp::string format, gocpp::slice<go_any> args)
-    {
-        token::FileSet* fset = {};
-        Qualifier qf = {};
-        if(check != nullptr)
-        {
-            fset = check->fset;
-            qf = [&](auto x){ return rec::qualifier(check, x); };
-        }
-        return types::sprintf(fset, qf, false, format, args);
-    }
-
-    gocpp::string sprintf(token::FileSet* fset, Qualifier qf, bool tpSubscripts, gocpp::string format, gocpp::slice<go_any> args)
-    {
-        for(auto [i, arg] : args)
-        {
-            //Go type switch emulation
-            {
-                const auto& gocpp_id_1 = gocpp::type_info(arg);
-                int conditionId = -1;
-                if(gocpp_id_1 == typeid(untyped nil)) { conditionId = 0; }
-                else if(gocpp_id_1 == typeid(types::operand)) { conditionId = 1; }
-                else if(gocpp_id_1 == typeid(types::operand*)) { conditionId = 2; }
-                else if(gocpp_id_1 == typeid(token::Pos)) { conditionId = 3; }
-                else if(gocpp_id_1 == typeid(ast::Expr)) { conditionId = 4; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<ast::Expr>)) { conditionId = 5; }
-                else if(gocpp_id_1 == typeid(types::Object)) { conditionId = 6; }
-                else if(gocpp_id_1 == typeid(types::Type)) { conditionId = 7; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<types::Type>)) { conditionId = 8; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<types::TypeParam*>)) { conditionId = 9; }
-                switch(conditionId)
-                {
-                    case 0:
-                    {
-                        untyped nil a = gocpp::any_cast<untyped nil>(arg);
-                        arg = "<nil>"_s;
-                        break;
-                    }
-                    case 1:
-                    {
-                        types::operand a = gocpp::any_cast<types::operand>(arg);
-                        gocpp::panic("got operand instead of *operand"_s);
-                        break;
-                    }
-                    case 2:
-                    {
-                        types::operand* a = gocpp::any_cast<types::operand*>(arg);
-                        arg = operandString(a, qf);
-                        break;
-                    }
-                    case 3:
-                    {
-                        token::Pos a = gocpp::any_cast<token::Pos>(arg);
-                        if(fset != nullptr)
-                        {
-                            arg = rec::String(gocpp::recv(rec::Position(gocpp::recv(fset), a)));
-                        }
-                        break;
-                    }
-                    case 4:
-                    {
-                        ast::Expr a = gocpp::any_cast<ast::Expr>(arg);
-                        arg = ExprString(a);
-                        break;
-                    }
-                    case 5:
-                    {
-                        gocpp::slice<ast::Expr> a = gocpp::any_cast<gocpp::slice<ast::Expr>>(arg);
-                        bytes::Buffer buf = {};
-                        rec::WriteByte(gocpp::recv(buf), '[');
-                        writeExprList(& buf, a);
-                        rec::WriteByte(gocpp::recv(buf), ']');
-                        arg = rec::String(gocpp::recv(buf));
-                        break;
-                    }
-                    case 6:
-                    {
-                        types::Object a = gocpp::any_cast<types::Object>(arg);
-                        arg = ObjectString(a, qf);
-                        break;
-                    }
-                    case 7:
-                    {
-                        types::Type a = gocpp::any_cast<types::Type>(arg);
-                        bytes::Buffer buf = {};
-                        auto w = newTypeWriter(& buf, qf);
-                        w->tpSubscripts = tpSubscripts;
-                        rec::typ(gocpp::recv(w), a);
-                        arg = rec::String(gocpp::recv(buf));
-                        break;
-                    }
-                    case 8:
-                    {
-                        gocpp::slice<types::Type> a = gocpp::any_cast<gocpp::slice<types::Type>>(arg);
-                        bytes::Buffer buf = {};
-                        auto w = newTypeWriter(& buf, qf);
-                        w->tpSubscripts = tpSubscripts;
-                        rec::WriteByte(gocpp::recv(buf), '[');
-                        for(auto [i, x] : a)
-                        {
-                            if(i > 0)
-                            {
-                                rec::WriteString(gocpp::recv(buf), ", "_s);
-                            }
-                            rec::typ(gocpp::recv(w), x);
-                        }
-                        rec::WriteByte(gocpp::recv(buf), ']');
-                        arg = rec::String(gocpp::recv(buf));
-                        break;
-                    }
-                    case 9:
-                    {
-                        gocpp::slice<types::TypeParam*> a = gocpp::any_cast<gocpp::slice<types::TypeParam*>>(arg);
-                        bytes::Buffer buf = {};
-                        auto w = newTypeWriter(& buf, qf);
-                        w->tpSubscripts = tpSubscripts;
-                        rec::WriteByte(gocpp::recv(buf), '[');
-                        for(auto [i, x] : a)
-                        {
-                            if(i > 0)
-                            {
-                                rec::WriteString(gocpp::recv(buf), ", "_s);
-                            }
-                            rec::typ(gocpp::recv(w), x);
-                        }
-                        rec::WriteByte(gocpp::recv(buf), ']');
-                        arg = rec::String(gocpp::recv(buf));
-                        break;
-                    }
-                }
-            }
-            args[i] = arg;
-        }
-        return mocklib::Sprintf(format, args);
-    }
-
-    void rec::trace(Checker* check, token::Pos pos, gocpp::string format, gocpp::slice<go_any> args)
-    {
-        mocklib::Printf("%s:\t%s%s\n"_s, rec::Position(gocpp::recv(check->fset), pos), strings::Repeat(".  "_s, check->indent), types::sprintf(check->fset, [&](auto x){ return rec::qualifier(check, x); }, true, format, args));
-    }
-
-    // dump is only needed for debugging
-    void rec::dump(Checker* check, gocpp::string format, gocpp::slice<go_any> args)
-    {
-        mocklib::Println(types::sprintf(check->fset, [&](auto x){ return rec::qualifier(check, x); }, true, format, args));
-    }
-
-    // Report records the error pointed to by errp, setting check.firstError if
-    // necessary.
-    void rec::report(Checker* check, error_* errp)
-    {
-        if(rec::empty(gocpp::recv(errp)))
-        {
-            gocpp::panic("empty error details"_s);
-        }
-
-        auto msg = rec::msg(gocpp::recv(errp), check->fset, [&](auto x){ return rec::qualifier(check, x); });
-        //Go switch emulation
-        {
-            auto condition = errp->code;
-            int conditionId = -1;
-            if(condition == InvalidSyntaxTree) { conditionId = 0; }
-            else if(condition == 0) { conditionId = 1; }
-            switch(conditionId)
-            {
-                case 0:
-                    msg = "invalid AST: "_s + msg;
-                    break;
-                case 1:
-                    gocpp::panic("no error code provided"_s);
-                    break;
-            }
-        }
-
-        // If we have a URL for error codes, add a link to the first line.
-        if(errp->code != 0 && check->conf->_ErrorURL != ""_s)
-        {
-            auto u = mocklib::Sprintf(check->conf->_ErrorURL, errp->code);
-            if(auto i = strings::Index(msg, "\n"_s); i >= 0)
-            {
-                msg = msg.make_slice(0, i) + u + msg.make_slice(i);
-            }
-            else
-            {
-                msg += u;
-            }
-        }
-
-        auto span = spanOf(errp->desc[0].posn);
-        auto e = gocpp::Init<golang::types::Error>([=](auto& x) {
-            x.Fset = check->fset;
-            x.Pos = span.pos;
-            x.Msg = msg;
-            x.Soft = errp->soft;
-            x.go116code = errp->code;
-            x.go116start = span.start;
-            x.go116end = span.end;
-        });
 
         // Cheap trick: Don't report errors with messages containing
         // "invalid operand" or "invalid type" as those tend to be
         // follow-on errors which don't add useful information. Only
         // exclude them if these strings are not at the beginning,
         // and only if we have at least one error already reported.
-        auto isInvalidErr = strings::Index(e.Msg, "invalid operand"_s) > 0 || strings::Index(e.Msg, "invalid type"_s) > 0;
-        if(check->firstErr != nullptr && isInvalidErr)
+        auto check = err->check;
+        if(check->firstErr != nullptr)
         {
-            return;
+            // It is sufficient to look at the first sub-error only.
+            auto msg = err->desc[0].msg;
+            if(strings::Index(msg, "invalid operand"_s) > 0 || strings::Index(msg, "invalid type"_s) > 0)
+            {
+                return;
+            }
         }
 
-        e.Msg = stripAnnotations(e.Msg);
+        if(check->conf->_Trace)
+        {
+            rec::trace(gocpp::recv(check), rec::Pos(gocpp::recv(rec::posn(gocpp::recv(err)))), "ERROR: %s (code = %d)"_s, err->desc[0].msg, err->code);
+        }
+
+        // In go/types, if there is a sub-error with a valid position,
+        // call the typechecker error handler for each sub-error.
+        // Otherwise, call it once, with a single combined message.
+        auto multiError = false;
+        if(! isTypes2)
+        {
+            for(auto i = 1; i < len(err->desc); i++)
+            {
+                if(rec::IsValid(gocpp::recv(rec::Pos(gocpp::recv(err->desc[i].posn)))))
+                {
+                    multiError = true;
+                    break;
+                }
+            }
+        }
+
+        if(multiError)
+        {
+            for(auto [i, gocpp_ignored] : err->desc)
+            {
+                auto p = & err->desc[i];
+                rec::handleError(gocpp::recv(check), i, p->posn, err->code, p->msg, err->soft);
+            }
+        }
+        else
+        {
+            rec::handleError(gocpp::recv(check), 0, rec::posn(gocpp::recv(err)), err->code, rec::msg(gocpp::recv(err)), err->soft);
+        }
+
+        // make sure the error is not reported twice
+        err->desc = nullptr;
+    }
+
+    // handleError should only be called by error_.report.
+    void rec::handleError(Checker* check, int index, positioner posn, errors::Code code, gocpp::string msg, bool soft)
+    {
+        assert(code != 0);
+
+        if(index == 0)
+        {
+            // If we are encountering an error while evaluating an inherited
+            // constant initialization expression, pos is the position of
+            // the original expression, and not of the currently declared
+            // constant identifier. Use the provided errpos instead.
+            // TODO(gri) We may also want to augment the error message and
+            // refer to the position (pos) in the original expression.
+            if(check->environment.errpos != nullptr && rec::IsValid(gocpp::recv(rec::Pos(gocpp::recv(check->environment.errpos)))))
+            {
+                assert(check->environment.1 != nullptr);
+                posn = check->environment.errpos;
+            }
+
+            // Report invalid syntax trees explicitly.
+            if(code == InvalidSyntaxTree)
+            {
+                msg = "invalid syntax tree: "_s + msg;
+            }
+
+            // If we have a URL for error codes, add a link to the first line.
+            if(check->conf->_ErrorURL != ""_s)
+            {
+                auto url = mocklib::Sprintf(check->conf->_ErrorURL, code);
+                if(auto i = strings::Index(msg, "\n"_s); i >= 0)
+                {
+                    msg = msg.make_slice(0, i) + url + msg.make_slice(i);
+                }
+                else
+                {
+                    msg += url;
+                }
+            }
+        }
+        else
+        {
+            // Indent sub-error.
+            // Position information is passed explicitly to Error, below.
+            msg = "\t"_s + msg;
+        }
+
+        auto span = spanOf(posn);
+        auto e = gocpp::Init<golang::go::types::Error>([=](auto& x) {
+            x.Fset = check->fset;
+            x.Pos = span.pos;
+            x.Msg = stripAnnotations(msg);
+            x.Soft = soft;
+            x.go116code = code;
+            x.go116start = span.start;
+            x.go116end = span.end;
+        });
+
         if(check->environment.errpos != nullptr)
         {
             // If we have an internal error and the errpos override is set, use it to
@@ -466,65 +341,22 @@ namespace golang::types
             e.go116start = span.start;
             e.go116end = span.end;
         }
-        auto err = e;
 
         if(check->firstErr == nullptr)
         {
-            check->firstErr = err;
-        }
-
-        if(check->conf->_Trace)
-        {
-            auto pos = e.Pos;
-            auto msg = e.Msg;
-            rec::trace(gocpp::recv(check), pos, "ERROR: %s"_s, msg);
+            check->firstErr = e;
         }
 
         auto f = [&](auto x){ return rec::Error(check->conf, x); };
         if(f == nullptr)
         {
-            // report only first error
+            // record first error and exit
             gocpp::panic(bailout {});
         }
-        f(err);
+        f(e);
     }
 
-    // newErrorf creates a new error_ for later reporting with check.report.
-    error_* newErrorf(positioner at, errors::Code code, gocpp::string format, gocpp::slice<go_any> args)
-    {
-        return gocpp::InitPtr<error_>([=](auto& x) {
-            x.desc = gocpp::slice<errorDesc> {{at, format, args}};
-            x.code = code;
-        });
-    }
-
-    void rec::error(Checker* check, positioner at, errors::Code code, gocpp::string msg)
-    {
-        rec::report(gocpp::recv(check), newErrorf(at, code, "%s"_s, msg));
-    }
-
-    void rec::errorf(Checker* check, positioner at, errors::Code code, gocpp::string format, gocpp::slice<go_any> args)
-    {
-        rec::report(gocpp::recv(check), newErrorf(at, code, format, args));
-    }
-
-    void rec::softErrorf(Checker* check, positioner at, errors::Code code, gocpp::string format, gocpp::slice<go_any> args)
-    {
-        auto err = newErrorf(at, code, format, args);
-        err->soft = true;
-        rec::report(gocpp::recv(check), err);
-    }
-
-    void rec::versionErrorf(Checker* check, positioner at, goVersion v, gocpp::string format, gocpp::slice<gocpp::go_any> args)
-    {
-        auto msg = rec::sprintf(gocpp::recv(check), format, args);
-        error_* err = {};
-        err = newErrorf(at, UnsupportedFeature, "%s requires %s or later"_s, msg, v);
-        rec::report(gocpp::recv(check), err);
-    }
-
-    // The positioner interface is used to extract the position of type-checker
-    // errors.
+    // The positioner interface is used to extract the position of type-checker errors.
     
     template<typename T>
     positioner::positioner(T& ref)
@@ -577,6 +409,42 @@ namespace golang::types
     std::ostream& operator<<(std::ostream& os, const struct positioner& value)
     {
         return value.PrintTo(os);
+    }
+
+    void rec::error(Checker* check, positioner at, errors::Code code, gocpp::string msg)
+    {
+        auto err = rec::newError(gocpp::recv(check), code);
+        rec::addf(gocpp::recv(err), at, "%s"_s, msg);
+        rec::report(gocpp::recv(err));
+    }
+
+    void rec::errorf(Checker* check, positioner at, errors::Code code, gocpp::string format, gocpp::slice<go_any> args)
+    {
+        auto err = rec::newError(gocpp::recv(check), code);
+        rec::addf(gocpp::recv(err), at, format, args);
+        rec::report(gocpp::recv(err));
+    }
+
+    void rec::softErrorf(Checker* check, positioner at, errors::Code code, gocpp::string format, gocpp::slice<go_any> args)
+    {
+        auto err = rec::newError(gocpp::recv(check), code);
+        rec::addf(gocpp::recv(err), at, format, args);
+        err->soft = true;
+        rec::report(gocpp::recv(err));
+    }
+
+    void rec::versionErrorf(Checker* check, positioner at, goVersion v, gocpp::string format, gocpp::slice<go_any> args)
+    {
+        auto msg = rec::sprintf(gocpp::recv(check), format, args);
+        auto err = rec::newError(gocpp::recv(check), UnsupportedFeature);
+        rec::addf(gocpp::recv(err), at, "%s requires %s or later"_s, msg, v);
+        rec::report(gocpp::recv(err));
+    }
+
+    // atPos wraps a token.Pos to implement the positioner interface.
+    token::Pos rec::Pos(atPos s)
+    {
+        return token::Pos(s);
     }
 
     // posSpan holds a position range along with a highlighted position within that
@@ -637,12 +505,6 @@ namespace golang::types
         return posSpan {start, pos, end};
     }
 
-    // atPos wraps a token.Pos to implement the positioner interface.
-    token::Pos rec::Pos(atPos s)
-    {
-        return token::Pos(s);
-    }
-
     // spanOf extracts an error span from the given positioner. By default this is
     // the trivial span starting and ending at pos, but this span is expanded when
     // the argument naturally corresponds to a span of source code.
@@ -650,12 +512,12 @@ namespace golang::types
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_2 = gocpp::type_info(at);
+            const auto& gocpp_id_1 = gocpp::type_info(at);
             int conditionId = -1;
-            if(gocpp_id_2 == typeid(untyped nil)) { conditionId = 0; }
-            else if(gocpp_id_2 == typeid(types::posSpan)) { conditionId = 1; }
-            else if(gocpp_id_2 == typeid(ast::Node)) { conditionId = 2; }
-            else if(gocpp_id_2 == typeid(types::operand*)) { conditionId = 3; }
+            if(gocpp_id_1 == typeid(untyped nil)) { conditionId = 0; }
+            else if(gocpp_id_1 == typeid(types::posSpan)) { conditionId = 1; }
+            else if(gocpp_id_1 == typeid(ast::Node)) { conditionId = 2; }
+            else if(gocpp_id_1 == typeid(types::operand*)) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
@@ -697,26 +559,6 @@ namespace golang::types
                 }
             }
         }
-    }
-
-    // stripAnnotations removes internal (type) annotations from s.
-    gocpp::string stripAnnotations(gocpp::string s)
-    {
-        strings::Builder buf = {};
-        for(auto [gocpp_ignored, r] : s)
-        {
-            // strip #'s and subscript digits
-            if(r < '₀' || '₀' + 10 <= r)
-            {
-                // '₀' == U+2080
-                rec::WriteRune(gocpp::recv(buf), r);
-            }
-        }
-        if(rec::Len(gocpp::recv(buf)) < len(s))
-        {
-            return rec::String(gocpp::recv(buf));
-        }
-        return s;
     }
 
 }

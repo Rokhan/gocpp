@@ -21,8 +21,13 @@
 #include "golang/strings/strings.h"
 #include "golang/unicode/utf8/utf8.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
+    namespace bytes = golang::bytes;
+    namespace fmt = golang::fmt;
+    namespace sort = golang::sort;
+    namespace strings = golang::strings;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using bytes::rec::Bytes;
@@ -244,7 +249,7 @@ namespace golang::comment
     }
 
     // text prints the text sequence x to out.
-    void rec::text(textPrinter* p, bytes::Buffer* out, gocpp::string indent, gocpp::slice<golang::comment::Text> x)
+    void rec::text(textPrinter* p, bytes::Buffer* out, gocpp::string indent, gocpp::slice<golang::go::doc::comment::Text> x)
     {
         rec::oneLongLine(gocpp::recv(p), & p->long, x);
         auto words = mocklib::StringsFields(rec::String(gocpp::recv(p->long)));
@@ -282,7 +287,7 @@ namespace golang::comment
     // oneLongLine prints the text sequence x to out as one long line,
     // without worrying about line wrapping.
     // Explicit links have the [ ] dropped to improve readability.
-    void rec::oneLongLine(textPrinter* p, strings::Builder* out, gocpp::slice<golang::comment::Text> x)
+    void rec::oneLongLine(textPrinter* p, strings::Builder* out, gocpp::slice<golang::go::doc::comment::Text> x)
     {
         for(auto [gocpp_ignored, t] : x)
         {

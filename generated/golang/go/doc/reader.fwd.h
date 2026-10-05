@@ -4,19 +4,17 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::doc
+namespace golang::go::doc
 {
     struct GoTag_methodSet;
     struct GoTag_embeddedSet;
-    struct data;
-}
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/doc/doc.fwd.h"
-
-namespace golang::doc
-{
-    using methodSet = gocpp::defined<gocpp::map<gocpp::string, Func*>, GoTag_methodSet>;
     struct namedType;
     struct reader;
     using embeddedSet = gocpp::defined<gocpp::map<namedType*, bool>, GoTag_embeddedSet>;
+}
+#include "golang/go/doc/doc.fwd.h"
+
+namespace golang::go::doc
+{
+    using methodSet = gocpp::defined<gocpp::map<gocpp::string, Func*>, GoTag_methodSet>;
 }

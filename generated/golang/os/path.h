@@ -15,8 +15,7 @@ namespace golang::os
     gocpp::error RemoveAll(gocpp::string path);
     bool endsWithDot(gocpp::string path);
 }
-#include "golang/io/fs/fs.h"
-#include "golang/os/types.fwd.h"
+#include "golang/os/types.h"
 
 namespace golang::os
 {

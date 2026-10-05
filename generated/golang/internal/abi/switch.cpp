@@ -12,9 +12,11 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
+#include "golang/internal/goarch/goarch.h"
 
-namespace golang::abi
+namespace golang::internal::abi
 {
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
     }
@@ -121,29 +123,22 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    bool UseInterfaceSwitchCache(gocpp::string goarch)
+    bool UseInterfaceSwitchCache(goarch::ArchFamilyType arch)
     {
-        if(! go122InterfaceSwitchCache)
-        {
-            return false;
-        }
         // We need an atomic load instruction to make the cache multithreaded-safe.
         // (AtomicLoadPtr needs to be implemented in cmd/compile/internal/ssa/_gen/ARCH.rules.)
         //Go switch emulation
         {
-            auto condition = goarch;
+            auto condition = arch;
             int conditionId = -1;
-            if(condition == "amd64"_s) { conditionId = 0; }
-            else if(condition == "arm64"_s) { conditionId = 1; }
-            else if(condition == "loong64"_s) { conditionId = 2; }
-            else if(condition == "mips"_s) { conditionId = 3; }
-            else if(condition == "mipsle"_s) { conditionId = 4; }
-            else if(condition == "mips64"_s) { conditionId = 5; }
-            else if(condition == "mips64le"_s) { conditionId = 6; }
-            else if(condition == "ppc64"_s) { conditionId = 7; }
-            else if(condition == "ppc64le"_s) { conditionId = 8; }
-            else if(condition == "riscv64"_s) { conditionId = 9; }
-            else if(condition == "s390x"_s) { conditionId = 10; }
+            if(condition == goarch::AMD64) { conditionId = 0; }
+            else if(condition == goarch::ARM64) { conditionId = 1; }
+            else if(condition == goarch::LOONG64) { conditionId = 2; }
+            else if(condition == goarch::MIPS) { conditionId = 3; }
+            else if(condition == goarch::MIPS64) { conditionId = 4; }
+            else if(condition == goarch::PPC64) { conditionId = 5; }
+            else if(condition == goarch::RISCV64) { conditionId = 6; }
+            else if(condition == goarch::S390X) { conditionId = 7; }
             switch(conditionId)
             {
                 case 0:
@@ -154,9 +149,6 @@ namespace golang::abi
                 case 5:
                 case 6:
                 case 7:
-                case 8:
-                case 9:
-                case 10:
                     return true;
                     break;
                 default:

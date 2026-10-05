@@ -11,11 +11,16 @@
 #include "golang/internal/chacha8rand/chacha8.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/byteorder/byteorder.h"
+#include "golang/internal/cpu/cpu.h"
+
 // Package chacha8rand implements a pseudorandom generator
 // based on ChaCha8. It is used by both runtime and math/rand/v2
-// and must have no dependencies.
-namespace golang::chacha8rand
+// and must have minimal dependencies.
+namespace golang::internal::chacha8rand
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace byteorder = golang::internal::byteorder;
     namespace rec
     {
     }
@@ -77,6 +82,7 @@ namespace golang::chacha8rand
     //
     // Next is //go:nosplit to allow its use in the runtime
     // with per-m data without holding the per-m lock.
+    //
     //go:nosplit
     std::tuple<uint64_t, bool> rec::Next(State* s)
     {
@@ -94,10 +100,10 @@ namespace golang::chacha8rand
     void rec::Init(State* s, gocpp::array<unsigned char, 32> seed)
     {
         rec::Init64(gocpp::recv(s), gocpp::array<uint64_t, 4> {
-            leUint64(seed.make_slice(0 * 8)),
-            leUint64(seed.make_slice(1 * 8)),
-            leUint64(seed.make_slice(2 * 8)),
-            leUint64(seed.make_slice(3 * 8))
+            byteorder::LEUint64(seed.make_slice(0 * 8)),
+            byteorder::LEUint64(seed.make_slice(1 * 8)),
+            byteorder::LEUint64(seed.make_slice(2 * 8)),
+            byteorder::LEUint64(seed.make_slice(3 * 8))
         });
     }
 
@@ -174,10 +180,10 @@ namespace golang::chacha8rand
         auto data = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 6 * 8);
         copy(data, "chacha8:"_s);
         auto used = (s->c / ctrInc) * chunk + s->i;
-        bePutUint64(data.make_slice(1 * 8), uint64_t(used));
+        byteorder::BEPutUint64(data.make_slice(1 * 8), uint64_t(used));
         for(auto [i, seed] : s->seed)
         {
-            lePutUint64(data.make_slice((2 + i) * 8), seed);
+            byteorder::LEPutUint64(data.make_slice((2 + i) * 8), seed);
         }
         return data;
     }
@@ -220,14 +226,14 @@ namespace golang::chacha8rand
         {
             return gocpp::error(new chacha8rand::errUnmarshalChaCha8{});
         }
-        auto used = beUint64(data.make_slice(1 * 8));
+        auto used = byteorder::BEUint64(data.make_slice(1 * 8));
         if(used > (ctrMax / ctrInc) * chunk - reseed)
         {
             return gocpp::error(new chacha8rand::errUnmarshalChaCha8{});
         }
         for(auto [i, gocpp_ignored] : s->seed)
         {
-            s->seed[i] = leUint64(data.make_slice((2 + i) * 8));
+            s->seed[i] = byteorder::LEUint64(data.make_slice((2 + i) * 8));
         }
         s->c = ctrInc * (uint32_t(used) / chunk);
         block(gocpp::make_array_ptr(s->seed), gocpp::make_array_ptr(s->buf), s->c);
@@ -238,54 +244,6 @@ namespace golang::chacha8rand
             s->n = chunk - reseed;
         }
         return nullptr;
-    }
-
-    // binary.bigEndian.Uint64, copied to avoid dependency
-    uint64_t beUint64(gocpp::slice<unsigned char> b)
-    {
-        // bounds check hint to compiler; see golang.org/issue/14808
-        _ = b[7];
-        return uint64_t(b[7]) | (uint64_t(b[6]) << 8) | (uint64_t(b[5]) << 16) | (uint64_t(b[4]) << 24) |
-                (uint64_t(b[3]) << 32) | (uint64_t(b[2]) << 40) | (uint64_t(b[1]) << 48) | (uint64_t(b[0]) << 56);
-    }
-
-    // binary.bigEndian.PutUint64, copied to avoid dependency
-    void bePutUint64(gocpp::slice<unsigned char> b, uint64_t v)
-    {
-        // early bounds check to guarantee safety of writes below
-        _ = b[7];
-        b[0] = (unsigned char)(v >> 56);
-        b[1] = (unsigned char)(v >> 48);
-        b[2] = (unsigned char)(v >> 40);
-        b[3] = (unsigned char)(v >> 32);
-        b[4] = (unsigned char)(v >> 24);
-        b[5] = (unsigned char)(v >> 16);
-        b[6] = (unsigned char)(v >> 8);
-        b[7] = (unsigned char)(v);
-    }
-
-    // binary.littleEndian.Uint64, copied to avoid dependency
-    uint64_t leUint64(gocpp::slice<unsigned char> b)
-    {
-        // bounds check hint to compiler; see golang.org/issue/14808
-        _ = b[7];
-        return uint64_t(b[0]) | (uint64_t(b[1]) << 8) | (uint64_t(b[2]) << 16) | (uint64_t(b[3]) << 24) |
-                (uint64_t(b[4]) << 32) | (uint64_t(b[5]) << 40) | (uint64_t(b[6]) << 48) | (uint64_t(b[7]) << 56);
-    }
-
-    // binary.littleEndian.PutUint64, copied to avoid dependency
-    void lePutUint64(gocpp::slice<unsigned char> b, uint64_t v)
-    {
-        // early bounds check to guarantee safety of writes below
-        _ = b[7];
-        b[0] = (unsigned char)(v);
-        b[1] = (unsigned char)(v >> 8);
-        b[2] = (unsigned char)(v >> 16);
-        b[3] = (unsigned char)(v >> 24);
-        b[4] = (unsigned char)(v >> 32);
-        b[5] = (unsigned char)(v >> 40);
-        b[6] = (unsigned char)(v >> 48);
-        b[7] = (unsigned char)(v >> 56);
     }
 
 }

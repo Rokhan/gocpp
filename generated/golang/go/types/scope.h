@@ -9,16 +9,33 @@
 #include "golang/go/types/scope.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/token/position.h"
 #include "golang/go/types/object.h"
+
+namespace golang::go::types
+{
+    Object resolve(gocpp::string name, Object obj);
+}
+#include "golang/go/token/position.fwd.h"
+#include "golang/sync/once.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/token/position.h"
+
+namespace golang::go::types
+{
+    namespace sync = golang::sync;
+}
 #include "golang/sync/once.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Scope
     {
-        golang::types::Scope* parent{};
-        gocpp::slice<golang::types::Scope*> children{};
+        golang::go::types::Scope* parent{};
+        gocpp::slice<golang::go::types::Scope*> children{};
         int number{}; // parent.children[number-1] is this scope; 0 if there is no parent
         gocpp::map<gocpp::string, Object> elems{}; // lazily allocated
         token::Pos pos{}; // scope extent; may be invalid
@@ -40,7 +57,7 @@ namespace golang::types
     std::ostream& operator<<(std::ostream& os, const struct Scope& value);
     struct lazyObject
     {
-        golang::types::Scope* parent{};
+        golang::go::types::Scope* parent{};
         std::function<Object ()> resolve{};
         Object obj{};
         sync::Once once{};
@@ -57,8 +74,7 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct lazyObject& value);
-    Object resolve(gocpp::string name, Object obj);
-    golang::types::Scope* NewScope(golang::types::Scope* parent, token::Pos pos, token::Pos end, gocpp::string comment);
+    golang::go::types::Scope* NewScope(golang::go::types::Scope* parent, token::Pos pos, token::Pos end, gocpp::string comment);
 }
 
 #include "golang/go/token/position.h"
@@ -67,45 +83,39 @@ namespace golang::types
 #include "golang/go/types/type.h"
 #include "golang/io/io.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace io = golang::io;
 
     namespace rec
     {
-        golang::types::Scope* Parent(golang::types::Scope* s);
-        int Len(golang::types::Scope* s);
-        gocpp::slice<gocpp::string> Names(golang::types::Scope* s);
-        int NumChildren(golang::types::Scope* s);
-        golang::types::Scope* Child(golang::types::Scope* s, int i);
-        Object Lookup(golang::types::Scope* s, gocpp::string name);
-        std::tuple<golang::types::Scope*, Object> LookupParent(golang::types::Scope* s, gocpp::string name, token::Pos pos);
-        Object Insert(golang::types::Scope* s, Object obj);
-        bool _InsertLazy(golang::types::Scope* s, gocpp::string name, std::function<Object ()> resolve);
-        void insert(golang::types::Scope* s, gocpp::string name, Object obj);
-        void squash(golang::types::Scope* s, std::function<void (Object obj, Object alt)> err);
-        token::Pos Pos(golang::types::Scope* s);
-        token::Pos End(golang::types::Scope* s);
-        bool Contains(golang::types::Scope* s, token::Pos pos);
-        golang::types::Scope* Innermost(golang::types::Scope* s, token::Pos pos);
-        void WriteTo(golang::types::Scope* s, io::Writer w, int n, bool recurse);
-        gocpp::string String(golang::types::Scope* s);
-        golang::types::Scope* Parent(lazyObject*);
+        golang::go::types::Scope* Parent(golang::go::types::Scope* s);
+        int Len(golang::go::types::Scope* s);
+        gocpp::slice<gocpp::string> Names(golang::go::types::Scope* s);
+        int NumChildren(golang::go::types::Scope* s);
+        golang::go::types::Scope* Child(golang::go::types::Scope* s, int i);
+        Object Lookup(golang::go::types::Scope* s, gocpp::string name);
+        gocpp::slice<Object> lookupIgnoringCase(golang::go::types::Scope* s, gocpp::string name, bool exported);
+        Object Insert(golang::go::types::Scope* s, Object obj);
+        bool _InsertLazy(golang::go::types::Scope* s, gocpp::string name, std::function<Object ()> resolve);
+        void insert(golang::go::types::Scope* s, gocpp::string name, Object obj);
+        void WriteTo(golang::go::types::Scope* s, io::Writer w, int n, bool recurse);
+        gocpp::string String(golang::go::types::Scope* s);
+        golang::go::types::Scope* Parent(lazyObject*);
         token::Pos Pos(lazyObject*);
         Package* Pkg(lazyObject*);
         gocpp::string Name(lazyObject*);
-        golang::types::Type Type(lazyObject*);
+        golang::go::types::Type Type(lazyObject*);
         bool Exported(lazyObject*);
         gocpp::string Id(lazyObject*);
         gocpp::string String(lazyObject*);
         uint32_t order(lazyObject*);
-        golang::types::color color(lazyObject*);
-        void setType(lazyObject*, golang::types::Type);
+        void setType(lazyObject*, golang::go::types::Type);
         void setOrder(lazyObject*, uint32_t);
-        void setColor(lazyObject*, golang::types::color color);
-        void setParent(lazyObject*, golang::types::Scope*);
-        bool sameId(lazyObject*, Package* pkg, gocpp::string name);
+        void setParent(lazyObject*, golang::go::types::Scope*);
+        bool sameId(lazyObject*, Package*, gocpp::string, bool);
         token::Pos scopePos(lazyObject*);
-        void setScopePos(lazyObject*, token::Pos pos);
+        void setScopePos(lazyObject*, token::Pos);
     }
 }
 

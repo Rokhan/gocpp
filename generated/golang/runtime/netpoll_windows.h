@@ -12,28 +12,40 @@
 
 namespace golang::runtime
 {
+    uint8_t unpackNetpollSource(uintptr_t key);
     extern uintptr_t iocphandle;
     void netpollinit();
     bool netpollIsPollDescriptor(uintptr_t fd);
     int32_t netpollclose(uintptr_t fd);
     void netpollBreak();
+    bool netpollQueueTimer(int64_t delay);
 }
-#include "golang/runtime/defs_windows.h"
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/netpoll.fwd.h"
 
 namespace golang::runtime
 {
-    struct net_op
+    uintptr_t packNetpollKey(uint8_t source, pollDesc* pd);
+    int32_t netpollopen(uintptr_t fd, pollDesc* pd);
+    void netpollarm(pollDesc* pd, int mode);
+    std::tuple<gList, int32_t> netpoll(int64_t delay);
+}
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/syscall/windows/defs_windows.fwd.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/syscall/windows/defs_windows.h"
+
+namespace golang::runtime
+{
+    namespace windows = golang::internal::runtime::syscall::windows;
+    namespace atomic = golang::internal::runtime::atomic;
+    struct pollOperation
     {
         // used by windows
-        overlapped o{};
+        windows::Overlapped _1{};
         // used by netpoll
         pollDesc* pd{};
         int32_t mode{};
-        int32_t errno{};
-        uint32_t qty{};
 
         using isGoStruct = void;
 
@@ -46,11 +58,11 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct net_op& value);
+    std::ostream& operator<<(std::ostream& os, const struct pollOperation& value);
     struct overlappedEntry
     {
-        pollDesc* key{};
-        net_op* op{}; // In reality it's *overlapped, but we cast it to *net_op anyway.
+        uintptr_t key{};
+        windows::Overlapped* ov{};
         uintptr_t internal{};
         uint32_t qty{};
 
@@ -67,10 +79,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct overlappedEntry& value);
     extern atomic::Uint32 netpollWakeSig;
-    int32_t netpollopen(uintptr_t fd, pollDesc* pd);
-    void netpollarm(pollDesc* pd, int mode);
-    std::tuple<gList, int32_t> netpoll(int64_t delay);
-    int32_t handlecompletion(gList* toRun, net_op* op, int32_t errno, uint32_t qty);
+    pollOperation* pollOperationFromOverlappedEntry(overlappedEntry* e);
 
     namespace rec
     {

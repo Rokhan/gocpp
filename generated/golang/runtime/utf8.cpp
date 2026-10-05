@@ -37,13 +37,13 @@ namespace golang::runtime
     // If the string appears to be incomplete or decoding problems
     // are encountered (runeerror, k + 1) is returned to ensure
     // progress when decoderune is used to iterate over a string.
-    std::tuple<gocpp::rune, int> decoderune(gocpp::string s, int k)
+    std::tuple<gocpp::rune, unsigned int> decoderune(gocpp::string s, unsigned int k)
     {
         gocpp::rune r;
-        int pos;
+        unsigned int pos;
         pos = k;
 
-        if(k >= len(s))
+        if(k >= (unsigned int)(len(s)))
         {
             return {runeError, k + 1};
         }

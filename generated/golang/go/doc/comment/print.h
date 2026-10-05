@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     struct commentPrinter
     {
@@ -31,7 +31,7 @@ namespace golang::comment
 }
 #include "golang/go/doc/comment/parse.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
     struct Printer
     {
@@ -86,8 +86,9 @@ namespace golang::comment
 #include "golang/bytes/buffer.h"
 #include "golang/go/doc/comment/parse.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
+    namespace bytes = golang::bytes;
 
     namespace rec
     {
@@ -98,7 +99,7 @@ namespace golang::comment
         gocpp::string DefaultID(Heading* h);
         gocpp::slice<unsigned char> Comment(Printer* p, Doc* d);
         void block(commentPrinter* p, bytes::Buffer* out, Block x);
-        void text(commentPrinter* p, bytes::Buffer* out, gocpp::string indent, gocpp::slice<golang::comment::Text> x);
+        void text(commentPrinter* p, bytes::Buffer* out, gocpp::string indent, gocpp::slice<golang::go::doc::comment::Text> x);
         void indent(commentPrinter* p, bytes::Buffer* out, gocpp::string indent, gocpp::string s);
     }
 }

@@ -11,7 +11,7 @@
 #include "golang/runtime/mpagealloc_64bit.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mem.h"
 #include "golang/runtime/mgcscavenge.h"
@@ -25,6 +25,7 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
         using atomic::rec::Load;
@@ -80,7 +81,7 @@ namespace golang::runtime
 
             // Reserve b bytes of memory anywhere in the address space.
             auto b = alignUp(uintptr_t(entries) * pallocSumBytes, physPageSize);
-            auto r = sysReserve(nullptr, b);
+            auto r = sysReserve(nullptr, b, "page summary"_s);
             if(r == nullptr)
             {
                 go_throw("failed to reserve page summary memory"_s);
@@ -188,13 +189,10 @@ namespace golang::runtime
             }
 
             // Map and commit need.
-            sysMap(gocpp::unsafe_pointer(rec::addr(gocpp::recv(need.base))), rec::size(gocpp::recv(need)), p->sysStat);
+            sysMap(gocpp::unsafe_pointer(rec::addr(gocpp::recv(need.base))), rec::size(gocpp::recv(need)), p->sysStat, "page alloc"_s);
             sysUsed(gocpp::unsafe_pointer(rec::addr(gocpp::recv(need.base))), rec::size(gocpp::recv(need)), rec::size(gocpp::recv(need)));
             p->summaryMappedReady += rec::size(gocpp::recv(need));
         }
-
-        // Update the scavenge index.
-        p->summaryMappedReady += rec::sysGrow(gocpp::recv(p->scav.index), base, limit, p->sysStat);
     }
 
     // sysGrow increases the index's backing store in response to a heap growth.
@@ -244,7 +242,7 @@ namespace golang::runtime
         // If we've got something to map, map it, and update the slice bounds.
         if(rec::size(gocpp::recv(need)) != 0)
         {
-            sysMap(gocpp::unsafe_pointer(rec::addr(gocpp::recv(need.base))), rec::size(gocpp::recv(need)), sysStat);
+            sysMap(gocpp::unsafe_pointer(rec::addr(gocpp::recv(need.base))), rec::size(gocpp::recv(need)), sysStat, "scavenge index"_s);
             sysUsed(gocpp::unsafe_pointer(rec::addr(gocpp::recv(need.base))), rec::size(gocpp::recv(need)), rec::size(gocpp::recv(need)));
             // Update the indices only after the new memory is valid.
             if(haveMax == 0 || needMin < haveMin)
@@ -266,7 +264,7 @@ namespace golang::runtime
     {
         auto n = uintptr_t(1 << heapAddrBits) / pallocChunkBytes;
         auto nbytes = n * gocpp::Sizeof<atomicScavChunkData>();
-        auto r = sysReserve(nullptr, nbytes);
+        auto r = sysReserve(nullptr, nbytes, "scavenge index"_s);
         auto sl = notInHeapSlice {(notInHeap*)(r), int(n), int(n)};
         s->chunks = *(gocpp::slice<atomicScavChunkData>*)(gocpp::unsafe_pointer(& sl));
         // All memory above is mapped Reserved.

@@ -37,10 +37,13 @@
 #include "golang/go/types/util.h"
 #include "golang/internal/types/errors/codes.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
+    namespace token = golang::go::token;
     namespace rec
     {
+        using ast::rec::End;
         using ast::rec::Pos;
     }
 
@@ -225,8 +228,9 @@ namespace golang::types
         }
 
         // TODO(mdempsky): Pivot stack so we report the cycle from the top?
+        auto err = rec::newError(gocpp::recv(check), InvalidInstanceCycle);
         auto obj0 = check->mono.vertices[v].obj;
-        rec::error(gocpp::recv(check), obj0, InvalidInstanceCycle, "instantiation cycle:"_s);
+        rec::addf(gocpp::recv(err), obj0, "instantiation cycle:"_s);
 
         auto qf = RelativeTo(check->pkg);
         for(auto [gocpp_ignored, v] : stack)
@@ -250,18 +254,19 @@ namespace golang::types
                     // secondary error, \t indented
                     case 0:
                     {
-                        rec::errorf(gocpp::recv(check), atPos(edge.pos), InvalidInstanceCycle, "\t%s implicitly parameterized by %s"_s, rec::Name(gocpp::recv(obj)), TypeString(edge.typ, qf));
+                        rec::addf(gocpp::recv(err), atPos(edge.pos), "%s implicitly parameterized by %s"_s, rec::Name(gocpp::recv(obj)), TypeString(edge.typ, qf));
                         break;
                     }
                     // secondary error, \t indented
                     case 1:
                     {
-                        rec::errorf(gocpp::recv(check), atPos(edge.pos), InvalidInstanceCycle, "\t%s instantiated as %s"_s, rec::Name(gocpp::recv(obj)), TypeString(edge.typ, qf));
+                        rec::addf(gocpp::recv(err), atPos(edge.pos), "%s instantiated as %s"_s, rec::Name(gocpp::recv(obj)), TypeString(edge.typ, qf));
                         break;
                     }
                 }
             }
         }
+        rec::report(gocpp::recv(err));
     }
 
     // recordCanon records that tpar is the canonical type parameter
@@ -277,7 +282,7 @@ namespace golang::types
 
     // recordInstance records that the given type parameters were
     // instantiated with the corresponding type arguments.
-    void rec::recordInstance(monoGraph* w, Package* pkg, token::Pos pos, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::types::Type> targs, gocpp::slice<ast::Expr> xlist)
+    void rec::recordInstance(monoGraph* w, Package* pkg, token::Pos pos, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> targs, gocpp::slice<ast::Expr> xlist)
     {
         for(auto [i, tpar] : tparams)
         {
@@ -285,14 +290,14 @@ namespace golang::types
             auto& pos = pos_tmp;
             if(i < len(xlist))
             {
-                pos = rec::Pos(gocpp::recv(xlist[i]));
+                pos = startPos(xlist[i]);
             }
             rec::assign(gocpp::recv(w), pkg, pos, tpar, targs[i]);
         }
     }
 
     // assign records that tpar was instantiated as targ at pos.
-    void rec::assign(monoGraph* w, Package* pkg, token::Pos pos, TypeParam* tpar, golang::types::Type targ)
+    void rec::assign(monoGraph* w, Package* pkg, token::Pos pos, TypeParam* tpar, golang::go::types::Type targ)
     {
         // Go generics do not have an analog to C++`s template-templates,
         // where a template parameter can itself be an instantiable
@@ -307,7 +312,7 @@ namespace golang::types
         }
 
         // flow adds an edge from vertex src representing that typ flows to tpar.
-        auto flow = [=](int src, golang::types::Type typ) mutable -> void
+        auto flow = [=](int src, golang::go::types::Type typ) mutable -> void
         {
             auto weight = 1;
             if(typ == targ)
@@ -320,8 +325,8 @@ namespace golang::types
 
         // Recursively walk the type argument to find any defined types or
         // type parameters.
-        std::function<void (golang::types::Type typ)> go_do = {};
-        go_do = [=](golang::types::Type typ) mutable -> void
+        std::function<void (golang::go::types::Type typ)> go_do = {};
+        go_do = [=](golang::go::types::Type typ) mutable -> void
         {
             //Go type switch emulation
             {
@@ -534,7 +539,7 @@ namespace golang::types
         return idx;
     }
 
-    void rec::addEdge(monoGraph* w, int dst, int src, int weight, token::Pos pos, golang::types::Type typ)
+    void rec::addEdge(monoGraph* w, int dst, int src, int weight, token::Pos pos, golang::go::types::Type typ)
     {
         // TODO(mdempsky): Deduplicate redundant edges?
         w->edges = append(w->edges, gocpp::Init<monoEdge>([=](auto& x) {

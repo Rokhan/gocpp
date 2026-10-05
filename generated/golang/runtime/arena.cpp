@@ -13,19 +13,20 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
-#include "golang/internal/goexperiment/exp_allocheaders_on.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/stubs.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/math/math.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/error.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/math/math.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
+#include "golang/runtime/malloc_stubs.h"
 #include "golang/runtime/mbarrier.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
+#include "golang/runtime/mbitmap.h"
 #include "golang/runtime/mcache.h"
 #include "golang/runtime/mcentral.h"
 #include "golang/runtime/mem.h"
@@ -48,12 +49,20 @@
 #include "golang/runtime/string.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/type.h"
-#include "golang/runtime/typekind.h"
+#include "golang/runtime/valgrind0.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace goarch = golang::internal::goarch;
+    namespace math = golang::internal::runtime::math;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
+        using abi::rec::Kind;
+        using abi::rec::Pointers;
         using atomic::rec::Add;
         using atomic::rec::Load;
         using atomic::rec::Store;
@@ -76,7 +85,7 @@ namespace golang::runtime
     go_any arena_arena_New(gocpp::unsafe_pointer arena, go_any typ)
     {
         auto t = (_type*)(efaceOf(& typ)->data);
-        if(t->Kind_ & kindMask != kindPtr)
+        if(rec::Kind(gocpp::recv(t)) != abi::Pointer)
         {
             go_throw("arena_New: non-pointer type"_s);
         }
@@ -116,11 +125,11 @@ namespace golang::runtime
         auto t = e->_type;
         //Go switch emulation
         {
-            auto condition = t->Kind_ & kindMask;
+            auto condition = rec::Kind(gocpp::recv(t));
             int conditionId = -1;
-            if(condition == kindString) { conditionId = 0; }
-            else if(condition == kindSlice) { conditionId = 1; }
-            else if(condition == kindPtr) { conditionId = 2; }
+            if(condition == abi::String) { conditionId = 0; }
+            else if(condition == abi::Slice) { conditionId = 1; }
+            else if(condition == abi::Pointer) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -147,11 +156,11 @@ namespace golang::runtime
         go_any x = {};
         //Go switch emulation
         {
-            auto condition = t->Kind_ & kindMask;
+            auto condition = rec::Kind(gocpp::recv(t));
             int conditionId = -1;
-            if(condition == kindString) { conditionId = 0; }
-            else if(condition == kindSlice) { conditionId = 1; }
-            else if(condition == kindPtr) { conditionId = 2; }
+            if(condition == abi::String) { conditionId = 0; }
+            else if(condition == abi::Slice) { conditionId = 1; }
+            else if(condition == abi::Pointer) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -219,15 +228,11 @@ namespace golang::runtime
     // heap metadata.
     uintptr_t userArenaChunkReserveBytes()
     {
-        if(goexperiment::AllocHeaders)
-        {
-            // In the allocation headers experiment, we reserve the end of the chunk for
-            // a pointer/scalar bitmap. We also reserve space for a dummy _type that
-            // refers to the bitmap. The PtrBytes field of the dummy _type indicates how
-            // many of those bits are valid.
-            return userArenaChunkBytes / goarch::PtrSize / 8 + gocpp::Sizeof<_type>();
-        }
-        return 0;
+        // In the allocation headers experiment, we reserve the end of the chunk for
+        // a pointer/scalar bitmap. We also reserve space for a dummy _type that
+        // refers to the bitmap. The PtrBytes field of the dummy _type indicates how
+        // many of those bits are valid.
+        return userArenaChunkBytes / goarch::PtrSize / 8 + gocpp::Sizeof<_type>();
     }
 
     
@@ -308,12 +313,12 @@ namespace golang::runtime
         }
         auto i = efaceOf(& sl);
         auto typ = i->_type;
-        if(typ->Kind_ & kindMask != kindPtr)
+        if(rec::Kind(gocpp::recv(typ)) != abi::Pointer)
         {
             gocpp::panic("slice result of non-ptr type"_s);
         }
         typ = (ptrtype*)(gocpp::unsafe_pointer(typ))->Elem;
-        if(typ->Kind_ & kindMask != kindSlice)
+        if(rec::Kind(gocpp::recv(typ)) != abi::Slice)
         {
             gocpp::panic("slice of non-ptr-to-slice type"_s);
         }
@@ -566,7 +571,7 @@ namespace golang::runtime
         mp->mallocing = 1;
 
         gocpp::unsafe_pointer ptr = {};
-        if(typ->PtrBytes == 0)
+        if(! rec::Pointers(gocpp::recv(typ)))
         {
             // Allocate pointer-less objects from the tail end of the chunk.
             auto [v, ok] = rec::takeFromBack(gocpp::recv(s->userArenaChunkFree), size, typ->Align_);
@@ -595,7 +600,7 @@ namespace golang::runtime
             go_throw("arena chunk needs zeroing, but should already be zeroed"_s);
         }
         // Set up heap bitmap and do extra accounting.
-        if(typ->PtrBytes != 0)
+        if(rec::Pointers(gocpp::recv(typ)))
         {
             if(cap >= 0)
             {
@@ -650,6 +655,260 @@ namespace golang::runtime
         }
     }
 
+    // userArenaHeapBitsSetType is the equivalent of heapSetType but for
+    // non-slice-backing-store Go values allocated in a user arena chunk. It
+    // sets up the type metadata for the value with type typ allocated at address ptr.
+    // base is the base address of the arena chunk.
+    void userArenaHeapBitsSetType(_type* typ, gocpp::unsafe_pointer ptr, mspan* s)
+    {
+        auto base = rec::base(gocpp::recv(s));
+        auto h = rec::writeUserArenaHeapBits(gocpp::recv(s), uintptr_t(ptr));
+
+        // start of 1-bit pointer mask
+        auto p = getGCMask(typ);
+        auto nb = typ->PtrBytes / goarch::PtrSize;
+
+        for(auto i = uintptr_t(0); i < nb; i += ptrBits)
+        {
+            auto k = nb - i;
+            if(k > ptrBits)
+            {
+                k = ptrBits;
+            }
+            // N.B. On big endian platforms we byte swap the data that we
+            // read from GCData, which is always stored in little-endian order
+            // by the compiler. writeUserArenaHeapBits handles data in
+            // a platform-ordered way for efficiency, but stores back the
+            // data in little endian order, since we expose the bitmap through
+            // a dummy type.
+            h = rec::write(gocpp::recv(h), s, readUintptr(addb(p, i / 8)), k);
+        }
+        // Note: we call pad here to ensure we emit explicit 0 bits
+        // for the pointerless tail of the object. This ensures that
+        // there's only a single noMorePtrs mark for the next object
+        // to clear. We don't need to do this to clear stale noMorePtrs
+        // markers from previous uses because arena chunk pointer bitmaps
+        // are always fully cleared when reused.
+        h = rec::pad(gocpp::recv(h), s, typ->Size_ - typ->PtrBytes);
+        rec::flush(gocpp::recv(h), s, uintptr_t(ptr), typ->Size_);
+
+        // Update the PtrBytes value in the type information. After this
+        // point, the GC will observe the new bitmap.
+        s->largeType->PtrBytes = uintptr_t(ptr) - base + typ->PtrBytes;
+
+        // Double-check that the bitmap was written out correctly.
+        auto doubleCheck = false;
+        if(doubleCheck)
+        {
+            doubleCheckHeapPointersInterior(uintptr_t(ptr), uintptr_t(ptr), typ->Size_, typ->Size_, typ, & s->largeType, s);
+        }
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    writeUserArenaHeapBits::operator T()
+    {
+        T result;
+        result.offset = this->offset;
+        result.mask = this->mask;
+        result.valid = this->valid;
+        result.low = this->low;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool writeUserArenaHeapBits::operator==(const T& ref) const
+    {
+        if (offset != ref.offset) return false;
+        if (mask != ref.mask) return false;
+        if (valid != ref.valid) return false;
+        if (low != ref.low) return false;
+        return true;
+    }
+
+    std::ostream& writeUserArenaHeapBits::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << offset;
+        os << " " << mask;
+        os << " " << valid;
+        os << " " << low;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct writeUserArenaHeapBits& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    golang::runtime::writeUserArenaHeapBits rec::writeUserArenaHeapBits(mspan* s, uintptr_t addr)
+    {
+        golang::runtime::writeUserArenaHeapBits h;
+        auto offset = addr - rec::base(gocpp::recv(s));
+
+        // We start writing bits maybe in the middle of a heap bitmap word.
+        // Remember how many bits into the word we started, so we can be sure
+        // not to overwrite the previous bits.
+        h.low = offset / goarch::PtrSize % ptrBits;
+
+        // round down to heap word that starts the bitmap word.
+        h.offset = offset - h.low * goarch::PtrSize;
+
+        // We don't have any bits yet.
+        h.mask = 0;
+        h.valid = h.low;
+
+        return h;
+    }
+
+    // write appends the pointerness of the next valid pointer slots
+    // using the low valid bits of bits. 1=pointer, 0=scalar.
+    golang::runtime::writeUserArenaHeapBits rec::write(golang::runtime::writeUserArenaHeapBits h, mspan* s, uintptr_t bits, uintptr_t valid)
+    {
+        // Too many bits to fit in this word. Write the current word
+        // out and move on to the next word.
+        if(h.valid + valid <= ptrBits)
+        {
+            // Fast path - just accumulate the bits.
+            h.mask |= bits << h.valid;
+            h.valid += valid;
+            return h;
+        }
+
+
+
+        // mask for this word
+        auto data = h.mask | (bits << h.valid);
+        // leftover for next word
+        h.mask = bits >> (ptrBits - h.valid);
+        // have h.valid+valid bits, writing ptrBits of them
+        h.valid += valid - ptrBits;
+
+        // Flush mask to the memory bitmap.
+        auto idx = h.offset / (ptrBits * goarch::PtrSize);
+        auto m = (uintptr_t(1) << h.low) - 1;
+        auto bitmap = rec::heapBits(gocpp::recv(s));
+        // Note: no synchronization required for this write because
+        // the allocator has exclusive access to the page, and the bitmap
+        // entries are all for a single page. Also, visibility of these
+        // writes is guaranteed by the publication barrier in mallocgc.
+        bitmap[idx] = bswapIfBigEndian(bswapIfBigEndian(bitmap[idx]) & m | data);
+
+
+
+
+
+        // Move to next word of bitmap.
+        h.offset += ptrBits * goarch::PtrSize;
+        h.low = 0;
+        return h;
+    }
+
+    // Add padding of size bytes.
+    golang::runtime::writeUserArenaHeapBits rec::pad(golang::runtime::writeUserArenaHeapBits h, mspan* s, uintptr_t size)
+    {
+        if(size == 0)
+        {
+            return h;
+        }
+        auto words = size / goarch::PtrSize;
+        for(; words > ptrBits; )
+        {
+            h = rec::write(gocpp::recv(h), s, 0, ptrBits);
+            words -= ptrBits;
+        }
+        return rec::write(gocpp::recv(h), s, 0, words);
+    }
+
+    // Flush the bits that have been written, and add zeros as needed
+    // to cover the full object [addr, addr+size).
+    void rec::flush(golang::runtime::writeUserArenaHeapBits h, mspan* s, uintptr_t addr, uintptr_t size)
+    {
+        auto offset = addr - rec::base(gocpp::recv(s));
+
+        // zeros counts the number of bits needed to represent the object minus the
+        // number of bits we've already written. This is the number of 0 bits
+        // that need to be added.
+        auto zeros = (offset + size - h.offset) / goarch::PtrSize - h.valid;
+
+        // Add zero bits up to the bitmap word boundary
+        if(zeros > 0)
+        {
+            auto z = ptrBits - h.valid;
+            if(z > zeros)
+            {
+                z = zeros;
+            }
+            h.valid += z;
+            zeros -= z;
+        }
+
+        // Find word in bitmap that we're going to write.
+        auto bitmap = rec::heapBits(gocpp::recv(s));
+        auto idx = h.offset / (ptrBits * goarch::PtrSize);
+
+        // Write remaining bits.
+        if(h.valid != h.low)
+        {
+            // don't clear existing bits below "low"
+            auto m = (uintptr_t(1) << h.low) - 1;
+            // don't clear existing bits above "valid"
+            m |= ~ ((uintptr_t(1) << h.valid) - 1);
+            bitmap[idx] = bswapIfBigEndian(bswapIfBigEndian(bitmap[idx]) & m | h.mask);
+        }
+        if(zeros == 0)
+        {
+            return;
+        }
+
+        // Advance to next bitmap word.
+        h.offset += ptrBits * goarch::PtrSize;
+
+        // Continue on writing zeros for the rest of the object.
+        // For standard use of the ptr bits this is not required, as
+        // the bits are read from the beginning of the object. Some uses,
+        // like noscan spans, oblets, bulk write barriers, and cgocheck, might
+        // start mid-object, so these writes are still required.
+        for(; ; )
+        {
+            // Write zero bits.
+            auto idx = h.offset / (ptrBits * goarch::PtrSize);
+            if(zeros < ptrBits)
+            {
+                bitmap[idx] = bswapIfBigEndian(bswapIfBigEndian(bitmap[idx]) &^ ((uintptr_t(1) << zeros) - 1));
+                break;
+            }
+            else
+            if(zeros == ptrBits)
+            {
+                bitmap[idx] = 0;
+                break;
+            }
+            else
+            {
+                bitmap[idx] = 0;
+                zeros -= ptrBits;
+            }
+            h.offset += ptrBits * goarch::PtrSize;
+        }
+    }
+
+    // bswapIfBigEndian swaps the byte order of the uintptr on goarch.BigEndian platforms,
+    // and leaves it alone elsewhere.
+    uintptr_t bswapIfBigEndian(uintptr_t x)
+    {
+        if(goarch::BigEndian)
+        {
+            if(goarch::PtrSize == 8)
+            {
+                return uintptr_t(sys::Bswap64(uint64_t(x)));
+            }
+            return uintptr_t(sys::Bswap32(uint32_t(x)));
+        }
+        return x;
+    }
+
     // newUserArenaChunk allocates a user arena chunk, which maps to a single
     // heap arena and single span. Returns a pointer to the base of the chunk
     // (this is really important: we need to keep the chunk alive) and the span.
@@ -666,7 +925,10 @@ namespace golang::runtime
         // does represent additional work for the GC, but we also have no idea
         // what that looks like until we actually allocate things into the
         // arena).
-        deductAssistCredit(userArenaChunkBytes);
+        if(gcBlackenEnabled != 0)
+        {
+            deductAssistCredit(userArenaChunkBytes);
+        }
 
         // Set mp.mallocing to keep from being preempted by GC.
         auto mp = acquirem();
@@ -716,14 +978,8 @@ namespace golang::runtime
         if(asanenabled)
         {
             // TODO(mknyszek): Track individual objects.
-            auto rzSize = computeRZlog(span->elemsize);
-            span->elemsize -= rzSize;
-            if(goexperiment::AllocHeaders)
-            {
-                span->largeType->Size_ = span->elemsize;
-            }
+            // N.B. span.elemsize includes a redzone already.
             auto rzStart = rec::base(gocpp::recv(span)) + span->elemsize;
-            span->userArenaChunkFree = makeAddrRange(rec::base(gocpp::recv(span)), rzStart);
             asanpoison(gocpp::unsafe_pointer(rzStart), span->limit - rzStart);
             asanunpoison(gocpp::unsafe_pointer(rec::base(gocpp::recv(span))), span->elemsize);
         }
@@ -736,9 +992,9 @@ namespace golang::runtime
                 go_throw("newUserArenaChunk called without a P or outside bootstrapping"_s);
             }
             // Note cache c only valid while m acquired; see #47302
-            if(rate != 1 && userArenaChunkBytes < c->nextSample)
+            if(rate != 1 && int64_t(userArenaChunkBytes) < c->nextSample)
             {
-                c->nextSample -= userArenaChunkBytes;
+                c->nextSample -= int64_t(userArenaChunkBytes);
             }
             else
             {
@@ -758,11 +1014,6 @@ namespace golang::runtime
 
         if(debug.malloc)
         {
-            if(debug.allocfreetrace != 0)
-            {
-                tracealloc(gocpp::unsafe_pointer(rec::base(gocpp::recv(span))), userArenaChunkBytes, nullptr);
-            }
-
             if(inittrace.active && inittrace.id == getg()->goid)
             {
                 // Init functions are executed sequentially in a single goroutine.
@@ -899,7 +1150,7 @@ namespace golang::runtime
             go_throw("invalid user arena span size"_s);
         }
 
-        // Mark the region as free to various santizers immediately instead
+        // Mark the region as free to various sanitizers immediately instead
         // of handling them at sweep time.
         if(raceenabled)
         {
@@ -912,6 +1163,10 @@ namespace golang::runtime
         if(asanenabled)
         {
             asanpoison(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), s->elemsize);
+        }
+        if(valgrindenabled)
+        {
+            valgrindFree(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))));
         }
 
         // Make ourselves non-preemptible as we manipulate state and statistics.
@@ -979,7 +1234,7 @@ namespace golang::runtime
                 // is mapped contiguously.
                 hintList = & h->arenaHints;
             }
-            auto [v, size] = rec::sysAlloc(gocpp::recv(h), userArenaChunkBytes, hintList, false);
+            auto [v, size] = rec::sysAlloc(gocpp::recv(h), userArenaChunkBytes, hintList, & mheap_.userArenaArenas);
             if(size % userArenaChunkBytes != 0)
             {
                 go_throw("sysAlloc size is not divisible by userArenaChunkBytes"_s);
@@ -1014,17 +1269,34 @@ namespace golang::runtime
         // it to Prepared and then Ready.
         // Unlike (*mheap).grow, just map in everything that we
         // asked for. We're likely going to use it all.
-        sysMap(gocpp::unsafe_pointer(base), userArenaChunkBytes, & gcController.heapReleased);
+        sysMap(gocpp::unsafe_pointer(base), userArenaChunkBytes, & gcController.heapReleased, "user arena chunk"_s);
         sysUsed(gocpp::unsafe_pointer(base), userArenaChunkBytes, userArenaChunkBytes);
 
         // Model the user arena as a heap span for a large object.
         auto spc = makeSpanClass(0, false);
-        rec::initSpan(gocpp::recv(h), s, spanAllocHeap, spc, base, userArenaChunkPages);
+        // A user arena chunk is always fresh from the OS. It's either newly allocated
+        // via sysAlloc() or reused from the readyList after a sysFault(). The memory is
+        // then re-mapped via sysMap(), so we can safely treat it as scavenged; the
+        // kernel guarantees it will be zero-filled on its next use.
+        rec::initSpan(gocpp::recv(h), s, spanAllocHeap, spc, base, userArenaChunkPages, userArenaChunkBytes);
         s->isUserArenaChunk = true;
         s->elemsize -= userArenaChunkReserveBytes();
-        s->limit = rec::base(gocpp::recv(s)) + s->elemsize;
         s->freeindex = 1;
         s->allocCount = 1;
+
+        // Adjust s.limit down to the object-containing part of the span.
+        // This is just to create a slightly tighter bound on the limit.
+        // It's totally OK if the garbage collector, in particular
+        // conservative scanning, can temporarily observes an inflated
+        // limit. It will simply mark the whole chunk or just skip it
+        // since we're in the mark phase anyway.
+        s->limit = rec::base(gocpp::recv(s)) + s->elemsize;
+
+        // Adjust size to include redzone.
+        if(asanenabled)
+        {
+            s->elemsize -= redZoneSize(s->elemsize);
+        }
 
         // Account for this new arena chunk memory.
         rec::add(gocpp::recv(gcController.heapInUse), int64_t(userArenaChunkBytes));
@@ -1047,7 +1319,7 @@ namespace golang::runtime
 
         // This must clear the entire heap bitmap so that it's safe
         // to allocate noscan data without writing anything out.
-        rec::initHeapBits(gocpp::recv(s), true);
+        rec::initHeapBits(gocpp::recv(s));
 
         // Clear the span preemptively. It's an arena chunk, so let's assume
         // everything is going to be used.
@@ -1069,15 +1341,13 @@ namespace golang::runtime
         // visible to the background sweeper.
         rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(h->central[spc].mcentral), h->sweepgen)), s);
 
-        if(goexperiment::AllocHeaders)
-        {
-            // Set up an allocation header. Avoid write barriers here because this type
-            // is not a real type, and it exists in an invalid location.
-            *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType)) = uintptr_t(gocpp::unsafe_pointer(s->limit));
-            *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType->GCData)) = s->limit + gocpp::Sizeof<_type>();
-            s->largeType->PtrBytes = 0;
-            s->largeType->Size_ = s->elemsize;
-        }
+        // Set up an allocation header. Avoid write barriers here because this type
+        // is not a real type, and it exists in an invalid location.
+        *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType)) = uintptr_t(gocpp::unsafe_pointer(s->limit));
+        *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType->GCData)) = s->limit + gocpp::Sizeof<_type>();
+        s->largeType->PtrBytes = 0;
+        s->largeType->Size_ = s->elemsize;
+
         return s;
     }
 

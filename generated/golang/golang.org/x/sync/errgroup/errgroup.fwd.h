@@ -4,14 +4,8 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::errgroup
+namespace golang::golang_org::x::sync::errgroup
 {
     struct token;
-}
-#include "golang/sync/once.fwd.h"
-#include "golang/sync/waitgroup.fwd.h"
-
-namespace golang::errgroup
-{
     struct Group;
 }

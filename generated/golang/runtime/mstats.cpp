@@ -11,12 +11,14 @@
 #include "golang/runtime/mstats.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/gc/sizeclasses.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/mcache.h"
 #include "golang/runtime/mfixalloc.h"
+#include "golang/runtime/mgcmark_greenteagc.h"
 #include "golang/runtime/mgcpacer.h"
 #include "golang/runtime/mgcscavenge.h"
 #include "golang/runtime/mheap.h"
@@ -25,17 +27,20 @@
 #include "golang/runtime/profbuf.h"
 #include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/sizeclasses.h"
 #include "golang/runtime/stack.h"
 #include "golang/runtime/stubs.h"
-#include "golang/runtime/trace2.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2event.h"
-#include "golang/runtime/trace2stack.h"
-#include "golang/runtime/trace2string.h"
+#include "golang/runtime/trace.h"
+#include "golang/runtime/tracebuf.h"
+#include "golang/runtime/traceevent.h"
+#include "golang/runtime/tracestack.h"
+#include "golang/runtime/tracestring.h"
+#include "golang/runtime/tracetype.h"
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace gc = golang::internal::runtime::gc;
     namespace rec
     {
         using atomic::rec::Add;
@@ -64,6 +69,7 @@ namespace golang::runtime
         result.gc_cpu_fraction = this->gc_cpu_fraction;
         result.last_gc_nanotime = this->last_gc_nanotime;
         result.lastHeapInUse = this->lastHeapInUse;
+        result.lastScanStats = this->lastScanStats;
         result.enablegc = this->enablegc;
         return result;
     }
@@ -87,6 +93,7 @@ namespace golang::runtime
         if (gc_cpu_fraction != ref.gc_cpu_fraction) return false;
         if (last_gc_nanotime != ref.last_gc_nanotime) return false;
         if (lastHeapInUse != ref.lastHeapInUse) return false;
+        if (lastScanStats != ref.lastScanStats) return false;
         if (enablegc != ref.enablegc) return false;
         return true;
     }
@@ -110,6 +117,7 @@ namespace golang::runtime
         os << " " << gc_cpu_fraction;
         os << " " << last_gc_nanotime;
         os << " " << lastHeapInUse;
+        os << " " << lastScanStats;
         os << " " << enablegc;
         os << '}';
         return os;
@@ -394,20 +402,20 @@ namespace golang::runtime
         auto nFree = consStats.largeFreeCount;
 
         // Collect per-sizeclass stats.
-        gocpp::array<gocpp_id_1, _NumSizeClasses> bySize = {};
+        gocpp::array<gocpp_id_1, gc::NumSizeClasses> bySize = {};
         for(auto [i, gocpp_ignored] : bySize)
         {
-            bySize[i].Size = uint32_t(class_to_size[i]);
+            bySize[i].Size = uint32_t(gc::SizeClassToSize[i]);
 
             // Malloc stats.
             auto a = consStats.smallAllocCount[i];
-            totalAlloc += a * uint64_t(class_to_size[i]);
+            totalAlloc += a * uint64_t(gc::SizeClassToSize[i]);
             nMalloc += a;
             bySize[i].Mallocs = a;
 
             // Free stats.
             auto f = consStats.smallFreeCount[i];
-            totalFree += f * uint64_t(class_to_size[i]);
+            totalFree += f * uint64_t(gc::SizeClassToSize[i]);
             nFree += f;
             bySize[i].Frees = f;
         }
@@ -424,12 +432,11 @@ namespace golang::runtime
         // Calculate derived stats.
         auto stackInUse = uint64_t(consStats.inStacks);
         auto gcWorkBufInUse = uint64_t(consStats.inWorkBufs);
-        auto gcProgPtrScalarBitsInUse = uint64_t(consStats.inPtrScalarBits);
 
         auto totalMapped = rec::load(gocpp::recv(gcController.heapInUse)) + rec::load(gocpp::recv(gcController.heapFree)) + rec::load(gocpp::recv(gcController.heapReleased)) +
                 rec::load(gocpp::recv(memstats.stacks_sys)) + rec::load(gocpp::recv(memstats.mspan_sys)) + rec::load(gocpp::recv(memstats.mcache_sys)) +
                 rec::load(gocpp::recv(memstats.buckhash_sys)) + rec::load(gocpp::recv(memstats.gcMiscSys)) + rec::load(gocpp::recv(memstats.other_sys)) +
-                stackInUse + gcWorkBufInUse + gcProgPtrScalarBitsInUse;
+                stackInUse + gcWorkBufInUse;
 
         auto heapGoal = rec::heapGoal(gocpp::recv(gcController));
 
@@ -442,14 +449,14 @@ namespace golang::runtime
             // should be identical to some combination of memstats. In particular:
             // * memstats.heapInUse == inHeap
             // * memstats.heapReleased == released
-            // * memstats.heapInUse + memstats.heapFree == committed - inStacks - inWorkBufs - inPtrScalarBits
+            // * memstats.heapInUse + memstats.heapFree == committed - inStacks - inWorkBufs
             // * memstats.totalAlloc == totalAlloc
             // * memstats.totalFree == totalFree
             // Check if that's actually true.
             // Prevent sysmon and the tracer from skewing the stats since they can
             // act without synchronizing with a STW. See #64401.
             lock(& sched.sysmonlock);
-            lock(& trace.lock);
+            lock(& runtime::trace.lock);
             if(rec::load(gocpp::recv(gcController.heapInUse)) != uint64_t(consStats.inHeap))
             {
                 print("runtime: heapInUse="_s, rec::load(gocpp::recv(gcController.heapInUse)), "\n"_s);
@@ -463,7 +470,7 @@ namespace golang::runtime
                 go_throw("heapReleased and consistent stats are not equal"_s);
             }
             auto heapRetained = rec::load(gocpp::recv(gcController.heapInUse)) + rec::load(gocpp::recv(gcController.heapFree));
-            auto consRetained = uint64_t(consStats.committed - consStats.inStacks - consStats.inWorkBufs - consStats.inPtrScalarBits);
+            auto consRetained = uint64_t(consStats.committed - consStats.inStacks - consStats.inWorkBufs);
             if(heapRetained != consRetained)
             {
                 print("runtime: global value="_s, heapRetained, "\n"_s);
@@ -493,7 +500,7 @@ namespace golang::runtime
                 print("runtime: totalMapped-released="_s, totalMapped - uint64_t(consStats.released), "\n"_s);
                 go_throw("mappedReady and other memstats are not equal"_s);
             }
-            unlock(& trace.lock);
+            unlock(& runtime::trace.lock);
             unlock(& sched.sysmonlock);
         }
 
@@ -514,8 +521,8 @@ namespace golang::runtime
         // HeapSys = bytes allocated from the OS for the heap - bytes ultimately used for non-heap purposes
         // HeapIdle = bytes allocated from the OS for the heap - bytes ultimately used for any purpose
         // or
-        // HeapSys = sys - stacks_inuse - gcWorkBufInUse - gcProgPtrScalarBitsInUse
-        // HeapIdle = sys - stacks_inuse - gcWorkBufInUse - gcProgPtrScalarBitsInUse - heapInUse
+        // HeapSys = sys - stacks_inuse - gcWorkBufInUse
+        // HeapIdle = sys - stacks_inuse - gcWorkBufInUse - heapInUse
         // => HeapIdle = HeapSys - heapInUse = heapFree + heapReleased
         stats->HeapIdle = rec::load(gocpp::recv(gcController.heapFree)) + rec::load(gocpp::recv(gcController.heapReleased));
         stats->HeapInuse = rec::load(gocpp::recv(gcController.heapInUse));
@@ -533,7 +540,7 @@ namespace golang::runtime
         // MemStats defines GCSys as an aggregate of all memory related
         // to the memory management system, but we track this memory
         // at a more granular level in the runtime.
-        stats->GCSys = rec::load(gocpp::recv(memstats.gcMiscSys)) + gcWorkBufInUse + gcProgPtrScalarBitsInUse;
+        stats->GCSys = rec::load(gocpp::recv(memstats.gcMiscSys)) + gcWorkBufInUse;
         stats->OtherSys = rec::load(gocpp::recv(memstats.other_sys));
         stats->NextGC = heapGoal;
         stats->LastGC = memstats.last_gc_unix;
@@ -677,7 +684,6 @@ namespace golang::runtime
         result.inHeap = this->inHeap;
         result.inStacks = this->inStacks;
         result.inWorkBufs = this->inWorkBufs;
-        result.inPtrScalarBits = this->inPtrScalarBits;
         result.tinyAllocCount = this->tinyAllocCount;
         result.largeAlloc = this->largeAlloc;
         result.largeAllocCount = this->largeAllocCount;
@@ -696,7 +702,6 @@ namespace golang::runtime
         if (inHeap != ref.inHeap) return false;
         if (inStacks != ref.inStacks) return false;
         if (inWorkBufs != ref.inWorkBufs) return false;
-        if (inPtrScalarBits != ref.inPtrScalarBits) return false;
         if (tinyAllocCount != ref.tinyAllocCount) return false;
         if (largeAlloc != ref.largeAlloc) return false;
         if (largeAllocCount != ref.largeAllocCount) return false;
@@ -715,7 +720,6 @@ namespace golang::runtime
         os << " " << inHeap;
         os << " " << inStacks;
         os << " " << inWorkBufs;
-        os << " " << inPtrScalarBits;
         os << " " << tinyAllocCount;
         os << " " << largeAlloc;
         os << " " << largeAllocCount;
@@ -740,7 +744,6 @@ namespace golang::runtime
         a->inHeap += b->inHeap;
         a->inStacks += b->inStacks;
         a->inWorkBufs += b->inWorkBufs;
-        a->inPtrScalarBits += b->inPtrScalarBits;
 
         a->tinyAllocCount += b->tinyAllocCount;
         a->largeAlloc += b->largeAlloc;
@@ -890,10 +893,7 @@ namespace golang::runtime
     {
         assertWorldStopped();
 
-        for(auto [i, gocpp_ignored] : m->stats)
-        {
-            m->stats[i] = heapStatsDelta {};
-        }
+        clear(m->stats.make_slice(0));
     }
 
     // read takes a globally consistent snapshot of m
@@ -963,51 +963,51 @@ namespace golang::runtime
     cpuStats::operator T()
     {
         T result;
-        result.gcAssistTime = this->gcAssistTime;
-        result.gcDedicatedTime = this->gcDedicatedTime;
-        result.gcIdleTime = this->gcIdleTime;
-        result.gcPauseTime = this->gcPauseTime;
-        result.gcTotalTime = this->gcTotalTime;
-        result.scavengeAssistTime = this->scavengeAssistTime;
-        result.scavengeBgTime = this->scavengeBgTime;
-        result.scavengeTotalTime = this->scavengeTotalTime;
-        result.idleTime = this->idleTime;
-        result.userTime = this->userTime;
-        result.totalTime = this->totalTime;
+        result.GCAssistTime = this->GCAssistTime;
+        result.GCDedicatedTime = this->GCDedicatedTime;
+        result.GCIdleTime = this->GCIdleTime;
+        result.GCPauseTime = this->GCPauseTime;
+        result.GCTotalTime = this->GCTotalTime;
+        result.ScavengeAssistTime = this->ScavengeAssistTime;
+        result.ScavengeBgTime = this->ScavengeBgTime;
+        result.ScavengeTotalTime = this->ScavengeTotalTime;
+        result.IdleTime = this->IdleTime;
+        result.UserTime = this->UserTime;
+        result.TotalTime = this->TotalTime;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool cpuStats::operator==(const T& ref) const
     {
-        if (gcAssistTime != ref.gcAssistTime) return false;
-        if (gcDedicatedTime != ref.gcDedicatedTime) return false;
-        if (gcIdleTime != ref.gcIdleTime) return false;
-        if (gcPauseTime != ref.gcPauseTime) return false;
-        if (gcTotalTime != ref.gcTotalTime) return false;
-        if (scavengeAssistTime != ref.scavengeAssistTime) return false;
-        if (scavengeBgTime != ref.scavengeBgTime) return false;
-        if (scavengeTotalTime != ref.scavengeTotalTime) return false;
-        if (idleTime != ref.idleTime) return false;
-        if (userTime != ref.userTime) return false;
-        if (totalTime != ref.totalTime) return false;
+        if (GCAssistTime != ref.GCAssistTime) return false;
+        if (GCDedicatedTime != ref.GCDedicatedTime) return false;
+        if (GCIdleTime != ref.GCIdleTime) return false;
+        if (GCPauseTime != ref.GCPauseTime) return false;
+        if (GCTotalTime != ref.GCTotalTime) return false;
+        if (ScavengeAssistTime != ref.ScavengeAssistTime) return false;
+        if (ScavengeBgTime != ref.ScavengeBgTime) return false;
+        if (ScavengeTotalTime != ref.ScavengeTotalTime) return false;
+        if (IdleTime != ref.IdleTime) return false;
+        if (UserTime != ref.UserTime) return false;
+        if (TotalTime != ref.TotalTime) return false;
         return true;
     }
 
     std::ostream& cpuStats::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << gcAssistTime;
-        os << " " << gcDedicatedTime;
-        os << " " << gcIdleTime;
-        os << " " << gcPauseTime;
-        os << " " << gcTotalTime;
-        os << " " << scavengeAssistTime;
-        os << " " << scavengeBgTime;
-        os << " " << scavengeTotalTime;
-        os << " " << idleTime;
-        os << " " << userTime;
-        os << " " << totalTime;
+        os << "" << GCAssistTime;
+        os << " " << GCDedicatedTime;
+        os << " " << GCIdleTime;
+        os << " " << GCPauseTime;
+        os << " " << GCTotalTime;
+        os << " " << ScavengeAssistTime;
+        os << " " << ScavengeBgTime;
+        os << " " << ScavengeTotalTime;
+        os << " " << IdleTime;
+        os << " " << UserTime;
+        os << " " << TotalTime;
         os << '}';
         return os;
     }
@@ -1015,6 +1015,17 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct cpuStats& value)
     {
         return value.PrintTo(os);
+    }
+
+    // accumulateGCPauseTime add dt*stwProcs to the GC CPU pause time stats. dt should be
+    // the actual time spent paused, for orthogonality. maxProcs should be GOMAXPROCS,
+    // not work.stwprocs, since this number must be comparable to a total time computed
+    // from GOMAXPROCS.
+    void rec::accumulateGCPauseTime(cpuStats* s, int64_t dt, int32_t maxProcs)
+    {
+        auto cpu = dt * int64_t(maxProcs);
+        s->GCPauseTime += cpu;
+        s->GCTotalTime += cpu;
     }
 
     // accumulate takes a cpuStats and adds in the current state of all GC CPU
@@ -1046,28 +1057,28 @@ namespace golang::runtime
         auto scavBgCpu = rec::Load(gocpp::recv(runtime::scavenge.backgroundTime));
 
         // Update cumulative GC CPU stats.
-        s->gcAssistTime += markAssistCpu;
-        s->gcDedicatedTime += markDedicatedCpu + markFractionalCpu;
-        s->gcIdleTime += markIdleCpu;
-        s->gcTotalTime += markAssistCpu + markDedicatedCpu + markFractionalCpu + markIdleCpu;
+        s->GCAssistTime += markAssistCpu;
+        s->GCDedicatedTime += markDedicatedCpu + markFractionalCpu;
+        s->GCIdleTime += markIdleCpu;
+        s->GCTotalTime += markAssistCpu + markDedicatedCpu + markFractionalCpu + markIdleCpu;
 
         // Update cumulative scavenge CPU stats.
-        s->scavengeAssistTime += scavAssistCpu;
-        s->scavengeBgTime += scavBgCpu;
-        s->scavengeTotalTime += scavAssistCpu + scavBgCpu;
+        s->ScavengeAssistTime += scavAssistCpu;
+        s->ScavengeBgTime += scavBgCpu;
+        s->ScavengeTotalTime += scavAssistCpu + scavBgCpu;
 
         // Update total CPU.
-        s->totalTime = sched.totaltime + (now - sched.procresizetime) * int64_t(gomaxprocs);
-        s->idleTime += rec::Load(gocpp::recv(sched.idleTime));
+        s->TotalTime = sched.totaltime + (now - sched.procresizetime) * int64_t(gomaxprocs);
+        s->IdleTime += rec::Load(gocpp::recv(sched.idleTime));
 
         // Compute userTime. We compute this indirectly as everything that's not the above.
         // Since time spent in _Pgcstop is covered by gcPauseTime, and time spent in _Pidle
-        // is covered by idleTime, what we're left with is time spent in _Prunning and _Psyscall,
+        // is covered by idleTime, what we're left with is time spent in _Prunning,
         // the latter of which is fine because the P will either go idle or get used for something
         // else via sysmon. Meanwhile if we subtract GC time from whatever's left, we get non-GC
         // _Prunning time. Note that this still leaves time spent in sweeping and in the scheduler,
         // but that's fine. The overwhelming majority of this time will be actual user time.
-        s->userTime = s->totalTime - (s->gcTotalTime + s->scavengeTotalTime + s->idleTime);
+        s->UserTime = s->TotalTime - (s->GCTotalTime + s->ScavengeTotalTime + s->IdleTime);
     }
 
 }

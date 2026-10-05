@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::parser
+namespace golang::go::parser
 {
     using Mode = unsigned int;
     const Mode PackageClauseOnly = 1 << 0;

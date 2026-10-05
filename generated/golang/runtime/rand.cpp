@@ -11,10 +11,11 @@
 #include "golang/runtime/rand.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/byteorder/byteorder.h"
 #include "golang/internal/chacha8rand/chacha8.h"
 #include "golang/internal/goarch/zgoarch_amd64.h"
-#include "golang/runtime/internal/math/math.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/math/bits/bits.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
@@ -23,6 +24,11 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace bits = golang::math::bits;
+    namespace byteorder = golang::internal::byteorder;
+    namespace chacha8rand = golang::internal::chacha8rand;
+    namespace goarch = golang::internal::goarch;
     namespace rec
     {
         using chacha8rand::rec::Init;
@@ -92,18 +98,17 @@ namespace golang::runtime
         }
 
         auto seed = gocpp::make_array_ptr(globalRand.seed);
-        if(startupRand != nullptr)
+        if(len(startupRand) >= 16 &&
+                ! allZero(startupRand.make_slice(0, 8)) && ! allZero(startupRand.make_slice(8, 16)))
         {
             for(auto [i, c] : startupRand)
             {
                 seed[i % len(seed)] ^= c;
             }
-            clear(startupRand);
-            startupRand = nullptr;
         }
         else
         {
-            if(readRandom(seed.make_slice(0)) != len(seed))
+            if(readRandom(seed.make_slice(0)) != len(seed) || allZero(seed.make_slice(0)))
             {
                 // readRandom should never fail, but if it does we'd rather
                 // not make Go binaries completely unusable, so make up
@@ -114,6 +119,29 @@ namespace golang::runtime
         }
         rec::Init(gocpp::recv(globalRand.state), *seed);
         clear(seed.make_slice(0));
+
+        if(startupRand != nullptr)
+        {
+            // Overwrite startupRand instead of clearing it, in case cgo programs
+            // access it after we used it.
+            for(; len(startupRand) > 0; )
+            {
+                auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8);
+                for(; ; )
+                {
+                    if(auto [x, ok] = rec::Next(gocpp::recv(globalRand.state)); ok)
+                    {
+                        byteorder::BEPutUint64(buf, x);
+                        break;
+                    }
+                    rec::Refill(gocpp::recv(globalRand.state));
+                }
+                auto n = copy(startupRand, buf);
+                startupRand = startupRand.make_slice(n);
+            }
+            startupRand = nullptr;
+        }
+
         globalRand.init = true;
         unlock(& globalRand.lock);
     }
@@ -148,7 +176,20 @@ namespace golang::runtime
         }
     }
 
+    bool allZero(gocpp::slice<unsigned char> b)
+    {
+        unsigned char acc = {};
+        for(auto [gocpp_ignored, x] : b)
+        {
+            acc |= x;
+        }
+        return acc == 0;
+    }
+
+    // Used in internal/runtime/maps
     // bootstrapRand returns a random uint64 from the global random generator.
+    //
+    //go:linknamestd bootstrapRand
     uint64_t bootstrapRand()
     {
         lock(& globalRand.lock);
@@ -181,6 +222,7 @@ namespace golang::runtime
     }
 
     // rand32 is uint32(rand()), called from compiler-generated code.
+    //
     //go:nosplit
     uint32_t rand32()
     {
@@ -188,7 +230,10 @@ namespace golang::runtime
     }
 
     // rand returns a random uint64 from the per-m chacha8 state.
+    // This is called from compiler-generated code.
+    //
     // Do not change signature: used via linkname from other packages.
+    //
     //go:nosplit
     //go:linkname rand
     uint64_t rand()
@@ -217,6 +262,12 @@ namespace golang::runtime
         }
     }
 
+    //go:linkname maps_rand internal/runtime/maps.rand
+    uint64_t maps_rand()
+    {
+        return rand();
+    }
+
     // mrandinit initializes the random state of an m.
     void mrandinit(m* mp)
     {
@@ -228,11 +279,13 @@ namespace golang::runtime
         // erase key we just extracted
         bootstrapRandReseed();
         rec::Init64(gocpp::recv(mp->chacha8), seed);
-        mp->cheaprand = rand();
+        mp->cheaprand = uint32_t(rand());
+        mp->cheaprand64 = rand();
     }
 
     // randn is like rand() % n but faster.
     // Do not change signature: used via linkname from other packages.
+    //
     //go:nosplit
     //go:linkname randn
     uint32_t randn(uint32_t n)
@@ -249,20 +302,28 @@ namespace golang::runtime
     // cheaprand must not be exported to other packages:
     // the rule is that other packages using runtime-provided
     // randomness must always use rand.
+    //
+    // cheaprand should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/gopkg
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname cheaprand
     //go:nosplit
     uint32_t cheaprand()
     {
         auto mp = getg()->m;
         // Implement wyrand: https://github.com/wangyi-fudan/wyhash
-        // Only the platform that math.Mul64 can be lowered
-        // by the compiler should be in this list.
-        if(goarch::IsAmd64 | goarch::IsArm64 | goarch::IsPpc64 |
-                goarch::IsPpc64le | goarch::IsMips64 | goarch::IsMips64le |
-                goarch::IsS390x | goarch::IsRiscv64 | goarch::IsLoong64 == 1)
+        // Only the platform that supports 64-bit multiplication
+        // natively should be allowed.
+        if(bits::UintSize == 64)
         {
-            mp->cheaprand += 0xa0761d6478bd642f;
-            auto [hi, lo] = math::Mul64(mp->cheaprand, mp->cheaprand ^ 0xe7037ed1a0b428db);
-            return uint32_t(hi ^ lo);
+            mp->cheaprand += 0x53c5ca59;
+            auto [hi, lo] = bits::Mul32(mp->cheaprand, mp->cheaprand ^ 0x74743c1b);
+            return hi ^ lo;
         }
 
         // Implement xorshift64+: 2 32-bit xorshift sequences added together.
@@ -270,7 +331,7 @@ namespace golang::runtime
         // Xorshift paper: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
         // This generator passes the SmallCrush suite, part of TestU01 framework:
         // http://simul.iro.umontreal.ca/testu01/tu01.html
-        auto t = (gocpp::array_ptr<gocpp::array<uint32_t, 2>>)(gocpp::unsafe_pointer(& mp->cheaprand));
+        auto t = (gocpp::array_ptr<gocpp::array<uint32_t, 2>>)(gocpp::unsafe_pointer(& mp->cheaprand64));
         auto [s1, s0] = std::tuple{t[0], t[1]};
         s1 ^= s1 << 17;
         s1 = s1 ^ s0 ^ (s1 >> 7) ^ (s0 >> 16);
@@ -285,10 +346,48 @@ namespace golang::runtime
     // cheaprand64 must not be exported to other packages:
     // the rule is that other packages using runtime-provided
     // randomness must always use rand.
+    //
+    // cheaprand64 should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/zhangyunhao116/fastrand
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname cheaprand64
     //go:nosplit
     int64_t cheaprand64()
     {
-        return (int64_t(cheaprand()) << 31) ^ int64_t(cheaprand());
+        return int64_t(cheaprandu64() & ~ (uint64_t(1) << 63));
+    }
+
+    // cheaprandu64 is a non-cryptographic-quality 64-bit random generator
+    // suitable for calling at very high frequency (such as during sampling decisions).
+    // it is "cheap" in the sense of both expense and quality.
+    //
+    // cheaprandu64 must not be exported to other packages:
+    // the rule is that other packages using runtime-provided
+    // randomness must always use rand.
+    //
+    //go:nosplit
+    uint64_t cheaprandu64()
+    {
+        // Implement wyrand: https://github.com/wangyi-fudan/wyhash
+        // Only the platform that bits.Mul64 can be lowered
+        // by the compiler should be in this list.
+        if(goarch::IsAmd64 | goarch::IsArm64 | goarch::IsPpc64 |
+                goarch::IsPpc64le | goarch::IsMips64 | goarch::IsMips64le |
+                goarch::IsS390x | goarch::IsRiscv64 | goarch::IsLoong64 == 1)
+        {
+            auto mp = getg()->m;
+            // Implement wyrand: https://github.com/wangyi-fudan/wyhash
+            mp->cheaprand64 += 0xa0761d6478bd642f;
+            auto [hi, lo] = bits::Mul64(mp->cheaprand64, mp->cheaprand64 ^ 0xe7037ed1a0b428db);
+            return hi ^ lo;
+        }
+
+        return (uint64_t(cheaprand()) << 32) | uint64_t(cheaprand());
     }
 
     // cheaprandn is like cheaprand() % n but faster.
@@ -296,6 +395,16 @@ namespace golang::runtime
     // cheaprandn must not be exported to other packages:
     // the rule is that other packages using runtime-provided
     // randomness must always use randn.
+    //
+    // cheaprandn should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/phuslu/log
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname cheaprandn
     //go:nosplit
     uint32_t cheaprandn(uint32_t n)
     {

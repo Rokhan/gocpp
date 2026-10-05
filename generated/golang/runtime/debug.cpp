@@ -11,12 +11,14 @@
 #include "golang/runtime/debug.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/cgocall.h"
+#include "golang/runtime/cgroup_stubs.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/mprof.h"
+#include "golang/runtime/pinner.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
@@ -24,15 +26,71 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
         using atomic::rec::Load;
     }
 
     // GOMAXPROCS sets the maximum number of CPUs that can be executing
-    // simultaneously and returns the previous setting. It defaults to
-    // the value of [runtime.NumCPU]. If n < 1, it does not change the current setting.
-    // This call will go away when the scheduler improves.
+    // simultaneously and returns the previous setting. If n < 1, it does not change
+    // the current setting.
+    //
+    // # Default
+    //
+    // If the GOMAXPROCS environment variable is set to a positive whole number,
+    // GOMAXPROCS defaults to that value.
+    //
+    // Otherwise, the Go runtime selects an appropriate default value from a combination of
+    //   - the number of logical CPUs on the machine,
+    //   - the process’s CPU affinity mask,
+    //   - and, on Linux, the process’s average CPU throughput limit based on cgroup CPU
+    //     quota, if any.
+    //
+    // If GODEBUG=containermaxprocs=0 is set and GOMAXPROCS is not set by the
+    // environment variable, then GOMAXPROCS instead defaults to the value of
+    // [runtime.NumCPU]. Note that GODEBUG=containermaxprocs=0 is [default] for
+    // language version 1.24 and below.
+    //
+    // # Updates
+    //
+    // The Go runtime periodically updates the default value based on changes to
+    // the total logical CPU count, the CPU affinity mask, or cgroup quota. Setting
+    // a custom value with the GOMAXPROCS environment variable or by calling
+    // GOMAXPROCS disables automatic updates. The default value and automatic
+    // updates can be restored by calling [SetDefaultGOMAXPROCS].
+    //
+    // If GODEBUG=updatemaxprocs=0 is set, the Go runtime does not perform
+    // automatic GOMAXPROCS updating. Note that GODEBUG=updatemaxprocs=0 is
+    // [default] for language version 1.24 and below.
+    //
+    // # Compatibility
+    //
+    // Note that the default GOMAXPROCS behavior may change as the scheduler
+    // improves, especially the implementation detail below.
+    //
+    // # Implementation details
+    //
+    // When computing default GOMAXPROCS via cgroups, the Go runtime computes the
+    // "average CPU throughput limit" as the cgroup CPU quota / period. In cgroup
+    // v2, these values come from the cpu.max file. In cgroup v1, they come from
+    // cpu.cfs_quota_us and cpu.cfs_period_us, respectively. In container runtimes
+    // that allow configuring CPU limits, this value usually corresponds to the
+    // "CPU limit" option, not "CPU request".
+    //
+    // The Go runtime typically selects the default GOMAXPROCS as the minimum of
+    // the logical CPU count, the CPU affinity mask count, or the cgroup CPU
+    // throughput limit. However, it will never set GOMAXPROCS less than 2 unless
+    // the logical CPU count or CPU affinity mask count are below 2.
+    //
+    // If the cgroup CPU throughput limit is not a whole number, the Go runtime
+    // rounds up to the next whole number.
+    //
+    // GOMAXPROCS updates are performed up to once per second, or less if the
+    // application is idle.
+    //
+    // [default]: https://go.dev/doc/godebug#default
     int GOMAXPROCS(int n)
     {
         if(GOARCH == "wasm"_s && n > 1)
@@ -43,19 +101,77 @@ namespace golang::runtime
 
         lock(& sched.lock);
         auto ret = int(gomaxprocs);
-        unlock(& sched.lock);
-        if(n <= 0 || n == ret)
+        if(n <= 0)
         {
+            unlock(& sched.lock);
+            return ret;
+        }
+        // Set early so we can wait for sysmon befor STW. See comment on
+        // computeMaxProcsLock.
+        sched.customGOMAXPROCS = true;
+        unlock(& sched.lock);
+
+        // Wait for sysmon to complete running defaultGOMAXPROCS.
+        lock(& computeMaxProcsLock);
+        unlock(& computeMaxProcsLock);
+
+        if(n == ret)
+        {
+            // sched.customGOMAXPROCS set, but no need to actually STW
+            // since the gomaxprocs itself isn't changing.
             return ret;
         }
 
         auto stw = stopTheWorldGC(stwGOMAXPROCS);
 
         // newprocs will be processed by startTheWorld
+        // TODO(prattmic): this could use a nicer API. Perhaps add it to the
+        // stw parameter?
         newprocs = int32_t(n);
 
         startTheWorldGC(stw);
         return ret;
+    }
+
+    // SetDefaultGOMAXPROCS updates the GOMAXPROCS setting to the runtime
+    // default, as described by [GOMAXPROCS], ignoring the GOMAXPROCS
+    // environment variable.
+    //
+    // SetDefaultGOMAXPROCS can be used to enable the default automatic updating
+    // GOMAXPROCS behavior if it has been disabled by the GOMAXPROCS
+    // environment variable or a prior call to [GOMAXPROCS], or to force an immediate
+    // update if the caller is aware of a change to the total logical CPU count, CPU
+    // affinity mask or cgroup quota.
+    void SetDefaultGOMAXPROCS()
+    {
+        // SetDefaultGOMAXPROCS conceptually means "[re]do what the runtime
+        // would do at startup if the GOMAXPROCS environment variable were
+        // unset." It still respects GODEBUG.
+        auto procs = defaultGOMAXPROCS(0);
+
+        lock(& sched.lock);
+        auto curr = gomaxprocs;
+        auto custom = sched.customGOMAXPROCS;
+        unlock(& sched.lock);
+
+        if(! custom && procs == curr)
+        {
+            // Nothing to do if we're already using automatic GOMAXPROCS
+            // and the limit is unchanged.
+            return;
+        }
+
+        auto stw = stopTheWorldGC(stwGOMAXPROCS);
+
+        // newprocs will be processed by startTheWorld
+        // TODO(prattmic): this could use a nicer API. Perhaps add it to the
+        // stw parameter?
+        newprocs = procs;
+        lock(& sched.lock);
+        sched.customGOMAXPROCS = false;
+        unlock(& sched.lock);
+
+        startTheWorldGC(stw);
     }
 
     // NumCPU returns the number of logical CPUs usable by the current process.
@@ -65,7 +181,7 @@ namespace golang::runtime
     // process startup are not reflected.
     int NumCPU()
     {
-        return int(ncpu);
+        return int(numCPUStartup);
     }
 
     // NumCgoCall returns the number of cgo calls made by the current process.
@@ -95,7 +211,7 @@ namespace golang::runtime
     // NumGoroutine returns the number of goroutines that currently exist.
     int NumGoroutine()
     {
-        return int(gcount());
+        return int(gcount(false));
     }
 
     //go:linkname debug_modinfo runtime/debug.modinfo
@@ -160,6 +276,26 @@ namespace golang::runtime
         {
             gp->stackguard0 = stackForceMove;
         }
+    }
+
+    // debugPinnerKeepUnpin is used to make runtime.(*Pinner).Unpin reachable.
+    bool debugPinnerKeepUnpin = false;
+    // debugPinnerV1 returns a new Pinner that pins itself. This function can be
+    // used by debuggers to easily obtain a Pinner that will not be garbage
+    // collected (or moved in memory) even if no references to it exist in the
+    // target program. This pinner in turn can be used to extend this property
+    // to other objects, which debuggers can use to simplify the evaluation of
+    // expressions involving multiple call injections.
+    Pinner* debugPinnerV1()
+    {
+        auto p = new Pinner{};
+        rec::Pin(gocpp::recv(p), gocpp::unsafe_pointer(p));
+        if(debugPinnerKeepUnpin)
+        {
+            // Make Unpin reachable.
+            rec::Unpin(gocpp::recv(p));
+        }
+        return p;
     }
 
 }

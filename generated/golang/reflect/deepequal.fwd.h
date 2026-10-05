@@ -3,7 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/reflect/type.fwd.h"
 
 namespace golang::reflect
 {

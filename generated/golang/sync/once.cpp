@@ -12,10 +12,12 @@
 #include "gocpp/support.h"
 
 #include "golang/sync/atomic/type.h"
+#include "golang/sync/cond.h"
 #include "golang/sync/mutex.h"
 
 namespace golang::sync
 {
+    namespace atomic = golang::sync::atomic;
     namespace rec
     {
         using atomic::rec::Load;
@@ -26,14 +28,17 @@ namespace golang::sync
     //
     // A Once must not be copied after first use.
     //
-    // In the terminology of the Go memory model,
+    // In the terminology of [the Go memory model],
     // the return from f “synchronizes before”
     // the return from any call of once.Do(f).
+    //
+    // [the Go memory model]: https://go.dev/ref/mem
     
     template<typename T> requires gocpp::GoStruct<T>
     Once::operator T()
     {
         T result;
+        result._1 = this->_1;
         result.done = this->done;
         result.m = this->m;
         return result;
@@ -42,6 +47,7 @@ namespace golang::sync
     template<typename T> requires gocpp::GoStruct<T>
     bool Once::operator==(const T& ref) const
     {
+        if (_1 != ref._1) return false;
         if (done != ref.done) return false;
         if (m != ref.m) return false;
         return true;
@@ -50,7 +56,8 @@ namespace golang::sync
     std::ostream& Once::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << done;
+        os << "" << _1;
+        os << " " << done;
         os << " " << m;
         os << '}';
         return os;
@@ -62,7 +69,7 @@ namespace golang::sync
     }
 
     // Do calls the function f if and only if Do is being called for the
-    // first time for this instance of Once. In other words, given
+    // first time for this instance of [Once]. In other words, given
     //
     //	var once Once
     //
@@ -84,7 +91,7 @@ namespace golang::sync
     void rec::Do(Once* o, std::function<void ()> f)
     {
         // Note: Here is an incorrect implementation of Do:
-        // if o.done.CompareAndSwap(0, 1) {
+        // if o.done.CompareAndSwap(false, true) {
         // f()
         // }
         // Do guarantees that when it returns, f has finished.
@@ -94,7 +101,7 @@ namespace golang::sync
         // waiting for the first's call to f to complete.
         // This is why the slow path falls back to a mutex, and why
         // the o.done.Store must be delayed until after f returns.
-        if(rec::Load(gocpp::recv(o->done)) == 0)
+        if(! rec::Load(gocpp::recv(o->done)))
         {
             // Outlined slow-path to allow inlining of the fast-path.
             rec::doSlow(gocpp::recv(o), f);
@@ -108,9 +115,9 @@ namespace golang::sync
         {
             rec::Lock(gocpp::recv(o->m));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(o->m)); });
-            if(rec::Load(gocpp::recv(o->done)) == 0)
+            if(! rec::Load(gocpp::recv(o->done)))
             {
-                defer.push_back([=]{ rec::Store(gocpp::recv(o->done), 1); });
+                defer.push_back([=]{ rec::Store(gocpp::recv(o->done), true); });
                 f();
             }
         }

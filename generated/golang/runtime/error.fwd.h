@@ -7,25 +7,10 @@
 namespace golang::runtime
 {
     struct Error;
+    struct TypeAssertionError;
     using errorString = gocpp::string;
     struct errorAddressString;
     using plainError = gocpp::string;
     struct boundsError;
-    using boundsErrorCode = uint8_t;
     struct stringer;
-    const boundsErrorCode boundsIndex = 0;
-    const boundsErrorCode boundsSliceAlen = 1;
-    const boundsErrorCode boundsSliceAcap = 2;
-    const boundsErrorCode boundsSliceB = 3;
-    const boundsErrorCode boundsSlice3Alen = 4;
-    const boundsErrorCode boundsSlice3Acap = 5;
-    const boundsErrorCode boundsSlice3B = 6;
-    const boundsErrorCode boundsSlice3C = 7;
-    const boundsErrorCode boundsConvert = 8;
-}
-#include "golang/runtime/type.fwd.h"
-
-namespace golang::runtime
-{
-    struct TypeAssertionError;
 }

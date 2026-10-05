@@ -10,17 +10,33 @@
 #include "gocpp/support.h"
 
 
-namespace golang::big
+namespace golang::math::big
 {
+    // These powers of 5 fit into a uint64.
+    //
+    //	for p, q := uint64(0), uint64(1); p < q; p, q = q, q*5 {
+    //		fmt.Println(q)
+    //	}
     extern gocpp::array<uint64_t, 28> pow5tab;
 }
-#include "golang/fmt/scan.h"
 #include "golang/math/big/float.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     extern Float floatZero;
     std::tuple<Float*, int, gocpp::error> ParseFloat(gocpp::string s, int base, unsigned int prec, RoundingMode mode);
+}
+#include "golang/fmt/errors.fwd.h"
+#include "golang/fmt/scan.fwd.h"
+
+namespace golang::math::big
+{
+    namespace fmt = golang::fmt;
+}
+#include "golang/fmt/scan.h"
+
+namespace golang::math::big
+{
     extern fmt::Scanner _;
 }
 
@@ -28,8 +44,9 @@ namespace golang::big
 #include "golang/io/io.h"
 #include "golang/math/big/float.h"
 
-namespace golang::big
+namespace golang::math::big
 {
+    namespace io = golang::io;
 
     namespace rec
     {

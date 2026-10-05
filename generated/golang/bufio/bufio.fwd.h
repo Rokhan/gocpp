@@ -7,14 +7,9 @@
 namespace golang::bufio
 {
     const long defaultBufSize = 4096;
+    struct Reader;
     const long minReadBufferSize = 16;
     const long maxConsecutiveEmptyReads = 100;
-    struct ReadWriter;
-}
-#include "golang/io/io.fwd.h"
-
-namespace golang::bufio
-{
-    struct Reader;
     struct Writer;
+    struct ReadWriter;
 }

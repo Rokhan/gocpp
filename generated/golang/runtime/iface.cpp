@@ -12,26 +12,26 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
+#include "golang/internal/abi/iface.h"
 #include "golang/internal/abi/switch.h"
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.h"
+#include "golang/internal/runtime/sys/intrinsics.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/atomic_pointer.h"
 #include "golang/runtime/error.h"
-#include "golang/runtime/extern.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/sys/intrinsics.h"
-#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
-#include "golang/runtime/map.h"
 #include "golang/runtime/mbarrier.h"
 #include "golang/runtime/msan0.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/race0.h"
 #include "golang/runtime/rand.h"
+#include "golang/runtime/runtime.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/slice.h"
 #include "golang/runtime/stubs.h"
@@ -40,10 +40,16 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace goarch = golang::internal::goarch;
+    namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
         using abi::rec::IsExported;
         using abi::rec::Name;
+        using abi::rec::Size;
         using abi::rec::Uncommon;
     }
 
@@ -94,6 +100,15 @@ namespace golang::runtime
         return uintptr_t(inter->Type.Hash ^ typ->Hash);
     }
 
+    // getitab should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname getitab
     itab* getitab(interfacetype* inter, _type* typ, bool canfail)
     {
         if(len(inter->Methods) == 0)
@@ -134,19 +149,19 @@ namespace golang::runtime
 
         // Entry doesn't exist yet. Make a new entry & add it.
         m = (itab*)(persistentalloc(gocpp::Sizeof<itab>() + uintptr_t(len(inter->Methods) - 1) * goarch::PtrSize, 0, & memstats.other_sys));
-        m->inter = inter;
-        m->_type = typ;
+        m->Inter = inter;
+        m->Type = typ;
         // The hash is used in type switches. However, compiler statically generates itab's
         // for all interface/type pairs used in switches (which are added to itabTable
         // in itabsinit). The dynamically-generated itab's never participate in type switches,
         // and thus the hash is irrelevant.
-        // Note: m.hash is _not_ the hash used for the runtime itabTable hash table.
-        m->hash = 0;
-        rec::init(gocpp::recv(m));
+        // Note: m.Hash is _not_ the hash used for the runtime itabTable hash table.
+        m->Hash = 0;
+        itabInit(m, true);
         itabAdd(m);
         unlock(& itabLock);
         finish:
-        if(m->fun[0] != 0)
+        if(m->Fun[0] != 0)
         {
             return m;
         }
@@ -163,7 +178,7 @@ namespace golang::runtime
         gocpp::panic(gocpp::InitPtr<TypeAssertionError>([=](auto& x) {
             x.concrete = typ;
             x.asserted = & inter->Type;
-            x.missingMethod = rec::init(gocpp::recv(m));
+            x.missingMethod = itabInit(m, false);
         }));
     }
 
@@ -187,7 +202,7 @@ namespace golang::runtime
             {
                 return nullptr;
             }
-            if(m->inter == inter && m->_type == typ)
+            if(m->Inter == inter && m->Type == typ)
             {
                 return m;
             }
@@ -245,7 +260,7 @@ namespace golang::runtime
         // See comment in find about the probe sequence.
         // Insert new itab in the first empty spot in the probe sequence.
         auto mask = t->size - 1;
-        auto h = itabHashFunc(m->inter, m->_type) & mask;
+        auto h = itabHashFunc(m->Inter, m->Type) & mask;
         for(auto i = uintptr_t(1); ; i++)
         {
             auto p = (itab**)(runtime::add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), h * goarch::PtrSize));
@@ -273,14 +288,21 @@ namespace golang::runtime
         }
     }
 
-    // init fills in the m.fun array with all the code pointers for
-    // the m.inter/m._type pair. If the type does not implement the interface,
-    // it sets m.fun[0] to 0 and returns the name of an interface function that is missing.
-    // It is ok to call this multiple times on the same m, even concurrently.
-    gocpp::string rec::init(itab* m)
+    // itabInit fills in the m.Fun array with all the code pointers for
+    // the m.Inter/m.Type pair. If the type does not implement the interface,
+    // it sets m.Fun[0] to 0 and returns the name of an interface function that is missing.
+    // If !firstTime, itabInit will not write anything to m.Fun (see issue 65962).
+    // It is ok to call this multiple times on the same m, even concurrently
+    // (although it will only be called once with firstTime==true).
+    //
+    // itabInit stores only code pointers, so it must not emit a write barrier;
+    // //go:nowritebarrier enforces that (see the methods store below).
+    //
+    //go:nowritebarrier
+    gocpp::string itabInit(itab* m, bool firstTime)
     {
-        auto inter = m->inter;
-        auto typ = m->_type;
+        auto inter = m->Inter;
+        auto typ = m->Type;
         auto x = rec::Uncommon(gocpp::recv(typ));
 
         // both inter and typ have method sorted by name,
@@ -289,9 +311,12 @@ namespace golang::runtime
         // the loop is O(ni+nt) not O(ni*nt).
         auto ni = len(inter->Methods);
         auto nt = int(x->Mcount);
-        auto xmhdr = (gocpp::array_ptr<gocpp::array<abi::Method, 1 << 16>>)(runtime::add(gocpp::unsafe_pointer(x), uintptr_t(x->Moff))).make_slice(0, nt, nt);
+        auto xmhdr = unsafe::Slice((abi::Method*)(add(gocpp::unsafe_pointer(x), uintptr_t(x->Moff))), nt);
         auto j = 0;
-        auto methods = (gocpp::array_ptr<gocpp::array<gocpp::unsafe_pointer, 1 << 16>>)(gocpp::unsafe_pointer(& m->fun[0])).make_slice(0, ni, ni);
+        // These are code pointers, not heap pointers. Use a uintptr slice so the
+        // store emits no write barrier: on wasm a code pointer can look like a
+        // heap pointer and make the GC crash (see issue 80472).
+        auto methods = unsafe::Slice(& m->Fun[0], ni);
         gocpp::unsafe_pointer fun0 = {};
         imethods:
         for(auto k = 0; k < ni; k++)
@@ -329,22 +354,26 @@ namespace golang::runtime
                         auto ifn = rec::textOff(gocpp::recv(rtyp), t->Ifn);
                         if(k == 0)
                         {
-                            // we'll set m.fun[0] at the end
+                            // we'll set m.Fun[0] at the end
                             fun0 = ifn;
                         }
                         else
+                        if(firstTime)
                         {
-                            methods[k] = ifn;
+                            methods[k] = uintptr_t(ifn);
                         }
                         goto imethods_continue;
                     }
                 }
             }
             // didn't find method
-            m->fun[0] = 0;
+            // Leaves m.Fun[0] set to 0.
             return iname;
         }
-        m->fun[0] = uintptr_t(fun0);
+        if(firstTime)
+        {
+            m->Fun[0] = uintptr_t(fun0);
+        }
         return ""_s;
     }
 
@@ -354,12 +383,24 @@ namespace golang::runtime
         lock(& itabLock);
         for(auto [gocpp_ignored, md] : activeModules())
         {
-            for(auto [gocpp_ignored, i] : md->itablinks)
-            {
-                itabAdd(i);
-            }
+            addModuleItabs(md);
         }
         unlock(& itabLock);
+    }
+
+    // addModuleItabs adds the pre-compiled itabs from md to the itab hash table.
+    // This is an optimization to let us skip creating itabs we already have.
+    void addModuleItabs(moduledata* md)
+    {
+        auto p = md->types + md->itaboffset;
+        auto end = p + md->itabsize;
+        for(; p < end; )
+        {
+            auto itab_tmp = (itab*)(gocpp::unsafe_pointer(p));
+            auto& itab = itab_tmp;
+            itabAdd(itab);
+            p += uintptr_t(rec::Size(gocpp::recv(itab)));
+        }
     }
 
     // panicdottypeE is called when doing an e.(T) conversion and the conversion fails.
@@ -378,7 +419,7 @@ namespace golang::runtime
         _type* t = {};
         if(have != nullptr)
         {
-            t = have->_type;
+            t = have->Type;
         }
         panicdottypeE(t, want, iface);
     }
@@ -415,7 +456,7 @@ namespace golang::runtime
     {
         if(raceenabled)
         {
-            raceReadObjectPC(t, v, getcallerpc(), abi::FuncPCABIInternal(convT));
+            raceReadObjectPC(t, v, sys::GetCallerPC(), abi::FuncPCABIInternal(convT));
         }
         if(msanenabled)
         {
@@ -435,7 +476,7 @@ namespace golang::runtime
         // TODO: maybe take size instead of type?
         if(raceenabled)
         {
-            raceReadObjectPC(t, v, getcallerpc(), abi::FuncPCABIInternal(convTnoptr));
+            raceReadObjectPC(t, v, sys::GetCallerPC(), abi::FuncPCABIInternal(convTnoptr));
         }
         if(msanenabled)
         {
@@ -489,6 +530,15 @@ namespace golang::runtime
         return x;
     }
 
+    // convT64 should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname convT64
     gocpp::unsafe_pointer convT64(uint64_t val)
     {
         gocpp::unsafe_pointer x;
@@ -504,6 +554,15 @@ namespace golang::runtime
         return x;
     }
 
+    // convTstring should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname convTstring
     gocpp::unsafe_pointer convTstring(gocpp::string val)
     {
         gocpp::unsafe_pointer x;
@@ -519,6 +578,15 @@ namespace golang::runtime
         return x;
     }
 
+    // convTslice should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname convTslice
     gocpp::unsafe_pointer convTslice(gocpp::slice<unsigned char> val)
     {
         gocpp::unsafe_pointer x;
@@ -572,7 +640,7 @@ namespace golang::runtime
             tab = getitab(s->Inter, t, s->CanFail);
         }
 
-        if(! abi::UseInterfaceSwitchCache(GOARCH))
+        if(! abi::UseInterfaceSwitchCache(goarch::ArchFamily))
         {
             return tab;
         }
@@ -689,7 +757,7 @@ namespace golang::runtime
             }
         }
 
-        if(! abi::UseInterfaceSwitchCache(GOARCH))
+        if(! abi::UseInterfaceSwitchCache(goarch::ArchFamily))
         {
             return {case_, tab};
         }
@@ -789,6 +857,15 @@ namespace golang::runtime
     abi::InterfaceSwitchCache emptyInterfaceSwitchCache = gocpp::Init<abi::InterfaceSwitchCache>([](auto& x) {
         x.Mask = 0;
     });
+    // reflect_ifaceE2I is for package reflect,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - gitee.com/quant1x/gox
+    //   - github.com/modern-go/reflect2
+    //   - github.com/v2pro/plz
+    //
+    // Do not remove or change the type signature.
+    //
     //go:linkname reflect_ifaceE2I reflect.ifaceE2I
     void reflect_ifaceE2I(interfacetype* inter, eface e, iface* dst)
     {
@@ -817,40 +894,18 @@ namespace golang::runtime
     }
 
     // staticuint64s is used to avoid allocating in convTx for small integer values.
-    gocpp::array<uint64_t, 256> staticuint64s = gocpp::array<uint64_t, 256> {
-        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
-        0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
-        0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
-        0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
-        0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
-        0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
-        0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
-        0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57,
-        0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
-        0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,
-        0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
-        0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77,
-        0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f,
-        0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
-        0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,
-        0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97,
-        0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0x9f,
-        0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7,
-        0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf,
-        0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7,
-        0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe, 0xbf,
-        0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7,
-        0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf,
-        0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7,
-        0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf,
-        0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7,
-        0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef,
-        0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7,
-        0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff
-    };
+    // staticuint64s[0] == 0, staticuint64s[1] == 1, and so forth.
+    // It is defined in assembler code so that it is read-only.
+    gocpp::array<uint64_t, 256> staticuint64s;
+    // getStaticuint64s is called by the reflect package to get a pointer
+    // to the read-only array.
+    //
+    //go:linkname getStaticuint64s
+    gocpp::array_ptr<gocpp::array<uint64_t, 256>> getStaticuint64s()
+    {
+        return gocpp::make_array_ptr(staticuint64s);
+    }
+
     // The linker redirects a reference of a method that it determined
     // unreachable to a reference to this function, so it will throw if
     // ever called.

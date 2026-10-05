@@ -16,6 +16,14 @@ namespace golang::runtime
     int Callers(int skip, gocpp::slice<uintptr_t> pc);
     extern gocpp::string defaultGOROOT;
     gocpp::string GOROOT();
+    // buildVersion is the Go tree's version string at build time.
+    //
+    // If any GOEXPERIMENTs are set to non-default values, it will include
+    // "X:<GOEXPERIMENT>".
+    //
+    // This is set by the linker.
+    //
+    // This is accessed by "go version <binary>".
     extern gocpp::string buildVersion;
     gocpp::string Version();
 

@@ -35,8 +35,37 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct inlineFrame& value);
 }
-#include "golang/internal/abi/symtab.h"
 #include "golang/runtime/symtab.h"
+
+namespace golang::runtime
+{
+    struct inlineUnwinder
+    {
+        golang::runtime::funcInfo f{};
+        gocpp::array_ptr<gocpp::array<inlinedCall, 1 << 20>> inlTree{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct inlineUnwinder& value);
+}
+#include "golang/internal/abi/symtab.fwd.h"
+
+namespace golang::runtime
+{
+    std::tuple<inlineUnwinder, inlineFrame> newInlineUnwinder(golang::runtime::funcInfo f, uintptr_t pc);
+    golang::runtime::srcFunc badSrcFunc(inlineUnwinder*, inlineFrame);
+    namespace abi = golang::internal::abi;
+}
+#include "golang/internal/abi/symtab.h"
 
 namespace golang::runtime
 {
@@ -60,24 +89,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct inlinedCall& value);
-    struct inlineUnwinder
-    {
-        golang::runtime::funcInfo f{};
-        gocpp::array_ptr<gocpp::array<inlinedCall, 1 << 20>> inlTree{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct inlineUnwinder& value);
-    std::tuple<inlineUnwinder, inlineFrame> newInlineUnwinder(golang::runtime::funcInfo f, uintptr_t pc);
 }
 
 #include "golang/runtime/symtab.h"

@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::goexperiment
+namespace golang::internal::goexperiment
 {
     struct Flags
     {
@@ -32,17 +32,9 @@ namespace golang::goexperiment
         // has been broken out to its own experiment that is disabled
         // by default.
         bool HeapMinimum512KiB{};
-        // CoverageRedesign enables the new compiler-based code coverage
-        // tooling.
-        bool CoverageRedesign{};
         // Arenas causes the "arena" standard library package to be visible
         // to the outside world.
         bool Arenas{};
-        // PageTrace enables GODEBUG=pagetrace=/path/to/result. This feature
-        // is a GOEXPERIMENT due to a security risk with setuid binaries:
-        // this compels the Go runtime to write to some arbitrary file, which
-        // may be exploited.
-        bool PageTrace{};
         // CgoCheck2 enables an expensive cgo rule checker.
         // When this experiment is enabled, cgo rule checks occur regardless
         // of the GODEBUG=cgocheck setting provided at runtime.
@@ -50,22 +42,31 @@ namespace golang::goexperiment
         // LoopVar changes loop semantics so that each iteration gets its own
         // copy of the iteration variable.
         bool LoopVar{};
-        // CacheProg adds support to cmd/go to use a child process to implement
-        // the build cache; see https://github.com/golang/go/issues/59719.
-        bool CacheProg{};
         // NewInliner enables a new+improved version of the function
         // inlining phase within the Go compiler.
         bool NewInliner{};
-        // RangeFunc enables range over func.
-        bool RangeFunc{};
-        // Range enables range over int and func.
-        bool Range{};
-        // AllocHeaders enables a different, more efficient way for the GC to
-        // manage heap metadata.
-        bool AllocHeaders{};
-        // ExecTracer2 controls whether to use the new execution trace
-        // implementation.
-        bool ExecTracer2{};
+        // Dwarf5 enables DWARF version 5 debug info generation.
+        bool Dwarf5{};
+        // JSONv2 enables the json/v2 package.
+        bool JSONv2{};
+        // GreenTeaGC enables the Green Tea GC implementation.
+        bool GreenTeaGC{};
+        // RandomizedHeapBase enables heap base address randomization on 64-bit
+        // platforms.
+        bool RandomizedHeapBase64{};
+        // RuntimeFreegc enables the runtime to free and reuse memory more eagerly in some circumstances with compiler help.
+        bool RuntimeFreegc{};
+        // SizeSpecializedMalloc enables malloc implementations that are specialized per size class.
+        bool SizeSpecializedMalloc{};
+        // SIMD enables the simd package and the compiler's handling
+        // of SIMD intrinsics.
+        bool SIMD{};
+        // RuntimeSecret enables the runtime/secret package.
+        bool RuntimeSecret{};
+        // MapSplitGroup changes the internal representation of map groups
+        // from interleaved key/elem slots (KVKVKVKV) to split key and elem
+        // arrays (KKKKVVVV).
+        bool MapSplitGroup{};
 
         using isGoStruct = void;
 

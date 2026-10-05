@@ -8,6 +8,8 @@
 
 namespace golang::runtime
 {
+    namespace goos = golang::internal::goos;
+    namespace goarch = golang::internal::goarch;
     // GOOS is the running program's operating system target:
     // one of darwin, freebsd, linux, and so on.
     // To view possible combinations of GOOS and GOARCH, run "go tool dist list".

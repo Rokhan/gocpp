@@ -12,27 +12,15 @@
 #include "gocpp/support.h"
 
 #include "golang/bufio/bufio.h"
-#include "golang/bytes/bytes.h"
 #include "golang/fmt/errors.h"
-#include "golang/fmt/print.h"
-#include "golang/go/build/build.h"
 #include "golang/go/token/position.h"
 #include "golang/go/types/package.h"
 #include "golang/go/types/universe.h"
 #include "golang/golang.org/x/tools/internal/gcimporter/exportdata.h"
-#include "golang/golang.org/x/tools/internal/gcimporter/iimport.h"
-#include "golang/golang.org/x/tools/internal/gcimporter/ureader_yes.h"
-#include "golang/io/fs/fs.h"
+#include "golang/golang.org/x/tools/internal/gcimporter/ureader.h"
 #include "golang/io/io.h"
-#include "golang/os/exec/exec.h"
 #include "golang/os/file.h"
-#include "golang/os/stat.h"
 #include "golang/os/types.h"
-#include "golang/path/filepath/path.h"
-#include "golang/path/filepath/path_windows.h"
-#include "golang/strings/strings.h"
-#include "golang/sync/map.h"
-#include "golang/sync/once.h"
 
 // Package gcimporter provides various functions for reading
 // gc-generated object files that can be used to implement the
@@ -49,176 +37,29 @@
 // the details of its internal representation. Because of these
 // differences, re-encoding the imported package may yield a
 // different, but equally valid, encoding of the package.
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    namespace bufio = golang::bufio;
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace os = golang::os;
+    namespace token = golang::go::token;
+    namespace types = golang::go::types;
     namespace rec
     {
-        using bufio::rec::Read;
-        using exec::rec::Output;
-        using fs::rec::IsDir;
         using io::rec::Close;
         using io::rec::Read;
         using os::rec::Close;
         using os::rec::Read;
-        using sync::rec::Do;
-        using sync::rec::Load;
-        using sync::rec::LoadOrStore;
         using types::rec::Complete;
-        using types::rec::Path;
-    }
-
-    sync::Map exportMap;
-    // lookupGorootExport returns the location of the export data
-    // (normally found in the build cache, but located in GOROOT/pkg
-    // in prior Go releases) for the package located in pkgDir.
-    //
-    // (We use the package's directory instead of its import path
-    // mainly to simplify handling of the packages in src/vendor
-    // and cmd/vendor.)
-    std::tuple<gocpp::string, bool> lookupGorootExport(gocpp::string pkgDir)
-    {
-        auto [f, ok] = rec::Load(gocpp::recv(exportMap), pkgDir);
-        if(! ok)
-        {
-            sync::Once listOnce = {};
-            gocpp::string exportPath = {};
-            std::tie(f, std::ignore) = rec::LoadOrStore(gocpp::recv(exportMap), pkgDir, [=]() mutable -> std::tuple<gocpp::string, bool>
-            {
-                rec::Do(gocpp::recv(listOnce), [=]() mutable -> void
-                {
-                    auto cmd = exec::Command("go"_s, "list"_s, "-export"_s, "-f"_s, "{{.Export}}"_s, pkgDir);
-                    cmd->Dir = build::Default.GOROOT;
-                    gocpp::slice<unsigned char> output = {};
-                    gocpp::error err;
-                    std::tie(output, err) = rec::Output(gocpp::recv(cmd));
-                    if(err != nullptr)
-                    {
-                        return;
-                    }
-
-                    auto exports = strings::Split(gocpp::string(bytes::TrimSpace(output)), "\n"_s);
-                    if(len(exports) != 1)
-                    {
-                        return;
-                    }
-
-                    exportPath = exports[0];
-                });
-
-                return {exportPath, exportPath != ""_s};
-            });
-        }
-
-        return gocpp::getValue<std::function<std::tuple<gocpp::string, bool> ()>>(f)();
-    }
-
-    gocpp::array<gocpp::string, 2> pkgExts = gocpp::array<gocpp::string, 2> {".a"_s, ".o"_s};
-    // FindPkg returns the filename and unique package id for an import
-    // path based on package information provided by build.Import (using
-    // the build.Default build.Context). A relative srcDir is interpreted
-    // relative to the current working directory.
-    // If no file was found, an empty filename is returned.
-    std::tuple<gocpp::string, gocpp::string> FindPkg(gocpp::string path, gocpp::string srcDir)
-    {
-        gocpp::string filename;
-        gocpp::string id;
-        if(path == ""_s)
-        {
-            return {filename, id};
-        }
-
-        gocpp::string noext = {};
-        //Go switch emulation
-        {
-            int conditionId = -1;
-            if(build::IsLocalImport(path)) { conditionId = 0; }
-            else if(filepath::IsAbs(path)) { conditionId = 1; }
-            switch(conditionId)
-            {
-                default:
-                {
-                    // "x" -> "$GOPATH/pkg/$GOOS_$GOARCH/x.ext", "x"
-                    // Don't require the source files to be present.
-                    if(auto [abs, err] = filepath::Abs(srcDir); err == nullptr)
-                    {
-                        // see issue 14282
-                        srcDir = abs;
-                    }
-                    auto [bp, gocpp_id_0] = build::Import(path, srcDir, build::FindOnly | build::AllowBinary);
-                    if(bp->PkgObj == ""_s)
-                    {
-                        bool ok = {};
-                        if(bp->Goroot && bp->Dir != ""_s)
-                        {
-                            std::tie(filename, ok) = lookupGorootExport(bp->Dir);
-                        }
-                        if(! ok)
-                        {
-                            // make sure we have an id to print in error message
-                            id = path;
-                            return {filename, id};
-                        }
-                    }
-                    else
-                    {
-                        noext = strings::TrimSuffix(bp->PkgObj, ".a"_s);
-                        id = bp->ImportPath;
-                    }
-                    break;
-                }
-
-                case 0:
-                    // "./x" -> "/this/directory/x.ext", "/this/directory/x"
-                    noext = filepath::Join(srcDir, path);
-                    id = noext;
-                    break;
-
-                case 1:
-                    // for completeness only - go/build.Import
-                    // does not support absolute imports
-                    // "/x" -> "/x.ext", "/x"
-                    noext = path;
-                    id = path;
-                    break;
-            }
-        }
-
-        if(false)
-        {
-            // for debugging
-            if(path != id)
-            {
-                mocklib::Printf("%s -> %s\n"_s, path, id);
-            }
-        }
-
-        if(filename != ""_s)
-        {
-            if(auto [f, err] = os::Stat(filename); err == nullptr && ! rec::IsDir(gocpp::recv(f)))
-            {
-                return {filename, id};
-            }
-        }
-
-        // try extensions
-        for(auto [gocpp_ignored, ext] : pkgExts)
-        {
-            filename = noext + ext;
-            if(auto [f, err] = os::Stat(filename); err == nullptr && ! rec::IsDir(gocpp::recv(f)))
-            {
-                return {filename, id};
-            }
-        }
-
-        // not found
-        filename = ""_s;
-        return {filename, id};
     }
 
     // Import imports a gc-generated package given its import path and srcDir, adds
     // the corresponding package object to the packages map, and returns the object.
     // The packages map must contain all packages already imported.
-    std::tuple<types::Package*, gocpp::error> Import(gocpp::map<gocpp::string, types::Package*> packages, gocpp::string path, gocpp::string srcDir, std::function<std::tuple<io::ReadCloser, gocpp::error> (gocpp::string path)> lookup)
+    //
+    // Import is only used in tests.
+    std::tuple<types::Package*, gocpp::error> Import(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> packages, gocpp::string path, gocpp::string srcDir, std::function<std::tuple<io::ReadCloser, gocpp::error> (gocpp::string path)> lookup)
     {
         types::Package* pkg;
         gocpp::error err;
@@ -226,7 +67,6 @@ namespace golang::gcimporter
         try
         {
             io::ReadCloser rc = {};
-            gocpp::string filename = {};
             gocpp::string id = {};
             if(lookup != nullptr)
             {
@@ -252,14 +92,15 @@ namespace golang::gcimporter
             }
             else
             {
-                std::tie(filename, id) = FindPkg(path, srcDir);
+                gocpp::string filename = {};
+                std::tie(filename, id, err) = FindPkg(path, srcDir);
                 if(filename == ""_s)
                 {
                     if(path == "unsafe"_s)
                     {
                         return {types::Unsafe, nullptr};
                     }
-                    return {nullptr, mocklib::Errorf("can't find import: %q"_s, id)};
+                    return {nullptr, err};
                 }
 
                 // no need to re-import if the package was imported completely before
@@ -286,87 +127,17 @@ namespace golang::gcimporter
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(rc)); });
 
-            gocpp::string hdr = {};
-            int64_t size = {};
             auto buf = bufio::NewReader(rc);
-            if(std::tie(hdr, size, err) = FindExportData(buf); err != nullptr)
+            gocpp::slice<unsigned char> data;
+            std::tie(data, err) = ReadUnified(buf);
+            if(err != nullptr)
             {
+                err = mocklib::Errorf("import %q: %v"_s, path, err);
                 return {pkg, err};
             }
 
-            //Go switch emulation
-            {
-                auto condition = hdr;
-                int conditionId = -1;
-                if(condition == "$$B\n"_s) { conditionId = 0; }
-                switch(conditionId)
-                {
-                    case 0:
-                    {
-                        gocpp::slice<unsigned char> data = {};
-                        std::tie(data, err) = io::ReadAll(buf);
-                        if(err != nullptr)
-                        {
-                            break;
-                        }
-                        // TODO(gri): allow clients of go/importer to provide a FileSet.
-                        // Or, define a new standard go/types/gcexportdata package.
-                        auto fset = token::NewFileSet();
-                        // Select appropriate importer.
-                        if(len(data) > 0)
-                        {
-                            //Go switch emulation
-                            {
-                                auto condition = data[0];
-                                int conditionId = -1;
-                                if(condition == 'v') { conditionId = 0; }
-                                else if(condition == 'c') { conditionId = 1; }
-                                else if(condition == 'd') { conditionId = 2; }
-                                else if(condition == 'i') { conditionId = 3; }
-                                else if(condition == 'u') { conditionId = 4; }
-                                switch(conditionId)
-                                {
-                                    case 0:
-                                    case 1:
-                                    case 2:
-                                        return {nullptr, mocklib::Errorf("binary (%c) import format is no longer supported"_s, data[0])};
-                                        break;
-
-                                    case 3:
-                                    {
-                                        auto [gocpp_id_1, pkg, err] = IImportData(fset, packages, data.make_slice(1), id);
-                                        return {pkg, err};
-                                        break;
-                                    }
-
-                                    case 4:
-                                    {
-                                        std::tie(std::ignore, pkg, err) = UImportData(fset, packages, data.make_slice(1, size), id);
-                                        return {pkg, err};
-                                        break;
-                                    }
-
-                                    default:
-                                    {
-                                        auto l = len(data);
-                                        if(l > 10)
-                                        {
-                                            l = 10;
-                                        }
-                                        return {nullptr, mocklib::Errorf("unexpected export data with prefix %q for path %s"_s, gocpp::string(data.make_slice(0, l)), id)};
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    }
-
-                    default:
-                        err = mocklib::Errorf("unknown export data header: %q"_s, hdr);
-                        break;
-                }
-            }
+            // unified: emitted by cmd/compile since go1.20.
+            std::tie(std::ignore, pkg, err) = UImportData(fset, packages, data, id);
 
             return {pkg, err};
         }
@@ -375,21 +146,6 @@ namespace golang::gcimporter
             defer.handlePanic(gp);
             return {pkg, err};
         }
-    }
-
-    int rec::Len(byPath a)
-    {
-        return len(a);
-    }
-
-    void rec::Swap(byPath a, int i, int j)
-    {
-        std::tie(a[i], a[j]) = std::tuple{a[j], a[i]};
-    }
-
-    bool rec::Less(byPath a, int i, int j)
-    {
-        return rec::Path(gocpp::recv(a[i])) < rec::Path(gocpp::recv(a[j]));
     }
 
 }

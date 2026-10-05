@@ -13,169 +13,191 @@
 
 #include "golang/go/types/alias.h"
 #include "golang/go/types/api_predicates.h"
-#include "golang/go/types/basic.h"
 #include "golang/go/types/chan.h"
-#include "golang/go/types/named.h"
-#include "golang/go/types/predicates.h"
-#include "golang/go/types/slice.h"
+#include "golang/go/types/check.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeparam.h"
-#include "golang/go/types/universe.h"
+#include "golang/iter/iter.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace iter = golang::iter;
     namespace rec
     {
     }
 
-    // under returns the true expanded underlying type.
-    // If it doesn't exist, the result is Typ[Invalid].
-    // under must only be called when a type is known
-    // to be fully set up.
-    golang::types::Type under(golang::types::Type t)
+    // If typ is a type parameter, underIs returns the result of typ.underIs(f).
+    // Otherwise, underIs returns the result of f(typ.Underlying()).
+    bool underIs(golang::go::types::Type typ, std::function<bool (golang::go::types::Type _1)> f)
     {
+        return all(typ, [=](golang::go::types::Type _1, golang::go::types::Type u) mutable -> bool
         {
-            auto t_tmp = asNamed(t);
-            if(auto& t = t_tmp; t != nullptr)
-            {
-                return rec::under(gocpp::recv(t));
-            }
-        }
-        return rec::Underlying(gocpp::recv(t));
+            return f(u);
+        });
     }
 
-    // If t is not a type parameter, coreType returns the underlying type.
-    // If t is a type parameter, coreType returns the single underlying
-    // type of all types in its type set if it exists, or nil otherwise. If the
-    // type set contains only unrestricted and restricted channel types (with
-    // identical element types), the single underlying type is the restricted
-    // channel type if the restrictions are always the same, or nil otherwise.
-    golang::types::Type coreType(golang::types::Type t)
+    // all reports whether f(t, u) is true for all (type/underlying type)
+    // pairs in the typeset of t. See [typeset] for details of sequence.
+    bool all(golang::go::types::Type t, std::function<bool (golang::go::types::Type t, golang::go::types::Type u)> f)
     {
-        auto [tpar, gocpp_id_0] = gocpp::getValue<TypeParam*>(t);
-        if(tpar == nullptr)
+        if(auto [p, gocpp_id_0] = gocpp::getValue<TypeParam*>(Unalias(t)); p != nullptr)
         {
-            return under(t);
+            return rec::typeset(gocpp::recv(p), f);
         }
+        return f(t, rec::Underlying(gocpp::recv(t)));
+    }
 
-        golang::types::Type su = {};
-        if(rec::underIs(gocpp::recv(tpar), [=](golang::types::Type u) mutable -> bool
+    // typeset is an iterator over the (type/underlying type) pairs of the
+    // specific type terms of the type set implied by t.
+    // If t is a type parameter, the implied type set is the type set of t's constraint.
+    // In this case, if there are no specific terms, the iterator produces (nil, nil).
+    // If t is not a type parameter, the implied type set consists of just t.
+    // In any case, typeset is guaranteed to produce at least one set of results.
+    iter::Seq2<golang::go::types::Type, golang::go::types::Type> typeset(golang::go::types::Type t)
+    {
+        return [=](std::function<bool (golang::go::types::Type t, golang::go::types::Type u)> yield) mutable -> void
         {
-            if(u == nullptr)
+            all(t, yield);
+        };
+    }
+
+    // A typeError describes a type error.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    typeError::operator T()
+    {
+        T result;
+        result.format_ = this->format_;
+        result.args = this->args;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool typeError::operator==(const T& ref) const
+    {
+        if (format_ != ref.format_) return false;
+        if (args != ref.args) return false;
+        return true;
+    }
+
+    std::ostream& typeError::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << format_;
+        os << " " << args;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct typeError& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    typeError emptyTypeError;
+    typeError* typeErrorf(gocpp::string format, gocpp::slice<go_any> args)
+    {
+        if(format == ""_s)
+        {
+            return & emptyTypeError;
+        }
+        return new typeError {format, args};
+    }
+
+    // format formats a type error as a string.
+    // check may be nil.
+    gocpp::string rec::format(typeError* err, Checker* check)
+    {
+        return rec::sprintf(gocpp::recv(check), err->format_, err->args);
+    }
+
+    // If t is a type parameter, cond is nil, and t's type set contains no channel types,
+    // commonUnder returns the common underlying type of all types in t's type set if
+    // it exists, or nil and a type error otherwise.
+    //
+    // If t is a type parameter, cond is nil, and there are channel types, t's type set
+    // must only contain channel types, they must all have the same element types,
+    // channel directions must not conflict, and commonUnder returns one of the most
+    // restricted channels. Otherwise, the function returns nil and a type error.
+    //
+    // If cond != nil, each pair (t, u) of type and underlying type in t's type set
+    // must satisfy the condition expressed by cond. If the result of cond is != nil,
+    // commonUnder returns nil and the type error reported by cond.
+    // Note that cond is called before any other conditions are checked; specifically
+    // cond may be called with (nil, nil) if the type set contains no specific types.
+    //
+    // If t is not a type parameter, commonUnder behaves as if t was a type parameter
+    // with the single type t in its type set.
+    std::tuple<golang::go::types::Type, typeError*> commonUnder(golang::go::types::Type t, std::function<typeError* (golang::go::types::Type t, golang::go::types::Type u)> cond)
+    {
+        // type and respective common underlying type
+        golang::go::types::Type ct = {};
+        golang::go::types::Type cu = {};
+        for(auto [t, u] : typeset(t))
+        {
+            if(cond != nullptr)
             {
-                return false;
-            }
-            if(su != nullptr)
-            {
-                u = match(su, u);
-                if(u == nullptr)
+                if(auto err = cond(t, u); err != nullptr)
                 {
-                    return false;
+                    return {nullptr, err};
                 }
             }
-            // su == nil || match(su, u) != nil
-            su = u;
-            return true;
-        }))
-        {
-            return su;
-        }
-        return nullptr;
-    }
 
-    // coreString is like coreType but also considers []byte
-    // and strings as identical. In this case, if successful and we saw
-    // a string, the result is of type (possibly untyped) string.
-    golang::types::Type coreString(golang::types::Type t)
-    {
-        auto [tpar, gocpp_id_1] = gocpp::getValue<TypeParam*>(t);
-        if(tpar == nullptr)
-        {
-            // string or untyped string
-            return under(t);
-        }
-
-        golang::types::Type su = {};
-        auto hasString = false;
-        if(rec::underIs(gocpp::recv(tpar), [=](golang::types::Type u) mutable -> bool
-        {
             if(u == nullptr)
             {
-                return false;
+                return {nullptr, typeErrorf("no specific type"_s)};
             }
-            if(isString(u))
-            {
-                u = NewSlice(universeByte);
-                hasString = true;
-            }
-            if(su != nullptr)
-            {
-                u = match(su, u);
-                if(u == nullptr)
-                {
-                    return false;
-                }
-            }
-            // su == nil || match(su, u) != nil
-            su = u;
-            return true;
-        }))
-        {
-            if(hasString)
-            {
-                return Typ[types::String];
-            }
-            return su;
-        }
-        return nullptr;
-    }
 
-    // If x and y are identical, match returns x.
-    // If x and y are identical channels but for their direction
-    // and one of them is unrestricted, match returns the channel
-    // with the restricted direction.
-    // In all other cases, match returns nil.
-    golang::types::Type match(golang::types::Type x, golang::types::Type y)
-    {
-        // Common case: we don't have channels.
-        if(Identical(x, y))
-        {
-            return x;
-        }
-
-        // We may have channels that differ in direction only.
-        {
-            auto [x_tmp, gocpp_id_2] = gocpp::getValue<Chan*>(x);
-            if(auto& x = x_tmp; x != nullptr)
+            // If this is the first type we're seeing, we're done.
+            if(cu == nullptr)
             {
+                std::tie(ct, cu) = std::tuple{t, u};
+                continue;
+            }
+
+            // If we've seen a channel before, and we have a channel now, they must be compatible.
+            if(auto [chu, gocpp_id_1] = gocpp::getValue<Chan*>(cu); chu != nullptr)
+            {
+                if(auto [ch, gocpp_id_2] = gocpp::getValue<Chan*>(u); ch != nullptr)
                 {
-                    auto [y_tmp, gocpp_id_3] = gocpp::getValue<Chan*>(y);
-                    if(auto& y = y_tmp; y != nullptr && Identical(x->elem, y->elem))
+                    if(! Identical(chu->elem, ch->elem))
                     {
-                        // We have channels that differ in direction only.
-                        // If there's an unrestricted channel, select the restricted one.
-                        //Go switch emulation
+                        return {nullptr, typeErrorf("channels %s and %s have different element types"_s, ct, t)};
+                    }
+                    // If we have different channel directions, keep the restricted one
+                    // and complain if they conflict.
+                    //Go switch emulation
+                    {
+                        int conditionId = -1;
+                        if(chu->dir == ch->dir) { conditionId = 0; }
+                        else if(chu->dir == SendRecv) { conditionId = 1; }
+                        else if(ch->dir != SendRecv) { conditionId = 2; }
+                        switch(conditionId)
                         {
-                            int conditionId = -1;
-                            if(x->dir == SendRecv) { conditionId = 0; }
-                            else if(y->dir == SendRecv) { conditionId = 1; }
-                            switch(conditionId)
-                            {
-                                case 0:
-                                    return y;
-                                    break;
-                                case 1:
-                                    return x;
-                                    break;
-                            }
+                            case 0:
+                                break;
+                            // nothing to do
+                            // switch to restricted channel
+                            case 1:
+                                std::tie(ct, cu) = std::tuple{t, u};
+                                break;
+                            case 2:
+                                return {nullptr, typeErrorf("channels %s and %s have conflicting directions"_s, ct, t)};
+                                break;
                         }
                     }
+                    continue;
                 }
             }
-        }
 
-        // types are different
-        return nullptr;
+            // Otherwise, the current type must have the same underlying type as all previous types.
+            if(! Identical(cu, u))
+            {
+                return {nullptr, typeErrorf("%s and %s have different underlying types"_s, ct, t)};
+            }
+        }
+        return {cu, nullptr};
     }
 
 }

@@ -7,14 +7,8 @@
 namespace golang::syscall
 {
     struct DLLError;
-    struct Proc;
-}
-#include "golang/sync/mutex.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-
-namespace golang::syscall
-{
     struct DLL;
+    struct Proc;
     struct LazyDLL;
     struct LazyProc;
 }

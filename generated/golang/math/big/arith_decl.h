@@ -11,16 +11,16 @@
 
 #include "golang/math/big/arith.h"
 
-namespace golang::big
+namespace golang::math::big
 {
     Word addVV(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y);
     Word subVV(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y);
-    Word addVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
-    Word subVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
     Word shlVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
-    Word shrVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
-    Word mulAddVWW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y, Word r);
+    Word lshVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
+    Word rshVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
+    Word mulAddVWW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word m, Word a);
     Word addMulVVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
+    Word addMulVVWW(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y, Word m, Word a);
 
     namespace rec
     {

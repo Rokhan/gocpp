@@ -10,20 +10,33 @@
 #include "gocpp/support.h"
 
 
-namespace golang::flate
+namespace golang::compress::flate
 {
-    extern gocpp::slice<int8_t> lengthExtraBits;
-    extern gocpp::slice<uint32_t> lengthBase;
-    extern gocpp::slice<int8_t> offsetExtraBits;
-    extern gocpp::slice<uint32_t> offsetBase;
+    // lengthExtraBits[i] is the number of extra bits needed by
+    // length code i + lengthCodesStart.
+    extern gocpp::array<uint8_t, 32> lengthExtraBits;
+    // lengthBase[i] is the length indicated by length code i + lengthCodesStart.
+    extern gocpp::array<uint8_t, 32> lengthBase;
+    // offsetExtraBits[i] is the number of extra bits for offset code i.
+    extern gocpp::array<int8_t, 32> offsetExtraBits;
+    // offsetCombined combines offset lookup of extra bits and offset code in a single table.
+    extern gocpp::array<uint32_t, 32> offsetCombined;
+    // codegenOrder is the order in which codegen code sizes are written.
     extern gocpp::slice<uint32_t> codegenOrder;
-    void init();
-    void histogram(gocpp::slice<unsigned char> b, gocpp::slice<int32_t> h);
+}
+#include "golang/io/io.fwd.h"
+#include "golang/sync/oncefunc.fwd.h"
+
+namespace golang::compress::flate
+{
+    namespace io = golang::io;
+    namespace sync = golang::sync;
 }
 #include "golang/io/io.h"
+#include "golang/sync/oncefunc.h"
 #include "golang/compress/flate/huffman_code.fwd.h"
 
-namespace golang::flate
+namespace golang::compress::flate
 {
     struct huffmanBitWriter
     {
@@ -32,20 +45,32 @@ namespace golang::flate
         // that Write errors are sticky.
         io::Writer writer{};
         // Data waiting to be written is bytes[0:nbytes]
-        // and then the low nbits of bits.  Data is always written
-        // sequentially into the bytes array.
+        // and then the low nbits of bits.
         uint64_t bits{};
-        unsigned int nbits{};
-        gocpp::array<unsigned char, bufferSize> bytes{};
-        gocpp::array<int32_t, codegenCodeCount> codegenFreq{};
-        int nbytes{};
-        gocpp::slice<int32_t> literalFreq{};
-        gocpp::slice<int32_t> offsetFreq{};
-        gocpp::slice<uint8_t> codegen{};
+        uint8_t nbits{};
+        uint8_t nbytes{};
+        // If wroteHuffman is set, a table for outputting only literals
+        // has been generated and offsets are invalid.
+        bool wroteHuffman{};
         huffmanEncoder* literalEncoding{};
+        huffmanEncoder* tmpLitEncoding{};
         huffmanEncoder* offsetEncoding{};
         huffmanEncoder* codegenEncoding{};
         gocpp::error err{};
+        // If prevHeader is non-zero the Huffman table can be reused.
+        // It also indicates that an EOB has not yet been emitted, so if a new table
+        // is generated, an EOB with the previous table must be written.
+        int prevHeader{};
+        // logNewTablePenalty is a log2 penalty reduction for creating new tables.
+        // The initial penalty is 100%.
+        // Adding 1 will cut the penalty in half.
+        unsigned int logNewTablePenalty{};
+        gocpp::array<unsigned char, 256 + 8> bytes{};
+        gocpp::array<uint16_t, lengthCodesStart + 32> literalFreq{};
+        gocpp::array<uint16_t, 32> offsetFreq{};
+        gocpp::array<uint16_t, codegenCodeCount> codegenFreq{};
+        // codegen must have an extra space for the final symbol.
+        gocpp::array<uint8_t, literalCount + offsetCodeCount + 1> codegen{};
 
         using isGoStruct = void;
 
@@ -59,7 +84,9 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct huffmanBitWriter& value);
-    extern huffmanEncoder* huffOffset;
+    // huffOffset is a static offset encoder used for Huffman-only encoding.
+    // It can be reused since we will not be encoding offset values.
+    extern std::function<flate::huffmanEncoder* (void)> huffOffset;
     huffmanBitWriter* newHuffmanBitWriter(io::Writer w);
 }
 
@@ -67,29 +94,36 @@ namespace golang::flate
 #include "golang/compress/flate/token.h"
 #include "golang/io/io.h"
 
-namespace golang::flate
+namespace golang::compress::flate
 {
 
     namespace rec
     {
         void reset(huffmanBitWriter* w, io::Writer writer);
+        bool canReuse(huffmanBitWriter* w, tokens* t);
         void flush(huffmanBitWriter* w);
         void write(huffmanBitWriter* w, gocpp::slice<unsigned char> b);
-        void writeBits(huffmanBitWriter* w, int32_t b, unsigned int nb);
+        void writeBits(huffmanBitWriter* w, int32_t b, uint8_t nb);
         void writeBytes(huffmanBitWriter* w, gocpp::slice<unsigned char> bytes);
         void generateCodegen(huffmanBitWriter* w, int numLiterals, int numOffsets, huffmanEncoder* litEnc, huffmanEncoder* offEnc);
+        int codegens(huffmanBitWriter* w);
+        std::tuple<int, int> headerSize(huffmanBitWriter* w);
+        int dynamicReuseSize(huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc);
         std::tuple<int, int> dynamicSize(huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc, int extraBits);
+        int extraBitSize(huffmanBitWriter* w);
         int fixedSize(huffmanBitWriter* w, int extraBits);
         std::tuple<int, bool> storedSize(huffmanBitWriter* w, gocpp::slice<unsigned char> in);
         void writeCode(huffmanBitWriter* w, hcode c);
+        void flushBits(huffmanBitWriter* w);
         void writeDynamicHeader(huffmanBitWriter* w, int numLiterals, int numOffsets, int numCodegens, bool isEof);
         void writeStoredHeader(huffmanBitWriter* w, int length, bool isEof);
         void writeFixedHeader(huffmanBitWriter* w, bool isEof);
-        void writeBlock(huffmanBitWriter* w, gocpp::slice<token> tokens, bool eof, gocpp::slice<unsigned char> input);
-        void writeBlockDynamic(huffmanBitWriter* w, gocpp::slice<token> tokens, bool eof, gocpp::slice<unsigned char> input);
-        std::tuple<int, int> indexTokens(huffmanBitWriter* w, gocpp::slice<token> tokens);
-        void writeTokens(huffmanBitWriter* w, gocpp::slice<token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes);
-        void writeBlockHuff(huffmanBitWriter* w, bool eof, gocpp::slice<unsigned char> input);
+        void writeBlock(huffmanBitWriter* w, tokens* tokens, bool eof, gocpp::slice<unsigned char> input);
+        void writeBlockDynamic(huffmanBitWriter* w, tokens* tokens, bool eof, gocpp::slice<unsigned char> input, bool sync);
+        std::tuple<int, int> indexTokens(huffmanBitWriter* w, tokens* t);
+        void generate(huffmanBitWriter* w);
+        void writeTokens(huffmanBitWriter* w, gocpp::slice<token> tokens, gocpp::slice<hcode> lenCodes, gocpp::slice<hcode> offCodes);
+        void writeBlockHuff(huffmanBitWriter* w, bool eof, gocpp::slice<unsigned char> input, bool sync);
     }
 }
 

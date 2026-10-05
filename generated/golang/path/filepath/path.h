@@ -10,31 +10,11 @@
 #include "gocpp/support.h"
 
 
-namespace golang::filepath
+namespace golang::path::filepath
 {
-    struct lazybuf
-    {
-        gocpp::string path{};
-        gocpp::slice<unsigned char> buf{};
-        int w{};
-        gocpp::string volAndPath{};
-        int volLen{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct lazybuf& value);
     gocpp::string Clean(gocpp::string path);
     bool IsLocal(gocpp::string path);
-    bool unixIsLocal(gocpp::string path);
+    std::tuple<gocpp::string, gocpp::error> Localize(gocpp::string path);
     gocpp::string ToSlash(gocpp::string path);
     gocpp::string FromSlash(gocpp::string path);
     gocpp::slice<gocpp::string> SplitList(gocpp::string path);
@@ -54,46 +34,52 @@ namespace golang::filepath
     }
     gocpp::string Ext(gocpp::string path);
     std::tuple<gocpp::string, gocpp::error> EvalSymlinks(gocpp::string path);
+    bool IsAbs(gocpp::string path);
     std::tuple<gocpp::string, gocpp::error> Abs(gocpp::string path);
     std::tuple<gocpp::string, gocpp::error> unixAbs(gocpp::string path);
-    std::tuple<gocpp::string, gocpp::error> Rel(gocpp::string basepath, gocpp::string targpath);
+    std::tuple<gocpp::string, gocpp::error> Rel(gocpp::string basePath, gocpp::string targPath);
+    // SkipDir is used as a return value from [WalkFunc] to indicate that
+    // the directory named in the call is to be skipped. It is not returned
+    // as an error by any function.
+    extern gocpp::error SkipDir;
+    // SkipAll is used as a return value from [WalkFunc] to indicate that
+    // all remaining files and directories are to be skipped. It is not returned
+    // as an error by any function.
+    extern gocpp::error SkipAll;
     gocpp::error Walk(gocpp::string root, WalkFunc fn);
     std::tuple<gocpp::slice<gocpp::string>, gocpp::error> readDirNames(gocpp::string dirname);
     gocpp::string Base(gocpp::string path);
     gocpp::string Dir(gocpp::string path);
     gocpp::string VolumeName(gocpp::string path);
 }
+#include "golang/io/fs/fs.fwd.h"
+#include "golang/io/fs/readdir.fwd.h"
+#include "golang/io/fs/walk.fwd.h"
+#include "golang/os/dir.fwd.h"
+#include "golang/os/file.fwd.h"
+#include "golang/os/getwd.fwd.h"
+#include "golang/os/path_windows.fwd.h"
+#include "golang/os/stat.fwd.h"
+
+namespace golang::path::filepath
+{
+    namespace os = golang::os;
+}
 #include "golang/io/fs/fs.h"
 #include "golang/io/fs/walk.h"
 #include "golang/os/stat.h"
+#include "golang/os/types.h"
 
-namespace golang::filepath
+namespace golang::path::filepath
 {
-    extern gocpp::error SkipDir;
-    extern gocpp::error SkipAll;
-    extern std::function<std::tuple<fs::FileInfo, gocpp::error> (gocpp::string)> lstat;
+    namespace fs = golang::io::fs;
+    extern std::function<std::tuple<os::FileInfo, gocpp::error> (gocpp::string)> lstat;
     gocpp::error walkDir(gocpp::string path, fs::DirEntry d, fs::WalkDirFunc walkDirFn);
     gocpp::error walk(gocpp::string path, fs::FileInfo info, WalkFunc walkFn);
     gocpp::error WalkDir(gocpp::string root, fs::WalkDirFunc fn);
 
     namespace rec
     {
-        unsigned char index(lazybuf* b, int i);
-        void append(lazybuf* b, unsigned char c);
-        void prepend(lazybuf* b, gocpp::slice<unsigned char> prefix);
-        
-        template<typename... Args>
-        void prepend(lazybuf* b, Args... prefix)
-        {
-            return prepend(b, gocpp::ToSlice<unsigned char>(prefix...));
-        }
-        
-        template<typename... Args>
-        void prepend(lazybuf* b, unsigned char value, Args... prefix)
-        {
-            return prepend(b, gocpp::ToSlice<unsigned char>(value, prefix...));
-        }
-        gocpp::string string(lazybuf* b);
     }
 }
 

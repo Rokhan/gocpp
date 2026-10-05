@@ -11,4 +11,7 @@ namespace golang::main
     template<typename T> struct Wrapper;
     template<typename T> struct Pointer;
     struct entry;
+    template<typename T> using Boxed = int;
+    template<typename K, typename V> struct Pair;
+    template<typename K, typename V> using BoxedPair = int;
 }

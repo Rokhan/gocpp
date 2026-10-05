@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::goos
+namespace golang::internal::goos
 {
     const gocpp::string GOOS = "windows"_s;
     const long IsAix = 0;

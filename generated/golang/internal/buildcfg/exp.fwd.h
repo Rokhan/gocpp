@@ -3,12 +3,15 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/buildcfg/zbootstrap.fwd.h"
-#include "golang/internal/goexperiment/flags.fwd.h"
 
-namespace golang::buildcfg
+namespace golang::internal::buildcfg
 {
     struct ExperimentFlags;
+}
+#include "golang/internal/buildcfg/zbootstrap.fwd.h"
+
+namespace golang::internal::buildcfg
+{
     // DefaultGOEXPERIMENT is the embedded default GOEXPERIMENT string.
     // It is not guaranteed to be canonical.
     const gocpp::string DefaultGOEXPERIMENT = defaultGOEXPERIMENT;

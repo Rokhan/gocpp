@@ -16,6 +16,7 @@
 
 namespace golang::slices
 {
+    namespace cmp = golang::cmp;
     namespace rec
     {
     }

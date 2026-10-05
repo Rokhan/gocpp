@@ -4,15 +4,18 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::flate
+namespace golang::compress::flate
 {
-    // 2 bits:   type   0 = literal  1=EOF  2=Match   3=Unused
-    // 8 bits:   xlength = length - MIN_MATCH_LENGTH
-    // 22 bits   xoffset = offset - MIN_OFFSET_SIZE, or literal
+    // Token is a compound value:
+    // bits 0-16  xoffset = offset - MIN_OFFSET_SIZE, or literal - 16 bits
+    // bits 16-22 offset code - 5 bits
+    // bits 22-30 xlength = length - MIN_MATCH_LENGTH - 8 bits
+    // bits 30-32 type, 0 = literal  1=EOF  2=Match   3=Unused - 2 bits
     const long lengthShift = 22;
     const int typeMask = 3 << 30;
-    const int literalType = 0 << 30;
     const int matchType = 1 << 30;
+    const long matchOffsetOnlyMask = 0xffff;
     using token = uint32_t;
+    struct tokens;
     const int offsetMask = (1 << lengthShift) - 1;
 }

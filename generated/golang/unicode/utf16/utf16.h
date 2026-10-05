@@ -10,11 +10,12 @@
 #include "gocpp/support.h"
 
 
-namespace golang::utf16
+namespace golang::unicode::utf16
 {
     bool IsSurrogate(gocpp::rune r);
     gocpp::rune DecodeRune(gocpp::rune r1, gocpp::rune r2);
     std::tuple<gocpp::rune, gocpp::rune> EncodeRune(gocpp::rune r);
+    int RuneLen(gocpp::rune r);
     gocpp::slice<uint16_t> Encode(gocpp::slice<gocpp::rune> s);
     gocpp::slice<uint16_t> AppendRune(gocpp::slice<uint16_t> a, gocpp::rune r);
     gocpp::slice<gocpp::rune> Decode(gocpp::slice<uint16_t> s);

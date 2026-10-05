@@ -12,23 +12,56 @@
 
 namespace golang::runtime
 {
+    // iscgo is set to true by the runtime/cgo package
+    //
+    // iscgo should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ebitengine/purego
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname iscgo
+    extern bool iscgo;
+    // set_crosscall2 is set by the runtime/cgo package
+    // set_crosscall2 should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ebitengine/purego
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname set_crosscall2
+    extern std::function<void ()> set_crosscall2;
+    // cgoHasExtraM is set on startup when an extra M is created for cgo.
+    // The extra M must be created before any C/C++ code calls cgocallback.
+    extern bool cgoHasExtraM;
+    void cgoUse(go_any);
+    void cgoKeepAlive(go_any);
+    // cgoAlwaysFalse is a boolean value that is always false.
+    // The cgo-generated code says if cgoAlwaysFalse { cgoUse(p) },
+    // or if cgoAlwaysFalse { cgoKeepAlive(p) }.
+    // The compiler cannot see that cgoAlwaysFalse is always false,
+    // so it emits the test and keeps the call, giving the desired
+    // escape/alive analysis result. The test is cheaper than the call.
+    extern bool cgoAlwaysFalse;
+    extern unsafe::Pointer* cgo_yield;
+    void cgoNoCallback(bool v);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     extern gocpp::unsafe_pointer _cgo_init;
     extern gocpp::unsafe_pointer _cgo_thread_start;
     extern gocpp::unsafe_pointer _cgo_sys_thread_create;
     extern gocpp::unsafe_pointer _cgo_notify_runtime_init_done;
     extern gocpp::unsafe_pointer _cgo_callers;
-    extern gocpp::unsafe_pointer _cgo_set_context_function;
+    extern gocpp::unsafe_pointer _cgo_set_traceback_functions;
+    extern gocpp::unsafe_pointer _cgo_call_traceback_function;
+    extern gocpp::unsafe_pointer _cgo_call_symbolizer_function;
     extern gocpp::unsafe_pointer _cgo_yield;
     extern gocpp::unsafe_pointer _cgo_pthread_key_created;
     extern gocpp::unsafe_pointer _cgo_bindm;
     extern gocpp::unsafe_pointer _cgo_getstackbound;
-    extern bool iscgo;
-    extern std::function<void ()> set_crosscall2;
-    extern bool cgoHasExtraM;
-    void cgoUse(go_any);
-    extern bool cgoAlwaysFalse;
-    void cgoNoCallback(bool v);
-    extern unsafe::Pointer* cgo_yield;
 
     namespace rec
     {

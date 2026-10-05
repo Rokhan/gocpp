@@ -10,21 +10,21 @@
 #include "gocpp/support.h"
 
 
-namespace golang::big
+namespace golang::math::big
 {
     std::tuple<Word, Word> mulWW(Word x, Word y);
     std::tuple<Word, Word> mulAddWWW_g(Word x, Word y, Word c);
     unsigned int nlz(Word x);
     Word addVV_g(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y);
     Word subVV_g(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y);
-    Word addVW_g(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
-    Word addVWlarge(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
-    Word subVW_g(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
-    Word subVWlarge(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
-    Word shlVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
-    Word shrVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
+    Word addVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
+    Word addVW_ref(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
+    Word subVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
+    Word subVW_ref(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
+    Word lshVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
+    Word rshVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
     Word mulAddVWW_g(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y, Word r);
-    Word addMulVVW_g(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
+    Word addMulVVWW_g(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y, Word m, Word a);
     std::tuple<Word, Word> divWW(Word x1, Word x0, Word y, Word m);
     Word reciprocalWord(Word d1);
 

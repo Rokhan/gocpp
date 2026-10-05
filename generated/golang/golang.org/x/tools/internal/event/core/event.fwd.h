@@ -4,14 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::core
-{
-    struct eventLabelMap;
-}
-#include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
-#include "golang/time/time.fwd.h"
-
-namespace golang::core
+namespace golang::golang_org::x::tools::internal::event::core
 {
     struct Event;
 }

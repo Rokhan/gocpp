@@ -17,6 +17,9 @@
 
 namespace golang::main
 {
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace strings = golang::strings;
     namespace rec
     {
         using strings::rec::Read;

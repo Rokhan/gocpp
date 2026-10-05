@@ -4,19 +4,16 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::cpu
+namespace golang::internal::cpu
 {
+    struct CacheLinePad;
     struct X86Struct;
     struct ARMStruct;
     struct ARM64Struct;
+    struct Loong64Struct;
     struct MIPS64XStruct;
     struct PPC64Struct;
     struct S390XStruct;
+    struct RISCV64Struct;
     struct option;
-}
-#include "golang/internal/cpu/cpu_x86.fwd.h"
-
-namespace golang::cpu
-{
-    struct CacheLinePad;
 }

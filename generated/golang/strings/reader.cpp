@@ -17,6 +17,9 @@
 
 namespace golang::strings
 {
+    namespace errors = golang::errors;
+    namespace io = golang::io;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
     }
@@ -154,11 +157,6 @@ namespace golang::strings
             return {0, 0, io::go_EOF};
         }
         r->prevRune = int(r->i);
-        if(auto c = r->s[r->i]; c < utf8::RuneSelf)
-        {
-            r->i++;
-            return {gocpp::rune(c), 1, nullptr};
-        }
         std::tie(ch, size) = utf8::DecodeRuneInString(r->s.make_slice(r->i));
         r->i += int64_t(size);
         return {ch, size, err};

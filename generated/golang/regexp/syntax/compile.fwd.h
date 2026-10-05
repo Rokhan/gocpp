@@ -4,14 +4,9 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
     struct patchList;
     struct frag;
-}
-#include "golang/regexp/syntax/prog.fwd.h"
-
-namespace golang::syntax
-{
     struct compiler;
 }

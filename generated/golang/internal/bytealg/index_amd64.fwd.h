@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
     const long MaxBruteForce = 64;
 }

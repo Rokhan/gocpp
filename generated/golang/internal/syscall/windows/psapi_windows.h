@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::windows
+namespace golang::internal::syscall::windows
 {
     struct PROCESS_MEMORY_COUNTERS
     {

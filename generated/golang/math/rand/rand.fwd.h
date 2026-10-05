@@ -4,17 +4,11 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::rand
+namespace golang::math::rand
 {
     struct Source;
     struct Source64;
     struct Rand;
-}
-#include "golang/math/rand/rng.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-
-namespace golang::rand
-{
     struct runtimeSource;
     struct lockedSource;
 }

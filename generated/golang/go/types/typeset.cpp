@@ -12,11 +12,13 @@
 #include "gocpp/support.h"
 
 #include "golang/go/token/position.h"
+#include "golang/go/types/alias.h"
 #include "golang/go/types/api.h"
 #include "golang/go/types/api_predicates.h"
 #include "golang/go/types/check.h"
 #include "golang/go/types/decl.h"
 #include "golang/go/types/errors.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/lookup.h"
 #include "golang/go/types/object.h"
@@ -30,11 +32,14 @@
 #include "golang/go/types/union.h"
 #include "golang/go/types/version.h"
 #include "golang/internal/types/errors/codes.h"
-#include "golang/sort/sort.h"
+#include "golang/slices/sort.h"
 #include "golang/strings/builder.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace slices = golang::slices;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
     namespace rec
     {
         using strings::rec::String;
@@ -87,13 +92,13 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
-    // IsEmpty reports whether type set s is the empty set.
+    // IsEmpty reports whether s is the empty set.
     bool rec::IsEmpty(_TypeSet* s)
     {
         return rec::isEmpty(gocpp::recv(s->terms));
     }
 
-    // IsAll reports whether type set s is the set of all types (corresponding to the empty interface).
+    // IsAll reports whether s is the set of all types (corresponding to the empty interface).
     bool rec::IsAll(_TypeSet* s)
     {
         return rec::IsMethodSet(gocpp::recv(s)) && len(s->methods) == 0;
@@ -106,15 +111,15 @@ namespace golang::types
     }
 
     // IsComparable reports whether each type in the set is comparable.
-    bool rec::IsComparable(_TypeSet* s, gocpp::map<golang::types::Type, bool> seen)
+    bool rec::IsComparable(_TypeSet* s, gocpp::map<golang::go::types::Type, bool> seen)
     {
         if(rec::isAll(gocpp::recv(s->terms)))
         {
             return s->comparable;
         }
-        return rec::is(gocpp::recv(s), [=](term* t) mutable -> bool
+        return rec::is(gocpp::recv(s), [=](golang::go::types::term* t) mutable -> bool
         {
-            return t != nullptr && comparable(t->typ, false, seen, nullptr);
+            return t != nullptr && comparableType(t->typ, false, seen) == nullptr;
         });
     }
 
@@ -124,7 +129,7 @@ namespace golang::types
         return len(s->methods);
     }
 
-    // Method returns the i'th method of type set s for 0 <= i < s.NumMethods().
+    // Method returns the i'th method of s for 0 <= i < s.NumMethods().
     // The methods are ordered by their unique ID.
     Func* rec::Method(_TypeSet* s, int i)
     {
@@ -134,7 +139,7 @@ namespace golang::types
     // LookupMethod returns the index of and method with matching package and name, or (-1, nil).
     std::tuple<int, Func*> rec::LookupMethod(_TypeSet* s, Package* pkg, gocpp::string name, bool foldCase)
     {
-        return types::lookupMethod(s->methods, pkg, name, foldCase);
+        return types::methodIndex(s->methods, pkg, name, foldCase);
     }
 
     gocpp::string rec::String(_TypeSet* s)
@@ -188,7 +193,7 @@ namespace golang::types
         return rec::String(gocpp::recv(buf));
     }
 
-    // hasTerms reports whether the type set has specific type terms.
+    // hasTerms reports whether s has specific type terms.
     bool rec::hasTerms(_TypeSet* s)
     {
         return ! rec::isEmpty(gocpp::recv(s->terms)) && ! rec::isAll(gocpp::recv(s->terms));
@@ -200,10 +205,41 @@ namespace golang::types
         return rec::subsetOf(gocpp::recv(s1->terms), s2->terms);
     }
 
+    // all reports whether f(t, u) is true for each (type/underlying type) pairs in s.
+    // If s has no specific terms, all calls f(nil, nil).
+    // In any case, all is guaranteed to call f at least once.
+    bool rec::all(_TypeSet* s, std::function<bool (golang::go::types::Type t, golang::go::types::Type u)> f)
+    {
+        if(! rec::hasTerms(gocpp::recv(s)))
+        {
+            return f(nullptr, nullptr);
+        }
+
+        for(auto [gocpp_ignored, t] : s->terms)
+        {
+            assert(t->typ != nullptr);
+            // Unalias(x) == x.Underlying() for ~x terms
+            auto u = Unalias(t->typ);
+            if(! t->tilde)
+            {
+                u = rec::Underlying(gocpp::recv(u));
+            }
+            if(debug)
+            {
+                assert(Identical(u, rec::Underlying(gocpp::recv(u))));
+            }
+            if(! f(t->typ, u))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     // is calls f with the specific type terms of s and reports whether
     // all calls to f returned true. If there are no specific terms, is
     // returns the result of f(nil).
-    bool rec::is(_TypeSet* s, std::function<bool (term* _1)> f)
+    bool rec::is(_TypeSet* s, std::function<bool (golang::go::types::term* _1)> f)
     {
         if(! rec::hasTerms(gocpp::recv(s)))
         {
@@ -213,36 +249,6 @@ namespace golang::types
         {
             assert(t->typ != nullptr);
             if(! f(t))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    // underIs calls f with the underlying types of the specific type terms
-    // of s and reports whether all calls to f returned true. If there are
-    // no specific terms, underIs returns the result of f(nil).
-    bool rec::underIs(_TypeSet* s, std::function<bool (golang::types::Type _1)> f)
-    {
-        if(! rec::hasTerms(gocpp::recv(s)))
-        {
-            return f(nullptr);
-        }
-        for(auto [gocpp_ignored, t] : s->terms)
-        {
-            assert(t->typ != nullptr);
-            // x == under(x) for ~x terms
-            auto u = t->typ;
-            if(! t->tilde)
-            {
-                u = types::under(u);
-            }
-            if(debug)
-            {
-                assert(Identical(u, types::under(u)));
-            }
-            if(! f(u))
             {
                 return false;
             }
@@ -272,7 +278,7 @@ namespace golang::types
             // type set eventually. Instead, return the top type set and
             // let any follow-on errors play out.
             // TODO(gri) Consider recording when this happens and reporting
-            // it as an error (but only if there were no other errors so to
+            // it as an error (but only if there were no other errors so
             // to not have unnecessary follow-on errors).
             if(! ityp->complete)
             {
@@ -354,9 +360,10 @@ namespace golang::types
                         case 1:
                             if(check != nullptr)
                             {
-                                rec::errorf(gocpp::recv(check), atPos(pos), DuplicateDecl, "duplicate method %s"_s, m->object.name);
-                                // secondary error, \t indented
-                                rec::errorf(gocpp::recv(check), atPos(mpos[gocpp::getValue<Func*>(other)]), DuplicateDecl, "\tother declaration of %s"_s, m->object.name);
+                                auto err = rec::newError(gocpp::recv(check), DuplicateDecl);
+                                rec::addf(gocpp::recv(err), atPos(pos), "duplicate method %s"_s, m->object.name);
+                                rec::addf(gocpp::recv(err), atPos(mpos[gocpp::getValue<Func*>(other)]), "other declaration of method %s"_s, m->object.name);
+                                rec::report(gocpp::recv(err));
                             }
                             break;
                         default:
@@ -369,11 +376,12 @@ namespace golang::types
                             {
                                 rec::describef(gocpp::recv(rec::later(gocpp::recv(check), [=]() mutable -> void
                                 {
-                                    if(! rec::allowVersion(gocpp::recv(check), m->object.pkg, atPos(pos), go1_14) || ! Identical(m->object.typ, rec::Type(gocpp::recv(other))))
+                                    if(rec::IsValid(gocpp::recv(pos)) && ! rec::allowVersion(gocpp::recv(check), go1_14) || ! Identical(m->object.typ, rec::Type(gocpp::recv(other))))
                                     {
-                                        rec::errorf(gocpp::recv(check), atPos(pos), DuplicateDecl, "duplicate method %s"_s, m->object.name);
-                                        // secondary error, \t indented
-                                        rec::errorf(gocpp::recv(check), atPos(mpos[gocpp::getValue<Func*>(other)]), DuplicateDecl, "\tother declaration of %s"_s, m->object.name);
+                                        auto err = rec::newError(gocpp::recv(check), DuplicateDecl);
+                                        rec::addf(gocpp::recv(err), atPos(pos), "duplicate method %s"_s, m->object.name);
+                                        rec::addf(gocpp::recv(err), atPos(mpos[gocpp::getValue<Func*>(other)]), "other declaration of method %s"_s, m->object.name);
+                                        rec::report(gocpp::recv(err));
                                     }
                                 })), atPos(pos), "duplicate method check for %s"_s, m->object.name);
                             }
@@ -392,9 +400,8 @@ namespace golang::types
             auto allComparable = false;
             for(auto [i, typ] : ityp->embeddeds)
             {
-                // The embedding position is nil for imported interfaces
-                // and also for interface copies after substitution (but
-                // in that case we don't need to report errors again).
+                // The embedding position is nil for imported interfaces.
+                // We don't need to do version checks in those cases.
                 // embedding position
                 token::Pos pos = {};
                 if(ityp->embedPos != nullptr)
@@ -402,10 +409,10 @@ namespace golang::types
                     pos = (*ityp->embedPos)[i];
                 }
                 bool comparable = {};
-                golang::types::termlist terms = {};
+                termlist terms = {};
                 //Go type switch emulation
                 {
-                    const auto& gocpp_id_0 = gocpp::type_info(under(typ));
+                    const auto& gocpp_id_0 = gocpp::type_info(rec::Underlying(gocpp::recv(typ)));
                     int conditionId = -1;
                     if(gocpp_id_0 == typeid(types::Interface*)) { conditionId = 0; }
                     else if(gocpp_id_0 == typeid(types::Union*)) { conditionId = 1; }
@@ -413,12 +420,12 @@ namespace golang::types
                     {
                         case 0:
                         {
-                            types::Interface* u = gocpp::any_cast<types::Interface*>(under(typ));
+                            types::Interface* u = gocpp::any_cast<types::Interface*>(rec::Underlying(gocpp::recv(typ)));
                             // For now we don't permit type parameters as constraints.
                             assert(! isTypeParam(typ));
                             auto tset = computeInterfaceTypeSet(check, pos, u);
                             // If typ is local, an error was already reported where typ is specified/defined.
-                            if(check != nullptr && rec::isImportedConstraint(gocpp::recv(check), typ) && ! rec::verifyVersionf(gocpp::recv(check), atPos(pos), go1_18, "embedding constraint interface %s"_s, typ))
+                            if(rec::IsValid(gocpp::recv(pos)) && check != nullptr && rec::isImportedConstraint(gocpp::recv(check), typ) && ! rec::verifyVersionf(gocpp::recv(check), atPos(pos), go1_18, "embedding constraint interface %s"_s, typ))
                             {
                                 continue;
                             }
@@ -433,8 +440,8 @@ namespace golang::types
                         }
                         case 1:
                         {
-                            types::Union* u = gocpp::any_cast<types::Union*>(under(typ));
-                            if(check != nullptr && ! rec::verifyVersionf(gocpp::recv(check), atPos(pos), go1_18, "embedding interface element %s"_s, u))
+                            types::Union* u = gocpp::any_cast<types::Union*>(rec::Underlying(gocpp::recv(typ)));
+                            if(rec::IsValid(gocpp::recv(pos)) && check != nullptr && ! rec::verifyVersionf(gocpp::recv(check), atPos(pos), go1_18, "embedding interface element %s"_s, u))
                             {
                                 continue;
                             }
@@ -451,16 +458,16 @@ namespace golang::types
                         }
                         default:
                         {
-                            auto u = under(typ);
+                            auto u = rec::Underlying(gocpp::recv(typ));
                             if(! isValid(u))
                             {
                                 continue;
                             }
-                            if(check != nullptr && ! rec::verifyVersionf(gocpp::recv(check), atPos(pos), go1_18, "embedding non-interface type %s"_s, typ))
+                            if(rec::IsValid(gocpp::recv(pos)) && check != nullptr && ! rec::verifyVersionf(gocpp::recv(check), atPos(pos), go1_18, "embedding non-interface type %s"_s, typ))
                             {
                                 continue;
                             }
-                            terms = golang::types::termlist {{false, typ}};
+                            terms = termlist {{false, typ}};
                             break;
                         }
                     }
@@ -490,7 +497,7 @@ namespace golang::types
 
     // intersectTermLists computes the intersection of two term lists and respective comparable bits.
     // xcomp, ycomp are valid only if xterms.isAll() and yterms.isAll() respectively.
-    std::tuple<golang::types::termlist, bool> intersectTermLists(golang::types::termlist xterms, bool xcomp, golang::types::termlist yterms, bool ycomp)
+    std::tuple<termlist, bool> intersectTermLists(termlist xterms, bool xcomp, termlist yterms, bool ycomp)
     {
         auto terms = rec::intersect(gocpp::recv(xterms), yterms);
         // If one of xterms or yterms is marked as comparable,
@@ -503,7 +510,7 @@ namespace golang::types
             for(auto [gocpp_ignored, t] : terms)
             {
                 assert(t->typ != nullptr);
-                if(comparable(t->typ, false, nullptr, nullptr))
+                if(comparableType(t->typ, false, nullptr) == nullptr)
                 {
                     terms[i] = t;
                     i++;
@@ -520,9 +527,14 @@ namespace golang::types
         return {terms, comp};
     }
 
+    int compareFunc(Func* a, Func* b)
+    {
+        return rec::cmp(gocpp::recv(a), & b->object);
+    }
+
     void sortMethods(gocpp::slice<Func*> list)
     {
-        sort::Sort(byUniqueMethodName(list));
+        slices::SortFunc(list, compareFunc);
     }
 
     void assertSortedMethods(gocpp::slice<Func*> list)
@@ -531,26 +543,10 @@ namespace golang::types
         {
             gocpp::panic("assertSortedMethods called outside debug mode"_s);
         }
-        if(! sort::IsSorted(byUniqueMethodName(list)))
+        if(! slices::IsSortedFunc(list, compareFunc))
         {
             gocpp::panic("methods not sorted"_s);
         }
-    }
-
-    // byUniqueMethodName method lists can be sorted by their unique method names.
-    int rec::Len(byUniqueMethodName a)
-    {
-        return len(a);
-    }
-
-    bool rec::Less(byUniqueMethodName a, int i, int j)
-    {
-        return rec::less(gocpp::recv(a[i]), & a[j]->object);
-    }
-
-    void rec::Swap(byUniqueMethodName a, int i, int j)
-    {
-        std::tie(a[i], a[j]) = std::tuple{a[j], a[i]};
     }
 
     // invalidTypeSet is a singleton type set to signal an invalid type set
@@ -569,11 +565,11 @@ namespace golang::types
         // avoid infinite recursion (see also computeInterfaceTypeSet)
         unionSets[utyp] = new types::_TypeSet{};
 
-        golang::types::termlist allTerms = {};
+        termlist allTerms = {};
         for(auto [gocpp_ignored, t] : utyp->terms)
         {
-            golang::types::termlist terms = {};
-            auto u = under(t->typ);
+            termlist terms = {};
+            auto u = rec::Underlying(gocpp::recv(t->typ));
             if(auto [ui, gocpp_id_2] = gocpp::getValue<Interface*>(u); ui != nullptr)
             {
                 // For now we don't permit type parameters as constraints.
@@ -594,7 +590,7 @@ namespace golang::types
                     // ∅ term
                     t = nullptr;
                 }
-                terms = golang::types::termlist {(term*)(t)};
+                terms = termlist {(golang::go::types::term*)(t)};
             }
             // The type set of a union expression is the union
             // of the type sets of each term.

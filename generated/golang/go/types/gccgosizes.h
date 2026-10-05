@@ -9,9 +9,8 @@
 #include "golang/go/types/gccgosizes.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/types/sizes.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     extern gocpp::map<gocpp::string, StdSizes*> gccgoArchSizes;
 

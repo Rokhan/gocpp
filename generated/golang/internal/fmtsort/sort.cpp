@@ -11,16 +11,21 @@
 #include "golang/internal/fmtsort/sort.h"
 #include "gocpp/support.h"
 
+#include "golang/cmp/cmp.h"
+#include "golang/reflect/map.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
-#include "golang/sort/sort.h"
+#include "golang/slices/sort.h"
 
 // Package fmtsort provides a general stable ordering mechanism
 // for maps, on behalf of the fmt and text/template packages.
 // It is not guaranteed to be efficient and works only for types
 // that are valid map keys.
-namespace golang::fmtsort
+namespace golang::internal::fmtsort
 {
+    namespace cmp = golang::cmp;
+    namespace reflect = golang::reflect;
+    namespace slices = golang::slices;
     namespace rec
     {
         using reflect::rec::Bool;
@@ -44,11 +49,14 @@ namespace golang::fmtsort
         using reflect::rec::Value;
     }
 
-    // SortedMap represents a map's keys and values. The keys and values are
-    // aligned in index order: Value[i] is the value in the map corresponding to Key[i].
+    // SortedMap is a slice of KeyValue pairs that simplifies sorting
+    // and iterating over map entries.
+    //
+    // Each KeyValue pair contains a map key and its corresponding value.
+    // KeyValue holds a single key and value pair found in a map.
     
     template<typename T> requires gocpp::GoStruct<T>
-    SortedMap::operator T()
+    KeyValue::operator T()
     {
         T result;
         result.Key = this->Key;
@@ -57,14 +65,14 @@ namespace golang::fmtsort
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool SortedMap::operator==(const T& ref) const
+    bool KeyValue::operator==(const T& ref) const
     {
         if (Key != ref.Key) return false;
         if (Value != ref.Value) return false;
         return true;
     }
 
-    std::ostream& SortedMap::PrintTo(std::ostream& os) const
+    std::ostream& KeyValue::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << Key;
@@ -73,25 +81,9 @@ namespace golang::fmtsort
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct SortedMap& value)
+    std::ostream& operator<<(std::ostream& os, const struct KeyValue& value)
     {
         return value.PrintTo(os);
-    }
-
-    int rec::Len(SortedMap* o)
-    {
-        return len(o->Key);
-    }
-
-    bool rec::Less(SortedMap* o, int i, int j)
-    {
-        return compare(o->Key[i], o->Key[j]) < 0;
-    }
-
-    void rec::Swap(SortedMap* o, int i, int j)
-    {
-        std::tie(o->Key[i], o->Key[j]) = std::tuple{o->Key[j], o->Key[i]};
-        std::tie(o->Value[i], o->Value[j]) = std::tuple{o->Value[j], o->Value[i]};
     }
 
     // Sort accepts a map and returns a SortedMap that has the same keys and
@@ -112,7 +104,7 @@ namespace golang::fmtsort
     //     Otherwise identical arrays compare by length.
     //   - interface values compare first by reflect.Type describing the concrete type
     //     and then by concrete value as described in the previous rules.
-    SortedMap* Sort(reflect::Value mapValue)
+    SortedMap Sort(reflect::Value mapValue)
     {
         if(rec::Kind(gocpp::recv(rec::Type(gocpp::recv(mapValue)))) != reflect::Map)
         {
@@ -122,19 +114,16 @@ namespace golang::fmtsort
         // of a concurrent map update. The runtime is responsible for
         // yelling loudly if that happens. See issue 33275.
         auto n = rec::Len(gocpp::recv(mapValue));
-        auto key = gocpp::make(gocpp::Tag<gocpp::slice<reflect::Value>>(), 0, n);
-        auto value = gocpp::make(gocpp::Tag<gocpp::slice<reflect::Value>>(), 0, n);
+        auto sorted = gocpp::make(gocpp::Tag<SortedMap>(), 0, n);
         auto iter = rec::MapRange(gocpp::recv(mapValue));
         for(; rec::Next(gocpp::recv(iter)); )
         {
-            key = append(key, rec::Key(gocpp::recv(iter)));
-            value = append(value, rec::Value(gocpp::recv(iter)));
+            sorted = append(sorted, KeyValue {rec::Key(gocpp::recv(iter)), rec::Value(gocpp::recv(iter))});
         }
-        auto sorted = gocpp::InitPtr<SortedMap>([=](auto& x) {
-            x.Key = key;
-            x.Value = value;
+        slices::SortStableFunc(sorted, [=](KeyValue a, KeyValue b) mutable -> int
+        {
+            return compare(a.Key, b.Key);
         });
-        sort::Stable(sorted);
         return sorted;
     }
 
@@ -184,92 +173,32 @@ namespace golang::fmtsort
                 case 2:
                 case 3:
                 case 4:
-                {
-                    auto [a, b] = std::tuple{rec::Int(gocpp::recv(aVal)), rec::Int(gocpp::recv(bVal))};
-                    //Go switch emulation
-                    {
-                        int conditionId = -1;
-                        if(a < b) { conditionId = 0; }
-                        else if(a > b) { conditionId = 1; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                                return - 1;
-                                break;
-                            case 1:
-                                return 1;
-                                break;
-                            default:
-                                return 0;
-                                break;
-                        }
-                    }
+                    return cmp::Compare(rec::Int(gocpp::recv(aVal)), rec::Int(gocpp::recv(bVal)));
                     break;
-                }
                 case 5:
                 case 6:
                 case 7:
                 case 8:
                 case 9:
                 case 10:
-                {
-                    std::tie(a, b) = std::tuple{rec::Uint(gocpp::recv(aVal)), rec::Uint(gocpp::recv(bVal))};
-                    //Go switch emulation
-                    {
-                        int conditionId = -1;
-                        if(a < b) { conditionId = 0; }
-                        else if(a > b) { conditionId = 1; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                                return - 1;
-                                break;
-                            case 1:
-                                return 1;
-                                break;
-                            default:
-                                return 0;
-                                break;
-                        }
-                    }
+                    return cmp::Compare(rec::Uint(gocpp::recv(aVal)), rec::Uint(gocpp::recv(bVal)));
                     break;
-                }
                 case 11:
-                {
-                    std::tie(a, b) = std::tuple{rec::String(gocpp::recv(aVal)), rec::String(gocpp::recv(bVal))};
-                    //Go switch emulation
-                    {
-                        int conditionId = -1;
-                        if(a < b) { conditionId = 0; }
-                        else if(a > b) { conditionId = 1; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                                return - 1;
-                                break;
-                            case 1:
-                                return 1;
-                                break;
-                            default:
-                                return 0;
-                                break;
-                        }
-                    }
+                    return cmp::Compare(rec::String(gocpp::recv(aVal)), rec::String(gocpp::recv(bVal)));
                     break;
-                }
                 case 12:
                 case 13:
-                    return floatCompare(rec::Float(gocpp::recv(aVal)), rec::Float(gocpp::recv(bVal)));
+                    return cmp::Compare(rec::Float(gocpp::recv(aVal)), rec::Float(gocpp::recv(bVal)));
                     break;
                 case 14:
                 case 15:
                 {
-                    std::tie(a, b) = std::tuple{rec::Complex(gocpp::recv(aVal)), rec::Complex(gocpp::recv(bVal))};
-                    if(auto c = floatCompare(real(a), real(b)); c != 0)
+                    auto [a, b] = std::tuple{rec::Complex(gocpp::recv(aVal)), rec::Complex(gocpp::recv(bVal))};
+                    if(auto c = cmp::Compare(real(a), real(b)); c != 0)
                     {
                         return c;
                     }
-                    return floatCompare(imag(a), imag(b));
+                    return cmp::Compare(imag(a), imag(b));
                     break;
                 }
                 case 16:
@@ -297,55 +226,15 @@ namespace golang::fmtsort
                 }
                 case 17:
                 case 18:
-                {
-                    std::tie(a, b) = std::tuple{rec::Pointer(gocpp::recv(aVal)), rec::Pointer(gocpp::recv(bVal))};
-                    //Go switch emulation
-                    {
-                        int conditionId = -1;
-                        if(a < b) { conditionId = 0; }
-                        else if(a > b) { conditionId = 1; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                                return - 1;
-                                break;
-                            case 1:
-                                return 1;
-                                break;
-                            default:
-                                return 0;
-                                break;
-                        }
-                    }
+                    return cmp::Compare(rec::Pointer(gocpp::recv(aVal)), rec::Pointer(gocpp::recv(bVal)));
                     break;
-                }
                 case 19:
-                {
                     if(auto [c, ok] = nilCompare(aVal, bVal); ok)
                     {
                         return c;
                     }
-                    auto [ap, bp] = std::tuple{rec::Pointer(gocpp::recv(aVal)), rec::Pointer(gocpp::recv(bVal))};
-                    //Go switch emulation
-                    {
-                        int conditionId = -1;
-                        if(ap < bp) { conditionId = 0; }
-                        else if(ap > bp) { conditionId = 1; }
-                        switch(conditionId)
-                        {
-                            case 0:
-                                return - 1;
-                                break;
-                            case 1:
-                                return 1;
-                                break;
-                            default:
-                                return 0;
-                                break;
-                        }
-                    }
+                    return cmp::Compare(rec::Pointer(gocpp::recv(aVal)), rec::Pointer(gocpp::recv(bVal)));
                     break;
-                }
                 case 20:
                     for(auto i = 0; i < rec::NumField(gocpp::recv(aVal)); i++)
                     {
@@ -408,41 +297,6 @@ namespace golang::fmtsort
             return {1, true};
         }
         return {0, false};
-    }
-
-    // floatCompare compares two floating-point values. NaNs compare low.
-    int floatCompare(double a, double b)
-    {
-        //Go switch emulation
-        {
-            int conditionId = -1;
-            if(isNaN(a)) { conditionId = 0; }
-            else if(isNaN(b)) { conditionId = 1; }
-            else if(a < b) { conditionId = 2; }
-            else if(a > b) { conditionId = 3; }
-            switch(conditionId)
-            {
-                // No good answer if b is a NaN so don't bother checking.
-                case 0:
-                    return - 1;
-                    break;
-                case 1:
-                    return 1;
-                    break;
-                case 2:
-                    return - 1;
-                    break;
-                case 3:
-                    return 1;
-                    break;
-            }
-        }
-        return 0;
-    }
-
-    bool isNaN(double a)
-    {
-        return a != a;
     }
 
 }

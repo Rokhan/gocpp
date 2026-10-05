@@ -3,9 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/encoding/binary/binary.fwd.h"
 
-namespace golang::binary
+namespace golang::encoding::binary
 {
     struct nativeEndian;
 }

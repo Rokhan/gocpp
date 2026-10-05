@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::flate
+namespace golang::compress::flate
 {
     struct ReadError
     {
@@ -70,11 +70,20 @@ namespace golang::flate
     void fixedHuffmanDecoderInit();
     extern huffmanDecoder fixedHuffmanDecoder;
 }
+#include "golang/io/io.fwd.h"
+#include "golang/sync/once.fwd.h"
+
+namespace golang::compress::flate
+{
+    namespace sync = golang::sync;
+}
 #include "golang/io/io.h"
 #include "golang/sync/once.h"
 
-namespace golang::flate
+namespace golang::compress::flate
 {
+    namespace io = golang::io;
+    // Initialize the fixedHuffmanDecoder only once upon first use.
     extern sync::Once fixedOnce;
     struct Resetter : virtual gocpp::Interface
     {
@@ -204,14 +213,19 @@ namespace golang::flate
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
+}
+#include "golang/bufio/bufio.fwd.h"
+
+namespace golang::compress::flate
+{
     io::ReadCloser NewReader(io::Reader r);
     io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
 }
 #include "golang/compress/flate/dict_decoder.h"
-#include "golang/bufio/bufio.fwd.h"
 
-namespace golang::flate
+namespace golang::compress::flate
 {
+    namespace bufio = golang::bufio;
     struct decompressor
     {
         // Input source.
@@ -259,7 +273,7 @@ namespace golang::flate
 
 #include "golang/io/io.h"
 
-namespace golang::flate
+namespace golang::compress::flate
 {
 
     namespace rec

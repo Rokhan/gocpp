@@ -10,30 +10,23 @@
 #include "gocpp/support.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct GoTag_opPredicates { };
     void init();
+    extern gocpp::array<gocpp::string, 20> op2str1;
+    // This is only used for operations that may cause overflow.
+    extern gocpp::array<gocpp::string, 21> op2str2;
     void init();
+    gocpp::string nth(int n, gocpp::string what);
 }
-#include "golang/go/ast/ast.h"
-#include "golang/go/constant/value.h"
-#include "golang/go/token/token.h"
-#include "golang/go/types/type.h"
 #include "golang/go/types/signature.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    using opPredicates = gocpp::defined<gocpp::map<token::Token, std::function<bool (golang::types::Type _1)>>, GoTag_opPredicates>;
-    gocpp::string opName(ast::Expr e);
-    extern gocpp::array<gocpp::string, 20> op2str1;
-    extern gocpp::array<gocpp::string, 21> op2str2;
-    bool underIs(golang::types::Type typ, std::function<bool (golang::types::Type _1)> f);
-    bool isShift(token::Token op);
-    bool isComparison(token::Token op);
     struct target
     {
-        Signature* sig{};
+        golang::go::types::Signature* sig{};
         gocpp::string desc{};
 
         using isGoStruct = void;
@@ -48,10 +41,39 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct target& value);
-    gocpp::go_any keyVal(constant::Value x);
+}
+#include "golang/go/ast/ast.fwd.h"
+#include "golang/go/constant/value.fwd.h"
+#include "golang/go/token/position.fwd.h"
+#include "golang/go/token/token.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/ast/ast.h"
+#include "golang/go/constant/value.h"
+#include "golang/go/token/position.h"
+#include "golang/go/token/token.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+    namespace constant = golang::go::constant;
+}
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    using opPredicates = gocpp::defined<gocpp::map<token::Token, std::function<bool (golang::go::types::Type _1)>>, GoTag_opPredicates>;
+    token::Pos opPos(ast::Expr x);
+    gocpp::string opName(ast::Expr e);
+    bool isShift(token::Token op);
+    bool isComparison(token::Token op);
+    target* newTarget(golang::go::types::Type typ, gocpp::string desc);
+    go_any keyVal(constant::Value x);
     extern opPredicates unaryOpPredicates;
     extern opPredicates binaryOpPredicates;
-    target* newTarget(golang::types::Type typ, gocpp::string desc);
 }
 
 #include "golang/go/ast/ast.h"
@@ -59,35 +81,34 @@ namespace golang::types
 #include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
 #include "golang/go/types/check.h"
+#include "golang/go/types/errors.h"
 #include "golang/go/types/operand.h"
 #include "golang/go/types/type.h"
 #include "golang/internal/types/errors/codes.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
         bool op(Checker* check, opPredicates m, operand* x, token::Token op);
         void unary(Checker* check, operand* x, ast::UnaryExpr* e);
-        void updateExprType(Checker* check, ast::Expr x, golang::types::Type typ, bool final);
-        void updateExprType0(Checker* check, ast::Expr parent, ast::Expr x, golang::types::Type typ, bool final);
+        golang::go::types::Type chanElem(Checker* check, positioner pos, operand* x, bool recv);
+        void updateExprType(Checker* check, ast::Expr x, golang::go::types::Type typ, bool final);
         void updateExprVal(Checker* check, ast::Expr x, constant::Value val);
-        std::tuple<golang::types::Type, constant::Value, errors::Code> implicitTypeAndValue(Checker* check, operand* x, golang::types::Type target);
+        std::tuple<golang::go::types::Type, constant::Value, errors::Code> implicitTypeAndValue(Checker* check, operand* x, golang::go::types::Type target);
         void comparison(Checker* check, operand* x, operand* y, token::Token op, bool switchCase);
-        gocpp::string incomparableCause(Checker* check, golang::types::Type typ);
-        gocpp::string kindString(Checker* check, golang::types::Type typ);
+        gocpp::string incomparableCause(Checker* check, golang::go::types::Type typ);
         void shift(Checker* check, operand* x, operand* y, ast::Expr e, token::Token op);
         void binary(Checker* check, operand* x, ast::Expr e, ast::Expr lhs, ast::Expr rhs, token::Token op, token::Pos opPos);
         void matchTypes(Checker* check, operand* x, operand* y);
-        exprKind rawExpr(Checker* check, target* T, operand* x, ast::Expr e, golang::types::Type hint, bool allowGeneric);
+        exprKind rawExpr(Checker* check, target* T, operand* x, ast::Expr e, golang::go::types::Type hint, bool allowGeneric);
         void nonGeneric(Checker* check, target* T, operand* x);
-        exprKind exprInternal(Checker* check, target* T, operand* x, ast::Expr e, golang::types::Type hint);
-        void typeAssertion(Checker* check, ast::Expr e, operand* x, golang::types::Type T, bool typeSwitch);
+        exprKind exprInternal(Checker* check, target* T, operand* x, ast::Expr e, golang::go::types::Type hint);
+        void typeAssertion(Checker* check, ast::Expr e, operand* x, golang::go::types::Type T, bool typeSwitch);
         void expr(Checker* check, target* T, operand* x, ast::Expr e);
-        void genericExpr(Checker* check, operand* x, ast::Expr e);
+        void genericExpr(Checker* check, operand* x, ast::Expr e, golang::go::types::Type hint);
         std::tuple<gocpp::slice<operand*>, bool> multiExpr(Checker* check, ast::Expr e, bool allowCommaOk);
-        void exprWithHint(Checker* check, operand* x, ast::Expr e, golang::types::Type hint);
         void exprOrType(Checker* check, operand* x, ast::Expr e, bool allowGeneric);
         void exclude(Checker* check, operand* x, unsigned int modeset);
         void singleValue(Checker* check, operand* x);

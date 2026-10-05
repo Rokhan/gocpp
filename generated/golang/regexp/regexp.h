@@ -12,6 +12,12 @@
 
 namespace golang::regexp
 {
+    // Pools of *machine for use during (*Regexp).find,
+    // split up by the size of the execution queues.
+    // matchPool[i] machines have queue size matchSize[i].
+    // On a 64-bit system each queue entry is 16 bytes,
+    // so matchPool[0] has 16*2*128 = 4kB queues, etc.
+    // The final matchPool is a catch-all for very large queues.
     extern gocpp::array<int, 5> matchSize;
     gocpp::string quote(gocpp::string s);
     struct inputString
@@ -48,54 +54,17 @@ namespace golang::regexp
     std::ostream& operator<<(std::ostream& os, const struct inputBytes& value);
     std::tuple<bool, gocpp::error> MatchString(gocpp::string pattern, gocpp::string s);
     std::tuple<bool, gocpp::error> Match(gocpp::string pattern, gocpp::slice<unsigned char> b);
+    // Bitmap used by func special to check whether a character needs to be escaped.
     extern gocpp::array<unsigned char, 16> specialBytes;
     bool special(unsigned char b);
     void init();
     gocpp::string QuoteMeta(gocpp::string s);
     std::tuple<gocpp::string, int, gocpp::string, bool> extract(gocpp::string str);
 }
-#include "golang/io/io.h"
 #include "golang/regexp/exec.h"
-#include "golang/regexp/syntax/prog.h"
-#include "golang/sync/pool.h"
-#include "golang/regexp/onepass.fwd.h"
 
 namespace golang::regexp
 {
-    struct Regexp
-    {
-        gocpp::string expr{}; // as passed to Compile
-        syntax::Prog* prog{}; // compiled program
-        onePassProg* onepass{}; // onepass program or nil
-        int numSubexp{};
-        int maxBitStateLen{};
-        gocpp::slice<gocpp::string> subexpNames{};
-        gocpp::string prefix{}; // required prefix in unanchored matches
-        gocpp::slice<unsigned char> prefixBytes{}; // prefix, as a []byte
-        gocpp::rune prefixRune{}; // first rune in prefix
-        uint32_t prefixEnd{}; // pc for last rune in prefix
-        int mpool{}; // pool for machines
-        int matchcap{}; // size of recorded match lengths
-        bool prefixComplete{}; // prefix is the entire regexp
-        syntax::EmptyOp cond{}; // empty-width conditions required at start of match
-        int minInputLen{}; // minimum length of the input in bytes
-        // This field can be modified by the Longest method,
-        // but it is otherwise read-only.
-        bool longest{}; // whether regexp prefers leftmost-longest match
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Regexp& value);
-    extern gocpp::array<sync::Pool, len(matchSize)> matchPool;
     struct input : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -183,6 +152,65 @@ namespace golang::regexp
     }
 
     std::ostream& operator<<(std::ostream& os, const struct input& value);
+}
+#include "golang/io/io.fwd.h"
+#include "golang/regexp/syntax/compile.fwd.h"
+#include "golang/regexp/syntax/parse.fwd.h"
+#include "golang/regexp/syntax/prog.fwd.h"
+#include "golang/regexp/syntax/regexp.fwd.h"
+#include "golang/sync/pool.fwd.h"
+
+namespace golang::regexp
+{
+    namespace syntax = golang::regexp::syntax;
+}
+#include "golang/io/io.h"
+#include "golang/regexp/syntax/prog.h"
+
+namespace golang::regexp
+{
+    namespace sync = golang::sync;
+}
+#include "golang/sync/pool.h"
+#include "golang/regexp/onepass.fwd.h"
+
+namespace golang::regexp
+{
+    namespace io = golang::io;
+    struct Regexp
+    {
+        gocpp::string expr{}; // as passed to Compile
+        syntax::Prog* prog{}; // compiled program
+        onePassProg* onepass{}; // onepass program or nil
+        int numSubexp{};
+        int maxBitStateLen{};
+        gocpp::slice<gocpp::string> subexpNames{};
+        gocpp::string prefix{}; // required prefix in unanchored matches
+        gocpp::slice<unsigned char> prefixBytes{}; // prefix, as a []byte
+        gocpp::rune prefixRune{}; // first rune in prefix
+        uint32_t prefixEnd{}; // pc for last rune in prefix
+        int mpool{}; // pool for machines
+        int matchcap{}; // size of recorded match lengths
+        bool prefixComplete{}; // prefix is the entire regexp
+        syntax::EmptyOp cond{}; // empty-width conditions required at start of match
+        int minInputLen{}; // minimum length of the input in bytes
+        // This field can be modified by the Longest method,
+        // but it is otherwise read-only.
+        bool longest{}; // whether regexp prefers leftmost-longest match
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Regexp& value);
+    extern gocpp::array<sync::Pool, len(matchSize)> matchPool;
     struct inputReader
     {
         io::RuneReader r{};
@@ -204,23 +232,24 @@ namespace golang::regexp
     std::tuple<bool, gocpp::error> MatchReader(gocpp::string pattern, io::RuneReader r);
     std::tuple<Regexp*, gocpp::error> Compile(gocpp::string expr);
     std::tuple<Regexp*, gocpp::error> CompilePOSIX(gocpp::string expr);
+    int minInputLen(syntax::Regexp* re);
     Regexp* MustCompile(gocpp::string str);
     Regexp* MustCompilePOSIX(gocpp::string str);
 }
 #include "golang/regexp/syntax/parse.h"
-#include "golang/regexp/syntax/regexp.fwd.h"
 
 namespace golang::regexp
 {
     std::tuple<Regexp*, gocpp::error> compile(gocpp::string expr, syntax::Flags mode, bool longest);
-    int minInputLen(syntax::Regexp* re);
 }
 
 #include "golang/io/io.h"
+#include "golang/iter/iter.h"
 #include "golang/regexp/exec.h"
 
 namespace golang::regexp
 {
+    namespace iter = golang::iter;
 
     namespace rec
     {
@@ -259,29 +288,46 @@ namespace golang::regexp
         gocpp::slice<unsigned char> ReplaceAllLiteral(Regexp* re, gocpp::slice<unsigned char> src, gocpp::slice<unsigned char> repl);
         gocpp::slice<unsigned char> ReplaceAllFunc(Regexp* re, gocpp::slice<unsigned char> src, std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char> _1)> repl);
         gocpp::slice<int> pad(Regexp* re, gocpp::slice<int> a);
-        void allMatches(Regexp* re, gocpp::string s, gocpp::slice<unsigned char> b, int n, std::function<void (gocpp::slice<int> _1)> deliver);
+        iter::Seq<gocpp::slice<int>> matches(Regexp* re, gocpp::string s, gocpp::slice<unsigned char> b, int max, int ncap);
         gocpp::slice<unsigned char> Find(Regexp* re, gocpp::slice<unsigned char> b);
-        gocpp::slice<int> FindIndex(Regexp* re, gocpp::slice<unsigned char> b);
         gocpp::string FindString(Regexp* re, gocpp::string s);
+        gocpp::slice<int> FindIndex(Regexp* re, gocpp::slice<unsigned char> b);
         gocpp::slice<int> FindStringIndex(Regexp* re, gocpp::string s);
         gocpp::slice<int> FindReaderIndex(Regexp* re, io::RuneReader r);
         gocpp::slice<gocpp::slice<unsigned char>> FindSubmatch(Regexp* re, gocpp::slice<unsigned char> b);
+        gocpp::slice<gocpp::string> FindStringSubmatch(Regexp* re, gocpp::string s);
+        gocpp::slice<int> FindSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b);
+        gocpp::slice<int> FindStringSubmatchIndex(Regexp* re, gocpp::string s);
+        gocpp::slice<int> FindReaderSubmatchIndex(Regexp* re, io::RuneReader r);
+        iter::Seq<gocpp::slice<unsigned char>> all(Regexp* re, gocpp::slice<unsigned char> b, int n);
+        iter::Seq<gocpp::string> allString(Regexp* re, gocpp::string s, int n);
+        iter::Seq<gocpp::slice<int>> allIndex(Regexp* re, gocpp::slice<unsigned char> b, int n);
+        iter::Seq<gocpp::slice<int>> allStringIndex(Regexp* re, gocpp::string s, int n);
+        iter::Seq<gocpp::slice<gocpp::slice<unsigned char>>> allSubmatch(Regexp* re, gocpp::slice<unsigned char> b, int n);
+        iter::Seq<gocpp::slice<gocpp::string>> allStringSubmatch(Regexp* re, gocpp::string s, int n);
+        iter::Seq<gocpp::slice<int>> allSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b, int n);
+        iter::Seq<gocpp::slice<int>> allStringSubmatchIndex(Regexp* re, gocpp::string s, int n);
+        iter::Seq<gocpp::slice<unsigned char>> _All(Regexp* re, gocpp::slice<unsigned char> b);
+        iter::Seq<gocpp::string> _AllString(Regexp* re, gocpp::string s);
+        iter::Seq<gocpp::slice<int>> _AllIndex(Regexp* re, gocpp::slice<unsigned char> b);
+        iter::Seq<gocpp::slice<int>> _AllStringIndex(Regexp* re, gocpp::string s);
+        iter::Seq<gocpp::slice<gocpp::slice<unsigned char>>> _AllSubmatch(Regexp* re, gocpp::slice<unsigned char> b);
+        iter::Seq<gocpp::slice<gocpp::string>> _AllStringSubmatch(Regexp* re, gocpp::string s);
+        iter::Seq<gocpp::slice<int>> _AllSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b);
+        iter::Seq<gocpp::slice<int>> _AllStringSubmatchIndex(Regexp* re, gocpp::string s);
+        gocpp::slice<gocpp::slice<unsigned char>> FindAll(Regexp* re, gocpp::slice<unsigned char> b, int n);
+        gocpp::slice<gocpp::string> FindAllString(Regexp* re, gocpp::string s, int n);
+        gocpp::slice<gocpp::slice<int>> FindAllIndex(Regexp* re, gocpp::slice<unsigned char> b, int n);
+        gocpp::slice<gocpp::slice<int>> FindAllStringIndex(Regexp* re, gocpp::string s, int n);
+        gocpp::slice<gocpp::slice<gocpp::slice<unsigned char>>> FindAllSubmatch(Regexp* re, gocpp::slice<unsigned char> b, int n);
+        gocpp::slice<gocpp::slice<gocpp::string>> FindAllStringSubmatch(Regexp* re, gocpp::string s, int n);
+        gocpp::slice<gocpp::slice<int>> FindAllSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b, int n);
+        gocpp::slice<gocpp::slice<int>> FindAllStringSubmatchIndex(Regexp* re, gocpp::string s, int n);
         gocpp::slice<unsigned char> Expand(Regexp* re, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> go_template, gocpp::slice<unsigned char> src, gocpp::slice<int> match);
         gocpp::slice<unsigned char> ExpandString(Regexp* re, gocpp::slice<unsigned char> dst, gocpp::string go_template, gocpp::string src, gocpp::slice<int> match);
         gocpp::slice<unsigned char> expand(Regexp* re, gocpp::slice<unsigned char> dst, gocpp::string go_template, gocpp::slice<unsigned char> bsrc, gocpp::string src, gocpp::slice<int> match);
-        gocpp::slice<int> FindSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b);
-        gocpp::slice<gocpp::string> FindStringSubmatch(Regexp* re, gocpp::string s);
-        gocpp::slice<int> FindStringSubmatchIndex(Regexp* re, gocpp::string s);
-        gocpp::slice<int> FindReaderSubmatchIndex(Regexp* re, io::RuneReader r);
-        gocpp::slice<gocpp::slice<unsigned char>> FindAll(Regexp* re, gocpp::slice<unsigned char> b, int n);
-        gocpp::slice<gocpp::slice<int>> FindAllIndex(Regexp* re, gocpp::slice<unsigned char> b, int n);
-        gocpp::slice<gocpp::string> FindAllString(Regexp* re, gocpp::string s, int n);
-        gocpp::slice<gocpp::slice<int>> FindAllStringIndex(Regexp* re, gocpp::string s, int n);
-        gocpp::slice<gocpp::slice<gocpp::slice<unsigned char>>> FindAllSubmatch(Regexp* re, gocpp::slice<unsigned char> b, int n);
-        gocpp::slice<gocpp::slice<int>> FindAllSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b, int n);
-        gocpp::slice<gocpp::slice<gocpp::string>> FindAllStringSubmatch(Regexp* re, gocpp::string s, int n);
-        gocpp::slice<gocpp::slice<int>> FindAllStringSubmatchIndex(Regexp* re, gocpp::string s, int n);
         gocpp::slice<gocpp::string> Split(Regexp* re, gocpp::string s, int n);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendText(Regexp* re, gocpp::slice<unsigned char> b);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalText(Regexp* re);
         gocpp::error UnmarshalText(Regexp* re, gocpp::slice<unsigned char> text);
     }

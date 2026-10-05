@@ -5,7 +5,7 @@
 
 #include "golang/go/ast/ast.fwd.h"
 
-namespace golang::ast
+namespace golang::go::ast
 {
     struct Visitor;
     using inspector = std::function<bool (Node _1)>;

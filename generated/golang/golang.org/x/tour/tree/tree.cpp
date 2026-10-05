@@ -14,8 +14,10 @@
 #include "golang/fmt/print.h"
 #include "golang/math/rand/rand.h"
 
-namespace golang::tree
+namespace golang::golang_org::x::tour::tree
 {
+    namespace fmt = golang::fmt;
+    namespace rand = golang::math::rand;
     namespace rec
     {
     }

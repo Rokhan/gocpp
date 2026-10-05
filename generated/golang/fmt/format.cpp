@@ -12,12 +12,14 @@
 #include "gocpp/support.h"
 
 #include "golang/fmt/print.h"
-#include "golang/strconv/ftoa.h"
+#include "golang/strconv/number.h"
 #include "golang/strconv/quote.h"
 #include "golang/unicode/utf8/utf8.h"
 
 namespace golang::fmt
 {
+    namespace strconv = golang::strconv;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
     }
@@ -122,6 +124,8 @@ namespace golang::fmt
     void rec::clearflags(golang::fmt::fmt* f)
     {
         f->fmtFlags = fmtFlags {};
+        f->wid = 0;
+        f->prec = 0;
     }
 
     void rec::init(golang::fmt::fmt* f, buffer* buf)
@@ -149,7 +153,8 @@ namespace golang::fmt
         }
         // Decide which byte the padding should be filled with.
         auto padByte = (unsigned char)(' ');
-        if(f->fmtFlags.zero)
+        // Zero padding is allowed only to the left.
+        if(f->fmtFlags.zero && ! f->fmtFlags.minus)
         {
             padByte = (unsigned char)('0');
         }
@@ -328,8 +333,9 @@ namespace golang::fmt
             }
         }
         else
-        if(f->fmtFlags.zero && f->fmtFlags.widPresent)
+        if(f->fmtFlags.zero && ! f->fmtFlags.minus && f->fmtFlags.widPresent)
         {
+            // Zero padding is allowed only to the left.
             prec = f->wid;
             if(negative || f->fmtFlags.plus || f->fmtFlags.space)
             {
@@ -501,11 +507,7 @@ namespace golang::fmt
                 {
                     return b.make_slice(0, i);
                 }
-                auto wid = 1;
-                if(b[i] >= utf8::RuneSelf)
-                {
-                    std::tie(std::ignore, wid) = utf8::DecodeRune(b.make_slice(i));
-                }
+                auto [gocpp_id_0, wid] = utf8::DecodeRune(b.make_slice(i));
                 i += wid;
             }
         }
@@ -826,7 +828,8 @@ namespace golang::fmt
         {
             // If we're zero padding to the left we want the sign before the leading zeros.
             // Achieve this by writing the sign out and then padding the unsigned number.
-            if(f->fmtFlags.zero && f->fmtFlags.widPresent && f->wid > len(num))
+            // Zero padding is allowed only to the left.
+            if(f->fmtFlags.zero && ! f->fmtFlags.minus && f->fmtFlags.widPresent && f->wid > len(num))
             {
                 rec::writeByte(gocpp::recv(f->buf), num[0]);
                 rec::writePadding(gocpp::recv(f), f->wid - len(num));

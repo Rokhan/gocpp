@@ -63,7 +63,16 @@ namespace golang::math
         // To avoid the floating-point hardware, could use:
         // x := Float64bits(f);
         // return sign >= 0 && x == uvinf || sign <= 0 && x == uvneginf;
-        return sign >= 0 && f > MaxFloat64 || sign <= 0 && f < - MaxFloat64;
+        if(sign == 0)
+        {
+            f = Abs(f);
+        }
+        else
+        if(sign < 0)
+        {
+            f = - f;
+        }
+        return f > MaxFloat64;
     }
 
     // normalize returns a normal number y and exponent exp

@@ -29,15 +29,19 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    // mSpanStateNames are the names of the span states, indexed by
+    // mSpanState.
     extern gocpp::slice<gocpp::string> mSpanStateNames;
-    void recordspan(gocpp::unsafe_pointer vh, gocpp::unsafe_pointer p);
     spanClass makeSpanClass(uint8_t sizeclass, bool noscan);
     arenaIdx arenaIndex(uintptr_t p);
     uintptr_t arenaBase(arenaIdx i);
     bool inheap(uintptr_t b);
     bool inHeapOrStack(uintptr_t b);
     void runtime_debug_freeOSMemory();
-    void removefinalizer(gocpp::unsafe_pointer p);
+    void clearFinalizerContext(uintptr_t ptr);
+    void clearCleanupContext(uintptr_t ptr, uint64_t cleanupID);
+    bool inTinyBlock(uintptr_t ptr);
+    void gcWakeAllStrongFromWeak();
     struct specialsIter
     {
         special** pprev{};
@@ -73,18 +77,82 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gcBitsHeader& value);
     void nextMarkBitArenaEpoch();
-    /*const uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<gcBitsHeader>() [known mising deps] */;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
-#include "golang/runtime/mcentral.h"
+#include "golang/runtime/malloc.h"
+#include "golang/runtime/mcleanup.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/internal/cpu/cpu_x86.fwd.h"
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mcheckmark.fwd.h"
 #include "golang/runtime/mprof.fwd.h"
 #include "golang/runtime/type.fwd.h"
+
+namespace golang::runtime
+{
+    // pagesPerReclaimerChunk indicates how many pages to scan from the
+    // pageInUse bitmap at a time. Used by the page reclaimer.
+    //
+    // Higher values reduce contention on scanning indexes (such as
+    // h.reclaimIndex), but increase the minimum latency of the
+    // operation.
+    //
+    // The time required to scan this many pages can vary a lot depending
+    // on how many spans are actually freed. Experimentally, it can
+    // scan for pages at ~300 GB/ms on a 2.6GHz Core i7, but can only
+    // free spans at ~32 MB/ms. Using 512 pages bounds this at
+    // roughly 100µs.
+    //
+    // Must be a multiple of the pageInUse bitmap element size and
+    // must also evenly divide pagesPerArena.
+    const int pagesPerReclaimerChunk = gocpp::min(512, pagesPerArena);
+    void recordspan(gocpp::unsafe_pointer vh, gocpp::unsafe_pointer p);
+    bool addfinalizer(gocpp::unsafe_pointer p, funcval* f, uintptr_t nret, _type* fint, ptrtype* ot);
+    void removefinalizer(gocpp::unsafe_pointer p);
+    uint64_t addCleanup(gocpp::unsafe_pointer p, cleanupFn c);
+    void setFinalizerContext(gocpp::unsafe_pointer ptr, _type* ptrType, uintptr_t createPC, uintptr_t funcPC);
+    void setCleanupContext(gocpp::unsafe_pointer ptr, _type* ptrType, uintptr_t createPC, uintptr_t funcPC, uint64_t cleanupID);
+    void setTinyBlockContext(gocpp::unsafe_pointer ptr);
+    gocpp::unsafe_pointer internal_weak_runtime_registerWeakPointer(gocpp::unsafe_pointer p);
+    gocpp::unsafe_pointer internal_weak_runtime_makeStrongFromWeak(gocpp::unsafe_pointer u);
+    m* gcParkStrongFromWeak();
+    void setprofilebucket(gocpp::unsafe_pointer p, bucket* b);
+    /*const uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<gcBitsHeader>() [known mising deps] */;
+    struct gcBitsArenasStruct
+    {
+        mutex lock{};
+        gcBitsArena* free{};
+        gcBitsArena* next{}; // Read atomically. Write atomically under lock.
+        gcBitsArena* current{};
+        gcBitsArena* previous{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gcBitsArenasStruct& value);
+}
+#include "golang/internal/cpu/cpu.fwd.h"
+#include "golang/internal/cpu/cpu_x86.fwd.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/sys/nih.fwd.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace cpu = golang::internal::cpu;
+}
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/sys/nih.h"
+#include "golang/runtime/mcentral.h"
+#include "golang/runtime/mcheckmark.fwd.h"
 
 namespace golang::runtime
 {
@@ -108,8 +176,6 @@ namespace golang::runtime
     struct heapArena
     {
         sys::NotInHeap _1{};
-        // heapArenaPtrScalar contains pointer/scalar data about the heap for this heap arena.
-        heapArenaPtrScalar heapArenaPtrScalar{};
         // spans maps from virtual address page ID within this arena to *mspan.
         // For allocated spans, their pages map to the span itself.
         // For free spans, only the lowest and highest pages map to the span itself.
@@ -146,8 +212,13 @@ namespace golang::runtime
         // Reads are done atomically to find spans containing specials
         // during marking.
         gocpp::array<uint8_t, pagesPerArena / 8> pageSpecials{};
+        // pageUseSpanInlineMarkBits is a bitmap where each bit corresponds
+        // to a span, as only spans one page in size can have inline mark bits.
+        // The bit indicates that the span has a spanInlineMarkBits struct
+        // stored directly at the top end of the span's memory.
+        gocpp::array<uint8_t, pagesPerArena / 8> pageUseSpanInlineMarkBits{};
         // checkmarks stores the debug.gccheckmark state. It is only
-        // used if debug.gccheckmark > 0.
+        // used if debug.gccheckmark > 0 or debug.checkfinalizers > 0.
         checkmarksMap* checkmarks{};
         // zeroedBase marks the first byte of the first page in this
         // arena which hasn't been used yet and is therefore already
@@ -228,7 +299,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1{};
         special* next{}; // linked list in span
-        uint16_t offset{}; // span offset of object
+        uintptr_t offset{}; // span offset of object
         unsigned char kind{}; // kind of special
 
         using isGoStruct = void;
@@ -243,8 +314,42 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct special& value);
-    bool addfinalizer(gocpp::unsafe_pointer p, funcval* f, uintptr_t nret, _type* fint, ptrtype* ot);
-    void setprofilebucket(gocpp::unsafe_pointer p, golang::runtime::bucket* b);
+    atomic::Uintptr* getOrAddWeakHandle(gocpp::unsafe_pointer p);
+    atomic::Uintptr* getWeakHandle(gocpp::unsafe_pointer p);
+    struct immortalWeakHandleMap
+    {
+        atomic::UnsafePointer root{}; // *immortalWeakHandle (can't use generics because it's notinheap)
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct immortalWeakHandleMap& value);
+    struct immortalWeakHandle
+    {
+        sys::NotInHeap _1{};
+        gocpp::array<atomic::UnsafePointer, 2> children{}; // *immortalObjectMapNode (can't use generics because it's notinheap)
+        uintptr_t ptr{}; // &ptr is the weak handle
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct immortalWeakHandle& value);
     struct gcBits
     {
         sys::NotInHeap _1{};
@@ -262,26 +367,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcBits& value);
-    struct gcBitsArenasStruct
-    {
-        mutex lock{};
-        gcBitsArena* free{};
-        gcBitsArena* next{}; // Read atomically. Write atomically under lock.
-        gcBitsArena* current{};
-        gcBitsArena* previous{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gcBitsArenasStruct& value);
     struct gocpp_id_2
     {
         // arenaHints is a list of addresses at which to attempt to
@@ -309,7 +394,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
     std::tuple<heapArena*, uintptr_t, uint8_t> pageIndexOf(uintptr_t p);
-    bool addspecial(gocpp::unsafe_pointer p, special* s);
+    heapArena* heapArenaOf(uintptr_t p);
+    bool addspecial(gocpp::unsafe_pointer p, special* s, bool force);
     special* removespecial(gocpp::unsafe_pointer p, uint8_t kind);
     struct specialfinalizer
     {
@@ -332,11 +418,90 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct specialfinalizer& value);
+    struct specialCleanup
+    {
+        sys::NotInHeap _1{};
+        special special{};
+        cleanupFn cleanup{};
+        // Globally unique ID for the cleanup, obtained from mheap_.cleanupID.
+        uint64_t id{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct specialCleanup& value);
+    struct specialCheckFinalizer
+    {
+        sys::NotInHeap _1{};
+        special special{};
+        uint64_t cleanupID{}; // Needed to disambiguate cleanups.
+        uintptr_t createPC{};
+        uintptr_t funcPC{};
+        _type* ptrType{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct specialCheckFinalizer& value);
+    struct specialTinyBlock
+    {
+        sys::NotInHeap _1{};
+        special special{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct specialTinyBlock& value);
+    struct specialWeakHandle
+    {
+        sys::NotInHeap _1{};
+        special special{};
+        // handle is a reference to the actual weak pointer.
+        // It is always heap-allocated and must be explicitly kept
+        // live so long as this special exists.
+        atomic::Uintptr* handle{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct specialWeakHandle& value);
     struct specialprofile
     {
         sys::NotInHeap _1{};
         special special{};
-        golang::runtime::bucket* b{};
+        bucket* b{};
 
         using isGoStruct = void;
 
@@ -385,6 +550,24 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct specialPinCounter& value);
+    struct specialSecret
+    {
+        sys::NotInHeap _1{};
+        special special{};
+        uintptr_t size{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct specialSecret& value);
     void freeSpecial(special* s, gocpp::unsafe_pointer p, uintptr_t size);
     struct gcBitsArena
     {
@@ -428,11 +611,11 @@ namespace golang::runtime
         // Each allocation scans allocBits starting at freeindex until it encounters a 0
         // indicating a free object. freeindex is then adjusted so that subsequent scans begin
         // just past the newly discovered free object.
-        // If freeindex == nelem, this span has no free objects.
+        // If freeindex == nelems, this span has no free objects, though might have reusable objects.
         // allocBits is a bitmap of objects in this span.
         // If n >= freeindex and allocBits[n/8] & (1<<(n%8)) is 0
         // then object n is free;
-        // otherwise, object n is allocated. Bits starting at nelem are
+        // otherwise, object n is allocated. Bits starting at nelems are
         // undefined and should never be referenced.
         // Object n starts at address n*elemsize + (start << pageShift).
         uint16_t freeindex{};
@@ -504,17 +687,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mspan& value);
+    specialCheckFinalizer* getCleanupContext(uintptr_t ptr, uint64_t cleanupID);
+    extern gcBitsArenasStruct gcBitsArenas;
+    gcBitsArena* newArenaMayUnlock();
     mspan* spanOf(uintptr_t p);
     mspan* spanOfUnchecked(uintptr_t p);
     mspan* spanOfHeap(uintptr_t p);
     void spanHasSpecials(mspan* s);
     void spanHasNoSpecials(mspan* s);
     specialsIter newSpecialsIter(mspan* span);
-    extern gcBitsArenasStruct gcBitsArenas;
-    gcBitsArena* newArenaMayUnlock();
 }
 #include "golang/internal/cpu/cpu.h"
-#include "golang/runtime/malloc.h"
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mpagealloc.h"
 
@@ -558,9 +741,9 @@ namespace golang::runtime
         atomic::Uint64 pagesSweptBasis{}; // pagesSwept to use as the origin of the sweep ratio
         uint64_t sweepHeapLiveBasis{}; // value of gcController.heapLive to use as the origin of sweep ratio; written with lock, read without
         double sweepPagesPerByte{}; // proportional sweep ratio; written with lock, read without
-        // reclaimIndex is the page index in allArenas of next page to
+        // reclaimIndex is the page index in heapArenas of next page to
         // reclaim. Specifically, it refers to page (i %
-        // pagesPerArena) of arena allArenas[i / pagesPerArena].
+        // pagesPerArena) of arena heapArenas[i / pagesPerArena].
         // If this is >= 1<<63, the page reclaimer is done scanning
         // the page marks.
         atomic::Uint64 reclaimIndex{};
@@ -602,19 +785,26 @@ namespace golang::runtime
         // arena is a pre-reserved space for allocating heap arenas
         // (the actual arenas). This is only used on 32-bit.
         linearAlloc arena{};
-        // allArenas is the arenaIndex of every mapped arena. This can
-        // be used to iterate through the address space.
+        // heapArenas is the arenaIndex of every mapped arena mapped for the heap.
+        // This can be used to iterate through the heap address space.
         // Access is protected by mheap_.lock. However, since this is
         // append-only and old backing arrays are never freed, it is
         // safe to acquire mheap_.lock, copy the slice header, and
         // then release mheap_.lock.
-        gocpp::slice<arenaIdx> allArenas{};
-        // sweepArenas is a snapshot of allArenas taken at the
+        gocpp::slice<arenaIdx> heapArenas{};
+        // userArenaArenas is the arenaIndex of every mapped arena mapped for
+        // user arenas.
+        // Access is protected by mheap_.lock. However, since this is
+        // append-only and old backing arrays are never freed, it is
+        // safe to acquire mheap_.lock, copy the slice header, and
+        // then release mheap_.lock.
+        gocpp::slice<arenaIdx> userArenaArenas{};
+        // sweepArenas is a snapshot of heapArenas taken at the
         // beginning of the sweep cycle. This can be read safely by
         // simply blocking GC (by disabling preemption).
         gocpp::slice<arenaIdx> sweepArenas{};
-        // markArenas is a snapshot of allArenas taken at the beginning
-        // of the mark cycle. Because allArenas is append-only, neither
+        // markArenas is a snapshot of heapArenas taken at the beginning
+        // of the mark cycle. Because heapArenas is append-only, neither
         // this slice nor its contents will change during the mark, so
         // it can be read safely.
         gocpp::slice<arenaIdx> markArenas{};
@@ -627,17 +817,31 @@ namespace golang::runtime
         // gets its own cache line.
         // central is indexed by spanClass.
         gocpp::array<gocpp_id_1, numSpanClasses> central{};
-        fixalloc spanalloc{}; // allocator for span*
-        fixalloc cachealloc{}; // allocator for mcache*
-        fixalloc specialfinalizeralloc{}; // allocator for specialfinalizer*
-        fixalloc specialprofilealloc{}; // allocator for specialprofile*
+        fixalloc spanalloc{}; // allocator for span
+        fixalloc spanSPMCAlloc{}; // allocator for spanSPMC, protected by work.spanSPMCs.lock
+        fixalloc cachealloc{}; // allocator for mcache
+        fixalloc specialfinalizeralloc{}; // allocator for specialfinalizer
+        fixalloc specialCleanupAlloc{}; // allocator for specialCleanup
+        fixalloc specialCheckFinalizerAlloc{}; // allocator for specialCheckFinalizer
+        fixalloc specialTinyBlockAlloc{}; // allocator for specialTinyBlock
+        fixalloc specialprofilealloc{}; // allocator for specialprofile
         fixalloc specialReachableAlloc{}; // allocator for specialReachable
         fixalloc specialPinCounterAlloc{}; // allocator for specialPinCounter
+        fixalloc specialWeakHandleAlloc{}; // allocator for specialWeakHandle
+        fixalloc specialBubbleAlloc{}; // allocator for specialBubble
+        fixalloc specialSecretAlloc{}; // allocator for specialSecret
         mutex speciallock{}; // lock for special record allocators.
         fixalloc arenaHintAlloc{}; // allocator for arenaHints
         // User arena state.
         // Protected by mheap_.lock.
         gocpp_id_2 userArena{};
+        // cleanupID is a counter which is incremented each time a cleanup special is added
+        // to a span. It's used to create globally unique identifiers for individual cleanup.
+        // cleanupID is protected by mheap_.speciallock. It must only be incremented while holding
+        // the lock. ID 0 is reserved. Users should increment first, then read the value.
+        uint64_t cleanupID{};
+        cpu::CacheLinePad _3{};
+        immortalWeakHandleMap immortalWeakHandles{};
         specialfinalizer* unused{}; // never set, just here to force the specialfinalizer type into DWARF
 
         using isGoStruct = void;
@@ -653,13 +857,18 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct mheap& value);
     extern mheap mheap_;
+}
+
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {
         void set(mSpanStateBox* b, mSpanState s);
         mSpanState get(mSpanStateBox* b);
         uintptr_t base(mspan* s);
-        std::tuple<uintptr_t, uintptr_t, uintptr_t> layout(mspan* s);
         int8_t sizeclass(spanClass sc);
         bool noscan(spanClass sc);
         unsigned int l1(arenaIdx i);
@@ -676,7 +885,7 @@ namespace golang::runtime
         mspan* allocMSpanLocked(mheap* h);
         void freeMSpanLocked(mheap* h, mspan* s);
         mspan* allocSpan(mheap* h, uintptr_t npages, spanAllocType typ, spanClass spanclass);
-        void initSpan(mheap* h, mspan* s, spanAllocType typ, spanClass spanclass, uintptr_t base, uintptr_t npages);
+        void initSpan(mheap* h, mspan* s, spanAllocType typ, spanClass spanclass, uintptr_t base, uintptr_t npages, uintptr_t scav);
         std::tuple<uintptr_t, bool> grow(mheap* h, uintptr_t npage);
         void freeSpan(mheap* h, mspan* s);
         void freeManual(mheap* h, mspan* s, spanAllocType typ);
@@ -691,6 +900,8 @@ namespace golang::runtime
         void insertBack(mSpanList* list, mspan* span);
         void takeAll(mSpanList* list, mSpanList* other);
         std::tuple<special**, bool> specialFindSplicePoint(mspan* span, uintptr_t offset, unsigned char kind);
+        atomic::Uintptr* handle(immortalWeakHandle* h);
+        atomic::Uintptr* getOrAdd(immortalWeakHandleMap* tab, uintptr_t p);
         bool valid(specialsIter* i);
         void next(specialsIter* i);
         special* unlinkAndNext(specialsIter* i);

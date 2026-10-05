@@ -9,9 +9,15 @@
 #include "golang/golang.org/x/tour/reader/validate.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/io/io.fwd.h"
+
+namespace golang::golang_org::x::tour::reader
+{
+    namespace io = golang::io;
+}
 #include "golang/io/io.h"
 
-namespace golang::reader
+namespace golang::golang_org::x::tour::reader
 {
     void Validate(io::Reader r);
 

@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::goarch
+namespace golang::internal::goarch
 {
     const long _DefaultPhysPageSize = 4096;
     const long _PCQuantum = 1;
@@ -12,7 +12,7 @@ namespace golang::goarch
 }
 #include "golang/internal/goarch/goarch.fwd.h"
 
-namespace golang::goarch
+namespace golang::internal::goarch
 {
     const goarch::ArchFamilyType _ArchFamily = AMD64;
     const int _StackAlign = PtrSize;

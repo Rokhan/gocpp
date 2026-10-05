@@ -11,13 +11,13 @@
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct ctxtEntry
     {
-        golang::types::Type orig{};
-        gocpp::slice<golang::types::Type> targs{};
-        golang::types::Type instance{}; // = orig[targs]
+        golang::go::types::Type orig{};
+        gocpp::slice<golang::go::types::Type> targs{};
+        golang::go::types::Type instance{}; // = orig[targs]
 
         using isGoStruct = void;
 
@@ -32,16 +32,22 @@ namespace golang::types
 
     std::ostream& operator<<(std::ostream& os, const struct ctxtEntry& value);
 }
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::go::types
+{
+    namespace sync = golang::sync;
+}
 #include "golang/sync/mutex.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Context
     {
         mocklib::Mutex mu{};
         gocpp::map<gocpp::string, gocpp::slice<ctxtEntry>> typeMap{}; // type hash -> instances entries
         int nextID{}; // next unique ID
-        gocpp::map<golang::types::Type, int> originIDs{}; // origin type -> unique ID
+        gocpp::map<golang::go::types::Type, int> originIDs{}; // origin type -> unique ID
 
         using isGoStruct = void;
 
@@ -60,15 +66,15 @@ namespace golang::types
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        gocpp::string instanceHash(Context* ctxt, golang::types::Type orig, gocpp::slice<golang::types::Type> targs);
-        golang::types::Type lookup(Context* ctxt, gocpp::string h, golang::types::Type orig, gocpp::slice<golang::types::Type> targs);
-        golang::types::Type update(Context* ctxt, gocpp::string h, golang::types::Type orig, gocpp::slice<golang::types::Type> targs, golang::types::Type inst);
-        int getID(Context* ctxt, golang::types::Type t);
+        gocpp::string instanceHash(Context* ctxt, golang::go::types::Type orig, gocpp::slice<golang::go::types::Type> targs);
+        golang::go::types::Type lookup(Context* ctxt, gocpp::string h, golang::go::types::Type orig, gocpp::slice<golang::go::types::Type> targs);
+        golang::go::types::Type update(Context* ctxt, gocpp::string h, golang::go::types::Type orig, gocpp::slice<golang::go::types::Type> targs, golang::go::types::Type inst);
+        int getID(Context* ctxt, golang::go::types::Type t);
     }
 }
 

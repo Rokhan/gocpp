@@ -14,8 +14,9 @@
 #include "golang/internal/bytealg/bytealg.h"
 #include "golang/internal/cpu/cpu.h"
 
-namespace golang::bytealg
+namespace golang::internal::bytealg
 {
+    namespace cpu = golang::internal::cpu;
     namespace rec
     {
     }

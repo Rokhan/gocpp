@@ -13,7 +13,6 @@
 
 #include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/abi_amd64.h"
-#include "golang/internal/abi/type.h"
 #include "golang/runtime/map.h"
 #include "golang/runtime/runtime.h"
 #include "golang/runtime/runtime2.h"
@@ -21,12 +20,23 @@
 
 namespace golang::runtime
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
     namespace rec
     {
     }
 
     // Should be a built-in for unsafe.Pointer?
     //
+    // add should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - fortio.org/log
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname add
     //go:nosplit
     gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x)
     {
@@ -104,6 +114,18 @@ namespace golang::runtime
     //
     // The (CPU-specific) implementations of this function are in memclr_*.s.
     //
+    // memclrNoHeapPointers should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //   - github.com/chenzhuoyu/iasm
+    //   - github.com/dgraph-io/ristretto
+    //   - github.com/outcaste-io/ristretto
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname memclrNoHeapPointers
     //go:noescape
     void memclrNoHeapPointers(gocpp::unsafe_pointer ptr, uintptr_t n)
     /* convertBlockStmt, nil block */;
@@ -126,6 +148,23 @@ namespace golang::runtime
     //
     // Implementations are in memmove_*.s.
     //
+    // Outside assembly calls memmove.
+    //
+    // memmove should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //   - github.com/cloudwego/dynamicgo
+    //   - github.com/ebitengine/purego
+    //   - github.com/tetratelabs/wazero
+    //   - github.com/ugorji/go/codec
+    //   - gvisor.dev/gvisor
+    //   - github.com/sagernet/gvisor
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname memmove
     //go:noescape
     void memmove(gocpp::unsafe_pointer to, gocpp::unsafe_pointer from, uintptr_t n)
     /* convertBlockStmt, nil block */;
@@ -138,6 +177,15 @@ namespace golang::runtime
 
     // in internal/bytealg/equal_*.s
     //
+    // memequal should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname memequal
     //go:noescape
     bool memequal(gocpp::unsafe_pointer a, gocpp::unsafe_pointer b, uintptr_t size)
     /* convertBlockStmt, nil block */;
@@ -148,6 +196,19 @@ namespace golang::runtime
     // compiles down to zero instructions.
     // USE CAREFULLY!
     //
+    // noescape should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/gopkg
+    //   - github.com/ebitengine/purego
+    //   - github.com/hamba/avro/v2
+    //   - github.com/puzpuzpuz/xsync/v3
+    //   - github.com/songzhibin97/gkit
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname noescape
     //go:nosplit
     gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p)
     {
@@ -169,12 +230,19 @@ namespace golang::runtime
     // Not all cgocallback frames are actually cgocallback,
     // so not all have these arguments. Mark them uintptr so that the GC
     // does not misinterpret memory when the arguments are not present.
-    // cgocallback is not called from Go, only from crosscall2.
+    // cgocallback is not called from Go, only from crosscall2 in runtime/cgo.
     // This in turn calls cgocallbackg, which is where we'll find
     // pointer-declared arguments.
     //
     // When fn is nil (frame is saved g), call dropm instead,
     // this is used when the C thread is exiting.
+    //
+    // cgocallback should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ebitengine/purego
+    //
+    //go:linkname cgocallback
     void cgocallback(uintptr_t fn, uintptr_t frame, uintptr_t ctxt)
     /* convertBlockStmt, nil block */;
 
@@ -233,11 +301,34 @@ namespace golang::runtime
     // only in a very limited callee of reflectcall, the stackArgs are copied, and
     // regArgs is only used in the reflectcall frame.
     //
+    //go:linknamestd reflectcall
     //go:noescape
     void reflectcall(_type* stackArgsType, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
+    // procyield should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/sagernet/sing-tun
+    //   - github.com/slackhq/nebula
+    //   - golang.zx2c4.com/wireguard
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname procyield
+    //go:nosplit
     void procyield(uint32_t cycles)
+    {
+        if(cycles == 0)
+        {
+            return;
+        }
+        procyieldAsm(cycles);
+    }
+
+    // procyieldAsm is the assembly implementation of procyield.
+    void procyieldAsm(uint32_t cycles)
     /* convertBlockStmt, nil block */;
 
     
@@ -298,54 +389,29 @@ namespace golang::runtime
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    uintptr_t getcallerpc()
-    /* convertBlockStmt, nil block */;
-
-    //go:noescape
-    uintptr_t getcallersp()
-    /* convertBlockStmt, nil block */;
-
-    // getclosureptr returns the pointer to the current closure.
-    // getclosureptr can only be used in an assignment statement
-    // at the entry of a function. Moreover, go:nosplit directive
-    // must be specified at the declaration of caller function,
-    // so that the function prolog does not clobber the closure register.
-    // for example:
-    //
-    //	//go:nosplit
-    //	func f(arg1, arg2, arg3 int) {
-    //		dx := getclosureptr()
-    //	}
-    //
-    // The compiler rewrites calls to this function into instructions that fetch the
-    // pointer from a well-known register (DX on x86 architecture, etc.) directly.
-    //
-    // WARNING: PGO-based devirtualization cannot detect that caller of
-    // getclosureptr require closure context, and thus must maintain a list of
-    // these functions, which is in
-    // cmd/compile/internal/devirtualize/pgo.maybeDevirtualizeFunctionCall.
-    uintptr_t getclosureptr()
-    /* convertBlockStmt, nil block */;
-
-    //go:noescape
     int32_t asmcgocall(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer arg)
     /* convertBlockStmt, nil block */;
 
     void morestack()
     /* convertBlockStmt, nil block */;
 
+    // morestack_noctxt should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issues/67401.
+    // See go.dev/issues/71672.
+    //
+    //go:linkname morestack_noctxt
     void morestack_noctxt()
     /* convertBlockStmt, nil block */;
 
     void rt0_go()
     /* convertBlockStmt, nil block */;
 
-    // return0 is a stub used to return 0 from deferproc.
-    // It is called at the very end of deferproc to signal
-    // the calling Go function that it should not jump
-    // to deferreturn.
-    // in asm_*.s
-    void return0()
+    void rt0_lib_go()
     /* convertBlockStmt, nil block */;
 
     // in asm_*.s
@@ -452,16 +518,14 @@ namespace golang::runtime
     }
 
     // divRoundUp returns ceil(n / a).
+    //
+    //go:nosplit
     uintptr_t divRoundUp(uintptr_t n, uintptr_t a)
     {
         // a is generally a power of two. This will get inlined and
         // the compiler will optimize the division.
         return (n + a - 1) / a;
     }
-
-    // checkASM reports whether assembly runtime checks have passed.
-    bool checkASM()
-    /* convertBlockStmt, nil block */;
 
     bool memequal_varlen(gocpp::unsafe_pointer a, gocpp::unsafe_pointer b)
     /* convertBlockStmt, nil block */;
@@ -479,6 +543,10 @@ namespace golang::runtime
     // (e.g., an INT3 on x86). A crash in abort is recognized by the
     // signal handler, which will attempt to tear down the runtime
     // immediately.
+    //
+    // Also called from runtime test.
+    //
+    //go:linkname abort
     void abort()
     /* convertBlockStmt, nil block */;
 
@@ -486,6 +554,15 @@ namespace golang::runtime
     void gcWriteBarrier1()
     /* convertBlockStmt, nil block */;
 
+    // gcWriteBarrier2 should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname gcWriteBarrier2
     void gcWriteBarrier2()
     /* convertBlockStmt, nil block */;
 

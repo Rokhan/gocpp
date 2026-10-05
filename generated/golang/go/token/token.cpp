@@ -11,7 +11,7 @@
 #include "golang/go/token/token.h"
 #include "gocpp/support.h"
 
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 #include "golang/unicode/digit.h"
 #include "golang/unicode/graphic.h"
 #include "golang/unicode/letter.h"
@@ -19,8 +19,11 @@
 
 // Package token defines constants representing the lexical tokens of the Go
 // programming language and basic operations on tokens (printing, predicates).
-namespace golang::token
+namespace golang::go::token
 {
+    namespace strconv = golang::strconv;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
     }

@@ -4,8 +4,9 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::gocommand
+namespace golang::golang_org::x::tools::internal::gocommand
 {
+    struct Runner;
     const long maxInFlight = 10;
     struct gocpp_id_2;
     struct gocpp_id_3;
@@ -13,10 +14,4 @@ namespace golang::gocommand
     struct gocpp_id_8;
     struct gocpp_id_9;
     struct Invocation;
-}
-#include "golang/sync/once.fwd.h"
-
-namespace golang::gocommand
-{
-    struct Runner;
 }

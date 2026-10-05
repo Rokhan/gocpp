@@ -11,6 +11,7 @@
 #include "golang/go/doc/example.h"
 #include "gocpp/support.h"
 
+#include "golang/cmp/cmp.h"
 #include "golang/go/ast/ast.h"
 #include "golang/go/ast/scope.h"
 #include "golang/go/ast/walk.h"
@@ -19,15 +20,24 @@
 #include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
 #include "golang/internal/lazyregexp/lazyre.h"
-#include "golang/path/path.h"
-#include "golang/sort/slice.h"
+#include "golang/iter/iter.h"
+#include "golang/slices/sort.h"
 #include "golang/strconv/quote.h"
 #include "golang/strings/strings.h"
 #include "golang/unicode/letter.h"
 #include "golang/unicode/utf8/utf8.h"
 
-namespace golang::doc
+namespace golang::go::doc
 {
+    namespace ast = golang::go::ast;
+    namespace cmp = golang::cmp;
+    namespace lazyregexp = golang::internal::lazyregexp;
+    namespace slices = golang::slices;
+    namespace strconv = golang::strconv;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
+    namespace unicode = golang::unicode;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
         using ast::rec::End;
@@ -37,6 +47,7 @@ namespace golang::doc
         using ast::rec::specNode;
         using lazyregexp::rec::FindStringSubmatchIndex;
         using lazyregexp::rec::MatchString;
+        using token::rec::IsValid;
     }
 
     // An Example represents an example function found in a test source file.
@@ -149,6 +160,11 @@ namespace golang::doc
                     // function has params; not a valid example
                     continue;
                 }
+                if(auto results = f->Type->Results; results != nullptr && len(results->List) != 0)
+                {
+                    // function has results; not a valid example
+                    continue;
+                }
                 if(f->Body == nullptr)
                 {
                     // ast.File.Body nil dereference (see issue 28044)
@@ -183,9 +199,9 @@ namespace golang::doc
             list = append(list, flist);
         }
         // sort by name
-        sort::Slice(list, [=](int i, int j) mutable -> bool
+        slices::SortFunc(list, [=](Example* a, Example* b) mutable -> int
         {
-            return list[i]->Name < list[j]->Name;
+            return cmp::Compare(a->Name, b->Name);
         });
         return list;
     }
@@ -324,15 +340,6 @@ namespace golang::doc
         // Find unresolved identifiers and uses of top-level declarations.
         auto [depDecls, unresolved] = findDeclsAndUnresolved(body, topDecls, typMethods);
 
-        // Remove predeclared identifiers from unresolved list.
-        for(auto [n, gocpp_ignored] : unresolved)
-        {
-            if(predeclaredTypes[n] || predeclaredConstants[n] || predeclaredFuncs[n])
-            {
-                remove(unresolved, n);
-            }
-        }
-
         // Use unresolved identifiers to determine the imports used by this
         // example. The heuristic assumes package names match base import
         // paths for imports w/o renames (should be good enough most of the time).
@@ -369,7 +376,7 @@ namespace golang::doc
                 // because the package syscall/js is not available in the playground.
                 return nullptr;
             }
-            auto n = path::Base(p);
+            auto n = assumedPackageName(p);
             if(s->Name != nullptr)
             {
                 n = s->Name->Name;
@@ -398,8 +405,17 @@ namespace golang::doc
                 auto spec = *s;
                 auto path = *s->Path;
                 spec.Path = & path;
-                spec.Path->ValuePos = groupStart(& spec);
+                updateBasicLitPos(spec.Path, groupStart(& spec));
                 namedImports = append(namedImports, & spec);
+                remove(unresolved, n);
+            }
+        }
+
+        // Remove predeclared identifiers from unresolved list.
+        for(auto [n, gocpp_ignored] : unresolved)
+        {
+            if(predeclaredTypes[n] || predeclaredConstants[n] || predeclaredFuncs[n])
+            {
                 remove(unresolved, n);
             }
         }
@@ -488,13 +504,13 @@ namespace golang::doc
         decls = append(decls, depDecls);
         decls = append(decls, funcDecl);
 
-        sort::Slice(decls, [=](int i, int j) mutable -> bool
+        slices::SortFunc(decls, [=](ast::Decl a, ast::Decl b) mutable -> int
         {
-            return rec::Pos(gocpp::recv(decls[i])) < rec::Pos(gocpp::recv(decls[j]));
+            return cmp::Compare(rec::Pos(gocpp::recv(a)), rec::Pos(gocpp::recv(b)));
         });
-        sort::Slice(comments, [=](int i, int j) mutable -> bool
+        slices::SortFunc(comments, [=](ast::CommentGroup* a, ast::CommentGroup* b) mutable -> int
         {
-            return rec::Pos(gocpp::recv(comments[i])) < rec::Pos(gocpp::recv(comments[j]));
+            return cmp::Compare(rec::Pos(gocpp::recv(a)), rec::Pos(gocpp::recv(b)));
         });
 
         // Synthesize file.
@@ -610,7 +626,7 @@ namespace golang::doc
                     case 0:
                     {
                         ast::FuncDecl* d = gocpp::any_cast<ast::FuncDecl*>(depDecls[i]);
-                        // Inpect type parameters.
+                        // Inspect type parameters.
                         inspectFieldList(d->Type->TypeParams);
                         // Inspect types of parameters and results. See #28492.
                         inspectFieldList(d->Type->Params);
@@ -789,19 +805,16 @@ namespace golang::doc
 
     bool hasIota(ast::Spec s)
     {
-        auto has = false;
-        ast::Inspect(s, [=](ast::Node n) mutable -> bool
+        for(auto [n, gocpp_ignored] : ast::Preorder(s))
         {
             // Check that this is the special built-in "iota" identifier, not
             // a user-defined shadow.
             if(auto [id, ok] = gocpp::getValue<ast::Ident*>(n); ok && id->Name == "iota"_s && id->Obj == nullptr)
             {
-                has = true;
-                return false;
+                return true;
             }
-            return true;
-        });
-        return has;
+        }
+        return false;
     }
 
     // findImportGroupStarts finds the start positions of each sequence of import
@@ -824,9 +837,9 @@ namespace golang::doc
         auto imps = gocpp::make(gocpp::Tag<gocpp::slice<ast::ImportSpec*>>(), len(origImps));
         copy(imps, origImps);
         // Assume the imports are sorted by position.
-        sort::Slice(imps, [=](int i, int j) mutable -> bool
+        slices::SortFunc(imps, [=](ast::ImportSpec* a, ast::ImportSpec* b) mutable -> int
         {
-            return rec::Pos(gocpp::recv(imps[i])) < rec::Pos(gocpp::recv(imps[j]));
+            return cmp::Compare(rec::Pos(gocpp::recv(a)), rec::Pos(gocpp::recv(b)));
         });
         // Assume gofmt has been applied, so there is a blank line between adjacent imps
         // if and only if they are more than 2 positions apart (newline, tab).
@@ -1014,9 +1027,9 @@ namespace golang::doc
         // Sort list of example according to the user-specified suffix name.
         for(auto [gocpp_ignored, exs] : ids)
         {
-            sort::Slice((*exs), [=](int i, int j) mutable -> bool
+            slices::SortFunc(*exs, [=](Example* a, Example* b) mutable -> int
             {
-                return (*exs)[i]->Suffix < (*exs)[j]->Suffix;
+                return cmp::Compare(a->Suffix, b->Suffix);
             });
         }
     }
@@ -1069,6 +1082,19 @@ namespace golang::doc
     {
         auto [r, size] = utf8::DecodeRuneInString(s);
         return size > 0 && unicode::IsLower(r);
+    }
+
+    // updateBasicLitPos updates lit.Pos,
+    // ensuring that lit.End is displaced by the same amount.
+    // (See https://go.dev/issue/76395.)
+    void updateBasicLitPos(ast::BasicLit* lit, token::Pos pos)
+    {
+        auto len = rec::End(gocpp::recv(lit)) - rec::Pos(gocpp::recv(lit));
+        lit->ValuePos = pos;
+        if(rec::IsValid(gocpp::recv(lit->ValueEnd)))
+        {
+            lit->ValueEnd = pos + len;
+        }
     }
 
 }

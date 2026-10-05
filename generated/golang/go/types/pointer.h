@@ -11,11 +11,11 @@
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Pointer
     {
-        golang::types::Type base{}; // element type
+        golang::go::types::Type base{}; // element type
 
         using isGoStruct = void;
 
@@ -29,18 +29,18 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Pointer& value);
-    Pointer* NewPointer(golang::types::Type elem);
+    Pointer* NewPointer(golang::go::types::Type elem);
 }
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
-        golang::types::Type Elem(Pointer* p);
-        golang::types::Type Underlying(Pointer* p);
+        golang::go::types::Type Elem(Pointer* p);
+        golang::go::types::Type Underlying(Pointer* p);
         gocpp::string String(Pointer* p);
     }
 }

@@ -9,29 +9,28 @@
 #include "golang/go/types/builtins.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/ast/ast.h"
 #include "golang/go/types/type.h"
-#include "golang/go/types/named.fwd.h"
+#include "golang/go/types/operand.fwd.h"
 #include "golang/go/types/signature.fwd.h"
+#include "golang/go/types/under.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
-    bool hasVarSize(golang::types::Type t, gocpp::map<Named*, bool> seen);
-    Signature* makeSig(golang::types::Type res, gocpp::slice<golang::types::Type> args);
+    std::tuple<golang::go::types::Type, typeError*> sliceElem(operand* x);
+    golang::go::types::Signature* makeSig(golang::go::types::Type res, gocpp::slice<golang::go::types::Type> args);
     
     template<typename... Args>
-    Signature* makeSig(golang::types::Type res, Args... args)
+    golang::go::types::Signature* makeSig(golang::go::types::Type res, Args... args)
     {
-        return makeSig(res, gocpp::ToSlice<golang::types::Type>(args...));
+        return makeSig(res, gocpp::ToSlice<golang::go::types::Type>(args...));
     }
     
     template<typename... Args>
-    Signature* makeSig(golang::types::Type res, golang::types::Type value, Args... args)
+    golang::go::types::Signature* makeSig(golang::go::types::Type res, golang::go::types::Type value, Args... args)
     {
-        return makeSig(res, gocpp::ToSlice<golang::types::Type>(value, args...));
+        return makeSig(res, gocpp::ToSlice<golang::go::types::Type>(value, args...));
     }
-    golang::types::Type arrayPtrDeref(golang::types::Type typ);
-    ast::Expr unparen(ast::Expr e);
+    golang::go::types::Type arrayPtrDeref(golang::go::types::Type typ);
 }
 
 #include "golang/go/ast/ast.h"
@@ -40,13 +39,15 @@ namespace golang::types
 #include "golang/go/types/type.h"
 #include "golang/go/types/universe.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace ast = golang::go::ast;
 
     namespace rec
     {
         bool builtin(Checker* check, operand* x, ast::CallExpr* call, builtinId id);
-        golang::types::Type applyTypeFunc(Checker* check, std::function<golang::types::Type (golang::types::Type _1)> f, operand* x, builtinId id);
+        bool hasVarSize(Checker* check, golang::go::types::Type t);
+        golang::go::types::Type applyTypeFunc(Checker* check, std::function<golang::go::types::Type (golang::go::types::Type _1)> f, operand* x, builtinId id);
     }
 }
 

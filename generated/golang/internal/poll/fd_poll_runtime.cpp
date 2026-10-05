@@ -20,8 +20,12 @@
 #include "golang/syscall/syscall_windows.h"
 #include "golang/time/time.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
+    namespace errors = golang::errors;
+    namespace sync = golang::sync;
+    namespace syscall = golang::syscall;
+    namespace time = golang::time;
     namespace rec
     {
         using sync::rec::Do;
@@ -245,6 +249,7 @@ namespace golang::poll
                 return err;
             }
             defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
+
             if(fd->pd.runtimeCtx == 0)
             {
                 return ErrNoDeadline;
@@ -260,6 +265,16 @@ namespace golang::poll
 
     // IsPollDescriptor reports whether fd is the descriptor being used by the poller.
     // This is only used for testing.
+    //
+    // IsPollDescriptor should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/opencontainers/runc
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname IsPollDescriptor
     bool IsPollDescriptor(uintptr_t fd)
     {
         return runtime_isPollServerDescriptor(fd);

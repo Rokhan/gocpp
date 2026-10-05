@@ -11,12 +11,12 @@
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Array
     {
         int64_t len{};
-        golang::types::Type elem{};
+        golang::go::types::Type elem{};
 
         using isGoStruct = void;
 
@@ -30,19 +30,19 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Array& value);
-    Array* NewArray(golang::types::Type elem, int64_t len);
+    Array* NewArray(golang::go::types::Type elem, int64_t len);
 }
 
 #include "golang/go/types/type.h"
 
-namespace golang::types
+namespace golang::go::types
 {
 
     namespace rec
     {
         int64_t Len(Array* a);
-        golang::types::Type Elem(Array* a);
-        golang::types::Type Underlying(Array* a);
+        golang::go::types::Type Elem(Array* a);
+        golang::go::types::Type Underlying(Array* a);
         gocpp::string String(Array* a);
     }
 }

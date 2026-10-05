@@ -105,6 +105,86 @@ namespace golang::hash
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash& value);
+    struct XOF : virtual gocpp::Interface, io::Writer, io::Reader
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        XOF(){}
+        XOF(XOF& i) = default;
+        XOF(const XOF& i) = default;
+        XOF& operator=(XOF& i) = default;
+        XOF& operator=(const XOF& i) = default;
+
+        inline XOF(nullptr_t) {};
+        XOF& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        XOF(T& ref);
+
+        template<typename T>
+        XOF(const T& ref);
+
+        template<typename T>
+        XOF(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IXOF: virtual io::Writer::IWriter, virtual io::Reader::IReader
+        {
+            // Reset resets the XOF to its initial state.
+            virtual void vReset() = 0;
+            // BlockSize returns the XOF's underlying block size.
+            // The Write method must be able to accept any amount
+            // of data, but it may operate more efficiently if all writes
+            // are a multiple of the block size.
+            virtual int vBlockSize() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IXOF>
+        struct XOFImpl : virtual TInterface, virtual io::Writer::WriterImpl<T, TStore, TInterface>, virtual io::Reader::ReaderImpl<T, TStore, TInterface>
+        {
+            explicit XOFImpl(T* ptr): io::Writer::WriterImpl<T, TStore, TInterface>(ptr), io::Reader::ReaderImpl<T, TStore, TInterface>(ptr)
+            {
+                value.reset(ptr);
+            }
+
+            void vReset() override;
+
+            int vBlockSize() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IXOF* value() const;
+
+        std::shared_ptr<IXOF> mValue;
+    };
+
+    namespace rec
+    {
+        void Reset(const gocpp::PtrRecv<struct XOF, false>& self);
+        void Reset(const gocpp::ObjRecv<struct XOF>& self);
+
+        int BlockSize(const gocpp::PtrRecv<struct XOF, false>& self);
+        int BlockSize(const gocpp::ObjRecv<struct XOF>& self);
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct XOF, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct XOF>& self, gocpp::slice<unsigned char> p);
+
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct XOF, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct XOF>& self, gocpp::slice<unsigned char> p);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct XOF& value);
     struct Hash32 : virtual gocpp::Interface, Hash
     {
         using gocpp::Interface::operator==;
@@ -261,6 +341,84 @@ namespace golang::hash
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash64& value);
+    struct Cloner : virtual gocpp::Interface, Hash
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        Cloner(){}
+        Cloner(Cloner& i) = default;
+        Cloner(const Cloner& i) = default;
+        Cloner& operator=(Cloner& i) = default;
+        Cloner& operator=(const Cloner& i) = default;
+
+        inline Cloner(nullptr_t) {};
+        Cloner& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        Cloner(T& ref);
+
+        template<typename T>
+        Cloner(const T& ref);
+
+        template<typename T>
+        Cloner(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct ICloner: virtual Hash::IHash
+        {
+            virtual std::tuple<Cloner, gocpp::error> vClone() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = ICloner>
+        struct ClonerImpl : virtual TInterface, virtual Hash::HashImpl<T, TStore, TInterface>
+        {
+            explicit ClonerImpl(T* ptr): Hash::HashImpl<T, TStore, TInterface>(ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<Cloner, gocpp::error> vClone() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline ICloner* value() const;
+
+        std::shared_ptr<ICloner> mValue;
+    };
+
+    namespace rec
+    {
+        std::tuple<Cloner, gocpp::error> Clone(const gocpp::PtrRecv<struct Cloner, false>& self);
+        std::tuple<Cloner, gocpp::error> Clone(const gocpp::ObjRecv<struct Cloner>& self);
+
+        int BlockSize(const gocpp::PtrRecv<struct Cloner, false>& self);
+        int BlockSize(const gocpp::ObjRecv<struct Cloner>& self);
+
+        void Reset(const gocpp::PtrRecv<struct Cloner, false>& self);
+        void Reset(const gocpp::ObjRecv<struct Cloner>& self);
+
+        int Size(const gocpp::PtrRecv<struct Cloner, false>& self);
+        int Size(const gocpp::ObjRecv<struct Cloner>& self);
+
+        gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<struct Cloner, false>& self, gocpp::slice<unsigned char> b);
+        gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<struct Cloner>& self, gocpp::slice<unsigned char> b);
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Cloner, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Cloner>& self, gocpp::slice<unsigned char> p);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Cloner& value);
 
     namespace rec
     {

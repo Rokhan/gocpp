@@ -10,24 +10,29 @@
 #include "gocpp/support.h"
 
 
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
+    // ErrUnexpectedType is returned by Get*Value when the value's type was unexpected.
+    extern gocpp::error ErrUnexpectedType;
     std::tuple<gocpp::string, gocpp::error> ExpandString(gocpp::string value);
 }
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
 #include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
-#include "golang/errors/errors.fwd.h"
 
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
+    namespace syscall = golang::syscall;
+    // ErrShortBuffer is returned when the buffer was too short for the operation.
     extern syscall::Errno ErrShortBuffer;
+    // ErrNotExist is returned when a registry key or value does not exist.
     extern syscall::Errno ErrNotExist;
-    extern gocpp::error ErrUnexpectedType;
 }
 
 #include "golang/internal/syscall/windows/registry/key.h"
 
-namespace golang::registry
+namespace golang::internal::syscall::windows::registry
 {
 
     namespace rec

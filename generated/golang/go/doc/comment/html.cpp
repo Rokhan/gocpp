@@ -16,10 +16,13 @@
 #include "golang/go/doc/comment/parse.h"
 #include "golang/go/doc/comment/print.h"
 #include "golang/io/io.h"
-#include "golang/strconv/itoa.h"
+#include "golang/strconv/number.h"
 
-namespace golang::comment
+namespace golang::go::doc::comment
 {
+    namespace bytes = golang::bytes;
+    namespace fmt = golang::fmt;
+    namespace strconv = golang::strconv;
     namespace rec
     {
         using bytes::rec::Bytes;
@@ -196,7 +199,7 @@ namespace golang::comment
     }
 
     // text prints the text sequence x to out.
-    void rec::text(htmlPrinter* p, bytes::Buffer* out, gocpp::slice<golang::comment::Text> x)
+    void rec::text(htmlPrinter* p, bytes::Buffer* out, gocpp::slice<golang::go::doc::comment::Text> x)
     {
         for(auto [gocpp_ignored, t] : x)
         {

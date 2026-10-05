@@ -11,11 +11,16 @@
 #include "golang/strings/builder.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/escape.h"
 #include "golang/internal/bytealg/bytealg.h"
 #include "golang/unicode/utf8/utf8.h"
 
 namespace golang::strings
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
+    namespace bytealg = golang::internal::bytealg;
+    namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
     }
@@ -55,20 +60,12 @@ namespace golang::strings
         return value.PrintTo(os);
     }
 
-    // noescape hides a pointer from escape analysis. It is the identity function
-    // but escape analysis doesn't think the output depends on the input.
-    // noescape is inlined and currently compiles down to zero instructions.
-    // USE CAREFULLY!
-    // This was copied from the runtime; see issues 23382 and 7921.
+    // copyCheck implements a dynamic check to prevent modification after
+    // copying a non-zero Builder, which would be unsafe (see #25907, #47276).
     //
-    //go:nosplit
-    //go:nocheckptr
-    gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p)
-    {
-        auto x = uintptr_t(p);
-        return gocpp::unsafe_pointer(x ^ 0);
-    }
-
+    // We cannot add a noCopy field to Builder, to cause vet's copylocks
+    // check to report copying, because copylocks cannot reliably
+    // discriminate the zero and nonzero cases.
     void rec::copyCheck(Builder* b)
     {
         if(b->addr == nullptr)
@@ -78,7 +75,7 @@ namespace golang::strings
             // See issue 23382.
             // TODO: once issue 7921 is fixed, this should be reverted to
             // just "b.addr = b".
-            b->addr = (Builder*)(noescape(gocpp::unsafe_pointer(b)));
+            b->addr = (Builder*)(abi::NoEscape(gocpp::unsafe_pointer(b)));
         }
         else
         if(b->addr != b)
@@ -158,7 +155,7 @@ namespace golang::strings
     }
 
     // WriteRune appends the UTF-8 encoding of Unicode code point r to b's buffer.
-    // It returns the length of r and a nil error.
+    // It returns the number of bytes written and a nil error.
     std::tuple<int, gocpp::error> rec::WriteRune(Builder* b, gocpp::rune r)
     {
         rec::copyCheck(gocpp::recv(b));

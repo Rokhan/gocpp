@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::atomic
+namespace golang::sync::atomic
 {
     struct Value
     {
@@ -28,6 +28,10 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Value& value);
+    extern unsigned char firstStoreInProgress;
+    int runtime_procPin();
+    void runtime_procUnpin();
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct efaceWords
     {
         gocpp::unsafe_pointer typ{};
@@ -45,9 +49,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct efaceWords& value);
-    extern unsigned char firstStoreInProgress;
-    int runtime_procPin();
-    void runtime_procUnpin();
 
     namespace rec
     {

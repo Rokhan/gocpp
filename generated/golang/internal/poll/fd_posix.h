@@ -10,14 +10,17 @@
 #include "gocpp/support.h"
 
 
-namespace golang::poll
+namespace golang::internal::poll
 {
     gocpp::error ignoringEINTR(std::function<gocpp::error ()> fn);
+    
+    template<typename T>
+    std::tuple<T, gocpp::error> ignoringEINTR2(std::function<std::tuple<T, gocpp::error> ()> fn);
 }
 
 #include "golang/internal/poll/fd_windows.h"
 
-namespace golang::poll
+namespace golang::internal::poll
 {
 
     namespace rec

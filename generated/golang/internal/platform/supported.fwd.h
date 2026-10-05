@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::platform
+namespace golang::internal::platform
 {
     struct OSArch;
     struct osArchInfo;

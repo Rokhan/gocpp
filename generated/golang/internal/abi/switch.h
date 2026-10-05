@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::abi
+namespace golang::internal::abi
 {
     struct InterfaceSwitchCacheEntry
     {
@@ -33,7 +33,6 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitchCacheEntry& value);
-    bool UseInterfaceSwitchCache(gocpp::string goarch);
     struct TypeAssertCacheEntry
     {
         // type of source value (a *runtime._type)
@@ -91,7 +90,7 @@ namespace golang::abi
 }
 #include "golang/internal/abi/type.fwd.h"
 
-namespace golang::abi
+namespace golang::internal::abi
 {
     struct InterfaceSwitch
     {
@@ -99,7 +98,7 @@ namespace golang::abi
         int NCases{};
         // Array of NCases elements.
         // Each case must be a non-empty interface type.
-        gocpp::array<golang::abi::InterfaceType*, 1> Cases{};
+        gocpp::array<golang::internal::abi::InterfaceType*, 1> Cases{};
 
         using isGoStruct = void;
 
@@ -116,7 +115,7 @@ namespace golang::abi
     struct TypeAssert
     {
         TypeAssertCache* Cache{};
-        golang::abi::InterfaceType* Inter{};
+        golang::internal::abi::InterfaceType* Inter{};
         bool CanFail{};
 
         using isGoStruct = void;
@@ -131,6 +130,18 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeAssert& value);
+}
+#include "golang/internal/goarch/goarch.fwd.h"
+
+namespace golang::internal::abi
+{
+    namespace goarch = golang::internal::goarch;
+}
+#include "golang/internal/goarch/goarch.h"
+
+namespace golang::internal::abi
+{
+    bool UseInterfaceSwitchCache(goarch::ArchFamilyType arch);
 
     namespace rec
     {

@@ -12,14 +12,18 @@
 #include "golang/go/types/type.h"
 #include "golang/go/types/named.fwd.h"
 #include "golang/go/types/object.fwd.h"
+#include "golang/go/types/typelists.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Alias
     {
         TypeName* obj{}; // corresponding declared alias object
-        golang::types::Type fromRHS{}; // RHS of type alias declaration; may be an alias
-        golang::types::Type actual{}; // actual (aliased) type; never an alias
+        Alias* orig{}; // original, uninstantiated alias
+        TypeParamList* tparams{}; // type parameters, or nil
+        TypeList* targs{}; // type arguments, or nil
+        golang::go::types::Type fromRHS{}; // RHS of type alias declaration; may be an alias
+        golang::go::types::Type actual{}; // actual (aliased) type; never an alias
 
         using isGoStruct = void;
 
@@ -33,25 +37,37 @@ namespace golang::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Alias& value);
-    golang::types::Type Unalias(golang::types::Type t);
-    Named* asNamed(golang::types::Type t);
-    Alias* NewAlias(TypeName* obj, golang::types::Type rhs);
-    golang::types::Type unalias(Alias* a0);
+    golang::go::types::Type Unalias(golang::go::types::Type t);
+    Named* asNamed(golang::go::types::Type t);
+    Alias* NewAlias(TypeName* obj, golang::go::types::Type rhs);
+    golang::go::types::Type unalias(Alias* a0);
 }
 
+#include "golang/go/token/position.h"
 #include "golang/go/types/check.h"
+#include "golang/go/types/context.h"
+#include "golang/go/types/named.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/type.h"
+#include "golang/go/types/typelists.h"
+#include "golang/go/types/typeparam.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace token = golang::go::token;
 
     namespace rec
     {
         TypeName* Obj(Alias* a);
-        golang::types::Type Underlying(Alias* a);
         gocpp::string String(Alias* a);
-        Alias* newAlias(Checker* check, TypeName* obj, golang::types::Type rhs);
+        golang::go::types::Type Underlying(Alias* a);
+        Alias* Origin(Alias* a);
+        TypeParamList* TypeParams(Alias* a);
+        void SetTypeParams(Alias* a, gocpp::slice<TypeParam*> tparams);
+        TypeList* TypeArgs(Alias* a);
+        golang::go::types::Type Rhs(Alias* a);
+        Alias* newAlias(Checker* check, TypeName* obj, golang::go::types::Type rhs);
+        Alias* newAliasInstance(Checker* check, token::Pos pos, Alias* orig, gocpp::slice<golang::go::types::Type> targs, Named* expanding, Context* ctxt);
         void cleanup(Alias* a);
     }
 }

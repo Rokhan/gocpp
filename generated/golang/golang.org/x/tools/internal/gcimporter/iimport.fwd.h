@@ -4,14 +4,17 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    struct intReader;
     // Keep this in sync with constants in iexport.go.
     const long iexportVersionGo1_11 = 0;
     const long iexportVersionPosCol = 1;
     const long iexportVersionGo1_18 = 2;
     const long iexportVersionGenerics = 2;
-    const long iexportVersionCurrent = 2;
+    const long iexportVersionGenericMethods = 3;
+    const long iexportVersionCurrent = 3;
+    struct ident;
     const long predeclReserved = 32;
     using itag = uint64_t;
     // Object tags
@@ -24,6 +27,12 @@ namespace golang::gcimporter
     const char typeParamTag = 'P';
     const char typeTag = 'T';
     const char genericTypeTag = 'U';
+    struct GetPackagesItem;
+    struct setConstraintArgs;
+    struct iimporter;
+    struct importReader;
+    struct GoTag_byPath;
+    const int iexportVersion = iexportVersionGenericMethods;
     // Types
     const itag definedType = 0;
     const itag pointerType = 1;
@@ -38,23 +47,29 @@ namespace golang::gcimporter
     const itag instanceType = 10;
     const itag unionType = 11;
     const itag aliasType = 12;
+    using GetPackagesFunc = std::function<gocpp::error (gocpp::slice<GetPackagesItem> items)>;
 }
-#include "golang/bytes/reader.fwd.h"
-#include "golang/go/token/position.fwd.h"
+#include "golang/go/types/alias.fwd.h"
+#include "golang/go/types/array.fwd.h"
+#include "golang/go/types/basic.fwd.h"
+#include "golang/go/types/chan.fwd.h"
+#include "golang/go/types/instantiate.fwd.h"
 #include "golang/go/types/interface.fwd.h"
+#include "golang/go/types/map.fwd.h"
+#include "golang/go/types/named.fwd.h"
+#include "golang/go/types/object.fwd.h"
 #include "golang/go/types/package.fwd.h"
+#include "golang/go/types/pointer.fwd.h"
+#include "golang/go/types/signature.fwd.h"
+#include "golang/go/types/slice.fwd.h"
+#include "golang/go/types/struct.fwd.h"
+#include "golang/go/types/tuple.fwd.h"
 #include "golang/go/types/type.fwd.h"
 #include "golang/go/types/typeparam.fwd.h"
-#include "golang/golang.org/x/tools/internal/gcimporter/bimport.fwd.h"
-#include "golang/golang.org/x/tools/internal/gcimporter/iexport.fwd.h"
+#include "golang/go/types/union.fwd.h"
 
-namespace golang::gcimporter
+namespace golang::golang_org::x::tools::internal::gcimporter
 {
-    struct intReader;
-    struct ident;
-    struct GetPackagesItem;
-    struct setConstraintArgs;
-    struct iimporter;
-    struct importReader;
-    using GetPackagesFunc = std::function<gocpp::error (gocpp::slice<GetPackagesItem> items)>;
+    namespace types = golang::go::types;
+    using byPath = gocpp::defined<gocpp::slice<types::Package*>, GoTag_byPath>;
 }

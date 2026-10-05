@@ -4,8 +4,13 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::doc
+namespace golang::go::doc
 {
+    struct Package;
+    struct Value;
+    struct Type;
+    struct Func;
+    struct Note;
     using Mode = int;
     // AllDecls says to extract documentation for all package-level
     // declarations, not just exported ones.
@@ -17,16 +22,4 @@ namespace golang::doc
     // the AST such as function bodies were nil-ed out to save memory in
     // godoc, but not all programs want that behavior.
     const Mode PreserveAST = 1 << 2;
-}
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/doc/example.fwd.h"
-#include "golang/go/token/position.fwd.h"
-
-namespace golang::doc
-{
-    struct Package;
-    struct Value;
-    struct Type;
-    struct Func;
-    struct Note;
 }

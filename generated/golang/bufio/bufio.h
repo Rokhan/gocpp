@@ -12,6 +12,12 @@
 
 namespace golang::bufio
 {
+    extern gocpp::error ErrInvalidUnreadByte;
+    extern gocpp::error ErrInvalidUnreadRune;
+    extern gocpp::error ErrBufferFull;
+    extern gocpp::error ErrNegativeCount;
+    extern gocpp::error errNegativeRead;
+    extern gocpp::error errNegativeWrite;
     struct ReadWriter
     {
         Reader* Reader{};
@@ -30,15 +36,12 @@ namespace golang::bufio
 
     std::ostream& operator<<(std::ostream& os, const struct ReadWriter& value);
 }
+#include "golang/io/io.fwd.h"
 #include "golang/io/io.h"
-#include "golang/errors/errors.fwd.h"
 
 namespace golang::bufio
 {
-    extern gocpp::error ErrInvalidUnreadByte;
-    extern gocpp::error ErrInvalidUnreadRune;
-    extern gocpp::error ErrBufferFull;
-    extern gocpp::error ErrNegativeCount;
+    namespace io = golang::io;
     struct Reader
     {
         gocpp::slice<unsigned char> buf{};
@@ -61,8 +64,6 @@ namespace golang::bufio
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
-    extern gocpp::error errNegativeRead;
-    extern gocpp::error errNegativeWrite;
     struct Writer
     {
         gocpp::error err{};

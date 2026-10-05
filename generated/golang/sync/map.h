@@ -9,59 +9,21 @@
 #include "golang/sync/map.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/sync/hashtriemap.fwd.h"
 
 namespace golang::sync
 {
-    struct readOnly
-    {
-        gocpp::map<go_any, entry*> m{};
-        bool amended{}; // true if the dirty map contains some key not in m.
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct readOnly& value);
-    extern gocpp::go_any* expunged;
+    namespace isync = golang::internal::sync;
 }
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
+#include "golang/internal/sync/hashtriemap.h"
+#include "golang/sync/cond.h"
 
 namespace golang::sync
 {
     struct Map
     {
-        Mutex mu{};
-        // read contains the portion of the map's contents that are safe for
-        // concurrent access (with or without mu held).
-        // The read field itself is always safe to load, but must only be stored with
-        // mu held.
-        // Entries stored in read may be updated concurrently without mu, but updating
-        // a previously-expunged entry requires that the entry be copied to the dirty
-        // map and unexpunged with mu held.
-        atomic::Pointer<readOnly> read{};
-        // dirty contains the portion of the map's contents that require mu to be
-        // held. To ensure that the dirty map can be promoted to the read map quickly,
-        // it also includes all of the non-expunged entries in the read map.
-        // Expunged entries are not stored in the dirty map. An expunged entry in the
-        // clean map must be unexpunged and added to the dirty map before a new value
-        // can be stored to it.
-        // If the dirty map is nil, the next write to the map will initialize it by
-        // making a shallow copy of the clean map, omitting stale entries.
-        gocpp::map<go_any, entry*> dirty{};
-        // misses counts the number of loads since the read map was last updated that
-        // needed to lock mu to determine whether the key was present.
-        // Once enough misses have occurred to cover the cost of copying the dirty
-        // map, the dirty map will be promoted to the read map (in the unamended
-        // state) and the next store to the map will make a new dirty copy.
-        int misses{};
+        noCopy _1{};
+        isync::HashTrieMap<go_any, go_any> m{};
 
         using isGoStruct = void;
 
@@ -75,60 +37,19 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Map& value);
-    struct entry
-    {
-        // p points to the interface{} value stored for the entry.
-        // If p == nil, the entry has been deleted, and either m.dirty == nil or
-        // m.dirty[key] is e.
-        // If p == expunged, the entry has been deleted, m.dirty != nil, and the entry
-        // is missing from m.dirty.
-        // Otherwise, the entry is valid and recorded in m.read.m[key] and, if m.dirty
-        // != nil, in m.dirty[key].
-        // An entry can be deleted by atomic replacement with nil: when m.dirty is
-        // next created, it will atomically replace nil with expunged and leave
-        // m.dirty[key] unset.
-        // An entry's associated value can be updated by atomic replacement, provided
-        // p != expunged. If p == expunged, an entry's associated value can be updated
-        // only after first setting m.dirty[key] = e so that lookups using the dirty
-        // map find the entry.
-        atomic::Pointer<go_any> p{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct entry& value);
-    entry* newEntry(go_any i);
 
     namespace rec
     {
-        readOnly loadReadOnly(Map* m);
         std::tuple<go_any, bool> Load(Map* m, go_any key);
-        std::tuple<go_any, bool> load(entry* e);
         void Store(Map* m, go_any key, go_any value);
-        bool tryCompareAndSwap(entry* e, go_any old, go_any go_new);
-        bool unexpungeLocked(entry* e);
-        go_any* swapLocked(entry* e, go_any* i);
+        void Clear(Map* m);
         std::tuple<go_any, bool> LoadOrStore(Map* m, go_any key, go_any value);
-        std::tuple<go_any, bool, bool> tryLoadOrStore(entry* e, go_any i);
         std::tuple<go_any, bool> LoadAndDelete(Map* m, go_any key);
         void Delete(Map* m, go_any key);
-        std::tuple<go_any, bool> go_delete(entry* e);
-        std::tuple<go_any*, bool> trySwap(entry* e, go_any* i);
         std::tuple<go_any, bool> Swap(Map* m, go_any key, go_any value);
         bool CompareAndSwap(Map* m, go_any key, go_any old, go_any go_new);
         bool CompareAndDelete(Map* m, go_any key, go_any old);
         void Range(Map* m, std::function<bool (go_any key, go_any value)> f);
-        void missLocked(Map* m);
-        void dirtyLocked(Map* m);
-        bool tryExpungeLocked(entry* e);
     }
 }
 

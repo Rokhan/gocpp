@@ -12,13 +12,33 @@
 
 namespace golang::runtime
 {
+    // If useCheckmark is true, marking of an object uses the checkmark
+    // bits instead of the standard mark bits.
     extern bool useCheckmark;
     void startCheckmarks();
     void endCheckmarks();
+    std::tuple<unsigned char*, uint8_t> getCheckmark(uintptr_t obj);
+    void checkFinalizersAndCleanups();
 }
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mbitmap.h"
+#include "golang/runtime/mgcwork.fwd.h"
+#include "golang/runtime/mheap.fwd.h"
+
+namespace golang::runtime
+{
+    bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, markBits mbits);
+    void runCheckmark(std::function<void (gcWork* _1)> prepareRootSet);
+    void forEachSpecial(std::function<bool (uintptr_t p, mspan* s, special* sp)> yield);
+}
 #include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/internal/runtime/sys/nih.fwd.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+    namespace goarch = golang::internal::goarch;
+}
+#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/malloc.fwd.h"
 
 namespace golang::runtime
@@ -40,7 +60,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct checkmarksMap& value);
-    bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, markBits mbits);
 
     namespace rec
     {

@@ -13,54 +13,59 @@
 
 #include "golang/compress/flate/deflatefast.h"
 #include "golang/compress/flate/huffman_bit_writer.h"
+#include "golang/compress/flate/huffman_code.h"
+#include "golang/compress/flate/load_store.h"
 #include "golang/compress/flate/token.h"
 #include "golang/errors/errors.h"
 #include "golang/fmt/errors.h"
 #include "golang/io/io.h"
 #include "golang/math/const.h"
+#include "golang/slices/slices.h"
 
-namespace golang::flate
+namespace golang::compress::flate
 {
+    namespace errors = golang::errors;
+    namespace fmt = golang::fmt;
+    namespace io = golang::io;
+    namespace math = golang::math;
+    namespace slices = golang::slices;
     namespace rec
     {
-        using io::rec::Write;
     }
 
+    // compressionLevel holds the parameters for levels 7-9.
     
     template<typename T> requires gocpp::GoStruct<T>
     compressionLevel::operator T()
     {
         T result;
-        result.level = this->level;
         result.good = this->good;
         result.lazy = this->lazy;
         result.nice = this->nice;
         result.chain = this->chain;
-        result.fastSkipHashing = this->fastSkipHashing;
+        result.level = this->level;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool compressionLevel::operator==(const T& ref) const
     {
-        if (level != ref.level) return false;
         if (good != ref.good) return false;
         if (lazy != ref.lazy) return false;
         if (nice != ref.nice) return false;
         if (chain != ref.chain) return false;
-        if (fastSkipHashing != ref.fastSkipHashing) return false;
+        if (level != ref.level) return false;
         return true;
     }
 
     std::ostream& compressionLevel::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << level;
-        os << " " << good;
+        os << "" << good;
         os << " " << lazy;
         os << " " << nice;
         os << " " << chain;
-        os << " " << fastSkipHashing;
+        os << " " << level;
         os << '}';
         return os;
     }
@@ -71,47 +76,96 @@ namespace golang::flate
     }
 
     gocpp::slice<compressionLevel> levels = gocpp::slice<compressionLevel> {
-        {0, 0, 0, 0, 0, /* NoCompression. */ 0},
-        {1, 0, 0, 0, 0, /* BestSpeed uses a custom algorithm; see deflatefast.go. */ 0},
-        // For levels 2-3 we don't bother trying with lazy matches.
-        {2, 4, 0, 16, 8, 5},
-        {3, 4, 0, 32, 32, 6},
-        // Levels 4-9 use increasingly more lazy matching
+        /* 0 */ {},
+        // Level 1-6 uses specialized algorithm - values not used
+        {0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 2},
+        {0, 0, 0, 0, 3},
+        {0, 0, 0, 0, 4},
+        {0, 0, 0, 0, 5},
+        {0, 0, 0, 0, 6},
+        // Levels 7-9 use increasingly more lazy matching
         // and increasingly stringent conditions for "good enough".
-        {4, 4, 4, 16, 16, skipNever},
-        {5, 8, 16, 32, 32, skipNever},
-        {6, 8, 16, 128, 128, skipNever},
-        {7, 8, 32, 128, 256, skipNever},
-        {8, 32, 128, 258, 1024, skipNever},
-        {9, 32, 258, 258, 4096, skipNever}
+        {8, 12, 16, 24, 7},
+        {16, 30, 40, 64, 8},
+        {32, 258, 258, 1024, 9}
     };
+    // advancedState contains state for levels 7-9, with bigger hash tables, etc.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    advancedState::operator T()
+    {
+        T result;
+        result.length = this->length;
+        result.offset = this->offset;
+        result.maxInsertIndex = this->maxInsertIndex;
+        result.chainHead = this->chainHead;
+        result.hashOffset = this->hashOffset;
+        result.literalCounter = this->literalCounter;
+        result.index = this->index;
+        result.hashMatch = this->hashMatch;
+        result.hashHead = this->hashHead;
+        result.hashPrev = this->hashPrev;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool advancedState::operator==(const T& ref) const
+    {
+        if (length != ref.length) return false;
+        if (offset != ref.offset) return false;
+        if (maxInsertIndex != ref.maxInsertIndex) return false;
+        if (chainHead != ref.chainHead) return false;
+        if (hashOffset != ref.hashOffset) return false;
+        if (literalCounter != ref.literalCounter) return false;
+        if (index != ref.index) return false;
+        if (hashMatch != ref.hashMatch) return false;
+        if (hashHead != ref.hashHead) return false;
+        if (hashPrev != ref.hashPrev) return false;
+        return true;
+    }
+
+    std::ostream& advancedState::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << length;
+        os << " " << offset;
+        os << " " << maxInsertIndex;
+        os << " " << chainHead;
+        os << " " << hashOffset;
+        os << " " << literalCounter;
+        os << " " << index;
+        os << " " << hashMatch;
+        os << " " << hashHead;
+        os << " " << hashPrev;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct advancedState& value)
+    {
+        return value.PrintTo(os);
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     compressor::operator T()
     {
         T result;
         result.compressionLevel = this->compressionLevel;
+        result.h = this->h;
         result.w = this->w;
-        result.bulkHasher = this->bulkHasher;
         result.fill = this->fill;
         result.step = this->step;
-        result.sync = this->sync;
-        result.bestSpeed = this->bestSpeed;
-        result.chainHead = this->chainHead;
-        result.hashHead = this->hashHead;
-        result.hashPrev = this->hashPrev;
-        result.hashOffset = this->hashOffset;
-        result.index = this->index;
         result.window = this->window;
         result.windowEnd = this->windowEnd;
         result.blockStart = this->blockStart;
-        result.byteAvailable = this->byteAvailable;
-        result.tokens = this->tokens;
-        result.length = this->length;
-        result.offset = this->offset;
-        result.maxInsertIndex = this->maxInsertIndex;
         result.err = this->err;
-        result.hashMatch = this->hashMatch;
+        result.tokens = this->tokens;
+        result.fast = this->fast;
+        result.state = this->state;
+        result.sync = this->sync;
+        result.byteAvailable = this->byteAvailable;
         return result;
     }
 
@@ -119,27 +173,19 @@ namespace golang::flate
     bool compressor::operator==(const T& ref) const
     {
         if (compressionLevel != ref.compressionLevel) return false;
+        if (h != ref.h) return false;
         if (w != ref.w) return false;
-        if (bulkHasher != ref.bulkHasher) return false;
         if (fill != ref.fill) return false;
         if (step != ref.step) return false;
-        if (sync != ref.sync) return false;
-        if (bestSpeed != ref.bestSpeed) return false;
-        if (chainHead != ref.chainHead) return false;
-        if (hashHead != ref.hashHead) return false;
-        if (hashPrev != ref.hashPrev) return false;
-        if (hashOffset != ref.hashOffset) return false;
-        if (index != ref.index) return false;
         if (window != ref.window) return false;
         if (windowEnd != ref.windowEnd) return false;
         if (blockStart != ref.blockStart) return false;
-        if (byteAvailable != ref.byteAvailable) return false;
-        if (tokens != ref.tokens) return false;
-        if (length != ref.length) return false;
-        if (offset != ref.offset) return false;
-        if (maxInsertIndex != ref.maxInsertIndex) return false;
         if (err != ref.err) return false;
-        if (hashMatch != ref.hashMatch) return false;
+        if (tokens != ref.tokens) return false;
+        if (fast != ref.fast) return false;
+        if (state != ref.state) return false;
+        if (sync != ref.sync) return false;
+        if (byteAvailable != ref.byteAvailable) return false;
         return true;
     }
 
@@ -147,27 +193,19 @@ namespace golang::flate
     {
         os << '{';
         os << "" << compressionLevel;
+        os << " " << h;
         os << " " << w;
-        os << " " << bulkHasher;
         os << " " << fill;
         os << " " << step;
-        os << " " << sync;
-        os << " " << bestSpeed;
-        os << " " << chainHead;
-        os << " " << hashHead;
-        os << " " << hashPrev;
-        os << " " << hashOffset;
-        os << " " << index;
         os << " " << window;
         os << " " << windowEnd;
         os << " " << blockStart;
-        os << " " << byteAvailable;
-        os << " " << tokens;
-        os << " " << length;
-        os << " " << offset;
-        os << " " << maxInsertIndex;
         os << " " << err;
-        os << " " << hashMatch;
+        os << " " << tokens;
+        os << " " << fast;
+        os << " " << state;
+        os << " " << sync;
+        os << " " << byteAvailable;
         os << '}';
         return os;
     }
@@ -177,13 +215,15 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
+    // fillDeflate will add b to the current window for levels 7-9.
     int rec::fillDeflate(compressor* d, gocpp::slice<unsigned char> b)
     {
-        if(d->index >= 2 * windowSize - (minMatchLength + maxMatchLength))
+        auto s = d->state;
+        if(s->index >= 2 * windowSize - (minMatchLength + maxMatchLength))
         {
             // shift the window by windowSize
-            copy(d->window, d->window.make_slice(windowSize, 2 * windowSize));
-            d->index -= windowSize;
+            copy(d->window.make_slice(0), d->window.make_slice(windowSize, 2 * windowSize));
+            s->index -= windowSize;
             d->windowEnd -= windowSize;
             if(d->blockStart >= windowSize)
             {
@@ -193,47 +233,33 @@ namespace golang::flate
             {
                 d->blockStart = math::MaxInt32;
             }
-            d->hashOffset += windowSize;
-            if(d->hashOffset > maxHashOffset)
+            s->hashOffset += windowSize;
+            if(s->hashOffset > maxHashOffset)
             {
-                auto delta = d->hashOffset - 1;
-                d->hashOffset -= delta;
-                d->chainHead -= delta;
-
-                // Iterate over slices instead of arrays to avoid copying
-                // the entire table onto the stack (Issue #18625).
-                for(auto [i, v] : d->hashPrev.make_slice(0))
+                auto delta = s->hashOffset - 1;
+                s->hashOffset -= delta;
+                s->chainHead -= delta;
+                // Note: range over &array to avoid copy (see go.dev/issue/18625).
+                for(auto [i, v] : gocpp::make_array_ptr(s->hashPrev))
                 {
-                    if(int(v) > delta)
-                    {
-                        d->hashPrev[i] = uint32_t(int(v) - delta);
-                    }
-                    else
-                    {
-                        d->hashPrev[i] = 0;
-                    }
+                    s->hashPrev[i] = gocpp::max(v - delta, 0);
                 }
-                for(auto [i, v] : d->hashHead.make_slice(0))
+                for(auto [i, v] : gocpp::make_array_ptr(s->hashHead))
                 {
-                    if(int(v) > delta)
-                    {
-                        d->hashHead[i] = uint32_t(int(v) - delta);
-                    }
-                    else
-                    {
-                        d->hashHead[i] = 0;
-                    }
+                    s->hashHead[i] = gocpp::max(v - delta, 0);
                 }
             }
         }
         auto n = copy(d->window.make_slice(d->windowEnd), b);
-        d->windowEnd += n;
+        d->windowEnd += int32_t(n);
         return n;
     }
 
-    gocpp::error rec::writeBlock(compressor* d, gocpp::slice<token> tokens, int index)
+    // writeBlock will write tokens to output.
+    // The provided index is where the block starts in d.window.
+    gocpp::error rec::writeBlock(compressor* d, tokens* tok, int32_t index, bool eof)
     {
-        if(index > 0)
+        if(index > 0 || eof)
         {
             gocpp::slice<unsigned char> window = {};
             if(d->blockStart <= index)
@@ -241,7 +267,39 @@ namespace golang::flate
                 window = d->window.make_slice(d->blockStart, index);
             }
             d->blockStart = index;
-            rec::writeBlock(gocpp::recv(d->w), tokens, false, window);
+            rec::writeBlockDynamic(gocpp::recv(d->w), tok, eof, window, d->sync);
+            return d->w->err;
+        }
+        return nullptr;
+    }
+
+    // writeBlockSkip writes the current block and uses the number of tokens
+    // to determine if the block should be stored when there are no matches, or
+    // only Huffman encoded.
+    gocpp::error rec::writeBlockSkip(compressor* d, tokens* tok, int32_t index, bool eof)
+    {
+        if(index > 0 || eof)
+        {
+            if(d->blockStart <= index)
+            {
+                auto window = d->window.make_slice(d->blockStart, index);
+                // If we removed less than a 64th of all literals
+                // we huffman compress the block.
+                if(int(tok->n) > len(window) - (len(window) >> 6))
+                {
+                    rec::writeBlockHuff(gocpp::recv(d->w), eof, window, d->sync);
+                }
+                else
+                {
+                    // Write a dynamic huffman block.
+                    rec::writeBlockDynamic(gocpp::recv(d->w), tok, eof, window, d->sync);
+                }
+            }
+            else
+            {
+                rec::writeBlock(gocpp::recv(d->w), tok, eof, nullptr);
+            }
+            d->blockStart = index;
             return d->w->err;
         }
         return nullptr;
@@ -250,105 +308,117 @@ namespace golang::flate
     // fillWindow will fill the current window with the supplied
     // dictionary and calculate all hashes.
     // This is much faster than doing a full encode.
-    // Should only be used after a reset.
+    // Should only be used after a start/reset.
     void rec::fillWindow(compressor* d, gocpp::slice<unsigned char> b)
     {
-        // Do not fill window if we are in store-only mode.
-        if(d->compressionLevel.level < 2)
+        // Do not fill window if we are in store-only or huffman mode.
+        if(d->compressionLevel.level <= 0)
         {
             return;
         }
-        if(d->index != 0 || d->windowEnd != 0)
+        if(d->fast != nullptr)
         {
-            gocpp::panic("internal error: fillWindow called with stale data"_s);
+            // encode the last data, but discard the result
+            if(len(b) > maxMatchOffset)
+            {
+                b = b.make_slice(len(b) - maxMatchOffset);
+            }
+            rec::encode(gocpp::recv(d->fast), & d->tokens, b);
+            rec::Reset(gocpp::recv(d->tokens));
+            return;
         }
-
+        auto s = d->state;
         // If we are given too much, cut it.
         if(len(b) > windowSize)
         {
             b = b.make_slice(len(b) - windowSize);
         }
         // Add all to window.
-        auto n = copy(d->window, b);
+        auto n = int32_t(copy(d->window.make_slice(d->windowEnd), b));
 
         // Calculate 256 hashes at the time (more L1 cache hits)
         auto loops = (n + 256 - minMatchLength) / 256;
-        for(auto j = 0; j < loops; j++)
+        for(auto [j, gocpp_ignored] : loops)
         {
-            auto index = j * 256;
-            auto end = index + 256 + minMatchLength - 1;
-            if(end > n)
-            {
-                end = n;
-            }
-            auto toCheck = d->window.make_slice(index, end);
-            auto dstSize = len(toCheck) - minMatchLength + 1;
+            auto startindex = j * 256;
+            auto end = gocpp::min(startindex + 256 + minMatchLength - 1, n);
+            auto tocheck = d->window.make_slice(startindex, end);
+            auto dstSize = len(tocheck) - minMatchLength + 1;
 
             if(dstSize <= 0)
             {
                 continue;
             }
 
-            auto dst = d->hashMatch.make_slice(0, dstSize);
-            d->bulkHasher(toCheck, dst);
+            auto dst = s->hashMatch.make_slice(0, dstSize);
+            bulkHash4(tocheck, dst);
+            uint32_t newH = {};
             for(auto [i, val] : dst)
             {
-                auto di = i + index;
-                auto hh = & d->hashHead[val & hashMask];
+                auto di = int32_t(i) + startindex;
+                newH = val & hashMask;
                 // Get previous value with the same hash.
                 // Our chain should point to the previous value.
-                d->hashPrev[di & windowMask] = *hh;
+                s->hashPrev[di & windowMask] = s->hashHead[newH];
                 // Set the head of the hash chain to us.
-                *hh = uint32_t(di + d->hashOffset);
+                s->hashHead[newH] = di + s->hashOffset;
             }
         }
         // Update window information.
-        d->windowEnd = n;
-        d->index = n;
+        d->windowEnd += n;
+        s->index = n;
     }
 
-    // Try to find a match starting at index whose length is greater than prevSize.
-    // We only look at chainCount possibilities before giving up.
-    std::tuple<int, int, bool> rec::findMatch(compressor* d, int pos, int prevHead, int prevLength, int lookahead)
+    // findMatch finds the longest match starting at pos in the hash chain starting
+    // at prevHead. It searches up to d.chain entries in the chain.
+    std::tuple<int32_t, int32_t, bool> rec::findMatch(compressor* d, int32_t pos, int32_t prevHead, int32_t lookahead)
     {
-        int length;
-        int offset;
+        int32_t length;
+        int32_t offset;
         bool ok;
-        auto minMatchLook = maxMatchLength;
-        if(lookahead < minMatchLook)
-        {
-            minMatchLook = lookahead;
-        }
+        auto minMatchLook = gocpp::min(lookahead, maxMatchLength);
 
         auto win = d->window.make_slice(0, pos + minMatchLook);
 
         // We quit when we get a match that's at least nice long
-        auto nice = len(win) - pos;
-        if(d->compressionLevel.nice < nice)
-        {
-            nice = d->compressionLevel.nice;
-        }
+        auto nice = gocpp::min(d->compressionLevel.nice, int32_t(len(win)) - pos);
 
         // If we've got a match that's good enough, only look in 1/4 the chain.
         auto tries = d->compressionLevel.chain;
-        length = prevLength;
-        if(length >= d->compressionLevel.good)
-        {
-            tries >>= 2;
-        }
+        length = minMatchLength - 1;
 
         auto wEnd = win[pos + length];
         auto wPos = win.make_slice(pos);
-        auto minIndex = pos - windowSize;
+        auto minIndex = gocpp::max(pos - windowSize, 0);
+        offset = 0;
+
+        // Minimum gain to accept a match.
+        auto cGain = 4;
+
+        // Some like it higher (CSV), some like it lower (JSON)
+        // Base is 4 bytes at with an additional cost.
+        // Matches must be better than this.
+        auto baseCost = 3;
+
+
 
         for(auto i = prevHead; tries > 0; tries--)
         {
             if(wEnd == win[i + length])
             {
-                auto n = flate::matchLen(win.make_slice(i), wPos, minMatchLook);
-
-                if(n > length && (n > minMatchLength || pos - i <= 4096))
+                auto n = int32_t(matchLen(win.make_slice(i, i + minMatchLook), wPos));
+                if(n > length)
                 {
+                    if(d->compressionLevel.chain >= 100)
+                    {
+                        // Calculate gain. Estimates the gains of the new match compared to emitting as literals.
+                        auto newGain = rec::bitLengthRaw(gocpp::recv(d->h), wPos.make_slice(0, n)) - int(offsetExtraBits[offsetCode(uint32_t(pos - i))]) - baseCost - int(lengthExtraBits[lengthCodes[(n - 3) & 255]]);
+                        if(newGain <= cGain)
+                        {
+                            goto next;
+                        }
+                        cGain = newGain;
+                    }
                     length = n;
                     offset = pos - i;
                     ok = true;
@@ -360,13 +430,14 @@ namespace golang::flate
                     wEnd = win[pos + n];
                 }
             }
-            if(i == minIndex)
+            next:
+            if(i <= minIndex)
             {
                 // hashPrev[i & windowMask] has already been overwritten, so stop now.
                 break;
             }
-            i = int(d->hashPrev[i & windowMask]) - d->hashOffset;
-            if(i < minIndex || i < 0)
+            i = d->state->hashPrev[i & windowMask] - d->state->hashOffset;
+            if(i < minIndex)
             {
                 break;
             }
@@ -374,6 +445,7 @@ namespace golang::flate
         return {length, offset, ok};
     }
 
+    // writeStoredBlock writes an uncompressed block to the stream.
     gocpp::error rec::writeStoredBlock(compressor* d, gocpp::slice<unsigned char> buf)
     {
         if(rec::writeStoredHeader(gocpp::recv(d->w), len(buf), false); d->w->err != nullptr)
@@ -389,145 +461,216 @@ namespace golang::flate
     // The caller must ensure that len(b) >= 4.
     uint32_t hash4(gocpp::slice<unsigned char> b)
     {
-        return ((uint32_t(b[3]) | (uint32_t(b[2]) << 8) | (uint32_t(b[1]) << 16) | (uint32_t(b[0]) << 24)) * hashmul) >> (32 - hashBits);
+        return hash4u(loadLE32(b, 0), hashBits);
     }
 
-    // bulkHash4 will compute hashes using the same
-    // algorithm as hash4.
+    // hash4 returns the hash of u to fit in a hash table with h bits.
+    // Preferably h should be a constant and should always be <32.
+    uint32_t hash4u(uint32_t u, uint8_t h)
+    {
+        return (u * prime4bytes) >> (32 - h);
+    }
+
+    // bulkHash4 sets dst[i] = hash4(b[i:i+4]) for all i <= len(b)-4.
     void bulkHash4(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> dst)
     {
-        if(len(b) < minMatchLength)
+        if(len(b) < 4)
         {
             return;
         }
-        auto hb = uint32_t(b[3]) | (uint32_t(b[2]) << 8) | (uint32_t(b[1]) << 16) | (uint32_t(b[0]) << 24);
-        dst[0] = (hb * hashmul) >> (32 - hashBits);
-        auto end = len(b) - minMatchLength + 1;
+        auto hb = loadLE32(b, 0);
+
+        dst[0] = hash4u(hb, hashBits);
+        auto end = len(b) - 4 + 1;
         for(auto i = 1; i < end; i++)
         {
-            hb = (hb << 8) | uint32_t(b[i + 3]);
-            dst[i] = (hb * hashmul) >> (32 - hashBits);
+            hb = (hb >> 8) | (uint32_t(b[i + 3]) << 24);
+            dst[i] = hash4u(hb, hashBits);
         }
     }
 
-    // matchLen returns the number of matching bytes in a and b
-    // up to length 'max'. Both slices must be at least 'max'
-    // bytes in size.
-    int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, int max)
-    {
-        a = a.make_slice(0, max);
-        b = b.make_slice(0, len(a));
-        for(auto [i, av] : a)
-        {
-            if(b[i] != av)
-            {
-                return i;
-            }
-        }
-        return max;
-    }
-
-    // encSpeed will compress and store the currently added data,
-    // if enough has been accumulated or we at the end of the stream.
-    // Any error that occurred will be in d.err
-    void rec::encSpeed(compressor* d)
-    {
-        // We only compress if we have maxStoreBlockSize.
-        if(d->windowEnd < maxStoreBlockSize)
-        {
-            if(! d->sync)
-            {
-                return;
-            }
-
-            // Handle small sizes.
-            if(d->windowEnd < 128)
-            {
-                //Go switch emulation
-                {
-                    int conditionId = -1;
-                    if(d->windowEnd == 0) { conditionId = 0; }
-                    else if(d->windowEnd <= 16) { conditionId = 1; }
-                    switch(conditionId)
-                    {
-                        case 0:
-                            return;
-                            break;
-                        case 1:
-                            d->err = rec::writeStoredBlock(gocpp::recv(d), d->window.make_slice(0, d->windowEnd));
-                            break;
-                        default:
-                            rec::writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd));
-                            d->err = d->w->err;
-                            break;
-                    }
-                }
-                d->windowEnd = 0;
-                rec::reset(gocpp::recv(d->bestSpeed));
-                return;
-            }
-        }
-        // Encode the block.
-        d->tokens = rec::encode(gocpp::recv(d->bestSpeed), d->tokens.make_slice(0, 0), d->window.make_slice(0, d->windowEnd));
-
-        // If we removed less than 1/16th, Huffman compress the block.
-        if(len(d->tokens) > d->windowEnd - (d->windowEnd >> 4))
-        {
-            rec::writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd));
-        }
-        else
-        {
-            rec::writeBlockDynamic(gocpp::recv(d->w), d->tokens, false, d->window.make_slice(0, d->windowEnd));
-        }
-        d->err = d->w->err;
-        d->windowEnd = 0;
-    }
-
+    // initDeflate initializes d for levels 7-9.
     void rec::initDeflate(compressor* d)
     {
         d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 2 * windowSize);
-        d->hashOffset = 1;
-        d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<token>>(), 0, maxFlateBlockTokens + 1);
-        d->length = minMatchLength - 1;
-        d->offset = 0;
         d->byteAvailable = false;
-        d->index = 0;
-        d->chainHead = - 1;
-        d->bulkHasher = bulkHash4;
-    }
-
-    void rec::deflate(compressor* d)
-    {
-        if(d->windowEnd - d->index < minMatchLength + maxMatchLength && ! d->sync)
+        d->err = nullptr;
+        if(d->state == nullptr)
         {
             return;
         }
+        auto s = d->state;
+        s->index = 0;
+        s->hashOffset = 1;
+        s->length = minMatchLength - 1;
+        s->offset = 0;
+        s->chainHead = - 1;
+    }
 
-        d->maxInsertIndex = d->windowEnd - (minMatchLength - 1);
+    // tryBetterMatchAtEnd checks whether a better match exists at the end of the
+    // previous match and, if so, emits the skipped literals and adjusts the match.
+    // Returns the (possibly updated) prevLength and prevOffset.
+    std::tuple<int32_t, int32_t> rec::tryBetterMatchAtEnd(compressor* d, int32_t prevLength, int32_t prevOffset, int32_t lookahead)
+    {
+        int32_t newLen;
+        int32_t newOff;
+        // We start checking at checkOff from the current match position.
+        // This allows up to two additional literals, but that could be
+        // compensated by a higher quality match.
+        // If the match looks better, we extend backwards.
+        auto checkOff = 2;
+        auto s = d->state;
 
-        Loop:
-        for(; ; )
+        if(prevLength >= maxMatchLength - checkOff)
         {
-            if(false) {
-            Loop_continue:
-                continue;
-            Loop_break:
+            return {prevLength, prevOffset};
+        }
+        auto prevIndex = s->index - 1;
+        if(prevIndex + prevLength >= s->maxInsertIndex)
+        {
+            return {prevLength, prevOffset};
+        }
+
+        auto end = gocpp::min(lookahead, maxMatchLength + checkOff) + prevIndex;
+        auto minIndex = gocpp::max(s->index - windowSize, 0);
+
+        auto h = hash4(d->window.make_slice(prevIndex + prevLength));
+        auto ch2 = s->hashHead[h] - s->hashOffset - prevLength;
+        if(prevIndex - ch2 == prevOffset || ch2 <= minIndex + checkOff)
+        {
+            return {prevLength, prevOffset};
+        }
+
+        auto length = int32_t(matchLen(d->window.make_slice(prevIndex + checkOff, end), d->window.make_slice(ch2 + checkOff)));
+        if(length <= prevLength)
+        {
+            return {prevLength, prevOffset};
+        }
+
+        prevLength = length;
+        prevOffset = prevIndex - ch2;
+
+        for(auto i = int32_t(checkOff - 1); i >= 0; i--)
+        {
+            if(prevLength >= maxMatchLength || d->window[prevIndex + i] != d->window[ch2 + i])
+            {
+                for(auto [j, gocpp_ignored] : i + 1)
+                {
+                    rec::AddLiteral(gocpp::recv(d->tokens), d->window[prevIndex + j]);
+                    if(d->tokens.n == maxFlateBlockTokens)
+                    {
+                        if(d->err = rec::writeBlock(gocpp::recv(d), & d->tokens, s->index, false); d->err != nullptr)
+                        {
+                            return {prevLength, prevOffset};
+                        }
+                        rec::Reset(gocpp::recv(d->tokens));
+                    }
+                    s->index++;
+                    if(s->index < s->maxInsertIndex)
+                    {
+                        auto h = hash4(d->window.make_slice(s->index));
+                        auto ch = s->hashHead[h];
+                        s->chainHead = ch;
+                        s->hashPrev[s->index & windowMask] = ch;
+                        s->hashHead[h] = s->index + s->hashOffset;
+                    }
+                }
                 break;
             }
-            if(d->index > d->windowEnd)
+            prevLength++;
+        }
+        return {prevLength, prevOffset};
+    }
+
+    // skipLiterals emits extra literal bytes during long runs of incompressible data,
+    // skipping ahead to avoid futile match searches. Returns false on write error.
+    bool rec::skipLiterals(compressor* d)
+    {
+        auto s = d->state;
+        auto n = int32_t(s->literalCounter) - d->compressionLevel.chain;
+        if(n <= 0)
+        {
+            return true;
+        }
+        n = 1 + (n >> 6);
+        for(const auto& _ : n)
+        {
+            if(s->index >= d->windowEnd - 1)
             {
-                gocpp::panic("index > windowEnd"_s);
+                break;
             }
-            auto lookahead = d->windowEnd - d->index;
+            rec::AddLiteral(gocpp::recv(d->tokens), d->window[s->index - 1]);
+            if(d->tokens.n == maxFlateBlockTokens)
+            {
+                if(d->err = rec::writeBlock(gocpp::recv(d), & d->tokens, s->index, false); d->err != nullptr)
+                {
+                    return false;
+                }
+                rec::Reset(gocpp::recv(d->tokens));
+            }
+            if(s->index < s->maxInsertIndex)
+            {
+                auto h = hash4(d->window.make_slice(s->index));
+                auto ch = s->hashHead[h];
+                s->chainHead = ch;
+                s->hashPrev[s->index & windowMask] = ch;
+                s->hashHead[h] = s->index + s->hashOffset;
+            }
+            s->index++;
+        }
+        rec::AddLiteral(gocpp::recv(d->tokens), d->window[s->index - 1]);
+        d->byteAvailable = false;
+        if(d->tokens.n == maxFlateBlockTokens)
+        {
+            if(d->err = rec::writeBlock(gocpp::recv(d), & d->tokens, s->index, false); d->err != nullptr)
+            {
+                return false;
+            }
+            rec::Reset(gocpp::recv(d->tokens));
+        }
+        return true;
+    }
+
+    // deflateLazy encodes the current window using lazy matching.
+    // Lazy matching defers emitting a match to see if the next position yields a better one.
+    // Unique to levels 7-9 is that more than 2 matches are potentially checked
+    // until a good/nice one is found.
+    void rec::deflateLazy(compressor* d)
+    {
+        auto s = d->state;
+
+        if(d->windowEnd - s->index < minMatchLength + maxMatchLength && ! d->sync)
+        {
+            return;
+        }
+        if(d->windowEnd != s->index && d->compressionLevel.chain > 100)
+        {
+            // Get literal huffman coder.
+            // This is used to estimate the cost of emitting a literal.
+            if(d->h == nullptr)
+            {
+                d->h = newHuffmanEncoder(maxFlateBlockTokens);
+            }
+            gocpp::array<uint16_t, 256> tmp = {};
+            auto toIndex = d->window.make_slice(s->index, d->windowEnd);
+            toIndex = toIndex.make_slice(0, gocpp::min(len(toIndex), maxFlateBlockTokens));
+            for(auto [gocpp_ignored, v] : toIndex)
+            {
+                tmp[v]++;
+            }
+            rec::generate(gocpp::recv(d->h), tmp.make_slice(0), 15);
+        }
+
+        s->maxInsertIndex = d->windowEnd - (minMatchLength - 1);
+
+        for(; ; )
+        {
+            auto lookahead = d->windowEnd - s->index;
             if(lookahead < minMatchLength + maxMatchLength)
             {
                 if(! d->sync)
                 {
-                    goto Loop_break;
-                }
-                if(d->index > d->windowEnd)
-                {
-                    gocpp::panic("index > windowEnd"_s);
+                    return;
                 }
                 if(lookahead == 0)
                 {
@@ -535,150 +678,124 @@ namespace golang::flate
                     if(d->byteAvailable)
                     {
                         // There is still one pending token that needs to be flushed
-                        d->tokens = append(d->tokens, literalToken(uint32_t(d->window[d->index - 1])));
+                        rec::AddLiteral(gocpp::recv(d->tokens), d->window[s->index - 1]);
                         d->byteAvailable = false;
                     }
-                    if(len(d->tokens) > 0)
+                    if(d->tokens.n > 0)
                     {
-                        if(d->err = rec::writeBlock(gocpp::recv(d), d->tokens, d->index); d->err != nullptr)
+                        if(d->err = rec::writeBlock(gocpp::recv(d), & d->tokens, s->index, false); d->err != nullptr)
                         {
                             return;
                         }
-                        d->tokens = d->tokens.make_slice(0, 0);
+                        rec::Reset(gocpp::recv(d->tokens));
                     }
-                    goto Loop_break;
+                    return;
                 }
             }
-            if(d->index < d->maxInsertIndex)
+            if(s->index < s->maxInsertIndex)
             {
-                // Update the hash
-                auto hash = hash4(d->window.make_slice(d->index, d->index + minMatchLength));
-                auto hh = & d->hashHead[hash & hashMask];
-                d->chainHead = int(*hh);
-                d->hashPrev[d->index & windowMask] = uint32_t(d->chainHead);
-                *hh = uint32_t(d->index + d->hashOffset);
+                auto h = hash4(d->window.make_slice(s->index));
+                auto ch = s->hashHead[h];
+                s->chainHead = ch;
+                s->hashPrev[s->index & windowMask] = ch;
+                s->hashHead[h] = s->index + s->hashOffset;
             }
-            auto prevLength = d->length;
-            auto prevOffset = d->offset;
-            d->length = minMatchLength - 1;
-            d->offset = 0;
-            auto minIndex = d->index - windowSize;
-            if(minIndex < 0)
+            auto prevLength = s->length;
+            auto prevOffset = s->offset;
+            s->length = minMatchLength - 1;
+            s->offset = 0;
+            auto minIndex = gocpp::max(s->index - windowSize, 0);
+
+            if(s->chainHead - s->hashOffset >= minIndex && lookahead > prevLength && prevLength < d->compressionLevel.lazy)
             {
-                minIndex = 0;
+                if(auto [newLength, newOffset, ok] = rec::findMatch(gocpp::recv(d), s->index, s->chainHead - s->hashOffset, lookahead); ok)
+                {
+                    s->length = newLength;
+                    s->offset = newOffset;
+                }
             }
 
-            if(d->chainHead - d->hashOffset >= minIndex &&
-                        (d->compressionLevel.fastSkipHashing != skipNever && lookahead > minMatchLength - 1 ||
-                            d->compressionLevel.fastSkipHashing == skipNever && lookahead > prevLength && prevLength < d->compressionLevel.lazy))
+            if(prevLength >= minMatchLength && s->length <= prevLength)
             {
-                if(auto [newLength, newOffset, ok] = rec::findMatch(gocpp::recv(d), d->index, d->chainHead - d->hashOffset, minMatchLength - 1, lookahead); ok)
+                std::tie(prevLength, prevOffset) = rec::tryBetterMatchAtEnd(gocpp::recv(d), prevLength, prevOffset, lookahead);
+                if(d->err != nullptr)
                 {
-                    d->length = newLength;
-                    d->offset = newOffset;
+                    return;
                 }
-            }
-            if(d->compressionLevel.fastSkipHashing != skipNever && d->length >= minMatchLength ||
-                        d->compressionLevel.fastSkipHashing == skipNever && prevLength >= minMatchLength && d->length <= prevLength)
-            {
+
                 // There was a match at the previous step, and the current match is
                 // not better. Output the previous match.
-                if(d->compressionLevel.fastSkipHashing != skipNever)
-                {
-                    d->tokens = append(d->tokens, matchToken(uint32_t(d->length - baseMatchLength), uint32_t(d->offset - baseMatchOffset)));
-                }
-                else
-                {
-                    d->tokens = append(d->tokens, matchToken(uint32_t(prevLength - baseMatchLength), uint32_t(prevOffset - baseMatchOffset)));
-                }
+                rec::AddMatch(gocpp::recv(d->tokens), uint32_t(prevLength - 3), uint32_t(prevOffset - minOffsetSize));
+
                 // Insert in the hash table all strings up to the end of the match.
                 // index and index-1 are already inserted. If there is not enough
                 // lookahead, the last two strings are not inserted into the hash
                 // table.
-                if(d->length <= d->compressionLevel.fastSkipHashing)
+                auto newIndex = s->index + prevLength - 1;
+                auto end = gocpp::min(newIndex, s->maxInsertIndex);
+                end += minMatchLength - 1;
+                auto startindex = gocpp::min(s->index + 1, s->maxInsertIndex);
+                auto tocheck = d->window.make_slice(startindex, end);
+                auto dstSize = len(tocheck) - minMatchLength + 1;
+                if(dstSize > 0)
                 {
-                    int newIndex = {};
-                    if(d->compressionLevel.fastSkipHashing != skipNever)
+                    auto dst = s->hashMatch.make_slice(0, dstSize);
+                    bulkHash4(tocheck, dst);
+                    uint32_t newH = {};
+                    for(auto [i, val] : dst)
                     {
-                        newIndex = d->index + d->length;
+                        auto di = int32_t(i) + startindex;
+                        newH = val & hashMask;
+                        s->hashPrev[di & windowMask] = s->hashHead[newH];
+                        s->hashHead[newH] = di + s->hashOffset;
                     }
-                    else
-                    {
-                        newIndex = d->index + prevLength - 1;
-                    }
-                    auto index = d->index;
-                    for(index++; index < newIndex; index++)
-                    {
-                        if(index < d->maxInsertIndex)
-                        {
-                            auto hash = hash4(d->window.make_slice(index, index + minMatchLength));
-                            // Get previous value with the same hash.
-                            // Our chain should point to the previous value.
-                            auto hh = & d->hashHead[hash & hashMask];
-                            d->hashPrev[index & windowMask] = *hh;
-                            // Set the head of the hash chain to us.
-                            *hh = uint32_t(index + d->hashOffset);
-                        }
-                    }
-                    d->index = index;
+                }
 
-                    if(d->compressionLevel.fastSkipHashing == skipNever)
-                    {
-                        d->byteAvailable = false;
-                        d->length = minMatchLength - 1;
-                    }
-                }
-                else
+                s->index = newIndex;
+                d->byteAvailable = false;
+                s->length = minMatchLength - 1;
+                if(d->tokens.n == maxFlateBlockTokens)
                 {
-                    // For matches this long, we don't bother inserting each individual
-                    // item into the table.
-                    d->index += d->length;
-                }
-                if(len(d->tokens) == maxFlateBlockTokens)
-                {
-                    // The block includes the current character
-                    if(d->err = rec::writeBlock(gocpp::recv(d), d->tokens, d->index); d->err != nullptr)
+                    if(d->err = rec::writeBlock(gocpp::recv(d), & d->tokens, s->index, false); d->err != nullptr)
                     {
                         return;
                     }
-                    d->tokens = d->tokens.make_slice(0, 0);
+                    rec::Reset(gocpp::recv(d->tokens));
+                }
+                s->literalCounter = 0;
+                continue;
+            }
+            if(s->length >= minMatchLength)
+            {
+                s->literalCounter = 0;
+            }
+            if(d->byteAvailable)
+            {
+                s->literalCounter++;
+                rec::AddLiteral(gocpp::recv(d->tokens), d->window[s->index - 1]);
+                if(d->tokens.n == maxFlateBlockTokens)
+                {
+                    if(d->err = rec::writeBlock(gocpp::recv(d), & d->tokens, s->index, false); d->err != nullptr)
+                    {
+                        return;
+                    }
+                    rec::Reset(gocpp::recv(d->tokens));
+                }
+                s->index++;
+                if(! rec::skipLiterals(gocpp::recv(d)))
+                {
+                    return;
                 }
             }
             else
             {
-                if(d->compressionLevel.fastSkipHashing != skipNever || d->byteAvailable)
-                {
-                    auto i = d->index - 1;
-                    if(d->compressionLevel.fastSkipHashing != skipNever)
-                    {
-                        i = d->index;
-                    }
-                    d->tokens = append(d->tokens, literalToken(uint32_t(d->window[i])));
-                    if(len(d->tokens) == maxFlateBlockTokens)
-                    {
-                        if(d->err = rec::writeBlock(gocpp::recv(d), d->tokens, i + 1); d->err != nullptr)
-                        {
-                            return;
-                        }
-                        d->tokens = d->tokens.make_slice(0, 0);
-                    }
-                }
-                d->index++;
-                if(d->compressionLevel.fastSkipHashing == skipNever)
-                {
-                    d->byteAvailable = true;
-                }
+                s->index++;
+                d->byteAvailable = true;
             }
         }
     }
 
-    int rec::fillStore(compressor* d, gocpp::slice<unsigned char> b)
-    {
-        auto n = copy(d->window.make_slice(d->windowEnd), b);
-        d->windowEnd += n;
-        return n;
-    }
-
+    // store will store the current window if it has filled or if we are in sync.
     void rec::store(compressor* d)
     {
         if(d->windowEnd > 0 && (d->windowEnd == maxStoreBlockSize || d->sync))
@@ -688,20 +805,88 @@ namespace golang::flate
         }
     }
 
-    // storeHuff compresses and stores the currently added data
-    // when the d.window is full or we are at the end of the stream.
-    // Any error that occurred will be in d.err
-    void rec::storeHuff(compressor* d)
+    // fillBlock appends b to d.window, returning the number of bytes copied.
+    // If n < len(b), the window is filled.
+    int rec::fillBlock(compressor* d, gocpp::slice<unsigned char> b)
     {
-        if(d->windowEnd < len(d->window) && ! d->sync || d->windowEnd == 0)
+        auto n = copy(d->window.make_slice(d->windowEnd), b);
+        d->windowEnd += int32_t(n);
+        return n;
+    }
+
+    // deflateHuff compresses and stores the current window
+    // (if it has filled or if we are in sync or flush).
+    // It uses Huffman-only encoding.
+    void rec::deflateHuff(compressor* d)
+    {
+        if(int(d->windowEnd) < len(d->window) && ! d->sync || d->windowEnd == 0)
         {
             return;
         }
-        rec::writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd));
+        rec::writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd), d->sync);
         d->err = d->w->err;
         d->windowEnd = 0;
     }
 
+    // deflateFast encodes the current window
+    // if it has filled or if we are doing sync/flush.
+    // It uses the level 1-6 fast encoding.
+    void rec::deflateFast(compressor* d)
+    {
+        // We only compress if we have maxStoreBlockSize.
+        if(int(d->windowEnd) < len(d->window))
+        {
+            if(! d->sync)
+            {
+                return;
+            }
+            // Handle extremely small sizes.
+            if(d->windowEnd < 128)
+            {
+                if(d->windowEnd == 0)
+                {
+                    return;
+                }
+                if(d->windowEnd <= 32)
+                {
+                    d->err = rec::writeStoredBlock(gocpp::recv(d), d->window.make_slice(0, d->windowEnd));
+                }
+                else
+                {
+                    rec::writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd), true);
+                    d->err = d->w->err;
+                }
+                rec::Reset(gocpp::recv(d->tokens));
+                d->windowEnd = 0;
+                rec::reset(gocpp::recv(d->fast));
+                return;
+            }
+        }
+
+        rec::encode(gocpp::recv(d->fast), & d->tokens, d->window.make_slice(0, d->windowEnd));
+        // If we made zero matches, store the block as is.
+        if(d->tokens.n == 0)
+        {
+            d->err = rec::writeStoredBlock(gocpp::recv(d), d->window.make_slice(0, d->windowEnd));
+        }
+        else
+        // If we removed less than 1/16th, huffman compress the block.
+        if(int32_t(d->tokens.n) > d->windowEnd - (d->windowEnd >> 4))
+        {
+            rec::writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd), d->sync);
+            d->err = d->w->err;
+        }
+        else
+        {
+            rec::writeBlockDynamic(gocpp::recv(d->w), & d->tokens, false, d->window.make_slice(0, d->windowEnd), d->sync);
+            d->err = d->w->err;
+        }
+        rec::Reset(gocpp::recv(d->tokens));
+        d->windowEnd = 0;
+    }
+
+    // write adds b to the compressor.
+    // It can only return a short length if an error occurs.
     std::tuple<int, gocpp::error> rec::write(compressor* d, gocpp::slice<unsigned char> b)
     {
         int n;
@@ -713,16 +898,22 @@ namespace golang::flate
         n = len(b);
         for(; len(b) > 0; )
         {
-            d->step(d);
+            if(int(d->windowEnd) == len(d->window) || d->sync)
+            {
+                d->step(d);
+            }
             b = b.make_slice(d->fill(d, b));
             if(d->err != nullptr)
             {
                 return {0, d->err};
             }
         }
-        return {n, nullptr};
+        return {n, d->err};
     }
 
+    // syncFlush will flush the compressor by writing
+    // any remaining window and writing a stored block
+    // to byte-align the output.
     gocpp::error rec::syncFlush(compressor* d)
     {
         if(d->err != nullptr)
@@ -741,6 +932,7 @@ namespace golang::flate
         return d->err;
     }
 
+    // init a new encode with new writer and compression level.
     gocpp::error rec::init(compressor* d, io::Writer w, int level)
     {
         gocpp::error err;
@@ -751,88 +943,82 @@ namespace golang::flate
             int conditionId = -1;
             if(level == NoCompression) { conditionId = 0; }
             else if(level == HuffmanOnly) { conditionId = 1; }
-            else if(level == BestSpeed) { conditionId = 2; }
-            else if(level == DefaultCompression) { conditionId = 3; }
-            else if(2 <= level && level <= 9) { conditionId = 4; }
+            else if(level == DefaultCompression) { conditionId = 2; }
+            else if(1 <= level && level <= 6) { conditionId = 3; }
+            else if(7 <= level && level <= 9) { conditionId = 4; }
             switch(conditionId)
             {
                 case 0:
                     d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), maxStoreBlockSize);
-                    d->fill = [&](auto x, auto y){ return rec::fillStore(x, y); };
+                    d->fill = [&](auto x, auto y){ return rec::fillBlock(x, y); };
                     d->step = [&](auto x){ return rec::store(x); };
                     break;
                 case 1:
-                    d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), maxStoreBlockSize);
-                    d->fill = [&](auto x, auto y){ return rec::fillStore(x, y); };
-                    d->step = [&](auto x){ return rec::storeHuff(x); };
+                    d->w->logNewTablePenalty = 10;
+                    d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 32 << 10);
+                    d->fill = [&](auto x, auto y){ return rec::fillBlock(x, y); };
+                    d->step = [&](auto x){ return rec::deflateHuff(x); };
                     break;
                 case 2:
-                    d->compressionLevel = levels[level];
-                    d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), maxStoreBlockSize);
-                    d->fill = [&](auto x, auto y){ return rec::fillStore(x, y); };
-                    d->step = [&](auto x){ return rec::encSpeed(x); };
-                    d->bestSpeed = newDeflateFast();
-                    d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<token>>(), maxStoreBlockSize);
-                    break;
-                case 3:
                     level = 6;
+                case 3:
+                    d->w->logNewTablePenalty = 7;
+                    d->fast = newFastEnc(level);
+                    d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), maxStoreBlockSize);
+                    d->fill = [&](auto x, auto y){ return rec::fillBlock(x, y); };
+                    d->step = [&](auto x){ return rec::deflateFast(x); };
+                    break;
                 case 4:
+                    d->w->logNewTablePenalty = 8;
+                    d->state = new advancedState {};
                     d->compressionLevel = levels[level];
                     rec::initDeflate(gocpp::recv(d));
                     d->fill = [&](auto x, auto y){ return rec::fillDeflate(x, y); };
-                    d->step = [&](auto x){ return rec::deflate(x); };
+                    d->step = [&](auto x){ return rec::deflateLazy(x); };
                     break;
                 default:
                     return mocklib::Errorf("flate: invalid compression level %d: want value in range [-2, 9]"_s, level);
                     break;
             }
         }
+        d->compressionLevel.level = level;
         return nullptr;
     }
 
+    // reset resets the compressor with a new output writer.
     void rec::reset(compressor* d, io::Writer w)
     {
         rec::reset(gocpp::recv(d->w), w);
         d->sync = false;
         d->err = nullptr;
-        //Go switch emulation
+        d->windowEnd = 0;
+        // We only need to reset a few things for fast encoders.
+        if(d->fast != nullptr)
         {
-            auto condition = d->compressionLevel.level;
-            int conditionId = -1;
-            if(condition == NoCompression) { conditionId = 0; }
-            else if(condition == BestSpeed) { conditionId = 1; }
-            switch(conditionId)
-            {
-                case 0:
-                    d->windowEnd = 0;
-                    break;
-                case 1:
-                    d->windowEnd = 0;
-                    d->tokens = d->tokens.make_slice(0, 0);
-                    rec::reset(gocpp::recv(d->bestSpeed));
-                    break;
-                default:
-                    d->chainHead = - 1;
-                    for(auto [i, gocpp_ignored] : d->hashHead)
-                    {
-                        d->hashHead[i] = 0;
-                    }
-                    for(auto [i, gocpp_ignored] : d->hashPrev)
-                    {
-                        d->hashPrev[i] = 0;
-                    }
-                    d->hashOffset = 1;
-                    std::tie(d->index, d->windowEnd) = std::tuple{0, 0};
-                    std::tie(d->blockStart, d->byteAvailable) = std::tuple{0, false};
-                    d->tokens = d->tokens.make_slice(0, 0);
-                    d->length = minMatchLength - 1;
-                    d->offset = 0;
-                    d->maxInsertIndex = 0;
-                    break;
-            }
+            rec::reset(gocpp::recv(d->fast));
+            rec::Reset(gocpp::recv(d->tokens));
+            return;
         }
+        if(d->compressionLevel.chain == 0)
+        {
+            return;
+        }
+        auto s = d->state;
+        s->chainHead = - 1;
+        clear(s->hashHead.make_slice(0));
+        clear(s->hashPrev.make_slice(0));
+        s->hashOffset = 1;
+        s->index = 0;
+        std::tie(d->blockStart, d->byteAvailable) = std::tuple{0, false};
+        rec::Reset(gocpp::recv(d->tokens));
+        s->length = minMatchLength - 1;
+        s->offset = 0;
+        s->literalCounter = 0;
+        s->maxInsertIndex = 0;
     }
 
+    gocpp::error errWriterClosed = errors::New("flate: closed writer"_s);
+    // close flushes any uncompressed data and writes an EOF block.
     gocpp::error rec::close(compressor* d)
     {
         if(d->err == errWriterClosed)
@@ -859,6 +1045,7 @@ namespace golang::flate
             return d->w->err;
         }
         d->err = errWriterClosed;
+        rec::reset(gocpp::recv(d->w), nullptr);
         return nullptr;
     }
 
@@ -874,6 +1061,10 @@ namespace golang::flate
     //
     // If level is in the range [-2, 9] then the error returned will be nil.
     // Otherwise the error returned will be non-nil.
+    //
+    // Note that the exact bytes written to w are not covered by the Go 1
+    // compatibility promise. Callers, including tests, should not depend on the
+    // exact written bytes.
     std::tuple<Writer*, gocpp::error> NewWriter(io::Writer w, int level)
     {
         Writer dw = {};
@@ -888,59 +1079,25 @@ namespace golang::flate
     // [Writer] with a preset dictionary. The returned [Writer] behaves
     // as if the dictionary had been written to it without producing
     // any compressed output. The compressed data written to w
-    // can only be decompressed by a [Reader] initialized with the
-    // same dictionary.
+    // can only be decompressed by a reader initialized with the
+    // same dictionary (see [NewReaderDict]).
+    //
+    // Note that the exact bytes written to w are not covered by the Go 1
+    // compatibility promise. Callers, including tests, should not depend on the
+    // exact written bytes.
     std::tuple<Writer*, gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
     {
-        auto dw = new dictWriter {w};
-        auto [zw, err] = NewWriter(dw, level);
+        auto [zw, err] = NewWriter(w, level);
         if(err != nullptr)
         {
             return {nullptr, err};
         }
         rec::fillWindow(gocpp::recv(zw->d), dict);
-        // duplicate dictionary for Reset method.
-        zw->dict = append(zw->dict, dict);
+        // Clone dict so we can Reset without changing the provided slice.
+        zw->dict = slices::Clone(dict);
         return {zw, err};
     }
 
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    dictWriter::operator T()
-    {
-        T result;
-        result.w = this->w;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool dictWriter::operator==(const T& ref) const
-    {
-        if (w != ref.w) return false;
-        return true;
-    }
-
-    std::ostream& dictWriter::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << w;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct dictWriter& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    std::tuple<int, gocpp::error> rec::Write(dictWriter* w, gocpp::slice<unsigned char> b)
-    {
-        int n;
-        gocpp::error err;
-        return rec::Write(gocpp::recv(w->w), b);
-    }
-
-    gocpp::error errWriterClosed = errors::New("flate: closed writer"_s);
     // A Writer takes data written to it and writes the compressed
     // form of that data to an underlying writer (see [NewWriter]).
     
@@ -1007,22 +1164,12 @@ namespace golang::flate
     }
 
     // Reset discards the writer's state and makes it equivalent to
-    // the result of [NewWriter] or [NewWriterDict] called with dst
+    // the result of NewWriter or NewWriterDict called with dst
     // and w's level and dictionary.
     void rec::Reset(Writer* w, io::Writer dst)
     {
-        if(auto [dw, ok] = gocpp::getValue<dictWriter*>(w->d.w->writer); ok)
-        {
-            // w was created with NewWriterDict
-            dw->w = dst;
-            rec::reset(gocpp::recv(w->d), dw);
-            rec::fillWindow(gocpp::recv(w->d), w->dict);
-        }
-        else
-        {
-            // w was created with NewWriter
-            rec::reset(gocpp::recv(w->d), dst);
-        }
+        rec::reset(gocpp::recv(w->d), dst);
+        rec::fillWindow(gocpp::recv(w->d), w->dict);
     }
 
 }

@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::rand
+namespace golang::math::rand
 {
     const long rngLen = 607;
     const long rngTap = 273;

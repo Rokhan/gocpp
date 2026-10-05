@@ -12,8 +12,9 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/cpu/cpu.h"
+#include "golang/internal/cpu/cpu_x86_other.h"
 
-namespace golang::cpu
+namespace golang::internal::cpu
 {
     namespace rec
     {
@@ -48,6 +49,10 @@ namespace golang::cpu
             x.Feature = & X86.HasERMS;
         }),
             gocpp::Init<>([=](auto& x) {
+            x.Name = "fsrm"_s;
+            x.Feature = & X86.HasFSRM;
+        }),
+            gocpp::Init<>([=](auto& x) {
             x.Name = "pclmulqdq"_s;
             x.Feature = & X86.HasPCLMULQDQ;
         }),
@@ -58,6 +63,10 @@ namespace golang::cpu
             gocpp::Init<>([=](auto& x) {
             x.Name = "sha"_s;
             x.Feature = & X86.HasSHA;
+        }),
+            gocpp::Init<>([=](auto& x) {
+            x.Name = "vpclmulqdq"_s;
+            x.Feature = & X86.HasAVX512VPCLMULQDQ;
         })
         };
         auto level = getGOAMD64level();
@@ -111,8 +120,14 @@ namespace golang::cpu
                 x.Name = "avx512f"_s;
                 x.Feature = & X86.HasAVX512F;
             }), gocpp::Init<option>([=](auto& x) {
+                x.Name = "avx512cd"_s;
+                x.Feature = & X86.HasAVX512CD;
+            }), gocpp::Init<option>([=](auto& x) {
                 x.Name = "avx512bw"_s;
                 x.Feature = & X86.HasAVX512BW;
+            }), gocpp::Init<option>([=](auto& x) {
+                x.Name = "avx512dq"_s;
+                x.Feature = & X86.HasAVX512DQ;
             }), gocpp::Init<option>([=](auto& x) {
                 x.Name = "avx512vl"_s;
                 x.Feature = & X86.HasAVX512VL;
@@ -123,6 +138,7 @@ namespace golang::cpu
 
         if(maxID < 1)
         {
+            osInit();
             return;
         }
 
@@ -143,12 +159,6 @@ namespace golang::cpu
         // e.g. setting the xsavedisable boot option on Windows 10.
         X86.HasOSXSAVE = isSet(ecx1, cpuid_OSXSAVE);
 
-        // The FMA instruction set extension only has VEX prefixed instructions.
-        // VEX prefixed instructions require OSXSAVE to be enabled.
-        // See Intel 64 and IA-32 Architecture Software Developer’s Manual Volume 2
-        // Section 2.4 "AVX and SSE Instruction Exception Specification"
-        X86.HasFMA = isSet(ecx1, cpuid_FMA) && X86.HasOSXSAVE;
-
         auto osSupportsAVX = false;
         auto osSupportsAVX512 = false;
         // For XGETBV, OSXSAVE bit is required and sufficient.
@@ -166,36 +176,86 @@ namespace golang::cpu
 
         X86.HasAVX = isSet(ecx1, cpuid_AVX) && osSupportsAVX;
 
+        // The FMA instruction set extension requires both the FMA and AVX flags.
+        // Furthermore, the FMA instructions are all VEX prefixed instructions.
+        // VEX prefixed instructions require OSXSAVE to be enabled.
+        // See Intel 64 and IA-32 Architecture Software Developer’s Manual Volume 2
+        // Section 2.4 "AVX and SSE Instruction Exception Specification"
+        X86.HasFMA = isSet(ecx1, cpuid_FMA) && X86.HasAVX && X86.HasOSXSAVE;
+
         if(maxID < 7)
         {
+            osInit();
             return;
         }
 
-        auto [gocpp_id_7, ebx7, gocpp_id_8, gocpp_id_9] = cpuid(7, 0);
+        auto [eax7, ebx7, ecx7, edx7] = cpuid(7, 0);
         X86.HasBMI1 = isSet(ebx7, cpuid_BMI1);
         X86.HasAVX2 = isSet(ebx7, cpuid_AVX2) && osSupportsAVX;
         X86.HasBMI2 = isSet(ebx7, cpuid_BMI2);
         X86.HasERMS = isSet(ebx7, cpuid_ERMS);
         X86.HasADX = isSet(ebx7, cpuid_ADX);
         X86.HasSHA = isSet(ebx7, cpuid_SHA);
+        X86.HasVAES = isSet(ecx7, cpuid_VAES) && X86.HasAVX;
+        X86.HasVPCLMULQDQ = isSet(ecx7, cpuid_VPCLMULQDQ);
 
         X86.HasAVX512F = isSet(ebx7, cpuid_AVX512F) && osSupportsAVX512;
         if(X86.HasAVX512F)
         {
+            X86.HasAVX512CD = isSet(ebx7, cpuid_AVX512CD);
             X86.HasAVX512BW = isSet(ebx7, cpuid_AVX512BW);
+            X86.HasAVX512DQ = isSet(ebx7, cpuid_AVX512DQ);
             X86.HasAVX512VL = isSet(ebx7, cpuid_AVX512VL);
+            X86.HasAVX512GFNI = isSet(ecx7, cpuid_AVX512GFNI);
+            X86.HasAVX512BITALG = isSet(ecx7, cpuid_AVX512BITALG);
+            X86.HasAVX512VPOPCNTDQ = isSet(ecx7, cpuid_AVX512VPOPCNTDQ);
+            X86.HasAVX512VBMI = isSet(ecx7, cpuid_AVX512VBMI);
+            X86.HasAVX512VBMI2 = isSet(ecx7, cpuid_AVX512VBMI2);
+            X86.HasAVX512VAES = isSet(ecx7, cpuid_VAES) && X86.HasAES && isSet(ebx7, cpuid_AVX512VL);
+            X86.HasAVX512VNNI = isSet(ecx7, cpuid_AVX512VNNI);
+            X86.HasAVX512VPCLMULQDQ = isSet(ecx7, cpuid_AVX512VPCLMULQDQ);
+            X86.HasAVX512VBMI = isSet(ecx7, cpuid_AVX512_VBMI);
+            X86.HasAVX512VBMI2 = isSet(ecx7, cpuid_AVX512_VBMI2);
+            X86.HasGFNI = isSet(ecx7, cpuid_GFNI);
+            X86.HasAVX512BITALG = isSet(ecx7, cpuid_AVX512_BITALG);
         }
+
+        X86.HasFSRM = isSet(edx7, cpuid_FSRM);
 
         uint32_t maxExtendedInformation = {};
         std::tie(maxExtendedInformation, std::ignore, std::ignore, std::ignore) = cpuid(0x80000000, 0);
 
         if(maxExtendedInformation < 0x80000001)
         {
+            osInit();
             return;
         }
 
-        auto [gocpp_id_10, gocpp_id_11, gocpp_id_12, edxExt1] = cpuid(0x80000001, 0);
+        auto [gocpp_id_7, gocpp_id_8, gocpp_id_9, edxExt1] = cpuid(0x80000001, 0);
         X86.HasRDTSCP = isSet(edxExt1, cpuid_RDTSCP);
+
+        doDerived = [=]() mutable -> void
+        {
+            // Rather than carefully gating on fundamental AVX-512 features, we have
+            // a virtual "AVX512" feature that captures F+CD+BW+DQ+VL. BW, DQ, and
+            // VL have a huge effect on which AVX-512 instructions are available,
+            // and these have all been supported on everything except the earliest
+            // Phi chips with AVX-512. No CPU has had CD without F, so we include
+            // it. GOAMD64=v4 also implies exactly this set, and these are all
+            // included in AVX10.1.
+            X86.HasAVX512 = X86.HasAVX512F && X86.HasAVX512CD && X86.HasAVX512BW && X86.HasAVX512DQ && X86.HasAVX512VL;
+        };
+
+        if(eax7 >= 1)
+        {
+            auto [eax71, gocpp_id_10, gocpp_id_11, gocpp_id_12] = cpuid(7, 1);
+            if(X86.HasAVX)
+            {
+                X86.HasAVXVNNI = isSet(eax71, cpuid_AVXVNNI);
+            }
+        }
+
+        osInit();
     }
 
     bool isSet(uint32_t hwc, uint32_t value)

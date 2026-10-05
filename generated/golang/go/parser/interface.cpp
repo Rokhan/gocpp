@@ -26,8 +26,16 @@
 #include "golang/path/filepath/path.h"
 #include "golang/strings/strings.h"
 
-namespace golang::parser
+namespace golang::go::parser
 {
+    namespace ast = golang::go::ast;
+    namespace errors = golang::errors;
+    namespace filepath = golang::path::filepath;
+    namespace fs = golang::io::fs;
+    namespace io = golang::io;
+    namespace os = golang::os;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
     namespace rec
     {
         using bytes::rec::Bytes;
@@ -37,6 +45,9 @@ namespace golang::parser
         using scanner::rec::Add;
         using scanner::rec::Err;
         using scanner::rec::Sort;
+        using token::rec::AddFile;
+        using token::rec::Base;
+        using token::rec::End;
         using token::rec::Position;
     }
 
@@ -139,7 +150,9 @@ namespace golang::parser
                 return {nullptr, err};
             }
 
-            golang::parser::parser p = {};
+            auto file = rec::AddFile(gocpp::recv(fset), filename, - 1, len(text));
+
+            golang::go::parser::parser p = {};
             defer.push_back([=, &f, &err]{ [=]() mutable -> void
             {
                 if(auto e = gocpp::recover(); e != nullptr)
@@ -169,12 +182,17 @@ namespace golang::parser
                     });
                 }
 
+                // Ensure the start/end are consistent,
+                // whether parsing succeeded or not.
+                f->FileStart = token::Pos(rec::Base(gocpp::recv(file)));
+                f->FileEnd = rec::End(gocpp::recv(file));
+
                 rec::Sort(gocpp::recv(p.errors));
                 err = rec::Err(gocpp::recv(p.errors));
             }(); });
 
             // parse source
-            rec::init(gocpp::recv(p), fset, filename, text, mode);
+            rec::init(gocpp::recv(p), file, text, mode);
             f = rec::parseFile(gocpp::recv(p));
 
             return {f, err};
@@ -198,6 +216,11 @@ namespace golang::parser
     // If the directory couldn't be read, a nil map and the respective error are
     // returned. If a parse error occurred, a non-nil but incomplete map and the
     // first error encountered are returned.
+    //
+    // Deprecated: ParseDir does not consider build tags when associating
+    // files with packages. For precise information about the relationship
+    // between packages and files, use golang.org/x/tools/go/packages,
+    // which can also optionally parse and type-check the files too.
     std::tuple<gocpp::map<gocpp::string, ast::Package*>, gocpp::error> ParseDir(token::FileSet* fset, gocpp::string path, std::function<bool (fs::FileInfo _1)> filter, Mode mode)
     {
         gocpp::map<gocpp::string, ast::Package*> pkgs;
@@ -282,7 +305,7 @@ namespace golang::parser
                 return {nullptr, err};
             }
 
-            golang::parser::parser p = {};
+            golang::go::parser::parser p = {};
             defer.push_back([=, &err]{ [=]() mutable -> void
             {
                 if(auto e = gocpp::recover(); e != nullptr)
@@ -304,7 +327,8 @@ namespace golang::parser
             }(); });
 
             // parse expr
-            rec::init(gocpp::recv(p), fset, filename, text, mode);
+            auto file = rec::AddFile(gocpp::recv(fset), filename, - 1, len(text));
+            rec::init(gocpp::recv(p), file, text, mode);
             expr = rec::parseRhs(gocpp::recv(p));
 
             // If a semicolon was inserted, consume it;

@@ -15,6 +15,7 @@
 
 namespace golang::main
 {
+    namespace fmt = golang::fmt;
     namespace rec
     {
     }
@@ -229,7 +230,7 @@ namespace golang::main
     entry* newEntry(go_any i)
     {
         auto e = new entry {};
-        rec::Store<gocpp::go_any>(gocpp::recv(e->p), & i);
+        rec::Store<go_any>(gocpp::recv(e->p), & i);
         return e;
     }
 
@@ -261,6 +262,130 @@ namespace golang::main
         auto s1 = gocpp::slice<int> {1, 2, 3};
         auto s2 = Grow(s1, 10);
         mocklib::Printf("Grow: %v, %v\n"_s, s1, s2);
+    }
+
+    // Generic function, 1 type param
+    template<typename T>
+    T Identity(T v)
+    {
+        return v;
+    }
+
+    // Generic function, 2 type params
+    template<typename K, typename V>
+    std::tuple<K, V> MakePair(K k, V v)
+    {
+        return {k, v};
+    }
+
+    // Generic type, 1 type param, underlying type is convertible (int)
+    // Generic type, 2 type params, struct
+    
+    template<typename K, typename V>
+    template<typename T> requires gocpp::GoStruct<T>
+    Pair<K, V>::operator T()
+    {
+        T result;
+        result.Key = this->Key;
+        result.Val = this->Val;
+        return result;
+    }
+
+    template<typename K, typename V>
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Pair<K, V>::operator==(const T& ref) const
+    {
+        if (Key != ref.Key) return false;
+        if (Val != ref.Val) return false;
+        return true;
+    }
+
+    template<typename K, typename V>
+    std::ostream& Pair<K, V>::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Key;
+        os << " " << Val;
+        os << '}';
+        return os;
+    }
+
+    template<typename K, typename V>
+    std::ostream& operator<<(std::ostream& os, const struct Pair<K, V>& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    //  1. Real indexing — NOT generic at all. Exercises the "else" branch
+    //     (%s[%s]) for its intended purpose. tv.IsType() should be false,
+    //     IsFunc should be false.
+    int RealIndexing(gocpp::slice<int> arr, int i)
+    {
+        return arr[i];
+    }
+
+    //  2. Generic function instantiation, used as a value (not called).
+    //     IsFunc(n.X) && IsFunc(n) == true -> "%s<%s>" via the existing branch.
+    std::function<int (int _1)> FuncInstantiationAsValue()
+    {
+        auto f = Identity<int>;
+        return f;
+    }
+
+    //  3. Generic function instantiation, called directly.
+    //     Same IsFunc branch, but n is the Fun of a CallExpr.
+    int FuncInstantiationCalled()
+    {
+        return Identity<int>(42);
+    }
+
+    //  4. Generic TYPE instantiation used as an explicit conversion.
+    //     tv.IsType() == true, IsFunc == false -> this is the case that was
+    //     previously falling into the wrong "%s[%s]" branch.
+    Boxed<int> TypeInstantiationConverted(int x)
+    {
+        return Boxed<int>(x);
+    }
+
+    // 5. Generic function instantiation with 2 type params, used as a value.
+    std::function<std::tuple<int, gocpp::string> (int _1, gocpp::string _2)> FuncInstantiationAsValue2()
+    {
+        auto f = MakePair<int, gocpp::string>;
+        return f;
+    }
+
+    // 6. Generic function instantiation with 2 type params, called directly.
+    std::tuple<int, gocpp::string> FuncInstantiationCalled2()
+    {
+        return MakePair<int, gocpp::string>(1, "a"_s);
+    }
+
+    //  7. Generic TYPE instantiation with 2 type params, as an explicit
+    //     conversion. This is the IndexListExpr analog of case 4 — the one
+    //     IsFunc(n.X) && IsFunc(n) would miss entirely (falls to default in
+    //     CallExpr, then wrongly emitted "%s[%s]" before the fix).
+    BoxedPair<int, gocpp::string> TypeInstantiationConverted2(int x)
+    {
+        return BoxedPair<int, gocpp::string>(x);
+    }
+
+    //  8. Generic type with 2 type params used as a receiver — exercises the
+    //     original bug (missing template<> on the method) plus the
+    //     StarExpr -> IndexListExpr -> typenames propagation via JoinExpr.
+    template<typename K, typename V>
+    std::tuple<V, K> rec::Swap(Pair<K, V>* p)
+    {
+        return {p->Val, p->Key};
+    }
+
+    //  9. Composite literal with 2 type params — exercises convertTypeExpr's
+    //     IndexListExpr case directly (type position, not expression position).
+    Pair<int, gocpp::string> NewPair()
+    {
+        return gocpp::Init<Pair<int, gocpp::string>>([=](auto& x) {
+            x.Key = 1;
+            x.Val = "a"_s;
+        });
     }
 
 }

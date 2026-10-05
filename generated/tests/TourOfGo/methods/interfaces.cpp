@@ -17,6 +17,8 @@
 
 namespace golang::main
 {
+    namespace fmt = golang::fmt;
+    namespace math = golang::math;
     namespace rec
     {
     }

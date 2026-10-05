@@ -4,14 +4,14 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::types
+namespace golang::go::types
 {
     struct StdSizes;
 }
 #include "golang/go/types/object.fwd.h"
 #include "golang/go/types/type.fwd.h"
 
-namespace golang::types
+namespace golang::go::types
 {
     struct Sizes;
 }

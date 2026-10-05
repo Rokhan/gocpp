@@ -14,6 +14,12 @@ namespace golang::sync
 {
     struct GoTag_rlocker { };
 }
+#include "golang/sync/atomic/type.fwd.h"
+
+namespace golang::sync
+{
+    namespace atomic = golang::sync::atomic;
+}
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/mutex.h"
 

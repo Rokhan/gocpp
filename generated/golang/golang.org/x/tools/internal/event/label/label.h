@@ -10,8 +10,86 @@
 #include "gocpp/support.h"
 
 
-namespace golang::label
+namespace golang::golang_org::x::tools::internal::event::label
 {
+    struct Key : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        Key(){}
+        Key(Key& i) = default;
+        Key(const Key& i) = default;
+        Key& operator=(Key& i) = default;
+        Key& operator=(const Key& i) = default;
+
+        inline Key(nullptr_t) {};
+        Key& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        Key(T& ref);
+
+        template<typename T>
+        Key(const T& ref);
+
+        template<typename T>
+        Key(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IKey
+        {
+            // Name returns the key name.
+            virtual gocpp::string vName() = 0;
+            // Description returns a string that can be used to describe the value.
+            virtual gocpp::string vDescription() = 0;
+            // Append appends the formatted value of the label to the supplied buffer.
+            virtual gocpp::slice<unsigned char> vAppend(gocpp::slice<unsigned char> buf, golang::golang_org::x::tools::internal::event::label::Label l) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IKey>
+        struct KeyImpl : virtual TInterface
+        {
+            explicit KeyImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            gocpp::string vName() override;
+
+            gocpp::string vDescription() override;
+
+            gocpp::slice<unsigned char> vAppend(gocpp::slice<unsigned char> buf, golang::golang_org::x::tools::internal::event::label::Label l) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IKey* value() const;
+
+        std::shared_ptr<IKey> mValue;
+    };
+
+    namespace rec
+    {
+        gocpp::string Name(const gocpp::PtrRecv<struct Key, false>& self);
+        gocpp::string Name(const gocpp::ObjRecv<struct Key>& self);
+
+        gocpp::string Description(const gocpp::PtrRecv<struct Key, false>& self);
+        gocpp::string Description(const gocpp::ObjRecv<struct Key>& self);
+
+        gocpp::slice<unsigned char> Append(const gocpp::PtrRecv<struct Key, false>& self, gocpp::slice<unsigned char> buf, golang::golang_org::x::tools::internal::event::label::Label l);
+        gocpp::slice<unsigned char> Append(const gocpp::ObjRecv<struct Key>& self, gocpp::slice<unsigned char> buf, golang::golang_org::x::tools::internal::event::label::Label l);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Key& value);
     struct Map : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -42,7 +120,7 @@ namespace golang::label
         struct IMap
         {
             // Find returns the label that matches the supplied key.
-            virtual golang::label::Label vFind(golang::label::Key key) = 0;
+            virtual golang::golang_org::x::tools::internal::event::label::Label vFind(golang::golang_org::x::tools::internal::event::label::Key key) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -54,7 +132,7 @@ namespace golang::label
                 value.reset(ptr);
             }
 
-            golang::label::Label vFind(golang::label::Key key) override;
+            golang::golang_org::x::tools::internal::event::label::Label vFind(golang::golang_org::x::tools::internal::event::label::Key key) override;
 
             void* getPtr() override
             {
@@ -71,8 +149,8 @@ namespace golang::label
 
     namespace rec
     {
-        golang::label::Label Find(const gocpp::PtrRecv<struct Map, false>& self, golang::label::Key key);
-        golang::label::Label Find(const gocpp::ObjRecv<struct Map>& self, golang::label::Key key);
+        golang::golang_org::x::tools::internal::event::label::Label Find(const gocpp::PtrRecv<struct Map, false>& self, golang::golang_org::x::tools::internal::event::label::Key key);
+        golang::golang_org::x::tools::internal::event::label::Label Find(const gocpp::ObjRecv<struct Map>& self, golang::golang_org::x::tools::internal::event::label::Key key);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Map& value);
@@ -109,7 +187,7 @@ namespace golang::label
             // It does not imply the label at that index will itself be valid.
             virtual bool vValid(int index) = 0;
             // Label returns the label at the given index.
-            virtual golang::label::Label vLabel(int index) = 0;
+            virtual golang::golang_org::x::tools::internal::event::label::Label vLabel(int index) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -123,7 +201,7 @@ namespace golang::label
 
             bool vValid(int index) override;
 
-            golang::label::Label vLabel(int index) override;
+            golang::golang_org::x::tools::internal::event::label::Label vLabel(int index) override;
 
             void* getPtr() override
             {
@@ -143,11 +221,47 @@ namespace golang::label
         bool Valid(const gocpp::PtrRecv<struct List, false>& self, int index);
         bool Valid(const gocpp::ObjRecv<struct List>& self, int index);
 
-        golang::label::Label Label(const gocpp::PtrRecv<struct List, false>& self, int index);
-        golang::label::Label Label(const gocpp::ObjRecv<struct List>& self, int index);
+        golang::golang_org::x::tools::internal::event::label::Label Label(const gocpp::PtrRecv<struct List, false>& self, int index);
+        golang::golang_org::x::tools::internal::event::label::Label Label(const gocpp::ObjRecv<struct List>& self, int index);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct List& value);
+    extern list* emptyList;
+    struct Label
+    {
+        golang::golang_org::x::tools::internal::event::label::Key key{};
+        uint64_t packed{};
+        go_any untyped{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Label& value);
+    struct filter
+    {
+        gocpp::slice<golang::golang_org::x::tools::internal::event::label::Key> keys{};
+        List underlying{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct filter& value);
     struct mapChain
     {
         gocpp::slice<Map> maps{};
@@ -164,6 +278,19 @@ namespace golang::label
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mapChain& value);
+    List Filter(List l, gocpp::slice<golang::golang_org::x::tools::internal::event::label::Key> keys);
+    
+    template<typename... Args>
+    List Filter(List l, Args... keys)
+    {
+        return Filter(l, gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Key>(keys...));
+    }
+    
+    template<typename... Args>
+    List Filter(List l, golang::golang_org::x::tools::internal::event::label::Key value, Args... keys)
+    {
+        return Filter(l, gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Key>(value, keys...));
+    }
     Map MergeMaps(gocpp::slice<Map> srcs);
     
     template<typename... Args>
@@ -177,143 +304,9 @@ namespace golang::label
     {
         return MergeMaps(gocpp::ToSlice<Map>(value, srcs...));
     }
-}
-#include "golang/io/io.h"
-
-namespace golang::label
-{
-    struct Key : virtual gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        Key(){}
-        Key(Key& i) = default;
-        Key(const Key& i) = default;
-        Key& operator=(Key& i) = default;
-        Key& operator=(const Key& i) = default;
-
-        inline Key(nullptr_t) {};
-        Key& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        Key(T& ref);
-
-        template<typename T>
-        Key(const T& ref);
-
-        template<typename T>
-        Key(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IKey
-        {
-            // Name returns the key name.
-            virtual gocpp::string vName() = 0;
-            // Description returns a string that can be used to describe the value.
-            virtual gocpp::string vDescription() = 0;
-            // Format is used in formatting to append the value of the label to the
-            // supplied buffer.
-            // The formatter may use the supplied buf as a scratch area to avoid
-            // allocations.
-            virtual void vFormat(io::Writer w, gocpp::slice<unsigned char> buf, golang::label::Label l) = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IKey>
-        struct KeyImpl : virtual TInterface
-        {
-            explicit KeyImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            gocpp::string vName() override;
-
-            gocpp::string vDescription() override;
-
-            void vFormat(io::Writer w, gocpp::slice<unsigned char> buf, golang::label::Label l) override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IKey* value() const;
-
-        std::shared_ptr<IKey> mValue;
-    };
-
-    namespace rec
-    {
-        gocpp::string Name(const gocpp::PtrRecv<struct Key, false>& self);
-        gocpp::string Name(const gocpp::ObjRecv<struct Key>& self);
-
-        gocpp::string Description(const gocpp::PtrRecv<struct Key, false>& self);
-        gocpp::string Description(const gocpp::ObjRecv<struct Key>& self);
-
-        void Format(const gocpp::PtrRecv<struct Key, false>& self, io::Writer w, gocpp::slice<unsigned char> buf, golang::label::Label l);
-        void Format(const gocpp::ObjRecv<struct Key>& self, io::Writer w, gocpp::slice<unsigned char> buf, golang::label::Label l);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Key& value);
-    struct Label
-    {
-        golang::label::Key key{};
-        uint64_t packed{};
-        gocpp::go_any untyped{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Label& value);
-    struct filter
-    {
-        gocpp::slice<golang::label::Key> keys{};
-        List underlying{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct filter& value);
-    List Filter(List l, gocpp::slice<golang::label::Key> keys);
-    
-    template<typename... Args>
-    List Filter(List l, Args... keys)
-    {
-        return Filter(l, gocpp::ToSlice<golang::label::Key>(keys...));
-    }
-    
-    template<typename... Args>
-    List Filter(List l, golang::label::Key value, Args... keys)
-    {
-        return Filter(l, gocpp::ToSlice<golang::label::Key>(value, keys...));
-    }
     struct list
     {
-        gocpp::slice<golang::label::Label> labels{};
+        gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels{};
 
         using isGoStruct = void;
 
@@ -329,7 +322,7 @@ namespace golang::label
     std::ostream& operator<<(std::ostream& os, const struct list& value);
     struct listMap
     {
-        gocpp::slice<golang::label::Label> labels{};
+        gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels{};
 
         using isGoStruct = void;
 
@@ -343,57 +336,57 @@ namespace golang::label
     };
 
     std::ostream& operator<<(std::ostream& os, const struct listMap& value);
-    golang::label::Label OfValue(golang::label::Key k, gocpp::go_any value);
-    golang::label::Label Of64(golang::label::Key k, uint64_t v);
-    golang::label::Label OfString(golang::label::Key k, gocpp::string v);
-    List NewList(gocpp::slice<golang::label::Label> labels);
+    golang::golang_org::x::tools::internal::event::label::Label OfValue(golang::golang_org::x::tools::internal::event::label::Key k, go_any value);
+    golang::golang_org::x::tools::internal::event::label::Label Of64(golang::golang_org::x::tools::internal::event::label::Key k, uint64_t v);
+    golang::golang_org::x::tools::internal::event::label::Label OfString(golang::golang_org::x::tools::internal::event::label::Key k, gocpp::string v);
+    List NewList(gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels);
     
     template<typename... Args>
     List NewList(Args... labels)
     {
-        return NewList(gocpp::ToSlice<golang::label::Label>(labels...));
+        return NewList(gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Label>(labels...));
     }
     
     template<typename... Args>
-    List NewList(golang::label::Label value, Args... labels)
+    List NewList(golang::golang_org::x::tools::internal::event::label::Label value, Args... labels)
     {
-        return NewList(gocpp::ToSlice<golang::label::Label>(value, labels...));
+        return NewList(gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Label>(value, labels...));
     }
-    Map NewMap(gocpp::slice<golang::label::Label> labels);
+    Map NewMap(gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels);
     
     template<typename... Args>
     Map NewMap(Args... labels)
     {
-        return NewMap(gocpp::ToSlice<golang::label::Label>(labels...));
+        return NewMap(gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Label>(labels...));
     }
     
     template<typename... Args>
-    Map NewMap(golang::label::Label value, Args... labels)
+    Map NewMap(golang::golang_org::x::tools::internal::event::label::Label value, Args... labels)
     {
-        return NewMap(gocpp::ToSlice<golang::label::Label>(value, labels...));
+        return NewMap(gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Label>(value, labels...));
     }
-    extern list* emptyList;
 }
 
 #include "golang/fmt/print.h"
 
-namespace golang::label
+namespace golang::golang_org::x::tools::internal::event::label
 {
+    namespace fmt = golang::fmt;
 
     namespace rec
     {
-        gocpp::go_any UnpackValue(golang::label::Label t);
-        uint64_t Unpack64(golang::label::Label t);
-        gocpp::string UnpackString(golang::label::Label t);
-        bool Valid(golang::label::Label t);
-        golang::label::Key Key(golang::label::Label t);
-        void Format(golang::label::Label t, fmt::State f, gocpp::rune r);
+        go_any UnpackValue(golang::golang_org::x::tools::internal::event::label::Label t);
+        uint64_t Unpack64(golang::golang_org::x::tools::internal::event::label::Label t);
+        gocpp::string UnpackString(golang::golang_org::x::tools::internal::event::label::Label t);
+        bool Valid(golang::golang_org::x::tools::internal::event::label::Label t);
+        golang::golang_org::x::tools::internal::event::label::Key Key(golang::golang_org::x::tools::internal::event::label::Label t);
+        void Format(golang::golang_org::x::tools::internal::event::label::Label t, fmt::State f, gocpp::rune r);
         bool Valid(list* l, int index);
-        golang::label::Label Label(list* l, int index);
+        golang::golang_org::x::tools::internal::event::label::Label Label(list* l, int index);
         bool Valid(filter* f, int index);
-        golang::label::Label Label(filter* f, int index);
-        golang::label::Label Find(listMap lm, golang::label::Key key);
-        golang::label::Label Find(mapChain c, golang::label::Key key);
+        golang::golang_org::x::tools::internal::event::label::Label Label(filter* f, int index);
+        golang::golang_org::x::tools::internal::event::label::Label Find(listMap lm, golang::golang_org::x::tools::internal::event::label::Key key);
+        golang::golang_org::x::tools::internal::event::label::Label Find(mapChain c, golang::golang_org::x::tools::internal::event::label::Key key);
     }
 }
 

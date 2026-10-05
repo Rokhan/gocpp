@@ -11,8 +11,10 @@
 
 #include "golang/internal/platform/supported.h"
 
-namespace golang::platform
+namespace golang::internal::platform
 {
+    // List is the list of all valid GOOS/GOARCH combinations,
+    // including known-broken ports.
     extern gocpp::slice<OSArch> List;
     extern gocpp::map<OSArch, osArchInfo> distInfo;
 

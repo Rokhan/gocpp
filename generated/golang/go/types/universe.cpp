@@ -31,23 +31,26 @@
 #include "golang/go/types/typeset.h"
 #include "golang/strings/strings.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace constant = golang::go::constant;
+    namespace strings = golang::strings;
     namespace rec
     {
     }
 
     // The Universe scope contains all predeclared objects of Go.
     // It is the outermost scope of any chain of nested scopes.
-    golang::types::Scope* Universe;
+    golang::go::types::Scope* Universe;
     // The Unsafe package is the package returned by an importer
     // for the import path "unsafe".
     Package* Unsafe;
     Object universeIota;
-    golang::types::Type universeByte;
-    golang::types::Type universeRune;
+    golang::go::types::Type universeBool;
+    golang::go::types::Type universeByte;
+    golang::go::types::Type universeRune;
+    golang::go::types::Type universeError;
     Object universeAny;
-    golang::types::Type universeError;
     Object universeComparable;
     // Typ contains the predeclared *Basic types indexed by their
     // corresponding BasicKind.
@@ -83,7 +86,7 @@ namespace golang::types
         x[UntypedString] = {UntypedString, IsString | IsUntyped, "untyped string"_s};
         x[UntypedNil] = {UntypedNil, IsUntyped, "untyped nil"_s};
     });
-    gocpp::array<Basic*, 2> aliases = gocpp::array<Basic*, 2> {
+    gocpp::array<Basic*, 2> basicAliases = gocpp::array<Basic*, 2> {
         {Byte, IsInteger | IsUnsigned, "byte"_s},
         {Rune, IsInteger, "rune"_s}
     };
@@ -93,30 +96,21 @@ namespace golang::types
         {
             def(NewTypeName(nopos, nullptr, t->name, t));
         }
-        for(auto [gocpp_ignored, t] : aliases)
+
+        for(auto [gocpp_ignored, t] : basicAliases)
         {
             def(NewTypeName(nopos, nullptr, t->name, t));
         }
-
-        // type any = interface{}
-        // Note: don't use &emptyInterface for the type of any. Using a unique
-        // pointer allows us to detect any and format it as "any" rather than
-        // interface{}, which clarifies user-facing error messages significantly.
-        def(NewTypeName(nopos, nullptr, "any"_s, gocpp::InitPtr<Interface>([=](auto& x) {
-            x.complete = true;
-            x.tset = & topTypeSet;
-        })));
 
         // type error interface{ Error() string }
         // type error interface{ Error() string }
         {
             auto obj = NewTypeName(nopos, nullptr, "error"_s, nullptr);
-            rec::setColor(gocpp::recv(obj), black);
             auto typ = NewNamed(obj, nullptr, nullptr);
 
             // error.Error() string
-            auto recv = NewVar(nopos, nullptr, ""_s, typ);
-            auto res = NewVar(nopos, nullptr, ""_s, Typ[types::String]);
+            auto recv = newVar(RecvVar, nopos, nullptr, ""_s, typ);
+            auto res = newVar(ResultVar, nopos, nullptr, ""_s, Typ[types::String]);
             auto sig = NewSignatureType(recv, nullptr, nullptr, nullptr, NewTuple(res), false);
             auto err = NewFunc(nopos, nullptr, "Error"_s, sig);
 
@@ -128,7 +122,16 @@ namespace golang::types
             // prevent races due to lazy computation of tset
             computeInterfaceTypeSet(nullptr, nopos, ityp);
 
-            rec::SetUnderlying(gocpp::recv(typ), ityp);
+            typ->fromRHS = ityp;
+            rec::Underlying(gocpp::recv(typ));
+            def(obj);
+        }
+
+        // type any = interface{}
+        // type any = interface{}
+        {
+            auto obj = NewTypeName(nopos, nullptr, "any"_s, nullptr);
+            NewAlias(obj, & emptyInterface);
             def(obj);
         }
 
@@ -136,16 +139,10 @@ namespace golang::types
         // type comparable interface{} // marked as comparable
         {
             auto obj = NewTypeName(nopos, nullptr, "comparable"_s, nullptr);
-            rec::setColor(gocpp::recv(obj), black);
-            auto typ = NewNamed(obj, nullptr, nullptr);
-
-            // interface{} // marked as comparable
-            auto ityp = gocpp::InitPtr<Interface>([=](auto& x) {
+            NewNamed(obj, gocpp::InitPtr<Interface>([=](auto& x) {
                 x.complete = true;
                 x.tset = new _TypeSet {nullptr, allTermlist, true};
-            });
-
-            rec::SetUnderlying(gocpp::recv(typ), ityp);
+            }), nullptr);
             def(obj);
         }
     }
@@ -212,7 +209,6 @@ namespace golang::types
         def(new Nil {gocpp::Init<object>([=](auto& x) {
             x.name = "nil"_s;
             x.typ = Typ[UntypedNil];
-            x.color_ = black;
         })});
     }
 
@@ -335,10 +331,11 @@ namespace golang::types
         defPredeclaredFuncs();
 
         universeIota = rec::Lookup(gocpp::recv(Universe), "iota"_s);
+        universeBool = rec::Type(gocpp::recv(rec::Lookup(gocpp::recv(Universe), "bool"_s)));
         universeByte = rec::Type(gocpp::recv(rec::Lookup(gocpp::recv(Universe), "byte"_s)));
         universeRune = rec::Type(gocpp::recv(rec::Lookup(gocpp::recv(Universe), "rune"_s)));
-        universeAny = rec::Lookup(gocpp::recv(Universe), "any"_s);
         universeError = rec::Type(gocpp::recv(rec::Lookup(gocpp::recv(Universe), "error"_s)));
+        universeAny = rec::Lookup(gocpp::recv(Universe), "any"_s);
         universeComparable = rec::Lookup(gocpp::recv(Universe), "comparable"_s);
     }
 
@@ -347,7 +344,7 @@ namespace golang::types
     // scope; other objects are inserted in the universe scope.
     void def(Object obj)
     {
-        assert(rec::color(gocpp::recv(obj)) == black);
+        assert(rec::Type(gocpp::recv(obj)) != nullptr);
         auto name = rec::Name(gocpp::recv(obj));
         if(strings::Contains(name, " "_s))
         {
@@ -389,7 +386,7 @@ namespace golang::types
                     default:
                     {
                         auto obj = obj_ref;
-                        unreachable();
+                        gocpp::panic("unreachable"_s);
                         break;
                     }
                 }

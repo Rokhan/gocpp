@@ -24,14 +24,16 @@
 #include "golang/go/types/struct.h"
 #include "golang/go/types/type.h"
 #include "golang/go/types/typeset.h"
-#include "golang/go/types/under.h"
 #include "golang/io/io.h"
 #include "golang/sort/search.h"
 #include "golang/sort/slice.h"
 #include "golang/strings/builder.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace fmt = golang::fmt;
+    namespace sort = golang::sort;
+    namespace strings = golang::strings;
     namespace rec
     {
         using strings::rec::String;
@@ -129,7 +131,7 @@ namespace golang::types
     MethodSet emptyMethodSet;
     // NewMethodSet returns the method set for the given type T.
     // It always returns a non-nil method set, even if it is empty.
-    MethodSet* NewMethodSet(golang::types::Type T)
+    MethodSet* NewMethodSet(golang::go::types::Type T)
     {
         // WARNING: The code in this function is extremely subtle - do not modify casually!
         // This function and lookupFieldOrMethod should be kept in sync.
@@ -202,7 +204,7 @@ namespace golang::types
 
                 //Go type switch emulation
                 {
-                    const auto& gocpp_id_0 = gocpp::type_info(under(typ));
+                    const auto& gocpp_id_0 = gocpp::type_info(rec::Underlying(gocpp::recv(typ)));
                     int conditionId = -1;
                     if(gocpp_id_0 == typeid(types::Struct*)) { conditionId = 0; }
                     else if(gocpp_id_0 == typeid(types::Interface*)) { conditionId = 1; }
@@ -210,7 +212,7 @@ namespace golang::types
                     {
                         case 0:
                         {
-                            types::Struct* t = gocpp::any_cast<types::Struct*>(under(typ));
+                            types::Struct* t = gocpp::any_cast<types::Struct*>(rec::Underlying(gocpp::recv(typ)));
                             for(auto [i, f] : t->fields)
                             {
                                 if(fset == nullptr)
@@ -237,7 +239,7 @@ namespace golang::types
 
                         case 1:
                         {
-                            types::Interface* t = gocpp::any_cast<types::Interface*>(under(typ));
+                            types::Interface* t = gocpp::any_cast<types::Interface*>(rec::Underlying(gocpp::recv(typ)));
                             mset = rec::add(gocpp::recv(mset), rec::typeSet(gocpp::recv(t))->methods, e.index, true, e.multiples);
                             break;
                         }

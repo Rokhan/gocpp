@@ -22,6 +22,7 @@
 #include "golang/go/types/check.h"
 #include "golang/go/types/context.h"
 #include "golang/go/types/errors.h"
+#include "golang/go/types/format.h"
 #include "golang/go/types/interface.h"
 #include "golang/go/types/lookup.h"
 #include "golang/go/types/map.h"
@@ -45,11 +46,15 @@
 #include "golang/go/types/unify.h"
 #include "golang/go/types/union.h"
 #include "golang/go/types/version.h"
-#include "golang/internal/types/errors/codes.h"
+#include "golang/slices/slices.h"
 #include "golang/strings/builder.h"
 
-namespace golang::types
+namespace golang::go::types
 {
+    namespace fmt = golang::fmt;
+    namespace slices = golang::slices;
+    namespace strings = golang::strings;
+    namespace token = golang::go::token;
     namespace rec
     {
         using strings::rec::String;
@@ -63,10 +68,11 @@ namespace golang::types
     // If reverse is set, an error message's contents are reversed for a better error message for some
     // errors related to reverse type inference (where the function call is synthetic).
     // If successful, infer returns the complete list of given and inferred type arguments, one for each
-    // type parameter. Otherwise the result is nil and appropriate errors will be reported.
-    gocpp::slice<golang::types::Type> rec::infer(Checker* check, positioner posn, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::types::Type> targs, Tuple* params, gocpp::slice<operand*> args, bool reverse)
+    // type parameter. Otherwise the result is nil. Errors are reported through the err parameter.
+    // Note: infer may fail (return nil) due to invalid args operands without reporting additional errors.
+    gocpp::slice<golang::go::types::Type> rec::infer(Checker* check, positioner posn, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> targs, Tuple* params, gocpp::slice<operand*> args, bool reverse, error_* err)
     {
-        gocpp::slice<golang::types::Type> inferred;
+        gocpp::slice<golang::go::types::Type> inferred;
         gocpp::Defer defer;
         try
         {
@@ -78,7 +84,7 @@ namespace golang::types
             {
                 defer.push_back([=, &inferred]{ [=]() mutable -> void
                 {
-                    assert(inferred == nullptr || len(inferred) == len(tparams) && ! containsNil(inferred));
+                    assert(inferred == nullptr || len(inferred) == len(tparams) && ! slices::Contains(inferred, nullptr));
                 }(); });
             }
 
@@ -100,7 +106,7 @@ namespace golang::types
             assert(rec::Len(gocpp::recv(params)) == len(args));
 
             // If we already have all type arguments, we're done.
-            if(len(targs) == n && ! containsNil(targs))
+            if(len(targs) == n && ! slices::Contains(targs, nullptr))
             {
                 return targs;
             }
@@ -109,7 +115,7 @@ namespace golang::types
             // Avoid additional inference errors and exit early (go.dev/issue/60434).
             for(auto [gocpp_ignored, arg] : args)
             {
-                if(arg->mode == invalid)
+                if(! rec::isValid(gocpp::recv(arg)))
                 {
                     return nullptr;
                 }
@@ -120,7 +126,7 @@ namespace golang::types
             // len(targs) == n
             if(len(targs) < n)
             {
-                auto targs2 = gocpp::make(gocpp::Tag<gocpp::slice<golang::types::Type>>(), n);
+                auto targs2 = gocpp::make(gocpp::Tag<gocpp::slice<golang::go::types::Type>>(), n);
                 copy(targs2, targs);
                 targs = targs2;
             }
@@ -156,9 +162,9 @@ namespace golang::types
             // Unify parameter and argument types for generic parameters with typed arguments
             // and collect the indices of generic parameters with untyped arguments.
             // Terminology: generic parameter = function parameter with a type-parameterized type
-            auto u = newUnifier(tparams, targs, rec::allowVersion(gocpp::recv(check), check->pkg, posn, go1_21));
+            auto u = newUnifier(check, tparams, targs, rec::allowVersion(gocpp::recv(check), go1_21));
 
-            auto errorf = [=](golang::types::Type tpar, golang::types::Type targ, operand* arg) mutable -> void
+            auto errorf = [=](golang::go::types::Type tpar, golang::go::types::Type targ, operand* arg) mutable -> void
             {
                 // provide a better error message if we can
                 auto targs = rec::inferred(gocpp::recv(u), tparams);
@@ -178,7 +184,7 @@ namespace golang::types
                     }
                     if(allFailed)
                     {
-                        rec::errorf(gocpp::recv(check), arg, CannotInferTypeArgs, "type %s of %s does not match %s (cannot infer %s)"_s, targ, arg->expr, tpar, typeParamsString(tparams));
+                        rec::addf(gocpp::recv(err), arg, "type %s of %s does not match %s (cannot infer %s)"_s, targ, arg->expr, tpar, typeParamsString(tparams));
                         return;
                     }
                 }
@@ -193,16 +199,16 @@ namespace golang::types
                 {
                     if(reverse)
                     {
-                        rec::errorf(gocpp::recv(check), arg, CannotInferTypeArgs, "inferred type %s for %s does not match type %s of %s"_s, inferred, tpar, targ, arg->expr);
+                        rec::addf(gocpp::recv(err), arg, "inferred type %s for %s does not match type %s of %s"_s, inferred, tpar, targ, arg->expr);
                     }
                     else
                     {
-                        rec::errorf(gocpp::recv(check), arg, CannotInferTypeArgs, "type %s of %s does not match inferred type %s for %s"_s, targ, arg->expr, inferred, tpar);
+                        rec::addf(gocpp::recv(err), arg, "type %s of %s does not match inferred type %s for %s"_s, targ, arg->expr, inferred, tpar);
                     }
                 }
                 else
                 {
-                    rec::errorf(gocpp::recv(check), arg, CannotInferTypeArgs, "type %s of %s does not match %s"_s, targ, arg->expr, tpar);
+                    rec::addf(gocpp::recv(err), arg, "type %s of %s does not match %s"_s, targ, arg->expr, tpar);
                 }
             };
 
@@ -219,7 +225,7 @@ namespace golang::types
 
             for(auto [i, arg] : args)
             {
-                if(arg->mode == invalid)
+                if(! rec::isValid(gocpp::recv(arg)))
                 {
                     // An error was reported earlier. Ignore this arg
                     // and continue, we may still be able to infer all
@@ -228,15 +234,15 @@ namespace golang::types
                     continue;
                 }
                 auto par = rec::At(gocpp::recv(params), i);
-                if(types::isParameterized(tparams, par->object.typ) || types::isParameterized(tparams, arg->typ))
+                if(types::isParameterized(tparams, par->object.typ) || types::isParameterized(tparams, rec::typ(gocpp::recv(arg))))
                 {
                     // Function parameters are always typed. Arguments may be untyped.
                     // Collect the indices of untyped arguments and handle them later.
-                    if(isTyped(arg->typ))
+                    if(isTyped(rec::typ(gocpp::recv(arg))))
                     {
-                        if(! rec::unify(gocpp::recv(u), par->object.typ, arg->typ, types::assign))
+                        if(! rec::unify(gocpp::recv(u), par->object.typ, rec::typ(gocpp::recv(arg)), types::assign))
                         {
-                            errorf(par->object.typ, arg->typ, arg);
+                            errorf(par->object.typ, rec::typ(gocpp::recv(arg)), arg);
                             return nullptr;
                         }
                     }
@@ -249,6 +255,10 @@ namespace golang::types
                         // Thus, for untyped arguments we only need to look at parameter types
                         // that are single type parameters.
                         // Also, untyped nils don't have a default type and can be ignored.
+                        // Finally, it's not possible to have an alias type denoting a type
+                        // parameter declared by the current function and use it in the same
+                        // function signature; hence we don't need to Unalias before the
+                        // .(*TypeParam) type assertion above.
                         untyped = append(untyped, i);
                     }
                 }
@@ -301,11 +311,11 @@ namespace golang::types
                         rec::tracef(gocpp::recv(u), "-- type parameter %s = %s: core(%s) = %s, single = %v"_s, tpar, tx, tpar, core, single);
                     }
 
-                    // If there is a core term (i.e., a core type with tilde information)
-                    // unify the type parameter with the core type.
+                    // If the type parameter's constraint has a core term (i.e., a core type with tilde information)
+                    // try to unify the type parameter with that core type.
                     if(core != nullptr)
                     {
-                        // A type parameter can be unified with its core type in two cases.
+                        // A type parameter can be unified with its constraint's core type in two cases.
                         //Go switch emulation
                         {
                             int conditionId = -1;
@@ -314,6 +324,10 @@ namespace golang::types
                             switch(conditionId)
                             {
                                 case 0:
+                                    if(traceInference)
+                                    {
+                                        rec::tracef(gocpp::recv(u), "-> unify type parameter %s (type %s) with constraint core type %s"_s, tpar, tx, core->typ);
+                                    }
                                     // The corresponding type argument tx is known. There are 2 cases:
                                     // 1) If the core type has a tilde, per spec requirement for tilde
                                     // elements, the core type is an underlying (literal) type.
@@ -329,44 +343,57 @@ namespace golang::types
                                         // TODO(gri) Type parameters that appear in the constraint and
                                         // for which we have type arguments inferred should
                                         // use those type arguments for a better error message.
-                                        rec::errorf(gocpp::recv(check), posn, CannotInferTypeArgs, "%s (type %s) does not satisfy %s"_s, tpar, tx, rec::Constraint(gocpp::recv(tpar)));
+                                        rec::addf(gocpp::recv(err), posn, "%s (type %s) does not satisfy %s"_s, tpar, tx, rec::Constraint(gocpp::recv(tpar)));
                                         return nullptr;
                                     }
                                     break;
                                 case 1:
-                                    // The corresponding type argument tx is unknown and there's a single
-                                    // specific type and no tilde.
+                                    if(traceInference)
+                                    {
+                                        rec::tracef(gocpp::recv(u), "-> set type parameter %s to constraint's common underlying type %s"_s, tpar, core->typ);
+                                    }
+                                    // The corresponding type argument tx is unknown and the core term
+                                    // describes a single specific type and no tilde.
                                     // In this case the type argument must be that single type; set it.
                                     rec::set(gocpp::recv(u), tpar, core->typ);
                                     break;
                             }
                         }
                     }
-                    else
+
+                    // Independent of whether there is a core term, if the type argument tx is known
+                    // it must implement the methods of the type constraint, possibly after unification
+                    // of the relevant method signatures, otherwise tx cannot satisfy the constraint.
+                    // This unification step may provide additional type arguments.
+                    // Note: The type argument tx may be known but contain references to other type
+                    // parameters (i.e., tx may still be parameterized).
+                    // In this case the methods of tx don't correctly reflect the final method set
+                    // and we may get a missing method error below. Skip this step in this case.
+                    // TODO(gri) We should be able continue even with a parameterized tx if we add
+                    // a simplify step beforehand (see below). This will require factoring out the
+                    // simplify phase so we can call it from here.
+                    if(tx != nullptr && ! types::isParameterized(tparams, tx))
                     {
-                        if(tx != nullptr)
+                        if(traceInference)
                         {
-                            // We don't have a core type, but the type argument tx is known.
-                            // It must have (at least) all the methods of the type constraint,
-                            // and the method signatures must unify; otherwise tx cannot satisfy
-                            // the constraint.
-                            // TODO(gri) Now that unification handles interfaces, this code can
-                            // be reduced to calling u.unify(tx, tpar.iface(), assign)
-                            // (which will compare signatures exactly as we do below).
-                            // We leave it as is for now because missingMethod provides
-                            // a failure cause which allows for a better error message.
-                            // Eventually, unify should return an error with cause.
-                            gocpp::string cause = {};
-                            auto constraint = rec::iface(gocpp::recv(tpar));
-                            if(auto [m, gocpp_id_1] = rec::missingMethod(gocpp::recv(check), tx, constraint, true, [=](golang::types::Type x, golang::types::Type y) mutable -> bool
-                            {
-                                return rec::unify(gocpp::recv(u), x, y, exact);
-                            }, & cause); m != nullptr)
-                            {
-                                // TODO(gri) better error message (see TODO above)
-                                rec::errorf(gocpp::recv(check), posn, CannotInferTypeArgs, "%s (type %s) does not satisfy %s %s"_s, tpar, tx, rec::Constraint(gocpp::recv(tpar)), cause);
-                                return nullptr;
-                            }
+                            rec::tracef(gocpp::recv(u), "-> unify type parameter %s (type %s) methods with constraint methods"_s, tpar, tx);
+                        }
+                        // TODO(gri) Now that unification handles interfaces, this code can
+                        // be reduced to calling u.unify(tx, tpar.iface(), assign)
+                        // (which will compare signatures exactly as we do below).
+                        // We leave it as is for now because missingMethod provides
+                        // a failure cause which allows for a better error message.
+                        // Eventually, unify should return an error with cause.
+                        gocpp::string cause = {};
+                        auto constraint = rec::iface(gocpp::recv(tpar));
+                        if(! rec::hasAllMethods(gocpp::recv(check), tx, constraint, true, [=](golang::go::types::Type x, golang::go::types::Type y) mutable -> bool
+                        {
+                            return rec::unify(gocpp::recv(u), x, y, exact);
+                        }, & cause))
+                        {
+                            // TODO(gri) better error message (see TODO above)
+                            rec::addf(gocpp::recv(err), posn, "%s (type %s) does not satisfy %s %s"_s, tpar, tx, rec::Constraint(gocpp::recv(tpar)), cause);
+                            return nullptr;
                         }
                     }
                 }
@@ -395,10 +422,10 @@ namespace golang::types
             // Collect all remaining parameters that don't have a type yet and determine the
             // maximum untyped type for each of those parameters, if possible.
             // lazily allocated (we may not need it)
-            gocpp::map<TypeParam*, golang::types::Type> maxUntyped = {};
+            gocpp::map<TypeParam*, golang::go::types::Type> maxUntyped = {};
             for(auto [gocpp_ignored, index] : untyped)
             {
-                // is type parameter by construction of untyped
+                // is type parameter (no alias) by construction of untyped
                 auto tpar = gocpp::getValue<TypeParam*>(rec::At(gocpp::recv(params), index)->object.typ);
                 if(rec::at(gocpp::recv(u), tpar) == nullptr)
                 {
@@ -406,19 +433,19 @@ namespace golang::types
                     auto arg = args[index];
                     if(maxUntyped == nullptr)
                     {
-                        maxUntyped = gocpp::make(gocpp::Tag<gocpp::map<TypeParam*, golang::types::Type>>());
+                        maxUntyped = gocpp::make(gocpp::Tag<gocpp::map<TypeParam*, golang::go::types::Type>>());
                     }
                     auto max = maxUntyped[tpar];
                     if(max == nullptr)
                     {
-                        max = arg->typ;
+                        max = rec::typ(gocpp::recv(arg));
                     }
                     else
                     {
-                        auto m = maxType(max, arg->typ);
+                        auto m = maxType(max, rec::typ(gocpp::recv(arg)));
                         if(m == nullptr)
                         {
-                            rec::errorf(gocpp::recv(check), arg, CannotInferTypeArgs, "mismatched types %s and %s (cannot infer %s)"_s, max, arg->typ, tpar);
+                            rec::addf(gocpp::recv(err), arg, "mismatched types %s and %s (cannot infer %s)"_s, max, rec::typ(gocpp::recv(arg)), tpar);
                             return nullptr;
                         }
                         max = m;
@@ -507,16 +534,16 @@ namespace golang::types
                         // t0 was simplified to t1.
                         // If t0 was a generic function, but the simplified signature t1 does
                         // not contain any type parameters anymore, the function is not generic
-                        // anymore. Remove it's type parameters. (go.dev/issue/59953)
+                        // anymore. Remove its type parameters. (go.dev/issue/59953)
                         // Note that if t0 was a signature, t1 must be a signature, and t1
                         // can only be a generic signature if it originated from a generic
                         // function argument. Those signatures are never defined types and
-                        // thus there is no need to call under below.
+                        // thus there is no need to call Underlying below.
                         // TODO(gri) Consider doing this in Checker.subst.
                         // Then this would fall out automatically here and also
                         // in instantiation (where we also explicitly nil out
-                        // type parameters). See the *Signature TODO in subst.
-                        if(auto [sig, gocpp_id_2] = gocpp::getValue<Signature*>(t1); sig != nullptr && rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))) > 0 && ! types::isParameterized(tparams, sig))
+                        // type parameters).
+                        if(auto [sig, gocpp_id_1] = gocpp::getValue<golang::go::types::Signature*>(t1); sig != nullptr && rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))) > 0 && ! types::isParameterized(tparams, sig))
                         {
                             sig->tparams = nullptr;
                         }
@@ -537,7 +564,7 @@ namespace golang::types
                 if(typ == nullptr || types::isParameterized(tparams, typ))
                 {
                     auto obj = tparams[i]->obj;
-                    rec::errorf(gocpp::recv(check), posn, CannotInferTypeArgs, "cannot infer %s (%s)"_s, obj->object.name, obj->object.pos);
+                    rec::addf(gocpp::recv(err), posn, "cannot infer %s (declared at %v)"_s, obj->object.name, obj->object.pos);
                     return nullptr;
                 }
             }
@@ -551,19 +578,6 @@ namespace golang::types
         }
     }
 
-    // containsNil reports whether list contains a nil entry.
-    bool containsNil(gocpp::slice<golang::types::Type> list)
-    {
-        for(auto [gocpp_ignored, t] : list)
-        {
-            if(t == nullptr)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
     // renameTParams renames the type parameters in the given type such that each type
     // parameter is given a new identity. renameTParams returns the new type parameters
     // and updated type. If the result type is unchanged from the argument type, none
@@ -571,7 +585,7 @@ namespace golang::types
     // If typ is a generic function, type parameters held with typ are not changed and
     // must be updated separately if desired.
     // The positions is only used for debug traces.
-    std::tuple<gocpp::slice<TypeParam*>, golang::types::Type> rec::renameTParams(Checker* check, token::Pos pos, gocpp::slice<TypeParam*> tparams, golang::types::Type typ)
+    std::tuple<gocpp::slice<TypeParam*>, golang::go::types::Type> rec::renameTParams(Checker* check, token::Pos pos, gocpp::slice<TypeParam*> tparams, golang::go::types::Type typ)
     {
         // For the purpose of type inference we must differentiate type parameters
         // occurring in explicit type or value function arguments from the type
@@ -664,11 +678,11 @@ namespace golang::types
     // isParameterized reports whether typ contains any of the type parameters of tparams.
     // If typ is a generic function, isParameterized ignores the type parameter declarations;
     // it only considers the signature proper (incoming and result parameters).
-    bool isParameterized(gocpp::slice<TypeParam*> tparams, golang::types::Type typ)
+    bool isParameterized(gocpp::slice<TypeParam*> tparams, golang::go::types::Type typ)
     {
         auto w = gocpp::Init<tpWalker>([=](auto& x) {
             x.tparams = tparams;
-            x.seen = gocpp::make(gocpp::Tag<gocpp::map<golang::types::Type, bool>>());
+            x.seen = gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, bool>>());
         });
         return rec::isParameterized(gocpp::recv(w), typ);
     }
@@ -705,7 +719,7 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
-    bool rec::isParameterized(tpWalker* w, golang::types::Type typ)
+    bool rec::isParameterized(tpWalker* w, golang::go::types::Type typ)
     {
         bool res;
         gocpp::Defer defer;
@@ -724,21 +738,21 @@ namespace golang::types
 
             //Go type switch emulation
             {
-                const auto& gocpp_id_3 = gocpp::type_info(typ);
+                const auto& gocpp_id_2 = gocpp::type_info(typ);
                 int conditionId = -1;
-                if(gocpp_id_3 == typeid(types::Basic*)) { conditionId = 0; }
-                else if(gocpp_id_3 == typeid(types::Alias*)) { conditionId = 1; }
-                else if(gocpp_id_3 == typeid(types::Array*)) { conditionId = 2; }
-                else if(gocpp_id_3 == typeid(types::Slice*)) { conditionId = 3; }
-                else if(gocpp_id_3 == typeid(types::Struct*)) { conditionId = 4; }
-                else if(gocpp_id_3 == typeid(types::Pointer*)) { conditionId = 5; }
-                else if(gocpp_id_3 == typeid(types::Tuple*)) { conditionId = 6; }
-                else if(gocpp_id_3 == typeid(types::Signature*)) { conditionId = 7; }
-                else if(gocpp_id_3 == typeid(types::Interface*)) { conditionId = 8; }
-                else if(gocpp_id_3 == typeid(types::Map*)) { conditionId = 9; }
-                else if(gocpp_id_3 == typeid(types::Chan*)) { conditionId = 10; }
-                else if(gocpp_id_3 == typeid(types::Named*)) { conditionId = 11; }
-                else if(gocpp_id_3 == typeid(types::TypeParam*)) { conditionId = 12; }
+                if(gocpp_id_2 == typeid(types::Basic*)) { conditionId = 0; }
+                else if(gocpp_id_2 == typeid(types::Alias*)) { conditionId = 1; }
+                else if(gocpp_id_2 == typeid(types::Array*)) { conditionId = 2; }
+                else if(gocpp_id_2 == typeid(types::Slice*)) { conditionId = 3; }
+                else if(gocpp_id_2 == typeid(types::Struct*)) { conditionId = 4; }
+                else if(gocpp_id_2 == typeid(types::Pointer*)) { conditionId = 5; }
+                else if(gocpp_id_2 == typeid(types::Tuple*)) { conditionId = 6; }
+                else if(gocpp_id_2 == typeid(types::Signature*)) { conditionId = 7; }
+                else if(gocpp_id_2 == typeid(types::Interface*)) { conditionId = 8; }
+                else if(gocpp_id_2 == typeid(types::Map*)) { conditionId = 9; }
+                else if(gocpp_id_2 == typeid(types::Chan*)) { conditionId = 10; }
+                else if(gocpp_id_2 == typeid(types::Named*)) { conditionId = 11; }
+                else if(gocpp_id_2 == typeid(types::TypeParam*)) { conditionId = 12; }
                 switch(conditionId)
                 {
                     // nothing to do
@@ -819,7 +833,7 @@ namespace golang::types
                                 return true;
                             }
                         }
-                        return rec::is(gocpp::recv(tset), [=](term* t) mutable -> bool
+                        return rec::is(gocpp::recv(tset), [=](golang::go::types::term* t) mutable -> bool
                         {
                             return t != nullptr && rec::isParameterized(gocpp::recv(w), t->typ);
                         });
@@ -856,7 +870,7 @@ namespace golang::types
                     case 12:
                     {
                         types::TypeParam* t = gocpp::any_cast<types::TypeParam*>(typ);
-                        return tparamIndex(w->tparams, t) >= 0;
+                        return slices::Index(w->tparams, t) >= 0;
                         break;
                     }
 
@@ -894,13 +908,13 @@ namespace golang::types
     // Otherwise, if tpar has a core type T, it returns a term corresponding to that
     // core type and false. In that case, if any term of tpar has a tilde, the core
     // term has a tilde. In all other cases coreTerm returns (nil, false).
-    std::tuple<term*, bool> coreTerm(TypeParam* tpar)
+    std::tuple<golang::go::types::term*, bool> coreTerm(TypeParam* tpar)
     {
         auto n = 0;
         // valid if n == 1
-        term* single = {};
+        golang::go::types::term* single = {};
         bool tilde = {};
-        rec::is(gocpp::recv(tpar), [=](term* t) mutable -> bool
+        rec::is(gocpp::recv(tpar), [=](golang::go::types::term* t) mutable -> bool
         {
             if(t == nullptr)
             {
@@ -920,17 +934,18 @@ namespace golang::types
         {
             if(debug)
             {
-                assert(debug && under(single->typ) == coreType(tpar));
+                auto [u, gocpp_id_3] = commonUnder(tpar, nullptr);
+                assert(rec::Underlying(gocpp::recv(single->typ)) == u);
             }
             return {single, true};
         }
-        if(auto typ = coreType(tpar); typ != nullptr)
+        if(auto [typ, gocpp_id_4] = commonUnder(tpar, nullptr); typ != nullptr)
         {
             // A core type is always an underlying type.
             // If any term of tpar has a tilde, we don't
             // have a precise core type and we must return
             // a tilde as well.
-            return {new term {tilde, typ}, false};
+            return {new golang::go::types::term {tilde, typ}, false};
         }
         return {nullptr, false};
     }
@@ -942,9 +957,9 @@ namespace golang::types
     //
     // TODO(gri) Determine if we can simply abort inference as soon as we have
     // found a single cycle.
-    void killCycles(gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::types::Type> inferred)
+    void killCycles(gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> inferred)
     {
-        auto w = cycleFinder {tparams, inferred, gocpp::make(gocpp::Tag<gocpp::map<golang::types::Type, bool>>())};
+        auto w = cycleFinder {tparams, inferred, gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, bool>>())};
         for(auto [gocpp_ignored, t] : tparams)
         {
             // t != nil
@@ -987,19 +1002,20 @@ namespace golang::types
         return value.PrintTo(os);
     }
 
-    void rec::typ(cycleFinder* w, golang::types::Type typ)
+    void rec::typ(cycleFinder* w, golang::go::types::Type typ)
     {
         gocpp::Defer defer;
         try
         {
+            typ = Unalias(typ);
             if(w->seen[typ])
             {
                 // We have seen typ before. If it is one of the type parameters
                 // in w.tparams, iterative substitution will lead to infinite expansion.
                 // Nil out the corresponding type which effectively kills the cycle.
-                if(auto [tpar, gocpp_id_4] = gocpp::getValue<TypeParam*>(typ); tpar != nullptr)
+                if(auto [tpar, gocpp_id_5] = gocpp::getValue<TypeParam*>(typ); tpar != nullptr)
                 {
-                    if(auto i = tparamIndex(w->tparams, tpar); i >= 0)
+                    if(auto i = slices::Index(w->tparams, tpar); i >= 0)
                     {
                         // cycle through tpar
                         w->inferred[i] = nullptr;
@@ -1014,21 +1030,20 @@ namespace golang::types
 
             //Go type switch emulation
             {
-                const auto& gocpp_id_5 = gocpp::type_info(typ);
+                const auto& gocpp_id_6 = gocpp::type_info(typ);
                 int conditionId = -1;
-                if(gocpp_id_5 == typeid(types::Basic*)) { conditionId = 0; }
-                else if(gocpp_id_5 == typeid(types::Alias*)) { conditionId = 1; }
-                else if(gocpp_id_5 == typeid(types::Array*)) { conditionId = 2; }
-                else if(gocpp_id_5 == typeid(types::Slice*)) { conditionId = 3; }
-                else if(gocpp_id_5 == typeid(types::Struct*)) { conditionId = 4; }
-                else if(gocpp_id_5 == typeid(types::Pointer*)) { conditionId = 5; }
-                else if(gocpp_id_5 == typeid(types::Signature*)) { conditionId = 6; }
-                else if(gocpp_id_5 == typeid(types::Union*)) { conditionId = 7; }
-                else if(gocpp_id_5 == typeid(types::Interface*)) { conditionId = 8; }
-                else if(gocpp_id_5 == typeid(types::Map*)) { conditionId = 9; }
-                else if(gocpp_id_5 == typeid(types::Chan*)) { conditionId = 10; }
-                else if(gocpp_id_5 == typeid(types::Named*)) { conditionId = 11; }
-                else if(gocpp_id_5 == typeid(types::TypeParam*)) { conditionId = 12; }
+                if(gocpp_id_6 == typeid(types::Basic*)) { conditionId = 0; }
+                else if(gocpp_id_6 == typeid(types::Array*)) { conditionId = 1; }
+                else if(gocpp_id_6 == typeid(types::Slice*)) { conditionId = 2; }
+                else if(gocpp_id_6 == typeid(types::Struct*)) { conditionId = 3; }
+                else if(gocpp_id_6 == typeid(types::Pointer*)) { conditionId = 4; }
+                else if(gocpp_id_6 == typeid(types::Signature*)) { conditionId = 5; }
+                else if(gocpp_id_6 == typeid(types::Union*)) { conditionId = 6; }
+                else if(gocpp_id_6 == typeid(types::Interface*)) { conditionId = 7; }
+                else if(gocpp_id_6 == typeid(types::Map*)) { conditionId = 8; }
+                else if(gocpp_id_6 == typeid(types::Chan*)) { conditionId = 9; }
+                else if(gocpp_id_6 == typeid(types::Named*)) { conditionId = 10; }
+                else if(gocpp_id_6 == typeid(types::TypeParam*)) { conditionId = 11; }
                 switch(conditionId)
                 {
                     // nothing to do
@@ -1037,35 +1052,30 @@ namespace golang::types
                         types::Basic* t = gocpp::any_cast<types::Basic*>(typ);
                         break;
                     }
+                    // *Alias:
+                    // This case should not occur because of Unalias(typ) at the top.
                     case 1:
-                    {
-                        types::Alias* t = gocpp::any_cast<types::Alias*>(typ);
-                        rec::typ(gocpp::recv(w), Unalias(t));
-                        break;
-                    }
-
-                    case 2:
                     {
                         types::Array* t = gocpp::any_cast<types::Array*>(typ);
                         rec::typ(gocpp::recv(w), t->elem);
                         break;
                     }
 
-                    case 3:
+                    case 2:
                     {
                         types::Slice* t = gocpp::any_cast<types::Slice*>(typ);
                         rec::typ(gocpp::recv(w), t->elem);
                         break;
                     }
 
-                    case 4:
+                    case 3:
                     {
                         types::Struct* t = gocpp::any_cast<types::Struct*>(typ);
                         rec::varList(gocpp::recv(w), t->fields);
                         break;
                     }
 
-                    case 5:
+                    case 4:
                     {
                         types::Pointer* t = gocpp::any_cast<types::Pointer*>(typ);
                         rec::typ(gocpp::recv(w), t->base);
@@ -1075,7 +1085,7 @@ namespace golang::types
                     // case *Tuple:
                     // This case should not occur because tuples only appear
                     // in signatures where they are handled explicitly.
-                    case 6:
+                    case 5:
                     {
                         types::Signature* t = gocpp::any_cast<types::Signature*>(typ);
                         if(t->params != nullptr)
@@ -1089,7 +1099,7 @@ namespace golang::types
                         break;
                     }
 
-                    case 7:
+                    case 6:
                     {
                         types::Union* t = gocpp::any_cast<types::Union*>(typ);
                         for(auto [gocpp_ignored, t] : t->terms)
@@ -1099,7 +1109,7 @@ namespace golang::types
                         break;
                     }
 
-                    case 8:
+                    case 7:
                     {
                         types::Interface* t = gocpp::any_cast<types::Interface*>(typ);
                         for(auto [gocpp_ignored, m] : t->methods)
@@ -1113,7 +1123,7 @@ namespace golang::types
                         break;
                     }
 
-                    case 9:
+                    case 8:
                     {
                         types::Map* t = gocpp::any_cast<types::Map*>(typ);
                         rec::typ(gocpp::recv(w), t->key);
@@ -1121,14 +1131,14 @@ namespace golang::types
                         break;
                     }
 
-                    case 10:
+                    case 9:
                     {
                         types::Chan* t = gocpp::any_cast<types::Chan*>(typ);
                         rec::typ(gocpp::recv(w), t->elem);
                         break;
                     }
 
-                    case 11:
+                    case 10:
                     {
                         types::Named* t = gocpp::any_cast<types::Named*>(typ);
                         for(auto [gocpp_ignored, tpar] : rec::list(gocpp::recv(rec::TypeArgs(gocpp::recv(t)))))
@@ -1138,10 +1148,10 @@ namespace golang::types
                         break;
                     }
 
-                    case 12:
+                    case 11:
                     {
                         types::TypeParam* t = gocpp::any_cast<types::TypeParam*>(typ);
-                        if(auto i = tparamIndex(w->tparams, t); i >= 0 && w->inferred[i] != nullptr)
+                        if(auto i = slices::Index(w->tparams, t); i >= 0 && w->inferred[i] != nullptr)
                         {
                             rec::typ(gocpp::recv(w), w->inferred[i]);
                         }
@@ -1169,20 +1179,6 @@ namespace golang::types
         {
             rec::typ(gocpp::recv(w), v->object.typ);
         }
-    }
-
-    // If tpar is a type parameter in list, tparamIndex returns the index
-    // of the type parameter in list. Otherwise the result is < 0.
-    int tparamIndex(gocpp::slice<TypeParam*> list, TypeParam* tpar)
-    {
-        for(auto [i, p] : list)
-        {
-            if(p == tpar)
-            {
-                return i;
-            }
-        }
-        return - 1;
     }
 
 }

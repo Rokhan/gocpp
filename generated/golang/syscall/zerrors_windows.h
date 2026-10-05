@@ -12,6 +12,7 @@
 
 namespace golang::syscall
 {
+    // Error strings for invented errors
     extern gocpp::array<gocpp::string, 131> errors;
 
     namespace rec

@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::gcexportdata
+namespace golang::golang_org::x::tools::go::gcexportdata
 {
     struct gocpp_id_0;
 }

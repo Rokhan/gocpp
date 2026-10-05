@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 
-namespace golang::semver
+namespace golang::golang_org::x::mod::semver
 {
     struct parsed
     {
@@ -44,6 +44,7 @@ namespace golang::semver
     struct GoTag_ByVersion { };
     using ByVersion = gocpp::defined<gocpp::slice<gocpp::string>, GoTag_ByVersion>;
     void Sort(gocpp::slice<gocpp::string> list);
+    int compareVersion(gocpp::string a, gocpp::string b);
     std::tuple<gocpp::string, gocpp::string, bool> parseInt(gocpp::string v);
     std::tuple<gocpp::string, gocpp::string, bool> parsePrerelease(gocpp::string v);
     std::tuple<gocpp::string, gocpp::string, bool> parseBuild(gocpp::string v);

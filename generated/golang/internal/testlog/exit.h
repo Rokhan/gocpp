@@ -10,14 +10,20 @@
 #include "gocpp/support.h"
 
 
-namespace golang::testlog
+namespace golang::internal::testlog
 {
     bool PanicOnExit0();
     void SetPanicOnExit0(bool v);
 }
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::internal::testlog
+{
+    namespace sync = golang::sync;
+}
 #include "golang/sync/mutex.h"
 
-namespace golang::testlog
+namespace golang::internal::testlog
 {
     struct panicOnExit0Struct
     {
@@ -36,6 +42,9 @@ namespace golang::testlog
     };
 
     std::ostream& operator<<(std::ostream& os, const struct panicOnExit0Struct& value);
+    // panicOnExit0 is the flag used for PanicOnExit0. This uses a lock
+    // because the value can be cleared via a timer call that may race
+    // with calls to os.Exit
     extern panicOnExit0Struct panicOnExit0;
 
     namespace rec

@@ -4,8 +4,9 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::syntax
+namespace golang::regexp::syntax
 {
+    struct Regexp;
     using Op = uint8_t;
     using printFlags = uint8_t;
     const long negShift = 5;
@@ -35,10 +36,4 @@ namespace golang::syntax
     const printFlags flagS = 1 << 2;
     const printFlags flagOff = 1 << 3;
     const printFlags flagPrec = 1 << 4;
-}
-#include "golang/regexp/syntax/parse.fwd.h"
-
-namespace golang::syntax
-{
-    struct Regexp;
 }

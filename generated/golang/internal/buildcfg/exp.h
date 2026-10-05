@@ -9,10 +9,27 @@
 #include "golang/internal/buildcfg/exp.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/buildcfg/cfg.h"
+
+namespace golang::internal::buildcfg
+{
+    // FramePointerEnabled enables the use of platform conventions for
+    // saving frame pointers.
+    //
+    // This used to be an experiment, but now it's always enabled on
+    // platforms that support it.
+    //
+    // Note: must agree with runtime.framepointer_enabled.
+    extern bool FramePointerEnabled;
+}
+#include "golang/internal/goexperiment/flags.fwd.h"
+
+namespace golang::internal::buildcfg
+{
+    namespace goexperiment = golang::internal::goexperiment;
+}
 #include "golang/internal/goexperiment/flags.h"
 
-namespace golang::buildcfg
+namespace golang::internal::buildcfg
 {
     struct ExperimentFlags
     {
@@ -31,15 +48,18 @@ namespace golang::buildcfg
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ExperimentFlags& value);
-    extern bool FramePointerEnabled;
     gocpp::slice<gocpp::string> expList(goexperiment::Flags* exp, goexperiment::Flags* base, bool all);
-    std::tuple<ExperimentFlags*, gocpp::error> ParseGOEXPERIMENT(gocpp::string goos, gocpp::string goarch, gocpp::string goexp);
-}
-#include "golang/internal/buildcfg/zbootstrap.h"
-
-namespace golang::buildcfg
-{
+    // Experiment contains the toolchain experiments enabled for the
+    // current build.
+    //
+    // (This is not necessarily the set of experiments the compiler itself
+    // was built with.)
+    //
+    // Experiment.baseline specifies the experiment flags that are enabled by
+    // default in the current toolchain. This is, in effect, the "control"
+    // configuration and any variation from this is an experiment.
     extern ExperimentFlags Experiment;
+    std::tuple<ExperimentFlags*, gocpp::error> ParseGOEXPERIMENT(gocpp::string goos, gocpp::string goarch, gocpp::string goexp);
 
     namespace rec
     {

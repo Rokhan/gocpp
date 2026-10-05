@@ -15,6 +15,8 @@
 
 namespace golang::main
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace fmt = golang::fmt;
     namespace rec
     {
     }

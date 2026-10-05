@@ -6,13 +6,7 @@
 
 namespace golang::runtime
 {
-    struct inlineFrame;
-}
-#include "golang/internal/abi/symtab.fwd.h"
-#include "golang/runtime/symtab.fwd.h"
-
-namespace golang::runtime
-{
     struct inlinedCall;
     struct inlineUnwinder;
+    struct inlineFrame;
 }

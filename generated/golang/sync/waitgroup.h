@@ -9,6 +9,12 @@
 #include "golang/sync/waitgroup.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/sync/atomic/type.fwd.h"
+
+namespace golang::sync
+{
+    namespace atomic = golang::sync::atomic;
+}
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/cond.h"
 
@@ -17,7 +23,11 @@ namespace golang::sync
     struct WaitGroup
     {
         noCopy noCopy{};
-        atomic::Uint64 state{}; // high 32 bits are counter, low 32 bits are waiter count.
+        // Bits (high to low):
+        // bits[0:32]  counter
+        // bits[32]    flag: synctest bubble membership
+        // bits[33:64] wait count
+        atomic::Uint64 state{};
         uint32_t sema{};
 
         using isGoStruct = void;
@@ -38,6 +48,7 @@ namespace golang::sync
         void Add(WaitGroup* wg, int delta);
         void Done(WaitGroup* wg);
         void Wait(WaitGroup* wg);
+        void Go(WaitGroup* wg, std::function<void ()> f);
     }
 }
 

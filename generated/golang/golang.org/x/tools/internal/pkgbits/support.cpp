@@ -13,8 +13,9 @@
 
 #include "golang/fmt/errors.h"
 
-namespace golang::pkgbits
+namespace golang::golang_org::x::tools::internal::pkgbits
 {
+    namespace fmt = golang::fmt;
     namespace rec
     {
     }
@@ -27,7 +28,7 @@ namespace golang::pkgbits
         }
     }
 
-    void errorf(gocpp::string format, gocpp::slice<gocpp::go_any> args)
+    void panicf(gocpp::string format, gocpp::slice<go_any> args)
     {
         gocpp::panic(mocklib::Errorf(format, args));
     }

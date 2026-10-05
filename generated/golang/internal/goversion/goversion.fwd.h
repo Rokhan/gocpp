@@ -4,12 +4,12 @@
 #include "gocpp/support.fwd.h"
 
 
-namespace golang::goversion
+namespace golang::internal::goversion
 {
     // Version is the Go 1.x version which is currently
     // in development and will eventually get released.
     //
     // It should be updated at the start of each development cycle to be
-    // the version of the next Go 1.x release. See golang.org/issue/40705.
-    const long Version = 22;
+    // the version of the next Go 1.x release. See go.dev/issue/40705.
+    const long Version = 27;
 }

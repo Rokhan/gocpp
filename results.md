@@ -126,7 +126,7 @@
 | ---- | -------------| ----------- |
 | $(ImportDir)/bufio/bufio.go | ✔️ ([cpp](generated/golang/bufio/bufio.cpp), [h](generated/golang/bufio/bufio.h))| ✔️ |
 | $(ImportDir)/bytes/buffer.go | ✔️ ([cpp](generated/golang/bytes/buffer.cpp), [h](generated/golang/bytes/buffer.h))| ✔️ |
-| $(ImportDir)/bytes/bytes.go | ✔️ ([cpp](generated/golang/bytes/bytes.cpp), [h](generated/golang/bytes/bytes.h))| ❌ |
+| $(ImportDir)/bytes/bytes.go | ✔️ ([cpp](generated/golang/bytes/bytes.cpp), [h](generated/golang/bytes/bytes.h))| ✔️ |
 | $(ImportDir)/bytes/reader.go | ✔️ ([cpp](generated/golang/bytes/reader.cpp), [h](generated/golang/bytes/reader.h))| ✔️ |
 | $(ImportDir)/cmp/cmp.go | ✔️ ([cpp](generated/golang/cmp/cmp.cpp), [h](generated/golang/cmp/cmp.h))| ✔️ |
 | $(ImportDir)/compress/flate/deflate.go | ✔️ ([cpp](generated/golang/compress/flate/deflate.cpp), [h](generated/golang/compress/flate/deflate.h))| ❌ |
@@ -777,7 +777,7 @@
 | $(ImportDir)/strings/reader.go | ✔️ ([cpp](generated/golang/strings/reader.cpp), [h](generated/golang/strings/reader.h))| ✔️ |
 | $(ImportDir)/strings/replace.go | ✔️ ([cpp](generated/golang/strings/replace.cpp), [h](generated/golang/strings/replace.h))| ✔️ |
 | $(ImportDir)/strings/search.go | ✔️ ([cpp](generated/golang/strings/search.cpp), [h](generated/golang/strings/search.h))| ✔️ |
-| $(ImportDir)/strings/strings.go | ✔️ ([cpp](generated/golang/strings/strings.cpp), [h](generated/golang/strings/strings.h))| ❌ |
+| $(ImportDir)/strings/strings.go | ✔️ ([cpp](generated/golang/strings/strings.cpp), [h](generated/golang/strings/strings.h))| ✔️ |
 | $(ImportDir)/structs/hostlayout.go | ✔️ ([cpp](generated/golang/structs/hostlayout.cpp), [h](generated/golang/structs/hostlayout.h))| ✔️ |
 | $(ImportDir)/sync/atomic/doc.go | ✔️ ([cpp](generated/golang/sync/atomic/doc.cpp), [h](generated/golang/sync/atomic/doc.h))| ✔️ |
 | $(ImportDir)/sync/atomic/doc_64.go | ✔️ ([cpp](generated/golang/sync/atomic/doc_64.cpp), [h](generated/golang/sync/atomic/doc_64.h))| ✔️ |

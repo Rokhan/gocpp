@@ -1020,8 +1020,8 @@ namespace gocpp
     template<typename T>
     struct array_base
     {
-        using element_type = T;
         using store_type = safe_vector<T>;
+        using element_type = store_type::value_type;
         using vect_iterator = typename store_type::iterator;
         using const_vect_iterator = typename store_type::iterator;
 

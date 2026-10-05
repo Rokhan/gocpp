@@ -1505,7 +1505,7 @@ namespace golang::bytes
         auto start = 0;
         if(len(old) > 0)
         {
-            for(const auto& _ : n)
+            for(int i = 0; i < n; ++i)
             {
                 auto j = start + Index(s.make_slice(start), old);
                 w += copy(t.make_slice(w), s.make_slice(start, j));
@@ -1517,7 +1517,7 @@ namespace golang::bytes
         {
             // len(old) == 0
             w += copy(t.make_slice(w), go_new);
-            for(const auto& _ : n - 1)
+            for(int i = 0; i < n - 1; ++i)
             {
                 auto [gocpp_id_2, wid] = utf8::DecodeRune(s.make_slice(start));
                 auto j = start + wid;

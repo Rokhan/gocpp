@@ -84,7 +84,7 @@ namespace golang::math::big
         {
             if(auto [bw, ok] = gocpp::getValue<io::ByteWriter>(s); ok)
             {
-                for(const auto& _ : count)
+                for(int i = 0; i < count; ++i)
                 {
                     rec::WriteByte(gocpp::recv(bw), text[0]);
                 }
@@ -93,14 +93,14 @@ namespace golang::math::big
         }
         if(auto [sw, ok] = gocpp::getValue<io::StringWriter>(s); ok)
         {
-            for(const auto& _ : count)
+            for(int i = 0; i < count; ++i)
             {
                 rec::WriteString(gocpp::recv(sw), text);
             }
             return;
         }
         auto b = gocpp::slice<unsigned char>(text);
-        for(const auto& _ : count)
+        for(int i = 0; i < count; ++i)
         {
             rec::Write(gocpp::recv(s), b);
         }

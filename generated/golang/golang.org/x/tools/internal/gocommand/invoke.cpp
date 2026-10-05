@@ -504,7 +504,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
 
             // Wait for all in-progress go commands to return before proceeding,
             // to avoid load concurrency errors.
-            for(const auto& _ : maxInFlight)
+            for(int i = 0; i < maxInFlight; ++i)
             {
                 //Go select emulation
                 {

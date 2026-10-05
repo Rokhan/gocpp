@@ -850,7 +850,7 @@ namespace golang::runtime
 
         // Collect them and schedule them.
         gList list = {};
-        for(const auto& _ : wake)
+        for(int i = 0; i < wake; ++i)
         {
             rec::push(gocpp::recv(list), rec::pop(gocpp::recv(q->sleeping)));
         }
@@ -891,7 +891,7 @@ namespace golang::runtime
         }
         runtime::unlock(& q->lock);
 
-        for(const auto& _ : need)
+        for(int i = 0; i < need; ++i)
         {
             gocpp::go([&]{ runCleanups(); });
         }

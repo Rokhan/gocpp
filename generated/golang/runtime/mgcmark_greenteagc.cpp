@@ -1206,7 +1206,7 @@ namespace golang::runtime
         gcw->heapScanWork += int64_t(sys::Len64(uint64_t(ptrBits)) * goarch::PtrSize);
         auto nptrs = 0;
         auto n = sys::OnesCount64(uint64_t(ptrBits));
-        for(const auto& _ : n)
+        for(int i = 0; i < n; ++i)
         {
             auto k = sys::TrailingZeros64(uint64_t(ptrBits));
             ptrBits &^= 1 << k;
@@ -1251,7 +1251,7 @@ namespace golang::runtime
             auto n = sys::OnesCount64(uint64_t(bits));
             auto [hbitsBase, gocpp_id_2] = spanHeapBitsRange(base, gc::PageSize, objSize);
             auto hbits = (unsigned char*)(gocpp::unsafe_pointer(hbitsBase));
-            for(const auto& _ : n)
+            for(int i = 0; i < n; ++i)
             {
                 auto j = sys::TrailingZeros64(uint64_t(bits));
                 bits &^= 1 << j;
@@ -1261,7 +1261,7 @@ namespace golang::runtime
                 gcw->heapScanWork += int64_t(sys::Len64(uint64_t(ptrBits)) * goarch::PtrSize);
 
                 auto n = sys::OnesCount64(uint64_t(ptrBits));
-                for(const auto& _ : n)
+                for(int i = 0; i < n; ++i)
                 {
                     auto k = sys::TrailingZeros64(uint64_t(ptrBits));
                     ptrBits &^= 1 << k;

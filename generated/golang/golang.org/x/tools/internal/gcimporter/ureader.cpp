@@ -1036,7 +1036,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                         }
                         if(rec::Has(gocpp::recv(rec::Version(gocpp::recv(r))), pkgbits::GenericMethods))
                         {
-                            for(const auto& _ : rec::Len(gocpp::recv(r)))
+                            for(int i = 0; i < rec::Len(gocpp::recv(r)); ++i)
                             {
                                 // Careful: objIdx is used to read in package-scoped declarations, which
                                 // methods are not. Instead, decode it here. This makes it easier to

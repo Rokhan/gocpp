@@ -578,7 +578,7 @@ namespace golang::internal::strconv
                             dst = append(dst, s.make_slice(i, m));
                             i = m;
                         }
-                        for(const auto& _ : prec + 1 - i)
+                        for(int j = 0; j < prec + 1 - i; ++j)
                         {
                             dst = append(dst, '0');
                         }
@@ -638,7 +638,7 @@ namespace golang::internal::strconv
                         {
                             dst = append(dst, c);
                         }
-                        for(const auto& _ : dp - m)
+                        for(int i = 0; i < dp - m; ++i)
                         {
                             dst = append(dst, '0');
                         }
@@ -658,7 +658,7 @@ namespace golang::internal::strconv
                         auto m = gocpp::min(prec - lz, gocpp::max(0, nd - off));
                         // trailing zeros
                         auto tz = gocpp::max(0, prec - lz - m);
-                        for(const auto& _ : lz)
+                        for(int i = 0; i < lz; ++i)
                         {
                             dst = append(dst, '0');
                         }
@@ -666,7 +666,7 @@ namespace golang::internal::strconv
                         {
                             dst = append(dst, s[off + i]);
                         }
-                        for(const auto& _ : tz)
+                        for(int i = 0; i < tz; ++i)
                         {
                             dst = append(dst, '0');
                         }

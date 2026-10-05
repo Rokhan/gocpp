@@ -1490,7 +1490,7 @@ namespace golang::strings
         auto start = 0;
         if(len(old) > 0)
         {
-            for(const auto& _ : n)
+            for(int i = 0; i < n; ++i)
             {
                 auto j = start + Index(s.make_slice(start), old);
                 rec::WriteString(gocpp::recv(b), s.make_slice(start, j));
@@ -1502,7 +1502,7 @@ namespace golang::strings
         {
             // len(old) == 0
             rec::WriteString(gocpp::recv(b), go_new);
-            for(const auto& _ : n - 1)
+            for(int i = 0; i < n - 1; ++i)
             {
                 auto [gocpp_id_4, wid] = utf8::DecodeRuneInString(s.make_slice(start));
                 auto j = start + wid;

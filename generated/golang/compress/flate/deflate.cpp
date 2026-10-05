@@ -593,7 +593,7 @@ namespace golang::compress::flate
             return true;
         }
         n = 1 + (n >> 6);
-        for(const auto& _ : n)
+        for(int i = 0; i < n; ++i)
         {
             if(s->index >= d->windowEnd - 1)
             {

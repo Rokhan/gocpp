@@ -44,6 +44,15 @@ namespace golang::main
         {
             n++;
         }
+
+        // check conflict with generated loop variable names
+        auto i = 0;
+        auto j = 0;
+        for(int k = 0; k < 5; ++k)
+        {
+            mocklib::Println("for range 5"_s);
+        }
+        mocklib::Println(i, j);
     }
 
 }

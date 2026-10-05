@@ -52,3 +52,4 @@ log/
 /.vscode/launch.json
 /**/.vs
 /generated.build/
+/times.md

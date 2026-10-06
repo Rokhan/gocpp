@@ -1811,7 +1811,11 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			cv.WritterExprPrintf(cppOut, "%sstd::tie(%s, std::ignore) = *%s;\n", cv.cpp.Indent(), cv.convertExpr(s.Key), itName)
 			cv.WritterExprPrintf(cppOut, "%sfor(; %[2]s != std::end(%[4]s); std::tie(%[3]s, std::ignore) = *++%[2]s)\n", cv.cpp.Indent(), itName, cv.convertExpr(s.Key), cv.convertExpr(s.X))
 		} else if s.Key != nil && s.Value == nil && s.Tok == token.DEFINE {
-			cv.WritterExprPrintf(cppOut, "%sfor(auto [%s, gocpp_ignored] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.X))
+			if cv.IsExprInt(s.X) {
+				cv.WritterExprPrintf(cppOut, "%sfor(int %[2]s = 0; %[2]s < %[3]s; ++%[2]s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.X))
+			} else {
+				cv.WritterExprPrintf(cppOut, "%sfor(auto [%s, gocpp_ignored] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.X))
+			}
 		} else if s.Key == nil && s.Value != nil && s.Tok == token.DEFINE {
 			cv.WritterExprPrintf(cppOut, "%sfor(auto [gocpp_ignored, %s] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Value), cv.convertExpr(s.X))
 		} else if s.Key == nil && s.Value == nil {

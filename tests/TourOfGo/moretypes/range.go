@@ -31,4 +31,8 @@ func main() {
 		fmt.Println("for range 5")
 	}
 	fmt.Println(i, j)
+
+	for k := range 5 {
+		fmt.Println(k)
+	}
 }

@@ -12,6 +12,7 @@ import (
 	"go/token"
 	"go/types"
 	"io"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -21,7 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/exp/maps"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -278,7 +278,7 @@ func (cv *cppConverter) declareVars(params typeNames) {
 func (cv *cppConverter) getScopeVars() (result []string) {
 	for elt := cv.scopes.Back(); elt != nil; elt = elt.Prev() {
 		scope := elt.Value.(scope)
-		result = append(result, maps.Keys(scope.vars)...)
+		result = append(result, slices.Collect(maps.Keys(scope.vars))...)
 	}
 	return
 }
@@ -286,7 +286,7 @@ func (cv *cppConverter) getScopeVars() (result []string) {
 func (cv *cppConverter) getLocalScopeVars() (result []string) {
 	elt := cv.scopes.Back()
 	scope := elt.Value.(scope)
-	return maps.Keys(scope.vars)
+	return slices.Collect(maps.Keys(scope.vars))
 }
 
 // FIXME : manage composed names like A.B.C
@@ -1724,7 +1724,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 	case *ast.DeferStmt:
 		*env.useDefer = true
-		usedOutVars := maps.Keys(usedIdentifiers(env.outNames, s.Call))
+		usedOutVars := slices.Collect(maps.Keys(usedIdentifiers(env.outNames, s.Call)))
 		byRefString := JoinWithPrefix(usedOutVars, ", &")
 		cv.WritterExprPrintf(cppOut, "%sdefer.push_back([=%s]{ %s; });\n", cv.cpp.Indent(), byRefString, cv.convertExpr(s.Call))
 
@@ -2563,8 +2563,8 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 							}
 						}
 						result = append(result, inlineStrf(s, "auto [%s] = %s%s", strings.Join(names, ", "), cv.convertExpr(values[0]), end)...)
-						for name, tmpName := range tmpNames {
-							result = append(result, inlineStrf(s, "auto& %s = %s%s", name, tmpName, end)...)
+						for _, name := range slices.Sorted(maps.Keys(tmpNames)) {
+							result = append(result, inlineStrf(s, "auto& %s = %s%s", name, tmpNames[name], end)...)
 						}
 
 					default:
@@ -3446,7 +3446,7 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {
-		templatePrmList = fmt.Sprintf("<%s>", strings.Join(maps.Keys(templatePrms), ", "))
+		templatePrmList = fmt.Sprintf("<%s>", strings.Join(slices.Collect(maps.Keys(templatePrms)), ", "))
 	}
 
 	for _, field := range fields {
@@ -3499,7 +3499,7 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 		cv.Panicf("unmanaged GenOutputType value %v", param.output)
 	}
 
-	excludedNames := append(maps.Keys(templatePrms), param.name)
+	excludedNames := append(slices.Collect(maps.Keys(templatePrms)), param.name)
 	newTemplateParamName := getAnotherTemplateParamName(excludedNames)
 
 	// Not needed for now, we want to keep struct an aggregate type.
@@ -3704,7 +3704,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {
-		templatePrmList = fmt.Sprintf("<%s>", strings.Join(maps.Keys(templatePrms), ", "))
+		templatePrmList = fmt.Sprintf("<%s>", strings.Join(slices.Collect(maps.Keys(templatePrms)), ", "))
 	}
 
 	data := cv.computeGenStructData(param, templatePrmList)

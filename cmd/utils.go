@@ -547,15 +547,15 @@ func buildOutType(outTypes []outType, typeParams typeParams) string {
 		resultType = "void"
 	case 1:
 		resultType = GetCppOutType(outTypes[0])
-		if deps, ok := typeParams[resultType]; ok && len(deps) != 0 {
-			resultType = fmt.Sprintf("%s<%s>", resultType, strings.Join(deps, ", "))
+		if deps, ok := typeParams[resultType]; ok && len(deps.subParams) != 0 {
+			resultType = fmt.Sprintf("%s<%s>", resultType, strings.Join(deps.subParams, ", "))
 		}
 	default:
 		var types []string
 		for _, outType := range outTypes {
 			cppOutType := GetCppOutType(outType)
-			if deps, ok := typeParams[cppOutType]; ok && len(deps) != 0 {
-				cppOutType = fmt.Sprintf("%s<%s>", cppOutType, strings.Join(deps, ", "))
+			if deps, ok := typeParams[cppOutType]; ok && len(deps.subParams) != 0 {
+				cppOutType = fmt.Sprintf("%s<%s>", cppOutType, strings.Join(deps.subParams, ", "))
 			}
 			types = append(types, cppOutType)
 		}
@@ -1354,14 +1354,43 @@ func mkTemplateParameter(name string, deps []string) string {
 	}
 }
 
+type typeParam struct {
+	name      string
+	order     int
+	subParams []string
+}
+
+type typeParams map[string]*typeParam
+
+func (tps typeParams) Ordered() []*typeParam {
+	values := make([]*typeParam, 0, len(tps))
+	for _, tp := range tps {
+		values = append(values, tp)
+	}
+
+	slices.SortFunc(values, func(a, b *typeParam) int {
+		return a.order - b.order
+	})
+
+	return values
+}
+
+func (tps typeParams) OrderedNames() []string {
+	values := tps.Ordered()
+
+	names := make([]string, len(values))
+	for i, tp := range values {
+		names[i] = tp.name
+	}
+
+	return names
+}
+
 func mkTemplateParameters(templatePrms typeParams) []string {
 	var templatePrmsStr []string
-	for name, deps := range templatePrms {
-		templatePrmsStr = append(templatePrmsStr, mkTemplateParameter(name, deps))
+	for _, tp := range templatePrms.Ordered() {
+		templatePrmsStr = append(templatePrmsStr, mkTemplateParameter(tp.name, tp.subParams))
 	}
-	slices.SortFunc(templatePrmsStr, func(x, y string) int {
-		return strings.Compare(x, y)
-	})
 	return templatePrmsStr
 }
 

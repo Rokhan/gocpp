@@ -1730,7 +1730,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 	case *ast.DeferStmt:
 		*env.useDefer = true
-		usedOutVars := slices.Collect(maps.Keys(usedIdentifiers(env.outNames, s.Call)))
+		usedOutVars := slices.Sorted(maps.Keys(usedIdentifiers(env.outNames, s.Call)))
 		byRefString := JoinWithPrefix(usedOutVars, ", &")
 		cv.WritterExprPrintf(cppOut, "%sdefer.push_back([=%s]{ %s; });\n", cv.cpp.Indent(), byRefString, cv.convertExpr(s.Call))
 

@@ -119,7 +119,7 @@ namespace golang::runtime
     // where the object must remain reachable.
     //
     //go:nocheckptr
-    template<typename S, typename T>
+    template<typename T, typename S>
     Cleanup AddCleanup(T* ptr, std::function<void (S _1)> cleanup, S arg)
     {
         // This is marked nocheckptr because checkptr doesn't understand the

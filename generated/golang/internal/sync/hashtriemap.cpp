@@ -804,7 +804,7 @@ namespace golang::internal::sync
     
     template<typename K, typename V>
     template<typename T> requires gocpp::GoStruct<T>
-    entry<V, K>::operator T()
+    entry<K, V>::operator T()
     {
         T result;
         result.node = this->node;
@@ -816,7 +816,7 @@ namespace golang::internal::sync
 
     template<typename K, typename V>
     template<typename T> requires gocpp::GoStruct<T>
-    bool entry<V, K>::operator==(const T& ref) const
+    bool entry<K, V>::operator==(const T& ref) const
     {
         if (node != ref.node) return false;
         if (overflow != ref.overflow) return false;
@@ -826,7 +826,7 @@ namespace golang::internal::sync
     }
 
     template<typename K, typename V>
-    std::ostream& entry<V, K>::PrintTo(std::ostream& os) const
+    std::ostream& entry<K, V>::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << node;
@@ -838,7 +838,7 @@ namespace golang::internal::sync
     }
 
     template<typename K, typename V>
-    std::ostream& operator<<(std::ostream& os, const struct entry<V, K>& value)
+    std::ostream& operator<<(std::ostream& os, const struct entry<K, V>& value)
     {
         return value.PrintTo(os);
     }

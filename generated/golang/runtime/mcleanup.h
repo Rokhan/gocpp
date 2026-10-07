@@ -39,7 +39,7 @@ namespace golang::runtime
     uintptr_t raceEnterNewCtx();
     void raceRestoreCtx(uintptr_t ctx);
     
-    template<typename S, typename T>
+    template<typename T, typename S>
     Cleanup AddCleanup(T* ptr, std::function<void (S _1)> cleanup, S arg);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }

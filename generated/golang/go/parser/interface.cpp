@@ -153,7 +153,7 @@ namespace golang::go::parser
             auto file = rec::AddFile(gocpp::recv(fset), filename, - 1, len(text));
 
             golang::go::parser::parser p = {};
-            defer.push_back([=, &f, &err]{ [=]() mutable -> void
+            defer.push_back([=, &err, &f]{ [=]() mutable -> void
             {
                 if(auto e = gocpp::recover(); e != nullptr)
                 {

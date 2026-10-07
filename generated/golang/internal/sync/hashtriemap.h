@@ -87,7 +87,7 @@ namespace golang::internal::sync
     };
 
     template<typename K, typename V>
-    std::ostream& operator<<(std::ostream& os, const struct indirect<V, K>& value);
+    std::ostream& operator<<(std::ostream& os, const struct indirect<K, V>& value);
     template<typename K, typename V> 
     struct entry
     {

@@ -1763,7 +1763,7 @@ namespace golang::reflect
         }
         return [=](std::function<bool (StructField _1)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::NumField(gocpp::recv(t)))
+            for(int i = 0; i < rec::NumField(gocpp::recv(t)); ++i)
             {
                 if(! yield(rec::Field(gocpp::recv(t), i)))
                 {
@@ -1777,7 +1777,7 @@ namespace golang::reflect
     {
         return [=](std::function<bool (golang::reflect::Method _1)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::NumMethod(gocpp::recv(t)))
+            for(int i = 0; i < rec::NumMethod(gocpp::recv(t)); ++i)
             {
                 if(! yield(rec::Method(gocpp::recv(t), i)))
                 {
@@ -1795,7 +1795,7 @@ namespace golang::reflect
         }
         return [=](std::function<bool (golang::reflect::Type _1)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::NumIn(gocpp::recv(t)))
+            for(int i = 0; i < rec::NumIn(gocpp::recv(t)); ++i)
             {
                 if(! yield(rec::In(gocpp::recv(t), i)))
                 {
@@ -1813,7 +1813,7 @@ namespace golang::reflect
         }
         return [=](std::function<bool (golang::reflect::Type _1)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::NumOut(gocpp::recv(t)))
+            for(int i = 0; i < rec::NumOut(gocpp::recv(t)); ++i)
             {
                 if(! yield(rec::Out(gocpp::recv(t), i)))
                 {
@@ -3701,7 +3701,7 @@ namespace golang::reflect
                                 break;
                             }
                             default:
-                                for(auto [i, gocpp_ignored] : num)
+                                for(int i = 0; i < num; ++i)
                                 {
                                     auto field = rec::Field(gocpp::recv(t), i);
                                     if(field.Name == "_"_s || ! isRegularMemory(field.Type) || isPaddedField(t, i))

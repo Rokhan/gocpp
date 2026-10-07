@@ -3866,7 +3866,7 @@ namespace golang::reflect
         }
         return [=](std::function<bool (StructField _1, golang::reflect::Value _2)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::NumField(gocpp::recv(v)))
+            for(int i = 0; i < rec::NumField(gocpp::recv(v)); ++i)
             {
                 if(! yield(rec::Field(gocpp::recv(t), i), rec::Field(gocpp::recv(v), i)))
                 {
@@ -3893,7 +3893,7 @@ namespace golang::reflect
         auto n = rec::NumMethod(gocpp::recv(v));
         return [=](std::function<bool (golang::reflect::Method _1, golang::reflect::Value _2)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : n)
+            for(int i = 0; i < n; ++i)
             {
                 if(! yield(rec::Method(gocpp::recv(rtype), i), rec::Method(gocpp::recv(v), i)))
                 {

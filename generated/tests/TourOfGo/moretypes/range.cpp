@@ -53,6 +53,11 @@ namespace golang::main
             mocklib::Println("for range 5"_s);
         }
         mocklib::Println(i, j);
+
+        for(int k = 0; k < 5; ++k)
+        {
+            mocklib::Println(k);
+        }
     }
 
 }

@@ -757,7 +757,7 @@ namespace golang::encoding::json::v2
                 typeString = rec::String(gocpp::recv(rec::Kind(gocpp::recv(e->GoType))));
                 if(rec::Kind(gocpp::recv(e->GoType)) == reflect::Struct && rec::Name(gocpp::recv(e->GoType)) == ""_s)
                 {
-                    for(auto [i, gocpp_ignored] : rec::NumField(gocpp::recv(e->GoType)))
+                    for(int i = 0; i < rec::NumField(gocpp::recv(e->GoType)); ++i)
                     {
                         if(auto pkgPath = rec::Field(gocpp::recv(e->GoType), i).PkgPath; pkgPath != ""_s)
                         {

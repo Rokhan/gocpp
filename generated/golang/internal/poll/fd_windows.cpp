@@ -72,7 +72,7 @@ namespace golang::internal::poll
         {
             return false;
         }
-        for(auto [i, gocpp_ignored] : n)
+        for(int i = 0; i < n; ++i)
         {
             if(buf[i].ServiceFlags1 & syscall::XP1_IFS_HANDLES == 0)
             {

@@ -2462,7 +2462,7 @@ namespace golang::encoding::json::v2
                 {
                     std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, rec::Elem(gocpp::recv(t)));
                 }
-                for(auto [i, gocpp_ignored] : n)
+                for(int i = 0; i < n; ++i)
                 {
                     // indexed slice element is always addressable
                     auto v = addressableValue {rec::Index(gocpp::recv(va), i), false};
@@ -2631,7 +2631,7 @@ namespace golang::encoding::json::v2
             {
                 std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, rec::Elem(gocpp::recv(t)));
             }
-            for(auto [i, gocpp_ignored] : n)
+            for(int i = 0; i < n; ++i)
             {
                 // indexed array element is addressable if array is addressable
                 auto v = addressableValue {rec::Index(gocpp::recv(va), i), va.forcedAddr};

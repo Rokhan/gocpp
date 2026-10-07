@@ -271,7 +271,7 @@ namespace golang::runtime
                 rec::fmtHex(gocpp::recv(h), lineBuf.make_slice(dataStart + int(pos + 1)).make_slice(0, 1), uint64_t(offset));
             }
             // Print ASCII offsets.
-            for(auto [offset, gocpp_ignored] : asciiChars)
+            for(int offset = 0; offset < asciiChars; ++offset)
             {
                 rec::fmtHex(gocpp::recv(h), lineBuf.make_slice(asciiStart + offset).make_slice(0, 1), uint64_t(offset));
             }

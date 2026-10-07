@@ -322,7 +322,7 @@ namespace golang::runtime
             return;
         }
         auto bits = gocpp::array<gocpp::string, 4> {"h"_s, "m"_s, "z"_s, "c"_s};
-        for(auto [i, gocpp_ignored] : 3)
+        for(int i = 0; i < 3; ++i)
         {
             if(t->state & (1 << i) == 0)
             {

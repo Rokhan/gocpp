@@ -609,7 +609,7 @@ namespace golang::encoding::json::internal::jsonwire
     // the truncated prefix of a \uFFFF escape sequence.
     bool hasEscapedUTF16Prefix(gocpp::slice<unsigned char> b, bool lowerSurrogateHalf)
     {
-        for(auto [i, gocpp_ignored] : len(b))
+        for(int i = 0; i < len(b); ++i)
         {
             //Go switch emulation
             {
@@ -890,7 +890,7 @@ namespace golang::encoding::json::internal::jsonwire
         {
             return {0, false};
         }
-        for(auto [i, gocpp_ignored] : 4)
+        for(int i = 0; i < 4; ++i)
         {
             auto c = b[i];
             //Go switch emulation

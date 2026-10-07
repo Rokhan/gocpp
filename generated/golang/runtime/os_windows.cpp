@@ -1066,7 +1066,7 @@ namespace golang::runtime
     {
         uintptr_t handle;
         uint32_t err;
-        for(auto [tries, gocpp_ignored] : 20)
+        for(int tries = 0; tries < 20; ++tries)
         {
             // We pass 0 for the stack size to use the default for this binary.
             handle = stdcall_no_g(_CreateThread, 0, stackSize, uintptr_t(fn), uintptr_t(arg), 0, 0);

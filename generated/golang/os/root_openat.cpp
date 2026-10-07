@@ -689,7 +689,7 @@ namespace golang::os
         // We replace it here with one that creates missing directories along the way.
         auto openDirFunc = [=](sysfdType parent, gocpp::string name) mutable -> std::tuple<sysfdType, gocpp::error>
         {
-            for(auto [go_try, gocpp_ignored] : 2)
+            for(int go_try = 0; go_try < 2; ++go_try)
             {
                 auto [fd, err] = rootOpenDir(parent, name);
                 //Go type switch emulation

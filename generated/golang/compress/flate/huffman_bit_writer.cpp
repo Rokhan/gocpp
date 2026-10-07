@@ -550,7 +550,7 @@ namespace golang::compress::flate
         rec::writeBits(gocpp::recv(w), int32_t(numOffsets - 1), 5);
         rec::writeBits(gocpp::recv(w), int32_t(numCodegens - 4), 4);
 
-        for(auto [i, gocpp_ignored] : numCodegens)
+        for(int i = 0; i < numCodegens; ++i)
         {
             auto value = (unsigned int)(rec::len(gocpp::recv(w->codegenEncoding->codes[codegenOrder[i]])));
             rec::writeBits(gocpp::recv(w), int32_t(value), 3);

@@ -2400,7 +2400,7 @@ namespace golang::regexp::syntax
     {
         gocpp::slice<unsigned char> b = {};
         auto first = true;
-        for(auto [i, gocpp_ignored] : len(name))
+        for(int i = 0; i < len(name); ++i)
         {
             auto c = name[i];
             //Go switch emulation

@@ -976,7 +976,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                         }
                         auto n = rec::NumMethods(gocpp::recv(named));
                         rec::uint64(gocpp::recv(w), uint64_t(n));
-                        for(auto [i, gocpp_ignored] : n)
+                        for(int i = 0; i < n; ++i)
                         {
                             auto m = rec::Method(gocpp::recv(named), i);
                             rec::pos(gocpp::recv(w), rec::Pos(gocpp::recv(m)));
@@ -1393,7 +1393,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                         }
                         rec::pkg(gocpp::recv(w), fieldPkg);
                         rec::uint64(gocpp::recv(w), uint64_t(n));
-                        for(auto [i, gocpp_ignored] : n)
+                        for(int i = 0; i < n; ++i)
                         {
                             auto f = rec::Field(gocpp::recv(t), i);
                             if(w->p->shallow)
@@ -1458,7 +1458,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                         rec::startType(gocpp::recv(w), gcimporter::unionType);
                         auto nt = rec::Len(gocpp::recv(t));
                         rec::uint64(gocpp::recv(w), uint64_t(nt));
-                        for(auto [i, gocpp_ignored] : nt)
+                        for(int i = 0; i < nt; ++i)
                         {
                             auto term = rec::Term(gocpp::recv(t), i);
                             rec::go_bool(gocpp::recv(w), rec::Tilde(gocpp::recv(term)));
@@ -1608,7 +1608,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     {
         auto n = rec::Len(gocpp::recv(tup));
         rec::uint64(gocpp::recv(w), uint64_t(n));
-        for(auto [i, gocpp_ignored] : n)
+        for(int i = 0; i < n; ++i)
         {
             rec::param(gocpp::recv(w), rec::At(gocpp::recv(tup), i));
         }

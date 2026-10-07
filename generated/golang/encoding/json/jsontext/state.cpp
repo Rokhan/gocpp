@@ -648,7 +648,7 @@ namespace golang::encoding::json::jsontext
     // Encoder or Decoder will return an error.
     void rec::InvalidateDisabledNamespaces(stateMachine* m)
     {
-        for(auto [i, gocpp_ignored] : rec::Depth(gocpp::recv(m)))
+        for(int i = 0; i < rec::Depth(gocpp::recv(m)); ++i)
         {
             auto e = rec::index(gocpp::recv(m), i);
             if(! rec::isActiveNamespace(gocpp::recv(e)))

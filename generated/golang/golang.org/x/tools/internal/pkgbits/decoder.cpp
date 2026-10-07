@@ -379,7 +379,7 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     {
         uint64_t x = {};
         unsigned int s = {};
-        for(auto [i, gocpp_ignored] : binary::MaxVarintLen64)
+        for(int i = 0; i < binary::MaxVarintLen64; ++i)
         {
             auto [b, err] = rec::ReadByte(gocpp::recv(r));
             if(err != nullptr)

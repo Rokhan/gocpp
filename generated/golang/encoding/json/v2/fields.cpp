@@ -298,7 +298,7 @@ namespace golang::encoding::json::v2
             bool hasAnyJSONTag = {};
             // whether any JSON serializable fields exist in current struct
             bool hasAnyJSONField = {};
-            for(auto [i, gocpp_ignored] : rec::NumField(gocpp::recv(t)))
+            for(int i = 0; i < rec::NumField(gocpp::recv(t)); ++i)
             {
                 auto sf = rec::Field(gocpp::recv(t), i);
                 auto [gocpp_id_0, hasTag] = rec::Lookup(gocpp::recv(sf.Tag), "json"_s);

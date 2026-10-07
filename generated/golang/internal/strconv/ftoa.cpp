@@ -662,7 +662,7 @@ namespace golang::internal::strconv
                         {
                             dst = append(dst, '0');
                         }
-                        for(auto [i, gocpp_ignored] : m)
+                        for(int i = 0; i < m; ++i)
                         {
                             dst = append(dst, s[off + i]);
                         }

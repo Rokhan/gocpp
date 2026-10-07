@@ -251,7 +251,7 @@ namespace golang::internal::runtime::maps
             // No room for another level in the directory. Grow the
             // directory.
             auto newDir = gocpp::make(gocpp::Tag<gocpp::slice<table*>>(), m->dirLen * 2);
-            for(auto [i, gocpp_ignored] : m->dirLen)
+            for(int i = 0; i < m->dirLen; ++i)
             {
                 auto t = rec::directoryAt(gocpp::recv(m), uintptr_t(i));
                 newDir[2 * i] = t;
@@ -707,7 +707,7 @@ namespace golang::internal::runtime::maps
         else
         {
             table* lastTab = {};
-            for(auto [i, gocpp_ignored] : m->dirLen)
+            for(int i = 0; i < m->dirLen; ++i)
             {
                 auto t = rec::directoryAt(gocpp::recv(m), uintptr_t(i));
                 if(t == lastTab)

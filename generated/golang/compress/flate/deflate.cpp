@@ -338,7 +338,7 @@ namespace golang::compress::flate
 
         // Calculate 256 hashes at the time (more L1 cache hits)
         auto loops = (n + 256 - minMatchLength) / 256;
-        for(auto [j, gocpp_ignored] : loops)
+        for(int j = 0; j < loops; ++j)
         {
             auto startindex = j * 256;
             auto end = gocpp::min(startindex + 256 + minMatchLength - 1, n);
@@ -554,7 +554,7 @@ namespace golang::compress::flate
         {
             if(prevLength >= maxMatchLength || d->window[prevIndex + i] != d->window[ch2 + i])
             {
-                for(auto [j, gocpp_ignored] : i + 1)
+                for(int j = 0; j < i + 1; ++j)
                 {
                     rec::AddLiteral(gocpp::recv(d->tokens), d->window[prevIndex + j]);
                     if(d->tokens.n == maxFlateBlockTokens)

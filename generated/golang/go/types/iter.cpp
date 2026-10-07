@@ -40,7 +40,7 @@ namespace golang::go::types
     {
         return [=](std::function<bool (Func* m)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::NumMethods(gocpp::recv(t)))
+            for(int i = 0; i < rec::NumMethods(gocpp::recv(t)); ++i)
             {
                 if(! yield(rec::Method(gocpp::recv(t), i)))
                 {
@@ -58,7 +58,7 @@ namespace golang::go::types
     {
         return [=](std::function<bool (Func* m)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::NumExplicitMethods(gocpp::recv(t)))
+            for(int i = 0; i < rec::NumExplicitMethods(gocpp::recv(t)); ++i)
             {
                 if(! yield(rec::ExplicitMethod(gocpp::recv(t), i)))
                 {
@@ -75,7 +75,7 @@ namespace golang::go::types
     {
         return [=](std::function<bool (golang::go::types::Type e)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::NumEmbeddeds(gocpp::recv(t)))
+            for(int i = 0; i < rec::NumEmbeddeds(gocpp::recv(t)); ++i)
             {
                 if(! yield(rec::EmbeddedType(gocpp::recv(t), i)))
                 {
@@ -92,7 +92,7 @@ namespace golang::go::types
     {
         return [=](std::function<bool (Func* m)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::NumMethods(gocpp::recv(t)))
+            for(int i = 0; i < rec::NumMethods(gocpp::recv(t)); ++i)
             {
                 if(! yield(rec::Method(gocpp::recv(t), i)))
                 {
@@ -109,7 +109,7 @@ namespace golang::go::types
     {
         return [=](std::function<bool (golang::go::types::Scope* child)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::NumChildren(gocpp::recv(s)))
+            for(int i = 0; i < rec::NumChildren(gocpp::recv(s)); ++i)
             {
                 if(! yield(rec::Child(gocpp::recv(s), i)))
                 {
@@ -126,7 +126,7 @@ namespace golang::go::types
     {
         return [=](std::function<bool (Var* field)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::NumFields(gocpp::recv(s)))
+            for(int i = 0; i < rec::NumFields(gocpp::recv(s)); ++i)
             {
                 if(! yield(rec::Field(gocpp::recv(s), i)))
                 {
@@ -143,7 +143,7 @@ namespace golang::go::types
     {
         return [=](std::function<bool (Var* v)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::Len(gocpp::recv(t)))
+            for(int i = 0; i < rec::Len(gocpp::recv(t)); ++i)
             {
                 if(! yield(rec::At(gocpp::recv(t), i)))
                 {
@@ -160,7 +160,7 @@ namespace golang::go::types
     {
         return [=](std::function<bool (Selection* method)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::Len(gocpp::recv(s)))
+            for(int i = 0; i < rec::Len(gocpp::recv(s)); ++i)
             {
                 if(! yield(rec::At(gocpp::recv(s), i)))
                 {
@@ -177,7 +177,7 @@ namespace golang::go::types
     {
         return [=](std::function<bool (golang::go::types::Term* term)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::Len(gocpp::recv(u)))
+            for(int i = 0; i < rec::Len(gocpp::recv(u)); ++i)
             {
                 if(! yield(rec::Term(gocpp::recv(u), i)))
                 {
@@ -194,7 +194,7 @@ namespace golang::go::types
     {
         return [=](std::function<bool (TypeParam* tparam)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::Len(gocpp::recv(l)))
+            for(int i = 0; i < rec::Len(gocpp::recv(l)); ++i)
             {
                 if(! yield(rec::At(gocpp::recv(l), i)))
                 {
@@ -211,7 +211,7 @@ namespace golang::go::types
     {
         return [=](std::function<bool (golang::go::types::Type t)> yield) mutable -> void
         {
-            for(auto [i, gocpp_ignored] : rec::Len(gocpp::recv(l)))
+            for(int i = 0; i < rec::Len(gocpp::recv(l)); ++i)
             {
                 if(! yield(rec::At(gocpp::recv(l), i)))
                 {

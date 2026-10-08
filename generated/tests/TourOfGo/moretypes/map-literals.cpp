@@ -41,8 +41,8 @@ namespace golang::main
     std::ostream& Vertex::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << Lat;
-        os << " " << Long;
+        os << "" << to_go_string(Lat);
+        os << " " << to_go_string(Long);
         os << '}';
         return os;
     }

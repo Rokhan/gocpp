@@ -41,8 +41,8 @@ namespace golang::main
     std::ostream& Vertex::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << Lat;
-        os << " " << Long;
+        os << "" << to_go_string(Lat);
+        os << " " << to_go_string(Long);
         os << '}';
         return os;
     }
@@ -59,6 +59,9 @@ namespace golang::main
         m["Bell Labs"_s] = Vertex {
             40.68433, - 74.39967
         };
+        mocklib::Println(m["Bell Labs"_s]);
+
+        clear(m);
         mocklib::Println(m["Bell Labs"_s]);
     }
 

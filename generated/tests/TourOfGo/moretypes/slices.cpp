@@ -44,6 +44,9 @@ namespace golang::main
 
         mocklib::Println("0123456789"_s[3]);
         mocklib::Println("0123456789"_s.make_slice(3, 7));
+
+        clear(primes4);
+        mocklib::Println(primes4);
     }
 
 }

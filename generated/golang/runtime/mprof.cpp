@@ -234,7 +234,7 @@ namespace golang::runtime
     std::ostream& blockRecord::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << count;
+        os << "" << to_go_string(count);
         os << " " << cycles;
         os << '}';
         return os;

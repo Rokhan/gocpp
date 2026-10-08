@@ -235,8 +235,8 @@ namespace golang::runtime
         os << " " << sysmonWake;
         os << " " << parked;
         os << " " << printControllerReset;
-        os << " " << targetCPUFraction;
-        os << " " << sleepRatio;
+        os << " " << to_go_string(targetCPUFraction);
+        os << " " << to_go_string(sleepRatio);
         os << " " << sleepController;
         os << " " << controllerCooldown;
         os << " " << sleepStub;
@@ -1416,12 +1416,12 @@ namespace golang::runtime
     std::ostream& piController::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << kp;
-        os << " " << ti;
-        os << " " << tt;
-        os << " " << min;
-        os << " " << max;
-        os << " " << errIntegral;
+        os << "" << to_go_string(kp);
+        os << " " << to_go_string(ti);
+        os << " " << to_go_string(tt);
+        os << " " << to_go_string(min);
+        os << " " << to_go_string(max);
+        os << " " << to_go_string(errIntegral);
         os << " " << errOverflow;
         os << " " << inputOverflow;
         os << '}';

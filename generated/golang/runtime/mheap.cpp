@@ -308,7 +308,7 @@ namespace golang::runtime
         os << " " << pagesSwept;
         os << " " << pagesSweptBasis;
         os << " " << sweepHeapLiveBasis;
-        os << " " << sweepPagesPerByte;
+        os << " " << to_go_string(sweepPagesPerByte);
         os << " " << reclaimIndex;
         os << " " << reclaimCredit;
         os << " " << _2;

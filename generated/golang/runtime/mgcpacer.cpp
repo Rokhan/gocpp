@@ -165,7 +165,7 @@ namespace golang::runtime
         os << " " << memoryLimit;
         os << " " << heapMinimum;
         os << " " << runway;
-        os << " " << consMark;
+        os << " " << to_go_string(consMark);
         os << " " << lastConsMark;
         os << " " << gcPercentHeapGoal;
         os << " " << sweepDistMinTrigger;
@@ -191,7 +191,7 @@ namespace golang::runtime
         os << " " << idleMarkWorkers;
         os << " " << assistWorkPerByte;
         os << " " << assistBytesPerWork;
-        os << " " << fractionalUtilizationGoal;
+        os << " " << to_go_string(fractionalUtilizationGoal);
         os << " " << heapInUse;
         os << " " << heapReleased;
         os << " " << heapFree;

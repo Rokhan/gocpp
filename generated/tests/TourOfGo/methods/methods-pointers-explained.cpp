@@ -43,8 +43,8 @@ namespace golang::main
     std::ostream& Vertex::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << X;
-        os << " " << Y;
+        os << "" << to_go_string(X);
+        os << " " << to_go_string(Y);
         os << '}';
         return os;
     }

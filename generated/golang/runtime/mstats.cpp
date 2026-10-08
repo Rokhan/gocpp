@@ -114,7 +114,7 @@ namespace golang::runtime
         os << " " << pause_end;
         os << " " << numgc;
         os << " " << numforcedgc;
-        os << " " << gc_cpu_fraction;
+        os << " " << to_go_string(gc_cpu_fraction);
         os << " " << last_gc_nanotime;
         os << " " << lastHeapInUse;
         os << " " << lastScanStats;
@@ -275,7 +275,7 @@ namespace golang::runtime
         os << " " << PauseEnd;
         os << " " << NumGC;
         os << " " << NumForcedGC;
-        os << " " << GCCPUFraction;
+        os << " " << to_go_string(GCCPUFraction);
         os << " " << EnableGC;
         os << " " << DebugGC;
         os << " " << BySize;

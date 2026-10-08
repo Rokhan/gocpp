@@ -3579,7 +3579,11 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 		sep := ""
 		for _, field := range fields {
 			for _, name := range field.names {
-				fmt.Fprintf(buf, "%s    os << \"%s\" << %s;\n", data.out.Indent(), sep, name)
+				if field.Type.str == "double" || field.Type.str == "float" {
+					fmt.Fprintf(buf, "%s    os << \"%s\" << to_go_string(%s);\n", data.out.Indent(), sep, name)
+				} else {
+					fmt.Fprintf(buf, "%s    os << \"%s\" << %s;\n", data.out.Indent(), sep, name)
+				}
 				sep = " "
 			}
 		}

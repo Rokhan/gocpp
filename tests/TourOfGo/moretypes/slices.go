@@ -28,4 +28,7 @@ func main() {
 
 	fmt.Println("0123456789"[3])
 	fmt.Println("0123456789"[3:7])
+
+	clear(primes4)
+	fmt.Println(primes4)
 }

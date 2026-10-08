@@ -1330,6 +1330,15 @@ namespace gocpp
             panic("invalid slice");
         }
 
+        // put all elements to default value
+        friend inline void clear(slice<T> input)
+        {
+            for(size_t i = input.mStart; i < input.mEnd; i++)
+            {
+                (*input.mArray)[i] = T();
+            }
+        }
+
         friend inline int copy(slice<T> dst, slice<T> src)
         {
             if(!dst.mArray || !src.mArray)
@@ -1468,6 +1477,11 @@ namespace gocpp
         friend inline void remove(map<K, V>& input, const K& key)
         {
             input.erase(key);
+        }
+
+        friend inline void clear(map<K, V>& input)
+        {
+            input.clear();
         }
     };
 

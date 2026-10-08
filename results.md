@@ -65,7 +65,7 @@
 | [TourOfGo/methods/exercise-rot-reader.go](tests/TourOfGo/methods/exercise-rot-reader.go) | ✔️ | ❌ | ❌ | ❌ |
 | [TourOfGo/methods/exercise-stringer.go](tests/TourOfGo/methods/exercise-stringer.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/exercise-stringer.cpp)) | ❌ |
 | [TourOfGo/methods/images.go](tests/TourOfGo/methods/images.go) | ✔️ | ❌ | ❌ | ❌ |
-| [TourOfGo/methods/indirection.go](tests/TourOfGo/methods/indirection.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection.cpp)) | ❌ |
+| [TourOfGo/methods/indirection.go](tests/TourOfGo/methods/indirection.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection.cpp)) | ✔️ |
 | [TourOfGo/methods/indirection-values.go](tests/TourOfGo/methods/indirection-values.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection-values.cpp)) | ✔️ |
 | [TourOfGo/methods/inline-interface.go](tests/TourOfGo/methods/inline-interface.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/inline-interface.cpp)) | ❌ |
 | [TourOfGo/methods/interfaces.go](tests/TourOfGo/methods/interfaces.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces.cpp)) | ✔️ |
@@ -129,7 +129,7 @@
 | $(ImportDir)/bytes/bytes.go | ✔️ ([cpp](generated/golang/bytes/bytes.cpp), [h](generated/golang/bytes/bytes.h))| ✔️ |
 | $(ImportDir)/bytes/reader.go | ✔️ ([cpp](generated/golang/bytes/reader.cpp), [h](generated/golang/bytes/reader.h))| ✔️ |
 | $(ImportDir)/cmp/cmp.go | ✔️ ([cpp](generated/golang/cmp/cmp.cpp), [h](generated/golang/cmp/cmp.h))| ✔️ |
-| $(ImportDir)/compress/flate/deflate.go | ✔️ ([cpp](generated/golang/compress/flate/deflate.cpp), [h](generated/golang/compress/flate/deflate.h))| ❌ |
+| $(ImportDir)/compress/flate/deflate.go | ✔️ ([cpp](generated/golang/compress/flate/deflate.cpp), [h](generated/golang/compress/flate/deflate.h))| ✔️ |
 | $(ImportDir)/compress/flate/deflatefast.go | ✔️ ([cpp](generated/golang/compress/flate/deflatefast.cpp), [h](generated/golang/compress/flate/deflatefast.h))| ❌ |
 | $(ImportDir)/compress/flate/dict_decoder.go | ✔️ ([cpp](generated/golang/compress/flate/dict_decoder.cpp), [h](generated/golang/compress/flate/dict_decoder.h))| ✔️ |
 | $(ImportDir)/compress/flate/huffman_bit_writer.go | ✔️ ([cpp](generated/golang/compress/flate/huffman_bit_writer.cpp), [h](generated/golang/compress/flate/huffman_bit_writer.h))| ❌ |
@@ -143,7 +143,7 @@
 | $(ImportDir)/compress/flate/level6.go | ✔️ ([cpp](generated/golang/compress/flate/level6.cpp), [h](generated/golang/compress/flate/level6.h))| ❌ |
 | $(ImportDir)/compress/flate/load_store.go | ✔️ ([cpp](generated/golang/compress/flate/load_store.cpp), [h](generated/golang/compress/flate/load_store.h))| ✔️ |
 | $(ImportDir)/compress/flate/regmask_amd64.go | ✔️ ([cpp](generated/golang/compress/flate/regmask_amd64.cpp), [h](generated/golang/compress/flate/regmask_amd64.h))| ✔️ |
-| $(ImportDir)/compress/flate/token.go | ✔️ ([cpp](generated/golang/compress/flate/token.cpp), [h](generated/golang/compress/flate/token.h))| ❌ |
+| $(ImportDir)/compress/flate/token.go | ✔️ ([cpp](generated/golang/compress/flate/token.cpp), [h](generated/golang/compress/flate/token.h))| ✔️ |
 | $(ImportDir)/compress/zlib/reader.go | ✔️ ([cpp](generated/golang/compress/zlib/reader.cpp), [h](generated/golang/compress/zlib/reader.h))| ✔️ |
 | $(ImportDir)/compress/zlib/writer.go | ✔️ ([cpp](generated/golang/compress/zlib/writer.cpp), [h](generated/golang/compress/zlib/writer.h))| ✔️ |
 | $(ImportDir)/container/heap/heap.go | ✔️ ([cpp](generated/golang/container/heap/heap.cpp), [h](generated/golang/container/heap/heap.h))| ✔️ |

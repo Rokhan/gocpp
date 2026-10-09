@@ -33,7 +33,7 @@ type cppConverterSharedData struct {
 	exeDate          time.Time
 	verbose          bool
 	strictMode       bool
-	debugMode        bool
+	debugMode        bool // If true, add comments in generated code to help debugging
 	tryRecover       bool
 	alwaysRegenerate bool
 	ignoreDeps       bool
@@ -1222,6 +1222,186 @@ func (cv *cppConverter) parentMethod(pt parentType) (methods []method) {
 				parent:      &pt,
 			})
 		}
+	}
+	return
+}
+
+type embedStep struct {
+	name  string // C++ field name
+	isPtr bool   // field itself is a pointer (embedded *A)
+}
+
+type promotedMethod struct {
+	name    string
+	result  string
+	params  typeNames
+	steps   []embedStep
+	callee  string  // fully qualified rec:: function implementing the method
+	onValue bool    // also in the method set of T, not only *T
+	defs    []place // namespace aliases needed by the signature
+}
+
+// Walk the embedded fields from the outer struct down to the method receiver.
+func embeddedSteps(root types.Type, fieldIdx []int) (steps []embedStep, last types.Type, ok bool) {
+	cur := root
+	for _, fi := range fieldIdx {
+		if p, isPtr := cur.(*types.Pointer); isPtr {
+			cur = p.Elem()
+		}
+		st, isStruct := cur.Underlying().(*types.Struct)
+		if !isStruct {
+			return nil, nil, false
+		}
+		f := st.Field(fi)
+		_, isPtr := f.Type().(*types.Pointer)
+		steps = append(steps, embedStep{GetCppName(f.Name()), isPtr})
+		cur = f.Type()
+	}
+	return steps, cur, true
+}
+
+// base is "self.ptr" (baseIsPtr) or "self.obj".
+func accessPath(base string, baseIsPtr bool, steps []embedStep) string {
+	var sb strings.Builder
+	sb.WriteString(base)
+	isPtr := baseIsPtr
+	for _, s := range steps {
+		if isPtr {
+			sb.WriteString("->")
+		} else {
+			sb.WriteString(".")
+		}
+		sb.WriteString(s.name)
+		isPtr = s.isPtr
+	}
+	return sb.String()
+}
+
+// recRef returns the shortest valid C++ spelling of the rec:: function implementing
+// `method` for `recvType`, and the places (namespace aliases) it needs.
+//
+//	same package          -> rec::M
+//	other package         -> pkg::rec::M        (+ alias `pkg`, reused if already emitted)
+//	alias name shadowed   -> golang::a::b::rec::M
+//	mocked receivers      -> mocklib::rec::M    (from stdFuncMapping, no alias)
+//	universe `error`      -> gocpp::rec::M
+func (cv *cppConverter) recRef(recvType types.Type, method string) (string, []place) {
+	if p, ok := recvType.(*types.Pointer); ok {
+		recvType = p.Elem()
+	}
+	method = GetCppName(method)
+
+	var pkg *types.Package
+	if named, ok := types.Unalias(recvType).(*types.Named); ok {
+		pkg = named.Obj().Pkg()
+	}
+	if pkg == nil {
+		return fmt.Sprintf("gocpp::%s::%s", recNs, method), nil
+	}
+
+	pkgName := pkg.Name()
+	pkgNs := cv.NamespaceFromTypePkg(pkg)
+
+	// Mocked receivers (sync::rec::Lock -> mocklib::rec::Lock, ...)
+	raw := fmt.Sprintf("%s::%s::%s", pkgName, recNs, method)
+	if mapped := GetCppFunc(raw); mapped != raw {
+		return mapped, nil
+	}
+
+	// Same namespace: the enclosing `rec` is already the right one.
+	if pkgNs == cv.fullNamespace {
+		return fmt.Sprintf("%s::%s", recNs, method), nil
+	}
+
+	// A local name hides the alias: fall back to the full path.
+	if cv.isAmbiguousName(pkgName) {
+		return fmt.Sprintf("%s::%s::%s::%s", goNs, pkgNs, recNs, method), nil
+	}
+
+	// Alias `pkgName`, same as convertTypeExpr/convertExprCtx. It is collected into
+	// namespaceElts by ConvertFile, so it is emitted once and shared with the
+	// aliases the rest of the file already needs.
+	return raw, []place{useNamespace(pkgName, pkgNs, depInfo{})}
+}
+
+func (cv *cppConverter) nsAliasPlaces(t types.Type) (defs []place) {
+	seen := map[string]bool{}
+	for _, obj := range GetObjectsOfType(t) {
+		pkg := obj.Pkg()
+		if pkg == nil || pkg.Name() == cv.namespace || seen[pkg.Path()] {
+			continue
+		}
+		seen[pkg.Path()] = true
+		defs = append(defs, useNamespace(pkg.Name(), cv.NamespaceFromTypePkg(pkg), depInfo{}))
+	}
+	return
+}
+
+// Extracted from your parentMethod; param names are synthetic so they can't clash with `self`.
+func (cv *cppConverter) convertSigParts(sig *types.Signature) (result string, params typeNames, defs []place) {
+	var outTypes []outType
+	for j := 0; j < sig.Results().Len(); j++ {
+		t := sig.Results().At(j).Type()
+		s, _ := cv.convertGoToCppType(t, token.Position{})
+		outTypes = append(outTypes, outType{str: s})
+		defs = append(defs, cv.nsAliasPlaces(t)...)
+	}
+	result = buildOutType(outTypes, nil)
+
+	for j := 0; j < sig.Params().Len(); j++ {
+		t := sig.Params().At(j).Type()
+		s, _ := cv.convertGoToCppType(t, token.Position{})
+		params = append(params, typeName{
+			names: []string{fmt.Sprintf("arg%d", j)},
+			Type:  mkCppType(s, nil),
+		})
+		defs = append(defs, cv.nsAliasPlaces(t)...)
+	}
+	return
+}
+
+// goType: the *types.Named for `type B struct{...}`, or the *types.Struct for an anonymous one.
+func (cv *cppConverter) promotedMethods(goType types.Type) (out []promotedMethod) {
+	if goType == nil {
+		return nil
+	}
+	if _, ok := goType.Underlying().(*types.Struct); !ok {
+		return nil
+	}
+	ptrSet := types.NewMethodSet(types.NewPointer(goType))
+	valSet := types.NewMethodSet(goType)
+
+	for i := 0; i < ptrSet.Len(); i++ {
+		sel := ptrSet.At(i)
+		idx := sel.Index()
+		if len(idx) < 2 {
+			continue // declared directly on the type: generated by convertDecls
+		}
+		fn, ok := sel.Obj().(*types.Func)
+		if !ok {
+			continue
+		}
+		sig, ok := fn.Type().(*types.Signature)
+		if !ok {
+			continue
+		}
+		steps, last, ok := embeddedSteps(goType, idx[:len(idx)-1])
+		if !ok {
+			cv.Panicf("promotedMethods: bad embedding path for %s on %v", fn.Name(), goType)
+		}
+		result, params, defs := cv.convertSigParts(sig)
+		callee, calleeDefs := cv.recRef(last, fn.Name())
+		defs = append(defs, calleeDefs...)
+
+		out = append(out, promotedMethod{
+			name:    GetCppName(fn.Name()),
+			result:  result,
+			params:  params,
+			steps:   steps,
+			callee:  callee,
+			onValue: valSet.Lookup(fn.Pkg(), fn.Name()) != nil,
+			defs:    defs,
+		})
 	}
 	return
 }
@@ -3450,7 +3630,7 @@ func (cv *cppConverter) computeGenStructData(param genStructParam, templatePrmLi
 func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms typeParams, param genStructParam) (cppStruct string, places []place) {
 	buf := new(bytes.Buffer)
 	ctx := ctContext{usagePosition: UsageInDeclaration, ensureHasTypeName: true, namespace: cv.namespace, keepDebug: true}
-	fields, parents := cv.readFieldsAndParentsCtx(node.Fields, ctx)
+	fields, _ := cv.readFieldsAndParentsCtx(node.Fields, ctx)
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {
@@ -3602,38 +3782,54 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 		cv.Panicf("unmanaged GenOutputType value %v", param.output)
 	}
 
-	methods := cv.parentMethods(parents)
+	// methods := cv.parentMethods(parents)
 
-	// Can't be created inline for the moment, as stream operators
-	if param.streamOp == with && len(methods) != 0 {
+	// //if cv.shared.debugMode {
+	// fmt.Fprintf(buf, "/* nb parents: %d */\n", len(parents))
+	// fmt.Fprintf(buf, "/* nb methods: %d */\n", len(methods))
+	// //}
+
+	goType := cv.typeInfo.Types[node].Type
+	promoted := cv.promotedMethods(goType)
+	for _, pm := range promoted {
+		places = append(places, pm.defs...)
+	}
+
+	if param.streamOp == with && len(promoted) != 0 {
 		fmt.Fprintf(buf, "\n%snamespace %s\n", data.out.Indent(), recNs)
-		fmt.Fprintf(buf, "%s{", data.out.Indent())
+		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
 		data.out.indent++
+		var first = true
 
-		for _, method := range methods {
-			endParams := ""
-			endParamNames := ""
-			if method.params != nil {
-				endParams = fmt.Sprintf(", %s", method.params)
-				endParamNames = fmt.Sprintf(", %s", method.params.NamesStr())
+		for _, pm := range promoted {
+			endParams, endArgs := "", ""
+			if len(pm.params) != 0 {
+				endParams = ", " + pm.params.String()
+				endArgs = ", " + pm.params.NamesStr()
 			}
 
-			fmt.Fprintf(buf, "\n")
-
-			fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<struct %s, false>& self%s)%s\n", data.out.Indent(), method.result, method.name, param.name, endParams, data.declEnd)
-			if data.needBody {
-				fmt.Fprintf(buf, "%s{\n", data.out.Indent())
-				fmt.Fprintf(buf, "%s    return rec::%s(self.ptr->%s%s);\n", data.out.Indent(), method.name, method.parent.name, endParamNames)
-				fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+			if !first {
 				fmt.Fprintf(buf, "\n")
 			}
 
-			fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<struct %s>& self%s)%s\n", data.out.Indent(), method.result, method.name, param.name, endParams, data.declEnd)
+			fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<struct %s, false>& self%s)%s\n", data.out.Indent(), pm.result, pm.name, param.name, endParams, data.declEnd)
 			if data.needBody {
 				fmt.Fprintf(buf, "%s{\n", data.out.Indent())
-				fmt.Fprintf(buf, "%s    return rec::%s(self.obj.%s%s);\n", data.out.Indent(), method.name, method.parent.name, endParamNames)
+				fmt.Fprintf(buf, "%s    return %s(gocpp::recv(%s)%s);\n", data.out.Indent(), pm.callee, accessPath("self.ptr", true, pm.steps), endArgs)
 				fmt.Fprintf(buf, "%s}\n", data.out.Indent())
 			}
+
+			if pm.onValue { // pointer-receiver methods must not be callable on a value
+				fmt.Fprintf(buf, "\n")
+				fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<struct %s>& self%s)%s\n", data.out.Indent(), pm.result, pm.name, param.name, endParams, data.declEnd)
+				if data.needBody {
+					fmt.Fprintf(buf, "%s{\n", data.out.Indent())
+					fmt.Fprintf(buf, "%s    return %s(gocpp::recv(%s)%s);\n", data.out.Indent(), pm.callee, accessPath("self.obj", false, pm.steps), endArgs)
+					fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+				}
+			}
+
+			first = false
 		}
 		data.out.indent--
 		fmt.Fprintf(buf, "%s}\n", data.out.Indent())

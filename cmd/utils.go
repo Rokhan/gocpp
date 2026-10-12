@@ -719,6 +719,29 @@ func (depInfo *depInfo) ComputeDeps(dm depMode) {
 	}
 }
 
+// Types that become template arguments in the generated C++.
+func templateArgs(t types.Type) (out []types.Type) {
+	switch t := t.(type) {
+	case *types.Named:
+		for i := 0; i < t.TypeArgs().Len(); i++ {
+			out = append(out, t.TypeArgs().At(i))
+		}
+	case *types.Alias:
+		for i := 0; i < t.TypeArgs().Len(); i++ {
+			out = append(out, t.TypeArgs().At(i))
+		}
+	case *types.Array:
+		out = append(out, t.Elem())
+	case *types.Slice:
+		out = append(out, t.Elem())
+	case *types.Chan:
+		out = append(out, t.Elem())
+	case *types.Map:
+		out = append(out, t.Key(), t.Elem())
+	}
+	return
+}
+
 func ComputeDeps(toDo map[string]types.Type, dm depMode) map[string]types.Type {
 	done := map[string]types.Type{}
 	for len(toDo) != 0 {
@@ -748,10 +771,17 @@ func ComputeDeps(toDo map[string]types.Type, dm depMode) map[string]types.Type {
 				toDo[keyType.String()] = keyType
 
 			case *types.Pointer:
+				elem := t.Elem()
 				if dm == FwdDepend {
-					elem := t.Elem()
 					toDo[elem.String()] = elem
 				}
+				// TODO ??
+				// else {
+				// 	// `Tmpl<Arg>*` needs only a declaration of Tmpl, but Arg must be usable
+				// 	for _, arg := range templateArgs(elem) {
+				// 		toDo[arg.String()] = arg
+				// 	}
+				// }
 
 			case *types.Signature:
 				if t.Params() != nil {
@@ -799,7 +829,12 @@ func ComputeDeps(toDo map[string]types.Type, dm depMode) map[string]types.Type {
 					}
 				}
 
-			case nil, *types.Alias, *types.Basic, *types.Named, *types.TypeParam:
+			case *types.Named, *types.Alias:
+				for _, arg := range templateArgs(t) {
+					toDo[arg.String()] = arg
+				}
+
+			case nil, *types.Basic, *types.TypeParam:
 				// Nothing to do
 
 			default:
@@ -819,10 +854,8 @@ func (depInfo *depInfo) ComputePackages(pc parsingContext, dm depMode) {
 		return
 	}
 
-	// TODO: rework ComputePackages to avoid this
-	includes, _ := ComputePackages(depInfo.dependencies, pc, dm)
-	_, usings := ComputePackages(depInfo.dependencies, pc, FwdDepend)
-	appendMap(&depInfo.depPkgs, includes)
+	includes, usings := ComputePackages(depInfo.dependencies, pc) // single walk
+	mergeIncludes(&depInfo.depPkgs, includes)
 
 	initMap(&depInfo.depNss)
 	for path := range usings {
@@ -840,138 +873,183 @@ func (depInfo *depInfo) ComputePackages(pc parsingContext, dm depMode) {
 	}
 }
 
-func ComputePackages(deps map[string]types.Type, pc parsingContext, dm depMode) (includes map[string]includeType, usings map[string]bool) {
+// What a template argument needs from its declaring file.
+//   - Naming `Tmpl<Arg>` can instantiate parts of Tmpl, so we ask for the full definition, even when
+//
+// `Tmpl<Arg>` is only used through a pointer.
+//   - This is a conservative approach, we can refine it later.
+const templateArgNeed = HdrInclude
 
-	toDo := map[string]types.Type{}
-	for k, v := range deps {
-		toDo[k] = v
+// strongerInclude: HdrInclude provides everything FwdInclude does, so it wins.
+func strongerInclude(a, b includeType) includeType {
+	switch {
+	case a == NotInclude:
+		return b
+	case b == NotInclude:
+		return a
+	case a == HdrInclude || b == HdrInclude:
+		return HdrInclude
+	default:
+		return FwdInclude
 	}
+}
 
+func mergeIncludes(target *map[string]includeType, src map[string]includeType) {
+	initMap(target)
+	for k, v := range src {
+		(*target)[k] = strongerInclude((*target)[k], v)
+	}
+}
+
+// ComputePackages walks deps and returns:
+//   - includes: file base path -> what a normal header needs from that file
+//     (HdrInclude: full definition, FwdInclude: forward declaration only)
+//   - usings: package paths of every named type met, at any level, so the
+//     namespace aliases are available
+func ComputePackages(deps map[string]types.Type, pc parsingContext) (includes map[string]includeType, usings map[string]bool) {
 	includes = map[string]includeType{}
 	usings = map[string]bool{}
 
-	addResult := func(obj types.Object) {
-		pkg := pc.getPackageFromType(obj, UnknownTag)
-		includes[pkg.basePath()] = HdrInclude
-		if pkg != nil {
-			usings[pkg.pkgPath] = true
-		} else {
-			errPath := fmt.Sprintf("<<%s>>", obj.Name())
-			usings[errPath] = true
+	type work struct {
+		typ  types.Type
+		need includeType
+	}
+	type workKey struct {
+		typ  string
+		need includeType
+	}
+
+	var toDo []work
+	done := map[workKey]bool{}
+	push := func(t types.Type, need includeType) {
+		if t != nil {
+			toDo = append(toDo, work{t, need})
 		}
 	}
 
-	done := map[string]types.Type{}
+	addResult := func(obj types.Object, need includeType) {
+		pkg := pc.getPackageFromType(obj, UnknownTag)
+		if pkg == nil {
+			return // universe object (error...) or no position
+		}
+		path := pkg.basePath()
+		includes[path] = strongerInclude(includes[path], need)
+		usings[pkg.pkgPath] = true
+	}
+
+	for _, t := range deps {
+		push(t, HdrInclude)
+	}
+
 	for len(toDo) != 0 {
-		for key, value := range toDo {
-			if _, skip := done[key]; skip {
-				delete(toDo, key)
-				continue
+		w := toDo[len(toDo)-1]
+		toDo = toDo[:len(toDo)-1]
+
+		k := workKey{w.typ.String(), w.need}
+		if done[k] {
+			continue
+		} else {
+
+			done[k] = true
+
+			argNeed := templateArgNeed
+			if w.need == FwdInclude { // we are behind a pointer
+				argNeed = FwdInclude
 			}
-			elt := value
-			switch t := elt.(type) {
+
+			switch t := w.typ.(type) {
 			case *types.Array:
-				elem := t.Elem()
-				toDo[elem.String()] = elem
+				push(t.Elem(), argNeed)
 
 			case *types.Chan:
-				elem := t.Elem()
-				toDo[elem.String()] = elem
+				push(t.Elem(), argNeed)
 
 			case *types.Slice:
-				elem := t.Elem()
-				toDo[elem.String()] = elem
+				push(t.Elem(), argNeed)
 
 			case *types.Map:
-				elem := t.Elem()
-				keyType := t.Key()
-				toDo[elem.String()] = elem
-				toDo[keyType.String()] = keyType
+				push(t.Key(), argNeed)
+				push(t.Elem(), argNeed)
 
 			case *types.Pointer:
-				if dm == FwdDepend {
-					elem := t.Elem()
-					toDo[elem.String()] = elem
-				}
+				// Only a forward declaration of the pointee. Its template arguments
+				// are still requested with argNeed by the cases above/below.
+				push(t.Elem(), FwdInclude)
 
 			case *types.Signature:
 				if t.Params() != nil {
 					for i := 0; i < t.Params().Len(); i++ {
-						paramType := t.Params().At(i).Type()
-						toDo[paramType.String()] = paramType
-						addResult(t.Params().At(i))
+						push(t.Params().At(i).Type(), argNeed)
+						addResult(t.Params().At(i), argNeed)
 					}
 				}
 				if t.Results() != nil {
 					for i := 0; i < t.Results().Len(); i++ {
-						resultType := t.Results().At(i).Type()
-						toDo[resultType.String()] = resultType
-						addResult(t.Results().At(i))
+						push(t.Results().At(i).Type(), argNeed)
+						addResult(t.Results().At(i), argNeed)
 					}
 				}
 				if t.Recv() != nil {
-					recvType := t.Recv().Type()
-					toDo[recvType.String()] = recvType
-					addResult(t.Recv())
+					push(t.Recv().Type(), argNeed)
+					addResult(t.Recv(), argNeed)
 				}
 
 			case *types.Struct:
-				if dm == DecDepend {
+				if w.need != HdrInclude {
+					break // behind a pointer: the contents are not needed
+				} else {
 					for i := 0; i < t.NumFields(); i++ {
-						fieldType := t.Field(i).Type()
-						toDo[fieldType.String()] = fieldType
-						addResult(t.Field(i))
+						push(t.Field(i).Type(), HdrInclude)
+						addResult(t.Field(i), HdrInclude)
 					}
-					// No addResult here: the signature `Var`s live in the file that declares
-					// the method, which the header doesn't need. The *types.Named case
-					// below already records the files of the types themselves.
+					// forwarders for promoted methods (see promotedSigTypes)
 					for _, sigType := range promotedSigTypes(t) {
-						toDo[sigType.String()] = sigType
+						push(sigType, HdrInclude)
 					}
 				}
 
 			case *types.Interface:
-				if dm == DecDepend {
+				if w.need != HdrInclude {
+					break
+				} else {
 					for i := 0; i < t.NumEmbeddeds(); i++ {
-						embeddedType := t.EmbeddedType(i)
-						toDo[embeddedType.String()] = embeddedType
+						push(t.EmbeddedType(i), HdrInclude)
 					}
-
 					for i := 0; i < t.NumMethods(); i++ {
-						method := t.Method(i)
-						toDo[method.FullName()] = method.Type()
-						addResult(method)
+						push(t.Method(i).Type(), HdrInclude)
+						addResult(t.Method(i), HdrInclude)
 					}
 				}
 
 			case *types.Union:
-				if dm == DecDepend {
+				if w.need != HdrInclude {
+					break
+				} else {
 					for i := 0; i < t.Len(); i++ {
-						termType := t.Term(i).Type()
-						toDo[termType.String()] = termType
+						push(t.Term(i).Type(), HdrInclude)
 					}
 				}
 
 			case *types.Named:
-				// No need to recurse on this, bring unneeded dependencies
-				addResult(t.Obj())
+				addResult(t.Obj(), w.need)
+				for i := 0; i < t.TypeArgs().Len(); i++ {
+					push(t.TypeArgs().At(i), argNeed)
+				}
 
 			case *types.Alias:
-				// No need to recurse on this, bring unneeded dependencies
-				addResult(t.Obj())
+				addResult(t.Obj(), w.need)
+				for i := 0; i < t.TypeArgs().Len(); i++ {
+					push(t.TypeArgs().At(i), argNeed)
+				}
 
 			case nil, *types.Basic, *types.TypeParam:
 				// Nothing to do
 
 			default:
-				Panicf("ComputeDeps, unmanaged type %T", t)
+				Panicf("ComputePackages, unmanaged type %T", t)
 			}
-
-			done[key] = value
-			delete(toDo, key)
 		}
 	}
-
 	return
 }
 

@@ -346,15 +346,18 @@ func internalGetObjectsOfType(t types.Type, seen map[types.Object]bool) {
 	switch typ := t.(type) {
 	case *types.Basic:
 		// Basic types do not have associated objects
+
 	case *types.Alias:
 		obj := typ.Obj()
-		if !seen[obj] {
-			seen[obj] = true
+		seen[obj] = true
+		for i := 0; i < typ.TypeArgs().Len(); i++ {
+			internalGetObjectsOfType(typ.TypeArgs().At(i), seen)
 		}
 	case *types.Named:
 		obj := typ.Obj()
-		if !seen[obj] {
-			seen[obj] = true
+		seen[obj] = true
+		for i := 0; i < typ.TypeArgs().Len(); i++ {
+			internalGetObjectsOfType(typ.TypeArgs().At(i), seen)
 		}
 	case *types.Pointer:
 		internalGetObjectsOfType(typ.Elem(), seen)
@@ -387,15 +390,14 @@ func internalGetObjectsOfType(t types.Type, seen map[types.Object]bool) {
 		if recv := typ.Recv(); recv != nil {
 			internalGetObjectsOfType(recv.Type(), seen)
 		}
-		if typ.Params() != nil {
-			for i := 0; i < typ.Params().Len(); i++ {
-				internalGetObjectsOfType(typ.Params().At(i).Type(), seen)
-			}
+		for i := 0; i < typ.Params().Len(); i++ {
+			internalGetObjectsOfType(typ.Params().At(i).Type(), seen)
 		}
-		if typ.Results() != nil {
-			for i := 0; i < typ.Results().Len(); i++ {
-				internalGetObjectsOfType(typ.Results().At(i).Type(), seen)
-			}
+		for i := 0; i < typ.Results().Len(); i++ {
+			internalGetObjectsOfType(typ.Results().At(i).Type(), seen)
+		}
+		for i := 0; i < typ.TypeParams().Len(); i++ {
+			internalGetObjectsOfType(typ.TypeParams().At(i), seen)
 		}
 	case *types.Tuple:
 		for i := 0; i < typ.Len(); i++ {

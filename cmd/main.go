@@ -1277,7 +1277,35 @@ func accessPath(base string, baseIsPtr bool, steps []embedStep) string {
 	return sb.String()
 }
 
-// recRef returns the shortest valid C++ spelling of the rec:: function implementing
+// Type arguments of the receiver's named type, as C++ strings, plus the
+// namespace aliases they need: entry<K, mypkg::T> -> ["K", "mypkg::T"]
+func (cv *cppConverter) recvTypeArgs(t types.Type) (args []string, defs []place) {
+	if p, ok := t.(*types.Pointer); ok {
+		t = p.Elem()
+	}
+	named, ok := types.Unalias(t).(*types.Named)
+	if !ok || named.TypeArgs().Len() == 0 {
+		return
+	}
+	tcCtx := typeConvCtx{cv.namespace, token.Position{}}
+	for i := 0; i < named.TypeArgs().Len(); i++ {
+		arg := named.TypeArgs().At(i)
+		args = append(args, convertGoToCppTypeRec(arg, tcCtx))
+		defs = append(defs, cv.nsAliasPlaces(arg)...)
+	}
+	return
+}
+
+func (cv *cppConverter) recRef(recvType types.Type, method string) (string, []place) {
+	ref, defs := cv.recRefName(recvType, method)
+	args, argDefs := cv.recvTypeArgs(recvType)
+	if len(args) > 0 {
+		ref = fmt.Sprintf("%s<%s>", ref, strings.Join(args, ", "))
+	}
+	return ref, append(defs, argDefs...)
+}
+
+// recRefName returns the shortest valid C++ spelling of the rec:: function implementing
 // `method` for `recvType`, and the places (namespace aliases) it needs.
 //
 //	same package          -> rec::M
@@ -1285,7 +1313,7 @@ func accessPath(base string, baseIsPtr bool, steps []embedStep) string {
 //	alias name shadowed   -> golang::a::b::rec::M
 //	mocked receivers      -> mocklib::rec::M    (from stdFuncMapping, no alias)
 //	universe `error`      -> gocpp::rec::M
-func (cv *cppConverter) recRef(recvType types.Type, method string) (string, []place) {
+func (cv *cppConverter) recRefName(recvType types.Type, method string) (string, []place) {
 	if p, ok := recvType.(*types.Pointer); ok {
 		recvType = p.Elem()
 	}
@@ -3801,10 +3829,11 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 				endArgs = ", " + pm.params.NamesStr()
 			}
 
-			if !first {
+			if !first && param.output == implem {
 				fmt.Fprintf(buf, "\n")
 			}
 
+			PrintTemplatePrefix(buf, data, templatePrms)
 			fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<struct %s, false>& self%s)%s\n", data.out.Indent(), pm.result, pm.name, param.name, endParams, data.declEnd)
 			if data.needBody {
 				fmt.Fprintf(buf, "%s{\n", data.out.Indent())
@@ -3813,7 +3842,10 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 			}
 
 			if pm.onValue { // pointer-receiver methods must not be callable on a value
-				fmt.Fprintf(buf, "\n")
+				if param.output == implem {
+					fmt.Fprintf(buf, "\n")
+				}
+				PrintTemplatePrefix(buf, data, templatePrms)
 				fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<struct %s>& self%s)%s\n", data.out.Indent(), pm.result, pm.name, param.name, endParams, data.declEnd)
 				if data.needBody {
 					fmt.Fprintf(buf, "%s{\n", data.out.Indent())

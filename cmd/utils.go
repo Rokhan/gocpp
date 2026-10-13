@@ -969,107 +969,100 @@ func ComputePackages(deps map[string]types.Type, pc parsingContext) (includes ma
 		k := workKey{w.typ.String(), w.need}
 		if done[k] {
 			continue
-		} else {
-
-			done[k] = true
-
-			argNeed := templateArgNeed
-			if w.need == FwdInclude { // we are behind a pointer
-				argNeed = FwdInclude
-			}
-
-			switch t := w.typ.(type) {
-			case *types.Array:
-				push(t.Elem(), argNeed)
-
-			case *types.Chan:
-				push(t.Elem(), argNeed)
-
-			case *types.Slice:
-				push(t.Elem(), argNeed)
-
-			case *types.Map:
-				push(t.Key(), argNeed)
-				push(t.Elem(), argNeed)
-
-			case *types.Pointer:
-				// Only a forward declaration of the pointee. Its template arguments
-				// are still requested with argNeed by the cases above/below.
-				push(t.Elem(), FwdInclude)
-
-			case *types.Signature:
-				if t.Params() != nil {
-					for i := 0; i < t.Params().Len(); i++ {
-						push(t.Params().At(i).Type(), argNeed)
-						addResult(t.Params().At(i), argNeed)
-					}
-				}
-				if t.Results() != nil {
-					for i := 0; i < t.Results().Len(); i++ {
-						push(t.Results().At(i).Type(), argNeed)
-						addResult(t.Results().At(i), argNeed)
-					}
-				}
-				if t.Recv() != nil {
-					push(t.Recv().Type(), argNeed)
-					addResult(t.Recv(), argNeed)
-				}
-
-			case *types.Struct:
-				if w.need != HdrInclude {
-					break // behind a pointer: the contents are not needed
-				} else {
-					for i := 0; i < t.NumFields(); i++ {
-						push(t.Field(i).Type(), HdrInclude)
-						addResult(t.Field(i), HdrInclude)
-					}
-					// forwarders for promoted methods (see promotedSigTypes)
-					for _, sigType := range promotedSigTypes(t) {
-						push(sigType, HdrInclude)
-					}
-				}
-
-			case *types.Interface:
-				if w.need != HdrInclude {
-					break
-				} else {
-					for i := 0; i < t.NumEmbeddeds(); i++ {
-						push(t.EmbeddedType(i), HdrInclude)
-					}
-					for i := 0; i < t.NumMethods(); i++ {
-						push(t.Method(i).Type(), HdrInclude)
-						addResult(t.Method(i), HdrInclude)
-					}
-				}
-
-			case *types.Union:
-				if w.need != HdrInclude {
-					break
-				} else {
-					for i := 0; i < t.Len(); i++ {
-						push(t.Term(i).Type(), HdrInclude)
-					}
-				}
-
-			case *types.Named:
-				addResult(t.Obj(), w.need)
-				for i := 0; i < t.TypeArgs().Len(); i++ {
-					push(t.TypeArgs().At(i), argNeed)
-				}
-
-			case *types.Alias:
-				addResult(t.Obj(), w.need)
-				for i := 0; i < t.TypeArgs().Len(); i++ {
-					push(t.TypeArgs().At(i), argNeed)
-				}
-
-			case nil, *types.Basic, *types.TypeParam:
-				// Nothing to do
-
-			default:
-				Panicf("ComputePackages, unmanaged type %T", t)
-			}
 		}
+
+		done[k] = true
+
+		argNeed := templateArgNeed
+		if w.need == FwdInclude { // we are behind a pointer
+			argNeed = FwdInclude
+		}
+
+		switch t := w.typ.(type) {
+		case *types.Array:
+			push(t.Elem(), argNeed)
+
+		case *types.Chan:
+			push(t.Elem(), argNeed)
+
+		case *types.Slice:
+			push(t.Elem(), argNeed)
+
+		case *types.Map:
+			push(t.Key(), argNeed)
+			push(t.Elem(), argNeed)
+
+		case *types.Pointer:
+			// Only a forward declaration of the pointee. Its template arguments
+			// are still requested with argNeed by the cases above/below.
+			push(t.Elem(), FwdInclude)
+
+		case *types.Signature:
+			for i := 0; i < t.Params().Len(); i++ {
+				push(t.Params().At(i).Type(), argNeed)
+				addResult(t.Params().At(i), argNeed)
+			}
+			for i := 0; i < t.Results().Len(); i++ {
+				push(t.Results().At(i).Type(), argNeed)
+				addResult(t.Results().At(i), argNeed)
+			}
+			if t.Recv() != nil {
+				push(t.Recv().Type(), argNeed)
+				addResult(t.Recv(), argNeed)
+			}
+
+		case *types.Struct:
+			if w.need != HdrInclude {
+				break // behind a pointer: the contents are not needed
+			}
+			for i := 0; i < t.NumFields(); i++ {
+				push(t.Field(i).Type(), HdrInclude)
+				addResult(t.Field(i), HdrInclude)
+			}
+			// forwarders for promoted methods (see promotedSigTypes)
+			for _, sigType := range promotedSigTypes(t) {
+				push(sigType, HdrInclude)
+			}
+
+		case *types.Interface:
+			if w.need != HdrInclude {
+				break
+			}
+			for i := 0; i < t.NumEmbeddeds(); i++ {
+				push(t.EmbeddedType(i), HdrInclude)
+			}
+			for i := 0; i < t.NumMethods(); i++ {
+				push(t.Method(i).Type(), HdrInclude)
+				addResult(t.Method(i), HdrInclude)
+			}
+
+		case *types.Union:
+			if w.need != HdrInclude {
+				break
+			}
+			for i := 0; i < t.Len(); i++ {
+				push(t.Term(i).Type(), HdrInclude)
+			}
+
+		case *types.Named:
+			addResult(t.Obj(), w.need)
+			for i := 0; i < t.TypeArgs().Len(); i++ {
+				push(t.TypeArgs().At(i), argNeed)
+			}
+
+		case *types.Alias:
+			addResult(t.Obj(), w.need)
+			for i := 0; i < t.TypeArgs().Len(); i++ {
+				push(t.TypeArgs().At(i), argNeed)
+			}
+
+		case nil, *types.Basic, *types.TypeParam:
+			// Nothing to do
+
+		default:
+			Panicf("ComputePackages, unmanaged type %T", t)
+		}
+
 	}
 	return
 }

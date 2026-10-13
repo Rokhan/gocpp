@@ -99,6 +99,25 @@ func GetCppGoType(goType types.Type, namespace string) string {
 	return convertNamespace(ccpStr, namespace)
 }
 
+// Same result as GetCppGoType for non-generic types, but type arguments are
+// emitted with C++ syntax: sync::entry<K, V>
+func convertGoNamedToCppType(obj *types.TypeName, args *types.TypeList, tcCtx typeConvCtx) string {
+	qualified := obj.Name()
+	if obj.Pkg() != nil {
+		qualified = obj.Pkg().Path() + "." + obj.Name()
+	}
+	name := convertNamespace(GetCppType(qualified), tcCtx.namespace)
+
+	if args == nil || args.Len() == 0 {
+		return name
+	}
+	strs := make([]string, args.Len())
+	for i := range strs {
+		strs[i] = convertGoToCppTypeRec(args.At(i), tcCtx)
+	}
+	return fmt.Sprintf("%s<%s>", name, strings.Join(strs, ", "))
+}
+
 // func GetCppFunc[T string | cppExpr](funcName T) T
 func GetCppFunc(funcName string) string {
 	funcName = GetCppName(funcName)

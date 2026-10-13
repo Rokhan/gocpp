@@ -4317,10 +4317,10 @@ func convertGoToCppType(goType types.Type, tcCtx typeConvCtx) (string, bool) {
 		return fmt.Sprintf("gocpp::map<%s, %s>", convertGoToCppTypeRec(subType.Key(), tcCtx), convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
 
 	case *types.Alias:
-		return GetCppGoType(subType, tcCtx.namespace), true
+		return convertGoNamedToCppType(subType.Obj(), subType.TypeArgs(), tcCtx), true
 
 	case *types.Named:
-		return GetCppGoType(subType, tcCtx.namespace), true
+		return convertGoNamedToCppType(subType.Obj(), subType.TypeArgs(), tcCtx), true
 
 	case *types.Pointer:
 		if isArray(subType.Elem()) {

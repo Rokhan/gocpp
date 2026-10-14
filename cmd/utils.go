@@ -108,6 +108,11 @@ func convertGoNamedToCppType(obj *types.TypeName, args *types.TypeList, tcCtx ty
 	}
 	name := convertNamespace(GetCppType(qualified), tcCtx.namespace)
 
+	if obj.Pkg() != nil && obj.Pkg().Path() == tcCtx.pkgPath &&
+		tcCtx.recNames.has(obj.Name()) && !strings.Contains(name, "::") {
+		name = obj.Pkg().Name() + "::" + name // Kind -> reflect::Kind
+	}
+
 	if args == nil || args.Len() == 0 {
 		return name
 	}

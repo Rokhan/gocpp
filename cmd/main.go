@@ -73,6 +73,7 @@ type cppConverter struct {
 	currentSwitchId *list.List
 	labelSwitchId   map[string]int
 	idCount         int
+	recNames        set[string]
 	scopes          *list.List
 	iota_value      int
 
@@ -1287,10 +1288,10 @@ func (cv *cppConverter) recvTypeArgs(t types.Type) (args []string, defs []place)
 	if !ok || named.TypeArgs().Len() == 0 {
 		return
 	}
-	tcCtx := typeConvCtx{cv.namespace, token.Position{}}
+
 	for i := 0; i < named.TypeArgs().Len(); i++ {
 		arg := named.TypeArgs().At(i)
-		args = append(args, convertGoToCppTypeRec(arg, tcCtx))
+		args = append(args, cv.convertGoToCppTypeInRecNs(arg))
 		defs = append(defs, cv.nsAliasPlaces(arg)...)
 	}
 	return
@@ -1352,6 +1353,27 @@ func (cv *cppConverter) recRefName(recvType types.Type, method string) (string, 
 	return raw, []place{useNamespace(pkgName, pkgNs, depInfo{})}
 }
 
+func (cv *cppConverter) recNamespaceNames() set[string] {
+	if cv.recNames != nil {
+		return cv.recNames
+	}
+	names := set[string]{}
+	for _, n := range cv.GetPackageMethodsNames() {
+		names.add(n)
+	}
+	for _, obj := range cv.typeInfo.Defs {
+		tn, ok := obj.(*types.TypeName)
+		if !ok || tn.Pkg() != cv.pkg || tn.Parent() != cv.pkg.Scope() {
+			continue
+		}
+		for _, sel := range promotedSelections(tn.Type()) {
+			names.add(sel.Obj().Name())
+		}
+	}
+	cv.recNames = names
+	return names
+}
+
 func (cv *cppConverter) nsAliasPlaces(t types.Type) (defs []place) {
 	seen := map[string]bool{}
 	for _, obj := range GetObjectsOfType(t) {
@@ -1370,7 +1392,7 @@ func (cv *cppConverter) convertSigParts(sig *types.Signature) (result string, pa
 	var outTypes []outType
 	for j := 0; j < sig.Results().Len(); j++ {
 		t := sig.Results().At(j).Type()
-		s, _ := cv.convertGoToCppType(t, token.Position{})
+		s := cv.convertGoToCppTypeInRecNs(t)
 		outTypes = append(outTypes, outType{str: s})
 		defs = append(defs, cv.nsAliasPlaces(t)...)
 	}
@@ -1378,7 +1400,7 @@ func (cv *cppConverter) convertSigParts(sig *types.Signature) (result string, pa
 
 	for j := 0; j < sig.Params().Len(); j++ {
 		t := sig.Params().At(j).Type()
-		s, _ := cv.convertGoToCppType(t, token.Position{})
+		s := cv.convertGoToCppTypeInRecNs(t)
 		params = append(params, typeName{
 			names: []string{fmt.Sprintf("arg%d", j)},
 			Type:  mkCppType(s, nil),
@@ -4318,6 +4340,18 @@ func convertNamespace(typeStr string, namespace string) string {
 type typeConvCtx struct {
 	namespace string
 	position  token.Position
+
+	// Names of receivers in the current package
+	recNames set[string]
+	pkgPath  string
+}
+
+// Converts a Go type used in a declaration that lives in the `rec` namespace,
+// where function names hide types of the current package (Kind -> reflect::Kind).
+func (cv *cppConverter) convertGoToCppTypeInRecNs(t types.Type) string {
+	ctx := typeConvCtx{namespace: cv.namespace, recNames: cv.recNamespaceNames(), pkgPath: cv.pkg.Path()}
+	str, _ := convertGoToCppType(t, ctx)
+	return str
 }
 
 // TODO, check if we really need all this methods/function
@@ -4327,7 +4361,7 @@ type typeConvCtx struct {
 //	-> convertTypeSpec(node *ast.TypeSpec, end string) cppType
 
 func (cv *cppConverter) convertGoToCppType(goType types.Type, position token.Position) (string, bool) {
-	return convertGoToCppType(goType, typeConvCtx{cv.namespace, position})
+	return convertGoToCppType(goType, typeConvCtx{namespace: cv.namespace, position: position})
 }
 
 func convertGoToCppType(goType types.Type, tcCtx typeConvCtx) (string, bool) {

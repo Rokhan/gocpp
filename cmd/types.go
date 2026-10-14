@@ -24,7 +24,7 @@ type parsingInfos struct {
 func convertGoToCppTypes(goType []types.Type, namespace string, position token.Position) []string {
 	results := []string{}
 	for _, subType := range goType {
-		result, _ := convertGoToCppType(subType, typeConvCtx{namespace, position})
+		result, _ := convertGoToCppType(subType, typeConvCtx{namespace: namespace, position: position})
 		results = append(results, result)
 	}
 	return results

@@ -1387,25 +1387,57 @@ func (cv *cppConverter) nsAliasPlaces(t types.Type) (defs []place) {
 	return
 }
 
-// Extracted from your parentMethod; param names are synthetic so they can't clash with `self`.
-func (cv *cppConverter) convertSigParts(sig *types.Signature) (result string, params typeNames, defs []place) {
+// forwardedParamName reuses the Go parameter name when it is safe in C++.
+func forwardedParamName(goName string, index int, reserved set[string]) string {
+	base := GetCppName(goName)
+	if goName == "" || goName == "_" {
+		base = fmt.Sprintf("arg%d", index)
+	}
+	name := base
+	for i := 1; reserved.has(name); i++ {
+		name = fmt.Sprintf("%s_%d", base, i)
+	}
+	return name
+}
+
+// Extracted from parentMethod;
+func (cv *cppConverter) convertSigParts(sig *types.Signature, owner types.Type) (result string, params typeNames, defs []place) {
+	reserved := set[string]{}
+	reserved.add("self")
+
+	// Type parameters of the struct (K, V...) are used bare in the signatures.
+	if named, ok := owner.(*types.Named); ok {
+		for i := 0; i < named.TypeParams().Len(); i++ {
+			reserved.add(GetCppName(named.TypeParams().At(i).Obj().Name()))
+		}
+	}
+	reserve := func(t types.Type) {
+		for _, obj := range GetObjectsOfType(t) {
+			reserved.add(GetCppName(obj.Name()))
+		}
+	}
+
 	var outTypes []outType
 	for j := 0; j < sig.Results().Len(); j++ {
 		t := sig.Results().At(j).Type()
-		s := cv.convertGoToCppTypeInRecNs(t)
-		outTypes = append(outTypes, outType{str: s})
+		reserve(t)
+		outTypes = append(outTypes, outType{str: cv.convertGoToCppTypeInRecNs(t)})
 		defs = append(defs, cv.nsAliasPlaces(t)...)
 	}
 	result = buildOutType(outTypes, nil)
 
 	for j := 0; j < sig.Params().Len(); j++ {
-		t := sig.Params().At(j).Type()
-		s := cv.convertGoToCppTypeInRecNs(t)
+		reserve(sig.Params().At(j).Type())
+	}
+	for j := 0; j < sig.Params().Len(); j++ {
+		p := sig.Params().At(j)
+		name := forwardedParamName(p.Name(), j, reserved)
+		reserved.add(name)
 		params = append(params, typeName{
-			names: []string{fmt.Sprintf("arg%d", j)},
-			Type:  mkCppType(s, nil),
+			names: []string{name},
+			Type:  mkCppType(cv.convertGoToCppTypeInRecNs(p.Type()), nil),
 		})
-		defs = append(defs, cv.nsAliasPlaces(t)...)
+		defs = append(defs, cv.nsAliasPlaces(p.Type())...)
 	}
 	return
 }
@@ -1432,7 +1464,7 @@ func (cv *cppConverter) promotedMethods(goType types.Type) (out []promotedMethod
 		if !ok {
 			cv.Panicf("promotedMethods: bad embedding path for %s on %v", fn.Name(), goType)
 		}
-		result, params, defs := cv.convertSigParts(sig)
+		result, params, defs := cv.convertSigParts(sig, goType)
 		callee, calleeDefs := cv.recRef(last, fn.Name())
 		defs = append(defs, calleeDefs...)
 

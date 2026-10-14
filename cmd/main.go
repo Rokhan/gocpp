@@ -3838,6 +3838,8 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 		places = append(places, pm.defs...)
 	}
 
+	fullStructName := param.name + templatePrmList
+
 	if param.streamOp == with && len(promoted) != 0 {
 		fmt.Fprintf(buf, "\n%snamespace %s\n", data.out.Indent(), recNs)
 		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
@@ -3856,7 +3858,7 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 			}
 
 			PrintTemplatePrefix(buf, data, templatePrms)
-			fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<struct %s, false>& self%s)%s\n", data.out.Indent(), pm.result, pm.name, param.name, endParams, data.declEnd)
+			fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<struct %s, false>& self%s)%s\n", data.out.Indent(), pm.result, pm.name, fullStructName, endParams, data.declEnd)
 			if data.needBody {
 				fmt.Fprintf(buf, "%s{\n", data.out.Indent())
 				fmt.Fprintf(buf, "%s    return %s(gocpp::recv(%s)%s);\n", data.out.Indent(), pm.callee, accessPath("self.ptr", true, pm.steps), endArgs)
@@ -3868,7 +3870,7 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 					fmt.Fprintf(buf, "\n")
 				}
 				PrintTemplatePrefix(buf, data, templatePrms)
-				fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<struct %s>& self%s)%s\n", data.out.Indent(), pm.result, pm.name, param.name, endParams, data.declEnd)
+				fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<struct %s>& self%s)%s\n", data.out.Indent(), pm.result, pm.name, fullStructName, endParams, data.declEnd)
 				if data.needBody {
 					fmt.Fprintf(buf, "%s{\n", data.out.Indent())
 					fmt.Fprintf(buf, "%s    return %s(gocpp::recv(%s)%s);\n", data.out.Indent(), pm.callee, accessPath("self.obj", false, pm.steps), endArgs)
@@ -3889,7 +3891,7 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 
 		// Need to add 'struct' to avoid conflicts when function have the same name than the struct
 		//   => exemple "RGBA" in "image\color\color.go"
-		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const struct %s%s& value)%s\n", data.out.Indent(), param.name, templatePrmList, data.declEnd)
+		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const struct %s& value)%s\n", data.out.Indent(), fullStructName, data.declEnd)
 		if data.needBody {
 			fmt.Fprintf(buf, "%s{\n", data.out.Indent())
 			fmt.Fprintf(buf, "%s    return value.PrintTo(os);\n", data.out.Indent())

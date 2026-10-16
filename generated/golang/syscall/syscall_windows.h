@@ -27,7 +27,6 @@ namespace golang::syscall
     std::tuple<int, gocpp::error> Read(golang::syscall::Handle fd, gocpp::slice<unsigned char> p);
     std::tuple<int, gocpp::error> Write(golang::syscall::Handle fd, gocpp::slice<unsigned char> p);
     extern int64_t ioSync;
-    extern LazyProc* procSetFilePointerEx;
     gocpp::error setFilePointerEx(golang::syscall::Handle handle, int64_t distToMove, int64_t* newFilePointer, uint32_t whence);
     std::tuple<int64_t, gocpp::error> Seek(golang::syscall::Handle fd, int64_t offset, int whence);
     gocpp::error Close(golang::syscall::Handle fd);
@@ -297,12 +296,14 @@ namespace golang::syscall
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/syscall/types_windows.h"
+#include "golang/syscall/dll_windows.fwd.h"
 
 namespace golang::syscall
 {
     SecurityAttributes* makeInheritSa();
     gocpp::error ReadFile(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, uint32_t* done, Overlapped* overlapped);
     gocpp::error WriteFile(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, uint32_t* done, Overlapped* overlapped);
+    extern LazyProc* procSetFilePointerEx;
     gocpp::error Gettimeofday(Timeval* tv);
     gocpp::error Utimes(gocpp::string path, gocpp::slice<Timeval> tv);
     struct Sockaddr : virtual gocpp::Interface

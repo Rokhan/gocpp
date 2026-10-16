@@ -80,21 +80,7 @@ namespace golang::runtime
     bool findGoroutineLeaks();
     void gcBgMarkStartWorkers();
     void gcBgMarkPrepare();
-    struct gocpp_id_9
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value);
+    void gcBgMarkWorker(gocpp::channel<gocpp::empty_struct> ready);
     bool gcIsMarkDone();
     void gcBeginWork();
     bool gcEndWork();
@@ -121,7 +107,6 @@ namespace golang::runtime
     //go:linkname writeBarrier
     extern writeBarrierStruct writeBarrier;
     void gcStart(gcTrigger trigger);
-    void gcBgMarkWorker(gocpp::channel<gocpp_id_9> ready);
     extern std::function<void ()> poolcleanup;
     void sync_runtime_registerPoolCleanup(std::function<void ()> f);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
@@ -505,6 +490,12 @@ namespace golang::runtime
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        void accumulate(const gocpp::PtrRecv<struct workType, false>& self, int64_t now, bool gcMarkPhase);
+        void accumulateGCPauseTime(const gocpp::PtrRecv<struct workType, false>& self, int64_t dt, int32_t maxProcs);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct workType& value);
     extern workType work;

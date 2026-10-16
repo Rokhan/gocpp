@@ -64,6 +64,79 @@ namespace golang::go::doc::comment
         return os;
     }
 
+    namespace rec
+    {
+        gocpp::slice<unsigned char> Comment(const gocpp::PtrRecv<struct mdPrinter, false>& self, comment::Doc* d)
+        {
+            return rec::Comment(gocpp::recv(self.ptr->Printer), d);
+        }
+
+        gocpp::slice<unsigned char> Comment(const gocpp::ObjRecv<struct mdPrinter>& self, comment::Doc* d)
+        {
+            return rec::Comment(gocpp::recv(self.obj.Printer), d);
+        }
+
+        gocpp::slice<unsigned char> HTML(const gocpp::PtrRecv<struct mdPrinter, false>& self, comment::Doc* d)
+        {
+            return rec::HTML(gocpp::recv(self.ptr->Printer), d);
+        }
+
+        gocpp::slice<unsigned char> HTML(const gocpp::ObjRecv<struct mdPrinter>& self, comment::Doc* d)
+        {
+            return rec::HTML(gocpp::recv(self.obj.Printer), d);
+        }
+
+        gocpp::slice<unsigned char> Markdown(const gocpp::PtrRecv<struct mdPrinter, false>& self, comment::Doc* d)
+        {
+            return rec::Markdown(gocpp::recv(self.ptr->Printer), d);
+        }
+
+        gocpp::slice<unsigned char> Markdown(const gocpp::ObjRecv<struct mdPrinter>& self, comment::Doc* d)
+        {
+            return rec::Markdown(gocpp::recv(self.obj.Printer), d);
+        }
+
+        gocpp::slice<unsigned char> Text(const gocpp::PtrRecv<struct mdPrinter, false>& self, comment::Doc* d)
+        {
+            return rec::Text(gocpp::recv(self.ptr->Printer), d);
+        }
+
+        gocpp::slice<unsigned char> Text(const gocpp::ObjRecv<struct mdPrinter>& self, comment::Doc* d)
+        {
+            return rec::Text(gocpp::recv(self.obj.Printer), d);
+        }
+
+        gocpp::string docLinkURL(const gocpp::PtrRecv<struct mdPrinter, false>& self, comment::DocLink* link)
+        {
+            return rec::docLinkURL(gocpp::recv(self.ptr->Printer), link);
+        }
+
+        gocpp::string docLinkURL(const gocpp::ObjRecv<struct mdPrinter>& self, comment::DocLink* link)
+        {
+            return rec::docLinkURL(gocpp::recv(self.obj.Printer), link);
+        }
+
+        gocpp::string headingID(const gocpp::PtrRecv<struct mdPrinter, false>& self, comment::Heading* h)
+        {
+            return rec::headingID(gocpp::recv(self.ptr->Printer), h);
+        }
+
+        gocpp::string headingID(const gocpp::ObjRecv<struct mdPrinter>& self, comment::Heading* h)
+        {
+            return rec::headingID(gocpp::recv(self.obj.Printer), h);
+        }
+
+        int headingLevel(const gocpp::PtrRecv<struct mdPrinter, false>& self)
+        {
+            return rec::headingLevel(gocpp::recv(self.ptr->Printer));
+        }
+
+        int headingLevel(const gocpp::ObjRecv<struct mdPrinter>& self)
+        {
+            return rec::headingLevel(gocpp::recv(self.obj.Printer));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct mdPrinter& value)
     {
         return value.PrintTo(os);

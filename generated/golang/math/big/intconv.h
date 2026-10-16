@@ -47,19 +47,14 @@ namespace golang::math::big
     {
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct byteReader, false>& self, gocpp::slice<unsigned char> buf);
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct byteReader>& self, gocpp::slice<unsigned char> buf);
-
         std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct byteReader, false>& self);
         std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::ObjRecv<struct byteReader>& self);
-
         void SkipSpace(const gocpp::PtrRecv<struct byteReader, false>& self);
         void SkipSpace(const gocpp::ObjRecv<struct byteReader>& self);
-
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> Token(const gocpp::PtrRecv<struct byteReader, false>& self, bool skipSpace, std::function<bool (gocpp::rune)> f);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> Token(const gocpp::ObjRecv<struct byteReader>& self, bool skipSpace, std::function<bool (gocpp::rune)> f);
-
         gocpp::error UnreadRune(const gocpp::PtrRecv<struct byteReader, false>& self);
         gocpp::error UnreadRune(const gocpp::ObjRecv<struct byteReader>& self);
-
         std::tuple<int, bool> Width(const gocpp::PtrRecv<struct byteReader, false>& self);
         std::tuple<int, bool> Width(const gocpp::ObjRecv<struct byteReader>& self);
     }

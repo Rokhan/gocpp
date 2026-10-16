@@ -79,7 +79,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct PanicNilError& value);
-    extern godebugInc* panicnil;
     void gopanic(go_any e);
     go_any gorecover();
     void sync_throw(gocpp::string s);
@@ -110,6 +109,7 @@ namespace golang::runtime
 {
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
+#include "golang/runtime/runtime.fwd.h"
 #include "golang/runtime/synctest.fwd.h"
 
 namespace golang::runtime
@@ -122,6 +122,7 @@ namespace golang::runtime
     void preprintpanics(_panic* p);
     void printpanics(_panic* p);
     std::tuple<uint32_t, gocpp::unsafe_pointer> readvarintUnsafe(gocpp::unsafe_pointer fd);
+    extern godebugInc* panicnil;
     void printPreFatalDeferPanic(_panic* p);
     // paniclk is held while printing the panic information and stack trace,
     // so that two concurrent panics don't overlap their output.

@@ -283,12 +283,12 @@ namespace golang::main
     {
         int Read(const gocpp::PtrRecv<struct nopCloser, false>& self)
         {
-            return rec::Read(self.ptr->Reader);
+            return rec::Read(gocpp::recv(self.ptr->Reader));
         }
 
         int Read(const gocpp::ObjRecv<struct nopCloser>& self)
         {
-            return rec::Read(self.obj.Reader);
+            return rec::Read(gocpp::recv(self.obj.Reader));
         }
     }
 
@@ -330,12 +330,12 @@ namespace golang::main
     {
         int Read(const gocpp::PtrRecv<struct nopCloserWriterTo, false>& self)
         {
-            return rec::Read(self.ptr->Reader);
+            return rec::Read(gocpp::recv(self.ptr->Reader));
         }
 
         int Read(const gocpp::ObjRecv<struct nopCloserWriterTo>& self)
         {
-            return rec::Read(self.obj.Reader);
+            return rec::Read(gocpp::recv(self.obj.Reader));
         }
     }
 

@@ -201,37 +201,6 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Multiplier& value);
-    struct gocpp_id_0
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            return result;
-        }
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-    {
-        return value.PrintTo(os);
-    }
-
     struct Context : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -261,7 +230,7 @@ namespace golang::main
 
         struct IContext
         {
-            virtual gocpp::channel<gocpp_id_0> vDone() = 0;
+            virtual gocpp::channel<gocpp::empty_struct> vDone() = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -273,7 +242,7 @@ namespace golang::main
                 value.reset(ptr);
             }
 
-            gocpp::channel<gocpp_id_0> vDone() override;
+            gocpp::channel<gocpp::empty_struct> vDone() override;
 
             void* getPtr() override
             {
@@ -290,8 +259,8 @@ namespace golang::main
 
     namespace rec
     {
-        gocpp::channel<gocpp_id_0> Done(const gocpp::PtrRecv<struct Context, false>& self);
-        gocpp::channel<gocpp_id_0> Done(const gocpp::ObjRecv<struct Context>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct Context, false>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::ObjRecv<struct Context>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Context& value);

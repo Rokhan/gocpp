@@ -7,7 +7,6 @@
 namespace golang::golang_org::x::tools::go::ast::edge
 {
     using Kind = uint8_t;
-    struct gocpp_id_1;
     struct fieldInfo;
     // Each [Kind] is named Type_Field, where Type is the
     // [ast.Node] struct type and Field is the name of the field

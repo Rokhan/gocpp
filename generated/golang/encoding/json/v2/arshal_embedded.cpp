@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/bytes/bytes.h"
+#include "golang/cmp/cmp.h"
 #include "golang/encoding/json/internal/jsonflags/flags.h"
 #include "golang/encoding/json/internal/jsonopts/options.h"
 #include "golang/encoding/json/internal/jsonwire/decode.h"

@@ -34,6 +34,7 @@
 namespace golang::runtime
 {
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace abi = golang::internal::abi;
     namespace sys = golang::internal::runtime::sys;
     namespace tracev2 = golang::internal::trace::tracev2;
     namespace rec
@@ -78,6 +79,559 @@ namespace golang::runtime
         os << " " << traceBuf;
         os << '}';
         return os;
+    }
+
+    namespace rec
+    {
+        void GCActive(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GCActive(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GCActive(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GCActive(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GCDone(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GCDone(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GCDone(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GCDone(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GCMarkAssistDone(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GCMarkAssistDone(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GCMarkAssistDone(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GCMarkAssistDone(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GCMarkAssistStart(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GCMarkAssistStart(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GCMarkAssistStart(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GCMarkAssistStart(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GCStart(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GCStart(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GCStart(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GCStart(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GCSweepDone(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GCSweepDone(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GCSweepDone(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GCSweepDone(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GCSweepSpan(const gocpp::PtrRecv<struct traceWriter, false>& self, uintptr_t bytesSwept)
+        {
+            return rec::GCSweepSpan(gocpp::recv(self.ptr->traceLocker), bytesSwept);
+        }
+
+        void GCSweepSpan(const gocpp::ObjRecv<struct traceWriter>& self, uintptr_t bytesSwept)
+        {
+            return rec::GCSweepSpan(gocpp::recv(self.obj.traceLocker), bytesSwept);
+        }
+
+        void GCSweepStart(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GCSweepStart(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GCSweepStart(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GCSweepStart(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GoCreate(const gocpp::PtrRecv<struct traceWriter, false>& self, g* newg, uintptr_t pc, bool blocked)
+        {
+            return rec::GoCreate(gocpp::recv(self.ptr->traceLocker), newg, pc, blocked);
+        }
+
+        void GoCreate(const gocpp::ObjRecv<struct traceWriter>& self, g* newg, uintptr_t pc, bool blocked)
+        {
+            return rec::GoCreate(gocpp::recv(self.obj.traceLocker), newg, pc, blocked);
+        }
+
+        void GoCreateSyscall(const gocpp::PtrRecv<struct traceWriter, false>& self, g* gp)
+        {
+            return rec::GoCreateSyscall(gocpp::recv(self.ptr->traceLocker), gp);
+        }
+
+        void GoCreateSyscall(const gocpp::ObjRecv<struct traceWriter>& self, g* gp)
+        {
+            return rec::GoCreateSyscall(gocpp::recv(self.obj.traceLocker), gp);
+        }
+
+        void GoDestroySyscall(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GoDestroySyscall(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GoDestroySyscall(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GoDestroySyscall(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GoEnd(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GoEnd(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GoEnd(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GoEnd(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GoPark(const gocpp::PtrRecv<struct traceWriter, false>& self, traceBlockReason reason, int skip)
+        {
+            return rec::GoPark(gocpp::recv(self.ptr->traceLocker), reason, skip);
+        }
+
+        void GoPark(const gocpp::ObjRecv<struct traceWriter>& self, traceBlockReason reason, int skip)
+        {
+            return rec::GoPark(gocpp::recv(self.obj.traceLocker), reason, skip);
+        }
+
+        void GoPreempt(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GoPreempt(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GoPreempt(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GoPreempt(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GoSched(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GoSched(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GoSched(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GoSched(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GoStart(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GoStart(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GoStart(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GoStart(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GoStop(const gocpp::PtrRecv<struct traceWriter, false>& self, traceGoStopReason reason)
+        {
+            return rec::GoStop(gocpp::recv(self.ptr->traceLocker), reason);
+        }
+
+        void GoStop(const gocpp::ObjRecv<struct traceWriter>& self, traceGoStopReason reason)
+        {
+            return rec::GoStop(gocpp::recv(self.obj.traceLocker), reason);
+        }
+
+        void GoSwitch(const gocpp::PtrRecv<struct traceWriter, false>& self, g* nextg, bool destroy)
+        {
+            return rec::GoSwitch(gocpp::recv(self.ptr->traceLocker), nextg, destroy);
+        }
+
+        void GoSwitch(const gocpp::ObjRecv<struct traceWriter>& self, g* nextg, bool destroy)
+        {
+            return rec::GoSwitch(gocpp::recv(self.obj.traceLocker), nextg, destroy);
+        }
+
+        void GoSysCall(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::GoSysCall(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void GoSysCall(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::GoSysCall(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void GoSysExit(const gocpp::PtrRecv<struct traceWriter, false>& self, bool lostP)
+        {
+            return rec::GoSysExit(gocpp::recv(self.ptr->traceLocker), lostP);
+        }
+
+        void GoSysExit(const gocpp::ObjRecv<struct traceWriter>& self, bool lostP)
+        {
+            return rec::GoSysExit(gocpp::recv(self.obj.traceLocker), lostP);
+        }
+
+        void GoUnpark(const gocpp::PtrRecv<struct traceWriter, false>& self, g* gp, int skip)
+        {
+            return rec::GoUnpark(gocpp::recv(self.ptr->traceLocker), gp, skip);
+        }
+
+        void GoUnpark(const gocpp::ObjRecv<struct traceWriter>& self, g* gp, int skip)
+        {
+            return rec::GoUnpark(gocpp::recv(self.obj.traceLocker), gp, skip);
+        }
+
+        void Gomaxprocs(const gocpp::PtrRecv<struct traceWriter, false>& self, int32_t procs)
+        {
+            return rec::Gomaxprocs(gocpp::recv(self.ptr->traceLocker), procs);
+        }
+
+        void Gomaxprocs(const gocpp::ObjRecv<struct traceWriter>& self, int32_t procs)
+        {
+            return rec::Gomaxprocs(gocpp::recv(self.obj.traceLocker), procs);
+        }
+
+        void GoroutineStackAlloc(const gocpp::PtrRecv<struct traceWriter, false>& self, uintptr_t base, uintptr_t size)
+        {
+            return rec::GoroutineStackAlloc(gocpp::recv(self.ptr->traceLocker), base, size);
+        }
+
+        void GoroutineStackAlloc(const gocpp::ObjRecv<struct traceWriter>& self, uintptr_t base, uintptr_t size)
+        {
+            return rec::GoroutineStackAlloc(gocpp::recv(self.obj.traceLocker), base, size);
+        }
+
+        void GoroutineStackExists(const gocpp::PtrRecv<struct traceWriter, false>& self, uintptr_t base, uintptr_t size)
+        {
+            return rec::GoroutineStackExists(gocpp::recv(self.ptr->traceLocker), base, size);
+        }
+
+        void GoroutineStackExists(const gocpp::ObjRecv<struct traceWriter>& self, uintptr_t base, uintptr_t size)
+        {
+            return rec::GoroutineStackExists(gocpp::recv(self.obj.traceLocker), base, size);
+        }
+
+        void GoroutineStackFree(const gocpp::PtrRecv<struct traceWriter, false>& self, uintptr_t base)
+        {
+            return rec::GoroutineStackFree(gocpp::recv(self.ptr->traceLocker), base);
+        }
+
+        void GoroutineStackFree(const gocpp::ObjRecv<struct traceWriter>& self, uintptr_t base)
+        {
+            return rec::GoroutineStackFree(gocpp::recv(self.obj.traceLocker), base);
+        }
+
+        void HeapAlloc(const gocpp::PtrRecv<struct traceWriter, false>& self, uint64_t live)
+        {
+            return rec::HeapAlloc(gocpp::recv(self.ptr->traceLocker), live);
+        }
+
+        void HeapAlloc(const gocpp::ObjRecv<struct traceWriter>& self, uint64_t live)
+        {
+            return rec::HeapAlloc(gocpp::recv(self.obj.traceLocker), live);
+        }
+
+        void HeapGoal(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::HeapGoal(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void HeapGoal(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::HeapGoal(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void HeapObjectAlloc(const gocpp::PtrRecv<struct traceWriter, false>& self, uintptr_t addr, abi::Type* typ)
+        {
+            return rec::HeapObjectAlloc(gocpp::recv(self.ptr->traceLocker), addr, typ);
+        }
+
+        void HeapObjectAlloc(const gocpp::ObjRecv<struct traceWriter>& self, uintptr_t addr, abi::Type* typ)
+        {
+            return rec::HeapObjectAlloc(gocpp::recv(self.obj.traceLocker), addr, typ);
+        }
+
+        void HeapObjectExists(const gocpp::PtrRecv<struct traceWriter, false>& self, uintptr_t addr, abi::Type* typ)
+        {
+            return rec::HeapObjectExists(gocpp::recv(self.ptr->traceLocker), addr, typ);
+        }
+
+        void HeapObjectExists(const gocpp::ObjRecv<struct traceWriter>& self, uintptr_t addr, abi::Type* typ)
+        {
+            return rec::HeapObjectExists(gocpp::recv(self.obj.traceLocker), addr, typ);
+        }
+
+        void HeapObjectFree(const gocpp::PtrRecv<struct traceWriter, false>& self, uintptr_t addr)
+        {
+            return rec::HeapObjectFree(gocpp::recv(self.ptr->traceLocker), addr);
+        }
+
+        void HeapObjectFree(const gocpp::ObjRecv<struct traceWriter>& self, uintptr_t addr)
+        {
+            return rec::HeapObjectFree(gocpp::recv(self.obj.traceLocker), addr);
+        }
+
+        void ProcStart(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::ProcStart(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void ProcStart(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::ProcStart(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void ProcSteal(const gocpp::PtrRecv<struct traceWriter, false>& self, runtime::p* pp)
+        {
+            return rec::ProcSteal(gocpp::recv(self.ptr->traceLocker), pp);
+        }
+
+        void ProcSteal(const gocpp::ObjRecv<struct traceWriter>& self, runtime::p* pp)
+        {
+            return rec::ProcSteal(gocpp::recv(self.obj.traceLocker), pp);
+        }
+
+        void ProcStop(const gocpp::PtrRecv<struct traceWriter, false>& self, runtime::p* pp)
+        {
+            return rec::ProcStop(gocpp::recv(self.ptr->traceLocker), pp);
+        }
+
+        void ProcStop(const gocpp::ObjRecv<struct traceWriter>& self, runtime::p* pp)
+        {
+            return rec::ProcStop(gocpp::recv(self.obj.traceLocker), pp);
+        }
+
+        void STWDone(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::STWDone(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        void STWDone(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::STWDone(gocpp::recv(self.obj.traceLocker));
+        }
+
+        void STWStart(const gocpp::PtrRecv<struct traceWriter, false>& self, stwReason reason)
+        {
+            return rec::STWStart(gocpp::recv(self.ptr->traceLocker), reason);
+        }
+
+        void STWStart(const gocpp::ObjRecv<struct traceWriter>& self, stwReason reason)
+        {
+            return rec::STWStart(gocpp::recv(self.obj.traceLocker), reason);
+        }
+
+        void SpanAlloc(const gocpp::PtrRecv<struct traceWriter, false>& self, mspan* s)
+        {
+            return rec::SpanAlloc(gocpp::recv(self.ptr->traceLocker), s);
+        }
+
+        void SpanAlloc(const gocpp::ObjRecv<struct traceWriter>& self, mspan* s)
+        {
+            return rec::SpanAlloc(gocpp::recv(self.obj.traceLocker), s);
+        }
+
+        void SpanExists(const gocpp::PtrRecv<struct traceWriter, false>& self, mspan* s)
+        {
+            return rec::SpanExists(gocpp::recv(self.ptr->traceLocker), s);
+        }
+
+        void SpanExists(const gocpp::ObjRecv<struct traceWriter>& self, mspan* s)
+        {
+            return rec::SpanExists(gocpp::recv(self.obj.traceLocker), s);
+        }
+
+        void SpanFree(const gocpp::PtrRecv<struct traceWriter, false>& self, mspan* s)
+        {
+            return rec::SpanFree(gocpp::recv(self.ptr->traceLocker), s);
+        }
+
+        void SpanFree(const gocpp::ObjRecv<struct traceWriter>& self, mspan* s)
+        {
+            return rec::SpanFree(gocpp::recv(self.obj.traceLocker), s);
+        }
+
+        bool available(const gocpp::PtrRecv<struct traceWriter, false>& self, int size)
+        {
+            return rec::available(gocpp::recv(self.ptr->traceBuf), size);
+        }
+
+        bool available(const gocpp::ObjRecv<struct traceWriter>& self, int size)
+        {
+            return rec::available(gocpp::recv(self.obj.traceBuf), size);
+        }
+
+        void byte(const gocpp::PtrRecv<struct traceWriter, false>& self, unsigned char v)
+        {
+            return rec::byte(gocpp::recv(self.ptr->traceBuf), v);
+        }
+
+        void byte(const gocpp::ObjRecv<struct traceWriter>& self, unsigned char v)
+        {
+            return rec::byte(gocpp::recv(self.obj.traceBuf), v);
+        }
+
+        void emitUnblockStatus(const gocpp::PtrRecv<struct traceWriter, false>& self, g* gp, uintptr_t gen)
+        {
+            return rec::emitUnblockStatus(gocpp::recv(self.ptr->traceLocker), gp, gen);
+        }
+
+        void emitUnblockStatus(const gocpp::ObjRecv<struct traceWriter>& self, g* gp, uintptr_t gen)
+        {
+            return rec::emitUnblockStatus(gocpp::recv(self.obj.traceLocker), gp, gen);
+        }
+
+        traceEventWriter eventWriter(const gocpp::PtrRecv<struct traceWriter, false>& self, tracev2::GoStatus goStatus, tracev2::ProcStatus procStatus)
+        {
+            return rec::eventWriter(gocpp::recv(self.ptr->traceLocker), goStatus, procStatus);
+        }
+
+        traceEventWriter eventWriter(const gocpp::ObjRecv<struct traceWriter>& self, tracev2::GoStatus goStatus, tracev2::ProcStatus procStatus)
+        {
+            return rec::eventWriter(gocpp::recv(self.obj.traceLocker), goStatus, procStatus);
+        }
+
+        traceWriter expWriter(const gocpp::PtrRecv<struct traceWriter, false>& self, tracev2::Experiment exp)
+        {
+            return rec::expWriter(gocpp::recv(self.ptr->traceLocker), exp);
+        }
+
+        traceWriter expWriter(const gocpp::ObjRecv<struct traceWriter>& self, tracev2::Experiment exp)
+        {
+            return rec::expWriter(gocpp::recv(self.obj.traceLocker), exp);
+        }
+
+        bool ok(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::ok(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        bool ok(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::ok(gocpp::recv(self.obj.traceLocker));
+        }
+
+        traceEventWriter rawEventWriter(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::rawEventWriter(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        traceEventWriter rawEventWriter(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::rawEventWriter(gocpp::recv(self.obj.traceLocker));
+        }
+
+        traceArg rtype(const gocpp::PtrRecv<struct traceWriter, false>& self, abi::Type* typ)
+        {
+            return rec::rtype(gocpp::recv(self.ptr->traceLocker), typ);
+        }
+
+        traceArg rtype(const gocpp::ObjRecv<struct traceWriter>& self, abi::Type* typ)
+        {
+            return rec::rtype(gocpp::recv(self.obj.traceLocker), typ);
+        }
+
+        traceArg stack(const gocpp::PtrRecv<struct traceWriter, false>& self, int skip)
+        {
+            return rec::stack(gocpp::recv(self.ptr->traceLocker), skip);
+        }
+
+        traceArg stack(const gocpp::ObjRecv<struct traceWriter>& self, int skip)
+        {
+            return rec::stack(gocpp::recv(self.obj.traceLocker), skip);
+        }
+
+        traceArg startPC(const gocpp::PtrRecv<struct traceWriter, false>& self, uintptr_t pc)
+        {
+            return rec::startPC(gocpp::recv(self.ptr->traceLocker), pc);
+        }
+
+        traceArg startPC(const gocpp::ObjRecv<struct traceWriter>& self, uintptr_t pc)
+        {
+            return rec::startPC(gocpp::recv(self.obj.traceLocker), pc);
+        }
+
+        traceArg string(const gocpp::PtrRecv<struct traceWriter, false>& self, gocpp::string s)
+        {
+            return rec::string(gocpp::recv(self.ptr->traceLocker), s);
+        }
+
+        traceArg string(const gocpp::ObjRecv<struct traceWriter>& self, gocpp::string s)
+        {
+            return rec::string(gocpp::recv(self.obj.traceLocker), s);
+        }
+
+        void stringData(const gocpp::PtrRecv<struct traceWriter, false>& self, gocpp::string s)
+        {
+            return rec::stringData(gocpp::recv(self.ptr->traceBuf), s);
+        }
+
+        void stringData(const gocpp::ObjRecv<struct traceWriter>& self, gocpp::string s)
+        {
+            return rec::stringData(gocpp::recv(self.obj.traceBuf), s);
+        }
+
+        traceArg uniqueString(const gocpp::PtrRecv<struct traceWriter, false>& self, gocpp::string s)
+        {
+            return rec::uniqueString(gocpp::recv(self.ptr->traceLocker), s);
+        }
+
+        traceArg uniqueString(const gocpp::ObjRecv<struct traceWriter>& self, gocpp::string s)
+        {
+            return rec::uniqueString(gocpp::recv(self.obj.traceLocker), s);
+        }
+
+        void varint(const gocpp::PtrRecv<struct traceWriter, false>& self, uint64_t v)
+        {
+            return rec::varint(gocpp::recv(self.ptr->traceBuf), v);
+        }
+
+        void varint(const gocpp::ObjRecv<struct traceWriter>& self, uint64_t v)
+        {
+            return rec::varint(gocpp::recv(self.obj.traceBuf), v);
+        }
+
+        void varintAt(const gocpp::PtrRecv<struct traceWriter, false>& self, int pos, uint64_t v)
+        {
+            return rec::varintAt(gocpp::recv(self.ptr->traceBuf), pos, v);
+        }
+
+        void varintAt(const gocpp::ObjRecv<struct traceWriter>& self, int pos, uint64_t v)
+        {
+            return rec::varintAt(gocpp::recv(self.obj.traceBuf), pos, v);
+        }
+
+        int varintReserve(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::varintReserve(gocpp::recv(self.ptr->traceBuf));
+        }
+
+        int varintReserve(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::varintReserve(gocpp::recv(self.obj.traceBuf));
+        }
+
+        traceWriter writer(const gocpp::PtrRecv<struct traceWriter, false>& self)
+        {
+            return rec::writer(gocpp::recv(self.ptr->traceLocker));
+        }
+
+        traceWriter writer(const gocpp::ObjRecv<struct traceWriter>& self)
+        {
+            return rec::writer(gocpp::recv(self.obj.traceLocker));
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct traceWriter& value)

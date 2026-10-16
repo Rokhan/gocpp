@@ -12,21 +12,6 @@
 
 namespace golang::runtime
 {
-    struct gocpp_id_0
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     extern uint32_t traceAdvanceSema;
     extern uint32_t traceShutdownSema;
     gocpp::error StartTrace();
@@ -36,40 +21,10 @@ namespace golang::runtime
     void traceRegisterLabelsAndReasons(uintptr_t gen);
     gocpp::slice<unsigned char> ReadTrace();
     std::tuple<gocpp::slice<unsigned char>, bool> readTrace0();
-    struct gocpp_id_1
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
-    struct gocpp_id_4
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
     struct traceAdvancerState
     {
         wakeableSleep* timer{};
-        gocpp::channel<gocpp_id_1> done{};
+        gocpp::channel<gocpp::empty_struct> done{};
 
         using isGoStruct = void;
 
@@ -83,6 +38,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceAdvancerState& value);
+    // Trace advancer goroutine.
+    extern traceAdvancerState traceAdvancer;
 }
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/time.fwd.h"
@@ -91,14 +48,12 @@ namespace golang::runtime
 {
     g* traceReader();
     g* traceReaderAvailable();
-    // Trace advancer goroutine.
-    extern traceAdvancerState traceAdvancer;
     struct wakeableSleep
     {
         timer* timer{};
         // lock protects access to wakeup, but not send/recv on it.
         mutex lock{};
-        gocpp::channel<gocpp_id_4> wakeup{};
+        gocpp::channel<gocpp::empty_struct> wakeup{};
 
         using isGoStruct = void;
 
@@ -121,13 +76,13 @@ namespace golang::runtime
     wakeableSleep* newWakeableSleep();
 }
 #include "golang/internal/runtime/atomic/types.h"
+#include "golang/runtime/profbuf.h"
 #include "golang/runtime/tracebuf.h"
 #include "golang/runtime/traceevent.h"
 #include "golang/runtime/tracestack.h"
 #include "golang/runtime/tracestring.h"
 #include "golang/runtime/tracetype.h"
 #include "golang/runtime/mgc.fwd.h"
-#include "golang/runtime/profbuf.fwd.h"
 #include "golang/runtime/traceruntime.fwd.h"
 
 namespace golang::runtime
@@ -183,7 +138,7 @@ namespace golang::runtime
         atomic::Uint32 signalLock{}; // protects use of the following member, only usable in signal handlers
         gocpp::array<atomic::Pointer<profBuf>, 2> cpuLogWrite{}; // copy of cpuLogRead for use in signal handlers, set without signalLock
         wakeableSleep* cpuSleep{};
-        gocpp::channel<gocpp_id_0> cpuLogDone{};
+        gocpp::channel<gocpp::empty_struct> cpuLogDone{};
         gocpp::array<traceBuf*, 2> cpuBuf{};
         atomic::Pointer<g> reader{}; // goroutine that called ReadTrace, or nil
         // Fast mappings from enumerations to string IDs that are prepopulated

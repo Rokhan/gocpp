@@ -40,6 +40,13 @@ namespace golang::os
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        void Lock(const gocpp::PtrRecv<struct getwdCacheStruct, false>& self);
+        bool TryLock(const gocpp::PtrRecv<struct getwdCacheStruct, false>& self);
+        void Unlock(const gocpp::PtrRecv<struct getwdCacheStruct, false>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct getwdCacheStruct& value);
     extern getwdCacheStruct getwdCache;
 

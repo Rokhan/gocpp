@@ -14,6 +14,57 @@ namespace golang::syscall
 {
     extern gocpp::error errERROR_IO_PENDING;
     extern gocpp::error errERROR_EINVAL;
+    bool DnsNameCompare(uint16_t* name1, uint16_t* name2);
+    gocpp::error CreateHardLink(uint16_t* filename, uint16_t* existingfilename, uintptr_t reserved);
+    gocpp::error CreateSymbolicLink(uint16_t* symlinkfilename, uint16_t* targetfilename, uint32_t flags);
+    gocpp::error DeleteFile(uint16_t* path);
+    void ExitProcess(uint32_t exitcode);
+    gocpp::error FlushViewOfFile(uintptr_t addr, uintptr_t length);
+    std::tuple<uint32_t, gocpp::error> formatMessage(uint32_t flags, uintptr_t msgsrc, uint32_t msgid, uint32_t langid, gocpp::slice<uint16_t> buf, unsigned char* args);
+    gocpp::error FreeEnvironmentStrings(uint16_t* envs);
+    uint16_t* GetCommandLine();
+    gocpp::error GetComputerName(uint16_t* buf, uint32_t* n);
+    std::tuple<uint32_t, gocpp::error> GetCurrentDirectory(uint32_t buflen, uint16_t* buf);
+    uint32_t getCurrentProcessId();
+    std::tuple<uint16_t*, gocpp::error> GetEnvironmentStrings();
+    std::tuple<uint32_t, gocpp::error> GetEnvironmentVariable(uint16_t* name, uint16_t* buffer, uint32_t size);
+    gocpp::error GetFileAttributesEx(uint16_t* name, uint32_t level, unsigned char* info);
+    std::tuple<uint32_t, gocpp::error> GetFileAttributes(uint16_t* name);
+    std::tuple<uint32_t, gocpp::error> GetFullPathName(uint16_t* path, uint32_t buflen, uint16_t* buf, uint16_t** fname);
+    gocpp::error GetLastError();
+    std::tuple<uint32_t, gocpp::error> GetLongPathName(uint16_t* path, uint16_t* buf, uint32_t buflen);
+    std::tuple<uint32_t, gocpp::error> GetShortPathName(uint16_t* longpath, uint16_t* shortpath, uint32_t buflen);
+    std::tuple<uint32_t, gocpp::error> GetTempPath(uint32_t buflen, uint16_t* buf);
+    std::tuple<uint32_t, gocpp::error> GetVersion();
+    std::tuple<uintptr_t, gocpp::error> localAlloc(uint32_t flags, uint32_t length);
+    gocpp::error MoveFile(uint16_t* from, uint16_t* to);
+    gocpp::error RemoveDirectory(uint16_t* path);
+    gocpp::error SetCurrentDirectory(uint16_t* path);
+    gocpp::error SetEnvironmentVariable(uint16_t* name, uint16_t* value);
+    gocpp::error SetFileAttributes(uint16_t* name, uint32_t attrs);
+    gocpp::error UnmapViewOfFile(uintptr_t addr);
+    gocpp::error VirtualLock(uintptr_t addr, uintptr_t length);
+    gocpp::error VirtualUnlock(uintptr_t addr, uintptr_t length);
+    gocpp::error NetApiBufferFree(unsigned char* buf);
+    gocpp::error NetGetJoinInformation(uint16_t* server, uint16_t** name, uint32_t* bufType);
+    gocpp::error NetUserGetInfo(uint16_t* serverName, uint16_t* userName, uint32_t level, unsigned char** buf);
+    gocpp::error GetUserNameEx(uint32_t nameFormat, uint16_t* nameBuffre, uint32_t* nSize);
+    gocpp::error TranslateName(uint16_t* accName, uint32_t accNameFormat, uint32_t desiredNameFormat, uint16_t* translatedName, uint32_t* nSize);
+    std::tuple<gocpp::array_ptr<gocpp::array<gocpp::array_ptr<gocpp::array<uint16_t, 8192>>, 8192>>, gocpp::error> CommandLineToArgv(uint16_t* cmd, int32_t* argc);
+    gocpp::error WSACleanup();
+    uint16_t Ntohs(uint16_t netshort);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
+#include "golang/syscall/security_windows.h"
+#include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/dll_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/types_windows_amd64.fwd.h"
+
+namespace golang::syscall
+{
+    extern gocpp::unsafe_pointer _;
+    gocpp::error errnoErr(Errno e);
     extern LazyDLL* modadvapi32;
     extern LazyDLL* modcrypt32;
     extern LazyDLL* moddnsapi;
@@ -174,56 +225,6 @@ namespace golang::syscall
     extern LazyProc* procsetsockopt;
     extern LazyProc* procshutdown;
     extern LazyProc* procsocket;
-    bool DnsNameCompare(uint16_t* name1, uint16_t* name2);
-    gocpp::error CreateHardLink(uint16_t* filename, uint16_t* existingfilename, uintptr_t reserved);
-    gocpp::error CreateSymbolicLink(uint16_t* symlinkfilename, uint16_t* targetfilename, uint32_t flags);
-    gocpp::error DeleteFile(uint16_t* path);
-    void ExitProcess(uint32_t exitcode);
-    gocpp::error FlushViewOfFile(uintptr_t addr, uintptr_t length);
-    std::tuple<uint32_t, gocpp::error> formatMessage(uint32_t flags, uintptr_t msgsrc, uint32_t msgid, uint32_t langid, gocpp::slice<uint16_t> buf, unsigned char* args);
-    gocpp::error FreeEnvironmentStrings(uint16_t* envs);
-    uint16_t* GetCommandLine();
-    gocpp::error GetComputerName(uint16_t* buf, uint32_t* n);
-    std::tuple<uint32_t, gocpp::error> GetCurrentDirectory(uint32_t buflen, uint16_t* buf);
-    uint32_t getCurrentProcessId();
-    std::tuple<uint16_t*, gocpp::error> GetEnvironmentStrings();
-    std::tuple<uint32_t, gocpp::error> GetEnvironmentVariable(uint16_t* name, uint16_t* buffer, uint32_t size);
-    gocpp::error GetFileAttributesEx(uint16_t* name, uint32_t level, unsigned char* info);
-    std::tuple<uint32_t, gocpp::error> GetFileAttributes(uint16_t* name);
-    std::tuple<uint32_t, gocpp::error> GetFullPathName(uint16_t* path, uint32_t buflen, uint16_t* buf, uint16_t** fname);
-    gocpp::error GetLastError();
-    std::tuple<uint32_t, gocpp::error> GetLongPathName(uint16_t* path, uint16_t* buf, uint32_t buflen);
-    std::tuple<uint32_t, gocpp::error> GetShortPathName(uint16_t* longpath, uint16_t* shortpath, uint32_t buflen);
-    std::tuple<uint32_t, gocpp::error> GetTempPath(uint32_t buflen, uint16_t* buf);
-    std::tuple<uint32_t, gocpp::error> GetVersion();
-    std::tuple<uintptr_t, gocpp::error> localAlloc(uint32_t flags, uint32_t length);
-    gocpp::error MoveFile(uint16_t* from, uint16_t* to);
-    gocpp::error RemoveDirectory(uint16_t* path);
-    gocpp::error SetCurrentDirectory(uint16_t* path);
-    gocpp::error SetEnvironmentVariable(uint16_t* name, uint16_t* value);
-    gocpp::error SetFileAttributes(uint16_t* name, uint32_t attrs);
-    gocpp::error UnmapViewOfFile(uintptr_t addr);
-    gocpp::error VirtualLock(uintptr_t addr, uintptr_t length);
-    gocpp::error VirtualUnlock(uintptr_t addr, uintptr_t length);
-    gocpp::error NetApiBufferFree(unsigned char* buf);
-    gocpp::error NetGetJoinInformation(uint16_t* server, uint16_t** name, uint32_t* bufType);
-    gocpp::error NetUserGetInfo(uint16_t* serverName, uint16_t* userName, uint32_t level, unsigned char** buf);
-    gocpp::error GetUserNameEx(uint32_t nameFormat, uint16_t* nameBuffre, uint32_t* nSize);
-    gocpp::error TranslateName(uint16_t* accName, uint32_t accNameFormat, uint32_t desiredNameFormat, uint16_t* translatedName, uint32_t* nSize);
-    std::tuple<gocpp::array_ptr<gocpp::array<gocpp::array_ptr<gocpp::array<uint16_t, 8192>>, 8192>>, gocpp::error> CommandLineToArgv(uint16_t* cmd, int32_t* argc);
-    gocpp::error WSACleanup();
-    uint16_t Ntohs(uint16_t netshort);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-}
-#include "golang/syscall/security_windows.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/types_windows_amd64.fwd.h"
-
-namespace golang::syscall
-{
-    extern gocpp::unsafe_pointer _;
-    gocpp::error errnoErr(Errno e);
     gocpp::error ConvertSidToStringSid(SID* sid, uint16_t** stringSid);
     gocpp::error ConvertStringSidToSid(uint16_t* stringSid, SID** sid);
     gocpp::error CopySid(uint32_t destSidLen, SID* destSid, SID* srcSid);

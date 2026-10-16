@@ -601,6 +601,19 @@ namespace golang::go::doc::comment
         return os;
     }
 
+    namespace rec
+    {
+        comment::Doc* Parse(const gocpp::PtrRecv<struct parseDoc, false>& self, gocpp::string text)
+        {
+            return rec::Parse(gocpp::recv(self.ptr->Parser), text);
+        }
+
+        comment::Doc* Parse(const gocpp::ObjRecv<struct parseDoc>& self, gocpp::string text)
+        {
+            return rec::Parse(gocpp::recv(self.obj.Parser), text);
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct parseDoc& value)
     {
         return value.PrintTo(os);

@@ -818,6 +818,14 @@ namespace golang::runtime
         return os;
     }
 
+    namespace rec
+    {
+        void merge(const gocpp::PtrRecv<struct heapStatsAggregate, false>& self, heapStatsDelta* b)
+        {
+            return rec::merge(gocpp::recv(self.ptr->heapStatsDelta), b);
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct heapStatsAggregate& value)
     {
         return value.PrintTo(os);
@@ -958,6 +966,19 @@ namespace golang::runtime
         os << "" << cpuStats;
         os << '}';
         return os;
+    }
+
+    namespace rec
+    {
+        void accumulate(const gocpp::PtrRecv<struct cpuStatsAggregate, false>& self, int64_t now, bool gcMarkPhase)
+        {
+            return rec::accumulate(gocpp::recv(self.ptr->cpuStats), now, gcMarkPhase);
+        }
+
+        void accumulateGCPauseTime(const gocpp::PtrRecv<struct cpuStatsAggregate, false>& self, int64_t dt, int32_t maxProcs)
+        {
+            return rec::accumulateGCPauseTime(gocpp::recv(self.ptr->cpuStats), dt, maxProcs);
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct cpuStatsAggregate& value)

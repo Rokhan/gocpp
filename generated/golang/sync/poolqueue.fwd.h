@@ -9,8 +9,7 @@ namespace golang::sync
     struct poolDequeue;
     struct eface;
     const long dequeueBits = 32;
-    struct gocpp_id_0;
-    using dequeueNil = gocpp_id_0*;
+    using dequeueNil = gocpp::empty_struct*;
     struct poolChain;
     struct poolChainElt;
     // dequeueLimit is the maximum size of a poolDequeue.

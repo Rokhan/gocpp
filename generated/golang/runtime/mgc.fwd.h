@@ -27,10 +27,8 @@ namespace golang::runtime
     struct gcTrigger;
     using gcTriggerKind = int;
     struct gcDebugMarkDoneStruct;
-    struct gocpp_id_8;
     struct gcBgMarkWorkerNode;
     struct gcBgMarkWorkerNodePadded;
-    struct gocpp_id_10;
     // gcMarkWorkerNotWorker indicates that the next scheduled G is not
     // starting work and the mode should be ignored.
     const gcMarkWorkerMode gcMarkWorkerNotWorker = 0;

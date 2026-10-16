@@ -455,6 +455,15 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        unsafe::Pointer get(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
+        void set(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self, unsafe::Pointer v);
+        void setTraceable(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
+        void setUntraceable(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
+        uintptr_t uintptr(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct maybeTraceableChan& value);
     struct gocpp_id_2
     {
@@ -1151,6 +1160,14 @@ namespace golang::runtime
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        void becomeSpinning(const gocpp::PtrRecv<struct mPadded, false>& self);
+        void clearAllpSnapshot(const gocpp::PtrRecv<struct mPadded, false>& self);
+        bool hasCgoOnStack(const gocpp::PtrRecv<struct mPadded, false>& self);
+        gocpp::slice<runtime::p*> snapshotAllp(const gocpp::PtrRecv<struct mPadded, false>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct mPadded& value);
 }

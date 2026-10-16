@@ -190,9 +190,6 @@ namespace golang::runtime
     bool preemptall();
     extern int64_t starttime;
     void schedtrace(bool detailed);
-    // GOMAXPROCS update godebug metric. Incremented if automatic
-    // GOMAXPROCS updates actually change the value of GOMAXPROCS.
-    extern godebugInc* updatemaxprocs;
     void defaultGOMAXPROCSUpdateEnable();
     void updateMaxProcsGoroutine();
     void sysmonUpdateGOMAXPROCS();
@@ -312,6 +309,7 @@ namespace golang::runtime
 #include "golang/runtime/rwmutex.h"
 #include "golang/runtime/traceruntime.h"
 #include "golang/runtime/mcache.fwd.h"
+#include "golang/runtime/runtime.fwd.h"
 
 namespace golang::runtime
 {
@@ -481,6 +479,9 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct syscallingThread& value);
     bool preemptone(golang::runtime::p* pp);
+    // GOMAXPROCS update godebug metric. Incremented if automatic
+    // GOMAXPROCS updates actually change the value of GOMAXPROCS.
+    extern godebugInc* updatemaxprocs;
     // Synchronization between GOMAXPROCS and sysmon.
     //
     // Setting GOMAXPROCS via a call to GOMAXPROCS disables automatic

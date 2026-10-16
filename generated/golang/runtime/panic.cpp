@@ -635,7 +635,7 @@ namespace golang::runtime
         d->sp = sys::GetCallerSP();
 
         d->rangefunc = true;
-        d->head = new atomic::Pointer[runtime::_defer]{};
+        d->head = new atomic::Pointer<_defer>{};
 
         return d->head;
     }

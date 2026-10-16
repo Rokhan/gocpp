@@ -150,6 +150,11 @@ namespace golang::internal::abi
     
     template<typename T>
     Type* TypeFor();
+}
+#include "golang/internal/abi/map.fwd.h"
+
+namespace golang::internal::abi
+{
     struct ArrayType
     {
         Type Type{};
@@ -167,6 +172,33 @@ namespace golang::internal::abi
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        int Align(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::ArrayType* ArrayType(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::ChanDir ChanDir(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::ChanType* ChanType(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::Type* Common(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        int DescriptorSize(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        gocpp::slice<abi::Method> ExportedMethods(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        int FieldAlign(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::FuncType* FuncType(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        gocpp::slice<unsigned char> GcSlice(const gocpp::PtrRecv<struct ArrayType, false>& self, uintptr_t begin, uintptr_t end);
+        bool HasName(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::InterfaceType* InterfaceType(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        bool IsDirectIface(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::Type* Key(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::Kind Kind(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::MapType* MapType(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        int NumMethod(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::PtrType* PointerType(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        bool Pointers(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        uintptr_t Size(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::SliceType* SliceType(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::StructType* StructType(const gocpp::PtrRecv<struct ArrayType, false>& self);
+        abi::UncommonType* Uncommon(const gocpp::PtrRecv<struct ArrayType, false>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct ArrayType& value);
     struct ChanType
@@ -186,6 +218,34 @@ namespace golang::internal::abi
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        int Align(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::ArrayType* ArrayType(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::ChanDir ChanDir(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::ChanType* ChanType(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::Type* Common(const gocpp::PtrRecv<struct ChanType, false>& self);
+        int DescriptorSize(const gocpp::PtrRecv<struct ChanType, false>& self);
+        gocpp::slice<abi::Method> ExportedMethods(const gocpp::PtrRecv<struct ChanType, false>& self);
+        int FieldAlign(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::FuncType* FuncType(const gocpp::PtrRecv<struct ChanType, false>& self);
+        gocpp::slice<unsigned char> GcSlice(const gocpp::PtrRecv<struct ChanType, false>& self, uintptr_t begin, uintptr_t end);
+        bool HasName(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::InterfaceType* InterfaceType(const gocpp::PtrRecv<struct ChanType, false>& self);
+        bool IsDirectIface(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::Type* Key(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::Kind Kind(const gocpp::PtrRecv<struct ChanType, false>& self);
+        int Len(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::MapType* MapType(const gocpp::PtrRecv<struct ChanType, false>& self);
+        int NumMethod(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::PtrType* PointerType(const gocpp::PtrRecv<struct ChanType, false>& self);
+        bool Pointers(const gocpp::PtrRecv<struct ChanType, false>& self);
+        uintptr_t Size(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::SliceType* SliceType(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::StructType* StructType(const gocpp::PtrRecv<struct ChanType, false>& self);
+        abi::UncommonType* Uncommon(const gocpp::PtrRecv<struct ChanType, false>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct ChanType& value);
     struct InterfaceType
     {
@@ -204,6 +264,35 @@ namespace golang::internal::abi
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        int Align(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::ArrayType* ArrayType(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::ChanDir ChanDir(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::ChanType* ChanType(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::Type* Common(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        int DescriptorSize(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::Type* Elem(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        gocpp::slice<abi::Method> ExportedMethods(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        int FieldAlign(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::FuncType* FuncType(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        gocpp::slice<unsigned char> GcSlice(const gocpp::PtrRecv<struct InterfaceType, false>& self, uintptr_t begin, uintptr_t end);
+        bool HasName(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::InterfaceType* InterfaceType(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        bool IsDirectIface(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::Type* Key(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::Kind Kind(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        int Len(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::MapType* MapType(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        int NumMethod(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::PtrType* PointerType(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        bool Pointers(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        uintptr_t Size(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::SliceType* SliceType(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::StructType* StructType(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+        abi::UncommonType* Uncommon(const gocpp::PtrRecv<struct InterfaceType, false>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct InterfaceType& value);
     struct SliceType
     {
@@ -220,6 +309,34 @@ namespace golang::internal::abi
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        int Align(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::ArrayType* ArrayType(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::ChanDir ChanDir(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::ChanType* ChanType(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::Type* Common(const gocpp::PtrRecv<struct SliceType, false>& self);
+        int DescriptorSize(const gocpp::PtrRecv<struct SliceType, false>& self);
+        gocpp::slice<abi::Method> ExportedMethods(const gocpp::PtrRecv<struct SliceType, false>& self);
+        int FieldAlign(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::FuncType* FuncType(const gocpp::PtrRecv<struct SliceType, false>& self);
+        gocpp::slice<unsigned char> GcSlice(const gocpp::PtrRecv<struct SliceType, false>& self, uintptr_t begin, uintptr_t end);
+        bool HasName(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::InterfaceType* InterfaceType(const gocpp::PtrRecv<struct SliceType, false>& self);
+        bool IsDirectIface(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::Type* Key(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::Kind Kind(const gocpp::PtrRecv<struct SliceType, false>& self);
+        int Len(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::MapType* MapType(const gocpp::PtrRecv<struct SliceType, false>& self);
+        int NumMethod(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::PtrType* PointerType(const gocpp::PtrRecv<struct SliceType, false>& self);
+        bool Pointers(const gocpp::PtrRecv<struct SliceType, false>& self);
+        uintptr_t Size(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::SliceType* SliceType(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::StructType* StructType(const gocpp::PtrRecv<struct SliceType, false>& self);
+        abi::UncommonType* Uncommon(const gocpp::PtrRecv<struct SliceType, false>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct SliceType& value);
     struct FuncType
@@ -239,6 +356,35 @@ namespace golang::internal::abi
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        int Align(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::ArrayType* ArrayType(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::ChanDir ChanDir(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::ChanType* ChanType(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::Type* Common(const gocpp::PtrRecv<struct FuncType, false>& self);
+        int DescriptorSize(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::Type* Elem(const gocpp::PtrRecv<struct FuncType, false>& self);
+        gocpp::slice<abi::Method> ExportedMethods(const gocpp::PtrRecv<struct FuncType, false>& self);
+        int FieldAlign(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::FuncType* FuncType(const gocpp::PtrRecv<struct FuncType, false>& self);
+        gocpp::slice<unsigned char> GcSlice(const gocpp::PtrRecv<struct FuncType, false>& self, uintptr_t begin, uintptr_t end);
+        bool HasName(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::InterfaceType* InterfaceType(const gocpp::PtrRecv<struct FuncType, false>& self);
+        bool IsDirectIface(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::Type* Key(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::Kind Kind(const gocpp::PtrRecv<struct FuncType, false>& self);
+        int Len(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::MapType* MapType(const gocpp::PtrRecv<struct FuncType, false>& self);
+        int NumMethod(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::PtrType* PointerType(const gocpp::PtrRecv<struct FuncType, false>& self);
+        bool Pointers(const gocpp::PtrRecv<struct FuncType, false>& self);
+        uintptr_t Size(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::SliceType* SliceType(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::StructType* StructType(const gocpp::PtrRecv<struct FuncType, false>& self);
+        abi::UncommonType* Uncommon(const gocpp::PtrRecv<struct FuncType, false>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct FuncType& value);
     struct PtrType
     {
@@ -255,6 +401,34 @@ namespace golang::internal::abi
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        int Align(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::ArrayType* ArrayType(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::ChanDir ChanDir(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::ChanType* ChanType(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::Type* Common(const gocpp::PtrRecv<struct PtrType, false>& self);
+        int DescriptorSize(const gocpp::PtrRecv<struct PtrType, false>& self);
+        gocpp::slice<abi::Method> ExportedMethods(const gocpp::PtrRecv<struct PtrType, false>& self);
+        int FieldAlign(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::FuncType* FuncType(const gocpp::PtrRecv<struct PtrType, false>& self);
+        gocpp::slice<unsigned char> GcSlice(const gocpp::PtrRecv<struct PtrType, false>& self, uintptr_t begin, uintptr_t end);
+        bool HasName(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::InterfaceType* InterfaceType(const gocpp::PtrRecv<struct PtrType, false>& self);
+        bool IsDirectIface(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::Type* Key(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::Kind Kind(const gocpp::PtrRecv<struct PtrType, false>& self);
+        int Len(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::MapType* MapType(const gocpp::PtrRecv<struct PtrType, false>& self);
+        int NumMethod(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::PtrType* PointerType(const gocpp::PtrRecv<struct PtrType, false>& self);
+        bool Pointers(const gocpp::PtrRecv<struct PtrType, false>& self);
+        uintptr_t Size(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::SliceType* SliceType(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::StructType* StructType(const gocpp::PtrRecv<struct PtrType, false>& self);
+        abi::UncommonType* Uncommon(const gocpp::PtrRecv<struct PtrType, false>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct PtrType& value);
     struct StructType
@@ -274,6 +448,35 @@ namespace golang::internal::abi
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        int Align(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::ArrayType* ArrayType(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::ChanDir ChanDir(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::ChanType* ChanType(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::Type* Common(const gocpp::PtrRecv<struct StructType, false>& self);
+        int DescriptorSize(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::Type* Elem(const gocpp::PtrRecv<struct StructType, false>& self);
+        gocpp::slice<abi::Method> ExportedMethods(const gocpp::PtrRecv<struct StructType, false>& self);
+        int FieldAlign(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::FuncType* FuncType(const gocpp::PtrRecv<struct StructType, false>& self);
+        gocpp::slice<unsigned char> GcSlice(const gocpp::PtrRecv<struct StructType, false>& self, uintptr_t begin, uintptr_t end);
+        bool HasName(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::InterfaceType* InterfaceType(const gocpp::PtrRecv<struct StructType, false>& self);
+        bool IsDirectIface(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::Type* Key(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::Kind Kind(const gocpp::PtrRecv<struct StructType, false>& self);
+        int Len(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::MapType* MapType(const gocpp::PtrRecv<struct StructType, false>& self);
+        int NumMethod(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::PtrType* PointerType(const gocpp::PtrRecv<struct StructType, false>& self);
+        bool Pointers(const gocpp::PtrRecv<struct StructType, false>& self);
+        uintptr_t Size(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::SliceType* SliceType(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::StructType* StructType(const gocpp::PtrRecv<struct StructType, false>& self);
+        abi::UncommonType* Uncommon(const gocpp::PtrRecv<struct StructType, false>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct StructType& value);
     struct structTypeUncommon
     {
@@ -290,6 +493,35 @@ namespace golang::internal::abi
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        int Align(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::ArrayType* ArrayType(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::ChanDir ChanDir(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::ChanType* ChanType(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::Type* Common(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        int DescriptorSize(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::Type* Elem(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        gocpp::slice<abi::Method> ExportedMethods(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        int FieldAlign(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::FuncType* FuncType(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        gocpp::slice<unsigned char> GcSlice(const gocpp::PtrRecv<struct structTypeUncommon, false>& self, uintptr_t begin, uintptr_t end);
+        bool HasName(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::InterfaceType* InterfaceType(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        bool IsDirectIface(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::Type* Key(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::Kind Kind(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        int Len(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::MapType* MapType(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        int NumMethod(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::PtrType* PointerType(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        bool Pointers(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        uintptr_t Size(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::SliceType* SliceType(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        abi::UncommonType* Uncommon(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+        std::tuple<int, int> descriptorSizes(const gocpp::PtrRecv<struct structTypeUncommon, false>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct structTypeUncommon& value);
 }

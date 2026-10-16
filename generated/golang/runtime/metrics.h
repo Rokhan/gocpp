@@ -223,6 +223,11 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        void merge(const gocpp::PtrRecv<struct heapStatsAggregate, false>& self, heapStatsDelta* b);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct heapStatsAggregate& value);
     struct cpuStatsAggregate
     {
@@ -238,6 +243,12 @@ namespace golang::runtime
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        void accumulate(const gocpp::PtrRecv<struct cpuStatsAggregate, false>& self, int64_t now, bool gcMarkPhase);
+        void accumulateGCPauseTime(const gocpp::PtrRecv<struct cpuStatsAggregate, false>& self, int64_t dt, int32_t maxProcs);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct cpuStatsAggregate& value);
     struct metricValue

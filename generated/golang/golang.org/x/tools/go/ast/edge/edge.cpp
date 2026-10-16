@@ -91,42 +91,10 @@ namespace golang::golang_org::x::tools::go::ast::edge
         return out;
     }
 
-    struct gocpp_id_1
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            return result;
-        }
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
     // Assert that the encoding fits in 7 bits,
     // as the inspector relies on this.
     // (We are currently at 104.)
-    gocpp_id_1 gocpp_id_2 = gocpp::array<gocpp_id_1, 1 << 7> {}[maxKind];
+    gocpp::empty_struct gocpp_id_1 = gocpp::array<gocpp::empty_struct, 1 << 7> {}[maxKind];
     
     template<typename T> requires gocpp::GoStruct<T>
     fieldInfo::operator T()

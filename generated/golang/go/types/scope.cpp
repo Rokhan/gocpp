@@ -11,6 +11,7 @@
 #include "golang/go/types/scope.h"
 #include "gocpp/support.h"
 
+#include "golang/cmp/cmp.h"
 #include "golang/fmt/print.h"
 #include "golang/go/token/position.h"
 #include "golang/go/types/object.h"

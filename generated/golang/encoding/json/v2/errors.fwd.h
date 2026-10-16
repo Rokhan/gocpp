@@ -8,7 +8,6 @@ namespace golang::encoding::json::v2
 {
     const gocpp::string errorPrefix = "json: "_s;
     struct SemanticError;
-    struct gocpp_id_6;
 }
 #include "golang/encoding/json/jsontext/decode.fwd.h"
 #include "golang/encoding/json/jsontext/encode.fwd.h"

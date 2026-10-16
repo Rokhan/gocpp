@@ -115,7 +115,7 @@ namespace golang::internal::sync
             // equal function for the value, if any.
             gocpp::map<K, V> m = {};
             auto mapType = rec::MapType(gocpp::recv(abi::TypeOf(m)));
-            rec::Store<sync::indirect[K, V]>(gocpp::recv(ht->root), newIndirectNode<K, V>(nullptr));
+            rec::Store<sync::indirect<K, V>>(gocpp::recv(ht->root), newIndirectNode<K, V>(nullptr));
             ht->keyHash = [&](auto x, auto y){ return abi::rec::Hasher(mapType, x, y); };
             ht->valEqual = [&](auto x, auto y){ return abi::rec::Equal(mapType->Elem, x, y); };
             ht->seed = uintptr_t(runtime_rand());
@@ -139,13 +139,13 @@ namespace golang::internal::sync
         rec::init<K, V>(gocpp::recv(ht));
         auto hash = ht->keyHash(abi::NoEscape(gocpp::unsafe_pointer(& key)), ht->seed);
 
-        auto i = rec::Load<sync::indirect[K, V]>(gocpp::recv(ht->root));
+        auto i = rec::Load<sync::indirect<K, V>>(gocpp::recv(ht->root));
         auto hashShift = 8 * goarch::PtrSize;
         for(; hashShift != 0; )
         {
             hashShift -= nChildrenLog2;
 
-            auto n = rec::Load<sync::node[K, V]>(gocpp::recv(i->children[(hash >> hashShift) & nChildrenMask]));
+            auto n = rec::Load<sync::node<K, V>>(gocpp::recv(i->children[(hash >> hashShift) & nChildrenMask]));
             if(n == nullptr)
             {
                 return {*new V{}, false};
@@ -179,7 +179,7 @@ namespace golang::internal::sync
             for(; ; )
             {
                 // Find the key or a candidate location for insertion.
-                i = rec::Load<sync::indirect[K, V]>(gocpp::recv(ht->root));
+                i = rec::Load<sync::indirect<K, V>>(gocpp::recv(ht->root));
                 hashShift = 8 * goarch::PtrSize;
                 auto haveInsertPoint = false;
                 for(; hashShift != 0; )
@@ -187,7 +187,7 @@ namespace golang::internal::sync
                     hashShift -= nChildrenLog2;
 
                     slot = & i->children[(hash >> hashShift) & nChildrenMask];
-                    n = rec::Load<sync::node[K, V]>(gocpp::recv(slot));
+                    n = rec::Load<sync::node<K, V>>(gocpp::recv(slot));
                     if(n == nullptr)
                     {
                         // We found a nil slot which is a candidate for insertion.
@@ -215,7 +215,7 @@ namespace golang::internal::sync
 
                 // Grab the lock and double-check what we saw.
                 rec::Lock(gocpp::recv(i->mu));
-                n = rec::Load<sync::node[K, V]>(gocpp::recv(slot));
+                n = rec::Load<sync::node<K, V>>(gocpp::recv(slot));
                 if((n == nullptr || n->isEntry) && ! rec::Load(gocpp::recv(i->dead)))
                 {
                     // What we saw is still true, so we can continue with the insert.
@@ -245,14 +245,14 @@ namespace golang::internal::sync
             if(oldEntry == nullptr)
             {
                 // Easy case: create a new entry and store it.
-                rec::Store<sync::node[K, V]>(gocpp::recv(slot), & newEntry->node);
+                rec::Store<sync::node<K, V>>(gocpp::recv(slot), & newEntry->node);
             }
             else
             {
                 // We possibly need to expand the entry already there into one or more new nodes.
                 // Publish the node last, which will make both oldEntry and newEntry visible. We
                 // don't want readers to be able to observe that oldEntry isn't in the tree.
-                rec::Store<sync::node[K, V]>(gocpp::recv(slot), rec::expand<K, V>(gocpp::recv(ht), oldEntry, newEntry, hash, hashShift, i));
+                rec::Store<sync::node<K, V>>(gocpp::recv(slot), rec::expand<K, V>(gocpp::recv(ht), oldEntry, newEntry, hash, hashShift, i));
             }
             return {value, false};
         }
@@ -274,7 +274,7 @@ namespace golang::internal::sync
         {
             // Store the old entry in the new entry's overflow list, then store
             // the new entry.
-            rec::Store<sync::entry[K, V]>(gocpp::recv(newEntry->overflow), oldEntry);
+            rec::Store<sync::entry<K, V>>(gocpp::recv(newEntry->overflow), oldEntry);
             return & newEntry->node;
         }
         // We have to add an indirect node. Worse still, we may need to add more than one.
@@ -292,12 +292,12 @@ namespace golang::internal::sync
             auto ni = (newHash >> hashShift) & nChildrenMask;
             if(oi != ni)
             {
-                rec::Store<sync::node[K, V]>(gocpp::recv(newIndirect->children[oi]), & oldEntry->node);
-                rec::Store<sync::node[K, V]>(gocpp::recv(newIndirect->children[ni]), & newEntry->node);
+                rec::Store<sync::node<K, V>>(gocpp::recv(newIndirect->children[oi]), & oldEntry->node);
+                rec::Store<sync::node<K, V>>(gocpp::recv(newIndirect->children[ni]), & newEntry->node);
                 break;
             }
             auto nextIndirect = newIndirectNode(newIndirect);
-            rec::Store<sync::node[K, V]>(gocpp::recv(newIndirect->children[oi]), & nextIndirect->node);
+            rec::Store<sync::node<K, V>>(gocpp::recv(newIndirect->children[oi]), & nextIndirect->node);
             newIndirect = nextIndirect;
         }
         return & top->node;
@@ -329,7 +329,7 @@ namespace golang::internal::sync
             for(; ; )
             {
                 // Find the key or a candidate location for insertion.
-                i = rec::Load<sync::indirect[K, V]>(gocpp::recv(ht->root));
+                i = rec::Load<sync::indirect<K, V>>(gocpp::recv(ht->root));
                 hashShift = 8 * goarch::PtrSize;
                 auto haveInsertPoint = false;
                 for(; hashShift != 0; )
@@ -337,7 +337,7 @@ namespace golang::internal::sync
                     hashShift -= nChildrenLog2;
 
                     slot = & i->children[(hash >> hashShift) & nChildrenMask];
-                    n = rec::Load<sync::node[K, V]>(gocpp::recv(slot));
+                    n = rec::Load<sync::node<K, V>>(gocpp::recv(slot));
                     if(n == nullptr || n->isEntry)
                     {
                         // We found a nil slot which is a candidate for insertion,
@@ -354,7 +354,7 @@ namespace golang::internal::sync
 
                 // Grab the lock and double-check what we saw.
                 rec::Lock(gocpp::recv(i->mu));
-                n = rec::Load<sync::node[K, V]>(gocpp::recv(slot));
+                n = rec::Load<sync::node<K, V>>(gocpp::recv(slot));
                 if((n == nullptr || n->isEntry) && ! rec::Load(gocpp::recv(i->dead)))
                 {
                     // What we saw is still true, so we can continue with the insert.
@@ -379,7 +379,7 @@ namespace golang::internal::sync
                 auto [newEntry, old, swapped] = rec::swap<K, V>(gocpp::recv(oldEntry), key, go_new);
                 if(swapped)
                 {
-                    rec::Store<sync::node[K, V]>(gocpp::recv(slot), & newEntry->node);
+                    rec::Store<sync::node<K, V>>(gocpp::recv(slot), & newEntry->node);
                     return {old, true};
                 }
             }
@@ -388,14 +388,14 @@ namespace golang::internal::sync
             if(oldEntry == nullptr)
             {
                 // Easy case: create a new entry and store it.
-                rec::Store<sync::node[K, V]>(gocpp::recv(slot), & newEntry->node);
+                rec::Store<sync::node<K, V>>(gocpp::recv(slot), & newEntry->node);
             }
             else
             {
                 // We possibly need to expand the entry already there into one or more new nodes.
                 // Publish the node last, which will make both oldEntry and newEntry visible. We
                 // don't want readers to be able to observe that oldEntry isn't in the tree.
-                rec::Store<sync::node[K, V]>(gocpp::recv(slot), rec::expand<K, V>(gocpp::recv(ht), oldEntry, newEntry, hash, hashShift, i));
+                rec::Store<sync::node<K, V>>(gocpp::recv(slot), rec::expand<K, V>(gocpp::recv(ht), oldEntry, newEntry, hash, hashShift, i));
             }
             return {zero, false};
         }
@@ -435,7 +435,7 @@ namespace golang::internal::sync
             }
 
             // Try to swap the entry.
-            sync::entry[K, V]* e;
+            sync::entry<K, V>* e;
             std::tie(e, swapped) = rec::compareAndSwap<K, V>(gocpp::recv(rec::entry<K, V>(gocpp::recv(n))), key, old, go_new, ht->valEqual);
             if(! swapped)
             {
@@ -443,7 +443,7 @@ namespace golang::internal::sync
                 return false;
             }
             // Store the entry back because it changed.
-            rec::Store<sync::node[K, V]>(gocpp::recv(slot), & e->node);
+            rec::Store<sync::node<K, V>>(gocpp::recv(slot), & e->node);
             return true;
         }
         catch(gocpp::GoPanic& gp)
@@ -476,7 +476,7 @@ namespace golang::internal::sync
 
         // Try to delete the entry.
         V v;
-        sync::entry[K, V]* e;
+        sync::entry<K, V>* e;
         std::tie(v, e, loaded) = rec::loadAndDelete<K, V>(gocpp::recv(rec::entry<K, V>(gocpp::recv(n))), key);
         if(! loaded)
         {
@@ -488,12 +488,12 @@ namespace golang::internal::sync
         {
             // We didn't actually delete the whole entry, just one entry in the chain.
             // Nothing else to do, since the parent is definitely not empty.
-            rec::Store<sync::node[K, V]>(gocpp::recv(slot), & e->node);
+            rec::Store<sync::node<K, V>>(gocpp::recv(slot), & e->node);
             rec::Unlock(gocpp::recv(i->mu));
             return {v, true};
         }
         // Delete the entry.
-        rec::Store<sync::node[K, V]>(gocpp::recv(slot), nullptr);
+        rec::Store<sync::node<K, V>>(gocpp::recv(slot), nullptr);
 
         // Check if the node is now empty (and isn't the root), and delete it if able.
         for(; i->parent != nullptr && rec::empty<K, V>(gocpp::recv(i)); )
@@ -508,7 +508,7 @@ namespace golang::internal::sync
             auto parent = i->parent;
             rec::Lock(gocpp::recv(parent->mu));
             rec::Store(gocpp::recv(i->dead), true);
-            rec::Store<sync::node[K, V]>(gocpp::recv(parent->children[(hash >> hashShift) & nChildrenMask]), nullptr);
+            rec::Store<sync::node<K, V>>(gocpp::recv(parent->children[(hash >> hashShift) & nChildrenMask]), nullptr);
             rec::Unlock(gocpp::recv(i->mu));
             i = parent;
         }
@@ -551,7 +551,7 @@ namespace golang::internal::sync
         }
 
         // Try to delete the entry.
-        sync::entry[K, V]* e;
+        sync::entry<K, V>* e;
         std::tie(e, deleted) = rec::compareAndDelete<K, V>(gocpp::recv(rec::entry<K, V>(gocpp::recv(n))), key, old, ht->valEqual);
         if(! deleted)
         {
@@ -563,12 +563,12 @@ namespace golang::internal::sync
         {
             // We didn't actually delete the whole entry, just one entry in the chain.
             // Nothing else to do, since the parent is definitely not empty.
-            rec::Store<sync::node[K, V]>(gocpp::recv(slot), & e->node);
+            rec::Store<sync::node<K, V>>(gocpp::recv(slot), & e->node);
             rec::Unlock(gocpp::recv(i->mu));
             return true;
         }
         // Delete the entry.
-        rec::Store<sync::node[K, V]>(gocpp::recv(slot), nullptr);
+        rec::Store<sync::node<K, V>>(gocpp::recv(slot), nullptr);
 
         // Check if the node is now empty (and isn't the root), and delete it if able.
         for(; i->parent != nullptr && rec::empty<K, V>(gocpp::recv(i)); )
@@ -583,7 +583,7 @@ namespace golang::internal::sync
             auto parent = i->parent;
             rec::Lock(gocpp::recv(parent->mu));
             rec::Store(gocpp::recv(i->dead), true);
-            rec::Store<sync::node[K, V]>(gocpp::recv(parent->children[(hash >> hashShift) & nChildrenMask]), nullptr);
+            rec::Store<sync::node<K, V>>(gocpp::recv(parent->children[(hash >> hashShift) & nChildrenMask]), nullptr);
             rec::Unlock(gocpp::recv(i->mu));
             i = parent;
         }
@@ -607,7 +607,7 @@ namespace golang::internal::sync
         for(; ; )
         {
             // Find the key or return if it's not there.
-            i = rec::Load<sync::indirect[K, V]>(gocpp::recv(ht->root));
+            i = rec::Load<sync::indirect<K, V>>(gocpp::recv(ht->root));
             hashShift = 8 * goarch::PtrSize;
             auto found = false;
             for(; hashShift != 0; )
@@ -615,7 +615,7 @@ namespace golang::internal::sync
                 hashShift -= nChildrenLog2;
 
                 slot = & i->children[(hash >> hashShift) & nChildrenMask];
-                n = rec::Load<sync::node[K, V]>(gocpp::recv(slot));
+                n = rec::Load<sync::node<K, V>>(gocpp::recv(slot));
                 if(n == nullptr)
                 {
                     // Nothing to compare with. Give up.
@@ -645,7 +645,7 @@ namespace golang::internal::sync
 
             // Grab the lock and double-check what we saw.
             rec::Lock(gocpp::recv(i->mu));
-            n = rec::Load<sync::node[K, V]>(gocpp::recv(slot));
+            n = rec::Load<sync::node<K, V>>(gocpp::recv(slot));
             if(! rec::Load(gocpp::recv(i->dead)) && (n == nullptr || n->isEntry))
             {
                 // Either we've got a valid node or the node is now nil under the lock.
@@ -671,7 +671,7 @@ namespace golang::internal::sync
         rec::init<K, V>(gocpp::recv(ht));
         return [=](std::function<bool (K key, V value)> yield) mutable -> void
         {
-            rec::iter<K, V>(gocpp::recv(ht), rec::Load<sync::indirect[K, V]>(gocpp::recv(ht->root)), yield);
+            rec::iter<K, V>(gocpp::recv(ht), rec::Load<sync::indirect<K, V>>(gocpp::recv(ht->root)), yield);
         };
     }
 
@@ -684,7 +684,7 @@ namespace golang::internal::sync
     void rec::Range(HashTrieMap<K, V>* ht, std::function<bool (K _1, V _2)> yield)
     {
         rec::init<K, V>(gocpp::recv(ht));
-        rec::iter<K, V>(gocpp::recv(ht), rec::Load<sync::indirect[K, V]>(gocpp::recv(ht->root)), yield);
+        rec::iter<K, V>(gocpp::recv(ht), rec::Load<sync::indirect<K, V>>(gocpp::recv(ht->root)), yield);
     }
 
     template<typename K, typename V>
@@ -692,7 +692,7 @@ namespace golang::internal::sync
     {
         for(auto [j, gocpp_ignored] : i->children)
         {
-            auto n = rec::Load<sync::node[K, V]>(gocpp::recv(i->children[j]));
+            auto n = rec::Load<sync::node<K, V>>(gocpp::recv(i->children[j]));
             if(n == nullptr)
             {
                 continue;
@@ -712,7 +712,7 @@ namespace golang::internal::sync
                 {
                     return false;
                 }
-                e = rec::Load<sync::entry[K, V]>(gocpp::recv(e->overflow));
+                e = rec::Load<sync::entry<K, V>>(gocpp::recv(e->overflow));
             }
         }
         return true;
@@ -726,7 +726,7 @@ namespace golang::internal::sync
 
         // It's sufficient to just drop the root on the floor, but the root
         // must always be non-nil.
-        rec::Store<sync::indirect[K, V]>(gocpp::recv(ht->root), newIndirectNode<K, V>(nullptr));
+        rec::Store<sync::indirect<K, V>>(gocpp::recv(ht->root), newIndirectNode<K, V>(nullptr));
     }
 
     // indirect is an internal node in the hash-trie.
@@ -769,6 +769,21 @@ namespace golang::internal::sync
         return os;
     }
 
+    namespace rec
+    {
+        template<typename K, typename V>
+        sync::entry<K, V>* entry(const gocpp::PtrRecv<struct indirect<K, V>, false>& self)
+        {
+            return rec::entry<K, V>(gocpp::recv(self.ptr->node));
+        }
+
+        template<typename K, typename V>
+        sync::indirect<K, V>* indirect(const gocpp::PtrRecv<struct indirect<K, V>, false>& self)
+        {
+            return rec::indirect<K, V>(gocpp::recv(self.ptr->node));
+        }
+    }
+
     template<typename K, typename V>
     std::ostream& operator<<(std::ostream& os, const struct indirect<K, V>& value)
     {
@@ -792,7 +807,7 @@ namespace golang::internal::sync
         auto nc = 0;
         for(auto [j, gocpp_ignored] : i->children)
         {
-            if(rec::Load<sync::node[K, V]>(gocpp::recv(i->children[j])) != nullptr)
+            if(rec::Load<sync::node<K, V>>(gocpp::recv(i->children[j])) != nullptr)
             {
                 nc++;
             }
@@ -837,6 +852,21 @@ namespace golang::internal::sync
         return os;
     }
 
+    namespace rec
+    {
+        template<typename K, typename V>
+        sync::entry<K, V>* entry(const gocpp::PtrRecv<struct entry<K, V>, false>& self)
+        {
+            return rec::entry<K, V>(gocpp::recv(self.ptr->node));
+        }
+
+        template<typename K, typename V>
+        sync::indirect<K, V>* indirect(const gocpp::PtrRecv<struct entry<K, V>, false>& self)
+        {
+            return rec::indirect<K, V>(gocpp::recv(self.ptr->node));
+        }
+    }
+
     template<typename K, typename V>
     std::ostream& operator<<(std::ostream& os, const struct entry<K, V>& value)
     {
@@ -864,7 +894,7 @@ namespace golang::internal::sync
             {
                 return {e->value, true};
             }
-            e = rec::Load<sync::entry[K, V]>(gocpp::recv(e->overflow));
+            e = rec::Load<sync::entry<K, V>>(gocpp::recv(e->overflow));
         }
         return {*new V{}, false};
     }
@@ -878,7 +908,7 @@ namespace golang::internal::sync
             {
                 return {e->value, true};
             }
-            e = rec::Load<sync::entry[K, V]>(gocpp::recv(e->overflow));
+            e = rec::Load<sync::entry<K, V>>(gocpp::recv(e->overflow));
         }
         return {*new V{}, false};
     }
@@ -894,25 +924,25 @@ namespace golang::internal::sync
         {
             // Return the new head of the list.
             auto e = newEntryNode(key, go_new);
-            if(auto chain = rec::Load<sync::entry[K, V]>(gocpp::recv(head->overflow)); chain != nullptr)
+            if(auto chain = rec::Load<sync::entry<K, V>>(gocpp::recv(head->overflow)); chain != nullptr)
             {
-                rec::Store<sync::entry[K, V]>(gocpp::recv(e->overflow), chain);
+                rec::Store<sync::entry<K, V>>(gocpp::recv(e->overflow), chain);
             }
             return {e, head->value, true};
         }
         auto i = & head->overflow;
-        auto e = rec::Load<sync::entry[K, V]>(gocpp::recv(i));
+        auto e = rec::Load<sync::entry<K, V>>(gocpp::recv(i));
         for(; e != nullptr; )
         {
             if(e->key == key)
             {
                 auto eNew = newEntryNode(key, go_new);
-                rec::Store<sync::entry[K, V]>(gocpp::recv(eNew->overflow), rec::Load<sync::entry[K, V]>(gocpp::recv(e->overflow)));
-                rec::Store<sync::entry[K, V]>(gocpp::recv(i), eNew);
+                rec::Store<sync::entry<K, V>>(gocpp::recv(eNew->overflow), rec::Load<sync::entry<K, V>>(gocpp::recv(e->overflow)));
+                rec::Store<sync::entry<K, V>>(gocpp::recv(i), eNew);
                 return {head, e->value, true};
             }
             i = & e->overflow;
-            e = rec::Load<sync::entry[K, V]>(gocpp::recv(e->overflow));
+            e = rec::Load<sync::entry<K, V>>(gocpp::recv(e->overflow));
         }
         V zero = {};
         return {head, zero, false};
@@ -929,25 +959,25 @@ namespace golang::internal::sync
         {
             // Return the new head of the list.
             auto e = newEntryNode(key, go_new);
-            if(auto chain = rec::Load<sync::entry[K, V]>(gocpp::recv(head->overflow)); chain != nullptr)
+            if(auto chain = rec::Load<sync::entry<K, V>>(gocpp::recv(head->overflow)); chain != nullptr)
             {
-                rec::Store<sync::entry[K, V]>(gocpp::recv(e->overflow), chain);
+                rec::Store<sync::entry<K, V>>(gocpp::recv(e->overflow), chain);
             }
             return {e, true};
         }
         auto i = & head->overflow;
-        auto e = rec::Load<sync::entry[K, V]>(gocpp::recv(i));
+        auto e = rec::Load<sync::entry<K, V>>(gocpp::recv(i));
         for(; e != nullptr; )
         {
             if(e->key == key && valEqual(gocpp::unsafe_pointer(& e->value), abi::NoEscape(gocpp::unsafe_pointer(& old))))
             {
                 auto eNew = newEntryNode(key, go_new);
-                rec::Store<sync::entry[K, V]>(gocpp::recv(eNew->overflow), rec::Load<sync::entry[K, V]>(gocpp::recv(e->overflow)));
-                rec::Store<sync::entry[K, V]>(gocpp::recv(i), eNew);
+                rec::Store<sync::entry<K, V>>(gocpp::recv(eNew->overflow), rec::Load<sync::entry<K, V>>(gocpp::recv(e->overflow)));
+                rec::Store<sync::entry<K, V>>(gocpp::recv(i), eNew);
                 return {head, true};
             }
             i = & e->overflow;
-            e = rec::Load<sync::entry[K, V]>(gocpp::recv(e->overflow));
+            e = rec::Load<sync::entry<K, V>>(gocpp::recv(e->overflow));
         }
         return {head, false};
     }
@@ -962,19 +992,19 @@ namespace golang::internal::sync
         if(head->key == key)
         {
             // Drop the head of the list.
-            return {head->value, rec::Load<sync::entry[K, V]>(gocpp::recv(head->overflow)), true};
+            return {head->value, rec::Load<sync::entry<K, V>>(gocpp::recv(head->overflow)), true};
         }
         auto i = & head->overflow;
-        auto e = rec::Load<sync::entry[K, V]>(gocpp::recv(i));
+        auto e = rec::Load<sync::entry<K, V>>(gocpp::recv(i));
         for(; e != nullptr; )
         {
             if(e->key == key)
             {
-                rec::Store<sync::entry[K, V]>(gocpp::recv(i), rec::Load<sync::entry[K, V]>(gocpp::recv(e->overflow)));
+                rec::Store<sync::entry<K, V>>(gocpp::recv(i), rec::Load<sync::entry<K, V>>(gocpp::recv(e->overflow)));
                 return {e->value, head, true};
             }
             i = & e->overflow;
-            e = rec::Load<sync::entry[K, V]>(gocpp::recv(e->overflow));
+            e = rec::Load<sync::entry<K, V>>(gocpp::recv(e->overflow));
         }
         return {*new V{}, head, false};
     }
@@ -989,19 +1019,19 @@ namespace golang::internal::sync
         if(head->key == key && valEqual(gocpp::unsafe_pointer(& head->value), abi::NoEscape(gocpp::unsafe_pointer(& value))))
         {
             // Drop the head of the list.
-            return {rec::Load<sync::entry[K, V]>(gocpp::recv(head->overflow)), true};
+            return {rec::Load<sync::entry<K, V>>(gocpp::recv(head->overflow)), true};
         }
         auto i = & head->overflow;
-        auto e = rec::Load<sync::entry[K, V]>(gocpp::recv(i));
+        auto e = rec::Load<sync::entry<K, V>>(gocpp::recv(i));
         for(; e != nullptr; )
         {
             if(e->key == key && valEqual(gocpp::unsafe_pointer(& e->value), abi::NoEscape(gocpp::unsafe_pointer(& value))))
             {
-                rec::Store<sync::entry[K, V]>(gocpp::recv(i), rec::Load<sync::entry[K, V]>(gocpp::recv(e->overflow)));
+                rec::Store<sync::entry<K, V>>(gocpp::recv(i), rec::Load<sync::entry<K, V>>(gocpp::recv(e->overflow)));
                 return {head, true};
             }
             i = & e->overflow;
-            e = rec::Load<sync::entry[K, V]>(gocpp::recv(e->overflow));
+            e = rec::Load<sync::entry<K, V>>(gocpp::recv(e->overflow));
         }
         return {head, false};
     }

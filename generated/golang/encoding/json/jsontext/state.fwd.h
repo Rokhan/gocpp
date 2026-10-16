@@ -16,9 +16,6 @@ namespace golang::encoding::json::jsontext
     struct objectNameStack;
     struct GoTag_objectNamespaceStack;
     struct objectNamespace;
-    struct gocpp_id_1;
-    struct gocpp_id_2;
-    struct gocpp_id_4;
     // The type mask (1 bit) records whether this is a JSON object or array.
     const stateEntry stateTypeMask = 0x8000000000000000;
     const stateEntry stateTypeObject = 0x8000000000000000;

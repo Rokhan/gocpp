@@ -77,6 +77,124 @@ namespace golang::internal::abi
         return os;
     }
 
+    namespace rec
+    {
+        int Align(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::Align(gocpp::recv(self.ptr->Type));
+        }
+
+        abi::ArrayType* ArrayType(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::ArrayType(gocpp::recv(self.ptr->Type));
+        }
+
+        abi::ChanDir ChanDir(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::ChanDir(gocpp::recv(self.ptr->Type));
+        }
+
+        abi::ChanType* ChanType(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::ChanType(gocpp::recv(self.ptr->Type));
+        }
+
+        abi::Type* Common(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::Common(gocpp::recv(self.ptr->Type));
+        }
+
+        int DescriptorSize(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::DescriptorSize(gocpp::recv(self.ptr->Type));
+        }
+
+        gocpp::slice<abi::Method> ExportedMethods(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::ExportedMethods(gocpp::recv(self.ptr->Type));
+        }
+
+        int FieldAlign(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::FieldAlign(gocpp::recv(self.ptr->Type));
+        }
+
+        abi::FuncType* FuncType(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::FuncType(gocpp::recv(self.ptr->Type));
+        }
+
+        gocpp::slice<unsigned char> GcSlice(const gocpp::PtrRecv<struct MapType, false>& self, uintptr_t begin, uintptr_t end)
+        {
+            return rec::GcSlice(gocpp::recv(self.ptr->Type), begin, end);
+        }
+
+        bool HasName(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::HasName(gocpp::recv(self.ptr->Type));
+        }
+
+        abi::InterfaceType* InterfaceType(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::InterfaceType(gocpp::recv(self.ptr->Type));
+        }
+
+        bool IsDirectIface(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::IsDirectIface(gocpp::recv(self.ptr->Type));
+        }
+
+        abi::Kind Kind(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::Kind(gocpp::recv(self.ptr->Type));
+        }
+
+        int Len(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::Len(gocpp::recv(self.ptr->Type));
+        }
+
+        abi::MapType* MapType(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::MapType(gocpp::recv(self.ptr->Type));
+        }
+
+        int NumMethod(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::NumMethod(gocpp::recv(self.ptr->Type));
+        }
+
+        abi::PtrType* PointerType(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::PointerType(gocpp::recv(self.ptr->Type));
+        }
+
+        bool Pointers(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::Pointers(gocpp::recv(self.ptr->Type));
+        }
+
+        uintptr_t Size(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::Size(gocpp::recv(self.ptr->Type));
+        }
+
+        abi::SliceType* SliceType(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::SliceType(gocpp::recv(self.ptr->Type));
+        }
+
+        abi::StructType* StructType(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::StructType(gocpp::recv(self.ptr->Type));
+        }
+
+        abi::UncommonType* Uncommon(const gocpp::PtrRecv<struct MapType, false>& self)
+        {
+            return rec::Uncommon(gocpp::recv(self.ptr->Type));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct MapType& value)
     {
         return value.PrintTo(os);

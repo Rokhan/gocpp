@@ -3,12 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-
-namespace golang::os
-{
-    struct gocpp_id_2;
-    struct gocpp_id_1;
-}
 #include "golang/syscall/exec_windows.fwd.h"
 #include "golang/syscall/syscall_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"

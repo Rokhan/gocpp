@@ -36,9 +36,13 @@ namespace golang::runtime
     bool isSweepDone();
     void deductSweepCredit(uintptr_t spanBytes, uintptr_t callerSweepPages);
     void gcPaceSweeper(uint64_t trigger);
+    namespace abi = golang::internal::abi;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
+#include "golang/runtime/mbitmap.h"
+#include "golang/runtime/mgcmark_greenteagc.fwd.h"
 #include "golang/runtime/mheap.fwd.h"
+#include "golang/runtime/pinner.fwd.h"
 
 namespace golang::runtime
 {
@@ -56,6 +60,88 @@ namespace golang::runtime
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        markBits allocBitsForIndex(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t allocBitIndex);
+        markBits allocBitsForIndex(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t allocBitIndex);
+        uintptr_t base(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        uintptr_t base(const gocpp::ObjRecv<struct sweepLocked>& self);
+        int countAlloc(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        int countAlloc(const gocpp::ObjRecv<struct sweepLocked>& self);
+        bool decPinCounter(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t offset);
+        bool decPinCounter(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t offset);
+        uintptr_t divideByElemSize(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t n);
+        uintptr_t divideByElemSize(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t n);
+        void ensureSwept(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        void ensureSwept(const gocpp::ObjRecv<struct sweepLocked>& self);
+        pinnerBits* getPinnerBits(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        pinnerBits* getPinnerBits(const gocpp::ObjRecv<struct sweepLocked>& self);
+        gocpp::slice<uintptr_t> heapBits(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        gocpp::slice<uintptr_t> heapBits(const gocpp::ObjRecv<struct sweepLocked>& self);
+        uintptr_t heapBitsSmallForAddr(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t addr);
+        uintptr_t heapBitsSmallForAddr(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t addr);
+        bool inList(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        bool inList(const gocpp::ObjRecv<struct sweepLocked>& self);
+        void incPinCounter(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t offset);
+        void incPinCounter(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t offset);
+        void init(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t base, uintptr_t npages);
+        void init(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t base, uintptr_t npages);
+        void initHeapBits(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        void initHeapBits(const gocpp::ObjRecv<struct sweepLocked>& self);
+        void initInlineMarkBits(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        void initInlineMarkBits(const gocpp::ObjRecv<struct sweepLocked>& self);
+        spanInlineMarkBits* inlineMarkBits(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        spanInlineMarkBits* inlineMarkBits(const gocpp::ObjRecv<struct sweepLocked>& self);
+        bool isFree(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t index);
+        bool isFree(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t index);
+        bool isFreeOrNewlyAllocated(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t index);
+        bool isFreeOrNewlyAllocated(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t index);
+        bool isUnusedUserArenaChunk(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        bool isUnusedUserArenaChunk(const gocpp::ObjRecv<struct sweepLocked>& self);
+        markBits markBitsForBase(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        markBits markBitsForBase(const gocpp::ObjRecv<struct sweepLocked>& self);
+        markBits markBitsForIndex(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t objIndex);
+        markBits markBitsForIndex(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t objIndex);
+        void moveInlineMarks(const gocpp::PtrRecv<struct sweepLocked, false>& self, gcBits* dst);
+        void moveInlineMarks(const gocpp::ObjRecv<struct sweepLocked>& self, gcBits* dst);
+        pinnerBits* newPinnerBits(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        pinnerBits* newPinnerBits(const gocpp::ObjRecv<struct sweepLocked>& self);
+        uint16_t nextFreeIndex(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        uint16_t nextFreeIndex(const gocpp::ObjRecv<struct sweepLocked>& self);
+        uintptr_t objBase(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t addr);
+        uintptr_t objBase(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t addr);
+        uintptr_t objIndex(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t p);
+        uintptr_t objIndex(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t p);
+        uintptr_t pinnerBitSize(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        uintptr_t pinnerBitSize(const gocpp::ObjRecv<struct sweepLocked>& self);
+        void refillAllocCache(const gocpp::PtrRecv<struct sweepLocked, false>& self, uint16_t whichByte);
+        void refillAllocCache(const gocpp::ObjRecv<struct sweepLocked>& self, uint16_t whichByte);
+        void refreshPinnerBits(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        void refreshPinnerBits(const gocpp::ObjRecv<struct sweepLocked>& self);
+        void reportZombies(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        void reportZombies(const gocpp::ObjRecv<struct sweepLocked>& self);
+        markBits scannedBitsForIndex(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t objIndex);
+        markBits scannedBitsForIndex(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t objIndex);
+        void setPinnerBits(const gocpp::PtrRecv<struct sweepLocked, false>& self, pinnerBits* p);
+        void setPinnerBits(const gocpp::ObjRecv<struct sweepLocked>& self, pinnerBits* p);
+        void setUserArenaChunkToFault(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        void setUserArenaChunkToFault(const gocpp::ObjRecv<struct sweepLocked>& self);
+        std::tuple<special**, bool> specialFindSplicePoint(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t offset, unsigned char kind);
+        std::tuple<special**, bool> specialFindSplicePoint(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t offset, unsigned char kind);
+        typePointers typePointersOf(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t addr, uintptr_t size);
+        typePointers typePointersOf(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t addr, uintptr_t size);
+        typePointers typePointersOfType(const gocpp::PtrRecv<struct sweepLocked, false>& self, abi::Type* typ, uintptr_t addr);
+        typePointers typePointersOfType(const gocpp::ObjRecv<struct sweepLocked>& self, abi::Type* typ, uintptr_t addr);
+        typePointers typePointersOfUnchecked(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t addr);
+        typePointers typePointersOfUnchecked(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t addr);
+        unsafe::Pointer userArenaNextFree(const gocpp::PtrRecv<struct sweepLocked, false>& self, _type* typ, int cap);
+        unsafe::Pointer userArenaNextFree(const gocpp::ObjRecv<struct sweepLocked>& self, _type* typ, int cap);
+        uintptr_t writeHeapBitsSmall(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t x, uintptr_t dataSize, _type* typ);
+        uintptr_t writeHeapBitsSmall(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t x, uintptr_t dataSize, _type* typ);
+        runtime::writeUserArenaHeapBits writeUserArenaHeapBits(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t addr);
+        runtime::writeUserArenaHeapBits writeUserArenaHeapBits(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t addr);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct sweepLocked& value);
     void clobberfree(gocpp::unsafe_pointer x, uintptr_t size);

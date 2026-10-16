@@ -86,6 +86,14 @@ namespace golang::internal::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        template<typename K, typename V>
+        sync::entry<K, V>* entry(const gocpp::PtrRecv<struct indirect<K, V>, false>& self);
+        template<typename K, typename V>
+        sync::indirect<K, V>* indirect(const gocpp::PtrRecv<struct indirect<K, V>, false>& self);
+    }
+
     template<typename K, typename V>
     std::ostream& operator<<(std::ostream& os, const struct indirect<K, V>& value);
     template<typename K, typename V> 
@@ -106,6 +114,14 @@ namespace golang::internal::sync
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        template<typename K, typename V>
+        sync::entry<K, V>* entry(const gocpp::PtrRecv<struct entry<K, V>, false>& self);
+        template<typename K, typename V>
+        sync::indirect<K, V>* indirect(const gocpp::PtrRecv<struct entry<K, V>, false>& self);
+    }
 
     template<typename K, typename V>
     std::ostream& operator<<(std::ostream& os, const struct entry<K, V>& value);

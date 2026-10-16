@@ -12,14 +12,6 @@
 
 namespace golang::go::types
 {
-    // Typ contains the predeclared *Basic types indexed by their
-    // corresponding BasicKind.
-    //
-    // The *Basic type for Typ[Byte] will have the name "uint8".
-    // Use Universe.Lookup("byte").Type() to obtain the specific
-    // alias basic type named "byte" (and analogous for "rune").
-    extern gocpp::slice<Basic*> Typ;
-    extern gocpp::array<Basic*, 2> basicAliases;
     void defPredeclaredTypes();
     void defPredeclaredConsts();
     void defPredeclaredNil();
@@ -30,6 +22,7 @@ namespace golang::go::types
 #include "golang/go/types/expr.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/type.h"
+#include "golang/go/types/basic.fwd.h"
 #include "golang/go/types/package.fwd.h"
 #include "golang/go/types/scope.fwd.h"
 
@@ -48,6 +41,14 @@ namespace golang::go::types
     extern golang::go::types::Type universeError;
     extern Object universeAny;
     extern Object universeComparable;
+    // Typ contains the predeclared *Basic types indexed by their
+    // corresponding BasicKind.
+    //
+    // The *Basic type for Typ[Byte] will have the name "uint8".
+    // Use Universe.Lookup("byte").Type() to obtain the specific
+    // alias basic type named "byte" (and analogous for "rune").
+    extern gocpp::slice<Basic*> Typ;
+    extern gocpp::array<Basic*, 2> basicAliases;
     extern gocpp::array<gocpp_id_1, 28> predeclaredFuncs;
     void def(Object obj);
 }

@@ -9,6 +9,7 @@
 #include "golang/go/types/gccgosizes.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/go/types/sizes.fwd.h"
 
 namespace golang::go::types
 {

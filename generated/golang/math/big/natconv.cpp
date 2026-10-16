@@ -700,6 +700,24 @@ namespace golang::math::big
         return os;
     }
 
+    namespace rec
+    {
+        void Lock(const gocpp::PtrRecv<struct cacheBase10Struct, false>& self)
+        {
+            return mocklib::rec::Lock(gocpp::recv(self.ptr->Mutex));
+        }
+
+        bool TryLock(const gocpp::PtrRecv<struct cacheBase10Struct, false>& self)
+        {
+            return sync::rec::TryLock(gocpp::recv(self.ptr->Mutex));
+        }
+
+        void Unlock(const gocpp::PtrRecv<struct cacheBase10Struct, false>& self)
+        {
+            return mocklib::rec::Unlock(gocpp::recv(self.ptr->Mutex));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct cacheBase10Struct& value)
     {
         return value.PrintTo(os);

@@ -18,23 +18,6 @@ namespace golang::bufio
     extern gocpp::error ErrNegativeCount;
     extern gocpp::error errNegativeRead;
     extern gocpp::error errNegativeWrite;
-    struct ReadWriter
-    {
-        Reader* Reader{};
-        Writer* Writer{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ReadWriter& value);
 }
 #include "golang/io/io.fwd.h"
 #include "golang/io/io.h"
@@ -83,6 +66,77 @@ namespace golang::bufio
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
+    struct ReadWriter
+    {
+        Reader* Reader{};
+        Writer* Writer{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    namespace rec
+    {
+        int Available(const gocpp::PtrRecv<struct ReadWriter, false>& self);
+        int Available(const gocpp::ObjRecv<struct ReadWriter>& self);
+        gocpp::slice<unsigned char> AvailableBuffer(const gocpp::PtrRecv<struct ReadWriter, false>& self);
+        gocpp::slice<unsigned char> AvailableBuffer(const gocpp::ObjRecv<struct ReadWriter>& self);
+        std::tuple<int, gocpp::error> Discard(const gocpp::PtrRecv<struct ReadWriter, false>& self, int n);
+        std::tuple<int, gocpp::error> Discard(const gocpp::ObjRecv<struct ReadWriter>& self, int n);
+        gocpp::error Flush(const gocpp::PtrRecv<struct ReadWriter, false>& self);
+        gocpp::error Flush(const gocpp::ObjRecv<struct ReadWriter>& self);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct ReadWriter, false>& self, int n);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::ObjRecv<struct ReadWriter>& self, int n);
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadWriter, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadWriter>& self, gocpp::slice<unsigned char> p);
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct ReadWriter, false>& self);
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<struct ReadWriter>& self);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadBytes(const gocpp::PtrRecv<struct ReadWriter, false>& self, unsigned char delim);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadBytes(const gocpp::ObjRecv<struct ReadWriter>& self, unsigned char delim);
+        std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::PtrRecv<struct ReadWriter, false>& self, io::Reader r);
+        std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::ObjRecv<struct ReadWriter>& self, io::Reader r);
+        std::tuple<gocpp::slice<unsigned char>, bool, gocpp::error> ReadLine(const gocpp::PtrRecv<struct ReadWriter, false>& self);
+        std::tuple<gocpp::slice<unsigned char>, bool, gocpp::error> ReadLine(const gocpp::ObjRecv<struct ReadWriter>& self);
+        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct ReadWriter, false>& self);
+        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::ObjRecv<struct ReadWriter>& self);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadSlice(const gocpp::PtrRecv<struct ReadWriter, false>& self, unsigned char delim);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadSlice(const gocpp::ObjRecv<struct ReadWriter>& self, unsigned char delim);
+        std::tuple<gocpp::string, gocpp::error> ReadString(const gocpp::PtrRecv<struct ReadWriter, false>& self, unsigned char delim);
+        std::tuple<gocpp::string, gocpp::error> ReadString(const gocpp::ObjRecv<struct ReadWriter>& self, unsigned char delim);
+        gocpp::error UnreadByte(const gocpp::PtrRecv<struct ReadWriter, false>& self);
+        gocpp::error UnreadByte(const gocpp::ObjRecv<struct ReadWriter>& self);
+        gocpp::error UnreadRune(const gocpp::PtrRecv<struct ReadWriter, false>& self);
+        gocpp::error UnreadRune(const gocpp::ObjRecv<struct ReadWriter>& self);
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct ReadWriter, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct ReadWriter>& self, gocpp::slice<unsigned char> p);
+        gocpp::error WriteByte(const gocpp::PtrRecv<struct ReadWriter, false>& self, unsigned char c);
+        gocpp::error WriteByte(const gocpp::ObjRecv<struct ReadWriter>& self, unsigned char c);
+        std::tuple<int, gocpp::error> WriteRune(const gocpp::PtrRecv<struct ReadWriter, false>& self, gocpp::rune r);
+        std::tuple<int, gocpp::error> WriteRune(const gocpp::ObjRecv<struct ReadWriter>& self, gocpp::rune r);
+        std::tuple<int, gocpp::error> WriteString(const gocpp::PtrRecv<struct ReadWriter, false>& self, gocpp::string s);
+        std::tuple<int, gocpp::error> WriteString(const gocpp::ObjRecv<struct ReadWriter>& self, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::PtrRecv<struct ReadWriter, false>& self, io::Writer w);
+        std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::ObjRecv<struct ReadWriter>& self, io::Writer w);
+        std::tuple<gocpp::slice<gocpp::slice<unsigned char>>, gocpp::slice<unsigned char>, int, gocpp::error> collectFragments(const gocpp::PtrRecv<struct ReadWriter, false>& self, unsigned char delim);
+        std::tuple<gocpp::slice<gocpp::slice<unsigned char>>, gocpp::slice<unsigned char>, int, gocpp::error> collectFragments(const gocpp::ObjRecv<struct ReadWriter>& self, unsigned char delim);
+        void fill(const gocpp::PtrRecv<struct ReadWriter, false>& self);
+        void fill(const gocpp::ObjRecv<struct ReadWriter>& self);
+        gocpp::error readErr(const gocpp::PtrRecv<struct ReadWriter, false>& self);
+        gocpp::error readErr(const gocpp::ObjRecv<struct ReadWriter>& self);
+        void reset(const gocpp::PtrRecv<struct ReadWriter, false>& self, gocpp::slice<unsigned char> buf, io::Reader r);
+        void reset(const gocpp::ObjRecv<struct ReadWriter>& self, gocpp::slice<unsigned char> buf, io::Reader r);
+        std::tuple<int64_t, gocpp::error> writeBuf(const gocpp::PtrRecv<struct ReadWriter, false>& self, io::Writer w);
+        std::tuple<int64_t, gocpp::error> writeBuf(const gocpp::ObjRecv<struct ReadWriter>& self, io::Writer w);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct ReadWriter& value);
     Reader* NewReaderSize(io::Reader rd, int size);
     Reader* NewReader(io::Reader rd);
     Writer* NewWriterSize(io::Writer w, int size);

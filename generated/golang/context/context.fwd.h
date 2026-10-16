@@ -6,10 +6,8 @@
 
 namespace golang::context
 {
-    struct gocpp_id_0;
     struct deadlineExceededError;
     struct emptyCtx;
-    struct gocpp_id_1;
     struct backgroundCtx;
     struct todoCtx;
     using CancelFunc = std::function<void ()>;
@@ -17,21 +15,10 @@ namespace golang::context
     struct afterFuncer;
     struct afterFuncCtx;
     struct stopCtx;
-    struct gocpp_id_3;
     struct canceler;
-    struct gocpp_id_4;
-    struct gocpp_id_5;
     struct cancelCtx;
-    struct gocpp_id_7;
-    struct gocpp_id_8;
-    struct gocpp_id_9;
-    struct gocpp_id_10;
-    struct gocpp_id_11;
-    struct gocpp_id_12;
     struct stringer;
-    struct gocpp_id_14;
     struct withoutCancelCtx;
-    struct gocpp_id_15;
     struct timerCtx;
     struct valueCtx;
 }

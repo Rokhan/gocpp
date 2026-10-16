@@ -10,16 +10,13 @@ namespace golang::encoding::json::v2
     // common patterns, rather than using the slower, but more general logic.
     // All tests should pass regardless of whether this is true or not.
     const bool optimizeCommon = true;
-    struct gocpp_id_0;
     const long startDetectingCyclesAfter = 1000;
-    struct gocpp_id_1;
-    using seenPointers = gocpp::map<go_any, gocpp_id_1>;
+    using seenPointers = gocpp::map<go_any, gocpp::empty_struct>;
     struct typedPointer;
-    struct gocpp_id_3;
+    struct gocpp_id_6;
+    struct gocpp_id_7;
+    struct gocpp_id_8;
     struct gocpp_id_9;
-    struct gocpp_id_10;
-    struct gocpp_id_11;
-    struct gocpp_id_12;
     using uintSet64 = uint64_t;
     struct uintSet;
 }

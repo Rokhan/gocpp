@@ -614,38 +614,6 @@ namespace golang::encoding::json::v2
         return err;
     }
 
-    struct gocpp_id_6
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
     // errorModalVerb is a modal verb like "cannot" or "unable to".
     //
     // Once per process, Hyrum-proof the error message by deliberately
@@ -654,7 +622,7 @@ namespace golang::encoding::json::v2
     // on map iteration in Go.
     std::function<gocpp::string (void)> errorModalVerb = sync::OnceValue([]() mutable -> gocpp::string
     {
-        for(auto [phrase, gocpp_ignored] : gocpp::map<gocpp::string, gocpp_id_6> {{ "cannot"_s, {} }, { "unable to"_s, {} }})
+        for(auto [phrase, gocpp_ignored] : gocpp::map<gocpp::string, gocpp::empty_struct> {{ "cannot"_s, {} }, { "unable to"_s, {} }})
         {
             // use whichever phrase we get in the first iteration
             return phrase;
@@ -791,7 +759,7 @@ namespace golang::encoding::json::v2
         // Avoid printing if it overlaps with a wrapped SyntacticError.
         //Go switch emulation
         {
-            auto [serr, gocpp_id_7] = gocpp::getValue<jsontext::SyntacticError*>(e->Err);
+            auto [serr, gocpp_id_6] = gocpp::getValue<jsontext::SyntacticError*>(e->Err);
             int conditionId = -1;
             if(e->JSONPointer != ""_s) { conditionId = 0; }
             else if(e->ByteOffset > 0) { conditionId = 1; }
@@ -838,7 +806,7 @@ namespace golang::encoding::json::v2
     {
         if(quotedName != nullptr)
         {
-            auto [name, gocpp_id_8] = jsonwire::AppendUnquote(nullptr, quotedName);
+            auto [name, gocpp_id_7] = jsonwire::AppendUnquote(nullptr, quotedName);
             ptr = rec::AppendToken(gocpp::recv(ptr), gocpp::string(name));
         }
         return gocpp::error(gocpp::InitPtr<jsontext::SyntacticError>([=](auto& x) {

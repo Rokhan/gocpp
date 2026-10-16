@@ -11,6 +11,7 @@
 #include "golang/fmt/errors.h"
 #include "gocpp/support.h"
 
+#include "golang/cmp/cmp.h"
 #include "golang/errors/errors.h"
 #include "golang/fmt/print.h"
 #include "golang/internal/stringslite/strings.h"

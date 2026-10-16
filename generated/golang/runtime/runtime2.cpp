@@ -460,6 +460,34 @@ namespace golang::runtime
         return os;
     }
 
+    namespace rec
+    {
+        unsafe::Pointer get(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self)
+        {
+            return rec::get(gocpp::recv(self.ptr->maybeTraceablePtr));
+        }
+
+        void set(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self, unsafe::Pointer v)
+        {
+            return rec::set(gocpp::recv(self.ptr->maybeTraceablePtr), v);
+        }
+
+        void setTraceable(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self)
+        {
+            return rec::setTraceable(gocpp::recv(self.ptr->maybeTraceablePtr));
+        }
+
+        void setUntraceable(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self)
+        {
+            return rec::setUntraceable(gocpp::recv(self.ptr->maybeTraceablePtr));
+        }
+
+        uintptr_t uintptr(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self)
+        {
+            return rec::uintptr(gocpp::recv(self.ptr->maybeTraceablePtr));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct maybeTraceableChan& value)
     {
         return value.PrintTo(os);
@@ -1166,6 +1194,29 @@ namespace golang::runtime
         return os;
     }
 
+    namespace rec
+    {
+        void becomeSpinning(const gocpp::PtrRecv<struct mPadded, false>& self)
+        {
+            return rec::becomeSpinning(gocpp::recv(self.ptr->m));
+        }
+
+        void clearAllpSnapshot(const gocpp::PtrRecv<struct mPadded, false>& self)
+        {
+            return rec::clearAllpSnapshot(gocpp::recv(self.ptr->m));
+        }
+
+        bool hasCgoOnStack(const gocpp::PtrRecv<struct mPadded, false>& self)
+        {
+            return rec::hasCgoOnStack(gocpp::recv(self.ptr->m));
+        }
+
+        gocpp::slice<runtime::p*> snapshotAllp(const gocpp::PtrRecv<struct mPadded, false>& self)
+        {
+            return rec::snapshotAllp(gocpp::recv(self.ptr->m));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct mPadded& value)
     {
         return value.PrintTo(os);
@@ -1211,7 +1262,7 @@ namespace golang::runtime
     mWeakPointer newMWeakPointer(m* mp)
     {
         auto w = gocpp::Init<mWeakPointer>([=](auto& x) {
-            x.m = new atomic::Pointer[runtime::m]{};
+            x.m = new atomic::Pointer<m>{};
         });
         rec::Store<m>(gocpp::recv(w.m), mp);
         return w;

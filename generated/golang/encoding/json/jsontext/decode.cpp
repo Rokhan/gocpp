@@ -29,6 +29,7 @@ namespace golang::encoding::json::jsontext
 {
     namespace bytes = golang::bytes;
     namespace errors = golang::errors;
+    namespace internal = golang::encoding::json::internal;
     namespace io = golang::io;
     namespace jsonflags = golang::encoding::json::internal::jsonflags;
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
@@ -138,6 +139,84 @@ namespace golang::encoding::json::jsontext
         os << " " << StringCache;
         os << '}';
         return os;
+    }
+
+    namespace rec
+    {
+        void InitializeMultiline(const gocpp::PtrRecv<struct decoderState, false>& self)
+        {
+            return jsonopts::rec::InitializeMultiline(gocpp::recv(self.ptr->Struct));
+        }
+
+        void JSONOptions(const gocpp::PtrRecv<struct decoderState, false>& self, internal::NotForPublicUse arg0)
+        {
+            return jsonopts::rec::JSONOptions(gocpp::recv(self.ptr->Struct), arg0);
+        }
+
+        void Join(const gocpp::PtrRecv<struct decoderState, false>& self, gocpp::slice<jsonopts::Options> srcs)
+        {
+            return jsonopts::rec::Join(gocpp::recv(self.ptr->Struct), srcs);
+        }
+
+        gocpp::slice<unsigned char> PreviousTokenOrValue(const gocpp::PtrRecv<struct decoderState, false>& self)
+        {
+            return rec::PreviousTokenOrValue(gocpp::recv(self.ptr->decodeBuffer));
+        }
+
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct decoderState, false>& self, gocpp::slice<unsigned char> b, int where)
+        {
+            return rec::appendStackPointer(gocpp::recv(self.ptr->state), b, where);
+        }
+
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct decoderState>& self, gocpp::slice<unsigned char> b, int where)
+        {
+            return rec::appendStackPointer(gocpp::recv(self.obj.state), b, where);
+        }
+
+        void invalidatePreviousRead(const gocpp::PtrRecv<struct decoderState, false>& self)
+        {
+            return rec::invalidatePreviousRead(gocpp::recv(self.ptr->decodeBuffer));
+        }
+
+        bool needMore(const gocpp::PtrRecv<struct decoderState, false>& self, int pos)
+        {
+            return rec::needMore(gocpp::recv(self.ptr->decodeBuffer), pos);
+        }
+
+        bool needObjectValue(const gocpp::PtrRecv<struct decoderState, false>& self)
+        {
+            return rec::needObjectValue(gocpp::recv(self.ptr->state));
+        }
+
+        int64_t offsetAt(const gocpp::PtrRecv<struct decoderState, false>& self, int pos)
+        {
+            return rec::offsetAt(gocpp::recv(self.ptr->decodeBuffer), pos);
+        }
+
+        gocpp::slice<unsigned char> previousBuffer(const gocpp::PtrRecv<struct decoderState, false>& self)
+        {
+            return rec::previousBuffer(gocpp::recv(self.ptr->decodeBuffer));
+        }
+
+        int64_t previousOffsetEnd(const gocpp::PtrRecv<struct decoderState, false>& self)
+        {
+            return rec::previousOffsetEnd(gocpp::recv(self.ptr->decodeBuffer));
+        }
+
+        int64_t previousOffsetStart(const gocpp::PtrRecv<struct decoderState, false>& self)
+        {
+            return rec::previousOffsetStart(gocpp::recv(self.ptr->decodeBuffer));
+        }
+
+        void reset(const gocpp::PtrRecv<struct decoderState, false>& self)
+        {
+            return rec::reset(gocpp::recv(self.ptr->state));
+        }
+
+        gocpp::slice<unsigned char> unreadBuffer(const gocpp::PtrRecv<struct decoderState, false>& self)
+        {
+            return rec::unreadBuffer(gocpp::recv(self.ptr->decodeBuffer));
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct decoderState& value)

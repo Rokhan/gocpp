@@ -28,6 +28,32 @@ namespace golang::encoding::binary
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        gocpp::slice<unsigned char> AppendUint16(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint16_t v);
+        gocpp::slice<unsigned char> AppendUint16(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b, uint16_t v);
+        gocpp::slice<unsigned char> AppendUint32(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint32_t v);
+        gocpp::slice<unsigned char> AppendUint32(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b, uint32_t v);
+        gocpp::slice<unsigned char> AppendUint64(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint64_t v);
+        gocpp::slice<unsigned char> AppendUint64(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b, uint64_t v);
+        gocpp::string GoString(const gocpp::PtrRecv<struct nativeEndian, false>& self);
+        gocpp::string GoString(const gocpp::ObjRecv<struct nativeEndian>& self);
+        void PutUint16(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint16_t v);
+        void PutUint16(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b, uint16_t v);
+        void PutUint32(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint32_t v);
+        void PutUint32(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b, uint32_t v);
+        void PutUint64(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint64_t v);
+        void PutUint64(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b, uint64_t v);
+        gocpp::string String(const gocpp::PtrRecv<struct nativeEndian, false>& self);
+        gocpp::string String(const gocpp::ObjRecv<struct nativeEndian>& self);
+        uint16_t Uint16(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b);
+        uint16_t Uint16(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b);
+        uint32_t Uint32(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b);
+        uint32_t Uint32(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b);
+        uint64_t Uint64(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b);
+        uint64_t Uint64(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct nativeEndian& value);
     // NativeEndian is the native-endian implementation of [ByteOrder] and [AppendByteOrder].
     extern nativeEndian NativeEndian;

@@ -13,8 +13,9 @@
 namespace golang::runtime
 {
     gocpp::slice<uintptr_t> runtime_expandFinalInlineFrame(gocpp::slice<uintptr_t> stk);
-    struct gocpp_id_0
+    struct Func
     {
+        gocpp::empty_struct opaque{}; // unexported field to disallow conversions
 
         using isGoStruct = void;
 
@@ -27,7 +28,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct Func& value);
     struct modulehash
     {
         gocpp::string modulename{};
@@ -152,22 +153,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackmap& value);
-    struct Func
-    {
-        gocpp_id_0 opaque{}; // unexported field to disallow conversions
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Func& value);
+    Func* FuncForPC(uintptr_t pc);
     struct pcvalueCache
     {
         gocpp::array<gocpp::array<pcvalueCacheEnt, 8>, 2> entries{};
@@ -200,7 +186,6 @@ namespace golang::runtime
     //
     // To make sure the map isn't collected, we keep a second reference here.
     extern gocpp::slice<gocpp::map<_type*, _type*>> pinnedTypemaps;
-    Func* FuncForPC(uintptr_t pc);
     struct funcInfo
     {
         _func* _func{};
@@ -216,6 +201,14 @@ namespace golang::runtime
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        runtime::funcInfo funcInfo(const gocpp::PtrRecv<struct funcInfo, false>& self);
+        runtime::funcInfo funcInfo(const gocpp::ObjRecv<struct funcInfo>& self);
+        bool isInlined(const gocpp::PtrRecv<struct funcInfo, false>& self);
+        bool isInlined(const gocpp::ObjRecv<struct funcInfo>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct funcInfo& value);
     bitvector stackmapdata(stackmap* stkmap, int32_t n);

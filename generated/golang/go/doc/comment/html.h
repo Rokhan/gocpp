@@ -14,6 +14,7 @@ namespace golang::go::doc::comment
 {
     gocpp::string inc(gocpp::string s);
 }
+#include "golang/go/doc/comment/parse.fwd.h"
 #include "golang/go/doc/comment/print.fwd.h"
 
 namespace golang::go::doc::comment
@@ -33,6 +34,24 @@ namespace golang::go::doc::comment
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        gocpp::slice<unsigned char> Comment(const gocpp::PtrRecv<struct htmlPrinter, false>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> Comment(const gocpp::ObjRecv<struct htmlPrinter>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> HTML(const gocpp::PtrRecv<struct htmlPrinter, false>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> HTML(const gocpp::ObjRecv<struct htmlPrinter>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> Markdown(const gocpp::PtrRecv<struct htmlPrinter, false>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> Markdown(const gocpp::ObjRecv<struct htmlPrinter>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> Text(const gocpp::PtrRecv<struct htmlPrinter, false>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> Text(const gocpp::ObjRecv<struct htmlPrinter>& self, comment::Doc* d);
+        gocpp::string docLinkURL(const gocpp::PtrRecv<struct htmlPrinter, false>& self, comment::DocLink* link);
+        gocpp::string docLinkURL(const gocpp::ObjRecv<struct htmlPrinter>& self, comment::DocLink* link);
+        gocpp::string headingID(const gocpp::PtrRecv<struct htmlPrinter, false>& self, comment::Heading* h);
+        gocpp::string headingID(const gocpp::ObjRecv<struct htmlPrinter>& self, comment::Heading* h);
+        int headingLevel(const gocpp::PtrRecv<struct htmlPrinter, false>& self);
+        int headingLevel(const gocpp::ObjRecv<struct htmlPrinter>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct htmlPrinter& value);
 }

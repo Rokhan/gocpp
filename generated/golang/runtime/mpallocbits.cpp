@@ -543,6 +543,69 @@ namespace golang::runtime
         return os;
     }
 
+    namespace rec
+    {
+        void allocAll(const gocpp::PtrRecv<struct pallocData, false>& self)
+        {
+            return rec::allocAll(gocpp::recv(self.ptr->pallocBits));
+        }
+
+        void allocPages64(const gocpp::PtrRecv<struct pallocData, false>& self, unsigned int i, uint64_t alloc)
+        {
+            return rec::allocPages64(gocpp::recv(self.ptr->pallocBits), i, alloc);
+        }
+
+        void allocRange(const gocpp::PtrRecv<struct pallocData, false>& self, unsigned int i, unsigned int n)
+        {
+            return rec::allocRange(gocpp::recv(self.ptr->pallocBits), i, n);
+        }
+
+        std::tuple<unsigned int, unsigned int> find(const gocpp::PtrRecv<struct pallocData, false>& self, uintptr_t npages, unsigned int searchIdx)
+        {
+            return rec::find(gocpp::recv(self.ptr->pallocBits), npages, searchIdx);
+        }
+
+        unsigned int find1(const gocpp::PtrRecv<struct pallocData, false>& self, unsigned int searchIdx)
+        {
+            return rec::find1(gocpp::recv(self.ptr->pallocBits), searchIdx);
+        }
+
+        std::tuple<unsigned int, unsigned int> findLargeN(const gocpp::PtrRecv<struct pallocData, false>& self, uintptr_t npages, unsigned int searchIdx)
+        {
+            return rec::findLargeN(gocpp::recv(self.ptr->pallocBits), npages, searchIdx);
+        }
+
+        std::tuple<unsigned int, unsigned int> findSmallN(const gocpp::PtrRecv<struct pallocData, false>& self, uintptr_t npages, unsigned int searchIdx)
+        {
+            return rec::findSmallN(gocpp::recv(self.ptr->pallocBits), npages, searchIdx);
+        }
+
+        void free(const gocpp::PtrRecv<struct pallocData, false>& self, unsigned int i, unsigned int n)
+        {
+            return rec::free(gocpp::recv(self.ptr->pallocBits), i, n);
+        }
+
+        void free1(const gocpp::PtrRecv<struct pallocData, false>& self, unsigned int i)
+        {
+            return rec::free1(gocpp::recv(self.ptr->pallocBits), i);
+        }
+
+        void freeAll(const gocpp::PtrRecv<struct pallocData, false>& self)
+        {
+            return rec::freeAll(gocpp::recv(self.ptr->pallocBits));
+        }
+
+        uint64_t pages64(const gocpp::PtrRecv<struct pallocData, false>& self, unsigned int i)
+        {
+            return rec::pages64(gocpp::recv(self.ptr->pallocBits), i);
+        }
+
+        pallocSum summarize(const gocpp::PtrRecv<struct pallocData, false>& self)
+        {
+            return rec::summarize(gocpp::recv(self.ptr->pallocBits));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct pallocData& value)
     {
         return value.PrintTo(os);

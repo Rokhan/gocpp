@@ -397,62 +397,62 @@ namespace golang::math::big
     {
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct byteReader, false>& self, gocpp::slice<unsigned char> buf)
         {
-            return rec::Read(self.ptr->ScanState, buf);
+            return fmt::rec::Read(gocpp::recv(self.ptr->ScanState), buf);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct byteReader>& self, gocpp::slice<unsigned char> buf)
         {
-            return rec::Read(self.obj.ScanState, buf);
+            return fmt::rec::Read(gocpp::recv(self.obj.ScanState), buf);
         }
 
         std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct byteReader, false>& self)
         {
-            return rec::ReadRune(self.ptr->ScanState);
+            return fmt::rec::ReadRune(gocpp::recv(self.ptr->ScanState));
         }
 
         std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::ObjRecv<struct byteReader>& self)
         {
-            return rec::ReadRune(self.obj.ScanState);
+            return fmt::rec::ReadRune(gocpp::recv(self.obj.ScanState));
         }
 
         void SkipSpace(const gocpp::PtrRecv<struct byteReader, false>& self)
         {
-            return rec::SkipSpace(self.ptr->ScanState);
+            return fmt::rec::SkipSpace(gocpp::recv(self.ptr->ScanState));
         }
 
         void SkipSpace(const gocpp::ObjRecv<struct byteReader>& self)
         {
-            return rec::SkipSpace(self.obj.ScanState);
+            return fmt::rec::SkipSpace(gocpp::recv(self.obj.ScanState));
         }
 
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> Token(const gocpp::PtrRecv<struct byteReader, false>& self, bool skipSpace, std::function<bool (gocpp::rune)> f)
         {
-            return rec::Token(self.ptr->ScanState, skipSpace, f);
+            return fmt::rec::Token(gocpp::recv(self.ptr->ScanState), skipSpace, f);
         }
 
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> Token(const gocpp::ObjRecv<struct byteReader>& self, bool skipSpace, std::function<bool (gocpp::rune)> f)
         {
-            return rec::Token(self.obj.ScanState, skipSpace, f);
+            return fmt::rec::Token(gocpp::recv(self.obj.ScanState), skipSpace, f);
         }
 
         gocpp::error UnreadRune(const gocpp::PtrRecv<struct byteReader, false>& self)
         {
-            return rec::UnreadRune(self.ptr->ScanState);
+            return fmt::rec::UnreadRune(gocpp::recv(self.ptr->ScanState));
         }
 
         gocpp::error UnreadRune(const gocpp::ObjRecv<struct byteReader>& self)
         {
-            return rec::UnreadRune(self.obj.ScanState);
+            return fmt::rec::UnreadRune(gocpp::recv(self.obj.ScanState));
         }
 
         std::tuple<int, bool> Width(const gocpp::PtrRecv<struct byteReader, false>& self)
         {
-            return rec::Width(self.ptr->ScanState);
+            return fmt::rec::Width(gocpp::recv(self.ptr->ScanState));
         }
 
         std::tuple<int, bool> Width(const gocpp::ObjRecv<struct byteReader>& self)
         {
-            return rec::Width(self.obj.ScanState);
+            return fmt::rec::Width(gocpp::recv(self.obj.ScanState));
         }
     }
 

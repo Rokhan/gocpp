@@ -200,8 +200,7 @@ namespace golang::syscall
     const long CERT_E_CN_NO_MATCH = 0x800B010F;
     const long AUTHTYPE_CLIENT = 1;
     const long AUTHTYPE_SERVER = 2;
-    struct gocpp_id_0;
-    using Pointer = gocpp_id_0*;
+    using Pointer = gocpp::empty_struct*;
     struct Timeval;
     struct SecurityAttributes;
     struct Overlapped;

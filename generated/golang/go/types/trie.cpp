@@ -45,14 +45,14 @@ namespace golang::go::types
                     const auto& gocpp_id_0 = gocpp::type_info(v);
                     const auto& v_ref = v;
                     int conditionId = -1;
-                    if(gocpp_id_0 == typeid(types::trie[V])) { conditionId = 0; }
+                    if(gocpp_id_0 == typeid(types::trie<V>)) { conditionId = 0; }
                     else if(gocpp_id_0 == typeid(V)) { conditionId = 1; }
                     else if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 2; }
                     switch(conditionId)
                     {
                         case 0:
                         {
-                            types::trie[V] v = gocpp::any_cast<types::trie[V]>(v_ref);
+                            types::trie<V> v = gocpp::any_cast<types::trie<V>>(v_ref);
                             // Path continues.
                             // Must check this case first in case V is any which would act as catch-all.
                             tr = v;
@@ -113,14 +113,14 @@ namespace golang::go::types
             {
                 const auto& gocpp_id_1 = gocpp::type_info(rec::pickValue<V>(gocpp::recv(tr)));
                 int conditionId = -1;
-                if(gocpp_id_1 == typeid(types::trie[V])) { conditionId = 0; }
+                if(gocpp_id_1 == typeid(types::trie<V>)) { conditionId = 0; }
                 else if(gocpp_id_1 == typeid(V)) { conditionId = 1; }
                 else if(gocpp_id_1 == typeid(untyped nil)) { conditionId = 2; }
                 switch(conditionId)
                 {
                     case 0:
                     {
-                        types::trie[V] v = gocpp::any_cast<types::trie[V]>(rec::pickValue<V>(gocpp::recv(tr)));
+                        types::trie<V> v = gocpp::any_cast<types::trie<V>>(rec::pickValue<V>(gocpp::recv(tr)));
                         tr = v;
                         break;
                     }

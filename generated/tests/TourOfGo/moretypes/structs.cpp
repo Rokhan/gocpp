@@ -352,40 +352,25 @@ namespace golang::main
         }
     }
 
-    struct gocpp_id_2
+    void emptyStructs()
+    {
+        auto done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp::empty_struct>>());
+        auto set = gocpp::map<gocpp::string, gocpp::empty_struct> {{ "a"_s, {} }};
+
+        gocpp::go([&]{ [=]() mutable -> void
         {
+            done.send(gocpp::empty_struct {});
+        }(); });
+        done.recv();
 
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
-        {
-            return value.PrintTo(os);
-        }
-
+        auto [gocpp_id_2, ok] = set["a"_s];
+        mocklib::Println(ok, gocpp::empty_struct {}, len(set));
+    }
 
     struct gocpp_id_3
         {
+            int i{};
+            int j{};
 
             using isGoStruct = void;
 
@@ -393,18 +378,24 @@ namespace golang::main
             operator T()
             {
                 T result;
+                result.i = this->i;
+                result.j = this->j;
                 return result;
             }
 
             template<typename T> requires gocpp::GoStruct<T>
             bool operator==(const T& ref) const
             {
+                if (i != ref.i) return false;
+                if (j != ref.j) return false;
                 return true;
             }
 
             std::ostream& PrintTo(std::ostream& os) const
             {
                 os << '{';
+                os << "" << i;
+                os << " " << j;
                 os << '}';
                 return os;
             }
@@ -498,46 +489,6 @@ namespace golang::main
 
     struct gocpp_id_6
         {
-            int i{};
-            int j{};
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                result.i = this->i;
-                result.j = this->j;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                if (i != ref.i) return false;
-                if (j != ref.j) return false;
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << "" << i;
-                os << " " << j;
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
-    struct gocpp_id_7
-        {
             int a{};
 
             using isGoStruct = void;
@@ -566,7 +517,7 @@ namespace golang::main
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
         {
             return value.PrintTo(os);
         }
@@ -576,19 +527,19 @@ namespace golang::main
     {
         mocklib::Println(Vertex {1, 2});
 
-        gocpp_id_2 i = {};
-        gocpp_id_3 j = {};
+        gocpp::empty_struct i = {};
+        gocpp::empty_struct j = {};
         mocklib::Println(i == j);
 
         auto e = Empty {};
         mocklib::Println(e == j);
 
-        auto v1 = gocpp_id_4 {1, 2};
-        auto v2 = gocpp_id_5 {1, 2};
+        auto v1 = gocpp_id_3 {1, 2};
+        auto v2 = gocpp_id_4 {1, 2};
         mocklib::Println(v1 == v2);
 
         auto d = Dummy {1, 2};
-        d = gocpp_id_6 {1, 2};
+        d = gocpp_id_5 {1, 2};
         mocklib::Println(d == v2);
         mocklib::Println(d == v1);
 
@@ -601,8 +552,9 @@ namespace golang::main
         auto dd = Dummy2 {d, Vertex {}, 3};
         mocklib::Println(dd);
 
-        inlineStructDef(gocpp_id_7 {42});
+        inlineStructDef(gocpp_id_6 {42});
         embededStructDef();
+        emptyStructs();
 
         auto vv = Vertex {3, 4};
         auto offsetX = gocpp::Offsetof<Vertex>(&Vertex::X);

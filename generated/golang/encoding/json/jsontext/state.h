@@ -81,21 +81,6 @@ namespace golang::encoding::json::jsontext
 
     std::ostream& operator<<(std::ostream& os, const struct objectNameStack& value);
     struct GoTag_objectNamespaceStack { };
-    struct gocpp_id_0
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct objectNamespace
     {
         // endOffsets is a list of offsets to the end of each name in buffers.
@@ -105,7 +90,7 @@ namespace golang::encoding::json::jsontext
         gocpp::slice<unsigned char> allUnquotedNames{};
         // mapNames is a Go map containing every name in the namespace.
         // Only valid if non-nil.
-        gocpp::map<gocpp::string, gocpp_id_0> mapNames{};
+        gocpp::map<gocpp::string, gocpp::empty_struct> mapNames{};
 
         using isGoStruct = void;
 

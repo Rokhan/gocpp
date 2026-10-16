@@ -510,6 +510,74 @@ namespace golang::runtime
         return os;
     }
 
+    namespace rec
+    {
+        runtime::hchan* hchan(const gocpp::PtrRecv<struct timeTimer, false>& self)
+        {
+            return rec::hchan(gocpp::recv(self.ptr->timer));
+        }
+
+        void lock(const gocpp::PtrRecv<struct timeTimer, false>& self)
+        {
+            return rec::lock(gocpp::recv(self.ptr->timer));
+        }
+
+        void maybeAdd(const gocpp::PtrRecv<struct timeTimer, false>& self)
+        {
+            return rec::maybeAdd(gocpp::recv(self.ptr->timer));
+        }
+
+        void maybeRunChan(const gocpp::PtrRecv<struct timeTimer, false>& self, runtime::hchan* c)
+        {
+            return rec::maybeRunChan(gocpp::recv(self.ptr->timer), c);
+        }
+
+        bool modify(const gocpp::PtrRecv<struct timeTimer, false>& self, int64_t when, int64_t period, std::function<void (go_any, uintptr_t, int64_t)> f, go_any arg, uintptr_t seq)
+        {
+            return rec::modify(gocpp::recv(self.ptr->timer), when, period, f, arg, seq);
+        }
+
+        bool needsAdd(const gocpp::PtrRecv<struct timeTimer, false>& self)
+        {
+            return rec::needsAdd(gocpp::recv(self.ptr->timer));
+        }
+
+        bool reset(const gocpp::PtrRecv<struct timeTimer, false>& self, int64_t when, int64_t period)
+        {
+            return rec::reset(gocpp::recv(self.ptr->timer), when, period);
+        }
+
+        bool stop(const gocpp::PtrRecv<struct timeTimer, false>& self)
+        {
+            return rec::stop(gocpp::recv(self.ptr->timer));
+        }
+
+        void trace(const gocpp::PtrRecv<struct timeTimer, false>& self, gocpp::string op)
+        {
+            return rec::trace(gocpp::recv(self.ptr->timer), op);
+        }
+
+        void trace1(const gocpp::PtrRecv<struct timeTimer, false>& self, gocpp::string op)
+        {
+            return rec::trace1(gocpp::recv(self.ptr->timer), op);
+        }
+
+        void unlock(const gocpp::PtrRecv<struct timeTimer, false>& self)
+        {
+            return rec::unlock(gocpp::recv(self.ptr->timer));
+        }
+
+        void unlockAndRun(const gocpp::PtrRecv<struct timeTimer, false>& self, int64_t now, synctestBubble* bubble)
+        {
+            return rec::unlockAndRun(gocpp::recv(self.ptr->timer), now, bubble);
+        }
+
+        bool updateHeap(const gocpp::PtrRecv<struct timeTimer, false>& self)
+        {
+            return rec::updateHeap(gocpp::recv(self.ptr->timer));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct timeTimer& value)
     {
         return value.PrintTo(os);

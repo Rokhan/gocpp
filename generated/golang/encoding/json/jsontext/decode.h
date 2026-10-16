@@ -54,6 +54,7 @@ namespace golang::encoding::json::jsontext
 namespace golang::encoding::json::jsontext
 {
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
+    namespace internal = golang::encoding::json::internal;
 }
 #include "golang/encoding/json/internal/jsonopts/options.h"
 #include "golang/encoding/json/jsontext/state.h"
@@ -77,6 +78,25 @@ namespace golang::encoding::json::jsontext
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        void InitializeMultiline(const gocpp::PtrRecv<struct decoderState, false>& self);
+        void JSONOptions(const gocpp::PtrRecv<struct decoderState, false>& self, internal::NotForPublicUse arg0);
+        void Join(const gocpp::PtrRecv<struct decoderState, false>& self, gocpp::slice<jsonopts::Options> srcs);
+        gocpp::slice<unsigned char> PreviousTokenOrValue(const gocpp::PtrRecv<struct decoderState, false>& self);
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct decoderState, false>& self, gocpp::slice<unsigned char> b, int where);
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct decoderState>& self, gocpp::slice<unsigned char> b, int where);
+        void invalidatePreviousRead(const gocpp::PtrRecv<struct decoderState, false>& self);
+        bool needMore(const gocpp::PtrRecv<struct decoderState, false>& self, int pos);
+        bool needObjectValue(const gocpp::PtrRecv<struct decoderState, false>& self);
+        int64_t offsetAt(const gocpp::PtrRecv<struct decoderState, false>& self, int pos);
+        gocpp::slice<unsigned char> previousBuffer(const gocpp::PtrRecv<struct decoderState, false>& self);
+        int64_t previousOffsetEnd(const gocpp::PtrRecv<struct decoderState, false>& self);
+        int64_t previousOffsetStart(const gocpp::PtrRecv<struct decoderState, false>& self);
+        void reset(const gocpp::PtrRecv<struct decoderState, false>& self);
+        gocpp::slice<unsigned char> unreadBuffer(const gocpp::PtrRecv<struct decoderState, false>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct decoderState& value);
     struct Decoder

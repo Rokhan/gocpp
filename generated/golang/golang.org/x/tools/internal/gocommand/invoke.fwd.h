@@ -8,10 +8,5 @@ namespace golang::golang_org::x::tools::internal::gocommand
 {
     struct Runner;
     const long maxInFlight = 10;
-    struct gocpp_id_2;
-    struct gocpp_id_3;
-    struct gocpp_id_7;
-    struct gocpp_id_8;
-    struct gocpp_id_9;
     struct Invocation;
 }

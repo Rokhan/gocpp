@@ -73,27 +73,6 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolDequeue& value);
-    struct poolChain
-    {
-        // head is the poolDequeue to push to. This is only accessed
-        // by the producer, so doesn't need to be synchronized.
-        poolChainElt* head{};
-        // tail is the poolDequeue to popTail from. This is accessed
-        // by consumers, so reads and writes must be atomic.
-        atomic::Pointer<poolChainElt> tail{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct poolChain& value);
     struct poolChainElt
     {
         poolDequeue poolDequeue{};
@@ -119,7 +98,37 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        uint64_t pack(const gocpp::PtrRecv<struct poolChainElt, false>& self, uint32_t head, uint32_t tail);
+        std::tuple<go_any, bool> popHead(const gocpp::PtrRecv<struct poolChainElt, false>& self);
+        std::tuple<go_any, bool> popTail(const gocpp::PtrRecv<struct poolChainElt, false>& self);
+        bool pushHead(const gocpp::PtrRecv<struct poolChainElt, false>& self, go_any val);
+        std::tuple<uint32_t, uint32_t> unpack(const gocpp::PtrRecv<struct poolChainElt, false>& self, uint64_t ptrs);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct poolChainElt& value);
+    struct poolChain
+    {
+        // head is the poolDequeue to push to. This is only accessed
+        // by the producer, so doesn't need to be synchronized.
+        poolChainElt* head{};
+        // tail is the poolDequeue to popTail from. This is accessed
+        // by consumers, so reads and writes must be atomic.
+        atomic::Pointer<poolChainElt> tail{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct poolChain& value);
 
     namespace rec
     {

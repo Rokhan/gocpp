@@ -54,7 +54,6 @@ namespace golang::go::token
     int searchInts(gocpp::slice<int> a, int x);
     int searchLineInfos(gocpp::slice<lineInfo> a, int x);
 }
-#include "golang/sync/atomic/type.fwd.h"
 #include "golang/sync/mutex.fwd.h"
 #include "golang/sync/rwmutex.fwd.h"
 
@@ -62,14 +61,10 @@ namespace golang::go::token
 {
     namespace sync = golang::sync;
 }
-#include "golang/go/token/tree.h"
-#include "golang/sync/atomic/type.h"
 #include "golang/sync/mutex.h"
-#include "golang/sync/rwmutex.h"
 
 namespace golang::go::token
 {
-    namespace atomic = golang::sync::atomic;
     struct File
     {
         gocpp::string name{}; // file name as provided to AddFile
@@ -92,6 +87,15 @@ namespace golang::go::token
     };
 
     std::ostream& operator<<(std::ostream& os, const struct File& value);
+}
+#include "golang/sync/atomic/type.fwd.h"
+#include "golang/go/token/tree.h"
+#include "golang/sync/atomic/type.h"
+#include "golang/sync/rwmutex.h"
+
+namespace golang::go::token
+{
+    namespace atomic = golang::sync::atomic;
     struct FileSet
     {
         sync::RWMutex mutex{}; // protects the file set

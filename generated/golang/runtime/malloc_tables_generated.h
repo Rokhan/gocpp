@@ -9,6 +9,7 @@
 #include "golang/runtime/malloc_tables_generated.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

@@ -3,8 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-
-namespace golang::main
-{
-    struct gocpp_id_0;
-}

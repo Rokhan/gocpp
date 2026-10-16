@@ -1135,6 +1135,159 @@ namespace golang::os::exec
         return os;
     }
 
+    namespace rec
+    {
+        int ExitCode(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::ExitCode(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        int ExitCode(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::ExitCode(gocpp::recv(self.obj.ProcessState));
+        }
+
+        bool Exited(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::Exited(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        bool Exited(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::Exited(gocpp::recv(self.obj.ProcessState));
+        }
+
+        int Pid(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::Pid(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        int Pid(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::Pid(gocpp::recv(self.obj.ProcessState));
+        }
+
+        gocpp::string String(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::String(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        gocpp::string String(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::String(gocpp::recv(self.obj.ProcessState));
+        }
+
+        bool Success(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::Success(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        bool Success(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::Success(gocpp::recv(self.obj.ProcessState));
+        }
+
+        go_any Sys(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::Sys(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        go_any Sys(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::Sys(gocpp::recv(self.obj.ProcessState));
+        }
+
+        go_any SysUsage(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::SysUsage(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        go_any SysUsage(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::SysUsage(gocpp::recv(self.obj.ProcessState));
+        }
+
+        time::Duration SystemTime(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::SystemTime(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        time::Duration SystemTime(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::SystemTime(gocpp::recv(self.obj.ProcessState));
+        }
+
+        time::Duration UserTime(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::UserTime(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        time::Duration UserTime(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::UserTime(gocpp::recv(self.obj.ProcessState));
+        }
+
+        bool exited(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::exited(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        bool exited(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::exited(gocpp::recv(self.obj.ProcessState));
+        }
+
+        bool success(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::success(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        bool success(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::success(gocpp::recv(self.obj.ProcessState));
+        }
+
+        go_any sys(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::sys(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        go_any sys(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::sys(gocpp::recv(self.obj.ProcessState));
+        }
+
+        go_any sysUsage(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::sysUsage(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        go_any sysUsage(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::sysUsage(gocpp::recv(self.obj.ProcessState));
+        }
+
+        time::Duration systemTime(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::systemTime(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        time::Duration systemTime(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::systemTime(gocpp::recv(self.obj.ProcessState));
+        }
+
+        time::Duration userTime(const gocpp::PtrRecv<struct ExitError, false>& self)
+        {
+            return os::rec::userTime(gocpp::recv(self.ptr->ProcessState));
+        }
+
+        time::Duration userTime(const gocpp::ObjRecv<struct ExitError>& self)
+        {
+            return os::rec::userTime(gocpp::recv(self.obj.ProcessState));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct ExitError& value)
     {
         return value.PrintTo(os);

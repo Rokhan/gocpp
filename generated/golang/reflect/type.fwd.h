@@ -22,9 +22,6 @@ namespace golang::reflect
     struct funcLookupCacheStruct;
     struct structLookupCacheStruct;
     struct structTypeUncommon;
-    struct gocpp_id_7;
-    struct gocpp_id_9;
-    struct gocpp_id_10;
     struct layoutKey;
     struct layoutType;
     struct bitVector;

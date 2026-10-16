@@ -27,6 +27,12 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        void unpin(const gocpp::PtrRecv<struct Pinner, false>& self);
+        void unpin(const gocpp::ObjRecv<struct Pinner>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct Pinner& value);
     struct pinState
     {

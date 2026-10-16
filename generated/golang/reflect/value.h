@@ -240,6 +240,26 @@ namespace golang::reflect
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        reflect::Kind kind(const gocpp::PtrRecv<struct Value, false>& self);
+        reflect::Kind kind(const gocpp::ObjRecv<struct Value>& self);
+        void mustBe(const gocpp::PtrRecv<struct Value, false>& self, reflect::Kind expected);
+        void mustBe(const gocpp::ObjRecv<struct Value>& self, reflect::Kind expected);
+        void mustBeAssignable(const gocpp::PtrRecv<struct Value, false>& self);
+        void mustBeAssignable(const gocpp::ObjRecv<struct Value>& self);
+        void mustBeAssignableSlow(const gocpp::PtrRecv<struct Value, false>& self);
+        void mustBeAssignableSlow(const gocpp::ObjRecv<struct Value>& self);
+        void mustBeExported(const gocpp::PtrRecv<struct Value, false>& self);
+        void mustBeExported(const gocpp::ObjRecv<struct Value>& self);
+        void mustBeExportedSlow(const gocpp::PtrRecv<struct Value, false>& self);
+        void mustBeExportedSlow(const gocpp::ObjRecv<struct Value>& self);
+        void panicNotMap(const gocpp::PtrRecv<struct Value, false>& self);
+        void panicNotMap(const gocpp::ObjRecv<struct Value>& self);
+        flag ro(const gocpp::PtrRecv<struct Value, false>& self);
+        flag ro(const gocpp::ObjRecv<struct Value>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct Value& value);
     struct nonEmptyInterface
     {

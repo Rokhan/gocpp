@@ -9,9 +9,7 @@ namespace golang::runtime
     struct rtype;
     struct bitCursor;
     struct reflectOffsStruct;
-    struct gocpp_id_0;
     struct _typePair;
-    struct gocpp_id_3;
 }
 #include "golang/internal/abi/funcpc.fwd.h"
 #include "golang/internal/abi/map.fwd.h"

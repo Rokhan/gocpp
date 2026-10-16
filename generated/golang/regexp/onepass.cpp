@@ -11,6 +11,7 @@
 #include "golang/regexp/onepass.h"
 #include "gocpp/support.h"
 
+#include "golang/cmp/cmp.h"
 #include "golang/regexp/syntax/parse.h"
 #include "golang/regexp/syntax/prog.h"
 #include "golang/slices/sort.h"
@@ -96,6 +97,34 @@ namespace golang::regexp
         os << " " << Next;
         os << '}';
         return os;
+    }
+
+    namespace rec
+    {
+        bool MatchEmptyWidth(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune before, gocpp::rune after)
+        {
+            return syntax::rec::MatchEmptyWidth(gocpp::recv(self.ptr->Inst), before, after);
+        }
+
+        bool MatchRune(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r)
+        {
+            return syntax::rec::MatchRune(gocpp::recv(self.ptr->Inst), r);
+        }
+
+        int MatchRunePos(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r)
+        {
+            return syntax::rec::MatchRunePos(gocpp::recv(self.ptr->Inst), r);
+        }
+
+        gocpp::string String(const gocpp::PtrRecv<struct onePassInst, false>& self)
+        {
+            return syntax::rec::String(gocpp::recv(self.ptr->Inst));
+        }
+
+        syntax::InstOp op(const gocpp::PtrRecv<struct onePassInst, false>& self)
+        {
+            return syntax::rec::op(gocpp::recv(self.ptr->Inst));
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct onePassInst& value)

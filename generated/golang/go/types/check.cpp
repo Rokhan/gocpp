@@ -454,6 +454,59 @@ namespace golang::go::types
         return os;
     }
 
+    namespace rec
+    {
+        types::Object ObjectOf(const gocpp::PtrRecv<struct Checker, false>& self, ast::Ident* id)
+        {
+            return rec::ObjectOf(gocpp::recv(self.ptr->Info), id);
+        }
+
+        types::Object ObjectOf(const gocpp::ObjRecv<struct Checker>& self, ast::Ident* id)
+        {
+            return rec::ObjectOf(gocpp::recv(self.obj.Info), id);
+        }
+
+        types::PkgName* PkgNameOf(const gocpp::PtrRecv<struct Checker, false>& self, ast::ImportSpec* imp)
+        {
+            return rec::PkgNameOf(gocpp::recv(self.ptr->Info), imp);
+        }
+
+        types::PkgName* PkgNameOf(const gocpp::ObjRecv<struct Checker>& self, ast::ImportSpec* imp)
+        {
+            return rec::PkgNameOf(gocpp::recv(self.obj.Info), imp);
+        }
+
+        types::Type TypeOf(const gocpp::PtrRecv<struct Checker, false>& self, ast::Expr e)
+        {
+            return rec::TypeOf(gocpp::recv(self.ptr->Info), e);
+        }
+
+        types::Type TypeOf(const gocpp::ObjRecv<struct Checker>& self, ast::Expr e)
+        {
+            return rec::TypeOf(gocpp::recv(self.obj.Info), e);
+        }
+
+        types::Object lookup(const gocpp::PtrRecv<struct Checker, false>& self, gocpp::string name)
+        {
+            return rec::lookup(gocpp::recv(self.ptr->environment), name);
+        }
+
+        std::tuple<types::Scope*, types::Object> lookupScope(const gocpp::PtrRecv<struct Checker, false>& self, gocpp::string name)
+        {
+            return rec::lookupScope(gocpp::recv(self.ptr->environment), name);
+        }
+
+        bool recordTypes(const gocpp::PtrRecv<struct Checker, false>& self)
+        {
+            return rec::recordTypes(gocpp::recv(self.ptr->Info));
+        }
+
+        bool recordTypes(const gocpp::ObjRecv<struct Checker>& self)
+        {
+            return rec::recordTypes(gocpp::recv(self.obj.Info));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct Checker& value)
     {
         return value.PrintTo(os);

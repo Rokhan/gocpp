@@ -322,6 +322,19 @@ namespace golang::image::color
         return os;
     }
 
+    namespace rec
+    {
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<struct NYCbCrA, false>& self)
+        {
+            return rec::RGBA(gocpp::recv(self.ptr->YCbCr));
+        }
+
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<struct NYCbCrA>& self)
+        {
+            return rec::RGBA(gocpp::recv(self.obj.YCbCr));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct NYCbCrA& value)
     {
         return value.PrintTo(os);

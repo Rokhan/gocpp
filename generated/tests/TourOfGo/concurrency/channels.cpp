@@ -31,39 +31,7 @@ namespace golang::main
         c.send(sum);
     }
 
-    struct gocpp_id_0
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            return result;
-        }
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
-    gocpp::channel<gocpp_id_0> NullChannel()
+    gocpp::channel<gocpp::empty_struct> NullChannel()
     {
         return nullptr;
     }
@@ -79,6 +47,7 @@ namespace golang::main
         // receive from c
         auto [x, y] = std::tuple{c.recv(), c.recv()};
 
+        std::tie(x, y) = std::tuple{gocpp::min(x, y), gocpp::max(x, y)};
         mocklib::Println(x, y, x + y);
 
         c = gocpp::make(gocpp::Tag<gocpp::channel<int>>());
@@ -89,6 +58,7 @@ namespace golang::main
         // receive from c
         y = c.recv();
 
+        std::tie(x, y) = std::tuple{gocpp::min(x, y), gocpp::max(x, y)};
         mocklib::Println(x, y, x + y);
 
         c = nullptr;

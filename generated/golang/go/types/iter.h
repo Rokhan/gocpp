@@ -14,17 +14,16 @@
 #include "golang/go/types/interface.h"
 #include "golang/go/types/methodset.h"
 #include "golang/go/types/named.h"
+#include "golang/go/types/object.h"
 #include "golang/go/types/scope.h"
+#include "golang/go/types/selection.h"
 #include "golang/go/types/struct.h"
 #include "golang/go/types/tuple.h"
+#include "golang/go/types/type.h"
 #include "golang/go/types/typelists.h"
+#include "golang/go/types/typeparam.h"
 #include "golang/go/types/union.h"
 #include "golang/iter/iter.h"
-
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/selection.fwd.h"
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
 
 namespace golang::go::types
 {

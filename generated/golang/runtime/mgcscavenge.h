@@ -45,6 +45,13 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        bool isEmpty(const gocpp::PtrRecv<struct scavChunkData, false>& self);
+        void setEmpty(const gocpp::PtrRecv<struct scavChunkData, false>& self);
+        void setNonEmpty(const gocpp::PtrRecv<struct scavChunkData, false>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value);
     struct piController
     {

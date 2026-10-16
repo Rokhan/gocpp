@@ -31,6 +31,7 @@ namespace golang::encoding::json::jsontext
 {
     namespace bits = golang::math::bits;
     namespace bytes = golang::bytes;
+    namespace internal = golang::encoding::json::internal;
     namespace io = golang::io;
     namespace jsonflags = golang::encoding::json::internal::jsonflags;
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
@@ -109,33 +110,6 @@ namespace golang::encoding::json::jsontext
         return value.PrintTo(os);
     }
 
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
-    {
-        T result;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
-    {
-        return true;
-    }
-
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
     // encoderState is the low-level state of Encoder.
     // It has exported fields and methods for use by the "json" package.
     
@@ -169,6 +143,59 @@ namespace golang::encoding::json::jsontext
         os << " " << SeenPointers;
         os << '}';
         return os;
+    }
+
+    namespace rec
+    {
+        void InitializeMultiline(const gocpp::PtrRecv<struct encoderState, false>& self)
+        {
+            return jsonopts::rec::InitializeMultiline(gocpp::recv(self.ptr->Struct));
+        }
+
+        void JSONOptions(const gocpp::PtrRecv<struct encoderState, false>& self, internal::NotForPublicUse arg0)
+        {
+            return jsonopts::rec::JSONOptions(gocpp::recv(self.ptr->Struct), arg0);
+        }
+
+        void Join(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<jsonopts::Options> srcs)
+        {
+            return jsonopts::rec::Join(gocpp::recv(self.ptr->Struct), srcs);
+        }
+
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<unsigned char> b, int where)
+        {
+            return rec::appendStackPointer(gocpp::recv(self.ptr->state), b, where);
+        }
+
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct encoderState>& self, gocpp::slice<unsigned char> b, int where)
+        {
+            return rec::appendStackPointer(gocpp::recv(self.obj.state), b, where);
+        }
+
+        bool needObjectValue(const gocpp::PtrRecv<struct encoderState, false>& self)
+        {
+            return rec::needObjectValue(gocpp::recv(self.ptr->state));
+        }
+
+        int64_t offsetAt(const gocpp::PtrRecv<struct encoderState, false>& self, int pos)
+        {
+            return rec::offsetAt(gocpp::recv(self.ptr->encodeBuffer), pos);
+        }
+
+        int64_t previousOffsetEnd(const gocpp::PtrRecv<struct encoderState, false>& self)
+        {
+            return rec::previousOffsetEnd(gocpp::recv(self.ptr->encodeBuffer));
+        }
+
+        void reset(const gocpp::PtrRecv<struct encoderState, false>& self)
+        {
+            return rec::reset(gocpp::recv(self.ptr->state));
+        }
+
+        gocpp::slice<unsigned char> unflushedBuffer(const gocpp::PtrRecv<struct encoderState, false>& self)
+        {
+            return rec::unflushedBuffer(gocpp::recv(self.ptr->encodeBuffer));
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct encoderState& value)
@@ -265,7 +292,7 @@ namespace golang::encoding::json::jsontext
         }
         // Reuse the buffer if it does not alias a previous [bytes.Buffer].
         auto b = e->s.encodeBuffer.Buf.make_slice(0, 0);
-        if(auto [gocpp_id_1, ok] = gocpp::getValue<bytes::Buffer*>(e->s.encodeBuffer.wr); ok)
+        if(auto [gocpp_id_0, ok] = gocpp::getValue<bytes::Buffer*>(e->s.encodeBuffer.wr); ok)
         {
             b = nullptr;
         }
@@ -351,7 +378,7 @@ namespace golang::encoding::json::jsontext
             // otherwise Write operates as expected.
             // See https://go.dev/issue/42986.
             // never fails unless bb is nil
-            auto [n, gocpp_id_2] = rec::Write(gocpp::recv(bb), e->encodeBuffer.Buf);
+            auto [n, gocpp_id_1] = rec::Write(gocpp::recv(bb), e->encodeBuffer.Buf);
             e->encodeBuffer.baseOffset += int64_t(n);
 
             // If the internal buffer of bytes.Buffer is too small,

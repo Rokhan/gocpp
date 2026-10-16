@@ -69,6 +69,12 @@ namespace golang::image::color
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<struct NYCbCrA, false>& self);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<struct NYCbCrA>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct NYCbCrA& value);
 }
 #include "golang/image/color/color.h"

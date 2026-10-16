@@ -120,6 +120,89 @@ namespace golang::reflect
         return os;
     }
 
+    namespace rec
+    {
+        reflect::Kind kind(const gocpp::PtrRecv<struct Value, false>& self)
+        {
+            return rec::kind(gocpp::recv(self.ptr->flag));
+        }
+
+        reflect::Kind kind(const gocpp::ObjRecv<struct Value>& self)
+        {
+            return rec::kind(gocpp::recv(self.obj.flag));
+        }
+
+        void mustBe(const gocpp::PtrRecv<struct Value, false>& self, reflect::Kind expected)
+        {
+            return rec::mustBe(gocpp::recv(self.ptr->flag), expected);
+        }
+
+        void mustBe(const gocpp::ObjRecv<struct Value>& self, reflect::Kind expected)
+        {
+            return rec::mustBe(gocpp::recv(self.obj.flag), expected);
+        }
+
+        void mustBeAssignable(const gocpp::PtrRecv<struct Value, false>& self)
+        {
+            return rec::mustBeAssignable(gocpp::recv(self.ptr->flag));
+        }
+
+        void mustBeAssignable(const gocpp::ObjRecv<struct Value>& self)
+        {
+            return rec::mustBeAssignable(gocpp::recv(self.obj.flag));
+        }
+
+        void mustBeAssignableSlow(const gocpp::PtrRecv<struct Value, false>& self)
+        {
+            return rec::mustBeAssignableSlow(gocpp::recv(self.ptr->flag));
+        }
+
+        void mustBeAssignableSlow(const gocpp::ObjRecv<struct Value>& self)
+        {
+            return rec::mustBeAssignableSlow(gocpp::recv(self.obj.flag));
+        }
+
+        void mustBeExported(const gocpp::PtrRecv<struct Value, false>& self)
+        {
+            return rec::mustBeExported(gocpp::recv(self.ptr->flag));
+        }
+
+        void mustBeExported(const gocpp::ObjRecv<struct Value>& self)
+        {
+            return rec::mustBeExported(gocpp::recv(self.obj.flag));
+        }
+
+        void mustBeExportedSlow(const gocpp::PtrRecv<struct Value, false>& self)
+        {
+            return rec::mustBeExportedSlow(gocpp::recv(self.ptr->flag));
+        }
+
+        void mustBeExportedSlow(const gocpp::ObjRecv<struct Value>& self)
+        {
+            return rec::mustBeExportedSlow(gocpp::recv(self.obj.flag));
+        }
+
+        void panicNotMap(const gocpp::PtrRecv<struct Value, false>& self)
+        {
+            return rec::panicNotMap(gocpp::recv(self.ptr->flag));
+        }
+
+        void panicNotMap(const gocpp::ObjRecv<struct Value>& self)
+        {
+            return rec::panicNotMap(gocpp::recv(self.obj.flag));
+        }
+
+        flag ro(const gocpp::PtrRecv<struct Value, false>& self)
+        {
+            return rec::ro(gocpp::recv(self.ptr->flag));
+        }
+
+        flag ro(const gocpp::ObjRecv<struct Value>& self)
+        {
+            return rec::ro(gocpp::recv(self.obj.flag));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct Value& value)
     {
         return value.PrintTo(os);

@@ -17,7 +17,6 @@ namespace golang::golang_org::x::tools::go::packages
     struct loaderPackage;
     struct loader;
     struct parseValue;
-    struct gocpp_id_5;
     struct unit;
     // NeedName adds Name and PkgPath.
     const LoadMode NeedName = 1 << 0;

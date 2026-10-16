@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/bytes/bytes.h"
+#include "golang/cmp/cmp.h"
 #include "golang/errors/errors.h"
 #include "golang/fmt/errors.h"
 #include "golang/fmt/print.h"

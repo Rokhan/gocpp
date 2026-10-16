@@ -20,7 +20,9 @@ namespace golang::go::types
 #include "golang/go/token/position.h"
 #include "golang/go/types/object.h"
 #include "golang/go/types/type.h"
+#include "golang/go/types/package.fwd.h"
 #include "golang/go/types/resolver.fwd.h"
+#include "golang/go/types/scope.fwd.h"
 
 namespace golang::go::types
 {

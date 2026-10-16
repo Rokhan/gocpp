@@ -45,15 +45,21 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 {
     namespace pkgbits = golang::golang_org::x::tools::internal::pkgbits;
     namespace types = golang::go::types;
-    namespace token = golang::go::token;
 }
+#include "golang/go/constant/value.h"
 #include "golang/go/types/type.h"
 #include "golang/golang.org/x/tools/internal/gcimporter/bimport.h"
+#include "golang/golang.org/x/tools/internal/pkgbits/codes.h"
 #include "golang/golang.org/x/tools/internal/pkgbits/decoder.h"
 #include "golang/golang.org/x/tools/internal/pkgbits/reloc.h"
+#include "golang/golang.org/x/tools/internal/pkgbits/sync.h"
+#include "golang/golang.org/x/tools/internal/pkgbits/version.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    namespace token = golang::go::token;
+    namespace constant = golang::go::constant;
+    namespace big = golang::math::big;
     struct pkgReader
     {
         pkgbits::PkgDecoder PkgDecoder{};
@@ -87,6 +93,25 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        int AbsIdx(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx);
+        gocpp::string DataIdx(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx);
+        gocpp::array<unsigned char, 8> Fingerprint(const gocpp::PtrRecv<struct pkgReader, false>& self);
+        pkgbits::Decoder NewDecoder(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx, pkgbits::SyncMarker marker);
+        pkgbits::Decoder NewDecoderRaw(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx);
+        int NumElems(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k);
+        std::tuple<gocpp::string, gocpp::string, pkgbits::CodeObj> PeekObj(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::Index idx);
+        gocpp::string PeekPkgPath(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::Index idx);
+        gocpp::string PkgPath(const gocpp::PtrRecv<struct pkgReader, false>& self);
+        void RetireDecoder(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::Decoder* d);
+        gocpp::string StringIdx(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::Index idx);
+        bool SyncMarkers(const gocpp::PtrRecv<struct pkgReader, false>& self);
+        pkgbits::Decoder TempDecoder(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx, pkgbits::SyncMarker marker);
+        pkgbits::Decoder TempDecoderRaw(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx);
+        int TotalElems(const gocpp::PtrRecv<struct pkgReader, false>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct pkgReader& value);
     struct derivedInfo
@@ -140,6 +165,30 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        bool Bool(const gocpp::PtrRecv<struct reader, false>& self);
+        int Code(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::SyncMarker mark);
+        int Int(const gocpp::PtrRecv<struct reader, false>& self);
+        int64_t Int64(const gocpp::PtrRecv<struct reader, false>& self);
+        int Len(const gocpp::PtrRecv<struct reader, false>& self);
+        pkgbits::Index Reloc(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::RelocKind k);
+        gocpp::string String(const gocpp::PtrRecv<struct reader, false>& self);
+        gocpp::slice<gocpp::string> Strings(const gocpp::PtrRecv<struct reader, false>& self);
+        void Sync(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::SyncMarker mWant);
+        unsigned int Uint(const gocpp::PtrRecv<struct reader, false>& self);
+        uint64_t Uint64(const gocpp::PtrRecv<struct reader, false>& self);
+        constant::Value Value(const gocpp::PtrRecv<struct reader, false>& self);
+        pkgbits::Version Version(const gocpp::PtrRecv<struct reader, false>& self);
+        big::Float* bigFloat(const gocpp::PtrRecv<struct reader, false>& self);
+        big::Int* bigInt(const gocpp::PtrRecv<struct reader, false>& self);
+        void checkErr(const gocpp::PtrRecv<struct reader, false>& self, gocpp::error err);
+        pkgbits::Index rawReloc(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::RelocKind k, int idx);
+        uint64_t rawUvarint(const gocpp::PtrRecv<struct reader, false>& self);
+        int64_t rawVarint(const gocpp::PtrRecv<struct reader, false>& self);
+        constant::Value scalar(const gocpp::PtrRecv<struct reader, false>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);
     types::Scope* pkgScope(types::Package* pkg);

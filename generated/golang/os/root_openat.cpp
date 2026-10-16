@@ -159,75 +159,11 @@ namespace golang::os
         return r->name;
     }
 
-    struct gocpp_id_2
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_1
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
     gocpp::error rootChmod(Root* r, gocpp::string name, FileMode mode)
     {
-        auto [gocpp_id_0, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp_id_1, gocpp::error>
+        auto [gocpp_id_0, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
-            return {gocpp_id_2 {}, chmodat(parent, name, mode)};
+            return {gocpp::empty_struct {}, chmodat(parent, name, mode)};
         });
         if(err != nullptr)
         {
@@ -240,75 +176,11 @@ namespace golang::os
         return nullptr;
     }
 
-    struct gocpp_id_5
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_4
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
     gocpp::error rootChown(Root* r, gocpp::string name, int uid, int gid)
     {
-        auto [gocpp_id_3, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp_id_4, gocpp::error>
+        auto [gocpp_id_1, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
-            return {gocpp_id_5 {}, chownat(parent, name, uid, gid)};
+            return {gocpp::empty_struct {}, chownat(parent, name, uid, gid)};
         });
         if(err != nullptr)
         {
@@ -321,75 +193,11 @@ namespace golang::os
         return nullptr;
     }
 
-    struct gocpp_id_8
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_7
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
     gocpp::error rootLchown(Root* r, gocpp::string name, int uid, int gid)
     {
-        auto [gocpp_id_6, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp_id_7, gocpp::error>
+        auto [gocpp_id_2, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
-            return {gocpp_id_8 {}, lchownat(parent, name, uid, gid)};
+            return {gocpp::empty_struct {}, lchownat(parent, name, uid, gid)};
         });
         if(err != nullptr)
         {
@@ -402,75 +210,11 @@ namespace golang::os
         return nullptr;
     }
 
-    struct gocpp_id_11
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_11& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_10
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_10& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
     gocpp::error rootChtimes(Root* r, gocpp::string name, mocklib::Date atime, mocklib::Date mtime)
     {
-        auto [gocpp_id_9, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp_id_10, gocpp::error>
+        auto [gocpp_id_3, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
-            return {gocpp_id_11 {}, chtimesat(parent, name, atime, mtime)};
+            return {gocpp::empty_struct {}, chtimesat(parent, name, atime, mtime)};
         });
         if(err != nullptr)
         {
@@ -482,70 +226,6 @@ namespace golang::os
         }
         return nullptr;
     }
-
-    struct gocpp_id_14
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_14& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_13
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_13& value)
-        {
-            return value.PrintTo(os);
-        }
-
 
     gocpp::error rootMkdir(Root* r, gocpp::string name, FileMode perm)
     {
@@ -570,9 +250,9 @@ namespace golang::os
                     break;
             }
         }
-        auto [gocpp_id_12, err] = doInRoot(r, name, flags, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp_id_13, gocpp::error>
+        auto [gocpp_id_4, err] = doInRoot(r, name, flags, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
-            return {gocpp_id_14 {}, mkdirat(parent, name, perm)};
+            return {gocpp::empty_struct {}, mkdirat(parent, name, perm)};
         });
         if(err != nullptr)
         {
@@ -584,102 +264,6 @@ namespace golang::os
         }
         return nullptr;
     }
-
-    struct gocpp_id_18
-                        {
-
-                            using isGoStruct = void;
-
-                            template<typename T> requires gocpp::GoStruct<T>
-                            operator T()
-                            {
-                                T result;
-                                return result;
-                            }
-
-                            template<typename T> requires gocpp::GoStruct<T>
-                            bool operator==(const T& ref) const
-                            {
-                                return true;
-                            }
-
-                            std::ostream& PrintTo(std::ostream& os) const
-                            {
-                                os << '{';
-                                os << '}';
-                                return os;
-                            }
-                        };
-
-                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_18& value)
-                        {
-                            return value.PrintTo(os);
-                        }
-
-
-    struct gocpp_id_19
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_19& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_16
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_16& value)
-        {
-            return value.PrintTo(os);
-        }
-
 
     gocpp::error rootMkdirAll(Root* r, gocpp::string fullname, FileMode perm)
     {
@@ -694,10 +278,10 @@ namespace golang::os
                 auto [fd, err] = rootOpenDir(parent, name);
                 //Go type switch emulation
                 {
-                    const auto& gocpp_id_15 = gocpp::type_info(err);
+                    const auto& gocpp_id_5 = gocpp::type_info(err);
                     int conditionId = -1;
-                    if(gocpp_id_15 == typeid(untyped nil)) { conditionId = 0; }
-                    else if(gocpp_id_15 == typeid(errSymlink)) { conditionId = 1; }
+                    if(gocpp_id_5 == typeid(untyped nil)) { conditionId = 0; }
+                    else if(gocpp_id_5 == typeid(errSymlink)) { conditionId = 1; }
                     switch(conditionId)
                     {
                         case 0:
@@ -728,7 +312,7 @@ namespace golang::os
             gocpp::panic("unreachable"_s);
         };
         // openLastComponentFunc opens the last path component.
-        auto openLastComponentFunc = [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp_id_16, gocpp::error>
+        auto openLastComponentFunc = [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
             auto err = mkdirat(parent, name, perm);
             if(err == syscall::go_EEXIST)
@@ -771,21 +355,21 @@ namespace golang::os
             }
             //Go type switch emulation
             {
-                const auto& gocpp_id_17 = gocpp::type_info(err);
+                const auto& gocpp_id_6 = gocpp::type_info(err);
                 int conditionId = -1;
-                if(gocpp_id_17 == typeid(untyped nil)) { conditionId = 0; }
-                else if(gocpp_id_17 == typeid(errSymlink)) { conditionId = 1; }
+                if(gocpp_id_6 == typeid(untyped nil)) { conditionId = 0; }
+                else if(gocpp_id_6 == typeid(errSymlink)) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
                     case 1:
                     {
-                        return {gocpp_id_18 {}, err};
+                        return {gocpp::empty_struct {}, err};
                         break;
                     }
                 }
             }
-            return {gocpp_id_19 {}, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
+            return {gocpp::empty_struct {}, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
                 x.Op = "mkdirat"_s;
                 x.Err = err;
             }))};
@@ -808,10 +392,10 @@ namespace golang::os
                     break;
             }
         }
-        auto [gocpp_id_20, err] = doInRoot(r, fullname, flags, openDirFunc, openLastComponentFunc);
+        auto [gocpp_id_7, err] = doInRoot(r, fullname, flags, openDirFunc, openLastComponentFunc);
         if(err != nullptr)
         {
-            if(auto [gocpp_id_21, ok] = gocpp::getValue<PathError*>(err); ! ok)
+            if(auto [gocpp_id_8, ok] = gocpp::getValue<PathError*>(err); ! ok)
             {
                 err = gocpp::InitPtr<PathError>([=](auto& x) {
                     x.Op = "mkdirat"_s;
@@ -840,75 +424,11 @@ namespace golang::os
         return {target, nullptr};
     }
 
-    struct gocpp_id_24
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_24& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_23
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_23& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
     gocpp::error rootRemove(Root* r, gocpp::string name)
     {
-        auto [gocpp_id_22, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp_id_23, gocpp::error>
+        auto [gocpp_id_9, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
-            return {gocpp_id_24 {}, removeat(parent, name)};
+            return {gocpp::empty_struct {}, removeat(parent, name)};
         });
         if(err != nullptr)
         {
@@ -920,70 +440,6 @@ namespace golang::os
         }
         return nullptr;
     }
-
-    struct gocpp_id_27
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_27& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_26
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_26& value)
-        {
-            return value.PrintTo(os);
-        }
-
 
     gocpp::error rootRemoveAll(Root* r, gocpp::string name)
     {
@@ -1002,9 +458,9 @@ namespace golang::os
                 x.Err = syscall::go_EINVAL;
             }));
         }
-        auto [gocpp_id_25, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp_id_26, gocpp::error>
+        auto [gocpp_id_10, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
-            return {gocpp_id_27 {}, removeAllFrom(parent, name)};
+            return {gocpp::empty_struct {}, removeAllFrom(parent, name)};
         });
         if(IsNotExist(err))
         {
@@ -1021,283 +477,27 @@ namespace golang::os
         return err;
     }
 
-    struct gocpp_id_32
-                        {
-
-                            using isGoStruct = void;
-
-                            template<typename T> requires gocpp::GoStruct<T>
-                            operator T()
-                            {
-                                T result;
-                                return result;
-                            }
-
-                            template<typename T> requires gocpp::GoStruct<T>
-                            bool operator==(const T& ref) const
-                            {
-                                return true;
-                            }
-
-                            std::ostream& PrintTo(std::ostream& os) const
-                            {
-                                os << '{';
-                                os << '}';
-                                return os;
-                            }
-                        };
-
-                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_32& value)
-                        {
-                            return value.PrintTo(os);
-                        }
-
-
-    struct gocpp_id_33
-                        {
-
-                            using isGoStruct = void;
-
-                            template<typename T> requires gocpp::GoStruct<T>
-                            operator T()
-                            {
-                                T result;
-                                return result;
-                            }
-
-                            template<typename T> requires gocpp::GoStruct<T>
-                            bool operator==(const T& ref) const
-                            {
-                                return true;
-                            }
-
-                            std::ostream& PrintTo(std::ostream& os) const
-                            {
-                                os << '{';
-                                os << '}';
-                                return os;
-                            }
-                        };
-
-                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_33& value)
-                        {
-                            return value.PrintTo(os);
-                        }
-
-
-    struct gocpp_id_34
-                        {
-
-                            using isGoStruct = void;
-
-                            template<typename T> requires gocpp::GoStruct<T>
-                            operator T()
-                            {
-                                T result;
-                                return result;
-                            }
-
-                            template<typename T> requires gocpp::GoStruct<T>
-                            bool operator==(const T& ref) const
-                            {
-                                return true;
-                            }
-
-                            std::ostream& PrintTo(std::ostream& os) const
-                            {
-                                os << '{';
-                                os << '}';
-                                return os;
-                            }
-                        };
-
-                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_34& value)
-                        {
-                            return value.PrintTo(os);
-                        }
-
-
-    struct gocpp_id_35
-                        {
-
-                            using isGoStruct = void;
-
-                            template<typename T> requires gocpp::GoStruct<T>
-                            operator T()
-                            {
-                                T result;
-                                return result;
-                            }
-
-                            template<typename T> requires gocpp::GoStruct<T>
-                            bool operator==(const T& ref) const
-                            {
-                                return true;
-                            }
-
-                            std::ostream& PrintTo(std::ostream& os) const
-                            {
-                                os << '{';
-                                os << '}';
-                                return os;
-                            }
-                        };
-
-                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_35& value)
-                        {
-                            return value.PrintTo(os);
-                        }
-
-
-    struct gocpp_id_36
-                {
-
-                    using isGoStruct = void;
-
-                    template<typename T> requires gocpp::GoStruct<T>
-                    operator T()
-                    {
-                        T result;
-                        return result;
-                    }
-
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool operator==(const T& ref) const
-                    {
-                        return true;
-                    }
-
-                    std::ostream& PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << '}';
-                        return os;
-                    }
-                };
-
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_36& value)
-                {
-                    return value.PrintTo(os);
-                }
-
-
-    struct gocpp_id_31
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_31& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_37
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_37& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_29
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_29& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
     gocpp::error rootRename(Root* r, gocpp::string oldname, gocpp::string newname)
     {
-        auto [gocpp_id_28, err_tmp] = doInRoot(r, oldname, 0, nullptr, [=](sysfdType oldparent, gocpp::string oldname, bool oldEndsInSlash) mutable -> std::tuple<gocpp_id_29, gocpp::error>
+        auto [gocpp_id_11, err_tmp] = doInRoot(r, oldname, 0, nullptr, [=](sysfdType oldparent, gocpp::string oldname, bool oldEndsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
             auto flags = (unsigned int)(doInRootCreatingDirectory);
             if(mocklib::GOOS == "windows"_s)
             {
                 flags |= doInRootNoHandleTerminalSlash;
             }
-            auto [gocpp_id_30, err_tmp] = doInRoot(r, newname, flags, nullptr, [=](sysfdType newparent, gocpp::string newname, bool newEndsInSlash) mutable -> std::tuple<gocpp_id_31, gocpp::error>
+            auto [gocpp_id_12, err_tmp] = doInRoot(r, newname, flags, nullptr, [=](sysfdType newparent, gocpp::string newname, bool newEndsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
             {
                 if(mocklib::GOOS != "windows"_s && newEndsInSlash)
                 {
                     auto [oldMode, err] = modeAt(oldparent, oldname);
                     if(err != nullptr)
                     {
-                        return {gocpp_id_32 {}, err};
+                        return {gocpp::empty_struct {}, err};
                     }
                     if(rec::Type(gocpp::recv(oldMode)) != fs::ModeDir)
                     {
-                        return {gocpp_id_33 {}, gocpp::error(syscall::go_ENOTDIR)};
+                        return {gocpp::empty_struct {}, gocpp::error(syscall::go_ENOTDIR)};
                     }
                 }
                 // Same checks as applied by rename (in file_unix.go):
@@ -1306,18 +506,18 @@ namespace golang::os
                 {
                     if(auto [ofi, err] = lstatat(oldparent, oldname); err != nullptr)
                     {
-                        return {gocpp_id_34 {}, err};
+                        return {gocpp::empty_struct {}, err};
                     }
                     else
                     if(newname == oldname || ! SameFile(fi, ofi))
                     {
-                        return {gocpp_id_35 {}, gocpp::error(syscall::go_EEXIST)};
+                        return {gocpp::empty_struct {}, gocpp::error(syscall::go_EEXIST)};
                     }
                 }
-                return {gocpp_id_36 {}, renameat(oldparent, oldname, newparent, newname)};
+                return {gocpp::empty_struct {}, renameat(oldparent, oldname, newparent, newname)};
             });
             auto& err = err_tmp;
-            return {gocpp_id_37 {}, err};
+            return {gocpp::empty_struct {}, err};
         });
         auto& err = err_tmp;
         if(err != nullptr)
@@ -1327,137 +527,9 @@ namespace golang::os
         return err;
     }
 
-    struct gocpp_id_42
-                {
-
-                    using isGoStruct = void;
-
-                    template<typename T> requires gocpp::GoStruct<T>
-                    operator T()
-                    {
-                        T result;
-                        return result;
-                    }
-
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool operator==(const T& ref) const
-                    {
-                        return true;
-                    }
-
-                    std::ostream& PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << '}';
-                        return os;
-                    }
-                };
-
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_42& value)
-                {
-                    return value.PrintTo(os);
-                }
-
-
-    struct gocpp_id_41
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_41& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_43
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_43& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_39
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_39& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
     gocpp::error rootLink(Root* r, gocpp::string oldname, gocpp::string newname)
     {
-        auto [gocpp_id_38, err_tmp] = doInRoot(r, oldname, 0, nullptr, [=](sysfdType oldparent, gocpp::string oldname, bool oldEndsInSlash) mutable -> std::tuple<gocpp_id_39, gocpp::error>
+        auto [gocpp_id_13, err_tmp] = doInRoot(r, oldname, 0, nullptr, [=](sysfdType oldparent, gocpp::string oldname, bool oldEndsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
             auto flags = (unsigned int)(0);
             if(mocklib::GOOS == "windows"_s)
@@ -1465,11 +537,11 @@ namespace golang::os
                 // Windows doesn't pay attention to trailing slashes in the link target.
                 flags |= doInRootNoHandleTerminalSlash;
             }
-            auto [gocpp_id_40, err] = doInRoot(r, newname, flags, nullptr, [=](sysfdType newparent, gocpp::string newname, bool newEndsInSlash) mutable -> std::tuple<gocpp_id_41, gocpp::error>
+            auto [gocpp_id_14, err] = doInRoot(r, newname, flags, nullptr, [=](sysfdType newparent, gocpp::string newname, bool newEndsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
             {
-                return {gocpp_id_42 {}, linkat(oldparent, oldname, newparent, newname)};
+                return {gocpp::empty_struct {}, linkat(oldparent, oldname, newparent, newname)};
             });
-            return {gocpp_id_43 {}, err};
+            return {gocpp::empty_struct {}, err};
         });
         auto& err = err_tmp;
         if(err != nullptr)
@@ -1677,11 +749,11 @@ namespace golang::os
 
                 //Go type switch emulation
                 {
-                    const auto& gocpp_id_44 = gocpp::type_info(err);
+                    const auto& gocpp_id_15 = gocpp::type_info(err);
                     int conditionId = -1;
-                    if(gocpp_id_44 == typeid(untyped nil)) { conditionId = 0; }
-                    else if(gocpp_id_44 == typeid(errSymlink)) { conditionId = 1; }
-                    else if(gocpp_id_44 == typeid(PathError*)) { conditionId = 2; }
+                    if(gocpp_id_15 == typeid(untyped nil)) { conditionId = 0; }
+                    else if(gocpp_id_15 == typeid(errSymlink)) { conditionId = 1; }
+                    else if(gocpp_id_15 == typeid(PathError*)) { conditionId = 2; }
                     switch(conditionId)
                     {
                         case 0:

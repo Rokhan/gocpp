@@ -11,6 +11,7 @@
 #include "golang/path/filepath/path.h"
 #include "gocpp/support.h"
 
+#include "golang/cmp/cmp.h"
 #include "golang/errors/errors.h"
 #include "golang/internal/bytealg/count_native.h"
 #include "golang/internal/filepathlite/path.h"

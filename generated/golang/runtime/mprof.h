@@ -164,6 +164,11 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        gocpp::slice<uintptr_t> Stack(const gocpp::PtrRecv<struct BlockProfileRecord, false>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct BlockProfileRecord& value);
     std::tuple<int, bool> ThreadCreateProfile(gocpp::slice<StackRecord> p);
     std::tuple<int, bool> GoroutineProfile(gocpp::slice<StackRecord> p);

@@ -2161,12 +2161,12 @@ namespace golang::io
     {
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct nopCloser, false>& self, gocpp::slice<unsigned char> p)
         {
-            return rec::Read(self.ptr->Reader, p);
+            return rec::Read(gocpp::recv(self.ptr->Reader), p);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct nopCloser>& self, gocpp::slice<unsigned char> p)
         {
-            return rec::Read(self.obj.Reader, p);
+            return rec::Read(gocpp::recv(self.obj.Reader), p);
         }
     }
 
@@ -2208,12 +2208,12 @@ namespace golang::io
     {
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct nopCloserWriterTo, false>& self, gocpp::slice<unsigned char> p)
         {
-            return rec::Read(self.ptr->Reader, p);
+            return rec::Read(gocpp::recv(self.ptr->Reader), p);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct nopCloserWriterTo>& self, gocpp::slice<unsigned char> p)
         {
-            return rec::Read(self.obj.Reader, p);
+            return rec::Read(gocpp::recv(self.obj.Reader), p);
         }
     }
 

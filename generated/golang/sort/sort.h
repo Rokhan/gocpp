@@ -155,10 +155,8 @@ namespace golang::sort
     {
         int Len(const gocpp::PtrRecv<struct reverse, false>& self);
         int Len(const gocpp::ObjRecv<struct reverse>& self);
-
         bool Less(const gocpp::PtrRecv<struct reverse, false>& self, int i, int j);
         bool Less(const gocpp::ObjRecv<struct reverse>& self, int i, int j);
-
         void Swap(const gocpp::PtrRecv<struct reverse, false>& self, int i, int j);
         void Swap(const gocpp::ObjRecv<struct reverse>& self, int i, int j);
     }

@@ -981,33 +981,6 @@ namespace golang::encoding::json::jsontext
         *nss = (*nss).make_slice(0, len(*nss) - 1);
     }
 
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
-    {
-        T result;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
-    {
-        return true;
-    }
-
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
     // objectNamespace is the namespace for a JSON object.
     // In contrast to objectNameStack, this needs to remember all names
     // per JSON object.
@@ -1108,102 +1081,6 @@ namespace golang::encoding::json::jsontext
         return rec::insert(gocpp::recv(ns), name, false);
     }
 
-    struct gocpp_id_1
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_2
-                {
-
-                    using isGoStruct = void;
-
-                    template<typename T> requires gocpp::GoStruct<T>
-                    operator T()
-                    {
-                        T result;
-                        return result;
-                    }
-
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool operator==(const T& ref) const
-                    {
-                        return true;
-                    }
-
-                    std::ostream& PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << '}';
-                        return os;
-                    }
-                };
-
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
-                {
-                    return value.PrintTo(os);
-                }
-
-
-    struct gocpp_id_4
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
     bool rec::insert(objectNamespace* ns, gocpp::slice<unsigned char> name, bool quoted)
     {
         gocpp::slice<unsigned char> allNames = {};
@@ -1221,13 +1098,13 @@ namespace golang::encoding::json::jsontext
         // This does not add the current name to the map.
         if(ns->mapNames == nullptr && (rec::length(gocpp::recv(ns)) > 64 || len(ns->allUnquotedNames) > 1024))
         {
-            ns->mapNames = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp_id_1>>());
+            ns->mapNames = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::empty_struct>>());
             unsigned int startOffset = {};
             for(auto [gocpp_ignored, endOffset] : ns->endOffsets)
             {
                 auto name = ns->allUnquotedNames.make_slice(startOffset, endOffset);
                 // allocates a new string
-                ns->mapNames[gocpp::string(name)] = gocpp_id_2 {};
+                ns->mapNames[gocpp::string(name)] = gocpp::empty_struct {};
                 startOffset = endOffset;
             }
         }
@@ -1250,12 +1127,12 @@ namespace golang::encoding::json::jsontext
         {
             // Use the map if it is populated.
             // It provides O(1) lookup, but requires a string allocation per name.
-            if(auto [gocpp_id_3, ok] = ns->mapNames[gocpp::string(name)]; ok)
+            if(auto [gocpp_id_0, ok] = ns->mapNames[gocpp::string(name)]; ok)
             {
                 return false;
             }
             // allocates a new string
-            ns->mapNames[gocpp::string(name)] = gocpp_id_4 {};
+            ns->mapNames[gocpp::string(name)] = gocpp::empty_struct {};
         }
 
         ns->allUnquotedNames = allNames;

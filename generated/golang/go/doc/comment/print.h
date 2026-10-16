@@ -9,26 +9,6 @@
 #include "golang/go/doc/comment/print.fwd.h"
 #include "gocpp/support.h"
 
-
-namespace golang::go::doc::comment
-{
-    struct commentPrinter
-    {
-        Printer* Printer{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct commentPrinter& value);
-}
 #include "golang/go/doc/comment/parse.h"
 
 namespace golang::go::doc::comment
@@ -80,6 +60,40 @@ namespace golang::go::doc::comment
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Printer& value);
+    struct commentPrinter
+    {
+        Printer* Printer{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    namespace rec
+    {
+        gocpp::slice<unsigned char> Comment(const gocpp::PtrRecv<struct commentPrinter, false>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> Comment(const gocpp::ObjRecv<struct commentPrinter>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> HTML(const gocpp::PtrRecv<struct commentPrinter, false>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> HTML(const gocpp::ObjRecv<struct commentPrinter>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> Markdown(const gocpp::PtrRecv<struct commentPrinter, false>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> Markdown(const gocpp::ObjRecv<struct commentPrinter>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> Text(const gocpp::PtrRecv<struct commentPrinter, false>& self, comment::Doc* d);
+        gocpp::slice<unsigned char> Text(const gocpp::ObjRecv<struct commentPrinter>& self, comment::Doc* d);
+        gocpp::string docLinkURL(const gocpp::PtrRecv<struct commentPrinter, false>& self, comment::DocLink* link);
+        gocpp::string docLinkURL(const gocpp::ObjRecv<struct commentPrinter>& self, comment::DocLink* link);
+        gocpp::string headingID(const gocpp::PtrRecv<struct commentPrinter, false>& self, comment::Heading* h);
+        gocpp::string headingID(const gocpp::ObjRecv<struct commentPrinter>& self, comment::Heading* h);
+        int headingLevel(const gocpp::PtrRecv<struct commentPrinter, false>& self);
+        int headingLevel(const gocpp::ObjRecv<struct commentPrinter>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct commentPrinter& value);
     bool blankBefore(Block x);
 }
 

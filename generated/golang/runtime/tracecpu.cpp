@@ -64,70 +64,6 @@ namespace golang::runtime
         rec::Store<profBuf>(gocpp::recv(runtime::trace.cpuLogWrite[1]), runtime::trace.cpuLogRead[1]);
     }
 
-    struct gocpp_id_0
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
-    struct gocpp_id_1
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
     // traceStartReadCPU creates a goroutine to start reading CPU profile
     // data into an active trace.
     //
@@ -140,7 +76,7 @@ namespace golang::runtime
         }
         // Spin up the logger goroutine.
         runtime::trace.cpuSleep = newWakeableSleep();
-        auto done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_0>>(), 1);
+        auto done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp::empty_struct>>(), 1);
         gocpp::go([&]{ [=]() mutable -> void
         {
             for(; traceEnabled(); )
@@ -168,7 +104,7 @@ namespace golang::runtime
                     break;
                 }
             }
-            done.send(gocpp_id_1 {});
+            done.send(gocpp::empty_struct {});
         }(); });
         runtime::trace.cpuLogDone = done;
     }

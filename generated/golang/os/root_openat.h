@@ -32,13 +32,17 @@ namespace golang::os
 }
 #include "golang/sync/mutex.fwd.h"
 #include "golang/time/time.fwd.h"
-#include "golang/sync/mutex.h"
-#include "golang/time/time.h"
 
 namespace golang::os
 {
     namespace sync = golang::sync;
     namespace time = golang::time;
+}
+#include "golang/sync/mutex.h"
+#include "golang/time/time.h"
+
+namespace golang::os
+{
     struct root
     {
         gocpp::string name{};

@@ -285,7 +285,7 @@ namespace golang::main
     }
 
     template<typename T, typename TStore, typename TInterface>
-    gocpp::channel<gocpp_id_0> Context::ContextImpl<T, TStore, TInterface>::vDone()
+    gocpp::channel<gocpp::empty_struct> Context::ContextImpl<T, TStore, TInterface>::vDone()
     {
         return rec::Done(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -298,12 +298,12 @@ namespace golang::main
 
     namespace rec
     {
-        gocpp::channel<gocpp_id_0> Done(const gocpp::PtrRecv<struct Context, false>& self)
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct Context, false>& self)
         {
             return self.ptr->value()->vDone();
         }
 
-        gocpp::channel<gocpp_id_0> Done(const gocpp::ObjRecv<struct Context>& self)
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::ObjRecv<struct Context>& self)
         {
             return self.obj.value()->vDone();
         }

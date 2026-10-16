@@ -348,70 +348,6 @@ namespace golang::os
         return {fi, nullptr};
     }
 
-    struct gocpp_id_2
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_1
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
     gocpp::error rootSymlink(Root* r, gocpp::string oldname, gocpp::string newname)
     {
         if(oldname == ""_s)
@@ -461,9 +397,9 @@ namespace golang::os
             flags |= windows::SYMLINKAT_RELATIVE;
         }
 
-        auto [gocpp_id_0, err] = doInRoot(r, newname, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp_id_1, gocpp::error>
+        auto [gocpp_id_0, err] = doInRoot(r, newname, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
-            return {gocpp_id_2 {}, windows::Symlinkat(oldname, parent, name, flags)};
+            return {gocpp::empty_struct {}, windows::Symlinkat(oldname, parent, name, flags)};
         });
         if(err != nullptr)
         {

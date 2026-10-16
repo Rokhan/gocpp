@@ -43,6 +43,119 @@ namespace golang::encoding::binary
         return os;
     }
 
+    namespace rec
+    {
+        gocpp::slice<unsigned char> AppendUint16(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint16_t v)
+        {
+            return rec::AppendUint16(gocpp::recv(self.ptr->littleEndian), b, v);
+        }
+
+        gocpp::slice<unsigned char> AppendUint16(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b, uint16_t v)
+        {
+            return rec::AppendUint16(gocpp::recv(self.obj.littleEndian), b, v);
+        }
+
+        gocpp::slice<unsigned char> AppendUint32(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint32_t v)
+        {
+            return rec::AppendUint32(gocpp::recv(self.ptr->littleEndian), b, v);
+        }
+
+        gocpp::slice<unsigned char> AppendUint32(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b, uint32_t v)
+        {
+            return rec::AppendUint32(gocpp::recv(self.obj.littleEndian), b, v);
+        }
+
+        gocpp::slice<unsigned char> AppendUint64(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint64_t v)
+        {
+            return rec::AppendUint64(gocpp::recv(self.ptr->littleEndian), b, v);
+        }
+
+        gocpp::slice<unsigned char> AppendUint64(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b, uint64_t v)
+        {
+            return rec::AppendUint64(gocpp::recv(self.obj.littleEndian), b, v);
+        }
+
+        gocpp::string GoString(const gocpp::PtrRecv<struct nativeEndian, false>& self)
+        {
+            return rec::GoString(gocpp::recv(self.ptr->littleEndian));
+        }
+
+        gocpp::string GoString(const gocpp::ObjRecv<struct nativeEndian>& self)
+        {
+            return rec::GoString(gocpp::recv(self.obj.littleEndian));
+        }
+
+        void PutUint16(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint16_t v)
+        {
+            return rec::PutUint16(gocpp::recv(self.ptr->littleEndian), b, v);
+        }
+
+        void PutUint16(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b, uint16_t v)
+        {
+            return rec::PutUint16(gocpp::recv(self.obj.littleEndian), b, v);
+        }
+
+        void PutUint32(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint32_t v)
+        {
+            return rec::PutUint32(gocpp::recv(self.ptr->littleEndian), b, v);
+        }
+
+        void PutUint32(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b, uint32_t v)
+        {
+            return rec::PutUint32(gocpp::recv(self.obj.littleEndian), b, v);
+        }
+
+        void PutUint64(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint64_t v)
+        {
+            return rec::PutUint64(gocpp::recv(self.ptr->littleEndian), b, v);
+        }
+
+        void PutUint64(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b, uint64_t v)
+        {
+            return rec::PutUint64(gocpp::recv(self.obj.littleEndian), b, v);
+        }
+
+        gocpp::string String(const gocpp::PtrRecv<struct nativeEndian, false>& self)
+        {
+            return rec::String(gocpp::recv(self.ptr->littleEndian));
+        }
+
+        gocpp::string String(const gocpp::ObjRecv<struct nativeEndian>& self)
+        {
+            return rec::String(gocpp::recv(self.obj.littleEndian));
+        }
+
+        uint16_t Uint16(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b)
+        {
+            return rec::Uint16(gocpp::recv(self.ptr->littleEndian), b);
+        }
+
+        uint16_t Uint16(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b)
+        {
+            return rec::Uint16(gocpp::recv(self.obj.littleEndian), b);
+        }
+
+        uint32_t Uint32(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b)
+        {
+            return rec::Uint32(gocpp::recv(self.ptr->littleEndian), b);
+        }
+
+        uint32_t Uint32(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b)
+        {
+            return rec::Uint32(gocpp::recv(self.obj.littleEndian), b);
+        }
+
+        uint64_t Uint64(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b)
+        {
+            return rec::Uint64(gocpp::recv(self.ptr->littleEndian), b);
+        }
+
+        uint64_t Uint64(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b)
+        {
+            return rec::Uint64(gocpp::recv(self.obj.littleEndian), b);
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct nativeEndian& value)
     {
         return value.PrintTo(os);

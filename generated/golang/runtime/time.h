@@ -162,6 +162,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct timers& value);
+}
+#include "golang/runtime/synctest.fwd.h"
+
+namespace golang::runtime
+{
     struct timeTimer
     {
         gocpp::unsafe_pointer c{}; // <-chan time.Time
@@ -178,6 +183,23 @@ namespace golang::runtime
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        runtime::hchan* hchan(const gocpp::PtrRecv<struct timeTimer, false>& self);
+        void lock(const gocpp::PtrRecv<struct timeTimer, false>& self);
+        void maybeAdd(const gocpp::PtrRecv<struct timeTimer, false>& self);
+        void maybeRunChan(const gocpp::PtrRecv<struct timeTimer, false>& self, runtime::hchan* c);
+        bool modify(const gocpp::PtrRecv<struct timeTimer, false>& self, int64_t when, int64_t period, std::function<void (go_any, uintptr_t, int64_t)> f, go_any arg, uintptr_t seq);
+        bool needsAdd(const gocpp::PtrRecv<struct timeTimer, false>& self);
+        bool reset(const gocpp::PtrRecv<struct timeTimer, false>& self, int64_t when, int64_t period);
+        bool stop(const gocpp::PtrRecv<struct timeTimer, false>& self);
+        void trace(const gocpp::PtrRecv<struct timeTimer, false>& self, gocpp::string op);
+        void trace1(const gocpp::PtrRecv<struct timeTimer, false>& self, gocpp::string op);
+        void unlock(const gocpp::PtrRecv<struct timeTimer, false>& self);
+        void unlockAndRun(const gocpp::PtrRecv<struct timeTimer, false>& self, int64_t now, synctestBubble* bubble);
+        bool updateHeap(const gocpp::PtrRecv<struct timeTimer, false>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct timeTimer& value);
     timeTimer* newTimer(int64_t when, int64_t period, std::function<void (go_any arg, uintptr_t seq, int64_t delay)> f, go_any arg, golang::runtime::hchan* c);

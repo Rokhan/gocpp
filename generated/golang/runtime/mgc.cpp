@@ -625,6 +625,19 @@ namespace golang::runtime
         return os;
     }
 
+    namespace rec
+    {
+        void accumulate(const gocpp::PtrRecv<struct workType, false>& self, int64_t now, bool gcMarkPhase)
+        {
+            return rec::accumulate(gocpp::recv(self.ptr->cpuStats), now, gcMarkPhase);
+        }
+
+        void accumulateGCPauseTime(const gocpp::PtrRecv<struct workType, false>& self, int64_t dt, int32_t maxProcs)
+        {
+            return rec::accumulateGCPauseTime(gocpp::recv(self.ptr->cpuStats), dt, maxProcs);
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct workType& value)
     {
         return value.PrintTo(os);
@@ -1958,38 +1971,6 @@ namespace golang::runtime
         }
     }
 
-    struct gocpp_id_8
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
     // gcBgMarkStartWorkers prepares background mark worker goroutines. These
     // goroutines will not run until the mark phase, but they must be started while
     // the work is not stopped and from a regular G stack. The caller must hold
@@ -2012,7 +1993,7 @@ namespace golang::runtime
         // TODO(prattmic): cleanup gcStart to use a more explicit "in gcStart"
         // check for bailing.
         auto mp = acquirem();
-        auto ready = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_8>>(), 1);
+        auto ready = gocpp::make(gocpp::Tag<gocpp::channel<gocpp::empty_struct>>(), 1);
         releasem(mp);
 
         for(; gcBgMarkWorkerCount < gomaxprocs; )
@@ -2125,65 +2106,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_10
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_10& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_9::operator T()
-    {
-        T result;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_9::operator==(const T& ref) const
-    {
-        return true;
-    }
-
-    std::ostream& gocpp_id_9::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value)
-    {
-        return value.PrintTo(os);
-    }
-
-    void gcBgMarkWorker(gocpp::channel<gocpp_id_9> ready)
+    void gcBgMarkWorker(gocpp::channel<gocpp::empty_struct> ready)
     {
         auto gp = getg();
 
@@ -2217,7 +2140,7 @@ namespace golang::runtime
         // this G will be in the worker pool for the next findRunnableGCWorker.
         // This isn't strictly necessary, but it reduces latency between
         // _GCmark starting and the workers starting.
-        ready.send(gocpp_id_10 {});
+        ready.send(gocpp::empty_struct {});
 
 
 
@@ -2841,7 +2764,7 @@ namespace golang::runtime
         {
             return "stack"_s;
         }
-        if(auto [base, gocpp_id_11, gocpp_id_12] = findObject(p2, 0, 0); base != 0)
+        if(auto [base, gocpp_id_8, gocpp_id_9] = findObject(p2, 0, 0); base != 0)
         {
             return "heap"_s;
         }

@@ -9,32 +9,13 @@
 #include "golang/encoding/json/jsontext/encode.fwd.h"
 #include "gocpp/support.h"
 
-
-namespace golang::encoding::json::jsontext
-{
-    struct gocpp_id_0
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-}
 #include "golang/io/io.fwd.h"
+#include "golang/encoding/json/jsontext/pools.h"
 
 namespace golang::encoding::json::jsontext
 {
     namespace io = golang::io;
 }
-#include "golang/encoding/json/jsontext/pools.h"
 #include "golang/io/io.h"
 
 namespace golang::encoding::json::jsontext
@@ -72,6 +53,7 @@ namespace golang::encoding::json::jsontext
 namespace golang::encoding::json::jsontext
 {
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
+    namespace internal = golang::encoding::json::internal;
 }
 #include "golang/encoding/json/internal/jsonopts/options.h"
 #include "golang/encoding/json/jsontext/state.h"
@@ -83,7 +65,7 @@ namespace golang::encoding::json::jsontext
         state state{};
         encodeBuffer encodeBuffer{};
         jsonopts::Struct Struct{};
-        gocpp::map<go_any, gocpp_id_0> SeenPointers{}; // only used when marshaling; identical to json.seenPointers
+        gocpp::map<go_any, gocpp::empty_struct> SeenPointers{}; // only used when marshaling; identical to json.seenPointers
 
         using isGoStruct = void;
 
@@ -95,6 +77,20 @@ namespace golang::encoding::json::jsontext
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        void InitializeMultiline(const gocpp::PtrRecv<struct encoderState, false>& self);
+        void JSONOptions(const gocpp::PtrRecv<struct encoderState, false>& self, internal::NotForPublicUse arg0);
+        void Join(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<jsonopts::Options> srcs);
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<unsigned char> b, int where);
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct encoderState>& self, gocpp::slice<unsigned char> b, int where);
+        bool needObjectValue(const gocpp::PtrRecv<struct encoderState, false>& self);
+        int64_t offsetAt(const gocpp::PtrRecv<struct encoderState, false>& self, int pos);
+        int64_t previousOffsetEnd(const gocpp::PtrRecv<struct encoderState, false>& self);
+        void reset(const gocpp::PtrRecv<struct encoderState, false>& self);
+        gocpp::slice<unsigned char> unflushedBuffer(const gocpp::PtrRecv<struct encoderState, false>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct encoderState& value);
     struct Encoder

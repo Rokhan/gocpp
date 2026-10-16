@@ -87,60 +87,6 @@ namespace golang::golang_org::x::tools::internal::gocommand
         using time::rec::Stop;
     }
 
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
-    {
-        T result;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
-    {
-        return true;
-    }
-
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_1::operator T()
-    {
-        T result;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_1::operator==(const T& ref) const
-    {
-        return true;
-    }
-
-    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
     // A Runner will run go command invocations and serialize
     // them if it sees a concurrency error.
     
@@ -178,76 +124,12 @@ namespace golang::golang_org::x::tools::internal::gocommand
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_2
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_3
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
     void rec::initialize(Runner* runner)
     {
         rec::Do(gocpp::recv(runner->once), [=]() mutable -> void
         {
-            runner->inFlight = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_2>>(), maxInFlight);
-            runner->serialized = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_3>>(), 1);
+            runner->inFlight = gocpp::make(gocpp::Tag<gocpp::channel<gocpp::empty_struct>>(), maxInFlight);
+            runner->serialized = gocpp::make(gocpp::Tag<gocpp::channel<gocpp::empty_struct>>(), 1);
         });
     }
 
@@ -273,7 +155,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
             auto& ctx = ctx_tmp;
             defer.push_back([=]{ done(); });
 
-            auto [go_stdout, gocpp_id_4, friendly, gocpp_id_5] = rec::RunRaw(gocpp::recv(runner), ctx, inv);
+            auto [go_stdout, gocpp_id_0, friendly, gocpp_id_1] = rec::RunRaw(gocpp::recv(runner), ctx, inv);
             return {go_stdout, friendly};
         }
         catch(gocpp::GoPanic& gp)
@@ -293,7 +175,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
             auto& ctx = ctx_tmp;
             defer.push_back([=]{ done(); });
 
-            auto [gocpp_id_6, err] = rec::runPiped(gocpp::recv(runner), ctx, inv, go_stdout, go_stderr);
+            auto [gocpp_id_2, err] = rec::runPiped(gocpp::recv(runner), ctx, inv, go_stdout, go_stderr);
             return err;
         }
         catch(gocpp::GoPanic& gp)
@@ -338,38 +220,6 @@ namespace golang::golang_org::x::tools::internal::gocommand
         }
     }
 
-    struct gocpp_id_7
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
     // Postcondition: both error results have same nilness.
     std::tuple<bytes::Buffer*, bytes::Buffer*, gocpp::error, gocpp::error> rec::runConcurrent(Runner* runner, context::Context ctx, Invocation inv)
     {
@@ -381,7 +231,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
             {
                 int conditionId = -1;
                 if(auto [gocpp_ignored , ok] = rec::Done(gocpp::recv(ctx)).tryRecv(); ok) { conditionId = 0; }
-                else if(runner->inFlight.trySend(gocpp_id_7 {})) { conditionId = 1; }
+                else if(runner->inFlight.trySend(gocpp::empty_struct {})) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
@@ -407,70 +257,6 @@ namespace golang::golang_org::x::tools::internal::gocommand
         }
     }
 
-    struct gocpp_id_8
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
-    struct gocpp_id_9
-                {
-
-                    using isGoStruct = void;
-
-                    template<typename T> requires gocpp::GoStruct<T>
-                    operator T()
-                    {
-                        T result;
-                        return result;
-                    }
-
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool operator==(const T& ref) const
-                    {
-                        return true;
-                    }
-
-                    std::ostream& PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << '}';
-                        return os;
-                    }
-                };
-
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value)
-                {
-                    return value.PrintTo(os);
-                }
-
-
     // Postcondition: both error results have same nilness.
     std::tuple<gocpp::error, gocpp::error> rec::runPiped(Runner* runner, context::Context ctx, Invocation inv, io::Writer go_stdout, io::Writer go_stderr)
     {
@@ -486,7 +272,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
             {
                 int conditionId = -1;
                 if(auto [gocpp_ignored , ok] = rec::Done(gocpp::recv(ctx)).tryRecv(); ok) { conditionId = 0; }
-                else if(runner->serialized.trySend(gocpp_id_8 {})) { conditionId = 1; }
+                else if(runner->serialized.trySend(gocpp::empty_struct {})) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
@@ -510,7 +296,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
                 {
                     int conditionId = -1;
                     if(auto [gocpp_ignored , ok] = rec::Done(gocpp::recv(ctx)).tryRecv(); ok) { conditionId = 0; }
-                    else if(runner->inFlight.trySend(gocpp_id_9 {})) { conditionId = 1; }
+                    else if(runner->inFlight.trySend(gocpp::empty_struct {})) { conditionId = 1; }
                     switch(conditionId)
                     {
                         case 0:
@@ -763,7 +549,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
             os::File* stdoutW = {};
             if(cmd->Stdout != nullptr)
             {
-                if(auto [gocpp_id_10, ok] = gocpp::getValue<os::File*>(cmd->Stdout); ! ok)
+                if(auto [gocpp_id_3, ok] = gocpp::getValue<os::File*>(cmd->Stdout); ! ok)
                 {
                     os::File* stdoutR = {};
                     std::tie(stdoutR, stdoutW, err) = os::Pipe();
@@ -777,7 +563,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
                     auto stdoutErr = gocpp::make(gocpp::Tag<gocpp::channel<gocpp::error>>(), 1);
                     gocpp::go([&]{ [=]() mutable -> void
                     {
-                        auto [gocpp_id_11, err] = io::Copy(prevStdout, stdoutR);
+                        auto [gocpp_id_4, err] = io::Copy(prevStdout, stdoutR);
                         if(err != nullptr)
                         {
                             err = mocklib::Errorf("copying stdout: %w"_s, err);
@@ -1013,7 +799,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
                             {
                                 case 0:
                                     auto go_stderr = "not a bytes.Buffer"_s;
-                                    if(auto [buf, gocpp_id_12] = gocpp::getValue<bytes::Buffer*>(cmd->Stderr); buf != nullptr)
+                                    if(auto [buf, gocpp_id_5] = gocpp::getValue<bytes::Buffer*>(cmd->Stderr); buf != nullptr)
                                     {
                                         go_stderr = rec::String(gocpp::recv(buf));
                                     }

@@ -63,6 +63,24 @@ namespace golang::os
         return os;
     }
 
+    namespace rec
+    {
+        void Lock(const gocpp::PtrRecv<struct getwdCacheStruct, false>& self)
+        {
+            return mocklib::rec::Lock(gocpp::recv(self.ptr->Mutex));
+        }
+
+        bool TryLock(const gocpp::PtrRecv<struct getwdCacheStruct, false>& self)
+        {
+            return sync::rec::TryLock(gocpp::recv(self.ptr->Mutex));
+        }
+
+        void Unlock(const gocpp::PtrRecv<struct getwdCacheStruct, false>& self)
+        {
+            return mocklib::rec::Unlock(gocpp::recv(self.ptr->Mutex));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct getwdCacheStruct& value)
     {
         return value.PrintTo(os);

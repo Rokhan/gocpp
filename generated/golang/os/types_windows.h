@@ -64,6 +64,13 @@ namespace golang::os
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        void Lock(const gocpp::PtrRecv<struct fileStat, false>& self);
+        bool TryLock(const gocpp::PtrRecv<struct fileStat, false>& self);
+        void Unlock(const gocpp::PtrRecv<struct fileStat, false>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct fileStat& value);
     extern godebug::Setting* winsymlink;
     mocklib::Date atime(FileInfo fi);

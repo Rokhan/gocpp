@@ -12,15 +12,6 @@
 
 namespace golang::os
 {
-    // Stdin, Stdout, and Stderr are open Files pointing to the standard input,
-    // standard output, and standard error file descriptors.
-    //
-    // Note that the Go runtime writes to standard error for panics and crashes;
-    // closing Stderr may cause those messages to go elsewhere, perhaps
-    // to a file opened later.
-    extern File* Stdin;
-    extern File* Stdout;
-    extern File* Stderr;
     struct LinkError
     {
         gocpp::string Op{};
@@ -91,7 +82,64 @@ namespace golang::os
 
 namespace golang::os
 {
+    // Stdin, Stdout, and Stderr are open Files pointing to the standard input,
+    // standard output, and standard error file descriptors.
+    //
+    // Note that the Go runtime writes to standard error for panics and crashes;
+    // closing Stderr may cause those messages to go elsewhere, perhaps
+    // to a file opened later.
+    extern File* Stdin;
+    extern File* Stdout;
+    extern File* Stderr;
     File* NewFile(uintptr_t fd, gocpp::string name);
+    gocpp::error Mkdir(gocpp::string name, FileMode perm);
+    std::tuple<File*, gocpp::error> Open(gocpp::string name);
+    std::tuple<File*, gocpp::error> Create(gocpp::string name);
+    std::tuple<File*, gocpp::error> OpenFile(gocpp::string name, int flag, FileMode perm);
+    std::tuple<File*, gocpp::error> openDir(gocpp::string name);
+    gocpp::error Chmod(gocpp::string name, FileMode mode);
+    int64_t statOrZero(File* f);
+    gocpp::error WriteFile(gocpp::string name, gocpp::slice<unsigned char> data, FileMode perm);
+}
+#include "golang/io/fs/fs.fwd.h"
+#include "golang/io/fs/readdir.fwd.h"
+#include "golang/io/fs/readfile.fwd.h"
+#include "golang/io/fs/readlink.fwd.h"
+#include "golang/io/fs/stat.fwd.h"
+#include "golang/io/io.fwd.h"
+#include "golang/syscall/net.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/time/time.fwd.h"
+
+namespace golang::os
+{
+    namespace syscall = golang::syscall;
+}
+#include "golang/io/fs/fs.h"
+#include "golang/io/fs/readdir.h"
+#include "golang/io/fs/readfile.h"
+#include "golang/io/fs/readlink.h"
+#include "golang/io/fs/stat.h"
+
+namespace golang::os
+{
+    namespace io = golang::io;
+}
+#include "golang/io/io.h"
+#include "golang/os/dir.h"
+
+namespace golang::os
+{
+    namespace time = golang::time;
+}
+#include "golang/syscall/net.h"
+#include "golang/time/time.h"
+
+namespace golang::os
+{
+    namespace fs = golang::io::fs;
     struct fileWithoutReadFrom
     {
         noReadFrom noReadFrom{};
@@ -108,7 +156,90 @@ namespace golang::os
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        gocpp::error Chdir(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self);
+        gocpp::error Chdir(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self);
+        gocpp::error Chmod(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, FileMode mode);
+        gocpp::error Chmod(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, FileMode mode);
+        gocpp::error Chown(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, int uid, int gid);
+        gocpp::error Chown(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, int uid, int gid);
+        gocpp::error Close(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self);
+        gocpp::error Close(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self);
+        uintptr_t Fd(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self);
+        uintptr_t Fd(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self);
+        gocpp::string Name(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self);
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> ReadAt(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> ReadAt(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, int n);
+        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, int n);
+        std::tuple<gocpp::slice<FileInfo>, gocpp::error> Readdir(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, int n);
+        std::tuple<gocpp::slice<FileInfo>, gocpp::error> Readdir(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, int n);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::error> Readdirnames(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, int n);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::error> Readdirnames(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, int n);
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, int64_t offset, int whence);
+        gocpp::error SetDeadline(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, time::Time t);
+        gocpp::error SetDeadline(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, time::Time t);
+        gocpp::error SetReadDeadline(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, time::Time t);
+        gocpp::error SetReadDeadline(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, time::Time t);
+        gocpp::error SetWriteDeadline(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, time::Time t);
+        gocpp::error SetWriteDeadline(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, time::Time t);
+        std::tuple<FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self);
+        std::tuple<FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self);
+        gocpp::error Sync(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self);
+        gocpp::error Sync(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self);
+        std::tuple<syscall::RawConn, gocpp::error> SyscallConn(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self);
+        std::tuple<syscall::RawConn, gocpp::error> SyscallConn(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self);
+        gocpp::error Truncate(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, int64_t size);
+        gocpp::error Truncate(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, int64_t size);
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> WriteAt(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> WriteAt(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> WriteString(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, gocpp::string s);
+        std::tuple<int, gocpp::error> WriteString(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, io::Writer w);
+        std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, io::Writer w);
+        gocpp::error checkValid(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, gocpp::string op);
+        gocpp::error checkValid(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, gocpp::string op);
+        gocpp::error chmod(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, FileMode mode);
+        gocpp::error chmod(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, FileMode mode);
+        gocpp::error close(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self);
+        gocpp::error close(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self);
+        uintptr_t fd(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self);
+        uintptr_t fd(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self);
+        std::tuple<int, gocpp::error> pread(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> pread(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> pwrite(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> pwrite(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> read(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> read(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, bool, gocpp::error> readFrom(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, io::Reader r);
+        std::tuple<int64_t, bool, gocpp::error> readFrom(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, io::Reader r);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, gocpp::error> readdir(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, int n, readdirMode mode);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, gocpp::error> readdir(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, int n, readdirMode mode);
+        std::tuple<int64_t, gocpp::error> seek(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> seek(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, int64_t offset, int whence);
+        gocpp::error setDeadline(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, time::Time t);
+        gocpp::error setDeadline(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, time::Time t);
+        gocpp::error setReadDeadline(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, time::Time t);
+        gocpp::error setReadDeadline(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, time::Time t);
+        gocpp::error setWriteDeadline(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, time::Time t);
+        gocpp::error setWriteDeadline(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, time::Time t);
+        gocpp::error wrapErr(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, gocpp::string op, gocpp::error err);
+        gocpp::error wrapErr(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, gocpp::string op, gocpp::error err);
+        std::tuple<int, gocpp::error> write(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> write(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, bool, gocpp::error> writeTo(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, io::Writer w);
+        std::tuple<int64_t, bool, gocpp::error> writeTo(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, io::Writer w);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct fileWithoutReadFrom& value);
+    std::tuple<int64_t, gocpp::error> genericReadFrom(File* f, io::Reader r);
     struct fileWithoutWriteTo
     {
         noWriteTo noWriteTo{};
@@ -125,34 +256,89 @@ namespace golang::os
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct fileWithoutWriteTo& value);
-    gocpp::error Mkdir(gocpp::string name, FileMode perm);
-    std::tuple<File*, gocpp::error> Open(gocpp::string name);
-    std::tuple<File*, gocpp::error> Create(gocpp::string name);
-    std::tuple<File*, gocpp::error> OpenFile(gocpp::string name, int flag, FileMode perm);
-    std::tuple<File*, gocpp::error> openDir(gocpp::string name);
-    gocpp::error Chmod(gocpp::string name, FileMode mode);
-    int64_t statOrZero(File* f);
-    gocpp::error WriteFile(gocpp::string name, gocpp::slice<unsigned char> data, FileMode perm);
-}
-#include "golang/io/fs/fs.fwd.h"
-#include "golang/io/fs/readdir.fwd.h"
-#include "golang/io/fs/readfile.fwd.h"
-#include "golang/io/fs/readlink.fwd.h"
-#include "golang/io/fs/stat.fwd.h"
-#include "golang/io/io.fwd.h"
-#include "golang/io/fs/fs.h"
-#include "golang/io/fs/readdir.h"
-#include "golang/io/fs/readfile.h"
-#include "golang/io/fs/readlink.h"
-#include "golang/io/fs/stat.h"
-#include "golang/io/io.h"
+    namespace rec
+    {
+        gocpp::error Chdir(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self);
+        gocpp::error Chdir(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self);
+        gocpp::error Chmod(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, FileMode mode);
+        gocpp::error Chmod(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, FileMode mode);
+        gocpp::error Chown(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, int uid, int gid);
+        gocpp::error Chown(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, int uid, int gid);
+        gocpp::error Close(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self);
+        gocpp::error Close(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self);
+        uintptr_t Fd(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self);
+        uintptr_t Fd(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self);
+        gocpp::string Name(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self);
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> ReadAt(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> ReadAt(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, int n);
+        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, int n);
+        std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, io::Reader r);
+        std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, io::Reader r);
+        std::tuple<gocpp::slice<FileInfo>, gocpp::error> Readdir(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, int n);
+        std::tuple<gocpp::slice<FileInfo>, gocpp::error> Readdir(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, int n);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::error> Readdirnames(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, int n);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::error> Readdirnames(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, int n);
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, int64_t offset, int whence);
+        gocpp::error SetDeadline(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, time::Time t);
+        gocpp::error SetDeadline(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, time::Time t);
+        gocpp::error SetReadDeadline(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, time::Time t);
+        gocpp::error SetReadDeadline(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, time::Time t);
+        gocpp::error SetWriteDeadline(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, time::Time t);
+        gocpp::error SetWriteDeadline(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, time::Time t);
+        std::tuple<FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self);
+        std::tuple<FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self);
+        gocpp::error Sync(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self);
+        gocpp::error Sync(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self);
+        std::tuple<syscall::RawConn, gocpp::error> SyscallConn(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self);
+        std::tuple<syscall::RawConn, gocpp::error> SyscallConn(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self);
+        gocpp::error Truncate(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, int64_t size);
+        gocpp::error Truncate(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, int64_t size);
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> WriteAt(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> WriteAt(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> WriteString(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, gocpp::string s);
+        std::tuple<int, gocpp::error> WriteString(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, gocpp::string s);
+        gocpp::error checkValid(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, gocpp::string op);
+        gocpp::error checkValid(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, gocpp::string op);
+        gocpp::error chmod(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, FileMode mode);
+        gocpp::error chmod(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, FileMode mode);
+        gocpp::error close(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self);
+        gocpp::error close(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self);
+        uintptr_t fd(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self);
+        uintptr_t fd(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self);
+        std::tuple<int, gocpp::error> pread(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> pread(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> pwrite(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> pwrite(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> read(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> read(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, bool, gocpp::error> readFrom(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, io::Reader r);
+        std::tuple<int64_t, bool, gocpp::error> readFrom(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, io::Reader r);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, gocpp::error> readdir(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, int n, readdirMode mode);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, gocpp::error> readdir(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, int n, readdirMode mode);
+        std::tuple<int64_t, gocpp::error> seek(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> seek(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, int64_t offset, int whence);
+        gocpp::error setDeadline(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, time::Time t);
+        gocpp::error setDeadline(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, time::Time t);
+        gocpp::error setReadDeadline(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, time::Time t);
+        gocpp::error setReadDeadline(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, time::Time t);
+        gocpp::error setWriteDeadline(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, time::Time t);
+        gocpp::error setWriteDeadline(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, time::Time t);
+        gocpp::error wrapErr(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, gocpp::string op, gocpp::error err);
+        gocpp::error wrapErr(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, gocpp::string op, gocpp::error err);
+        std::tuple<int, gocpp::error> write(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> write(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, bool, gocpp::error> writeTo(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, io::Writer w);
+        std::tuple<int64_t, bool, gocpp::error> writeTo(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, io::Writer w);
+    }
 
-namespace golang::os
-{
-    namespace io = golang::io;
-    namespace fs = golang::io::fs;
-    std::tuple<int64_t, gocpp::error> genericReadFrom(File* f, io::Reader r);
+    std::ostream& operator<<(std::ostream& os, const struct fileWithoutWriteTo& value);
     std::tuple<int64_t, gocpp::error> genericWriteTo(File* f, io::Writer w);
     fs::FS DirFS(gocpp::string dir);
     extern fs::StatFS _;
@@ -170,8 +356,6 @@ namespace golang::os
 
 namespace golang::os
 {
-    namespace syscall = golang::syscall;
-    namespace time = golang::time;
 
     namespace rec
     {

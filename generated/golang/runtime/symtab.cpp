@@ -443,33 +443,6 @@ namespace golang::runtime
         return frames;
     }
 
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
-    {
-        T result;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
-    {
-        return true;
-    }
-
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
     // A Func represents a Go function in the running binary.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -1369,6 +1342,29 @@ namespace golang::runtime
         return os;
     }
 
+    namespace rec
+    {
+        runtime::funcInfo funcInfo(const gocpp::PtrRecv<struct funcInfo, false>& self)
+        {
+            return rec::funcInfo(gocpp::recv(self.ptr->_func));
+        }
+
+        runtime::funcInfo funcInfo(const gocpp::ObjRecv<struct funcInfo>& self)
+        {
+            return rec::funcInfo(gocpp::recv(self.obj._func));
+        }
+
+        bool isInlined(const gocpp::PtrRecv<struct funcInfo, false>& self)
+        {
+            return rec::isInlined(gocpp::recv(self.ptr->_func));
+        }
+
+        bool isInlined(const gocpp::ObjRecv<struct funcInfo>& self)
+        {
+            return rec::isInlined(gocpp::recv(self.obj._func));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct funcInfo& value)
     {
         return value.PrintTo(os);
@@ -1835,7 +1831,7 @@ namespace golang::runtime
         {
             return {"?"_s, 0};
         }
-        auto [fileno, gocpp_id_1] = pcvalue(f, f._func.pcfile, targetpc, strict);
+        auto [fileno, gocpp_id_0] = pcvalue(f, f._func.pcfile, targetpc, strict);
         std::tie(line, std::ignore) = pcvalue(f, f._func.pcln, targetpc, strict);
         if(fileno == - 1 || line == - 1 || int(fileno) >= len(datap->filetab))
         {
@@ -1855,7 +1851,7 @@ namespace golang::runtime
 
     int32_t funcspdelta(golang::runtime::funcInfo f, uintptr_t targetpc)
     {
-        auto [x, gocpp_id_2] = pcvalue(f, f._func.pcsp, targetpc, true);
+        auto [x, gocpp_id_1] = pcvalue(f, f._func.pcsp, targetpc, true);
         if(debugPcln && x & (goarch::PtrSize - 1) != 0)
         {
             print("invalid spdelta "_s, funcname(f), " "_s, hex(rec::entry(gocpp::recv(f))), " "_s, hex(targetpc), " "_s, hex(f._func.pcsp), " "_s, x, "\n"_s);
@@ -1895,7 +1891,7 @@ namespace golang::runtime
         {
             return - 1;
         }
-        auto [r, gocpp_id_3] = pcvalue(f, pcdatastart(f, table), targetpc, true);
+        auto [r, gocpp_id_2] = pcvalue(f, pcdatastart(f, table), targetpc, true);
         return r;
     }
 
@@ -1905,7 +1901,7 @@ namespace golang::runtime
         {
             return - 1;
         }
-        auto [r, gocpp_id_4] = pcvalue(f, pcdatastart(f, table), targetpc, strict);
+        auto [r, gocpp_id_3] = pcvalue(f, pcdatastart(f, table), targetpc, strict);
         return r;
     }
 

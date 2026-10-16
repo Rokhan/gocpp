@@ -859,6 +859,39 @@ namespace golang::golang_org::x::tools::go::packages
         return os;
     }
 
+    namespace rec
+    {
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(const gocpp::PtrRecv<struct loaderPackage, false>& self)
+        {
+            return rec::MarshalJSON(gocpp::recv(self.ptr->Package));
+        }
+
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(const gocpp::ObjRecv<struct loaderPackage>& self)
+        {
+            return rec::MarshalJSON(gocpp::recv(self.obj.Package));
+        }
+
+        gocpp::string String(const gocpp::PtrRecv<struct loaderPackage, false>& self)
+        {
+            return rec::String(gocpp::recv(self.ptr->Package));
+        }
+
+        gocpp::string String(const gocpp::ObjRecv<struct loaderPackage>& self)
+        {
+            return rec::String(gocpp::recv(self.obj.Package));
+        }
+
+        gocpp::error UnmarshalJSON(const gocpp::PtrRecv<struct loaderPackage, false>& self, gocpp::slice<unsigned char> b)
+        {
+            return rec::UnmarshalJSON(gocpp::recv(self.ptr->Package), b);
+        }
+
+        gocpp::error UnmarshalJSON(const gocpp::ObjRecv<struct loaderPackage>& self, gocpp::slice<unsigned char> b)
+        {
+            return rec::UnmarshalJSON(gocpp::recv(self.obj.Package), b);
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct loaderPackage& value)
     {
         return value.PrintTo(os);
@@ -910,37 +943,18 @@ namespace golang::golang_org::x::tools::go::packages
         return os;
     }
 
+    namespace rec
+    {
+        std::tuple<gocpp::string, gocpp::error> abs(const gocpp::PtrRecv<struct loader, false>& self, gocpp::string path)
+        {
+            return rec::abs(gocpp::recv(self.ptr->Config), path);
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct loader& value)
     {
         return value.PrintTo(os);
     }
-
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
-    {
-        T result;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
-    {
-        return true;
-    }
-
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-    {
-        return value.PrintTo(os);
-    }
-
 
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -1090,7 +1104,7 @@ namespace golang::golang_org::x::tools::go::packages
             });
             // Don't trust the driver to respond with duplicate-free
             // package names (go.dev/issue/63822).
-            if(auto [gocpp_id_1, ok] = ld->pkgs[lpkg->Package.ID]; ok)
+            if(auto [gocpp_id_0, ok] = ld->pkgs[lpkg->Package.ID]; ok)
             {
                 return {nullptr, mocklib::Errorf("%s response contained duplicate packages for ID %q"_s, cond(ld->externalDriver, "go/packages driver"_s, "go list"_s), lpkg->Package.ID)};
             }
@@ -1240,7 +1254,7 @@ namespace golang::golang_org::x::tools::go::packages
             // workers from enqeuing, and thus finishing, and thus
             // allowing the group to make progress: deadlock.
             // Instead we use the ioLimit and cpuLimit semaphores.
-            auto [g, gocpp_id_2] = errgroup::WithContext(ld->Config.Context);
+            auto [g, gocpp_id_1] = errgroup::WithContext(ld->Config.Context);
 
             // enqueues adds a package to the type-checking queue.
             // It must have no unfinished successors.
@@ -1433,13 +1447,13 @@ namespace golang::golang_org::x::tools::go::packages
                 gocpp::slice<golang::golang_org::x::tools::go::packages::Error> errs = {};
                 //Go type switch emulation
                 {
-                    const auto& gocpp_id_3 = gocpp::type_info(err);
+                    const auto& gocpp_id_2 = gocpp::type_info(err);
                     const auto& err_ref = err;
                     int conditionId = -1;
-                    if(gocpp_id_3 == typeid(packages::Error)) { conditionId = 0; }
-                    else if(gocpp_id_3 == typeid(os::PathError*)) { conditionId = 1; }
-                    else if(gocpp_id_3 == typeid(scanner::ErrorList)) { conditionId = 2; }
-                    else if(gocpp_id_3 == typeid(types::Error)) { conditionId = 3; }
+                    if(gocpp_id_2 == typeid(packages::Error)) { conditionId = 0; }
+                    else if(gocpp_id_2 == typeid(os::PathError*)) { conditionId = 1; }
+                    else if(gocpp_id_2 == typeid(scanner::ErrorList)) { conditionId = 2; }
+                    else if(gocpp_id_2 == typeid(types::Error)) { conditionId = 3; }
                     switch(conditionId)
                     {
                         case 0:
@@ -1523,7 +1537,7 @@ namespace golang::golang_org::x::tools::go::packages
             // - golang.org/issue/55883 (go/packages confusing error)
             // Should we assert a hard minimum of (currently) go1.16 here?
             int runtimeVersion = {};
-            if(auto [gocpp_id_4, err] = fmt::Sscanf(runtime::Version(), "go1.%d"_s, & runtimeVersion); err == nullptr && runtimeVersion < lpkg->goVersion)
+            if(auto [gocpp_id_3, err] = fmt::Sscanf(runtime::Version(), "go1.%d"_s, & runtimeVersion); err == nullptr && runtimeVersion < lpkg->goVersion)
             {
                 defer.push_back([=]{ [=]() mutable -> void
                 {
@@ -1763,38 +1777,6 @@ namespace golang::golang_org::x::tools::go::packages
     // the number of parallel I/O calls or CPU threads per process.
     gocpp::channel<packages::unit> ioLimit = gocpp::make(gocpp::Tag<gocpp::channel<unit>>(), 20);
     gocpp::channel<packages::unit> cpuLimit = gocpp::make(gocpp::Tag<gocpp::channel<unit>>(), runtime::GOMAXPROCS(0));
-    struct gocpp_id_5
-                {
-
-                    using isGoStruct = void;
-
-                    template<typename T> requires gocpp::GoStruct<T>
-                    operator T()
-                    {
-                        T result;
-                        return result;
-                    }
-
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool operator==(const T& ref) const
-                    {
-                        return true;
-                    }
-
-                    std::ostream& PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << '}';
-                        return os;
-                    }
-                };
-
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
-                {
-                    return value.PrintTo(os);
-                }
-
-
     std::tuple<ast::File*, gocpp::error> rec::parseFile(loader* ld, gocpp::string filename)
     {
         rec::Lock(gocpp::recv(ld->parseCacheMu));
@@ -1809,7 +1791,7 @@ namespace golang::golang_org::x::tools::go::packages
         {
             // cache miss
             v = gocpp::InitPtr<parseValue>([=](auto& x) {
-                x.ready = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_5>>());
+                x.ready = gocpp::make(gocpp::Tag<gocpp::channel<gocpp::empty_struct>>());
             });
             ld->parseCache[filename] = v;
             rec::Unlock(gocpp::recv(ld->parseCacheMu));
@@ -2038,7 +2020,7 @@ namespace golang::golang_org::x::tools::go::packages
             {
                 return mocklib::Errorf("reading %s: %v"_s, lpkg->Package.ExportFile, err);
             }
-            if(auto [gocpp_id_6, ok] = view["go.shape"_s]; ok)
+            if(auto [gocpp_id_4, ok] = view["go.shape"_s]; ok)
             {
                 // Account for the pseudopackage "go.shape" that gets
                 // created by generic code.

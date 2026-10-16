@@ -11,6 +11,7 @@
 #include "golang/sort/sort.h"
 #include "gocpp/support.h"
 
+#include "golang/cmp/cmp.h"
 #include "golang/math/bits/bits.h"
 #include "golang/slices/sort.h"
 #include "golang/sort/zsortinterface.h"
@@ -206,32 +207,32 @@ namespace golang::sort
     {
         int Len(const gocpp::PtrRecv<struct reverse, false>& self)
         {
-            return rec::Len(self.ptr->Interface);
+            return rec::Len(gocpp::recv(self.ptr->Interface));
         }
 
         int Len(const gocpp::ObjRecv<struct reverse>& self)
         {
-            return rec::Len(self.obj.Interface);
+            return rec::Len(gocpp::recv(self.obj.Interface));
         }
 
         bool Less(const gocpp::PtrRecv<struct reverse, false>& self, int i, int j)
         {
-            return rec::Less(self.ptr->Interface, i, j);
+            return rec::Less(gocpp::recv(self.ptr->Interface), i, j);
         }
 
         bool Less(const gocpp::ObjRecv<struct reverse>& self, int i, int j)
         {
-            return rec::Less(self.obj.Interface, i, j);
+            return rec::Less(gocpp::recv(self.obj.Interface), i, j);
         }
 
         void Swap(const gocpp::PtrRecv<struct reverse, false>& self, int i, int j)
         {
-            return rec::Swap(self.ptr->Interface, i, j);
+            return rec::Swap(gocpp::recv(self.ptr->Interface), i, j);
         }
 
         void Swap(const gocpp::ObjRecv<struct reverse>& self, int i, int j)
         {
-            return rec::Swap(self.obj.Interface, i, j);
+            return rec::Swap(gocpp::recv(self.obj.Interface), i, j);
         }
     }
 

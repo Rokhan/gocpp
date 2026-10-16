@@ -12,36 +12,6 @@
 
 namespace golang::golang_org::x::tools::internal::gocommand
 {
-    struct gocpp_id_0
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    struct gocpp_id_1
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
     struct Invocation
     {
         gocpp::string Verb{};
@@ -124,10 +94,10 @@ namespace golang::golang_org::x::tools::internal::gocommand
         // once guards the runner initialization.
         sync::Once once{};
         // inFlight tracks available workers.
-        gocpp::channel<gocpp_id_0> inFlight{};
+        gocpp::channel<gocpp::empty_struct> inFlight{};
         // serialized guards the ability to run a go command serially,
         // to avoid deadlocks when claiming workers.
-        gocpp::channel<gocpp_id_1> serialized{};
+        gocpp::channel<gocpp::empty_struct> serialized{};
 
         using isGoStruct = void;
 

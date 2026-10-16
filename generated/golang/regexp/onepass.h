@@ -65,6 +65,15 @@ namespace golang::regexp
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        bool MatchEmptyWidth(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune before, gocpp::rune after);
+        bool MatchRune(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r);
+        int MatchRunePos(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r);
+        gocpp::string String(const gocpp::PtrRecv<struct onePassInst, false>& self);
+        syntax::InstOp op(const gocpp::PtrRecv<struct onePassInst, false>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct onePassInst& value);
     std::tuple<gocpp::string, bool, uint32_t> onePassPrefix(syntax::Prog* p);
     syntax::InstOp iop(syntax::Inst* i);

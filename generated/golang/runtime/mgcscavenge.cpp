@@ -1273,6 +1273,24 @@ namespace golang::runtime
         return os;
     }
 
+    namespace rec
+    {
+        bool isEmpty(const gocpp::PtrRecv<struct scavChunkData, false>& self)
+        {
+            return rec::isEmpty(gocpp::recv(self.ptr->scavChunkFlags));
+        }
+
+        void setEmpty(const gocpp::PtrRecv<struct scavChunkData, false>& self)
+        {
+            return rec::setEmpty(gocpp::recv(self.ptr->scavChunkFlags));
+        }
+
+        void setNonEmpty(const gocpp::PtrRecv<struct scavChunkData, false>& self)
+        {
+            return rec::setNonEmpty(gocpp::recv(self.ptr->scavChunkFlags));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value)
     {
         return value.PrintTo(os);

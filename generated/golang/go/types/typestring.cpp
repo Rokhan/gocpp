@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/bytes/buffer.h"
+#include "golang/cmp/cmp.h"
 #include "golang/fmt/print.h"
 #include "golang/go/token/position.h"
 #include "golang/go/types/alias.h"

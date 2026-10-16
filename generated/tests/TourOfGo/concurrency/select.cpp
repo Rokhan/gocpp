@@ -71,79 +71,15 @@ namespace golang::main
         }
     }
 
-    struct gocpp_id_0
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
-    struct gocpp_id_1
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
     // from src\runtime\trace2.go:967:3
     void testInlinedType()
     {
-        gocpp::channel<gocpp_id_0> wakeup = {};
+        gocpp::channel<gocpp::empty_struct> wakeup = {};
 
         //Go select emulation
         {
             int conditionId = -1;
-            if(wakeup.trySend(gocpp_id_1 {})) { conditionId = 0; }
+            if(wakeup.trySend(gocpp::empty_struct {})) { conditionId = 0; }
             switch(conditionId)
             {
                 case 0:

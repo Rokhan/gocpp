@@ -108,12 +108,12 @@ namespace golang::golang_org::x::tools::go::packages
     {
         gocpp::string Error(const gocpp::PtrRecv<struct goTooOldError, false>& self)
         {
-            return rec::Error(self.ptr->error);
+            return gocpp::rec::Error(gocpp::recv(self.ptr->error));
         }
 
         gocpp::string Error(const gocpp::ObjRecv<struct goTooOldError>& self)
         {
-            return rec::Error(self.obj.error);
+            return gocpp::rec::Error(gocpp::recv(self.obj.error));
         }
     }
 

@@ -8,12 +8,8 @@ namespace golang::runtime
 {
     struct traceStruct;
     struct traceAdvancerState;
-    struct gocpp_id_2;
-    struct gocpp_id_3;
     // traceAdvancePeriod is the approximate period between
     // new generations.
     const double defaultTraceAdvancePeriod = 1e9;
     struct wakeableSleep;
-    struct gocpp_id_5;
-    struct gocpp_id_6;
 }

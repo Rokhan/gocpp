@@ -52,6 +52,8 @@
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
     namespace aliases = golang::golang_org::x::tools::internal::aliases;
+    namespace big = golang::math::big;
+    namespace constant = golang::go::constant;
     namespace fmt = golang::fmt;
     namespace pkgbits = golang::golang_org::x::tools::internal::pkgbits;
     namespace sort = golang::sort;
@@ -164,6 +166,84 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         os << " " << ifaces;
         os << '}';
         return os;
+    }
+
+    namespace rec
+    {
+        int AbsIdx(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx)
+        {
+            return pkgbits::rec::AbsIdx(gocpp::recv(self.ptr->PkgDecoder), k, idx);
+        }
+
+        gocpp::string DataIdx(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx)
+        {
+            return pkgbits::rec::DataIdx(gocpp::recv(self.ptr->PkgDecoder), k, idx);
+        }
+
+        gocpp::array<unsigned char, 8> Fingerprint(const gocpp::PtrRecv<struct pkgReader, false>& self)
+        {
+            return pkgbits::rec::Fingerprint(gocpp::recv(self.ptr->PkgDecoder));
+        }
+
+        pkgbits::Decoder NewDecoder(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx, pkgbits::SyncMarker marker)
+        {
+            return pkgbits::rec::NewDecoder(gocpp::recv(self.ptr->PkgDecoder), k, idx, marker);
+        }
+
+        pkgbits::Decoder NewDecoderRaw(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx)
+        {
+            return pkgbits::rec::NewDecoderRaw(gocpp::recv(self.ptr->PkgDecoder), k, idx);
+        }
+
+        int NumElems(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k)
+        {
+            return pkgbits::rec::NumElems(gocpp::recv(self.ptr->PkgDecoder), k);
+        }
+
+        std::tuple<gocpp::string, gocpp::string, pkgbits::CodeObj> PeekObj(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::Index idx)
+        {
+            return pkgbits::rec::PeekObj(gocpp::recv(self.ptr->PkgDecoder), idx);
+        }
+
+        gocpp::string PeekPkgPath(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::Index idx)
+        {
+            return pkgbits::rec::PeekPkgPath(gocpp::recv(self.ptr->PkgDecoder), idx);
+        }
+
+        gocpp::string PkgPath(const gocpp::PtrRecv<struct pkgReader, false>& self)
+        {
+            return pkgbits::rec::PkgPath(gocpp::recv(self.ptr->PkgDecoder));
+        }
+
+        void RetireDecoder(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::Decoder* d)
+        {
+            return pkgbits::rec::RetireDecoder(gocpp::recv(self.ptr->PkgDecoder), d);
+        }
+
+        gocpp::string StringIdx(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::Index idx)
+        {
+            return pkgbits::rec::StringIdx(gocpp::recv(self.ptr->PkgDecoder), idx);
+        }
+
+        bool SyncMarkers(const gocpp::PtrRecv<struct pkgReader, false>& self)
+        {
+            return pkgbits::rec::SyncMarkers(gocpp::recv(self.ptr->PkgDecoder));
+        }
+
+        pkgbits::Decoder TempDecoder(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx, pkgbits::SyncMarker marker)
+        {
+            return pkgbits::rec::TempDecoder(gocpp::recv(self.ptr->PkgDecoder), k, idx, marker);
+        }
+
+        pkgbits::Decoder TempDecoderRaw(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx)
+        {
+            return pkgbits::rec::TempDecoderRaw(gocpp::recv(self.ptr->PkgDecoder), k, idx);
+        }
+
+        int TotalElems(const gocpp::PtrRecv<struct pkgReader, false>& self)
+        {
+            return pkgbits::rec::TotalElems(gocpp::recv(self.ptr->PkgDecoder));
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct pkgReader& value)
@@ -386,6 +466,109 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         os << " " << dict;
         os << '}';
         return os;
+    }
+
+    namespace rec
+    {
+        bool Bool(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::Bool(gocpp::recv(self.ptr->Decoder));
+        }
+
+        int Code(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::SyncMarker mark)
+        {
+            return pkgbits::rec::Code(gocpp::recv(self.ptr->Decoder), mark);
+        }
+
+        int Int(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::Int(gocpp::recv(self.ptr->Decoder));
+        }
+
+        int64_t Int64(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::Int64(gocpp::recv(self.ptr->Decoder));
+        }
+
+        int Len(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::Len(gocpp::recv(self.ptr->Decoder));
+        }
+
+        pkgbits::Index Reloc(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::RelocKind k)
+        {
+            return pkgbits::rec::Reloc(gocpp::recv(self.ptr->Decoder), k);
+        }
+
+        gocpp::string String(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::String(gocpp::recv(self.ptr->Decoder));
+        }
+
+        gocpp::slice<gocpp::string> Strings(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::Strings(gocpp::recv(self.ptr->Decoder));
+        }
+
+        void Sync(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::SyncMarker mWant)
+        {
+            return pkgbits::rec::Sync(gocpp::recv(self.ptr->Decoder), mWant);
+        }
+
+        unsigned int Uint(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::Uint(gocpp::recv(self.ptr->Decoder));
+        }
+
+        uint64_t Uint64(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::Uint64(gocpp::recv(self.ptr->Decoder));
+        }
+
+        constant::Value Value(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::Value(gocpp::recv(self.ptr->Decoder));
+        }
+
+        pkgbits::Version Version(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::Version(gocpp::recv(self.ptr->Decoder));
+        }
+
+        big::Float* bigFloat(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::bigFloat(gocpp::recv(self.ptr->Decoder));
+        }
+
+        big::Int* bigInt(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::bigInt(gocpp::recv(self.ptr->Decoder));
+        }
+
+        void checkErr(const gocpp::PtrRecv<struct reader, false>& self, gocpp::error err)
+        {
+            return pkgbits::rec::checkErr(gocpp::recv(self.ptr->Decoder), err);
+        }
+
+        pkgbits::Index rawReloc(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::RelocKind k, int idx)
+        {
+            return pkgbits::rec::rawReloc(gocpp::recv(self.ptr->Decoder), k, idx);
+        }
+
+        uint64_t rawUvarint(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::rawUvarint(gocpp::recv(self.ptr->Decoder));
+        }
+
+        int64_t rawVarint(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::rawVarint(gocpp::recv(self.ptr->Decoder));
+        }
+
+        constant::Value scalar(const gocpp::PtrRecv<struct reader, false>& self)
+        {
+            return pkgbits::rec::scalar(gocpp::recv(self.ptr->Decoder));
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value)

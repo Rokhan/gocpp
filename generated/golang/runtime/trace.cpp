@@ -62,33 +62,6 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
-    {
-        T result;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
-    {
-        return true;
-    }
-
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
-    
-    template<typename T> requires gocpp::GoStruct<T>
     traceStruct::operator T()
     {
         T result;
@@ -1083,33 +1056,6 @@ namespace golang::runtime
     traceAdvancerState traceAdvancer;
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_1::operator T()
-    {
-        T result;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_1::operator==(const T& ref) const
-    {
-        return true;
-    }
-
-    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
-    
-    template<typename T> requires gocpp::GoStruct<T>
     traceAdvancerState::operator T()
     {
         T result;
@@ -1140,75 +1086,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_2
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
-    struct gocpp_id_3
-            {
-
-                using isGoStruct = void;
-
-                template<typename T> requires gocpp::GoStruct<T>
-                operator T()
-                {
-                    T result;
-                    return result;
-                }
-
-                template<typename T> requires gocpp::GoStruct<T>
-                bool operator==(const T& ref) const
-                {
-                    return true;
-                }
-
-                std::ostream& PrintTo(std::ostream& os) const
-                {
-                    os << '{';
-                    os << '}';
-                    return os;
-                }
-            };
-
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
-            {
-                return value.PrintTo(os);
-            }
-
-
     // start starts a new traceAdvancer.
     void rec::start(traceAdvancerState* s)
     {
         // Start a goroutine to periodically advance the trace generation.
-        s->done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_2>>());
+        s->done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp::empty_struct>>());
         s->timer = newWakeableSleep();
         gocpp::go([&]{ [=]() mutable -> void
         {
@@ -1220,7 +1102,7 @@ namespace golang::runtime
                 // Try to advance the trace.
                 traceAdvance(false);
             }
-            s->done.send(gocpp_id_3 {});
+            s->done.send(gocpp::empty_struct {});
         }(); });
     }
 
@@ -1232,33 +1114,6 @@ namespace golang::runtime
         close(s->done);
         rec::close(gocpp::recv(s->timer));
     }
-
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_4::operator T()
-    {
-        T result;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_4::operator==(const T& ref) const
-    {
-        return true;
-    }
-
-    std::ostream& gocpp_id_4::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
-    {
-        return value.PrintTo(os);
-    }
-
 
     // wakeableSleep manages a wakeable goroutine sleep.
     //
@@ -1300,44 +1155,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_5
-        {
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
     // newWakeableSleep initializes a new wakeableSleep and returns it.
     wakeableSleep* newWakeableSleep()
     {
         auto s = new wakeableSleep{};
         lockInit(& s->lock, lockRankWakeableSleep);
-        s->wakeup = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_5>>(), 1);
+        s->wakeup = gocpp::make(gocpp::Tag<gocpp::channel<gocpp::empty_struct>>(), 1);
         s->timer = new timer{};
         auto f = [=](go_any s, uintptr_t _1, int64_t _2) mutable -> void
         {
@@ -1370,38 +1193,6 @@ namespace golang::runtime
         rec::stop(gocpp::recv(s->timer));
     }
 
-    struct gocpp_id_6
-                {
-
-                    using isGoStruct = void;
-
-                    template<typename T> requires gocpp::GoStruct<T>
-                    operator T()
-                    {
-                        T result;
-                        return result;
-                    }
-
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool operator==(const T& ref) const
-                    {
-                        return true;
-                    }
-
-                    std::ostream& PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << '}';
-                        return os;
-                    }
-                };
-
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
-                {
-                    return value.PrintTo(os);
-                }
-
-
     // wake awakens any goroutine sleeping on the timer.
     //
     // Safe for concurrent use with all other methods.
@@ -1423,7 +1214,7 @@ namespace golang::runtime
             //Go select emulation
             {
                 int conditionId = -1;
-                if(s->wakeup.trySend(gocpp_id_6 {})) { conditionId = 0; }
+                if(s->wakeup.trySend(gocpp::empty_struct {})) { conditionId = 0; }
                 switch(conditionId)
                 {
                     case 0:

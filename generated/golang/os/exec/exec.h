@@ -125,6 +125,11 @@ namespace golang::os::exec
 {
     namespace time = golang::time;
     namespace godebug = golang::internal::godebug;
+}
+#include "golang/time/time.h"
+
+namespace golang::os::exec
+{
     struct ctxResult
     {
         gocpp::error err{};
@@ -174,6 +179,40 @@ namespace golang::os::exec
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        int ExitCode(const gocpp::PtrRecv<struct ExitError, false>& self);
+        int ExitCode(const gocpp::ObjRecv<struct ExitError>& self);
+        bool Exited(const gocpp::PtrRecv<struct ExitError, false>& self);
+        bool Exited(const gocpp::ObjRecv<struct ExitError>& self);
+        int Pid(const gocpp::PtrRecv<struct ExitError, false>& self);
+        int Pid(const gocpp::ObjRecv<struct ExitError>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct ExitError, false>& self);
+        gocpp::string String(const gocpp::ObjRecv<struct ExitError>& self);
+        bool Success(const gocpp::PtrRecv<struct ExitError, false>& self);
+        bool Success(const gocpp::ObjRecv<struct ExitError>& self);
+        go_any Sys(const gocpp::PtrRecv<struct ExitError, false>& self);
+        go_any Sys(const gocpp::ObjRecv<struct ExitError>& self);
+        go_any SysUsage(const gocpp::PtrRecv<struct ExitError, false>& self);
+        go_any SysUsage(const gocpp::ObjRecv<struct ExitError>& self);
+        time::Duration SystemTime(const gocpp::PtrRecv<struct ExitError, false>& self);
+        time::Duration SystemTime(const gocpp::ObjRecv<struct ExitError>& self);
+        time::Duration UserTime(const gocpp::PtrRecv<struct ExitError, false>& self);
+        time::Duration UserTime(const gocpp::ObjRecv<struct ExitError>& self);
+        bool exited(const gocpp::PtrRecv<struct ExitError, false>& self);
+        bool exited(const gocpp::ObjRecv<struct ExitError>& self);
+        bool success(const gocpp::PtrRecv<struct ExitError, false>& self);
+        bool success(const gocpp::ObjRecv<struct ExitError>& self);
+        go_any sys(const gocpp::PtrRecv<struct ExitError, false>& self);
+        go_any sys(const gocpp::ObjRecv<struct ExitError>& self);
+        go_any sysUsage(const gocpp::PtrRecv<struct ExitError, false>& self);
+        go_any sysUsage(const gocpp::ObjRecv<struct ExitError>& self);
+        time::Duration systemTime(const gocpp::PtrRecv<struct ExitError, false>& self);
+        time::Duration systemTime(const gocpp::ObjRecv<struct ExitError>& self);
+        time::Duration userTime(const gocpp::PtrRecv<struct ExitError, false>& self);
+        time::Duration userTime(const gocpp::ObjRecv<struct ExitError>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct ExitError& value);
 }
 #include "golang/context/context.fwd.h"
@@ -184,11 +223,6 @@ namespace golang::os::exec
 {
     namespace syscall = golang::syscall;
     namespace context = golang::context;
-}
-#include "golang/time/time.h"
-
-namespace golang::os::exec
-{
     struct Cmd
     {
         // Path is the path of the command to run.

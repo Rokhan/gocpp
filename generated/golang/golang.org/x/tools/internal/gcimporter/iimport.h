@@ -35,6 +35,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 #include "golang/go/types/type.fwd.h"
 #include "golang/go/types/typeparam.fwd.h"
 #include "golang/go/types/union.fwd.h"
+#include "golang/io/io.fwd.h"
 #include "golang/bytes/reader.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
@@ -42,16 +43,18 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     namespace bytes = golang::bytes;
 }
 #include "golang/go/types/type.h"
+#include "golang/golang.org/x/tools/internal/gcimporter/iexport.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace io = golang::io;
+}
+#include "golang/io/io.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
     namespace types = golang::go::types;
     namespace token = golang::go::token;
-}
-#include "golang/golang.org/x/tools/internal/gcimporter/iexport.h"
-
-namespace golang::golang_org::x::tools::internal::gcimporter
-{
     struct intReader
     {
         bytes::Reader* Reader{};
@@ -67,6 +70,32 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        int Len(const gocpp::PtrRecv<struct intReader, false>& self);
+        int Len(const gocpp::ObjRecv<struct intReader>& self);
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct intReader, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct intReader>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> ReadAt(const gocpp::PtrRecv<struct intReader, false>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> ReadAt(const gocpp::ObjRecv<struct intReader>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct intReader, false>& self);
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<struct intReader>& self);
+        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct intReader, false>& self);
+        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::ObjRecv<struct intReader>& self);
+        void Reset(const gocpp::PtrRecv<struct intReader, false>& self, gocpp::slice<unsigned char> b);
+        void Reset(const gocpp::ObjRecv<struct intReader>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct intReader, false>& self, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct intReader>& self, int64_t offset, int whence);
+        int64_t Size(const gocpp::PtrRecv<struct intReader, false>& self);
+        int64_t Size(const gocpp::ObjRecv<struct intReader>& self);
+        gocpp::error UnreadByte(const gocpp::PtrRecv<struct intReader, false>& self);
+        gocpp::error UnreadByte(const gocpp::ObjRecv<struct intReader>& self);
+        gocpp::error UnreadRune(const gocpp::PtrRecv<struct intReader, false>& self);
+        gocpp::error UnreadRune(const gocpp::ObjRecv<struct intReader>& self);
+        std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::PtrRecv<struct intReader, false>& self, io::Writer w);
+        std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::ObjRecv<struct intReader>& self, io::Writer w);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct intReader& value);
     struct ident

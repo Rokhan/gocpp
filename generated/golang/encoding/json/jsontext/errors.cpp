@@ -423,12 +423,12 @@ namespace golang::encoding::json::jsontext
     {
         gocpp::string Error(const gocpp::PtrRecv<struct pointerSuffixError, false>& self)
         {
-            return rec::Error(self.ptr->error);
+            return gocpp::rec::Error(gocpp::recv(self.ptr->error));
         }
 
         gocpp::string Error(const gocpp::ObjRecv<struct pointerSuffixError>& self)
         {
-            return rec::Error(self.obj.error);
+            return gocpp::rec::Error(gocpp::recv(self.obj.error));
         }
     }
 

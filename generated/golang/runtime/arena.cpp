@@ -486,6 +486,399 @@ namespace golang::runtime
         return os;
     }
 
+    namespace rec
+    {
+        markBits allocBitsForIndex(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t allocBitIndex)
+        {
+            return rec::allocBitsForIndex(gocpp::recv(self.ptr->mspan), allocBitIndex);
+        }
+
+        markBits allocBitsForIndex(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t allocBitIndex)
+        {
+            return rec::allocBitsForIndex(gocpp::recv(self.obj.mspan), allocBitIndex);
+        }
+
+        uintptr_t base(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::base(gocpp::recv(self.ptr->mspan));
+        }
+
+        uintptr_t base(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::base(gocpp::recv(self.obj.mspan));
+        }
+
+        int countAlloc(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::countAlloc(gocpp::recv(self.ptr->mspan));
+        }
+
+        int countAlloc(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::countAlloc(gocpp::recv(self.obj.mspan));
+        }
+
+        bool decPinCounter(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t offset)
+        {
+            return rec::decPinCounter(gocpp::recv(self.ptr->mspan), offset);
+        }
+
+        bool decPinCounter(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t offset)
+        {
+            return rec::decPinCounter(gocpp::recv(self.obj.mspan), offset);
+        }
+
+        uintptr_t divideByElemSize(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t n)
+        {
+            return rec::divideByElemSize(gocpp::recv(self.ptr->mspan), n);
+        }
+
+        uintptr_t divideByElemSize(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t n)
+        {
+            return rec::divideByElemSize(gocpp::recv(self.obj.mspan), n);
+        }
+
+        void ensureSwept(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::ensureSwept(gocpp::recv(self.ptr->mspan));
+        }
+
+        void ensureSwept(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::ensureSwept(gocpp::recv(self.obj.mspan));
+        }
+
+        pinnerBits* getPinnerBits(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::getPinnerBits(gocpp::recv(self.ptr->mspan));
+        }
+
+        pinnerBits* getPinnerBits(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::getPinnerBits(gocpp::recv(self.obj.mspan));
+        }
+
+        gocpp::slice<uintptr_t> heapBits(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::heapBits(gocpp::recv(self.ptr->mspan));
+        }
+
+        gocpp::slice<uintptr_t> heapBits(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::heapBits(gocpp::recv(self.obj.mspan));
+        }
+
+        uintptr_t heapBitsSmallForAddr(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t addr)
+        {
+            return rec::heapBitsSmallForAddr(gocpp::recv(self.ptr->mspan), addr);
+        }
+
+        uintptr_t heapBitsSmallForAddr(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t addr)
+        {
+            return rec::heapBitsSmallForAddr(gocpp::recv(self.obj.mspan), addr);
+        }
+
+        bool inList(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::inList(gocpp::recv(self.ptr->mspan));
+        }
+
+        bool inList(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::inList(gocpp::recv(self.obj.mspan));
+        }
+
+        void incPinCounter(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t offset)
+        {
+            return rec::incPinCounter(gocpp::recv(self.ptr->mspan), offset);
+        }
+
+        void incPinCounter(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t offset)
+        {
+            return rec::incPinCounter(gocpp::recv(self.obj.mspan), offset);
+        }
+
+        void init(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t base, uintptr_t npages)
+        {
+            return rec::init(gocpp::recv(self.ptr->mspan), base, npages);
+        }
+
+        void init(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t base, uintptr_t npages)
+        {
+            return rec::init(gocpp::recv(self.obj.mspan), base, npages);
+        }
+
+        void initHeapBits(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::initHeapBits(gocpp::recv(self.ptr->mspan));
+        }
+
+        void initHeapBits(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::initHeapBits(gocpp::recv(self.obj.mspan));
+        }
+
+        void initInlineMarkBits(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::initInlineMarkBits(gocpp::recv(self.ptr->mspan));
+        }
+
+        void initInlineMarkBits(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::initInlineMarkBits(gocpp::recv(self.obj.mspan));
+        }
+
+        spanInlineMarkBits* inlineMarkBits(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::inlineMarkBits(gocpp::recv(self.ptr->mspan));
+        }
+
+        spanInlineMarkBits* inlineMarkBits(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::inlineMarkBits(gocpp::recv(self.obj.mspan));
+        }
+
+        bool isFree(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t index)
+        {
+            return rec::isFree(gocpp::recv(self.ptr->mspan), index);
+        }
+
+        bool isFree(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t index)
+        {
+            return rec::isFree(gocpp::recv(self.obj.mspan), index);
+        }
+
+        bool isFreeOrNewlyAllocated(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t index)
+        {
+            return rec::isFreeOrNewlyAllocated(gocpp::recv(self.ptr->mspan), index);
+        }
+
+        bool isFreeOrNewlyAllocated(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t index)
+        {
+            return rec::isFreeOrNewlyAllocated(gocpp::recv(self.obj.mspan), index);
+        }
+
+        bool isUnusedUserArenaChunk(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::isUnusedUserArenaChunk(gocpp::recv(self.ptr->mspan));
+        }
+
+        bool isUnusedUserArenaChunk(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::isUnusedUserArenaChunk(gocpp::recv(self.obj.mspan));
+        }
+
+        markBits markBitsForBase(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::markBitsForBase(gocpp::recv(self.ptr->mspan));
+        }
+
+        markBits markBitsForBase(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::markBitsForBase(gocpp::recv(self.obj.mspan));
+        }
+
+        markBits markBitsForIndex(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t objIndex)
+        {
+            return rec::markBitsForIndex(gocpp::recv(self.ptr->mspan), objIndex);
+        }
+
+        markBits markBitsForIndex(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t objIndex)
+        {
+            return rec::markBitsForIndex(gocpp::recv(self.obj.mspan), objIndex);
+        }
+
+        void moveInlineMarks(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, gcBits* dst)
+        {
+            return rec::moveInlineMarks(gocpp::recv(self.ptr->mspan), dst);
+        }
+
+        void moveInlineMarks(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, gcBits* dst)
+        {
+            return rec::moveInlineMarks(gocpp::recv(self.obj.mspan), dst);
+        }
+
+        pinnerBits* newPinnerBits(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::newPinnerBits(gocpp::recv(self.ptr->mspan));
+        }
+
+        pinnerBits* newPinnerBits(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::newPinnerBits(gocpp::recv(self.obj.mspan));
+        }
+
+        uint16_t nextFreeIndex(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::nextFreeIndex(gocpp::recv(self.ptr->mspan));
+        }
+
+        uint16_t nextFreeIndex(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::nextFreeIndex(gocpp::recv(self.obj.mspan));
+        }
+
+        uintptr_t objBase(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t addr)
+        {
+            return rec::objBase(gocpp::recv(self.ptr->mspan), addr);
+        }
+
+        uintptr_t objBase(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t addr)
+        {
+            return rec::objBase(gocpp::recv(self.obj.mspan), addr);
+        }
+
+        uintptr_t objIndex(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t p)
+        {
+            return rec::objIndex(gocpp::recv(self.ptr->mspan), p);
+        }
+
+        uintptr_t objIndex(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t p)
+        {
+            return rec::objIndex(gocpp::recv(self.obj.mspan), p);
+        }
+
+        uintptr_t pinnerBitSize(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::pinnerBitSize(gocpp::recv(self.ptr->mspan));
+        }
+
+        uintptr_t pinnerBitSize(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::pinnerBitSize(gocpp::recv(self.obj.mspan));
+        }
+
+        void refillAllocCache(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uint16_t whichByte)
+        {
+            return rec::refillAllocCache(gocpp::recv(self.ptr->mspan), whichByte);
+        }
+
+        void refillAllocCache(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uint16_t whichByte)
+        {
+            return rec::refillAllocCache(gocpp::recv(self.obj.mspan), whichByte);
+        }
+
+        void refreshPinnerBits(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::refreshPinnerBits(gocpp::recv(self.ptr->mspan));
+        }
+
+        void refreshPinnerBits(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::refreshPinnerBits(gocpp::recv(self.obj.mspan));
+        }
+
+        void reportZombies(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::reportZombies(gocpp::recv(self.ptr->mspan));
+        }
+
+        void reportZombies(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::reportZombies(gocpp::recv(self.obj.mspan));
+        }
+
+        markBits scannedBitsForIndex(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t objIndex)
+        {
+            return rec::scannedBitsForIndex(gocpp::recv(self.ptr->mspan), objIndex);
+        }
+
+        markBits scannedBitsForIndex(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t objIndex)
+        {
+            return rec::scannedBitsForIndex(gocpp::recv(self.obj.mspan), objIndex);
+        }
+
+        void setPinnerBits(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, pinnerBits* p)
+        {
+            return rec::setPinnerBits(gocpp::recv(self.ptr->mspan), p);
+        }
+
+        void setPinnerBits(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, pinnerBits* p)
+        {
+            return rec::setPinnerBits(gocpp::recv(self.obj.mspan), p);
+        }
+
+        void setUserArenaChunkToFault(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        {
+            return rec::setUserArenaChunkToFault(gocpp::recv(self.ptr->mspan));
+        }
+
+        void setUserArenaChunkToFault(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        {
+            return rec::setUserArenaChunkToFault(gocpp::recv(self.obj.mspan));
+        }
+
+        std::tuple<special**, bool> specialFindSplicePoint(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t offset, unsigned char kind)
+        {
+            return rec::specialFindSplicePoint(gocpp::recv(self.ptr->mspan), offset, kind);
+        }
+
+        std::tuple<special**, bool> specialFindSplicePoint(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t offset, unsigned char kind)
+        {
+            return rec::specialFindSplicePoint(gocpp::recv(self.obj.mspan), offset, kind);
+        }
+
+        typePointers typePointersOf(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t addr, uintptr_t size)
+        {
+            return rec::typePointersOf(gocpp::recv(self.ptr->mspan), addr, size);
+        }
+
+        typePointers typePointersOf(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t addr, uintptr_t size)
+        {
+            return rec::typePointersOf(gocpp::recv(self.obj.mspan), addr, size);
+        }
+
+        typePointers typePointersOfType(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, abi::Type* typ, uintptr_t addr)
+        {
+            return rec::typePointersOfType(gocpp::recv(self.ptr->mspan), typ, addr);
+        }
+
+        typePointers typePointersOfType(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, abi::Type* typ, uintptr_t addr)
+        {
+            return rec::typePointersOfType(gocpp::recv(self.obj.mspan), typ, addr);
+        }
+
+        typePointers typePointersOfUnchecked(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t addr)
+        {
+            return rec::typePointersOfUnchecked(gocpp::recv(self.ptr->mspan), addr);
+        }
+
+        typePointers typePointersOfUnchecked(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t addr)
+        {
+            return rec::typePointersOfUnchecked(gocpp::recv(self.obj.mspan), addr);
+        }
+
+        unsafe::Pointer userArenaNextFree(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, _type* typ, int cap)
+        {
+            return rec::userArenaNextFree(gocpp::recv(self.ptr->mspan), typ, cap);
+        }
+
+        unsafe::Pointer userArenaNextFree(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, _type* typ, int cap)
+        {
+            return rec::userArenaNextFree(gocpp::recv(self.obj.mspan), typ, cap);
+        }
+
+        uintptr_t writeHeapBitsSmall(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t x, uintptr_t dataSize, _type* typ)
+        {
+            return rec::writeHeapBitsSmall(gocpp::recv(self.ptr->mspan), x, dataSize, typ);
+        }
+
+        uintptr_t writeHeapBitsSmall(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t x, uintptr_t dataSize, _type* typ)
+        {
+            return rec::writeHeapBitsSmall(gocpp::recv(self.obj.mspan), x, dataSize, typ);
+        }
+
+        runtime::writeUserArenaHeapBits writeUserArenaHeapBits(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t addr)
+        {
+            return rec::writeUserArenaHeapBits(gocpp::recv(self.ptr->mspan), addr);
+        }
+
+        runtime::writeUserArenaHeapBits writeUserArenaHeapBits(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t addr)
+        {
+            return rec::writeUserArenaHeapBits(gocpp::recv(self.obj.mspan), addr);
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct liveUserArenaChunk& value)
     {
         return value.PrintTo(os);

@@ -74,6 +74,13 @@ namespace golang::math::big
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        void Lock(const gocpp::PtrRecv<struct cacheBase10Struct, false>& self);
+        bool TryLock(const gocpp::PtrRecv<struct cacheBase10Struct, false>& self);
+        void Unlock(const gocpp::PtrRecv<struct cacheBase10Struct, false>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct cacheBase10Struct& value);
     gocpp::slice<divisor> divisors(stack* stk, int m, Word b, int ndigits, Word bb);
     extern cacheBase10Struct cacheBase10;

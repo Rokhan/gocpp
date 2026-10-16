@@ -34,6 +34,12 @@ namespace golang::os
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        gocpp::error close(const gocpp::PtrRecv<struct File, false>& self);
+        gocpp::error close(const gocpp::ObjRecv<struct File>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct File& value);
 }
 

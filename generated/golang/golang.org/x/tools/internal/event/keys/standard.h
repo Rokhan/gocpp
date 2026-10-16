@@ -9,6 +9,7 @@
 #include "golang/golang.org/x/tools/internal/event/keys/standard.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/golang.org/x/tools/internal/event/keys/keys.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::event::keys
 {

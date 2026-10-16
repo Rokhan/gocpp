@@ -89,6 +89,49 @@ namespace golang::internal::reflectlite
         return os;
     }
 
+    namespace rec
+    {
+        reflectlite::Kind kind(const gocpp::PtrRecv<struct Value, false>& self)
+        {
+            return rec::kind(gocpp::recv(self.ptr->flag));
+        }
+
+        reflectlite::Kind kind(const gocpp::ObjRecv<struct Value>& self)
+        {
+            return rec::kind(gocpp::recv(self.obj.flag));
+        }
+
+        void mustBeAssignable(const gocpp::PtrRecv<struct Value, false>& self)
+        {
+            return rec::mustBeAssignable(gocpp::recv(self.ptr->flag));
+        }
+
+        void mustBeAssignable(const gocpp::ObjRecv<struct Value>& self)
+        {
+            return rec::mustBeAssignable(gocpp::recv(self.obj.flag));
+        }
+
+        void mustBeExported(const gocpp::PtrRecv<struct Value, false>& self)
+        {
+            return rec::mustBeExported(gocpp::recv(self.ptr->flag));
+        }
+
+        void mustBeExported(const gocpp::ObjRecv<struct Value>& self)
+        {
+            return rec::mustBeExported(gocpp::recv(self.obj.flag));
+        }
+
+        reflectlite::flag ro(const gocpp::PtrRecv<struct Value, false>& self)
+        {
+            return rec::ro(gocpp::recv(self.ptr->flag));
+        }
+
+        reflectlite::flag ro(const gocpp::ObjRecv<struct Value>& self)
+        {
+            return rec::ro(gocpp::recv(self.obj.flag));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct Value& value)
     {
         return value.PrintTo(os);

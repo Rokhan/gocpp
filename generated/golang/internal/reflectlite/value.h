@@ -205,6 +205,18 @@ namespace golang::internal::reflectlite
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        reflectlite::Kind kind(const gocpp::PtrRecv<struct Value, false>& self);
+        reflectlite::Kind kind(const gocpp::ObjRecv<struct Value>& self);
+        void mustBeAssignable(const gocpp::PtrRecv<struct Value, false>& self);
+        void mustBeAssignable(const gocpp::ObjRecv<struct Value>& self);
+        void mustBeExported(const gocpp::PtrRecv<struct Value, false>& self);
+        void mustBeExported(const gocpp::ObjRecv<struct Value>& self);
+        reflectlite::flag ro(const gocpp::PtrRecv<struct Value, false>& self);
+        reflectlite::flag ro(const gocpp::ObjRecv<struct Value>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct Value& value);
     gocpp::unsafe_pointer unsafe_New(abi::Type*);
     void ifaceE2I(abi::Type* t, go_any src, gocpp::unsafe_pointer dst);

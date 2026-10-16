@@ -29,6 +29,15 @@ namespace golang::compress::flate
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        int32_t addBlock(const gocpp::PtrRecv<struct fastEncL3, false>& self, gocpp::slice<unsigned char> src);
+        flate::fastGen* getFastGen(const gocpp::PtrRecv<struct fastEncL3, false>& self);
+        int32_t matchLenLimited(const gocpp::PtrRecv<struct fastEncL3, false>& self, int s, int t, gocpp::slice<unsigned char> src);
+        int32_t matchLenLong(const gocpp::PtrRecv<struct fastEncL3, false>& self, int s, int t, gocpp::slice<unsigned char> src);
+        void reset(const gocpp::PtrRecv<struct fastEncL3, false>& self);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct fastEncL3& value);
 }
 

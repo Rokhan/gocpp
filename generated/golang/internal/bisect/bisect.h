@@ -134,17 +134,45 @@ namespace golang::internal::bisect
     gocpp::error PrintMarker(Writer w, uint64_t h);
     gocpp::error printStack(Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
 }
-#include "golang/sync/atomic/doc_64.fwd.h"
-#include "golang/sync/atomic/type.fwd.h"
 #include "golang/sync/mutex.fwd.h"
 
 namespace golang::internal::bisect
 {
-    namespace atomic = golang::sync::atomic;
     namespace sync = golang::sync;
 }
-#include "golang/sync/atomic/type.h"
 #include "golang/sync/mutex.h"
+
+namespace golang::internal::bisect
+{
+    struct dedup
+    {
+        // 128-entry 4-way, lossy cache for seenLossy
+        gocpp::array<gocpp::array<uint64_t, 4>, 128> recent{};
+        // complete history for seen
+        mocklib::Mutex mu{};
+        gocpp::map<uint64_t, bool> m{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct dedup& value);
+}
+#include "golang/sync/atomic/doc_64.fwd.h"
+#include "golang/sync/atomic/type.fwd.h"
+
+namespace golang::internal::bisect
+{
+    namespace atomic = golang::sync::atomic;
+}
+#include "golang/sync/atomic/type.h"
 
 namespace golang::internal::bisect
 {
@@ -168,26 +196,6 @@ namespace golang::internal::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Matcher& value);
-    struct dedup
-    {
-        // 128-entry 4-way, lossy cache for seenLossy
-        gocpp::array<gocpp::array<uint64_t, 4>, 128> recent{};
-        // complete history for seen
-        mocklib::Mutex mu{};
-        gocpp::map<uint64_t, bool> m{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct dedup& value);
     std::tuple<Matcher*, gocpp::error> New(gocpp::string pattern);
 
     namespace rec

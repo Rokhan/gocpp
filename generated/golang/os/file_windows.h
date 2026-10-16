@@ -49,6 +49,7 @@ namespace golang::os
     namespace syscall = golang::syscall;
 }
 #include "golang/internal/poll/fd_windows.h"
+#include "golang/os/dir_windows.h"
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/oncefunc.h"
 #include "golang/syscall/syscall_windows.h"
@@ -56,11 +57,6 @@ namespace golang::os
 namespace golang::os
 {
     namespace sync = golang::sync;
-}
-#include "golang/os/dir_windows.fwd.h"
-
-namespace golang::os
-{
     namespace godebug = golang::internal::godebug;
     struct file
     {

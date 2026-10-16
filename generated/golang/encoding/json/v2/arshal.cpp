@@ -39,11 +39,13 @@
 
 namespace golang::encoding::json::v2
 {
+    namespace abi = golang::internal::abi;
     namespace bytes = golang::bytes;
     namespace encoding = golang::encoding;
     namespace errors = golang::errors;
     namespace internal = golang::encoding::json::internal;
     namespace io = golang::io;
+    namespace iter = golang::iter;
     namespace jsonflags = golang::encoding::json::internal::jsonflags;
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
     namespace jsontext = golang::encoding::json::jsontext;
@@ -693,6 +695,1059 @@ namespace golang::encoding::json::v2
         os << " " << forcedAddr;
         os << '}';
         return os;
+    }
+
+    namespace rec
+    {
+        reflect::Value Addr(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Addr(gocpp::recv(self.ptr->Value));
+        }
+
+        reflect::Value Addr(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Addr(gocpp::recv(self.obj.Value));
+        }
+
+        bool Bool(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Bool(gocpp::recv(self.ptr->Value));
+        }
+
+        bool Bool(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Bool(gocpp::recv(self.obj.Value));
+        }
+
+        gocpp::slice<unsigned char> Bytes(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Bytes(gocpp::recv(self.ptr->Value));
+        }
+
+        gocpp::slice<unsigned char> Bytes(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Bytes(gocpp::recv(self.obj.Value));
+        }
+
+        gocpp::slice<reflect::Value> Call(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::slice<reflect::Value> in)
+        {
+            return reflect::rec::Call(gocpp::recv(self.ptr->Value), in);
+        }
+
+        gocpp::slice<reflect::Value> Call(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::slice<reflect::Value> in)
+        {
+            return reflect::rec::Call(gocpp::recv(self.obj.Value), in);
+        }
+
+        gocpp::slice<reflect::Value> CallSlice(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::slice<reflect::Value> in)
+        {
+            return reflect::rec::CallSlice(gocpp::recv(self.ptr->Value), in);
+        }
+
+        gocpp::slice<reflect::Value> CallSlice(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::slice<reflect::Value> in)
+        {
+            return reflect::rec::CallSlice(gocpp::recv(self.obj.Value), in);
+        }
+
+        bool CanAddr(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::CanAddr(gocpp::recv(self.ptr->Value));
+        }
+
+        bool CanAddr(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::CanAddr(gocpp::recv(self.obj.Value));
+        }
+
+        bool CanComplex(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::CanComplex(gocpp::recv(self.ptr->Value));
+        }
+
+        bool CanComplex(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::CanComplex(gocpp::recv(self.obj.Value));
+        }
+
+        bool CanConvert(const gocpp::PtrRecv<struct addressableValue, false>& self, reflect::Type t)
+        {
+            return reflect::rec::CanConvert(gocpp::recv(self.ptr->Value), t);
+        }
+
+        bool CanConvert(const gocpp::ObjRecv<struct addressableValue>& self, reflect::Type t)
+        {
+            return reflect::rec::CanConvert(gocpp::recv(self.obj.Value), t);
+        }
+
+        bool CanFloat(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::CanFloat(gocpp::recv(self.ptr->Value));
+        }
+
+        bool CanFloat(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::CanFloat(gocpp::recv(self.obj.Value));
+        }
+
+        bool CanInt(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::CanInt(gocpp::recv(self.ptr->Value));
+        }
+
+        bool CanInt(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::CanInt(gocpp::recv(self.obj.Value));
+        }
+
+        bool CanInterface(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::CanInterface(gocpp::recv(self.ptr->Value));
+        }
+
+        bool CanInterface(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::CanInterface(gocpp::recv(self.obj.Value));
+        }
+
+        bool CanSet(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::CanSet(gocpp::recv(self.ptr->Value));
+        }
+
+        bool CanSet(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::CanSet(gocpp::recv(self.obj.Value));
+        }
+
+        bool CanUint(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::CanUint(gocpp::recv(self.ptr->Value));
+        }
+
+        bool CanUint(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::CanUint(gocpp::recv(self.obj.Value));
+        }
+
+        int Cap(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Cap(gocpp::recv(self.ptr->Value));
+        }
+
+        int Cap(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Cap(gocpp::recv(self.obj.Value));
+        }
+
+        void Clear(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Clear(gocpp::recv(self.ptr->Value));
+        }
+
+        void Clear(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Clear(gocpp::recv(self.obj.Value));
+        }
+
+        void Close(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Close(gocpp::recv(self.ptr->Value));
+        }
+
+        void Close(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Close(gocpp::recv(self.obj.Value));
+        }
+
+        bool Comparable(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Comparable(gocpp::recv(self.ptr->Value));
+        }
+
+        bool Comparable(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Comparable(gocpp::recv(self.obj.Value));
+        }
+
+        gocpp::complex128 Complex(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Complex(gocpp::recv(self.ptr->Value));
+        }
+
+        gocpp::complex128 Complex(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Complex(gocpp::recv(self.obj.Value));
+        }
+
+        reflect::Value Convert(const gocpp::PtrRecv<struct addressableValue, false>& self, reflect::Type t)
+        {
+            return reflect::rec::Convert(gocpp::recv(self.ptr->Value), t);
+        }
+
+        reflect::Value Convert(const gocpp::ObjRecv<struct addressableValue>& self, reflect::Type t)
+        {
+            return reflect::rec::Convert(gocpp::recv(self.obj.Value), t);
+        }
+
+        reflect::Value Elem(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Elem(gocpp::recv(self.ptr->Value));
+        }
+
+        reflect::Value Elem(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Elem(gocpp::recv(self.obj.Value));
+        }
+
+        bool Equal(const gocpp::PtrRecv<struct addressableValue, false>& self, reflect::Value u)
+        {
+            return reflect::rec::Equal(gocpp::recv(self.ptr->Value), u);
+        }
+
+        bool Equal(const gocpp::ObjRecv<struct addressableValue>& self, reflect::Value u)
+        {
+            return reflect::rec::Equal(gocpp::recv(self.obj.Value), u);
+        }
+
+        reflect::Value Field(const gocpp::PtrRecv<struct addressableValue, false>& self, int i)
+        {
+            return reflect::rec::Field(gocpp::recv(self.ptr->Value), i);
+        }
+
+        reflect::Value Field(const gocpp::ObjRecv<struct addressableValue>& self, int i)
+        {
+            return reflect::rec::Field(gocpp::recv(self.obj.Value), i);
+        }
+
+        reflect::Value FieldByIndex(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::slice<int> index)
+        {
+            return reflect::rec::FieldByIndex(gocpp::recv(self.ptr->Value), index);
+        }
+
+        reflect::Value FieldByIndex(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::slice<int> index)
+        {
+            return reflect::rec::FieldByIndex(gocpp::recv(self.obj.Value), index);
+        }
+
+        std::tuple<reflect::Value, gocpp::error> FieldByIndexErr(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::slice<int> index)
+        {
+            return reflect::rec::FieldByIndexErr(gocpp::recv(self.ptr->Value), index);
+        }
+
+        std::tuple<reflect::Value, gocpp::error> FieldByIndexErr(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::slice<int> index)
+        {
+            return reflect::rec::FieldByIndexErr(gocpp::recv(self.obj.Value), index);
+        }
+
+        reflect::Value FieldByName(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::string name)
+        {
+            return reflect::rec::FieldByName(gocpp::recv(self.ptr->Value), name);
+        }
+
+        reflect::Value FieldByName(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::string name)
+        {
+            return reflect::rec::FieldByName(gocpp::recv(self.obj.Value), name);
+        }
+
+        reflect::Value FieldByNameFunc(const gocpp::PtrRecv<struct addressableValue, false>& self, std::function<bool (gocpp::string)> match)
+        {
+            return reflect::rec::FieldByNameFunc(gocpp::recv(self.ptr->Value), match);
+        }
+
+        reflect::Value FieldByNameFunc(const gocpp::ObjRecv<struct addressableValue>& self, std::function<bool (gocpp::string)> match)
+        {
+            return reflect::rec::FieldByNameFunc(gocpp::recv(self.obj.Value), match);
+        }
+
+        iter::Seq2<reflect::StructField, reflect::Value> Fields(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Fields(gocpp::recv(self.ptr->Value));
+        }
+
+        iter::Seq2<reflect::StructField, reflect::Value> Fields(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Fields(gocpp::recv(self.obj.Value));
+        }
+
+        double Float(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Float(gocpp::recv(self.ptr->Value));
+        }
+
+        double Float(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Float(gocpp::recv(self.obj.Value));
+        }
+
+        void Grow(const gocpp::PtrRecv<struct addressableValue, false>& self, int n)
+        {
+            return reflect::rec::Grow(gocpp::recv(self.ptr->Value), n);
+        }
+
+        void Grow(const gocpp::ObjRecv<struct addressableValue>& self, int n)
+        {
+            return reflect::rec::Grow(gocpp::recv(self.obj.Value), n);
+        }
+
+        reflect::Value Index(const gocpp::PtrRecv<struct addressableValue, false>& self, int i)
+        {
+            return reflect::rec::Index(gocpp::recv(self.ptr->Value), i);
+        }
+
+        reflect::Value Index(const gocpp::ObjRecv<struct addressableValue>& self, int i)
+        {
+            return reflect::rec::Index(gocpp::recv(self.obj.Value), i);
+        }
+
+        int64_t Int(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Int(gocpp::recv(self.ptr->Value));
+        }
+
+        int64_t Int(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Int(gocpp::recv(self.obj.Value));
+        }
+
+        go_any Interface(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Interface(gocpp::recv(self.ptr->Value));
+        }
+
+        go_any Interface(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Interface(gocpp::recv(self.obj.Value));
+        }
+
+        gocpp::array<uintptr_t, 2> InterfaceData(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::InterfaceData(gocpp::recv(self.ptr->Value));
+        }
+
+        gocpp::array<uintptr_t, 2> InterfaceData(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::InterfaceData(gocpp::recv(self.obj.Value));
+        }
+
+        bool IsNil(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::IsNil(gocpp::recv(self.ptr->Value));
+        }
+
+        bool IsNil(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::IsNil(gocpp::recv(self.obj.Value));
+        }
+
+        bool IsValid(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::IsValid(gocpp::recv(self.ptr->Value));
+        }
+
+        bool IsValid(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::IsValid(gocpp::recv(self.obj.Value));
+        }
+
+        bool IsZero(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::IsZero(gocpp::recv(self.ptr->Value));
+        }
+
+        bool IsZero(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::IsZero(gocpp::recv(self.obj.Value));
+        }
+
+        reflect::Kind Kind(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Kind(gocpp::recv(self.ptr->Value));
+        }
+
+        reflect::Kind Kind(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Kind(gocpp::recv(self.obj.Value));
+        }
+
+        int Len(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Len(gocpp::recv(self.ptr->Value));
+        }
+
+        int Len(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Len(gocpp::recv(self.obj.Value));
+        }
+
+        reflect::Value MapIndex(const gocpp::PtrRecv<struct addressableValue, false>& self, reflect::Value key)
+        {
+            return reflect::rec::MapIndex(gocpp::recv(self.ptr->Value), key);
+        }
+
+        reflect::Value MapIndex(const gocpp::ObjRecv<struct addressableValue>& self, reflect::Value key)
+        {
+            return reflect::rec::MapIndex(gocpp::recv(self.obj.Value), key);
+        }
+
+        gocpp::slice<reflect::Value> MapKeys(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::MapKeys(gocpp::recv(self.ptr->Value));
+        }
+
+        gocpp::slice<reflect::Value> MapKeys(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::MapKeys(gocpp::recv(self.obj.Value));
+        }
+
+        reflect::MapIter* MapRange(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::MapRange(gocpp::recv(self.ptr->Value));
+        }
+
+        reflect::MapIter* MapRange(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::MapRange(gocpp::recv(self.obj.Value));
+        }
+
+        reflect::Value Method(const gocpp::PtrRecv<struct addressableValue, false>& self, int i)
+        {
+            return reflect::rec::Method(gocpp::recv(self.ptr->Value), i);
+        }
+
+        reflect::Value Method(const gocpp::ObjRecv<struct addressableValue>& self, int i)
+        {
+            return reflect::rec::Method(gocpp::recv(self.obj.Value), i);
+        }
+
+        reflect::Value MethodByName(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::string name)
+        {
+            return reflect::rec::MethodByName(gocpp::recv(self.ptr->Value), name);
+        }
+
+        reflect::Value MethodByName(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::string name)
+        {
+            return reflect::rec::MethodByName(gocpp::recv(self.obj.Value), name);
+        }
+
+        iter::Seq2<reflect::Method, reflect::Value> Methods(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Methods(gocpp::recv(self.ptr->Value));
+        }
+
+        iter::Seq2<reflect::Method, reflect::Value> Methods(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Methods(gocpp::recv(self.obj.Value));
+        }
+
+        int NumField(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::NumField(gocpp::recv(self.ptr->Value));
+        }
+
+        int NumField(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::NumField(gocpp::recv(self.obj.Value));
+        }
+
+        int NumMethod(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::NumMethod(gocpp::recv(self.ptr->Value));
+        }
+
+        int NumMethod(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::NumMethod(gocpp::recv(self.obj.Value));
+        }
+
+        bool OverflowComplex(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::complex128 x)
+        {
+            return reflect::rec::OverflowComplex(gocpp::recv(self.ptr->Value), x);
+        }
+
+        bool OverflowComplex(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::complex128 x)
+        {
+            return reflect::rec::OverflowComplex(gocpp::recv(self.obj.Value), x);
+        }
+
+        bool OverflowFloat(const gocpp::PtrRecv<struct addressableValue, false>& self, double x)
+        {
+            return reflect::rec::OverflowFloat(gocpp::recv(self.ptr->Value), x);
+        }
+
+        bool OverflowFloat(const gocpp::ObjRecv<struct addressableValue>& self, double x)
+        {
+            return reflect::rec::OverflowFloat(gocpp::recv(self.obj.Value), x);
+        }
+
+        bool OverflowInt(const gocpp::PtrRecv<struct addressableValue, false>& self, int64_t x)
+        {
+            return reflect::rec::OverflowInt(gocpp::recv(self.ptr->Value), x);
+        }
+
+        bool OverflowInt(const gocpp::ObjRecv<struct addressableValue>& self, int64_t x)
+        {
+            return reflect::rec::OverflowInt(gocpp::recv(self.obj.Value), x);
+        }
+
+        bool OverflowUint(const gocpp::PtrRecv<struct addressableValue, false>& self, uint64_t x)
+        {
+            return reflect::rec::OverflowUint(gocpp::recv(self.ptr->Value), x);
+        }
+
+        bool OverflowUint(const gocpp::ObjRecv<struct addressableValue>& self, uint64_t x)
+        {
+            return reflect::rec::OverflowUint(gocpp::recv(self.obj.Value), x);
+        }
+
+        uintptr_t Pointer(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Pointer(gocpp::recv(self.ptr->Value));
+        }
+
+        uintptr_t Pointer(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Pointer(gocpp::recv(self.obj.Value));
+        }
+
+        std::tuple<reflect::Value, bool> Recv(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Recv(gocpp::recv(self.ptr->Value));
+        }
+
+        std::tuple<reflect::Value, bool> Recv(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Recv(gocpp::recv(self.obj.Value));
+        }
+
+        void Send(const gocpp::PtrRecv<struct addressableValue, false>& self, reflect::Value x)
+        {
+            return reflect::rec::Send(gocpp::recv(self.ptr->Value), x);
+        }
+
+        void Send(const gocpp::ObjRecv<struct addressableValue>& self, reflect::Value x)
+        {
+            return reflect::rec::Send(gocpp::recv(self.obj.Value), x);
+        }
+
+        iter::Seq<reflect::Value> Seq(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Seq(gocpp::recv(self.ptr->Value));
+        }
+
+        iter::Seq<reflect::Value> Seq(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Seq(gocpp::recv(self.obj.Value));
+        }
+
+        iter::Seq2<reflect::Value, reflect::Value> Seq2(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Seq2(gocpp::recv(self.ptr->Value));
+        }
+
+        iter::Seq2<reflect::Value, reflect::Value> Seq2(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Seq2(gocpp::recv(self.obj.Value));
+        }
+
+        void Set(const gocpp::PtrRecv<struct addressableValue, false>& self, reflect::Value x)
+        {
+            return reflect::rec::Set(gocpp::recv(self.ptr->Value), x);
+        }
+
+        void Set(const gocpp::ObjRecv<struct addressableValue>& self, reflect::Value x)
+        {
+            return reflect::rec::Set(gocpp::recv(self.obj.Value), x);
+        }
+
+        void SetBool(const gocpp::PtrRecv<struct addressableValue, false>& self, bool x)
+        {
+            return reflect::rec::SetBool(gocpp::recv(self.ptr->Value), x);
+        }
+
+        void SetBool(const gocpp::ObjRecv<struct addressableValue>& self, bool x)
+        {
+            return reflect::rec::SetBool(gocpp::recv(self.obj.Value), x);
+        }
+
+        void SetBytes(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::slice<unsigned char> x)
+        {
+            return reflect::rec::SetBytes(gocpp::recv(self.ptr->Value), x);
+        }
+
+        void SetBytes(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::slice<unsigned char> x)
+        {
+            return reflect::rec::SetBytes(gocpp::recv(self.obj.Value), x);
+        }
+
+        void SetCap(const gocpp::PtrRecv<struct addressableValue, false>& self, int n)
+        {
+            return reflect::rec::SetCap(gocpp::recv(self.ptr->Value), n);
+        }
+
+        void SetCap(const gocpp::ObjRecv<struct addressableValue>& self, int n)
+        {
+            return reflect::rec::SetCap(gocpp::recv(self.obj.Value), n);
+        }
+
+        void SetComplex(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::complex128 x)
+        {
+            return reflect::rec::SetComplex(gocpp::recv(self.ptr->Value), x);
+        }
+
+        void SetComplex(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::complex128 x)
+        {
+            return reflect::rec::SetComplex(gocpp::recv(self.obj.Value), x);
+        }
+
+        void SetFloat(const gocpp::PtrRecv<struct addressableValue, false>& self, double x)
+        {
+            return reflect::rec::SetFloat(gocpp::recv(self.ptr->Value), x);
+        }
+
+        void SetFloat(const gocpp::ObjRecv<struct addressableValue>& self, double x)
+        {
+            return reflect::rec::SetFloat(gocpp::recv(self.obj.Value), x);
+        }
+
+        void SetInt(const gocpp::PtrRecv<struct addressableValue, false>& self, int64_t x)
+        {
+            return reflect::rec::SetInt(gocpp::recv(self.ptr->Value), x);
+        }
+
+        void SetInt(const gocpp::ObjRecv<struct addressableValue>& self, int64_t x)
+        {
+            return reflect::rec::SetInt(gocpp::recv(self.obj.Value), x);
+        }
+
+        void SetIterKey(const gocpp::PtrRecv<struct addressableValue, false>& self, reflect::MapIter* iter)
+        {
+            return reflect::rec::SetIterKey(gocpp::recv(self.ptr->Value), iter);
+        }
+
+        void SetIterKey(const gocpp::ObjRecv<struct addressableValue>& self, reflect::MapIter* iter)
+        {
+            return reflect::rec::SetIterKey(gocpp::recv(self.obj.Value), iter);
+        }
+
+        void SetIterValue(const gocpp::PtrRecv<struct addressableValue, false>& self, reflect::MapIter* iter)
+        {
+            return reflect::rec::SetIterValue(gocpp::recv(self.ptr->Value), iter);
+        }
+
+        void SetIterValue(const gocpp::ObjRecv<struct addressableValue>& self, reflect::MapIter* iter)
+        {
+            return reflect::rec::SetIterValue(gocpp::recv(self.obj.Value), iter);
+        }
+
+        void SetLen(const gocpp::PtrRecv<struct addressableValue, false>& self, int n)
+        {
+            return reflect::rec::SetLen(gocpp::recv(self.ptr->Value), n);
+        }
+
+        void SetLen(const gocpp::ObjRecv<struct addressableValue>& self, int n)
+        {
+            return reflect::rec::SetLen(gocpp::recv(self.obj.Value), n);
+        }
+
+        void SetMapIndex(const gocpp::PtrRecv<struct addressableValue, false>& self, reflect::Value key, reflect::Value elem)
+        {
+            return reflect::rec::SetMapIndex(gocpp::recv(self.ptr->Value), key, elem);
+        }
+
+        void SetMapIndex(const gocpp::ObjRecv<struct addressableValue>& self, reflect::Value key, reflect::Value elem)
+        {
+            return reflect::rec::SetMapIndex(gocpp::recv(self.obj.Value), key, elem);
+        }
+
+        void SetPointer(const gocpp::PtrRecv<struct addressableValue, false>& self, unsafe::Pointer x)
+        {
+            return reflect::rec::SetPointer(gocpp::recv(self.ptr->Value), x);
+        }
+
+        void SetPointer(const gocpp::ObjRecv<struct addressableValue>& self, unsafe::Pointer x)
+        {
+            return reflect::rec::SetPointer(gocpp::recv(self.obj.Value), x);
+        }
+
+        void SetString(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::string x)
+        {
+            return reflect::rec::SetString(gocpp::recv(self.ptr->Value), x);
+        }
+
+        void SetString(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::string x)
+        {
+            return reflect::rec::SetString(gocpp::recv(self.obj.Value), x);
+        }
+
+        void SetUint(const gocpp::PtrRecv<struct addressableValue, false>& self, uint64_t x)
+        {
+            return reflect::rec::SetUint(gocpp::recv(self.ptr->Value), x);
+        }
+
+        void SetUint(const gocpp::ObjRecv<struct addressableValue>& self, uint64_t x)
+        {
+            return reflect::rec::SetUint(gocpp::recv(self.obj.Value), x);
+        }
+
+        void SetZero(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::SetZero(gocpp::recv(self.ptr->Value));
+        }
+
+        void SetZero(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::SetZero(gocpp::recv(self.obj.Value));
+        }
+
+        reflect::Value Slice(const gocpp::PtrRecv<struct addressableValue, false>& self, int i, int j)
+        {
+            return reflect::rec::Slice(gocpp::recv(self.ptr->Value), i, j);
+        }
+
+        reflect::Value Slice(const gocpp::ObjRecv<struct addressableValue>& self, int i, int j)
+        {
+            return reflect::rec::Slice(gocpp::recv(self.obj.Value), i, j);
+        }
+
+        reflect::Value Slice3(const gocpp::PtrRecv<struct addressableValue, false>& self, int i, int j, int k)
+        {
+            return reflect::rec::Slice3(gocpp::recv(self.ptr->Value), i, j, k);
+        }
+
+        reflect::Value Slice3(const gocpp::ObjRecv<struct addressableValue>& self, int i, int j, int k)
+        {
+            return reflect::rec::Slice3(gocpp::recv(self.obj.Value), i, j, k);
+        }
+
+        gocpp::string String(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::String(gocpp::recv(self.ptr->Value));
+        }
+
+        gocpp::string String(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::String(gocpp::recv(self.obj.Value));
+        }
+
+        std::tuple<reflect::Value, bool> TryRecv(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::TryRecv(gocpp::recv(self.ptr->Value));
+        }
+
+        std::tuple<reflect::Value, bool> TryRecv(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::TryRecv(gocpp::recv(self.obj.Value));
+        }
+
+        bool TrySend(const gocpp::PtrRecv<struct addressableValue, false>& self, reflect::Value x)
+        {
+            return reflect::rec::TrySend(gocpp::recv(self.ptr->Value), x);
+        }
+
+        bool TrySend(const gocpp::ObjRecv<struct addressableValue>& self, reflect::Value x)
+        {
+            return reflect::rec::TrySend(gocpp::recv(self.obj.Value), x);
+        }
+
+        reflect::Type Type(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Type(gocpp::recv(self.ptr->Value));
+        }
+
+        reflect::Type Type(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Type(gocpp::recv(self.obj.Value));
+        }
+
+        uint64_t Uint(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::Uint(gocpp::recv(self.ptr->Value));
+        }
+
+        uint64_t Uint(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::Uint(gocpp::recv(self.obj.Value));
+        }
+
+        uintptr_t UnsafeAddr(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::UnsafeAddr(gocpp::recv(self.ptr->Value));
+        }
+
+        uintptr_t UnsafeAddr(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::UnsafeAddr(gocpp::recv(self.obj.Value));
+        }
+
+        unsafe::Pointer UnsafePointer(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::UnsafePointer(gocpp::recv(self.ptr->Value));
+        }
+
+        unsafe::Pointer UnsafePointer(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::UnsafePointer(gocpp::recv(self.obj.Value));
+        }
+
+        abi::Type* abiType(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::abiType(gocpp::recv(self.ptr->Value));
+        }
+
+        abi::Type* abiType(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::abiType(gocpp::recv(self.obj.Value));
+        }
+
+        abi::Type* abiTypeSlow(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::abiTypeSlow(gocpp::recv(self.ptr->Value));
+        }
+
+        abi::Type* abiTypeSlow(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::abiTypeSlow(gocpp::recv(self.obj.Value));
+        }
+
+        reflect::Value assignTo(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::string context, abi::Type* dst, unsafe::Pointer target)
+        {
+            return reflect::rec::assignTo(gocpp::recv(self.ptr->Value), context, dst, target);
+        }
+
+        reflect::Value assignTo(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::string context, abi::Type* dst, unsafe::Pointer target)
+        {
+            return reflect::rec::assignTo(gocpp::recv(self.obj.Value), context, dst, target);
+        }
+
+        gocpp::slice<unsigned char> bytesSlow(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::bytesSlow(gocpp::recv(self.ptr->Value));
+        }
+
+        gocpp::slice<unsigned char> bytesSlow(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::bytesSlow(gocpp::recv(self.obj.Value));
+        }
+
+        gocpp::slice<reflect::Value> call(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::string op, gocpp::slice<reflect::Value> in)
+        {
+            return reflect::rec::call(gocpp::recv(self.ptr->Value), op, in);
+        }
+
+        gocpp::slice<reflect::Value> call(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::string op, gocpp::slice<reflect::Value> in)
+        {
+            return reflect::rec::call(gocpp::recv(self.obj.Value), op, in);
+        }
+
+        int capNonSlice(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::capNonSlice(gocpp::recv(self.ptr->Value));
+        }
+
+        int capNonSlice(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::capNonSlice(gocpp::recv(self.obj.Value));
+        }
+
+        reflect::Value extendSlice(const gocpp::PtrRecv<struct addressableValue, false>& self, int n)
+        {
+            return reflect::rec::extendSlice(gocpp::recv(self.ptr->Value), n);
+        }
+
+        reflect::Value extendSlice(const gocpp::ObjRecv<struct addressableValue>& self, int n)
+        {
+            return reflect::rec::extendSlice(gocpp::recv(self.obj.Value), n);
+        }
+
+        void grow(const gocpp::PtrRecv<struct addressableValue, false>& self, int n)
+        {
+            return reflect::rec::grow(gocpp::recv(self.ptr->Value), n);
+        }
+
+        void grow(const gocpp::ObjRecv<struct addressableValue>& self, int n)
+        {
+            return reflect::rec::grow(gocpp::recv(self.obj.Value), n);
+        }
+
+        reflect::Kind kind(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::kind(gocpp::recv(self.ptr->Value.flag));
+        }
+
+        reflect::Kind kind(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::kind(gocpp::recv(self.obj.Value.flag));
+        }
+
+        int lenNonSlice(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::lenNonSlice(gocpp::recv(self.ptr->Value));
+        }
+
+        int lenNonSlice(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::lenNonSlice(gocpp::recv(self.obj.Value));
+        }
+
+        void mustBe(const gocpp::PtrRecv<struct addressableValue, false>& self, reflect::Kind expected)
+        {
+            return reflect::rec::mustBe(gocpp::recv(self.ptr->Value.flag), expected);
+        }
+
+        void mustBe(const gocpp::ObjRecv<struct addressableValue>& self, reflect::Kind expected)
+        {
+            return reflect::rec::mustBe(gocpp::recv(self.obj.Value.flag), expected);
+        }
+
+        void mustBeAssignable(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::mustBeAssignable(gocpp::recv(self.ptr->Value.flag));
+        }
+
+        void mustBeAssignable(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::mustBeAssignable(gocpp::recv(self.obj.Value.flag));
+        }
+
+        void mustBeAssignableSlow(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::mustBeAssignableSlow(gocpp::recv(self.ptr->Value.flag));
+        }
+
+        void mustBeAssignableSlow(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::mustBeAssignableSlow(gocpp::recv(self.obj.Value.flag));
+        }
+
+        void mustBeExported(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::mustBeExported(gocpp::recv(self.ptr->Value.flag));
+        }
+
+        void mustBeExported(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::mustBeExported(gocpp::recv(self.obj.Value.flag));
+        }
+
+        void mustBeExportedSlow(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::mustBeExportedSlow(gocpp::recv(self.ptr->Value.flag));
+        }
+
+        void mustBeExportedSlow(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::mustBeExportedSlow(gocpp::recv(self.obj.Value.flag));
+        }
+
+        void panicNotBool(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::panicNotBool(gocpp::recv(self.ptr->Value));
+        }
+
+        void panicNotBool(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::panicNotBool(gocpp::recv(self.obj.Value));
+        }
+
+        void panicNotMap(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::panicNotMap(gocpp::recv(self.ptr->Value.flag));
+        }
+
+        void panicNotMap(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::panicNotMap(gocpp::recv(self.obj.Value.flag));
+        }
+
+        unsafe::Pointer pointer(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::pointer(gocpp::recv(self.ptr->Value));
+        }
+
+        unsafe::Pointer pointer(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::pointer(gocpp::recv(self.obj.Value));
+        }
+
+        std::tuple<reflect::Value, bool> recv(const gocpp::PtrRecv<struct addressableValue, false>& self, bool nb)
+        {
+            return reflect::rec::recv(gocpp::recv(self.ptr->Value), nb);
+        }
+
+        std::tuple<reflect::Value, bool> recv(const gocpp::ObjRecv<struct addressableValue>& self, bool nb)
+        {
+            return reflect::rec::recv(gocpp::recv(self.obj.Value), nb);
+        }
+
+        reflect::flag ro(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::ro(gocpp::recv(self.ptr->Value.flag));
+        }
+
+        reflect::flag ro(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::ro(gocpp::recv(self.obj.Value.flag));
+        }
+
+        gocpp::slice<gocpp::rune> runes(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::runes(gocpp::recv(self.ptr->Value));
+        }
+
+        gocpp::slice<gocpp::rune> runes(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::runes(gocpp::recv(self.obj.Value));
+        }
+
+        bool send(const gocpp::PtrRecv<struct addressableValue, false>& self, reflect::Value x, bool nb)
+        {
+            return reflect::rec::send(gocpp::recv(self.ptr->Value), x, nb);
+        }
+
+        bool send(const gocpp::ObjRecv<struct addressableValue>& self, reflect::Value x, bool nb)
+        {
+            return reflect::rec::send(gocpp::recv(self.obj.Value), x, nb);
+        }
+
+        void setRunes(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::slice<gocpp::rune> x)
+        {
+            return reflect::rec::setRunes(gocpp::recv(self.ptr->Value), x);
+        }
+
+        void setRunes(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::slice<gocpp::rune> x)
+        {
+            return reflect::rec::setRunes(gocpp::recv(self.obj.Value), x);
+        }
+
+        gocpp::string stringNonString(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::stringNonString(gocpp::recv(self.ptr->Value));
+        }
+
+        gocpp::string stringNonString(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::stringNonString(gocpp::recv(self.obj.Value));
+        }
+
+        abi::Type* typ(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::typ(gocpp::recv(self.ptr->Value));
+        }
+
+        abi::Type* typ(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::typ(gocpp::recv(self.obj.Value));
+        }
+
+        reflect::Type typeSlow(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        {
+            return reflect::rec::typeSlow(gocpp::recv(self.ptr->Value));
+        }
+
+        reflect::Type typeSlow(const gocpp::ObjRecv<struct addressableValue>& self)
+        {
+            return reflect::rec::typeSlow(gocpp::recv(self.obj.Value));
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct addressableValue& value)

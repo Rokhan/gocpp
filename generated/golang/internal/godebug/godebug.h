@@ -39,8 +39,6 @@ namespace golang::internal::godebug
     int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n);
 }
 #include "golang/internal/bisect/bisect.fwd.h"
-#include "golang/internal/godebugs/table.fwd.h"
-#include "golang/sync/atomic/type.fwd.h"
 #include "golang/sync/map.fwd.h"
 #include "golang/sync/mutex.fwd.h"
 #include "golang/sync/once.fwd.h"
@@ -48,15 +46,8 @@ namespace golang::internal::godebug
 namespace golang::internal::godebug
 {
     namespace sync = golang::sync;
-    namespace atomic = golang::sync::atomic;
 }
-#include "golang/sync/atomic/type.h"
 #include "golang/sync/map.h"
-
-namespace golang::internal::godebug
-{
-    namespace godebugs = golang::internal::godebugs;
-}
 #include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
 
@@ -81,25 +72,6 @@ namespace golang::internal::godebug
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Setting& value);
-    struct setting
-    {
-        atomic::Pointer<value> value{};
-        sync::Once nonDefaultOnce{};
-        atomic::Uint64 nonDefault{};
-        godebugs::Info* info{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct setting& value);
     struct value
     {
         gocpp::string text{};
@@ -132,8 +104,40 @@ namespace golang::internal::godebug
     // Once entered into the map, the name is never removed.
     extern sync::Map cache;
     extern mocklib::Mutex updateMu;
+}
+#include "golang/internal/godebugs/table.fwd.h"
+#include "golang/sync/atomic/type.fwd.h"
+
+namespace golang::internal::godebug
+{
     Setting* New(gocpp::string name);
     extern value empty;
+    namespace atomic = golang::sync::atomic;
+}
+#include "golang/sync/atomic/type.h"
+
+namespace golang::internal::godebug
+{
+    namespace godebugs = golang::internal::godebugs;
+    struct setting
+    {
+        atomic::Pointer<value> value{};
+        sync::Once nonDefaultOnce{};
+        atomic::Uint64 nonDefault{};
+        godebugs::Info* info{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct setting& value);
     setting* lookup(gocpp::string name);
 
     namespace rec

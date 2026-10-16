@@ -48,7 +48,9 @@ namespace golang::golang_org::x::tools::go::packages
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Error& value);
-    struct gocpp_id_0
+    bool sameFile(gocpp::string x, gocpp::string y);
+    LoadMode impliedLoadMode(LoadMode loadMode);
+    struct unit
     {
 
         using isGoStruct = void;
@@ -62,9 +64,7 @@ namespace golang::golang_org::x::tools::go::packages
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    bool sameFile(gocpp::string x, gocpp::string y);
-    LoadMode impliedLoadMode(LoadMode loadMode);
+    std::ostream& operator<<(std::ostream& os, const struct unit& value);
     
     template<typename T>
     T cond(bool cond, T t, T f);
@@ -95,21 +95,10 @@ namespace golang::golang_org::x::tools::go::packages
     };
 
     std::ostream& operator<<(std::ostream& os, const struct flatPackage& value);
-    struct unit
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct unit& value);
+    // We use a counting semaphore to limit
+    // the number of parallel I/O calls or CPU threads per process.
+    extern gocpp::channel<packages::unit> ioLimit;
+    extern gocpp::channel<packages::unit> cpuLimit;
 }
 #include "golang/golang.org/x/tools/go/packages/external.fwd.h"
 
@@ -128,10 +117,6 @@ namespace golang::golang_org::x::tools::go::packages
     {
         return mergeResponses(gocpp::ToSlice<DriverResponse*>(value, responses...));
     }
-    // We use a counting semaphore to limit
-    // the number of parallel I/O calls or CPU threads per process.
-    extern gocpp::channel<packages::unit> ioLimit;
-    extern gocpp::channel<packages::unit> cpuLimit;
 }
 #include "golang/context/context.fwd.h"
 #include "golang/go/ast/ast.fwd.h"
@@ -167,12 +152,12 @@ namespace golang::golang_org::x::tools::go::packages
 {
     namespace packagesinternal = golang::golang_org::x::tools::internal::packagesinternal;
     namespace time = golang::time;
-    namespace atomic = golang::sync::atomic;
 }
 #include "golang/sync/atomic/type.h"
 
 namespace golang::golang_org::x::tools::go::packages
 {
+    namespace atomic = golang::sync::atomic;
     struct Config
     {
         // Mode controls the level of information returned for each package.
@@ -399,12 +384,22 @@ namespace golang::golang_org::x::tools::go::packages
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(const gocpp::PtrRecv<struct loaderPackage, false>& self);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(const gocpp::ObjRecv<struct loaderPackage>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct loaderPackage, false>& self);
+        gocpp::string String(const gocpp::ObjRecv<struct loaderPackage>& self);
+        gocpp::error UnmarshalJSON(const gocpp::PtrRecv<struct loaderPackage, false>& self, gocpp::slice<unsigned char> b);
+        gocpp::error UnmarshalJSON(const gocpp::ObjRecv<struct loaderPackage>& self, gocpp::slice<unsigned char> b);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct loaderPackage& value);
     struct parseValue
     {
         ast::File* f{};
         gocpp::error err{};
-        gocpp::channel<gocpp_id_0> ready{};
+        gocpp::channel<gocpp::empty_struct> ready{};
 
         using isGoStruct = void;
 
@@ -485,6 +480,11 @@ namespace golang::golang_org::x::tools::go::packages
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        std::tuple<gocpp::string, gocpp::error> abs(const gocpp::PtrRecv<struct loader, false>& self, gocpp::string path);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct loader& value);
     loader* newLoader(Config* cfg);

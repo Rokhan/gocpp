@@ -83,6 +83,19 @@ namespace golang::runtime
         return os;
     }
 
+    namespace rec
+    {
+        void unpin(const gocpp::PtrRecv<struct Pinner, false>& self)
+        {
+            return rec::unpin(gocpp::recv(self.ptr->pinner));
+        }
+
+        void unpin(const gocpp::ObjRecv<struct Pinner>& self)
+        {
+            return rec::unpin(gocpp::recv(self.obj.pinner));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct Pinner& value)
     {
         return value.PrintTo(os);

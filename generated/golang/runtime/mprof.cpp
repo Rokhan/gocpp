@@ -1436,6 +1436,14 @@ namespace golang::runtime
         return os;
     }
 
+    namespace rec
+    {
+        gocpp::slice<uintptr_t> Stack(const gocpp::PtrRecv<struct BlockProfileRecord, false>& self)
+        {
+            return rec::Stack(gocpp::recv(self.ptr->StackRecord));
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct BlockProfileRecord& value)
     {
         return value.PrintTo(os);

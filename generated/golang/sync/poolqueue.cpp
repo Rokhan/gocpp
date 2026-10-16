@@ -97,38 +97,6 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_0
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            return result;
-        }
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
     // dequeueNil is used in poolDequeue to represent interface{}(nil).
     // Since we use nil to represent empty slots, we need a sentinel value
     // to represent nil.
@@ -339,6 +307,34 @@ namespace golang::sync
         os << " " << prev;
         os << '}';
         return os;
+    }
+
+    namespace rec
+    {
+        uint64_t pack(const gocpp::PtrRecv<struct poolChainElt, false>& self, uint32_t head, uint32_t tail)
+        {
+            return rec::pack(gocpp::recv(self.ptr->poolDequeue), head, tail);
+        }
+
+        std::tuple<go_any, bool> popHead(const gocpp::PtrRecv<struct poolChainElt, false>& self)
+        {
+            return rec::popHead(gocpp::recv(self.ptr->poolDequeue));
+        }
+
+        std::tuple<go_any, bool> popTail(const gocpp::PtrRecv<struct poolChainElt, false>& self)
+        {
+            return rec::popTail(gocpp::recv(self.ptr->poolDequeue));
+        }
+
+        bool pushHead(const gocpp::PtrRecv<struct poolChainElt, false>& self, go_any val)
+        {
+            return rec::pushHead(gocpp::recv(self.ptr->poolDequeue), val);
+        }
+
+        std::tuple<uint32_t, uint32_t> unpack(const gocpp::PtrRecv<struct poolChainElt, false>& self, uint64_t ptrs)
+        {
+            return rec::unpack(gocpp::recv(self.ptr->poolDequeue), ptrs);
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct poolChainElt& value)

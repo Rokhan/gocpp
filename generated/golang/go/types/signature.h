@@ -9,12 +9,6 @@
 #include "golang/go/types/signature.fwd.h"
 #include "gocpp/support.h"
 
-
-namespace golang::go::types
-{
-    // sentinel value for detecting method expressions
-    extern Var* methodExprSentinel;
-}
 #include "golang/go/types/type.h"
 #include "golang/go/types/object.fwd.h"
 #include "golang/go/types/scope.fwd.h"
@@ -50,6 +44,8 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Signature& value);
+    // sentinel value for detecting method expressions
+    extern Var* methodExprSentinel;
     golang::go::types::Type unpointer(golang::go::types::Type t);
 }
 #include "golang/go/token/position.fwd.h"

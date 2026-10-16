@@ -246,6 +246,7 @@ namespace golang::go::types
 }
 #include "golang/go/types/mono.h"
 #include "golang/go/types/object.h"
+#include "golang/go/types/type.h"
 #include "golang/go/types/api.fwd.h"
 #include "golang/go/types/context.fwd.h"
 #include "golang/go/types/package.fwd.h"
@@ -311,6 +312,20 @@ namespace golang::go::types
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        types::Object ObjectOf(const gocpp::PtrRecv<struct Checker, false>& self, ast::Ident* id);
+        types::Object ObjectOf(const gocpp::ObjRecv<struct Checker>& self, ast::Ident* id);
+        types::PkgName* PkgNameOf(const gocpp::PtrRecv<struct Checker, false>& self, ast::ImportSpec* imp);
+        types::PkgName* PkgNameOf(const gocpp::ObjRecv<struct Checker>& self, ast::ImportSpec* imp);
+        types::Type TypeOf(const gocpp::PtrRecv<struct Checker, false>& self, ast::Expr e);
+        types::Type TypeOf(const gocpp::ObjRecv<struct Checker>& self, ast::Expr e);
+        types::Object lookup(const gocpp::PtrRecv<struct Checker, false>& self, gocpp::string name);
+        std::tuple<types::Scope*, types::Object> lookupScope(const gocpp::PtrRecv<struct Checker, false>& self, gocpp::string name);
+        bool recordTypes(const gocpp::PtrRecv<struct Checker, false>& self);
+        bool recordTypes(const gocpp::ObjRecv<struct Checker>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Checker& value);
     Checker* NewChecker(Config* conf, token::FileSet* fset, Package* pkg, golang::go::types::Info* info);

@@ -40,38 +40,6 @@ namespace golang::syscall
     gocpp::slice<unsigned char> OID_PKIX_KP_SERVER_AUTH = gocpp::slice<unsigned char>("1.3.6.1.5.5.7.3.1\x00"_s);
     gocpp::slice<unsigned char> OID_SERVER_GATED_CRYPTO = gocpp::slice<unsigned char>("1.3.6.1.4.1.311.10.3.3\x00"_s);
     gocpp::slice<unsigned char> OID_SGC_NETSCAPE = gocpp::slice<unsigned char>("2.16.840.1.113730.4.1\x00"_s);
-    struct gocpp_id_0
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            return result;
-        }
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
     // Pointer represents a pointer to an arbitrary Windows type.
     //
     // Pointer-typed fields may point to one of many different types. It's

@@ -225,6 +225,12 @@ namespace golang::go::doc::comment
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        comment::Doc* Parse(const gocpp::PtrRecv<struct parseDoc, false>& self, gocpp::string text);
+        comment::Doc* Parse(const gocpp::ObjRecv<struct parseDoc>& self, gocpp::string text);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct parseDoc& value);
     bool isStdPkg(gocpp::string path);
     std::tuple<gocpp::string, bool> DefaultLookupPackage(gocpp::string name);

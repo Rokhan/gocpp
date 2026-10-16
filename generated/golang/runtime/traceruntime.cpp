@@ -71,6 +71,34 @@ namespace golang::runtime
         return os;
     }
 
+    namespace rec
+    {
+        bool acquireStatus(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen)
+        {
+            return rec::acquireStatus(gocpp::recv(self.ptr->traceSchedResourceState), gen);
+        }
+
+        traceArg nextSeq(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen)
+        {
+            return rec::nextSeq(gocpp::recv(self.ptr->traceSchedResourceState), gen);
+        }
+
+        void readyNextGen(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen)
+        {
+            return rec::readyNextGen(gocpp::recv(self.ptr->traceSchedResourceState), gen);
+        }
+
+        void setStatusTraced(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen)
+        {
+            return rec::setStatusTraced(gocpp::recv(self.ptr->traceSchedResourceState), gen);
+        }
+
+        bool statusWasTraced(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen)
+        {
+            return rec::statusWasTraced(gocpp::recv(self.ptr->traceSchedResourceState), gen);
+        }
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct gTraceState& value)
     {
         return value.PrintTo(os);
@@ -166,6 +194,34 @@ namespace golang::runtime
         os << " " << reclaimed;
         os << '}';
         return os;
+    }
+
+    namespace rec
+    {
+        bool acquireStatus(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen)
+        {
+            return rec::acquireStatus(gocpp::recv(self.ptr->traceSchedResourceState), gen);
+        }
+
+        traceArg nextSeq(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen)
+        {
+            return rec::nextSeq(gocpp::recv(self.ptr->traceSchedResourceState), gen);
+        }
+
+        void readyNextGen(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen)
+        {
+            return rec::readyNextGen(gocpp::recv(self.ptr->traceSchedResourceState), gen);
+        }
+
+        void setStatusTraced(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen)
+        {
+            return rec::setStatusTraced(gocpp::recv(self.ptr->traceSchedResourceState), gen);
+        }
+
+        bool statusWasTraced(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen)
+        {
+            return rec::statusWasTraced(gocpp::recv(self.ptr->traceSchedResourceState), gen);
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct pTraceState& value)

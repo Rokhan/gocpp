@@ -7,35 +7,6 @@
 namespace golang::os
 {
     struct root;
-    struct gocpp_id_2;
-    struct gocpp_id_1;
-    struct gocpp_id_5;
-    struct gocpp_id_4;
-    struct gocpp_id_8;
-    struct gocpp_id_7;
-    struct gocpp_id_11;
-    struct gocpp_id_10;
-    struct gocpp_id_14;
-    struct gocpp_id_13;
-    struct gocpp_id_18;
-    struct gocpp_id_19;
-    struct gocpp_id_16;
-    struct gocpp_id_24;
-    struct gocpp_id_23;
-    struct gocpp_id_27;
-    struct gocpp_id_26;
-    struct gocpp_id_32;
-    struct gocpp_id_33;
-    struct gocpp_id_34;
-    struct gocpp_id_35;
-    struct gocpp_id_36;
-    struct gocpp_id_31;
-    struct gocpp_id_37;
-    struct gocpp_id_29;
-    struct gocpp_id_42;
-    struct gocpp_id_41;
-    struct gocpp_id_43;
-    struct gocpp_id_39;
     // Flags for doInRoot.
     // doInRootNoHandleTerminalSlash prevents doInRoot from applying special handling
     // for paths which end in one or more slashes.

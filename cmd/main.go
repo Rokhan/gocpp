@@ -3487,6 +3487,9 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		}
 
 	case *ast.StructType:
+		if n.Fields == nil || len(n.Fields.List) == 0 {
+			return mkCppType("gocpp::empty_struct", nil)
+		}
 		name, first := cv.GetOrCreateExprId(node, ctx, "Struct")
 		if first {
 			structFwdDecl := fmt.Sprintf("struct %s;\n", name)
@@ -4433,13 +4436,16 @@ func convertGoToCppType(goType types.Type, tcCtx typeConvCtx) (string, bool) {
 		return fmt.Sprintf("gocpp::slice<%s>", convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
 
 	case *types.Struct:
+		if subType.NumFields() == 0 {
+			return "gocpp::empty_struct", true
+		}
 		//fmt.Printf("convertGoToCppType, struct type [%v], position[%v]\n", subType, position)
 		id, ok := typeToId[subType]
 		if !ok {
 			for id, t := range typeToId {
 				fmt.Printf("convertGoToCppType, id %d, type %v\n", id, t)
 			}
-			//panic(fmt.Sprintf("Unknown struct type in convertGoToCppType, type [%v], position[%v]", subType, position))
+			//Panicf("Unknown struct type in convertGoToCppType, type [%v], position[%v]", subType, tcCtx.position)
 			return "UnknownStructType", false
 		}
 		return fmt.Sprintf("%s", id), true

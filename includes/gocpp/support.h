@@ -699,6 +699,26 @@ namespace gocpp
         }
     };
 
+    struct empty_struct
+    {
+        using isGoStruct = void;
+
+        // Go: struct{}{} is assignable to / convertible to any named empty struct
+        template<typename T>
+            requires GoStruct<T>&& std::is_empty_v<T> && (!std::same_as<T, empty_struct>)
+        operator T() const { return T { }; }
+
+        bool operator==(const empty_struct&) const { return true; }
+        bool operator!=(const empty_struct&) const { return false; }
+
+        std::ostream& PrintTo(std::ostream& os) const { return os << "{}"; }
+    };
+
+    inline std::ostream& operator<<(std::ostream& os, const empty_struct& value)
+    {
+        return value.PrintTo(os);
+    }
+
     template <typename T>
     concept IsRefError = requires(const T& t) {
         { Error(t) } -> std::same_as<gocpp::string>;
@@ -1472,6 +1492,11 @@ namespace gocpp
             // FIXME: Not equivalent to go maps.
             // Value are inserted only when explicitly assigned in golang
             return {std::map<K, V>::operator[](key), false};
+        }
+
+        friend inline long len(const map<K, V>& input)
+        {
+            return input.size();
         }
 
         friend inline void remove(map<K, V>& input, const K& key)

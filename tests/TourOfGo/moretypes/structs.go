@@ -70,6 +70,17 @@ func embededStructDef() {
 	}
 }
 
+func emptyStructs() {
+	done := make(chan struct{})
+	set := map[string]struct{}{"a": {}}
+
+	go func() { done <- struct{}{} }()
+	<-done
+
+	_, ok := set["a"]
+	fmt.Println(ok, struct{}{}, len(set))
+}
+
 func main() {
 	fmt.Println(Vertex{1, 2})
 
@@ -100,6 +111,7 @@ func main() {
 
 	inlineStructDef(struct{ a int }{42})
 	embededStructDef()
+	emptyStructs()
 
 	vv := Vertex{3, 4}
 	offsetX := unsafe.Offsetof(vv.X)

@@ -42,6 +42,7 @@ namespace gocpp
     // TODO: chose a clear naming scheme ...
     struct complex128;
     struct Defer;
+    struct empty_struct;
     struct error;
     struct GoPanic;
     struct go_any;

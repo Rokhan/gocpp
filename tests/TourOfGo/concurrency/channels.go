@@ -26,6 +26,7 @@ func main() {
 	// TODO: check evaluation order
 	x, y := <-c, <-c // receive from c
 
+	x, y = min(x, y), max(x, y)
 	fmt.Println(x, y, x+y)
 
 	c = make(chan int)
@@ -34,6 +35,7 @@ func main() {
 	x = <-c // receive from c
 	y = <-c // receive from c
 
+	x, y = min(x, y), max(x, y)
 	fmt.Println(x, y, x+y)
 
 	c = nil

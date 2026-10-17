@@ -821,8 +821,8 @@ namespace golang::image::png
                                 auto src = rgba->Pix.make_slice(rec::PixOffset(gocpp::recv(rgba), b.Min.X, y), rec::PixOffset(gocpp::recv(rgba), b.Max.X, y));
                                 for(; len(src) >= 4; std::tie(dst, src) = std::tuple{dst.make_slice(4), src.make_slice(4)})
                                 {
-                                    auto d = (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(dst);
-                                    auto s = (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(src);
+                                    auto d = gocpp::slice_to_array_ptr<4>(dst);
+                                    auto s = gocpp::slice_to_array_ptr<4>(src);
                                     if(s[3] == 0x00)
                                     {
                                         d[0] = 0;

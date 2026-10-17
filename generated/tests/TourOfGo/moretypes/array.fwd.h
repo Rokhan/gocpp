@@ -15,4 +15,7 @@ namespace golang::main
     using semTable2 = gocpp::defined<gocpp::array<gocpp_id_1, ten>, GoTag_semTable2>;
     struct GoTag_asciiSet;
     using asciiSet = gocpp::defined<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
+    struct GoTag_quad;
+    using quad = gocpp::defined<gocpp::array<int, 4>, GoTag_quad>;
+    const int half = ten / 2;
 }

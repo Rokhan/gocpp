@@ -166,6 +166,144 @@ namespace golang::main
         }
     }
 
+    // Arrays are values: assignment copies the elements.
+    void testArrayValueSemantics()
+    {
+        auto a = gocpp::array<int, 4> {1, 2, 3, 4};
+        auto b = a;
+        b[0] = 99;
+        mocklib::Println("copy:"_s, a, b);
+
+        gocpp::array<int, 4> c = {};
+        c = a;
+        c[1] = 77;
+        mocklib::Println("assign:"_s, a, c);
+
+        mocklib::Println("equal:"_s, a == c, a == gocpp::array<int, 4> {1, 2, 3, 4});
+
+        auto p = gocpp::make_array_ptr(a);
+        auto d = *p;
+        d[2] = 55;
+        mocklib::Println("deref copy:"_s, a, d);
+
+        *p = gocpp::array<int, 4> {9, 8, 7, 6};
+        mocklib::Println("write through ptr:"_s, a);
+    }
+
+    int sumPtr(gocpp::array_ptr<gocpp::array<int, 4>> p)
+    {
+        auto total = 0;
+        for(auto [gocpp_ignored, v] : p)
+        {
+            total += v;
+        }
+        return total;
+    }
+
+    // Conversions from slice to array pointer, the pointer aliases the slice.
+    void testSliceToArrayPtr()
+    {
+        auto s = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 6);
+
+        auto p = gocpp::slice_to_array_ptr<4>(s);
+        p[0] = 1;
+        p[3] = 4;
+        mocklib::Println("alias:"_s, s, len(p));
+
+        *p = gocpp::array<int, 4> {5, 6, 7, 8};
+        mocklib::Println("write through ptr:"_s, s);
+
+        *gocpp::slice_to_array_ptr<4>(s.make_slice(2)) = gocpp::array<int, 4> {1, 2, 3, 4};
+        mocklib::Println("write through subslice:"_s, s);
+
+        s[0] = 100;
+        mocklib::Println("slice write seen by ptr:"_s, p[0], *p);
+        mocklib::Println("sum:"_s, sumPtr(p), sumPtr(gocpp::slice_to_array_ptr<4>(s.make_slice(1))));
+
+        for(auto [i, v] : gocpp::slice_to_array_ptr<2>(s.make_slice(4)))
+        {
+            mocklib::Println("range:"_s, i, v);
+        }
+    }
+
+    // Conversions from slice to array, the result is a copy.
+    void testSliceToArray()
+    {
+        auto s = gocpp::slice<int> {1, 2, 3, 4, 5, 6};
+
+        auto a = gocpp::slice_to_array<4>(s);
+        a[0] = 99;
+        mocklib::Println("copy:"_s, a, s);
+
+        auto b = gocpp::slice_to_array<2>(s.make_slice(4));
+        s[4] = 50;
+        mocklib::Println("copy is independent:"_s, b, s);
+    }
+
+    // Same conversions with a named array type.
+    void testNamedArray()
+    {
+        auto s = gocpp::slice<int> {1, 2, 3, 4, 5};
+
+        auto q = gocpp::slice_to_array<quad>(s);
+        q[0] = 10;
+        mocklib::Println("named copy:"_s, q, s);
+
+        auto p = gocpp::slice_to_array_ptr<quad>(s);
+        p[1] = 20;
+        mocklib::Println("named alias:"_s, *p, s);
+    }
+
+    // Converting a slice that is too short must panic.
+    void testSliceToArrayPanic()
+    {
+        gocpp::Defer defer;
+        try
+        {
+            defer.push_back([=]{ [=]() mutable -> void
+            {
+                if(auto r = gocpp::recover(); r != nullptr)
+                {
+                    mocklib::Println("recovered"_s);
+                }
+            }(); });
+
+            auto s = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 3);
+            mocklib::Println("before"_s);
+            auto p = gocpp::slice_to_array_ptr<4>(s);
+            mocklib::Println("not reached"_s, p);
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
+    }
+
+    // Array lengths given by constants and constant expressions.
+    void testSymbolicLength()
+    {
+        auto s = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), ten + 2);
+        for(auto [i, gocpp_ignored] : s)
+        {
+            s[i] = i;
+        }
+
+        auto p = gocpp::slice_to_array_ptr<ten>(s);
+        p[ten - 1] = 100;
+        mocklib::Println("const length ptr:"_s, len(p), s);
+
+        auto a = gocpp::slice_to_array<half>(s.make_slice(ten - half));
+        a[0] = - 1;
+        mocklib::Println("const length copy:"_s, a, s.make_slice(ten - half));
+
+        auto q = gocpp::slice_to_array_ptr<(half + 2)>(s);
+        mocklib::Println("expression length:"_s, len(q), *q);
+
+        gocpp::array<int, ten> zero = {};
+        *gocpp::slice_to_array_ptr<(ten / 2 * 2)>(s) = zero;
+        mocklib::Println("expression length write:"_s, s);
+    }
+
     void main()
     {
         gocpp::array<gocpp::string, 2> a = {};
@@ -206,6 +344,13 @@ namespace golang::main
 
         testPtrArray1();
         testPtrArray2();
+
+        testArrayValueSemantics();
+        testSliceToArrayPtr();
+        testSliceToArray();
+        testNamedArray();
+        testSymbolicLength();
+        testSliceToArrayPanic();
     }
 
     int arrayLen(gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf)

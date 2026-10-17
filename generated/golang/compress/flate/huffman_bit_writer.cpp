@@ -903,8 +903,8 @@ namespace golang::compress::flate
     {
         int numLiterals;
         int numOffsets;
-        *(gocpp::array_ptr<gocpp::array<uint16_t, 256>>)(w->literalFreq.make_slice(0)) = t->litHist;
-        *(gocpp::array_ptr<gocpp::array<uint16_t, 32>>)(w->literalFreq.make_slice(256)) = t->extraHist;
+        *gocpp::slice_to_array_ptr<256>(w->literalFreq.make_slice(0)) = t->litHist;
+        *gocpp::slice_to_array_ptr<32>(w->literalFreq.make_slice(256)) = t->extraHist;
         w->offsetFreq = t->offHist;
 
         if(t->n == 0)

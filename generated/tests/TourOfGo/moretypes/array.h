@@ -24,6 +24,15 @@ namespace golang::main
     extern gocpp::array_ptr<asciiSet> global_asPtr1a;
     extern gocpp::array_ptr<asciiSet> global_asPtr1b;
     void testPtrArray2();
+    void testArrayValueSemantics();
+    int sumPtr(gocpp::array_ptr<gocpp::array<int, 4>> p);
+    void testSliceToArrayPtr();
+    void testSliceToArray();
+    struct GoTag_quad { };
+    using quad = gocpp::defined<gocpp::array<int, 4>, GoTag_quad>;
+    void testNamedArray();
+    void testSliceToArrayPanic();
+    void testSymbolicLength();
     void main();
     int arrayLen(gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf);
     asciiSet makeASCIISet(gocpp::string chars);

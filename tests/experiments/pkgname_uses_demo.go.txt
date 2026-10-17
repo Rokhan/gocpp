@@ -1,0 +1,72 @@
+package main
+
+import (
+	"fmt"
+	"go/ast"
+	"go/importer"
+	"go/parser"
+	"go/token"
+	"go/types"
+	"path/filepath"
+)
+
+const src = `package p
+
+import "fmt"
+import myfmt "fmt"
+
+func F() {
+	fmt.Println("hi") // "myfmt" here is the namespace-qualifier ident
+	myfmt.Println("hi") // "myfmt" here is the namespace-qualifier ident
+}
+`
+
+// declLocation returns "<pkgPath>/<filename>" for where obj was declared,
+// e.g. "fmt/print.go". Mirrors this project's existing pkgInfo.basePath()
+// convention (pkgPath + "/" + base filename).
+func declLocation(fset *token.FileSet, obj types.Object) string {
+	pos := fset.Position(obj.Pos())
+	if !pos.IsValid() {
+		return "<no declaration - predeclared/builtin>"
+	}
+	pkg := obj.Pkg()
+	if pkg == nil {
+		return filepath.Base(pos.Filename)
+	}
+	return pkg.Path() + "/" + filepath.Base(pos.Filename)
+}
+
+func main() {
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "p.go", src, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	conf := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
+	info := &types.Info{Uses: make(map[*ast.Ident]types.Object)}
+	if _, err := conf.Check("p", fset, []*ast.File{f}, info); err != nil {
+		panic(err)
+	}
+
+	ast.Inspect(f, func(n ast.Node) bool {
+		sel, ok := n.(*ast.SelectorExpr)
+		if !ok {
+			return true
+		}
+
+		// sel.X : the qualifier ("myfmt")
+		if id, ok := sel.X.(*ast.Ident); ok {
+			if obj, found := info.Uses[id]; found {
+				fmt.Printf("%-8s -> %s\n", id.Name, declLocation(fset, obj))
+			}
+		}
+
+		// sel.Sel : the selected member ("Println")
+		if obj, found := info.Uses[sel.Sel]; found {
+			fmt.Printf("%-8s -> %s\n", sel.Sel.Name, declLocation(fset, obj))
+		}
+
+		return true
+	})
+}

@@ -5,6 +5,7 @@
 #include "gocpp/common.h"
 #include "gocpp/mocklib.h"
 
+#include <concepts>
 #include <initializer_list>
 #include <memory>
 #include <type_traits>
@@ -19,10 +20,26 @@ namespace gocpp
         array_ptr() { }
         array_ptr(TArray* target) { ptr = target; }
 
-        array_ptr& operator=(TArray* target) { ptr = target; return *this; }
+        array_ptr& operator=(TArray* target) { ptr = target; owner.reset(); return *this; }
 
-        bool operator==(const array_ptr<TArray>&) const = default;
-        bool operator!=(const array_ptr<TArray>&) const = default;
+        // Go: (*[N]T)(s). The result aliases the slice storage (no copy), and panics if len(s) < N.
+        template <typename E> requires std::same_as<typename array_base<E>::element_type, typename TArray::element_type>
+        array_ptr(const slice<E>& s)
+        {
+            if(len(s) < TArray::length)
+            {
+                panic("runtime error: cannot convert slice with length too short to array or pointer to array");
+            }
+            owner = std::make_shared<TArray>(s.mArray, s.mStart);
+            ptr = owner.get();
+        }
+
+        // Pointers created from slices own distinct view objects: compare targets only.
+        bool operator==(const array_ptr<TArray>& rhs) const { return ptr == rhs.ptr; }
+        bool operator!=(const array_ptr<TArray>& rhs) const { return ptr != rhs.ptr; }
+
+        TArray& operator*() { check_not_null(); return *ptr; }
+        const TArray& operator*() const { check_not_null(); return *ptr; }
 
         bool operator==(std::nullptr_t) const { return ptr == nullptr; }
         bool operator!=(std::nullptr_t) const { return ptr != nullptr; }
@@ -60,6 +77,8 @@ namespace gocpp
             return ptr->end();
         }
 
+        // Keeps the array view alive when built from a slice, empty otherwise.
+        std::shared_ptr<TArray> owner;
         TArray* ptr = nullptr;
     };
 
@@ -124,9 +143,15 @@ namespace gocpp
 
         template <typename, int> friend struct array;
         template <typename> friend struct slice;
+        template <typename> friend struct array_ptr;
 
         size_t size() const
         {
+            if(mLen >= 0)
+            {
+                return mLen;
+            }
+
             if(mArray)
             {
                 return mArray->size();
@@ -139,7 +164,8 @@ namespace gocpp
         {
             if(mArray)
             {
-                return mArray->at(i);
+                check_view_index(i);
+                return mArray->at(i + mBase);
             }
 
             panic("Cannot access item of an empty array");
@@ -149,7 +175,8 @@ namespace gocpp
         {
             if(mArray)
             {
-                return mArray->at(i);
+                check_view_index(i);
+                return mArray->at(i + mBase);
             }
 
             panic("Cannot access item of an empty array");
@@ -159,7 +186,7 @@ namespace gocpp
         {
             if(mArray)
             {
-                return { 0, mArray->begin() };
+                return { 0, mArray->begin() + mBase };
             }
 
             return range_iterator();
@@ -179,7 +206,7 @@ namespace gocpp
         {
             if(mArray)
             {
-                return { mArray->size(), mArray->end() };
+                return { size(), mArray->begin() + mBase + (std::ptrdiff_t)size() };
             }
 
             return range_iterator();
@@ -202,7 +229,20 @@ namespace gocpp
     protected:
         array_base() { }
 
+        void check_view_index(size_t i) const
+        {
+            if(mLen >= 0 && i >= (size_t)mLen)
+            {
+                panic("runtime error: index out of range");
+            }
+        }
+
         std::shared_ptr<store_type> mArray;
+
+        // Window on *mArray: [mBase, mBase + mLen). mLen < 0 means "the whole vector".
+        // Only used by arrays built as views over slice storage (see array_ptr).
+        int mBase = 0;
+        int mLen = -1;
     };
 
     template<typename T, int N>
@@ -221,10 +261,58 @@ namespace gocpp
             this->mArray->resize(N);
         }
 
+        static constexpr int length = N;
+
+        // View over [base, base + N) of an existing store, used by array_ptr(slice).
+        array(std::shared_ptr<store_type> store, int base)
+        {
+            this->mArray = std::move(store);
+            this->mBase = base;
+            this->mLen = N;
+        }
+
+        // Go arrays are values: copies are deep.
+        array(const array& other)
+        {
+            this->mArray = std::make_shared<store_type>(N);
+            for(int i = 0; i < N; ++i) (*this)[i] = other[i];
+        }
+
+        array(array&& other)
+        {
+            if(other.mLen < 0)
+            {
+                this->mArray = std::move(other.mArray);
+            }
+            else
+            {
+                this->mArray = std::make_shared<store_type>(N);
+                for(int i = 0; i < N; ++i) (*this)[i] = other[i];
+            }
+        }
+
+        // Assignment copies elements, so it writes through views: `*p = x`.
+        array& operator=(const array& rhs)
+        {
+            if(this == &rhs) return *this;
+            if(!this->mArray) this->mArray = std::make_shared<store_type>(N);
+            for(int i = 0; i < N; ++i) (*this)[i] = rhs[i];
+            return *this;
+        }
+
+        array& operator=(array&& rhs)
+        {
+            return *this = static_cast<const array&>(rhs);
+        }
+
         // TODO : other constructors
 
         bool operator==(const array<T, N>& rhs) const {
-            return *this->mArray.get() == *rhs.mArray.get();
+            for(int i = 0; i < N; ++i)
+            {
+                if(!((*this)[i] == rhs[i])) return false;
+            }
+            return true;
         }
 
         friend constexpr long len(const array<T, N>& input)

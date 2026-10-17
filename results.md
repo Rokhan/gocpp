@@ -183,7 +183,7 @@
 | $(ImportDir)/encoding/json/v2/errors.go | ✔️ ([cpp](generated/golang/encoding/json/v2/errors.cpp), [h](generated/golang/encoding/json/v2/errors.h))| ❌ |
 | $(ImportDir)/encoding/json/v2/fields.go | ✔️ ([cpp](generated/golang/encoding/json/v2/fields.cpp), [h](generated/golang/encoding/json/v2/fields.h))| ❌ |
 | $(ImportDir)/encoding/json/v2/fold.go | ✔️ ([cpp](generated/golang/encoding/json/v2/fold.cpp), [h](generated/golang/encoding/json/v2/fold.h))| ✔️ |
-| $(ImportDir)/encoding/json/v2/intern.go | ✔️ ([cpp](generated/golang/encoding/json/v2/intern.cpp), [h](generated/golang/encoding/json/v2/intern.h))| ❌ |
+| $(ImportDir)/encoding/json/v2/intern.go | ✔️ ([cpp](generated/golang/encoding/json/v2/intern.cpp), [h](generated/golang/encoding/json/v2/intern.h))| ✔️ |
 | $(ImportDir)/encoding/json/v2/options.go | ✔️ ([cpp](generated/golang/encoding/json/v2/options.cpp), [h](generated/golang/encoding/json/v2/options.h))| ❌ |
 | $(ImportDir)/encoding/json/v2_decode.go | ✔️ ([cpp](generated/golang/encoding/json/v2_decode.cpp), [h](generated/golang/encoding/json/v2_decode.h))| ❌ |
 | $(ImportDir)/encoding/json/v2_encode.go | ✔️ ([cpp](generated/golang/encoding/json/v2_encode.cpp), [h](generated/golang/encoding/json/v2_encode.h))| ❌ |

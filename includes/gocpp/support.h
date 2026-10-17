@@ -981,8 +981,8 @@ namespace gocpp
         {
             checkParams(a, low, high);            
             this->mArray = a.mArray;
-            mStart = low;
-            mEnd = high;
+            mStart = low + a.mBase;
+            mEnd = high + a.mBase;
         }
         
         slice(array_base<T>& a, int low, int high, int capacity)
@@ -999,7 +999,7 @@ namespace gocpp
                 panic("slice: capacity > size");
             }
 
-            this->mArray = std::make_shared<store_type>(a.mArray->begin() + low, a.mArray->begin() + high);
+            this->mArray = std::make_shared<store_type>(a.mArray->begin() + a.mBase + low, a.mArray->begin() + a.mBase + high);
             this->mArray->reserve(capacity);
             mStart = 0;
             mEnd = high - low;

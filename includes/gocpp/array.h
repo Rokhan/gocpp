@@ -88,6 +88,33 @@ namespace gocpp
         return array_ptr<TArray>(&target);
     }
 
+    // Go: (*[N]T)(s), the result aliases the slice storage. Panics if len(s) < N.
+    // TArray is the array type (possibly a named one), or just N for a plain [N]E.
+    template <typename TArray, typename E>
+    array_ptr<TArray> slice_to_array_ptr(const slice<E>& s)
+    {
+        return array_ptr<TArray>(s);
+    }
+
+    template <int N, typename E>
+    array_ptr<array<E, N>> slice_to_array_ptr(const slice<E>& s)
+    {
+        return slice_to_array_ptr<array<E, N>>(s);
+    }
+
+    // Go: [N]T(s), the result is a copy of the first N elements. Panics if len(s) < N.
+    template <typename TArray, typename E>
+    TArray slice_to_array(const slice<E>& s)
+    {
+        return *array_ptr<TArray>(s);
+    }
+
+    template <int N, typename E>
+    array<E, N> slice_to_array(const slice<E>& s)
+    {
+        return slice_to_array<array<E, N>>(s);
+    }
+
     template<typename TArray>
     inline std::ostream& operator<<(std::ostream& os, const array_ptr<TArray>& value)
     {

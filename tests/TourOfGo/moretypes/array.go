@@ -81,6 +81,128 @@ func testPtrArray2() {
 	}
 }
 
+// Arrays are values: assignment copies the elements.
+func testArrayValueSemantics() {
+	a := [4]int{1, 2, 3, 4}
+	b := a
+	b[0] = 99
+	fmt.Println("copy:", a, b)
+
+	var c [4]int
+	c = a
+	c[1] = 77
+	fmt.Println("assign:", a, c)
+
+	fmt.Println("equal:", a == c, a == [4]int{1, 2, 3, 4})
+
+	p := &a
+	d := *p
+	d[2] = 55
+	fmt.Println("deref copy:", a, d)
+
+	*p = [4]int{9, 8, 7, 6}
+	fmt.Println("write through ptr:", a)
+}
+
+func sumPtr(p *[4]int) int {
+	total := 0
+	for _, v := range p {
+		total += v
+	}
+	return total
+}
+
+// Conversions from slice to array pointer, the pointer aliases the slice.
+func testSliceToArrayPtr() {
+	s := make([]int, 6)
+
+	p := (*[4]int)(s)
+	p[0] = 1
+	p[3] = 4
+	fmt.Println("alias:", s, len(p))
+
+	*p = [4]int{5, 6, 7, 8}
+	fmt.Println("write through ptr:", s)
+
+	*(*[4]int)(s[2:]) = [4]int{1, 2, 3, 4}
+	fmt.Println("write through subslice:", s)
+
+	s[0] = 100
+	fmt.Println("slice write seen by ptr:", p[0], *p)
+	fmt.Println("sum:", sumPtr(p), sumPtr((*[4]int)(s[1:])))
+
+	for i, v := range (*[2]int)(s[4:]) {
+		fmt.Println("range:", i, v)
+	}
+}
+
+// Conversions from slice to array, the result is a copy.
+func testSliceToArray() {
+	s := []int{1, 2, 3, 4, 5, 6}
+
+	a := [4]int(s)
+	a[0] = 99
+	fmt.Println("copy:", a, s)
+
+	b := [2]int(s[4:])
+	s[4] = 50
+	fmt.Println("copy is independent:", b, s)
+}
+
+type quad [4]int
+
+// Same conversions with a named array type.
+func testNamedArray() {
+	s := []int{1, 2, 3, 4, 5}
+
+	q := quad(s)
+	q[0] = 10
+	fmt.Println("named copy:", q, s)
+
+	p := (*quad)(s)
+	p[1] = 20
+	fmt.Println("named alias:", *p, s)
+}
+
+// Converting a slice that is too short must panic.
+func testSliceToArrayPanic() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("recovered")
+		}
+	}()
+
+	s := make([]int, 3)
+	fmt.Println("before")
+	p := (*[4]int)(s)
+	fmt.Println("not reached", p)
+}
+
+const half = ten / 2
+
+// Array lengths given by constants and constant expressions.
+func testSymbolicLength() {
+	s := make([]int, ten+2)
+	for i := range s {
+		s[i] = i
+	}
+
+	p := (*[ten]int)(s)
+	p[ten-1] = 100
+	fmt.Println("const length ptr:", len(p), s)
+
+	a := [half]int(s[ten-half:])
+	a[0] = -1
+	fmt.Println("const length copy:", a, s[ten-half:])
+
+	q := (*[half + 2]int)(s)
+	fmt.Println("expression length:", len(q), *q)
+
+	var zero [ten]int
+	*(*[ten / 2 * 2]int)(s) = zero
+	fmt.Println("expression length write:", s)
+}
+
 func main() {
 	var a [2]string
 	a[0] = "Hello"
@@ -120,6 +242,13 @@ func main() {
 
 	testPtrArray1()
 	testPtrArray2()
+
+	testArrayValueSemantics()
+	testSliceToArrayPtr()
+	testSliceToArray()
+	testNamedArray()
+	testSymbolicLength()
+	testSliceToArrayPanic()
 }
 
 func arrayLen(buf *[32]byte) int {

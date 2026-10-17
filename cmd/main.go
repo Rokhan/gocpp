@@ -4656,6 +4656,12 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		//}
 
 	case *ast.CallExpr:
+		if cv.typeInfo.Types[n.Fun].IsType() {
+			if conv, ok := cv.convertConversion(n); ok {
+				return conv
+			}
+		}
+
 		buf := mkCppBuffer()
 		var sep = ""
 		var convertAsType bool = false

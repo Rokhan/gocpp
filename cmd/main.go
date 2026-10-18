@@ -831,7 +831,11 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 				if cv.shared.debugMode {
 					dbg = fmt.Sprintf("/* %d */", getPlaceLogId(place))
 				}
-				fmt.Fprintf(outFile.out, "%s%s%s", indent, dbg, line)
+				if line != "\n" || dbg != "" {
+					fmt.Fprintf(outFile.out, "%s%s%s", indent, dbg, line)
+				} else {
+					fmt.Fprintf(outFile.out, "\n")
+				}
 			}
 
 			logPlace(cv, place, "'%s' decl", outFile.name)

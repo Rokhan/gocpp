@@ -16,6 +16,12 @@ namespace golang::go::types
 
     template<typename T>
     gocpp::slice<T> substList(gocpp::slice<T> in, std::function<T (T _1)> subst);
+
+    template<typename T, typename F1>
+    decltype(auto) substList(gocpp::slice<T> in, F1&& subst)
+    {
+        return substList(in, std::function(std::forward<F1>(subst)));
+    }
 }
 #include "golang/go/types/type.h"
 #include "golang/go/types/object.fwd.h"

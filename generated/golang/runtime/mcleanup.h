@@ -41,6 +41,12 @@ namespace golang::runtime
 
     template<typename T, typename S>
     Cleanup AddCleanup(T* ptr, std::function<void (S _1)> cleanup, S arg);
+
+    template<typename T, typename S, typename F1>
+    decltype(auto) AddCleanup(T* ptr, F1&& cleanup, S arg)
+    {
+        return AddCleanup(ptr, std::function(std::forward<F1>(cleanup)), arg);
+    }
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/runtime2.fwd.h"

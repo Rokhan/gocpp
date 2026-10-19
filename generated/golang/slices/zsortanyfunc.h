@@ -16,50 +16,146 @@ namespace golang::slices
     template<typename E>
     void insertionSortCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
 
+    template<typename E, typename F1>
+    decltype(auto) insertionSortCmpFunc(gocpp::slice<E> data, int a, int b, F1&& cmp)
+    {
+        return insertionSortCmpFunc(data, a, b, std::function(std::forward<F1>(cmp)));
+    }
+
     template<typename E>
     void siftDownCmpFunc(gocpp::slice<E> data, int lo, int hi, int first, std::function<int (E a, E b)> cmp);
+
+    template<typename E, typename F1>
+    decltype(auto) siftDownCmpFunc(gocpp::slice<E> data, int lo, int hi, int first, F1&& cmp)
+    {
+        return siftDownCmpFunc(data, lo, hi, first, std::function(std::forward<F1>(cmp)));
+    }
 
     template<typename E>
     void heapSortCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
 
+    template<typename E, typename F1>
+    decltype(auto) heapSortCmpFunc(gocpp::slice<E> data, int a, int b, F1&& cmp)
+    {
+        return heapSortCmpFunc(data, a, b, std::function(std::forward<F1>(cmp)));
+    }
+
     template<typename E>
     void pdqsortCmpFunc(gocpp::slice<E> data, int a, int b, int limit, std::function<int (E a, E b)> cmp);
+
+    template<typename E, typename F1>
+    decltype(auto) pdqsortCmpFunc(gocpp::slice<E> data, int a, int b, int limit, F1&& cmp)
+    {
+        return pdqsortCmpFunc(data, a, b, limit, std::function(std::forward<F1>(cmp)));
+    }
 
     template<typename E>
     std::tuple<int, bool> partitionCmpFunc(gocpp::slice<E> data, int a, int b, int pivot, std::function<int (E a, E b)> cmp);
 
+    template<typename E, typename F1>
+    decltype(auto) partitionCmpFunc(gocpp::slice<E> data, int a, int b, int pivot, F1&& cmp)
+    {
+        return partitionCmpFunc(data, a, b, pivot, std::function(std::forward<F1>(cmp)));
+    }
+
     template<typename E>
     int partitionEqualCmpFunc(gocpp::slice<E> data, int a, int b, int pivot, std::function<int (E a, E b)> cmp);
+
+    template<typename E, typename F1>
+    decltype(auto) partitionEqualCmpFunc(gocpp::slice<E> data, int a, int b, int pivot, F1&& cmp)
+    {
+        return partitionEqualCmpFunc(data, a, b, pivot, std::function(std::forward<F1>(cmp)));
+    }
 
     template<typename E>
     bool partialInsertionSortCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
 
+    template<typename E, typename F1>
+    decltype(auto) partialInsertionSortCmpFunc(gocpp::slice<E> data, int a, int b, F1&& cmp)
+    {
+        return partialInsertionSortCmpFunc(data, a, b, std::function(std::forward<F1>(cmp)));
+    }
+
     template<typename E>
     void breakPatternsCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
+
+    template<typename E, typename F1>
+    decltype(auto) breakPatternsCmpFunc(gocpp::slice<E> data, int a, int b, F1&& cmp)
+    {
+        return breakPatternsCmpFunc(data, a, b, std::function(std::forward<F1>(cmp)));
+    }
 
     template<typename E>
     std::tuple<int, int> order2CmpFunc(gocpp::slice<E> data, int a, int b, int* swaps, std::function<int (E a, E b)> cmp);
 
+    template<typename E, typename F1>
+    decltype(auto) order2CmpFunc(gocpp::slice<E> data, int a, int b, int* swaps, F1&& cmp)
+    {
+        return order2CmpFunc(data, a, b, swaps, std::function(std::forward<F1>(cmp)));
+    }
+
     template<typename E>
     int medianCmpFunc(gocpp::slice<E> data, int a, int b, int c, int* swaps, std::function<int (E a, E b)> cmp);
+
+    template<typename E, typename F1>
+    decltype(auto) medianCmpFunc(gocpp::slice<E> data, int a, int b, int c, int* swaps, F1&& cmp)
+    {
+        return medianCmpFunc(data, a, b, c, swaps, std::function(std::forward<F1>(cmp)));
+    }
 
     template<typename E>
     int medianAdjacentCmpFunc(gocpp::slice<E> data, int a, int* swaps, std::function<int (E a, E b)> cmp);
 
+    template<typename E, typename F1>
+    decltype(auto) medianAdjacentCmpFunc(gocpp::slice<E> data, int a, int* swaps, F1&& cmp)
+    {
+        return medianAdjacentCmpFunc(data, a, swaps, std::function(std::forward<F1>(cmp)));
+    }
+
     template<typename E>
     void reverseRangeCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
+
+    template<typename E, typename F1>
+    decltype(auto) reverseRangeCmpFunc(gocpp::slice<E> data, int a, int b, F1&& cmp)
+    {
+        return reverseRangeCmpFunc(data, a, b, std::function(std::forward<F1>(cmp)));
+    }
 
     template<typename E>
     void swapRangeCmpFunc(gocpp::slice<E> data, int a, int b, int n, std::function<int (E a, E b)> cmp);
 
+    template<typename E, typename F1>
+    decltype(auto) swapRangeCmpFunc(gocpp::slice<E> data, int a, int b, int n, F1&& cmp)
+    {
+        return swapRangeCmpFunc(data, a, b, n, std::function(std::forward<F1>(cmp)));
+    }
+
     template<typename E>
     void stableCmpFunc(gocpp::slice<E> data, int n, std::function<int (E a, E b)> cmp);
+
+    template<typename E, typename F1>
+    decltype(auto) stableCmpFunc(gocpp::slice<E> data, int n, F1&& cmp)
+    {
+        return stableCmpFunc(data, n, std::function(std::forward<F1>(cmp)));
+    }
 
     template<typename E>
     void symMergeCmpFunc(gocpp::slice<E> data, int a, int m, int b, std::function<int (E a, E b)> cmp);
 
+    template<typename E, typename F1>
+    decltype(auto) symMergeCmpFunc(gocpp::slice<E> data, int a, int m, int b, F1&& cmp)
+    {
+        return symMergeCmpFunc(data, a, m, b, std::function(std::forward<F1>(cmp)));
+    }
+
     template<typename E>
     void rotateCmpFunc(gocpp::slice<E> data, int a, int m, int b, std::function<int (E a, E b)> cmp);
+
+    template<typename E, typename F1>
+    decltype(auto) rotateCmpFunc(gocpp::slice<E> data, int a, int m, int b, F1&& cmp)
+    {
+        return rotateCmpFunc(data, a, m, b, std::function(std::forward<F1>(cmp)));
+    }
 }
 #include "golang/slices/sort.h"
 
@@ -68,6 +164,12 @@ namespace golang::slices
 
     template<typename E>
     std::tuple<int, sortedHint> choosePivotCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
+
+    template<typename E, typename F1>
+    decltype(auto) choosePivotCmpFunc(gocpp::slice<E> data, int a, int b, F1&& cmp)
+    {
+        return choosePivotCmpFunc(data, a, b, std::function(std::forward<F1>(cmp)));
+    }
 
     namespace rec
     {

@@ -18,6 +18,12 @@ namespace golang::os
 
     template<typename T>
     std::tuple<T, gocpp::error> ignoringEINTR2(std::function<std::tuple<T, gocpp::error> ()> fn);
+
+    template<typename F1>
+    decltype(auto) ignoringEINTR2(F1&& fn)
+    {
+        return ignoringEINTR2(std::function(std::forward<F1>(fn)));
+    }
 }
 #include "golang/os/types.h"
 

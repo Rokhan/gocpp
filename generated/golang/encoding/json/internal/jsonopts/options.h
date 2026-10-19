@@ -218,6 +218,12 @@ namespace golang::encoding::json::internal::jsonopts
 
     template<typename T>
     std::tuple<T, bool> GetOption(Options opts, std::function<Options (T _1)> setter);
+
+    template<typename F1>
+    decltype(auto) GetOption(Options opts, F1&& setter)
+    {
+        return GetOption(opts, std::function(std::forward<F1>(setter)));
+    }
     // JoinUnknownOption is injected by the "json" package to handle Options
     // declared in that package so that "jsonopts" can handle them.
     extern std::function<jsonopts::Struct (jsonopts::Struct, jsonopts::Options)> JoinUnknownOption;

@@ -28,6 +28,12 @@ namespace golang::os
 
     template<typename T>
     std::tuple<T, gocpp::error> doInRoot(Root* r, gocpp::string name, unsigned int flags, std::function<std::tuple<sysfdType, gocpp::error> (sysfdType parent, gocpp::string name)> openDirFunc, std::function<std::tuple<T, gocpp::error> (sysfdType parent, gocpp::string name, bool endsInSlash)> f);
+
+    template<typename F1, typename F2>
+    decltype(auto) doInRoot(Root* r, gocpp::string name, unsigned int flags, F1&& openDirFunc, F2&& f)
+    {
+        return doInRoot(r, name, flags, std::function(std::forward<F1>(openDirFunc)), std::function(std::forward<F2>(f)));
+    }
     std::tuple<FileMode, gocpp::error> modeAt(sysfdType parent, gocpp::string name);
 }
 #include "golang/sync/mutex.fwd.h"

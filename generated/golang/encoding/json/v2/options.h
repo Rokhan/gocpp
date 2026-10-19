@@ -28,6 +28,12 @@ namespace golang::encoding::json::v2
 
     template<typename T>
     std::tuple<T, bool> GetOption(golang::encoding::json::v2::Options opts, std::function<golang::encoding::json::v2::Options (T _1)> setter);
+
+    template<typename F1>
+    decltype(auto) GetOption(golang::encoding::json::v2::Options opts, F1&& setter)
+    {
+        return GetOption(opts, std::function(std::forward<F1>(setter)));
+    }
     golang::encoding::json::v2::Options DefaultOptionsV2();
     golang::encoding::json::v2::Options StringifyNumbers(bool v);
     golang::encoding::json::v2::Options Deterministic(bool v);

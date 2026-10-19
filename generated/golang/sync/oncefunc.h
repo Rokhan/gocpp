@@ -17,8 +17,20 @@ namespace golang::sync
     template<typename T>
     std::function<T ()> OnceValue(std::function<T ()> f);
 
+    template<typename F1>
+    decltype(auto) OnceValue(F1&& f)
+    {
+        return OnceValue(std::function(std::forward<F1>(f)));
+    }
+
     template<typename T1, typename T2>
     std::function<std::tuple<T1, T2> ()> OnceValues(std::function<std::tuple<T1, T2> ()> f);
+
+    template<typename F1>
+    decltype(auto) OnceValues(F1&& f)
+    {
+        return OnceValues(std::function(std::forward<F1>(f)));
+    }
 
     namespace rec
     {

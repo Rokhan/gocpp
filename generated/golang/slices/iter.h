@@ -41,8 +41,20 @@ namespace golang::slices
     template<typename E>
     gocpp::slice<E> SortedFunc(iter::Seq<E> seq, std::function<int (E _1, E _2)> cmp);
 
+    template<typename E, typename F1>
+    decltype(auto) SortedFunc(iter::Seq<E> seq, F1&& cmp)
+    {
+        return SortedFunc(seq, std::function(std::forward<F1>(cmp)));
+    }
+
     template<typename E>
     gocpp::slice<E> SortedStableFunc(iter::Seq<E> seq, std::function<int (E _1, E _2)> cmp);
+
+    template<typename E, typename F1>
+    decltype(auto) SortedStableFunc(iter::Seq<E> seq, F1&& cmp)
+    {
+        return SortedStableFunc(seq, std::function(std::forward<F1>(cmp)));
+    }
 
     template<template<typename> class  Slice, typename E>
     iter::Seq<Slice> Chunk(Slice<E> s, int n);

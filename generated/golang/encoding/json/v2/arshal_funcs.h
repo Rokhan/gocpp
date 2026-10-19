@@ -70,8 +70,20 @@ namespace golang::encoding::json::v2
     template<typename T>
     Marshalers* MarshalFunc(std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (T _1)> fn);
 
+    template<typename F1>
+    decltype(auto) MarshalFunc(F1&& fn)
+    {
+        return MarshalFunc(std::function(std::forward<F1>(fn)));
+    }
+
     template<typename T>
     Unmarshalers* UnmarshalFunc(std::function<gocpp::error (gocpp::slice<unsigned char> _1, T _2)> fn);
+
+    template<typename F1>
+    decltype(auto) UnmarshalFunc(F1&& fn)
+    {
+        return UnmarshalFunc(std::function(std::forward<F1>(fn)));
+    }
 }
 #include "golang/encoding/json/internal/jsonopts/options.fwd.h"
 #include "golang/encoding/json/jsontext/decode.fwd.h"
@@ -151,8 +163,20 @@ namespace golang::encoding::json::v2
     template<typename T>
     Marshalers* MarshalToFunc(std::function<gocpp::error (jsontext::Encoder* _1, T _2)> fn);
 
+    template<typename F1>
+    decltype(auto) MarshalToFunc(F1&& fn)
+    {
+        return MarshalToFunc(std::function(std::forward<F1>(fn)));
+    }
+
     template<typename T>
     Unmarshalers* UnmarshalFromFunc(std::function<gocpp::error (jsontext::Decoder* _1, T _2)> fn);
+
+    template<typename F1>
+    decltype(auto) UnmarshalFromFunc(F1&& fn)
+    {
+        return UnmarshalFromFunc(std::function(std::forward<F1>(fn)));
+    }
     void assertCastableTo(reflect::Type to, bool marshal);
     bool castableTo(reflect::Type from, reflect::Type to);
     bool castableToFromAny(reflect::Type to);

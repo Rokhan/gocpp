@@ -335,8 +335,8 @@ namespace golang::os
                 defer.handlePanic(gp);
             }
         });
-        auto& fi = fi_tmp;
         auto& err = err_tmp;
+        auto& fi = fi_tmp;
         if(err != nullptr)
         {
             return {nullptr, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {

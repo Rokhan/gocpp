@@ -132,7 +132,7 @@
 | $(ImportDir)/compress/flate/deflate.go | ✔️ ([cpp](generated/golang/compress/flate/deflate.cpp), [h](generated/golang/compress/flate/deflate.h))| ✔️ |
 | $(ImportDir)/compress/flate/deflatefast.go | ✔️ ([cpp](generated/golang/compress/flate/deflatefast.cpp), [h](generated/golang/compress/flate/deflatefast.h))| ✔️ |
 | $(ImportDir)/compress/flate/dict_decoder.go | ✔️ ([cpp](generated/golang/compress/flate/dict_decoder.cpp), [h](generated/golang/compress/flate/dict_decoder.h))| ✔️ |
-| $(ImportDir)/compress/flate/huffman_bit_writer.go | ✔️ ([cpp](generated/golang/compress/flate/huffman_bit_writer.cpp), [h](generated/golang/compress/flate/huffman_bit_writer.h))| ❌ |
+| $(ImportDir)/compress/flate/huffman_bit_writer.go | ✔️ ([cpp](generated/golang/compress/flate/huffman_bit_writer.cpp), [h](generated/golang/compress/flate/huffman_bit_writer.h))| ✔️ |
 | $(ImportDir)/compress/flate/huffman_code.go | ✔️ ([cpp](generated/golang/compress/flate/huffman_code.cpp), [h](generated/golang/compress/flate/huffman_code.h))| ❌ |
 | $(ImportDir)/compress/flate/inflate.go | ✔️ ([cpp](generated/golang/compress/flate/inflate.cpp), [h](generated/golang/compress/flate/inflate.h))| ✔️ |
 | $(ImportDir)/compress/flate/level1.go | ✔️ ([cpp](generated/golang/compress/flate/level1.cpp), [h](generated/golang/compress/flate/level1.h))| ✔️ |
@@ -501,7 +501,7 @@
 | $(ImportDir)/internal/unsafeheader/unsafeheader.go | ✔️ ([cpp](generated/golang/internal/unsafeheader/unsafeheader.cpp), [h](generated/golang/internal/unsafeheader/unsafeheader.h))| ✔️ |
 | $(ImportDir)/io/fs/format.go | ✔️ ([cpp](generated/golang/io/fs/format.cpp), [h](generated/golang/io/fs/format.h))| ❌ |
 | $(ImportDir)/io/fs/fs.go | ✔️ ([cpp](generated/golang/io/fs/fs.cpp), [h](generated/golang/io/fs/fs.h))| ✔️ |
-| $(ImportDir)/io/fs/readdir.go | ✔️ ([cpp](generated/golang/io/fs/readdir.cpp), [h](generated/golang/io/fs/readdir.h))| ❌ |
+| $(ImportDir)/io/fs/readdir.go | ✔️ ([cpp](generated/golang/io/fs/readdir.cpp), [h](generated/golang/io/fs/readdir.h))| ✔️ |
 | $(ImportDir)/io/fs/readfile.go | ✔️ ([cpp](generated/golang/io/fs/readfile.cpp), [h](generated/golang/io/fs/readfile.h))| ✔️ |
 | $(ImportDir)/io/fs/readlink.go | ✔️ ([cpp](generated/golang/io/fs/readlink.cpp), [h](generated/golang/io/fs/readlink.h))| ✔️ |
 | $(ImportDir)/io/fs/stat.go | ✔️ ([cpp](generated/golang/io/fs/stat.cpp), [h](generated/golang/io/fs/stat.h))| ✔️ |

@@ -1361,6 +1361,8 @@ func fwdHeaderStrf(di depInfo, node ast.Node, format string, params ...any) []pl
 	return expr.defs
 }
 
+type appendFunc func(places *[]place, format string, params ...any)
+
 // func appendInlineStrf(places *[]place, format string, params ...any) {
 // 	*places = append(*places, inlineStrf(nil, format, params...)...)
 // }
@@ -1413,7 +1415,7 @@ func (expr cppExpr) addDbg(dbg string) cppExpr {
 }
 
 func (expr cppExpr) toCppType() cppType {
-	return cppType{expr, false, false, false, nil, true}
+	return cppType{expr, false, false, false, false, nil, true}
 }
 
 func (ce cppExpr) withoutDefs() cppExpr {
@@ -1435,6 +1437,7 @@ type cppType struct {
 	isPtr      bool // is type a pointer ?
 	isStruct   bool // is the name of a stuct or an interface
 	isEllipsis bool // is type created by an ellipsis
+	isFunc     bool // unnamed func type,
 	eltType    *cppType
 
 	canFwd bool // Can go in forward header
@@ -1456,7 +1459,7 @@ func (ce cppType) inComment() cppType {
 }
 
 func mkCppType(str string, defs []place) cppType {
-	return cppType{cppExpr{str: str, defs: defs}, false, false, false, nil, true}
+	return cppType{cppExpr{str: str, defs: defs}, false, false, false, false, nil, true}
 }
 
 // func mkCppPtrType(expr cppExpr) cppType {
@@ -1464,7 +1467,7 @@ func mkCppType(str string, defs []place) cppType {
 // }
 
 func mkCppEllipsis(expr cppExpr, eltType cppType) cppType {
-	return cppType{expr, false, false, true, &eltType, true}
+	return cppType{expr, false, false, true, false, &eltType, true}
 }
 
 type cppExprWritter[TWritter io.Writer] struct {
@@ -1498,10 +1501,11 @@ func mkTemplateParameter(name string, deps []string) string {
 		return fmt.Sprintf("typename %s", name)
 	} else {
 		// We don't really need deps names, just the number of parameters
+		anon := make([]string, len(deps))
 		for i := range deps {
-			deps[i] = "typename"
+			anon[i] = "typename"
 		}
-		return fmt.Sprintf("template<%s> class  %s", strings.Join(deps, ", "), name)
+		return fmt.Sprintf("template<%s> class  %s", strings.Join(anon, ", "), name)
 	}
 }
 

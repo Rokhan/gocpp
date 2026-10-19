@@ -1582,7 +1582,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		name := GetCppName(d.Name.Name)
 
 		funcDef := []place{}
-		var appendStrf func(outPlaces *[]place, format string, args ...interface{})
+		var appendStrf appendFunc
 		var prefix string = ""
 		if d.Recv == nil || d.Recv.NumFields() == 0 {
 			appendStrf = appendHeaderStrf
@@ -1640,6 +1640,10 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			appendStrf(&funcDef, "    return %s(%s);\n", name, callParams2)
 			appendStrf(&funcDef, "}\n")
 
+		}
+
+		if d.Recv == nil && len(typeParams) != 0 && !(ok && last.Type.isEllipsis) {
+			funcDef = append(funcDef, cv.funcParamOverload(appendStrf, name, params, typeParams)...)
 		}
 
 		// TODO: merge elements and add node to the merged element.
@@ -3631,7 +3635,7 @@ func (cv *cppConverter) convertEllipsisTypeExpr(node *ast.Ellipsis, ctx ctContex
 
 func (cv *cppConverter) convertChanTypeExpr(node *ast.ChanType, ctx ctContext) cppType {
 	elt := cv.convertTypeExpr(node.Value, ctx)
-	return mkCppType(fmt.Sprintf("gocpp::channel<%s>", elt.str), elt.defs)
+	return ExprPrintf("gocpp::channel<%s>", elt).toCppType()
 }
 
 func (cv *cppConverter) convertFuncTypeExpr(node *ast.FuncType, ctx ctContext) cppType {
@@ -3642,13 +3646,15 @@ func (cv *cppConverter) convertFuncTypeExpr(node *ast.FuncType, ctx ctContext) c
 	_, outTypes, ifaceDefs := cv.getResultInfos(node)
 	defs = append(defs, ifaceDefs...)
 	resultType := buildOutType(outTypes, nil)
-	return mkCppType(fmt.Sprintf("std::function<%s (%s)>", resultType, params), defs)
+	cppType := mkCppType(fmt.Sprintf("std::function<%s (%s)>", resultType, params), defs)
+	cppType.isFunc = true
+	return cppType
 }
 
 func (cv *cppConverter) convertMapTypeExpr(node *ast.MapType, ctx ctContext) cppType {
 	key := cv.convertTypeExpr(node.Key, ctx)
 	value := cv.convertTypeExpr(node.Value, ctx)
-	return mkCppType(fmt.Sprintf("gocpp::map<%s, %s>", key.str, value.str), append(key.defs, value.defs...))
+	return ExprPrintf("gocpp::map<%s, %s>", key, value).toCppType()
 }
 
 type GenOutputType int

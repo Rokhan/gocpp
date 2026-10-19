@@ -1,7 +1,6 @@
 package main
 
 import (
-	"go/ast"
 	"go/token"
 	"strings"
 )
@@ -46,47 +45,4 @@ func (cv *parsingContext) Assertf(ok bool, format string, a ...interface{}) {
 	if !ok {
 		cv.Panicf(format, a...)
 	}
-}
-
-func (cv *parsingContext) getPosition(pos token.Pos) token.Position {
-	return cv.pcShared.fileSet.Position(pos)
-}
-
-func (cv *parsingContext) Position(expr ast.Node) token.Position {
-	if expr != nil {
-		return cv.getPosition(expr.Pos())
-	}
-	return token.Position{}
-}
-
-func (cv *parsingContext) EndPosition(expr ast.Node) token.Position {
-	switch e := expr.(type) {
-	case *ast.CaseClause:
-		if len(e.Body) > 0 {
-			return cv.getPosition(e.Body[len(e.Body)-1].End())
-		}
-	case *ast.CommClause:
-		if len(e.Body) > 0 {
-			return cv.getPosition(e.Body[len(e.Body)-1].End())
-		}
-	default:
-		return cv.getPosition(expr.End())
-	}
-	return token.Position{}
-}
-
-func (cv *parsingContext) TokenPosition(token token.Pos) token.Position {
-	return cv.pcShared.fileSet.Position(token)
-}
-
-func (cv *parsingContext) TokenLine(token token.Pos) int {
-	return cv.pcShared.fileSet.Position(token).Line
-}
-
-func (cv *parsingContext) StartLine(expr ast.Node) int {
-	return cv.Position(expr).Line
-}
-
-func (cv *parsingContext) EndLine(expr ast.Node) int {
-	return cv.EndPosition(expr).Line
 }

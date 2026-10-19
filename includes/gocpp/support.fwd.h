@@ -85,7 +85,7 @@ namespace gocpp
     {
         using std::string::string;
 
-        constexpr  inline string(const string& src) : std::string(src) { }
+        constexpr inline string(const string& src) : std::string(src) { }
         constexpr inline string(string&& src) : std::string(std::move(src)) { }
 
         constexpr inline string(const std::string& src) : std::string(src) { }

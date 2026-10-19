@@ -1881,8 +1881,9 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 			if allNew {
 				// Not necessary, the default case would work, but output looks better
 				result := []cppExpr{ExprPrintf("auto [%s] = %s", strings.Join(toDeclare, ", "), cv.convertAssignRightExprs(stmt.Rhs))}
-				for name, tmpName := range tmpNames {
-					result = append(result, ExprPrintf("auto& %s = %s", name, tmpName))
+				sortedNames := slices.Sorted(maps.Keys(tmpNames))
+				for _, name := range sortedNames {
+					result = append(result, ExprPrintf("auto& %s = %s", name, tmpNames[name]))
 				}
 				return result
 			}

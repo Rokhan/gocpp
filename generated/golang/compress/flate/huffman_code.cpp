@@ -199,9 +199,7 @@ namespace golang::compress::flate
         auto h = newHuffmanEncoder(literalCount);
         auto codes = h->codes;
         uint16_t ch = {};
-        auto it_0 = std::begin(uint16_t(literalCount));
-        std::tie(ch, std::ignore) = *it_0;
-        for(; it_0 != std::end(uint16_t(literalCount)); std::tie(ch, std::ignore) = *++it_0)
+        for(ch = 0; ch != uint16_t(literalCount); ++ch)
         {
             uint16_t bits = {};
             uint8_t size = {};

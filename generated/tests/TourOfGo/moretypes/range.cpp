@@ -58,6 +58,12 @@ namespace golang::main
         {
             mocklib::Println(k);
         }
+
+        int ii = {};
+        for(ii = 0; ii != 5; ++ii)
+        {
+            mocklib::Println(ii);
+        }
     }
 
 }

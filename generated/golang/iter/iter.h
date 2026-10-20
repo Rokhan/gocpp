@@ -27,10 +27,10 @@ namespace golang::iter
     };
 
     std::ostream& operator<<(std::ostream& os, const struct coro& value);
-    
+
     template<typename V>
     std::tuple<std::function<std::tuple<V, bool> ()>, std::function<void ()>> Pull(Seq<V> seq);
-    
+
     template<typename K, typename V>
     std::tuple<std::function<std::tuple<K, V, bool> ()>, std::function<void ()>> Pull2(Seq2<K, V> seq);
     // goexitPanicValue is a sentinel value indicating that an iterator

@@ -25,7 +25,7 @@ namespace golang::time
     gocpp::slice<unsigned char> appendInt(gocpp::slice<unsigned char> b, int x, int width);
     // Never printed, just needs to be non-nil for return by atoi.
     extern gocpp::error errAtoi;
-    
+
     template<typename bytes>
     std::tuple<int, gocpp::error> atoi(bytes s);
     int stdFracSecond(int code, int n, int c);
@@ -54,7 +54,7 @@ namespace golang::time
 
     std::ostream& operator<<(std::ostream& os, const struct ParseError& value);
     gocpp::string quote(gocpp::string s);
-    
+
     template<typename bytes>
     bool isDigit(bytes s, int i);
     std::tuple<int, gocpp::string, gocpp::error> getnum(gocpp::string s, bool fixed);
@@ -65,11 +65,11 @@ namespace golang::time
     int parseGMT(gocpp::string value);
     int parseSignedOffset(gocpp::string value);
     bool commaOrPeriod(unsigned char b);
-    
+
     template<typename bytes>
     std::tuple<int, gocpp::string, gocpp::error> parseNanoseconds(bytes value, int nbytes);
     extern gocpp::error errLeadingInt;
-    
+
     template<typename bytes>
     std::tuple<uint64_t, bytes, gocpp::error> leadingInt(bytes s);
     std::tuple<uint64_t, double, gocpp::string> leadingFraction(gocpp::string s);

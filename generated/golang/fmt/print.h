@@ -289,117 +289,117 @@ namespace golang::fmt
     struct GoTag_buffer { };
     using buffer = gocpp::defined<gocpp::slice<unsigned char>, GoTag_buffer>;
     std::tuple<int, gocpp::error> Printf(gocpp::string format, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Printf(gocpp::string format, Args... a)
     {
         return Printf(format, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Printf(gocpp::string format, go_any value, Args... a)
     {
         return Printf(format, gocpp::ToSlice<go_any>(value, a...));
     }
     gocpp::string Sprintf(gocpp::string format, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     gocpp::string Sprintf(gocpp::string format, Args... a)
     {
         return Sprintf(format, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     gocpp::string Sprintf(gocpp::string format, go_any value, Args... a)
     {
         return Sprintf(format, gocpp::ToSlice<go_any>(value, a...));
     }
     gocpp::slice<unsigned char> Appendf(gocpp::slice<unsigned char> b, gocpp::string format, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     gocpp::slice<unsigned char> Appendf(gocpp::slice<unsigned char> b, gocpp::string format, Args... a)
     {
         return Appendf(b, format, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     gocpp::slice<unsigned char> Appendf(gocpp::slice<unsigned char> b, gocpp::string format, go_any value, Args... a)
     {
         return Appendf(b, format, gocpp::ToSlice<go_any>(value, a...));
     }
     std::tuple<int, gocpp::error> Print(gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Print(Args... a)
     {
         return Print(gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Print(go_any value, Args... a)
     {
         return Print(gocpp::ToSlice<go_any>(value, a...));
     }
     gocpp::string Sprint(gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     gocpp::string Sprint(Args... a)
     {
         return Sprint(gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     gocpp::string Sprint(go_any value, Args... a)
     {
         return Sprint(gocpp::ToSlice<go_any>(value, a...));
     }
     gocpp::slice<unsigned char> Append(gocpp::slice<unsigned char> b, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     gocpp::slice<unsigned char> Append(gocpp::slice<unsigned char> b, Args... a)
     {
         return Append(b, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     gocpp::slice<unsigned char> Append(gocpp::slice<unsigned char> b, go_any value, Args... a)
     {
         return Append(b, gocpp::ToSlice<go_any>(value, a...));
     }
     std::tuple<int, gocpp::error> Println(gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Println(Args... a)
     {
         return Println(gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Println(go_any value, Args... a)
     {
         return Println(gocpp::ToSlice<go_any>(value, a...));
     }
     gocpp::string Sprintln(gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     gocpp::string Sprintln(Args... a)
     {
         return Sprintln(gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     gocpp::string Sprintln(go_any value, Args... a)
     {
         return Sprintln(gocpp::ToSlice<go_any>(value, a...));
     }
     gocpp::slice<unsigned char> Appendln(gocpp::slice<unsigned char> b, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     gocpp::slice<unsigned char> Appendln(gocpp::slice<unsigned char> b, Args... a)
     {
         return Appendln(b, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     gocpp::slice<unsigned char> Appendln(gocpp::slice<unsigned char> b, go_any value, Args... a)
     {
@@ -470,39 +470,39 @@ namespace golang::fmt
     namespace reflect = golang::reflect;
     extern sync::Pool ppFree;
     std::tuple<int, gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Fprintf(io::Writer w, gocpp::string format, Args... a)
     {
         return Fprintf(w, format, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Fprintf(io::Writer w, gocpp::string format, go_any value, Args... a)
     {
         return Fprintf(w, format, gocpp::ToSlice<go_any>(value, a...));
     }
     std::tuple<int, gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Fprint(io::Writer w, Args... a)
     {
         return Fprint(w, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Fprint(io::Writer w, go_any value, Args... a)
     {
         return Fprint(w, gocpp::ToSlice<go_any>(value, a...));
     }
     std::tuple<int, gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Fprintln(io::Writer w, Args... a)
     {
         return Fprintln(w, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Fprintln(io::Writer w, go_any value, Args... a)
     {

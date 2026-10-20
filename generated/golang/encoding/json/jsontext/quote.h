@@ -12,10 +12,10 @@
 
 namespace golang::encoding::json::jsontext
 {
-    
+
     template<typename Bytes>
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendQuote(gocpp::slice<unsigned char> dst, Bytes src);
-    
+
     template<typename Bytes>
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendUnquote(gocpp::slice<unsigned char> dst, Bytes src);
 

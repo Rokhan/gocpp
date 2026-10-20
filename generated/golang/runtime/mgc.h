@@ -246,13 +246,13 @@ namespace golang::runtime
     extern gocpp::slice<gocpp::unsafe_pointer> boringCaches;
     void boring_registerCache(gocpp::unsafe_pointer p);
     uint64_t gcTestIsReachable(gocpp::slice<gocpp::unsafe_pointer> ptrs);
-    
+
     template<typename... Args>
     uint64_t gcTestIsReachable(Args... ptrs)
     {
         return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(ptrs...));
     }
-    
+
     template<typename... Args>
     uint64_t gcTestIsReachable(gocpp::unsafe_pointer value, Args... ptrs)
     {

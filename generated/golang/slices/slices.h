@@ -12,112 +12,112 @@
 
 namespace golang::slices
 {
-    
+
     template<template<typename> class  S, typename E>
     bool Equal(S<E> s1, S<E> s2);
-    
+
     template<template<typename> class  S1, template<typename> class  S2, typename E1, typename E2>
     bool EqualFunc(S1<E1> s1, S2<E2> s2, std::function<bool (E1 _1, E2 _2)> eq);
-    
+
     template<template<typename> class  S, typename E>
     int Compare(S<E> s1, S<E> s2);
-    
+
     template<template<typename> class  S1, template<typename> class  S2, typename E1, typename E2>
     int CompareFunc(S1<E1> s1, S2<E2> s2, std::function<int (E1 _1, E2 _2)> cmp);
-    
+
     template<template<typename> class  S, typename E>
     int Index(S<E> s, E v);
-    
+
     template<template<typename> class  S, typename E>
     int IndexFunc(S<E> s, std::function<bool (E _1)> f);
-    
+
     template<template<typename> class  S, typename E>
     bool Contains(S<E> s, E v);
-    
+
     template<template<typename> class  S, typename E>
     bool ContainsFunc(S<E> s, std::function<bool (E _1)> f);
-    
+
     template<template<typename> class  S, typename E>
     S<E> Insert(S<E> s, int i, gocpp::slice<E> v);
-    
+
     template<template<typename> class  S, typename E, typename... Args>
     S<E> Insert(S<E> s, int i, Args... v)
     {
         return Insert(s, i, gocpp::ToSlice<E>(v...));
     }
-    
+
     template<template<typename> class  S, typename E, typename... Args>
     S<E> Insert(S<E> s, int i, E value, Args... v)
     {
         return Insert(s, i, gocpp::ToSlice<E>(value, v...));
     }
-    
+
     template<template<typename> class  S, typename E>
     S<E> Delete(S<E> s, int i, int j);
-    
+
     template<template<typename> class  S, typename E>
     S<E> DeleteFunc(S<E> s, std::function<bool (E _1)> del);
-    
+
     template<template<typename> class  S, typename E>
     S<E> Replace(S<E> s, int i, int j, gocpp::slice<E> v);
-    
+
     template<template<typename> class  S, typename E, typename... Args>
     S<E> Replace(S<E> s, int i, int j, Args... v)
     {
         return Replace(s, i, j, gocpp::ToSlice<E>(v...));
     }
-    
+
     template<template<typename> class  S, typename E, typename... Args>
     S<E> Replace(S<E> s, int i, int j, E value, Args... v)
     {
         return Replace(s, i, j, gocpp::ToSlice<E>(value, v...));
     }
-    
+
     template<template<typename> class  S, typename E>
     S<E> Clone(S<E> s);
-    
+
     template<template<typename> class  S, typename E>
     S<E> Compact(S<E> s);
-    
+
     template<template<typename> class  S, typename E>
     S<E> CompactFunc(S<E> s, std::function<bool (E _1, E _2)> eq);
-    
+
     template<template<typename> class  S, typename E>
     S<E> Grow(S<E> s, int n);
-    
+
     template<template<typename> class  S, typename E>
     S<E> Clip(S<E> s);
-    
+
     template<typename E>
     void rotateLeft(gocpp::slice<E> s, int r);
-    
+
     template<typename E>
     void rotateRight(gocpp::slice<E> s, int r);
-    
+
     template<typename E>
     bool overlaps(gocpp::slice<E> a, gocpp::slice<E> b);
-    
+
     template<typename E>
     int startIdx(gocpp::slice<E> haystack, gocpp::slice<E> needle);
-    
+
     template<template<typename> class  S, typename E>
     void Reverse(S<E> s);
-    
+
     template<template<typename> class  S, typename E>
     S<E> Concat(gocpp::slice<S<E>> slices);
-    
+
     template<template<typename> class  S, typename E, typename... Args>
     S<E> Concat(Args... slices)
     {
         return Concat(gocpp::ToSlice<S<E>>(slices...));
     }
-    
+
     template<template<typename> class  S, typename E, typename... Args>
     S<E> Concat(S<E> value, Args... slices)
     {
         return Concat(gocpp::ToSlice<S<E>>(value, slices...));
     }
-    
+
     template<template<typename> class  S, typename E>
     S<E> Repeat(S<E> x, int count);
 

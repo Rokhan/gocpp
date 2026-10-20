@@ -33,13 +33,13 @@ namespace golang::path
     gocpp::string Clean(gocpp::string path);
     std::tuple<gocpp::string, gocpp::string> Split(gocpp::string path);
     gocpp::string Join(gocpp::slice<gocpp::string> elem);
-    
+
     template<typename... Args>
     gocpp::string Join(Args... elem)
     {
         return Join(gocpp::ToSlice<gocpp::string>(elem...));
     }
-    
+
     template<typename... Args>
     gocpp::string Join(gocpp::string value, Args... elem)
     {

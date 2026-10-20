@@ -39,13 +39,13 @@ namespace golang::golang_org::x::tools::internal::event
     bool IsError(core::Event ev);
     bool IsMetric(core::Event ev);
     context::Context Label(context::Context ctx, gocpp::slice<label::Label> labels);
-    
+
     template<typename... Args>
     context::Context Label(context::Context ctx, Args... labels)
     {
         return Label(ctx, gocpp::ToSlice<label::Label>(labels...));
     }
-    
+
     template<typename... Args>
     context::Context Label(context::Context ctx, label::Label value, Args... labels)
     {
@@ -57,52 +57,52 @@ namespace golang::golang_org::x::tools::internal::event
     context::Context Detach(context::Context ctx);
     bool IsDetach(core::Event ev);
     void Log(context::Context ctx, gocpp::string message, gocpp::slice<label::Label> labels);
-    
+
     template<typename... Args>
     void Log(context::Context ctx, gocpp::string message, Args... labels)
     {
         return Log(ctx, message, gocpp::ToSlice<label::Label>(labels...));
     }
-    
+
     template<typename... Args>
     void Log(context::Context ctx, gocpp::string message, label::Label value, Args... labels)
     {
         return Log(ctx, message, gocpp::ToSlice<label::Label>(value, labels...));
     }
     void Error(context::Context ctx, gocpp::string message, gocpp::error err, gocpp::slice<label::Label> labels);
-    
+
     template<typename... Args>
     void Error(context::Context ctx, gocpp::string message, gocpp::error err, Args... labels)
     {
         return Error(ctx, message, err, gocpp::ToSlice<label::Label>(labels...));
     }
-    
+
     template<typename... Args>
     void Error(context::Context ctx, gocpp::string message, gocpp::error err, label::Label value, Args... labels)
     {
         return Error(ctx, message, err, gocpp::ToSlice<label::Label>(value, labels...));
     }
     void Metric(context::Context ctx, gocpp::slice<label::Label> labels);
-    
+
     template<typename... Args>
     void Metric(context::Context ctx, Args... labels)
     {
         return Metric(ctx, gocpp::ToSlice<label::Label>(labels...));
     }
-    
+
     template<typename... Args>
     void Metric(context::Context ctx, label::Label value, Args... labels)
     {
         return Metric(ctx, gocpp::ToSlice<label::Label>(value, labels...));
     }
     std::tuple<context::Context, std::function<void ()>> Start(context::Context ctx, gocpp::string name, gocpp::slice<label::Label> labels);
-    
+
     template<typename... Args>
     std::tuple<context::Context, std::function<void ()>> Start(context::Context ctx, gocpp::string name, Args... labels)
     {
         return Start(ctx, name, gocpp::ToSlice<label::Label>(labels...));
     }
-    
+
     template<typename... Args>
     std::tuple<context::Context, std::function<void ()>> Start(context::Context ctx, gocpp::string name, label::Label value, Args... labels)
     {

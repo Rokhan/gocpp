@@ -13,7 +13,7 @@
 namespace golang::runtime
 {
     void badsystemstack();
-    
+
     template<typename T>
     T* noEscapePtr(T* p);
     void cgocallback(uintptr_t fn, uintptr_t frame, uintptr_t ctxt);

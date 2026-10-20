@@ -37,13 +37,13 @@ namespace golang::runtime
     void callbackasm();
     uintptr_t callbackasmAddr(int i);
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, gocpp::slice<uintptr_t> args);
-    
+
     template<typename... Args>
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, Args... args)
     {
         return syscall_syscalln(fn, n, gocpp::ToSlice<uintptr_t>(args...));
     }
-    
+
     template<typename... Args>
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, uintptr_t value, Args... args)
     {

@@ -70,13 +70,13 @@ namespace golang::compress::flate
     {    }
 
     std::ostream& operator<<(std::ostream& os, const struct indexer& value);
-    
+
     template<typename I>
     unsigned char loadLE8(gocpp::slice<unsigned char> b, I i);
-    
+
     template<typename I>
     uint32_t loadLE32(gocpp::slice<unsigned char> b, I i);
-    
+
     template<typename I>
     uint64_t loadLE64(gocpp::slice<unsigned char> b, I i);
     void storeLE64(gocpp::slice<unsigned char> b, uint64_t v);

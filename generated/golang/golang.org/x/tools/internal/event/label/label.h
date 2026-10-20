@@ -279,26 +279,26 @@ namespace golang::golang_org::x::tools::internal::event::label
 
     std::ostream& operator<<(std::ostream& os, const struct mapChain& value);
     List Filter(List l, gocpp::slice<golang::golang_org::x::tools::internal::event::label::Key> keys);
-    
+
     template<typename... Args>
     List Filter(List l, Args... keys)
     {
         return Filter(l, gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Key>(keys...));
     }
-    
+
     template<typename... Args>
     List Filter(List l, golang::golang_org::x::tools::internal::event::label::Key value, Args... keys)
     {
         return Filter(l, gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Key>(value, keys...));
     }
     Map MergeMaps(gocpp::slice<Map> srcs);
-    
+
     template<typename... Args>
     Map MergeMaps(Args... srcs)
     {
         return MergeMaps(gocpp::ToSlice<Map>(srcs...));
     }
-    
+
     template<typename... Args>
     Map MergeMaps(Map value, Args... srcs)
     {
@@ -340,26 +340,26 @@ namespace golang::golang_org::x::tools::internal::event::label
     golang::golang_org::x::tools::internal::event::label::Label Of64(golang::golang_org::x::tools::internal::event::label::Key k, uint64_t v);
     golang::golang_org::x::tools::internal::event::label::Label OfString(golang::golang_org::x::tools::internal::event::label::Key k, gocpp::string v);
     List NewList(gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels);
-    
+
     template<typename... Args>
     List NewList(Args... labels)
     {
         return NewList(gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Label>(labels...));
     }
-    
+
     template<typename... Args>
     List NewList(golang::golang_org::x::tools::internal::event::label::Label value, Args... labels)
     {
         return NewList(gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Label>(value, labels...));
     }
     Map NewMap(gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels);
-    
+
     template<typename... Args>
     Map NewMap(Args... labels)
     {
         return NewMap(gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Label>(labels...));
     }
-    
+
     template<typename... Args>
     Map NewMap(golang::golang_org::x::tools::internal::event::label::Label value, Args... labels)
     {

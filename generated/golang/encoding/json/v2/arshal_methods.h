@@ -298,13 +298,13 @@ namespace golang::encoding::json::v2
     std::ostream& operator<<(std::ostream& os, const struct UnmarshalerFrom& value);
     arshaler* makeMethodArshaler(arshaler* fncs, reflect::Type t);
     bool implementsAny(reflect::Type t, gocpp::slice<reflect::Type> ifaceTypes);
-    
+
     template<typename... Args>
     bool implementsAny(reflect::Type t, Args... ifaceTypes)
     {
         return implementsAny(t, gocpp::ToSlice<reflect::Type>(ifaceTypes...));
     }
-    
+
     template<typename... Args>
     bool implementsAny(reflect::Type t, reflect::Type value, Args... ifaceTypes)
     {

@@ -65,7 +65,7 @@ namespace golang::golang_org::x::tools::go::packages
     };
 
     std::ostream& operator<<(std::ostream& os, const struct unit& value);
-    
+
     template<typename T>
     T cond(bool cond, T t, T f);
     struct flatPackage
@@ -105,13 +105,13 @@ namespace golang::golang_org::x::tools::go::packages
 namespace golang::golang_org::x::tools::go::packages
 {
     DriverResponse* mergeResponses(gocpp::slice<DriverResponse*> responses);
-    
+
     template<typename... Args>
     DriverResponse* mergeResponses(Args... responses)
     {
         return mergeResponses(gocpp::ToSlice<DriverResponse*>(responses...));
     }
-    
+
     template<typename... Args>
     DriverResponse* mergeResponses(DriverResponse* value, Args... responses)
     {
@@ -419,26 +419,26 @@ namespace golang::golang_org::x::tools::go::packages
 namespace golang::golang_org::x::tools::go::packages
 {
     std::tuple<gocpp::slice<Package*>, gocpp::error> Load(Config* cfg, gocpp::slice<gocpp::string> patterns);
-    
+
     template<typename... Args>
     std::tuple<gocpp::slice<Package*>, gocpp::error> Load(Config* cfg, Args... patterns)
     {
         return Load(cfg, gocpp::ToSlice<gocpp::string>(patterns...));
     }
-    
+
     template<typename... Args>
     std::tuple<gocpp::slice<Package*>, gocpp::error> Load(Config* cfg, gocpp::string value, Args... patterns)
     {
         return Load(cfg, gocpp::ToSlice<gocpp::string>(value, patterns...));
     }
     std::tuple<DriverResponse*, bool, gocpp::error> defaultDriver(Config* cfg, gocpp::slice<gocpp::string> patterns);
-    
+
     template<typename... Args>
     std::tuple<DriverResponse*, bool, gocpp::error> defaultDriver(Config* cfg, Args... patterns)
     {
         return defaultDriver(cfg, gocpp::ToSlice<gocpp::string>(patterns...));
     }
-    
+
     template<typename... Args>
     std::tuple<DriverResponse*, bool, gocpp::error> defaultDriver(Config* cfg, gocpp::string value, Args... patterns)
     {

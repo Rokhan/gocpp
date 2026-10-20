@@ -14,13 +14,13 @@ namespace golang::internal::abi
 {
     extern bool alwaysFalse;
     extern go_any escapeSink;
-    
+
     template<typename T>
     T Escape(T x);
-    
+
     template<typename T>
     void EscapeNonString(T v);
-    
+
     template<typename T>
     T EscapeToResultNonString(T v);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;

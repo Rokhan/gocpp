@@ -20,10 +20,10 @@ namespace golang::encoding::json::internal::jsonwire
     int CompareUTF16(gocpp::slice<unsigned char> x, gocpp::slice<unsigned char> y);
     // TODO(https://go.dev/issue/70547): Use utf8.ErrInvalid instead.
     extern gocpp::error ErrInvalidUTF8;
-    
+
     template<typename Bytes>
     gocpp::error NewInvalidCharacterError(Bytes prefix, gocpp::string where);
-    
+
     template<typename Bytes>
     gocpp::error NewInvalidEscapeSequenceError(Bytes what);
     struct InvalidTextError

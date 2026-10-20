@@ -14,13 +14,13 @@ namespace golang::internal::synctest
 {
     void Wait();
     bool IsInBubble();
-    
+
     template<typename T>
     Association Associate(T* p);
-    
+
     template<typename T>
     void Disassociate(T* p);
-    
+
     template<typename T>
     bool IsAssociated(T* p);
     go_any acquire();

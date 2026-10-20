@@ -18,13 +18,13 @@ namespace golang::go::types
 {
     std::tuple<golang::go::types::Type, typeError*> sliceElem(operand* x);
     golang::go::types::Signature* makeSig(golang::go::types::Type res, gocpp::slice<golang::go::types::Type> args);
-    
+
     template<typename... Args>
     golang::go::types::Signature* makeSig(golang::go::types::Type res, Args... args)
     {
         return makeSig(res, gocpp::ToSlice<golang::go::types::Type>(args...));
     }
-    
+
     template<typename... Args>
     golang::go::types::Signature* makeSig(golang::go::types::Type res, golang::go::types::Type value, Args... args)
     {

@@ -60,13 +60,13 @@ namespace golang::regexp::syntax
 {
     namespace strings = golang::strings;
     void bw(strings::Builder* b, gocpp::slice<gocpp::string> args);
-    
+
     template<typename... Args>
     void bw(strings::Builder* b, Args... args)
     {
         return bw(b, gocpp::ToSlice<gocpp::string>(args...));
     }
-    
+
     template<typename... Args>
     void bw(strings::Builder* b, gocpp::string value, Args... args)
     {

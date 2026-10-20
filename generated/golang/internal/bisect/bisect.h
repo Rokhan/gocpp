@@ -98,13 +98,13 @@ namespace golang::internal::bisect
     gocpp::slice<unsigned char> AppendMarker(gocpp::slice<unsigned char> dst, uint64_t id);
     std::tuple<gocpp::string, uint64_t, bool> CutMarker(gocpp::string line);
     uint64_t Hash(gocpp::slice<go_any> data);
-    
+
     template<typename... Args>
     uint64_t Hash(Args... data)
     {
         return Hash(gocpp::ToSlice<go_any>(data...));
     }
-    
+
     template<typename... Args>
     uint64_t Hash(go_any value, Args... data)
     {

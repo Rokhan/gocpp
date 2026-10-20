@@ -15,13 +15,13 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     gocpp::string tparamName(gocpp::string exportName);
     void assert(bool cond);
     gocpp::error internalErrorf(gocpp::string format, gocpp::slice<go_any> args);
-    
+
     template<typename... Args>
     gocpp::error internalErrorf(gocpp::string format, Args... args)
     {
         return internalErrorf(format, gocpp::ToSlice<go_any>(args...));
     }
-    
+
     template<typename... Args>
     gocpp::error internalErrorf(gocpp::string format, go_any value, Args... args)
     {

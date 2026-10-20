@@ -13,13 +13,13 @@
 namespace golang::golang_org::x::tools::internal::pkgbits
 {
     gocpp::slice<gocpp::string> fmtFrames(gocpp::slice<uintptr_t> pcs);
-    
+
     template<typename... Args>
     gocpp::slice<gocpp::string> fmtFrames(Args... pcs)
     {
         return fmtFrames(gocpp::ToSlice<uintptr_t>(pcs...));
     }
-    
+
     template<typename... Args>
     gocpp::slice<gocpp::string> fmtFrames(uintptr_t value, Args... pcs)
     {

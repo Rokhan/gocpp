@@ -37,13 +37,13 @@ namespace golang::golang_org::x::tools::go::packages
     std::ostream& operator<<(std::ostream& os, const struct goTooOldError& value);
     gocpp::slice<gocpp::string> appendUniqueStrings(gocpp::slice<gocpp::string> dst, gocpp::slice<gocpp::string> src);
     gocpp::slice<gocpp::string> absJoin(gocpp::string dir, gocpp::slice<gocpp::slice<gocpp::string>> fileses);
-    
+
     template<typename... Args>
     gocpp::slice<gocpp::string> absJoin(gocpp::string dir, Args... fileses)
     {
         return absJoin(dir, gocpp::ToSlice<gocpp::slice<gocpp::string>>(fileses...));
     }
-    
+
     template<typename... Args>
     gocpp::slice<gocpp::string> absJoin(gocpp::string dir, gocpp::slice<gocpp::string> value, Args... fileses)
     {

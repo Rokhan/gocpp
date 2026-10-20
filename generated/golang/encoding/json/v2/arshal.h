@@ -65,26 +65,26 @@ namespace golang::encoding::json::v2
 namespace golang::encoding::json::v2
 {
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> Marshal(go_any in, gocpp::slice<golang::encoding::json::v2::Options> opts);
-    
+
     template<typename... Args>
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> Marshal(go_any in, Args... opts)
     {
         return Marshal(in, gocpp::ToSlice<golang::encoding::json::v2::Options>(opts...));
     }
-    
+
     template<typename... Args>
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> Marshal(go_any in, golang::encoding::json::v2::Options value, Args... opts)
     {
         return Marshal(in, gocpp::ToSlice<golang::encoding::json::v2::Options>(value, opts...));
     }
     gocpp::error Unmarshal(gocpp::slice<unsigned char> in, go_any out, gocpp::slice<golang::encoding::json::v2::Options> opts);
-    
+
     template<typename... Args>
     gocpp::error Unmarshal(gocpp::slice<unsigned char> in, go_any out, Args... opts)
     {
         return Unmarshal(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(opts...));
     }
-    
+
     template<typename... Args>
     gocpp::error Unmarshal(gocpp::slice<unsigned char> in, go_any out, golang::encoding::json::v2::Options value, Args... opts)
     {
@@ -145,26 +145,26 @@ namespace golang::encoding::json::v2
     // export exposes internal functionality of the "jsontext" package.
     extern jsontext::export export;
     gocpp::error MarshalWrite(io::Writer out, go_any in, gocpp::slice<golang::encoding::json::v2::Options> opts);
-    
+
     template<typename... Args>
     gocpp::error MarshalWrite(io::Writer out, go_any in, Args... opts)
     {
         return MarshalWrite(out, in, gocpp::ToSlice<golang::encoding::json::v2::Options>(opts...));
     }
-    
+
     template<typename... Args>
     gocpp::error MarshalWrite(io::Writer out, go_any in, golang::encoding::json::v2::Options value, Args... opts)
     {
         return MarshalWrite(out, in, gocpp::ToSlice<golang::encoding::json::v2::Options>(value, opts...));
     }
     gocpp::error MarshalEncode(jsontext::Encoder* out, go_any in, gocpp::slice<golang::encoding::json::v2::Options> opts);
-    
+
     template<typename... Args>
     gocpp::error MarshalEncode(jsontext::Encoder* out, go_any in, Args... opts)
     {
         return MarshalEncode(out, in, gocpp::ToSlice<golang::encoding::json::v2::Options>(opts...));
     }
-    
+
     template<typename... Args>
     gocpp::error MarshalEncode(jsontext::Encoder* out, go_any in, golang::encoding::json::v2::Options value, Args... opts)
     {
@@ -172,26 +172,26 @@ namespace golang::encoding::json::v2
     }
     gocpp::error marshalEncode(jsontext::Encoder* out, go_any in, jsonopts::Struct* mo);
     gocpp::error UnmarshalRead(io::Reader in, go_any out, gocpp::slice<golang::encoding::json::v2::Options> opts);
-    
+
     template<typename... Args>
     gocpp::error UnmarshalRead(io::Reader in, go_any out, Args... opts)
     {
         return UnmarshalRead(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(opts...));
     }
-    
+
     template<typename... Args>
     gocpp::error UnmarshalRead(io::Reader in, go_any out, golang::encoding::json::v2::Options value, Args... opts)
     {
         return UnmarshalRead(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(value, opts...));
     }
     gocpp::error UnmarshalDecode(jsontext::Decoder* in, go_any out, gocpp::slice<golang::encoding::json::v2::Options> opts);
-    
+
     template<typename... Args>
     gocpp::error UnmarshalDecode(jsontext::Decoder* in, go_any out, Args... opts)
     {
         return UnmarshalDecode(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(opts...));
     }
-    
+
     template<typename... Args>
     gocpp::error UnmarshalDecode(jsontext::Decoder* in, go_any out, golang::encoding::json::v2::Options value, Args... opts)
     {

@@ -45,16 +45,16 @@ namespace golang::encoding::json::jsontext
 
 namespace golang::encoding::json::jsontext
 {
-    
+
     template<typename Bytes>
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendFormat(gocpp::slice<unsigned char> dst, Bytes src, gocpp::slice<golang::encoding::json::jsontext::Options> opts);
-    
+
     template<typename Bytes, typename... Args>
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendFormat(gocpp::slice<unsigned char> dst, Bytes src, Args... opts)
     {
         return AppendFormat(dst, src, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(opts...));
     }
-    
+
     template<typename Bytes, typename... Args>
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendFormat(gocpp::slice<unsigned char> dst, Bytes src, golang::encoding::json::jsontext::Options value, Args... opts)
     {

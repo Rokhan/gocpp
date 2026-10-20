@@ -13,13 +13,13 @@
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
     void errorf(gocpp::string format, gocpp::slice<go_any> args);
-    
+
     template<typename... Args>
     void errorf(gocpp::string format, Args... args)
     {
         return errorf(format, gocpp::ToSlice<go_any>(args...));
     }
-    
+
     template<typename... Args>
     void errorf(gocpp::string format, go_any value, Args... args)
     {

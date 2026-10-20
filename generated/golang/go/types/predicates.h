@@ -29,7 +29,7 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct comparer& value);
-    
+
     template<template<typename> class  P, typename T>
     P<T> clone(P<T> p);
     bool isValidName(gocpp::string s);

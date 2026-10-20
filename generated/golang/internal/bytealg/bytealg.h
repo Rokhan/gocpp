@@ -15,16 +15,16 @@ namespace golang::internal::bytealg
     // MaxLen is the maximum length of the string to be searched for (argument b) in Index.
     // If MaxLen is not 0, make sure MaxLen >= 4.
     extern int MaxLen;
-    
+
     template<typename T>
     std::tuple<uint32_t, uint32_t> hashStr(T sep);
-    
+
     template<typename T>
     std::tuple<uint32_t, uint32_t> hashStrRev(T sep);
-    
+
     template<typename T>
     int IndexRabinKarp(T s, T sep);
-    
+
     template<typename T>
     int LastIndexRabinKarp(T s, T sep);
     gocpp::slice<unsigned char> MakeNoZero(int n);

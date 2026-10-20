@@ -147,7 +147,7 @@ namespace golang::internal::abi
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
     gocpp::unsafe_pointer addChecked(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe);
     Type* TypeOf(go_any a);
-    
+
     template<typename T>
     Type* TypeFor();
 }

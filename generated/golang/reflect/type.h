@@ -32,13 +32,13 @@ namespace golang::reflect
 
     std::ostream& operator<<(std::ostream& os, const struct fieldScan& value);
     uint32_t fnv1(uint32_t x, gocpp::slice<unsigned char> list);
-    
+
     template<typename... Args>
     uint32_t fnv1(uint32_t x, Args... list)
     {
         return fnv1(x, gocpp::ToSlice<unsigned char>(list...));
     }
-    
+
     template<typename... Args>
     uint32_t fnv1(uint32_t x, unsigned char value, Args... list)
     {
@@ -932,7 +932,7 @@ namespace golang::reflect
 
     std::ostream& operator<<(std::ostream& os, const struct StructField& value);
     golang::reflect::Type TypeOf(go_any i);
-    
+
     template<typename T>
     golang::reflect::Type TypeFor();
     abi::Type* rtypeOf(go_any i);

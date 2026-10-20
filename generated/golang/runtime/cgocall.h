@@ -46,13 +46,13 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct argset& value);
     uintptr_t syscall_cgocaller(gocpp::unsafe_pointer fn, gocpp::slice<uintptr_t> args);
-    
+
     template<typename... Args>
     uintptr_t syscall_cgocaller(gocpp::unsafe_pointer fn, Args... args)
     {
         return syscall_cgocaller(fn, gocpp::ToSlice<uintptr_t>(args...));
     }
-    
+
     template<typename... Args>
     uintptr_t syscall_cgocaller(gocpp::unsafe_pointer fn, uintptr_t value, Args... args)
     {

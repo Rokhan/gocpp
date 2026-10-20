@@ -30,13 +30,13 @@ namespace golang::go::types
 
     std::ostream& operator<<(std::ostream& os, const struct Tuple& value);
     Tuple* NewTuple(gocpp::slice<Var*> x);
-    
+
     template<typename... Args>
     Tuple* NewTuple(Args... x)
     {
         return NewTuple(gocpp::ToSlice<Var*>(x...));
     }
-    
+
     template<typename... Args>
     Tuple* NewTuple(Var* value, Args... x)
     {

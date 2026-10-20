@@ -72,13 +72,13 @@ namespace golang::go::doc
     std::tuple<int, ast::CommentGroup*> lastComment(ast::BlockStmt* b, gocpp::slice<ast::CommentGroup*> c);
     void updateBasicLitPos(ast::BasicLit* lit, token::Pos pos);
     gocpp::slice<Example*> Examples(gocpp::slice<ast::File*> testFiles);
-    
+
     template<typename... Args>
     gocpp::slice<Example*> Examples(Args... testFiles)
     {
         return Examples(gocpp::ToSlice<ast::File*>(testFiles...));
     }
-    
+
     template<typename... Args>
     gocpp::slice<Example*> Examples(ast::File* value, Args... testFiles)
     {

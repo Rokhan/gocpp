@@ -12,7 +12,7 @@
 
 namespace golang::encoding::json::v2
 {
-    
+
     template<typename Bytes>
     int64_t len64(Bytes in);
     extern gocpp::error errNilField;

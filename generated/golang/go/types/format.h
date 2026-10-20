@@ -26,13 +26,13 @@ namespace golang::go::types
 namespace golang::go::types
 {
     gocpp::string sprintf(token::FileSet* fset, Qualifier qf, bool tpSubscripts, gocpp::string format, gocpp::slice<go_any> args);
-    
+
     template<typename... Args>
     gocpp::string sprintf(token::FileSet* fset, Qualifier qf, bool tpSubscripts, gocpp::string format, Args... args)
     {
         return sprintf(fset, qf, tpSubscripts, format, gocpp::ToSlice<go_any>(args...));
     }
-    
+
     template<typename... Args>
     gocpp::string sprintf(token::FileSet* fset, Qualifier qf, bool tpSubscripts, gocpp::string format, go_any value, Args... args)
     {

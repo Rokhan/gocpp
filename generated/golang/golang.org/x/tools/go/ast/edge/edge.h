@@ -35,7 +35,7 @@ namespace golang::golang_org::x::tools::go::ast::edge
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fieldInfo& value);
-    
+
     template<typename N>
     fieldInfo info(gocpp::string fieldName);
     extern gocpp::array<fieldInfo, 105> fieldInfos;

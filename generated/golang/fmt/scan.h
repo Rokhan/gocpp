@@ -190,78 +190,78 @@ namespace golang::fmt
 
     std::ostream& operator<<(std::ostream& os, const struct Scanner& value);
     std::tuple<int, gocpp::error> Scan(gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Scan(Args... a)
     {
         return Scan(gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Scan(go_any value, Args... a)
     {
         return Scan(gocpp::ToSlice<go_any>(value, a...));
     }
     std::tuple<int, gocpp::error> Scanln(gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Scanln(Args... a)
     {
         return Scanln(gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Scanln(go_any value, Args... a)
     {
         return Scanln(gocpp::ToSlice<go_any>(value, a...));
     }
     std::tuple<int, gocpp::error> Scanf(gocpp::string format, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Scanf(gocpp::string format, Args... a)
     {
         return Scanf(format, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Scanf(gocpp::string format, go_any value, Args... a)
     {
         return Scanf(format, gocpp::ToSlice<go_any>(value, a...));
     }
     std::tuple<int, gocpp::error> Sscan(gocpp::string str, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Sscan(gocpp::string str, Args... a)
     {
         return Sscan(str, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Sscan(gocpp::string str, go_any value, Args... a)
     {
         return Sscan(str, gocpp::ToSlice<go_any>(value, a...));
     }
     std::tuple<int, gocpp::error> Sscanln(gocpp::string str, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Sscanln(gocpp::string str, Args... a)
     {
         return Sscanln(str, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Sscanln(gocpp::string str, go_any value, Args... a)
     {
         return Sscanln(str, gocpp::ToSlice<go_any>(value, a...));
     }
     std::tuple<int, gocpp::error> Sscanf(gocpp::string str, gocpp::string format, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Sscanf(gocpp::string str, gocpp::string format, Args... a)
     {
         return Sscanf(str, format, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Sscanf(gocpp::string str, gocpp::string format, go_any value, Args... a)
     {
@@ -333,39 +333,39 @@ namespace golang::fmt
     namespace utf8 = golang::unicode::utf8;
     namespace sync = golang::sync;
     std::tuple<int, gocpp::error> Fscan(io::Reader r, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Fscan(io::Reader r, Args... a)
     {
         return Fscan(r, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Fscan(io::Reader r, go_any value, Args... a)
     {
         return Fscan(r, gocpp::ToSlice<go_any>(value, a...));
     }
     std::tuple<int, gocpp::error> Fscanln(io::Reader r, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Fscanln(io::Reader r, Args... a)
     {
         return Fscanln(r, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Fscanln(io::Reader r, go_any value, Args... a)
     {
         return Fscanln(r, gocpp::ToSlice<go_any>(value, a...));
     }
     std::tuple<int, gocpp::error> Fscanf(io::Reader r, gocpp::string format, gocpp::slice<go_any> a);
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Fscanf(io::Reader r, gocpp::string format, Args... a)
     {
         return Fscanf(r, format, gocpp::ToSlice<go_any>(a...));
     }
-    
+
     template<typename... Args>
     std::tuple<int, gocpp::error> Fscanf(io::Reader r, gocpp::string format, go_any value, Args... a)
     {

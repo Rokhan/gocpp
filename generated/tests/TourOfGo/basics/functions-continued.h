@@ -26,13 +26,13 @@ namespace golang::main
 {
     namespace fmt = golang::fmt;
     void Formatter(gocpp::slice<fmt::Formatter> ctx);
-    
+
     template<typename... Args>
     void Formatter(Args... ctx)
     {
         return Formatter(gocpp::ToSlice<fmt::Formatter>(ctx...));
     }
-    
+
     template<typename... Args>
     void Formatter(fmt::Formatter value, Args... ctx)
     {

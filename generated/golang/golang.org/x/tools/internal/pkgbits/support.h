@@ -14,13 +14,13 @@ namespace golang::golang_org::x::tools::internal::pkgbits
 {
     void assert(bool b);
     void panicf(gocpp::string format, gocpp::slice<go_any> args);
-    
+
     template<typename... Args>
     void panicf(gocpp::string format, Args... args)
     {
         return panicf(format, gocpp::ToSlice<go_any>(args...));
     }
-    
+
     template<typename... Args>
     void panicf(gocpp::string format, go_any value, Args... args)
     {

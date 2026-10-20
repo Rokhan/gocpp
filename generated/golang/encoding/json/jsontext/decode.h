@@ -121,13 +121,13 @@ namespace golang::encoding::json::jsontext
 namespace golang::encoding::json::jsontext
 {
     golang::encoding::json::jsontext::Decoder* NewDecoder(io::Reader r, gocpp::slice<golang::encoding::json::jsontext::Options> opts);
-    
+
     template<typename... Args>
     golang::encoding::json::jsontext::Decoder* NewDecoder(io::Reader r, Args... opts)
     {
         return NewDecoder(r, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(opts...));
     }
-    
+
     template<typename... Args>
     golang::encoding::json::jsontext::Decoder* NewDecoder(io::Reader r, golang::encoding::json::jsontext::Options value, Args... opts)
     {

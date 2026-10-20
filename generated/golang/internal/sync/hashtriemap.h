@@ -125,10 +125,10 @@ namespace golang::internal::sync
 
     template<typename K, typename V>
     std::ostream& operator<<(std::ostream& os, const struct entry<K, V>& value);
-    
+
     template<typename K, typename V>
     golang::internal::sync::indirect<K, V>* newIndirectNode(golang::internal::sync::indirect<K, V>* parent);
-    
+
     template<typename K, typename V>
     golang::internal::sync::entry<K, V>* newEntryNode(K key, V value);
 }

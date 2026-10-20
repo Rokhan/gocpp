@@ -13,19 +13,19 @@
 namespace golang::encoding::json::v2
 {
     golang::encoding::json::v2::Options JoinOptions(gocpp::slice<golang::encoding::json::v2::Options> srcs);
-    
+
     template<typename... Args>
     golang::encoding::json::v2::Options JoinOptions(Args... srcs)
     {
         return JoinOptions(gocpp::ToSlice<golang::encoding::json::v2::Options>(srcs...));
     }
-    
+
     template<typename... Args>
     golang::encoding::json::v2::Options JoinOptions(golang::encoding::json::v2::Options value, Args... srcs)
     {
         return JoinOptions(gocpp::ToSlice<golang::encoding::json::v2::Options>(value, srcs...));
     }
-    
+
     template<typename T>
     std::tuple<T, bool> GetOption(golang::encoding::json::v2::Options opts, std::function<golang::encoding::json::v2::Options (T _1)> setter);
     golang::encoding::json::v2::Options DefaultOptionsV2();

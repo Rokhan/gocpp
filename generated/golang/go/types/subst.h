@@ -13,7 +13,7 @@
 namespace golang::go::types
 {
     struct GoTag_substMap { };
-    
+
     template<typename T>
     gocpp::slice<T> substList(gocpp::slice<T> in, std::function<T (T _1)> subst);
 }

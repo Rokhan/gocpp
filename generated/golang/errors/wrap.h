@@ -457,10 +457,10 @@ namespace golang::errors
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value);
-    
+
     template<typename E>
     std::tuple<E, bool> AsType(gocpp::error err);
-    
+
     template<typename E>
     std::tuple<E, bool> asType(gocpp::error err, E** ppe);
     struct gocpp_id_9 : virtual gocpp::Interface

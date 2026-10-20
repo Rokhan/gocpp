@@ -36,7 +36,7 @@ namespace golang::strconv
     std::tuple<gocpp::string, gocpp::error> QuotedPrefix(gocpp::string s);
     std::tuple<gocpp::string, gocpp::error> Unquote(gocpp::string s);
     std::tuple<gocpp::string, gocpp::string, gocpp::error> unquote(gocpp::string in, bool unescape);
-    
+
     template<template<typename> class  S, typename E>
     std::tuple<int, bool> bsearch(S<E> s, E v);
     bool IsPrint(gocpp::rune r);

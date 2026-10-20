@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    
+
     template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep);
     template<typename T> 
@@ -33,49 +33,49 @@ namespace golang::main
 
     template<typename T>
     std::ostream& operator<<(std::ostream& os, const struct Wrapper<T>& value);
-    
+
     template<typename T>
     T Or(gocpp::slice<T> vals);
-    
+
     template<typename T, typename... Args>
     T Or(Args... vals)
     {
         return Or(gocpp::ToSlice<T>(vals...));
     }
-    
+
     template<typename T, typename... Args>
     T Or(T value, Args... vals)
     {
         return Or(gocpp::ToSlice<T>(value, vals...));
     }
-    
+
     template<typename T>
     T Dummy1(gocpp::string dummy, gocpp::slice<T> vals);
-    
+
     template<typename T, typename... Args>
     T Dummy1(gocpp::string dummy, Args... vals)
     {
         return Dummy1(dummy, gocpp::ToSlice<T>(vals...));
     }
-    
+
     template<typename T, typename... Args>
     T Dummy1(gocpp::string dummy, T value, Args... vals)
     {
         return Dummy1(dummy, gocpp::ToSlice<T>(value, vals...));
     }
-    
+
     template<typename T, typename U>
     U OneOrDefault(gocpp::map<T, U> dummy);
-    
+
     template<typename T>
     bool RemoveOne(gocpp::channel<T> dummy);
-    
+
     template<typename T>
     int UnusedGenericParameter();
-    
+
     template<typename T>
     T Zero();
-    
+
     template<template<typename> class  S, typename E>
     S<E> Grow(S<E> s, int n);
     template<typename T> 
@@ -112,10 +112,10 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct entry& value);
     void main();
-    
+
     template<typename T>
     T Identity(T v);
-    
+
     template<typename K, typename V>
     std::tuple<K, V> MakePair(K k, V v);
     template<typename K, typename V> 

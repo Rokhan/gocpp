@@ -37,13 +37,13 @@ namespace golang::encoding::json::jsontext
 namespace golang::encoding::json::jsontext
 {
     golang::encoding::json::jsontext::Encoder* getBufferedEncoder(gocpp::slice<golang::encoding::json::jsontext::Options> opts);
-    
+
     template<typename... Args>
     golang::encoding::json::jsontext::Encoder* getBufferedEncoder(Args... opts)
     {
         return getBufferedEncoder(gocpp::ToSlice<golang::encoding::json::jsontext::Options>(opts...));
     }
-    
+
     template<typename... Args>
     golang::encoding::json::jsontext::Encoder* getBufferedEncoder(golang::encoding::json::jsontext::Options value, Args... opts)
     {
@@ -52,13 +52,13 @@ namespace golang::encoding::json::jsontext
     void putBufferedEncoder(golang::encoding::json::jsontext::Encoder* e);
     void putStreamingEncoder(golang::encoding::json::jsontext::Encoder* e);
     golang::encoding::json::jsontext::Decoder* getBufferedDecoder(gocpp::slice<unsigned char> b, gocpp::slice<golang::encoding::json::jsontext::Options> opts);
-    
+
     template<typename... Args>
     golang::encoding::json::jsontext::Decoder* getBufferedDecoder(gocpp::slice<unsigned char> b, Args... opts)
     {
         return getBufferedDecoder(b, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(opts...));
     }
-    
+
     template<typename... Args>
     golang::encoding::json::jsontext::Decoder* getBufferedDecoder(gocpp::slice<unsigned char> b, golang::encoding::json::jsontext::Options value, Args... opts)
     {
@@ -93,13 +93,13 @@ namespace golang::encoding::json::jsontext
     // it is taken directly from the provided bytes.Buffer.
     extern sync::Pool* bytesBufferEncoderPool;
     golang::encoding::json::jsontext::Encoder* getStreamingEncoder(io::Writer w, gocpp::slice<golang::encoding::json::jsontext::Options> opts);
-    
+
     template<typename... Args>
     golang::encoding::json::jsontext::Encoder* getStreamingEncoder(io::Writer w, Args... opts)
     {
         return getStreamingEncoder(w, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(opts...));
     }
-    
+
     template<typename... Args>
     golang::encoding::json::jsontext::Encoder* getStreamingEncoder(io::Writer w, golang::encoding::json::jsontext::Options value, Args... opts)
     {
@@ -116,13 +116,13 @@ namespace golang::encoding::json::jsontext
     // it is taken directly from the provided bytes.Buffer.
     extern sync::Pool* bytesBufferDecoderPool;
     golang::encoding::json::jsontext::Decoder* getStreamingDecoder(io::Reader r, gocpp::slice<golang::encoding::json::jsontext::Options> opts);
-    
+
     template<typename... Args>
     golang::encoding::json::jsontext::Decoder* getStreamingDecoder(io::Reader r, Args... opts)
     {
         return getStreamingDecoder(r, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(opts...));
     }
-    
+
     template<typename... Args>
     golang::encoding::json::jsontext::Decoder* getStreamingDecoder(io::Reader r, golang::encoding::json::jsontext::Options value, Args... opts)
     {

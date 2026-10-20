@@ -31,13 +31,13 @@ namespace golang::go::types
     std::ostream& operator<<(std::ostream& os, const struct typeError& value);
     extern typeError emptyTypeError;
     typeError* typeErrorf(gocpp::string format, gocpp::slice<go_any> args);
-    
+
     template<typename... Args>
     typeError* typeErrorf(gocpp::string format, Args... args)
     {
         return typeErrorf(format, gocpp::ToSlice<go_any>(args...));
     }
-    
+
     template<typename... Args>
     typeError* typeErrorf(gocpp::string format, go_any value, Args... args)
     {

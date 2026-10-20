@@ -173,13 +173,13 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct metricData& value);
     statDepSet makeStatDepSet(gocpp::slice<statDep> deps);
-    
+
     template<typename... Args>
     statDepSet makeStatDepSet(Args... deps)
     {
         return makeStatDepSet(gocpp::ToSlice<statDep>(deps...));
     }
-    
+
     template<typename... Args>
     statDepSet makeStatDepSet(statDep value, Args... deps)
     {

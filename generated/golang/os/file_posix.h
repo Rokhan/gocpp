@@ -15,7 +15,7 @@ namespace golang::os
     gocpp::error Chown(gocpp::string name, int uid, int gid);
     gocpp::error Lchown(gocpp::string name, int uid, int gid);
     gocpp::error ignoringEINTR(std::function<gocpp::error ()> fn);
-    
+
     template<typename T>
     std::tuple<T, gocpp::error> ignoringEINTR2(std::function<std::tuple<T, gocpp::error> ()> fn);
 }

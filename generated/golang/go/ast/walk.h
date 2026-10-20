@@ -83,7 +83,7 @@ namespace golang::go::ast
 
 namespace golang::go::ast
 {
-    
+
     template<typename N>
     void walkList(Visitor v, gocpp::slice<N> list);
     void Walk(Visitor v, Node node);

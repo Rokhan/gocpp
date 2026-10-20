@@ -115,13 +115,13 @@ namespace golang::encoding::json::jsontext
 namespace golang::encoding::json::jsontext
 {
     golang::encoding::json::jsontext::Encoder* NewEncoder(io::Writer w, gocpp::slice<golang::encoding::json::jsontext::Options> opts);
-    
+
     template<typename... Args>
     golang::encoding::json::jsontext::Encoder* NewEncoder(io::Writer w, Args... opts)
     {
         return NewEncoder(w, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(opts...));
     }
-    
+
     template<typename... Args>
     golang::encoding::json::jsontext::Encoder* NewEncoder(io::Writer w, golang::encoding::json::jsontext::Options value, Args... opts)
     {

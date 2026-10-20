@@ -417,26 +417,26 @@ namespace golang::os::exec
 
     std::ostream& operator<<(std::ostream& os, const struct Cmd& value);
     Cmd* Command(gocpp::string name, gocpp::slice<gocpp::string> arg);
-    
+
     template<typename... Args>
     Cmd* Command(gocpp::string name, Args... arg)
     {
         return Command(name, gocpp::ToSlice<gocpp::string>(arg...));
     }
-    
+
     template<typename... Args>
     Cmd* Command(gocpp::string name, gocpp::string value, Args... arg)
     {
         return Command(name, gocpp::ToSlice<gocpp::string>(value, arg...));
     }
     Cmd* CommandContext(context::Context ctx, gocpp::string name, gocpp::slice<gocpp::string> arg);
-    
+
     template<typename... Args>
     Cmd* CommandContext(context::Context ctx, gocpp::string name, Args... arg)
     {
         return CommandContext(ctx, name, gocpp::ToSlice<gocpp::string>(arg...));
     }
-    
+
     template<typename... Args>
     Cmd* CommandContext(context::Context ctx, gocpp::string name, gocpp::string value, Args... arg)
     {

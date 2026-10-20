@@ -15,61 +15,61 @@ namespace golang::encoding::json::v2
     extern gocpp::error errUnsupportedMutation;
     extern gocpp::error errNonSingularValue;
     Marshalers* JoinMarshalers(gocpp::slice<Marshalers*> ms);
-    
+
     template<typename... Args>
     Marshalers* JoinMarshalers(Args... ms)
     {
         return JoinMarshalers(gocpp::ToSlice<Marshalers*>(ms...));
     }
-    
+
     template<typename... Args>
     Marshalers* JoinMarshalers(Marshalers* value, Args... ms)
     {
         return JoinMarshalers(gocpp::ToSlice<Marshalers*>(value, ms...));
     }
     Unmarshalers* JoinUnmarshalers(gocpp::slice<Unmarshalers*> us);
-    
+
     template<typename... Args>
     Unmarshalers* JoinUnmarshalers(Args... us)
     {
         return JoinUnmarshalers(gocpp::ToSlice<Unmarshalers*>(us...));
     }
-    
+
     template<typename... Args>
     Unmarshalers* JoinUnmarshalers(Unmarshalers* value, Args... us)
     {
         return JoinUnmarshalers(gocpp::ToSlice<Unmarshalers*>(value, us...));
     }
     Marshalers* newMarshalers(gocpp::slice<Marshalers*> ms);
-    
+
     template<typename... Args>
     Marshalers* newMarshalers(Args... ms)
     {
         return newMarshalers(gocpp::ToSlice<Marshalers*>(ms...));
     }
-    
+
     template<typename... Args>
     Marshalers* newMarshalers(Marshalers* value, Args... ms)
     {
         return newMarshalers(gocpp::ToSlice<Marshalers*>(value, ms...));
     }
     Unmarshalers* newUnmarshalers(gocpp::slice<Unmarshalers*> us);
-    
+
     template<typename... Args>
     Unmarshalers* newUnmarshalers(Args... us)
     {
         return newUnmarshalers(gocpp::ToSlice<Unmarshalers*>(us...));
     }
-    
+
     template<typename... Args>
     Unmarshalers* newUnmarshalers(Unmarshalers* value, Args... us)
     {
         return newUnmarshalers(gocpp::ToSlice<Unmarshalers*>(value, us...));
     }
-    
+
     template<typename T>
     Marshalers* MarshalFunc(std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (T _1)> fn);
-    
+
     template<typename T>
     Unmarshalers* UnmarshalFunc(std::function<gocpp::error (gocpp::slice<unsigned char> _1, T _2)> fn);
 }
@@ -147,25 +147,25 @@ namespace golang::encoding::json::v2
 
     template<typename Coder>
     std::ostream& operator<<(std::ostream& os, const struct typedArshaler<Coder>& value);
-    
+
     template<typename T>
     Marshalers* MarshalToFunc(std::function<gocpp::error (jsontext::Encoder* _1, T _2)> fn);
-    
+
     template<typename T>
     Unmarshalers* UnmarshalFromFunc(std::function<gocpp::error (jsontext::Decoder* _1, T _2)> fn);
     void assertCastableTo(reflect::Type to, bool marshal);
     bool castableTo(reflect::Type from, reflect::Type to);
     bool castableToFromAny(reflect::Type to);
-    
+
     template<typename Coder>
     typedArshalers<Coder>* newTypedArshalers(gocpp::slice<typedArshalers<Coder>*> as);
-    
+
     template<typename Coder, typename... Args>
     typedArshalers<Coder>* newTypedArshalers(Args... as)
     {
         return newTypedArshalers(gocpp::ToSlice<typedArshalers<Coder>*>(as...));
     }
-    
+
     template<typename Coder, typename... Args>
     typedArshalers<Coder>* newTypedArshalers(typedArshalers<Coder>* value, Args... as)
     {

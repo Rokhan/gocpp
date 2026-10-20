@@ -25,7 +25,7 @@ namespace golang::os
     gocpp::error rootRemoveAll(Root* r, gocpp::string name);
     gocpp::error rootRename(Root* r, gocpp::string oldname, gocpp::string newname);
     gocpp::error rootLink(Root* r, gocpp::string oldname, gocpp::string newname);
-    
+
     template<typename T>
     std::tuple<T, gocpp::error> doInRoot(Root* r, gocpp::string name, unsigned int flags, std::function<std::tuple<sysfdType, gocpp::error> (sysfdType parent, gocpp::string name)> openDirFunc, std::function<std::tuple<T, gocpp::error> (sysfdType parent, gocpp::string name, bool endsInSlash)> f);
     std::tuple<FileMode, gocpp::error> modeAt(sysfdType parent, gocpp::string name);

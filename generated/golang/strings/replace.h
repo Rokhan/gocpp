@@ -248,13 +248,13 @@ namespace golang::strings
 
     std::ostream& operator<<(std::ostream& os, const struct Replacer& value);
     Replacer* NewReplacer(gocpp::slice<gocpp::string> oldnew);
-    
+
     template<typename... Args>
     Replacer* NewReplacer(Args... oldnew)
     {
         return NewReplacer(gocpp::ToSlice<gocpp::string>(oldnew...));
     }
-    
+
     template<typename... Args>
     Replacer* NewReplacer(gocpp::string value, Args... oldnew)
     {

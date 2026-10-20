@@ -12,7 +12,7 @@
 
 namespace golang::internal::strconv
 {
-    
+
     template<typename T>
     T bool2(bool b);
     std::tuple<double, gocpp::error> pack64(uint64_t m, int e);
@@ -25,7 +25,7 @@ namespace golang::internal::strconv
     std::tuple<double, gocpp::error> parseFloat64(uint64_t d, int p, uint64_t sign);
     std::tuple<double, gocpp::error> parseFloat32(uint64_t d, int p, uint32_t sign);
     unrounded unmin(uint64_t x);
-    
+
     template<typename F>
     std::tuple<uint64_t, int> shortFloat(uint64_t m, int e);
     int skewed(int e);

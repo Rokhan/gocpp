@@ -14,7 +14,7 @@
 
 namespace golang::time
 {
-    
+
     template<typename bytes>
     std::tuple<Time, bool> parseRFC3339(bytes s, golang::time::Location* local);
     std::tuple<Time, gocpp::error> parseStrictRFC3339(gocpp::slice<unsigned char> b);

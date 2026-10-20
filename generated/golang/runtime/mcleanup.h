@@ -38,7 +38,7 @@ namespace golang::runtime
     bool sync_test_runtime_blockUntilEmptyCleanupQueue(int64_t timeout);
     uintptr_t raceEnterNewCtx();
     void raceRestoreCtx(uintptr_t ctx);
-    
+
     template<typename T, typename S>
     Cleanup AddCleanup(T* ptr, std::function<void (S _1)> cleanup, S arg);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
@@ -47,7 +47,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    
+
     template<typename T>
     void callCleanup(funcval* fn, gocpp::unsafe_pointer arg);
     struct cleanupFn

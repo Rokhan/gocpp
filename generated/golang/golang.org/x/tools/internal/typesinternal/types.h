@@ -145,13 +145,13 @@ namespace golang::golang_org::x::tools::internal::typesinternal
     gocpp::string ObjectKind(types::Object obj);
     iter::Seq2<types::Var*, bool> ImplicitFieldSelections(types::Selection seln);
     types::Tuple* TupleOf(gocpp::slice<types::Type> elems);
-    
+
     template<typename... Args>
     types::Tuple* TupleOf(Args... elems)
     {
         return TupleOf(gocpp::ToSlice<types::Type>(elems...));
     }
-    
+
     template<typename... Args>
     types::Tuple* TupleOf(types::Type value, Args... elems)
     {

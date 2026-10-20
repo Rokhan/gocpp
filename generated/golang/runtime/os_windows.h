@@ -303,26 +303,26 @@ namespace golang::runtime
     void minit();
     void unminit();
     uintptr_t stdcall_no_g(stdFunction fn, gocpp::slice<uintptr_t> args);
-    
+
     template<typename... Args>
     uintptr_t stdcall_no_g(stdFunction fn, Args... args)
     {
         return stdcall_no_g(fn, gocpp::ToSlice<uintptr_t>(args...));
     }
-    
+
     template<typename... Args>
     uintptr_t stdcall_no_g(stdFunction fn, uintptr_t value, Args... args)
     {
         return stdcall_no_g(fn, gocpp::ToSlice<uintptr_t>(value, args...));
     }
     uintptr_t stdcall(stdFunction fn, gocpp::slice<uintptr_t> args);
-    
+
     template<typename... Args>
     uintptr_t stdcall(stdFunction fn, Args... args)
     {
         return stdcall(fn, gocpp::ToSlice<uintptr_t>(args...));
     }
-    
+
     template<typename... Args>
     uintptr_t stdcall(stdFunction fn, uintptr_t value, Args... args)
     {

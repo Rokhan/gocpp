@@ -156,13 +156,13 @@ namespace golang::go::doc
     std::ostream& operator<<(std::ostream& os, const struct Note& value);
     Package* New(ast::Package* pkg, gocpp::string importPath, Mode mode);
     std::tuple<Package*, gocpp::error> NewFromFiles(token::FileSet* fset, gocpp::slice<ast::File*> files, gocpp::string importPath, gocpp::slice<go_any> opts);
-    
+
     template<typename... Args>
     std::tuple<Package*, gocpp::error> NewFromFiles(token::FileSet* fset, gocpp::slice<ast::File*> files, gocpp::string importPath, Args... opts)
     {
         return NewFromFiles(fset, files, importPath, gocpp::ToSlice<go_any>(opts...));
     }
-    
+
     template<typename... Args>
     std::tuple<Package*, gocpp::error> NewFromFiles(token::FileSet* fset, gocpp::slice<ast::File*> files, gocpp::string importPath, go_any value, Args... opts)
     {

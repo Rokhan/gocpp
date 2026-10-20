@@ -47,7 +47,7 @@ namespace golang::unicode::utf8
     int RuneCount(gocpp::slice<unsigned char> p);
     int RuneCountInString(gocpp::string s);
     bool RuneStart(unsigned char b);
-    
+
     template<typename T>
     uintptr_t word(T s);
     bool Valid(gocpp::slice<unsigned char> p);

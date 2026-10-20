@@ -20,13 +20,13 @@ namespace golang::internal::cpu
     bool isSet(uint32_t hwc, uint32_t value);
     gocpp::string Name();
     gocpp::slice<unsigned char> appendBytes(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> args);
-    
+
     template<typename... Args>
     gocpp::slice<unsigned char> appendBytes(gocpp::slice<unsigned char> b, Args... args)
     {
         return appendBytes(b, gocpp::ToSlice<uint32_t>(args...));
     }
-    
+
     template<typename... Args>
     gocpp::slice<unsigned char> appendBytes(gocpp::slice<unsigned char> b, uint32_t value, Args... args)
     {

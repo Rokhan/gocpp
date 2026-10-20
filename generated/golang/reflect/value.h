@@ -314,19 +314,19 @@ namespace golang::reflect
     void storeRcvr(golang::reflect::Value v, gocpp::unsafe_pointer p);
     gocpp::string funcName(std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> _1)> f);
     go_any valueInterface(golang::reflect::Value v, bool safe);
-    
+
     template<typename T>
     std::tuple<T, bool> TypeAssert(golang::reflect::Value v);
     go_any packIfaceValueIntoEmptyIface(golang::reflect::Value v);
     golang::reflect::Value copyVal(abi::Type* typ, flag fl, gocpp::unsafe_pointer ptr);
     golang::reflect::Value Append(golang::reflect::Value s, gocpp::slice<golang::reflect::Value> x);
-    
+
     template<typename... Args>
     golang::reflect::Value Append(golang::reflect::Value s, Args... x)
     {
         return Append(s, gocpp::ToSlice<golang::reflect::Value>(x...));
     }
-    
+
     template<typename... Args>
     golang::reflect::Value Append(golang::reflect::Value s, golang::reflect::Value value, Args... x)
     {

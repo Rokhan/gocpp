@@ -35,4 +35,9 @@ func main() {
 	for k := range 5 {
 		fmt.Println(k)
 	}
+
+	var ii int
+	for ii = range 5 {
+		fmt.Println(ii)
+	}
 }

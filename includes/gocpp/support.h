@@ -1262,7 +1262,14 @@ namespace gocpp
     {
         return T();
     }
-    
+
+    // Go: make(map[K]V) is a non-nil, empty map. Also matches named map types (gocpp::defined<map<K, V>, Tag>)
+    template <typename T> requires std::constructible_from<T, gocpp::non_nil_t>
+    T make(Tag<T>)
+    {
+        return T(gocpp::non_nil);
+    }
+
     template <typename T, typename P>
     T make(Tag<T>, P p)
     {
@@ -1335,25 +1342,6 @@ namespace gocpp
 
 namespace std
 {
-    template <typename V>
-    struct tuple_size<gocpp::map_value<V>>
-    {
-        static constexpr size_t value = 2;
-    };
-
-    // TODO: use the base std::tuple ?
-    template <typename V>
-    struct tuple_element<0, gocpp::map_value<V>>
-    {
-        using type = typename std::add_lvalue_reference<V>::type;
-    };
-
-    template <typename V>
-    struct tuple_element<1, gocpp::map_value<V>>
-    {
-        using type = bool;
-    };
-
     // Temporary mock for std::function printing, maybe we should use a custom
     // gocpp::ostream type to avoid overloading in std namespace.
     template<typename T>
@@ -1586,9 +1574,6 @@ namespace mocklib
     template<typename K, typename V>
     std::ostream& PrintTo(std::ostream& os, const gocpp::map<K, V>& value);
 
-    template<typename V>
-    std::ostream& PrintTo(std::ostream& os, const gocpp::map_value<V>& value);
-
     template<typename T>
     std::ostream& PrintTo(std::ostream& os, const T& value);
 
@@ -1768,12 +1753,6 @@ namespace mocklib
             sep = " ";
         }
         return os << "]";
-    }
-
-    template<typename V>
-    std::ostream& PrintTo(std::ostream& os, const gocpp::map_value<V>& value)
-    {
-        return os << std::get<0>(value);
     }
 
     template<typename T, int N>

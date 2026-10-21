@@ -98,7 +98,7 @@
 | [TourOfGo/moretypes/map-literals.go](tests/TourOfGo/moretypes/map-literals.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/map-literals.cpp)) | ✔️ |
 | [TourOfGo/moretypes/map-literals-continued.go](tests/TourOfGo/moretypes/map-literals-continued.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/map-literals-continued.cpp)) | ✔️ |
 | [TourOfGo/moretypes/maps.go](tests/TourOfGo/moretypes/maps.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/maps.cpp)) | ✔️ |
-| [TourOfGo/moretypes/mutating-maps.go](tests/TourOfGo/moretypes/mutating-maps.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/mutating-maps.cpp)) | ❌ |
+| [TourOfGo/moretypes/mutating-maps.go](tests/TourOfGo/moretypes/mutating-maps.go) | ✔️ | ❌ | ❌ | ❌ |
 | [TourOfGo/moretypes/nil-slices.go](tests/TourOfGo/moretypes/nil-slices.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/nil-slices.cpp)) | ✔️ |
 | [TourOfGo/moretypes/pointers.go](tests/TourOfGo/moretypes/pointers.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/pointers.cpp)) | ✔️ |
 | [TourOfGo/moretypes/range.go](tests/TourOfGo/moretypes/range.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/range.cpp)) | ✔️ |
@@ -199,7 +199,7 @@
 | $(ImportDir)/fmt/scan.go | ✔️ ([cpp](generated/golang/fmt/scan.cpp), [h](generated/golang/fmt/scan.h))| ❌ |
 | $(ImportDir)/go/ast/ast.go | ✔️ ([cpp](generated/golang/go/ast/ast.cpp), [h](generated/golang/go/ast/ast.h))| ❌ |
 | $(ImportDir)/go/ast/directive.go | ✔️ ([cpp](generated/golang/go/ast/directive.cpp), [h](generated/golang/go/ast/directive.h))| ✔️ |
-| $(ImportDir)/go/ast/scope.go | ✔️ ([cpp](generated/golang/go/ast/scope.cpp), [h](generated/golang/go/ast/scope.h))| ❌ |
+| $(ImportDir)/go/ast/scope.go | ✔️ ([cpp](generated/golang/go/ast/scope.cpp), [h](generated/golang/go/ast/scope.h))| ✔️ |
 | $(ImportDir)/go/ast/walk.go | ✔️ ([cpp](generated/golang/go/ast/walk.cpp), [h](generated/golang/go/ast/walk.h))| ✔️ |
 | $(ImportDir)/go/build/build.go | ✔️ ([cpp](generated/golang/go/build/build.cpp), [h](generated/golang/go/build/build.h))| ❌ |
 | $(ImportDir)/go/build/constraint/expr.go | ✔️ ([cpp](generated/golang/go/build/constraint/expr.cpp), [h](generated/golang/go/build/constraint/expr.h))| ❌ |
@@ -225,7 +225,7 @@
 | $(ImportDir)/go/scanner/errors.go | ✔️ ([cpp](generated/golang/go/scanner/errors.cpp), [h](generated/golang/go/scanner/errors.h))| ❌ |
 | $(ImportDir)/go/scanner/scanner.go | ✔️ ([cpp](generated/golang/go/scanner/scanner.cpp), [h](generated/golang/go/scanner/scanner.h))| ✔️ |
 | $(ImportDir)/go/token/position.go | ✔️ ([cpp](generated/golang/go/token/position.cpp), [h](generated/golang/go/token/position.h))| ❌ |
-| $(ImportDir)/go/token/token.go | ✔️ ([cpp](generated/golang/go/token/token.cpp), [h](generated/golang/go/token/token.h))| ❌ |
+| $(ImportDir)/go/token/token.go | ✔️ ([cpp](generated/golang/go/token/token.cpp), [h](generated/golang/go/token/token.h))| ✔️ |
 | $(ImportDir)/go/token/tree.go | ✔️ ([cpp](generated/golang/go/token/tree.cpp), [h](generated/golang/go/token/tree.h))| ❌ |
 | $(ImportDir)/go/types/alias.go | ✔️ ([cpp](generated/golang/go/types/alias.cpp), [h](generated/golang/go/types/alias.h))| ❌ |
 | $(ImportDir)/go/types/api.go | ✔️ ([cpp](generated/golang/go/types/api.cpp), [h](generated/golang/go/types/api.h))| ❌ |

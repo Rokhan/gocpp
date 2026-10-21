@@ -1820,6 +1820,17 @@ func (cv *cppConverter) convertAssignRightExprs(exprs []ast.Expr) cppExpr {
 	}
 }
 
+// convertAssignRight converts the right side of an assignment with nLhs names on the left.
+// `v, ok := m[k]` needs the comma-ok form of the map access.
+func (cv *cppConverter) convertAssignRight(nLhs int, exprs []ast.Expr) cppExpr {
+	if nLhs == 2 && len(exprs) == 1 {
+		if idx, ok := ast.Unparen(exprs[0]).(*ast.IndexExpr); ok && cv.IsExprMap(idx.X) {
+			return cv.convertExprCtx(idx, exprCtx{commaOk: true})
+		}
+	}
+	return cv.convertAssignRightExprs(exprs)
+}
+
 func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []cppExpr {
 	switch stmt.Tok {
 	case token.DEFINE:
@@ -1880,7 +1891,7 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 
 			if allNew {
 				// Not necessary, the default case would work, but output looks better
-				result := []cppExpr{ExprPrintf("auto [%s] = %s", strings.Join(toDeclare, ", "), cv.convertAssignRightExprs(stmt.Rhs))}
+				result := []cppExpr{ExprPrintf("auto [%s] = %s", strings.Join(toDeclare, ", "), cv.convertAssignRight(len(stmt.Lhs), stmt.Rhs))}
 				sortedNames := slices.Sorted(maps.Keys(tmpNames))
 				for _, name := range sortedNames {
 					result = append(result, ExprPrintf("auto& %s = %s", name, tmpNames[name]))
@@ -1901,7 +1912,7 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 					*env.varNames = append(*env.varNames, varName.str)
 				}
 			}
-			result := append(decl, ExprPrintf("std::tie(%s) = %s", strings.Join(leftVarList, ", "), cv.convertAssignRightExprs(stmt.Rhs)))
+			result := append(decl, ExprPrintf("std::tie(%s) = %s", strings.Join(leftVarList, ", "), cv.convertAssignRight(len(stmt.Lhs), stmt.Rhs)))
 			for name, tmpName := range tmpNames {
 				result = append(result, ExprPrintf("auto& %s = %s", name, tmpName))
 			}
@@ -1914,7 +1925,7 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 		case 1:
 			return []cppExpr{ExprPrintf("%s = %s", cv.convertTargetExpr(stmt.Lhs[0]), cv.convertAssignRightExprs(stmt.Rhs))}
 		default:
-			return []cppExpr{ExprPrintf("std::tie(%s) = %s", cv.convertAssignExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))}
+			return []cppExpr{ExprPrintf("std::tie(%s) = %s", cv.convertAssignExprs(stmt.Lhs), cv.convertAssignRight(len(stmt.Lhs), stmt.Rhs))}
 		}
 
 	case token.ADD_ASSIGN, token.SUB_ASSIGN, token.MUL_ASSIGN,
@@ -1926,7 +1937,7 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 			case 0:
 				panic("convertAssignStmt, len(exprs) == 0")
 			case 1:
-				return []cppExpr{ExprPrintf("%s %s %s", cv.convertExprs(stmt.Lhs), stmt.Tok, cv.convertAssignRightExprs(stmt.Rhs))}
+				return []cppExpr{ExprPrintf("%s %s %s", cv.convertWriteExpr(stmt.Lhs[0]), stmt.Tok, cv.convertAssignRightExprs(stmt.Rhs))}
 			default:
 				panic("convertAssignStmt, len(exprs) != 1")
 			}
@@ -1981,7 +1992,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), cv.convertExpr(s.X))
 
 	case *ast.IncDecStmt:
-		cv.WritterExprPrintf(cppOut, "%s%s%s;\n", cv.cpp.Indent(), cv.convertExpr(s.X), s.Tok)
+		cv.WritterExprPrintf(cppOut, "%s%s%s;\n", cv.cpp.Indent(), cv.convertWriteExpr(s.X), s.Tok)
 
 	case *ast.ReturnStmt:
 		cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), cv.convertReturnStmt(s, env.outNames))
@@ -2555,9 +2566,9 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr,
 	case *ast.IncDecStmt:
 		switch s.Tok {
 		case token.INC:
-			return ExprPrintf("%s++", cv.convertExpr(s.X)), false
+			return ExprPrintf("%s++", cv.convertWriteExpr(s.X)), false
 		case token.DEC:
-			return ExprPrintf("%s--", cv.convertExpr(s.X)), false
+			return ExprPrintf("%s--", cv.convertWriteExpr(s.X)), false
 		default:
 			cv.Panicf("inlineStmt, unmanaged type [%v]", reflect.TypeOf(s.Tok))
 		}
@@ -2836,7 +2847,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 								cv.declareVar(cppName, false)
 							}
 						}
-						result = append(result, inlineStrf(s, "auto [%s] = %s%s", strings.Join(names, ", "), cv.convertExpr(values[0]), end)...)
+						result = append(result, inlineStrf(s, "auto [%s] = %s%s", strings.Join(names, ", "), cv.convertAssignRight(len(s.Names), values), end)...)
 						for _, name := range slices.Sorted(maps.Keys(tmpNames)) {
 							result = append(result, inlineStrf(s, "auto& %s = %s%s", name, tmpNames[name], end)...)
 						}
@@ -4553,7 +4564,12 @@ func (cv *cppConverter) convertExpr(node ast.Expr) cppExpr {
 }
 
 func (cv *cppConverter) convertTargetExpr(node ast.Expr) cppExpr {
-	return cv.convertExprCtx(node, exprCtx{isTarget: true})
+	return cv.convertExprCtx(node, exprCtx{isTarget: true, isWrite: true})
+}
+
+// convertWriteExpr converts an expression that is modified in place (x++, x += y).
+func (cv *cppConverter) convertWriteExpr(node ast.Expr) cppExpr {
+	return cv.convertExprCtx(node, exprCtx{isWrite: true})
 }
 
 func (cv *cppConverter) convertSubExpr(node ast.Expr) cppExpr {
@@ -4561,8 +4577,12 @@ func (cv *cppConverter) convertSubExpr(node ast.Expr) cppExpr {
 }
 
 type exprCtx struct {
-	isSubExpr     bool
-	isTarget      bool
+	isSubExpr bool
+	isTarget  bool
+	// isWrite: the expression is assigned or modified (m[k] -> m.ref(k))
+	isWrite bool
+	// commaOk: `v, ok := m[k]` form (m[k] -> m.lookup(k))
+	commaOk       bool
 	explicitError bool
 	parent        ast.Node
 }
@@ -4845,6 +4865,16 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			return cv.convertTypeExpr(n, ctContext{}).cppExpr
 		} else if cv.IsFunc(n.X) && cv.IsFunc(n) {
 			return ExprPrintf("%s<%s>", cv.convertExpr(n.X), cv.convertExprCppType(n.Index))
+		} else if cv.IsExprMap(n.X) {
+			// Go map access depends on the context, see gocpp::map
+			switch {
+			case ctx.isWrite:
+				return ExprPrintf("%s.ref(%s)", cv.convertExpr(n.X), cv.convertExpr(n.Index))
+			case ctx.commaOk:
+				return ExprPrintf("%s.lookup(%s)", cv.convertExpr(n.X), cv.convertExpr(n.Index))
+			default:
+				return ExprPrintf("%s.get(%s)", cv.convertExpr(n.X), cv.convertExpr(n.Index))
+			}
 		} else {
 			return ExprPrintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
 		}
@@ -5046,6 +5076,9 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 			}
 		}
 		cv.BuffExprPrintf(buf, "%s})", cv.cpp.Indent())
+	} else if len(n.Elts) == 0 && !addPtr && litType.str != "" && cv.IsExprMap(n) {
+		// Go: map[K]V{} is a non-nil empty map, unlike the zero value.
+		cv.BuffExprPrintf(buf, "%s {gocpp::non_nil}", litType)
 	} else {
 		newPrefix := ""
 		if addPtr {
@@ -5153,7 +5186,7 @@ func (cv *cppConverter) convertReturnExprs(exprs []ast.Expr) cppExpr {
 }
 
 func (cv *cppConverter) convertAssignExprs(exprs []ast.Expr) cppExpr {
-	return cv.convertExprsImpl(exprs, exprCtx{isTarget: true}, true)
+	return cv.convertExprsImpl(exprs, exprCtx{isTarget: true, isWrite: true}, true)
 }
 
 func (cv *cppConverter) convertExprsImpl(exprs []ast.Expr, ctx exprCtx, useIgnore bool) cppExpr {

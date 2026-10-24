@@ -3,6 +3,7 @@
 #include "gocpp/support.fwd.h"
 
 #include <any>
+#include <iostream>
 
 namespace mocklib
 {

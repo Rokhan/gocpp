@@ -93,15 +93,13 @@ namespace gocpp
     template<typename K, typename V>
     std::ostream& operator<<(std::ostream& os, const gocpp::map<K, V>& dic)
     {
-        os << '[';
-        int i = 0;
+        os << "map[";
+        auto sep = "";
         for(auto& kv : dic)
         {
-            if(i != 0) { os << ", "; }
-            os << kv.first << ": " << kv.second;
-            i++;
+            os << sep << kv.first << ":" << kv.second;
+            sep = " ";
         }
-        os << ']';
-        return os;
+        return os << "]";
     }
 }

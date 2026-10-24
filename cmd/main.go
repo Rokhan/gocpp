@@ -5038,13 +5038,28 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 	// ignore 'n.Incomplete' at the moment
 	buf := mkCppBuffer()
 	var litType cppExpr
-	if n.Type != nil {
-		litType = cv.convertTypeExpr(n, ctContext{}).cppExpr
-	}
 
 	var isKvInit bool
 	if len(n.Elts) != 0 {
 		_, isKvInit = n.Elts[0].(*ast.KeyValueExpr)
+	}
+
+	if n.Type != nil {
+		litType = cv.convertTypeExpr(n, ctContext{}).cppExpr
+	} else if goType := cv.typeInfo.TypeOf(n); goType != nil {
+		// Type is elided, for example, in the inner '{1, 2}' in 'map[string]*Vertex{"a": {1, 2}}'.
+		// We can use go/types to check that such literal has the pointer type (*Vertex).
+		// In this case, '{1, 2}' really means '&Vertex{1, 2}'.
+		elided := goType
+		if ptr, ok := types.Unalias(goType).(*types.Pointer); ok {
+			addPtr = true
+			elided = ptr.Elem()
+		}
+		// The type name is only needed to build a pointer or a designated-init lambda.
+		if addPtr || (isKvInit && !cv.IsExprMap(n)) {
+			typeStr, _ := cv.convertGoToCppType(elided, cv.Position(n))
+			litType = mkCppExpr(typeStr)
+		}
 	}
 
 	if isKvInit && !isAstMapType(n.Type) && !cv.IsExprMap(n) {

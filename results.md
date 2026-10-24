@@ -98,7 +98,7 @@
 | [TourOfGo/moretypes/map-literals.go](tests/TourOfGo/moretypes/map-literals.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/map-literals.cpp)) | ✔️ |
 | [TourOfGo/moretypes/map-literals-continued.go](tests/TourOfGo/moretypes/map-literals-continued.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/map-literals-continued.cpp)) | ✔️ |
 | [TourOfGo/moretypes/maps.go](tests/TourOfGo/moretypes/maps.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/maps.cpp)) | ✔️ |
-| [TourOfGo/moretypes/mutating-maps.go](tests/TourOfGo/moretypes/mutating-maps.go) | ✔️ | ❌ | ❌ | ❌ |
+| [TourOfGo/moretypes/mutating-maps.go](tests/TourOfGo/moretypes/mutating-maps.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/mutating-maps.cpp)) | ✔️ |
 | [TourOfGo/moretypes/nil-slices.go](tests/TourOfGo/moretypes/nil-slices.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/nil-slices.cpp)) | ✔️ |
 | [TourOfGo/moretypes/pointers.go](tests/TourOfGo/moretypes/pointers.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/pointers.cpp)) | ✔️ |
 | [TourOfGo/moretypes/range.go](tests/TourOfGo/moretypes/range.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/range.cpp)) | ✔️ |
@@ -302,7 +302,7 @@
 | $(ImportDir)/golang.org/x/sync/errgroup/errgroup.go | ✔️ ([cpp](generated/golang/golang.org/x/sync/errgroup/errgroup.cpp), [h](generated/golang/golang.org/x/sync/errgroup/errgroup.h))| ❌ |
 | $(ImportDir)/golang.org/x/tools/go/ast/edge/edge.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/ast/edge/edge.cpp), [h](generated/golang/golang.org/x/tools/go/ast/edge/edge.h))| ❌ |
 | $(ImportDir)/golang.org/x/tools/go/ast/inspector/cursor.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/ast/inspector/cursor.cpp), [h](generated/golang/golang.org/x/tools/go/ast/inspector/cursor.h))| ❌ |
-| $(ImportDir)/golang.org/x/tools/go/ast/inspector/inspector.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/ast/inspector/inspector.cpp), [h](generated/golang/golang.org/x/tools/go/ast/inspector/inspector.h))| ❌ |
+| $(ImportDir)/golang.org/x/tools/go/ast/inspector/inspector.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/ast/inspector/inspector.cpp), [h](generated/golang/golang.org/x/tools/go/ast/inspector/inspector.h))| ✔️ |
 | $(ImportDir)/golang.org/x/tools/go/ast/inspector/typeof.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/ast/inspector/typeof.cpp), [h](generated/golang/golang.org/x/tools/go/ast/inspector/typeof.h))| ✔️ |
 | $(ImportDir)/golang.org/x/tools/go/ast/inspector/walk.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/ast/inspector/walk.cpp), [h](generated/golang/golang.org/x/tools/go/ast/inspector/walk.h))| ✔️ |
 | $(ImportDir)/golang.org/x/tools/go/gcexportdata/gcexportdata.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/gcexportdata/gcexportdata.cpp), [h](generated/golang/golang.org/x/tools/go/gcexportdata/gcexportdata.h))| ❌ |
@@ -388,7 +388,7 @@
 | $(ImportDir)/internal/byteorder/byteorder.go | ✔️ ([cpp](generated/golang/internal/byteorder/byteorder.cpp), [h](generated/golang/internal/byteorder/byteorder.h))| ✔️ |
 | $(ImportDir)/internal/chacha8rand/chacha8.go | ✔️ ([cpp](generated/golang/internal/chacha8rand/chacha8.cpp), [h](generated/golang/internal/chacha8rand/chacha8.h))| ✔️ |
 | $(ImportDir)/internal/cpu/cpu.go | ✔️ ([cpp](generated/golang/internal/cpu/cpu.cpp), [h](generated/golang/internal/cpu/cpu.h))| ❌ |
-| $(ImportDir)/internal/cpu/cpu_x86.go | ✔️ ([cpp](generated/golang/internal/cpu/cpu_x86.cpp), [h](generated/golang/internal/cpu/cpu_x86.h))| ❌ |
+| $(ImportDir)/internal/cpu/cpu_x86.go | ✔️ ([cpp](generated/golang/internal/cpu/cpu_x86.cpp), [h](generated/golang/internal/cpu/cpu_x86.h))| ✔️ |
 | $(ImportDir)/internal/cpu/cpu_x86_other.go | ✔️ ([cpp](generated/golang/internal/cpu/cpu_x86_other.cpp), [h](generated/golang/internal/cpu/cpu_x86_other.h))| ✔️ |
 | $(ImportDir)/internal/filepathlite/path.go | ✔️ ([cpp](generated/golang/internal/filepathlite/path.cpp), [h](generated/golang/internal/filepathlite/path.h))| ✔️ |
 | $(ImportDir)/internal/filepathlite/path_windows.go | ✔️ ([cpp](generated/golang/internal/filepathlite/path_windows.cpp), [h](generated/golang/internal/filepathlite/path_windows.h))| ✔️ |
@@ -397,7 +397,7 @@
 | $(ImportDir)/internal/goarch/goarch_amd64.go | ✔️ ([cpp](generated/golang/internal/goarch/goarch_amd64.cpp), [h](generated/golang/internal/goarch/goarch_amd64.h))| ❌ |
 | $(ImportDir)/internal/goarch/zgoarch_amd64.go | ✔️ ([cpp](generated/golang/internal/goarch/zgoarch_amd64.cpp), [h](generated/golang/internal/goarch/zgoarch_amd64.h))| ✔️ |
 | $(ImportDir)/internal/godebug/godebug.go | ✔️ ([cpp](generated/golang/internal/godebug/godebug.cpp), [h](generated/golang/internal/godebug/godebug.h))| ❌ |
-| $(ImportDir)/internal/godebugs/table.go | ✔️ ([cpp](generated/golang/internal/godebugs/table.cpp), [h](generated/golang/internal/godebugs/table.h))| ❌ |
+| $(ImportDir)/internal/godebugs/table.go | ✔️ ([cpp](generated/golang/internal/godebugs/table.cpp), [h](generated/golang/internal/godebugs/table.h))| ✔️ |
 | $(ImportDir)/internal/goexperiment/exp_cgocheck2_off.go | ✔️ ([cpp](generated/golang/internal/goexperiment/exp_cgocheck2_off.cpp), [h](generated/golang/internal/goexperiment/exp_cgocheck2_off.h))| ✔️ |
 | $(ImportDir)/internal/goexperiment/exp_greenteagc_on.go | ✔️ ([cpp](generated/golang/internal/goexperiment/exp_greenteagc_on.cpp), [h](generated/golang/internal/goexperiment/exp_greenteagc_on.h))| ✔️ |
 | $(ImportDir)/internal/goexperiment/exp_heapminimum512kib_off.go | ✔️ ([cpp](generated/golang/internal/goexperiment/exp_heapminimum512kib_off.cpp), [h](generated/golang/internal/goexperiment/exp_heapminimum512kib_off.h))| ✔️ |

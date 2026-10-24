@@ -338,7 +338,7 @@ namespace golang::go::types
         {
             return nullptr;
         }
-        return gcArchSizes[arch];
+        return gcArchSizes.get(arch);
     }
 
 }

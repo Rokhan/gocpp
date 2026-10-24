@@ -631,7 +631,7 @@ namespace golang::go::parser
     {
         for(; p->tok != token::go_EOF; rec::next(gocpp::recv(p)))
         {
-            if(to[p->tok])
+            if(to.get(p->tok))
             {
                 // Return only if parser made some progress since last
                 // sync or if it has not reached 10 advance calls without

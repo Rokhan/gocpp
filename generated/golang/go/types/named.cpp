@@ -795,8 +795,8 @@ namespace golang::go::types
                         types::Named* t = gocpp::any_cast<types::Named*>(rhs);
                         if(debug)
                         {
-                            assert(! seen[t]);
-                            seen[t] = true;
+                            assert(! seen.get(t));
+                            seen.ref(t) = true;
                         }
                         // don't recalculate the underlying
                         if(rec::stateHas(gocpp::recv(t), hasUnder))
@@ -806,7 +806,7 @@ namespace golang::go::types
                         }
                         if(debug)
                         {
-                            seen[t] = true;
+                            seen.ref(t) = true;
                         }
                         path = append(path, t);
                         rec::unpack(gocpp::recv(t));

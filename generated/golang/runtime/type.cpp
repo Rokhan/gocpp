@@ -782,7 +782,7 @@ namespace golang::runtime
 
         // No module found. see if it is a run time name.
         reflectOffsLock();
-        auto [res, found] = reflectOffs.m[int32_t(off)];
+        auto [res, found] = reflectOffs.m.lookup(int32_t(off));
         reflectOffsUnlock();
         if(! found)
         {
@@ -824,7 +824,7 @@ namespace golang::runtime
         if(md == nullptr)
         {
             reflectOffsLock();
-            auto res = reflectOffs.m[int32_t(off)];
+            auto res = reflectOffs.m.get(int32_t(off));
             reflectOffsUnlock();
             if(res == nullptr)
             {
@@ -839,7 +839,7 @@ namespace golang::runtime
         }
         auto res = md->types + uintptr_t(off);
         auto resType = (_type*)(gocpp::unsafe_pointer(res));
-        if(auto t = md->typemap[resType]; t != nullptr)
+        if(auto t = md->typemap.get(resType); t != nullptr)
         {
             return t;
         }
@@ -877,7 +877,7 @@ namespace golang::runtime
         if(md == nullptr)
         {
             reflectOffsLock();
-            auto res = reflectOffs.m[int32_t(off)];
+            auto res = reflectOffs.m.get(int32_t(off));
             reflectOffsUnlock();
             if(res == nullptr)
             {
@@ -943,10 +943,10 @@ namespace golang::runtime
                 auto t = tl;
                 if(prev->typemap != nullptr)
                 {
-                    t = prev->typemap[tl];
+                    t = prev->typemap.get(tl);
                 }
                 // Add to typehash if not seen before.
-                auto tlist = typehash[t->Hash];
+                auto tlist = typehash.get(t->Hash);
                 for(auto [gocpp_ignored, tcur] : tlist)
                 {
                     if(tcur == t)
@@ -954,7 +954,7 @@ namespace golang::runtime
                         goto collect_continue;
                     }
                 }
-                typehash[t->Hash] = append(tlist, t);
+                typehash.ref(t->Hash) = append(tlist, t);
             }
 
             auto mdTypelinks = moduleTypelinks(md);
@@ -970,16 +970,16 @@ namespace golang::runtime
                 for(auto [gocpp_ignored, t] : mdTypelinks)
                 {
                     auto set = t;
-                    for(auto [gocpp_ignored, candidate] : typehash[t->Hash])
+                    for(auto [gocpp_ignored, candidate] : typehash.get(t->Hash))
                     {
-                        auto seen = gocpp::map<_typePair, gocpp::empty_struct> {};
+                        auto seen = gocpp::map<_typePair, gocpp::empty_struct> {gocpp::non_nil};
                         if(typesEqual(t, candidate, seen))
                         {
                             set = candidate;
                             break;
                         }
                     }
-                    md->typemap[t] = set;
+                    md->typemap.ref(t) = set;
                 }
             }
 
@@ -1007,7 +1007,7 @@ namespace golang::runtime
             raceacquire(gocpp::unsafe_pointer(& moduleToTypelinksLock));
         }
 
-        if(auto [typelinks, ok] = moduleToTypelinks[md]; ok)
+        if(auto [typelinks, ok] = moduleToTypelinks.lookup(md); ok)
         {
             if(raceenabled)
             {
@@ -1046,7 +1046,7 @@ namespace golang::runtime
         {
             moduleToTypelinks = gocpp::make(gocpp::Tag<gocpp::map<moduledata*, gocpp::slice<_type*>>>());
         }
-        moduleToTypelinks[md] = ret;
+        moduleToTypelinks.ref(md) = ret;
 
         if(raceenabled)
         {
@@ -1108,7 +1108,7 @@ namespace golang::runtime
     bool typesEqual(_type* t, _type* v, gocpp::map<_typePair, gocpp::empty_struct> seen)
     {
         auto tp = _typePair {t, v};
-        if(auto [gocpp_id_0, ok] = seen[tp]; ok)
+        if(auto [gocpp_id_0, ok] = seen.lookup(tp); ok)
         {
             return true;
         }
@@ -1116,7 +1116,7 @@ namespace golang::runtime
         // mark these types as seen, and thus equivalent which prevents an infinite loop if
         // the two types are identical, but recursively defined and loaded from
         // different modules
-        seen[tp] = gocpp::empty_struct {};
+        seen.ref(tp) = gocpp::empty_struct {};
 
         if(t == v)
         {

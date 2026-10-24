@@ -521,7 +521,7 @@ namespace golang::go::types
             // not in a package-level init expression
             return;
         }
-        if(auto [gocpp_id_1, found] = check->objMap[to]; ! found)
+        if(auto [gocpp_id_1, found] = check->objMap.lookup(to); ! found)
         {
             // to is not a package-level object
             return;
@@ -537,7 +537,7 @@ namespace golang::go::types
             m = gocpp::make(gocpp::Tag<gocpp::map<ast::Expr, exprInfo>>());
             check->untyped = m;
         }
-        m[e] = exprInfo {lhs, mode, typ, val};
+        m.ref(e) = exprInfo {lhs, mode, typ, val};
     }
 
     // later pushes f on to the stack of actions that will be processed later;
@@ -563,7 +563,7 @@ namespace golang::go::types
         {
             check->objPathIdx = gocpp::make(gocpp::Tag<gocpp::map<Object, int>>());
         }
-        check->objPathIdx[obj] = len(check->objPath);
+        check->objPathIdx.ref(obj) = len(check->objPath);
         check->objPath = append(check->objPath, obj);
     }
 
@@ -779,7 +779,7 @@ namespace golang::go::types
                     rec::errorf(gocpp::recv(check), file->Name, TooNew, "file requires newer Go version %v (application built with %v)"_s, fileVersion, go_current);
                 }
             }
-            versions[file] = v;
+            versions.ref(file) = v;
         }
     }
 

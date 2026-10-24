@@ -277,7 +277,7 @@ namespace golang::go::types
         {
             w->canon = gocpp::make(gocpp::Tag<gocpp::map<TypeParam*, TypeParam*>>());
         }
-        w->canon[mpar] = tpar;
+        w->canon.ref(mpar) = tpar;
     }
 
     // recordInstance records that the given type parameters were
@@ -469,7 +469,7 @@ namespace golang::go::types
             return - 1;
         }
 
-        if(auto [idx, ok] = w->nameIdx[obj]; ok)
+        if(auto [idx, ok] = w->nameIdx.lookup(obj); ok)
         {
             return idx;
         }
@@ -507,21 +507,21 @@ namespace golang::go::types
         {
             w->nameIdx = gocpp::make(gocpp::Tag<gocpp::map<TypeName*, int>>());
         }
-        w->nameIdx[obj] = idx;
+        w->nameIdx.ref(obj) = idx;
         return idx;
     }
 
     // typeParamVertex returns the index of the vertex representing tpar.
     int rec::typeParamVertex(monoGraph* w, TypeParam* tpar)
     {
-        if(auto [x, ok] = w->canon[tpar]; ok)
+        if(auto [x, ok] = w->canon.lookup(tpar); ok)
         {
             tpar = x;
         }
 
         auto obj = rec::Obj(gocpp::recv(tpar));
 
-        if(auto [idx, ok] = w->nameIdx[obj]; ok)
+        if(auto [idx, ok] = w->nameIdx.lookup(obj); ok)
         {
             return idx;
         }
@@ -535,7 +535,7 @@ namespace golang::go::types
         w->vertices = append(w->vertices, gocpp::Init<monoVertex>([=](auto& x) {
             x.obj = obj;
         }));
-        w->nameIdx[obj] = idx;
+        w->nameIdx.ref(obj) = idx;
         return idx;
     }
 

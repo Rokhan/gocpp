@@ -121,7 +121,7 @@ namespace golang::go::types
         }
         if(auto m = check->Info.Types; m != nullptr)
         {
-            m[x] = TypeAndValue {mode, typ, val};
+            m.ref(x) = TypeAndValue {mode, typ, val};
         }
         rec::recordTypeAndValueInSyntax(gocpp::recv(check), x, mode, typ, val);
     }
@@ -185,12 +185,12 @@ namespace golang::go::types
         {
             for(; ; )
             {
-                auto tv = m[x];
+                auto tv = m.get(x);
                 // should have been recorded already
                 assert(tv.Type != nullptr);
                 auto pos = rec::Pos(gocpp::recv(x));
                 tv.Type = NewTuple(newVar(LocalVar, pos, check->pkg, ""_s, t0), newVar(LocalVar, pos, check->pkg, ""_s, t1));
-                m[x] = tv;
+                m.ref(x) = tv;
                 // if x is a parenthesized expression (p.X), update p.X
                 auto [p, gocpp_id_1] = gocpp::getValue<ast::ParenExpr*>(x);
                 if(p == nullptr)
@@ -229,14 +229,14 @@ namespace golang::go::types
                     copy.recv = pars.vars[0];
                     pars.vars = pars.vars.make_slice(1);
                     copy.params = & pars;
-                    m[ident] = Instance {newTypeList(targs), & copy};
+                    m.ref(ident) = Instance {newTypeList(targs), & copy};
                     return;
                 }
                 copy.recv = sig->recvold;
-                m[ident] = Instance {newTypeList(targs), & copy};
+                m.ref(ident) = Instance {newTypeList(targs), & copy};
                 return;
             }
-            m[ident] = Instance {newTypeList(targs), typ};
+            m.ref(ident) = Instance {newTypeList(targs), typ};
         }
     }
 
@@ -245,7 +245,7 @@ namespace golang::go::types
         assert(id != nullptr);
         if(auto m = check->Info.Defs; m != nullptr)
         {
-            m[id] = obj;
+            m.ref(id) = obj;
         }
     }
 
@@ -255,7 +255,7 @@ namespace golang::go::types
         assert(obj != nullptr);
         if(auto m = check->Info.Uses; m != nullptr)
         {
-            m[id] = obj;
+            m.ref(id) = obj;
         }
     }
 
@@ -265,7 +265,7 @@ namespace golang::go::types
         assert(obj != nullptr);
         if(auto m = check->Info.Implicits; m != nullptr)
         {
-            m[node] = obj;
+            m.ref(node) = obj;
         }
     }
 
@@ -275,7 +275,7 @@ namespace golang::go::types
         rec::recordUse(gocpp::recv(check), x->Sel, obj);
         if(auto m = check->Info.Selections; m != nullptr)
         {
-            m[x] = new Selection {kind, recv, obj, index, indirect};
+            m.ref(x) = new Selection {kind, recv, obj, index, indirect};
         }
     }
 
@@ -285,7 +285,7 @@ namespace golang::go::types
         assert(scope != nullptr);
         if(auto m = check->Info.Scopes; m != nullptr)
         {
-            m[node] = scope;
+            m.ref(node) = scope;
         }
     }
 

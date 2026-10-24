@@ -375,7 +375,7 @@ namespace golang::internal::godebug
             {
                 if(auto info = gocpp::getValue<setting*>(s)->info; info != nullptr && info->Immutable)
                 {
-                    did[gocpp::getValue<gocpp::string>(name)] = true;
+                    did.ref(gocpp::getValue<gocpp::string>(name)) = true;
                 }
                 return true;
             });
@@ -385,7 +385,7 @@ namespace golang::internal::godebug
             // Clear any cached values that are no longer present.
             rec::Range(gocpp::recv(cache), [=](go_any name, go_any s) mutable -> bool
             {
-                if(! did[gocpp::getValue<gocpp::string>(name)])
+                if(! did.get(gocpp::getValue<gocpp::string>(name)))
                 {
                     rec::Store<godebug::value>(gocpp::recv(gocpp::getValue<setting*>(s)->value), & empty);
                 }
@@ -422,9 +422,9 @@ namespace golang::internal::godebug
                 if(eq >= 0)
                 {
                     auto [name, arg] = std::tuple{s.make_slice(i + 1, eq), s.make_slice(eq + 1, end)};
-                    if(! did[name])
+                    if(! did.get(name))
                     {
-                        did[name] = true;
+                        did.ref(name) = true;
                         auto v = gocpp::InitPtr<value>([=](auto& x) {
                             x.text = arg;
                         });

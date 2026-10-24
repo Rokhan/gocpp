@@ -78,7 +78,7 @@ namespace golang::go::ast
     // are ignored.
     Object* rec::Lookup(Scope* s, gocpp::string name)
     {
-        return s->Objects[name];
+        return s->Objects.get(name);
     }
 
     // Insert attempts to insert a named object obj into the scope s.
@@ -88,9 +88,9 @@ namespace golang::go::ast
     Object* rec::Insert(Scope* s, Object* obj)
     {
         Object* alt;
-        if(alt = s->Objects[obj->Name]; alt == nullptr)
+        if(alt = s->Objects.get(obj->Name); alt == nullptr)
         {
-            s->Objects[obj->Name] = obj;
+            s->Objects.ref(obj->Name) = obj;
         }
         return alt;
     }

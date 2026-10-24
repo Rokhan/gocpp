@@ -831,7 +831,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
             if(len(split) == 2)
             {
                 auto [k, v] = std::tuple{split[0], split[1]};
-                env[k] = v;
+                env.ref(k) = v;
             }
         }
 
@@ -848,7 +848,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
                 args = append(args, arg);
             }
         }
-        return mocklib::Sprintf("GOROOT=%v GOPATH=%v GO111MODULE=%v GOPROXY=%v PWD=%v %v"_s, env["GOROOT"_s], env["GOPATH"_s], env["GO111MODULE"_s], env["GOPROXY"_s], env["PWD"_s], mocklib::StringsJoin(args, " "_s));
+        return mocklib::Sprintf("GOROOT=%v GOPATH=%v GO111MODULE=%v GOPROXY=%v PWD=%v %v"_s, env.get("GOROOT"_s), env.get("GOPATH"_s), env.get("GO111MODULE"_s), env.get("GOPROXY"_s), env.get("PWD"_s), mocklib::StringsJoin(args, " "_s));
     }
 
     // WriteOverlays writes each value in the overlay (see the Overlay
@@ -911,7 +911,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
                 {
                     return {""_s, nullptr, err};
                 }
-                overlays[k] = filename;
+                overlays.ref(k) = filename;
             }
 
             // Write the JSON overlay file that maps logical file names to temp files.

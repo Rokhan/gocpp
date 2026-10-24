@@ -109,13 +109,13 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         // positions per file. We delay calling token.File.SetLines until all
         // positions have been calculated (by way of fakeFileSet.setLines), so that
         // we can avoid setting unnecessary lines. See also golang/go#46586.
-        auto f = s->files[file];
+        auto f = s->files.get(file);
         if(f == nullptr)
         {
             f = gocpp::InitPtr<fileInfo>([=](auto& x) {
                 x.file = rec::AddFile(gocpp::recv(s->fset), file, - 1, maxlines);
             });
-            s->files[file] = f;
+            s->files.ref(file) = f;
         }
         if(line > maxlines)
         {

@@ -7,4 +7,7 @@
 namespace golang::main
 {
     struct Vertex;
+    struct GoTag_Set;
+    using Set = gocpp::defined<gocpp::map<gocpp::string, gocpp::empty_struct>, GoTag_Set>;
+    struct Registry;
 }

@@ -2199,7 +2199,7 @@ namespace golang::time
             }
             auto u = s.make_slice(0, i);
             s = s.make_slice(i);
-            auto [unit, ok] = unitMap[u];
+            auto [unit, ok] = unitMap.lookup(u);
             if(! ok)
             {
                 return {0, gocpp::error(new parseDurationError {"unknown unit "_s + quote(u) + " in duration"_s, orig})};

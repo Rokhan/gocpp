@@ -1082,7 +1082,7 @@ namespace golang::go::types
                                 p = gocpp::make(gocpp::Tag<gocpp::map<ast::CallExpr*, bool>>());
                                 check->environment.isPanic = p;
                             }
-                            p[call] = true;
+                            p.ref(call) = true;
                         }
                         rec::assignment(gocpp::recv(check), x, & emptyInterface, "argument to panic"_s);
                         if(! rec::isValid(gocpp::recv(x)))
@@ -1516,7 +1516,7 @@ namespace golang::go::types
                         {
                             return t->varSize;
                         }
-                        if(auto [i, ok] = check->objPathIdx[t->obj]; ok)
+                        if(auto [i, ok] = check->objPathIdx.lookup(t->obj); ok)
                         {
                             auto cycle = check->objPath.make_slice(i);
                             rec::cycleError(gocpp::recv(check), cycle, firstInSrc(cycle));

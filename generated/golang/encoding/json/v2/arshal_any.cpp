@@ -307,7 +307,7 @@ namespace golang::encoding::json::v2
                     {
                         return err;
                     }
-                    if(auto err = marshalValueAny(enc, obj[name], mo); err != nullptr)
+                    if(auto err = marshalValueAny(enc, obj.get(name), mo); err != nullptr)
                     {
                         return err;
                     }
@@ -364,7 +364,7 @@ namespace golang::encoding::json::v2
             auto name = rec::String(gocpp::recv(tok));
 
             // Manually check for duplicate names.
-            if(auto [gocpp_id_1, ok] = obj[name]; ok)
+            if(auto [gocpp_id_1, ok] = obj.lookup(name); ok)
             {
                 // TODO: Unread the object name.
                 auto name = rec::PreviousTokenOrValue(gocpp::recv(rec::Decoder(gocpp::recv(export), dec)));
@@ -374,7 +374,7 @@ namespace golang::encoding::json::v2
 
             go_any val;
             std::tie(val, err) = unmarshalValueAny(dec, uo);
-            obj[name] = val;
+            obj.ref(name) = val;
             if(err != nullptr)
             {
                 if(isFatalError(err, uo->Flags))

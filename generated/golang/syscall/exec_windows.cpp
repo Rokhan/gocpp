@@ -199,7 +199,7 @@ namespace golang::syscall
         }
 
         // lowercased keys to avoid recomputing them in sort
-        auto lowerKeyCache = gocpp::map<gocpp::string, gocpp::slice<unsigned char>> {};
+        auto lowerKeyCache = gocpp::map<gocpp::string, gocpp::slice<unsigned char>> {gocpp::non_nil};
         auto lowerKey = [=](gocpp::string kv) mutable -> gocpp::slice<unsigned char>
         {
             auto eq = bytealg::IndexByteString(kv, '=');
@@ -208,7 +208,7 @@ namespace golang::syscall
                 return nullptr;
             }
             auto k = kv.make_slice(0, eq);
-            auto [v, ok] = lowerKeyCache[k];
+            auto [v, ok] = lowerKeyCache.lookup(k);
             if(! ok)
             {
                 v = gocpp::slice<unsigned char>(k);
@@ -226,7 +226,7 @@ namespace golang::syscall
                         v[i] -= 'a' - 'A';
                     }
                 }
-                lowerKeyCache[k] = v;
+                lowerKeyCache.ref(k) = v;
             }
             return v;
         };

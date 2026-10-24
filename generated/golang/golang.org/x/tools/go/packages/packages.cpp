@@ -764,7 +764,7 @@ namespace golang::golang_org::x::tools::go::packages
             flat->Imports = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::string>>(), len(p->Imports));
             for(auto [path, ipkg] : p->Imports)
             {
-                flat->Imports[path] = ipkg->ID;
+                flat->Imports.ref(path) = ipkg->ID;
             }
         }
         return json::Marshal(flat);
@@ -797,7 +797,7 @@ namespace golang::golang_org::x::tools::go::packages
             p->Imports = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Package*>>(), len(flat->Imports));
             for(auto [path, id] : flat->Imports)
             {
-                p->Imports[path] = gocpp::InitPtr<Package>([=](auto& x) {
+                p->Imports.ref(path) = gocpp::InitPtr<Package>([=](auto& x) {
                     x.ID = id;
                 });
             }
@@ -994,7 +994,7 @@ namespace golang::golang_org::x::tools::go::packages
     loader* newLoader(Config* cfg)
     {
         auto ld = gocpp::InitPtr<loader>([=](auto& x) {
-            x.parseCache = gocpp::map<gocpp::string, parseValue*> {};
+            x.parseCache = gocpp::map<gocpp::string, parseValue*> {gocpp::non_nil};
         });
         if(cfg != nullptr)
         {
@@ -1073,7 +1073,7 @@ namespace golang::golang_org::x::tools::go::packages
         auto rootMap = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>(), len(roots));
         for(auto [i, root] : roots)
         {
-            rootMap[root] = i;
+            rootMap.ref(root) = i;
         }
         ld->pkgs = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, loaderPackage*>>());
         // first pass, fixup and build the map and roots
@@ -1081,7 +1081,7 @@ namespace golang::golang_org::x::tools::go::packages
         for(auto [gocpp_ignored, pkg] : response->Packages)
         {
             auto rootIndex = - 1;
-            if(auto [i, found] = rootMap[pkg->ID]; found)
+            if(auto [i, found] = rootMap.lookup(pkg->ID); found)
             {
                 rootIndex = i;
             }
@@ -1104,11 +1104,11 @@ namespace golang::golang_org::x::tools::go::packages
             });
             // Don't trust the driver to respond with duplicate-free
             // package names (go.dev/issue/63822).
-            if(auto [gocpp_id_0, ok] = ld->pkgs[lpkg->Package.ID]; ok)
+            if(auto [gocpp_id_0, ok] = ld->pkgs.lookup(lpkg->Package.ID); ok)
             {
                 return {nullptr, mocklib::Errorf("%s response contained duplicate packages for ID %q"_s, cond(ld->externalDriver, "go/packages driver"_s, "go list"_s), lpkg->Package.ID)};
             }
-            ld->pkgs[lpkg->Package.ID] = lpkg;
+            ld->pkgs.ref(lpkg->Package.ID) = lpkg;
             if(rootIndex >= 0)
             {
                 initial[rootIndex] = lpkg;
@@ -1161,7 +1161,7 @@ namespace golang::golang_org::x::tools::go::packages
                     for(auto [importPath, ipkg] : stubs)
                     {
                         gocpp::error importErr = {};
-                        auto imp = ld->pkgs[ipkg->ID];
+                        auto imp = ld->pkgs.get(ipkg->ID);
                         if(imp == nullptr)
                         {
                             // (includes package "C" when DisableCgo)
@@ -1178,7 +1178,7 @@ namespace golang::golang_org::x::tools::go::packages
                             {
                                 lpkg->importErrors = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::error>>());
                             }
-                            lpkg->importErrors[importPath] = importErr;
+                            lpkg->importErrors.ref(importPath) = importErr;
                             continue;
                         }
 
@@ -1186,7 +1186,7 @@ namespace golang::golang_org::x::tools::go::packages
                         {
                             lpkg->needsrc = true;
                         }
-                        lpkg->Package.Imports[importPath] = imp->Package;
+                        lpkg->Package.Imports.ref(importPath) = imp->Package;
                     }
 
                     // -- postorder --
@@ -1196,7 +1196,7 @@ namespace golang::golang_org::x::tools::go::packages
                     {
                         for(auto [gocpp_ignored, ipkg] : lpkg->Package.Imports)
                         {
-                            ld->pkgs[ipkg->ID]->needtypes = true;
+                            ld->pkgs.get(ipkg->ID)->needtypes = true;
                         }
                     }
 
@@ -1313,59 +1313,59 @@ namespace golang::golang_org::x::tools::go::packages
             // to catch programs that use more than they request.
             if(ld->requestedMode & NeedName == 0)
             {
-                ld->pkgs[i]->Package.Name = ""_s;
-                ld->pkgs[i]->Package.PkgPath = ""_s;
+                ld->pkgs.get(i)->Package.Name = ""_s;
+                ld->pkgs.get(i)->Package.PkgPath = ""_s;
             }
             if(ld->requestedMode & NeedFiles == 0)
             {
-                ld->pkgs[i]->Package.GoFiles = nullptr;
-                ld->pkgs[i]->Package.OtherFiles = nullptr;
-                ld->pkgs[i]->Package.IgnoredFiles = nullptr;
+                ld->pkgs.get(i)->Package.GoFiles = nullptr;
+                ld->pkgs.get(i)->Package.OtherFiles = nullptr;
+                ld->pkgs.get(i)->Package.IgnoredFiles = nullptr;
             }
             if(ld->requestedMode & NeedEmbedFiles == 0)
             {
-                ld->pkgs[i]->Package.EmbedFiles = nullptr;
+                ld->pkgs.get(i)->Package.EmbedFiles = nullptr;
             }
             if(ld->requestedMode & NeedEmbedPatterns == 0)
             {
-                ld->pkgs[i]->Package.EmbedPatterns = nullptr;
+                ld->pkgs.get(i)->Package.EmbedPatterns = nullptr;
             }
             if(ld->requestedMode & NeedCompiledGoFiles == 0)
             {
-                ld->pkgs[i]->Package.CompiledGoFiles = nullptr;
+                ld->pkgs.get(i)->Package.CompiledGoFiles = nullptr;
             }
             if(ld->requestedMode & NeedImports == 0)
             {
-                ld->pkgs[i]->Package.Imports = nullptr;
+                ld->pkgs.get(i)->Package.Imports = nullptr;
             }
             if(ld->requestedMode & NeedExportFile == 0)
             {
-                ld->pkgs[i]->Package.ExportFile = ""_s;
+                ld->pkgs.get(i)->Package.ExportFile = ""_s;
             }
             if(ld->requestedMode & NeedTypes == 0)
             {
-                ld->pkgs[i]->Package.Types = nullptr;
-                ld->pkgs[i]->Package.IllTyped = false;
+                ld->pkgs.get(i)->Package.Types = nullptr;
+                ld->pkgs.get(i)->Package.IllTyped = false;
             }
             if(ld->requestedMode & NeedSyntax == 0)
             {
-                ld->pkgs[i]->Package.Syntax = nullptr;
+                ld->pkgs.get(i)->Package.Syntax = nullptr;
             }
             if(ld->requestedMode & (NeedSyntax | NeedTypes | NeedTypesInfo) == 0)
             {
-                ld->pkgs[i]->Package.Fset = nullptr;
+                ld->pkgs.get(i)->Package.Fset = nullptr;
             }
             if(ld->requestedMode & NeedTypesInfo == 0)
             {
-                ld->pkgs[i]->Package.TypesInfo = nullptr;
+                ld->pkgs.get(i)->Package.TypesInfo = nullptr;
             }
             if(ld->requestedMode & NeedTypesSizes == 0)
             {
-                ld->pkgs[i]->Package.TypesSizes = nullptr;
+                ld->pkgs.get(i)->Package.TypesSizes = nullptr;
             }
             if(ld->requestedMode & NeedModule == 0)
             {
-                ld->pkgs[i]->Package.Module = nullptr;
+                ld->pkgs.get(i)->Package.Module = nullptr;
             }
         }
 
@@ -1595,10 +1595,10 @@ namespace golang::golang_org::x::tools::go::packages
                 }
 
                 // The imports map is keyed by import path.
-                auto ipkg = lpkg->Package.Imports[path];
+                auto ipkg = lpkg->Package.Imports.get(path);
                 if(ipkg == nullptr)
                 {
-                    if(auto err = lpkg->importErrors[path]; err != nullptr)
+                    if(auto err = lpkg->importErrors.get(path); err != nullptr)
                     {
                         return {nullptr, err};
                     }
@@ -1780,7 +1780,7 @@ namespace golang::golang_org::x::tools::go::packages
     std::tuple<ast::File*, gocpp::error> rec::parseFile(loader* ld, gocpp::string filename)
     {
         rec::Lock(gocpp::recv(ld->parseCacheMu));
-        auto [v, ok] = ld->parseCache[filename];
+        auto [v, ok] = ld->parseCache.lookup(filename);
         if(ok)
         {
             // cache hit
@@ -1793,7 +1793,7 @@ namespace golang::golang_org::x::tools::go::packages
             v = gocpp::InitPtr<parseValue>([=](auto& x) {
                 x.ready = gocpp::make(gocpp::Tag<gocpp::channel<gocpp::empty_struct>>());
             });
-            ld->parseCache[filename] = v;
+            ld->parseCache.ref(filename) = v;
             rec::Unlock(gocpp::recv(ld->parseCacheMu));
 
             gocpp::slice<unsigned char> src = {};
@@ -1999,11 +1999,11 @@ namespace golang::golang_org::x::tools::go::packages
             {
                 for(auto [gocpp_ignored, p] : pkgs)
                 {
-                    auto lpkg = ld->pkgs[p->ID];
-                    if(! seen[lpkg])
+                    auto lpkg = ld->pkgs.get(p->ID);
+                    if(! seen.get(lpkg))
                     {
-                        seen[lpkg] = true;
-                        view[lpkg->Package.PkgPath] = lpkg->Package.Types;
+                        seen.ref(lpkg) = true;
+                        view.ref(lpkg->Package.PkgPath) = lpkg->Package.Types;
                         visit(lpkg->Package.Imports);
                     }
                 }
@@ -2020,7 +2020,7 @@ namespace golang::golang_org::x::tools::go::packages
             {
                 return mocklib::Errorf("reading %s: %v"_s, lpkg->Package.ExportFile, err);
             }
-            if(auto [gocpp_id_4, ok] = view["go.shape"_s]; ok)
+            if(auto [gocpp_id_4, ok] = view.lookup("go.shape"_s); ok)
             {
                 // Account for the pseudopackage "go.shape" that gets
                 // created by generic code.

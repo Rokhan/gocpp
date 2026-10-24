@@ -314,7 +314,7 @@ namespace golang::go::types
                 if(auto [w, gocpp_id_1] = gocpp::getValue<Var*>(obj); w != nullptr && w->object.pkg == check->pkg)
                 {
                     v = w;
-                    v_used = check->usedVars[v];
+                    v_used = check->usedVars.get(v);
                 }
             }
         }
@@ -325,7 +325,7 @@ namespace golang::go::types
         if(v != nullptr)
         {
             // restore v.used
-            check->usedVars[v] = v_used;
+            check->usedVars.ref(v) = v_used;
         }
 
         if(! rec::isValid(gocpp::recv(x)) || ! types::isValid(rec::typ(gocpp::recv(x))))
@@ -774,13 +774,13 @@ namespace golang::go::types
             auto name = ident->Name;
             if(name != "_"_s)
             {
-                if(seen[name])
+                if(seen.get(name))
                 {
                     rec::errorf(gocpp::recv(check), lhs, RepeatedDecl, "%s repeated on left side of :="_s, lhs);
                     hasErr = true;
                     continue;
                 }
-                seen[name] = true;
+                seen.ref(name) = true;
             }
 
             // Use the correct obj if the ident is redeclared. The

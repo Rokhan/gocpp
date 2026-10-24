@@ -56,13 +56,189 @@ namespace golang::main
     void main()
     {
         m = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Vertex>>());
-        m["Bell Labs"_s] = Vertex {
+        m.ref("Bell Labs"_s) = Vertex {
             40.68433, - 74.39967
         };
-        mocklib::Println(m["Bell Labs"_s]);
+        mocklib::Println(m.get("Bell Labs"_s));
 
         clear(m);
-        mocklib::Println(m["Bell Labs"_s]);
+        mocklib::Println(m.get("Bell Labs"_s));
+
+        testNil();
+        testNotNil();
+        testAliasing();
+        testNamedAndEmptyStruct();
+        testNilWritePanic();
+        testNilFieldWritePanic();
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    Registry::operator T()
+    {
+        T result;
+        result.name = this->name;
+        result.items = this->items;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Registry::operator==(const T& ref) const
+    {
+        if (name != ref.name) return false;
+        if (items != ref.items) return false;
+        return true;
+    }
+
+    std::ostream& Registry::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << name;
+        os << " " << items;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Registry& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    void testNil()
+    {
+        gocpp::map<gocpp::string, int> nm = {};
+        mocklib::Println(nm == nullptr, nm != nullptr, len(nm), nm);
+        mocklib::Println(nm.get("x"_s));
+        auto [v, ok] = nm.lookup("x"_s);
+        mocklib::Println(v, ok);
+        for(auto [k, v] : nm)
+        {
+            mocklib::Println("unreachable"_s, k, v);
+        }
+        remove(nm, "x"_s);
+        clear(nm);
+        mocklib::Println(len(nm), nm == nullptr);
+    }
+
+    void testNotNil()
+    {
+        auto made = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+        auto lit = gocpp::map<gocpp::string, int> {gocpp::non_nil};
+        auto full = gocpp::map<gocpp::string, int> {{ "a"_s, 1 }};
+        mocklib::Println(made == nullptr, lit == nullptr, full == nullptr);
+
+        clear(full);
+        // clear does not make it nil
+        mocklib::Println(full == nullptr, len(full));
+
+        full = nullptr;
+        mocklib::Println(full == nullptr, len(full));
+    }
+
+    void fill(gocpp::map<gocpp::string, int> m)
+    {
+        m.ref("filled"_s) = 1;
+    }
+
+    void testAliasing()
+    {
+        auto a = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+        auto b = a;
+        b.ref("k"_s) = 1;
+        mocklib::Println(a, b, len(a));
+
+        fill(a);
+        mocklib::Println(b);
+
+        auto f = [=]() mutable -> void
+        {
+            a.ref("closure"_s) = 2;
+        };
+        f();
+        mocklib::Println(b);
+
+        // rebinds b only
+        b = nullptr;
+        mocklib::Println(a, b == nullptr, a == nullptr);
+
+        auto r1 = gocpp::Init<Registry>([=](auto& x) {
+            x.name = "r1"_s;
+        });
+        mocklib::Println(r1.items == nullptr);
+        r1.items = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+        // struct copy shares the map
+        auto r2 = r1;
+        r2.items.ref("x"_s) = 1;
+        mocklib::Println(r1.items, r2.items);
+    }
+
+    // Same shape as context.removeChild
+    void removeChild(gocpp::map<gocpp::string, gocpp::empty_struct> children, gocpp::string key)
+    {
+        if(children != nullptr)
+        {
+            remove(children, key);
+        }
+    }
+
+    void testNamedAndEmptyStruct()
+    {
+        Set s = {};
+        mocklib::Println(s == nullptr, len(s));
+        removeChild(s, "a"_s);
+
+        s = gocpp::make(gocpp::Tag<Set>());
+        s.ref("a"_s) = gocpp::empty_struct {};
+        auto s2 = s;
+        s2.ref("b"_s) = gocpp::empty_struct {};
+        mocklib::Println(len(s), s != nullptr);
+        removeChild(s, "a"_s);
+        mocklib::Println(len(s2));
+    }
+
+    void testNilWritePanic()
+    {
+        gocpp::Defer defer;
+        try
+        {
+            defer.push_back([=]{ [=]() mutable -> void
+            {
+                if(auto r = gocpp::recover(); r != nullptr)
+                {
+                    mocklib::Println("recovered"_s);
+                }
+            }(); });
+            gocpp::map<gocpp::string, int> nm = {};
+            mocklib::Println("before"_s);
+            nm.ref("x"_s) = 1;
+            mocklib::Println("not reached"_s);
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
+    }
+
+    void testNilFieldWritePanic()
+    {
+        gocpp::Defer defer;
+        try
+        {
+            defer.push_back([=]{ [=]() mutable -> void
+            {
+                if(auto r = gocpp::recover(); r != nullptr)
+                {
+                    mocklib::Println("recovered (field)"_s);
+                }
+            }(); });
+            Registry r = {};
+            r.items.ref("x"_s) = 1;
+            mocklib::Println("not reached"_s);
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
 }

@@ -146,7 +146,7 @@ namespace golang::time
         gocpp::string std;
         gocpp::string dst;
         auto stdName = syscall::UTF16ToString(z->StandardName.make_slice(0));
-        auto [a, ok] = abbrs[stdName];
+        auto [a, ok] = abbrs.lookup(stdName);
         if(! ok)
         {
             auto dstName = syscall::UTF16ToString(z->DaylightName.make_slice(0));
@@ -154,7 +154,7 @@ namespace golang::time
             auto [englishName, err] = toEnglishName(stdName, dstName);
             if(err == nullptr)
             {
-                std::tie(a, ok) = abbrs[englishName];
+                std::tie(a, ok) = abbrs.lookup(englishName);
                 if(ok)
                 {
                     return {a.std, a.dst};

@@ -82,7 +82,7 @@ namespace golang::go::types
 
     bool rec::op(Checker* check, opPredicates m, operand* x, token::Token op)
     {
-        if(auto pred = m[op]; pred != nullptr)
+        if(auto pred = m.get(op); pred != nullptr)
         {
             if(! pred(rec::typ(gocpp::recv(x))))
             {
@@ -375,7 +375,7 @@ namespace golang::go::types
     // shift, it must be an integer value.
     void rec::updateExprType(Checker* check, ast::Expr x, golang::go::types::Type typ, bool final)
     {
-        auto [old, found] = check->untyped[x];
+        auto [old, found] = check->untyped.lookup(x);
         if(! found)
         {
             // nothing to do
@@ -523,7 +523,7 @@ namespace golang::go::types
         if(! final && isUntyped(typ))
         {
             old.typ = gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(typ)));
-            check->untyped[x] = old;
+            check->untyped.ref(x) = old;
             return;
         }
 
@@ -563,10 +563,10 @@ namespace golang::go::types
     // updateExprVal updates the value of x to val.
     void rec::updateExprVal(Checker* check, ast::Expr x, constant::Value val)
     {
-        if(auto [info, ok] = check->untyped[x]; ok)
+        if(auto [info, ok] = check->untyped.lookup(x); ok)
         {
             info.val = val;
-            check->untyped[x] = info;
+            check->untyped.ref(x) = info;
         }
     }
 
@@ -1108,10 +1108,10 @@ namespace golang::go::types
                 // that node, and it can only be deleted once).
                 // Be cautious and check for presence of entry.
                 // Example: var e, f = int(1<<""[f]) // go.dev/issue/11347
-                if(auto [info, found] = check->untyped[x->expr]; found)
+                if(auto [info, found] = check->untyped.lookup(x->expr); found)
                 {
                     info.isLhs = true;
-                    check->untyped[x->expr] = info;
+                    check->untyped.ref(x->expr) = info;
                 }
                 // keep x's type
                 x->mode_ = value;

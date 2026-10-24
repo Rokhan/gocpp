@@ -132,7 +132,7 @@ namespace golang::go::types
             labels = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, ast::LabeledStmt*>>());
             b->labels = labels;
         }
-        labels[name] = s;
+        labels.ref(name) = s;
     }
 
     // gotoTarget returns the labeled statement in the current
@@ -141,7 +141,7 @@ namespace golang::go::types
     {
         for(auto s = b; s != nullptr; s = s->parent)
         {
-            if(auto t = s->labels[name]; t != nullptr)
+            if(auto t = s->labels.get(name); t != nullptr)
             {
                 return t;
             }

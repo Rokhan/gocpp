@@ -74,191 +74,191 @@ namespace golang::internal::godebugs
     // Note: After adding entries to this table, update the list in doc/godebug.md as well.
     // (Otherwise the test in this package will fail.)
     gocpp::slice<Info> All = gocpp::slice<Info> {
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "allowmultiplevcs"_s;
         x.Package = "cmd/go"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "containermaxprocs"_s;
         x.Package = "runtime"_s;
         x.Changed = 25;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "cryptocustomrand"_s;
         x.Package = "crypto"_s;
         x.Changed = 26;
         x.Old = "1"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "dataindependenttiming"_s;
         x.Package = "crypto/subtle"_s;
         x.Opaque = true;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "decoratemappings"_s;
         x.Package = "runtime"_s;
         x.Opaque = true;
         x.Changed = 25;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "embedfollowsymlinks"_s;
         x.Package = "cmd/go"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "execerrdot"_s;
         x.Package = "os/exec"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "fips140"_s;
         x.Package = "crypto/fips140"_s;
         x.Opaque = true;
         x.Immutable = true;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "fips140ems"_s;
         x.Package = "crypto/tls"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "gocachehash"_s;
         x.Package = "cmd/go"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "gocachetest"_s;
         x.Package = "cmd/go"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "gocacheverify"_s;
         x.Package = "cmd/go"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "gotestjsonbuildtext"_s;
         x.Package = "cmd/go"_s;
         x.Changed = 24;
         x.Old = "1"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "htmlmetacontenturlescape"_s;
         x.Package = "html/template"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "http2client"_s;
         x.Package = "net/http"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "http2debug"_s;
         x.Package = "net/http"_s;
         x.Opaque = true;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "http2server"_s;
         x.Package = "net/http"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "httpcookiemaxnum"_s;
         x.Package = "net/http"_s;
         x.Changed = 24;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "httplaxcontentlength"_s;
         x.Package = "net/http"_s;
         x.Changed = 22;
         x.Old = "1"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "httpmuxgo121"_s;
         x.Package = "net/http"_s;
         x.Changed = 22;
         x.Old = "1"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "httpservecontentkeepheaders"_s;
         x.Package = "net/http"_s;
         x.Changed = 23;
         x.Old = "1"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "installgoroot"_s;
         x.Package = "go/build"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "jstmpllitinterp"_s;
         x.Package = "html/template"_s;
         x.Opaque = true;
     }),
         // {Name: "multipartfiles", Package: "mime/multipart"},
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "multipartmaxheaders"_s;
         x.Package = "mime/multipart"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "multipartmaxparts"_s;
         x.Package = "mime/multipart"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "multipathtcp"_s;
         x.Package = "net"_s;
         x.Changed = 24;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "netdns"_s;
         x.Package = "net"_s;
         x.Opaque = true;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "netedns0"_s;
         x.Package = "net"_s;
         x.Changed = 19;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "panicnil"_s;
         x.Package = "runtime"_s;
         x.Changed = 21;
         x.Old = "1"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "randautoseed"_s;
         x.Package = "math/rand"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "randseednop"_s;
         x.Package = "math/rand"_s;
         x.Changed = 24;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "rsa1024min"_s;
         x.Package = "crypto/rsa"_s;
         x.Changed = 24;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "tarinsecurepath"_s;
         x.Package = "archive/tar"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "tlsmaxrsasize"_s;
         x.Package = "crypto/tls"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "tlsmlkem"_s;
         x.Package = "crypto/tls"_s;
         x.Changed = 24;
         x.Old = "0"_s;
         x.Opaque = true;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "tlssecpmlkem"_s;
         x.Package = "crypto/tls"_s;
         x.Changed = 26;
         x.Old = "0"_s;
         x.Opaque = true;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "tlssha1"_s;
         x.Package = "crypto/tls"_s;
         x.Changed = 25;
@@ -267,78 +267,78 @@ namespace golang::internal::godebugs
         // Mark tracebacklabels as Opaque so we don't generate a metric that we can't increment.
         // IncNonDefault uses a sync.Once, which involves sync.Mutex, and is not safe from a signal handler.
         // (Tracebacks are generated in signal-handlers.)
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "tracebacklabels"_s;
         x.Package = "runtime"_s;
         x.Changed = 27;
         x.Old = "0"_s;
         x.Opaque = true;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "updatemaxprocs"_s;
         x.Package = "runtime"_s;
         x.Changed = 25;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "urlmaxqueryparams"_s;
         x.Package = "net/url"_s;
         x.Changed = 24;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "urlstrictcolons"_s;
         x.Package = "net/url"_s;
         x.Changed = 26;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "winreadlinkvolume"_s;
         x.Package = "os"_s;
         x.Changed = 23;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "winsymlink"_s;
         x.Package = "os"_s;
         x.Changed = 23;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "x509negativeserial"_s;
         x.Package = "crypto/x509"_s;
         x.Changed = 23;
         x.Old = "1"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "x509rsacrt"_s;
         x.Package = "crypto/x509"_s;
         x.Changed = 24;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "x509sha256skid"_s;
         x.Package = "crypto/x509"_s;
         x.Changed = 25;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "x509sslcertoverrideplatform"_s;
         x.Package = "crypto/x509"_s;
         x.Changed = 27;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "x509usefallbackroots"_s;
         x.Package = "crypto/x509"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "x509usepolicies"_s;
         x.Package = "crypto/x509"_s;
         x.Changed = 24;
         x.Old = "0"_s;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::Info>([](auto& x) {
         x.Name = "zipinsecurepath"_s;
         x.Package = "archive/zip"_s;
     })
@@ -389,47 +389,47 @@ namespace golang::internal::godebugs
     // Every removed GODEBUG must have a corresponding section in doc/godebug.md,
     // since cmd/go links to that document when a removed GODEBUG is used.
     gocpp::slice<RemovedInfo> Removed = gocpp::slice<RemovedInfo> {
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::RemovedInfo>([](auto& x) {
         x.Name = "x509sha1"_s;
         x.Removed = 24;
         x.Old = one;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::RemovedInfo>([](auto& x) {
         x.Name = "tlskyber"_s;
         x.Removed = 24;
         x.Old = zero;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::RemovedInfo>([](auto& x) {
         x.Name = "gotypesalias"_s;
         x.Removed = 27;
         x.Old = zero;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::RemovedInfo>([](auto& x) {
         x.Name = "tlsunsafeekm"_s;
         x.Removed = 27;
         x.Old = one;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::RemovedInfo>([](auto& x) {
         x.Name = "tlsrsakex"_s;
         x.Removed = 27;
         x.Old = one;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::RemovedInfo>([](auto& x) {
         x.Name = "tls3des"_s;
         x.Removed = 27;
         x.Old = one;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::RemovedInfo>([](auto& x) {
         x.Name = "tls10server"_s;
         x.Removed = 27;
         x.Old = one;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::RemovedInfo>([](auto& x) {
         x.Name = "x509keypairleaf"_s;
         x.Removed = 27;
         x.Old = zero;
     }),
-        gocpp::Init<>([](auto& x) {
+        gocpp::Init<godebugs::RemovedInfo>([](auto& x) {
         x.Name = "asynctimerchan"_s;
         x.Removed = 27;
         x.Old = [](gocpp::string s) mutable -> bool

@@ -435,7 +435,7 @@ namespace golang::go::types
                     {
                         maxUntyped = gocpp::make(gocpp::Tag<gocpp::map<TypeParam*, golang::go::types::Type>>());
                     }
-                    auto max = maxUntyped[tpar];
+                    auto max = maxUntyped.get(tpar);
                     if(max == nullptr)
                     {
                         max = rec::typ(gocpp::recv(arg));
@@ -450,7 +450,7 @@ namespace golang::go::types
                         }
                         max = m;
                     }
-                    maxUntyped[tpar] = max;
+                    maxUntyped.ref(tpar) = max;
                 }
             }
             // maxUntyped contains the maximum untyped type for each type parameter
@@ -726,14 +726,14 @@ namespace golang::go::types
         try
         {
             // detect cycles
-            if(auto [x, ok] = w->seen[typ]; ok)
+            if(auto [x, ok] = w->seen.lookup(typ); ok)
             {
                 return x;
             }
-            w->seen[typ] = false;
+            w->seen.ref(typ) = false;
             defer.push_back([=, &res]{ [=]() mutable -> void
             {
-                w->seen[typ] = res;
+                w->seen.ref(typ) = res;
             }(); });
 
             //Go type switch emulation
@@ -1008,7 +1008,7 @@ namespace golang::go::types
         try
         {
             typ = Unalias(typ);
-            if(w->seen[typ])
+            if(w->seen.get(typ))
             {
                 // We have seen typ before. If it is one of the type parameters
                 // in w.tparams, iterative substitution will lead to infinite expansion.
@@ -1025,7 +1025,7 @@ namespace golang::go::types
                 // to an ordinary recursive type and we can just stop walking it.
                 return;
             }
-            w->seen[typ] = true;
+            w->seen.ref(typ) = true;
             defer.push_back([=]{ remove(w->seen, typ); });
 
             //Go type switch emulation

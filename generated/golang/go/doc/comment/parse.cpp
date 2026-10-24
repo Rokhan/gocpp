@@ -1197,9 +1197,9 @@ namespace golang::go::doc::comment
         for(auto [gocpp_ignored, def] : defs)
         {
             d->Doc.Links = append(d->Doc.Links, def);
-            if(d->links[def->Text] == nullptr)
+            if(d->links.get(def->Text) == nullptr)
             {
-                d->links[def->Text] = def;
+                d->links.ref(def->Text) = def;
             }
         }
         return nullptr;
@@ -1398,7 +1398,7 @@ namespace golang::go::doc::comment
                     case 1:
                         if(start >= 0)
                         {
-                            if(auto [def, ok] = d->links[gocpp::string(buf)]; ok)
+                            if(auto [def, ok] = d->links.lookup(gocpp::string(buf)); ok)
                             {
                                 def->Used = true;
                                 flush(start);
@@ -1558,7 +1558,7 @@ namespace golang::go::doc::comment
                 }
                 if(auto [id, ok] = ident(t); ok)
                 {
-                    auto [url, italics] = d->Parser.Words[id];
+                    auto [url, italics] = d->Parser.Words.lookup(id);
                     if(! italics)
                     {
                         i += len(id);

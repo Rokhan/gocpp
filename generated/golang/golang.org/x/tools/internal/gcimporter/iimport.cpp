@@ -400,11 +400,11 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         {
             for(auto [i, item] : items)
             {
-                auto [pkg, ok] = m[item.Path];
+                auto [pkg, ok] = m.lookup(item.Path);
                 if(! ok)
                 {
                     pkg = types::NewPackage(item.Path, item.Name);
-                    m[item.Path] = pkg;
+                    m.ref(item.Path) = pkg;
                 }
                 items[i].Pkg = pkg;
             }
@@ -529,7 +529,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
             for(auto [i, pt] : predeclared())
             {
-                p.typCache[uint64_t(i)] = pt;
+                p.typCache.ref(uint64_t(i)) = pt;
             }
 
             // Gather the relevant packages from the manifest.
@@ -559,12 +559,12 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                 for(; nSyms > 0; nSyms--)
                 {
                     auto name = rec::stringAt(gocpp::recv(p), rec::uint64(gocpp::recv(r)));
-                    nameIndex[name] = rec::uint64(gocpp::recv(r));
+                    nameIndex.ref(name) = rec::uint64(gocpp::recv(r));
                 }
 
                 items[i].nameIndex = nameIndex;
 
-                uniquePkgPaths[pkgPath] = true;
+                uniquePkgPaths.ref(pkgPath) = true;
             }
             // Debugging #63822; hypothesis: there are duplicate PkgPaths.
             if(len(uniquePkgPaths) != len(items))
@@ -599,8 +599,8 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                 {
                     errorf("internal error: getPackages returned wrong name %s for package %q, want %s"_s, rec::Name(gocpp::recv(pkg)), item.Path, item.Name);
                 }
-                p.pkgCache[item.pathOffset] = pkg;
-                p.pkgIndex[pkg] = item.nameIndex;
+                p.pkgCache.ref(item.pathOffset) = pkg;
+                p.pkgIndex.ref(pkg) = item.nameIndex;
                 pkgList[i] = pkg;
             }
 
@@ -641,8 +641,8 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                     continue;
                 }
 
-                auto names = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0, len(p.pkgIndex[pkg]));
-                for(auto [name, gocpp_ignored] : p.pkgIndex[pkg])
+                auto names = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0, len(p.pkgIndex.get(pkg)));
+                for(auto [name, gocpp_ignored] : p.pkgIndex.get(pkg))
                 {
                     names = append(names, name);
                 }
@@ -836,7 +836,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                 return;
             }
 
-            auto [off, ok] = p->pkgIndex[pkg][name];
+            auto [off, ok] = p->pkgIndex.get(pkg).lookup(name);
             if(! ok)
             {
                 // In deep mode, the index should be complete. In shallow
@@ -860,7 +860,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     gocpp::string rec::stringAt(iimporter* p, uint64_t off)
     {
-        if(auto [s, ok] = p->stringCache[off]; ok)
+        if(auto [s, ok] = p->stringCache.lookup(off); ok)
         {
             return s;
         }
@@ -872,7 +872,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         }
         auto spos = off + uint64_t(n);
         auto s = gocpp::string(p->stringData.make_slice(spos, spos + slen));
-        p->stringCache[off] = s;
+        p->stringCache.ref(off) = s;
         return s;
     }
 
@@ -935,7 +935,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     types::Package* rec::pkgAt(iimporter* p, uint64_t off)
     {
-        if(auto [pkg, ok] = p->pkgCache[off]; ok)
+        if(auto [pkg, ok] = p->pkgCache.lookup(off); ok)
         {
             return pkg;
         }
@@ -946,7 +946,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     types::Type rec::typAt(iimporter* p, uint64_t off, types::Named* base)
     {
-        if(auto [t, ok] = p->typCache[off]; ok && canReuse(base, t))
+        if(auto [t, ok] = p->typCache.lookup(off); ok && canReuse(base, t))
         {
             return t;
         }
@@ -964,7 +964,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
         if(canReuse(base, t))
         {
-            p->typCache[off] = t;
+            p->typCache.ref(off) = t;
         }
         return t;
     }
@@ -1166,7 +1166,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                     // To handle recursive references to the typeparam within its
                     // bound, save the partial type in tparamIndex before reading the bounds.
                     auto id = golang::golang_org::x::tools::internal::gcimporter::ident {pkg, name};
-                    r->p->tparamIndex[id] = t;
+                    r->p->tparamIndex.ref(id) = t;
                     bool implicit = {};
                     if(r->p->version >= iexportVersionGo1_18)
                     {
@@ -1669,14 +1669,14 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                         }
                         std::tie(pkg, name) = rec::qualifiedIdent(gocpp::recv(r));
                         auto id = golang::golang_org::x::tools::internal::gcimporter::ident {pkg, name};
-                        if(auto [t, ok] = r->p->tparamIndex[id]; ok)
+                        if(auto [t, ok] = r->p->tparamIndex.lookup(id); ok)
                         {
                             // We're already in the process of importing this typeparam.
                             return t;
                         }
                         // Otherwise, import the definition of the typeparam now.
                         rec::doDecl(gocpp::recv(r->p), pkg, name);
-                        return r->p->tparamIndex[id];
+                        return r->p->tparamIndex.get(id);
                         break;
                     }
 

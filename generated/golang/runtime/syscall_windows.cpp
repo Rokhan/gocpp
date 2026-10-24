@@ -581,7 +581,7 @@ namespace golang::runtime
         cbsLock();
 
         // Check if this callback is already registered.
-        if(auto [n, ok] = cbs.index[key]; ok)
+        if(auto [n, ok] = cbs.index.lookup(key); ok)
         {
             cbsUnlock();
             return callbackasmAddr(n);
@@ -600,7 +600,7 @@ namespace golang::runtime
         }
         auto c = winCallback {key.fn, retPop, abiMap};
         cbs.ctxt[n] = c;
-        cbs.index[key] = n;
+        cbs.index.ref(key) = n;
         cbs.n++;
 
         cbsUnlock();

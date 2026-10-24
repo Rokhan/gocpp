@@ -176,15 +176,15 @@ namespace golang::reflect
             // elems [abi.MapGroupSlots]elemType
             // }
             auto fields = gocpp::slice<StructField> {
-                gocpp::Init<>([=](auto& x) {
+                gocpp::Init<StructField>([=](auto& x) {
                 x.Name = "Ctrl"_s;
                 x.Type = TypeFor<uint64_t>();
             }),
-                gocpp::Init<>([=](auto& x) {
+                gocpp::Init<StructField>([=](auto& x) {
                 x.Name = "Keys"_s;
                 x.Type = ArrayOf(abi::MapGroupSlots, ktyp);
             }),
-                gocpp::Init<>([=](auto& x) {
+                gocpp::Init<StructField>([=](auto& x) {
                 x.Name = "Elems"_s;
                 x.Type = ArrayOf(abi::MapGroupSlots, etyp);
             })
@@ -201,11 +201,11 @@ namespace golang::reflect
         // }
         // }
         auto slotFields = gocpp::slice<StructField> {
-            gocpp::Init<>([=](auto& x) {
+            gocpp::Init<StructField>([=](auto& x) {
             x.Name = "Key"_s;
             x.Type = ktyp;
         }),
-            gocpp::Init<>([=](auto& x) {
+            gocpp::Init<StructField>([=](auto& x) {
             x.Name = "Elem"_s;
             x.Type = etyp;
         })
@@ -213,11 +213,11 @@ namespace golang::reflect
         auto slot = StructOf(slotFields);
 
         auto fields = gocpp::slice<StructField> {
-            gocpp::Init<>([=](auto& x) {
+            gocpp::Init<StructField>([=](auto& x) {
             x.Name = "Ctrl"_s;
             x.Type = TypeFor<uint64_t>();
         }),
-            gocpp::Init<>([=](auto& x) {
+            gocpp::Init<StructField>([=](auto& x) {
             x.Name = "Slots"_s;
             x.Type = ArrayOf(abi::MapGroupSlots, slot);
         })

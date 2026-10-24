@@ -162,7 +162,7 @@ namespace golang::go::types
             // initialization cycle. The cycle error will be reported later, when
             // determining initialization order.
             // TODO(gri) Report cycle here and simplify initialization order code.
-            if(auto [gocpp_id_0, ok] = check->objPathIdx[obj]; ok)
+            if(auto [gocpp_id_0, ok] = check->objPathIdx.lookup(obj); ok)
             {
                 //Go type switch emulation
                 {
@@ -230,7 +230,7 @@ namespace golang::go::types
             rec::push(gocpp::recv(check), obj);
             defer.push_back([=]{ rec::pop(gocpp::recv(check)); });
 
-            auto [d, ok] = check->objMap[obj];
+            auto [d, ok] = check->objMap.lookup(obj);
             assert(ok);
 
             // save/restore current environment and set up object environment
@@ -317,7 +317,7 @@ namespace golang::go::types
             // The object map contains the package scope objects and the non-interface methods.
             if(debug)
             {
-                auto info = check->objMap[obj];
+                auto info = check->objMap.get(obj);
                 // exclude methods
                 auto inObjMap = info != nullptr && (info->fdecl == nullptr || info->fdecl->Recv == nullptr);
                 auto isPkgObj = rec::Parent(gocpp::recv(obj)) == check->pkg->scope;
@@ -329,7 +329,7 @@ namespace golang::go::types
             }
 
             // Count cycle objects.
-            auto [start, found] = check->objPathIdx[obj];
+            auto [start, found] = check->objPathIdx.lookup(obj);
             assert(found);
             auto cycle = check->objPath.make_slice(start);
             // if set, the cycle is through a type parameter list
@@ -1252,7 +1252,7 @@ namespace golang::go::types
         {
             x = gocpp::InitPtr<ast::InterfaceType>([=](auto& y) {
                 y.Methods = gocpp::InitPtr<ast::FieldList>([=](auto& y) {
-                    y.List = gocpp::slice<ast::Field*> {gocpp::Init<>([=](auto& y) {
+                    y.List = gocpp::slice<ast::Field*> {gocpp::InitPtr<ast::Field>([=](auto& y) {
                         y.Type = x;
                     })};
                 });
@@ -1292,14 +1292,14 @@ namespace golang::go::types
         // (Checker.collectObjects only collects methods with non-blank names;
         // Checker.resolveBaseTypeName ensures that obj is not an alias name
         // if it has attached methods.)
-        auto methods = check->methods[obj];
+        auto methods = check->methods.get(obj);
         if(methods == nullptr)
         {
             return;
         }
         remove(check->methods, obj);
         // don't use TypeName.IsAlias (requires fully set up object)
-        assert(! rec::IsValid(gocpp::recv(check->objMap[obj]->tdecl->Assign)));
+        assert(! rec::IsValid(gocpp::recv(check->objMap.get(obj)->tdecl->Assign)));
 
         // use an objset to check for name conflicts
         objset mset = {};

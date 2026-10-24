@@ -140,7 +140,7 @@ namespace golang::main
 
     std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> rec::Fetch(fakeFetcher f, gocpp::string url)
     {
-        if(auto [res, ok] = f[url]; ok)
+        if(auto [res, ok] = f.lookup(url); ok)
         {
             return {res->body, res->urls, nullptr};
         }

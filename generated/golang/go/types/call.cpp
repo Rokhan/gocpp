@@ -170,7 +170,7 @@ namespace golang::go::types
                 auto expr = ast::NewIdent(T->desc);
                 // correct position
                 expr->NamePos = rec::Pos(gocpp::recv(x));
-                args = gocpp::slice<operand*> {gocpp::Init<>([=](auto& y) {
+                args = gocpp::slice<operand*> {gocpp::InitPtr<types::operand>([=](auto& y) {
                     y.mode_ = value;
                     y.expr = expr;
                     y.typ_ = T->sig;
@@ -981,7 +981,7 @@ namespace golang::go::types
             {
                 assert(pname->object.pkg == check->pkg);
                 rec::recordUse(gocpp::recv(check), ident, pname);
-                check->usedPkgNames[pname] = true;
+                check->usedPkgNames.ref(pname) = true;
                 auto pkg = pname->imported;
 
                 Object exp = {};
@@ -1459,7 +1459,7 @@ namespace golang::go::types
                             if(auto [w, gocpp_id_11] = gocpp::getValue<Var*>(obj); w != nullptr && w->object.pkg == check->pkg)
                             {
                                 v = w;
-                                v_used = check->usedVars[v];
+                                v_used = check->usedVars.get(v);
                             }
                         }
                     }
@@ -1467,7 +1467,7 @@ namespace golang::go::types
                     if(v != nullptr)
                     {
                         // restore v.used
-                        check->usedVars[v] = v_used;
+                        check->usedVars.ref(v) = v_used;
                     }
                     break;
                 }

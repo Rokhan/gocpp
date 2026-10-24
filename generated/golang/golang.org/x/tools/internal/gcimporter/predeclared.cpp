@@ -46,7 +46,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             rec::Lock(gocpp::recv(predeclMu));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(predeclMu)); });
 
-            if(auto [pre, ok] = predecl[anyt]; ok)
+            if(auto [pre, ok] = predecl.lookup(anyt); ok)
             {
                 return pre;
             }
@@ -107,7 +107,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                 anyt
             };
 
-            predecl[anyt] = decls;
+            predecl.ref(anyt) = decls;
             return decls;
         }
         catch(gocpp::GoPanic& gp)

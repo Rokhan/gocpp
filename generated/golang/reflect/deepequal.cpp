@@ -154,13 +154,13 @@ namespace golang::reflect
             // Short circuit if references are already seen.
             auto typ = rec::Type(gocpp::recv(v1));
             auto v = visit {addr1, addr2, typ};
-            if(visited[v])
+            if(visited.get(v))
             {
                 return true;
             }
 
             // Remember for later.
-            visited[v] = true;
+            visited.ref(v) = true;
         }
 
         //Go switch emulation

@@ -1104,7 +1104,7 @@ namespace golang::encoding::json::jsontext
             {
                 auto name = ns->allUnquotedNames.make_slice(startOffset, endOffset);
                 // allocates a new string
-                ns->mapNames[gocpp::string(name)] = gocpp::empty_struct {};
+                ns->mapNames.ref(gocpp::string(name)) = gocpp::empty_struct {};
                 startOffset = endOffset;
             }
         }
@@ -1127,12 +1127,12 @@ namespace golang::encoding::json::jsontext
         {
             // Use the map if it is populated.
             // It provides O(1) lookup, but requires a string allocation per name.
-            if(auto [gocpp_id_0, ok] = ns->mapNames[gocpp::string(name)]; ok)
+            if(auto [gocpp_id_0, ok] = ns->mapNames.lookup(gocpp::string(name)); ok)
             {
                 return false;
             }
             // allocates a new string
-            ns->mapNames[gocpp::string(name)] = gocpp::empty_struct {};
+            ns->mapNames.ref(gocpp::string(name)) = gocpp::empty_struct {};
         }
 
         ns->allUnquotedNames = allNames;

@@ -130,7 +130,7 @@ namespace golang::go::types
         for(auto [name, elem] : scope->elems)
         {
             elem = resolve(name, elem);
-            if(auto [v, gocpp_id_0] = gocpp::getValue<Var*>(elem); v != nullptr && needUse(v->kind) && ! check->usedVars[v])
+            if(auto [v, gocpp_id_0] = gocpp::getValue<Var*>(elem); v != nullptr && needUse(v->kind) && ! check->usedVars.get(v))
             {
                 unused = append(unused, v);
             }
@@ -434,7 +434,7 @@ namespace golang::go::types
             {
                 // look for duplicate types for a given value
                 // (quadratic algorithm, but these lists tend to be very short)
-                for(auto [gocpp_ignored, vt] : seen[val])
+                for(auto [gocpp_ignored, vt] : seen.get(val))
                 {
                     if(Identical(rec::typ(gocpp::recv(v)), vt.typ))
                     {
@@ -445,7 +445,7 @@ namespace golang::go::types
                         goto L_continue;
                     }
                 }
-                seen[val] = append(seen[val], valueType {rec::Pos(gocpp::recv(v)), rec::typ(gocpp::recv(v))});
+                seen.ref(val) = append(seen.get(val), valueType {rec::Pos(gocpp::recv(v)), rec::typ(gocpp::recv(v))});
             }
         }
     }
@@ -530,7 +530,7 @@ namespace golang::go::types
                     goto L_continue;
                 }
             }
-            seen[T] = e;
+            seen.ref(T) = e;
             if(x != nullptr && T != nullptr)
             {
                 rec::typeAssertion(gocpp::recv(check), e, x, T, true);
@@ -588,7 +588,7 @@ namespace golang::go::types
                 gocpp::panic("enable typeHash(T, nil)"_s);
             }
             // look for duplicate types
-            if(auto other = seen[hash]; other != nullptr)
+            if(auto other = seen.get(hash); other != nullptr)
             {
                 // talk about "case" rather than "type" because of nil case
                 auto Ts = "nil"_s;
@@ -602,7 +602,7 @@ namespace golang::go::types
                 rec::report(gocpp::recv(err));
                 goto L_continue;
             }
-            seen[hash] = e;
+            seen.ref(hash) = e;
             if(T != nullptr)
             {
                 rec::typeAssertion(gocpp::recv(check), e, x, T, true);
@@ -1228,12 +1228,12 @@ namespace golang::go::types
                             bool used = {};
                             for(auto [gocpp_ignored, v] : lhsVars)
                             {
-                                if(check->usedVars[v])
+                                if(check->usedVars.get(v))
                                 {
                                     used = true;
                                 }
                                 // avoid usage error when checking entire function
-                                check->usedVars[v] = true;
+                                check->usedVars.ref(v) = true;
                             }
                             if(! used)
                             {

@@ -233,7 +233,7 @@ namespace golang::regexp::syntax
     {
         if(! force)
         {
-            if(auto [size, ok] = p->size[re]; ok)
+            if(auto [size, ok] = p->size.lookup(re); ok)
             {
                 return size;
             }
@@ -307,7 +307,7 @@ namespace golang::regexp::syntax
         }
 
         size = gocpp::max(1, size);
-        p->size[re] = size;
+        p->size.ref(re) = size;
         return size;
     }
 
@@ -335,7 +335,7 @@ namespace golang::regexp::syntax
     {
         if(! force)
         {
-            if(auto [h, ok] = p->height[re]; ok)
+            if(auto [h, ok] = p->height.lookup(re); ok)
             {
                 return h;
             }
@@ -349,7 +349,7 @@ namespace golang::regexp::syntax
                 h = 1 + hsub;
             }
         }
-        p->height[re] = h;
+        p->height.ref(re) = h;
         return h;
     }
 
@@ -2231,7 +2231,7 @@ namespace golang::regexp::syntax
         {
             return {out, rest};
         }
-        auto g = perlGroup[s.make_slice(0, 2)];
+        auto g = perlGroup.get(s.make_slice(0, 2));
         if(g.sign == 0)
         {
             return {out, rest};
@@ -2260,7 +2260,7 @@ namespace golang::regexp::syntax
         i += 2;
         auto [name, s_tmp] = std::tuple{s.make_slice(0, i + 2), s.make_slice(i + 2)};
         auto& s = s_tmp;
-        auto g = posixGroup[name];
+        auto g = posixGroup.get(name);
         if(g.sign == 0)
         {
             return {nullptr, ""_s, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidCharRange, name})};
@@ -2300,19 +2300,19 @@ namespace golang::regexp::syntax
     }
 
     unicode::RangeTable* anyTable = gocpp::InitPtr<unicode::RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<unicode::Range16> {gocpp::Init<>([](auto& x) {
+        x.R16 = gocpp::slice<unicode::Range16> {gocpp::Init<unicode::Range16>([](auto& x) {
             x.Lo = 0;
             x.Hi = (1 << 16) - 1;
             x.Stride = 1;
         })};
-        x.R32 = gocpp::slice<unicode::Range32> {gocpp::Init<>([](auto& x) {
+        x.R32 = gocpp::slice<unicode::Range32> {gocpp::Init<unicode::Range32>([](auto& x) {
             x.Lo = 1 << 16;
             x.Hi = unicode::MaxRune;
             x.Stride = 1;
         })};
     });
     unicode::RangeTable* asciiTable = gocpp::InitPtr<unicode::RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<unicode::Range16> {gocpp::Init<>([](auto& x) {
+        x.R16 = gocpp::slice<unicode::Range16> {gocpp::Init<unicode::Range16>([](auto& x) {
             x.Lo = 0;
             x.Hi = 0x7F;
             x.Stride = 1;
@@ -2320,17 +2320,17 @@ namespace golang::regexp::syntax
     });
     unicode::RangeTable* asciiFoldTable = gocpp::InitPtr<unicode::RangeTable>([](auto& x) {
         x.R16 = gocpp::slice<unicode::Range16> {
-            gocpp::Init<>([](auto& x) {
+            gocpp::Init<unicode::Range16>([](auto& x) {
             x.Lo = 0;
             x.Hi = 0x7F;
             x.Stride = 1;
         }),
-            gocpp::Init<>([](auto& x) {
+            gocpp::Init<unicode::Range16>([](auto& x) {
             x.Lo = 0x017F;
             x.Hi = 0x017F;
             x.Stride = 1;
         }),
-            gocpp::Init<>([](auto& x) {
+            gocpp::Init<unicode::Range16>([](auto& x) {
             x.Lo = 0x212A;
             x.Hi = 0x212A;
             x.Stride = 1;
@@ -2383,11 +2383,11 @@ namespace golang::regexp::syntax
         aliases.scripts = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::string>>());
         for(auto [name, actual] : unicode::CategoryAliases)
         {
-            aliases.categories[canonicalName(name)] = actual;
+            aliases.categories.ref(canonicalName(name)) = actual;
         }
         for(auto [name, gocpp_ignored] : unicode::Scripts)
         {
-            aliases.scripts[canonicalName(name)] = name;
+            aliases.scripts.ref(canonicalName(name)) = name;
         }
     }
 
@@ -2484,32 +2484,32 @@ namespace golang::regexp::syntax
                     return {asciiTable, asciiFoldTable, + 1};
                     break;
                 case 3:
-                    return {unicode::Categories["LC"_s], unicode::FoldCategory["LC"_s], + 1};
+                    return {unicode::Categories.get("LC"_s), unicode::FoldCategory.get("LC"_s), + 1};
                     break;
             }
         }
-        if(auto t = unicode::Categories[name]; t != nullptr)
+        if(auto t = unicode::Categories.get(name); t != nullptr)
         {
-            return {t, unicode::FoldCategory[name], + 1};
+            return {t, unicode::FoldCategory.get(name), + 1};
         }
-        if(auto t = unicode::Scripts[name]; t != nullptr)
+        if(auto t = unicode::Scripts.get(name); t != nullptr)
         {
-            return {t, unicode::FoldScript[name], + 1};
+            return {t, unicode::FoldScript.get(name), + 1};
         }
 
         // unicode.CategoryAliases makes liberal use of underscores in its names
         // (they are defined that way by Unicode), but we want to match ignoring
         // the underscores, so make our own map with canonical names.
         rec::Do(gocpp::recv(aliases.once), initAliases);
-        if(auto actual = aliases.categories[name]; actual != ""_s)
+        if(auto actual = aliases.categories.get(name); actual != ""_s)
         {
-            auto t = unicode::Categories[actual];
-            return {t, unicode::FoldCategory[actual], + 1};
+            auto t = unicode::Categories.get(actual);
+            return {t, unicode::FoldCategory.get(actual), + 1};
         }
-        if(auto actual = aliases.scripts[name]; actual != ""_s)
+        if(auto actual = aliases.scripts.get(name); actual != ""_s)
         {
-            auto t = unicode::Scripts[actual];
-            return {t, unicode::FoldScript[actual], + 1};
+            auto t = unicode::Scripts.get(actual);
+            return {t, unicode::FoldScript.get(actual), + 1};
         }
         return {nullptr, nullptr, 0};
     }

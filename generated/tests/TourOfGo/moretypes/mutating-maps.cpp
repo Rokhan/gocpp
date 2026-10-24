@@ -24,17 +24,189 @@ namespace golang::main
     {
         auto m = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
 
-        m["Answer"_s] = 42;
-        mocklib::Println("The value:"_s, m["Answer"_s]);
+        m.ref("Answer"_s) = 42;
+        mocklib::Println("The value:"_s, m.get("Answer"_s));
 
-        m["Answer"_s] = 48;
-        mocklib::Println("The value:"_s, m["Answer"_s]);
+        m.ref("Answer"_s) = 48;
+        mocklib::Println("The value:"_s, m.get("Answer"_s));
 
         remove(m, "Answer"_s);
-        mocklib::Println("The value:"_s, m["Answer"_s]);
+        mocklib::Println("The value:"_s, m.get("Answer"_s));
 
-        auto [v, ok] = m["Answer"_s];
+        auto [v, ok] = m.lookup("Answer"_s);
         mocklib::Println("The value:"_s, v, "Present?"_s, ok);
+
+        testReadsDoNotInsert();
+        testCompoundOps();
+        testCopyAndSwap();
+        testAppendIdiom();
+        testValueTypes();
+        testNested();
+        testDeleteDuringRange();
+        testNilMutationPanic();
+        testCommaOkAssign();
+    }
+
+    void testReadsDoNotInsert()
+    {
+        auto m = gocpp::map<gocpp::string, int> {{ "a"_s, 1 }};
+        _ = m.get("absent"_s);
+        auto [v, ok] = m.lookup("absent"_s);
+        mocklib::Println(v, ok, len(m));
+        if(m.get("zzz"_s) == 0)
+        {
+            mocklib::Println("zero"_s, len(m));
+        }
+        if(auto [gocpp_id_0, ok] = m.lookup("yyy"_s); ! ok)
+        {
+            mocklib::Println("missing"_s, len(m), m);
+        }
+    }
+
+    void testCompoundOps()
+    {
+        auto m = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+        m.ref("inc"_s)++;
+        m.ref("dec"_s)--;
+        m.ref("add"_s) += 5;
+        m.ref("sub"_s) -= 3;
+        m.ref("or"_s) |= 4;
+        // writes a zero, but must still insert the key
+        m.ref("shl"_s) <<= 2;
+        mocklib::Println(m, len(m));
+
+        auto s = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::string>>());
+        s.ref("k"_s) += "x"_s;
+        s.ref("k"_s) += "y"_s;
+        mocklib::Println(s);
+    }
+
+    void testCopyAndSwap()
+    {
+        auto m = gocpp::map<gocpp::string, int> {{ "a"_s, 1 }, { "b"_s, 2 }};
+        m.ref("c"_s) = m.get("a"_s);
+        std::tie(m.ref("a"_s), m.ref("b"_s)) = std::tuple{m.get("b"_s), m.get("a"_s)};
+        mocklib::Println(m);
+
+        // inserts 0 under "new", nothing under "missing"
+        m.ref("new"_s) = m.get("missing"_s);
+        mocklib::Println(m);
+    }
+
+    void testAppendIdiom()
+    {
+        auto g = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::slice<int>>>());
+        g.ref("a"_s) = append(g.get("a"_s), 1);
+        g.ref("a"_s) = append(g.get("a"_s), 2);
+        g.ref("b"_s) = append(g.get("b"_s), 3);
+        mocklib::Println(g, len(g.get("zzz"_s)), len(g));
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    Vertex::operator T()
+    {
+        T result;
+        result.Lat = this->Lat;
+        result.Long = this->Long;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Vertex::operator==(const T& ref) const
+    {
+        if (Lat != ref.Lat) return false;
+        if (Long != ref.Long) return false;
+        return true;
+    }
+
+    std::ostream& Vertex::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << to_go_string(Lat);
+        os << " " << to_go_string(Long);
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    void testValueTypes()
+    {
+        auto m = gocpp::map<gocpp::string, Vertex> {gocpp::non_nil};
+        m.ref("a"_s) = Vertex {1, 2};
+        // field read on proxy
+        mocklib::Println(m.get("a"_s).Lat, m.get("missing"_s).Long, len(m));
+
+        auto p = gocpp::map<gocpp::string, Vertex*> {{ "a"_s, new Vertex {1, 2} }};
+        // write through the pointer, no map write
+        p.get("a"_s)->Lat = 10;
+        mocklib::Println(*p.get("a"_s), p.get("nope"_s) == nullptr);
+    }
+
+    void testNested()
+    {
+        auto n = gocpp::map<gocpp::string, gocpp::map<gocpp::string, int>> {gocpp::non_nil};
+        // nil inner map read
+        mocklib::Println(n.get("x"_s).get("y"_s), len(n));
+        n.ref("a"_s) = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+        n.get("a"_s).ref("b"_s) = 1;
+        n.get("a"_s).ref("b"_s)++;
+        mocklib::Println(n);
+    }
+
+    void testDeleteDuringRange()
+    {
+        auto m = gocpp::map<int, int> {{ 1, 1 }, { 2, 2 }, { 3, 3 }, { 4, 4 }};
+        for(auto [k, gocpp_ignored] : m)
+        {
+            if(k % 2 == 0)
+            {
+                remove(m, k);
+            }
+        }
+        mocklib::Println(m);
+    }
+
+    void testNilMutationPanic()
+    {
+        gocpp::Defer defer;
+        try
+        {
+            defer.push_back([=]{ [=]() mutable -> void
+            {
+                if(auto r = gocpp::recover(); r != nullptr)
+                {
+                    mocklib::Println("recovered"_s);
+                }
+            }(); });
+            gocpp::map<gocpp::string, int> m = {};
+            // legal
+            remove(m, "a"_s);
+            // panics
+            m.ref("a"_s)++;
+            mocklib::Println("not reached"_s);
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
+    }
+
+    void testCommaOkAssign()
+    {
+        auto m = gocpp::map<gocpp::string, int> {{ "a"_s, 1 }};
+        int v = {};
+        bool ok = {};
+        std::tie(v, ok) = m.lookup("a"_s);
+        mocklib::Println(v, ok);
+        std::tie(v, ok) = m.lookup("zz"_s);
+        mocklib::Println(v, ok, len(m));
+        auto [w, found] = m.lookup("a"_s);
+        mocklib::Println(w, found);
     }
 
 }

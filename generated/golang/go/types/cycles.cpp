@@ -78,7 +78,7 @@ namespace golang::go::types
         gocpp::slice<TypeName*> path = {};
         for(; ; )
         {
-            auto [start, found] = pathIdx[tname];
+            auto [start, found] = pathIdx.lookup(tname);
             if(start < 0)
             {
                 // tname is marked black - do not traverse it again.
@@ -104,12 +104,12 @@ namespace golang::go::types
             }
 
             // tname is marked white - mark it grey and add it to the path.
-            pathIdx[tname] = len(path);
+            pathIdx.ref(tname) = len(path);
             path = append(path, tname);
 
             // For direct cycle detection, we don't care about whether we have an alias or not.
             // If the associated type is not a name, we're at the end of the path and we're done.
-            auto [rhs, ok] = gocpp::getValue<ast::Ident*>(check->objMap[tname]->tdecl->Type);
+            auto [rhs, ok] = gocpp::getValue<ast::Ident*>(check->objMap.get(tname)->tdecl->Type);
             if(! ok)
             {
                 break;
@@ -135,7 +135,7 @@ namespace golang::go::types
         // (ensure that pathIdx doesn't contain any grey entries upon returning)
         for(auto [gocpp_ignored, tname] : path)
         {
-            pathIdx[tname] = - 1;
+            pathIdx.ref(tname) = - 1;
         }
 
         if(debug)
@@ -185,7 +185,7 @@ namespace golang::go::types
             }
         }
 
-        if(auto [i, found] = check->objPathIdx[obj]; found)
+        if(auto [i, found] = check->objPathIdx.lookup(obj); found)
         {
             auto cycle = check->objPath.make_slice(i);
             rec::cycleError(gocpp::recv(check), cycle, firstInSrc(cycle));

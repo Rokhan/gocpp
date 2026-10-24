@@ -203,7 +203,7 @@ namespace golang::go::types
                         // typ == Typ[Invalid] can happen if allowVersion fails.
                         obj->object.typ = Typ[Invalid];
                         // don't complain about unused variable
-                        check->usedVars[obj] = true;
+                        check->usedVars.ref(obj) = true;
                         continue;
                     }
 

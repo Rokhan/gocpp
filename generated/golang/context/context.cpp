@@ -1136,7 +1136,7 @@ namespace golang::context
                 {
                     p->children = gocpp::make(gocpp::Tag<gocpp::map<canceler, gocpp::empty_struct>>());
                 }
-                p->children[child] = gocpp::empty_struct {};
+                p->children.ref(child) = gocpp::empty_struct {};
             }
             rec::Unlock(gocpp::recv(p->mu));
             return;

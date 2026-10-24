@@ -1218,8 +1218,8 @@ namespace golang::internal::bisect
         {
             d->m = gocpp::make(gocpp::Tag<gocpp::map<uint64_t, bool>>());
         }
-        auto seen = d->m[h];
-        d->m[h] = true;
+        auto seen = d->m.get(h);
+        d->m.ref(h) = true;
         rec::Unlock(gocpp::recv(d->mu));
         return seen;
     }

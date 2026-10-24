@@ -2826,7 +2826,7 @@ namespace golang::reflect
         // current lists the fields to visit on this depth level,
         // and next lists the fields on the next lower level.
         auto current = gocpp::slice<fieldScan> {};
-        auto next = gocpp::slice<fieldScan> {gocpp::Init<>([=](auto& x) {
+        auto next = gocpp::slice<fieldScan> {gocpp::Init<fieldScan>([=](auto& x) {
             x.typ = t;
         })};
 
@@ -2843,7 +2843,7 @@ namespace golang::reflect
         // reachable embedded types; visited avoids following those cycles.
         // It also avoids duplicated effort: if we didn't find the field in an
         // embedded type T at level 2, we won't find it in one at level 4 either.
-        auto visited = gocpp::map<structType*, bool> {};
+        auto visited = gocpp::map<structType*, bool> {gocpp::non_nil};
 
         for(; len(next) > 0; )
         {
@@ -2858,14 +2858,14 @@ namespace golang::reflect
             for(auto [gocpp_ignored, scan] : current)
             {
                 auto t = scan.typ;
-                if(visited[t])
+                if(visited.get(t))
                 {
                     // We've looked through this type before, at a higher level.
                     // That higher level would shadow the lower level we're now at,
                     // so this one can't be useful to us. Ignore it.
                     continue;
                 }
-                visited[t] = true;
+                visited.ref(t) = true;
                 for(auto [i, gocpp_ignored] : t->StructType.Fields)
                 {
                     auto f = & t->StructType.Fields[i];
@@ -2886,7 +2886,7 @@ namespace golang::reflect
                     if(match(fname))
                     {
                         // Potential match
-                        if(count[t] > 1 || ok)
+                        if(count.get(t) > 1 || ok)
                         {
                             // Name appeared multiple times at this level: annihilate.
                             return {StructField {}, false};
@@ -2907,21 +2907,21 @@ namespace golang::reflect
                         continue;
                     }
                     auto styp = (structType*)(gocpp::unsafe_pointer(ntyp));
-                    if(nextCount[styp] > 0)
+                    if(nextCount.get(styp) > 0)
                     {
                         // exact multiple doesn't matter
-                        nextCount[styp] = 2;
+                        nextCount.ref(styp) = 2;
                         continue;
                     }
                     if(nextCount == nullptr)
                     {
-                        nextCount = gocpp::map<structType*, int> {};
+                        nextCount = gocpp::map<structType*, int> {gocpp::non_nil};
                     }
-                    nextCount[styp] = 1;
-                    if(count[t] > 1)
+                    nextCount.ref(styp) = 1;
+                    if(count.get(t) > 1)
                     {
                         // exact multiple doesn't matter
-                        nextCount[styp] = 2;
+                        nextCount.ref(styp) = 2;
                     }
                     gocpp::slice<int> index = {};
                     index = append(index, scan.index);
@@ -3715,11 +3715,11 @@ namespace golang::reflect
             }
 
             funcTypes[n] = StructOf(gocpp::slice<StructField> {
-                gocpp::Init<>([=](auto& x) {
+                gocpp::Init<StructField>([=](auto& x) {
                 x.Name = "FuncType"_s;
                 x.Type = TypeOf(funcType {});
             }),
-                gocpp::Init<>([=](auto& x) {
+                gocpp::Init<StructField>([=](auto& x) {
                 x.Name = "Args"_s;
                 x.Type = ArrayOf(n, TypeOf(new rtype {}));
             })
@@ -4569,7 +4569,7 @@ namespace golang::reflect
             gocpp::slice<abi::Method> methods = true;
             auto fs = gocpp::make(gocpp::Tag<gocpp::slice<structField>>(), len(fields));
             auto repr = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 64);
-            auto fset = gocpp::map<gocpp::string, gocpp::empty_struct> {};
+            auto fset = gocpp::map<gocpp::string, gocpp::empty_struct> {gocpp::non_nil};
 
             auto lastzero = uintptr_t(0);
             repr = append(repr, "struct {"_s);
@@ -4737,11 +4737,11 @@ namespace golang::reflect
                         }
                     }
                 }
-                if(auto [gocpp_id_7, dup] = fset[name]; dup && name != "_"_s)
+                if(auto [gocpp_id_7, dup] = fset.lookup(name); dup && name != "_"_s)
                 {
                     gocpp::panic("reflect.StructOf: duplicate field "_s + name);
                 }
-                fset[name] = gocpp::empty_struct {};
+                fset.ref(name) = gocpp::empty_struct {};
 
                 hash = fnv1(hash, (unsigned char)(ft->Hash >> 24), (unsigned char)(ft->Hash >> 16), (unsigned char)(ft->Hash >> 8), (unsigned char)(ft->Hash));
 
@@ -4813,15 +4813,15 @@ namespace golang::reflect
                 // need an array directly following the uncommonType memory.
                 // A similar strategy is used for funcTypeFixed4, ...funcTypeFixedN.
                 auto tt = New(StructOf(gocpp::slice<StructField> {
-                    gocpp::Init<>([=](auto& x) {
+                    gocpp::Init<StructField>([=](auto& x) {
                     x.Name = "S"_s;
                     x.Type = TypeOf(structType {});
                 }),
-                    gocpp::Init<>([=](auto& x) {
+                    gocpp::Init<StructField>([=](auto& x) {
                     x.Name = "U"_s;
                     x.Type = TypeOf(uncommonType {});
                 }),
-                    gocpp::Init<>([=](auto& x) {
+                    gocpp::Init<StructField>([=](auto& x) {
                     x.Name = "M"_s;
                     x.Type = ArrayOf(len(methods), TypeOf(methods[0]));
                 })

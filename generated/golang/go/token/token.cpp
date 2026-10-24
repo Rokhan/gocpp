@@ -202,14 +202,14 @@ namespace golang::go::token
         keywords = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Token>>(), keyword_end - (keyword_beg + 1));
         for(auto i = keyword_beg + 1; i < keyword_end; i++)
         {
-            keywords[tokens[i]] = i;
+            keywords.ref(tokens[i]) = i;
         }
     }
 
     // Lookup maps an identifier to its keyword token or [IDENT] (if not a keyword).
     Token Lookup(gocpp::string ident)
     {
-        if(auto [tok, is_keyword] = keywords[ident]; is_keyword)
+        if(auto [tok, is_keyword] = keywords.lookup(ident); is_keyword)
         {
             return tok;
         }
@@ -248,7 +248,7 @@ namespace golang::go::token
     bool IsKeyword(gocpp::string name)
     {
         // TODO: opt: use a perfect hash function instead of a global map.
-        auto [gocpp_id_1, ok] = keywords[name];
+        auto [gocpp_id_1, ok] = keywords.lookup(name);
         return ok;
     }
 

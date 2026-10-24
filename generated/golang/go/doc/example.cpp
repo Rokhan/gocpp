@@ -287,7 +287,7 @@ namespace golang::go::doc
                         ast::FuncDecl* d = gocpp::any_cast<ast::FuncDecl*>(decl);
                         if(d->Recv == nullptr)
                         {
-                            topDecls[d->Name->Obj] = d;
+                            topDecls.ref(d->Name->Obj) = d;
                         }
                         else
                         {
@@ -295,7 +295,7 @@ namespace golang::go::doc
                             {
                                 auto t = d->Recv->List[0]->Type;
                                 auto [tname, gocpp_id_3] = baseTypeName(t);
-                                typMethods[tname] = append(typMethods[tname], d);
+                                typMethods.ref(tname) = append(typMethods.get(tname), d);
                             }
                         }
                         break;
@@ -316,7 +316,7 @@ namespace golang::go::doc
                                     case 0:
                                     {
                                         ast::TypeSpec* s = gocpp::any_cast<ast::TypeSpec*>(spec);
-                                        topDecls[s->Name->Obj] = d;
+                                        topDecls.ref(s->Name->Obj) = d;
                                         break;
                                     }
                                     case 1:
@@ -324,7 +324,7 @@ namespace golang::go::doc
                                         ast::ValueSpec* s = gocpp::any_cast<ast::ValueSpec*>(spec);
                                         for(auto [gocpp_ignored, name] : s->Names)
                                         {
-                                            topDecls[name->Obj] = d;
+                                            topDecls.ref(name->Obj) = d;
                                         }
                                         break;
                                     }
@@ -399,7 +399,7 @@ namespace golang::go::doc
                     }
                 }
             }
-            if(unresolved[n])
+            if(unresolved.get(n))
             {
                 // Copy the spec and its path to avoid modifying the original.
                 auto spec = *s;
@@ -414,7 +414,7 @@ namespace golang::go::doc
         // Remove predeclared identifiers from unresolved list.
         for(auto [n, gocpp_ignored] : unresolved)
         {
-            if(predeclaredTypes[n] || predeclaredConstants[n] || predeclaredFuncs[n])
+            if(predeclaredTypes.get(n) || predeclaredConstants.get(n) || predeclaredFuncs.get(n))
             {
                 remove(unresolved, n);
             }
@@ -558,15 +558,15 @@ namespace golang::go::doc
                         ast::Ident* e = gocpp::any_cast<ast::Ident*>(n);
                         if(e->Obj == nullptr && e->Name != "_"_s)
                         {
-                            unresolved[e->Name] = true;
+                            unresolved.ref(e->Name) = true;
                         }
                         else
-                        if(auto d = topDecls[e->Obj]; d != nullptr)
+                        if(auto d = topDecls.get(e->Obj); d != nullptr)
                         {
-                            usedObjs[e->Obj] = true;
-                            if(! usedDecls[d])
+                            usedObjs.ref(e->Obj) = true;
+                            if(! usedDecls.get(d))
                             {
-                                usedDecls[d] = true;
+                                usedDecls.ref(d) = true;
                                 depDecls = append(depDecls, d);
                             }
                         }
@@ -656,7 +656,7 @@ namespace golang::go::doc
                                         ast::TypeSpec* s = gocpp::any_cast<ast::TypeSpec*>(spec);
                                         inspectFieldList(s->TypeParams);
                                         ast::Inspect(s->Type, inspectFunc);
-                                        depDecls = append(depDecls, typMethods[s->Name->Name]);
+                                        depDecls = append(depDecls, typMethods.get(s->Name->Name));
                                         break;
                                     }
                                     case 1:
@@ -728,7 +728,7 @@ namespace golang::go::doc
                                     case 0:
                                     {
                                         ast::TypeSpec* s = gocpp::any_cast<ast::TypeSpec*>(s_ref);
-                                        if(usedObjs[s->Name->Obj])
+                                        if(usedObjs.get(s->Name->Obj))
                                         {
                                             specs = append(specs, s);
                                         }
@@ -756,7 +756,7 @@ namespace golang::go::doc
                                         ns.Values = nullptr;
                                         for(auto [i, n] : s->Names)
                                         {
-                                            if(usedObjs[n->Obj])
+                                            if(usedObjs.get(n->Obj))
                                             {
                                                 ns.Names = append(ns.Names, n);
                                                 if(s->Values != nullptr)
@@ -963,14 +963,14 @@ namespace golang::go::doc
         // Mapping of names for funcs, types, and methods to the example listing.
         auto ids = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::slice<Example*>*>>());
         // package-level examples have an empty name
-        ids[""_s] = & p->Examples;
+        ids.ref(""_s) = & p->Examples;
         for(auto [gocpp_ignored, f] : p->Funcs)
         {
             if(! token::IsExported(f->Name))
             {
                 continue;
             }
-            ids[f->Name] = & f->Examples;
+            ids.ref(f->Name) = & f->Examples;
         }
         for(auto [gocpp_ignored, t] : p->Types)
         {
@@ -978,14 +978,14 @@ namespace golang::go::doc
             {
                 continue;
             }
-            ids[t->Name] = & t->Examples;
+            ids.ref(t->Name) = & t->Examples;
             for(auto [gocpp_ignored, f] : t->Funcs)
             {
                 if(! token::IsExported(f->Name))
                 {
                     continue;
                 }
-                ids[f->Name] = & f->Examples;
+                ids.ref(f->Name) = & f->Examples;
             }
             for(auto [gocpp_ignored, m] : t->Methods)
             {
@@ -993,7 +993,7 @@ namespace golang::go::doc
                 {
                     continue;
                 }
-                ids[strings::TrimPrefix(nameWithoutInst(m->Recv), "*"_s) + "_"_s + m->Name] = & m->Examples;
+                ids.ref(strings::TrimPrefix(nameWithoutInst(m->Recv), "*"_s) + "_"_s + m->Name) = & m->Examples;
             }
         }
 
@@ -1013,7 +1013,7 @@ namespace golang::go::doc
                     continue;
                 }
                 gocpp::slice<doc::Example*>* exs;
-                std::tie(exs, ok) = ids[prefix];
+                std::tie(exs, ok) = ids.lookup(prefix);
                 if(! ok)
                 {
                     continue;

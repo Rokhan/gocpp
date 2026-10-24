@@ -30,6 +30,33 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
     void main();
+    struct GoTag_Set { };
+    using Set = gocpp::defined<gocpp::map<gocpp::string, gocpp::empty_struct>, GoTag_Set>;
+    struct Registry
+    {
+        gocpp::string name{};
+        gocpp::map<gocpp::string, int> items{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Registry& value);
+    void testNil();
+    void testNotNil();
+    void fill(gocpp::map<gocpp::string, int> m);
+    void testAliasing();
+    void removeChild(gocpp::map<gocpp::string, gocpp::empty_struct> children, gocpp::string key);
+    void testNamedAndEmptyStruct();
+    void testNilWritePanic();
+    void testNilFieldWritePanic();
     extern gocpp::map<gocpp::string, Vertex> m;
 
     namespace rec

@@ -286,7 +286,7 @@ namespace golang::internal::platform
             return true;
         }
 
-        if(auto [gocpp_id_0, ok] = distInfo[OSArch {goos, goarch}]; ! ok)
+        if(auto [gocpp_id_0, ok] = distInfo.lookup(OSArch {goos, goarch}); ! ok)
         {
             // platform unrecognized
             return false;
@@ -716,21 +716,21 @@ namespace golang::internal::platform
     // CgoSupported reports whether goos/goarch supports cgo.
     bool CgoSupported(gocpp::string goos, gocpp::string goarch)
     {
-        return distInfo[OSArch {goos, goarch}].CgoSupported;
+        return distInfo.get(OSArch {goos, goarch}).CgoSupported;
     }
 
     // FirstClass reports whether goos/goarch is considered a “first class” port.
     // (See https://go.dev/wiki/PortingPolicy#first-class-ports.)
     bool FirstClass(gocpp::string goos, gocpp::string goarch)
     {
-        return distInfo[OSArch {goos, goarch}].FirstClass;
+        return distInfo.get(OSArch {goos, goarch}).FirstClass;
     }
 
     // Broken reports whether goos/goarch is considered a broken port.
     // (See https://go.dev/wiki/PortingPolicy#broken-ports.)
     bool Broken(gocpp::string goos, gocpp::string goarch)
     {
-        return distInfo[OSArch {goos, goarch}].Broken;
+        return distInfo.get(OSArch {goos, goarch}).Broken;
     }
 
 }

@@ -322,7 +322,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
 
         auto v = gocpp::InitPtr<visitor>([=](auto& x) {
             x.events = gocpp::make(gocpp::Tag<gocpp::slice<event>>(), 0, capacity);
-            x.stack = gocpp::slice<item> {gocpp::Init<>([=](auto& x) {
+            x.stack = gocpp::slice<item> {gocpp::Init<inspector::item>([=](auto& x) {
                 x.index = - 1;
             })};
         });

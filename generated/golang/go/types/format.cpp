@@ -257,7 +257,7 @@ namespace golang::go::types
                 rec::markImports(gocpp::recv(check), check->pkg);
             }
             // If the same package name was used by multiple packages, display the full path.
-            if(len(check->pkgPathMap[pkg->name]) > 1)
+            if(len(check->pkgPathMap.get(pkg->name)) > 1)
             {
                 return strconv::Quote(pkg->path);
             }
@@ -270,19 +270,19 @@ namespace golang::go::types
     // paths in pkgPathMap.
     void rec::markImports(Checker* check, Package* pkg)
     {
-        if(check->seenPkgMap[pkg])
+        if(check->seenPkgMap.get(pkg))
         {
             return;
         }
-        check->seenPkgMap[pkg] = true;
+        check->seenPkgMap.ref(pkg) = true;
 
-        auto [forName, ok] = check->pkgPathMap[pkg->name];
+        auto [forName, ok] = check->pkgPathMap.lookup(pkg->name);
         if(! ok)
         {
             forName = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>());
-            check->pkgPathMap[pkg->name] = forName;
+            check->pkgPathMap.ref(pkg->name) = forName;
         }
-        forName[pkg->path] = true;
+        forName.ref(pkg->path) = true;
 
         for(auto [gocpp_ignored, imp] : pkg->imports)
         {

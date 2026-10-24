@@ -131,7 +131,7 @@ namespace golang::go::types
             m = gocpp::make(gocpp::Tag<gocpp::map<Object, bool>>());
             d->deps = m;
         }
-        m[obj] = true;
+        m.ref(obj) = true;
     }
 
     // arityMatch checks that the lhs and rhs of a const or var decl
@@ -234,7 +234,7 @@ namespace golang::go::types
         }
 
         rec::declare(gocpp::recv(check), check->pkg->scope, ident, obj, nopos);
-        check->objMap[obj] = d;
+        check->objMap.ref(obj) = d;
         rec::setOrder(gocpp::recv(obj), uint32_t(len(check->objMap)));
     }
 
@@ -257,7 +257,7 @@ namespace golang::go::types
         // or fake (dummy packages for failed imports). Incomplete but
         // non-fake packages do require an import to complete them.
         auto key = importKey {path, dir};
-        auto imp = check->impMap[key];
+        auto imp = check->impMap.get(key);
         if(imp != nullptr)
         {
             return imp;
@@ -335,7 +335,7 @@ namespace golang::go::types
         // package should be complete or marked fake, but be cautious
         if(imp->complete || imp->fake)
         {
-            check->impMap[key] = imp;
+            check->impMap.ref(key) = imp;
             // Once we've formatted an error message, keep the pkgPathMap
             // up-to-date on subsequent imports. It is used for package
             // qualification in error messages.
@@ -366,7 +366,7 @@ namespace golang::go::types
         auto pkgImports = gocpp::make(gocpp::Tag<gocpp::map<Package*, bool>>());
         for(auto [gocpp_ignored, imp] : pkg->imports)
         {
-            pkgImports[imp] = true;
+            pkgImports.ref(imp) = true;
         }
 
         struct methodInfo
@@ -394,7 +394,7 @@ namespace golang::go::types
         auto fileScopes = gocpp::make(gocpp::Tag<gocpp::slice<golang::go::types::Scope*>>(), len(check->files));
         for(auto [fileNo, file] : check->files)
         {
-            check->environment.version = asGoVersion(check->versions[file]);
+            check->environment.version = asGoVersion(check->versions.get(file));
 
             // The package identifier denotes the current package,
             // but there is no corresponding package object.
@@ -471,9 +471,9 @@ namespace golang::go::types
                             // add package to list of explicit imports
                             // (this functionality is provided as a convenience
                             // for clients; it is not needed for type-checking)
-                            if(! pkgImports[imp])
+                            if(! pkgImports.get(imp))
                             {
-                                pkgImports[imp] = true;
+                                pkgImports.ref(imp) = true;
                                 pkg->imports = append(pkg->imports, imp);
                             }
                             auto pkgName = NewPkgName(rec::Pos(gocpp::recv(d.spec)), pkg, name, imp);
@@ -489,7 +489,7 @@ namespace golang::go::types
                             if(imp->fake)
                             {
                                 // match 1.17 cmd/compile (not prescribed by spec)
-                                check->usedPkgNames[pkgName] = true;
+                                check->usedPkgNames.ref(pkgName) = true;
                             }
                             // add import to file scope
                             check->imports = append(check->imports, pkgName);
@@ -524,7 +524,7 @@ namespace golang::go::types
                                         else
                                         {
                                             rec::insert(gocpp::recv(fileScope), name, obj);
-                                            check->dotImportMap[dotImportKey {fileScope, name}] = pkgName;
+                                            check->dotImportMap.ref(dotImportKey {fileScope, name}) = pkgName;
                                         }
                                     }
                                 }
@@ -703,7 +703,7 @@ namespace golang::go::types
                             // object map so that we can handle them like regular functions (if the
                             // receiver is invalid); also we need their fdecl info when associating
                             // them with their receiver base type, below.
-                            check->objMap[obj] = info;
+                            check->objMap.ref(obj) = info;
                             rec::setOrder(gocpp::recv(obj), uint32_t(len(check->objMap)));
                             break;
                         }
@@ -755,7 +755,7 @@ namespace golang::go::types
             if(base != nullptr)
             {
                 m->obj->hasPtrRecv_ = ptr;
-                check->methods[base] = append(check->methods[base], m->obj);
+                check->methods.ref(base) = append(check->methods.get(base), m->obj);
             }
         }
     }
@@ -902,14 +902,14 @@ namespace golang::go::types
             }
 
             // ... which we have not seen before
-            if(seen[tname])
+            if(seen.get(tname))
             {
                 break;
             }
 
             // we're done if tdecl describes a defined type (not an alias)
             // must exist for objects in package scope
-            auto tdecl = check->objMap[tname]->tdecl;
+            auto tdecl = check->objMap.get(tname)->tdecl;
             if(! rec::IsValid(gocpp::recv(tdecl->Assign)))
             {
                 return {ptr, tname};
@@ -927,7 +927,7 @@ namespace golang::go::types
             {
                 seen = gocpp::make(gocpp::Tag<gocpp::map<TypeName*, bool>>());
             }
-            seen[tname] = true;
+            seen.ref(tname) = true;
 
             // The go/parser keeps parentheses; strip them, if any.
             auto typ = ast::Unparen(tdecl->Type);
@@ -1008,7 +1008,7 @@ namespace golang::go::types
             {
                 if(auto [tname, gocpp_id_9] = gocpp::getValue<TypeName*>(obj); tname != nullptr)
                 {
-                    if(rec::IsValid(gocpp::recv(check->objMap[tname]->tdecl->Assign)))
+                    if(rec::IsValid(gocpp::recv(check->objMap.get(tname)->tdecl->Assign)))
                     {
                         aliasList = append(aliasList, tname);
                     }
@@ -1055,7 +1055,7 @@ namespace golang::go::types
         // (initialization), use the blank identifier as explicit package name."
         for(auto [gocpp_ignored, obj] : check->imports)
         {
-            if(obj->object.name != "_"_s && ! check->usedPkgNames[obj])
+            if(obj->object.name != "_"_s && ! check->usedPkgNames.get(obj))
             {
                 rec::errorUnusedPkg(gocpp::recv(check), obj);
             }

@@ -254,16 +254,16 @@ namespace golang::go::parser
             if(auto [src, err] = ParseFile(fset, filename, nullptr, mode); err == nullptr)
             {
                 auto name = src->Name->Name;
-                auto [pkg, found] = pkgs[name];
+                auto [pkg, found] = pkgs.lookup(name);
                 if(! found)
                 {
                     pkg = gocpp::InitPtr<ast::Package>([=](auto& x) {
                         x.Name = name;
                         x.Files = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, ast::File*>>());
                     });
-                    pkgs[name] = pkg;
+                    pkgs.ref(name) = pkg;
                 }
-                pkg->Files[filename] = src;
+                pkg->Files.ref(filename) = src;
             }
             else
             if(first == nullptr)

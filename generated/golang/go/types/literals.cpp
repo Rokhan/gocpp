@@ -449,7 +449,7 @@ namespace golang::go::types
                             auto xkey = keyVal(x->val);
                             if(keyIsInterface)
                             {
-                                for(auto [gocpp_ignored, vtyp] : visited[xkey])
+                                for(auto [gocpp_ignored, vtyp] : visited.get(xkey))
                                 {
                                     if(Identical(vtyp, rec::typ(gocpp::recv(x))))
                                     {
@@ -457,12 +457,12 @@ namespace golang::go::types
                                         break;
                                     }
                                 }
-                                visited[xkey] = append(visited[xkey], rec::typ(gocpp::recv(x)));
+                                visited.ref(xkey) = append(visited.get(xkey), rec::typ(gocpp::recv(x)));
                             }
                             else
                             {
-                                std::tie(std::ignore, duplicate) = visited[xkey];
-                                visited[xkey] = nullptr;
+                                std::tie(std::ignore, duplicate) = visited.lookup(xkey);
+                                visited.ref(xkey) = nullptr;
                             }
                             if(duplicate)
                             {
@@ -561,11 +561,11 @@ namespace golang::go::types
             // if we have a valid index, check for duplicate entries
             if(validIndex)
             {
-                if(visited[index])
+                if(visited.get(index))
                 {
                     rec::errorf(gocpp::recv(check), e, DuplicateLitKey, "duplicate index %d in array or slice literal"_s, index);
                 }
-                visited[index] = true;
+                visited.ref(index) = true;
             }
             index++;
             if(index > max)

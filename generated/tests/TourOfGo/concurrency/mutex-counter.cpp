@@ -65,7 +65,7 @@ namespace golang::main
     {
         rec::Lock(gocpp::recv(c->mu));
         // Lock so only one goroutine at a time can access the map c.v.
-        c->v[key]++;
+        c->v.ref(key)++;
         rec::Unlock(gocpp::recv(c->mu));
     }
 
@@ -78,7 +78,7 @@ namespace golang::main
             rec::Lock(gocpp::recv(c->mu));
             // Lock so only one goroutine at a time can access the map c.v.
             defer.push_back([=]{ rec::Unlock(gocpp::recv(c->mu)); });
-            return c->v[key];
+            return c->v.get(key);
         }
         catch(gocpp::GoPanic& gp)
         {

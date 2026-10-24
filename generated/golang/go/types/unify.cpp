@@ -116,7 +116,7 @@ namespace golang::go::types
             {
                 t = targs[i];
             }
-            handles[x] = & t;
+            handles.ref(x) = & t;
         }
         return new unifier {check, handles, 0, enableInterfaceInference};
     }
@@ -222,7 +222,7 @@ namespace golang::go::types
         }
         //Go switch emulation
         {
-            auto [hx, hy] = std::tuple{u->handles[x], u->handles[y]};
+            auto [hx, hy] = std::tuple{u->handles.get(x), u->handles.get(y)};
             int conditionId = -1;
             if(hx == hy) { conditionId = 0; }
             else if(*hx != nullptr && *hy != nullptr) { conditionId = 1; }
@@ -261,7 +261,7 @@ namespace golang::go::types
             auto [x_tmp, gocpp_id_0] = gocpp::getValue<TypeParam*>(Unalias(x));
             if(auto& x = x_tmp; x != nullptr)
             {
-                if(auto [gocpp_id_1, found] = u->handles[x]; found)
+                if(auto [gocpp_id_1, found] = u->handles.lookup(x); found)
                 {
                     return x;
                 }
@@ -274,13 +274,13 @@ namespace golang::go::types
     // (and all its joined type parameters) to h.
     void rec::setHandle(unifier* u, TypeParam* x, golang::go::types::Type* h)
     {
-        auto hx = u->handles[x];
+        auto hx = u->handles.get(x);
         assert(hx != nullptr);
         for(auto [y, hy] : u->handles)
         {
             if(hy == hx)
             {
-                u->handles[y] = h;
+                u->handles.ref(y) = h;
             }
         }
     }
@@ -288,7 +288,7 @@ namespace golang::go::types
     // at returns the (possibly nil) type for type parameter x.
     golang::go::types::Type rec::at(unifier* u, TypeParam* x)
     {
-        return *u->handles[x];
+        return *u->handles.get(x);
     }
 
     // set sets the type t for type parameter x;
@@ -300,7 +300,7 @@ namespace golang::go::types
         {
             rec::tracef(gocpp::recv(u), "%s ➞ %s"_s, x, t);
         }
-        *u->handles[x] = t;
+        *u->handles.get(x) = t;
     }
 
     // unknowns returns the number of type parameters for which no type has been set yet.
@@ -629,12 +629,12 @@ namespace golang::go::types
                     auto ymap = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Func*>>(), len(ymethods));
                     for(auto [gocpp_ignored, ym] : ymethods)
                     {
-                        ymap[rec::Id(gocpp::recv(ym))] = ym;
+                        ymap.ref(rec::Id(gocpp::recv(ym))) = ym;
                     }
                     // All xmethods must exist in ymethods and corresponding signatures must unify.
                     for(auto [gocpp_ignored, xm] : xmethods)
                     {
-                        if(auto ym = ymap[rec::Id(gocpp::recv(xm))]; ym == nullptr || ! rec::nify(gocpp::recv(u), xm->object.typ, ym->object.typ, exact, p))
+                        if(auto ym = ymap.get(rec::Id(gocpp::recv(xm))); ym == nullptr || ! rec::nify(gocpp::recv(u), xm->object.typ, ym->object.typ, exact, p))
                         {
                             return false;
                         }

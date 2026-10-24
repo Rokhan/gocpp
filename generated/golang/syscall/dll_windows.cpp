@@ -255,7 +255,7 @@ namespace golang::syscall
         }
         uintptr_t h = {};
         Errno e = {};
-        if(sysdll::IsSystemDLL[name])
+        if(sysdll::IsSystemDLL.get(name))
         {
             std::tie(h, e) = loadsystemlibrary(namep);
         }

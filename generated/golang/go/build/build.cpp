@@ -1283,10 +1283,10 @@ namespace golang::go::build
             {
                 badGoError = err;
             }
-            if(! badGoFiles[name])
+            if(! badGoFiles.get(name))
             {
                 p->InvalidGoFiles = append(p->InvalidGoFiles, name);
-                badGoFiles[name] = true;
+                badGoFiles.ref(name) = true;
             }
         };
 
@@ -1484,7 +1484,7 @@ namespace golang::go::build
                 switch(conditionId)
                 {
                     case 0:
-                        allTags["cgo"_s] = true;
+                        allTags.ref("cgo"_s) = true;
                         if(ctxt->CgoEnabled)
                         {
                             fileList = & p->CgoFiles;
@@ -1523,14 +1523,14 @@ namespace golang::go::build
             {
                 for(auto [gocpp_ignored, imp] : info->imports)
                 {
-                    importMap[imp.path] = append(importMap[imp.path], rec::Position(gocpp::recv(fset), imp.pos));
+                    importMap.ref(imp.path) = append(importMap.get(imp.path), rec::Position(gocpp::recv(fset), imp.pos));
                 }
             }
             if(embedMap != nullptr)
             {
                 for(auto [gocpp_ignored, emb] : info->embeds)
                 {
-                    embedMap[emb.pattern] = append(embedMap[emb.pattern], emb.pos);
+                    embedMap.ref(emb.pattern) = append(embedMap.get(emb.pattern), emb.pos);
                 }
             }
             if(directives != nullptr)
@@ -2847,7 +2847,7 @@ namespace golang::go::build
     {
         if(allTags != nullptr)
         {
-            allTags[name] = true;
+            allTags.ref(name) = true;
         }
 
         // special tags
@@ -2871,7 +2871,7 @@ namespace golang::go::build
         {
             return true;
         }
-        if(name == "unix"_s && syslist::UnixOS[ctxt->GOOS])
+        if(name == "unix"_s && syslist::UnixOS.get(ctxt->GOOS))
         {
             return true;
         }
@@ -2926,16 +2926,16 @@ namespace golang::go::build
             l = l.make_slice(0, n - 1);
         }
         auto n = len(l);
-        if(n >= 2 && syslist::KnownOS[l[n - 2]] && syslist::KnownArch[l[n - 1]])
+        if(n >= 2 && syslist::KnownOS.get(l[n - 2]) && syslist::KnownArch.get(l[n - 1]))
         {
             if(allTags != nullptr)
             {
                 // In case we short-circuit on l[n-1].
-                allTags[l[n - 2]] = true;
+                allTags.ref(l[n - 2]) = true;
             }
             return rec::matchTag(gocpp::recv(ctxt), l[n - 1], allTags) && rec::matchTag(gocpp::recv(ctxt), l[n - 2], allTags);
         }
-        if(n >= 1 && (syslist::KnownOS[l[n - 1]] || syslist::KnownArch[l[n - 1]]))
+        if(n >= 1 && (syslist::KnownOS.get(l[n - 1]) || syslist::KnownArch.get(l[n - 1])))
         {
             return rec::matchTag(gocpp::recv(ctxt), l[n - 1], allTags);
         }

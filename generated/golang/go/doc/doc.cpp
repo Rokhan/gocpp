@@ -310,7 +310,7 @@ namespace golang::go::doc
             x.Imports = sortedKeys(r.imports);
             x.Filenames = r.filenames;
             x.Notes = r.notes;
-            x.Bugs = noteBodies(r.notes["BUG"_s]);
+            x.Bugs = noteBodies(r.notes.get("BUG"_s));
             x.Consts = sortedValues(r.values, token::CONST);
             x.Types = sortedTypes(r.types, mode & AllMethods != 0);
             x.Vars = sortedValues(r.values, token::VAR);
@@ -333,7 +333,7 @@ namespace golang::go::doc
         {
             for(auto [gocpp_ignored, name] : v->Names)
             {
-                p->syms[name] = true;
+                p->syms.ref(name) = true;
             }
         }
     }
@@ -342,12 +342,12 @@ namespace golang::go::doc
     {
         for(auto [gocpp_ignored, t] : types)
         {
-            if(p->syms[t->Name])
+            if(p->syms.get(t->Name))
             {
                 // Shouldn't be any cycles but stop just in case.
                 continue;
             }
-            p->syms[t->Name] = true;
+            p->syms.ref(t->Name) = true;
             rec::collectValues(gocpp::recv(p), t->Consts);
             rec::collectValues(gocpp::recv(p), t->Vars);
             rec::collectFuncs(gocpp::recv(p), t->Funcs);
@@ -369,11 +369,11 @@ namespace golang::go::doc
                     // remove type parameters
                     r = r.make_slice(0, i);
                 }
-                p->syms[r + "."_s + f->Name] = true;
+                p->syms.ref(r + "."_s + f->Name) = true;
             }
             else
             {
-                p->syms[f->Name] = true;
+                p->syms.ref(f->Name) = true;
             }
         }
     }
@@ -405,7 +405,7 @@ namespace golang::go::doc
             {
                 for(auto [gocpp_ignored, name] : field->Names)
                 {
-                    p->syms[t->Name + "."_s + name->Name] = true;
+                    p->syms.ref(t->Name + "."_s + name->Name) = true;
                 }
             }
         }
@@ -429,7 +429,7 @@ namespace golang::go::doc
             {
                 for(auto [gocpp_ignored, name] : field->Names)
                 {
-                    p->syms[t->Name + "."_s + name->Name] = true;
+                    p->syms.ref(t->Name + "."_s + name->Name) = true;
                 }
             }
         }
@@ -517,7 +517,7 @@ namespace golang::go::doc
                         break;
                     case 1:
                         pkgName = file->Name->Name;
-                        goFiles[filename] = file;
+                        goFiles.ref(filename) = file;
                         break;
                     default:
                         return {nullptr, mocklib::Errorf("file files[%d] filename %q does not have a .go extension"_s, i, filename)};
@@ -551,9 +551,9 @@ namespace golang::go::doc
     {
         if(recv != ""_s)
         {
-            return p->syms[recv + "."_s + name];
+            return p->syms.get(recv + "."_s + name);
         }
-        return p->syms[name];
+        return p->syms.get(name);
     }
 
     // lookupPackage returns the import path identified by name
@@ -567,7 +567,7 @@ namespace golang::go::doc
     {
         gocpp::string importPath;
         bool ok;
-        if(auto [path, ok] = p->importByName[name]; ok)
+        if(auto [path, ok] = p->importByName.lookup(name); ok)
         {
             if(path == ""_s)
             {

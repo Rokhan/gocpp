@@ -134,7 +134,7 @@ namespace golang::go::doc
     void rec::set(methodSet mset, ast::FuncDecl* f, bool preserveAST)
     {
         auto name = f->Name->Name;
-        if(auto g = mset[name]; g != nullptr && g->Doc != ""_s)
+        if(auto g = mset.get(name); g != nullptr && g->Doc != ""_s)
         {
             // A function with the same name has already been registered;
             // since it has documentation, assume f is simply another
@@ -155,7 +155,7 @@ namespace golang::go::doc
             }
             recv = recvString(typ);
         }
-        mset[name] = gocpp::InitPtr<Func>([=](auto& x) {
+        mset.ref(name) = gocpp::InitPtr<Func>([=](auto& x) {
             x.Doc = rec::Text(gocpp::recv(f->Doc));
             x.Name = name;
             x.Decl = f;
@@ -174,16 +174,16 @@ namespace golang::go::doc
     // level than m.
     void rec::add(methodSet mset, Func* m)
     {
-        auto old = mset[m->Name];
+        auto old = mset.get(m->Name);
         if(old == nullptr || m->Level < old->Level)
         {
-            mset[m->Name] = m;
+            mset.ref(m->Name) = m;
             return;
         }
         if(m->Level == old->Level)
         {
             // conflict - mark it using a method with nil Decl
-            mset[m->Name] = gocpp::InitPtr<Func>([=](auto& x) {
+            mset.ref(m->Name) = gocpp::InitPtr<Func>([=](auto& x) {
                 x.Name = m->Name;
                 x.Level = m->Level;
             });
@@ -398,7 +398,7 @@ namespace golang::go::doc
             // no type docs for anonymous types
             return nullptr;
         }
-        if(auto [typ, found] = r->types[name]; found)
+        if(auto [typ, found] = r->types.lookup(name); found)
         {
             return typ;
         }
@@ -409,7 +409,7 @@ namespace golang::go::doc
             x.funcs = gocpp::make(gocpp::Tag<methodSet>());
             x.methods = gocpp::make(gocpp::Tag<methodSet>());
         });
-        r->types[name] = typ;
+        r->types.ref(name) = typ;
         return typ;
     }
 
@@ -430,7 +430,7 @@ namespace golang::go::doc
         {
             ftype->isEmbedded = true;
             auto [gocpp_id_3, ptr] = gocpp::getValue<ast::StarExpr*>(fieldType);
-            parent->embedded[ftype] = ptr;
+            parent->embedded.ref(ftype) = ptr;
         }
         return fname;
     }
@@ -454,7 +454,7 @@ namespace golang::go::doc
         {
             r->fixmap = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::slice<ast::InterfaceType*>>>());
         }
-        r->fixmap[predecl] = append(r->fixmap[predecl], typ);
+        r->fixmap.ref(predecl) = append(r->fixmap.get(predecl), typ);
     }
 
     gocpp::slice<gocpp::string> specNames(gocpp::slice<ast::Spec> specs)
@@ -650,7 +650,7 @@ namespace golang::go::doc
     // isPredeclared reports whether n denotes a predeclared type.
     bool rec::isPredeclared(reader* r, gocpp::string n)
     {
-        return predeclaredTypes[n] && r->types[n] == nullptr;
+        return predeclaredTypes.get(n) && r->types.get(n) == nullptr;
     }
 
     // readFunc processes a func or method declaration.
@@ -806,7 +806,7 @@ namespace golang::go::doc
             if(body != ""_s)
             {
                 auto marker = text.make_slice(m[2], m[3]);
-                r->notes[marker] = append(r->notes[marker], gocpp::InitPtr<Note>([=](auto& x) {
+                r->notes.ref(marker) = append(r->notes.get(marker), gocpp::InitPtr<Note>([=](auto& x) {
                     x.Pos = rec::Pos(gocpp::recv(list[0]));
                     x.End = rec::End(gocpp::recv(list[len(list) - 1]));
                     x.UID = text.make_slice(m[4], m[5]);
@@ -891,7 +891,7 @@ namespace golang::go::doc
                                         {
                                             if(auto [import_, err] = strconv::Unquote(s->Path->Value); err == nullptr)
                                             {
-                                                r->imports[import_] = 1;
+                                                r->imports.ref(import_) = 1;
                                                 gocpp::string name = {};
                                                 if(s->Name != nullptr)
                                                 {
@@ -907,16 +907,16 @@ namespace golang::go::doc
                                                     {
                                                         name = assumedPackageName(import_);
                                                     }
-                                                    auto [old, ok] = r->importByName[name];
+                                                    auto [old, ok] = r->importByName.lookup(name);
                                                     if(! ok)
                                                     {
-                                                        r->importByName[name] = import_;
+                                                        r->importByName.ref(name) = import_;
                                                     }
                                                     else
                                                     if(old != import_ && old != ""_s)
                                                     {
                                                         // ambiguous
-                                                        r->importByName[name] = ""_s;
+                                                        r->importByName.ref(name) = ""_s;
                                                     }
                                                 }
                                             }
@@ -1002,7 +1002,7 @@ namespace golang::go::doc
         // process files in sorted order
         for(auto [gocpp_ignored, filename] : r->filenames)
         {
-            auto f = pkg->Files[filename];
+            auto f = pkg->Files.get(filename);
             if(mode & AllDecls == 0)
             {
                 rec::fileExports(gocpp::recv(r), f);
@@ -1080,7 +1080,7 @@ namespace golang::go::doc
     // collectEmbeddedMethods collects the embedded methods of typ in mset.
     void rec::collectEmbeddedMethods(reader* r, methodSet mset, namedType* typ, gocpp::string recvTypeName, bool embeddedIsPtr, int level, embeddedSet visited)
     {
-        visited[typ] = true;
+        visited.ref(typ) = true;
         for(auto [embedded, isPtr] : typ->embedded)
         {
             // Once an embedded type is embedded as a pointer type
@@ -1097,7 +1097,7 @@ namespace golang::go::doc
                     rec::add(gocpp::recv(mset), customizeRecv(m, recvTypeName, thisEmbeddedIsPtr, level));
                 }
             }
-            if(! visited[embedded])
+            if(! visited.get(embedded))
             {
                 rec::collectEmbeddedMethods(gocpp::recv(r), mset, embedded, recvTypeName, thisEmbeddedIsPtr, level + 1, visited);
             }
@@ -1126,7 +1126,7 @@ namespace golang::go::doc
         // exported fields anymore.
         for(auto [predecl, gocpp_ignored] : r->shadowedPredecl)
         {
-            for(auto [gocpp_ignored, ityp] : r->fixmap[predecl])
+            for(auto [gocpp_ignored, ityp] : r->fixmap.get(predecl))
             {
                 removeAnonymousField(predecl, ityp);
             }
@@ -1142,7 +1142,7 @@ namespace golang::go::doc
         for(auto [gocpp_ignored, t] : r->types)
         {
             auto visible = rec::isVisible(gocpp::recv(r), t->name);
-            auto predeclared = predeclaredTypes[t->name];
+            auto predeclared = predeclaredTypes.get(t->name);
 
             if(t->decl == nullptr && (predeclared || visible && (t->isEmbedded || r->hasDotImp)))
             {
@@ -1158,7 +1158,7 @@ namespace golang::go::doc
                 {
                     // in a correct AST, package-level function names
                     // are all different - no need to check for conflicts
-                    r->funcs[name] = f;
+                    r->funcs.ref(name) = f;
                 }
                 // 3) move methods
                 if(! predeclared)
@@ -1166,9 +1166,9 @@ namespace golang::go::doc
                     for(auto [name, m] : t->methods)
                     {
                         // don't overwrite functions with the same name - drop them
-                        if(auto [gocpp_id_7, found] = r->funcs[name]; ! found)
+                        if(auto [gocpp_id_7, found] = r->funcs.lookup(name); ! found)
                         {
-                            r->funcs[name] = m;
+                            r->funcs.ref(name) = m;
                         }
                     }
                 }
@@ -1323,7 +1323,7 @@ namespace golang::go::doc
     // IsPredeclared reports whether s is a predeclared identifier.
     bool IsPredeclared(gocpp::string s)
     {
-        return predeclaredTypes[s] || predeclaredFuncs[s] || predeclaredConstants[s];
+        return predeclaredTypes.get(s) || predeclaredFuncs.get(s) || predeclaredConstants.get(s);
     }
 
     gocpp::map<gocpp::string, bool> predeclaredTypes = gocpp::map<gocpp::string, bool> {

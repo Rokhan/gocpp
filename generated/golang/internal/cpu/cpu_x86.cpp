@@ -36,35 +36,35 @@ namespace golang::internal::cpu
     void doinit()
     {
         options = gocpp::slice<option> {
-            gocpp::Init<>([=](auto& x) {
+            gocpp::Init<cpu::option>([=](auto& x) {
             x.Name = "adx"_s;
             x.Feature = & X86.HasADX;
         }),
-            gocpp::Init<>([=](auto& x) {
+            gocpp::Init<cpu::option>([=](auto& x) {
             x.Name = "aes"_s;
             x.Feature = & X86.HasAES;
         }),
-            gocpp::Init<>([=](auto& x) {
+            gocpp::Init<cpu::option>([=](auto& x) {
             x.Name = "erms"_s;
             x.Feature = & X86.HasERMS;
         }),
-            gocpp::Init<>([=](auto& x) {
+            gocpp::Init<cpu::option>([=](auto& x) {
             x.Name = "fsrm"_s;
             x.Feature = & X86.HasFSRM;
         }),
-            gocpp::Init<>([=](auto& x) {
+            gocpp::Init<cpu::option>([=](auto& x) {
             x.Name = "pclmulqdq"_s;
             x.Feature = & X86.HasPCLMULQDQ;
         }),
-            gocpp::Init<>([=](auto& x) {
+            gocpp::Init<cpu::option>([=](auto& x) {
             x.Name = "rdtscp"_s;
             x.Feature = & X86.HasRDTSCP;
         }),
-            gocpp::Init<>([=](auto& x) {
+            gocpp::Init<cpu::option>([=](auto& x) {
             x.Name = "sha"_s;
             x.Feature = & X86.HasSHA;
         }),
-            gocpp::Init<>([=](auto& x) {
+            gocpp::Init<cpu::option>([=](auto& x) {
             x.Name = "vpclmulqdq"_s;
             x.Feature = & X86.HasAVX512VPCLMULQDQ;
         })

@@ -149,7 +149,7 @@ namespace golang::go::types
     // object exists; otherwise the result is nil.
     Object rec::Lookup(golang::go::types::Scope* s, gocpp::string name)
     {
-        return resolve(name, s->elems[name]);
+        return resolve(name, s->elems.get(name));
     }
 
     // lookupIgnoringCase returns the objects in scope s whose names match
@@ -202,7 +202,7 @@ namespace golang::go::types
     // will be set to s after resolve is called.
     bool rec::_InsertLazy(golang::go::types::Scope* s, gocpp::string name, std::function<Object ()> resolve)
     {
-        if(s->elems[name] != nullptr)
+        if(s->elems.get(name) != nullptr)
         {
             return false;
         }
@@ -219,7 +219,7 @@ namespace golang::go::types
         {
             s->elems = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Object>>());
         }
-        s->elems[name] = obj;
+        s->elems.ref(name) = obj;
     }
 
     // WriteTo writes a string representation of the scope to w,

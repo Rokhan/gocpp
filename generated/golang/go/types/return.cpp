@@ -89,7 +89,7 @@ namespace golang::go::types
                 {
                     ast::ExprStmt* s = gocpp::any_cast<ast::ExprStmt*>(s_ref);
                     // calling the predeclared (possibly parenthesized) panic() function is terminating
-                    if(auto [call, ok] = gocpp::getValue<ast::CallExpr*>(ast::Unparen(s->X)); ok && check->environment.isPanic[call])
+                    if(auto [call, ok] = gocpp::getValue<ast::CallExpr*>(ast::Unparen(s->X)); ok && check->environment.isPanic.get(call))
                     {
                         return true;
                     }

@@ -13,6 +13,32 @@
 namespace golang::main
 {
     void main();
+    void testReadsDoNotInsert();
+    void testCompoundOps();
+    void testCopyAndSwap();
+    void testAppendIdiom();
+    struct Vertex
+    {
+        double Lat{};
+        double Long{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
+    void testValueTypes();
+    void testNested();
+    void testDeleteDuringRange();
+    void testNilMutationPanic();
+    void testCommaOkAssign();
 
     namespace rec
     {

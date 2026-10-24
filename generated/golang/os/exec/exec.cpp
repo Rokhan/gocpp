@@ -1826,12 +1826,12 @@ namespace golang::os::exec
             {
                 k = strings::ToLower(k);
             }
-            if(saw[k])
+            if(saw.get(k))
             {
                 continue;
             }
 
-            saw[k] = true;
+            saw.ref(k) = true;
             out = append(out, kv);
         }
 

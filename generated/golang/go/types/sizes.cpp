@@ -472,22 +472,22 @@ namespace golang::go::types
 
     // common architecture word sizes and alignments
     gocpp::map<gocpp::string, gcSizes*> gcArchSizes = gocpp::map<gocpp::string, gcSizes*> {
-        { "386"_s, {4, 4} },
-        { "amd64"_s, {8, 8} },
-        { "amd64p32"_s, {4, 8} },
-        { "arm"_s, {4, 4} },
-        { "arm64"_s, {8, 8} },
-        { "loong64"_s, {8, 8} },
-        { "mips"_s, {4, 4} },
-        { "mipsle"_s, {4, 4} },
-        { "mips64"_s, {8, 8} },
-        { "mips64le"_s, {8, 8} },
-        { "ppc64"_s, {8, 8} },
-        { "ppc64le"_s, {8, 8} },
-        { "riscv64"_s, {8, 8} },
-        { "s390x"_s, {8, 8} },
-        { "sparc64"_s, {8, 8} },
-        { "wasm"_s, {8, /* When adding more architectures here,
+        { "386"_s, new types::gcSizes {4, 4} },
+        { "amd64"_s, new types::gcSizes {8, 8} },
+        { "amd64p32"_s, new types::gcSizes {4, 8} },
+        { "arm"_s, new types::gcSizes {4, 4} },
+        { "arm64"_s, new types::gcSizes {8, 8} },
+        { "loong64"_s, new types::gcSizes {8, 8} },
+        { "mips"_s, new types::gcSizes {4, 4} },
+        { "mipsle"_s, new types::gcSizes {4, 4} },
+        { "mips64"_s, new types::gcSizes {8, 8} },
+        { "mips64le"_s, new types::gcSizes {8, 8} },
+        { "ppc64"_s, new types::gcSizes {8, 8} },
+        { "ppc64le"_s, new types::gcSizes {8, 8} },
+        { "riscv64"_s, new types::gcSizes {8, 8} },
+        { "s390x"_s, new types::gcSizes {8, 8} },
+        { "sparc64"_s, new types::gcSizes {8, 8} },
+        { "wasm"_s, new types::gcSizes {8, /* When adding more architectures here,
         update the doc string of SizesFor below. */ 8} }
     };
     // SizesFor returns the Sizes used by a compiler for an architecture.
@@ -513,7 +513,7 @@ namespace golang::go::types
                     }
                     break;
                 case 1:
-                    if(auto [s, ok] = gccgoArchSizes[arch]; ok)
+                    if(auto [s, ok] = gccgoArchSizes.lookup(arch); ok)
                     {
                         return Sizes(s);
                     }

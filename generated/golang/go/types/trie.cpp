@@ -37,7 +37,7 @@ namespace golang::go::types
         // A key serves as the path from the trie root to its corresponding value.
         for(auto [l, index] : key)
         {
-            if(auto [v, exists] = tr[index]; exists)
+            if(auto [v, exists] = tr.lookup(index); exists)
             {
                 // An entry already exists for this index; check its type to determine collision.
                 //Go type switch emulation
@@ -89,11 +89,11 @@ namespace golang::go::types
                 if(l == len(key) - 1)
                 {
                     // No prefix collision detected; insert val as a new leaf node.
-                    tr[index] = val;
+                    tr.ref(index) = val;
                     return {val, 0};
                 }
                 auto node = gocpp::make(trie<V>);
-                tr[index] = node;
+                tr.ref(index) = node;
                 tr = node;
             }
         }
@@ -163,7 +163,7 @@ namespace golang::go::types
         }
         // guarantee deterministic element pick
         sort::Ints(keys);
-        return tr[keys[0]];
+        return tr.get(keys[0]);
     }
 
 }

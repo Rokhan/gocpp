@@ -171,9 +171,9 @@ namespace golang::regexp::syntax
         {
             *flags = gocpp::make(gocpp::Tag<gocpp::map<Regexp*, printFlags>>());
         }
-        (*flags)[start] = f;
+        (*flags).ref(start) = f;
         // maybe start==last
-        (*flags)[last] |= flagOff;
+        (*flags).ref(last) |= flagOff;
     }
 
     // calcFlags calculates the flags to print around each subexpression in re,
@@ -342,7 +342,7 @@ namespace golang::regexp::syntax
         gocpp::Defer defer;
         try
         {
-            f |= flags[re];
+            f |= flags.get(re);
             if(f & flagPrec != 0 && f &^ (flagOff | flagPrec) != 0 && f & flagOff != 0)
             {
                 // flagPrec is redundant with other flags being added and terminated
@@ -518,7 +518,7 @@ namespace golang::regexp::syntax
                         }
                         if(re->Sub[0]->Op != OpEmptyMatch)
                         {
-                            writeRegexp(b, re->Sub[0], flags[re->Sub[0]], flags);
+                            writeRegexp(b, re->Sub[0], flags.get(re->Sub[0]), flags);
                         }
                         rec::WriteRune(gocpp::recv(b), ')');
                         break;

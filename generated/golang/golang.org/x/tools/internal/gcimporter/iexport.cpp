@@ -288,11 +288,11 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                 x.fset = fset;
                 x.version = version;
                 x.shallow = shallow;
-                x.allPkgs = gocpp::map<types::Package*, bool> {};
-                x.stringIndex = gocpp::map<gocpp::string, uint64_t> {};
-                x.declIndex = gocpp::map<types::Object, uint64_t> {};
-                x.tparamNames = gocpp::map<types::Object, gocpp::string> {};
-                x.typIndex = gocpp::map<types::Type, uint64_t> {};
+                x.allPkgs = gocpp::map<types::Package*, bool> {gocpp::non_nil};
+                x.stringIndex = gocpp::map<gocpp::string, uint64_t> {gocpp::non_nil};
+                x.declIndex = gocpp::map<types::Object, uint64_t> {gocpp::non_nil};
+                x.tparamNames = gocpp::map<types::Object, gocpp::string> {gocpp::non_nil};
+                x.typIndex = gocpp::map<types::Type, uint64_t> {gocpp::non_nil};
             });
             if(! bundle)
             {
@@ -301,7 +301,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
             for(auto [i, pt] : predeclared())
             {
-                p.typIndex[pt] = uint64_t(i);
+                p.typIndex.ref(pt) = uint64_t(i);
             }
             if(len(p.typIndex) > predeclReserved)
             {
@@ -323,10 +323,10 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                 if(bundle)
                 {
                     // Ensure pkg and its imports are included in the index.
-                    p.allPkgs[pkg] = true;
+                    p.allPkgs.ref(pkg) = true;
                     for(auto [gocpp_ignored, imp] : rec::Imports(gocpp::recv(pkg)))
                     {
-                        p.allPkgs[imp] = true;
+                        p.allPkgs.ref(imp) = true;
                     }
                 }
             }
@@ -497,24 +497,24 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             }
         };
         // Build a map from packages to objects from that package.
-        auto pkgObjs = gocpp::map<types::Package*, gocpp::slice<pkgObj>> {};
+        auto pkgObjs = gocpp::map<types::Package*, gocpp::slice<pkgObj>> {gocpp::non_nil};
 
         // For the main index, make sure to include every package that
         // we reference, even if we're not exporting (or reexporting)
         // any symbols from it.
         if(w->p->localpkg != nullptr)
         {
-            pkgObjs[w->p->localpkg] = nullptr;
+            pkgObjs.ref(w->p->localpkg) = nullptr;
         }
         for(auto [pkg, gocpp_ignored] : w->p->allPkgs)
         {
-            pkgObjs[pkg] = nullptr;
+            pkgObjs.ref(pkg) = nullptr;
         }
 
         for(auto [obj, gocpp_ignored] : index)
         {
             auto name = rec::exportName(gocpp::recv(w->p), obj);
-            pkgObjs[rec::Pkg(gocpp::recv(obj))] = append(pkgObjs[rec::Pkg(gocpp::recv(obj))], pkgObj {obj, name});
+            pkgObjs.ref(rec::Pkg(gocpp::recv(obj))) = append(pkgObjs.get(rec::Pkg(gocpp::recv(obj))), pkgObj {obj, name});
         }
 
         gocpp::slice<types::Package*> pkgs = {};
@@ -541,12 +541,12 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             // package height is not needed for go/types
             rec::uint64(gocpp::recv(w), uint64_t(0));
 
-            auto objs = pkgObjs[pkg];
+            auto objs = pkgObjs.get(pkg);
             rec::uint64(gocpp::recv(w), uint64_t(len(objs)));
             for(auto [gocpp_ignored, obj] : objs)
             {
                 rec::string(gocpp::recv(w), obj.name);
-                rec::uint64(gocpp::recv(w), index[obj.obj]);
+                rec::uint64(gocpp::recv(w), index.get(obj.obj));
             }
         }
     }
@@ -556,7 +556,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     gocpp::string rec::exportName(iexporter* p, types::Object obj)
     {
         gocpp::string res;
-        if(auto name = p->tparamNames[obj]; name != ""_s)
+        if(auto name = p->tparamNames.get(obj); name != ""_s)
         {
             return name;
         }
@@ -697,11 +697,11 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     // If not already present, it's added to the end.
     uint64_t rec::stringOff(iexporter* p, gocpp::string s)
     {
-        auto [off, ok] = p->stringIndex[s];
+        auto [off, ok] = p->stringIndex.lookup(s);
         if(! ok)
         {
             off = uint64_t(rec::Len(gocpp::recv(p->strings)));
-            p->stringIndex[s] = off;
+            p->stringIndex.ref(s) = off;
 
             rec::uint64(gocpp::recv(p->strings), uint64_t(len(s)));
             rec::WriteString(gocpp::recv(p->strings), s);
@@ -712,7 +712,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     // fileIndexAndOffset returns the index of the token.File and the byte offset of pos within it.
     std::tuple<uint64_t, uint64_t> rec::fileIndexAndOffset(iexporter* p, token::File* file, token::Pos pos)
     {
-        auto [index, ok] = p->fileInfo[file];
+        auto [index, ok] = p->fileInfo.lookup(file);
         if(! ok)
         {
             index = uint64_t(len(p->fileInfo));
@@ -723,7 +723,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             {
                 p->fileInfo = gocpp::make(gocpp::Tag<gocpp::map<token::File*, uint64_t>>());
             }
-            p->fileInfo[file] = index;
+            p->fileInfo.ref(file) = index;
         }
         // Record each needed offset.
         auto info = p->fileInfos[index];
@@ -749,13 +749,13 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return;
         }
 
-        if(auto [gocpp_id_0, ok] = p->declIndex[obj]; ok)
+        if(auto [gocpp_id_0, ok] = p->declIndex.lookup(obj); ok)
         {
             return;
         }
 
         // mark obj present in work queue
-        p->declIndex[obj] = ~ uint64_t(0);
+        p->declIndex.ref(obj) = ~ uint64_t(0);
         rec::pushTail(gocpp::recv(p->declTodo), obj);
     }
 
@@ -996,7 +996,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                                 for(auto [rparam, gocpp_ignored] : rec::TypeParams(gocpp::recv(rparams)))
                                 {
                                     auto name = tparamExportName(prefix, rparam);
-                                    w->p->tparamNames[rec::Obj(gocpp::recv(rparam))] = name;
+                                    w->p->tparamNames.ref(rec::Obj(gocpp::recv(rparam))) = name;
                                 }
                             }
                             rec::param(gocpp::recv(w), rec::Recv(gocpp::recv(sig)));
@@ -1014,7 +1014,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                 }
             }
 
-            p->declIndex[obj] = rec::flush(gocpp::recv(w));
+            p->declIndex.ref(obj) = rec::flush(gocpp::recv(w));
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1152,7 +1152,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             gocpp::panic("nil package"_s);
         }
         // Ensure any referenced packages are declared in the main index.
-        w->p->allPkgs[pkg] = true;
+        w->p->allPkgs.ref(pkg) = true;
 
         rec::string(gocpp::recv(w), rec::exportPath(gocpp::recv(w), pkg));
     }
@@ -1193,13 +1193,13 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     uint64_t rec::typOff(iexporter* p, types::Type t, types::Package* pkg)
     {
-        auto [off, ok] = p->typIndex[t];
+        auto [off, ok] = p->typIndex.lookup(t);
         if(! ok)
         {
             auto w = rec::newWriter(gocpp::recv(p));
             rec::doTyp(gocpp::recv(w), t, pkg);
             off = predeclReserved + rec::flush(gocpp::recv(w));
-            p->typIndex[t] = off;
+            p->typIndex.ref(t) = off;
         }
         return off;
     }
@@ -1566,7 +1566,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         {
             // Set the type parameter exportName before exporting its type.
             auto exportName = tparamExportName(prefix, tparam);
-            w->p->tparamNames[rec::Obj(gocpp::recv(tparam))] = exportName;
+            w->p->tparamNames.ref(rec::Obj(gocpp::recv(tparam))) = exportName;
             rec::typ(gocpp::recv(w), tparam, pkg);
         }
     }

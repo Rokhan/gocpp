@@ -129,7 +129,7 @@ namespace golang::runtime
             {
                 name = "."_s + name;
             }
-            syms[name] = val;
+            syms.ref(name) = val;
         }
         return {md->pluginpath, syms, md->inittasks, ""_s};
     }

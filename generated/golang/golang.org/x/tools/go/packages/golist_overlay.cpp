@@ -41,7 +41,7 @@ namespace golang::golang_org::x::tools::go::packages
         {
             return {nullptr, err};
         }
-        if(env["GOMOD"_s] != ""_s)
+        if(env.get("GOMOD"_s) != ""_s)
         {
             rec::Do(gocpp::recv(state->rootsOnce), [=]() mutable -> void
             {
@@ -76,8 +76,8 @@ namespace golang::golang_org::x::tools::go::packages
                 return {nullptr, err};
             }
         }
-        auto roots = gocpp::map<gocpp::string, gocpp::string> {};
-        auto modules = gocpp::map<gocpp::string, gocpp::string> {};
+        auto roots = gocpp::map<gocpp::string, gocpp::string> {gocpp::non_nil};
+        auto modules = gocpp::map<gocpp::string, gocpp::string> {gocpp::non_nil};
         int i = {};
         for(auto dec = json::NewDecoder(out); rec::More(gocpp::recv(dec)); )
         {
@@ -94,11 +94,11 @@ namespace golang::golang_org::x::tools::go::packages
                 {
                     return {nullptr, err};
                 }
-                modules[absDir] = mod->Path;
+                modules.ref(absDir) = mod->Path;
                 // The first result is the main module.
                 if(i == 0 || mod->Replace != nullptr && mod->Replace->Path != ""_s)
                 {
-                    roots[absDir] = mod->Path;
+                    roots.ref(absDir) = mod->Path;
                 }
             }
             i++;
@@ -108,15 +108,15 @@ namespace golang::golang_org::x::tools::go::packages
 
     std::tuple<gocpp::map<gocpp::string, gocpp::string>, gocpp::error> rec::determineRootDirsGOPATH(golistState* state)
     {
-        auto m = gocpp::map<gocpp::string, gocpp::string> {};
-        for(auto [gocpp_ignored, dir] : filepath::SplitList(rec::mustGetEnv(gocpp::recv(state))["GOPATH"_s]))
+        auto m = gocpp::map<gocpp::string, gocpp::string> {gocpp::non_nil};
+        for(auto [gocpp_ignored, dir] : filepath::SplitList(rec::mustGetEnv(gocpp::recv(state)).get("GOPATH"_s)))
         {
             auto [absDir, err] = filepath::Abs(dir);
             if(err != nullptr)
             {
                 return {nullptr, err};
             }
-            m[filepath::Join(absDir, "src"_s)] = ""_s;
+            m.ref(filepath::Join(absDir, "src"_s)) = ""_s;
         }
         return {m, nullptr};
     }

@@ -59,36 +59,36 @@ namespace golang::go::types
     // Use Universe.Lookup("byte").Type() to obtain the specific
     // alias basic type named "byte" (and analogous for "rune").
     gocpp::slice<Basic*> Typ = gocpp::Init<gocpp::slice<Basic*>>([](auto& x) {
-        x[Invalid] = {Invalid, 0, "invalid type"_s};
-        x[Bool] = {Bool, IsBoolean, "bool"_s};
-        x[Int] = {Int, IsInteger, "int"_s};
-        x[Int8] = {Int8, IsInteger, "int8"_s};
-        x[Int16] = {Int16, IsInteger, "int16"_s};
-        x[Int32] = {Int32, IsInteger, "int32"_s};
-        x[Int64] = {Int64, IsInteger, "int64"_s};
-        x[Uint] = {Uint, IsInteger | IsUnsigned, "uint"_s};
-        x[Uint8] = {Uint8, IsInteger | IsUnsigned, "uint8"_s};
-        x[Uint16] = {Uint16, IsInteger | IsUnsigned, "uint16"_s};
-        x[Uint32] = {Uint32, IsInteger | IsUnsigned, "uint32"_s};
-        x[Uint64] = {Uint64, IsInteger | IsUnsigned, "uint64"_s};
-        x[Uintptr] = {Uintptr, IsInteger | IsUnsigned, "uintptr"_s};
-        x[Float32] = {Float32, IsFloat, "float32"_s};
-        x[Float64] = {Float64, IsFloat, "float64"_s};
-        x[Complex64] = {Complex64, IsComplex, "complex64"_s};
-        x[Complex128] = {Complex128, IsComplex, "complex128"_s};
-        x[types::String] = {types::String, IsString, "string"_s};
-        x[UnsafePointer] = {UnsafePointer, 0, "Pointer"_s};
-        x[UntypedBool] = {UntypedBool, IsBoolean | IsUntyped, "untyped bool"_s};
-        x[UntypedInt] = {UntypedInt, IsInteger | IsUntyped, "untyped int"_s};
-        x[UntypedRune] = {UntypedRune, IsInteger | IsUntyped, "untyped rune"_s};
-        x[UntypedFloat] = {UntypedFloat, IsFloat | IsUntyped, "untyped float"_s};
-        x[UntypedComplex] = {UntypedComplex, IsComplex | IsUntyped, "untyped complex"_s};
-        x[UntypedString] = {UntypedString, IsString | IsUntyped, "untyped string"_s};
-        x[UntypedNil] = {UntypedNil, IsUntyped, "untyped nil"_s};
+        x[Invalid] = new types::Basic {Invalid, 0, "invalid type"_s};
+        x[Bool] = new types::Basic {Bool, IsBoolean, "bool"_s};
+        x[Int] = new types::Basic {Int, IsInteger, "int"_s};
+        x[Int8] = new types::Basic {Int8, IsInteger, "int8"_s};
+        x[Int16] = new types::Basic {Int16, IsInteger, "int16"_s};
+        x[Int32] = new types::Basic {Int32, IsInteger, "int32"_s};
+        x[Int64] = new types::Basic {Int64, IsInteger, "int64"_s};
+        x[Uint] = new types::Basic {Uint, IsInteger | IsUnsigned, "uint"_s};
+        x[Uint8] = new types::Basic {Uint8, IsInteger | IsUnsigned, "uint8"_s};
+        x[Uint16] = new types::Basic {Uint16, IsInteger | IsUnsigned, "uint16"_s};
+        x[Uint32] = new types::Basic {Uint32, IsInteger | IsUnsigned, "uint32"_s};
+        x[Uint64] = new types::Basic {Uint64, IsInteger | IsUnsigned, "uint64"_s};
+        x[Uintptr] = new types::Basic {Uintptr, IsInteger | IsUnsigned, "uintptr"_s};
+        x[Float32] = new types::Basic {Float32, IsFloat, "float32"_s};
+        x[Float64] = new types::Basic {Float64, IsFloat, "float64"_s};
+        x[Complex64] = new types::Basic {Complex64, IsComplex, "complex64"_s};
+        x[Complex128] = new types::Basic {Complex128, IsComplex, "complex128"_s};
+        x[types::String] = new types::Basic {types::String, IsString, "string"_s};
+        x[UnsafePointer] = new types::Basic {UnsafePointer, 0, "Pointer"_s};
+        x[UntypedBool] = new types::Basic {UntypedBool, IsBoolean | IsUntyped, "untyped bool"_s};
+        x[UntypedInt] = new types::Basic {UntypedInt, IsInteger | IsUntyped, "untyped int"_s};
+        x[UntypedRune] = new types::Basic {UntypedRune, IsInteger | IsUntyped, "untyped rune"_s};
+        x[UntypedFloat] = new types::Basic {UntypedFloat, IsFloat | IsUntyped, "untyped float"_s};
+        x[UntypedComplex] = new types::Basic {UntypedComplex, IsComplex | IsUntyped, "untyped complex"_s};
+        x[UntypedString] = new types::Basic {UntypedString, IsString | IsUntyped, "untyped string"_s};
+        x[UntypedNil] = new types::Basic {UntypedNil, IsUntyped, "untyped nil"_s};
     });
     gocpp::array<Basic*, 2> basicAliases = gocpp::array<Basic*, 2> {
-        {Byte, IsInteger | IsUnsigned, "byte"_s},
-        {Rune, IsInteger, "rune"_s}
+        new types::Basic {Byte, IsInteger | IsUnsigned, "byte"_s},
+        new types::Basic {Rune, IsInteger, "rune"_s}
     };
     void defPredeclaredTypes()
     {

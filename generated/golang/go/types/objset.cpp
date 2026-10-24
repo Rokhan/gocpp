@@ -29,7 +29,7 @@ namespace golang::go::types
     Object rec::insert(objset* s, Object obj)
     {
         auto id = rec::Id(gocpp::recv(obj));
-        if(auto alt = (*s)[id]; alt != nullptr)
+        if(auto alt = (*s).get(id); alt != nullptr)
         {
             return alt;
         }
@@ -37,7 +37,7 @@ namespace golang::go::types
         {
             *s = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Object>>());
         }
-        (*s)[id] = obj;
+        (*s).ref(id) = obj;
         return nullptr;
     }
 

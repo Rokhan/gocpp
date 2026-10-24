@@ -96,7 +96,7 @@ namespace golang::internal::trace::tracev2
         auto nameToType = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, EventType>>());
         for(auto [i, spec] : specs)
         {
-            nameToType[spec.Name] = EventType((unsigned char)(i));
+            nameToType.ref(spec.Name) = EventType((unsigned char)(i));
         }
         return nameToType;
     }

@@ -355,14 +355,14 @@ namespace golang::go::types
                     {
                         case 0:
                             allMethods = append(allMethods, m);
-                            mpos[m] = pos;
+                            mpos.ref(m) = pos;
                             break;
                         case 1:
                             if(check != nullptr)
                             {
                                 auto err = rec::newError(gocpp::recv(check), DuplicateDecl);
                                 rec::addf(gocpp::recv(err), atPos(pos), "duplicate method %s"_s, m->object.name);
-                                rec::addf(gocpp::recv(err), atPos(mpos[gocpp::getValue<Func*>(other)]), "other declaration of method %s"_s, m->object.name);
+                                rec::addf(gocpp::recv(err), atPos(mpos.get(gocpp::getValue<Func*>(other))), "other declaration of method %s"_s, m->object.name);
                                 rec::report(gocpp::recv(err));
                             }
                             break;
@@ -380,7 +380,7 @@ namespace golang::go::types
                                     {
                                         auto err = rec::newError(gocpp::recv(check), DuplicateDecl);
                                         rec::addf(gocpp::recv(err), atPos(pos), "duplicate method %s"_s, m->object.name);
-                                        rec::addf(gocpp::recv(err), atPos(mpos[gocpp::getValue<Func*>(other)]), "other declaration of method %s"_s, m->object.name);
+                                        rec::addf(gocpp::recv(err), atPos(mpos.get(gocpp::getValue<Func*>(other))), "other declaration of method %s"_s, m->object.name);
                                         rec::report(gocpp::recv(err));
                                     }
                                 })), atPos(pos), "duplicate method check for %s"_s, m->object.name);
@@ -467,7 +467,7 @@ namespace golang::go::types
                             {
                                 continue;
                             }
-                            terms = termlist {{false, typ}};
+                            terms = termlist {new types::term {false, typ}};
                             break;
                         }
                     }
@@ -557,13 +557,13 @@ namespace golang::go::types
     // The result is &invalidTypeSet if the union overflows.
     _TypeSet* computeUnionTypeSet(Checker* check, gocpp::map<Union*, _TypeSet*> unionSets, token::Pos pos, Union* utyp)
     {
-        if(auto [tset, gocpp_id_1] = unionSets[utyp]; tset != nullptr)
+        if(auto [tset, gocpp_id_1] = unionSets.lookup(utyp); tset != nullptr)
         {
             return tset;
         }
 
         // avoid infinite recursion (see also computeInterfaceTypeSet)
-        unionSets[utyp] = new types::_TypeSet{};
+        unionSets.ref(utyp) = new types::_TypeSet{};
 
         termlist allTerms = {};
         for(auto [gocpp_ignored, t] : utyp->terms)
@@ -601,13 +601,13 @@ namespace golang::go::types
                 {
                     rec::errorf(gocpp::recv(check), atPos(pos), InvalidUnion, "cannot handle more than %d union terms (implementation limitation)"_s, maxTermCount);
                 }
-                unionSets[utyp] = & invalidTypeSet;
-                return unionSets[utyp];
+                unionSets.ref(utyp) = & invalidTypeSet;
+                return unionSets.get(utyp);
             }
         }
-        unionSets[utyp]->terms = allTerms;
+        unionSets.get(utyp)->terms = allTerms;
 
-        return unionSets[utyp];
+        return unionSets.get(utyp);
     }
 
 }

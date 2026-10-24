@@ -394,14 +394,14 @@ namespace golang::golang_org::x::tools::internal::typesinternal
     types::Info* NewTypesInfo()
     {
         return gocpp::InitPtr<types::Info>([=](auto& x) {
-            x.Types = gocpp::map<ast::Expr, types::TypeAndValue> {};
-            x.Instances = gocpp::map<ast::Ident*, types::Instance> {};
-            x.Defs = gocpp::map<ast::Ident*, types::Object> {};
-            x.Uses = gocpp::map<ast::Ident*, types::Object> {};
-            x.Implicits = gocpp::map<ast::Node, types::Object> {};
-            x.Selections = gocpp::map<ast::SelectorExpr*, types::Selection*> {};
-            x.Scopes = gocpp::map<ast::Node, types::Scope*> {};
-            x.FileVersions = gocpp::map<ast::File*, gocpp::string> {};
+            x.Types = gocpp::map<ast::Expr, types::TypeAndValue> {gocpp::non_nil};
+            x.Instances = gocpp::map<ast::Ident*, types::Instance> {gocpp::non_nil};
+            x.Defs = gocpp::map<ast::Ident*, types::Object> {gocpp::non_nil};
+            x.Uses = gocpp::map<ast::Ident*, types::Object> {gocpp::non_nil};
+            x.Implicits = gocpp::map<ast::Node, types::Object> {gocpp::non_nil};
+            x.Selections = gocpp::map<ast::SelectorExpr*, types::Selection*> {gocpp::non_nil};
+            x.Scopes = gocpp::map<ast::Node, types::Scope*> {gocpp::non_nil};
+            x.FileVersions = gocpp::map<ast::File*, gocpp::string> {gocpp::non_nil};
         });
     }
 
@@ -434,7 +434,7 @@ namespace golang::golang_org::x::tools::internal::typesinternal
                     }
                 }
             }
-            if(auto b = info->Scopes[n]; b != nullptr)
+            if(auto b = info->Scopes.get(n); b != nullptr)
             {
                 return b;
             }

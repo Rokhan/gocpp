@@ -458,7 +458,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
 
             // 4. Search the object/type graph for the path to
             // the var (field/param/result) or method.
-            auto [ix, ok] = enc->pkgIndex[pkg];
+            auto [ix, ok] = enc->pkgIndex.lookup(pkg);
             if(! ok)
             {
                 // First search: don't build an index, just traverse.
@@ -473,7 +473,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                     enc->pkgIndex = gocpp::make(gocpp::Tag<gocpp::map<types::Package*, pkgIndex*>>());
                 }
                 // build the index next time
-                enc->pkgIndex[pkg] = ix;
+                enc->pkgIndex.ref(pkg) = ix;
 
                 auto f = gocpp::Init<traversal>([=](auto& x) {
                     x.pkg = pkg;
@@ -501,7 +501,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                 }
 
                 // Second and later searches: consult the index.
-                if(auto [offset, ok] = ix->offsets[obj]; ok)
+                if(auto [offset, ok] = ix->offsets.lookup(obj); ok)
                 {
                     return {rec::path(gocpp::recv(ix), offset), nullptr};
                 }
@@ -558,7 +558,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
             else
             {
                 offset = rec::emitPackageLevel(gocpp::recv(tr->ix), i);
-                tr->ix->offsets[obj] = offset;
+                tr->ix->offsets.ref(obj) = offset;
                 offset = rec::emitPathSegment(gocpp::recv(tr->ix), offset, opType, - 1);
             }
 
@@ -615,7 +615,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                     else
                     {
                         offset = rec::emitPackageLevel(gocpp::recv(tr->ix), i);
-                        tr->ix->offsets[obj] = offset;
+                        tr->ix->offsets.ref(obj) = offset;
                     }
                     rec::typ(gocpp::recv(tr), path, offset, opType, - 1, rec::Type(gocpp::recv(obj)));
                 }
@@ -634,7 +634,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                 else
                 {
                     // Inv: map entry for obj was populated in first pass.
-                    offset = rec::emitPathSegment(gocpp::recv(tr->ix), tr->ix->offsets[obj], opType, - 1);
+                    offset = rec::emitPathSegment(gocpp::recv(tr->ix), tr->ix->offsets.get(obj), opType, - 1);
                 }
 
                 // Inspect declared methods of defined types.
@@ -838,13 +838,13 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                             // embedded method from another package
                             continue;
                         }
-                        if(! tr->seenMethods[m])
+                        if(! tr->seenMethods.get(m))
                         {
                             if(tr->seenMethods == nullptr)
                             {
                                 tr->seenMethods = gocpp::make(gocpp::Tag<gocpp::map<types::Func*, bool>>());
                             }
-                            tr->seenMethods[m] = true;
+                            tr->seenMethods.ref(m) = true;
                             rec::object(gocpp::recv(tr), path, offset, opMethod, i, m);
                         }
                     }
@@ -860,13 +860,13 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                         // type parameter from another package
                         return;
                     }
-                    if(! tr->seenTParamNames[tname])
+                    if(! tr->seenTParamNames.get(tname))
                     {
                         if(tr->seenTParamNames == nullptr)
                         {
                             tr->seenTParamNames = gocpp::make(gocpp::Tag<gocpp::map<types::TypeName*, bool>>());
                         }
-                        tr->seenTParamNames[tname] = true;
+                        tr->seenTParamNames.ref(tname) = true;
                         rec::object(gocpp::recv(tr), path, offset, opObj, - 1, tname);
                         rec::typ(gocpp::recv(tr), path, offset, opConstraint, - 1, rec::Constraint(gocpp::recv(T)));
                     }
@@ -914,9 +914,9 @@ namespace golang::golang_org::x::tools::go::types::objectpath
         else
         {
             offset = rec::emitPathSegment(gocpp::recv(tr->ix), offset, op, index);
-            if(auto [gocpp_id_6, ok] = tr->ix->offsets[obj]; ! ok)
+            if(auto [gocpp_id_6, ok] = tr->ix->offsets.lookup(obj); ! ok)
             {
-                tr->ix->offsets[obj] = offset;
+                tr->ix->offsets.ref(obj) = offset;
             }
             offset = rec::emitPathSegment(gocpp::recv(tr->ix), offset, opType, - 1);
         }

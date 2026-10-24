@@ -160,7 +160,7 @@ namespace golang::go::types
             rec::Lock(gocpp::recv(ctxt->mu));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(ctxt->mu)); });
 
-            for(auto [gocpp_ignored, e] : ctxt->typeMap[h])
+            for(auto [gocpp_ignored, e] : ctxt->typeMap.get(h))
             {
                 if(identicalInstance(orig, targs, e.orig, e.targs))
                 {
@@ -195,7 +195,7 @@ namespace golang::go::types
             rec::Lock(gocpp::recv(ctxt->mu));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(ctxt->mu)); });
 
-            for(auto [gocpp_ignored, e] : ctxt->typeMap[h])
+            for(auto [gocpp_ignored, e] : ctxt->typeMap.get(h))
             {
                 if(inst == nullptr || Identical(inst, e.instance))
                 {
@@ -208,7 +208,7 @@ namespace golang::go::types
                 }
             }
 
-            ctxt->typeMap[h] = append(ctxt->typeMap[h], gocpp::Init<ctxtEntry>([=](auto& x) {
+            ctxt->typeMap.ref(h) = append(ctxt->typeMap.get(h), gocpp::Init<ctxtEntry>([=](auto& x) {
                 x.orig = orig;
                 x.targs = targs;
                 x.instance = inst;
@@ -230,11 +230,11 @@ namespace golang::go::types
         {
             rec::Lock(gocpp::recv(ctxt->mu));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(ctxt->mu)); });
-            auto [id, ok] = ctxt->originIDs[t];
+            auto [id, ok] = ctxt->originIDs.lookup(t);
             if(! ok)
             {
                 id = ctxt->nextID;
-                ctxt->originIDs[t] = id;
+                ctxt->originIDs.ref(t) = id;
                 ctxt->nextID++;
             }
             return id;

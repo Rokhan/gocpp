@@ -298,7 +298,7 @@ namespace golang::go::types
     // If dynamic is set, non-type parameter interfaces are always comparable.
     typeError* comparableType(golang::go::types::Type T, bool dynamic, gocpp::map<golang::go::types::Type, bool> seen)
     {
-        if(seen[T])
+        if(seen.get(T))
         {
             return nullptr;
         }
@@ -306,7 +306,7 @@ namespace golang::go::types
         {
             seen = gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, bool>>());
         }
-        seen[T] = true;
+        seen.ref(T) = true;
 
         //Go type switch emulation
         {

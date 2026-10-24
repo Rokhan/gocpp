@@ -450,7 +450,7 @@ namespace golang::go::types
             // ignore this entry
             // ignore this entry
             {
-                prev[e.typ] = n;
+                prev.ref(e.typ) = n;
                 list[n] = e;
                 n++;
             }
@@ -461,7 +461,7 @@ namespace golang::go::types
     std::tuple<int, bool> lookupType(gocpp::map<golang::go::types::Type, int> m, golang::go::types::Type typ)
     {
         // fast path: maybe the types are equal
-        if(auto [i, found] = m[typ]; found)
+        if(auto [i, found] = m.lookup(typ); found)
         {
             return {i, true};
         }
@@ -518,7 +518,7 @@ namespace golang::go::types
                 return t;
             }
         }
-        for(auto [gocpp_ignored, t] : l->m[rec::Origin(gocpp::recv(inst))])
+        for(auto [gocpp_ignored, t] : l->m.get(rec::Origin(gocpp::recv(inst))))
         {
             if(Identical(inst, t))
             {
@@ -542,8 +542,8 @@ namespace golang::go::types
         {
             l->m = gocpp::make(gocpp::Tag<gocpp::map<Named*, gocpp::slice<Named*>>>());
         }
-        auto insts = l->m[rec::Origin(gocpp::recv(inst))];
-        l->m[rec::Origin(gocpp::recv(inst))] = append(insts, inst);
+        auto insts = l->m.get(rec::Origin(gocpp::recv(inst)));
+        l->m.ref(rec::Origin(gocpp::recv(inst))) = append(insts, inst);
     }
 
     // MissingMethod returns (nil, false) if V implements T, otherwise it
@@ -822,13 +822,13 @@ namespace golang::go::types
     // (directly or indirectly) embedded fields with invalid types.
     bool hasInvalidEmbeddedFields(golang::go::types::Type T, gocpp::map<Struct*, bool> seen)
     {
-        if(auto [S, gocpp_id_10] = gocpp::getValue<Struct*>(rec::Underlying(gocpp::recv(derefStructPtr(T)))); S != nullptr && ! seen[S])
+        if(auto [S, gocpp_id_10] = gocpp::getValue<Struct*>(rec::Underlying(gocpp::recv(derefStructPtr(T)))); S != nullptr && ! seen.get(S))
         {
             if(seen == nullptr)
             {
                 seen = gocpp::make(gocpp::Tag<gocpp::map<Struct*, bool>>());
             }
-            seen[S] = true;
+            seen.ref(S) = true;
             for(auto [gocpp_ignored, f] : S->fields)
             {
                 if(f->embedded && (! isValid(f->object.typ) || hasInvalidEmbeddedFields(f->object.typ, seen)))

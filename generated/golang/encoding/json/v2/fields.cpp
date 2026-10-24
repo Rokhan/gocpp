@@ -191,7 +191,7 @@ namespace golang::encoding::json::v2
     // that also ignores the presence of dashes and underscores.
     gocpp::slice<structField*> rec::lookupByFoldedName(structFields* fs, gocpp::slice<unsigned char> name)
     {
-        return fs->byFoldedName[gocpp::string(foldName(name))];
+        return fs->byFoldedName.get(gocpp::string(foldName(name)));
     }
 
     
@@ -374,9 +374,9 @@ namespace golang::encoding::json::v2
                     {
                         if(qe.visitChildren)
                         {
-                            queue = append(queue, queueEntry {tf, f.index, ! seen[tf]});
+                            queue = append(queue, queueEntry {tf, f.index, ! seen.get(tf)});
                         }
-                        seen[tf] = true;
+                        seen.ref(tf) = true;
                         return;
                     }
                     else
@@ -529,13 +529,13 @@ namespace golang::encoding::json::v2
                     }
 
                     // Reject multiple fields with same name within the same struct.
-                    if(auto [j, ok] = namesIndex[f.fieldOptions.name]; ok)
+                    if(auto [j, ok] = namesIndex.lookup(f.fieldOptions.name); ok)
                     {
                         // Still append f to allFields as there is still a
                         // check for a dominant field before returning.
                         serr = orErrorf(serr, t, "Go struct fields %s and %s conflict over JSON object name %q"_s, rec::Field(gocpp::recv(t), j).Name, sf.Name, f.fieldOptions.name);
                     }
-                    namesIndex[f.fieldOptions.name] = i;
+                    namesIndex.ref(f.fieldOptions.name) = i;
 
                     f.id = len(allFields);
                     f.fncs = lookupArshaler(sf.Type);
@@ -635,8 +635,8 @@ namespace golang::encoding::json::v2
         for(auto [i, f] : fs.flattened)
         {
             auto foldedName = gocpp::string(foldName(gocpp::slice<unsigned char>(f.fieldOptions.name)));
-            fs.byActualName[f.fieldOptions.name] = & fs.flattened[i];
-            fs.byFoldedName[foldedName] = append(fs.byFoldedName[foldedName], & fs.flattened[i]);
+            fs.byActualName.ref(f.fieldOptions.name) = & fs.flattened[i];
+            fs.byFoldedName.ref(foldedName) = append(fs.byFoldedName.get(foldedName), & fs.flattened[i]);
         }
         for(auto [foldedName, fields] : fs.byFoldedName)
         {
@@ -648,7 +648,7 @@ namespace golang::encoding::json::v2
                 {
                     return cmp::Compare(x->id, y->id);
                 });
-                fs.byFoldedName[foldedName] = fields;
+                fs.byFoldedName.ref(foldedName) = fields;
             }
         }
         if(auto n = len(embeddedFallbacks); n == 1 || (n > 1 && len(embeddedFallbacks[0].index) != len(embeddedFallbacks[1].index)))
@@ -1000,7 +1000,7 @@ namespace golang::encoding::json::v2
             {
                 int conditionId = -1;
                 if(out.casing == caseIgnore | caseStrict) { conditionId = 0; }
-                else if(seenOpts[opt]) { conditionId = 1; }
+                else if(seenOpts.get(opt)) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
@@ -1011,7 +1011,7 @@ namespace golang::encoding::json::v2
                         break;
                 }
             }
-            seenOpts[opt] = true;
+            seenOpts.ref(opt) = true;
         }
         return {out, false, err};
     }

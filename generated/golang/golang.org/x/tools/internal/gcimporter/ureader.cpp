@@ -358,7 +358,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         {
             pr->laterFors = gocpp::make(gocpp::Tag<gocpp::map<types::Type, int>>());
         }
-        pr->laterFors[t] = len(pr->laterFns);
+        pr->laterFors.ref(t) = len(pr->laterFns);
         pr->laterFns = append(pr->laterFns, fn);
     }
 
@@ -755,7 +755,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             }
         }
 
-        if(auto pkg = r->p->imports[path]; pkg != nullptr)
+        if(auto pkg = r->p->imports.get(path); pkg != nullptr)
         {
             return pkg;
         }
@@ -763,7 +763,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         auto name = rec::String(gocpp::recv(r));
 
         auto pkg = types::NewPackage(path, name);
-        r->p->imports[path] = pkg;
+        r->p->imports.ref(path) = pkg;
 
         return pkg;
     }
@@ -1200,7 +1200,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                                 // First be sure that the rhs is initialized, if it needs to be initialized.
                                 // prevent cycles
                                 remove(pk->laterFors, named);
-                                if(auto [i, ok] = pk->laterFors[rhs]; ok)
+                                if(auto [i, ok] = pk->laterFors.lookup(rhs); ok)
                                 {
                                     auto f = pk->laterFns[i];
                                     // function is running now, so replace it with a no-op

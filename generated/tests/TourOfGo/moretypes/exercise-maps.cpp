@@ -11,11 +11,13 @@
 #include "tests/TourOfGo/moretypes/exercise-maps.h"
 #include "gocpp/support.h"
 
+#include "golang/fmt/print.h"
 #include "golang/golang.org/x/tour/wc/wc.h"
 #include "golang/strings/strings.h"
 
 namespace golang::main
 {
+    namespace fmt = golang::fmt;
     namespace strings = golang::strings;
     namespace wc = golang::golang_org::x::tour::wc;
     namespace rec
@@ -29,14 +31,32 @@ namespace golang::main
 
         for(auto [gocpp_ignored, f] : fields)
         {
-            wc[f]++;
+            wc.ref(f)++;
         }
         return wc;
+    }
+
+    void testWordCount()
+    {
+        auto empty = WordCount(""_s);
+        // non-nil, empty
+        mocklib::Println(empty == nullptr, len(empty), empty);
+
+        auto r = WordCount("a b a c a"_s);
+        mocklib::Println(r, len(r));
+        // lookup must not add a key
+        mocklib::Println(r.get("absent"_s), len(r));
+
+        // each call returns an independent map
+        auto r2 = WordCount("a"_s);
+        r2.ref("a"_s) = 100;
+        mocklib::Println(r.get("a"_s), r2.get("a"_s));
     }
 
     void main()
     {
         mocklib::wcTest(WordCount);
+        testWordCount();
     }
 
 }

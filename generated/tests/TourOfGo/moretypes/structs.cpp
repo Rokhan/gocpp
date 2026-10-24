@@ -363,7 +363,7 @@ namespace golang::main
         }(); });
         done.recv();
 
-        auto [gocpp_id_2, ok] = set["a"_s];
+        auto [gocpp_id_2, ok] = set.lookup("a"_s);
         mocklib::Println(ok, gocpp::empty_struct {}, len(set));
     }
 

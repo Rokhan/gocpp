@@ -217,12 +217,12 @@ namespace golang::go::types
         gocpp::Defer defer;
         try
         {
-            if(w->seen[typ])
+            if(w->seen.get(typ))
             {
                 rec::error(gocpp::recv(w), "cycle to "_s + goTypeName(typ));
                 return;
             }
-            w->seen[typ] = true;
+            w->seen.ref(typ) = true;
             defer.push_back([=]{ remove(w->seen, typ); });
 
             //Go type switch emulation

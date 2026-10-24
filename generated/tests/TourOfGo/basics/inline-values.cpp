@@ -22,8 +22,8 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Println(fetcher["https://golang.org/"_s]->body);
-        for(auto [gocpp_ignored, url] : fetcher["https://golang.org/"_s]->urls)
+        mocklib::Println(fetcher.get("https://golang.org/"_s)->body);
+        for(auto [gocpp_ignored, url] : fetcher.get("https://golang.org/"_s)->urls)
         {
             mocklib::Println(" -> "_s, url);
         }

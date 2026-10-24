@@ -191,7 +191,7 @@ namespace golang::go::doc
                         keepField = true;
                     }
                     else
-                    if(ityp != nullptr && predeclaredTypes[fname])
+                    if(ityp != nullptr && predeclaredTypes.get(fname))
                     {
                         // possibly an embedded predeclared type; keep it for now but
                         // remember this interface so that it can be fixed if name is also
@@ -421,7 +421,7 @@ namespace golang::go::doc
                         {
                             r->shadowedPredecl = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>());
                         }
-                        r->shadowedPredecl[name] = true;
+                        r->shadowedPredecl.ref(name) = true;
                     }
                     break;
                 }

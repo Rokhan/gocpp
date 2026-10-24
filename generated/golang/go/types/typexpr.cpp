@@ -120,7 +120,7 @@ namespace golang::go::types
             // (don't use Checker.use - we don't want to evaluate too much)
             if(auto [v, gocpp_id_1] = gocpp::getValue<Var*>(obj); v != nullptr && v->object.pkg == check->pkg)
             {
-                check->usedVars[v] = true;
+                check->usedVars.ref(v) = true;
             }
             return;
         }
@@ -148,9 +148,9 @@ namespace golang::go::types
         // If so, mark the respective package as used.
         // (This code is only needed for dot-imports. Without them,
         // we only have to mark variables, see *Var case below).
-        if(auto pkgName = check->dotImportMap[dotImportKey {scope, rec::Name(gocpp::recv(obj))}]; pkgName != nullptr)
+        if(auto pkgName = check->dotImportMap.get(dotImportKey {scope, rec::Name(gocpp::recv(obj))}); pkgName != nullptr)
         {
-            check->usedPkgNames[pkgName] = true;
+            check->usedPkgNames.ref(pkgName) = true;
         }
 
         //Go type switch emulation
@@ -216,7 +216,7 @@ namespace golang::go::types
                     // dot-imported variables.
                     if(obj->object.pkg == check->pkg)
                     {
-                        check->usedVars[obj] = true;
+                        check->usedVars.ref(obj) = true;
                     }
                     rec::addDeclDep(gocpp::recv(check), obj);
                     if(! types::isValid(typ))

@@ -162,8 +162,8 @@ namespace golang::golang_org::x::tools::go::packages
     {
         return gocpp::InitPtr<responseDeduper>([=](auto& x) {
             x.dr = new DriverResponse {};
-            x.seenRoots = gocpp::map<gocpp::string, bool> {};
-            x.seenPackages = gocpp::map<gocpp::string, Package*> {};
+            x.seenRoots = gocpp::map<gocpp::string, bool> {gocpp::non_nil};
+            x.seenPackages = gocpp::map<gocpp::string, Package*> {gocpp::non_nil};
         });
     }
 
@@ -183,7 +183,7 @@ namespace golang::golang_org::x::tools::go::packages
 
     void rec::addPackage(responseDeduper* r, Package* p)
     {
-        if(auto prev = r->seenPackages[p->ID]; prev != nullptr)
+        if(auto prev = r->seenPackages.get(p->ID); prev != nullptr)
         {
             // Package already seen in a previous response. Merge the file lists,
             // removing duplicates. This can happen when the same package appears
@@ -196,7 +196,7 @@ namespace golang::golang_org::x::tools::go::packages
             prev->EmbedPatterns = appendUniqueStrings(prev->EmbedPatterns, p->EmbedPatterns);
             return;
         }
-        r->seenPackages[p->ID] = p;
+        r->seenPackages.ref(p->ID) = p;
         r->dr->Packages = append(r->dr->Packages, p);
     }
 
@@ -211,12 +211,12 @@ namespace golang::golang_org::x::tools::go::packages
         auto seen = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>(), len(dst));
         for(auto [gocpp_ignored, s] : dst)
         {
-            seen[s] = true;
+            seen.ref(s) = true;
         }
 
         for(auto [gocpp_ignored, s] : src)
         {
-            if(! seen[s])
+            if(! seen.get(s))
             {
                 dst = append(dst, s);
             }
@@ -227,11 +227,11 @@ namespace golang::golang_org::x::tools::go::packages
 
     void rec::addRoot(responseDeduper* r, gocpp::string id)
     {
-        if(r->seenRoots[id])
+        if(r->seenRoots.get(id))
         {
             return;
         }
-        r->seenRoots[id] = true;
+        r->seenRoots.ref(id) = true;
         r->dr->Roots = append(r->dr->Roots, id);
     }
 
@@ -364,7 +364,7 @@ namespace golang::golang_org::x::tools::go::packages
             auto state = gocpp::InitPtr<golistState>([=](auto& x) {
                 x.cfg = cfg;
                 x.ctx = ctx;
-                x.vendorDirs = gocpp::map<gocpp::string, bool> {};
+                x.vendorDirs = gocpp::map<gocpp::string, bool> {gocpp::non_nil};
                 x.overlay = overlay;
                 x.runner = runner;
             });
@@ -522,7 +522,7 @@ namespace golang::golang_org::x::tools::go::packages
             auto isRoot = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>(), len(dirResponse->Roots));
             for(auto [gocpp_ignored, root] : dirResponse->Roots)
             {
-                isRoot[root] = true;
+                isRoot.ref(root) = true;
             }
             for(auto [gocpp_ignored, pkg] : dirResponse->Packages)
             {
@@ -532,7 +532,7 @@ namespace golang::golang_org::x::tools::go::packages
                 // Over-reporting packages is not a problem.
                 rec::addPackage(gocpp::recv(response), pkg);
                 // if the package was not a root one, it cannot have the file
-                if(! isRoot[pkg->ID])
+                if(! isRoot.get(pkg->ID))
                 {
                     continue;
                 }
@@ -810,7 +810,7 @@ namespace golang::golang_org::x::tools::go::packages
                 }
             }
 
-            if(auto [old, found] = seen[p->ImportPath]; found)
+            if(auto [old, found] = seen.lookup(p->ImportPath); found)
             {
                 // If one version of the package has an error, and the other doesn't, assume
                 // that this is a case where go list is reporting a fake dependency variant
@@ -871,7 +871,7 @@ namespace golang::golang_org::x::tools::go::packages
                             }
                             importingPkg = old->Error->ImportStack[len(old->Error->ImportStack) - 2];
                         }
-                        additionalErrors[importingPkg] = append(additionalErrors[importingPkg], gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
+                        additionalErrors.ref(importingPkg) = append(additionalErrors.get(importingPkg), gocpp::Init<golang::golang_org::x::tools::go::packages::Error>([=](auto& x) {
                             x.Pos = old->Error->Pos;
                             x.Msg = old->Error->Err;
                             x.Kind = ListError;
@@ -887,7 +887,7 @@ namespace golang::golang_org::x::tools::go::packages
                 }
             }
             // This package will replace the old one at the end of the loop.
-            seen[p->ImportPath] = p;
+            seen.ref(p->ImportPath) = p;
 
             auto pkg = gocpp::InitPtr<Package>([=](auto& x) {
                 x.Name = p->Name;
@@ -1003,13 +1003,13 @@ namespace golang::golang_org::x::tools::go::packages
             auto ids = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>());
             for(auto [gocpp_ignored, id] : p->Imports)
             {
-                ids[id] = true;
+                ids.ref(id) = true;
             }
             pkg->Imports = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Package*>>());
             for(auto [path, id] : p->ImportMap)
             {
                 // non-identity import
-                pkg->Imports[path] = gocpp::InitPtr<Package>([=](auto& x) {
+                pkg->Imports.ref(path) = gocpp::InitPtr<Package>([=](auto& x) {
                     x.ID = id;
                 });
                 remove(ids, id);
@@ -1022,7 +1022,7 @@ namespace golang::golang_org::x::tools::go::packages
                 }
 
                 // identity import
-                pkg->Imports[id] = gocpp::InitPtr<Package>([=](auto& x) {
+                pkg->Imports.ref(id) = gocpp::InitPtr<Package>([=](auto& x) {
                     x.ID = id;
                 });
             }
@@ -1089,12 +1089,12 @@ namespace golang::golang_org::x::tools::go::packages
                 }));
             }
 
-            pkgs[pkg->ID] = pkg;
+            pkgs.ref(pkg->ID) = pkg;
         }
 
         for(auto [id, errs] : additionalErrors)
         {
-            if(auto [p, ok] = pkgs[id]; ok)
+            if(auto [p, ok] = pkgs.lookup(id); ok)
             {
                 p->Errors = append(p->Errors, errs);
             }
@@ -1221,9 +1221,9 @@ namespace golang::golang_org::x::tools::go::packages
         {
             for(auto [gocpp_ignored, f] : fs)
             {
-                if(! added[f])
+                if(! added.get(f))
                 {
-                    added[f] = true;
+                    added.ref(f) = true;
                     fields = append(fields, f);
                 }
             }
@@ -1527,7 +1527,7 @@ namespace golang::golang_org::x::tools::go::packages
         {
             auto split = strings::SplitN(kv, "="_s, 2);
             auto [k, v] = std::tuple{split[0], split[1]};
-            env[k] = v;
+            env.ref(k) = v;
         }
 
         gocpp::slice<gocpp::string> args = {};
@@ -1543,7 +1543,7 @@ namespace golang::golang_org::x::tools::go::packages
                 args = append(args, arg);
             }
         }
-        return mocklib::Sprintf("GOROOT=%v GOPATH=%v GO111MODULE=%v GOPROXY=%v PWD=%v %v"_s, env["GOROOT"_s], env["GOPATH"_s], env["GO111MODULE"_s], env["GOPROXY"_s], env["PWD"_s], mocklib::StringsJoin(args, " "_s));
+        return mocklib::Sprintf("GOROOT=%v GOPATH=%v GO111MODULE=%v GOPROXY=%v PWD=%v %v"_s, env.get("GOROOT"_s), env.get("GOPATH"_s), env.get("GO111MODULE"_s), env.get("GOPROXY"_s), env.get("PWD"_s), mocklib::StringsJoin(args, " "_s));
     }
 
     // getSizesForArgs queries 'go list' for the appropriate

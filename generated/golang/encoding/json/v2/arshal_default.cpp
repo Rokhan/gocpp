@@ -1965,7 +1965,7 @@ namespace golang::encoding::json::v2
                         // one of the previously marshaled names from known fields.
                         if(auto foldedFields = rec::lookupByFoldedName(gocpp::recv(fields), name); len(foldedFields) > 0)
                         {
-                            if(auto f = fields.byActualName[gocpp::string(name)]; f != nullptr)
+                            if(auto f = fields.byActualName.get(gocpp::string(name)); f != nullptr)
                             {
                                 return rec::insert(gocpp::recv(seenIdxs), (unsigned int)(f->id));
                             }
@@ -2053,7 +2053,7 @@ namespace golang::encoding::json::v2
                                 return err;
                             }
                             auto name = jsonwire::UnquoteMayCopy(val, rec::IsVerbatim(gocpp::recv(flags)));
-                            auto f = fields.byActualName[gocpp::string(name)];
+                            auto f = fields.byActualName.get(gocpp::string(name));
                             if(f == nullptr)
                             {
                                 int numMatch = {};

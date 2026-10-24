@@ -437,7 +437,7 @@ namespace golang::go::types
     // Precondition: the Types, Uses and Defs maps are populated.
     golang::go::types::Type rec::TypeOf(golang::go::types::Info* info, ast::Expr e)
     {
-        if(auto [t, ok] = info->Types[e]; ok)
+        if(auto [t, ok] = info->Types.lookup(e); ok)
         {
             return t.Type;
         }
@@ -460,11 +460,11 @@ namespace golang::go::types
     // Precondition: the Uses and Defs maps are populated.
     Object rec::ObjectOf(golang::go::types::Info* info, ast::Ident* id)
     {
-        if(auto obj = info->Defs[id]; obj != nullptr)
+        if(auto obj = info->Defs.get(id); obj != nullptr)
         {
             return obj;
         }
-        return info->Uses[id];
+        return info->Uses.get(id);
     }
 
     // PkgNameOf returns the local package name defined by the import,
@@ -478,11 +478,11 @@ namespace golang::go::types
         Object obj = {};
         if(imp->Name != nullptr)
         {
-            obj = info->Defs[imp->Name];
+            obj = info->Defs.get(imp->Name);
         }
         else
         {
-            obj = info->Implicits[imp];
+            obj = info->Implicits.get(imp);
         }
         auto [pkgname, gocpp_id_1] = gocpp::getValue<PkgName*>(obj);
         return pkgname;

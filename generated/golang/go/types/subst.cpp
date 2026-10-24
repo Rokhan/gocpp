@@ -54,7 +54,7 @@ namespace golang::go::types
         auto proj = gocpp::make(gocpp::Tag<substMap>(), len(tpars));
         for(auto [i, tpar] : tpars)
         {
-            proj[tpar] = targs[i];
+            proj.ref(tpar) = targs[i];
         }
         return proj;
     }
@@ -67,7 +67,7 @@ namespace golang::go::types
         auto proj = gocpp::make(gocpp::Tag<substMap>(), len(from));
         for(auto [i, tpar] : from)
         {
-            proj[tpar] = to[i];
+            proj.ref(tpar) = to[i];
         }
         return proj;
     }
@@ -79,7 +79,7 @@ namespace golang::go::types
 
     golang::go::types::Type rec::lookup(substMap m, TypeParam* tpar)
     {
-        if(auto t = m[tpar]; t != nullptr)
+        if(auto t = m.get(tpar); t != nullptr)
         {
             return t;
         }
@@ -344,7 +344,7 @@ namespace golang::go::types
                         // If (any) one of the signature's type parameters is in the
                         // substitution map, this subst call is an instantiation of the
                         // signature.
-                        auto [gocpp_id_2, instantiating] = subst->smap[rec::At(gocpp::recv(tparams), 0)];
+                        auto [gocpp_id_2, instantiating] = subst->smap.lookup(rec::At(gocpp::recv(tparams), 0));
                         if(debug)
                         {
                             // When calling subst on a signature, the substitution either
@@ -352,7 +352,7 @@ namespace golang::go::types
                             // or none of them (none are in the map).
                             for(auto [gocpp_ignored, tp] : rec::list(gocpp::recv(tparams)))
                             {
-                                auto [gocpp_id_3, ok] = subst->smap[tp];
+                                auto [gocpp_id_3, ok] = subst->smap.lookup(tp);
                                 assert(ok == instantiating);
                             }
                         }
@@ -369,7 +369,7 @@ namespace golang::go::types
                             auto smap = gocpp::make(gocpp::Tag<substMap>(), len(subst->smap) + n);
                             for(auto [k, v] : subst->smap)
                             {
-                                smap[k] = v;
+                                smap.ref(k) = v;
                             }
                             for(auto [i, tp] : rec::list(gocpp::recv(tparams)))
                             {
@@ -377,7 +377,7 @@ namespace golang::go::types
                                 auto ftp = rec::newTypeParam(gocpp::recv(subst->check), tname, nullptr);
                                 ftp->index = tp->index;
                                 fresh[i] = ftp;
-                                smap[tp] = ftp;
+                                smap.ref(tp) = ftp;
                                 // The fresh parameter stands in for tp in the mono graph,
                                 // so that instantiations of (e.g.) G[int].M and G[A].M
                                 // are tracked against the same vertex as the origin's tp.

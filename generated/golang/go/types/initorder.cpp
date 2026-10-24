@@ -142,7 +142,7 @@ namespace golang::go::types
 
             // record the init order for variables with initializers only
             auto [v, gocpp_id_1] = gocpp::getValue<Var*>(n->obj);
-            auto info = check->objMap[v];
+            auto info = check->objMap.get(v);
             if(v == nullptr || ! rec::hasInitializer(gocpp::recv(info)))
             {
                 continue;
@@ -152,12 +152,12 @@ namespace golang::go::types
             // introduce a node for each lhs variable (here: a, b);
             // but they all have the same initializer - emit only
             // one, for the first variable seen
-            if(emitted[info])
+            if(emitted.get(info))
             {
                 // initializer already emitted, if any
                 continue;
             }
-            emitted[info] = true;
+            emitted.ref(info) = true;
 
             // possibly nil (see declInfo.lhs field comment)
             auto infoLhs = info->lhs;
@@ -186,15 +186,15 @@ namespace golang::go::types
     // If there is no such path, the result is nil.
     gocpp::slice<Object> findPath(gocpp::map<Object, declInfo*> objMap, Object from, Object to, gocpp::map<Object, bool> seen)
     {
-        if(seen[from])
+        if(seen.get(from))
         {
             return nullptr;
         }
-        seen[from] = true;
+        seen.ref(from) = true;
 
         // sort deps for deterministic result
         gocpp::slice<Object> deps = {};
-        for(auto [d, gocpp_ignored] : objMap[from]->deps)
+        for(auto [d, gocpp_ignored] : objMap.get(from)->deps)
         {
             deps = append(deps, d);
         }
@@ -508,7 +508,7 @@ namespace golang::go::types
         {
             *s = gocpp::make(gocpp::Tag<nodeSet>());
         }
-        (*s)[p] = true;
+        (*s).ref(p) = true;
     }
 
     // dependencyGraph computes the object dependency graph from the given objMap,
@@ -525,7 +525,7 @@ namespace golang::go::types
                 auto [obj_tmp, gocpp_id_2] = gocpp::getValue<dependency>(obj);
                 if(auto& obj = obj_tmp; obj != nullptr)
                 {
-                    M[obj] = gocpp::InitPtr<graphNode>([=](auto& x) {
+                    M.ref(obj) = gocpp::InitPtr<graphNode>([=](auto& x) {
                         x.obj = obj;
                     });
                 }
@@ -538,14 +538,14 @@ namespace golang::go::types
         for(auto [obj, n] : M)
         {
             // for each dependency obj -> d (= deps[i]), create graph edges n->s and s->n
-            for(auto [d, gocpp_ignored] : objMap[obj]->deps)
+            for(auto [d, gocpp_ignored] : objMap.get(obj)->deps)
             {
                 // only consider nodes that may be an initialization dependency
                 {
                     auto [d_tmp, gocpp_id_3] = gocpp::getValue<dependency>(d);
                     if(auto& d = d_tmp; d != nullptr)
                     {
-                        auto d_tmp = M[d];
+                        auto d_tmp = M.get(d);
                         auto& d = d_tmp;
                         rec::add(gocpp::recv(n->succ), d);
                         rec::add(gocpp::recv(d->pred), n);

@@ -219,7 +219,7 @@ namespace golang::go::types
                                 {
                                     fset = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>());
                                 }
-                                fset[rec::Id(gocpp::recv(f))] = true;
+                                fset.ref(rec::Id(gocpp::recv(f))) = true;
 
                                 // Embedded fields are always of the form T or *T where
                                 // T is a type name. If typ appeared multiple times at
@@ -251,10 +251,10 @@ namespace golang::go::types
             // names exist already.
             for(auto [k, m] : mset)
             {
-                if(auto [gocpp_id_1, found] = base[k]; ! found)
+                if(auto [gocpp_id_1, found] = base.lookup(k); ! found)
                 {
                     // Fields collide with methods of the same name at this depth.
-                    if(fset[k])
+                    if(fset.get(k))
                     {
                         // collision
                         m = nullptr;
@@ -263,7 +263,7 @@ namespace golang::go::types
                     {
                         base = gocpp::make(gocpp::Tag<methodSet>());
                     }
-                    base[k] = m;
+                    base.ref(k) = m;
                 }
             }
 
@@ -271,14 +271,14 @@ namespace golang::go::types
             // hide any method further down) if no entries with matching names exist already.
             for(auto [k, gocpp_ignored] : fset)
             {
-                if(auto [gocpp_id_2, found] = base[k]; ! found)
+                if(auto [gocpp_id_2, found] = base.lookup(k); ! found)
                 {
                     if(base == nullptr)
                     {
                         base = gocpp::make(gocpp::Tag<methodSet>());
                     }
                     // collision
-                    base[k] = nullptr;
+                    base.ref(k) = nullptr;
                 }
             }
 
@@ -342,14 +342,14 @@ namespace golang::go::types
             // (!indirect && f.hasPtrRecv()). A 2nd method on the same level may be in the method
             // set and may not collide with the first one, thus leading to a false positive.
             // Is that possible? Investigate.
-            if(auto [gocpp_id_3, found] = s[key]; ! found && (indirect || ! rec::hasPtrRecv(gocpp::recv(f))))
+            if(auto [gocpp_id_3, found] = s.lookup(key); ! found && (indirect || ! rec::hasPtrRecv(gocpp::recv(f))))
             {
-                s[key] = new Selection {MethodVal, nullptr, f, index, indirect};
+                s.ref(key) = new Selection {MethodVal, nullptr, f, index, indirect};
                 return s;
             }
         }
         // collision
-        s[key] = nullptr;
+        s.ref(key) = nullptr;
         return s;
     }
 

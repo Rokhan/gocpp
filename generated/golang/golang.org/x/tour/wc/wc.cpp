@@ -35,7 +35,7 @@ namespace golang::golang_org::x::tour::wc
             {
                 for(auto [k, gocpp_ignored] : c.want)
                 {
-                    if(c.want[k] != got[k])
+                    if(c.want.get(k) != got.get(k))
                     {
                         ok = false;
                     }

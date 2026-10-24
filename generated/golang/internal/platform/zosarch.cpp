@@ -73,149 +73,149 @@ namespace golang::internal::platform
         {"windows"_s, "arm64"_s}
     };
     gocpp::map<OSArch, osArchInfo> distInfo = gocpp::map<OSArch, osArchInfo> {
-        { {"aix"_s, "ppc64"_s}, gocpp::Init<>([](auto& x) {
+        { {"aix"_s, "ppc64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"android"_s, "386"_s}, gocpp::Init<>([](auto& x) {
+        { {"android"_s, "386"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"android"_s, "amd64"_s}, gocpp::Init<>([](auto& x) {
+        { {"android"_s, "amd64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"android"_s, "arm"_s}, gocpp::Init<>([](auto& x) {
+        { {"android"_s, "arm"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"android"_s, "arm64"_s}, gocpp::Init<>([](auto& x) {
+        { {"android"_s, "arm64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"darwin"_s, "amd64"_s}, gocpp::Init<>([](auto& x) {
-        x.CgoSupported = true;
-        x.FirstClass = true;
-    }) },
-        { {"darwin"_s, "arm64"_s}, gocpp::Init<>([](auto& x) {
+        { {"darwin"_s, "amd64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
         x.FirstClass = true;
     }) },
-        { {"dragonfly"_s, "amd64"_s}, gocpp::Init<>([](auto& x) {
+        { {"darwin"_s, "arm64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
+        x.CgoSupported = true;
+        x.FirstClass = true;
+    }) },
+        { {"dragonfly"_s, "amd64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"freebsd"_s, "386"_s}, gocpp::Init<>([](auto& x) {
+        { {"freebsd"_s, "386"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"freebsd"_s, "amd64"_s}, gocpp::Init<>([](auto& x) {
+        { {"freebsd"_s, "amd64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"freebsd"_s, "arm"_s}, gocpp::Init<>([](auto& x) {
+        { {"freebsd"_s, "arm"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"freebsd"_s, "arm64"_s}, gocpp::Init<>([](auto& x) {
+        { {"freebsd"_s, "arm64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"freebsd"_s, "riscv64"_s}, gocpp::Init<>([](auto& x) {
+        { {"freebsd"_s, "riscv64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
         x.Broken = true;
     }) },
-        { {"illumos"_s, "amd64"_s}, gocpp::Init<>([](auto& x) {
+        { {"illumos"_s, "amd64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"ios"_s, "amd64"_s}, gocpp::Init<>([](auto& x) {
+        { {"ios"_s, "amd64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"ios"_s, "arm64"_s}, gocpp::Init<>([](auto& x) {
+        { {"ios"_s, "arm64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
         { {"js"_s, "wasm"_s}, {} },
-        { {"linux"_s, "386"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "386"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
         x.FirstClass = true;
     }) },
-        { {"linux"_s, "amd64"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "amd64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
         x.FirstClass = true;
     }) },
-        { {"linux"_s, "arm"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "arm"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
         x.FirstClass = true;
     }) },
-        { {"linux"_s, "arm64"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "arm64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
         x.FirstClass = true;
     }) },
-        { {"linux"_s, "loong64"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "loong64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"linux"_s, "mips"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "mips"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"linux"_s, "mips64"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "mips64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"linux"_s, "mips64le"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "mips64le"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"linux"_s, "mipsle"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "mipsle"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"linux"_s, "ppc64"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "ppc64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"linux"_s, "ppc64le"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "ppc64le"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"linux"_s, "riscv64"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "riscv64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"linux"_s, "s390x"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "s390x"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"linux"_s, "sparc64"_s}, gocpp::Init<>([](auto& x) {
+        { {"linux"_s, "sparc64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
         x.Broken = true;
     }) },
-        { {"netbsd"_s, "386"_s}, gocpp::Init<>([](auto& x) {
+        { {"netbsd"_s, "386"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"netbsd"_s, "amd64"_s}, gocpp::Init<>([](auto& x) {
+        { {"netbsd"_s, "amd64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"netbsd"_s, "arm"_s}, gocpp::Init<>([](auto& x) {
+        { {"netbsd"_s, "arm"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"netbsd"_s, "arm64"_s}, gocpp::Init<>([](auto& x) {
+        { {"netbsd"_s, "arm64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"openbsd"_s, "386"_s}, gocpp::Init<>([](auto& x) {
+        { {"openbsd"_s, "386"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"openbsd"_s, "amd64"_s}, gocpp::Init<>([](auto& x) {
+        { {"openbsd"_s, "amd64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"openbsd"_s, "arm"_s}, gocpp::Init<>([](auto& x) {
+        { {"openbsd"_s, "arm"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
-        { {"openbsd"_s, "arm64"_s}, gocpp::Init<>([](auto& x) {
+        { {"openbsd"_s, "arm64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
         { {"openbsd"_s, "ppc64"_s}, {} },
-        { {"openbsd"_s, "riscv64"_s}, gocpp::Init<>([](auto& x) {
+        { {"openbsd"_s, "riscv64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
         { {"plan9"_s, "386"_s}, {} },
         { {"plan9"_s, "amd64"_s}, {} },
         { {"plan9"_s, "arm"_s}, {} },
-        { {"solaris"_s, "amd64"_s}, gocpp::Init<>([](auto& x) {
+        { {"solaris"_s, "amd64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) },
         { {"wasip1"_s, "wasm"_s}, {} },
-        { {"windows"_s, "386"_s}, gocpp::Init<>([](auto& x) {
+        { {"windows"_s, "386"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
         x.FirstClass = true;
     }) },
-        { {"windows"_s, "amd64"_s}, gocpp::Init<>([](auto& x) {
+        { {"windows"_s, "amd64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
         x.FirstClass = true;
     }) },
-        { {"windows"_s, "arm64"_s}, gocpp::Init<>([](auto& x) {
+        { {"windows"_s, "arm64"_s}, gocpp::Init<platform::osArchInfo>([](auto& x) {
         x.CgoSupported = true;
     }) }
     };

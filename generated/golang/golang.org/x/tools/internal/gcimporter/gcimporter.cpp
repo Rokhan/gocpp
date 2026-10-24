@@ -79,7 +79,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                 id = path;
 
                 // No need to re-import if the package was imported completely before.
-                if(pkg = packages[id]; pkg != nullptr && rec::Complete(gocpp::recv(pkg)))
+                if(pkg = packages.get(id); pkg != nullptr && rec::Complete(gocpp::recv(pkg)))
                 {
                     return {pkg, err};
                 }
@@ -104,7 +104,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                 }
 
                 // no need to re-import if the package was imported completely before
-                if(pkg = packages[id]; pkg != nullptr && rec::Complete(gocpp::recv(pkg)))
+                if(pkg = packages.get(id); pkg != nullptr && rec::Complete(gocpp::recv(pkg)))
                 {
                     return {pkg, err};
                 }

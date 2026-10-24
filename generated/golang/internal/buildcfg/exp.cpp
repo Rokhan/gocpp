@@ -173,14 +173,14 @@ namespace golang::internal::buildcfg
             for(auto i = 0; i < rec::NumField(gocpp::recv(rt)); i++)
             {
                 auto field = rec::Field(gocpp::recv(rv), i);
-                names[strings::ToLower(rec::Field(gocpp::recv(rt), i).Name)] = [&](auto x){ return reflect::rec::SetBool(field, x); };
+                names.ref(strings::ToLower(rec::Field(gocpp::recv(rt), i).Name)) = [&](auto x){ return reflect::rec::SetBool(field, x); };
             }
 
             // "regabi" is an alias for all working regabi
             // subexperiments, and not an experiment itself. Doing
             // this as an alias make both "regabi" and "noregabi"
             // do the right thing.
-            names["regabi"_s] = [=](bool v) mutable -> void
+            names.ref("regabi"_s) = [=](bool v) mutable -> void
             {
                 flags->Flags.RegabiWrappers = v;
                 flags->Flags.RegabiArgs = v;
@@ -206,7 +206,7 @@ namespace golang::internal::buildcfg
                 {
                     std::tie(f, val) = std::tuple{f.make_slice(2), false};
                 }
-                auto [set, ok] = names[f];
+                auto [set, ok] = names.lookup(f);
                 if(! ok)
                 {
                     return {nullptr, mocklib::Errorf("unknown GOEXPERIMENT %s"_s, f)};

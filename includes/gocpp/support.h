@@ -104,6 +104,11 @@ namespace gocpp
     template<typename T, typename DefTag> requires GoStruct<T>
     struct defined<T, DefTag> : T { };
 
+    template<typename T, typename DefTag> requires BasicValue<T>
+    std::ostream& operator<<(std::ostream& os, const defined<T, DefTag>& v)
+    {
+        return mocklib::PrintTo(os, v.value);
+    }
 
     inline dp::thread_pool<>& global_pool()
     {
@@ -224,31 +229,31 @@ namespace gocpp
     {
         using std::complex<float>::complex;
 
-        inline complex64(const std::complex<float>& c) : complex(c) {}
+        inline constexpr complex64(const std::complex<float>& c) : complex(c) {}
 
-        inline std::complex<float>& base() { return *this; }
-        inline const std::complex<float>& base() const { return *this; }
+        inline constexpr std::complex<float>& base() { return *this; }
+        inline constexpr const std::complex<float>& base() const { return *this; }
     };
 
-    inline static complex64 operator+(int i, complex64 c) { return float(i) + c.base(); };
-    inline static complex64 operator+(complex64 c, int i) { return c.base() + float(i); };
-    inline static complex64 operator-(int i, complex64 c) { return float(i) - c.base(); };
-    inline static complex64 operator-(complex64 c, int i) { return c.base() - float(i); };
+    inline static constexpr complex64 operator+(int i, complex64 c) { return float(i) + c.base(); };
+    inline static constexpr complex64 operator+(complex64 c, int i) { return c.base() + float(i); };
+    inline static constexpr complex64 operator-(int i, complex64 c) { return float(i) - c.base(); };
+    inline static constexpr complex64 operator-(complex64 c, int i) { return c.base() - float(i); };
 
     struct complex128 : std::complex<double>
     {
         using std::complex<double>::complex;
 
-        inline complex128(const std::complex<double>& c) : complex(c) {}
+        inline constexpr complex128(const std::complex<double>& c) : complex(c) {}
 
-        inline std::complex<double>& base() { return *this; }
-        inline const std::complex<double>& base() const { return *this; }
+        inline constexpr std::complex<double>& base() { return *this; }
+        inline constexpr const std::complex<double>& base() const { return *this; }
     };
 
-    inline static complex128 operator+(int i, complex128 c) { return double(i) + c.base(); };
-    inline static complex128 operator+(complex128 c, int i) { return c.base() + double(i); };
-    inline static complex128 operator-(int i, complex128 c) { return double(i) - c.base(); };
-    inline static complex128 operator-(complex128 c, int i) { return c.base() - double(i); };
+    inline static constexpr complex128 operator+(int i, complex128 c) { return double(i) + c.base(); };
+    inline static constexpr complex128 operator+(complex128 c, int i) { return c.base() + double(i); };
+    inline static constexpr complex128 operator-(int i, complex128 c) { return double(i) - c.base(); };
+    inline static constexpr complex128 operator-(complex128 c, int i) { return c.base() - double(i); };
 
     template<class It, class TargetType>
     class transform_iterator 
@@ -315,13 +320,13 @@ namespace gocpp
     }
 
     template<typename T1, typename T2, typename... Ts>
-    inline std::common_type_t<T1, T2, Ts...> max(T1 a, T2 b, Ts... args)
+    constexpr inline std::common_type_t<T1, T2, Ts...> max(T1 a, T2 b, Ts... args)
     {
         return max((a > b ? a : b), args...);
     }
 
     template<typename T>
-    inline T min(T a)
+    constexpr inline T min(T a)
     {
         return a;
     }
@@ -332,12 +337,12 @@ namespace gocpp
         return min((a < b ? a : b), args...);
     }
 
-    inline complex64 complex(float r, float i)
+    constexpr inline complex64 complex(float r, float i)
     {
         return std::complex<float>(r, i);
     }
 
-    inline complex128 complex(double r, double i)
+    constexpr inline complex128 complex(double r, double i)
     {
         return std::complex<double>(r, i);
     }
@@ -1565,23 +1570,6 @@ namespace mocklib
         }
         
     }
-
-    std::ostream& PrintTo(std::ostream& os, const Date& value);
-    std::ostream& PrintTo(std::ostream& os, bool value);
-    std::ostream& PrintTo(std::ostream& os, char value);
-    std::ostream& PrintTo(std::ostream& os, unsigned char value);
-
-    template<typename K, typename V>
-    std::ostream& PrintTo(std::ostream& os, const gocpp::map<K, V>& value);
-
-    template<typename T>
-    std::ostream& PrintTo(std::ostream& os, const T& value);
-
-    template<typename T, typename E>
-    std::ostream& PrintTo(std::ostream& os, const gocpp::result_or_error<T, E>& value);
-
-    template<typename T, typename... Args>
-    std::ostream& PrintTo(std::ostream& os, const T& value, Args&&... args);
 
     // internals: operators for tupples/ostream/slices
     template<typename... Ts>

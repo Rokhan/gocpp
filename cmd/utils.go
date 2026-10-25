@@ -1775,6 +1775,8 @@ func canBeDefined(node ast.Expr, defType types.Type) bool {
 
 func typeCanBeDefined(defType types.Type) bool {
 	switch dt := defType.(type) {
+	case *types.Basic:
+		return isWrappableBasic(dt)
 	case *types.Array:
 		return true
 	case *types.Map:
@@ -1788,6 +1790,13 @@ func typeCanBeDefined(defType types.Type) bool {
 	default:
 		return false
 	}
+}
+
+// isWrappableBasic reports whether `type X <basic>` can use the gocpp::defined<T, Tag>
+// specialisation for C++ arithmetic types (see BasicValue in gocpp/defined.h).
+func isWrappableBasic(b *types.Basic) bool {
+	const wrappable = types.IsInteger | types.IsFloat | types.IsBoolean
+	return b.Info()&wrappable != 0
 }
 
 // use cv.IsExprMap for testing the infered type

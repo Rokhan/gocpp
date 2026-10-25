@@ -2707,6 +2707,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 						exprType := cv.convertExprCppType(values[i])
 						exprType.comments = append(exprType.comments, comments...)
 						name := GetCppName(nameId.Name)
+						cstPrefix := constQualifier(cv.typeInfo.Defs[nameId])
 
 						canFwd := exprType.canFwd && cv.canForward(values[i])
 						if name == "_" {
@@ -2715,18 +2716,18 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 							if cv.ignoreKnownError(name, knownMissingDeps) {
 								exprType = exprType.inComment()
 								expr = expr.inComment()
-								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "/*%s %s %s = %s [known mising deps] */%s", cstPrefix, exprType, name, expr, end)...)
 							} else {
-								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "const %s %s = %s%s", exprType, name, expr, end)...)
+								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "%s %s %s = %s%s", cstPrefix, exprType, name, expr, end)...)
 							}
 						} else {
 							if tok == token.CONST {
 								if cv.ignoreKnownError(name, knownMissingDeps) {
 									exprType = exprType.inComment()
 									expr = expr.inComment()
-									result = append(result, headerStrf(s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+									result = append(result, headerStrf(s, "/*%s %s %s = %s [known mising deps] */%s", cstPrefix, exprType, name, expr, end)...)
 								} else {
-									result = append(result, headerStrf(s, "const %s %s = %s%s", exprType, name, expr, end)...)
+									result = append(result, headerStrf(s, "%s %s %s = %s%s", cstPrefix, exprType, name, expr, end)...)
 								}
 							} else {
 								if cv.ignoreKnownError(name, knownMissingDeps) {
@@ -2766,6 +2767,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 						name := GetCppName(nameId.Name)
 						exprType := cv.convertTypeExpr(s.Type, ctContext{usagePosition: UsageInHeader, targetVarName: name})
 						exprType.comments = append(exprType.comments, comments...)
+						cstPrefix := constQualifier(cv.typeInfo.Defs[nameId])
 
 						if len(values) == 0 {
 							result = append(result, headerStrf(typeOnlySpec(s), "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
@@ -2776,20 +2778,20 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 								if cv.ignoreKnownError(name, knownMissingDeps) {
 									exprType = exprType.inComment()
 									expr := expr.inComment()
-									result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+									result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "/*%s %s %s = %s [known mising deps] */%s", cstPrefix, exprType, name, expr, end)...)
 								} else {
 									Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
-									result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "const %s %s = %s%s", exprType, name, expr, end)...)
+									result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "%s %s %s = %s%s", cstPrefix, exprType, name, expr, end)...)
 								}
 							} else {
 								if tok == token.CONST {
 									if cv.ignoreKnownError(name, knownMissingDeps) {
 										exprType = exprType.inComment()
 										expr := expr.inComment()
-										result = append(result, headerStrf(s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+										result = append(result, headerStrf(s, "/*%s %s %s = %s [known mising deps] */%s", cstPrefix, exprType, name, expr, end)...)
 									} else {
 										Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
-										result = append(result, headerStrf(s, "const %s %s = %s%s", exprType, name, expr, end)...)
+										result = append(result, headerStrf(s, "%s %s %s = %s%s", cstPrefix, exprType, name, expr, end)...)
 									}
 								} else {
 									if cv.ignoreKnownError(name, knownMissingDeps) {
@@ -2919,6 +2921,20 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 	}
 
 	return result
+}
+
+// const declaration prefix for a Go constant.
+//
+//	-> constexpr for arithmetic-like types, const for others
+//	-> const for strings and complex
+func constQualifier(obj types.Object) string {
+	if obj == nil {
+		return "inline const"
+	}
+	if b, ok := types.Unalias(obj.Type()).Underlying().(*types.Basic); ok && isWrappableBasic(b) {
+		return "inline constexpr"
+	}
+	return "inline const"
 }
 
 func typeOnlySpec(s *ast.ValueSpec) *ast.ValueSpec {
@@ -4604,7 +4620,13 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		case token.IMAG:
 			return mkCppExpr("gocpp::complex128(0, " + strings.Replace(n.Value, "i", "", -1) + ")")
 		case token.INT, token.FLOAT:
-			return mkCppExpr(strings.ReplaceAll(n.Value, "_", ""))
+			lit := strings.ReplaceAll(n.Value, "_", "")
+			if n.Kind == token.INT && cv.isUntypedInt(n) {
+				// Go untyped ints are arbitrary precision,
+				// int is potentially too narrow for intermediates
+				lit += "LL"
+			}
+			return mkCppExpr(lit)
 		default:
 			switch n.Value[0] {
 			case '`':
@@ -4993,6 +5015,11 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		cv.Panicf("convertExprImpl, type %v, expr '%v', position %v", reflect.TypeOf(node), types.ExprString(n), cv.Position(n))
 	}
 	panic("convertExprImpl, bug, unreacheable code reached !")
+}
+
+func (cv *cppConverter) isUntypedInt(e ast.Expr) bool {
+	b, ok := cv.typeInfo.Types[e].Type.(*types.Basic)
+	return ok && b.Kind() == types.UntypedInt
 }
 
 func (cv *cppConverter) buildPkgDepInfo(obj *types.PkgName, selector *ast.Ident) depInfo {

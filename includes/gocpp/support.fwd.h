@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gocpp/defined.fwd.h"
+
 #include <cstdint>
 
 // TODO: try to not need this 

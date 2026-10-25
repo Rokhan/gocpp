@@ -44,6 +44,8 @@ type cppConverterSharedData struct {
 	usedFiles      map[string]bool
 	packagePaths   map[string]string
 
+	nonConstexprConsts map[types.Object]bool
+
 	// logging
 	logPerf outFile
 
@@ -189,6 +191,7 @@ func buildSharedData() (shared *cppConverterSharedData) {
 	shared.parsedFiles = map[string]*ast.File{}
 	shared.usedFiles = map[string]bool{}
 	shared.packagePaths = map[string]string{}
+	shared.nonConstexprConsts = map[types.Object]bool{}
 	return
 }
 
@@ -2707,7 +2710,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 						exprType := cv.convertExprCppType(values[i])
 						exprType.comments = append(exprType.comments, comments...)
 						name := GetCppName(nameId.Name)
-						cstPrefix := constQualifier(cv.typeInfo.Defs[nameId])
+						cstPrefix := cv.constQualifier(cv.typeInfo.Defs[nameId], values[i])
 
 						canFwd := exprType.canFwd && cv.canForward(values[i])
 						if name == "_" {
@@ -2767,13 +2770,13 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 						name := GetCppName(nameId.Name)
 						exprType := cv.convertTypeExpr(s.Type, ctContext{usagePosition: UsageInHeader, targetVarName: name})
 						exprType.comments = append(exprType.comments, comments...)
-						cstPrefix := constQualifier(cv.typeInfo.Defs[nameId])
 
 						if len(values) == 0 {
 							result = append(result, headerStrf(typeOnlySpec(s), "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 							result = append(result, inlineStrf(s, "%s %s%s", exprType, name, end)...)
 						} else {
 							expr := cv.convertExpr(values[i])
+							cstPrefix := cv.constQualifier(cv.typeInfo.Defs[nameId], values[i])
 							if tok == token.CONST && exprType.canFwd {
 								if cv.ignoreKnownError(name, knownMissingDeps) {
 									exprType = exprType.inComment()
@@ -2923,11 +2926,45 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 	return result
 }
 
+// usesNonConstexpr reports whether a constant initializer calls a listed builtin,
+// or refers to a constant that was itself emitted without constexpr.
+func (cv *cppConverter) usesNonConstexpr(expr ast.Expr) bool {
+	found := false
+	ast.Inspect(expr, func(n ast.Node) bool {
+		switch n := n.(type) {
+		case *ast.SelectorExpr:
+			if id, ok := n.X.(*ast.Ident); ok {
+				if pn, ok := cv.typeInfo.Uses[id].(*types.PkgName); ok &&
+					nonConstexprFuncs[fullName{pn.Imported().Path(), n.Sel.Name}] {
+					found = true
+				}
+			}
+		case *ast.Ident:
+			if c, ok := cv.typeInfo.Uses[n].(*types.Const); ok && cv.shared.nonConstexprConsts[c] {
+				found = true
+			}
+		}
+		return !found
+	})
+	return found
+}
+
+func (cv *cppConverter) constQualifier(obj types.Object, init ast.Expr) string {
+	q := constQualifierForType(obj) // the type-based function we already have
+	if q == "inline constexpr" && init != nil && cv.usesNonConstexpr(init) {
+		q = "inline const"
+	}
+	if q == "inline const" && obj != nil {
+		cv.shared.nonConstexprConsts[obj] = true // so dependents are downgraded too
+	}
+	return q
+}
+
 // const declaration prefix for a Go constant.
 //
 //	-> constexpr for arithmetic-like types, const for others
 //	-> const for strings and complex
-func constQualifier(obj types.Object) string {
+func constQualifierForType(obj types.Object) string {
 	if obj == nil {
 		return "inline const"
 	}

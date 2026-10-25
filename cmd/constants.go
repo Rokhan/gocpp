@@ -75,6 +75,12 @@ var knownForwardableFunctions = map[fullName]bool{
 	{"unsafe", "Sizeof"}: true,
 }
 
+// Go builtins that are constant expressions in Go but have no constexpr
+// implementation in the support library. Constants using them stay `inline const`.
+var nonConstexprFuncs = map[fullName]bool{
+	{"unsafe", "Offsetof"}: true, // gocpp::Offsetof uses reinterpret_cast
+}
+
 // TODO, make a dynamic mapping
 var cppKeyWordsMapping = map[string]string{
 	// map go keywords to C++ keywords

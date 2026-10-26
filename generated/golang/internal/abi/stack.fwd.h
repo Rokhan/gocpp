@@ -12,7 +12,7 @@ namespace golang::internal::abi
     // This value must be multiplied by the stack guard multiplier, so do not
     // use it directly. See runtime/stack.go:stackNosplit and
     // cmd/internal/objabi/stack.go:StackNosplit.
-    const long StackNosplitBase = 800;
+    inline constexpr long StackNosplitBase = 800;
     // After a stack split check the SP is allowed to be StackSmall bytes below
     // the stack guard.
     //
@@ -20,10 +20,10 @@ namespace golang::internal::abi
     // using a single comparison directly between the stack guard and the SP
     // because we ensure that StackSmall bytes of stack space are available
     // beyond the stack guard.
-    const long StackSmall = 128;
+    inline constexpr long StackSmall = 128;
     // Functions that need frames <= StackBig can assume that neither
     // SP-framesize nor stackGuard-StackSmall will underflow, and thus use a
     // more efficient check. In order to ensure this, StackBig must be <= the
     // size of the unmapped space at zero.
-    const long StackBig = 4096;
+    inline constexpr long StackBig = 4096;
 }

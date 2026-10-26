@@ -9,6 +9,12 @@
 #include "golang/go/types/named.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::go::types
+{
+    struct GoTag_stateMask { };
+    using stateMask = gocpp::defined<uint32_t, GoTag_stateMask>;
+}
 #include "golang/go/types/type.h"
 #include "golang/go/types/context.fwd.h"
 #include "golang/go/types/typelists.fwd.h"
@@ -19,7 +25,7 @@ namespace golang::go::types
     {
         Named* orig{}; // original, uninstantiated type
         TypeList* targs{}; // type arguments
-        int expandedMethods{}; // number of expanded methods; expandedMethods <= len(orig.methods)
+        int64_t expandedMethods{}; // number of expanded methods; expandedMethods <= len(orig.methods)
         Context* ctxt{}; // local Context; set to nil after full expansion
 
         using isGoStruct = void;
@@ -111,17 +117,17 @@ namespace golang::go::types
         TypeParamList* TypeParams(Named* t);
         void SetTypeParams(Named* t, gocpp::slice<TypeParam*> tparams);
         TypeList* TypeArgs(Named* t);
-        int NumMethods(Named* t);
-        Func* Method(Named* t, int i);
-        Func* expandMethod(Named* t, int i);
+        int64_t NumMethods(Named* t);
+        Func* Method(Named* t, int64_t i);
+        Func* expandMethod(Named* t, int64_t i);
         void SetUnderlying(Named* t, golang::go::types::Type u);
         void AddMethod(Named* t, Func* m);
-        int methodIndex(Named* t, gocpp::string name, bool foldCase);
+        int64_t methodIndex(Named* t, gocpp::string name, bool foldCase);
         golang::go::types::Type rhs(Named* n);
         golang::go::types::Type Underlying(Named* n);
         gocpp::string String(Named* t);
         void resolveUnderlying(Named* n);
-        std::tuple<int, Func*> lookupMethod(Named* n, Package* pkg, gocpp::string name, bool foldCase);
+        std::tuple<int64_t, Func*> lookupMethod(Named* n, Package* pkg, gocpp::string name, bool foldCase);
         Context* context(Checker* check);
         golang::go::types::Type expandRHS(Named* n);
     }

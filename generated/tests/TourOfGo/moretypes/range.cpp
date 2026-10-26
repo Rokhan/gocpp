@@ -20,7 +20,7 @@ namespace golang::main
     {
     }
 
-    gocpp::slice<int> pow = gocpp::slice<int> {1, 2, 4, 8, 16, 32, 64, 128};
+    gocpp::slice<int64_t> pow = gocpp::slice<int64_t> {1, 2, 4, 8, 16, 32, 64, 128};
     void main()
     {
         for(auto [i, v] : pow)
@@ -39,7 +39,7 @@ namespace golang::main
             mocklib::Printf("%v\n"_s, v);
         }
 
-        int n = 0;
+        int64_t n = 0;
         for(const auto& _ : pow)
         {
             n++;
@@ -59,7 +59,7 @@ namespace golang::main
             mocklib::Println(k);
         }
 
-        int ii = {};
+        int64_t ii = {};
         for(ii = 0; ii != 5; ++ii)
         {
             mocklib::Println(ii);

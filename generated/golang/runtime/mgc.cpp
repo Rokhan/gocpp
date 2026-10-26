@@ -140,7 +140,7 @@ namespace golang::runtime
     void gcenable()
     {
         // Kick off sweeping and scavenging.
-        auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>(), 2);
+        auto c = gocpp::make(gocpp::Tag<gocpp::channel<int64_t>>(), 2);
         gocpp::go([&]{ bgsweep(c); });
         gocpp::go([&]{ bgscavenge(c); });
         c.recv();
@@ -934,7 +934,7 @@ namespace golang::runtime
             // We do this after re-checking the transition condition so
             // that multiple goroutines that detect the heap trigger don't
             // start multiple STW GCs.
-            auto mode = gcBackgroundMode;
+            gcMode mode = gcBackgroundMode;
             if(debug.gcstoptheworld == 1)
             {
                 mode = gcForceMode;
@@ -1026,7 +1026,7 @@ namespace golang::runtime
 
             // Assists and workers can start the moment we start
             // the world.
-            rec::startCycle(gocpp::recv(gcController), now, int(gomaxprocs), trigger);
+            rec::startCycle(gocpp::recv(gcController), now, int64_t(gomaxprocs), trigger);
 
             // Notify the CPU limiter that assists may begin.
             rec::startGCTransition(gocpp::recv(gcCPULimiter), true, now);
@@ -1281,7 +1281,7 @@ namespace golang::runtime
         // See issue #27993 for details.
         // Switch to the system stack to call wbBufFlush1, though in this case
         // it doesn't matter because we're non-preemptible anyway.
-        auto restart = false;
+        bool restart = false;
         systemstack([=]() mutable -> void
         {
             for(auto [gocpp_ignored, p] : allp)
@@ -1356,7 +1356,7 @@ namespace golang::runtime
         // endCycle depends on all gcWork cache stats being flushed.
         // The termination algorithm above ensured that up to
         // allocations since the ragged barrier.
-        rec::endCycle(gocpp::recv(gcController), now, int(gomaxprocs));
+        rec::endCycle(gocpp::recv(gcController), now, int64_t(gomaxprocs));
 
         // Perform mark termination. This will restart the world.
         gcMarkTermination(stw);
@@ -1442,8 +1442,8 @@ namespace golang::runtime
         // vIndex and ivIndex. During the loop, anything < vIndex should be
         // valid stackRoots and anything >= ivIndex should be invalid stackRoots.
         // The loop terminates when the two indices meet.
-        int vIndex = work.nMaybeRunnableStackRoots;
-        int ivIndex = work.nStackRoots;
+        int64_t vIndex = work.nMaybeRunnableStackRoots;
+        int64_t ivIndex = work.nStackRoots;
         // Reorder goroutine list
         for(; vIndex < ivIndex; )
         {
@@ -1867,7 +1867,7 @@ namespace golang::runtime
         // we're trying to print.
         if(debug.gctrace > 0)
         {
-            auto util = int(memstats.gc_cpu_fraction * 100);
+            auto util = int64_t(memstats.gc_cpu_fraction * 100);
 
             gocpp::array<unsigned char, 24> sbuf = {};
             printlock();
@@ -2629,7 +2629,7 @@ namespace golang::runtime
     }
 
     // itoaDiv formats val/(10**dec) into buf.
-    gocpp::slice<unsigned char> itoaDiv(gocpp::slice<unsigned char> buf, uint64_t val, int dec)
+    gocpp::slice<unsigned char> itoaDiv(gocpp::slice<unsigned char> buf, uint64_t val, int64_t dec)
     {
         auto i = len(buf) - 1;
         auto idec = i - dec;
@@ -2663,7 +2663,7 @@ namespace golang::runtime
             buf[0] = '0';
             return buf.make_slice(0, 1);
         }
-        auto dec = 3;
+        int64_t dec = 3;
         for(; x >= 100; )
         {
             x /= 10;

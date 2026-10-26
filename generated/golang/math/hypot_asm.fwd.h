@@ -6,5 +6,5 @@
 
 namespace golang::math
 {
-    const bool haveArchHypot = true;
+    inline constexpr bool haveArchHypot = true;
 }

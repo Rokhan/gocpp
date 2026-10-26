@@ -192,7 +192,7 @@ namespace golang::go::types
             return;
         }
 
-        auto cause = ""_s;
+        gocpp::string cause = ""_s;
         if(auto [ok, code] = rec::assignableTo(gocpp::recv(x), check, T, & cause); ! ok)
         {
             if(cause != ""_s)
@@ -515,7 +515,7 @@ namespace golang::go::types
         return "("_s + mocklib::StringsJoin(res, ", "_s) + ")"_s;
     }
 
-    gocpp::string measure(int x, gocpp::string unit)
+    gocpp::string measure(int64_t x, gocpp::string unit)
     {
         if(x != 1)
         {
@@ -524,7 +524,7 @@ namespace golang::go::types
         return mocklib::Sprintf("%d %s"_s, x, unit);
     }
 
-    void rec::assignError(Checker* check, gocpp::slice<ast::Expr> rhs, int l, int r)
+    void rec::assignError(Checker* check, gocpp::slice<ast::Expr> rhs, int64_t l, int64_t r)
     {
         auto vars = measure(l, "variable"_s);
         auto vals = measure(r, "value"_s);
@@ -544,7 +544,7 @@ namespace golang::go::types
     void rec::returnError(Checker* check, positioner at, gocpp::slice<Var*> lhs, gocpp::slice<operand*> rhs)
     {
         auto [l, r] = std::tuple{len(lhs), len(rhs)};
-        auto qualifier = "not enough"_s;
+        gocpp::string qualifier = "not enough"_s;
         if(r > l)
         {
             // report at first extra value
@@ -572,7 +572,7 @@ namespace golang::go::types
     {
         auto [l, r] = std::tuple{len(lhs), len(orig_rhs)};
 
-        auto context = "assignment"_s;
+        gocpp::string context = "assignment"_s;
         if(returnStmt != nullptr)
         {
             context = "return statement"_s;
@@ -585,7 +585,7 @@ namespace golang::go::types
 
         // If l == 1 and the rhs is a single call, for a better
         // error message don't handle it as n:n mapping below.
-        auto isCall = false;
+        bool isCall = false;
         if(r == 1)
         {
             std::tie(std::ignore, isCall) = gocpp::getValue<ast::CallExpr*>(ast::Unparen(orig_rhs[0]));
@@ -683,7 +683,7 @@ namespace golang::go::types
     {
         auto [l, r] = std::tuple{len(lhs), len(orig_rhs)};
 
-        auto context = "assignment"_s;
+        gocpp::string context = "assignment"_s;
         if(l > 1)
         {
             context = "multiple assignment"_s;
@@ -691,7 +691,7 @@ namespace golang::go::types
 
         // If l == 1 and the rhs is a single call, for a better
         // error message don't handle it as n:n mapping below.
-        auto isCall = false;
+        bool isCall = false;
         if(r == 1)
         {
             std::tie(std::ignore, isCall) = gocpp::getValue<ast::CallExpr*>(ast::Unparen(orig_rhs[0]));
@@ -758,7 +758,7 @@ namespace golang::go::types
         auto seen = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>(), len(lhs));
         auto lhsVars = gocpp::make(gocpp::Tag<gocpp::slice<Var*>>(), len(lhs));
         auto newVars = gocpp::make(gocpp::Tag<gocpp::slice<Var*>>(), 0, len(lhs));
-        auto hasErr = false;
+        bool hasErr = false;
         for(auto [i, lhs] : lhs)
         {
             auto [ident, gocpp_id_5] = gocpp::getValue<ast::Ident*>(lhs);

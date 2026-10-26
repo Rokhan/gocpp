@@ -31,8 +31,8 @@ namespace golang::golang_org::x::tools::internal::packagesinternal
     };
 
     std::ostream& operator<<(std::ostream& os, const struct PackageError& value);
-    extern int TypecheckCgo;
-    extern int DepsErrors;
+    extern int64_t TypecheckCgo;
+    extern int64_t DepsErrors;
 
     namespace rec
     {

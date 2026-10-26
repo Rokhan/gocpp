@@ -6,7 +6,7 @@
 
 namespace golang::compress::flate
 {
-    const long l3TableBits = 16;
+    inline constexpr long l3TableBits = 16;
     struct fastEncL3;
-    const int l3TableSize = 1 << l3TableBits;
+    inline constexpr int64_t l3TableSize = 1 << l3TableBits;
 }

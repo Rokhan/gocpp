@@ -12,6 +12,8 @@
 
 namespace golang::runtime
 {
+    struct GoTag_lockRank { };
+    using lockRank = gocpp::defined<int64_t, GoTag_lockRank>;
     // lockNames gives the names associated with each of the above ranks.
     extern gocpp::slice<gocpp::string> lockNames;
     // lockPartialOrder is the transitive closure of the lock rank graph.

@@ -20,8 +20,8 @@ namespace golang::main
     {
     }
 
-    int gocpp_id_0 = 1 << 2;
-    int gocpp_id_1 = (1 << 2) - 1;
+    int64_t gocpp_id_0 = 1 << 2;
+    int64_t gocpp_id_1 = (1 << 2) - 1;
     void main()
     {
         mocklib::Printf("%v %v %v // %v %v %v\n"_s, c0, c1, c2, c3, c4, c5);

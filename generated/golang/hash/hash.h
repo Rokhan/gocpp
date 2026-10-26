@@ -48,12 +48,12 @@ namespace golang::hash
             // Reset resets the Hash to its initial state.
             virtual void vReset() = 0;
             // Size returns the number of bytes Sum will return.
-            virtual int vSize() = 0;
+            virtual int64_t vSize() = 0;
             // BlockSize returns the hash's underlying block size.
             // The Write method must be able to accept any amount
             // of data, but it may operate more efficiently if all writes
             // are a multiple of the block size.
-            virtual int vBlockSize() = 0;
+            virtual int64_t vBlockSize() = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -69,9 +69,9 @@ namespace golang::hash
 
             void vReset() override;
 
-            int vSize() override;
+            int64_t vSize() override;
 
-            int vBlockSize() override;
+            int64_t vBlockSize() override;
 
             void* getPtr() override
             {
@@ -94,14 +94,14 @@ namespace golang::hash
         void Reset(const gocpp::PtrRecv<struct Hash, false>& self);
         void Reset(const gocpp::ObjRecv<struct Hash>& self);
 
-        int Size(const gocpp::PtrRecv<struct Hash, false>& self);
-        int Size(const gocpp::ObjRecv<struct Hash>& self);
+        int64_t Size(const gocpp::PtrRecv<struct Hash, false>& self);
+        int64_t Size(const gocpp::ObjRecv<struct Hash>& self);
 
-        int BlockSize(const gocpp::PtrRecv<struct Hash, false>& self);
-        int BlockSize(const gocpp::ObjRecv<struct Hash>& self);
+        int64_t BlockSize(const gocpp::PtrRecv<struct Hash, false>& self);
+        int64_t BlockSize(const gocpp::ObjRecv<struct Hash>& self);
 
-        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Hash, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Hash>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct Hash, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::ObjRecv<struct Hash>& self, gocpp::slice<unsigned char> p);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash& value);
@@ -140,7 +140,7 @@ namespace golang::hash
             // The Write method must be able to accept any amount
             // of data, but it may operate more efficiently if all writes
             // are a multiple of the block size.
-            virtual int vBlockSize() = 0;
+            virtual int64_t vBlockSize() = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -154,7 +154,7 @@ namespace golang::hash
 
             void vReset() override;
 
-            int vBlockSize() override;
+            int64_t vBlockSize() override;
 
             void* getPtr() override
             {
@@ -174,14 +174,14 @@ namespace golang::hash
         void Reset(const gocpp::PtrRecv<struct XOF, false>& self);
         void Reset(const gocpp::ObjRecv<struct XOF>& self);
 
-        int BlockSize(const gocpp::PtrRecv<struct XOF, false>& self);
-        int BlockSize(const gocpp::ObjRecv<struct XOF>& self);
+        int64_t BlockSize(const gocpp::PtrRecv<struct XOF, false>& self);
+        int64_t BlockSize(const gocpp::ObjRecv<struct XOF>& self);
 
-        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct XOF, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct XOF>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct XOF, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::ObjRecv<struct XOF>& self, gocpp::slice<unsigned char> p);
 
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct XOF, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct XOF>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct XOF, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct XOF>& self, gocpp::slice<unsigned char> p);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct XOF& value);
@@ -246,20 +246,20 @@ namespace golang::hash
         uint32_t Sum32(const gocpp::PtrRecv<struct Hash32, false>& self);
         uint32_t Sum32(const gocpp::ObjRecv<struct Hash32>& self);
 
-        int BlockSize(const gocpp::PtrRecv<struct Hash32, false>& self);
-        int BlockSize(const gocpp::ObjRecv<struct Hash32>& self);
+        int64_t BlockSize(const gocpp::PtrRecv<struct Hash32, false>& self);
+        int64_t BlockSize(const gocpp::ObjRecv<struct Hash32>& self);
 
         void Reset(const gocpp::PtrRecv<struct Hash32, false>& self);
         void Reset(const gocpp::ObjRecv<struct Hash32>& self);
 
-        int Size(const gocpp::PtrRecv<struct Hash32, false>& self);
-        int Size(const gocpp::ObjRecv<struct Hash32>& self);
+        int64_t Size(const gocpp::PtrRecv<struct Hash32, false>& self);
+        int64_t Size(const gocpp::ObjRecv<struct Hash32>& self);
 
         gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<struct Hash32, false>& self, gocpp::slice<unsigned char> b);
         gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<struct Hash32>& self, gocpp::slice<unsigned char> b);
 
-        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Hash32, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Hash32>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct Hash32, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::ObjRecv<struct Hash32>& self, gocpp::slice<unsigned char> p);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash32& value);
@@ -324,20 +324,20 @@ namespace golang::hash
         uint64_t Sum64(const gocpp::PtrRecv<struct Hash64, false>& self);
         uint64_t Sum64(const gocpp::ObjRecv<struct Hash64>& self);
 
-        int BlockSize(const gocpp::PtrRecv<struct Hash64, false>& self);
-        int BlockSize(const gocpp::ObjRecv<struct Hash64>& self);
+        int64_t BlockSize(const gocpp::PtrRecv<struct Hash64, false>& self);
+        int64_t BlockSize(const gocpp::ObjRecv<struct Hash64>& self);
 
         void Reset(const gocpp::PtrRecv<struct Hash64, false>& self);
         void Reset(const gocpp::ObjRecv<struct Hash64>& self);
 
-        int Size(const gocpp::PtrRecv<struct Hash64, false>& self);
-        int Size(const gocpp::ObjRecv<struct Hash64>& self);
+        int64_t Size(const gocpp::PtrRecv<struct Hash64, false>& self);
+        int64_t Size(const gocpp::ObjRecv<struct Hash64>& self);
 
         gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<struct Hash64, false>& self, gocpp::slice<unsigned char> b);
         gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<struct Hash64>& self, gocpp::slice<unsigned char> b);
 
-        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Hash64, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Hash64>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct Hash64, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::ObjRecv<struct Hash64>& self, gocpp::slice<unsigned char> p);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash64& value);
@@ -402,20 +402,20 @@ namespace golang::hash
         std::tuple<Cloner, gocpp::error> Clone(const gocpp::PtrRecv<struct Cloner, false>& self);
         std::tuple<Cloner, gocpp::error> Clone(const gocpp::ObjRecv<struct Cloner>& self);
 
-        int BlockSize(const gocpp::PtrRecv<struct Cloner, false>& self);
-        int BlockSize(const gocpp::ObjRecv<struct Cloner>& self);
+        int64_t BlockSize(const gocpp::PtrRecv<struct Cloner, false>& self);
+        int64_t BlockSize(const gocpp::ObjRecv<struct Cloner>& self);
 
         void Reset(const gocpp::PtrRecv<struct Cloner, false>& self);
         void Reset(const gocpp::ObjRecv<struct Cloner>& self);
 
-        int Size(const gocpp::PtrRecv<struct Cloner, false>& self);
-        int Size(const gocpp::ObjRecv<struct Cloner>& self);
+        int64_t Size(const gocpp::PtrRecv<struct Cloner, false>& self);
+        int64_t Size(const gocpp::ObjRecv<struct Cloner>& self);
 
         gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<struct Cloner, false>& self, gocpp::slice<unsigned char> b);
         gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<struct Cloner>& self, gocpp::slice<unsigned char> b);
 
-        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Cloner, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Cloner>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct Cloner, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::ObjRecv<struct Cloner>& self, gocpp::slice<unsigned char> p);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Cloner& value);

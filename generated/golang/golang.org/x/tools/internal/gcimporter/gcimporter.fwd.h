@@ -8,7 +8,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 {
     // Enable debug during development: it adds some additional checks, and
     // prevents errors from being recovered.
-    const bool debug = false;
+    inline constexpr bool debug = false;
     // If trace is set, debugging output is printed to std out.
-    const bool trace = false;
+    inline constexpr bool trace = false;
 }

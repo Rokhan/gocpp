@@ -6,23 +6,24 @@
 
 namespace golang::compress::flate
 {
-    const long maxCodeLen = 16;
+    inline constexpr long maxCodeLen = 16;
     // The next three numbers come from the RFC section 3.2.7, with the
     // additional proviso in section 3.2.5 which implies that distance codes
     // 30 and 31 should never occur in compressed data.
-    const long maxNumLit = 286;
-    const long maxNumDist = 30;
-    const long numCodes = 19;
-    using CorruptInputError = int64_t;
+    inline constexpr long maxNumLit = 286;
+    inline constexpr long maxNumDist = 30;
+    inline constexpr long numCodes = 19;
+    struct GoTag_CorruptInputError;
+    using CorruptInputError = gocpp::defined<int64_t, GoTag_CorruptInputError>;
     using InternalError = gocpp::string;
     struct ReadError;
     struct WriteError;
-    const long huffmanChunkBits = 9;
-    const long huffmanCountMask = 15;
-    const long huffmanValueShift = 4;
+    inline constexpr long huffmanChunkBits = 9;
+    inline constexpr long huffmanCountMask = 15;
+    inline constexpr long huffmanValueShift = 4;
     struct huffmanDecoder;
     struct decompressor;
-    const int huffmanNumChunks = 1 << huffmanChunkBits;
+    inline constexpr int64_t huffmanNumChunks = 1 << huffmanChunkBits;
 }
 #include "golang/io/io.fwd.h"
 

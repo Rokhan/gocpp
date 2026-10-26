@@ -162,12 +162,12 @@ namespace golang::encoding::json::jsontext
             return jsonopts::rec::Join(gocpp::recv(self.ptr->Struct), srcs);
         }
 
-        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<unsigned char> b, int where)
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<unsigned char> b, int64_t where)
         {
             return rec::appendStackPointer(gocpp::recv(self.ptr->state), b, where);
         }
 
-        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct encoderState>& self, gocpp::slice<unsigned char> b, int where)
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct encoderState>& self, gocpp::slice<unsigned char> b, int64_t where)
         {
             return rec::appendStackPointer(gocpp::recv(self.obj.state), b, where);
         }
@@ -177,7 +177,7 @@ namespace golang::encoding::json::jsontext
             return rec::needObjectValue(gocpp::recv(self.ptr->state));
         }
 
-        int64_t offsetAt(const gocpp::PtrRecv<struct encoderState, false>& self, int pos)
+        int64_t offsetAt(const gocpp::PtrRecv<struct encoderState, false>& self, int64_t pos)
         {
             return rec::offsetAt(gocpp::recv(self.ptr->encodeBuffer), pos);
         }
@@ -435,7 +435,7 @@ namespace golang::encoding::json::jsontext
         return nullptr;
     }
 
-    int64_t rec::offsetAt(encodeBuffer* e, int pos)
+    int64_t rec::offsetAt(encodeBuffer* e, int64_t pos)
     {
         return e->baseOffset + int64_t(pos);
     }
@@ -512,7 +512,7 @@ namespace golang::encoding::json::jsontext
         auto b = rec::unflushedBuffer(gocpp::recv(e));
 
         // Detect whether the last value was empty.
-        int n = {};
+        int64_t n = {};
         if(len(b) >= 3)
         {
             //Go switch emulation
@@ -899,9 +899,9 @@ namespace golang::encoding::json::jsontext
         auto pos = len(b);
 
         // Append the value to the output.
-        int n = {};
+        int64_t n = {};
         n += jsonwire::ConsumeWhitespace(v.make_slice(n));
-        int m;
+        int64_t m;
         gocpp::error err;
         std::tie(b, m, err) = rec::reformatValue(gocpp::recv(e), b, v.make_slice(n), rec::Depth(gocpp::recv(e->state.Tokens)));
         if(err != nullptr)
@@ -1006,9 +1006,9 @@ namespace golang::encoding::json::jsontext
     // CountNextDelimWhitespace counts the number of bytes of delimiter and
     // whitespace bytes assuming the upcoming token is a JSON value.
     // This method is used for error reporting at the semantic layer.
-    int rec::CountNextDelimWhitespace(encoderState* e)
+    int64_t rec::CountNextDelimWhitespace(encoderState* e)
     {
-        int n;
+        int64_t n;
         // arbitrary kind as next JSON value
         auto next = Kind('"');
         auto delim = rec::needDelim(gocpp::recv(e->state.Tokens), next);
@@ -1066,7 +1066,7 @@ namespace golang::encoding::json::jsontext
 
     // AppendIndent appends the appropriate number of indentation characters
     // for the current nested level, n.
-    gocpp::slice<unsigned char> rec::AppendIndent(encoderState* e, gocpp::slice<unsigned char> b, int n)
+    gocpp::slice<unsigned char> rec::AppendIndent(encoderState* e, gocpp::slice<unsigned char> b, int64_t n)
     {
         if(n == 0)
         {
@@ -1084,7 +1084,7 @@ namespace golang::encoding::json::jsontext
     // reformatValue parses a JSON value from the start of src and
     // appends it to the end of dst, reformatting whitespace and strings as needed.
     // It returns the extended dst buffer and the number of consumed input bytes.
-    std::tuple<gocpp::slice<unsigned char>, int, gocpp::error> rec::reformatValue(encoderState* e, gocpp::slice<unsigned char> dst, Value src, int depth)
+    std::tuple<gocpp::slice<unsigned char>, int64_t, gocpp::error> rec::reformatValue(encoderState* e, gocpp::slice<unsigned char> dst, Value src, int64_t depth)
     {
         // TODO: Should this update ValueFlags as input?
         if(len(src) == 0)
@@ -1163,7 +1163,7 @@ namespace golang::encoding::json::jsontext
     // reformatObject parses a JSON object from the start of src and
     // appends it to the end of dst, reformatting whitespace and strings as needed.
     // It returns the extended dst buffer and the number of consumed input bytes.
-    std::tuple<gocpp::slice<unsigned char>, int, gocpp::error> rec::reformatObject(encoderState* e, gocpp::slice<unsigned char> dst, Value src, int depth)
+    std::tuple<gocpp::slice<unsigned char>, int64_t, gocpp::error> rec::reformatObject(encoderState* e, gocpp::slice<unsigned char> dst, Value src, int64_t depth)
     {
         gocpp::Defer defer;
         try
@@ -1179,11 +1179,11 @@ namespace golang::encoding::json::jsontext
                 return {dst, 0, errMaxDepth};
             }
             dst = append(dst, '{');
-            auto n = len("{"_s);
+            int64_t n = len("{"_s);
 
             // Append (possible) object end.
             n += jsonwire::ConsumeWhitespace(src.make_slice(n));
-            if((unsigned int)(len(src)) <= (unsigned int)(n))
+            if((uint64_t)(len(src)) <= (uint64_t)(n))
             {
                 return {dst, n, io::ErrUnexpectedEOF};
             }
@@ -1213,7 +1213,7 @@ namespace golang::encoding::json::jsontext
 
                 // Append object name.
                 n += jsonwire::ConsumeWhitespace(src.make_slice(n));
-                if((unsigned int)(len(src)) <= (unsigned int)(n))
+                if((uint64_t)(len(src)) <= (uint64_t)(n))
                 {
                     return {dst, n, io::ErrUnexpectedEOF};
                 }
@@ -1240,7 +1240,7 @@ namespace golang::encoding::json::jsontext
 
                 // Append colon.
                 n += jsonwire::ConsumeWhitespace(src.make_slice(n));
-                if((unsigned int)(len(src)) <= (unsigned int)(n))
+                if((uint64_t)(len(src)) <= (uint64_t)(n))
                 {
                     return {dst, n, wrapWithObjectName(io::ErrUnexpectedEOF, quotedName)};
                 }
@@ -1258,7 +1258,7 @@ namespace golang::encoding::json::jsontext
 
                 // Append object value.
                 n += jsonwire::ConsumeWhitespace(src.make_slice(n));
-                if((unsigned int)(len(src)) <= (unsigned int)(n))
+                if((uint64_t)(len(src)) <= (uint64_t)(n))
                 {
                     return {dst, n, wrapWithObjectName(io::ErrUnexpectedEOF, quotedName)};
                 }
@@ -1271,7 +1271,7 @@ namespace golang::encoding::json::jsontext
 
                 // Append comma or object end.
                 n += jsonwire::ConsumeWhitespace(src.make_slice(n));
-                if((unsigned int)(len(src)) <= (unsigned int)(n))
+                if((uint64_t)(len(src)) <= (uint64_t)(n))
                 {
                     return {dst, n, io::ErrUnexpectedEOF};
                 }
@@ -1317,7 +1317,7 @@ namespace golang::encoding::json::jsontext
     // reformatArray parses a JSON array from the start of src and
     // appends it to the end of dst, reformatting whitespace and strings as needed.
     // It returns the extended dst buffer and the number of consumed input bytes.
-    std::tuple<gocpp::slice<unsigned char>, int, gocpp::error> rec::reformatArray(encoderState* e, gocpp::slice<unsigned char> dst, Value src, int depth)
+    std::tuple<gocpp::slice<unsigned char>, int64_t, gocpp::error> rec::reformatArray(encoderState* e, gocpp::slice<unsigned char> dst, Value src, int64_t depth)
     {
         // Append array begin.
         if(len(src) == 0 || src[0] != '[')
@@ -1330,11 +1330,11 @@ namespace golang::encoding::json::jsontext
             return {dst, 0, errMaxDepth};
         }
         dst = append(dst, '[');
-        auto n = len("["_s);
+        int64_t n = len("["_s);
 
         // Append (possible) array end.
         n += jsonwire::ConsumeWhitespace(src.make_slice(n));
-        if((unsigned int)(len(src)) <= (unsigned int)(n))
+        if((uint64_t)(len(src)) <= (uint64_t)(n))
         {
             return {dst, n, io::ErrUnexpectedEOF};
         }
@@ -1358,11 +1358,11 @@ namespace golang::encoding::json::jsontext
 
             // Append array value.
             n += jsonwire::ConsumeWhitespace(src.make_slice(n));
-            if((unsigned int)(len(src)) <= (unsigned int)(n))
+            if((uint64_t)(len(src)) <= (uint64_t)(n))
             {
                 return {dst, n, io::ErrUnexpectedEOF};
             }
-            int m = {};
+            int64_t m = {};
             std::tie(dst, m, err) = rec::reformatValue(gocpp::recv(e), dst, src.make_slice(n), depth);
             if(err != nullptr)
             {
@@ -1372,7 +1372,7 @@ namespace golang::encoding::json::jsontext
 
             // Append comma or array end.
             n += jsonwire::ConsumeWhitespace(src.make_slice(n));
-            if((unsigned int)(len(src)) <= (unsigned int)(n))
+            if((uint64_t)(len(src)) <= (uint64_t)(n))
             {
                 return {dst, n, io::ErrUnexpectedEOF};
             }
@@ -1444,7 +1444,7 @@ namespace golang::encoding::json::jsontext
         // Should this ever alias e.Buf, we need to consider how it operates with
         // the specialized performance optimization for bytes.Buffer.
         // fast approximation for max length
-        auto n = 1 << bits::Len((unsigned int)(e->s.encodeBuffer.maxValue | 63));
+        auto n = 1 << bits::Len((uint64_t)(e->s.encodeBuffer.maxValue | 63));
         if(cap(e->s.encodeBuffer.availBuffer) < n)
         {
             e->s.encodeBuffer.availBuffer = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, n);
@@ -1475,7 +1475,7 @@ namespace golang::encoding::json::jsontext
     //   - After encoding the inner '[', StackDepth reports 2.
     //   - After encoding the inner ']', StackDepth reports 1.
     //   - After encoding the outer '}', StackDepth reports 0.
-    int rec::StackDepth(golang::encoding::json::jsontext::Encoder* e)
+    int64_t rec::StackDepth(golang::encoding::json::jsontext::Encoder* e)
     {
         // NOTE: Keep in sync with Decoder.StackDepth.
         return rec::Depth(gocpp::recv(e->s.state.Tokens)) - 1;
@@ -1493,7 +1493,7 @@ namespace golang::encoding::json::jsontext
     // Each name and value in a JSON object is counted separately,
     // so the effective number of members is half the length.
     // A complete JSON object must have an even length.
-    std::tuple<golang::encoding::json::jsontext::Kind, int64_t> rec::StackIndex(golang::encoding::json::jsontext::Encoder* e, int i)
+    std::tuple<golang::encoding::json::jsontext::Kind, int64_t> rec::StackIndex(golang::encoding::json::jsontext::Encoder* e, int64_t i)
     {
         // NOTE: Keep in sync with Decoder.StackIndex.
         //Go switch emulation
@@ -1523,7 +1523,7 @@ namespace golang::encoding::json::jsontext
         return Pointer(rec::AppendStackPointer(gocpp::recv(e->s), nullptr, - 1));
     }
 
-    gocpp::slice<unsigned char> rec::AppendStackPointer(encoderState* e, gocpp::slice<unsigned char> b, int where)
+    gocpp::slice<unsigned char> rec::AppendStackPointer(encoderState* e, gocpp::slice<unsigned char> b, int64_t where)
     {
         rec::copyQuotedBuffer(gocpp::recv(e->state.Names), e->encodeBuffer.Buf);
         return rec::appendStackPointer(gocpp::recv(e->state), b, where);

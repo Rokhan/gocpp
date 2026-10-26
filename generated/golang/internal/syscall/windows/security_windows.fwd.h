@@ -6,36 +6,37 @@
 
 namespace golang::internal::syscall::windows
 {
-    const long SecurityAnonymous = 0;
-    const long SecurityIdentification = 1;
-    const long SecurityImpersonation = 2;
-    const long SecurityDelegation = 3;
-    const long TOKEN_ADJUST_PRIVILEGES = 0x0020;
-    const long SE_PRIVILEGE_ENABLED = 0x00000002;
+    inline constexpr long SecurityAnonymous = 0;
+    inline constexpr long SecurityIdentification = 1;
+    inline constexpr long SecurityImpersonation = 2;
+    inline constexpr long SecurityDelegation = 3;
+    inline constexpr long TOKEN_ADJUST_PRIVILEGES = 0x0020;
+    inline constexpr long SE_PRIVILEGE_ENABLED = 0x00000002;
     struct LUID;
     struct LUID_AND_ATTRIBUTES;
     struct TOKEN_PRIVILEGES;
     struct SID_AND_ATTRIBUTES;
     struct TOKEN_MANDATORY_LABEL;
-    const long SE_GROUP_INTEGRITY = 0x00000020;
-    using TokenType = uint32_t;
-    const long LG_INCLUDE_INDIRECT = 0x1;
-    const long MAX_PREFERRED_LENGTH = 0xFFFFFFFF;
+    inline constexpr long SE_GROUP_INTEGRITY = 0x00000020;
+    struct GoTag_TokenType;
+    using TokenType = gocpp::defined<uint32_t, GoTag_TokenType>;
+    inline constexpr long LG_INCLUDE_INDIRECT = 0x1;
+    inline constexpr long MAX_PREFERRED_LENGTH = 0xFFFFFFFFLL;
     struct LocalGroupUserInfo0;
-    const long USER_PRIV_USER = 1;
+    inline constexpr long USER_PRIV_USER = 1;
     struct UserInfo1;
     struct UserInfo4;
     struct TOKEN_GROUPS;
     struct SID_IDENTIFIER_AUTHORITY;
-    const long SID_REVISION = 1;
+    inline constexpr long SID_REVISION = 1;
     // https://learn.microsoft.com/en-us/windows/win32/services/localsystem-account
-    const long SECURITY_LOCAL_SYSTEM_RID = 18;
+    inline constexpr long SECURITY_LOCAL_SYSTEM_RID = 18;
     // https://learn.microsoft.com/en-us/windows/win32/services/localservice-account
-    const long SECURITY_LOCAL_SERVICE_RID = 19;
+    inline constexpr long SECURITY_LOCAL_SERVICE_RID = 19;
     // https://learn.microsoft.com/en-us/windows/win32/services/networkservice-account
-    const long SECURITY_NETWORK_SERVICE_RID = 20;
-    const TokenType TokenPrimary = 1;
-    const TokenType TokenImpersonation = 2;
+    inline constexpr long SECURITY_NETWORK_SERVICE_RID = 20;
+    inline constexpr TokenType TokenPrimary = 1;
+    inline constexpr TokenType TokenImpersonation = 2;
 }
 #include "golang/syscall/security_windows.fwd.h"
 #include "golang/syscall/syscall_windows.fwd.h"
@@ -46,6 +47,6 @@ namespace golang::internal::syscall::windows
 namespace golang::internal::syscall::windows
 {
     namespace syscall = golang::syscall;
-    const syscall::Errno NERR_UserNotFound = 2221;
-    const syscall::Errno NERR_UserExists = 2224;
+    inline constexpr syscall::Errno NERR_UserNotFound = 2221;
+    inline constexpr syscall::Errno NERR_UserExists = 2224;
 }

@@ -777,7 +777,7 @@ namespace golang::go::ast
     {
         return [=](std::function<bool (Node _1)> yield) mutable -> void
         {
-            auto ok = true;
+            bool ok = true;
             Inspect(root, [=](Node n) mutable -> bool
             {
                 if(n != nullptr)

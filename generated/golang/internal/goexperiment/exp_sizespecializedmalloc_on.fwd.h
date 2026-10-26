@@ -6,6 +6,6 @@
 
 namespace golang::internal::goexperiment
 {
-    const bool SizeSpecializedMalloc = true;
-    const long SizeSpecializedMallocInt = 1;
+    inline constexpr bool SizeSpecializedMalloc = true;
+    inline constexpr long SizeSpecializedMallocInt = 1;
 }

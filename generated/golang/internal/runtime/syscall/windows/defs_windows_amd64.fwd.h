@@ -6,7 +6,7 @@
 
 namespace golang::internal::runtime::syscall::windows
 {
-    const long CONTEXT_CONTROL = 0x100001;
+    inline constexpr long CONTEXT_CONTROL = 0x100001;
     struct M128;
     struct Context;
     struct DISPATCHER_CONTEXT;

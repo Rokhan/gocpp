@@ -239,7 +239,7 @@ namespace golang::go::types
     }
 
     // filename returns a filename suitable for debugging output.
-    gocpp::string rec::filename(Checker* check, int fileNo)
+    gocpp::string rec::filename(Checker* check, int64_t fileNo)
     {
         auto file = check->files[fileNo];
         if(auto pos = rec::Pos(gocpp::recv(file)); rec::IsValid(gocpp::recv(pos)))
@@ -646,7 +646,7 @@ namespace golang::go::types
                                 if(name == "init"_s || (name == "main"_s && check->pkg->name == "main"_s))
                                 {
                                     // init and main functions must not declare type and ordinary parameters or results
-                                    auto code = InvalidInitDecl;
+                                    errors::Code code = InvalidInitDecl;
                                     if(name == "main"_s)
                                     {
                                         code = InvalidMainDecl;
@@ -764,13 +764,13 @@ namespace golang::go::types
     void rec::sortObjects(Checker* check)
     {
         check->objList = gocpp::make(gocpp::Tag<gocpp::slice<Object>>(), len(check->objMap));
-        auto i = 0;
+        int64_t i = 0;
         for(auto [obj, gocpp_ignored] : check->objMap)
         {
             check->objList[i] = obj;
             i++;
         }
-        slices::SortFunc(check->objList, [=](Object a, Object b) mutable -> int
+        slices::SortFunc(check->objList, [=](Object a, Object b) mutable -> int64_t
         {
             return cmp::Compare(rec::order(gocpp::recv(a)), rec::order(gocpp::recv(b)));
         });

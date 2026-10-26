@@ -16,7 +16,7 @@ namespace golang::bytes
     {
         gocpp::slice<unsigned char> s{};
         int64_t i{}; // current reading index
-        int prevRune{}; // index of previous rune; or < 0
+        int64_t prevRune{}; // index of previous rune; or < 0
 
         using isGoStruct = void;
 
@@ -41,15 +41,15 @@ namespace golang::bytes
 
     namespace rec
     {
-        int Len(Reader* r);
+        int64_t Len(Reader* r);
         int64_t Size(Reader* r);
-        std::tuple<int, gocpp::error> Read(Reader* r, gocpp::slice<unsigned char> b);
-        std::tuple<int, gocpp::error> ReadAt(Reader* r, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int64_t, gocpp::error> Read(Reader* r, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> ReadAt(Reader* r, gocpp::slice<unsigned char> b, int64_t off);
         std::tuple<unsigned char, gocpp::error> ReadByte(Reader* r);
         gocpp::error UnreadByte(Reader* r);
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(Reader* r);
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(Reader* r);
         gocpp::error UnreadRune(Reader* r);
-        std::tuple<int64_t, gocpp::error> Seek(Reader* r, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> Seek(Reader* r, int64_t offset, int64_t whence);
         std::tuple<int64_t, gocpp::error> WriteTo(Reader* r, io::Writer w);
         void Reset(Reader* r, gocpp::slice<unsigned char> b);
     }

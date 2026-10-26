@@ -30,7 +30,7 @@ namespace golang::internal::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cond& value);
-    gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, gocpp::string file, int line);
+    gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, gocpp::string file, int64_t line);
     struct Writer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -60,7 +60,7 @@ namespace golang::internal::bisect
 
         struct IWriter
         {
-            virtual std::tuple<int, gocpp::error> vWrite(gocpp::slice<unsigned char> _1) = 0;
+            virtual std::tuple<int64_t, gocpp::error> vWrite(gocpp::slice<unsigned char> _1) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -72,7 +72,7 @@ namespace golang::internal::bisect
                 value.reset(ptr);
             }
 
-            std::tuple<int, gocpp::error> vWrite(gocpp::slice<unsigned char> _1) override;
+            std::tuple<int64_t, gocpp::error> vWrite(gocpp::slice<unsigned char> _1) override;
 
             void* getPtr() override
             {
@@ -89,8 +89,8 @@ namespace golang::internal::bisect
 
     namespace rec
     {
-        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Writer, false>& self, gocpp::slice<unsigned char> _1);
-        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Writer>& self, gocpp::slice<unsigned char> _1);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct Writer, false>& self, gocpp::slice<unsigned char> _1);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::ObjRecv<struct Writer>& self, gocpp::slice<unsigned char> _1);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
@@ -130,7 +130,7 @@ namespace golang::internal::bisect
     uint64_t fnvString(uint64_t h, gocpp::string x);
     uint64_t fnvUint64(uint64_t h, uint64_t x);
     uint64_t fnvUint32(uint64_t h, uint32_t x);
-    gocpp::error printFileLine(Writer w, uint64_t h, gocpp::string file, int line);
+    gocpp::error printFileLine(Writer w, uint64_t h, gocpp::string file, int64_t line);
     gocpp::error PrintMarker(Writer w, uint64_t h);
     gocpp::error printStack(Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
 }
@@ -204,8 +204,8 @@ namespace golang::internal::bisect
         bool ShouldEnable(Matcher* m, uint64_t id);
         bool ShouldPrint(Matcher* m, uint64_t id);
         bool matchResult(Matcher* m, uint64_t id);
-        bool FileLine(Matcher* m, Writer w, gocpp::string file, int line);
-        bool fileLine(Matcher* m, Writer w, gocpp::string file, int line);
+        bool FileLine(Matcher* m, Writer w, gocpp::string file, int64_t line);
+        bool fileLine(Matcher* m, Writer w, gocpp::string file, int64_t line);
         bool Stack(Matcher* m, Writer w);
         bool stack(Matcher* m, Writer w);
         gocpp::string Error(parseError* e);

@@ -14,7 +14,7 @@ namespace golang::go::doc
 {
     bool isTest(gocpp::string name, gocpp::string prefix);
     gocpp::string nameWithoutInst(gocpp::string name);
-    std::tuple<gocpp::string, gocpp::string, bool> splitExampleName(gocpp::string s, int i);
+    std::tuple<gocpp::string, gocpp::string, bool> splitExampleName(gocpp::string s, int64_t i);
     bool isExampleSuffix(gocpp::string s);
 }
 #include "golang/go/ast/ast.fwd.h"
@@ -46,7 +46,7 @@ namespace golang::go::doc
         gocpp::string Output{}; // expected output
         bool Unordered{};
         bool EmptyOutput{}; // expect empty output
-        int Order{}; // original source code order
+        int64_t Order{}; // original source code order
 
         using isGoStruct = void;
 
@@ -69,7 +69,7 @@ namespace golang::go::doc
     gocpp::slice<ast::ImportSpec*> findImportGroupStarts1(gocpp::slice<ast::ImportSpec*> origImps);
     ast::File* playExampleFile(ast::File* file);
     std::tuple<ast::BlockStmt*, gocpp::slice<ast::CommentGroup*>> stripOutputComment(ast::BlockStmt* body, gocpp::slice<ast::CommentGroup*> comments);
-    std::tuple<int, ast::CommentGroup*> lastComment(ast::BlockStmt* b, gocpp::slice<ast::CommentGroup*> c);
+    std::tuple<int64_t, ast::CommentGroup*> lastComment(ast::BlockStmt* b, gocpp::slice<ast::CommentGroup*> c);
     void updateBasicLitPos(ast::BasicLit* lit, token::Pos pos);
     gocpp::slice<Example*> Examples(gocpp::slice<ast::File*> testFiles);
 

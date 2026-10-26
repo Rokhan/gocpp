@@ -26,7 +26,7 @@ namespace golang::strings
     // Use Compare when you need to perform a three-way comparison (with
     // [slices.SortFunc], for example). It is usually clearer and always faster
     // to use the built-in string comparison operators ==, <, >, and so on.
-    int Compare(gocpp::string a, gocpp::string b)
+    int64_t Compare(gocpp::string a, gocpp::string b)
     {
         return bytealg::CompareString(a, b);
     }

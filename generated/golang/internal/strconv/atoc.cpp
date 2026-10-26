@@ -40,9 +40,9 @@ namespace golang::internal::strconv
     // If s is syntactically well-formed but either component is more than 1/2 ULP
     // away from the largest floating point number of the given component's size,
     // ParseComplex returns err.Err = ErrRange and c = ±Inf for the respective component.
-    std::tuple<struct gocpp::complex128, gocpp::error> ParseComplex(gocpp::string s, int bitSize)
+    std::tuple<struct gocpp::complex128, gocpp::error> ParseComplex(gocpp::string s, int64_t bitSize)
     {
-        auto size = 64;
+        int64_t size = 64;
         if(bitSize == 64)
         {
             // complex64 uses float32 parts

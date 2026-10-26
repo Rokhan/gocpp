@@ -12,9 +12,11 @@
 
 namespace golang::runtime
 {
-    traceTime traceClockNow();
+    struct GoTag_traceTime { };
+    using traceTime = gocpp::defined<uint64_t, GoTag_traceTime>;
     uint64_t traceClockUnitsPerSecond();
     void traceSyncBatch(uintptr_t gen, uint64_t frequency);
+    traceTime traceClockNow();
 
     namespace rec
     {

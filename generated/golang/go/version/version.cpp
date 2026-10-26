@@ -76,7 +76,7 @@ namespace golang::go::version
     // valid versions and equal to each other.
     // The language version "go1.21" compares less than the
     // release candidate and eventual releases "go1.21rc1" and "go1.21.0".
-    int Compare(gocpp::string x, gocpp::string y)
+    int64_t Compare(gocpp::string x, gocpp::string y)
     {
         return gover::Compare(stripGo(x), stripGo(y));
     }

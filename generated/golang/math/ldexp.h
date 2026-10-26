@@ -12,8 +12,8 @@
 
 namespace golang::math
 {
-    double Ldexp(double frac, int exp);
-    double ldexp(double frac, int exp);
+    double Ldexp(double frac, int64_t exp);
+    double ldexp(double frac, int64_t exp);
 
     namespace rec
     {

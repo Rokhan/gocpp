@@ -13,9 +13,11 @@
 namespace golang::internal::strconv
 {
     unsigned char lower(unsigned char c);
-    std::tuple<uint64_t, gocpp::error> ParseUint(gocpp::string s, int base, int bitSize);
-    std::tuple<int64_t, gocpp::error> ParseInt(gocpp::string s, int base, int bitSize);
-    std::tuple<int, gocpp::error> Atoi(gocpp::string s);
+    struct GoTag_Error { };
+    using Error = gocpp::defined<int64_t, GoTag_Error>;
+    std::tuple<uint64_t, gocpp::error> ParseUint(gocpp::string s, int64_t base, int64_t bitSize);
+    std::tuple<int64_t, gocpp::error> ParseInt(gocpp::string s, int64_t base, int64_t bitSize);
+    std::tuple<int64_t, gocpp::error> Atoi(gocpp::string s);
     bool underscoreOK(gocpp::string s);
 
     namespace rec

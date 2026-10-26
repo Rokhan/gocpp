@@ -6,5 +6,5 @@
 
 namespace golang::runtime
 {
-    const long cb_max = 2000;
+    inline constexpr long cb_max = 2000;
 }

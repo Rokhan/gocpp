@@ -70,9 +70,9 @@ namespace golang::os
 
     // read reads up to len(b) bytes from the File.
     // It returns the number of bytes read and an error, if any.
-    std::tuple<int, gocpp::error> rec::read(File* f, gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> rec::read(File* f, gocpp::slice<unsigned char> b)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         std::tie(n, err) = rec::Read(gocpp::recv(f->file.pfd), b);
         runtime::KeepAlive(f);
@@ -82,9 +82,9 @@ namespace golang::os
     // pread reads len(b) bytes from the File starting at byte offset off.
     // It returns the number of bytes read and the error, if any.
     // EOF is signaled by a zero count with err set to nil.
-    std::tuple<int, gocpp::error> rec::pread(File* f, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int64_t, gocpp::error> rec::pread(File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         std::tie(n, err) = rec::Pread(gocpp::recv(f->file.pfd), b, off);
         runtime::KeepAlive(f);
@@ -93,9 +93,9 @@ namespace golang::os
 
     // write writes len(b) bytes to the File.
     // It returns the number of bytes written and an error, if any.
-    std::tuple<int, gocpp::error> rec::write(File* f, gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> rec::write(File* f, gocpp::slice<unsigned char> b)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         std::tie(n, err) = rec::Write(gocpp::recv(f->file.pfd), b);
         runtime::KeepAlive(f);
@@ -104,9 +104,9 @@ namespace golang::os
 
     // pwrite writes len(b) bytes to the File starting at byte offset off.
     // It returns the number of bytes written and an error, if any.
-    std::tuple<int, gocpp::error> rec::pwrite(File* f, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int64_t, gocpp::error> rec::pwrite(File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         std::tie(n, err) = rec::Pwrite(gocpp::recv(f->file.pfd), b, off);
         runtime::KeepAlive(f);
@@ -174,7 +174,7 @@ namespace golang::os
     //
     // On Windows or Plan 9, Chown always returns the [syscall.EWINDOWS] or
     // [syscall.EPLAN9] error, wrapped in [*PathError].
-    gocpp::error Chown(gocpp::string name, int uid, int gid)
+    gocpp::error Chown(gocpp::string name, int64_t uid, int64_t gid)
     {
         auto e = ignoringEINTR([=]() mutable -> gocpp::error
         {
@@ -197,7 +197,7 @@ namespace golang::os
     //
     // On Windows, it always returns the [syscall.EWINDOWS] error, wrapped
     // in [*PathError].
-    gocpp::error Lchown(gocpp::string name, int uid, int gid)
+    gocpp::error Lchown(gocpp::string name, int64_t uid, int64_t gid)
     {
         auto e = ignoringEINTR([=]() mutable -> gocpp::error
         {
@@ -219,7 +219,7 @@ namespace golang::os
     //
     // On Windows, it always returns the [syscall.EWINDOWS] error, wrapped
     // in [*PathError].
-    gocpp::error rec::Chown(File* f, int uid, int gid)
+    gocpp::error rec::Chown(File* f, int64_t uid, int64_t gid)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chown"_s); err != nullptr)
         {
@@ -288,7 +288,7 @@ namespace golang::os
     gocpp::array<syscall::Timespec, 2> chtimesUtimes(mocklib::Date atime, mocklib::Date mtime)
     {
         gocpp::array<syscall::Timespec, 2> utimes = {};
-        auto set = [=](int i, mocklib::Date t) mutable -> void
+        auto set = [=](int64_t i, mocklib::Date t) mutable -> void
         {
             if(rec::IsZero(gocpp::recv(t)))
             {

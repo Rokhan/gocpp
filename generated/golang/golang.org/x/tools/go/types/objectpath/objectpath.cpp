@@ -642,7 +642,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                 // to the underlying go/types data structures,
                 // which ultimately derives from source order
                 // and must be preserved by export data.
-                for(auto i = 0; i < rec::NumMethods(gocpp::recv(T)); i++)
+                for(int64_t i = 0; i < rec::NumMethods(gocpp::recv(T)); i++)
                 {
                     auto m = rec::Method(gocpp::recv(T), i);
                     rec::object(gocpp::recv(tr), path, offset, opMethod, i, m);
@@ -810,7 +810,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                 case 9:
                 {
                     types::Struct* T = gocpp::any_cast<types::Struct*>(T_ref);
-                    for(auto i = 0; i < rec::NumFields(gocpp::recv(T)); i++)
+                    for(int64_t i = 0; i < rec::NumFields(gocpp::recv(T)); i++)
                     {
                         rec::object(gocpp::recv(tr), path, offset, opField, i, rec::Field(gocpp::recv(T), i));
                     }
@@ -820,7 +820,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                 case 10:
                 {
                     types::Tuple* T = gocpp::any_cast<types::Tuple*>(T_ref);
-                    for(auto i = 0; i < rec::Len(gocpp::recv(T)); i++)
+                    for(int64_t i = 0; i < rec::Len(gocpp::recv(T)); i++)
                     {
                         rec::object(gocpp::recv(tr), path, offset, opAt, i, rec::At(gocpp::recv(T), i));
                     }
@@ -830,7 +830,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                 case 11:
                 {
                     types::Interface* T = gocpp::any_cast<types::Interface*>(T_ref);
-                    for(auto i = 0; i < rec::NumMethods(gocpp::recv(T)); i++)
+                    for(int64_t i = 0; i < rec::NumMethods(gocpp::recv(T)); i++)
                     {
                         auto m = rec::Method(gocpp::recv(T), i);
                         if(rec::Pkg(gocpp::recv(m)) != nullptr && rec::Pkg(gocpp::recv(m)) != tr->pkg)
@@ -878,14 +878,14 @@ namespace golang::golang_org::x::tools::go::types::objectpath
 
     void rec::tparams(traversal* tr, types::TypeParamList* list, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op)
     {
-        for(auto i = 0; i < rec::Len(gocpp::recv(list)); i++)
+        for(int64_t i = 0; i < rec::Len(gocpp::recv(list)); i++)
         {
             rec::typ(gocpp::recv(tr), path, offset, op, i, rec::At(gocpp::recv(list), i));
         }
     }
 
     // typ descends the type graph edge (op, index), then proceeds to traverse type t.
-    void rec::typ(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op, int index, types::Type t)
+    void rec::typ(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op, int64_t index, types::Type t)
     {
         if(tr->ix == nullptr)
         {
@@ -900,7 +900,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
 
     // object descends the type graph edge (op, index), records object
     // obj, then proceeds to traverse its type.
-    void rec::object(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op, int index, types::Object obj)
+    void rec::object(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op, int64_t index, types::Object obj)
     {
         if(tr->ix == nullptr)
         {
@@ -925,7 +925,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
 
     // emitPackageLevel encodes a record for a package-level symbol,
     // identified by its index in ix.scopeNames.
-    uint32_t rec::emitPackageLevel(pkgIndex* p, int index)
+    uint32_t rec::emitPackageLevel(pkgIndex* p, int64_t index)
     {
         auto off = uint32_t(len(p->data));
         // zero varint => no parent
@@ -935,7 +935,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
     }
 
     // emitPathSegment emits a record for a non-initial object path segment.
-    uint32_t rec::emitPathSegment(pkgIndex* p, uint32_t parent, unsigned char op, int index)
+    uint32_t rec::emitPathSegment(pkgIndex* p, uint32_t parent, unsigned char op, int64_t index)
     {
         auto off = uint32_t(len(p->data));
         p->data = binary::AppendUvarint(p->data, uint64_t(parent));
@@ -1003,7 +1003,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                     {
                         auto [val, n] = binary::Uvarint(p->data.make_slice(offset));
                         offset += uint32_t(n);
-                        elems = append(elems, strconv::Itoa(int(val)));
+                        elems = append(elems, strconv::Itoa(int64_t(val)));
                         break;
                     }
                 }
@@ -1034,7 +1034,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
 
     // appendOpArg appends (op, index) to the object path.
     // A negative index is ignored.
-    gocpp::slice<unsigned char> appendOpArg(gocpp::slice<unsigned char> path, unsigned char op, int index)
+    gocpp::slice<unsigned char> appendOpArg(gocpp::slice<unsigned char> path, unsigned char op, int64_t index)
     {
         path = append(path, op);
         if(index >= 0)
@@ -1117,7 +1117,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
         // Method indices are w.r.t. the go/types data structures,
         // ultimately deriving from source order,
         // which is preserved by export data.
-        for(auto i = 0; i < rec::NumMethods(gocpp::recv(named)); i++)
+        for(int64_t i = 0; i < rec::NumMethods(gocpp::recv(named)); i++)
         {
             if(rec::Method(gocpp::recv(named), i) == meth)
             {
@@ -1440,7 +1440,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
             suffix = suffix.make_slice(1);
 
             // Codes [AFMTr] have an integer operand.
-            int index = {};
+            int64_t index = {};
             //Go switch emulation
             {
                 auto condition = code;
@@ -1467,7 +1467,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                         {
                             return {nullptr, mocklib::Errorf("invalid path: bad numeric operand %q for code %q"_s, numerals, code)};
                         }
-                        index = int(i);
+                        index = int64_t(i);
                         break;
                     }
                     case 5:

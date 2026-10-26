@@ -54,7 +54,7 @@ namespace golang::runtime
     // from stack traces, see CL 5523.
     //
     // Avoid calling this function directly. Prefer traceEventWriter.stack.
-    uint64_t traceStack(int skip, g* gp, traceStackTable* tab)
+    uint64_t traceStack(int64_t skip, g* gp, traceStackTable* tab)
     {
         auto pcBuf = getg()->m->profStack;
 
@@ -106,7 +106,7 @@ namespace golang::runtime
             // It may still have an M, if it's locked to some M.
             mp = rec::ptr(gocpp::recv(gp->lockedm));
         }
-        auto nstk = 1;
+        int64_t nstk = 1;
         if(tracefpunwindoff() || (mp != nullptr && rec::hasCgoOnStack(gocpp::recv(mp))))
         {
             // Slow path: Unwind using default unwinder. Used when frame pointer
@@ -397,9 +397,9 @@ namespace golang::runtime
     // returns the number of PCs written to pcBuf. The returned PCs correspond to
     // "physical frames" rather than "logical frames"; that is if A is inlined into
     // B, this will return a PC for only B.
-    int fpTracebackPCs(gocpp::unsafe_pointer fp, gocpp::slice<uintptr_t> pcBuf)
+    int64_t fpTracebackPCs(gocpp::unsafe_pointer fp, gocpp::slice<uintptr_t> pcBuf)
     {
-        int i;
+        int64_t i;
         for(i = 0; i < len(pcBuf) && fp != nullptr; i++)
         {
             // return addr sits one word above the frame pointer
@@ -411,7 +411,7 @@ namespace golang::runtime
     }
 
     //go:linkname pprof_fpunwindExpand
-    int pprof_fpunwindExpand(gocpp::slice<uintptr_t> dst, gocpp::slice<uintptr_t> src)
+    int64_t pprof_fpunwindExpand(gocpp::slice<uintptr_t> dst, gocpp::slice<uintptr_t> src)
     {
         return fpunwindExpand(dst, src);
     }
@@ -425,7 +425,7 @@ namespace golang::runtime
     // sentinel value in pcBuf[0]. Logical frames are simply returned without the
     // sentinel. Physical frames are turned into logical frames via inline unwinding
     // and by applying the skip value that's stored in pcBuf[0].
-    int fpunwindExpand(gocpp::slice<uintptr_t> dst, gocpp::slice<uintptr_t> pcBuf)
+    int64_t fpunwindExpand(gocpp::slice<uintptr_t> dst, gocpp::slice<uintptr_t> pcBuf)
     {
         if(len(pcBuf) == 0)
         {
@@ -439,7 +439,7 @@ namespace golang::runtime
             return copy(dst, pcBuf.make_slice(1));
         }
 
-        int n = {};
+        int64_t n = {};
         auto lastFuncID = abi::FuncIDNormal;
         auto skip = pcBuf[0];
         auto skipOrAdd = [=](uintptr_t retPC) mutable -> bool

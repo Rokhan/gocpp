@@ -48,8 +48,8 @@ namespace golang::fmt
     {
         buffer* buf{};
         fmtFlags fmtFlags{};
-        int wid{}; // width
-        int prec{}; // precision
+        int64_t wid{}; // width
+        int64_t prec{}; // precision
         // intbuf is large enough to store %b of an int64 with a sign and
         // avoids padding at the end of the struct on 32 bit architectures.
         gocpp::array<unsigned char, 68> intbuf{};
@@ -77,12 +77,12 @@ namespace golang::fmt
     {
         void clearflags(golang::fmt::fmt* f);
         void init(golang::fmt::fmt* f, buffer* buf);
-        void writePadding(golang::fmt::fmt* f, int n);
+        void writePadding(golang::fmt::fmt* f, int64_t n);
         void pad(golang::fmt::fmt* f, gocpp::slice<unsigned char> b);
         void padString(golang::fmt::fmt* f, gocpp::string s);
         void fmtBoolean(golang::fmt::fmt* f, bool v);
         void fmtUnicode(golang::fmt::fmt* f, uint64_t u);
-        void fmtInteger(golang::fmt::fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, gocpp::string digits);
+        void fmtInteger(golang::fmt::fmt* f, uint64_t u, int64_t base, bool isSigned, gocpp::rune verb, gocpp::string digits);
         gocpp::string truncateString(golang::fmt::fmt* f, gocpp::string s);
         gocpp::slice<unsigned char> truncate(golang::fmt::fmt* f, gocpp::slice<unsigned char> b);
         void fmtS(golang::fmt::fmt* f, gocpp::string s);
@@ -93,7 +93,7 @@ namespace golang::fmt
         void fmtQ(golang::fmt::fmt* f, gocpp::string s);
         void fmtC(golang::fmt::fmt* f, uint64_t c);
         void fmtQc(golang::fmt::fmt* f, uint64_t c);
-        void fmtFloat(golang::fmt::fmt* f, double v, int size, gocpp::rune verb, int prec);
+        void fmtFloat(golang::fmt::fmt* f, double v, int64_t size, gocpp::rune verb, int64_t prec);
     }
 }
 

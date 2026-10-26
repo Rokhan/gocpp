@@ -445,7 +445,7 @@ namespace golang::encoding::json::internal::jsonopts
                     {
                         jsonopts::DepthLimit src = gocpp::any_cast<jsonopts::DepthLimit>(src_ref);
                         rec::Set(gocpp::recv(dst->Flags), jsonflags::DepthLimit | 1);
-                        dst->CoderValues.DepthLimit = int(src);
+                        dst->CoderValues.DepthLimit = int64_t(src);
                         break;
                     }
                     case 7:

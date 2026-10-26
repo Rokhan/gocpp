@@ -12,7 +12,7 @@
 
 namespace golang::go::types
 {
-    gocpp::string measure(int x, gocpp::string unit);
+    gocpp::string measure(int64_t x, gocpp::string unit);
 }
 #include "golang/go/types/type.h"
 #include "golang/go/types/object.fwd.h"
@@ -43,7 +43,7 @@ namespace golang::go::types
         golang::go::types::Type lhsVar(Checker* check, ast::Expr lhs);
         void assignVar(Checker* check, ast::Expr lhs, ast::Expr rhs, operand* x, gocpp::string context);
         gocpp::string typesSummary(Checker* check, gocpp::slice<golang::go::types::Type> list, bool variadic, bool hasDots);
-        void assignError(Checker* check, gocpp::slice<ast::Expr> rhs, int l, int r);
+        void assignError(Checker* check, gocpp::slice<ast::Expr> rhs, int64_t l, int64_t r);
         void returnError(Checker* check, positioner at, gocpp::slice<Var*> lhs, gocpp::slice<operand*> rhs);
         void initVars(Checker* check, gocpp::slice<Var*> lhs, gocpp::slice<ast::Expr> orig_rhs, ast::Stmt returnStmt);
         void assignVars(Checker* check, gocpp::slice<ast::Expr> lhs, gocpp::slice<ast::Expr> orig_rhs);

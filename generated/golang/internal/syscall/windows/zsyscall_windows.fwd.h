@@ -8,5 +8,5 @@ namespace golang::internal::syscall::windows
 {
     // Do the interface allocations only once for common
     // Errno values.
-    const long errnoERROR_IO_PENDING = 997;
+    inline constexpr long errnoERROR_IO_PENDING = 997;
 }

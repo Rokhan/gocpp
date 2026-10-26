@@ -156,8 +156,8 @@ namespace golang::runtime
         void end(dloggerImpl* l);
         dloggerFake b(dloggerFake l, bool x);
         dloggerImpl* b(dloggerImpl* l, bool x);
-        dloggerFake i(dloggerFake l, int x);
-        dloggerImpl* i(dloggerImpl* l, int x);
+        dloggerFake i(dloggerFake l, int64_t x);
+        dloggerImpl* i(dloggerImpl* l, int64_t x);
         dloggerFake i8(dloggerFake l, int8_t x);
         dloggerImpl* i8(dloggerImpl* l, int8_t x);
         dloggerFake i16(dloggerFake l, int16_t x);
@@ -166,8 +166,8 @@ namespace golang::runtime
         dloggerImpl* i32(dloggerImpl* l, int32_t x);
         dloggerFake i64(dloggerFake l, int64_t x);
         dloggerImpl* i64(dloggerImpl* l, int64_t x);
-        dloggerFake u(dloggerFake l, unsigned int x);
-        dloggerImpl* u(dloggerImpl* l, unsigned int x);
+        dloggerFake u(dloggerFake l, uint64_t x);
+        dloggerImpl* u(dloggerImpl* l, uint64_t x);
         dloggerFake uptr(dloggerFake l, uintptr_t x);
         dloggerImpl* uptr(dloggerImpl* l, uintptr_t x);
         dloggerFake u8(dloggerFake l, uint8_t x);
@@ -202,7 +202,7 @@ namespace golang::runtime
         uint16_t readUint16LEAt(debugLogReader* r, uint64_t pos);
         uint64_t readUint64LEAt(debugLogReader* r, uint64_t pos);
         uint64_t peek(debugLogReader* r);
-        std::tuple<uint64_t, uint64_t, uint64_t, int> header(debugLogReader* r);
+        std::tuple<uint64_t, uint64_t, uint64_t, int64_t> header(debugLogReader* r);
         uint64_t uvarint(debugLogReader* r);
         int64_t varint(debugLogReader* r);
         bool printVal(debugLogReader* r);

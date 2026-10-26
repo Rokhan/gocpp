@@ -42,7 +42,7 @@ namespace golang::sort
         struct IInterface
         {
             // Len is the number of elements in the collection.
-            virtual int vLen() = 0;
+            virtual int64_t vLen() = 0;
             // Less reports whether the element with index i
             // must sort before the element with index j.
             // If both Less(i, j) and Less(j, i) are false,
@@ -56,9 +56,9 @@ namespace golang::sort
             // is not a strict weak ordering when not-a-number (NaN) values are involved.
             // See Float64Slice.Less for a correct implementation for floating-point values.
             // [Strict Weak Ordering]: https://en.wikipedia.org/wiki/Weak_ordering#Strict_weak_orderings
-            virtual bool vLess(int i, int j) = 0;
+            virtual bool vLess(int64_t i, int64_t j) = 0;
             // Swap swaps the elements with indexes i and j.
-            virtual void vSwap(int i, int j) = 0;
+            virtual void vSwap(int64_t i, int64_t j) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -70,11 +70,11 @@ namespace golang::sort
                 value.reset(ptr);
             }
 
-            int vLen() override;
+            int64_t vLen() override;
 
-            bool vLess(int i, int j) override;
+            bool vLess(int64_t i, int64_t j) override;
 
-            void vSwap(int i, int j) override;
+            void vSwap(int64_t i, int64_t j) override;
 
             void* getPtr() override
             {
@@ -91,22 +91,26 @@ namespace golang::sort
 
     namespace rec
     {
-        int Len(const gocpp::PtrRecv<struct Interface, false>& self);
-        int Len(const gocpp::ObjRecv<struct Interface>& self);
+        int64_t Len(const gocpp::PtrRecv<struct Interface, false>& self);
+        int64_t Len(const gocpp::ObjRecv<struct Interface>& self);
 
-        bool Less(const gocpp::PtrRecv<struct Interface, false>& self, int i, int j);
-        bool Less(const gocpp::ObjRecv<struct Interface>& self, int i, int j);
+        bool Less(const gocpp::PtrRecv<struct Interface, false>& self, int64_t i, int64_t j);
+        bool Less(const gocpp::ObjRecv<struct Interface>& self, int64_t i, int64_t j);
 
-        void Swap(const gocpp::PtrRecv<struct Interface, false>& self, int i, int j);
-        void Swap(const gocpp::ObjRecv<struct Interface>& self, int i, int j);
+        void Swap(const gocpp::PtrRecv<struct Interface, false>& self, int64_t i, int64_t j);
+        void Swap(const gocpp::ObjRecv<struct Interface>& self, int64_t i, int64_t j);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
-    unsigned int nextPowerOfTwo(int length);
+    struct GoTag_sortedHint { };
+    using sortedHint = gocpp::defined<int64_t, GoTag_sortedHint>;
+    struct GoTag_xorshift { };
+    using xorshift = gocpp::defined<uint64_t, GoTag_xorshift>;
+    uint64_t nextPowerOfTwo(int64_t length);
     struct lessSwap
     {
-        std::function<bool (int i, int j)> Less{};
-        std::function<void (int i, int j)> Swap{};
+        std::function<bool (int64_t i, int64_t j)> Less{};
+        std::function<void (int64_t i, int64_t j)> Swap{};
 
         using isGoStruct = void;
 
@@ -121,16 +125,16 @@ namespace golang::sort
 
     std::ostream& operator<<(std::ostream& os, const struct lessSwap& value);
     struct GoTag_IntSlice { };
-    using IntSlice = gocpp::defined<gocpp::slice<int>, GoTag_IntSlice>;
+    using IntSlice = gocpp::defined<gocpp::slice<int64_t>, GoTag_IntSlice>;
     struct GoTag_Float64Slice { };
     using Float64Slice = gocpp::defined<gocpp::slice<double>, GoTag_Float64Slice>;
     bool isNaN(double f);
     struct GoTag_StringSlice { };
     using StringSlice = gocpp::defined<gocpp::slice<gocpp::string>, GoTag_StringSlice>;
-    void Ints(gocpp::slice<int> x);
+    void Ints(gocpp::slice<int64_t> x);
     void Float64s(gocpp::slice<double> x);
     void Strings(gocpp::slice<gocpp::string> x);
-    bool IntsAreSorted(gocpp::slice<int> x);
+    bool IntsAreSorted(gocpp::slice<int64_t> x);
     bool Float64sAreSorted(gocpp::slice<double> x);
     bool StringsAreSorted(gocpp::slice<gocpp::string> x);
     void Sort(Interface data);
@@ -153,12 +157,12 @@ namespace golang::sort
 
     namespace rec
     {
-        int Len(const gocpp::PtrRecv<struct reverse, false>& self);
-        int Len(const gocpp::ObjRecv<struct reverse>& self);
-        bool Less(const gocpp::PtrRecv<struct reverse, false>& self, int i, int j);
-        bool Less(const gocpp::ObjRecv<struct reverse>& self, int i, int j);
-        void Swap(const gocpp::PtrRecv<struct reverse, false>& self, int i, int j);
-        void Swap(const gocpp::ObjRecv<struct reverse>& self, int i, int j);
+        int64_t Len(const gocpp::PtrRecv<struct reverse, false>& self);
+        int64_t Len(const gocpp::ObjRecv<struct reverse>& self);
+        bool Less(const gocpp::PtrRecv<struct reverse, false>& self, int64_t i, int64_t j);
+        bool Less(const gocpp::ObjRecv<struct reverse>& self, int64_t i, int64_t j);
+        void Swap(const gocpp::PtrRecv<struct reverse, false>& self, int64_t i, int64_t j);
+        void Swap(const gocpp::ObjRecv<struct reverse>& self, int64_t i, int64_t j);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reverse& value);
@@ -169,18 +173,18 @@ namespace golang::sort
     namespace rec
     {
         uint64_t Next(xorshift* r);
-        bool Less(reverse r, int i, int j);
-        int Len(IntSlice x);
-        bool Less(IntSlice x, int i, int j);
-        void Swap(IntSlice x, int i, int j);
+        bool Less(reverse r, int64_t i, int64_t j);
+        int64_t Len(IntSlice x);
+        bool Less(IntSlice x, int64_t i, int64_t j);
+        void Swap(IntSlice x, int64_t i, int64_t j);
         void Sort(IntSlice x);
-        int Len(Float64Slice x);
-        bool Less(Float64Slice x, int i, int j);
-        void Swap(Float64Slice x, int i, int j);
+        int64_t Len(Float64Slice x);
+        bool Less(Float64Slice x, int64_t i, int64_t j);
+        void Swap(Float64Slice x, int64_t i, int64_t j);
         void Sort(Float64Slice x);
-        int Len(StringSlice x);
-        bool Less(StringSlice x, int i, int j);
-        void Swap(StringSlice x, int i, int j);
+        int64_t Len(StringSlice x);
+        bool Less(StringSlice x, int64_t i, int64_t j);
+        void Swap(StringSlice x, int64_t i, int64_t j);
         void Sort(StringSlice x);
     }
 }

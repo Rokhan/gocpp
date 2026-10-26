@@ -6,9 +6,10 @@
 
 namespace golang::internal::synctest
 {
-    using Association = int;
+    struct GoTag_Association;
+    using Association = gocpp::defined<int64_t, GoTag_Association>;
     struct Bubble;
-    const synctest::Association Unbubbled = Association(0);
-    const synctest::Association CurrentBubble = Association(1);
-    const synctest::Association OtherBubble = Association(2);
+    inline constexpr synctest::Association Unbubbled = Association(0);
+    inline constexpr synctest::Association CurrentBubble = Association(1);
+    inline constexpr synctest::Association OtherBubble = Association(2);
 }

@@ -12,9 +12,12 @@
 
 namespace golang::runtime
 {
+    struct GoTag_spanScanOwnership { };
+    using spanScanOwnership = gocpp::defined<uint8_t, GoTag_spanScanOwnership>;
     bool gcUsesSpanInlineMarkBits(uintptr_t size);
     void freeDeadSpanSPMCs();
-    objptr makeObjPtr(uintptr_t spanBase, uint16_t objIndex);
+    struct GoTag_objptr { };
+    using objptr = gocpp::defined<uintptr_t, GoTag_objptr>;
     uintptr_t extractHeapBitsSmall(unsigned char* hbits, uintptr_t spanBase, uintptr_t addr, uintptr_t elemsize);
     struct sizeClassScanStats
     {
@@ -38,6 +41,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct sizeClassScanStats& value);
     void dumpScanStats();
     bool gcMarkWorkAvailable();
+    objptr makeObjPtr(uintptr_t spanBase, uint16_t objIndex);
 }
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mgcwork.fwd.h"
@@ -150,7 +154,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanSPMC& value);
-    int spanSetScans(uintptr_t spanBase, uint16_t nelems, spanInlineMarkBits* imb, gocpp::array_ptr<gc::ObjMask> toScan);
+    int64_t spanSetScans(uintptr_t spanBase, uint16_t nelems, spanInlineMarkBits* imb, gocpp::array_ptr<gc::ObjMask> toScan);
     void scanObjectsSmall(uintptr_t base, uintptr_t objSize, uint16_t elems, gcWork* gcw, gocpp::array_ptr<gc::ObjMask> scans);
     gocpp::array_ptr<gc::PtrMask> spanPtrMaskUnsafe(uintptr_t spanBase);
     struct spanQueue
@@ -160,7 +164,7 @@ namespace golang::runtime
         uint32_t tail{};
         gocpp::array<objptr, 256> ring{};
         // putsSinceDrain counts the number of put calls since the last drain.
-        int putsSinceDrain{};
+        int64_t putsSinceDrain{};
         // chain contains state visible to other Ps.
         // In particular, that means a linked chain of single-producer multi-consumer
         // ring buffers where the single producer is this P only.

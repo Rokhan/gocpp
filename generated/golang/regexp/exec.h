@@ -29,10 +29,11 @@ namespace golang::regexp
     };
 
     std::ostream& operator<<(std::ostream& os, const struct entry& value);
-    lazyFlag newLazyFlag(gocpp::rune r1, gocpp::rune r2);
+    struct GoTag_lazyFlag { };
+    using lazyFlag = gocpp::defined<uint64_t, GoTag_lazyFlag>;
     // arrayNoInts is returned by find match if nil dstCap is passed
     // to it with ncap=0.
-    extern gocpp::array<int, 0> arrayNoInts;
+    extern gocpp::array<int64_t, 0> arrayNoInts;
     struct queue
     {
         gocpp::slice<uint32_t> sparse{};
@@ -50,6 +51,7 @@ namespace golang::regexp
     };
 
     std::ostream& operator<<(std::ostream& os, const struct queue& value);
+    lazyFlag newLazyFlag(gocpp::rune r1, gocpp::rune r2);
 }
 #include "golang/regexp/regexp.h"
 
@@ -83,7 +85,7 @@ namespace golang::regexp
     struct onePassMachine
     {
         inputs inputs{};
-        gocpp::slice<int> matchcap{};
+        gocpp::slice<int64_t> matchcap{};
 
         using isGoStruct = void;
 
@@ -107,7 +109,7 @@ namespace golang::regexp
     struct thread
     {
         syntax::Inst* inst{};
-        gocpp::slice<int> cap{};
+        gocpp::slice<int64_t> cap{};
 
         using isGoStruct = void;
 
@@ -129,7 +131,7 @@ namespace golang::regexp
         queue q1{};
         gocpp::slice<thread*> pool{}; // pool of available threads
         bool matched{}; // whether a match was found
-        gocpp::slice<int> matchcap{}; // capture information for the match
+        gocpp::slice<int64_t> matchcap{}; // capture information for the match
         inputs inputs{};
 
         using isGoStruct = void;
@@ -163,17 +165,17 @@ namespace golang::regexp
         input newString(inputs* i, gocpp::string s);
         input newReader(inputs* i, io::RuneReader r);
         void clear(inputs* i);
-        std::tuple<input, int> init(inputs* i, io::RuneReader r, gocpp::slice<unsigned char> b, gocpp::string s);
-        void init(machine* m, int ncap);
+        std::tuple<input, int64_t> init(inputs* i, io::RuneReader r, gocpp::slice<unsigned char> b, gocpp::string s);
+        void init(machine* m, int64_t ncap);
         thread* alloc(machine* m, syntax::Inst* i);
         bool match(lazyFlag f, syntax::EmptyOp op);
-        bool match(machine* m, input i, int pos);
+        bool match(machine* m, input i, int64_t pos);
         void clear(machine* m, queue* q);
-        void step(machine* m, queue* runq, queue* nextq, int pos, int nextPos, gocpp::rune c, lazyFlag* nextCond);
-        thread* add(machine* m, queue* q, uint32_t pc, int pos, gocpp::slice<int> cap, lazyFlag* cond, thread* t);
-        gocpp::slice<int> doOnePass(Regexp* re, io::RuneReader ir, gocpp::slice<unsigned char> ib, gocpp::string is, int pos, int ncap, gocpp::slice<int> dstCap);
+        void step(machine* m, queue* runq, queue* nextq, int64_t pos, int64_t nextPos, gocpp::rune c, lazyFlag* nextCond);
+        thread* add(machine* m, queue* q, uint32_t pc, int64_t pos, gocpp::slice<int64_t> cap, lazyFlag* cond, thread* t);
+        gocpp::slice<int64_t> doOnePass(Regexp* re, io::RuneReader ir, gocpp::slice<unsigned char> ib, gocpp::string is, int64_t pos, int64_t ncap, gocpp::slice<int64_t> dstCap);
         bool doMatch(Regexp* re, io::RuneReader r, gocpp::slice<unsigned char> b, gocpp::string s);
-        gocpp::slice<int> find(Regexp* re, io::RuneReader r, gocpp::slice<unsigned char> b, gocpp::string s, int pos, int ncap, gocpp::slice<int> dstCap);
+        gocpp::slice<int64_t> find(Regexp* re, io::RuneReader r, gocpp::slice<unsigned char> b, gocpp::string s, int64_t pos, int64_t ncap, gocpp::slice<int64_t> dstCap);
     }
 }
 

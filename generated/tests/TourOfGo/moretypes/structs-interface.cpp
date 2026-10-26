@@ -46,7 +46,7 @@ namespace golang::main
     }
 
     template<typename T, typename TStore, typename TInterface>
-    int Reader::ReaderImpl<T, TStore, TInterface>::vRead()
+    int64_t Reader::ReaderImpl<T, TStore, TInterface>::vRead()
     {
         return rec::Read(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -59,12 +59,12 @@ namespace golang::main
 
     namespace rec
     {
-        int Read(const gocpp::PtrRecv<struct Reader, false>& self)
+        int64_t Read(const gocpp::PtrRecv<struct Reader, false>& self)
         {
             return self.ptr->value()->vRead();
         }
 
-        int Read(const gocpp::ObjRecv<struct Reader>& self)
+        int64_t Read(const gocpp::ObjRecv<struct Reader>& self)
         {
             return self.obj.value()->vRead();
         }
@@ -100,7 +100,7 @@ namespace golang::main
     }
 
     template<typename T, typename TStore, typename TInterface>
-    int WriterTo::WriterToImpl<T, TStore, TInterface>::vWriteTo()
+    int64_t WriterTo::WriterToImpl<T, TStore, TInterface>::vWriteTo()
     {
         return rec::WriteTo(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -113,12 +113,12 @@ namespace golang::main
 
     namespace rec
     {
-        int WriteTo(const gocpp::PtrRecv<struct WriterTo, false>& self)
+        int64_t WriteTo(const gocpp::PtrRecv<struct WriterTo, false>& self)
         {
             return self.ptr->value()->vWriteTo();
         }
 
-        int WriteTo(const gocpp::ObjRecv<struct WriterTo>& self)
+        int64_t WriteTo(const gocpp::ObjRecv<struct WriterTo>& self)
         {
             return self.obj.value()->vWriteTo();
         }
@@ -216,12 +216,12 @@ namespace golang::main
 
     namespace rec
     {
-        int Read(const gocpp::PtrRecv<struct ReadCloser, false>& self)
+        int64_t Read(const gocpp::PtrRecv<struct ReadCloser, false>& self)
         {
             return self.ptr->value()->vRead();
         }
 
-        int Read(const gocpp::ObjRecv<struct ReadCloser>& self)
+        int64_t Read(const gocpp::ObjRecv<struct ReadCloser>& self)
         {
             return self.obj.value()->vRead();
         }
@@ -281,12 +281,12 @@ namespace golang::main
 
     namespace rec
     {
-        int Read(const gocpp::PtrRecv<struct nopCloser, false>& self)
+        int64_t Read(const gocpp::PtrRecv<struct nopCloser, false>& self)
         {
             return rec::Read(gocpp::recv(self.ptr->Reader));
         }
 
-        int Read(const gocpp::ObjRecv<struct nopCloser>& self)
+        int64_t Read(const gocpp::ObjRecv<struct nopCloser>& self)
         {
             return rec::Read(gocpp::recv(self.obj.Reader));
         }
@@ -328,12 +328,12 @@ namespace golang::main
 
     namespace rec
     {
-        int Read(const gocpp::PtrRecv<struct nopCloserWriterTo, false>& self)
+        int64_t Read(const gocpp::PtrRecv<struct nopCloserWriterTo, false>& self)
         {
             return rec::Read(gocpp::recv(self.ptr->Reader));
         }
 
-        int Read(const gocpp::ObjRecv<struct nopCloserWriterTo>& self)
+        int64_t Read(const gocpp::ObjRecv<struct nopCloserWriterTo>& self)
         {
             return rec::Read(gocpp::recv(self.obj.Reader));
         }
@@ -349,7 +349,7 @@ namespace golang::main
         return "nopCloserWriterTo.Close"_s;
     }
 
-    int rec::WriteTo(nopCloserWriterTo c)
+    int64_t rec::WriteTo(nopCloserWriterTo c)
     {
         return rec::WriteTo(gocpp::recv(gocpp::getValue<WriterTo>(c.Reader)));
     }
@@ -384,7 +384,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    int rec::Read(myReader r)
+    int64_t rec::Read(myReader r)
     {
         return r.val;
     }
@@ -419,12 +419,12 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    int rec::Read(myReaderWriterTo r)
+    int64_t rec::Read(myReaderWriterTo r)
     {
         return r.val;
     }
 
-    int rec::WriteTo(myReaderWriterTo r)
+    int64_t rec::WriteTo(myReaderWriterTo r)
     {
         return r.val * 2;
     }

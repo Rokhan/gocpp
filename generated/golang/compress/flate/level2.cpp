@@ -61,12 +61,12 @@ namespace golang::compress::flate
             return rec::getFastGen(gocpp::recv(self.ptr->fastGen));
         }
 
-        int32_t matchLenLimited(const gocpp::PtrRecv<struct fastEncL2, false>& self, int s, int t, gocpp::slice<unsigned char> src)
+        int32_t matchLenLimited(const gocpp::PtrRecv<struct fastEncL2, false>& self, int64_t s, int64_t t, gocpp::slice<unsigned char> src)
         {
             return rec::matchLenLimited(gocpp::recv(self.ptr->fastGen), s, t, src);
         }
 
-        int32_t matchLenLong(const gocpp::PtrRecv<struct fastEncL2, false>& self, int s, int t, gocpp::slice<unsigned char> src)
+        int32_t matchLenLong(const gocpp::PtrRecv<struct fastEncL2, false>& self, int64_t s, int64_t t, gocpp::slice<unsigned char> src)
         {
             return rec::matchLenLong(gocpp::recv(self.ptr->fastGen), s, t, src);
         }
@@ -193,7 +193,7 @@ namespace golang::compress::flate
             {
                 // Extend the 4-byte match as long as possible.
                 auto t = candidate.offset - e->fastGen.cur;
-                auto l = rec::matchLenLong(gocpp::recv(e), int(s + 4), int(t + 4), src) + 4;
+                auto l = rec::matchLenLong(gocpp::recv(e), int64_t(s + 4), int64_t(t + 4), src) + 4;
 
                 // Extend backwards
                 for(; t > 0 && s > nextEmit && src[t - 1] == src[s - 1]; )
@@ -223,7 +223,7 @@ namespace golang::compress::flate
                 if(s >= sLimit)
                 {
                     // Index first pair after match end.
-                    if(int(s + l + 8) < len(src))
+                    if(int64_t(s + l + 8) < len(src))
                     {
                         auto cv = loadLE64(src, s);
                         e->table[hashLen(cv, l2TableBits, hashBytes)] = gocpp::Init<tableEntry>([=](auto& x) {
@@ -286,7 +286,7 @@ namespace golang::compress::flate
         }
 
         emitRemainder:
-        if(int(nextEmit) < len(src))
+        if(int64_t(nextEmit) < len(src))
         {
             // If nothing was added, don't encode literals.
             if(dst->n == 0)

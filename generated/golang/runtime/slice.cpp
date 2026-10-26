@@ -125,7 +125,7 @@ namespace golang::runtime
 
     // makeslicecopy allocates a slice of "tolen" elements of type "et",
     // then copies "fromlen" elements of type "et" into that new allocation from "from".
-    gocpp::unsafe_pointer makeslicecopy(_type* et, int tolen, int fromlen, gocpp::unsafe_pointer from)
+    gocpp::unsafe_pointer makeslicecopy(_type* et, int64_t tolen, int64_t fromlen, gocpp::unsafe_pointer from)
     {
         uintptr_t tomem = {};
         uintptr_t copymem = {};
@@ -201,7 +201,7 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname makeslice
-    gocpp::unsafe_pointer makeslice(_type* et, int len, int cap)
+    gocpp::unsafe_pointer makeslice(_type* et, int64_t len, int64_t cap)
     {
         auto [mem, overflow] = math::MulUintptr(et->Size_, uintptr_t(cap));
         if(overflow || mem > maxAlloc || len < 0 || len > cap)
@@ -224,13 +224,13 @@ namespace golang::runtime
 
     gocpp::unsafe_pointer makeslice64(_type* et, int64_t len64, int64_t cap64)
     {
-        auto len = int(len64);
+        auto len = int64_t(len64);
         if(int64_t(len) != len64)
         {
             panicmakeslicelen();
         }
 
-        auto cap = int(cap64);
+        auto cap = int64_t(cap64);
         if(int64_t(cap) != cap64)
         {
             panicmakeslicecap();
@@ -283,21 +283,21 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname growslice
-    golang::runtime::slice growslice(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et)
+    golang::runtime::slice growslice(gocpp::unsafe_pointer oldPtr, int64_t newLen, int64_t oldCap, int64_t num, _type* et)
     {
         auto oldLen = newLen - num;
         if(raceenabled)
         {
             auto callerpc = sys::GetCallerPC();
-            racereadrangepc(oldPtr, uintptr_t(oldLen * int(et->Size_)), callerpc, abi::FuncPCABIInternal(growslice));
+            racereadrangepc(oldPtr, uintptr_t(oldLen * int64_t(et->Size_)), callerpc, abi::FuncPCABIInternal(growslice));
         }
         if(msanenabled)
         {
-            msanread(oldPtr, uintptr_t(oldLen * int(et->Size_)));
+            msanread(oldPtr, uintptr_t(oldLen * int64_t(et->Size_)));
         }
         if(asanenabled)
         {
-            asanread(oldPtr, uintptr_t(oldLen * int(et->Size_)));
+            asanread(oldPtr, uintptr_t(oldLen * int64_t(et->Size_)));
         }
 
         if(newLen < 0)
@@ -336,14 +336,14 @@ namespace golang::runtime
                     newlenmem = uintptr_t(newLen);
                     capmem = roundupsize(uintptr_t(newcap), noscan);
                     overflow = uintptr_t(newcap) > maxAlloc;
-                    newcap = int(capmem);
+                    newcap = int64_t(capmem);
                     break;
                 case 1:
                     lenmem = uintptr_t(oldLen) * goarch::PtrSize;
                     newlenmem = uintptr_t(newLen) * goarch::PtrSize;
                     capmem = roundupsize(uintptr_t(newcap) * goarch::PtrSize, noscan);
                     overflow = uintptr_t(newcap) > maxAlloc / goarch::PtrSize;
-                    newcap = int(capmem / goarch::PtrSize);
+                    newcap = int64_t(capmem / goarch::PtrSize);
                     break;
                 case 2:
                     uintptr_t shift = {};
@@ -360,7 +360,7 @@ namespace golang::runtime
                     newlenmem = uintptr_t(newLen) << shift;
                     capmem = roundupsize(uintptr_t(newcap) << shift, noscan);
                     overflow = uintptr_t(newcap) > (maxAlloc >> shift);
-                    newcap = int(capmem >> shift);
+                    newcap = int64_t(capmem >> shift);
                     capmem = uintptr_t(newcap) << shift;
                     break;
                 default:
@@ -368,7 +368,7 @@ namespace golang::runtime
                     newlenmem = uintptr_t(newLen) * et->Size_;
                     std::tie(capmem, overflow) = math::MulUintptr(et->Size_, uintptr_t(newcap));
                     capmem = roundupsize(capmem, noscan);
-                    newcap = int(capmem / et->Size_);
+                    newcap = int64_t(capmem / et->Size_);
                     capmem = uintptr_t(newcap) * et->Size_;
                     break;
             }
@@ -432,7 +432,7 @@ namespace golang::runtime
     // be an interior pointer, such as after a reslice.
     //
     // See freegc for details.
-    golang::runtime::slice growsliceNoAlias(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et)
+    golang::runtime::slice growsliceNoAlias(gocpp::unsafe_pointer oldPtr, int64_t newLen, int64_t oldCap, int64_t num, _type* et)
     {
         auto s = growslice(oldPtr, newLen, oldCap, num, et);
         if(goexperiment::RuntimeFreegc && oldPtr != nullptr && oldPtr != s.array)
@@ -457,7 +457,7 @@ namespace golang::runtime
     }
 
     // nextslicecap computes the next appropriate slice length.
-    int nextslicecap(int newLen, int oldCap)
+    int64_t nextslicecap(int64_t newLen, int64_t oldCap)
     {
         auto newcap = oldCap;
         auto doublecap = newcap + newcap;
@@ -482,7 +482,7 @@ namespace golang::runtime
             // newLen is guaranteed to be larger than zero, hence
             // when newcap overflows then `uint(newcap) > uint(newLen)`.
             // This allows to check for both with the same comparison.
-            if((unsigned int)(newcap) >= (unsigned int)(newLen))
+            if((uint64_t)(newcap) >= (uint64_t)(newLen))
             {
                 break;
             }
@@ -506,7 +506,7 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname reflect_growslice reflect.growslice
-    golang::runtime::slice reflect_growslice(_type* et, golang::runtime::slice old, int num)
+    golang::runtime::slice reflect_growslice(_type* et, golang::runtime::slice old, int64_t num)
     {
         // Semantically equivalent to slices.Grow, except that the caller
         // is responsible for ensuring that old.len+num > old.cap.
@@ -534,7 +534,7 @@ namespace golang::runtime
     }
 
     // slicecopy is used to copy from a string or slice of pointerless elements into a slice.
-    int slicecopy(gocpp::unsafe_pointer toPtr, int toLen, gocpp::unsafe_pointer fromPtr, int fromLen, uintptr_t width)
+    int64_t slicecopy(gocpp::unsafe_pointer toPtr, int64_t toLen, gocpp::unsafe_pointer fromPtr, int64_t fromLen, uintptr_t width)
     {
         if(fromLen == 0 || toLen == 0)
         {
@@ -586,7 +586,7 @@ namespace golang::runtime
     }
 
     //go:linkname bytealg_MakeNoZero internal/bytealg.MakeNoZero
-    gocpp::slice<unsigned char> bytealg_MakeNoZero(int len)
+    gocpp::slice<unsigned char> bytealg_MakeNoZero(int64_t len)
     {
         if(uintptr_t(len) > maxAlloc)
         {
@@ -598,7 +598,7 @@ namespace golang::runtime
 
     // moveSlice copies the input slice to the heap and returns it.
     // et is the element type of the slice.
-    std::tuple<gocpp::unsafe_pointer, int, int> moveSlice(_type* et, gocpp::unsafe_pointer old, int len, int cap)
+    std::tuple<gocpp::unsafe_pointer, int64_t, int64_t> moveSlice(_type* et, gocpp::unsafe_pointer old, int64_t len, int64_t cap)
     {
         if(cap == 0)
         {
@@ -617,7 +617,7 @@ namespace golang::runtime
 
     // moveSliceNoScan is like moveSlice except the element type is known to
     // not have any pointers. We instead pass in the size of the element.
-    std::tuple<gocpp::unsafe_pointer, int, int> moveSliceNoScan(uintptr_t elemSize, gocpp::unsafe_pointer old, int len, int cap)
+    std::tuple<gocpp::unsafe_pointer, int64_t, int64_t> moveSliceNoScan(uintptr_t elemSize, gocpp::unsafe_pointer old, int64_t len, int64_t cap)
     {
         if(cap == 0)
         {
@@ -636,7 +636,7 @@ namespace golang::runtime
     // moveSliceNoCap is like moveSlice, but can pick any appropriate capacity
     // for the returned slice.
     // Elements between len and cap in the returned slice will be zeroed.
-    std::tuple<gocpp::unsafe_pointer, int, int> moveSliceNoCap(_type* et, gocpp::unsafe_pointer old, int len)
+    std::tuple<gocpp::unsafe_pointer, int64_t, int64_t> moveSliceNoCap(_type* et, gocpp::unsafe_pointer old, int64_t len)
     {
         if(len == 0)
         {
@@ -652,11 +652,11 @@ namespace golang::runtime
         auto go_new = mallocgc(cap * et->Size_, et, true);
         bulkBarrierPreWriteSrcOnly(uintptr_t(go_new), uintptr_t(old), lenmem, et);
         memmove(go_new, old, lenmem);
-        return {go_new, len, int(cap)};
+        return {go_new, len, int64_t(cap)};
     }
 
     // moveSliceNoCapNoScan is a combination of moveSliceNoScan and moveSliceNoCap.
-    std::tuple<gocpp::unsafe_pointer, int, int> moveSliceNoCapNoScan(uintptr_t elemSize, gocpp::unsafe_pointer old, int len)
+    std::tuple<gocpp::unsafe_pointer, int64_t, int64_t> moveSliceNoCapNoScan(uintptr_t elemSize, gocpp::unsafe_pointer old, int64_t len)
     {
         if(len == 0)
         {
@@ -674,12 +674,12 @@ namespace golang::runtime
         {
             memclrNoHeapPointers(add(go_new, lenmem), capmem - lenmem);
         }
-        return {go_new, len, int(capmem / elemSize)};
+        return {go_new, len, int64_t(capmem / elemSize)};
     }
 
     // growsliceBuf is like growslice, but we can use the given buffer
     // as a backing store if we want. bufPtr must be on the stack.
-    golang::runtime::slice growsliceBuf(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et, gocpp::unsafe_pointer bufPtr, int bufLen)
+    golang::runtime::slice growsliceBuf(gocpp::unsafe_pointer oldPtr, int64_t newLen, int64_t oldCap, int64_t num, _type* et, gocpp::unsafe_pointer bufPtr, int64_t bufLen)
     {
         if(newLen > bufLen)
         {
@@ -701,7 +701,7 @@ namespace golang::runtime
         // Instead, we try to just bump up to the next size class.
         // This will ensure that we don't waste any space when we eventually
         // call moveSlice with the resulting slice.
-        auto newCap = int(roundupsize(uintptr_t(newLen) * et->Size_, ! rec::Pointers(gocpp::recv(et))) / et->Size_);
+        auto newCap = int64_t(roundupsize(uintptr_t(newLen) * et->Size_, ! rec::Pointers(gocpp::recv(et))) / et->Size_);
 
         // Zero slice beyond newLen.
         // The buffer is stack memory, so NoHeapPointers is ok.
@@ -718,7 +718,7 @@ namespace golang::runtime
 
     // growsliceBufNoAlias is a combination of growsliceBuf and growsliceNoAlias.
     // bufPtr must be on the stack.
-    golang::runtime::slice growsliceBufNoAlias(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et, gocpp::unsafe_pointer bufPtr, int bufLen)
+    golang::runtime::slice growsliceBufNoAlias(gocpp::unsafe_pointer oldPtr, int64_t newLen, int64_t oldCap, int64_t num, _type* et, gocpp::unsafe_pointer bufPtr, int64_t bufLen)
     {
         auto s = growsliceBuf(oldPtr, newLen, oldCap, num, et, bufPtr, bufLen);
         if(goexperiment::RuntimeFreegc && oldPtr != bufPtr && oldPtr != nullptr && oldPtr != s.array)

@@ -9,11 +9,11 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     using ReportFunc = std::function<void (gocpp::string _1, gocpp::slice<go_any> _2)>;
     // Current bundled export format version. Increase with each format change.
     // 0: initial implementation
-    const long bundleVersion = 0;
+    inline constexpr long bundleVersion = 0;
     struct iexporter;
     struct filePositions;
     struct exportWriter;
-    const gocpp::string blankMarker = "$"_s;
+    inline const gocpp::string blankMarker = "$"_s;
     struct intWriter;
     struct objQueue;
     using internalError = gocpp::string;

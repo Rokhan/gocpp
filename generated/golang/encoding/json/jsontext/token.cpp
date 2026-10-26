@@ -520,7 +520,7 @@ namespace golang::encoding::json::jsontext
         return {double(f), err};
     }
 
-    std::tuple<double, gocpp::error> rec::float(Token t, int bits)
+    std::tuple<double, gocpp::error> rec::float(Token t, int64_t bits)
     {
         if(auto raw = t.raw; raw != nullptr)
         {

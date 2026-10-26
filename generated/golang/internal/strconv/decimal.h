@@ -15,8 +15,8 @@ namespace golang::internal::strconv
     struct decimal
     {
         gocpp::array<unsigned char, 800> d{}; // digits, big-endian representation
-        int nd{}; // number of digits used
-        int dp{}; // decimal point
+        int64_t nd{}; // number of digits used
+        int64_t dp{}; // decimal point
         bool neg{}; // negative flag
         bool trunc{}; // discarded nonzero digits beyond d[:nd]
 
@@ -32,10 +32,10 @@ namespace golang::internal::strconv
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decimal& value);
-    int digitZero(gocpp::slice<unsigned char> dst);
+    int64_t digitZero(gocpp::slice<unsigned char> dst);
     struct leftCheat
     {
-        int delta{}; // number of new digits
+        int64_t delta{}; // number of new digits
         gocpp::string cutoff{}; // minus one digit if original < a.
 
         using isGoStruct = void;
@@ -52,19 +52,19 @@ namespace golang::internal::strconv
     std::ostream& operator<<(std::ostream& os, const struct leftCheat& value);
     bool prefixIsLessThan(gocpp::slice<unsigned char> b, gocpp::string s);
     void trim(decimal* a);
-    void rightShift(decimal* a, unsigned int k);
+    void rightShift(decimal* a, uint64_t k);
     extern gocpp::slice<leftCheat> leftcheats;
-    void leftShift(decimal* a, unsigned int k);
-    bool shouldRoundUp(decimal* a, int nd);
+    void leftShift(decimal* a, uint64_t k);
+    bool shouldRoundUp(decimal* a, int64_t nd);
 
     namespace rec
     {
         gocpp::string String(decimal* a);
         void Assign(decimal* a, uint64_t v);
-        void Shift(decimal* a, int k);
-        void Round(decimal* a, int nd);
-        void RoundDown(decimal* a, int nd);
-        void RoundUp(decimal* a, int nd);
+        void Shift(decimal* a, int64_t k);
+        void Round(decimal* a, int64_t nd);
+        void RoundDown(decimal* a, int64_t nd);
+        void RoundUp(decimal* a, int64_t nd);
         uint64_t RoundedInteger(decimal* a);
     }
 }

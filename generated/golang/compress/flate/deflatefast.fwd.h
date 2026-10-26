@@ -7,26 +7,26 @@
 namespace golang::compress::flate
 {
     // tableBits is the number of bits used in the hash table.
-    const long tableBits = 15;
+    inline constexpr long tableBits = 15;
     // hashLongBytes is the number of bytes used for long table hashes.
-    const long hashLongBytes = 7;
+    inline constexpr long hashLongBytes = 7;
     // baseMatchOffset is the smallest match offset.
-    const long baseMatchOffset = 1;
+    inline constexpr long baseMatchOffset = 1;
     // baseMatchLength is the smallest match length per RFC section 3.2.5.
-    const long baseMatchLength = 3;
+    inline constexpr long baseMatchLength = 3;
     // maxMatchOffset is the largest match offset.
-    const int maxMatchOffset = 1 << 15;
+    inline constexpr int64_t maxMatchOffset = 1 << 15;
     struct fastGen;
     struct tableEntry;
     struct tableEntryPrev;
-    const long prime3bytes = 506832829;
-    const long prime4bytes = 2654435761;
-    const long prime5bytes = 889523592379;
-    const long prime6bytes = 227718039650203;
-    const long prime7bytes = 58295818150454627;
-    const long prime8bytes = 0xcf1bbcdcb7a56463;
+    inline constexpr long prime3bytes = 506832829;
+    inline constexpr long prime4bytes = 2654435761LL;
+    inline constexpr long prime5bytes = 889523592379LL;
+    inline constexpr long prime6bytes = 227718039650203LL;
+    inline constexpr long prime7bytes = 58295818150454627LL;
+    inline constexpr uint64_t prime8bytes = uint64_t(0xcf1bbcdcb7a56463_bi);
     // tableSize is the size of the hash table.
-    const int tableSize = 1 << tableBits;
+    inline constexpr int64_t tableSize = 1 << tableBits;
 }
 #include "golang/compress/flate/deflate.fwd.h"
 #include "golang/compress/flate/token.fwd.h"
@@ -34,8 +34,8 @@ namespace golang::compress::flate
 namespace golang::compress::flate
 {
     // allocHistory is the size to preallocate for history.
-    const int allocHistory = maxStoreBlockSize * 5;
+    inline constexpr int64_t allocHistory = maxStoreBlockSize * 5;
     struct fastEnc;
     // bufferReset is the buffer offset at which the history is reset.
-    const int bufferReset = (1 << 31) - allocHistory - maxStoreBlockSize - 1;
+    inline constexpr int64_t bufferReset = (1LL << 31) - int64_t(allocHistory) - int64_t(maxStoreBlockSize) - 1LL;
 }

@@ -20,12 +20,12 @@ namespace golang::main
     {
     }
 
-    int i = 1;
-    int j = 2;
-    std::tuple<gocpp::string, int, uint64_t> locabs()
+    int64_t i = 1;
+    int64_t j = 2;
+    std::tuple<gocpp::string, int64_t, uint64_t> locabs()
     {
         gocpp::string name;
-        int offset;
+        int64_t offset;
         uint64_t abs;
         return {"UTC"_s, 0, 0};
     }

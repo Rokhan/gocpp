@@ -13,7 +13,7 @@
 namespace golang::main
 {
     void main();
-    void printSlice(gocpp::slice<int> s);
+    void printSlice(gocpp::slice<int64_t> s);
 
     namespace rec
     {

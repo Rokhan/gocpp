@@ -23,7 +23,7 @@ namespace golang::main
     {
     }
 
-    void fill(gocpp::channel<int> c)
+    void fill(gocpp::channel<int64_t> c)
     {
         for(; ; )
         {
@@ -34,7 +34,7 @@ namespace golang::main
 
     void main()
     {
-        auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>(), 5);
+        auto c = gocpp::make(gocpp::Tag<gocpp::channel<int64_t>>(), 5);
 
         gocpp::go([&]{ fill(c); });
 
@@ -43,7 +43,7 @@ namespace golang::main
         mocklib::Println(xx, ok);
 
         // optional result with single declaration (2 forms)
-        int zz;
+        int64_t zz;
         std::tie(zz, ok) = c.recv();
         mocklib::Println(zz, ok);
 

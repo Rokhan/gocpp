@@ -236,7 +236,7 @@ namespace golang::golang_org::x::tools::internal::event::keys
     }
 
     // Of creates a new Label with this key and the supplied value.
-    label::Label rec::Of(Int* k, int v)
+    label::Label rec::Of(Int* k, int64_t v)
     {
         return rec::Of64(gocpp::recv(k), int64_t(v));
     }

@@ -223,25 +223,25 @@ namespace golang::encoding::binary
     };
 
     std::ostream& operator<<(std::ostream& os, const struct bigEndian& value);
-    int Size(go_any v);
+    int64_t Size(go_any v);
     struct GoTag_decoder { };
     struct GoTag_encoder { };
-    std::tuple<int, gocpp::slice<unsigned char>> intDataSize(go_any data);
-    std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>> ensure(gocpp::slice<unsigned char> buf, int n);
+    std::tuple<int64_t, gocpp::slice<unsigned char>> intDataSize(go_any data);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>> ensure(gocpp::slice<unsigned char> buf, int64_t n);
     // LittleEndian is the little-endian implementation of [ByteOrder] and [AppendByteOrder].
     extern littleEndian LittleEndian;
     // BigEndian is the big-endian implementation of [ByteOrder] and [AppendByteOrder].
     extern bigEndian BigEndian;
-    std::tuple<int, gocpp::error> Decode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data);
+    std::tuple<int64_t, gocpp::error> Decode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data);
     bool decodeFast(gocpp::slice<unsigned char> bs, ByteOrder order, go_any data);
-    std::tuple<int, gocpp::error> Encode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data);
+    std::tuple<int64_t, gocpp::error> Encode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> Append(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data);
     void encodeFast(gocpp::slice<unsigned char> bs, ByteOrder order, go_any data);
     struct coder
     {
         ByteOrder order{};
         gocpp::slice<unsigned char> buf{};
-        int offset{};
+        int64_t offset{};
 
         using isGoStruct = void;
 
@@ -283,8 +283,8 @@ namespace golang::encoding::binary
     gocpp::error Read(io::Reader r, ByteOrder order, go_any data);
     gocpp::error Write(io::Writer w, ByteOrder order, go_any data);
     extern sync::Map structSize;
-    int dataSize(reflect::Value v);
-    int go_sizeof(reflect::Type t);
+    int64_t dataSize(reflect::Value v);
+    int64_t go_sizeof(reflect::Type t);
 }
 
 #include "golang/encoding/binary/native_endian_little.h"

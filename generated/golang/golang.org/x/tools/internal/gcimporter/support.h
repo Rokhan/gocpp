@@ -14,7 +14,7 @@
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
     namespace bufio = golang::bufio;
-    int readArchiveHeader(bufio::Reader* b, gocpp::string name);
+    int64_t readArchiveHeader(bufio::Reader* b, gocpp::string name);
 
     namespace rec
     {

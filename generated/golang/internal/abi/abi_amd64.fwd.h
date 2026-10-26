@@ -7,9 +7,9 @@
 namespace golang::internal::abi
 {
     // RAX, RBX, RCX, RDI, RSI, R8, R9, R10, R11.
-    const long IntArgRegs = 9;
+    inline constexpr long IntArgRegs = 9;
     // X0 -> X14.
-    const long FloatArgRegs = 15;
+    inline constexpr long FloatArgRegs = 15;
     // We use SSE2 registers which support 64-bit float operations.
-    const long EffectiveFloatRegSize = 8;
+    inline constexpr long EffectiveFloatRegSize = 8;
 }

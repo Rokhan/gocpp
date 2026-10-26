@@ -93,7 +93,7 @@ namespace golang::unicode::utf8
             return false;
         }
         auto x = first[p[0]];
-        if(n >= int(x & 7))
+        if(n >= int64_t(x & 7))
         {
             // ASCII, invalid or valid.
             return true;
@@ -121,7 +121,7 @@ namespace golang::unicode::utf8
             return false;
         }
         auto x = first[s[0]];
-        if(n >= int(x & 7))
+        if(n >= int64_t(x & 7))
         {
             // ASCII, invalid, or valid.
             return true;
@@ -148,10 +148,10 @@ namespace golang::unicode::utf8
     // An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
     // out of range, or is not the shortest possible UTF-8 encoding for the
     // value. No other validation is performed.
-    std::tuple<gocpp::rune, int> DecodeRune(gocpp::slice<unsigned char> p)
+    std::tuple<gocpp::rune, int64_t> DecodeRune(gocpp::slice<unsigned char> p)
     {
         gocpp::rune r;
-        int size;
+        int64_t size;
         // Inlineable fast path for ASCII characters; see #48195.
         // This implementation is weird but effective at rendering the
         // function inlineable.
@@ -167,10 +167,10 @@ namespace golang::unicode::utf8
         return {r, size};
     }
 
-    std::tuple<gocpp::rune, int> decodeRuneSlow(gocpp::slice<unsigned char> p)
+    std::tuple<gocpp::rune, int64_t> decodeRuneSlow(gocpp::slice<unsigned char> p)
     {
         gocpp::rune r;
-        int size;
+        int64_t size;
         auto n = len(p);
         if(n < 1)
         {
@@ -187,7 +187,7 @@ namespace golang::unicode::utf8
             auto mask = (gocpp::rune(x) << 31) >> 31;
             return {gocpp::rune(p[0]) &^ mask | RuneError & mask, 1};
         }
-        auto sz = int(x & 7);
+        auto sz = int64_t(x & 7);
         auto accept = acceptRanges[x >> 4];
         if(n < sz)
         {
@@ -228,10 +228,10 @@ namespace golang::unicode::utf8
     // An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
     // out of range, or is not the shortest possible UTF-8 encoding for the
     // value. No other validation is performed.
-    std::tuple<gocpp::rune, int> DecodeRuneInString(gocpp::string s)
+    std::tuple<gocpp::rune, int64_t> DecodeRuneInString(gocpp::string s)
     {
         gocpp::rune r;
-        int size;
+        int64_t size;
         // Inlineable fast path for ASCII characters; see #48195.
         // This implementation is a bit weird but effective at rendering the
         // function inlineable.
@@ -246,7 +246,7 @@ namespace golang::unicode::utf8
         return {r, size};
     }
 
-    std::tuple<gocpp::rune, int> decodeRuneInStringSlow(gocpp::string s)
+    std::tuple<gocpp::rune, int64_t> decodeRuneInStringSlow(gocpp::string s)
     {
         auto n = len(s);
         if(n < 1)
@@ -264,7 +264,7 @@ namespace golang::unicode::utf8
             auto mask = (gocpp::rune(x) << 31) >> 31;
             return {gocpp::rune(s[0]) &^ mask | RuneError & mask, 1};
         }
-        auto sz = int(x & 7);
+        auto sz = int64_t(x & 7);
         auto accept = acceptRanges[x >> 4];
         if(n < sz)
         {
@@ -305,10 +305,10 @@ namespace golang::unicode::utf8
     // An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
     // out of range, or is not the shortest possible UTF-8 encoding for the
     // value. No other validation is performed.
-    std::tuple<gocpp::rune, int> DecodeLastRune(gocpp::slice<unsigned char> p)
+    std::tuple<gocpp::rune, int64_t> DecodeLastRune(gocpp::slice<unsigned char> p)
     {
         gocpp::rune r;
-        int size;
+        int64_t size;
         auto end = len(p);
         if(end == 0)
         {
@@ -351,10 +351,10 @@ namespace golang::unicode::utf8
     // An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
     // out of range, or is not the shortest possible UTF-8 encoding for the
     // value. No other validation is performed.
-    std::tuple<gocpp::rune, int> DecodeLastRuneInString(gocpp::string s)
+    std::tuple<gocpp::rune, int64_t> DecodeLastRuneInString(gocpp::string s)
     {
         gocpp::rune r;
-        int size;
+        int64_t size;
         auto end = len(s);
         if(end == 0)
         {
@@ -391,7 +391,7 @@ namespace golang::unicode::utf8
 
     // RuneLen returns the number of bytes in the UTF-8 encoding of the rune.
     // It returns -1 if the rune is not a valid value to encode in UTF-8.
-    int RuneLen(gocpp::rune r)
+    int64_t RuneLen(gocpp::rune r)
     {
         //Go switch emulation
         {
@@ -430,7 +430,7 @@ namespace golang::unicode::utf8
     // EncodeRune writes into p (which must be large enough) the UTF-8 encoding of the rune.
     // If the rune is out of range, it writes the encoding of [RuneError].
     // It returns the number of bytes written.
-    int EncodeRune(gocpp::slice<unsigned char> p, gocpp::rune r)
+    int64_t EncodeRune(gocpp::slice<unsigned char> p, gocpp::rune r)
     {
         // This function is inlineable for fast handling of ASCII.
         if(uint32_t(r) <= rune1Max)
@@ -441,7 +441,7 @@ namespace golang::unicode::utf8
         return encodeRuneNonASCII(p, r);
     }
 
-    int encodeRuneNonASCII(gocpp::slice<unsigned char> p, gocpp::rune r)
+    int64_t encodeRuneNonASCII(gocpp::slice<unsigned char> p, gocpp::rune r)
     {
         // Negative values are erroneous. Making it unsigned addresses the problem.
         //Go switch emulation
@@ -536,10 +536,10 @@ namespace golang::unicode::utf8
 
     // RuneCount returns the number of runes in p. Erroneous and short
     // encodings are treated as single runes of width 1 byte.
-    int RuneCount(gocpp::slice<unsigned char> p)
+    int64_t RuneCount(gocpp::slice<unsigned char> p)
     {
         auto np = len(p);
-        int n = {};
+        int64_t n = {};
         for(; n < np; n++)
         {
             if(auto c = p[n]; c >= RuneSelf)
@@ -552,9 +552,9 @@ namespace golang::unicode::utf8
     }
 
     // RuneCountInString is like [RuneCount] but its input is a string.
-    int RuneCountInString(gocpp::string s)
+    int64_t RuneCountInString(gocpp::string s)
     {
-        int n;
+        int64_t n;
         for(const auto& _ : s)
         {
             n++;
@@ -613,7 +613,7 @@ namespace golang::unicode::utf8
                 continue;
             }
             auto x = first[p0];
-            auto size = int(x & 7);
+            auto size = int64_t(x & 7);
             auto accept = acceptRanges[x >> 4];
             //Go switch emulation
             {
@@ -683,7 +683,7 @@ namespace golang::unicode::utf8
                 continue;
             }
             auto x = first[s0];
-            auto size = int(x & 7);
+            auto size = int64_t(x & 7);
             auto accept = acceptRanges[x >> 4];
             //Go switch emulation
             {

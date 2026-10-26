@@ -350,7 +350,7 @@ namespace golang::runtime
     std::tuple<uintptr_t, bool> rec::Load(atomicOffAddr* b)
     {
         auto v = rec::Load(gocpp::recv(b->a));
-        auto wasMarked = false;
+        bool wasMarked = false;
         if(v < 0)
         {
             wasMarked = true;
@@ -416,7 +416,7 @@ namespace golang::runtime
 
     // findSucc returns the first index in a such that addr is
     // less than the base of the addrRange at that index.
-    int rec::findSucc(addrRanges* a, uintptr_t addr)
+    int64_t rec::findSucc(addrRanges* a, uintptr_t addr)
     {
         auto base = offAddr {addr};
 
@@ -427,7 +427,7 @@ namespace golang::runtime
         auto [bot, top] = std::tuple{0, len(a->ranges)};
         for(; top - bot > iterMax; )
         {
-            auto i = int((unsigned int)(bot + top) >> 1);
+            auto i = int64_t((uint64_t)(bot + top) >> 1);
             if(rec::contains(gocpp::recv(a->ranges[i]), rec::addr(gocpp::recv(base))))
             {
                 // a.ranges[i] contains base, so
@@ -612,7 +612,7 @@ namespace golang::runtime
             a->ranges = a->ranges.make_slice(0, 0);
             return;
         }
-        auto removed = uintptr_t(0);
+        uintptr_t removed = uintptr_t(0);
         for(auto [gocpp_ignored, r] : a->ranges.make_slice(pivot))
         {
             removed += rec::size(gocpp::recv(r));

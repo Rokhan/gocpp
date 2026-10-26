@@ -171,7 +171,7 @@ namespace golang::go::types
     {
         // sort type parameters for reproducible strings
         auto tparams = gocpp::make(gocpp::Tag<typeParamsById>(), len(u->handles));
-        auto i = 0;
+        int64_t i = 0;
         for(auto [tpar, gocpp_ignored] : u->handles)
         {
             tparams[i] = tpar;
@@ -196,17 +196,17 @@ namespace golang::go::types
         return rec::String(gocpp::recv(buf));
     }
 
-    int rec::Len(typeParamsById s)
+    int64_t rec::Len(typeParamsById s)
     {
         return len(s);
     }
 
-    bool rec::Less(typeParamsById s, int i, int j)
+    bool rec::Less(typeParamsById s, int64_t i, int64_t j)
     {
         return s[i]->id < s[j]->id;
     }
 
-    void rec::Swap(typeParamsById s, int i, int j)
+    void rec::Swap(typeParamsById s, int64_t i, int64_t j)
     {
         std::tie(s[i], s[j]) = std::tuple{s[j], s[i]};
     }
@@ -304,9 +304,9 @@ namespace golang::go::types
     }
 
     // unknowns returns the number of type parameters for which no type has been set yet.
-    int rec::unknowns(unifier* u)
+    int64_t rec::unknowns(unifier* u)
     {
-        auto n = 0;
+        int64_t n = 0;
         for(auto [gocpp_ignored, h] : u->handles)
         {
             if(*h == nullptr)

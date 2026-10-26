@@ -14,7 +14,7 @@ namespace golang::runtime
 {
     extern long stackPoisonCopy;
     void stackinit();
-    int stacklog2(uintptr_t n);
+    int64_t stacklog2(uintptr_t n);
     extern uintptr_t maxstacksize;
     extern uintptr_t maxstackceiling;
     extern gocpp::slice<gocpp::string> ptrnames;

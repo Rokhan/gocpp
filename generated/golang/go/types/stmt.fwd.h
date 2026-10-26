@@ -6,15 +6,16 @@
 
 namespace golang::go::types
 {
-    using stmtContext = unsigned int;
+    struct GoTag_stmtContext;
+    using stmtContext = gocpp::defined<uint64_t, GoTag_stmtContext>;
     struct GoTag_valueMap;
     struct valueType;
     // permissible control-flow statements
-    const stmtContext breakOk = 1 << 0;
-    const stmtContext continueOk = 1 << 1;
-    const stmtContext fallthroughOk = 1 << 2;
+    inline constexpr stmtContext breakOk = 1 << 0;
+    inline constexpr stmtContext continueOk = 1 << 1;
+    inline constexpr stmtContext fallthroughOk = 1 << 2;
     // additional context information
-    const stmtContext finalSwitchCase = 1 << 3;
-    const stmtContext inTypeSwitch = 1 << 4;
+    inline constexpr stmtContext finalSwitchCase = 1 << 3;
+    inline constexpr stmtContext inTypeSwitch = 1 << 4;
     using valueMap = gocpp::defined<gocpp::map<go_any, gocpp::slice<valueType>>, GoTag_valueMap>;
 }

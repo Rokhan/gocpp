@@ -6,19 +6,20 @@
 
 namespace golang::runtime
 {
-    using throwType = uint32_t;
+    struct GoTag_throwType;
+    using throwType = gocpp::defined<uint32_t, GoTag_throwType>;
     struct PanicNilError;
     // throwTypeNone means that we are not throwing.
-    const throwType throwTypeNone = 0;
+    inline constexpr throwType throwTypeNone = 0;
     // throwTypeUser is a throw due to a problem with the application.
     //
     // These throws do not include runtime frames, system goroutines, or
     // frame metadata.
-    const throwType throwTypeUser = 1;
+    inline constexpr throwType throwTypeUser = 1;
     // throwTypeRuntime is a throw due to a problem with Go itself.
     //
     // These throws include as much information as possible to aid in
     // debugging the runtime, including runtime frames, system goroutines,
     // and frame metadata.
-    const throwType throwTypeRuntime = 2;
+    inline constexpr throwType throwTypeRuntime = 2;
 }

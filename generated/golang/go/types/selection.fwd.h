@@ -6,9 +6,10 @@
 
 namespace golang::go::types
 {
-    using SelectionKind = int;
+    struct GoTag_SelectionKind;
+    using SelectionKind = gocpp::defined<int64_t, GoTag_SelectionKind>;
     struct Selection;
-    const SelectionKind FieldVal = 0;
-    const SelectionKind MethodVal = 1;
-    const SelectionKind MethodExpr = 2;
+    inline constexpr SelectionKind FieldVal = 0;
+    inline constexpr SelectionKind MethodVal = 1;
+    inline constexpr SelectionKind MethodExpr = 2;
 }

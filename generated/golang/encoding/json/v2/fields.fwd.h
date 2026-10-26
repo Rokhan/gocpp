@@ -9,7 +9,7 @@ namespace golang::encoding::json::v2
     struct isZeroer;
     struct structFields;
     struct structField;
-    const long caseIgnore = 1;
-    const long caseStrict = 2;
+    inline constexpr long caseIgnore = 1;
+    inline constexpr long caseStrict = 2;
     struct fieldOptions;
 }

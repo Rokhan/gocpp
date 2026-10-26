@@ -124,17 +124,17 @@ namespace golang::reflect
     }
 
     template<typename T, typename TStore, typename TInterface>
-    int Type::TypeImpl<T, TStore, TInterface>::vAlign()
+    int64_t Type::TypeImpl<T, TStore, TInterface>::vAlign()
     {
         return rec::Align(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    int Type::TypeImpl<T, TStore, TInterface>::vFieldAlign()
+    int64_t Type::TypeImpl<T, TStore, TInterface>::vFieldAlign()
     {
         return rec::FieldAlign(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    golang::reflect::Method Type::TypeImpl<T, TStore, TInterface>::vMethod(int _1)
+    golang::reflect::Method Type::TypeImpl<T, TStore, TInterface>::vMethod(int64_t _1)
     {
         return rec::Method(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
@@ -149,7 +149,7 @@ namespace golang::reflect
         return rec::MethodByName(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
     template<typename T, typename TStore, typename TInterface>
-    int Type::TypeImpl<T, TStore, TInterface>::vNumMethod()
+    int64_t Type::TypeImpl<T, TStore, TInterface>::vNumMethod()
     {
         return rec::NumMethod(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -199,7 +199,7 @@ namespace golang::reflect
         return rec::Comparable(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    int Type::TypeImpl<T, TStore, TInterface>::vBits()
+    int64_t Type::TypeImpl<T, TStore, TInterface>::vBits()
     {
         return rec::Bits(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -219,7 +219,7 @@ namespace golang::reflect
         return rec::Elem(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    StructField Type::TypeImpl<T, TStore, TInterface>::vField(int i)
+    StructField Type::TypeImpl<T, TStore, TInterface>::vField(int64_t i)
     {
         return rec::Field(gocpp::PtrRecv<T, false>(value.get()), i);
     }
@@ -229,7 +229,7 @@ namespace golang::reflect
         return rec::Fields(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    StructField Type::TypeImpl<T, TStore, TInterface>::vFieldByIndex(gocpp::slice<int> index)
+    StructField Type::TypeImpl<T, TStore, TInterface>::vFieldByIndex(gocpp::slice<int64_t> index)
     {
         return rec::FieldByIndex(gocpp::PtrRecv<T, false>(value.get()), index);
     }
@@ -244,7 +244,7 @@ namespace golang::reflect
         return rec::FieldByNameFunc(gocpp::PtrRecv<T, false>(value.get()), match);
     }
     template<typename T, typename TStore, typename TInterface>
-    golang::reflect::Type Type::TypeImpl<T, TStore, TInterface>::vIn(int i)
+    golang::reflect::Type Type::TypeImpl<T, TStore, TInterface>::vIn(int64_t i)
     {
         return rec::In(gocpp::PtrRecv<T, false>(value.get()), i);
     }
@@ -259,27 +259,27 @@ namespace golang::reflect
         return rec::Key(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    int Type::TypeImpl<T, TStore, TInterface>::vLen()
+    int64_t Type::TypeImpl<T, TStore, TInterface>::vLen()
     {
         return rec::Len(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    int Type::TypeImpl<T, TStore, TInterface>::vNumField()
+    int64_t Type::TypeImpl<T, TStore, TInterface>::vNumField()
     {
         return rec::NumField(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    int Type::TypeImpl<T, TStore, TInterface>::vNumIn()
+    int64_t Type::TypeImpl<T, TStore, TInterface>::vNumIn()
     {
         return rec::NumIn(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    int Type::TypeImpl<T, TStore, TInterface>::vNumOut()
+    int64_t Type::TypeImpl<T, TStore, TInterface>::vNumOut()
     {
         return rec::NumOut(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    golang::reflect::Type Type::TypeImpl<T, TStore, TInterface>::vOut(int i)
+    golang::reflect::Type Type::TypeImpl<T, TStore, TInterface>::vOut(int64_t i)
     {
         return rec::Out(gocpp::PtrRecv<T, false>(value.get()), i);
     }
@@ -337,32 +337,32 @@ namespace golang::reflect
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct Type, false>& self)
+        int64_t Align(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value()->vAlign();
         }
 
-        int Align(const gocpp::ObjRecv<struct Type>& self)
+        int64_t Align(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value()->vAlign();
         }
 
-        int FieldAlign(const gocpp::PtrRecv<struct Type, false>& self)
+        int64_t FieldAlign(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value()->vFieldAlign();
         }
 
-        int FieldAlign(const gocpp::ObjRecv<struct Type>& self)
+        int64_t FieldAlign(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value()->vFieldAlign();
         }
 
-        golang::reflect::Method Method(const gocpp::PtrRecv<struct Type, false>& self, int _1)
+        golang::reflect::Method Method(const gocpp::PtrRecv<struct Type, false>& self, int64_t _1)
         {
             return self.ptr->value()->vMethod(_1);
         }
 
-        golang::reflect::Method Method(const gocpp::ObjRecv<struct Type>& self, int _1)
+        golang::reflect::Method Method(const gocpp::ObjRecv<struct Type>& self, int64_t _1)
         {
             return self.obj.value()->vMethod(_1);
         }
@@ -387,12 +387,12 @@ namespace golang::reflect
             return self.obj.value()->vMethodByName(_1);
         }
 
-        int NumMethod(const gocpp::PtrRecv<struct Type, false>& self)
+        int64_t NumMethod(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value()->vNumMethod();
         }
 
-        int NumMethod(const gocpp::ObjRecv<struct Type>& self)
+        int64_t NumMethod(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value()->vNumMethod();
         }
@@ -487,12 +487,12 @@ namespace golang::reflect
             return self.obj.value()->vComparable();
         }
 
-        int Bits(const gocpp::PtrRecv<struct Type, false>& self)
+        int64_t Bits(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value()->vBits();
         }
 
-        int Bits(const gocpp::ObjRecv<struct Type>& self)
+        int64_t Bits(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value()->vBits();
         }
@@ -527,12 +527,12 @@ namespace golang::reflect
             return self.obj.value()->vElem();
         }
 
-        StructField Field(const gocpp::PtrRecv<struct Type, false>& self, int i)
+        StructField Field(const gocpp::PtrRecv<struct Type, false>& self, int64_t i)
         {
             return self.ptr->value()->vField(i);
         }
 
-        StructField Field(const gocpp::ObjRecv<struct Type>& self, int i)
+        StructField Field(const gocpp::ObjRecv<struct Type>& self, int64_t i)
         {
             return self.obj.value()->vField(i);
         }
@@ -547,12 +547,12 @@ namespace golang::reflect
             return self.obj.value()->vFields();
         }
 
-        StructField FieldByIndex(const gocpp::PtrRecv<struct Type, false>& self, gocpp::slice<int> index)
+        StructField FieldByIndex(const gocpp::PtrRecv<struct Type, false>& self, gocpp::slice<int64_t> index)
         {
             return self.ptr->value()->vFieldByIndex(index);
         }
 
-        StructField FieldByIndex(const gocpp::ObjRecv<struct Type>& self, gocpp::slice<int> index)
+        StructField FieldByIndex(const gocpp::ObjRecv<struct Type>& self, gocpp::slice<int64_t> index)
         {
             return self.obj.value()->vFieldByIndex(index);
         }
@@ -577,12 +577,12 @@ namespace golang::reflect
             return self.obj.value()->vFieldByNameFunc(match);
         }
 
-        golang::reflect::Type In(const gocpp::PtrRecv<struct Type, false>& self, int i)
+        golang::reflect::Type In(const gocpp::PtrRecv<struct Type, false>& self, int64_t i)
         {
             return self.ptr->value()->vIn(i);
         }
 
-        golang::reflect::Type In(const gocpp::ObjRecv<struct Type>& self, int i)
+        golang::reflect::Type In(const gocpp::ObjRecv<struct Type>& self, int64_t i)
         {
             return self.obj.value()->vIn(i);
         }
@@ -607,52 +607,52 @@ namespace golang::reflect
             return self.obj.value()->vKey();
         }
 
-        int Len(const gocpp::PtrRecv<struct Type, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value()->vLen();
         }
 
-        int Len(const gocpp::ObjRecv<struct Type>& self)
+        int64_t Len(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value()->vLen();
         }
 
-        int NumField(const gocpp::PtrRecv<struct Type, false>& self)
+        int64_t NumField(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value()->vNumField();
         }
 
-        int NumField(const gocpp::ObjRecv<struct Type>& self)
+        int64_t NumField(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value()->vNumField();
         }
 
-        int NumIn(const gocpp::PtrRecv<struct Type, false>& self)
+        int64_t NumIn(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value()->vNumIn();
         }
 
-        int NumIn(const gocpp::ObjRecv<struct Type>& self)
+        int64_t NumIn(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value()->vNumIn();
         }
 
-        int NumOut(const gocpp::PtrRecv<struct Type, false>& self)
+        int64_t NumOut(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value()->vNumOut();
         }
 
-        int NumOut(const gocpp::ObjRecv<struct Type>& self)
+        int64_t NumOut(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value()->vNumOut();
         }
 
-        golang::reflect::Type Out(const gocpp::PtrRecv<struct Type, false>& self, int i)
+        golang::reflect::Type Out(const gocpp::PtrRecv<struct Type, false>& self, int64_t i)
         {
             return self.ptr->value()->vOut(i);
         }
 
-        golang::reflect::Type Out(const gocpp::ObjRecv<struct Type>& self, int i)
+        golang::reflect::Type Out(const gocpp::ObjRecv<struct Type>& self, int64_t i)
         {
             return self.obj.value()->vOut(i);
         }
@@ -789,7 +789,7 @@ namespace golang::reflect
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct common, false>& self)
+        int64_t Align(const gocpp::PtrRecv<struct common, false>& self)
         {
             return abi::rec::Align(gocpp::recv(self.ptr->Type));
         }
@@ -814,7 +814,7 @@ namespace golang::reflect
             return abi::rec::Common(gocpp::recv(self.ptr->Type));
         }
 
-        int DescriptorSize(const gocpp::PtrRecv<struct common, false>& self)
+        int64_t DescriptorSize(const gocpp::PtrRecv<struct common, false>& self)
         {
             return abi::rec::DescriptorSize(gocpp::recv(self.ptr->Type));
         }
@@ -829,7 +829,7 @@ namespace golang::reflect
             return abi::rec::ExportedMethods(gocpp::recv(self.ptr->Type));
         }
 
-        int FieldAlign(const gocpp::PtrRecv<struct common, false>& self)
+        int64_t FieldAlign(const gocpp::PtrRecv<struct common, false>& self)
         {
             return abi::rec::FieldAlign(gocpp::recv(self.ptr->Type));
         }
@@ -869,7 +869,7 @@ namespace golang::reflect
             return abi::rec::Kind(gocpp::recv(self.ptr->Type));
         }
 
-        int Len(const gocpp::PtrRecv<struct common, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct common, false>& self)
         {
             return abi::rec::Len(gocpp::recv(self.ptr->Type));
         }
@@ -879,7 +879,7 @@ namespace golang::reflect
             return abi::rec::MapType(gocpp::recv(self.ptr->Type));
         }
 
-        int NumMethod(const gocpp::PtrRecv<struct common, false>& self)
+        int64_t NumMethod(const gocpp::PtrRecv<struct common, false>& self)
         {
             return abi::rec::NumMethod(gocpp::recv(self.ptr->Type));
         }
@@ -1002,7 +1002,7 @@ namespace golang::reflect
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct interfaceType, false>& self)
+        int64_t Align(const gocpp::PtrRecv<struct interfaceType, false>& self)
         {
             return abi::rec::Align(gocpp::recv(self.ptr->InterfaceType.Type));
         }
@@ -1027,7 +1027,7 @@ namespace golang::reflect
             return abi::rec::Common(gocpp::recv(self.ptr->InterfaceType.Type));
         }
 
-        int DescriptorSize(const gocpp::PtrRecv<struct interfaceType, false>& self)
+        int64_t DescriptorSize(const gocpp::PtrRecv<struct interfaceType, false>& self)
         {
             return abi::rec::DescriptorSize(gocpp::recv(self.ptr->InterfaceType.Type));
         }
@@ -1042,7 +1042,7 @@ namespace golang::reflect
             return abi::rec::ExportedMethods(gocpp::recv(self.ptr->InterfaceType.Type));
         }
 
-        int FieldAlign(const gocpp::PtrRecv<struct interfaceType, false>& self)
+        int64_t FieldAlign(const gocpp::PtrRecv<struct interfaceType, false>& self)
         {
             return abi::rec::FieldAlign(gocpp::recv(self.ptr->InterfaceType.Type));
         }
@@ -1077,7 +1077,7 @@ namespace golang::reflect
             return abi::rec::Kind(gocpp::recv(self.ptr->InterfaceType.Type));
         }
 
-        int Len(const gocpp::PtrRecv<struct interfaceType, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct interfaceType, false>& self)
         {
             return abi::rec::Len(gocpp::recv(self.ptr->InterfaceType.Type));
         }
@@ -1087,7 +1087,7 @@ namespace golang::reflect
             return abi::rec::MapType(gocpp::recv(self.ptr->InterfaceType.Type));
         }
 
-        int NumMethod(const gocpp::PtrRecv<struct interfaceType, false>& self)
+        int64_t NumMethod(const gocpp::PtrRecv<struct interfaceType, false>& self)
         {
             return abi::rec::NumMethod(gocpp::recv(self.ptr->InterfaceType));
         }
@@ -1122,7 +1122,7 @@ namespace golang::reflect
             return abi::rec::Uncommon(gocpp::recv(self.ptr->InterfaceType.Type));
         }
 
-        std::tuple<int, int> descriptorSizes(const gocpp::PtrRecv<struct interfaceType, false>& self)
+        std::tuple<int64_t, int64_t> descriptorSizes(const gocpp::PtrRecv<struct interfaceType, false>& self)
         {
             return abi::rec::descriptorSizes(gocpp::recv(self.ptr->InterfaceType));
         }
@@ -1190,7 +1190,7 @@ namespace golang::reflect
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct ptrType, false>& self)
+        int64_t Align(const gocpp::PtrRecv<struct ptrType, false>& self)
         {
             return abi::rec::Align(gocpp::recv(self.ptr->PtrType.Type));
         }
@@ -1215,7 +1215,7 @@ namespace golang::reflect
             return abi::rec::Common(gocpp::recv(self.ptr->PtrType.Type));
         }
 
-        int DescriptorSize(const gocpp::PtrRecv<struct ptrType, false>& self)
+        int64_t DescriptorSize(const gocpp::PtrRecv<struct ptrType, false>& self)
         {
             return abi::rec::DescriptorSize(gocpp::recv(self.ptr->PtrType.Type));
         }
@@ -1225,7 +1225,7 @@ namespace golang::reflect
             return abi::rec::ExportedMethods(gocpp::recv(self.ptr->PtrType.Type));
         }
 
-        int FieldAlign(const gocpp::PtrRecv<struct ptrType, false>& self)
+        int64_t FieldAlign(const gocpp::PtrRecv<struct ptrType, false>& self)
         {
             return abi::rec::FieldAlign(gocpp::recv(self.ptr->PtrType.Type));
         }
@@ -1265,7 +1265,7 @@ namespace golang::reflect
             return abi::rec::Kind(gocpp::recv(self.ptr->PtrType.Type));
         }
 
-        int Len(const gocpp::PtrRecv<struct ptrType, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct ptrType, false>& self)
         {
             return abi::rec::Len(gocpp::recv(self.ptr->PtrType.Type));
         }
@@ -1275,7 +1275,7 @@ namespace golang::reflect
             return abi::rec::MapType(gocpp::recv(self.ptr->PtrType.Type));
         }
 
-        int NumMethod(const gocpp::PtrRecv<struct ptrType, false>& self)
+        int64_t NumMethod(const gocpp::PtrRecv<struct ptrType, false>& self)
         {
             return abi::rec::NumMethod(gocpp::recv(self.ptr->PtrType.Type));
         }
@@ -1310,7 +1310,7 @@ namespace golang::reflect
             return abi::rec::Uncommon(gocpp::recv(self.ptr->PtrType.Type));
         }
 
-        std::tuple<int, int> descriptorSizes(const gocpp::PtrRecv<struct ptrType, false>& self)
+        std::tuple<int64_t, int64_t> descriptorSizes(const gocpp::PtrRecv<struct ptrType, false>& self)
         {
             return abi::rec::descriptorSizes(gocpp::recv(self.ptr->PtrType));
         }
@@ -1348,7 +1348,7 @@ namespace golang::reflect
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct sliceType, false>& self)
+        int64_t Align(const gocpp::PtrRecv<struct sliceType, false>& self)
         {
             return abi::rec::Align(gocpp::recv(self.ptr->SliceType.Type));
         }
@@ -1373,7 +1373,7 @@ namespace golang::reflect
             return abi::rec::Common(gocpp::recv(self.ptr->SliceType.Type));
         }
 
-        int DescriptorSize(const gocpp::PtrRecv<struct sliceType, false>& self)
+        int64_t DescriptorSize(const gocpp::PtrRecv<struct sliceType, false>& self)
         {
             return abi::rec::DescriptorSize(gocpp::recv(self.ptr->SliceType.Type));
         }
@@ -1383,7 +1383,7 @@ namespace golang::reflect
             return abi::rec::ExportedMethods(gocpp::recv(self.ptr->SliceType.Type));
         }
 
-        int FieldAlign(const gocpp::PtrRecv<struct sliceType, false>& self)
+        int64_t FieldAlign(const gocpp::PtrRecv<struct sliceType, false>& self)
         {
             return abi::rec::FieldAlign(gocpp::recv(self.ptr->SliceType.Type));
         }
@@ -1423,7 +1423,7 @@ namespace golang::reflect
             return abi::rec::Kind(gocpp::recv(self.ptr->SliceType.Type));
         }
 
-        int Len(const gocpp::PtrRecv<struct sliceType, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct sliceType, false>& self)
         {
             return abi::rec::Len(gocpp::recv(self.ptr->SliceType.Type));
         }
@@ -1433,7 +1433,7 @@ namespace golang::reflect
             return abi::rec::MapType(gocpp::recv(self.ptr->SliceType.Type));
         }
 
-        int NumMethod(const gocpp::PtrRecv<struct sliceType, false>& self)
+        int64_t NumMethod(const gocpp::PtrRecv<struct sliceType, false>& self)
         {
             return abi::rec::NumMethod(gocpp::recv(self.ptr->SliceType.Type));
         }
@@ -1463,7 +1463,7 @@ namespace golang::reflect
             return abi::rec::Uncommon(gocpp::recv(self.ptr->SliceType.Type));
         }
 
-        std::tuple<int, int> descriptorSizes(const gocpp::PtrRecv<struct sliceType, false>& self)
+        std::tuple<int64_t, int64_t> descriptorSizes(const gocpp::PtrRecv<struct sliceType, false>& self)
         {
             return abi::rec::descriptorSizes(gocpp::recv(self.ptr->SliceType));
         }
@@ -1502,7 +1502,7 @@ namespace golang::reflect
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct structType, false>& self)
+        int64_t Align(const gocpp::PtrRecv<struct structType, false>& self)
         {
             return abi::rec::Align(gocpp::recv(self.ptr->StructType.Type));
         }
@@ -1527,7 +1527,7 @@ namespace golang::reflect
             return abi::rec::Common(gocpp::recv(self.ptr->StructType.Type));
         }
 
-        int DescriptorSize(const gocpp::PtrRecv<struct structType, false>& self)
+        int64_t DescriptorSize(const gocpp::PtrRecv<struct structType, false>& self)
         {
             return abi::rec::DescriptorSize(gocpp::recv(self.ptr->StructType.Type));
         }
@@ -1542,7 +1542,7 @@ namespace golang::reflect
             return abi::rec::ExportedMethods(gocpp::recv(self.ptr->StructType.Type));
         }
 
-        int FieldAlign(const gocpp::PtrRecv<struct structType, false>& self)
+        int64_t FieldAlign(const gocpp::PtrRecv<struct structType, false>& self)
         {
             return abi::rec::FieldAlign(gocpp::recv(self.ptr->StructType.Type));
         }
@@ -1582,7 +1582,7 @@ namespace golang::reflect
             return abi::rec::Kind(gocpp::recv(self.ptr->StructType.Type));
         }
 
-        int Len(const gocpp::PtrRecv<struct structType, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct structType, false>& self)
         {
             return abi::rec::Len(gocpp::recv(self.ptr->StructType.Type));
         }
@@ -1592,7 +1592,7 @@ namespace golang::reflect
             return abi::rec::MapType(gocpp::recv(self.ptr->StructType.Type));
         }
 
-        int NumMethod(const gocpp::PtrRecv<struct structType, false>& self)
+        int64_t NumMethod(const gocpp::PtrRecv<struct structType, false>& self)
         {
             return abi::rec::NumMethod(gocpp::recv(self.ptr->StructType.Type));
         }
@@ -1622,7 +1622,7 @@ namespace golang::reflect
             return abi::rec::Uncommon(gocpp::recv(self.ptr->StructType.Type));
         }
 
-        std::tuple<int, int> descriptorSizes(const gocpp::PtrRecv<struct structType, false>& self)
+        std::tuple<int64_t, int64_t> descriptorSizes(const gocpp::PtrRecv<struct structType, false>& self)
         {
             return abi::rec::descriptorSizes(gocpp::recv(self.ptr->StructType));
         }
@@ -1712,11 +1712,11 @@ namespace golang::reflect
     // String returns the name of k.
     gocpp::string rec::String(golang::reflect::Kind k)
     {
-        if((unsigned int)(k) < (unsigned int)(len(kindNames)))
+        if((uint64_t)(k) < (uint64_t)(len(kindNames)))
         {
-            return kindNames[(unsigned int)(k)];
+            return kindNames[(uint64_t)(k)];
         }
-        return "kind"_s + strconv::Itoa(int(k));
+        return "kind"_s + strconv::Itoa(int64_t(k));
     }
 
     gocpp::slice<gocpp::string> kindNames = gocpp::Init<gocpp::slice<gocpp::string>>([](auto& x) {
@@ -1848,7 +1848,7 @@ namespace golang::reflect
         return rec::Size(gocpp::recv(t->t));
     }
 
-    int rec::Bits(rtype* t)
+    int64_t rec::Bits(rtype* t)
     {
         if(t == nullptr)
         {
@@ -1859,15 +1859,15 @@ namespace golang::reflect
         {
             gocpp::panic("reflect: Bits of non-arithmetic Type "_s + rec::String(gocpp::recv(t)));
         }
-        return int(t->t.Size_) * 8;
+        return int64_t(t->t.Size_) * 8;
     }
 
-    int rec::Align(rtype* t)
+    int64_t rec::Align(rtype* t)
     {
         return rec::Align(gocpp::recv(t->t));
     }
 
-    int rec::FieldAlign(rtype* t)
+    int64_t rec::FieldAlign(rtype* t)
     {
         return rec::FieldAlign(gocpp::recv(t->t));
     }
@@ -1887,7 +1887,7 @@ namespace golang::reflect
         return rec::ExportedMethods(gocpp::recv(ut));
     }
 
-    int rec::NumMethod(rtype* t)
+    int64_t rec::NumMethod(rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) == reflect::Interface)
         {
@@ -1897,7 +1897,7 @@ namespace golang::reflect
         return len(rec::exportedMethods(gocpp::recv(t)));
     }
 
-    golang::reflect::Method rec::Method(rtype* t, int i)
+    golang::reflect::Method rec::Method(rtype* t, int64_t i)
     {
         golang::reflect::Method m;
         if(rec::Kind(gocpp::recv(t)) == reflect::Interface)
@@ -1913,7 +1913,7 @@ namespace golang::reflect
         auto p = methods[i];
         auto pname = rec::nameOff(gocpp::recv(t), p.Name);
         m.Name = rec::Name(gocpp::recv(pname));
-        auto fl = flag(Func);
+        flag fl = flag(Func);
         auto mtyp = rec::typeOff(gocpp::recv(t), p.Mtyp);
         auto ft = (funcType*)(gocpp::unsafe_pointer(mtyp));
         auto in = gocpp::make(gocpp::Tag<gocpp::slice<golang::reflect::Type>>(), 0, 1 + rec::NumIn(gocpp::recv(ft)));
@@ -1960,7 +1960,7 @@ namespace golang::reflect
         for(; i < j; )
         {
             // avoid overflow when computing h
-            auto h = int((unsigned int)(i + j) >> 1);
+            auto h = int64_t((uint64_t)(i + j) >> 1);
             // i ≤ h < j
             if(! (rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), methods[h].Name))) >= name))
             {
@@ -2009,7 +2009,7 @@ namespace golang::reflect
         }
         auto s = rec::String(gocpp::recv(t));
         auto i = len(s) - 1;
-        auto sqBrackets = 0;
+        int64_t sqBrackets = 0;
         for(; i >= 0 && (s[i] != '.' || sqBrackets != 0); )
         {
             //Go switch emulation
@@ -2068,7 +2068,7 @@ namespace golang::reflect
         return toType(elem(rec::common(gocpp::recv(t))));
     }
 
-    StructField rec::Field(rtype* t, int i)
+    StructField rec::Field(rtype* t, int64_t i)
     {
         if(rec::Kind(gocpp::recv(t)) != Struct)
         {
@@ -2078,7 +2078,7 @@ namespace golang::reflect
         return rec::Field(gocpp::recv(tt), i);
     }
 
-    StructField rec::FieldByIndex(rtype* t, gocpp::slice<int> index)
+    StructField rec::FieldByIndex(rtype* t, gocpp::slice<int64_t> index)
     {
         if(rec::Kind(gocpp::recv(t)) != Struct)
         {
@@ -2108,17 +2108,17 @@ namespace golang::reflect
         return rec::FieldByNameFunc(gocpp::recv(tt), match);
     }
 
-    int rec::Len(rtype* t)
+    int64_t rec::Len(rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Array)
         {
             gocpp::panic("reflect: Len of non-array type "_s + rec::String(gocpp::recv(t)));
         }
         auto tt = (arrayType*)(gocpp::unsafe_pointer(t));
-        return int(tt->Len);
+        return int64_t(tt->Len);
     }
 
-    int rec::NumField(rtype* t)
+    int64_t rec::NumField(rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Struct)
         {
@@ -2128,7 +2128,7 @@ namespace golang::reflect
         return len(tt->StructType.Fields);
     }
 
-    golang::reflect::Type rec::In(rtype* t, int i)
+    golang::reflect::Type rec::In(rtype* t, int64_t i)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
         {
@@ -2138,7 +2138,7 @@ namespace golang::reflect
         return toType(rec::InSlice(gocpp::recv(tt))[i]);
     }
 
-    int rec::NumIn(rtype* t)
+    int64_t rec::NumIn(rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
         {
@@ -2148,7 +2148,7 @@ namespace golang::reflect
         return rec::NumIn(gocpp::recv(tt));
     }
 
-    int rec::NumOut(rtype* t)
+    int64_t rec::NumOut(rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
         {
@@ -2158,7 +2158,7 @@ namespace golang::reflect
         return rec::NumOut(gocpp::recv(tt));
     }
 
-    golang::reflect::Type rec::Out(rtype* t, int i)
+    golang::reflect::Type rec::Out(rtype* t, int64_t i)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
         {
@@ -2503,11 +2503,11 @@ namespace golang::reflect
                     break;
             }
         }
-        return "ChanDir"_s + strconv::Itoa(int(d));
+        return "ChanDir"_s + strconv::Itoa(int64_t(d));
     }
 
     // Method returns the i'th method in the type's method set.
-    golang::reflect::Method rec::Method(interfaceType* t, int i)
+    golang::reflect::Method rec::Method(interfaceType* t, int64_t i)
     {
         golang::reflect::Method m;
         if(i < 0 || i >= len(t->InterfaceType.Methods))
@@ -2531,7 +2531,7 @@ namespace golang::reflect
     }
 
     // NumMethod returns the number of interface methods in the type's method set.
-    int rec::NumMethod(interfaceType* t)
+    int64_t rec::NumMethod(interfaceType* t)
     {
         return len(t->InterfaceType.Methods);
     }
@@ -2645,7 +2645,7 @@ namespace golang::reflect
         for(; tag != ""_s; )
         {
             // Skip leading space.
-            auto i = 0;
+            int64_t i = 0;
             for(; i < len(tag) && tag[i] == ' '; )
             {
                 i++;
@@ -2703,7 +2703,7 @@ namespace golang::reflect
     }
 
     // Field returns the i'th struct field.
-    StructField rec::Field(structType* t, int i)
+    StructField rec::Field(structType* t, int64_t i)
     {
         StructField f;
         if(i < 0 || i >= len(t->StructType.Fields))
@@ -2730,11 +2730,11 @@ namespace golang::reflect
         {
             auto staticuint64s = getStaticuint64s();
             auto p = gocpp::unsafe_pointer(& (*staticuint64s)[i]);
-            if(gocpp::Sizeof<int>() == 4 && goarch::BigEndian)
+            if(gocpp::Sizeof<int64_t>() == 4 && goarch::BigEndian)
             {
                 p = unsafe::Add(p, 4);
             }
-            f.Index = unsafe::Slice((int*)(p), 1);
+            f.Index = unsafe::Slice((int64_t*)(p), 1);
         }
         else
         {
@@ -2745,7 +2745,7 @@ namespace golang::reflect
             // One possibility is CL 5371098, but we postponed that
             // ugliness until there is a demonstrated
             // need for the performance. This is issue 2320.
-            f.Index = gocpp::slice<int> {i};
+            f.Index = gocpp::slice<int64_t> {i};
         }
         return f;
     }
@@ -2759,7 +2759,7 @@ namespace golang::reflect
     /* convertBlockStmt, nil block */;
 
     // FieldByIndex returns the nested field corresponding to index.
-    StructField rec::FieldByIndex(structType* t, gocpp::slice<int> index)
+    StructField rec::FieldByIndex(structType* t, gocpp::slice<int64_t> index)
     {
         StructField f;
         f.Type = toType(& t->StructType.Type);
@@ -2836,7 +2836,7 @@ namespace golang::reflect
         // If a struct type T can be reached more than once at a given depth level,
         // then it annihilates itself and need not be considered at all when we
         // process that next depth level.
-        gocpp::map<structType*, int> nextCount = {};
+        gocpp::map<structType*, int64_t> nextCount = {};
 
         // visited records the structs that have been considered already.
         // Embedded pointer fields can create cycles in the graph of
@@ -2915,7 +2915,7 @@ namespace golang::reflect
                     }
                     if(nextCount == nullptr)
                     {
-                        nextCount = gocpp::map<structType*, int> {gocpp::non_nil};
+                        nextCount = gocpp::map<structType*, int64_t> {gocpp::non_nil};
                     }
                     nextCount.ref(styp) = 1;
                     if(count.get(t) > 1)
@@ -2923,7 +2923,7 @@ namespace golang::reflect
                         // exact multiple doesn't matter
                         nextCount.ref(styp) = 2;
                     }
-                    gocpp::slice<int> index = {};
+                    gocpp::slice<int64_t> index = {};
                     index = append(index, scan.index);
                     index = append(index, i);
                     next = append(next, fieldScan {styp, index});
@@ -2944,7 +2944,7 @@ namespace golang::reflect
         StructField f;
         bool present;
         // Quick check for top-level name, or struct without embedded fields.
-        auto hasEmbeds = false;
+        bool hasEmbeds = false;
         if(name != ""_s)
         {
             for(auto [i, gocpp_ignored] : t->StructType.Fields)
@@ -3143,8 +3143,8 @@ namespace golang::reflect
         if(rec::Kind(gocpp::recv(V)) == abi::Interface)
         {
             auto v = (interfaceType*)(gocpp::unsafe_pointer(V));
-            auto i = 0;
-            for(auto j = 0; j < len(v->InterfaceType.Methods); j++)
+            int64_t i = 0;
+            for(int64_t j = 0; j < len(v->InterfaceType.Methods); j++)
             {
                 auto tm = & t->InterfaceType.Methods[i];
                 auto tmName = rec::nameOff(gocpp::recv(t), tm->Name);
@@ -3183,9 +3183,9 @@ namespace golang::reflect
         {
             return false;
         }
-        auto i = 0;
+        int64_t i = 0;
         auto vmethods = rec::Methods(gocpp::recv(v));
-        for(auto j = 0; j < int(v->Mcount); j++)
+        for(int64_t j = 0; j < int64_t(v->Mcount); j++)
         {
             auto tm = & t->InterfaceType.Methods[i];
             auto tmName = rec::nameOff(gocpp::recv(t), tm->Name);
@@ -3327,14 +3327,14 @@ namespace golang::reflect
                     {
                         return false;
                     }
-                    for(auto i = 0; i < rec::NumIn(gocpp::recv(t)); i++)
+                    for(int64_t i = 0; i < rec::NumIn(gocpp::recv(t)); i++)
                     {
                         if(! haveIdenticalType(rec::In(gocpp::recv(t), i), rec::In(gocpp::recv(v), i), cmpTags))
                         {
                             return false;
                         }
                     }
-                    for(auto i = 0; i < rec::NumOut(gocpp::recv(t)); i++)
+                    for(int64_t i = 0; i < rec::NumOut(gocpp::recv(t)); i++)
                     {
                         if(! haveIdenticalType(rec::Out(gocpp::recv(t), i), rec::Out(gocpp::recv(v), i), cmpTags))
                         {
@@ -3471,7 +3471,7 @@ namespace golang::reflect
             for(; i < j; )
             {
                 // avoid overflow when computing h
-                auto h = int((unsigned int)(i + j) >> 1);
+                auto h = int64_t((uint64_t)(i + j) >> 1);
                 // i ≤ h < j
                 if(! (stringFor(types[h]) >= s))
                 {
@@ -3696,7 +3696,7 @@ namespace golang::reflect
 
     gocpp::slice<golang::reflect::Type> funcTypes;
     mocklib::Mutex funcTypesMutex;
-    golang::reflect::Type initFuncTypes(int n)
+    golang::reflect::Type initFuncTypes(int64_t n)
     {
         gocpp::Defer defer;
         try
@@ -3867,7 +3867,7 @@ namespace golang::reflect
             {
                 repr = append(repr, ", "_s);
             }
-            if(rec::IsVariadic(gocpp::recv(ft)) && i == int(ft->InCount) - 1)
+            if(rec::IsVariadic(gocpp::recv(ft)) && i == int64_t(ft->InCount) - 1)
             {
                 repr = append(repr, "..."_s);
                 repr = append(repr, stringFor((sliceType*)(gocpp::unsafe_pointer(t))->SliceType.Elem));
@@ -4123,11 +4123,11 @@ namespace golang::reflect
         auto ptrs = typ->PtrBytes / goarch::PtrSize;
         auto words = typ->Size_ / goarch::PtrSize;
         auto mask = rec::GcSlice(gocpp::recv(typ), 0, (ptrs + 7) / 8);
-        for(auto j = uintptr_t(0); j < ptrs; j++)
+        for(uintptr_t j = uintptr_t(0); j < ptrs; j++)
         {
             if((mask[j / 8] >> (j % 8)) & 1 != 0)
             {
-                for(auto i = uintptr_t(0); i < n; i++)
+                for(uintptr_t i = uintptr_t(0); i < n; i++)
                 {
                     auto k = base + i * words + j;
                     out[k / 8] |= 1 << (k % 8);
@@ -4261,7 +4261,7 @@ namespace golang::reflect
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct structTypeUncommon, false>& self)
+        int64_t Align(const gocpp::PtrRecv<struct structTypeUncommon, false>& self)
         {
             return abi::rec::Align(gocpp::recv(self.ptr->structType.StructType.Type));
         }
@@ -4286,7 +4286,7 @@ namespace golang::reflect
             return abi::rec::Common(gocpp::recv(self.ptr->structType.StructType.Type));
         }
 
-        int DescriptorSize(const gocpp::PtrRecv<struct structTypeUncommon, false>& self)
+        int64_t DescriptorSize(const gocpp::PtrRecv<struct structTypeUncommon, false>& self)
         {
             return abi::rec::DescriptorSize(gocpp::recv(self.ptr->structType.StructType.Type));
         }
@@ -4301,17 +4301,17 @@ namespace golang::reflect
             return abi::rec::ExportedMethods(gocpp::recv(self.ptr->structType.StructType.Type));
         }
 
-        StructField Field(const gocpp::PtrRecv<struct structTypeUncommon, false>& self, int i)
+        StructField Field(const gocpp::PtrRecv<struct structTypeUncommon, false>& self, int64_t i)
         {
             return rec::Field(gocpp::recv(self.ptr->structType), i);
         }
 
-        int FieldAlign(const gocpp::PtrRecv<struct structTypeUncommon, false>& self)
+        int64_t FieldAlign(const gocpp::PtrRecv<struct structTypeUncommon, false>& self)
         {
             return abi::rec::FieldAlign(gocpp::recv(self.ptr->structType.StructType.Type));
         }
 
-        StructField FieldByIndex(const gocpp::PtrRecv<struct structTypeUncommon, false>& self, gocpp::slice<int> index)
+        StructField FieldByIndex(const gocpp::PtrRecv<struct structTypeUncommon, false>& self, gocpp::slice<int64_t> index)
         {
             return rec::FieldByIndex(gocpp::recv(self.ptr->structType), index);
         }
@@ -4361,7 +4361,7 @@ namespace golang::reflect
             return abi::rec::Kind(gocpp::recv(self.ptr->structType.StructType.Type));
         }
 
-        int Len(const gocpp::PtrRecv<struct structTypeUncommon, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct structTypeUncommon, false>& self)
         {
             return abi::rec::Len(gocpp::recv(self.ptr->structType.StructType.Type));
         }
@@ -4371,7 +4371,7 @@ namespace golang::reflect
             return abi::rec::MapType(gocpp::recv(self.ptr->structType.StructType.Type));
         }
 
-        int NumMethod(const gocpp::PtrRecv<struct structTypeUncommon, false>& self)
+        int64_t NumMethod(const gocpp::PtrRecv<struct structTypeUncommon, false>& self)
         {
             return abi::rec::NumMethod(gocpp::recv(self.ptr->structType.StructType.Type));
         }
@@ -4401,7 +4401,7 @@ namespace golang::reflect
             return abi::rec::Uncommon(gocpp::recv(self.ptr->structType.StructType.Type));
         }
 
-        std::tuple<int, int> descriptorSizes(const gocpp::PtrRecv<struct structTypeUncommon, false>& self)
+        std::tuple<int64_t, int64_t> descriptorSizes(const gocpp::PtrRecv<struct structTypeUncommon, false>& self)
         {
             return abi::rec::descriptorSizes(gocpp::recv(self.ptr->structType.StructType));
         }
@@ -4541,7 +4541,7 @@ namespace golang::reflect
 
     // isPaddedField reports whether the i'th field of struct type t is followed
     // by padding.
-    bool isPaddedField(golang::reflect::Type t, int i)
+    bool isPaddedField(golang::reflect::Type t, int64_t i)
     {
         auto field = rec::Field(gocpp::recv(t), i);
         if(i + 1 < rec::NumField(gocpp::recv(t)))
@@ -4571,9 +4571,9 @@ namespace golang::reflect
             auto repr = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 64);
             auto fset = gocpp::map<gocpp::string, gocpp::empty_struct> {gocpp::non_nil};
 
-            auto lastzero = uintptr_t(0);
+            uintptr_t lastzero = uintptr_t(0);
             repr = append(repr, "struct {"_s);
-            auto pkgpath = ""_s;
+            gocpp::string pkgpath = ""_s;
             for(auto [i, field] : fields)
             {
                 if(field.Name == ""_s)
@@ -5053,7 +5053,7 @@ namespace golang::reflect
                 {
                     auto st = (structType*)(gocpp::unsafe_pointer(t));
                     // find the last field that has pointers.
-                    auto field = - 1;
+                    int64_t field = - 1;
                     for(auto [i, gocpp_ignored] : st->StructType.Fields)
                     {
                         auto ft = st->StructType.Fields[i].Typ;
@@ -5083,7 +5083,7 @@ namespace golang::reflect
     //
     // If the resulting type would be larger than the available address space,
     // ArrayOf panics.
-    golang::reflect::Type ArrayOf(int length, golang::reflect::Type elem)
+    golang::reflect::Type ArrayOf(int64_t length, golang::reflect::Type elem)
     {
         if(length < 0)
         {
@@ -5202,7 +5202,7 @@ namespace golang::reflect
         {
             array.Type.Equal = [=](gocpp::unsafe_pointer p, gocpp::unsafe_pointer q) mutable -> bool
             {
-                for(auto i = 0; i < length; i++)
+                for(int64_t i = 0; i < length; i++)
                 {
                     auto pi = arrayAt(p, i, esize, "i < length"_s);
                     auto qi = arrayAt(q, i, esize, "i < length"_s);
@@ -5477,7 +5477,7 @@ namespace golang::reflect
             // Runtime needs pointer masks to be a multiple of uintptr in size.
             // Since reflect passes bv.data directly to the runtime as a pointer mask,
             // we append a full uintptr of zeros at a time.
-            for(auto i = 0; i < goarch::PtrSize; i++)
+            for(int64_t i = 0; i < goarch::PtrSize; i++)
             {
                 bv->data = append(bv->data, 0);
             }
@@ -5538,7 +5538,7 @@ namespace golang::reflect
                 {
                     // repeat inner type
                     auto tt = (arrayType*)(gocpp::unsafe_pointer(t));
-                    for(auto i = 0; i < int(tt->Len); i++)
+                    for(int64_t i = 0; i < int64_t(tt->Len); i++)
                     {
                         addTypeBits(bv, offset + uintptr_t(i) * tt->Elem->Size_, tt->Elem);
                     }

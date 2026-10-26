@@ -176,7 +176,7 @@ namespace golang::os
         return nullptr;
     }
 
-    gocpp::error rootChown(Root* r, gocpp::string name, int uid, int gid)
+    gocpp::error rootChown(Root* r, gocpp::string name, int64_t uid, int64_t gid)
     {
         auto [gocpp_id_1, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
@@ -193,7 +193,7 @@ namespace golang::os
         return nullptr;
     }
 
-    gocpp::error rootLchown(Root* r, gocpp::string name, int uid, int gid)
+    gocpp::error rootLchown(Root* r, gocpp::string name, int64_t uid, int64_t gid)
     {
         auto [gocpp_id_2, err] = doInRoot(r, name, 0, nullptr, [=](sysfdType parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
@@ -229,7 +229,7 @@ namespace golang::os
 
     gocpp::error rootMkdir(Root* r, gocpp::string name, FileMode perm)
     {
-        auto flags = (unsigned int)(doInRootCreatingDirectory);
+        uint64_t flags = (uint64_t)(doInRootCreatingDirectory);
         //Go switch emulation
         {
             auto condition = mocklib::GOOS;
@@ -374,7 +374,7 @@ namespace golang::os
                 x.Err = err;
             }))};
         };
-        auto flags = (unsigned int)(doInRootCreatingDirectory);
+        uint64_t flags = (uint64_t)(doInRootCreatingDirectory);
         //Go switch emulation
         {
             auto condition = mocklib::GOOS;
@@ -481,7 +481,7 @@ namespace golang::os
     {
         auto [gocpp_id_11, err_tmp] = doInRoot(r, oldname, 0, nullptr, [=](sysfdType oldparent, gocpp::string oldname, bool oldEndsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
-            auto flags = (unsigned int)(doInRootCreatingDirectory);
+            uint64_t flags = (uint64_t)(doInRootCreatingDirectory);
             if(mocklib::GOOS == "windows"_s)
             {
                 flags |= doInRootNoHandleTerminalSlash;
@@ -531,7 +531,7 @@ namespace golang::os
     {
         auto [gocpp_id_13, err_tmp] = doInRoot(r, oldname, 0, nullptr, [=](sysfdType oldparent, gocpp::string oldname, bool oldEndsInSlash) mutable -> std::tuple<gocpp::empty_struct, gocpp::error>
         {
-            auto flags = (unsigned int)(0);
+            uint64_t flags = (uint64_t)(0);
             if(mocklib::GOOS == "windows"_s)
             {
                 // Windows doesn't pay attention to trailing slashes in the link target.
@@ -577,7 +577,7 @@ namespace golang::os
     // If f or openDirFunc return a *PathError, doInRoot will set PathError.Path to the
     // full path which caused the error.
     template<typename T>
-    std::tuple<T, gocpp::error> doInRoot(Root* r, gocpp::string name, unsigned int flags, std::function<std::tuple<sysfdType, gocpp::error> (sysfdType parent, gocpp::string name)> openDirFunc, std::function<std::tuple<T, gocpp::error> (sysfdType parent, gocpp::string name, bool endsInSlash)> f)
+    std::tuple<T, gocpp::error> doInRoot(Root* r, gocpp::string name, uint64_t flags, std::function<std::tuple<sysfdType, gocpp::error> (sysfdType parent, gocpp::string name)> openDirFunc, std::function<std::tuple<T, gocpp::error> (sysfdType parent, gocpp::string name, bool endsInSlash)> f)
     {
         T ret;
         gocpp::error err;
@@ -621,10 +621,10 @@ namespace golang::os
             auto maxSteps = 255;
             auto maxRestarts = 8;
 
-            auto i = 0;
-            auto steps = 0;
-            auto restarts = 0;
-            auto symlinks = 0;
+            int64_t i = 0;
+            int64_t steps = 0;
+            int64_t restarts = 0;
+            int64_t symlinks = 0;
             Loop:
             for(; ; )
             {

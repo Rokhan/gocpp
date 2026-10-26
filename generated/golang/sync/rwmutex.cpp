@@ -277,7 +277,7 @@ namespace golang::sync
             fatal("sync: Unlock of unlocked RWMutex"_s);
         }
         // Unblock blocked readers, if any.
-        for(auto i = 0; i < int(r); i++)
+        for(int64_t i = 0; i < int64_t(r); i++)
         {
             runtime_Semrelease(& rw->readerSem, false, 0);
         }

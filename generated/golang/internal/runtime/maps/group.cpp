@@ -116,7 +116,7 @@ namespace golang::internal::runtime::maps
     }
 
     // count returns the number of bits set in b.
-    int rec::count(bitset b)
+    int64_t rec::count(bitset b)
     {
         // Note: works for both bitset representations (AMD64 and generic)
         return sys::OnesCount64(uint64_t(b));
@@ -377,7 +377,7 @@ namespace golang::internal::runtime::maps
     groupsReference newGroups(abi::MapType* typ, uint64_t length)
     {
         return gocpp::Init<groupsReference>([=](auto& x) {
-            x.data = newarray(typ->Group, int(length));
+            x.data = newarray(typ->Group, int64_t(length));
             x.lengthMask = length - 1;
         });
     }
@@ -400,7 +400,7 @@ namespace golang::internal::runtime::maps
         if(rec::IndirectKey(gocpp::recv(typ)))
         {
             // Deep copy keys if indirect.
-            for(auto i = uintptr_t(0); i < abi::MapGroupSlots; i++)
+            for(uintptr_t i = uintptr_t(0); i < abi::MapGroupSlots; i++)
             {
                 auto oldKey = *(gocpp::unsafe_pointer*)(rec::key(gocpp::recv(oldGroup), typ, i));
                 if(oldKey == nullptr)
@@ -415,7 +415,7 @@ namespace golang::internal::runtime::maps
         if(rec::IndirectElem(gocpp::recv(typ)))
         {
             // Deep copy elems if indirect.
-            for(auto i = uintptr_t(0); i < abi::MapGroupSlots; i++)
+            for(uintptr_t i = uintptr_t(0); i < abi::MapGroupSlots; i++)
             {
                 auto oldElem = *(gocpp::unsafe_pointer*)(rec::elem(gocpp::recv(oldGroup), typ, i));
                 if(oldElem == nullptr)

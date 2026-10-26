@@ -30,7 +30,8 @@ namespace golang::go::ast
     struct UnaryExpr;
     struct BinaryExpr;
     struct KeyValueExpr;
-    using ChanDir = int;
+    struct GoTag_ChanDir;
+    using ChanDir = gocpp::defined<int64_t, GoTag_ChanDir>;
     struct ArrayType;
     struct StructType;
     struct FuncType;
@@ -67,8 +68,8 @@ namespace golang::go::ast
     struct FuncDecl;
     struct File;
     struct Package;
-    const ChanDir SEND = 1 << 0;
-    const ChanDir RECV = 1 << 1;
+    inline constexpr ChanDir SEND = 1 << 0;
+    inline constexpr ChanDir RECV = 1 << 1;
 }
 #include "golang/go/token/position.fwd.h"
 #include "golang/go/token/token.fwd.h"

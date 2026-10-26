@@ -12,6 +12,8 @@
 
 namespace golang::sync
 {
+    struct GoTag_copyChecker { };
+    using copyChecker = gocpp::defined<uintptr_t, GoTag_copyChecker>;
     struct noCopy
     {
 

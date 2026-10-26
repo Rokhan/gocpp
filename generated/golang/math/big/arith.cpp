@@ -26,7 +26,7 @@ namespace golang::math::big
     {
         Word z1;
         Word z0;
-        auto [hi, lo] = bits::Mul((unsigned int)(x), (unsigned int)(y));
+        auto [hi, lo] = bits::Mul((uint64_t)(x), (uint64_t)(y));
         return {Word(hi), Word(lo)};
     }
 
@@ -35,17 +35,17 @@ namespace golang::math::big
     {
         Word z1;
         Word z0;
-        auto [hi, lo] = bits::Mul((unsigned int)(x), (unsigned int)(y));
-        unsigned int cc = {};
-        std::tie(lo, cc) = bits::Add(lo, (unsigned int)(c), 0);
+        auto [hi, lo] = bits::Mul((uint64_t)(x), (uint64_t)(y));
+        uint64_t cc = {};
+        std::tie(lo, cc) = bits::Add(lo, (uint64_t)(c), 0);
         return {Word(hi + cc), Word(lo)};
     }
 
     // nlz returns the number of leading zeros in x.
     // Wraps bits.LeadingZeros call for convenience.
-    unsigned int nlz(Word x)
+    uint64_t nlz(Word x)
     {
-        return (unsigned int)(bits::LeadingZeros((unsigned int)(x)));
+        return (uint64_t)(bits::LeadingZeros((uint64_t)(x)));
     }
 
     // The resulting carry c is either 0 or 1.
@@ -59,7 +59,7 @@ namespace golang::math::big
 
         for(auto [i, gocpp_ignored] : z)
         {
-            auto [zi, cc] = bits::Add((unsigned int)(x[i]), (unsigned int)(y[i]), (unsigned int)(c));
+            auto [zi, cc] = bits::Add((uint64_t)(x[i]), (uint64_t)(y[i]), (uint64_t)(c));
             z[i] = Word(zi);
             c = Word(cc);
         }
@@ -77,7 +77,7 @@ namespace golang::math::big
 
         for(auto [i, gocpp_ignored] : z)
         {
-            auto [zi, cc] = bits::Sub((unsigned int)(x[i]), (unsigned int)(y[i]), (unsigned int)(c));
+            auto [zi, cc] = bits::Sub((uint64_t)(x[i]), (uint64_t)(y[i]), (uint64_t)(c));
             z[i] = Word(zi);
             c = Word(cc);
         }
@@ -109,7 +109,7 @@ namespace golang::math::big
         {
             return y;
         }
-        auto [zi, cc] = bits::Add((unsigned int)(x[0]), (unsigned int)(y), 0);
+        auto [zi, cc] = bits::Add((uint64_t)(x[0]), (uint64_t)(y), 0);
         z[0] = Word(zi);
         if(cc == 0)
         {
@@ -119,7 +119,7 @@ namespace golang::math::big
             }
             return 0;
         }
-        for(auto i = 1; i < len(z); i++)
+        for(int64_t i = 1; i < len(z); i++)
         {
             auto xi = x[i];
             if(xi != ~ Word(0))
@@ -143,7 +143,7 @@ namespace golang::math::big
         c = y;
         for(auto [i, gocpp_ignored] : z)
         {
-            auto [zi, cc] = bits::Add((unsigned int)(x[i]), (unsigned int)(c), 0);
+            auto [zi, cc] = bits::Add((uint64_t)(x[i]), (uint64_t)(c), 0);
             z[i] = Word(zi);
             c = Word(cc);
         }
@@ -175,7 +175,7 @@ namespace golang::math::big
         {
             return y;
         }
-        auto [zi, cc] = bits::Sub((unsigned int)(x[0]), (unsigned int)(y), 0);
+        auto [zi, cc] = bits::Sub((uint64_t)(x[0]), (uint64_t)(y), 0);
         z[0] = Word(zi);
         if(cc == 0)
         {
@@ -185,7 +185,7 @@ namespace golang::math::big
             }
             return 0;
         }
-        for(auto i = 1; i < len(z); i++)
+        for(int64_t i = 1; i < len(z); i++)
         {
             auto xi = x[i];
             if(xi != 0)
@@ -209,14 +209,14 @@ namespace golang::math::big
         c = y;
         for(auto [i, gocpp_ignored] : z)
         {
-            auto [zi, cc] = bits::Sub((unsigned int)(x[i]), (unsigned int)(c), 0);
+            auto [zi, cc] = bits::Sub((uint64_t)(x[i]), (uint64_t)(c), 0);
             z[i] = Word(zi);
             c = Word(cc);
         }
         return c;
     }
 
-    Word lshVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
+    Word lshVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, uint64_t s)
     {
         Word c;
         if(len(x) != len(z))
@@ -247,7 +247,7 @@ namespace golang::math::big
         return c;
     }
 
-    Word rshVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
+    Word rshVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, uint64_t s)
     {
         Word c;
         if(len(x) != len(z))
@@ -270,7 +270,7 @@ namespace golang::math::big
         // ditto
         ŝ &= _W - 1;
         c = x[0] << ŝ;
-        for(auto i = 1; i < len(z); i++)
+        for(int64_t i = 1; i < len(z); i++)
         {
             z[i - 1] = (x[i - 1] >> s) | (x[i] << ŝ);
         }
@@ -305,7 +305,7 @@ namespace golang::math::big
         for(auto [i, gocpp_ignored] : z)
         {
             auto [z1, z0] = mulAddWWW_g(y[i], m, x[i]);
-            auto [lo, cc] = bits::Add((unsigned int)(z0), (unsigned int)(c), 0);
+            auto [lo, cc] = bits::Add((uint64_t)(z0), (uint64_t)(c), 0);
             std::tie(c, z[i]) = std::tuple{Word(cc), Word(lo)};
             c += z1;
         }
@@ -326,7 +326,7 @@ namespace golang::math::big
             x0 <<= s;
             y <<= s;
         }
-        auto d = (unsigned int)(y);
+        auto d = (uint64_t)(y);
         // We know that
         // m = ⎣(B^2-1)/d⎦-B
         // ⎣(B^2-1)/d⎦ = m+B
@@ -339,16 +339,16 @@ namespace golang::math::big
         // = ⎣(x1*m+x1*B+x0)/B + x0*m/B^2 + delta2*(x1*B+x0)/B^2⎦
         // The latter two terms of this three-term sum are between 0 and 1.
         // So we can compute just the first term, and we will be low by at most 2.
-        auto [t1, t0] = bits::Mul((unsigned int)(m), (unsigned int)(x1));
-        auto [gocpp_id_0, c] = bits::Add(t0, (unsigned int)(x0), 0);
-        std::tie(t1, std::ignore) = bits::Add(t1, (unsigned int)(x1), c);
+        auto [t1, t0] = bits::Mul((uint64_t)(m), (uint64_t)(x1));
+        auto [gocpp_id_0, c] = bits::Add(t0, (uint64_t)(x0), 0);
+        std::tie(t1, std::ignore) = bits::Add(t1, (uint64_t)(x1), c);
         // The quotient is either t1, t1+1, or t1+2.
         // We'll try t1 and adjust if needed.
         auto qq = t1;
         // compute remainder r=x-d*q.
         auto [dq1, dq0] = bits::Mul(d, qq);
-        auto [r0, b] = bits::Sub((unsigned int)(x0), dq0, 0);
-        auto [r1, gocpp_id_1] = bits::Sub((unsigned int)(x1), dq1, b);
+        auto [r0, b] = bits::Sub((uint64_t)(x0), dq0, 0);
+        auto [r1, gocpp_id_1] = bits::Sub((uint64_t)(x1), dq1, b);
         // The remainder we just computed is bounded above by B+d:
         // r = x1*B + x0 - d*q.
         // = x1*B + x0 - d*⎣(x1*m+x1*B+x0)/B⎦
@@ -383,9 +383,9 @@ namespace golang::math::big
     // reciprocalWord return the reciprocal of the divisor. rec = floor(( _B^2 - 1 ) / u - _B). u = d1 << nlz(d1).
     Word reciprocalWord(Word d1)
     {
-        auto u = (unsigned int)(d1 << nlz(d1));
+        auto u = (uint64_t)(d1 << nlz(d1));
         auto x1 = ~ u;
-        auto x0 = (unsigned int)(_M);
+        uint64_t x0 = (uint64_t)(_M);
         // (_B^2-1)/U-_B = (_B*(_M-C)+_M)/U
         auto [rec, gocpp_id_2] = bits::Div(x1, x0, u);
         return Word(rec);

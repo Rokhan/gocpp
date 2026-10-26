@@ -12,6 +12,8 @@
 
 namespace golang::go::types
 {
+    struct GoTag_stmtContext { };
+    using stmtContext = gocpp::defined<uint64_t, GoTag_stmtContext>;
     struct GoTag_valueMap { };
 }
 #include "golang/go/ast/ast.fwd.h"
@@ -19,14 +21,18 @@ namespace golang::go::types
 #include "golang/go/token/position.fwd.h"
 #include "golang/go/token/token.fwd.h"
 #include "golang/go/ast/ast.h"
-#include "golang/go/constant/value.h"
-#include "golang/go/token/position.h"
 
 namespace golang::go::types
 {
     namespace ast = golang::go::ast;
+}
+#include "golang/go/constant/value.h"
+
+namespace golang::go::types
+{
     namespace constant = golang::go::constant;
 }
+#include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
 
 namespace golang::go::types

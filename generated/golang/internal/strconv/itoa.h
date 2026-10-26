@@ -12,15 +12,15 @@
 
 namespace golang::internal::strconv
 {
-    gocpp::string FormatUint(uint64_t i, int base);
-    gocpp::string FormatInt(int64_t i, int base);
-    gocpp::string Itoa(int i);
-    gocpp::slice<unsigned char> AppendInt(gocpp::slice<unsigned char> dst, int64_t i, int base);
-    gocpp::slice<unsigned char> AppendUint(gocpp::slice<unsigned char> dst, uint64_t i, int base);
-    std::tuple<gocpp::slice<unsigned char>, gocpp::string> formatBits(gocpp::slice<unsigned char> dst, uint64_t u, int base, bool neg, bool append_);
-    bool isPowerOfTwo(int x);
-    gocpp::string small(int i);
-    int RuntimeFormatBase10(gocpp::slice<unsigned char> a, uint64_t u);
+    gocpp::string FormatUint(uint64_t i, int64_t base);
+    gocpp::string FormatInt(int64_t i, int64_t base);
+    gocpp::string Itoa(int64_t i);
+    gocpp::slice<unsigned char> AppendInt(gocpp::slice<unsigned char> dst, int64_t i, int64_t base);
+    gocpp::slice<unsigned char> AppendUint(gocpp::slice<unsigned char> dst, uint64_t i, int64_t base);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::string> formatBits(gocpp::slice<unsigned char> dst, uint64_t u, int64_t base, bool neg, bool append_);
+    bool isPowerOfTwo(int64_t x);
+    gocpp::string small(int64_t i);
+    int64_t RuntimeFormatBase10(gocpp::slice<unsigned char> a, uint64_t u);
     void formatBase10(gocpp::slice<unsigned char> a, uint64_t u);
 
     namespace rec

@@ -6,14 +6,14 @@
 
 namespace golang::internal::strconv
 {
-    const gocpp::string lowerhex = "0123456789abcdef"_s;
-    const gocpp::string upperhex = "0123456789ABCDEF"_s;
-    const long float32MantBits = 23;
-    const long float32ExpBits = 8;
-    const long float32Bias = - 127;
-    const long float32MinExp = - 189;
-    const long float64MantBits = 52;
-    const long float64ExpBits = 11;
-    const long float64Bias = - 1023;
-    const long float64MinExp = - 1085;
+    inline const gocpp::string lowerhex = "0123456789abcdef"_s;
+    inline const gocpp::string upperhex = "0123456789ABCDEF"_s;
+    inline constexpr long float32MantBits = 23;
+    inline constexpr long float32ExpBits = 8;
+    inline constexpr long float32Bias = - 127;
+    inline constexpr long float32MinExp = - 189;
+    inline constexpr long float64MantBits = 52;
+    inline constexpr long float64ExpBits = 11;
+    inline constexpr long float64Bias = - 1023;
+    inline constexpr long float64MinExp = - 1085;
 }

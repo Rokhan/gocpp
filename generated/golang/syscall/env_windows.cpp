@@ -32,7 +32,7 @@ namespace golang::syscall
         {
             return {""_s, false};
         }
-        auto n = uint32_t(100);
+        uint32_t n = uint32_t(100);
         for(; ; )
         {
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
@@ -93,7 +93,7 @@ namespace golang::syscall
             // Environment variables can begin with =
             // so start looking for the separator = at j=1.
             // https://devblogs.microsoft.com/oldnewthing/20100506-00/?p=14133
-            for(auto j = 1; j < len(s); j++)
+            for(int64_t j = 1; j < len(s); j++)
             {
                 if(s[j] == '=')
                 {

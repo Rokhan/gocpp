@@ -6,7 +6,7 @@
 
 namespace golang::runtime
 {
-    const bool dlogEnabled = false;
+    inline constexpr bool dlogEnabled = false;
     struct dlogPerM;
 }
 #include "golang/runtime/debuglog.fwd.h"

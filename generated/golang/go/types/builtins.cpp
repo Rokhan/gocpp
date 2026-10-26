@@ -113,7 +113,7 @@ namespace golang::go::types
             // evaluation is done by the respective built-in code.
             // not valid for _Make, _New, _Offsetof, _Trace
             gocpp::slice<operand*> args = {};
-            int nargs = {};
+            int64_t nargs = {};
             //Go switch emulation
             {
                 auto condition = id;
@@ -154,7 +154,7 @@ namespace golang::go::types
             // check argument count
             // check argument count
             {
-                auto msg = ""_s;
+                gocpp::string msg = ""_s;
                 if(nargs < bin.nargs)
                 {
                     msg = "not enough"_s;
@@ -227,7 +227,7 @@ namespace golang::go::types
                             if(auto [ok, gocpp_id_0] = rec::assignableTo(gocpp::recv(x), check, NewSlice(universeByte), nullptr); ok)
                             {
                                 auto y = args[1];
-                                auto hasString = false;
+                                bool hasString = false;
                                 for(auto [gocpp_ignored, u] : types::typeset(rec::typ(gocpp::recv(y))))
                                 {
                                     if(auto [s, gocpp_id_1] = gocpp::getValue<Slice*>(u); s != nullptr && Identical(s->elem, universeByte))
@@ -279,7 +279,7 @@ namespace golang::go::types
                     {
                         // cap(x)
                         // len(x)
-                        auto mode = invalid;
+                        types::operandMode mode = invalid;
                         constant::Value val = {};
                         //Go type switch emulation
                         {
@@ -414,7 +414,7 @@ namespace golang::go::types
                             // avoid error if underlying type is invalid
                             if(types::isValid(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))))
                             {
-                                auto code = InvalidCap;
+                                errors::Code code = InvalidCap;
                                 if(id == _Len)
                                 {
                                     code = InvalidLen;
@@ -500,7 +500,7 @@ namespace golang::go::types
                         // complex(x, y floatT) complexT
                         auto y = args[1];
                         // convert or check untyped arguments
-                        auto d = 0;
+                        int64_t d = 0;
                         if(isUntyped(rec::typ(gocpp::recv(x))))
                         {
                             d |= 1;
@@ -795,7 +795,7 @@ namespace golang::go::types
                         auto resTyp = rec::applyTypeFunc(gocpp::recv(check), f, x, id);
                         if(resTyp == nullptr)
                         {
-                            auto code = InvalidImag;
+                            errors::Code code = InvalidImag;
                             if(id == _Real)
                             {
                                 code = InvalidReal;
@@ -878,7 +878,7 @@ namespace golang::go::types
                             return _1;
                         }
                         // minimum number of arguments
-                        int min = {};
+                        int64_t min = {};
                         //Go type switch emulation
                         {
                             const auto& gocpp_id_12 = gocpp::type_info(u);
@@ -945,7 +945,7 @@ namespace golang::go::types
                         // max(x, ...)
                         // min(x, ...)
                         rec::verifyVersionf(gocpp::recv(check), call->Fun, go1_21, "built-in %s"_s, bin.name);
-                        auto op = token::LSS;
+                        token::Token op = token::LSS;
                         if(id == _Max)
                         {
                             op = token::GTR;
@@ -1234,7 +1234,7 @@ namespace golang::go::types
                         // record the selector expression (was bug - go.dev/issue/47895)
                         // record the selector expression (was bug - go.dev/issue/47895)
                         {
-                            auto mode = value;
+                            types::operandMode mode = value;
                             if(rec::mode(gocpp::recv(x)) == variable || indirect)
                             {
                                 mode = variable;

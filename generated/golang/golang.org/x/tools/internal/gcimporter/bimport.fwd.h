@@ -6,8 +6,8 @@
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
-    const long deltaNewFile = - 64;
+    inline constexpr long deltaNewFile = - 64;
     struct fakeFileSet;
     struct fileInfo;
-    const int maxlines = 64 * 1024;
+    inline constexpr int64_t maxlines = 64 * 1024;
 }

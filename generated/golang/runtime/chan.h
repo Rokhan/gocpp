@@ -48,15 +48,15 @@ namespace golang::runtime
 {
     struct hchan
     {
-        unsigned int qcount{}; // total data in the queue
-        unsigned int dataqsiz{}; // size of the circular queue
+        uint64_t qcount{}; // total data in the queue
+        uint64_t dataqsiz{}; // size of the circular queue
         gocpp::unsafe_pointer buf{}; // points to an array of dataqsiz elements
         uint16_t elemsize{};
         uint32_t closed{};
         timer* timer{}; // timer feeding this chan
         _type* elemtype{}; // element type
-        unsigned int sendx{}; // send index
-        unsigned int recvx{}; // receive index
+        uint64_t sendx{}; // send index
+        uint64_t recvx{}; // receive index
         waitq recvq{}; // list of recv waiters
         waitq sendq{}; // list of send waiters
         synctestBubble* bubble{};
@@ -79,34 +79,34 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct hchan& value);
-    /*const uintptr_t hchanSize = gocpp::Sizeof<golang::runtime::hchan>() + uintptr_t(- int(gocpp::Sizeof<golang::runtime::hchan>()) & (maxAlign - 1)) [known mising deps] */;
-    golang::runtime::hchan* reflect_makechan(chantype* t, int size);
+    /*inline constexpr uintptr_t hchanSize = gocpp::Sizeof<golang::runtime::hchan>() + uintptr_t(- int64_t(gocpp::Sizeof<golang::runtime::hchan>()) & (maxAlign - 1)) [known mising deps] */;
+    golang::runtime::hchan* reflect_makechan(chantype* t, int64_t size);
     golang::runtime::hchan* makechan64(chantype* t, int64_t size);
-    golang::runtime::hchan* makechan(chantype* t, int size);
-    gocpp::unsafe_pointer chanbuf(golang::runtime::hchan* c, unsigned int i);
+    golang::runtime::hchan* makechan(chantype* t, int64_t size);
+    gocpp::unsafe_pointer chanbuf(golang::runtime::hchan* c, uint64_t i);
     bool full(golang::runtime::hchan* c);
     void chansend1(golang::runtime::hchan* c, gocpp::unsafe_pointer elem);
     bool chansend(golang::runtime::hchan* c, gocpp::unsafe_pointer ep, bool block, uintptr_t callerpc);
-    void send(golang::runtime::hchan* c, sudog* sg, gocpp::unsafe_pointer ep, std::function<void ()> unlockf, int skip);
+    void send(golang::runtime::hchan* c, sudog* sg, gocpp::unsafe_pointer ep, std::function<void ()> unlockf, int64_t skip);
     bool timerchandrain(golang::runtime::hchan* c);
     void closechan(golang::runtime::hchan* c);
     bool empty(golang::runtime::hchan* c);
     void chanrecv1(golang::runtime::hchan* c, gocpp::unsafe_pointer elem);
     bool chanrecv2(golang::runtime::hchan* c, gocpp::unsafe_pointer elem);
     std::tuple<bool, bool> chanrecv(golang::runtime::hchan* c, gocpp::unsafe_pointer ep, bool block);
-    void recv(golang::runtime::hchan* c, sudog* sg, gocpp::unsafe_pointer ep, std::function<void ()> unlockf, int skip);
+    void recv(golang::runtime::hchan* c, sudog* sg, gocpp::unsafe_pointer ep, std::function<void ()> unlockf, int64_t skip);
     bool selectnbsend(golang::runtime::hchan* c, gocpp::unsafe_pointer elem);
     std::tuple<bool, bool> selectnbrecv(gocpp::unsafe_pointer elem, golang::runtime::hchan* c);
     bool reflect_chansend(golang::runtime::hchan* c, gocpp::unsafe_pointer elem, bool nb);
     std::tuple<bool, bool> reflect_chanrecv(golang::runtime::hchan* c, bool nb, gocpp::unsafe_pointer elem);
-    int chanlen(golang::runtime::hchan* c);
-    int chancap(golang::runtime::hchan* c);
-    int reflect_chanlen(golang::runtime::hchan* c);
-    int reflectlite_chanlen(golang::runtime::hchan* c);
-    int reflect_chancap(golang::runtime::hchan* c);
+    int64_t chanlen(golang::runtime::hchan* c);
+    int64_t chancap(golang::runtime::hchan* c);
+    int64_t reflect_chanlen(golang::runtime::hchan* c);
+    int64_t reflectlite_chanlen(golang::runtime::hchan* c);
+    int64_t reflect_chancap(golang::runtime::hchan* c);
     void reflect_chanclose(golang::runtime::hchan* c);
     void racesync(golang::runtime::hchan* c, sudog* sg);
-    void racenotify(golang::runtime::hchan* c, unsigned int idx, sudog* sg);
+    void racenotify(golang::runtime::hchan* c, uint64_t idx, sudog* sg);
 }
 
 #include "golang/runtime/runtime2.h"

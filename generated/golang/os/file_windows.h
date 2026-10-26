@@ -12,6 +12,8 @@
 
 namespace golang::os
 {
+    struct GoTag_newFileKind { };
+    using newFileKind = gocpp::defined<int64_t, GoTag_newFileKind>;
     gocpp::error Truncate(gocpp::string name, int64_t size);
     gocpp::error Remove(gocpp::string name);
     gocpp::error rename(gocpp::string oldname, gocpp::string newname);
@@ -28,7 +30,7 @@ namespace golang::os
 {
     File* newFileFromNewFile(uintptr_t fd, gocpp::string name);
     void epipecheck(File* file, gocpp::error e);
-    std::tuple<File*, gocpp::error> openFileNolog(gocpp::string name, int flag, FileMode perm);
+    std::tuple<File*, gocpp::error> openFileNolog(gocpp::string name, int64_t flag, FileMode perm);
     std::tuple<File*, gocpp::error> openDirNolog(gocpp::string name);
     std::tuple<File*, File*, gocpp::error> Pipe();
 }
@@ -95,7 +97,7 @@ namespace golang::os
     {
         uintptr_t fd(File* file);
         gocpp::error close(file* file);
-        std::tuple<int64_t, gocpp::error> seek(File* f, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> seek(File* f, int64_t offset, int64_t whence);
     }
 }
 

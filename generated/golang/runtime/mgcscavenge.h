@@ -14,9 +14,35 @@ namespace golang::runtime
 {
     uint64_t heapRetained();
     void gcPaceScavenger(int64_t memoryLimit, uint64_t heapGoal, uint64_t lastHeapGoal);
-    void bgscavenge(gocpp::channel<int> c);
+    void bgscavenge(gocpp::channel<int64_t> c);
     void printScavTrace(uintptr_t releasedBg, uintptr_t releasedEager, bool forced);
-    uint64_t fillAligned(uint64_t x, unsigned int m);
+    uint64_t fillAligned(uint64_t x, uint64_t m);
+    struct GoTag_scavChunkFlags { };
+    using scavChunkFlags = gocpp::defined<uint8_t, GoTag_scavChunkFlags>;
+    struct piController
+    {
+        double kp{}; // Proportional constant.
+        double ti{}; // Integral time constant.
+        double tt{}; // Reset time.
+        double min{}; // Output boundaries.
+        double max{};
+        double errIntegral{}; // Integral of the error from t=0 to now.
+        // Error flags.
+        bool errOverflow{}; // Set if errIntegral ever overflowed.
+        bool inputOverflow{}; // Set if an operation with the input overflowed.
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct piController& value);
     struct scavChunkData
     {
         // inUse indicates how many pages in this chunk are currently
@@ -53,30 +79,6 @@ namespace golang::runtime
     }
 
     std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value);
-    struct piController
-    {
-        double kp{}; // Proportional constant.
-        double ti{}; // Integral time constant.
-        double tt{}; // Reset time.
-        double min{}; // Output boundaries.
-        double max{};
-        double errIntegral{}; // Integral of the error from t=0 to now.
-        // Error flags.
-        bool errOverflow{}; // Set if errIntegral ever overflowed.
-        bool inputOverflow{}; // Set if an operation with the input overflowed.
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct piController& value);
     scavChunkData unpackScavChunkData(uint64_t sc);
 }
 #include "golang/internal/runtime/atomic/stubs.fwd.h"
@@ -297,13 +299,13 @@ namespace golang::runtime
         void controllerFailed(scavengerState* s);
         std::tuple<uintptr_t, double> run(scavengerState* s);
         uintptr_t scavenge(pageAlloc* p, uintptr_t nbytes, std::function<bool ()> shouldStop, bool force);
-        uintptr_t scavengeOne(pageAlloc* p, chunkIdx ci, unsigned int searchIdx, uintptr_t max);
-        std::tuple<unsigned int, unsigned int> findScavengeCandidate(pallocData* m, unsigned int searchIdx, uintptr_t minimum, uintptr_t max);
+        uintptr_t scavengeOne(pageAlloc* p, chunkIdx ci, uint64_t searchIdx, uintptr_t max);
+        std::tuple<uint64_t, uint64_t> findScavengeCandidate(pallocData* m, uint64_t searchIdx, uintptr_t minimum, uintptr_t max);
         uintptr_t init(scavengeIndex* s, bool test, sysMemStat* sysStat);
         uintptr_t grow(scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat);
-        std::tuple<chunkIdx, unsigned int> find(scavengeIndex* s, bool force);
-        void alloc(scavengeIndex* s, chunkIdx ci, unsigned int npages);
-        void free(scavengeIndex* s, chunkIdx ci, unsigned int page, unsigned int npages);
+        std::tuple<chunkIdx, uint64_t> find(scavengeIndex* s, bool force);
+        void alloc(scavengeIndex* s, chunkIdx ci, uint64_t npages);
+        void free(scavengeIndex* s, chunkIdx ci, uint64_t page, uint64_t npages);
         void nextGen(scavengeIndex* s);
         void setEmpty(scavengeIndex* s, chunkIdx ci);
         scavChunkData load(atomicScavChunkData* sc);
@@ -313,8 +315,8 @@ namespace golang::runtime
         void setEmpty(scavChunkFlags* sc);
         void setNonEmpty(scavChunkFlags* sc);
         bool shouldScavenge(scavChunkData sc, uint32_t currGen, bool force);
-        void alloc(scavChunkData* sc, unsigned int npages, uint32_t newGen);
-        void free(scavChunkData* sc, unsigned int npages, uint32_t newGen);
+        void alloc(scavChunkData* sc, uint64_t npages, uint32_t newGen);
+        void free(scavChunkData* sc, uint64_t npages, uint32_t newGen);
         std::tuple<double, bool> next(piController* c, double input, double setpoint, double period);
         void reset(piController* c);
     }

@@ -7,7 +7,7 @@
 namespace golang::runtime
 {
     struct Cleanup;
-    const long cleanupBlockSize = 512;
+    inline constexpr long cleanupBlockSize = 512;
     struct cleanupBlock;
     struct cleanupFn;
     struct cleanupBlockHeader;

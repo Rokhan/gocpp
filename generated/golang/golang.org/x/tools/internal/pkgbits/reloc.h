@@ -12,6 +12,10 @@
 
 namespace golang::golang_org::x::tools::internal::pkgbits
 {
+    struct GoTag_RelocKind { };
+    using RelocKind = gocpp::defined<int32_t, GoTag_RelocKind>;
+    struct GoTag_Index { };
+    using Index = gocpp::defined<int32_t, GoTag_Index>;
     struct RelocEnt
     {
         RelocKind Kind{};

@@ -8,7 +8,7 @@ namespace golang::go::types
 {
     struct GoTag_termlist;
     // termSep is the separator used between individual terms.
-    const gocpp::string termSep = " | "_s;
+    inline const gocpp::string termSep = " | "_s;
 }
 #include "golang/go/types/typeterm.fwd.h"
 

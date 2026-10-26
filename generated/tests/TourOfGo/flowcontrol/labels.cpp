@@ -31,10 +31,10 @@ namespace golang::main
         testRange(0);
         testRange(1);
         testRange(2);
-        testSwitchWithLabel1(gocpp::slice<int> {0, 0, 0});
-        testSwitchWithLabel1(gocpp::slice<int> {- 5});
-        testSwitchWithLabel1(gocpp::slice<int> {7});
-        testSwitchWithLabel1(gocpp::slice<int> {7, - 2, 0, 5, 0, 0, - 9});
+        testSwitchWithLabel1(gocpp::slice<int64_t> {0, 0, 0});
+        testSwitchWithLabel1(gocpp::slice<int64_t> {- 5});
+        testSwitchWithLabel1(gocpp::slice<int64_t> {7});
+        testSwitchWithLabel1(gocpp::slice<int64_t> {7, - 2, 0, 5, 0, 0, - 9});
 
         testSwitchWithLabel2("\"hello\""_s, 1);
         testSwitchWithLabel2("\"true\""_s, 1);
@@ -42,10 +42,10 @@ namespace golang::main
         testSwitchWithLabel2("1234567"_s, 1);
     }
 
-    void testFor(int k)
+    void testFor(int64_t k)
     {
         loop1:
-        for(auto i = 0; i < 3; i++)
+        for(int64_t i = 0; i < 3; i++)
         {
             if(false) {
             loop1_continue:
@@ -53,7 +53,7 @@ namespace golang::main
             loop1_break:
                 break;
             }
-            for(auto j = 0; j < 3; j++)
+            for(int64_t j = 0; j < 3; j++)
             {
                 mocklib::Println("for"_s, i, j);
                 //Go switch emulation
@@ -78,10 +78,10 @@ namespace golang::main
         mocklib::Println();
     }
 
-    void testRange(int k)
+    void testRange(int64_t k)
     {
         loop1:
-        for(auto [i, gocpp_ignored] : gocpp::slice<int> {0, 1, 2})
+        for(auto [i, gocpp_ignored] : gocpp::slice<int64_t> {0, 1, 2})
         {
             if(false) {
             loop1_continue:
@@ -89,7 +89,7 @@ namespace golang::main
             loop1_break:
                 break;
             }
-            for(auto [j, gocpp_ignored] : gocpp::slice<int> {0, 1, 2})
+            for(auto [j, gocpp_ignored] : gocpp::slice<int64_t> {0, 1, 2})
             {
                 mocklib::Println("range"_s, i, j);
                 //Go switch emulation
@@ -116,7 +116,7 @@ namespace golang::main
 
     void testGoTo()
     {
-        auto i = 0;
+        int64_t i = 0;
         label1:
         i++;
 
@@ -134,7 +134,7 @@ namespace golang::main
             goto label2;
         }
         label3:
-        for(auto j = 0; j < 10; j++)
+        for(int64_t j = 0; j < 10; j++)
         {
             if(false) {
             label3_continue:
@@ -153,9 +153,9 @@ namespace golang::main
         }
     }
 
-    void testSwitchWithLabel1(gocpp::slice<int> items)
+    void testSwitchWithLabel1(gocpp::slice<int64_t> items)
     {
-        auto result = ""_s;
+        gocpp::string result = ""_s;
 
         Outer:
         for(auto [i, item] : items)
@@ -180,7 +180,7 @@ namespace golang::main
                         Selector_break_0:
                             break;
                         }
-                        for(auto j = 0; j < 3; j++)
+                        for(int64_t j = 0; j < 3; j++)
                         {
                             if(j == 1)
                             {
@@ -196,7 +196,7 @@ namespace golang::main
                         Selector_break_1:
                             break;
                         }
-                        for(auto j = 0; j < 3; j++)
+                        for(int64_t j = 0; j < 3; j++)
                         {
                             if(j == i % 3)
                             {
@@ -232,7 +232,7 @@ namespace golang::main
     }
 
     // switch loop from "encoding/json/decode.go"
-    void testSwitchWithLabel2(gocpp::string data, int offset)
+    void testSwitchWithLabel2(gocpp::string data, int64_t offset)
     {
         auto [d, i] = std::tuple{data, offset};
         Switch:

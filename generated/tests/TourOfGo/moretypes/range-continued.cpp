@@ -22,11 +22,11 @@ namespace golang::main
 
     void main()
     {
-        auto pow = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 10);
+        auto pow = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), 10);
         for(auto [i, gocpp_ignored] : pow)
         {
             // == 2**i
-            pow[i] = 1 << (unsigned int)(i);
+            pow[i] = 1 << (uint64_t)(i);
         }
         for(auto [gocpp_ignored, value] : pow)
         {
@@ -35,14 +35,14 @@ namespace golang::main
         }
 
         // assignment versions
-        auto value = 0;
+        int64_t value = 0;
         auto it_0 = std::begin(pow);
         std::tie(std::ignore, value) = *it_0;
         for(; it_0 != std::end(pow); std::tie(std::ignore, value) = *++it_0)
         {
             mocklib::Printf("%v\n"_s, value);
         }
-        auto i = 0;
+        int64_t i = 0;
         auto it_1 = std::begin(pow);
         std::tie(i, std::ignore) = *it_1;
         for(; it_1 != std::end(pow); std::tie(i, std::ignore) = *++it_1)

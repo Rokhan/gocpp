@@ -212,7 +212,7 @@ namespace golang::runtime
     // It is nosplit for the same reason as exceptionhandler.
     //
     //go:nosplit
-    int32_t sigtrampgo(windows::ExceptionPointers* ep, int kind)
+    int32_t sigtrampgo(windows::ExceptionPointers* ep, int64_t kind)
     {
         auto gp = sigFetchG();
         if(gp == nullptr)

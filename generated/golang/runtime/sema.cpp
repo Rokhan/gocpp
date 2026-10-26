@@ -162,25 +162,25 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname sync_runtime_Semrelease sync.runtime_Semrelease
-    void sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes)
+    void sync_runtime_Semrelease(uint32_t* addr, bool handoff, int64_t skipframes)
     {
         semrelease1(addr, handoff, skipframes);
     }
 
     //go:linkname internal_sync_runtime_SemacquireMutex internal/sync.runtime_SemacquireMutex
-    void internal_sync_runtime_SemacquireMutex(uint32_t* addr, bool lifo, int skipframes)
+    void internal_sync_runtime_SemacquireMutex(uint32_t* addr, bool lifo, int64_t skipframes)
     {
         semacquire1(addr, lifo, semaBlockProfile | semaMutexProfile, skipframes, waitReasonSyncMutexLock);
     }
 
     //go:linkname sync_runtime_SemacquireRWMutexR sync.runtime_SemacquireRWMutexR
-    void sync_runtime_SemacquireRWMutexR(uint32_t* addr, bool lifo, int skipframes)
+    void sync_runtime_SemacquireRWMutexR(uint32_t* addr, bool lifo, int64_t skipframes)
     {
         semacquire1(addr, lifo, semaBlockProfile | semaMutexProfile, skipframes, waitReasonSyncRWMutexRLock);
     }
 
     //go:linkname sync_runtime_SemacquireRWMutex sync.runtime_SemacquireRWMutex
-    void sync_runtime_SemacquireRWMutex(uint32_t* addr, bool lifo, int skipframes)
+    void sync_runtime_SemacquireRWMutex(uint32_t* addr, bool lifo, int64_t skipframes)
     {
         semacquire1(addr, lifo, semaBlockProfile | semaMutexProfile, skipframes, waitReasonSyncRWMutexLock);
     }
@@ -188,7 +188,7 @@ namespace golang::runtime
     //go:linkname sync_runtime_SemacquireWaitGroup sync.runtime_SemacquireWaitGroup
     void sync_runtime_SemacquireWaitGroup(uint32_t* addr, bool synctestDurable)
     {
-        auto reason = waitReasonSyncWaitGroupWait;
+        waitReason reason = waitReasonSyncWaitGroupWait;
         if(synctestDurable)
         {
             reason = waitReasonSynctestWaitGroupWait;
@@ -203,12 +203,12 @@ namespace golang::runtime
     }
 
     //go:linkname internal_sync_runtime_Semrelease internal/sync.runtime_Semrelease
-    void internal_sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes)
+    void internal_sync_runtime_Semrelease(uint32_t* addr, bool handoff, int64_t skipframes)
     {
         semrelease1(addr, handoff, skipframes);
     }
 
-    void readyWithTime(sudog* s, int traceskip)
+    void readyWithTime(sudog* s, int64_t traceskip)
     {
         if(s->releasetime != 0)
         {
@@ -223,7 +223,7 @@ namespace golang::runtime
         semacquire1(addr, false, 0, 0, waitReasonSemacquire);
     }
 
-    void semacquire1(uint32_t* addr, bool lifo, semaProfileFlags profile, int skipframes, waitReason reason)
+    void semacquire1(uint32_t* addr, bool lifo, semaProfileFlags profile, int64_t skipframes, waitReason reason)
     {
         auto gp = getg();
         if(gp != gp->m->curg)
@@ -245,7 +245,7 @@ namespace golang::runtime
         // (waiter descriptor is dequeued by signaler)
         auto s = acquireSudog();
         auto root = rec::rootFor(gocpp::recv(semtable), addr);
-        auto t0 = int64_t(0);
+        int64_t t0 = int64_t(0);
         s->releasetime = 0;
         s->acquiretime = 0;
         s->ticket = 0;
@@ -295,7 +295,7 @@ namespace golang::runtime
         semrelease1(addr, false, 0);
     }
 
-    void semrelease1(uint32_t* addr, bool handoff, int skipframes)
+    void semrelease1(uint32_t* addr, bool handoff, int64_t skipframes)
     {
         auto root = rec::rootFor(gocpp::recv(semtable), addr);
         atomic::Xadd(addr, 1);
@@ -799,7 +799,7 @@ namespace golang::runtime
         s->g->waiting = s;
         s->ticket = t;
         s->releasetime = 0;
-        auto t0 = int64_t(0);
+        int64_t t0 = int64_t(0);
         if(blockprofilerate > 0)
         {
             t0 = cputicks();

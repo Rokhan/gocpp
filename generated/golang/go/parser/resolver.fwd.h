@@ -6,7 +6,7 @@
 
 namespace golang::go::parser
 {
-    const bool debugResolve = false;
-    const int maxScopeDepth = 1e3;
+    inline constexpr bool debugResolve = false;
+    inline constexpr int64_t maxScopeDepth = 1e3;
     struct resolver;
 }

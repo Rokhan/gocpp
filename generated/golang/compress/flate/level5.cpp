@@ -66,12 +66,12 @@ namespace golang::compress::flate
             return rec::getFastGen(gocpp::recv(self.ptr->fastGen));
         }
 
-        int32_t matchLenLimited(const gocpp::PtrRecv<struct fastEncL5, false>& self, int s, int t, gocpp::slice<unsigned char> src)
+        int32_t matchLenLimited(const gocpp::PtrRecv<struct fastEncL5, false>& self, int64_t s, int64_t t, gocpp::slice<unsigned char> src)
         {
             return rec::matchLenLimited(gocpp::recv(self.ptr->fastGen), s, t, src);
         }
 
-        int32_t matchLenLong(const gocpp::PtrRecv<struct fastEncL5, false>& self, int s, int t, gocpp::slice<unsigned char> src)
+        int32_t matchLenLong(const gocpp::PtrRecv<struct fastEncL5, false>& self, int64_t s, int64_t t, gocpp::slice<unsigned char> src)
         {
             return rec::matchLenLong(gocpp::recv(self.ptr->fastGen), s, t, src);
         }
@@ -217,8 +217,8 @@ namespace golang::compress::flate
                         auto t2 = lCandidate.prev.offset - e->fastGen.cur;
                         if(s - t2 < maxMatchOffset && uint32_t(cv) == loadLE32(src, t2))
                         {
-                            l = rec::matchLenLimited(gocpp::recv(e), int(s + 4), int(t + 4), src) + 4;
-                            auto ml1 = rec::matchLenLimited(gocpp::recv(e), int(s + 4), int(t2 + 4), src) + 4;
+                            l = rec::matchLenLimited(gocpp::recv(e), int64_t(s + 4), int64_t(t + 4), src) + 4;
+                            auto ml1 = rec::matchLenLimited(gocpp::recv(e), int64_t(s + 4), int64_t(t2 + 4), src) + 4;
                             if(ml1 > l)
                             {
                                 t = t2;
@@ -247,7 +247,7 @@ namespace golang::compress::flate
                 if(s - t < maxMatchOffset && uint32_t(cv) == loadLE32(src, t))
                 {
                     // Found a 4 match...
-                    l = rec::matchLenLimited(gocpp::recv(e), int(s + 4), int(t + 4), src) + 4;
+                    l = rec::matchLenLimited(gocpp::recv(e), int64_t(s + 4), int64_t(t + 4), src) + 4;
                     // Store the next match
                     lCandidate = e->bTable[nextHashL];
 
@@ -266,7 +266,7 @@ namespace golang::compress::flate
                     {
                         if(loadLE32(src, t2) == uint32_t(next))
                         {
-                            auto ml = rec::matchLenLimited(gocpp::recv(e), int(nextS + 4), int(t2 + 4), src) + 4;
+                            auto ml = rec::matchLenLimited(gocpp::recv(e), int64_t(nextS + 4), int64_t(t2 + 4), src) + 4;
                             if(ml > l)
                             {
                                 t = t2;
@@ -279,7 +279,7 @@ namespace golang::compress::flate
                         t2 = lCandidate.prev.offset - e->fastGen.cur;
                         if(nextS - t2 < maxMatchOffset && loadLE32(src, t2) == uint32_t(next))
                         {
-                            auto ml = rec::matchLenLimited(gocpp::recv(e), int(nextS + 4), int(t2 + 4), src) + 4;
+                            auto ml = rec::matchLenLimited(gocpp::recv(e), int64_t(nextS + 4), int64_t(t2 + 4), src) + 4;
                             if(ml > l)
                             {
                                 t = t2;
@@ -297,12 +297,12 @@ namespace golang::compress::flate
             if(l == 0)
             {
                 // Extend the 4-byte match as long as possible.
-                l = rec::matchLenLong(gocpp::recv(e), int(s + 4), int(t + 4), src) + 4;
+                l = rec::matchLenLong(gocpp::recv(e), int64_t(s + 4), int64_t(t + 4), src) + 4;
             }
             else
             if(l == maxMatchLength)
             {
-                l += rec::matchLenLong(gocpp::recv(e), int(s + l), int(t + l), src);
+                l += rec::matchLenLong(gocpp::recv(e), int64_t(s + l), int64_t(t + l), src);
             }
 
             // Try to locate a better match by checking the end of best match...
@@ -320,7 +320,7 @@ namespace golang::compress::flate
                 auto off = s2 - t2;
                 if(t2 >= 0 && off < maxMatchOffset && off > 0)
                 {
-                    if(auto l2 = rec::matchLenLong(gocpp::recv(e), int(s2), int(t2), src); l2 > l)
+                    if(auto l2 = rec::matchLenLong(gocpp::recv(e), int64_t(s2), int64_t(t2), src); l2 > l)
                     {
                         t = t2;
                         l = l2;
@@ -421,7 +421,7 @@ namespace golang::compress::flate
         }
 
         emitRemainder:
-        if(int(nextEmit) < len(src))
+        if(int64_t(nextEmit) < len(src))
         {
             // If nothing was added, don't encode literals.
             if(dst->n == 0)

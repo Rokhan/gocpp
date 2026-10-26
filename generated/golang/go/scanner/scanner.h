@@ -12,16 +12,18 @@
 
 namespace golang::go::scanner
 {
+    struct GoTag_Mode { };
+    using Mode = gocpp::defined<uint64_t, GoTag_Mode>;
     extern gocpp::slice<unsigned char> prefix;
-    std::tuple<int, int, bool> trailingDigits(gocpp::slice<unsigned char> text);
+    std::tuple<int64_t, int64_t, bool> trailingDigits(gocpp::slice<unsigned char> text);
     bool isLetter(gocpp::rune ch);
     bool isDigit(gocpp::rune ch);
-    int digitVal(gocpp::rune ch);
+    int64_t digitVal(gocpp::rune ch);
     gocpp::rune lower(gocpp::rune ch);
     bool isDecimal(gocpp::rune ch);
     bool isHex(gocpp::rune ch);
     gocpp::string litname(gocpp::rune prefix);
-    int invalidSep(gocpp::string x);
+    int64_t invalidSep(gocpp::string x);
     gocpp::slice<unsigned char> stripCR(gocpp::slice<unsigned char> b, bool comment);
 }
 #include "golang/go/token/position.fwd.h"
@@ -45,15 +47,15 @@ namespace golang::go::scanner
         Mode mode{}; // scanning mode
         // scanning state
         gocpp::rune ch{}; // current character
-        int offset{}; // character offset
-        int rdOffset{}; // reading offset (position after current character)
-        int lineOffset{}; // current line offset
+        int64_t offset{}; // character offset
+        int64_t rdOffset{}; // reading offset (position after current character)
+        int64_t lineOffset{}; // current line offset
         bool insertSemi{}; // insert a semicolon before next newline
         token::Pos nlPos{}; // position of newline in preceding comment
         bool endPosValid{};
         token::Pos endPos{}; // overrides the offset as the default end position
         // public state - ok to modify
-        int ErrorCount{}; // number of errors encountered
+        int64_t ErrorCount{}; // number of errors encountered
 
         using isGoStruct = void;
 
@@ -80,24 +82,24 @@ namespace golang::go::scanner
         void next(Scanner* s);
         unsigned char peek(Scanner* s);
         void Init(Scanner* s, token::File* file, gocpp::slice<unsigned char> src, ErrorHandler err, Mode mode);
-        void error(Scanner* s, int offs, gocpp::string msg);
-        void errorf(Scanner* s, int offs, gocpp::string format, gocpp::slice<go_any> args);
+        void error(Scanner* s, int64_t offs, gocpp::string msg);
+        void errorf(Scanner* s, int64_t offs, gocpp::string format, gocpp::slice<go_any> args);
         
         template<typename... Args>
-        void errorf(Scanner* s, int offs, gocpp::string format, Args... args)
+        void errorf(Scanner* s, int64_t offs, gocpp::string format, Args... args)
         {
             return errorf(s, offs, format, gocpp::ToSlice<go_any>(args...));
         }
         
         template<typename... Args>
-        void errorf(Scanner* s, int offs, gocpp::string format, go_any value, Args... args)
+        void errorf(Scanner* s, int64_t offs, gocpp::string format, go_any value, Args... args)
         {
             return errorf(s, offs, format, gocpp::ToSlice<go_any>(value, args...));
         }
-        std::tuple<gocpp::string, int> scanComment(Scanner* s);
-        void updateLineInfo(Scanner* s, int next, int offs, gocpp::slice<unsigned char> text);
+        std::tuple<gocpp::string, int64_t> scanComment(Scanner* s);
+        void updateLineInfo(Scanner* s, int64_t next, int64_t offs, gocpp::slice<unsigned char> text);
         gocpp::string scanIdentifier(Scanner* s);
-        int digits(Scanner* s, int base, int* invalid);
+        int64_t digits(Scanner* s, int64_t base, int64_t* invalid);
         std::tuple<token::Token, gocpp::string> scanNumber(Scanner* s);
         bool scanEscape(Scanner* s, gocpp::rune quote);
         gocpp::string scanRune(Scanner* s);

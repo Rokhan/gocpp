@@ -8,5 +8,6 @@ namespace golang::main
 {
     struct I;
     struct T;
-    using F = double;
+    struct GoTag_F;
+    using F = gocpp::defined<double, GoTag_F>;
 }

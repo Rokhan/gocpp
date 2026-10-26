@@ -19,7 +19,7 @@ namespace golang::go::doc::comment
         // HTML and Markdown headings.
         // If HeadingLevel is zero, it defaults to level 3,
         // meaning to use <h3> and ###.
-        int HeadingLevel{};
+        int64_t HeadingLevel{};
         // HeadingID is a function that computes the heading ID
         // (anchor tag) to use for the heading h when generating
         // HTML and Markdown. If HeadingID returns an empty string,
@@ -46,7 +46,7 @@ namespace golang::go::doc::comment
         // excluding TextPrefix and the newline character.
         // If TextWidth is zero, it defaults to 80 minus the number of code points in TextPrefix.
         // If TextWidth is negative, there is no limit.
-        int TextWidth{};
+        int64_t TextWidth{};
 
         using isGoStruct = void;
 
@@ -89,8 +89,8 @@ namespace golang::go::doc::comment
         gocpp::string docLinkURL(const gocpp::ObjRecv<struct commentPrinter>& self, comment::DocLink* link);
         gocpp::string headingID(const gocpp::PtrRecv<struct commentPrinter, false>& self, comment::Heading* h);
         gocpp::string headingID(const gocpp::ObjRecv<struct commentPrinter>& self, comment::Heading* h);
-        int headingLevel(const gocpp::PtrRecv<struct commentPrinter, false>& self);
-        int headingLevel(const gocpp::ObjRecv<struct commentPrinter>& self);
+        int64_t headingLevel(const gocpp::PtrRecv<struct commentPrinter, false>& self);
+        int64_t headingLevel(const gocpp::ObjRecv<struct commentPrinter>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct commentPrinter& value);
@@ -106,7 +106,7 @@ namespace golang::go::doc::comment
 
     namespace rec
     {
-        int headingLevel(Printer* p);
+        int64_t headingLevel(Printer* p);
         gocpp::string headingID(Printer* p, Heading* h);
         gocpp::string docLinkURL(Printer* p, DocLink* link);
         gocpp::string DefaultURL(DocLink* l, gocpp::string baseURL);

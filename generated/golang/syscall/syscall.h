@@ -19,11 +19,11 @@ namespace golang::syscall
     // Single-word zero for use when we need a valid pointer to 0 bytes.
     // See mksyscall.pl.
     extern uintptr_t _zero;
-    int Getpagesize();
-    void Exit(int code);
+    int64_t Getpagesize();
+    void Exit(int64_t code);
     void runtimeSetenv(gocpp::string k, gocpp::string v);
     void runtimeUnsetenv(gocpp::string k);
-    void runtimeClearenv(gocpp::map<gocpp::string, int> env);
+    void runtimeClearenv(gocpp::map<gocpp::string, int64_t> env);
 }
 
 #include "golang/syscall/syscall_windows.h"

@@ -14,8 +14,8 @@ namespace golang::math::big
 {
     // Rounding modes that determine how the integer quotient is adjusted in an integer division.
     // See Daan Leijen, “Division and Modulus for Computer Scientists”, for details.
-    const big::RoundingMode Trunc = ToZero;
-    const big::RoundingMode Floor = ToNegativeInf;
-    const big::RoundingMode Round = ToNearestEven;
-    const big::RoundingMode Ceil = ToPositiveInf;
+    inline constexpr big::RoundingMode Trunc = ToZero;
+    inline constexpr big::RoundingMode Floor = ToNegativeInf;
+    inline constexpr big::RoundingMode Round = ToNearestEven;
+    inline constexpr big::RoundingMode Ceil = ToPositiveInf;
 }

@@ -111,7 +111,7 @@ namespace golang::regexp
             return syntax::rec::MatchRune(gocpp::recv(self.ptr->Inst), r);
         }
 
-        int MatchRunePos(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r)
+        int64_t MatchRunePos(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r)
         {
             return syntax::rec::MatchRunePos(gocpp::recv(self.ptr->Inst), r);
         }
@@ -302,7 +302,7 @@ namespace golang::regexp
         q->size++;
     }
 
-    queueOnePass* newQueue(int size)
+    queueOnePass* newQueue(int64_t size)
     {
         queueOnePass* q;
         return gocpp::InitPtr<queueOnePass>([=](auto& x) {
@@ -324,11 +324,11 @@ namespace golang::regexp
             {
                 gocpp::panic("mergeRuneSets odd length []rune"_s);
             }
-            int lx = {};
-            int rx = {};
+            int64_t lx = {};
+            int64_t rx = {};
             auto merged = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::rune>>(), 0);
             auto next = gocpp::make(gocpp::Tag<gocpp::slice<uint32_t>>(), 0);
-            auto ok = true;
+            bool ok = true;
             defer.push_back([=]{ [=]() mutable -> void
             {
                 if(! ok)
@@ -338,8 +338,8 @@ namespace golang::regexp
                 }
             }(); });
 
-            auto ix = - 1;
-            auto extend = [=](int* newLow, gocpp::slice<gocpp::rune>* newArray, uint32_t pc) mutable -> bool
+            int64_t ix = - 1;
+            auto extend = [=](int64_t* newLow, gocpp::slice<gocpp::rune>* newArray, uint32_t pc) mutable -> bool
             {
                 if(ix > 0 && (*newArray)[*newLow] <= merged[ix])
                 {
@@ -496,7 +496,7 @@ namespace golang::regexp
                         // A:BC + B:DA => A:BC + B:DC
                         auto p_B_Alt = & p->Inst[*p_A_Alt].Inst.Out;
                         auto p_B_Other = & p->Inst[*p_A_Alt].Inst.Arg;
-                        auto patch = false;
+                        bool patch = false;
                         if(instAlt.Inst.Out == uint32_t(pc))
                         {
                             patch = true;
@@ -772,7 +772,7 @@ namespace golang::regexp
         {
             return nullptr;
         }
-        auto hasAlt = false;
+        bool hasAlt = false;
         for(auto [gocpp_ignored, inst] : prog->Inst)
         {
             if(inst.Op == syntax::InstAlt || inst.Op == syntax::InstAltMatch)

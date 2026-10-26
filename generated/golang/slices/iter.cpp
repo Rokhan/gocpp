@@ -25,9 +25,9 @@ namespace golang::slices
     // All returns an iterator over index-value pairs in the slice
     // in the usual order.
     template<template<typename> class  Slice, typename E>
-    iter::Seq2<int, E> All(Slice<E> s)
+    iter::Seq2<int64_t, E> All(Slice<E> s)
     {
-        return [=](std::function<bool (int _1, E _2)> yield) mutable -> void
+        return [=](std::function<bool (int64_t _1, E _2)> yield) mutable -> void
         {
             for(auto [i, v] : s)
             {
@@ -42,9 +42,9 @@ namespace golang::slices
     // Backward returns an iterator over index-value pairs in the slice,
     // traversing it backward with descending indices.
     template<template<typename> class  Slice, typename E>
-    iter::Seq2<int, E> Backward(Slice<E> s)
+    iter::Seq2<int64_t, E> Backward(Slice<E> s)
     {
-        return [=](std::function<bool (int _1, E _2)> yield) mutable -> void
+        return [=](std::function<bool (int64_t _1, E _2)> yield) mutable -> void
         {
             for(auto i = len(s) - 1; i >= 0; i--)
             {
@@ -108,7 +108,7 @@ namespace golang::slices
     // using the comparison function, and returns it.
     // If seq is empty, the result is nil.
     template<typename E>
-    gocpp::slice<E> SortedFunc(iter::Seq<E> seq, std::function<int (E _1, E _2)> cmp)
+    gocpp::slice<E> SortedFunc(iter::Seq<E> seq, std::function<int64_t (E _1, E _2)> cmp)
     {
         auto s = Collect(seq);
         SortFunc(s, cmp);
@@ -121,7 +121,7 @@ namespace golang::slices
     // It returns the new slice.
     // If seq is empty, the result is nil.
     template<typename E>
-    gocpp::slice<E> SortedStableFunc(iter::Seq<E> seq, std::function<int (E _1, E _2)> cmp)
+    gocpp::slice<E> SortedStableFunc(iter::Seq<E> seq, std::function<int64_t (E _1, E _2)> cmp)
     {
         auto s = Collect(seq);
         SortStableFunc(s, cmp);
@@ -134,7 +134,7 @@ namespace golang::slices
     // If s is empty, the sequence is empty: there is no empty slice in the sequence.
     // Chunk panics if n is less than 1.
     template<template<typename> class  Slice, typename E>
-    iter::Seq<Slice> Chunk(Slice<E> s, int n)
+    iter::Seq<Slice> Chunk(Slice<E> s, int64_t n)
     {
         if(n < 1)
         {
@@ -143,7 +143,7 @@ namespace golang::slices
 
         return [=](std::function<bool (Slice _1)> yield) mutable -> void
         {
-            for(auto i = 0; i < len(s); i += n)
+            for(int64_t i = 0; i < len(s); i += n)
             {
                 // Clamp the last chunk to the slice bound as necessary.
                 auto end = gocpp::min(n, len(s.make_slice(i)));

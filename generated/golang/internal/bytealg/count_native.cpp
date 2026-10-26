@@ -18,17 +18,17 @@ namespace golang::internal::bytealg
     }
 
     //go:noescape
-    int Count(gocpp::slice<unsigned char> b, unsigned char c)
+    int64_t Count(gocpp::slice<unsigned char> b, unsigned char c)
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    int CountString(gocpp::string s, unsigned char c)
+    int64_t CountString(gocpp::string s, unsigned char c)
     /* convertBlockStmt, nil block */;
 
     // A backup implementation to use by assembly.
-    int countGeneric(gocpp::slice<unsigned char> b, unsigned char c)
+    int64_t countGeneric(gocpp::slice<unsigned char> b, unsigned char c)
     {
-        auto n = 0;
+        int64_t n = 0;
         for(auto [gocpp_ignored, x] : b)
         {
             if(x == c)
@@ -39,10 +39,10 @@ namespace golang::internal::bytealg
         return n;
     }
 
-    int countGenericString(gocpp::string s, unsigned char c)
+    int64_t countGenericString(gocpp::string s, unsigned char c)
     {
-        auto n = 0;
-        for(auto i = 0; i < len(s); i++)
+        int64_t n = 0;
+        for(int64_t i = 0; i < len(s); i++)
         {
             if(s[i] == c)
             {

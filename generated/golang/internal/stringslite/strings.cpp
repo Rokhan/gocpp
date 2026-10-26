@@ -38,12 +38,12 @@ namespace golang::internal::stringslite
         return len(s) >= len(suffix) && s.make_slice(len(s) - len(suffix)) == suffix;
     }
 
-    int IndexByte(gocpp::string s, unsigned char c)
+    int64_t IndexByte(gocpp::string s, unsigned char c)
     {
         return bytealg::IndexByteString(s, c);
     }
 
-    int Index(gocpp::string s, gocpp::string substr)
+    int64_t Index(gocpp::string s, gocpp::string substr)
     {
         auto n = len(substr);
         //Go switch emulation
@@ -72,9 +72,9 @@ namespace golang::internal::stringslite
         }
         auto c0 = substr[0];
         auto c1 = substr[1];
-        auto i = 0;
+        int64_t i = 0;
         auto t = len(s) - n + 1;
-        auto fails = 0;
+        int64_t fails = 0;
         for(; i < t; )
         {
             if(s[i] != c0)

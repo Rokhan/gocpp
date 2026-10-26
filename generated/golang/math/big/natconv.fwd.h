@@ -6,10 +6,10 @@
 
 namespace golang::math::big
 {
-    const gocpp::string digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"_s;
+    inline const gocpp::string digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"_s;
     // MaxBase is the largest number base accepted for string conversions.
-    const gocpp::rune MaxBase = 10 + ('z' - 'a' + 1) + ('Z' - 'A' + 1);
-    const gocpp::rune maxBaseSmall = 10 + ('z' - 'a' + 1);
+    inline constexpr gocpp::rune MaxBase = 10 + ('z' - 'a' + 1) + ('Z' - 'A' + 1);
+    inline constexpr gocpp::rune maxBaseSmall = 10 + ('z' - 'a' + 1);
     struct divisor;
     struct cacheBase10Struct;
 }

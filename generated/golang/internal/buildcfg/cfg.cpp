@@ -49,13 +49,13 @@ namespace golang::internal::buildcfg
     gocpp::string GOARCH = envOr("GOARCH"_s, defaultGOARCH);
     gocpp::string GOOS = envOr("GOOS"_s, defaultGOOS);
     gocpp::string GO386 = envOr("GO386"_s, DefaultGO386);
-    int GOAMD64 = goamd64();
+    int64_t GOAMD64 = goamd64();
     buildcfg::GoarmFeatures GOARM = goarm();
     buildcfg::Goarm64Features GOARM64 = goarm64();
     gocpp::string GOMIPS = gomips();
     gocpp::string GOMIPS64 = gomips64();
-    int GOPPC64 = goppc64();
-    int GORISCV64 = goriscv64();
+    int64_t GOPPC64 = goppc64();
+    int64_t GORISCV64 = goriscv64();
     buildcfg::gowasmFeatures GOWASM = gowasm();
     gocpp::slice<gocpp::string> ToolTags = toolTags();
     gocpp::string GO_LDSO = defaultGO_LDSO;
@@ -82,7 +82,7 @@ namespace golang::internal::buildcfg
         return value;
     }
 
-    int goamd64()
+    int64_t goamd64()
     {
         //Go switch emulation
         {
@@ -110,7 +110,7 @@ namespace golang::internal::buildcfg
             }
         }
         Error = mocklib::Errorf("invalid GOAMD64: must be v1, v2, v3, v4"_s);
-        return int(DefaultGOAMD64[len("v"_s)] - '0');
+        return int64_t(DefaultGOAMD64[len("v"_s)] - '0');
     }
 
     gocpp::string gofips140()
@@ -186,7 +186,7 @@ namespace golang::internal::buildcfg
     {
         gocpp::string rest;
         bool ok;
-        auto i = 0;
+        int64_t i = 0;
         for(; i < len(s) && '0' <= s[i] && s[i] <= '9'; )
         {
             i++;
@@ -245,7 +245,7 @@ namespace golang::internal::buildcfg
         GoarmFeatures g;
         auto softFloatOpt = ",softfloat"_s;
         auto hardFloatOpt = ",hardfloat"_s;
-        auto def = DefaultGOARM;
+        gocpp::string def = DefaultGOARM;
         if(GOOS == "android"_s && GOARCH == "arm"_s)
         {
             // Android arm devices always support GOARM=7.
@@ -253,7 +253,7 @@ namespace golang::internal::buildcfg
         }
         auto v = envOr("GOARM"_s, def);
 
-        auto floatSpecified = false;
+        bool floatSpecified = false;
         if(strings::HasSuffix(v, softFloatOpt))
         {
             g.SoftFloat = true;
@@ -286,7 +286,7 @@ namespace golang::internal::buildcfg
                     break;
                 default:
                     Error = mocklib::Errorf("invalid GOARM: must start with 5, 6, or 7, and may optionally end in either %q or %q"_s, hardFloatOpt, softFloatOpt);
-                    g.Version = int(def[0] - '0');
+                    g.Version = int64_t(def[0] - '0');
                     break;
             }
         }
@@ -520,7 +520,7 @@ namespace golang::internal::buildcfg
         return DefaultGOMIPS64;
     }
 
-    int goppc64()
+    int64_t goppc64()
     {
         //Go switch emulation
         {
@@ -544,10 +544,10 @@ namespace golang::internal::buildcfg
             }
         }
         Error = mocklib::Errorf("invalid GOPPC64: must be power8, power9, power10"_s);
-        return int(DefaultGOPPC64[len("power"_s)] - '0');
+        return int64_t(DefaultGOPPC64[len("power"_s)] - '0');
     }
 
-    int goriscv64()
+    int64_t goriscv64()
     {
         //Go switch emulation
         {
@@ -755,7 +755,7 @@ namespace golang::internal::buildcfg
                     break;
                 case 1:
                     gocpp::slice<gocpp::string> list = {};
-                    for(auto i = 1; i <= GOAMD64; i++)
+                    for(int64_t i = 1; i <= GOAMD64; i++)
                     {
                         list = append(list, mocklib::Sprintf("%s.v%d"_s, GOARCH, i));
                     }
@@ -763,7 +763,7 @@ namespace golang::internal::buildcfg
                     break;
                 case 2:
                     gocpp::slice<gocpp::string> list = {};
-                    for(auto i = 5; i <= GOARM.Version; i++)
+                    for(int64_t i = 5; i <= GOARM.Version; i++)
                     {
                         list = append(list, mocklib::Sprintf("%s.%d"_s, GOARCH, i));
                     }
@@ -772,16 +772,16 @@ namespace golang::internal::buildcfg
                 case 3:
                 {
                     gocpp::slice<gocpp::string> list = {};
-                    auto major = int(GOARM64.Version[1] - '0');
-                    auto minor = int(GOARM64.Version[3] - '0');
-                    for(auto i = 0; i <= minor; i++)
+                    auto major = int64_t(GOARM64.Version[1] - '0');
+                    auto minor = int64_t(GOARM64.Version[3] - '0');
+                    for(int64_t i = 0; i <= minor; i++)
                     {
                         list = append(list, mocklib::Sprintf("%s.v%d.%d"_s, GOARCH, major, i));
                     }
                     // ARM64 v9.x also includes support of v8.x+5 (i.e. v9.1 includes v8.(1+5) = v8.6).
                     if(major == 9)
                     {
-                        for(auto i = 0; i <= minor + 5 && i <= 9; i++)
+                        for(int64_t i = 0; i <= minor + 5 && i <= 9; i++)
                         {
                             list = append(list, mocklib::Sprintf("%s.v%d.%d"_s, GOARCH, 8, i));
                         }
@@ -800,7 +800,7 @@ namespace golang::internal::buildcfg
                 case 8:
                 case 9:
                     gocpp::slice<gocpp::string> list = {};
-                    for(auto i = 8; i <= GOPPC64; i++)
+                    for(int64_t i = 8; i <= GOPPC64; i++)
                     {
                         list = append(list, mocklib::Sprintf("%s.power%d"_s, GOARCH, i));
                     }

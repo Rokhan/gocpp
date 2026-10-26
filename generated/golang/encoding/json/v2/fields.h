@@ -101,9 +101,9 @@ namespace golang::encoding::json::v2
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fieldOptions& value);
-    std::tuple<gocpp::string, int, gocpp::error> consumeTagOption(gocpp::string in, bool allowQuoted);
+    std::tuple<gocpp::string, int64_t, gocpp::error> consumeTagOption(gocpp::string in, bool allowQuoted);
     bool isLetterOrDigit(gocpp::rune r);
-    int boolsCompare(bool x, bool y);
+    int64_t boolsCompare(bool x, bool y);
 }
 #include "golang/reflect/type.fwd.h"
 
@@ -119,9 +119,9 @@ namespace golang::encoding::json::v2
     extern reflect::Type isZeroerType;
     struct structField
     {
-        int id{}; // unique numeric ID in breadth-first ordering
-        int index0{}; // 0th index into a struct according to [reflect.Type.FieldByIndex]
-        gocpp::slice<int> index{}; // 1st index and remainder according to [reflect.Type.FieldByIndex]
+        int64_t id{}; // unique numeric ID in breadth-first ordering
+        int64_t index0{}; // 0th index into a struct according to [reflect.Type.FieldByIndex]
+        gocpp::slice<int64_t> index{}; // 1st index and remainder according to [reflect.Type.FieldByIndex]
         reflect::Type typ{};
         arshaler* fncs{};
         std::function<bool (addressableValue _1)> isZero{};

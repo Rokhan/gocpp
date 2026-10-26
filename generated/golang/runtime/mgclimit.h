@@ -33,6 +33,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    struct GoTag_limiterEventType { };
+    using limiterEventType = gocpp::defined<uint8_t, GoTag_limiterEventType>;
+    struct GoTag_limiterEventStamp { };
+    using limiterEventStamp = gocpp::defined<uint64_t, GoTag_limiterEventStamp>;
     limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now);
 }
 #include "golang/internal/runtime/atomic/types.fwd.h"

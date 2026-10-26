@@ -62,13 +62,13 @@ namespace golang::math::big
         golang::math::big::Rat* Abs(golang::math::big::Rat* z, golang::math::big::Rat* x);
         golang::math::big::Rat* Neg(golang::math::big::Rat* z, golang::math::big::Rat* x);
         golang::math::big::Rat* Inv(golang::math::big::Rat* z, golang::math::big::Rat* x);
-        int Sign(golang::math::big::Rat* x);
+        int64_t Sign(golang::math::big::Rat* x);
         bool IsInt(golang::math::big::Rat* x);
         golang::math::big::Int* Num(golang::math::big::Rat* x);
         golang::math::big::Int* Denom(golang::math::big::Rat* x);
         golang::math::big::Rat* norm(golang::math::big::Rat* z);
         void scaleDenom(golang::math::big::Int* z, stack* stk, golang::math::big::Int* x, golang::math::big::nat f);
-        int Cmp(golang::math::big::Rat* x, golang::math::big::Rat* y);
+        int64_t Cmp(golang::math::big::Rat* x, golang::math::big::Rat* y);
         golang::math::big::Rat* Add(golang::math::big::Rat* z, golang::math::big::Rat* x, golang::math::big::Rat* y);
         golang::math::big::Rat* Sub(golang::math::big::Rat* z, golang::math::big::Rat* x, golang::math::big::Rat* y);
         golang::math::big::Rat* Mul(golang::math::big::Rat* z, golang::math::big::Rat* x, golang::math::big::Rat* y);

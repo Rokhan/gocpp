@@ -6,5 +6,5 @@
 
 namespace golang::internal::runtime::sys
 {
-    const long isRace = 0;
+    inline constexpr long isRace = 0;
 }

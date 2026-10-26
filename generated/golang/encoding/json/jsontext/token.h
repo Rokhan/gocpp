@@ -15,6 +15,8 @@ namespace golang::encoding::json::jsontext
     extern gocpp::error errInvalidToken;
     int64_t f64toi64(double f64);
     uint64_t f64tou64(double f64);
+    struct GoTag_Kind { };
+    using Kind = gocpp::defined<unsigned char, GoTag_Kind>;
     extern gocpp::array<golang::encoding::json::jsontext::Kind, 256> normKind;
 }
 #include "golang/encoding/json/jsontext/doc.h"
@@ -87,7 +89,7 @@ namespace golang::encoding::json::jsontext
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> appendNumber(Token t, gocpp::slice<unsigned char> dst, jsonflags::Flags* flags);
         std::tuple<double, gocpp::error> Float32(Token t);
         std::tuple<double, gocpp::error> Float(Token t);
-        std::tuple<double, gocpp::error> float(Token t, int bits);
+        std::tuple<double, gocpp::error> float(Token t, int64_t bits);
         std::tuple<int64_t, gocpp::error> Int(Token t);
         std::tuple<uint64_t, gocpp::error> Uint(Token t);
         golang::encoding::json::jsontext::Kind Kind(Token t);

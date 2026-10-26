@@ -6,5 +6,5 @@
 
 namespace golang::os
 {
-    const bool supportsCreateWithStickyBit = true;
+    inline constexpr bool supportsCreateWithStickyBit = true;
 }

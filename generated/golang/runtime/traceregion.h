@@ -82,7 +82,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceRegionAllocBlock& value);
-    const uintptr_t traceRegionAllocBlockData = (64 << 10) - gocpp::Sizeof<traceRegionAllocBlockHeader>();
+    inline constexpr uintptr_t traceRegionAllocBlockData = (64 << 10) - gocpp::Sizeof<traceRegionAllocBlockHeader>();
 }
 
 #include "golang/runtime/malloc.h"

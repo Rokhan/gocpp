@@ -8,13 +8,14 @@ namespace golang::runtime
 {
     struct semaRoot;
     // Prime to not correlate with any user patterns.
-    const long semTabSize = 251;
+    inline constexpr long semTabSize = 251;
     struct gocpp_id_0;
     struct GoTag_semTable;
-    using semaProfileFlags = int;
+    struct GoTag_semaProfileFlags;
+    using semaProfileFlags = gocpp::defined<int64_t, GoTag_semaProfileFlags>;
     struct notifyList;
-    const semaProfileFlags semaBlockProfile = 1 << 0;
-    const semaProfileFlags semaMutexProfile = 1 << 1;
+    inline constexpr semaProfileFlags semaBlockProfile = 1 << 0;
+    inline constexpr semaProfileFlags semaMutexProfile = 1 << 1;
 }
 #include "golang/internal/cpu/cpu_x86.fwd.h"
 

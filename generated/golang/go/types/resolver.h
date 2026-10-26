@@ -70,7 +70,7 @@ namespace golang::go::types
         void addDep(declInfo* d, Object obj);
         void arityMatch(Checker* check, ast::ValueSpec* s, ast::ValueSpec* init);
         void declarePkgObj(Checker* check, ast::Ident* ident, Object obj, declInfo* d);
-        gocpp::string filename(Checker* check, int fileNo);
+        gocpp::string filename(Checker* check, int64_t fileNo);
         Package* importPackage(Checker* check, positioner at, gocpp::string path, gocpp::string dir);
         void collectObjects(Checker* check);
         void sortObjects(Checker* check);

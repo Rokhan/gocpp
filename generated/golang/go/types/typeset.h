@@ -33,7 +33,7 @@ namespace golang::go::types
 
     std::ostream& operator<<(std::ostream& os, const struct _TypeSet& value);
     std::tuple<termlist, bool> intersectTermLists(termlist xterms, bool xcomp, termlist yterms, bool ycomp);
-    int compareFunc(Func* a, Func* b);
+    int64_t compareFunc(Func* a, Func* b);
     void sortMethods(gocpp::slice<Func*> list);
     void assertSortedMethods(gocpp::slice<Func*> list);
 }
@@ -78,9 +78,9 @@ namespace golang::go::types
         bool IsAll(_TypeSet* s);
         bool IsMethodSet(_TypeSet* s);
         bool IsComparable(_TypeSet* s, gocpp::map<golang::go::types::Type, bool> seen);
-        int NumMethods(_TypeSet* s);
-        Func* Method(_TypeSet* s, int i);
-        std::tuple<int, Func*> LookupMethod(_TypeSet* s, Package* pkg, gocpp::string name, bool foldCase);
+        int64_t NumMethods(_TypeSet* s);
+        Func* Method(_TypeSet* s, int64_t i);
+        std::tuple<int64_t, Func*> LookupMethod(_TypeSet* s, Package* pkg, gocpp::string name, bool foldCase);
         gocpp::string String(_TypeSet* s);
         bool hasTerms(_TypeSet* s);
         bool subsetOf(_TypeSet* s1, _TypeSet* s2);

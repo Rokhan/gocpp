@@ -30,8 +30,8 @@ namespace golang::go::token
     std::ostream& operator<<(std::ostream& os, const struct tree& value);
     struct key
     {
-        int start{};
-        int end{};
+        int64_t start{};
+        int64_t end{};
 
         using isGoStruct = void;
 
@@ -45,7 +45,7 @@ namespace golang::go::token
     };
 
     std::ostream& operator<<(std::ostream& os, const struct key& value);
-    int compareKey(golang::go::token::key x, golang::go::token::key y);
+    int64_t compareKey(golang::go::token::key x, golang::go::token::key y);
 }
 #include "golang/go/token/position.fwd.h"
 

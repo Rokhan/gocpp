@@ -29,7 +29,7 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     gocpp::slice<gocpp::string> fmtFrames(gocpp::slice<uintptr_t> pcs)
     {
         auto res = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0, len(pcs));
-        walkFrames(pcs, [=](gocpp::string file, int line, gocpp::string name, uintptr_t offset) mutable -> void
+        walkFrames(pcs, [=](gocpp::string file, int64_t line, gocpp::string name, uintptr_t offset) mutable -> void
         {
             // Trim package from function name. It's just redundant noise.
             name = strings::TrimPrefix(name, "cmd/compile/internal/noder."_s);

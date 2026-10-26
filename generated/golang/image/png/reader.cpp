@@ -58,12 +58,12 @@ namespace golang::image::png
         using mocklib::rec::Error;
     }
 
-    bool cbPaletted(int cb)
+    bool cbPaletted(int64_t cb)
     {
         return cbP1 <= cb && cb <= cbP8;
     }
 
-    bool cbTrueColor(int cb)
+    bool cbTrueColor(int64_t cb)
     {
         return cb == cbTC8 || cb == cbTC16;
     }
@@ -222,7 +222,7 @@ namespace golang::image::png
         {
             return gocpp::error(FormatError("invalid interlace method"_s));
         }
-        d->interlace = int(d->tmp[12]);
+        d->interlace = int64_t(d->tmp[12]);
 
         auto w = int32_t(rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4)));
         auto h = int32_t(rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(4, 8)));
@@ -231,7 +231,7 @@ namespace golang::image::png
             return gocpp::error(FormatError("non-positive dimension"_s));
         }
         auto nPixels64 = int64_t(w) * int64_t(h);
-        auto nPixels = int(nPixels64);
+        auto nPixels = int64_t(nPixels64);
         if(nPixels64 != int64_t(nPixels))
         {
             return gocpp::error(UnsupportedError("dimension overflow"_s));
@@ -243,7 +243,7 @@ namespace golang::image::png
         }
 
         d->cb = cbInvalid;
-        d->depth = int(d->tmp[8]);
+        d->depth = int64_t(d->tmp[8]);
         //Go switch emulation
         {
             auto condition = d->depth;
@@ -371,15 +371,15 @@ namespace golang::image::png
         {
             return gocpp::error(UnsupportedError(mocklib::Sprintf("bit depth %d, color type %d"_s, d->tmp[8], d->tmp[9])));
         }
-        std::tie(d->width, d->height) = std::tuple{int(w), int(h)};
+        std::tie(d->width, d->height) = std::tuple{int64_t(w), int64_t(h)};
         return rec::verifyChecksum(gocpp::recv(d));
     }
 
     gocpp::error rec::parsePLTE(decoder* d, uint32_t length)
     {
         // The number of palette entries.
-        auto np = int(length / 3);
-        if(length % 3 != 0 || np <= 0 || np > 256 || np > (1 << (unsigned int)(d->depth)))
+        auto np = int64_t(length / 3);
+        if(length % 3 != 0 || np <= 0 || np > 256 || np > (1 << (uint64_t)(d->depth)))
         {
             return gocpp::error(FormatError("bad PLTE length"_s));
         }
@@ -408,7 +408,7 @@ namespace golang::image::png
                 case 2:
                 case 3:
                     d->palette = gocpp::make(color::Palette, 256);
-                    for(auto i = 0; i < np; i++)
+                    for(int64_t i = 0; i < np; i++)
                     {
                         d->palette[i] = color::RGBA {d->tmp[3 * i + 0], d->tmp[3 * i + 1], d->tmp[3 * i + 2], 0xff};
                     }
@@ -535,7 +535,7 @@ namespace golang::image::png
                     {
                         d->palette = d->palette.make_slice(0, n);
                     }
-                    for(auto i = 0; i < n; i++)
+                    for(int64_t i = 0; i < n; i++)
                     {
                         auto rgba = gocpp::getValue<color::RGBA>(d->palette[i]);
                         d->palette[i] = color::NRGBA {rgba.R, rgba.G, rgba.B, d->tmp[i]};
@@ -560,7 +560,7 @@ namespace golang::image::png
     // immediately before the first Read call is that d.r is positioned between the
     // first IDAT and xxx, and the decoder state immediately after the last Read
     // call is that d.r is positioned between yy and crc1.
-    std::tuple<int, gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
     {
         if(len(p) == 0)
         {
@@ -587,11 +587,11 @@ namespace golang::image::png
             rec::Reset(gocpp::recv(d->crc));
             rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(4, 8));
         }
-        if(int(d->idatLength) < 0)
+        if(int64_t(d->idatLength) < 0)
         {
             return {0, gocpp::error(UnsupportedError("IDAT chunk length overflow"_s))};
         }
-        auto [n, err] = rec::Read(gocpp::recv(d->r), p.make_slice(0, gocpp::min(len(p), int(d->idatLength))));
+        auto [n, err] = rec::Read(gocpp::recv(d->r), p.make_slice(0, gocpp::min(len(p), int64_t(d->idatLength))));
         rec::Write(gocpp::recv(d->crc), p.make_slice(0, n));
         d->idatLength -= uint32_t(n);
         return {n, err};
@@ -627,7 +627,7 @@ namespace golang::image::png
                 {
                     return {nullptr, err};
                 }
-                for(auto pass = 0; pass < 7; pass++)
+                for(int64_t pass = 0; pass < 7; pass++)
                 {
                     auto [imagePass, err] = rec::readImagePass(gocpp::recv(d), r, pass, false);
                     if(err != nullptr)
@@ -642,8 +642,8 @@ namespace golang::image::png
             }
 
             // Check for EOF, to verify the zlib checksum.
-            auto n = 0;
-            for(auto i = 0; n == 0 && err == nullptr; i++)
+            int64_t n = 0;
+            for(int64_t i = 0; n == 0 && err == nullptr; i++)
             {
                 if(i == 100)
                 {
@@ -669,10 +669,10 @@ namespace golang::image::png
     }
 
     // readImagePass reads a single image pass, sized according to the pass number.
-    std::tuple<image::Image, gocpp::error> rec::readImagePass(decoder* d, io::Reader r, int pass, bool allocateOnly)
+    std::tuple<image::Image, gocpp::error> rec::readImagePass(decoder* d, io::Reader r, int64_t pass, bool allocateOnly)
     {
-        auto bitsPerPixel = 0;
-        auto pixOffset = 0;
+        int64_t bitsPerPixel = 0;
+        int64_t pixOffset = 0;
         image::Gray* gray = {};
         image::RGBA* rgba = {};
         image::Paletted* paletted = {};
@@ -810,7 +810,7 @@ namespace golang::image::png
 
         // The +1 is for the per-row filter type, which is at cr[0].
         auto rowSize = 1 + (int64_t(bitsPerPixel) * int64_t(width) + 7) / 8;
-        if(rowSize != int64_t(int(rowSize)))
+        if(rowSize != int64_t(int64_t(rowSize)))
         {
             return {nullptr, gocpp::error(UnsupportedError("dimension overflow"_s))};
         }
@@ -818,7 +818,7 @@ namespace golang::image::png
         auto cr = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), rowSize);
         auto pr = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), rowSize);
 
-        for(auto y = 0; y < height; y++)
+        for(int64_t y = 0; y < height; y++)
         {
             // Read the decompressed bytes.
             auto [gocpp_id_2, err] = io::ReadFull(r, cr);
@@ -864,13 +864,13 @@ namespace golang::image::png
                         // The first column has no column to the left of it, so it is a
                         // special case. We know that the first column exists because we
                         // check above that width != 0, and so len(cdat) != 0.
-                        for(auto i = 0; i < bytesPerPixel; i++)
+                        for(int64_t i = 0; i < bytesPerPixel; i++)
                         {
                             cdat[i] += pdat[i] / 2;
                         }
                         for(auto i = bytesPerPixel; i < len(cdat); i++)
                         {
-                            cdat[i] += uint8_t((int(cdat[i - bytesPerPixel]) + int(pdat[i])) / 2);
+                            cdat[i] += uint8_t((int64_t(cdat[i - bytesPerPixel]) + int64_t(pdat[i])) / 2);
                         }
                         break;
                     case 4:
@@ -908,13 +908,13 @@ namespace golang::image::png
                         if(d->useTransparent)
                         {
                             auto ty = d->transparent[1];
-                            for(auto x = 0; x < width; x += 8)
+                            for(int64_t x = 0; x < width; x += 8)
                             {
                                 auto b = cdat[x / 8];
-                                for(auto x2 = 0; x2 < 8 && x + x2 < width; x2++)
+                                for(int64_t x2 = 0; x2 < 8 && x + x2 < width; x2++)
                                 {
                                     auto ycol = (b >> 7) * 0xff;
-                                    auto acol = uint8_t(0xff);
+                                    uint8_t acol = uint8_t(0xff);
                                     if(ycol == ty)
                                     {
                                         acol = 0x00;
@@ -926,10 +926,10 @@ namespace golang::image::png
                         }
                         else
                         {
-                            for(auto x = 0; x < width; x += 8)
+                            for(int64_t x = 0; x < width; x += 8)
                             {
                                 auto b = cdat[x / 8];
-                                for(auto x2 = 0; x2 < 8 && x + x2 < width; x2++)
+                                for(int64_t x2 = 0; x2 < 8 && x + x2 < width; x2++)
                                 {
                                     rec::SetGray(gocpp::recv(gray), x + x2, y, color::Gray {(b >> 7) * 0xff});
                                     b <<= 1;
@@ -941,13 +941,13 @@ namespace golang::image::png
                         if(d->useTransparent)
                         {
                             auto ty = d->transparent[1];
-                            for(auto x = 0; x < width; x += 4)
+                            for(int64_t x = 0; x < width; x += 4)
                             {
                                 auto b = cdat[x / 4];
-                                for(auto x2 = 0; x2 < 4 && x + x2 < width; x2++)
+                                for(int64_t x2 = 0; x2 < 4 && x + x2 < width; x2++)
                                 {
                                     auto ycol = (b >> 6) * 0x55;
-                                    auto acol = uint8_t(0xff);
+                                    uint8_t acol = uint8_t(0xff);
                                     if(ycol == ty)
                                     {
                                         acol = 0x00;
@@ -959,10 +959,10 @@ namespace golang::image::png
                         }
                         else
                         {
-                            for(auto x = 0; x < width; x += 4)
+                            for(int64_t x = 0; x < width; x += 4)
                             {
                                 auto b = cdat[x / 4];
-                                for(auto x2 = 0; x2 < 4 && x + x2 < width; x2++)
+                                for(int64_t x2 = 0; x2 < 4 && x + x2 < width; x2++)
                                 {
                                     rec::SetGray(gocpp::recv(gray), x + x2, y, color::Gray {(b >> 6) * 0x55});
                                     b <<= 2;
@@ -974,13 +974,13 @@ namespace golang::image::png
                         if(d->useTransparent)
                         {
                             auto ty = d->transparent[1];
-                            for(auto x = 0; x < width; x += 2)
+                            for(int64_t x = 0; x < width; x += 2)
                             {
                                 auto b = cdat[x / 2];
-                                for(auto x2 = 0; x2 < 2 && x + x2 < width; x2++)
+                                for(int64_t x2 = 0; x2 < 2 && x + x2 < width; x2++)
                                 {
                                     auto ycol = (b >> 4) * 0x11;
-                                    auto acol = uint8_t(0xff);
+                                    uint8_t acol = uint8_t(0xff);
                                     if(ycol == ty)
                                     {
                                         acol = 0x00;
@@ -992,10 +992,10 @@ namespace golang::image::png
                         }
                         else
                         {
-                            for(auto x = 0; x < width; x += 2)
+                            for(int64_t x = 0; x < width; x += 2)
                             {
                                 auto b = cdat[x / 2];
-                                for(auto x2 = 0; x2 < 2 && x + x2 < width; x2++)
+                                for(int64_t x2 = 0; x2 < 2 && x + x2 < width; x2++)
                                 {
                                     rec::SetGray(gocpp::recv(gray), x + x2, y, color::Gray {(b >> 4) * 0x11});
                                     b <<= 4;
@@ -1007,10 +1007,10 @@ namespace golang::image::png
                         if(d->useTransparent)
                         {
                             auto ty = d->transparent[1];
-                            for(auto x = 0; x < width; x++)
+                            for(int64_t x = 0; x < width; x++)
                             {
                                 auto ycol = cdat[x];
-                                auto acol = uint8_t(0xff);
+                                uint8_t acol = uint8_t(0xff);
                                 if(ycol == ty)
                                 {
                                     acol = 0x00;
@@ -1025,7 +1025,7 @@ namespace golang::image::png
                         }
                         break;
                     case 4:
-                        for(auto x = 0; x < width; x++)
+                        for(int64_t x = 0; x < width; x++)
                         {
                             auto ycol = cdat[2 * x + 0];
                             rec::SetNRGBA(gocpp::recv(nrgba), x, y, color::NRGBA {ycol, ycol, ycol, cdat[2 * x + 1]});
@@ -1036,12 +1036,12 @@ namespace golang::image::png
                         {
                             auto [pix, i, j] = std::tuple{nrgba->Pix, pixOffset, 0};
                             auto [tr, tg, tb] = std::tuple{d->transparent[1], d->transparent[3], d->transparent[5]};
-                            for(auto x = 0; x < width; x++)
+                            for(int64_t x = 0; x < width; x++)
                             {
                                 auto r = cdat[j + 0];
                                 auto g = cdat[j + 1];
                                 auto b = cdat[j + 2];
-                                auto a = uint8_t(0xff);
+                                uint8_t a = uint8_t(0xff);
                                 if(r == tr && g == tg && b == tb)
                                 {
                                     a = 0x00;
@@ -1058,7 +1058,7 @@ namespace golang::image::png
                         else
                         {
                             auto [pix, i, j] = std::tuple{rgba->Pix, pixOffset, 0};
-                            for(auto x = 0; x < width; x++)
+                            for(int64_t x = 0; x < width; x++)
                             {
                                 pix[i + 0] = cdat[j + 0];
                                 pix[i + 1] = cdat[j + 1];
@@ -1071,15 +1071,15 @@ namespace golang::image::png
                         }
                         break;
                     case 6:
-                        for(auto x = 0; x < width; x += 8)
+                        for(int64_t x = 0; x < width; x += 8)
                         {
                             auto b = cdat[x / 8];
-                            for(auto x2 = 0; x2 < 8 && x + x2 < width; x2++)
+                            for(int64_t x2 = 0; x2 < 8 && x + x2 < width; x2++)
                             {
                                 auto idx = b >> 7;
-                                if(len(paletted->Palette) <= int(idx))
+                                if(len(paletted->Palette) <= int64_t(idx))
                                 {
-                                    paletted->Palette = paletted->Palette.make_slice(0, int(idx) + 1);
+                                    paletted->Palette = paletted->Palette.make_slice(0, int64_t(idx) + 1);
                                 }
                                 rec::SetColorIndex(gocpp::recv(paletted), x + x2, y, idx);
                                 b <<= 1;
@@ -1087,15 +1087,15 @@ namespace golang::image::png
                         }
                         break;
                     case 7:
-                        for(auto x = 0; x < width; x += 4)
+                        for(int64_t x = 0; x < width; x += 4)
                         {
                             auto b = cdat[x / 4];
-                            for(auto x2 = 0; x2 < 4 && x + x2 < width; x2++)
+                            for(int64_t x2 = 0; x2 < 4 && x + x2 < width; x2++)
                             {
                                 auto idx = b >> 6;
-                                if(len(paletted->Palette) <= int(idx))
+                                if(len(paletted->Palette) <= int64_t(idx))
                                 {
-                                    paletted->Palette = paletted->Palette.make_slice(0, int(idx) + 1);
+                                    paletted->Palette = paletted->Palette.make_slice(0, int64_t(idx) + 1);
                                 }
                                 rec::SetColorIndex(gocpp::recv(paletted), x + x2, y, idx);
                                 b <<= 2;
@@ -1103,15 +1103,15 @@ namespace golang::image::png
                         }
                         break;
                     case 8:
-                        for(auto x = 0; x < width; x += 2)
+                        for(int64_t x = 0; x < width; x += 2)
                         {
                             auto b = cdat[x / 2];
-                            for(auto x2 = 0; x2 < 2 && x + x2 < width; x2++)
+                            for(int64_t x2 = 0; x2 < 2 && x + x2 < width; x2++)
                             {
                                 auto idx = b >> 4;
-                                if(len(paletted->Palette) <= int(idx))
+                                if(len(paletted->Palette) <= int64_t(idx))
                                 {
-                                    paletted->Palette = paletted->Palette.make_slice(0, int(idx) + 1);
+                                    paletted->Palette = paletted->Palette.make_slice(0, int64_t(idx) + 1);
                                 }
                                 rec::SetColorIndex(gocpp::recv(paletted), x + x2, y, idx);
                                 b <<= 4;
@@ -1121,11 +1121,11 @@ namespace golang::image::png
                     case 9:
                         if(len(paletted->Palette) != 256)
                         {
-                            for(auto x = 0; x < width; x++)
+                            for(int64_t x = 0; x < width; x++)
                             {
-                                if(len(paletted->Palette) <= int(cdat[x]))
+                                if(len(paletted->Palette) <= int64_t(cdat[x]))
                                 {
-                                    paletted->Palette = paletted->Palette.make_slice(0, int(cdat[x]) + 1);
+                                    paletted->Palette = paletted->Palette.make_slice(0, int64_t(cdat[x]) + 1);
                                 }
                             }
                         }
@@ -1140,10 +1140,10 @@ namespace golang::image::png
                         if(d->useTransparent)
                         {
                             auto ty = (uint16_t(d->transparent[0]) << 8) | uint16_t(d->transparent[1]);
-                            for(auto x = 0; x < width; x++)
+                            for(int64_t x = 0; x < width; x++)
                             {
                                 auto ycol = (uint16_t(cdat[2 * x + 0]) << 8) | uint16_t(cdat[2 * x + 1]);
-                                auto acol = uint16_t(0xffff);
+                                uint16_t acol = uint16_t(0xffff);
                                 if(ycol == ty)
                                 {
                                     acol = 0x0000;
@@ -1153,7 +1153,7 @@ namespace golang::image::png
                         }
                         else
                         {
-                            for(auto x = 0; x < width; x++)
+                            for(int64_t x = 0; x < width; x++)
                             {
                                 auto ycol = (uint16_t(cdat[2 * x + 0]) << 8) | uint16_t(cdat[2 * x + 1]);
                                 rec::SetGray16(gocpp::recv(gray16), x, y, color::Gray16 {ycol});
@@ -1161,7 +1161,7 @@ namespace golang::image::png
                         }
                         break;
                     case 12:
-                        for(auto x = 0; x < width; x++)
+                        for(int64_t x = 0; x < width; x++)
                         {
                             auto ycol = (uint16_t(cdat[4 * x + 0]) << 8) | uint16_t(cdat[4 * x + 1]);
                             auto acol = (uint16_t(cdat[4 * x + 2]) << 8) | uint16_t(cdat[4 * x + 3]);
@@ -1174,12 +1174,12 @@ namespace golang::image::png
                             auto tr = (uint16_t(d->transparent[0]) << 8) | uint16_t(d->transparent[1]);
                             auto tg = (uint16_t(d->transparent[2]) << 8) | uint16_t(d->transparent[3]);
                             auto tb = (uint16_t(d->transparent[4]) << 8) | uint16_t(d->transparent[5]);
-                            for(auto x = 0; x < width; x++)
+                            for(int64_t x = 0; x < width; x++)
                             {
                                 auto rcol = (uint16_t(cdat[6 * x + 0]) << 8) | uint16_t(cdat[6 * x + 1]);
                                 auto gcol = (uint16_t(cdat[6 * x + 2]) << 8) | uint16_t(cdat[6 * x + 3]);
                                 auto bcol = (uint16_t(cdat[6 * x + 4]) << 8) | uint16_t(cdat[6 * x + 5]);
-                                auto acol = uint16_t(0xffff);
+                                uint16_t acol = uint16_t(0xffff);
                                 if(rcol == tr && gcol == tg && bcol == tb)
                                 {
                                     acol = 0x0000;
@@ -1189,7 +1189,7 @@ namespace golang::image::png
                         }
                         else
                         {
-                            for(auto x = 0; x < width; x++)
+                            for(int64_t x = 0; x < width; x++)
                             {
                                 auto rcol = (uint16_t(cdat[6 * x + 0]) << 8) | uint16_t(cdat[6 * x + 1]);
                                 auto gcol = (uint16_t(cdat[6 * x + 2]) << 8) | uint16_t(cdat[6 * x + 3]);
@@ -1199,7 +1199,7 @@ namespace golang::image::png
                         }
                         break;
                     case 14:
-                        for(auto x = 0; x < width; x++)
+                        for(int64_t x = 0; x < width; x++)
                         {
                             auto rcol = (uint16_t(cdat[8 * x + 0]) << 8) | uint16_t(cdat[8 * x + 1]);
                             auto gcol = (uint16_t(cdat[8 * x + 2]) << 8) | uint16_t(cdat[8 * x + 3]);
@@ -1219,14 +1219,14 @@ namespace golang::image::png
     }
 
     // mergePassInto merges a single pass into a full sized image.
-    void rec::mergePassInto(decoder* d, image::Image dst, image::Image src, int pass)
+    void rec::mergePassInto(decoder* d, image::Image dst, image::Image src, int64_t pass)
     {
         auto p = interlacing[pass];
         gocpp::slice<uint8_t> srcPix = {};
         gocpp::slice<uint8_t> dstPix = {};
-        int stride = {};
+        int64_t stride = {};
         image::Rectangle rect = {};
-        int bytesPerPixel = {};
+        int64_t bytesPerPixel = {};
         //Go type switch emulation
         {
             const auto& gocpp_id_3 = gocpp::type_info(dst);
@@ -1461,7 +1461,7 @@ namespace golang::image::png
         gocpp::array<unsigned char, 4096> ignored = {};
         for(; length > 0; )
         {
-            auto [n, err] = io::ReadFull(d->r, ignored.make_slice(0, gocpp::min(len(ignored), int(length))));
+            auto [n, err] = io::ReadFull(d->r, ignored.make_slice(0, gocpp::min(len(ignored), int64_t(length))));
             if(err != nullptr)
             {
                 return err;

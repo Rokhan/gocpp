@@ -306,13 +306,13 @@ namespace golang::image::png
     }
 
     // The absolute value of a byte interpreted as a signed int8.
-    int abs8(uint8_t d)
+    int64_t abs8(uint8_t d)
     {
         if(d < 128)
         {
-            return int(d);
+            return int64_t(d);
         }
-        return 256 - int(d);
+        return 256 - int64_t(d);
     }
 
     void rec::writeChunk(encoder* e, gocpp::slice<unsigned char> b, gocpp::string name)
@@ -322,7 +322,7 @@ namespace golang::image::png
             return;
         }
         auto n = uint32_t(len(b));
-        if(int(n) != len(b))
+        if(int64_t(n) != len(b))
         {
             e->err = UnsupportedError(name + " chunk is too large: "_s + strconv::Itoa(len(b)));
             return;
@@ -430,7 +430,7 @@ namespace golang::image::png
             e->err = FormatError("bad palette length: "_s + strconv::Itoa(len(p)));
             return;
         }
-        auto last = - 1;
+        int64_t last = - 1;
         for(auto [i, c] : p)
         {
             auto c1 = gocpp::getValue<color::NRGBA>(rec::Convert(gocpp::recv(color::NRGBAModel), c));
@@ -456,7 +456,7 @@ namespace golang::image::png
     //
     // This method should only be called from writeIDATs (via writeImage).
     // No other code should treat an encoder as an io.Writer.
-    std::tuple<int, gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> b)
     {
         rec::writeChunk(gocpp::recv(e), b, "IDAT"_s);
         if(e->err != nullptr)
@@ -468,7 +468,7 @@ namespace golang::image::png
 
     // Chooses the filter to use for encoding the current row, and applies it.
     // The return value is the index of the filter and also of the row in cr that has had it applied.
-    int filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int bpp)
+    int64_t filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int64_t bpp)
     {
         // We try all five filter types, and pick the one that minimizes the sum of absolute differences.
         // This is the same heuristic that libpng uses, although the filters are attempted in order of
@@ -483,18 +483,18 @@ namespace golang::image::png
         auto n = len(cdat0);
 
         // The up filter.
-        auto sum = 0;
-        for(auto i = 0; i < n; i++)
+        int64_t sum = 0;
+        for(int64_t i = 0; i < n; i++)
         {
             cdat2[i] = cdat0[i] - pdat[i];
             sum += abs8(cdat2[i]);
         }
         auto best = sum;
-        auto filter = ftUp;
+        int64_t filter = ftUp;
 
         // The Paeth filter.
         sum = 0;
-        for(auto i = 0; i < bpp; i++)
+        for(int64_t i = 0; i < bpp; i++)
         {
             cdat4[i] = cdat0[i] - pdat[i];
             sum += abs8(cdat4[i]);
@@ -516,7 +516,7 @@ namespace golang::image::png
 
         // The none filter.
         sum = 0;
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             sum += abs8(cdat0[i]);
             if(sum >= best)
@@ -532,7 +532,7 @@ namespace golang::image::png
 
         // The sub filter.
         sum = 0;
-        for(auto i = 0; i < bpp; i++)
+        for(int64_t i = 0; i < bpp; i++)
         {
             cdat1[i] = cdat0[i];
             sum += abs8(cdat1[i]);
@@ -554,14 +554,14 @@ namespace golang::image::png
 
         // The average filter.
         sum = 0;
-        for(auto i = 0; i < bpp; i++)
+        for(int64_t i = 0; i < bpp; i++)
         {
             cdat3[i] = cdat0[i] - pdat[i] / 2;
             sum += abs8(cdat3[i]);
         }
         for(auto i = bpp; i < n; i++)
         {
-            cdat3[i] = cdat0[i] - uint8_t((int(cdat0[i - bpp]) + int(pdat[i])) / 2);
+            cdat3[i] = cdat0[i] - uint8_t((int64_t(cdat0[i - bpp]) + int64_t(pdat[i])) / 2);
             sum += abs8(cdat3[i]);
             if(sum >= best)
             {
@@ -576,7 +576,7 @@ namespace golang::image::png
         return filter;
     }
 
-    gocpp::error rec::writeImage(encoder* e, io::Writer w, image::Image m, int cb, int level)
+    gocpp::error rec::writeImage(encoder* e, io::Writer w, image::Image m, int64_t cb, int64_t level)
     {
         gocpp::Defer defer;
         try
@@ -597,7 +597,7 @@ namespace golang::image::png
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(e->zw)); });
 
-            auto bitsPerPixel = 0;
+            int64_t bitsPerPixel = 0;
 
             //Go switch emulation
             {
@@ -687,7 +687,7 @@ namespace golang::image::png
             for(auto y = b.Min.Y; y < b.Max.Y; y++)
             {
                 // Convert from colors to bytes.
-                auto i = 1;
+                int64_t i = 1;
                 //Go switch emulation
                 {
                     auto condition = cb;
@@ -782,11 +782,11 @@ namespace golang::image::png
                         {
                             auto pi = gocpp::getValue<image::PalettedImage>(m);
                             uint8_t a = {};
-                            int c = {};
+                            int64_t c = {};
                             auto pixelsPerByte = 8 / bitsPerPixel;
                             for(auto x = b.Min.X; x < b.Max.X; x++)
                             {
-                                a = (a << (unsigned int)(bitsPerPixel)) | rec::ColorIndexAt(gocpp::recv(pi), x, y);
+                                a = (a << (uint64_t)(bitsPerPixel)) | rec::ColorIndexAt(gocpp::recv(pi), x, y);
                                 c++;
                                 if(c == pixelsPerByte)
                                 {
@@ -800,7 +800,7 @@ namespace golang::image::png
                             {
                                 for(; c != pixelsPerByte; )
                                 {
-                                    a = a << (unsigned int)(bitsPerPixel);
+                                    a = a << (uint64_t)(bitsPerPixel);
                                     c++;
                                 }
                                 cr[0][i] = a;
@@ -913,7 +913,7 @@ namespace golang::image::png
                 // Skip filter for NoCompression and paletted images (cbP8) as
                 // "filters are rarely useful on palette images" and will result
                 // in larger files (see http://www.libpng.org/pub/png/book/chapter09.html).
-                auto f = ftNone;
+                int64_t f = ftNone;
                 if(level != zlib::NoCompression && cb != cbP8 && cb != cbP4 && cb != cbP2 && cb != cbP1)
                 {
                     // Since we skip paletted images we don't have to worry about
@@ -964,7 +964,7 @@ namespace golang::image::png
 
     // This function is required because we want the zero value of
     // Encoder.CompressionLevel to map to zlib.DefaultCompression.
-    int levelToZlib(CompressionLevel l)
+    int64_t levelToZlib(CompressionLevel l)
     {
         //Go switch emulation
         {

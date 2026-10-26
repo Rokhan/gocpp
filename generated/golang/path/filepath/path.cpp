@@ -260,10 +260,10 @@ namespace golang::path::filepath
         // Position base[b0:bi] and targ[t0:ti] at the first differing elements.
         auto bl = len(base);
         auto tl = len(targ);
-        int b0 = {};
-        int bi = {};
-        int t0 = {};
-        int ti = {};
+        int64_t b0 = {};
+        int64_t bi = {};
+        int64_t t0 = {};
+        int64_t ti = {};
         for(; ; )
         {
             for(; bi < bl && base[bi] != Separator; )
@@ -304,7 +304,7 @@ namespace golang::path::filepath
             }
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
             auto n = copy(buf, ".."_s);
-            for(auto i = 0; i < seps; i++)
+            for(int64_t i = 0; i < seps; i++)
             {
                 buf[n] = Separator;
                 copy(buf.make_slice(n + 1), ".."_s);

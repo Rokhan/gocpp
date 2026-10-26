@@ -266,7 +266,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(noscanint_);
         auto span = c->alloc[spc];
@@ -510,7 +510,7 @@ namespace golang::runtime
             return x;
         }
         // Allocate a new maxTinySize block.
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto span = c->alloc[tinySpanClass];
         auto v = nextFreeFastTiny(span);
         if(v == 0)
@@ -605,7 +605,7 @@ namespace golang::runtime
                 auto freeidx = result + 1;
                 if(! (freeidx % 64 == 0 && freeidx != nelems))
                 {
-                    span->allocCache >>= (unsigned int)(theBit + 1);
+                    span->allocCache >>= (uint64_t)(theBit + 1);
                     span->freeindex = freeidx;
                     span->allocCount++;
                     nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize_ + rec::base(gocpp::recv(span)));
@@ -628,7 +628,7 @@ namespace golang::runtime
                 auto freeidx = result + 1;
                 if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                 {
-                    span->allocCache >>= (unsigned int)(theBit + 1);
+                    span->allocCache >>= (uint64_t)(theBit + 1);
                     span->freeindex = freeidx;
                     span->allocCount++;
                     nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));

@@ -14,7 +14,7 @@ namespace golang::runtime
 {
     struct hexdumpMarker
     {
-        int chars{};
+        int64_t chars{};
 
         using isGoStruct = void;
 

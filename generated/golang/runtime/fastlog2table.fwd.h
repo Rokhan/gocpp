@@ -6,5 +6,5 @@
 
 namespace golang::runtime
 {
-    const long fastlogNumBits = 5;
+    inline constexpr long fastlogNumBits = 5;
 }

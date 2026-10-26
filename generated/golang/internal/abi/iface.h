@@ -92,7 +92,7 @@ namespace golang::internal::abi
 
     namespace rec
     {
-        int Size(ITab* it);
+        int64_t Size(ITab* it);
     }
 }
 

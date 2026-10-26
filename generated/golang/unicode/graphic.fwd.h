@@ -7,15 +7,15 @@
 namespace golang::unicode
 {
     // Bit masks for each code point under U+0100, for fast lookup.
-    const int pC = 1 << 0;
-    const int pP = 1 << 1;
-    const int pN = 1 << 2;
-    const int pS = 1 << 3;
-    const int pZ = 1 << 4;
-    const int pLu = 1 << 5;
-    const int pLl = 1 << 6;
-    const int pp = 1 << 7;
-    const int pg = pp | pZ;
-    const int pLo = pLl | pLu;
-    const int pLmask = pLo;
+    inline constexpr int64_t pC = 1 << 0;
+    inline constexpr int64_t pP = 1 << 1;
+    inline constexpr int64_t pN = 1 << 2;
+    inline constexpr int64_t pS = 1 << 3;
+    inline constexpr int64_t pZ = 1 << 4;
+    inline constexpr int64_t pLu = 1 << 5;
+    inline constexpr int64_t pLl = 1 << 6;
+    inline constexpr int64_t pp = 1 << 7;
+    inline constexpr int64_t pg = pp | pZ;
+    inline constexpr int64_t pLo = pLl | pLu;
+    inline constexpr int64_t pLmask = pLo;
 }

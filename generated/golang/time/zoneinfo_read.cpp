@@ -84,7 +84,7 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    gocpp::slice<unsigned char> rec::read(dataIO* d, int n)
+    gocpp::slice<unsigned char> rec::read(dataIO* d, int64_t n)
     {
         if(len(d->p) < n)
         {
@@ -171,7 +171,7 @@ namespace golang::time
         }
 
         // 1-byte version, then 15 bytes of padding
-        int version = {};
+        int64_t version = {};
         gocpp::slice<unsigned char> p = {};
         if(p = rec::read(gocpp::recv(d), 16); len(p) != 16)
         {
@@ -217,26 +217,26 @@ namespace golang::time
         auto NTime = 3;
         auto NZone = 4;
         auto NChar = 5;
-        gocpp::array<int, 6> n = {};
-        for(auto i = 0; i < 6; i++)
+        gocpp::array<int64_t, 6> n = {};
+        for(int64_t i = 0; i < 6; i++)
         {
             auto [nn, ok] = rec::big4(gocpp::recv(d));
             if(! ok)
             {
                 return {nullptr, errBadData};
             }
-            if(uint32_t(int(nn)) != nn)
+            if(uint32_t(int64_t(nn)) != nn)
             {
                 return {nullptr, errBadData};
             }
-            n[i] = int(nn);
+            n[i] = int64_t(nn);
         }
 
         // If we have version 2 or 3, then the data is first written out
         // in a 32-bit format, then written out again in a 64-bit format.
         // Skip the 32-bit format and read the 64-bit one, as it can
         // describe a broader range of dates.
-        auto is64 = false;
+        bool is64 = false;
         if(version > 1)
         {
             // Skip the 32-bit data.
@@ -254,22 +254,22 @@ namespace golang::time
             is64 = true;
 
             // Read the counts again, they can differ.
-            for(auto i = 0; i < 6; i++)
+            for(int64_t i = 0; i < 6; i++)
             {
                 auto [nn, ok] = rec::big4(gocpp::recv(d));
                 if(! ok)
                 {
                     return {nullptr, errBadData};
                 }
-                if(uint32_t(int(nn)) != nn)
+                if(uint32_t(int64_t(nn)) != nn)
                 {
                     return {nullptr, errBadData};
                 }
-                n[i] = int(nn);
+                n[i] = int64_t(nn);
             }
         }
 
-        auto size = 4;
+        int64_t size = 4;
         if(is64)
         {
             size = 8;
@@ -330,18 +330,18 @@ namespace golang::time
             {
                 return {nullptr, errBadData};
             }
-            if(uint32_t(int(n)) != n)
+            if(uint32_t(int64_t(n)) != n)
             {
                 return {nullptr, errBadData};
             }
-            zones[i].offset = int(int32_t(n));
+            zones[i].offset = int64_t(int32_t(n));
             unsigned char b = {};
             if(std::tie(b, ok) = rec::byte(gocpp::recv(zonedata)); ! ok)
             {
                 return {nullptr, errBadData};
             }
             zones[i].isDST = b != 0;
-            if(std::tie(b, ok) = rec::byte(gocpp::recv(zonedata)); ! ok || int(b) >= len(abbrev))
+            if(std::tie(b, ok) = rec::byte(gocpp::recv(zonedata)); ! ok || int64_t(b) >= len(abbrev))
             {
                 return {nullptr, errBadData};
             }
@@ -386,7 +386,7 @@ namespace golang::time
                 }
             }
             tx[i].when = n;
-            if(int(txzones[i]) >= len(zones))
+            if(int64_t(txzones[i]) >= len(zones))
             {
                 return {nullptr, errBadData};
             }
@@ -464,7 +464,7 @@ namespace golang::time
         return {l, nullptr};
     }
 
-    int findZone(gocpp::slice<zone> zones, gocpp::string name, int offset, bool isDST)
+    int64_t findZone(gocpp::slice<zone> zones, gocpp::string name, int64_t offset, bool isDST)
     {
         for(auto [i, z] : zones)
         {
@@ -492,23 +492,23 @@ namespace golang::time
     }
 
     // get4 returns the little-endian 32-bit value in b.
-    int get4(gocpp::slice<unsigned char> b)
+    int64_t get4(gocpp::slice<unsigned char> b)
     {
         if(len(b) < 4)
         {
             return 0;
         }
-        return int(b[0]) | (int(b[1]) << 8) | (int(b[2]) << 16) | (int(b[3]) << 24);
+        return int64_t(b[0]) | (int64_t(b[1]) << 8) | (int64_t(b[2]) << 16) | (int64_t(b[3]) << 24);
     }
 
     // get2 returns the little-endian 16-bit value in b.
-    int get2(gocpp::slice<unsigned char> b)
+    int64_t get2(gocpp::slice<unsigned char> b)
     {
         if(len(b) < 2)
         {
             return 0;
         }
-        return int(b[0]) | (int(b[1]) << 8);
+        return int64_t(b[0]) | (int64_t(b[1]) << 8);
     }
 
     // loadTzinfoFromZip returns the contents of the file with the given name
@@ -546,7 +546,7 @@ namespace golang::time
                 return {nullptr, errors::New("corrupt zip file "_s + zipfile)};
             }
 
-            for(auto i = 0; i < n; i++)
+            for(int64_t i = 0; i < n; i++)
             {
                 // zip entry layout:
                 // 0	magic[4]
@@ -728,7 +728,7 @@ namespace golang::time
             defer.push_back([=]{ closefd(f); });
             gocpp::array<unsigned char, 4096> buf = {};
             gocpp::slice<unsigned char> ret = {};
-            int n = {};
+            int64_t n = {};
             for(; ; )
             {
                 std::tie(n, err) = read(f, buf.make_slice(0));

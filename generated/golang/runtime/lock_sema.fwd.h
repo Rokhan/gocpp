@@ -6,5 +6,5 @@
 
 namespace golang::runtime
 {
-    const uintptr_t locked = 1;
+    inline constexpr uintptr_t locked = 1;
 }

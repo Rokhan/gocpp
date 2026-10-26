@@ -12,9 +12,9 @@
 
 namespace golang::internal::bytealg
 {
-    int Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
-    int CompareString(gocpp::string a, gocpp::string b);
-    int abigen_runtime_cmpstring(gocpp::string a, gocpp::string b);
+    int64_t Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
+    int64_t CompareString(gocpp::string a, gocpp::string b);
+    int64_t abigen_runtime_cmpstring(gocpp::string a, gocpp::string b);
 
     namespace rec
     {

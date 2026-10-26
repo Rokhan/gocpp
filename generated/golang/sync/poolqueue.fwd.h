@@ -8,7 +8,7 @@ namespace golang::sync
 {
     struct poolDequeue;
     struct eface;
-    const long dequeueBits = 32;
+    inline constexpr long dequeueBits = 32;
     using dequeueNil = gocpp::empty_struct*;
     struct poolChain;
     struct poolChainElt;
@@ -17,5 +17,5 @@ namespace golang::sync
     // This must be at most (1<<dequeueBits)/2 because detecting fullness
     // depends on wrapping around the ring buffer without wrapping around
     // the index. We divide by 4 so this fits in an int on 32-bit.
-    const int dequeueLimit = (1 << dequeueBits) / 4;
+    inline constexpr int64_t dequeueLimit = (1LL << dequeueBits) / 4LL;
 }

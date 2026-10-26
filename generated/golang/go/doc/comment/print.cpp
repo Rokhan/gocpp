@@ -86,7 +86,7 @@ namespace golang::go::doc::comment
         return value.PrintTo(os);
     }
 
-    int rec::headingLevel(Printer* p)
+    int64_t rec::headingLevel(Printer* p)
     {
         if(p->HeadingLevel <= 0)
         {
@@ -135,7 +135,7 @@ namespace golang::go::doc::comment
     {
         if(l->ImportPath != ""_s)
         {
-            auto slash = ""_s;
+            gocpp::string slash = ""_s;
             if(strings::HasSuffix(baseURL, "/"_s))
             {
                 slash = "/"_s;
@@ -291,12 +291,12 @@ namespace golang::go::doc::comment
             return rec::headingID(gocpp::recv(self.obj.Printer), h);
         }
 
-        int headingLevel(const gocpp::PtrRecv<struct commentPrinter, false>& self)
+        int64_t headingLevel(const gocpp::PtrRecv<struct commentPrinter, false>& self)
         {
             return rec::headingLevel(gocpp::recv(self.ptr->Printer));
         }
 
-        int headingLevel(const gocpp::ObjRecv<struct commentPrinter>& self)
+        int64_t headingLevel(const gocpp::ObjRecv<struct commentPrinter>& self)
         {
             return rec::headingLevel(gocpp::recv(self.obj.Printer));
         }
@@ -329,10 +329,10 @@ namespace golang::go::doc::comment
         // This makes it easy to clean up the unused ones: gofmt and
         // delete the final block. And it's a nice visual signal without
         // affecting the way the comment formats for users.
-        for(auto i = 0; i < 2; i++)
+        for(int64_t i = 0; i < 2; i++)
         {
             auto used = i == 0;
-            auto first = true;
+            bool first = true;
             for(auto [gocpp_ignored, def] : d->Links)
             {
                 if(def->Used == used)

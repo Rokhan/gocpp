@@ -9,18 +9,18 @@ namespace golang::internal::syscall::windows::registry
     // Registry key security and access rights.
     // See https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-key-security-and-access-rights
     // for details.
-    const long ALL_ACCESS = 0xf003f;
-    const long CREATE_LINK = 0x00020;
-    const long CREATE_SUB_KEY = 0x00004;
-    const long ENUMERATE_SUB_KEYS = 0x00008;
-    const long EXECUTE = 0x20019;
-    const long NOTIFY = 0x00010;
-    const long QUERY_VALUE = 0x00001;
-    const long READ = 0x20019;
-    const long SET_VALUE = 0x00002;
-    const long WOW64_32KEY = 0x00200;
-    const long WOW64_64KEY = 0x00100;
-    const long WRITE = 0x20006;
+    inline constexpr long ALL_ACCESS = 0xf003f;
+    inline constexpr long CREATE_LINK = 0x00020;
+    inline constexpr long CREATE_SUB_KEY = 0x00004;
+    inline constexpr long ENUMERATE_SUB_KEYS = 0x00008;
+    inline constexpr long EXECUTE = 0x20019;
+    inline constexpr long NOTIFY = 0x00010;
+    inline constexpr long QUERY_VALUE = 0x00001;
+    inline constexpr long READ = 0x20019;
+    inline constexpr long SET_VALUE = 0x00002;
+    inline constexpr long WOW64_32KEY = 0x00200;
+    inline constexpr long WOW64_64KEY = 0x00100;
+    inline constexpr long WRITE = 0x20006;
     struct KeyInfo;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
@@ -35,9 +35,9 @@ namespace golang::internal::syscall::windows::registry
     // An application can use these keys as entry points to the registry.
     // Normally these keys are used in OpenKey to open new keys,
     // but they can also be used anywhere a Key is required.
-    const registry::Key CLASSES_ROOT = Key(syscall::HKEY_CLASSES_ROOT);
-    const registry::Key CURRENT_USER = Key(syscall::HKEY_CURRENT_USER);
-    const registry::Key LOCAL_MACHINE = Key(syscall::HKEY_LOCAL_MACHINE);
-    const registry::Key USERS = Key(syscall::HKEY_USERS);
-    const registry::Key CURRENT_CONFIG = Key(syscall::HKEY_CURRENT_CONFIG);
+    inline constexpr registry::Key CLASSES_ROOT = Key(syscall::HKEY_CLASSES_ROOT);
+    inline constexpr registry::Key CURRENT_USER = Key(syscall::HKEY_CURRENT_USER);
+    inline constexpr registry::Key LOCAL_MACHINE = Key(syscall::HKEY_LOCAL_MACHINE);
+    inline constexpr registry::Key USERS = Key(syscall::HKEY_USERS);
+    inline constexpr registry::Key CURRENT_CONFIG = Key(syscall::HKEY_CURRENT_CONFIG);
 }

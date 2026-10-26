@@ -829,12 +829,12 @@ namespace golang::encoding::json::v2
             return reflect::rec::CanUint(gocpp::recv(self.obj.Value));
         }
 
-        int Cap(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        int64_t Cap(const gocpp::PtrRecv<struct addressableValue, false>& self)
         {
             return reflect::rec::Cap(gocpp::recv(self.ptr->Value));
         }
 
-        int Cap(const gocpp::ObjRecv<struct addressableValue>& self)
+        int64_t Cap(const gocpp::ObjRecv<struct addressableValue>& self)
         {
             return reflect::rec::Cap(gocpp::recv(self.obj.Value));
         }
@@ -909,32 +909,32 @@ namespace golang::encoding::json::v2
             return reflect::rec::Equal(gocpp::recv(self.obj.Value), u);
         }
 
-        reflect::Value Field(const gocpp::PtrRecv<struct addressableValue, false>& self, int i)
+        reflect::Value Field(const gocpp::PtrRecv<struct addressableValue, false>& self, int64_t i)
         {
             return reflect::rec::Field(gocpp::recv(self.ptr->Value), i);
         }
 
-        reflect::Value Field(const gocpp::ObjRecv<struct addressableValue>& self, int i)
+        reflect::Value Field(const gocpp::ObjRecv<struct addressableValue>& self, int64_t i)
         {
             return reflect::rec::Field(gocpp::recv(self.obj.Value), i);
         }
 
-        reflect::Value FieldByIndex(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::slice<int> index)
+        reflect::Value FieldByIndex(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::slice<int64_t> index)
         {
             return reflect::rec::FieldByIndex(gocpp::recv(self.ptr->Value), index);
         }
 
-        reflect::Value FieldByIndex(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::slice<int> index)
+        reflect::Value FieldByIndex(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::slice<int64_t> index)
         {
             return reflect::rec::FieldByIndex(gocpp::recv(self.obj.Value), index);
         }
 
-        std::tuple<reflect::Value, gocpp::error> FieldByIndexErr(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::slice<int> index)
+        std::tuple<reflect::Value, gocpp::error> FieldByIndexErr(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::slice<int64_t> index)
         {
             return reflect::rec::FieldByIndexErr(gocpp::recv(self.ptr->Value), index);
         }
 
-        std::tuple<reflect::Value, gocpp::error> FieldByIndexErr(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::slice<int> index)
+        std::tuple<reflect::Value, gocpp::error> FieldByIndexErr(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::slice<int64_t> index)
         {
             return reflect::rec::FieldByIndexErr(gocpp::recv(self.obj.Value), index);
         }
@@ -979,22 +979,22 @@ namespace golang::encoding::json::v2
             return reflect::rec::Float(gocpp::recv(self.obj.Value));
         }
 
-        void Grow(const gocpp::PtrRecv<struct addressableValue, false>& self, int n)
+        void Grow(const gocpp::PtrRecv<struct addressableValue, false>& self, int64_t n)
         {
             return reflect::rec::Grow(gocpp::recv(self.ptr->Value), n);
         }
 
-        void Grow(const gocpp::ObjRecv<struct addressableValue>& self, int n)
+        void Grow(const gocpp::ObjRecv<struct addressableValue>& self, int64_t n)
         {
             return reflect::rec::Grow(gocpp::recv(self.obj.Value), n);
         }
 
-        reflect::Value Index(const gocpp::PtrRecv<struct addressableValue, false>& self, int i)
+        reflect::Value Index(const gocpp::PtrRecv<struct addressableValue, false>& self, int64_t i)
         {
             return reflect::rec::Index(gocpp::recv(self.ptr->Value), i);
         }
 
-        reflect::Value Index(const gocpp::ObjRecv<struct addressableValue>& self, int i)
+        reflect::Value Index(const gocpp::ObjRecv<struct addressableValue>& self, int64_t i)
         {
             return reflect::rec::Index(gocpp::recv(self.obj.Value), i);
         }
@@ -1069,12 +1069,12 @@ namespace golang::encoding::json::v2
             return reflect::rec::Kind(gocpp::recv(self.obj.Value));
         }
 
-        int Len(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct addressableValue, false>& self)
         {
             return reflect::rec::Len(gocpp::recv(self.ptr->Value));
         }
 
-        int Len(const gocpp::ObjRecv<struct addressableValue>& self)
+        int64_t Len(const gocpp::ObjRecv<struct addressableValue>& self)
         {
             return reflect::rec::Len(gocpp::recv(self.obj.Value));
         }
@@ -1109,12 +1109,12 @@ namespace golang::encoding::json::v2
             return reflect::rec::MapRange(gocpp::recv(self.obj.Value));
         }
 
-        reflect::Value Method(const gocpp::PtrRecv<struct addressableValue, false>& self, int i)
+        reflect::Value Method(const gocpp::PtrRecv<struct addressableValue, false>& self, int64_t i)
         {
             return reflect::rec::Method(gocpp::recv(self.ptr->Value), i);
         }
 
-        reflect::Value Method(const gocpp::ObjRecv<struct addressableValue>& self, int i)
+        reflect::Value Method(const gocpp::ObjRecv<struct addressableValue>& self, int64_t i)
         {
             return reflect::rec::Method(gocpp::recv(self.obj.Value), i);
         }
@@ -1139,22 +1139,22 @@ namespace golang::encoding::json::v2
             return reflect::rec::Methods(gocpp::recv(self.obj.Value));
         }
 
-        int NumField(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        int64_t NumField(const gocpp::PtrRecv<struct addressableValue, false>& self)
         {
             return reflect::rec::NumField(gocpp::recv(self.ptr->Value));
         }
 
-        int NumField(const gocpp::ObjRecv<struct addressableValue>& self)
+        int64_t NumField(const gocpp::ObjRecv<struct addressableValue>& self)
         {
             return reflect::rec::NumField(gocpp::recv(self.obj.Value));
         }
 
-        int NumMethod(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        int64_t NumMethod(const gocpp::PtrRecv<struct addressableValue, false>& self)
         {
             return reflect::rec::NumMethod(gocpp::recv(self.ptr->Value));
         }
 
-        int NumMethod(const gocpp::ObjRecv<struct addressableValue>& self)
+        int64_t NumMethod(const gocpp::ObjRecv<struct addressableValue>& self)
         {
             return reflect::rec::NumMethod(gocpp::recv(self.obj.Value));
         }
@@ -1279,12 +1279,12 @@ namespace golang::encoding::json::v2
             return reflect::rec::SetBytes(gocpp::recv(self.obj.Value), x);
         }
 
-        void SetCap(const gocpp::PtrRecv<struct addressableValue, false>& self, int n)
+        void SetCap(const gocpp::PtrRecv<struct addressableValue, false>& self, int64_t n)
         {
             return reflect::rec::SetCap(gocpp::recv(self.ptr->Value), n);
         }
 
-        void SetCap(const gocpp::ObjRecv<struct addressableValue>& self, int n)
+        void SetCap(const gocpp::ObjRecv<struct addressableValue>& self, int64_t n)
         {
             return reflect::rec::SetCap(gocpp::recv(self.obj.Value), n);
         }
@@ -1339,12 +1339,12 @@ namespace golang::encoding::json::v2
             return reflect::rec::SetIterValue(gocpp::recv(self.obj.Value), iter);
         }
 
-        void SetLen(const gocpp::PtrRecv<struct addressableValue, false>& self, int n)
+        void SetLen(const gocpp::PtrRecv<struct addressableValue, false>& self, int64_t n)
         {
             return reflect::rec::SetLen(gocpp::recv(self.ptr->Value), n);
         }
 
-        void SetLen(const gocpp::ObjRecv<struct addressableValue>& self, int n)
+        void SetLen(const gocpp::ObjRecv<struct addressableValue>& self, int64_t n)
         {
             return reflect::rec::SetLen(gocpp::recv(self.obj.Value), n);
         }
@@ -1399,22 +1399,22 @@ namespace golang::encoding::json::v2
             return reflect::rec::SetZero(gocpp::recv(self.obj.Value));
         }
 
-        reflect::Value Slice(const gocpp::PtrRecv<struct addressableValue, false>& self, int i, int j)
+        reflect::Value Slice(const gocpp::PtrRecv<struct addressableValue, false>& self, int64_t i, int64_t j)
         {
             return reflect::rec::Slice(gocpp::recv(self.ptr->Value), i, j);
         }
 
-        reflect::Value Slice(const gocpp::ObjRecv<struct addressableValue>& self, int i, int j)
+        reflect::Value Slice(const gocpp::ObjRecv<struct addressableValue>& self, int64_t i, int64_t j)
         {
             return reflect::rec::Slice(gocpp::recv(self.obj.Value), i, j);
         }
 
-        reflect::Value Slice3(const gocpp::PtrRecv<struct addressableValue, false>& self, int i, int j, int k)
+        reflect::Value Slice3(const gocpp::PtrRecv<struct addressableValue, false>& self, int64_t i, int64_t j, int64_t k)
         {
             return reflect::rec::Slice3(gocpp::recv(self.ptr->Value), i, j, k);
         }
 
-        reflect::Value Slice3(const gocpp::ObjRecv<struct addressableValue>& self, int i, int j, int k)
+        reflect::Value Slice3(const gocpp::ObjRecv<struct addressableValue>& self, int64_t i, int64_t j, int64_t k)
         {
             return reflect::rec::Slice3(gocpp::recv(self.obj.Value), i, j, k);
         }
@@ -1539,32 +1539,32 @@ namespace golang::encoding::json::v2
             return reflect::rec::call(gocpp::recv(self.obj.Value), op, in);
         }
 
-        int capNonSlice(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        int64_t capNonSlice(const gocpp::PtrRecv<struct addressableValue, false>& self)
         {
             return reflect::rec::capNonSlice(gocpp::recv(self.ptr->Value));
         }
 
-        int capNonSlice(const gocpp::ObjRecv<struct addressableValue>& self)
+        int64_t capNonSlice(const gocpp::ObjRecv<struct addressableValue>& self)
         {
             return reflect::rec::capNonSlice(gocpp::recv(self.obj.Value));
         }
 
-        reflect::Value extendSlice(const gocpp::PtrRecv<struct addressableValue, false>& self, int n)
+        reflect::Value extendSlice(const gocpp::PtrRecv<struct addressableValue, false>& self, int64_t n)
         {
             return reflect::rec::extendSlice(gocpp::recv(self.ptr->Value), n);
         }
 
-        reflect::Value extendSlice(const gocpp::ObjRecv<struct addressableValue>& self, int n)
+        reflect::Value extendSlice(const gocpp::ObjRecv<struct addressableValue>& self, int64_t n)
         {
             return reflect::rec::extendSlice(gocpp::recv(self.obj.Value), n);
         }
 
-        void grow(const gocpp::PtrRecv<struct addressableValue, false>& self, int n)
+        void grow(const gocpp::PtrRecv<struct addressableValue, false>& self, int64_t n)
         {
             return reflect::rec::grow(gocpp::recv(self.ptr->Value), n);
         }
 
-        void grow(const gocpp::ObjRecv<struct addressableValue>& self, int n)
+        void grow(const gocpp::ObjRecv<struct addressableValue>& self, int64_t n)
         {
             return reflect::rec::grow(gocpp::recv(self.obj.Value), n);
         }
@@ -1579,12 +1579,12 @@ namespace golang::encoding::json::v2
             return reflect::rec::kind(gocpp::recv(self.obj.Value.flag));
         }
 
-        int lenNonSlice(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        int64_t lenNonSlice(const gocpp::PtrRecv<struct addressableValue, false>& self)
         {
             return reflect::rec::lenNonSlice(gocpp::recv(self.ptr->Value));
         }
 
-        int lenNonSlice(const gocpp::ObjRecv<struct addressableValue>& self)
+        int64_t lenNonSlice(const gocpp::ObjRecv<struct addressableValue>& self)
         {
             return reflect::rec::lenNonSlice(gocpp::recv(self.obj.Value));
         }
@@ -1825,7 +1825,7 @@ namespace golang::encoding::json::v2
         };
     });
     // getStrings returns a non-nil pointer to a slice with length n.
-    stringSlice* getStrings(int n)
+    stringSlice* getStrings(int64_t n)
     {
         auto s = gocpp::getValue<stringSlice*>(rec::Get(gocpp::recv(stringsPools)));
         if(cap(*s) < n)

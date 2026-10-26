@@ -120,11 +120,11 @@ namespace golang::runtime
         int64_t nextYield = {};
 
         // Drive the goroutine to a preemption point.
-        auto stopped = false;
+        bool stopped = false;
         m* asyncM = {};
         uint32_t asyncGen = {};
         int64_t nextPreemptM = {};
-        for(auto i = 0; ; i++)
+        for(int64_t i = 0; ; i++)
         {
             //Go switch emulation
             {

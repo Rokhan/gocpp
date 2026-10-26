@@ -14,14 +14,14 @@ namespace golang::internal::runtime::sys
 {
     extern gocpp::array<unsigned char, 32> deBruijn32tab;
     extern gocpp::array<unsigned char, 64> deBruijn64tab;
-    int TrailingZeros32(uint32_t x);
-    int TrailingZeros64(uint64_t x);
-    int TrailingZeros8(uint8_t x);
-    int Len64(uint64_t x);
-    int OnesCount64(uint64_t x);
-    int LeadingZeros64(uint64_t x);
-    int LeadingZeros8(uint8_t x);
-    int Len8(uint8_t x);
+    int64_t TrailingZeros32(uint32_t x);
+    int64_t TrailingZeros64(uint64_t x);
+    int64_t TrailingZeros8(uint8_t x);
+    int64_t Len64(uint64_t x);
+    int64_t OnesCount64(uint64_t x);
+    int64_t LeadingZeros64(uint64_t x);
+    int64_t LeadingZeros8(uint8_t x);
+    int64_t Len8(uint8_t x);
     uint64_t Bswap64(uint64_t x);
     uint32_t Bswap32(uint32_t x);
     void Prefetch(uintptr_t addr);

@@ -58,8 +58,8 @@ namespace golang::golang_org::x::tools::internal::event::core
     {
         mocklib::Date At(Event ev);
         void Format(Event ev, fmt::State f, gocpp::rune r);
-        bool Valid(Event ev, int index);
-        label::Label Label(Event ev, int index);
+        bool Valid(Event ev, int64_t index);
+        label::Label Label(Event ev, int64_t index);
         iter::Seq<label::Label> Labels(Event ev);
         label::Label Find(Event ev, label::Key key);
     }

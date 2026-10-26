@@ -37,7 +37,7 @@ namespace golang::internal::runtime::maps
 {
     void typedmemmove(abi::Type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
     void typedmemclr(abi::Type* typ, gocpp::unsafe_pointer ptr);
-    gocpp::unsafe_pointer newarray(abi::Type* typ, int n);
+    gocpp::unsafe_pointer newarray(abi::Type* typ, int64_t n);
     gocpp::unsafe_pointer newobject(abi::Type* typ);
     // TODO: move zeroVal to internal/abi?
     //

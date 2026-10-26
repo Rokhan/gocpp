@@ -110,7 +110,7 @@ namespace golang::go::doc
 
     gocpp::slice<Value*> filterValues(gocpp::slice<Value*> a, golang::go::doc::Filter f)
     {
-        auto w = 0;
+        int64_t w = 0;
         for(auto [gocpp_ignored, vd] : a)
         {
             if(matchDecl(vd->Decl, f))
@@ -124,7 +124,7 @@ namespace golang::go::doc
 
     gocpp::slice<Func*> filterFuncs(gocpp::slice<Func*> a, golang::go::doc::Filter f)
     {
-        auto w = 0;
+        int64_t w = 0;
         for(auto [gocpp_ignored, fd] : a)
         {
             if(f(fd->Name))
@@ -138,11 +138,11 @@ namespace golang::go::doc
 
     gocpp::slice<Type*> filterTypes(gocpp::slice<Type*> a, golang::go::doc::Filter f)
     {
-        auto w = 0;
+        int64_t w = 0;
         for(auto [gocpp_ignored, td] : a)
         {
             // number of matches
-            auto n = 0;
+            int64_t n = 0;
             if(matchDecl(td->Decl, f))
             {
                 n = 1;

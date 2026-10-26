@@ -22,7 +22,7 @@ namespace golang::main
 
     void main()
     {
-        auto ch = gocpp::make(gocpp::Tag<gocpp::channel<int>>(), 2);
+        auto ch = gocpp::make(gocpp::Tag<gocpp::channel<int64_t>>(), 2);
         ch.send(1);
         ch.send(2);
         mocklib::Println(ch.recv());

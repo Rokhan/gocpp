@@ -96,7 +96,7 @@ namespace golang::strings
         return rec::Replace(gocpp::PtrRecv<T, false>(value.get()), s);
     }
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<int, gocpp::error> replacer::replacerImpl<T, TStore, TInterface>::vWriteString(io::Writer w, gocpp::string s)
+    std::tuple<int64_t, gocpp::error> replacer::replacerImpl<T, TStore, TInterface>::vWriteString(io::Writer w, gocpp::string s)
     {
         return rec::WriteString(gocpp::PtrRecv<T, false>(value.get()), w, s);
     }
@@ -119,12 +119,12 @@ namespace golang::strings
             return self.obj.value()->vReplace(s);
         }
 
-        std::tuple<int, gocpp::error> WriteString(const gocpp::PtrRecv<struct replacer, false>& self, io::Writer w, gocpp::string s)
+        std::tuple<int64_t, gocpp::error> WriteString(const gocpp::PtrRecv<struct replacer, false>& self, io::Writer w, gocpp::string s)
         {
             return self.ptr->value()->vWriteString(w, s);
         }
 
-        std::tuple<int, gocpp::error> WriteString(const gocpp::ObjRecv<struct replacer>& self, io::Writer w, gocpp::string s)
+        std::tuple<int64_t, gocpp::error> WriteString(const gocpp::ObjRecv<struct replacer>& self, io::Writer w, gocpp::string s)
         {
             return self.obj.value()->vWriteString(w, s);
         }
@@ -166,8 +166,8 @@ namespace golang::strings
             return makeSingleStringReplacer(oldnew[0], oldnew[1]);
         }
 
-        auto allNewBytes = true;
-        for(auto i = 0; i < len(oldnew); i += 2)
+        bool allNewBytes = true;
+        for(int64_t i = 0; i < len(oldnew); i += 2)
         {
             if(len(oldnew[i]) != 1)
             {
@@ -227,9 +227,9 @@ namespace golang::strings
     }
 
     // WriteString writes s to w with all replacements performed.
-    std::tuple<int, gocpp::error> rec::WriteString(Replacer* r, io::Writer w, gocpp::string s)
+    std::tuple<int64_t, gocpp::error> rec::WriteString(Replacer* r, io::Writer w, gocpp::string s)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         rec::Do(gocpp::recv(r->once), [&](){ return rec::buildOnce(r); });
         return rec::WriteString(gocpp::recv(r->r), w, s);
@@ -293,7 +293,7 @@ namespace golang::strings
         return value.PrintTo(os);
     }
 
-    void rec::add(trieNode* t, gocpp::string key, gocpp::string val, int priority, genericReplacer* r)
+    void rec::add(trieNode* t, gocpp::string key, gocpp::string val, int64_t priority, genericReplacer* r)
     {
         if(key == ""_s)
         {
@@ -309,7 +309,7 @@ namespace golang::strings
         {
             // Need to split the prefix among multiple nodes.
             // length of the longest common prefix
-            int n = {};
+            int64_t n = {};
             for(; n < len(t->prefix) && n < len(key); n++)
             {
                 if(t->prefix[n] != key[n])
@@ -379,16 +379,16 @@ namespace golang::strings
         }
     }
 
-    std::tuple<gocpp::string, int, bool> rec::lookup(genericReplacer* r, gocpp::string s, bool ignoreRoot)
+    std::tuple<gocpp::string, int64_t, bool> rec::lookup(genericReplacer* r, gocpp::string s, bool ignoreRoot)
     {
         gocpp::string val;
-        int keylen;
+        int64_t keylen;
         bool found;
         // Iterate down the trie to the end, and grab the value and keylen with
         // the highest priority.
-        auto bestPriority = 0;
+        int64_t bestPriority = 0;
         auto node = & r->root;
-        auto n = 0;
+        int64_t n = 0;
         for(; node != nullptr; )
         {
             if(node->priority > bestPriority && ! (ignoreRoot && node == & r->root))
@@ -406,7 +406,7 @@ namespace golang::strings
             if(node->table != nullptr)
             {
                 auto index = r->mapping[s[0]];
-                if(int(index) == r->tableSize)
+                if(int64_t(index) == r->tableSize)
                 {
                     break;
                 }
@@ -470,10 +470,10 @@ namespace golang::strings
     {
         auto r = new genericReplacer{};
         // Find each byte used, then assign them each an index.
-        for(auto i = 0; i < len(oldnew); i += 2)
+        for(int64_t i = 0; i < len(oldnew); i += 2)
         {
             auto key = oldnew[i];
-            for(auto j = 0; j < len(key); j++)
+            for(int64_t j = 0; j < len(key); j++)
             {
                 r->mapping[key[j]] = 1;
             }
@@ -481,7 +481,7 @@ namespace golang::strings
 
         for(auto [gocpp_ignored, b] : r->mapping)
         {
-            r->tableSize += int(b);
+            r->tableSize += int64_t(b);
         }
 
         unsigned char index = {};
@@ -500,7 +500,7 @@ namespace golang::strings
         // Ensure root node uses a lookup table (for performance).
         r->root.table = gocpp::make(gocpp::Tag<gocpp::slice<trieNode*>>(), r->tableSize);
 
-        for(auto i = 0; i < len(oldnew); i += 2)
+        for(int64_t i = 0; i < len(oldnew); i += 2)
         {
             rec::add(gocpp::recv(r->root), oldnew[i], oldnew[i + 1], len(oldnew) - i, r);
         }
@@ -508,14 +508,14 @@ namespace golang::strings
     }
 
     // Write writes to the buffer to satisfy [io.Writer].
-    std::tuple<int, gocpp::error> rec::Write(appendSliceWriter* w, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Write(appendSliceWriter* w, gocpp::slice<unsigned char> p)
     {
         *w = append(*w, p);
         return {len(p), nullptr};
     }
 
     // WriteString writes to the buffer without string->[]byte->string allocations.
-    std::tuple<int, gocpp::error> rec::WriteString(appendSliceWriter* w, gocpp::string s)
+    std::tuple<int64_t, gocpp::error> rec::WriteString(appendSliceWriter* w, gocpp::string s)
     {
         *w = append(*w, s);
         return {len(s), nullptr};
@@ -550,7 +550,7 @@ namespace golang::strings
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> rec::WriteString(stringWriter w, gocpp::string s)
+    std::tuple<int64_t, gocpp::error> rec::WriteString(stringWriter w, gocpp::string s)
     {
         return rec::Write(gocpp::recv(w.w), gocpp::slice<unsigned char>(s));
     }
@@ -572,20 +572,20 @@ namespace golang::strings
         return gocpp::string(buf);
     }
 
-    std::tuple<int, gocpp::error> rec::WriteString(genericReplacer* r, io::Writer w, gocpp::string s)
+    std::tuple<int64_t, gocpp::error> rec::WriteString(genericReplacer* r, io::Writer w, gocpp::string s)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto sw = getStringWriter(w);
-        int last = {};
-        int wn = {};
+        int64_t last = {};
+        int64_t wn = {};
         bool prevMatchEmpty = {};
-        for(auto i = 0; i <= len(s); )
+        for(int64_t i = 0; i <= len(s); )
         {
             // Fast path: s[i] is not a prefix of any pattern.
             if(i != len(s) && r->root.priority == 0)
             {
-                auto index = int(r->mapping[s[i]]);
+                auto index = int64_t(r->mapping[s[i]]);
                 if(index == r->tableSize || r->root.table[index] == nullptr)
                 {
                     i++;
@@ -691,13 +691,13 @@ namespace golang::strings
         return rec::String(gocpp::recv(buf));
     }
 
-    std::tuple<int, gocpp::error> rec::WriteString(singleStringReplacer* r, io::Writer w, gocpp::string s)
+    std::tuple<int64_t, gocpp::error> rec::WriteString(singleStringReplacer* r, io::Writer w, gocpp::string s)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto sw = getStringWriter(w);
-        int i = {};
-        int wn = {};
+        int64_t i = {};
+        int64_t wn = {};
         for(; ; )
         {
             auto match = rec::next(gocpp::recv(r->finder), s.make_slice(i));
@@ -731,7 +731,7 @@ namespace golang::strings
     {
         // lazily allocated
         gocpp::slice<unsigned char> buf = {};
-        for(auto i = 0; i < len(s); i++)
+        for(int64_t i = 0; i < len(s); i++)
         {
             auto b = s[i];
             if(r[b] != b)
@@ -750,13 +750,13 @@ namespace golang::strings
         return gocpp::string(buf);
     }
 
-    std::tuple<int, gocpp::error> rec::WriteString(gocpp::array_ptr<byteReplacer> r, io::Writer w, gocpp::string s)
+    std::tuple<int64_t, gocpp::error> rec::WriteString(gocpp::array_ptr<byteReplacer> r, io::Writer w, gocpp::string s)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto sw = getStringWriter(w);
-        auto last = 0;
-        for(auto i = 0; i < len(s); i++)
+        int64_t last = 0;
+        for(int64_t i = 0; i < len(s); i++)
         {
             auto b = s[i];
             if(r[b] == b)
@@ -773,7 +773,7 @@ namespace golang::strings
                 }
             }
             last = i + 1;
-            auto [nw, err] = rec::Write(gocpp::recv(w), r.make_slice(b, int(b) + 1));
+            auto [nw, err] = rec::Write(gocpp::recv(w), r.make_slice(b, int64_t(b) + 1));
             n += nw;
             if(err != nullptr)
             {
@@ -829,7 +829,7 @@ namespace golang::strings
     gocpp::string rec::Replace(byteStringReplacer* r, gocpp::string s)
     {
         auto newSize = len(s);
-        auto anyChanges = false;
+        bool anyChanges = false;
         // Is it faster to use Count?
         if(len(r->toReplace) * countCutOff <= len(s))
         {
@@ -845,7 +845,7 @@ namespace golang::strings
         }
         else
         {
-            for(auto i = 0; i < len(s); i++)
+            for(int64_t i = 0; i < len(s); i++)
             {
                 auto b = s[i];
                 if(r->replacements[b] != nullptr)
@@ -861,8 +861,8 @@ namespace golang::strings
             return s;
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), newSize);
-        auto j = 0;
-        for(auto i = 0; i < len(s); i++)
+        int64_t j = 0;
+        for(int64_t i = 0; i < len(s); i++)
         {
             auto b = s[i];
             if(r->replacements[b] != nullptr)
@@ -878,13 +878,13 @@ namespace golang::strings
         return gocpp::string(buf);
     }
 
-    std::tuple<int, gocpp::error> rec::WriteString(byteStringReplacer* r, io::Writer w, gocpp::string s)
+    std::tuple<int64_t, gocpp::error> rec::WriteString(byteStringReplacer* r, io::Writer w, gocpp::string s)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto sw = getStringWriter(w);
-        auto last = 0;
-        for(auto i = 0; i < len(s); i++)
+        int64_t last = 0;
+        for(int64_t i = 0; i < len(s); i++)
         {
             auto b = s[i];
             if(r->replacements[b] == nullptr)
@@ -910,7 +910,7 @@ namespace golang::strings
         }
         if(last != len(s))
         {
-            int nw = {};
+            int64_t nw = {};
             std::tie(nw, err) = rec::WriteString(gocpp::recv(sw), s.make_slice(last));
             n += nw;
         }

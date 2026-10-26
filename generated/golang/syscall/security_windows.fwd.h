@@ -6,83 +6,84 @@
 
 namespace golang::syscall
 {
-    const long STANDARD_RIGHTS_REQUIRED = 0xf0000;
-    const long STANDARD_RIGHTS_READ = 0x20000;
-    const long STANDARD_RIGHTS_WRITE = 0x20000;
-    const long STANDARD_RIGHTS_EXECUTE = 0x20000;
-    const long STANDARD_RIGHTS_ALL = 0x1F0000;
-    const long NameUnknown = 0;
-    const long NameFullyQualifiedDN = 1;
-    const long NameSamCompatible = 2;
-    const long NameDisplay = 3;
-    const long NameUniqueId = 6;
-    const long NameCanonical = 7;
-    const long NameUserPrincipal = 8;
-    const long NameCanonicalEx = 9;
-    const long NameServicePrincipal = 10;
-    const long NameDnsDomain = 12;
+    inline constexpr long STANDARD_RIGHTS_REQUIRED = 0xf0000;
+    inline constexpr long STANDARD_RIGHTS_READ = 0x20000;
+    inline constexpr long STANDARD_RIGHTS_WRITE = 0x20000;
+    inline constexpr long STANDARD_RIGHTS_EXECUTE = 0x20000;
+    inline constexpr long STANDARD_RIGHTS_ALL = 0x1F0000;
+    inline constexpr long NameUnknown = 0;
+    inline constexpr long NameFullyQualifiedDN = 1;
+    inline constexpr long NameSamCompatible = 2;
+    inline constexpr long NameDisplay = 3;
+    inline constexpr long NameUniqueId = 6;
+    inline constexpr long NameCanonical = 7;
+    inline constexpr long NameUserPrincipal = 8;
+    inline constexpr long NameCanonicalEx = 9;
+    inline constexpr long NameServicePrincipal = 10;
+    inline constexpr long NameDnsDomain = 12;
     // do not reorder
-    const int NetSetupUnknownStatus = 0;
-    const int NetSetupUnjoined = 1;
-    const int NetSetupWorkgroupName = 2;
-    const int NetSetupDomainName = 3;
+    inline constexpr int64_t NetSetupUnknownStatus = 0;
+    inline constexpr int64_t NetSetupUnjoined = 1;
+    inline constexpr int64_t NetSetupWorkgroupName = 2;
+    inline constexpr int64_t NetSetupDomainName = 3;
     struct UserInfo10;
     // do not reorder
-    const int SidTypeUser = 1 + 0;
-    const int SidTypeGroup = 1 + 1;
-    const int SidTypeDomain = 1 + 2;
-    const int SidTypeAlias = 1 + 3;
-    const int SidTypeWellKnownGroup = 1 + 4;
-    const int SidTypeDeletedAccount = 1 + 5;
-    const int SidTypeInvalid = 1 + 6;
-    const int SidTypeUnknown = 1 + 7;
-    const int SidTypeComputer = 1 + 8;
-    const int SidTypeLabel = 1 + 9;
+    inline constexpr int64_t SidTypeUser = 1 + 0;
+    inline constexpr int64_t SidTypeGroup = 1 + 1;
+    inline constexpr int64_t SidTypeDomain = 1 + 2;
+    inline constexpr int64_t SidTypeAlias = 1 + 3;
+    inline constexpr int64_t SidTypeWellKnownGroup = 1 + 4;
+    inline constexpr int64_t SidTypeDeletedAccount = 1 + 5;
+    inline constexpr int64_t SidTypeInvalid = 1 + 6;
+    inline constexpr int64_t SidTypeUnknown = 1 + 7;
+    inline constexpr int64_t SidTypeComputer = 1 + 8;
+    inline constexpr int64_t SidTypeLabel = 1 + 9;
     struct SID;
     // do not reorder
-    const int TOKEN_ASSIGN_PRIMARY = 1 << 0;
-    const int TOKEN_DUPLICATE = 1 << 1;
-    const int TOKEN_IMPERSONATE = 1 << 2;
-    const int TOKEN_QUERY = 1 << 3;
-    const int TOKEN_QUERY_SOURCE = 1 << 4;
-    const int TOKEN_ADJUST_PRIVILEGES = 1 << 5;
-    const int TOKEN_ADJUST_GROUPS = 1 << 6;
-    const int TOKEN_ADJUST_DEFAULT = 1 << 7;
-    const int TOKEN_ADJUST_SESSIONID = 1 << 8;
+    inline constexpr int64_t TOKEN_ASSIGN_PRIMARY = 1 << 0;
+    inline constexpr int64_t TOKEN_DUPLICATE = 1 << 1;
+    inline constexpr int64_t TOKEN_IMPERSONATE = 1 << 2;
+    inline constexpr int64_t TOKEN_QUERY = 1 << 3;
+    inline constexpr int64_t TOKEN_QUERY_SOURCE = 1 << 4;
+    inline constexpr int64_t TOKEN_ADJUST_PRIVILEGES = 1 << 5;
+    inline constexpr int64_t TOKEN_ADJUST_GROUPS = 1 << 6;
+    inline constexpr int64_t TOKEN_ADJUST_DEFAULT = 1 << 7;
+    inline constexpr int64_t TOKEN_ADJUST_SESSIONID = 1 << 8;
     // do not reorder
-    const int TokenUser = 1 + 0;
-    const int TokenGroups = 1 + 1;
-    const int TokenPrivileges = 1 + 2;
-    const int TokenOwner = 1 + 3;
-    const int TokenPrimaryGroup = 1 + 4;
-    const int TokenDefaultDacl = 1 + 5;
-    const int TokenSource = 1 + 6;
-    const int TokenType = 1 + 7;
-    const int TokenImpersonationLevel = 1 + 8;
-    const int TokenStatistics = 1 + 9;
-    const int TokenRestrictedSids = 1 + 10;
-    const int TokenSessionId = 1 + 11;
-    const int TokenGroupsAndPrivileges = 1 + 12;
-    const int TokenSessionReference = 1 + 13;
-    const int TokenSandBoxInert = 1 + 14;
-    const int TokenAuditPolicy = 1 + 15;
-    const int TokenOrigin = 1 + 16;
-    const int TokenElevationType = 1 + 17;
-    const int TokenLinkedToken = 1 + 18;
-    const int TokenElevation = 1 + 19;
-    const int TokenHasRestrictions = 1 + 20;
-    const int TokenAccessInformation = 1 + 21;
-    const int TokenVirtualizationAllowed = 1 + 22;
-    const int TokenVirtualizationEnabled = 1 + 23;
-    const int TokenIntegrityLevel = 1 + 24;
-    const int TokenUIAccess = 1 + 25;
-    const int TokenMandatoryPolicy = 1 + 26;
-    const int TokenLogonSid = 1 + 27;
-    const int MaxTokenInfoClass = 1 + 28;
+    inline constexpr int64_t TokenUser = 1 + 0;
+    inline constexpr int64_t TokenGroups = 1 + 1;
+    inline constexpr int64_t TokenPrivileges = 1 + 2;
+    inline constexpr int64_t TokenOwner = 1 + 3;
+    inline constexpr int64_t TokenPrimaryGroup = 1 + 4;
+    inline constexpr int64_t TokenDefaultDacl = 1 + 5;
+    inline constexpr int64_t TokenSource = 1 + 6;
+    inline constexpr int64_t TokenType = 1 + 7;
+    inline constexpr int64_t TokenImpersonationLevel = 1 + 8;
+    inline constexpr int64_t TokenStatistics = 1 + 9;
+    inline constexpr int64_t TokenRestrictedSids = 1 + 10;
+    inline constexpr int64_t TokenSessionId = 1 + 11;
+    inline constexpr int64_t TokenGroupsAndPrivileges = 1 + 12;
+    inline constexpr int64_t TokenSessionReference = 1 + 13;
+    inline constexpr int64_t TokenSandBoxInert = 1 + 14;
+    inline constexpr int64_t TokenAuditPolicy = 1 + 15;
+    inline constexpr int64_t TokenOrigin = 1 + 16;
+    inline constexpr int64_t TokenElevationType = 1 + 17;
+    inline constexpr int64_t TokenLinkedToken = 1 + 18;
+    inline constexpr int64_t TokenElevation = 1 + 19;
+    inline constexpr int64_t TokenHasRestrictions = 1 + 20;
+    inline constexpr int64_t TokenAccessInformation = 1 + 21;
+    inline constexpr int64_t TokenVirtualizationAllowed = 1 + 22;
+    inline constexpr int64_t TokenVirtualizationEnabled = 1 + 23;
+    inline constexpr int64_t TokenIntegrityLevel = 1 + 24;
+    inline constexpr int64_t TokenUIAccess = 1 + 25;
+    inline constexpr int64_t TokenMandatoryPolicy = 1 + 26;
+    inline constexpr int64_t TokenLogonSid = 1 + 27;
+    inline constexpr int64_t MaxTokenInfoClass = 1 + 28;
     struct SIDAndAttributes;
     struct Tokenuser;
     struct Tokenprimarygroup;
-    const int TOKEN_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED |
+    struct GoTag_Token;
+    inline constexpr int64_t TOKEN_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED |
             TOKEN_ASSIGN_PRIMARY |
             TOKEN_DUPLICATE |
             TOKEN_IMPERSONATE |
@@ -92,16 +93,16 @@ namespace golang::syscall
             TOKEN_ADJUST_GROUPS |
             TOKEN_ADJUST_DEFAULT |
             TOKEN_ADJUST_SESSIONID;
-    const int TOKEN_READ = STANDARD_RIGHTS_READ | TOKEN_QUERY;
-    const int TOKEN_WRITE = STANDARD_RIGHTS_WRITE |
+    inline constexpr int64_t TOKEN_READ = STANDARD_RIGHTS_READ | TOKEN_QUERY;
+    inline constexpr int64_t TOKEN_WRITE = STANDARD_RIGHTS_WRITE |
             TOKEN_ADJUST_PRIVILEGES |
             TOKEN_ADJUST_GROUPS |
             TOKEN_ADJUST_DEFAULT;
-    const int TOKEN_EXECUTE = STANDARD_RIGHTS_EXECUTE;
+    inline constexpr int64_t TOKEN_EXECUTE = STANDARD_RIGHTS_EXECUTE;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
 
 namespace golang::syscall
 {
-    using Token = golang::syscall::Handle;
+    using Token = gocpp::defined<golang::syscall::Handle, GoTag_Token>;
 }

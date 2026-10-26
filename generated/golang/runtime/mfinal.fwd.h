@@ -6,13 +6,13 @@
 
 namespace golang::runtime
 {
-    const int finBlockSize = 4 * 1024;
+    inline constexpr int64_t finBlockSize = 4 * 1024;
     struct finBlock;
     // finalizer goroutine status.
-    const uint32_t fingUninitialized = 0;
-    const uint32_t fingCreated = 1 << (1 - 1);
-    const uint32_t fingRunningFinalizer = 1 << (2 - 1);
-    const uint32_t fingWait = 1 << (3 - 1);
-    const uint32_t fingWake = 1 << (4 - 1);
+    inline constexpr uint32_t fingUninitialized = 0;
+    inline constexpr uint32_t fingCreated = 1 << (1 - 1);
+    inline constexpr uint32_t fingRunningFinalizer = 1 << (2 - 1);
+    inline constexpr uint32_t fingWait = 1 << (3 - 1);
+    inline constexpr uint32_t fingWake = 1 << (4 - 1);
     struct finalizer;
 }

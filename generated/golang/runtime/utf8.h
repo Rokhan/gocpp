@@ -12,9 +12,9 @@
 
 namespace golang::runtime
 {
-    int countrunes(gocpp::string s);
-    std::tuple<gocpp::rune, unsigned int> decoderune(gocpp::string s, unsigned int k);
-    int encoderune(gocpp::slice<unsigned char> p, gocpp::rune r);
+    int64_t countrunes(gocpp::string s);
+    std::tuple<gocpp::rune, uint64_t> decoderune(gocpp::string s, uint64_t k);
+    int64_t encoderune(gocpp::slice<unsigned char> p, gocpp::rune r);
 
     namespace rec
     {

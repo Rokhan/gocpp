@@ -109,7 +109,7 @@ namespace golang::bytes
     // The slice is only valid until the next call to a read or write method.
     // The slice aliases the buffer content at least until the next buffer modification,
     // so immediate changes to the slice will affect the result of future reads.
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::Peek(Buffer* b, int n)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::Peek(Buffer* b, int64_t n)
     {
         if(rec::Len(gocpp::recv(b)) < n)
         {
@@ -126,20 +126,20 @@ namespace golang::bytes
 
     // Len returns the number of bytes of the unread portion of the buffer;
     // b.Len() == len(b.Bytes()).
-    int rec::Len(Buffer* b)
+    int64_t rec::Len(Buffer* b)
     {
         return len(b->buf) - b->off;
     }
 
     // Cap returns the capacity of the buffer's underlying byte slice, that is, the
     // total space allocated for the buffer's data.
-    int rec::Cap(Buffer* b)
+    int64_t rec::Cap(Buffer* b)
     {
         return cap(b->buf);
     }
 
     // Available returns how many bytes are unused in the buffer.
-    int rec::Available(Buffer* b)
+    int64_t rec::Available(Buffer* b)
     {
         return cap(b->buf) - len(b->buf);
     }
@@ -147,7 +147,7 @@ namespace golang::bytes
     // Truncate discards all but the first n unread bytes from the buffer
     // but continues to use the same allocated storage.
     // It panics if n is negative or greater than the length of the buffer.
-    void rec::Truncate(Buffer* b, int n)
+    void rec::Truncate(Buffer* b, int64_t n)
     {
         if(n == 0)
         {
@@ -175,7 +175,7 @@ namespace golang::bytes
     // tryGrowByReslice is an inlineable version of grow for the fast-case where the
     // internal buffer only needs to be resliced.
     // It returns the index where bytes should be written and whether it succeeded.
-    std::tuple<int, bool> rec::tryGrowByReslice(Buffer* b, int n)
+    std::tuple<int64_t, bool> rec::tryGrowByReslice(Buffer* b, int64_t n)
     {
         if(auto l = len(b->buf); n <= cap(b->buf) - l)
         {
@@ -188,7 +188,7 @@ namespace golang::bytes
     // grow grows the buffer to guarantee space for n more bytes.
     // It returns the index where bytes should be written.
     // If the buffer can't grow it will panic with ErrTooLarge.
-    int rec::grow(Buffer* b, int n)
+    int64_t rec::grow(Buffer* b, int64_t n)
     {
         auto m = rec::Len(gocpp::recv(b));
         // If buffer is empty, reset to recover space.
@@ -236,7 +236,7 @@ namespace golang::bytes
     // buffer without another allocation.
     // If n is negative, Grow will panic.
     // If the buffer can't grow it will panic with [ErrTooLarge].
-    void rec::Grow(Buffer* b, int n)
+    void rec::Grow(Buffer* b, int64_t n)
     {
         if(n < 0)
         {
@@ -249,9 +249,9 @@ namespace golang::bytes
     // Write appends the contents of p to the buffer, growing the buffer as
     // needed. The return value n is the length of p; err is always nil. If the
     // buffer becomes too large, Write will panic with [ErrTooLarge].
-    std::tuple<int, gocpp::error> rec::Write(Buffer* b, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Write(Buffer* b, gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         b->lastRead = opInvalid;
         auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), len(p));
@@ -265,9 +265,9 @@ namespace golang::bytes
     // WriteString appends the contents of s to the buffer, growing the buffer as
     // needed. The return value n is the length of s; err is always nil. If the
     // buffer becomes too large, WriteString will panic with [ErrTooLarge].
-    std::tuple<int, gocpp::error> rec::WriteString(Buffer* b, gocpp::string s)
+    std::tuple<int64_t, gocpp::error> rec::WriteString(Buffer* b, gocpp::string s)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         b->lastRead = opInvalid;
         auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), len(s));
@@ -313,7 +313,7 @@ namespace golang::bytes
 
     // growSlice grows b by n, preserving the original content of b.
     // If the allocation fails, it panics with ErrTooLarge.
-    gocpp::slice<unsigned char> growSlice(gocpp::slice<unsigned char> b, int n)
+    gocpp::slice<unsigned char> growSlice(gocpp::slice<unsigned char> b, int64_t n)
     {
         gocpp::Defer defer;
         try
@@ -404,9 +404,9 @@ namespace golang::bytes
     // buffer, returning the number of bytes written and a nil error. The nil
     // error is included to match [bufio.Writer]'s WriteRune. The buffer is grown
     // as needed; if it becomes too large, WriteRune will panic with [ErrTooLarge].
-    std::tuple<int, gocpp::error> rec::WriteRune(Buffer* b, gocpp::rune r)
+    std::tuple<int64_t, gocpp::error> rec::WriteRune(Buffer* b, gocpp::rune r)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         // Compare as uint32 to correctly handle negative runes.
         if(uint32_t(r) < utf8::RuneSelf)
@@ -428,9 +428,9 @@ namespace golang::bytes
     // is drained. The return value n is the number of bytes read. If the
     // buffer has no data to return, err is [io.EOF] (unless len(p) is zero);
     // otherwise it is nil.
-    std::tuple<int, gocpp::error> rec::Read(Buffer* b, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Read(Buffer* b, gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         b->lastRead = opInvalid;
         if(rec::empty(gocpp::recv(b)))
@@ -456,7 +456,7 @@ namespace golang::bytes
     // advancing the buffer as if the bytes had been returned by [Buffer.Read].
     // If there are fewer than n bytes in the buffer, Next returns the entire buffer.
     // The slice is only valid until the next call to a read or write method.
-    gocpp::slice<unsigned char> rec::Next(Buffer* b, int n)
+    gocpp::slice<unsigned char> rec::Next(Buffer* b, int64_t n)
     {
         b->lastRead = opInvalid;
         auto m = rec::Len(gocpp::recv(b));
@@ -494,10 +494,10 @@ namespace golang::bytes
     // If no bytes are available, the error returned is io.EOF.
     // If the bytes are an erroneous UTF-8 encoding, it
     // consumes one byte and returns U+FFFD, 1.
-    std::tuple<gocpp::rune, int, gocpp::error> rec::ReadRune(Buffer* b)
+    std::tuple<gocpp::rune, int64_t, gocpp::error> rec::ReadRune(Buffer* b)
     {
         gocpp::rune r;
-        int size;
+        int64_t size;
         gocpp::error err;
         if(rec::empty(gocpp::recv(b)))
         {
@@ -512,7 +512,7 @@ namespace golang::bytes
             b->lastRead = opReadRune1;
             return {gocpp::rune(c), 1, nullptr};
         }
-        int n;
+        int64_t n;
         std::tie(r, n) = utf8::DecodeRune(b->buf.make_slice(b->off));
         b->off += n;
         b->lastRead = readOp(n);
@@ -530,9 +530,9 @@ namespace golang::bytes
         {
             return errors::New("bytes.Buffer: UnreadRune: previous operation was not a successful ReadRune"_s);
         }
-        if(b->off >= int(b->lastRead))
+        if(b->off >= int64_t(b->lastRead))
         {
-            b->off -= int(b->lastRead);
+            b->off -= int64_t(b->lastRead);
         }
         b->lastRead = opInvalid;
         return nullptr;

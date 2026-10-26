@@ -25,7 +25,7 @@ namespace golang::go::types
         Checker* check{}; // for lazy type bound completion
         uint64_t id{}; // unique id, for debugging only
         TypeName* obj{}; // corresponding type name
-        int index{}; // type parameter index in source order, starting at 0
+        int64_t index{}; // type parameter index in source order, starting at 0
         golang::go::types::Type bound{}; // any type, but underlying is eventually *Interface for correct programs (see TypeParam.iface)
 
         using isGoStruct = void;
@@ -71,7 +71,7 @@ namespace golang::go::types
     {
         TypeParam* newTypeParam(Checker* check, TypeName* obj, golang::go::types::Type constraint);
         TypeName* Obj(TypeParam* t);
-        int Index(TypeParam* t);
+        int64_t Index(TypeParam* t);
         golang::go::types::Type Constraint(TypeParam* t);
         void SetConstraint(TypeParam* t, golang::go::types::Type bound);
         golang::go::types::Type Underlying(TypeParam* t);

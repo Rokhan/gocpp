@@ -37,9 +37,9 @@ namespace golang::go::types
     //
     // If p and q are in different files, p is before q if the filename
     // of p sorts lexicographically before the filename of q.
-    int cmpPos(token::Pos p, token::Pos q)
+    int64_t cmpPos(token::Pos p, token::Pos q)
     {
-        return int(p - q);
+        return int64_t(p - q);
     }
 
     // hasDots reports whether the last argument in the call is followed by ...

@@ -15,9 +15,9 @@ namespace golang::math::big
 {
     Word addVV(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y);
     Word subVV(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y);
-    Word shlVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
-    Word lshVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
-    Word rshVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
+    Word shlVU(gocpp::slice<Word> z, gocpp::slice<Word> x, uint64_t s);
+    Word lshVU(gocpp::slice<Word> z, gocpp::slice<Word> x, uint64_t s);
+    Word rshVU(gocpp::slice<Word> z, gocpp::slice<Word> x, uint64_t s);
     Word mulAddVWW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word m, Word a);
     Word addMulVVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
     Word addMulVVWW(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y, Word m, Word a);

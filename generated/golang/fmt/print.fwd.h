@@ -8,20 +8,20 @@ namespace golang::fmt
 {
     // Strings for use with buffer.WriteString.
     // This is less overhead than using buffer.Write with byte arrays.
-    const gocpp::string commaSpaceString = ", "_s;
-    const gocpp::string nilAngleString = "<nil>"_s;
-    const gocpp::string nilParenString = "(nil)"_s;
-    const gocpp::string nilString = "nil"_s;
-    const gocpp::string mapString = "map["_s;
-    const gocpp::string percentBangString = "%!"_s;
-    const gocpp::string missingString = "(MISSING)"_s;
-    const gocpp::string badIndexString = "(BADINDEX)"_s;
-    const gocpp::string panicString = "(PANIC="_s;
-    const gocpp::string extraString = "%!(EXTRA "_s;
-    const gocpp::string badWidthString = "%!(BADWIDTH)"_s;
-    const gocpp::string badPrecString = "%!(BADPREC)"_s;
-    const gocpp::string noVerbString = "%!(NOVERB)"_s;
-    const gocpp::string invReflectString = "<invalid reflect.Value>"_s;
+    inline const gocpp::string commaSpaceString = ", "_s;
+    inline const gocpp::string nilAngleString = "<nil>"_s;
+    inline const gocpp::string nilParenString = "(nil)"_s;
+    inline const gocpp::string nilString = "nil"_s;
+    inline const gocpp::string mapString = "map["_s;
+    inline const gocpp::string percentBangString = "%!"_s;
+    inline const gocpp::string missingString = "(MISSING)"_s;
+    inline const gocpp::string badIndexString = "(BADINDEX)"_s;
+    inline const gocpp::string panicString = "(PANIC="_s;
+    inline const gocpp::string extraString = "%!(EXTRA "_s;
+    inline const gocpp::string badWidthString = "%!(BADWIDTH)"_s;
+    inline const gocpp::string badPrecString = "%!(BADPREC)"_s;
+    inline const gocpp::string noVerbString = "%!(NOVERB)"_s;
+    inline const gocpp::string invReflectString = "<invalid reflect.Value>"_s;
     struct State;
     struct Formatter;
     struct Stringer;

@@ -38,7 +38,7 @@ namespace golang::main
         board[1][0] = "O"_s;
         board[0][2] = "X"_s;
 
-        for(auto i = 0; i < len(board); i++)
+        for(int64_t i = 0; i < len(board); i++)
         {
             // fmt.Printf("%s\n", strings.Join(board[i], " "))
             mocklib::Printf("%v\n"_s, mocklib::StringsJoin(board[i], " "_s));

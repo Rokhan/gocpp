@@ -13,11 +13,11 @@
 namespace golang::encoding::binary
 {
     gocpp::slice<unsigned char> AppendUvarint(gocpp::slice<unsigned char> buf, uint64_t x);
-    int PutUvarint(gocpp::slice<unsigned char> buf, uint64_t x);
-    std::tuple<uint64_t, int> Uvarint(gocpp::slice<unsigned char> buf);
+    int64_t PutUvarint(gocpp::slice<unsigned char> buf, uint64_t x);
+    std::tuple<uint64_t, int64_t> Uvarint(gocpp::slice<unsigned char> buf);
     gocpp::slice<unsigned char> AppendVarint(gocpp::slice<unsigned char> buf, int64_t x);
-    int PutVarint(gocpp::slice<unsigned char> buf, int64_t x);
-    std::tuple<int64_t, int> Varint(gocpp::slice<unsigned char> buf);
+    int64_t PutVarint(gocpp::slice<unsigned char> buf, int64_t x);
+    std::tuple<int64_t, int64_t> Varint(gocpp::slice<unsigned char> buf);
     extern gocpp::error errOverflow;
 }
 #include "golang/io/io.fwd.h"

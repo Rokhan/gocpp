@@ -43,7 +43,7 @@ namespace golang::main
         printN("zzz2"_s, n);
     }
 
-    int square(int num)
+    int64_t square(int64_t num)
     {
         return num * num;
     }
@@ -53,7 +53,7 @@ namespace golang::main
         mocklib::Printf(str1 + ", "_s + str2 + str3);
     }
 
-    void printN(gocpp::string str1, int n)
+    void printN(gocpp::string str1, int64_t n)
     {
         mocklib::Printf(str1 + "%d\n"_s, n);
     }

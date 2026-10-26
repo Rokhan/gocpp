@@ -32,7 +32,7 @@ namespace golang::go::types
     // key and n is the length > 0 of the common key prefix. The trie is not
     // changed in this case.
     template<typename V>
-    std::tuple<V, int> rec::insert(trie<V> tr, gocpp::slice<int> key, V val)
+    std::tuple<V, int64_t> rec::insert(trie<V> tr, gocpp::slice<int64_t> key, V val)
     {
         // A key serves as the path from the trie root to its corresponding value.
         for(auto [l, index] : key)
@@ -156,7 +156,7 @@ namespace golang::go::types
     template<typename V>
     go_any rec::pickValue(trie<V> tr)
     {
-        gocpp::slice<int> keys = {};
+        gocpp::slice<int64_t> keys = {};
         for(auto [k, gocpp_ignored] : tr)
         {
             keys = append(keys, k);

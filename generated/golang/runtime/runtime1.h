@@ -38,7 +38,7 @@ namespace golang::runtime
     {
         gocpp::string key{};
         gocpp::string value{};
-        int removed{};
+        int64_t removed{};
 
         using isGoStruct = void;
 

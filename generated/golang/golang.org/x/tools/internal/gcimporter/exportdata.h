@@ -31,9 +31,9 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     namespace sync = golang::sync;
     std::tuple<int64_t, gocpp::error> FindExportData(bufio::Reader* r);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadUnified(bufio::Reader* r);
-    std::tuple<int, gocpp::error> FindPackageDefinition(bufio::Reader* r);
+    std::tuple<int64_t, gocpp::error> FindPackageDefinition(bufio::Reader* r);
     std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> ReadObjectHeaders(bufio::Reader* r);
-    std::tuple<int, gocpp::error> ReadExportDataHeader(bufio::Reader* r);
+    std::tuple<int64_t, gocpp::error> ReadExportDataHeader(bufio::Reader* r);
     extern sync::Map exportMap;
 
     namespace rec

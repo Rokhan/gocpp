@@ -16,8 +16,8 @@ namespace golang::compress::flate
     {
         gocpp::slice<unsigned char> hist{}; // Sliding window history
         // Invariant: 0 <= rdPos <= wrPos <= len(hist)
-        int wrPos{}; // Current output position in buffer
-        int rdPos{}; // Have emitted hist[:rdPos] already
+        int64_t wrPos{}; // Current output position in buffer
+        int64_t rdPos{}; // Have emitted hist[:rdPos] already
         bool full{}; // Has a full window length been written yet?
 
         using isGoStruct = void;
@@ -35,15 +35,15 @@ namespace golang::compress::flate
 
     namespace rec
     {
-        void init(dictDecoder* dd, int size, gocpp::slice<unsigned char> dict);
-        int histSize(dictDecoder* dd);
-        int availRead(dictDecoder* dd);
-        int availWrite(dictDecoder* dd);
+        void init(dictDecoder* dd, int64_t size, gocpp::slice<unsigned char> dict);
+        int64_t histSize(dictDecoder* dd);
+        int64_t availRead(dictDecoder* dd);
+        int64_t availWrite(dictDecoder* dd);
         gocpp::slice<unsigned char> writeSlice(dictDecoder* dd);
-        void writeMark(dictDecoder* dd, int cnt);
+        void writeMark(dictDecoder* dd, int64_t cnt);
         void writeByte(dictDecoder* dd, unsigned char c);
-        int writeCopy(dictDecoder* dd, int dist, int length);
-        int tryWriteCopy(dictDecoder* dd, int dist, int length);
+        int64_t writeCopy(dictDecoder* dd, int64_t dist, int64_t length);
+        int64_t tryWriteCopy(dictDecoder* dd, int64_t dist, int64_t length);
         gocpp::slice<unsigned char> readFlush(dictDecoder* dd);
     }
 }

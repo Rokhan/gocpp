@@ -12,14 +12,14 @@
 
 namespace golang::image::png
 {
-    bool cbPaletted(int cb);
-    bool cbTrueColor(int cb);
+    bool cbPaletted(int64_t cb);
+    bool cbTrueColor(int64_t cb);
     struct interlaceScan
     {
-        int xFactor{};
-        int yFactor{};
-        int xOffset{};
-        int yOffset{};
+        int64_t xFactor{};
+        int64_t yFactor{};
+        int64_t xOffset{};
+        int64_t yOffset{};
 
         using isGoStruct = void;
 
@@ -61,15 +61,15 @@ namespace golang::image::png
         io::Reader r{};
         image::Image img{};
         hash::Hash32 crc{};
-        int width{};
-        int height{};
-        int depth{};
+        int64_t width{};
+        int64_t height{};
+        int64_t depth{};
         color::Palette palette{};
-        int cb{};
-        int stage{};
+        int64_t cb{};
+        int64_t stage{};
         uint32_t idatLength{};
         gocpp::array<unsigned char, 3 * 256> tmp{};
-        int interlace{};
+        int64_t interlace{};
         // useTransparent and transparent are used for grayscale and truecolor
         // transparency, as opposed to palette transparency.
         bool useTransparent{};
@@ -104,10 +104,10 @@ namespace golang::image::png
         gocpp::error parseIHDR(decoder* d, uint32_t length);
         gocpp::error parsePLTE(decoder* d, uint32_t length);
         gocpp::error parsetRNS(decoder* d, uint32_t length);
-        std::tuple<int, gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
         std::tuple<image::Image, gocpp::error> decode(decoder* d);
-        std::tuple<image::Image, gocpp::error> readImagePass(decoder* d, io::Reader r, int pass, bool allocateOnly);
-        void mergePassInto(decoder* d, image::Image dst, image::Image src, int pass);
+        std::tuple<image::Image, gocpp::error> readImagePass(decoder* d, io::Reader r, int64_t pass, bool allocateOnly);
+        void mergePassInto(decoder* d, image::Image dst, image::Image src, int64_t pass);
         gocpp::error parseIDAT(decoder* d, uint32_t length);
         gocpp::error parseIEND(decoder* d, uint32_t length);
         gocpp::error parseChunk(decoder* d, bool configOnly);

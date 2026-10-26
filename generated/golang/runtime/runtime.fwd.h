@@ -28,5 +28,5 @@ namespace golang::runtime
     // converting durations, not timestamps. Durations are usually going to be much larger, and so
     // the tiny error doesn't matter. The error is definitely going to be a problem when trying to
     // use this for timestamps, as it'll make those timestamps much less likely to line up.
-    const int minTimeForTicksPerSecond = 5000000 * (1 - osHasLowResClockInt) + 100000000 * osHasLowResClockInt;
+    inline constexpr int64_t minTimeForTicksPerSecond = 5000000 * (1 - osHasLowResClockInt) + 100000000 * osHasLowResClockInt;
 }

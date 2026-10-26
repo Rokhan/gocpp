@@ -7,11 +7,12 @@
 namespace golang::go::scanner
 {
     struct Scanner;
-    const long bom = 0xFEFF;
-    const long eof = - 1;
-    using Mode = unsigned int;
-    const Mode ScanComments = 1 << 0;
-    const Mode dontInsertSemis = 1 << 1;
+    inline constexpr long bom = 0xFEFF;
+    inline constexpr long eof = - 1;
+    struct GoTag_Mode;
+    using Mode = gocpp::defined<uint64_t, GoTag_Mode>;
+    inline constexpr Mode ScanComments = 1 << 0;
+    inline constexpr Mode dontInsertSemis = 1 << 1;
 }
 #include "golang/go/token/position.fwd.h"
 #include "golang/go/token/token.fwd.h"

@@ -12,8 +12,8 @@
 
 namespace golang::main
 {
-    void fibonacci(gocpp::channel<int> c, gocpp::channel<int> quit);
-    void sum(gocpp::channel<int> input, gocpp::channel<int> quit);
+    void fibonacci(gocpp::channel<int64_t> c, gocpp::channel<int64_t> quit);
+    void sum(gocpp::channel<int64_t> input, gocpp::channel<int64_t> quit);
     void testInlinedType();
     void main();
 

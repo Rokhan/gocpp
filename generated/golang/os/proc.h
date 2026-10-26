@@ -16,13 +16,13 @@ namespace golang::os
     extern gocpp::slice<gocpp::string> Args;
     void init();
     gocpp::slice<gocpp::string> runtime_args();
-    int Getuid();
-    int Geteuid();
-    int Getgid();
-    int Getegid();
-    std::tuple<gocpp::slice<int>, gocpp::error> Getgroups();
-    void Exit(int code);
-    void runtime_beforeExit(int exitCode);
+    int64_t Getuid();
+    int64_t Geteuid();
+    int64_t Getgid();
+    int64_t Getegid();
+    std::tuple<gocpp::slice<int64_t>, gocpp::error> Getgroups();
+    void Exit(int64_t code);
+    void runtime_beforeExit(int64_t exitCode);
 
     namespace rec
     {

@@ -12,18 +12,28 @@
 
 namespace golang::runtime
 {
-    int countSub(uint32_t x, uint32_t y);
+    struct GoTag_profAtomic { };
+    using profAtomic = gocpp::defined<uint64_t, GoTag_profAtomic>;
+    struct GoTag_profIndex { };
+    using profIndex = gocpp::defined<uint64_t, GoTag_profIndex>;
+    int64_t countSub(uint32_t x, uint32_t y);
+    struct GoTag_profBufReadMode { };
+    using profBufReadMode = gocpp::defined<int64_t, GoTag_profBufReadMode>;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     extern gocpp::array<gocpp::unsafe_pointer, 1> overflowTag;
 }
 #include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
 #include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
 #include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/note_other.h"
 
 namespace golang::runtime
 {
-    namespace atomic = golang::internal::runtime::atomic;
     struct profBuf
     {
         // accessed atomically
@@ -53,7 +63,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct profBuf& value);
-    profBuf* newProfBuf(int hdrsize, int bufwords, int tags);
+    profBuf* newProfBuf(int64_t hdrsize, int64_t bufwords, int64_t tags);
 
     namespace rec
     {
@@ -62,12 +72,12 @@ namespace golang::runtime
         bool cas(profAtomic* x, profIndex old, profIndex go_new);
         uint32_t dataCount(profIndex x);
         uint32_t tagCount(profIndex x);
-        profIndex addCountsAndClearFlags(profIndex x, int data, int tag);
+        profIndex addCountsAndClearFlags(profIndex x, int64_t data, int64_t tag);
         bool hasOverflow(profBuf* b);
         std::tuple<uint32_t, uint64_t> takeOverflow(profBuf* b);
         void incrementOverflow(profBuf* b, int64_t now);
-        bool canWriteRecord(profBuf* b, int nstk);
-        bool canWriteTwoRecords(profBuf* b, int nstk1, int nstk2);
+        bool canWriteRecord(profBuf* b, int64_t nstk);
+        bool canWriteTwoRecords(profBuf* b, int64_t nstk1, int64_t nstk2);
         void write(profBuf* b, gocpp::unsafe_pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk);
         void close(profBuf* b);
         void wakeupExtra(profBuf* b);

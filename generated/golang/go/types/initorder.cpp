@@ -198,7 +198,7 @@ namespace golang::go::types
         {
             deps = append(deps, d);
         }
-        sort::Slice(deps, [=](int i, int j) mutable -> bool
+        sort::Slice(deps, [=](int64_t i, int64_t j) mutable -> bool
         {
             return rec::order(gocpp::recv(deps[i])) < rec::order(gocpp::recv(deps[j]));
         });
@@ -497,7 +497,7 @@ namespace golang::go::types
 
     // cost returns the cost of removing this node, which involves copying each
     // predecessor to each successor (and vice-versa).
-    int rec::cost(graphNode* n)
+    int64_t rec::cost(graphNode* n)
     {
         return len(n->pred) * len(n->succ);
     }
@@ -578,7 +578,7 @@ namespace golang::go::types
         // throughout the function graph, the cost of removing a function at
         // position X is proportional to cost * (len(funcG)-X). Therefore, we should
         // remove high-cost functions last.
-        slices::SortFunc(funcG, [=](graphNode* a, graphNode* b) mutable -> int
+        slices::SortFunc(funcG, [=](graphNode* a, graphNode* b) mutable -> int64_t
         {
             return cmp::Compare(rec::cost(gocpp::recv(a)), rec::cost(gocpp::recv(b)));
         });
@@ -625,19 +625,19 @@ namespace golang::go::types
 
     // nodeQueue implements the container/heap interface;
     // a nodeQueue may be used as a priority queue.
-    int rec::Len(nodeQueue a)
+    int64_t rec::Len(nodeQueue a)
     {
         return len(a);
     }
 
-    void rec::Swap(nodeQueue a, int i, int j)
+    void rec::Swap(nodeQueue a, int64_t i, int64_t j)
     {
         auto [x, y] = std::tuple{a[i], a[j]};
         std::tie(a[i], a[j]) = std::tuple{y, x};
         std::tie(x->index, y->index) = std::tuple{j, i};
     }
 
-    bool rec::Less(nodeQueue a, int i, int j)
+    bool rec::Less(nodeQueue a, int64_t i, int64_t j)
     {
         auto [x, y] = std::tuple{a[i], a[j]};
 

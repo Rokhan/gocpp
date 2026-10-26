@@ -16,7 +16,7 @@ namespace golang::internal::strconv
     double float32frombits(uint32_t b);
     uint64_t float64bits(double f);
     uint32_t float32bits(double f);
-    double inf(int sign);
+    double inf(int64_t sign);
     bool isNaN(double f);
     double nan();
 

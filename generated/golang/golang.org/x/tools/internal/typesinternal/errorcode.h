@@ -9,8 +9,11 @@
 #include "golang/golang.org/x/tools/internal/typesinternal/errorcode.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::golang_org::x::tools::internal::typesinternal
 {
+    struct GoTag_ErrorCode { };
+    using ErrorCode = gocpp::defined<int64_t, GoTag_ErrorCode>;
 
     namespace rec
     {

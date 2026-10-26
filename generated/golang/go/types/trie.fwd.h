@@ -7,5 +7,5 @@
 namespace golang::go::types
 {
     template<typename V> struct GoTag_trie;
-    template<typename V> using trie = gocpp::defined<gocpp::map<int, go_any>, GoTag_trie>;
+    template<typename V> using trie = gocpp::defined<gocpp::map<int64_t, go_any>, GoTag_trie<V>>;
 }

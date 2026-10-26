@@ -6,11 +6,14 @@
 
 namespace golang::runtime
 {
-    const long itabInitSize = 512;
+    inline constexpr long itabInitSize = 512;
     struct itabTableType;
-    using uint16InterfacePtr = uint16_t;
-    using uint32InterfacePtr = uint32_t;
-    using uint64InterfacePtr = uint64_t;
+    struct GoTag_uint16InterfacePtr;
+    using uint16InterfacePtr = gocpp::defined<uint16_t, GoTag_uint16InterfacePtr>;
+    struct GoTag_uint32InterfacePtr;
+    using uint32InterfacePtr = gocpp::defined<uint32_t, GoTag_uint32InterfacePtr>;
+    struct GoTag_uint64InterfacePtr;
+    using uint64InterfacePtr = gocpp::defined<uint64_t, GoTag_uint64InterfacePtr>;
     using stringInterfacePtr = gocpp::string;
     struct GoTag_sliceInterfacePtr;
     using sliceInterfacePtr = gocpp::defined<gocpp::slice<unsigned char>, GoTag_sliceInterfacePtr>;

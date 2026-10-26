@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    gocpp::slice<gocpp::slice<uint8_t>> Pic(int dx, int dy);
+    gocpp::slice<gocpp::slice<uint8_t>> Pic(int64_t dx, int64_t dy);
     void main();
 
     namespace rec

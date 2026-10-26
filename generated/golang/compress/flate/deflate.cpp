@@ -216,7 +216,7 @@ namespace golang::compress::flate
     }
 
     // fillDeflate will add b to the current window for levels 7-9.
-    int rec::fillDeflate(compressor* d, gocpp::slice<unsigned char> b)
+    int64_t rec::fillDeflate(compressor* d, gocpp::slice<unsigned char> b)
     {
         auto s = d->state;
         if(s->index >= 2 * windowSize - (minMatchLength + maxMatchLength))
@@ -285,7 +285,7 @@ namespace golang::compress::flate
                 auto window = d->window.make_slice(d->blockStart, index);
                 // If we removed less than a 64th of all literals
                 // we huffman compress the block.
-                if(int(tok->n) > len(window) - (len(window) >> 6))
+                if(int64_t(tok->n) > len(window) - (len(window) >> 6))
                 {
                     rec::writeBlockHuff(gocpp::recv(d->w), eof, window, d->sync);
                 }
@@ -393,7 +393,7 @@ namespace golang::compress::flate
         offset = 0;
 
         // Minimum gain to accept a match.
-        auto cGain = 4;
+        int64_t cGain = 4;
 
         // Some like it higher (CSV), some like it lower (JSON)
         // Base is 4 bytes at with an additional cost.
@@ -412,7 +412,7 @@ namespace golang::compress::flate
                     if(d->compressionLevel.chain >= 100)
                     {
                         // Calculate gain. Estimates the gains of the new match compared to emitting as literals.
-                        auto newGain = rec::bitLengthRaw(gocpp::recv(d->h), wPos.make_slice(0, n)) - int(offsetExtraBits[offsetCode(uint32_t(pos - i))]) - baseCost - int(lengthExtraBits[lengthCodes[(n - 3) & 255]]);
+                        auto newGain = rec::bitLengthRaw(gocpp::recv(d->h), wPos.make_slice(0, n)) - int64_t(offsetExtraBits[offsetCode(uint32_t(pos - i))]) - baseCost - int64_t(lengthExtraBits[lengthCodes[(n - 3) & 255]]);
                         if(newGain <= cGain)
                         {
                             goto next;
@@ -482,7 +482,7 @@ namespace golang::compress::flate
 
         dst[0] = hash4u(hb, hashBits);
         auto end = len(b) - 4 + 1;
-        for(auto i = 1; i < end; i++)
+        for(int64_t i = 1; i < end; i++)
         {
             hb = (hb >> 8) | (uint32_t(b[i + 3]) << 24);
             dst[i] = hash4u(hb, hashBits);
@@ -550,7 +550,7 @@ namespace golang::compress::flate
         prevLength = length;
         prevOffset = prevIndex - ch2;
 
-        for(auto i = int32_t(checkOff - 1); i >= 0; i--)
+        for(int32_t i = int32_t(checkOff - 1); i >= 0; i--)
         {
             if(prevLength >= maxMatchLength || d->window[prevIndex + i] != d->window[ch2 + i])
             {
@@ -807,7 +807,7 @@ namespace golang::compress::flate
 
     // fillBlock appends b to d.window, returning the number of bytes copied.
     // If n < len(b), the window is filled.
-    int rec::fillBlock(compressor* d, gocpp::slice<unsigned char> b)
+    int64_t rec::fillBlock(compressor* d, gocpp::slice<unsigned char> b)
     {
         auto n = copy(d->window.make_slice(d->windowEnd), b);
         d->windowEnd += int32_t(n);
@@ -819,7 +819,7 @@ namespace golang::compress::flate
     // It uses Huffman-only encoding.
     void rec::deflateHuff(compressor* d)
     {
-        if(int(d->windowEnd) < len(d->window) && ! d->sync || d->windowEnd == 0)
+        if(int64_t(d->windowEnd) < len(d->window) && ! d->sync || d->windowEnd == 0)
         {
             return;
         }
@@ -834,7 +834,7 @@ namespace golang::compress::flate
     void rec::deflateFast(compressor* d)
     {
         // We only compress if we have maxStoreBlockSize.
-        if(int(d->windowEnd) < len(d->window))
+        if(int64_t(d->windowEnd) < len(d->window))
         {
             if(! d->sync)
             {
@@ -887,9 +887,9 @@ namespace golang::compress::flate
 
     // write adds b to the compressor.
     // It can only return a short length if an error occurs.
-    std::tuple<int, gocpp::error> rec::write(compressor* d, gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> rec::write(compressor* d, gocpp::slice<unsigned char> b)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         if(d->err != nullptr)
         {
@@ -898,7 +898,7 @@ namespace golang::compress::flate
         n = len(b);
         for(; len(b) > 0; )
         {
-            if(int(d->windowEnd) == len(d->window) || d->sync)
+            if(int64_t(d->windowEnd) == len(d->window) || d->sync)
             {
                 d->step(d);
             }
@@ -933,7 +933,7 @@ namespace golang::compress::flate
     }
 
     // init a new encode with new writer and compression level.
-    gocpp::error rec::init(compressor* d, io::Writer w, int level)
+    gocpp::error rec::init(compressor* d, io::Writer w, int64_t level)
     {
         gocpp::error err;
         d->w = newHuffmanBitWriter(w);
@@ -1065,7 +1065,7 @@ namespace golang::compress::flate
     // Note that the exact bytes written to w are not covered by the Go 1
     // compatibility promise. Callers, including tests, should not depend on the
     // exact written bytes.
-    std::tuple<Writer*, gocpp::error> NewWriter(io::Writer w, int level)
+    std::tuple<Writer*, gocpp::error> NewWriter(io::Writer w, int64_t level)
     {
         Writer dw = {};
         if(auto err = rec::init(gocpp::recv(dw.d), w, level); err != nullptr)
@@ -1085,7 +1085,7 @@ namespace golang::compress::flate
     // Note that the exact bytes written to w are not covered by the Go 1
     // compatibility promise. Callers, including tests, should not depend on the
     // exact written bytes.
-    std::tuple<Writer*, gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
+    std::tuple<Writer*, gocpp::error> NewWriterDict(io::Writer w, int64_t level, gocpp::slice<unsigned char> dict)
     {
         auto [zw, err] = NewWriter(w, level);
         if(err != nullptr)
@@ -1134,9 +1134,9 @@ namespace golang::compress::flate
 
     // Write writes data to w, which will eventually write the
     // compressed form of data to its underlying writer.
-    std::tuple<int, gocpp::error> rec::Write(Writer* w, gocpp::slice<unsigned char> data)
+    std::tuple<int64_t, gocpp::error> rec::Write(Writer* w, gocpp::slice<unsigned char> data)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return rec::write(gocpp::recv(w->d), data);
     }

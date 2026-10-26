@@ -25,14 +25,14 @@ namespace golang::syscall
 
     // TranslateAccountName converts a directory service
     // object name from one format to another.
-    std::tuple<gocpp::string, gocpp::error> TranslateAccountName(gocpp::string username, uint32_t from, uint32_t to, int initSize)
+    std::tuple<gocpp::string, gocpp::error> TranslateAccountName(gocpp::string username, uint32_t from, uint32_t to, int64_t initSize)
     {
         auto [u, e] = UTF16PtrFromString(username);
         if(e != nullptr)
         {
             return {""_s, e};
         }
-        auto n = uint32_t(50);
+        uint32_t n = uint32_t(50);
         for(; ; )
         {
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
@@ -172,8 +172,8 @@ namespace golang::syscall
                 return {nullptr, ""_s, 0, e};
             }
         }
-        auto n = uint32_t(50);
-        auto dn = uint32_t(50);
+        uint32_t n = uint32_t(50);
+        uint32_t dn = uint32_t(50);
         for(; ; )
         {
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
@@ -218,9 +218,9 @@ namespace golang::syscall
     }
 
     // Len returns the length, in bytes, of a valid security identifier sid.
-    int rec::Len(SID* sid)
+    int64_t rec::Len(SID* sid)
     {
-        return int(GetLengthSid(sid));
+        return int64_t(GetLengthSid(sid));
     }
 
     // Copy creates a duplicate of security identifier sid.
@@ -254,8 +254,8 @@ namespace golang::syscall
                 return {""_s, ""_s, 0, err};
             }
         }
-        auto n = uint32_t(50);
-        auto dn = uint32_t(50);
+        uint32_t n = uint32_t(50);
+        uint32_t dn = uint32_t(50);
         for(; ; )
         {
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
@@ -398,7 +398,7 @@ namespace golang::syscall
     }
 
     // getInfo retrieves a specified type of information about an access token.
-    std::tuple<gocpp::unsafe_pointer, gocpp::error> rec::getInfo(Token t, uint32_t go_class, int initSize)
+    std::tuple<gocpp::unsafe_pointer, gocpp::error> rec::getInfo(Token t, uint32_t go_class, int64_t initSize)
     {
         auto n = uint32_t(initSize);
         for(; ; )
@@ -448,7 +448,7 @@ namespace golang::syscall
     // root directory of the access token t user's profile.
     std::tuple<gocpp::string, gocpp::error> rec::GetUserProfileDirectory(Token t)
     {
-        auto n = uint32_t(100);
+        uint32_t n = uint32_t(100);
         for(; ; )
         {
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);

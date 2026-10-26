@@ -7,16 +7,16 @@
 namespace golang::internal::syscall::windows::registry
 {
     // Registry value types.
-    const long NONE = 0;
-    const long SZ = 1;
-    const long EXPAND_SZ = 2;
-    const long BINARY = 3;
-    const long DWORD = 4;
-    const long DWORD_BIG_ENDIAN = 5;
-    const long LINK = 6;
-    const long MULTI_SZ = 7;
-    const long RESOURCE_LIST = 8;
-    const long FULL_RESOURCE_DESCRIPTOR = 9;
-    const long RESOURCE_REQUIREMENTS_LIST = 10;
-    const long QWORD = 11;
+    inline constexpr long NONE = 0;
+    inline constexpr long SZ = 1;
+    inline constexpr long EXPAND_SZ = 2;
+    inline constexpr long BINARY = 3;
+    inline constexpr long DWORD = 4;
+    inline constexpr long DWORD_BIG_ENDIAN = 5;
+    inline constexpr long LINK = 6;
+    inline constexpr long MULTI_SZ = 7;
+    inline constexpr long RESOURCE_LIST = 8;
+    inline constexpr long FULL_RESOURCE_DESCRIPTOR = 9;
+    inline constexpr long RESOURCE_REQUIREMENTS_LIST = 10;
+    inline constexpr long QWORD = 11;
 }

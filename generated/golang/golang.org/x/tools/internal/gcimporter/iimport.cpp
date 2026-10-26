@@ -151,32 +151,32 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     namespace rec
     {
-        int Len(const gocpp::PtrRecv<struct intReader, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct intReader, false>& self)
         {
             return bytes::rec::Len(gocpp::recv(self.ptr->Reader));
         }
 
-        int Len(const gocpp::ObjRecv<struct intReader>& self)
+        int64_t Len(const gocpp::ObjRecv<struct intReader>& self)
         {
             return bytes::rec::Len(gocpp::recv(self.obj.Reader));
         }
 
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct intReader, false>& self, gocpp::slice<unsigned char> b)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct intReader, false>& self, gocpp::slice<unsigned char> b)
         {
             return bytes::rec::Read(gocpp::recv(self.ptr->Reader), b);
         }
 
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct intReader>& self, gocpp::slice<unsigned char> b)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct intReader>& self, gocpp::slice<unsigned char> b)
         {
             return bytes::rec::Read(gocpp::recv(self.obj.Reader), b);
         }
 
-        std::tuple<int, gocpp::error> ReadAt(const gocpp::PtrRecv<struct intReader, false>& self, gocpp::slice<unsigned char> b, int64_t off)
+        std::tuple<int64_t, gocpp::error> ReadAt(const gocpp::PtrRecv<struct intReader, false>& self, gocpp::slice<unsigned char> b, int64_t off)
         {
             return bytes::rec::ReadAt(gocpp::recv(self.ptr->Reader), b, off);
         }
 
-        std::tuple<int, gocpp::error> ReadAt(const gocpp::ObjRecv<struct intReader>& self, gocpp::slice<unsigned char> b, int64_t off)
+        std::tuple<int64_t, gocpp::error> ReadAt(const gocpp::ObjRecv<struct intReader>& self, gocpp::slice<unsigned char> b, int64_t off)
         {
             return bytes::rec::ReadAt(gocpp::recv(self.obj.Reader), b, off);
         }
@@ -191,12 +191,12 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return bytes::rec::ReadByte(gocpp::recv(self.obj.Reader));
         }
 
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct intReader, false>& self)
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::PtrRecv<struct intReader, false>& self)
         {
             return bytes::rec::ReadRune(gocpp::recv(self.ptr->Reader));
         }
 
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::ObjRecv<struct intReader>& self)
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::ObjRecv<struct intReader>& self)
         {
             return bytes::rec::ReadRune(gocpp::recv(self.obj.Reader));
         }
@@ -211,12 +211,12 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return bytes::rec::Reset(gocpp::recv(self.obj.Reader), b);
         }
 
-        std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct intReader, false>& self, int64_t offset, int whence)
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct intReader, false>& self, int64_t offset, int64_t whence)
         {
             return bytes::rec::Seek(gocpp::recv(self.ptr->Reader), offset, whence);
         }
 
-        std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct intReader>& self, int64_t offset, int whence)
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct intReader>& self, int64_t offset, int64_t whence)
         {
             return bytes::rec::Seek(gocpp::recv(self.obj.Reader), offset, whence);
         }
@@ -323,7 +323,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     // and returns 0 and a reference to the package.
     // If the export data version is not recognized or the format is otherwise
     // compromised, an error is returned.
-    std::tuple<int, types::Package*, gocpp::error> IImportData(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::slice<unsigned char> data, gocpp::string path)
+    std::tuple<int64_t, types::Package*, gocpp::error> IImportData(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::slice<unsigned char> data, gocpp::string path)
     {
         auto [pkgs, err] = iimportCommon(fset, GetPackagesFromMap(imports), data, false, path, false, nullptr);
         if(err != nullptr)
@@ -420,7 +420,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         try
         {
             auto currentVersion = iexportVersionCurrent;
-            auto version = int64_t(- 1);
+            int64_t version = int64_t(- 1);
             if(! debug)
             {
                 defer.push_back([=, &err]{ [=]() mutable -> void
@@ -505,7 +505,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             rec::Seek(gocpp::recv(r), sLen + fLen + dLen, io::SeekCurrent);
 
             auto p = gocpp::Init<iimporter>([=](auto& x) {
-                x.version = int(version);
+                x.version = int64_t(version);
                 x.ipath = path;
                 x.shallow = shallow;
                 x.reportf = reportf;
@@ -891,7 +891,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     token::File* rec::decodeFile(iimporter* p, intReader rd)
     {
         auto filename = rec::stringAt(gocpp::recv(p), rec::uint64(gocpp::recv(rd)));
-        auto size = int(rec::uint64(gocpp::recv(rd)));
+        auto size = int64_t(rec::uint64(gocpp::recv(rd)));
         auto file = rec::AddFile(gocpp::recv(p->fake.fset), filename, - 1, size);
 
         // SetLines requires a nondecreasing sequence.
@@ -902,13 +902,13 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         // that strictly increase by the largest possible amount.
         // This allows us to avoid having to record the actual end
         // offset of each needed line.
-        auto lines = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), int(rec::uint64(gocpp::recv(rd))));
-        int index = {};
-        int offset = {};
-        for(auto [i, n] = std::tuple{0, int(rec::uint64(gocpp::recv(rd)))}; i < n; i++)
+        auto lines = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), int64_t(rec::uint64(gocpp::recv(rd))));
+        int64_t index = {};
+        int64_t offset = {};
+        for(auto [i, n] = std::tuple{0, int64_t(rec::uint64(gocpp::recv(rd)))}; i < n; i++)
         {
-            index += int(rec::uint64(gocpp::recv(rd)));
-            offset += int(rec::uint64(gocpp::recv(rd)));
+            index += int64_t(rec::uint64(gocpp::recv(rd)));
+            offset += int64_t(rec::uint64(gocpp::recv(rd)));
             lines[index] = offset;
 
             // Ensure monotonicity between points.
@@ -1279,10 +1279,10 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         return {typ, val};
     }
 
-    std::tuple<bool, unsigned int> intSize(types::Basic* b)
+    std::tuple<bool, uint64_t> intSize(types::Basic* b)
     {
         bool go_signed;
-        unsigned int maxBytes;
+        uint64_t maxBytes;
         if((rec::Info(gocpp::recv(b)) & types::IsUntyped) != 0)
         {
             return {true, 64};
@@ -1358,7 +1358,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         }
 
         auto [n, gocpp_id_5] = rec::ReadByte(gocpp::recv(r->declReader));
-        if((unsigned int)(n) < maxSmall)
+        if((uint64_t)(n) < maxSmall)
         {
             auto v = int64_t(n);
             if(go_signed)
@@ -1378,7 +1378,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         {
             v = - (n &^ 1) >> 1;
         }
-        if(v < 1 || (unsigned int)(v) > maxBytes)
+        if(v < 1 || (uint64_t)(v) > maxBytes)
         {
             errorf("weird decoding: %v, %v => %v"_s, n, go_signed, v);
         }
@@ -1399,7 +1399,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         rec::SetInt(gocpp::recv(f), & mant);
         if(rec::Sign(gocpp::recv(f)) != 0)
         {
-            rec::SetMantExp(gocpp::recv(f), & f, int(rec::int64(gocpp::recv(r))));
+            rec::SetMantExp(gocpp::recv(f), & f, int64_t(rec::int64(gocpp::recv(r))));
         }
         return constant::Make(& f);
     }
@@ -1436,7 +1436,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         {
             return token::NoPos;
         }
-        return rec::pos(gocpp::recv(r->p->fake), r->prevFile, int(r->prevLine), int(r->prevColumn));
+        return rec::pos(gocpp::recv(r->p->fake), r->prevFile, int64_t(r->prevLine), int64_t(r->prevColumn));
     }
 
     void rec::posv0(importReader* r)
@@ -1481,7 +1481,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return token::NoPos;
         }
         auto tf = rec::fileAt(gocpp::recv(r->p), file - 1);
-        return rec::Pos(gocpp::recv(tf), int(rec::uint64(gocpp::recv(r))));
+        return rec::Pos(gocpp::recv(tf), int64_t(rec::uint64(gocpp::recv(r))));
     }
 
     types::Type rec::typ(importReader* r)
@@ -1568,7 +1568,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                     }
                     case 5:
                     {
-                        auto dir = chanDir(int(rec::uint64(gocpp::recv(r))));
+                        auto dir = chanDir(int64_t(rec::uint64(gocpp::recv(r))));
                         return types::NewChan(dir, rec::typ(gocpp::recv(r)));
                         break;
                     }
@@ -1837,17 +1837,17 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         return x;
     }
 
-    int rec::Len(byPath a)
+    int64_t rec::Len(byPath a)
     {
         return len(a);
     }
 
-    void rec::Swap(byPath a, int i, int j)
+    void rec::Swap(byPath a, int64_t i, int64_t j)
     {
         std::tie(a[i], a[j]) = std::tuple{a[j], a[i]};
     }
 
-    bool rec::Less(byPath a, int i, int j)
+    bool rec::Less(byPath a, int64_t i, int64_t j)
     {
         return rec::Path(gocpp::recv(a[i])) < rec::Path(gocpp::recv(a[j]));
     }

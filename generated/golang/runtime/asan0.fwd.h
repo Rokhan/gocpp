@@ -6,6 +6,6 @@
 
 namespace golang::runtime
 {
-    const bool asanenabled = false;
-    const long asanenabledBit = 0;
+    inline constexpr bool asanenabled = false;
+    inline constexpr long asanenabledBit = 0;
 }

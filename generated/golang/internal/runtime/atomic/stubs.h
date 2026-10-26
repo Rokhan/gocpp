@@ -20,7 +20,7 @@ namespace golang::internal::runtime::atomic
     void Storeint64(int64_t* ptr, int64_t go_new);
     void Storeuintptr(uintptr_t* ptr, uintptr_t go_new);
     uintptr_t Loaduintptr(uintptr_t* ptr);
-    unsigned int Loaduint(unsigned int* ptr);
+    uint64_t Loaduint(uint64_t* ptr);
     int32_t Loadint32(int32_t* ptr);
     int64_t Loadint64(int64_t* ptr);
     int32_t Xaddint32(int32_t* ptr, int32_t delta);

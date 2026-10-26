@@ -85,7 +85,7 @@ namespace golang::cmp
     // For floating-point types, a NaN is considered less than any non-NaN,
     // a NaN is considered equal to a NaN, and -0.0 is equal to 0.0.
     template<typename T>
-    int Compare(T x, T y)
+    int64_t Compare(T x, T y)
     {
         auto xNaN = isNaN(x);
         auto yNaN = isNaN(y);

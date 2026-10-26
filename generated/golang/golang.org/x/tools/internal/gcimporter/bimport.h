@@ -25,7 +25,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     {
         return errorf(format, gocpp::ToSlice<go_any>(value, args...));
     }
-    extern gocpp::slice<int> fakeLines;
+    extern gocpp::slice<int64_t> fakeLines;
 }
 #include "golang/go/token/position.fwd.h"
 #include "golang/go/types/chan.fwd.h"
@@ -62,7 +62,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     struct fileInfo
     {
         token::File* file{};
-        int lastline{};
+        int64_t lastline{};
 
         using isGoStruct = void;
 
@@ -77,7 +77,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     std::ostream& operator<<(std::ostream& os, const struct fileInfo& value);
     extern sync::Once fakeLinesOnce;
-    types::ChanDir chanDir(int d);
+    types::ChanDir chanDir(int64_t d);
 }
 
 #include "golang/go/token/position.h"
@@ -87,7 +87,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     namespace rec
     {
-        token::Pos pos(fakeFileSet* s, gocpp::string file, int line, int column);
+        token::Pos pos(fakeFileSet* s, gocpp::string file, int64_t line, int64_t column);
         void setLines(fakeFileSet* s);
     }
 }

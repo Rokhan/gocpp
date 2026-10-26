@@ -8,13 +8,14 @@ namespace golang::go::ast
 {
     struct Scope;
     struct Object;
-    using ObjKind = int;
+    struct GoTag_ObjKind;
+    using ObjKind = gocpp::defined<int64_t, GoTag_ObjKind>;
     // The list of possible [Object] kinds.
-    const ObjKind Bad = 0;
-    const ObjKind Pkg = 1;
-    const ObjKind Con = 2;
-    const ObjKind Typ = 3;
-    const ObjKind Var = 4;
-    const ObjKind Fun = 5;
-    const ObjKind Lbl = 6;
+    inline constexpr ObjKind Bad = 0;
+    inline constexpr ObjKind Pkg = 1;
+    inline constexpr ObjKind Con = 2;
+    inline constexpr ObjKind Typ = 3;
+    inline constexpr ObjKind Var = 4;
+    inline constexpr ObjKind Fun = 5;
+    inline constexpr ObjKind Lbl = 6;
 }

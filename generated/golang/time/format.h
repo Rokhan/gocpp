@@ -13,25 +13,25 @@
 namespace golang::time
 {
     // std0x records the std values for "01", "02", ..., "06".
-    extern gocpp::array<int, 6> std0x;
+    extern gocpp::array<int64_t, 6> std0x;
     bool startsWithLowerCase(gocpp::string str);
-    std::tuple<gocpp::string, int, gocpp::string> nextStdChunk(gocpp::string layout);
+    std::tuple<gocpp::string, int64_t, gocpp::string> nextStdChunk(gocpp::string layout);
     extern gocpp::slice<gocpp::string> longDayNames;
     extern gocpp::slice<gocpp::string> shortDayNames;
     extern gocpp::slice<gocpp::string> shortMonthNames;
     extern gocpp::slice<gocpp::string> longMonthNames;
     bool match(gocpp::string s1, gocpp::string s2);
-    std::tuple<int, gocpp::string, gocpp::error> lookup(gocpp::slice<gocpp::string> tab, gocpp::string val);
-    gocpp::slice<unsigned char> appendInt(gocpp::slice<unsigned char> b, int x, int width);
+    std::tuple<int64_t, gocpp::string, gocpp::error> lookup(gocpp::slice<gocpp::string> tab, gocpp::string val);
+    gocpp::slice<unsigned char> appendInt(gocpp::slice<unsigned char> b, int64_t x, int64_t width);
     // Never printed, just needs to be non-nil for return by atoi.
     extern gocpp::error errAtoi;
 
     template<typename bytes>
-    std::tuple<int, gocpp::error> atoi(bytes s);
-    int stdFracSecond(int code, int n, int c);
-    int digitsLen(int std);
-    unsigned char separator(int std);
-    gocpp::slice<unsigned char> appendNano(gocpp::slice<unsigned char> b, int nanosec, int std);
+    std::tuple<int64_t, gocpp::error> atoi(bytes s);
+    int64_t stdFracSecond(int64_t code, int64_t n, int64_t c);
+    int64_t digitsLen(int64_t std);
+    unsigned char separator(int64_t std);
+    gocpp::slice<unsigned char> appendNano(gocpp::slice<unsigned char> b, int64_t nanosec, int64_t std);
     extern gocpp::error errBad;
     struct ParseError
     {
@@ -56,18 +56,18 @@ namespace golang::time
     gocpp::string quote(gocpp::string s);
 
     template<typename bytes>
-    bool isDigit(bytes s, int i);
-    std::tuple<int, gocpp::string, gocpp::error> getnum(gocpp::string s, bool fixed);
-    std::tuple<int, gocpp::string, gocpp::error> getnum3(gocpp::string s, bool fixed);
+    bool isDigit(bytes s, int64_t i);
+    std::tuple<int64_t, gocpp::string, gocpp::error> getnum(gocpp::string s, bool fixed);
+    std::tuple<int64_t, gocpp::string, gocpp::error> getnum3(gocpp::string s, bool fixed);
     gocpp::string cutspace(gocpp::string s);
     std::tuple<gocpp::string, gocpp::error> skip(gocpp::string value, gocpp::string prefix);
-    std::tuple<int, bool> parseTimeZone(gocpp::string value);
-    int parseGMT(gocpp::string value);
-    int parseSignedOffset(gocpp::string value);
+    std::tuple<int64_t, bool> parseTimeZone(gocpp::string value);
+    int64_t parseGMT(gocpp::string value);
+    int64_t parseSignedOffset(gocpp::string value);
     bool commaOrPeriod(unsigned char b);
 
     template<typename bytes>
-    std::tuple<int, gocpp::string, gocpp::error> parseNanoseconds(bytes value, int nbytes);
+    std::tuple<int64_t, gocpp::string, gocpp::error> parseNanoseconds(bytes value, int64_t nbytes);
     extern gocpp::error errLeadingInt;
 
     template<typename bytes>

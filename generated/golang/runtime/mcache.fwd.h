@@ -8,6 +8,7 @@ namespace golang::runtime
 {
     struct mcache;
     struct gclink;
-    using gclinkptr = uintptr_t;
+    struct GoTag_gclinkptr;
+    using gclinkptr = gocpp::defined<uintptr_t, GoTag_gclinkptr>;
     struct stackfreelist;
 }

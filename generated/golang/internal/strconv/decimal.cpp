@@ -71,7 +71,7 @@ namespace golang::internal::strconv
         }
 
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
-        auto w = 0;
+        int64_t w = 0;
         //Go switch emulation
         {
             int conditionId = -1;
@@ -112,7 +112,7 @@ namespace golang::internal::strconv
         return gocpp::string(buf.make_slice(0, w));
     }
 
-    int digitZero(gocpp::slice<unsigned char> dst)
+    int64_t digitZero(gocpp::slice<unsigned char> dst)
     {
         for(auto [i, gocpp_ignored] : dst)
         {
@@ -142,7 +142,7 @@ namespace golang::internal::strconv
         gocpp::array<unsigned char, 24> buf = {};
 
         // Write reversed decimal in buf.
-        auto n = 0;
+        int64_t n = 0;
         for(; v > 0; )
         {
             auto v1 = v / 10;
@@ -164,15 +164,15 @@ namespace golang::internal::strconv
     }
 
     // Binary shift right (/ 2) by k bits.  k <= maxShift to avoid overflow.
-    void rightShift(decimal* a, unsigned int k)
+    void rightShift(decimal* a, uint64_t k)
     {
         // read pointer
-        auto r = 0;
+        int64_t r = 0;
         // write pointer
-        auto w = 0;
+        int64_t w = 0;
 
         // Pick up enough leading digits to cover first shift.
-        unsigned int n = {};
+        uint64_t n = {};
         for(; (n >> k) == 0; r++)
         {
             if(r >= a->nd)
@@ -190,17 +190,17 @@ namespace golang::internal::strconv
                 }
                 break;
             }
-            auto c = (unsigned int)(a->d[r]);
+            auto c = (uint64_t)(a->d[r]);
             n = n * 10 + c - '0';
         }
         a->dp -= r - 1;
 
-        unsigned int mask = (1 << k) - 1;
+        uint64_t mask = (1 << k) - 1;
 
         // Pick up a digit, put down a digit.
         for(; r < a->nd; r++)
         {
-            auto c = (unsigned int)(a->d[r]);
+            auto c = (uint64_t)(a->d[r]);
             auto dig = n >> k;
             n &= mask;
             a->d[w] = (unsigned char)(dig + '0');
@@ -339,7 +339,7 @@ namespace golang::internal::strconv
     // Is the leading prefix of b lexicographically less than s?
     bool prefixIsLessThan(gocpp::slice<unsigned char> b, gocpp::string s)
     {
-        for(auto i = 0; i < len(s); i++)
+        for(int64_t i = 0; i < len(s); i++)
         {
             if(i >= len(b))
             {
@@ -354,7 +354,7 @@ namespace golang::internal::strconv
     }
 
     // Binary shift left (* 2) by k bits.  k <= maxShift to avoid overflow.
-    void leftShift(decimal* a, unsigned int k)
+    void leftShift(decimal* a, uint64_t k)
     {
         auto delta = leftcheats[k].delta;
         if(prefixIsLessThan(a->d.make_slice(0, a->nd), leftcheats[k].cutoff))
@@ -368,10 +368,10 @@ namespace golang::internal::strconv
         auto w = a->nd + delta;
 
         // Pick up a digit, put down a digit.
-        unsigned int n = {};
+        uint64_t n = {};
         for(r--; r >= 0; r--)
         {
-            n += ((unsigned int)(a->d[r]) - '0') << k;
+            n += ((uint64_t)(a->d[r]) - '0') << k;
             auto quo = n / 10;
             auto rem = n - 10 * quo;
             w--;
@@ -415,7 +415,7 @@ namespace golang::internal::strconv
     }
 
     // Binary shift left (k > 0) or right (k < 0).
-    void rec::Shift(decimal* a, int k)
+    void rec::Shift(decimal* a, int64_t k)
     {
         //Go switch emulation
         {
@@ -434,7 +434,7 @@ namespace golang::internal::strconv
                         leftShift(a, maxShift);
                         k -= maxShift;
                     }
-                    leftShift(a, (unsigned int)(k));
+                    leftShift(a, (uint64_t)(k));
                     break;
                 case 2:
                     for(; k < - maxShift; )
@@ -442,14 +442,14 @@ namespace golang::internal::strconv
                         rightShift(a, maxShift);
                         k += maxShift;
                     }
-                    rightShift(a, (unsigned int)(- k));
+                    rightShift(a, (uint64_t)(- k));
                     break;
             }
         }
     }
 
     // If we chop a at nd digits, should we round up?
-    bool shouldRoundUp(decimal* a, int nd)
+    bool shouldRoundUp(decimal* a, int64_t nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -473,7 +473,7 @@ namespace golang::internal::strconv
     // If nd is zero, it means we're rounding
     // just to the left of the digits, as in
     // 0.09 -> 0.1.
-    void rec::Round(decimal* a, int nd)
+    void rec::Round(decimal* a, int64_t nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -490,7 +490,7 @@ namespace golang::internal::strconv
     }
 
     // Round a down to nd digits (or fewer).
-    void rec::RoundDown(decimal* a, int nd)
+    void rec::RoundDown(decimal* a, int64_t nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -501,7 +501,7 @@ namespace golang::internal::strconv
     }
 
     // Round a up to nd digits (or fewer).
-    void rec::RoundUp(decimal* a, int nd)
+    void rec::RoundUp(decimal* a, int64_t nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -536,8 +536,8 @@ namespace golang::internal::strconv
         {
             return 0xFFFFFFFFFFFFFFFF;
         }
-        int i = {};
-        auto n = uint64_t(0);
+        int64_t i = {};
+        uint64_t n = uint64_t(0);
         for(i = 0; i < a->dp && i < a->nd; i++)
         {
             n = n * 10 + uint64_t(a->d[i] - '0');

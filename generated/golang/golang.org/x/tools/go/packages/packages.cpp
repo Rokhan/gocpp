@@ -321,15 +321,15 @@ namespace golang::golang_org::x::tools::go::packages
 
     // splitIntoChunks chunks the slice so that the total number of characters
     // in a chunk is no longer than argMax.
-    std::tuple<gocpp::slice<gocpp::slice<gocpp::string>>, gocpp::error> splitIntoChunks(gocpp::slice<gocpp::string> patterns, int argMax)
+    std::tuple<gocpp::slice<gocpp::slice<gocpp::string>>, gocpp::error> splitIntoChunks(gocpp::slice<gocpp::string> patterns, int64_t argMax)
     {
         if(argMax <= 0)
         {
             return {nullptr, errors::New("failed to split patterns into chunks, negative safe argMax value"_s)};
         }
         gocpp::slice<gocpp::slice<gocpp::string>> chunks = {};
-        auto charsInChunk = 0;
-        auto nextChunkStart = 0;
+        int64_t charsInChunk = 0;
+        int64_t nextChunkStart = 0;
         for(auto [i, v] : patterns)
         {
             auto vChars = len(v);
@@ -614,8 +614,8 @@ namespace golang::golang_org::x::tools::go::packages
         {
             return gocpp::getValue<Package*>(p)->depsErrors;
         };
-        packagesinternal::TypecheckCgo = int(typecheckCgo);
-        packagesinternal::DepsErrors = int(needInternalDepsErrors);
+        packagesinternal::TypecheckCgo = int64_t(typecheckCgo);
+        packagesinternal::DepsErrors = int64_t(needInternalDepsErrors);
     }
 
     // An Error describes a problem with a package's metadata, syntax, or types.
@@ -1070,7 +1070,7 @@ namespace golang::golang_org::x::tools::go::packages
     std::tuple<gocpp::slice<Package*>, gocpp::error> rec::refine(loader* ld, DriverResponse* response)
     {
         auto roots = response->Roots;
-        auto rootMap = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>(), len(roots));
+        auto rootMap = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int64_t>>(), len(roots));
         for(auto [i, root] : roots)
         {
             rootMap.ref(root) = i;
@@ -1080,7 +1080,7 @@ namespace golang::golang_org::x::tools::go::packages
         auto initial = gocpp::make(gocpp::Tag<gocpp::slice<loaderPackage*>>(), len(roots));
         for(auto [gocpp_ignored, pkg] : response->Packages)
         {
-            auto rootIndex = - 1;
+            int64_t rootIndex = - 1;
             if(auto [i, found] = rootMap.lookup(pkg->ID); found)
             {
                 rootIndex = i;
@@ -1536,7 +1536,7 @@ namespace golang::golang_org::x::tools::go::packages
             // - golang.org/issue/50825 (gopls legacy version support)
             // - golang.org/issue/55883 (go/packages confusing error)
             // Should we assert a hard minimum of (currently) go1.16 here?
-            int runtimeVersion = {};
+            int64_t runtimeVersion = {};
             if(auto [gocpp_id_3, err] = fmt::Sscanf(runtime::Version(), "go1.%d"_s, & runtimeVersion); err == nullptr && runtimeVersion < lpkg->goVersion)
             {
                 defer.push_back([=]{ [=]() mutable -> void
@@ -1862,7 +1862,7 @@ namespace golang::golang_org::x::tools::go::packages
         rec::Wait(gocpp::recv(g));
 
         // Eliminate nils, preserving order.
-        int o = {};
+        int64_t o = {};
         for(auto [gocpp_ignored, f] : parsed)
         {
             if(f != nullptr)

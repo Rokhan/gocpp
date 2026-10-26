@@ -38,10 +38,10 @@ namespace golang::internal::runtime::maps
         uint16_t used = {};
         uint16_t deleted = {};
         uint16_t empty = {};
-        for(auto i = uint64_t(0); i <= t->groups.lengthMask; i++)
+        for(uint64_t i = uint64_t(0); i <= t->groups.lengthMask; i++)
         {
             auto g = rec::group(gocpp::recv(t->groups), typ, i);
-            for(auto j = uintptr_t(0); j < abi::MapGroupSlots; j++)
+            for(uintptr_t j = uintptr_t(0); j < abi::MapGroupSlots; j++)
             {
                 auto c = rec::get(gocpp::recv(rec::ctrls(gocpp::recv(g))), j);
                 //Go switch emulation
@@ -120,13 +120,13 @@ namespace golang::internal::runtime::maps
     {
         print("table{\n\tindex: "_s, t->index, "\n\tlocalDepth: "_s, t->localDepth, "\n\tcapacity: "_s, t->capacity, "\n\tused: "_s, t->used, "\n\tgrowthLeft: "_s, t->growthLeft, "\n\tgroups:\n"_s);
 
-        for(auto i = uint64_t(0); i <= t->groups.lengthMask; i++)
+        for(uint64_t i = uint64_t(0); i <= t->groups.lengthMask; i++)
         {
             print("\t\tgroup "_s, i, "\n"_s);
 
             auto g = rec::group(gocpp::recv(t->groups), typ, i);
             auto ctrls = rec::ctrls(gocpp::recv(g));
-            for(auto j = uintptr_t(0); j < abi::MapGroupSlots; j++)
+            for(uintptr_t j = uintptr_t(0); j < abi::MapGroupSlots; j++)
             {
                 print("\t\t\tslot "_s, j, "\n"_s);
 

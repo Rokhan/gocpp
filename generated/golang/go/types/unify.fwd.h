@@ -8,14 +8,14 @@ namespace golang::go::types
 {
     // Upper limit for recursion depth. Used to catch infinite recursions
     // due to implementation issues (e.g., see issues go.dev/issue/48619, go.dev/issue/48656).
-    const long unificationDepthLimit = 50;
+    inline constexpr long unificationDepthLimit = 50;
     // Whether to panic when unificationDepthLimit is reached.
     // If disabled, a recursion depth overflow results in a (quiet)
     // unification failure.
-    const bool panicAtUnificationDepthLimit = true;
+    inline constexpr bool panicAtUnificationDepthLimit = true;
     // If enableCoreTypeUnification is set, unification will consider
     // the core types, if any, of non-local (unbound) type parameters.
-    const bool enableCoreTypeUnification = true;
+    inline constexpr bool enableCoreTypeUnification = true;
     // If traceInference is set, unification will print a trace of its operation.
     // Interpretation of trace:
     //   x ≡ y    attempt to unify types x and y
@@ -23,21 +23,22 @@ namespace golang::go::types
     //   p ⇄ q    type parameters p and q match (p is inferred to be q and vice versa)
     //   x ≢ y    types x and y cannot be unified
     //   [p, q, ...] ➞ [x, y, ...]    mapping from type parameters to types
-    const bool traceInference = false;
+    inline constexpr bool traceInference = false;
     struct unifier;
-    using unifyMode = unsigned int;
+    struct GoTag_unifyMode;
+    using unifyMode = gocpp::defined<uint64_t, GoTag_unifyMode>;
     struct GoTag_typeParamsById;
     // If assign is set, we are unifying types involved in an assignment:
     // they may match inexactly at the top, but element types must match
     // exactly.
-    const unifyMode assign = 1 << 0;
+    inline constexpr unifyMode assign = 1 << 0;
     // If exact is set, types unify if they are identical (or can be
     // made identical with suitable arguments for type parameters).
     // Otherwise, a named type and a type literal unify if their
     // underlying types unify, channel directions are ignored, and
     // if there is an interface, the other type must implement the
     // interface.
-    const unifyMode exact = 1 << 1;
+    inline constexpr unifyMode exact = 1 << 1;
 }
 #include "golang/go/types/typeparam.fwd.h"
 

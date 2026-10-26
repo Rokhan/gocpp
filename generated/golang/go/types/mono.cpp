@@ -171,7 +171,7 @@ namespace golang::go::types
         // iterations, we run until we either reach a fixed point or we've
         // found a path of length |V|. This allows us to terminate earlier
         // when there are no cycles, which should be the common case.
-        auto again = true;
+        bool again = true;
         for(; again; )
         {
             again = false;
@@ -203,9 +203,9 @@ namespace golang::go::types
         }
     }
 
-    void rec::reportInstanceLoop(Checker* check, int v)
+    void rec::reportInstanceLoop(Checker* check, int64_t v)
     {
-        gocpp::slice<int> stack = {};
+        gocpp::slice<int64_t> stack = {};
         auto seen = gocpp::make(gocpp::Tag<gocpp::slice<bool>>(), len(check->mono.vertices));
 
         // We have a path that contains a cycle and ends at v, but v may
@@ -312,9 +312,9 @@ namespace golang::go::types
         }
 
         // flow adds an edge from vertex src representing that typ flows to tpar.
-        auto flow = [=](int src, golang::go::types::Type typ) mutable -> void
+        auto flow = [=](int64_t src, golang::go::types::Type typ) mutable -> void
         {
-            auto weight = 1;
+            int64_t weight = 1;
             if(typ == targ)
             {
                 weight = 0;
@@ -368,7 +368,7 @@ namespace golang::go::types
                             flow(src, typ);
                         }
                         auto targs = rec::TypeArgs(gocpp::recv(typ));
-                        for(auto i = 0; i < rec::Len(gocpp::recv(targs)); i++)
+                        for(int64_t i = 0; i < rec::Len(gocpp::recv(targs)); i++)
                         {
                             go_do(rec::At(gocpp::recv(targs), i));
                         }
@@ -416,7 +416,7 @@ namespace golang::go::types
                     case 8:
                     {
                         types::Interface* typ = gocpp::any_cast<types::Interface*>(Unalias(typ));
-                        for(auto i = 0; i < rec::NumMethods(gocpp::recv(typ)); i++)
+                        for(int64_t i = 0; i < rec::NumMethods(gocpp::recv(typ)); i++)
                         {
                             go_do(rec::Type(gocpp::recv(rec::Method(gocpp::recv(typ), i))));
                         }
@@ -427,7 +427,7 @@ namespace golang::go::types
                         types::Signature* typ = gocpp::any_cast<types::Signature*>(Unalias(typ));
                         auto tuple = [=](Tuple* tup) mutable -> void
                         {
-                            for(auto i = 0; i < rec::Len(gocpp::recv(tup)); i++)
+                            for(int64_t i = 0; i < rec::Len(gocpp::recv(tup)); i++)
                             {
                                 go_do(rec::Type(gocpp::recv(rec::At(gocpp::recv(tup), i))));
                             }
@@ -439,7 +439,7 @@ namespace golang::go::types
                     case 10:
                     {
                         types::Struct* typ = gocpp::any_cast<types::Struct*>(Unalias(typ));
-                        for(auto i = 0; i < rec::NumFields(gocpp::recv(typ)); i++)
+                        for(int64_t i = 0; i < rec::NumFields(gocpp::recv(typ)); i++)
                         {
                             go_do(rec::Type(gocpp::recv(rec::Field(gocpp::recv(typ), i))));
                         }
@@ -453,7 +453,7 @@ namespace golang::go::types
 
     // localNamedVertex returns the index of the vertex representing
     // named, or -1 if named doesn't need representation.
-    int rec::localNamedVertex(monoGraph* w, Package* pkg, Named* named)
+    int64_t rec::localNamedVertex(monoGraph* w, Package* pkg, Named* named)
     {
         auto obj = rec::Obj(gocpp::recv(named));
         if(rec::Pkg(gocpp::recv(obj)) != pkg)
@@ -474,7 +474,7 @@ namespace golang::go::types
             return idx;
         }
 
-        auto idx = - 1;
+        int64_t idx = - 1;
 
         // Walk the type definition's scope to find any ambient type
         // parameters that it's implicitly parameterized by.
@@ -505,14 +505,14 @@ namespace golang::go::types
 
         if(w->nameIdx == nullptr)
         {
-            w->nameIdx = gocpp::make(gocpp::Tag<gocpp::map<TypeName*, int>>());
+            w->nameIdx = gocpp::make(gocpp::Tag<gocpp::map<TypeName*, int64_t>>());
         }
         w->nameIdx.ref(obj) = idx;
         return idx;
     }
 
     // typeParamVertex returns the index of the vertex representing tpar.
-    int rec::typeParamVertex(monoGraph* w, TypeParam* tpar)
+    int64_t rec::typeParamVertex(monoGraph* w, TypeParam* tpar)
     {
         if(auto [x, ok] = w->canon.lookup(tpar); ok)
         {
@@ -528,7 +528,7 @@ namespace golang::go::types
 
         if(w->nameIdx == nullptr)
         {
-            w->nameIdx = gocpp::make(gocpp::Tag<gocpp::map<TypeName*, int>>());
+            w->nameIdx = gocpp::make(gocpp::Tag<gocpp::map<TypeName*, int64_t>>());
         }
 
         auto idx = len(w->vertices);
@@ -539,7 +539,7 @@ namespace golang::go::types
         return idx;
     }
 
-    void rec::addEdge(monoGraph* w, int dst, int src, int weight, token::Pos pos, golang::go::types::Type typ)
+    void rec::addEdge(monoGraph* w, int64_t dst, int64_t src, int64_t weight, token::Pos pos, golang::go::types::Type typ)
     {
         // TODO(mdempsky): Deduplicate redundant edges?
         w->edges = append(w->edges, gocpp::Init<monoEdge>([=](auto& x) {

@@ -430,11 +430,11 @@ namespace golang::runtime
     // Returns the root of that tree, and the buf+idx of the nth object after x.obj[idx].
     // (The first object that was not included in the binary search tree.)
     // If n == 0, returns nil, x.
-    std::tuple<stackObject*, stackObjectBuf*, int> binarySearchTree(stackObjectBuf* x, int idx, int n)
+    std::tuple<stackObject*, stackObjectBuf*, int64_t> binarySearchTree(stackObjectBuf* x, int64_t idx, int64_t n)
     {
         stackObject* root;
         stackObjectBuf* restBuf;
-        int restIdx;
+        int64_t restIdx;
         if(n == 0)
         {
             return {nullptr, x, idx};

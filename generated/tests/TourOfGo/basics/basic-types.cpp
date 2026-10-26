@@ -25,11 +25,132 @@ namespace golang::main
     bool ToBe = false;
     uint64_t MaxInt = (1 << 64) - 1;
     gocpp::complex128 z = std::sqrt(- 5 + gocpp::complex128(0, 12));
+    // Same method name on two types with the same underlying type:
+    // they must not collide once Meters and Feet are distinct C++ types.
+    gocpp::string rec::Describe(Meters m)
+    {
+        return "meters"_s;
+    }
+
+    gocpp::string rec::Describe(Feet f)
+    {
+        return "feet"_s;
+    }
+
+    bool rec::IsHot(Kind k)
+    {
+        return k == Hot;
+    }
+
+    gocpp::string classify(go_any v)
+    {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_0 = gocpp::type_info(v);
+            int conditionId = -1;
+            if(gocpp_id_0 == typeid(Meters)) { conditionId = 0; }
+            else if(gocpp_id_0 == typeid(Feet)) { conditionId = 1; }
+            else if(gocpp_id_0 == typeid(int64_t)) { conditionId = 2; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    return "Meters"_s;
+                    break;
+                }
+                case 1:
+                {
+                    return "Feet"_s;
+                    break;
+                }
+                case 2:
+                {
+                    return "int"_s;
+                    break;
+                }
+                default:
+                {
+                    return "other"_s;
+                    break;
+                }
+            }
+        }
+    }
+
+    void testDistinctTypes()
+    {
+        Meters m = Meters(7);
+        // conversion between two defined types
+        auto f = Feet(m);
+        mocklib::Println(rec::Describe(gocpp::recv(m)), rec::Describe(gocpp::recv(f)), m, f);
+
+        mocklib::Println(classify(m), classify(f), classify(7), classify(7.5));
+    }
+
+    void testArithmetic()
+    {
+        Meters m = Meters(7);
+        mocklib::Println(m + 1, 2 * m, m / 2, m % 4, - m);
+
+        m += 3;
+        m <<= 1;
+        m |= 1;
+        m++;
+        mocklib::Println(m);
+
+        mocklib::Println(m > 20, m == 22, Meters(3) < m);
+    }
+
+    void testWraparound()
+    {
+        Level l = Level(250);
+        l += 10;
+        mocklib::Println(l);
+        // 4 - 5 wraps around to 255
+        mocklib::Println(l - 5);
+    }
+
+    void testFloat()
+    {
+        Celsius c = Celsius(100);
+        mocklib::Println(c / 4, c + Celsius(0.5), double(c) * 2);
+
+        Celsius half = 0.5;
+        mocklib::Println(half, half + Celsius(0.25));
+    }
+
+    void testIotaKinds()
+    {
+        mocklib::Println(Cold, Warm, Hot);
+        mocklib::Println(Hot > Warm, Kind(2) == Hot, rec::IsHot(gocpp::recv(Warm)), rec::IsHot(gocpp::recv(Hot)));
+
+        auto names = gocpp::array<gocpp::string, 3> {"cold"_s, "warm"_s, "hot"_s};
+        mocklib::Println(names[Warm], names[Hot]);
+
+        auto temps = gocpp::map<Kind, gocpp::string> {{ Cold, "brr"_s }, { Hot, "ouch"_s }};
+        mocklib::Println(temps.get(Hot), temps.get(Warm) == ""_s, len(temps));
+    }
+
+    // Needs the constant to be usable in a constant expression (constexpr).
+    void testConstLength()
+    {
+        gocpp::array<int64_t, Size> grid = {};
+        grid[Size - 1] = 5;
+        mocklib::Println(len(grid), grid);
+    }
+
     void main()
     {
         mocklib::Printf("Type: %T Value: %v\n"_s, ToBe, ToBe);
         mocklib::Printf("Type: %T Value: %v\n"_s, MaxInt, MaxInt);
         mocklib::Printf("Type: %T Value: %v\n"_s, z, z);
+
+        testDistinctTypes();
+        testArithmetic();
+        testWraparound();
+        testFloat();
+        testIotaKinds();
+        testConstLength();
     }
 
 }

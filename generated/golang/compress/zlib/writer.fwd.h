@@ -15,9 +15,9 @@ namespace golang::compress::zlib
     namespace flate = golang::compress::flate;
     // These constants are copied from the [flate] package, so that code that imports
     // [compress/zlib] does not also have to import [compress/flate].
-    const int NoCompression = flate::NoCompression;
-    const int BestSpeed = flate::BestSpeed;
-    const int BestCompression = flate::BestCompression;
-    const int DefaultCompression = flate::DefaultCompression;
-    const int HuffmanOnly = flate::HuffmanOnly;
+    inline constexpr int64_t NoCompression = flate::NoCompression;
+    inline constexpr int64_t BestSpeed = flate::BestSpeed;
+    inline constexpr int64_t BestCompression = flate::BestCompression;
+    inline constexpr int64_t DefaultCompression = flate::DefaultCompression;
+    inline constexpr int64_t HuffmanOnly = flate::HuffmanOnly;
 }

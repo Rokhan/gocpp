@@ -187,7 +187,7 @@ namespace golang::internal::syscall::windows
             }
         }
 
-        auto fileAttrs = uint32_t(FILE_ATTRIBUTE_NORMAL);
+        uint32_t fileAttrs = uint32_t(FILE_ATTRIBUTE_NORMAL);
         if(perm & syscall::S_IWRITE == 0)
         {
             fileAttrs = FILE_ATTRIBUTE_READONLY;

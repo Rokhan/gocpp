@@ -7,9 +7,10 @@
 namespace golang::go::types
 {
     struct Chan;
-    using ChanDir = int;
+    struct GoTag_ChanDir;
+    using ChanDir = gocpp::defined<int64_t, GoTag_ChanDir>;
     // The direction of a channel is indicated by one of these constants.
-    const ChanDir SendRecv = 0;
-    const ChanDir SendOnly = 1;
-    const ChanDir RecvOnly = 2;
+    inline constexpr ChanDir SendRecv = 0;
+    inline constexpr ChanDir SendOnly = 1;
+    inline constexpr ChanDir RecvOnly = 2;
 }

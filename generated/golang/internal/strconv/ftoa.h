@@ -12,13 +12,13 @@
 
 namespace golang::internal::strconv
 {
-    gocpp::string FormatFloat(double f, unsigned char fmt, int prec, int bitSize);
-    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double f, unsigned char fmt, int prec, int bitSize);
-    gocpp::slice<unsigned char> ftoa32(gocpp::slice<unsigned char> dst, double val, unsigned char fmt, int prec);
-    gocpp::slice<unsigned char> ftoa64(gocpp::slice<unsigned char> dst, double val, unsigned char fmt, int prec);
-    gocpp::slice<unsigned char> fmtEFG(gocpp::slice<unsigned char> dst, bool neg, gocpp::slice<unsigned char> s, int dp, int nd, int prec, unsigned char fmt, bool shortest);
-    gocpp::slice<unsigned char> fmtB(gocpp::slice<unsigned char> dst, bool neg, uint64_t mant, int exp);
-    gocpp::slice<unsigned char> fmtX(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, int mantBits);
+    gocpp::string FormatFloat(double f, unsigned char fmt, int64_t prec, int64_t bitSize);
+    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double f, unsigned char fmt, int64_t prec, int64_t bitSize);
+    gocpp::slice<unsigned char> ftoa32(gocpp::slice<unsigned char> dst, double val, unsigned char fmt, int64_t prec);
+    gocpp::slice<unsigned char> ftoa64(gocpp::slice<unsigned char> dst, double val, unsigned char fmt, int64_t prec);
+    gocpp::slice<unsigned char> fmtEFG(gocpp::slice<unsigned char> dst, bool neg, gocpp::slice<unsigned char> s, int64_t dp, int64_t nd, int64_t prec, unsigned char fmt, bool shortest);
+    gocpp::slice<unsigned char> fmtB(gocpp::slice<unsigned char> dst, bool neg, uint64_t mant, int64_t exp);
+    gocpp::slice<unsigned char> fmtX(gocpp::slice<unsigned char> dst, int64_t prec, unsigned char fmt, bool neg, uint64_t mant, int64_t exp, int64_t mantBits);
 
     namespace rec
     {

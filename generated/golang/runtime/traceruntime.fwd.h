@@ -9,33 +9,35 @@ namespace golang::runtime
     struct gTraceState;
     struct mTraceState;
     struct pTraceState;
-    using traceBlockReason = uint8_t;
-    using traceGoStopReason = uint8_t;
+    struct GoTag_traceBlockReason;
+    using traceBlockReason = gocpp::defined<uint8_t, GoTag_traceBlockReason>;
+    struct GoTag_traceGoStopReason;
+    using traceGoStopReason = gocpp::defined<uint8_t, GoTag_traceGoStopReason>;
     struct traceLocker;
     // debugTraceReentrancy checks if the trace is reentrant.
     //
     // This is optional because throwing in a function makes it instantly
     // not inlineable, and we want traceAcquire to be inlineable for
     // low overhead when the trace is disabled.
-    const bool debugTraceReentrancy = false;
-    const traceBlockReason traceBlockGeneric = 0;
-    const traceBlockReason traceBlockForever = 1;
-    const traceBlockReason traceBlockNet = 2;
-    const traceBlockReason traceBlockSelect = 3;
-    const traceBlockReason traceBlockCondWait = 4;
-    const traceBlockReason traceBlockSync = 5;
-    const traceBlockReason traceBlockChanSend = 6;
-    const traceBlockReason traceBlockChanRecv = 7;
-    const traceBlockReason traceBlockGCMarkAssist = 8;
-    const traceBlockReason traceBlockGCSweep = 9;
-    const traceBlockReason traceBlockSystemGoroutine = 10;
-    const traceBlockReason traceBlockPreempted = 11;
-    const traceBlockReason traceBlockDebugCall = 12;
-    const traceBlockReason traceBlockUntilGCEnds = 13;
-    const traceBlockReason traceBlockSleep = 14;
-    const traceBlockReason traceBlockGCWeakToStrongWait = 15;
-    const traceBlockReason traceBlockSynctest = 16;
-    const traceGoStopReason traceGoStopGeneric = 0;
-    const traceGoStopReason traceGoStopGoSched = 1;
-    const traceGoStopReason traceGoStopPreempted = 2;
+    inline constexpr bool debugTraceReentrancy = false;
+    inline constexpr traceBlockReason traceBlockGeneric = 0;
+    inline constexpr traceBlockReason traceBlockForever = 1;
+    inline constexpr traceBlockReason traceBlockNet = 2;
+    inline constexpr traceBlockReason traceBlockSelect = 3;
+    inline constexpr traceBlockReason traceBlockCondWait = 4;
+    inline constexpr traceBlockReason traceBlockSync = 5;
+    inline constexpr traceBlockReason traceBlockChanSend = 6;
+    inline constexpr traceBlockReason traceBlockChanRecv = 7;
+    inline constexpr traceBlockReason traceBlockGCMarkAssist = 8;
+    inline constexpr traceBlockReason traceBlockGCSweep = 9;
+    inline constexpr traceBlockReason traceBlockSystemGoroutine = 10;
+    inline constexpr traceBlockReason traceBlockPreempted = 11;
+    inline constexpr traceBlockReason traceBlockDebugCall = 12;
+    inline constexpr traceBlockReason traceBlockUntilGCEnds = 13;
+    inline constexpr traceBlockReason traceBlockSleep = 14;
+    inline constexpr traceBlockReason traceBlockGCWeakToStrongWait = 15;
+    inline constexpr traceBlockReason traceBlockSynctest = 16;
+    inline constexpr traceGoStopReason traceGoStopGeneric = 0;
+    inline constexpr traceGoStopReason traceGoStopGoSched = 1;
+    inline constexpr traceGoStopReason traceGoStopPreempted = 2;
 }

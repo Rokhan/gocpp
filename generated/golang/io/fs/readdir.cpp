@@ -130,7 +130,7 @@ namespace golang::io::fs
 
             gocpp::slice<fs::DirEntry> list;
             std::tie(list, err) = rec::ReadDir(gocpp::recv(dir), - 1);
-            slices::SortFunc(list, [=](DirEntry a, DirEntry b) mutable -> int
+            slices::SortFunc(list, [=](DirEntry a, DirEntry b) mutable -> int64_t
             {
                 return bytealg::CompareString(rec::Name(gocpp::recv(a)), rec::Name(gocpp::recv(b)));
             });

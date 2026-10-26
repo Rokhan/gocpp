@@ -152,7 +152,7 @@ namespace golang::math::big
         r = xn;
         if(len(x) == 1)
         {
-            auto [qq, rr] = bits::Div((unsigned int)(r), (unsigned int)(x[0]), (unsigned int)(y));
+            auto [qq, rr] = bits::Div((uint64_t)(r), (uint64_t)(x[0]), (uint64_t)(y));
             z[0] = Word(qq);
             return Word(rr);
         }
@@ -254,13 +254,13 @@ namespace golang::math::big
 
             // Invent a leading 0 for u, for the first iteration.
             // Invariant: ujn == u[j+n] in each iteration.
-            auto ujn = Word(0);
+            big::Word ujn = Word(0);
 
             // Compute each digit of quotient.
             for(auto j = m; j >= 0; j--)
             {
                 // Compute the 2-by-1 guess q̂.
-                auto qhat = Word(_M);
+                big::Word qhat = Word(_M);
 
                 // ujn ≤ vn1, or else q̂ would be more than one digit.
                 // For ujn == vn1, we set q̂ to the max digit M above.
@@ -364,7 +364,7 @@ namespace golang::math::big
     // z must be large enough to hold ⌊u/v⌋.
     // It uses temps[depth] (allocating if needed) as a temporary live across
     // the recursive call. It also uses tmp, but not live across the recursion.
-    void rec::divRecursiveStep(golang::math::big::nat z, stack* stk, golang::math::big::nat u, golang::math::big::nat v, int depth)
+    void rec::divRecursiveStep(golang::math::big::nat z, stack* stk, golang::math::big::nat u, golang::math::big::nat v, int64_t depth)
     {
         gocpp::Defer defer;
         try
@@ -449,7 +449,7 @@ namespace golang::math::big
                 auto qhatv = rec::nat(gocpp::recv(stk), 3 * n);
                 clear(qhatv);
                 qhatv = rec::mul(gocpp::recv(qhatv), stk, qhat, v.make_slice(0, s));
-                for(auto i = 0; i < 2; i++)
+                for(int64_t i = 0; i < 2; i++)
                 {
                     auto e = rec::cmp(gocpp::recv(qhatv), rec::norm(gocpp::recv(uu)));
                     if(e <= 0)
@@ -490,7 +490,7 @@ namespace golang::math::big
             clear(qhatv);
             qhatv = rec::mul(gocpp::recv(qhatv), stk, qhat, v.make_slice(0, s));
             // Set the correct remainder as before.
-            for(auto i = 0; i < 2; i++)
+            for(int64_t i = 0; i < 2; i++)
             {
                 if(auto e = rec::cmp(gocpp::recv(qhatv), rec::norm(gocpp::recv(u))); e > 0)
                 {

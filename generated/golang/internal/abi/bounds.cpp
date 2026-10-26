@@ -21,9 +21,9 @@ namespace golang::internal::abi
     // kinds of bounds check failures.
     // Encode bounds failure information into an integer for PCDATA_PanicBounds.
     // Register numbers must be in 0-15. Constants must be in 0-31.
-    int BoundsEncode(BoundsErrorCode code, bool go_signed, bool xIsReg, bool yIsReg, int xVal, int yVal)
+    int64_t BoundsEncode(BoundsErrorCode code, bool go_signed, bool xIsReg, bool yIsReg, int64_t xVal, int64_t yVal)
     {
-        auto c = int(0);
+        int64_t c = int64_t(0);
         if(xIsReg)
         {
             c |= 1 << 0;
@@ -62,19 +62,19 @@ namespace golang::internal::abi
             }
             c |= yVal << 7;
         }
-        return c * int(numBoundsCodes) + int(code);
+        return c * int64_t(numBoundsCodes) + int64_t(code);
     }
 
-    std::tuple<BoundsErrorCode, bool, bool, bool, int, int> BoundsDecode(int v)
+    std::tuple<BoundsErrorCode, bool, bool, bool, int64_t, int64_t> BoundsDecode(int64_t v)
     {
         BoundsErrorCode code;
         bool go_signed;
         bool xIsReg;
         bool yIsReg;
-        int xVal;
-        int yVal;
-        code = BoundsErrorCode(v % int(numBoundsCodes));
-        auto c = v / int(numBoundsCodes);
+        int64_t xVal;
+        int64_t yVal;
+        code = BoundsErrorCode(v % int64_t(numBoundsCodes));
+        auto c = v / int64_t(numBoundsCodes);
         xIsReg = c & 1 != 0;
         c >>= 1;
         yIsReg = c & 1 != 0;

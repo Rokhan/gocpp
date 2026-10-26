@@ -55,7 +55,7 @@ namespace golang::strings
 
     // splitSeq is SplitSeq or SplitAfterSeq, configured by how many
     // bytes of sep to include in the results (none or all).
-    iter::Seq<gocpp::string> splitSeq(gocpp::string s, gocpp::string sep, int sepSave)
+    iter::Seq<gocpp::string> splitSeq(gocpp::string s, gocpp::string sep, int64_t sepSave)
     {
         return [=](std::function<bool (gocpp::string _1)> yield) mutable -> void
         {
@@ -116,10 +116,10 @@ namespace golang::strings
     {
         return [=](std::function<bool (gocpp::string _1)> yield) mutable -> void
         {
-            auto start = - 1;
-            for(auto i = 0; i < len(s); )
+            int64_t start = - 1;
+            for(int64_t i = 0; i < len(s); )
             {
-                auto size = 1;
+                int64_t size = 1;
                 auto r = gocpp::rune(s[i]);
                 auto isSpace = asciiSpace[s[i]] != 0;
                 if(r >= utf8::RuneSelf)
@@ -160,8 +160,8 @@ namespace golang::strings
     {
         return [=](std::function<bool (gocpp::string _1)> yield) mutable -> void
         {
-            auto start = - 1;
-            for(auto i = 0; i < len(s); )
+            int64_t start = - 1;
+            for(int64_t i = 0; i < len(s); )
             {
                 auto [r, size] = utf8::DecodeRuneInString(s.make_slice(i));
                 if(f(r))

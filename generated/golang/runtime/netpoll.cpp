@@ -288,7 +288,7 @@ namespace golang::runtime
     }
 
     //go:linkname poll_runtime_pollOpen internal/poll.runtime_pollOpen
-    std::tuple<pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd)
+    std::tuple<pollDesc*, int64_t> poll_runtime_pollOpen(uintptr_t fd)
     {
         auto pd = rec::alloc(gocpp::recv(pollcache));
         lock(& pd->lock);
@@ -324,7 +324,7 @@ namespace golang::runtime
         if(errno != 0)
         {
             rec::free(gocpp::recv(pollcache), pd);
-            return {nullptr, int(errno)};
+            return {nullptr, int64_t(errno)};
         }
         return {pd, 0};
     }
@@ -377,7 +377,7 @@ namespace golang::runtime
     // This returns an error code; the codes are defined above.
     //
     //go:linkname poll_runtime_pollReset internal/poll.runtime_pollReset
-    int poll_runtime_pollReset(pollDesc* pd, int mode)
+    int64_t poll_runtime_pollReset(pollDesc* pd, int64_t mode)
     {
         auto errcode = netpollcheckerr(pd, int32_t(mode));
         if(errcode != pollNoError)
@@ -402,7 +402,7 @@ namespace golang::runtime
     // This returns an error code; the codes are defined above.
     //
     //go:linkname poll_runtime_pollWait internal/poll.runtime_pollWait
-    int poll_runtime_pollWait(pollDesc* pd, int mode)
+    int64_t poll_runtime_pollWait(pollDesc* pd, int64_t mode)
     {
         auto errcode = netpollcheckerr(pd, int32_t(mode));
         if(errcode != pollNoError)
@@ -429,7 +429,7 @@ namespace golang::runtime
     }
 
     //go:linkname poll_runtime_pollWaitCanceled internal/poll.runtime_pollWaitCanceled
-    void poll_runtime_pollWaitCanceled(pollDesc* pd, int mode)
+    void poll_runtime_pollWaitCanceled(pollDesc* pd, int64_t mode)
     {
         // This function is used only on windows after a failed attempt to cancel
         // a pending async IO operation. Wait for ioready, ignore closing or timeouts.
@@ -439,7 +439,7 @@ namespace golang::runtime
     }
 
     //go:linkname poll_runtime_pollSetDeadline internal/poll.runtime_pollSetDeadline
-    void poll_runtime_pollSetDeadline(pollDesc* pd, int64_t d, int mode)
+    void poll_runtime_pollSetDeadline(pollDesc* pd, int64_t d, int64_t mode)
     {
         lock(& pd->lock);
         if(pd->closing)
@@ -525,7 +525,7 @@ namespace golang::runtime
         }
         // If we set the new deadline in the past, unblock currently pending IO if any.
         // Note that pd.publishInfo has already been called, above, immediately after modifying rd and wd.
-        auto delta = int32_t(0);
+        int32_t delta = int32_t(0);
         g* rg = {};
         g* wg = {};
         if(pd->rd < 0)
@@ -562,7 +562,7 @@ namespace golang::runtime
         g* rg = {};
         g* wg = {};
         rec::publishInfo(gocpp::recv(pd));
-        auto delta = int32_t(0);
+        int32_t delta = int32_t(0);
         rg = netpollunblock(pd, 'r', false, & delta);
         wg = netpollunblock(pd, 'w', false, & delta);
         if(pd->rrun)
@@ -600,7 +600,7 @@ namespace golang::runtime
     //go:nowritebarrier
     int32_t netpollready(gList* toRun, pollDesc* pd, int32_t mode)
     {
-        auto delta = int32_t(0);
+        int32_t delta = int32_t(0);
         g* rg = {};
         g* wg = {};
         if(mode == 'r' || mode == 'r' + 'w')
@@ -622,7 +622,7 @@ namespace golang::runtime
         return delta;
     }
 
-    int netpollcheckerr(pollDesc* pd, int32_t mode)
+    int64_t netpollcheckerr(pollDesc* pd, int32_t mode)
     {
         auto info = rec::info(gocpp::recv(pd));
         if(rec::closing(gocpp::recv(info)))
@@ -656,7 +656,7 @@ namespace golang::runtime
         return r;
     }
 
-    void netpollgoready(g* gp, int traceskip)
+    void netpollgoready(g* gp, int64_t traceskip)
     {
         goready(gp, traceskip + 1);
     }
@@ -737,7 +737,7 @@ namespace golang::runtime
                 // will check for timeout/cancel before waiting.
                 return nullptr;
             }
-            auto go_new = pdNil;
+            uintptr_t go_new = pdNil;
             if(ioready)
             {
                 go_new = pdReady;
@@ -774,7 +774,7 @@ namespace golang::runtime
             unlock(& pd->lock);
             return;
         }
-        auto delta = int32_t(0);
+        int32_t delta = int32_t(0);
         g* rg = {};
         if(read)
         {
@@ -861,7 +861,7 @@ namespace golang::runtime
                 }
             };
             auto pdSize = gocpp::Sizeof<pollDescPadded>();
-            auto n = pollBlockSize / pdSize;
+            uintptr_t n = pollBlockSize / pdSize;
             if(n == 0)
             {
                 n = 1;
@@ -869,7 +869,7 @@ namespace golang::runtime
             // Must be in non-GC memory because can be referenced
             // only from epoll/kqueue internals.
             auto mem = persistentalloc(n * pdSize, tagAlign, & memstats.other_sys);
-            for(auto i = uintptr_t(0); i < n; i++)
+            for(uintptr_t i = uintptr_t(0); i < n; i++)
             {
                 auto pd = (pollDesc*)(runtime::add(mem, i * pdSize));
                 lockInit(& pd->lock, lockRankPollDesc);

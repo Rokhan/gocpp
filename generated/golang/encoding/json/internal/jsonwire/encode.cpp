@@ -52,8 +52,8 @@ namespace golang::encoding::json::internal::jsonwire
     // It reports true for inputs with invalid UTF-8.
     bool NeedEscape(gocpp::slice<unsigned char> src)
     {
-        int i = {};
-        for(; (unsigned int)(len(src)) > (unsigned int)(i); )
+        int64_t i = {};
+        for(; (uint64_t)(len(src)) > (uint64_t)(i); )
         {
             if(auto c = src[i]; c < utf8::RuneSelf)
             {
@@ -89,12 +89,12 @@ namespace golang::encoding::json::internal::jsonwire
     // which is also the canonical form for strings (RFC 8785, section 3.2.2.2).
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendQuote(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, jsonflags::Flags* flags)
     {
-        int i = {};
-        int n = {};
+        int64_t i = {};
+        int64_t n = {};
         bool hasInvalidUTF8 = {};
         dst = slices::Grow(dst, len("\""_s) + len(src) + len("\""_s));
         dst = append(dst, '"');
-        for(; (unsigned int)(len(src)) > (unsigned int)(n); )
+        for(; (uint64_t)(len(src)) > (uint64_t)(n); )
         {
             if(auto c = src[n]; c < utf8::RuneSelf)
             {
@@ -220,7 +220,7 @@ namespace golang::encoding::json::internal::jsonwire
     // ReformatString consumes a JSON string from src and appends it to dst,
     // reformatting it if necessary according to the specified flags.
     // It returns the appended output and the number of consumed input bytes.
-    std::tuple<gocpp::slice<unsigned char>, int, gocpp::error> ReformatString(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, jsonflags::Flags* flags)
+    std::tuple<gocpp::slice<unsigned char>, int64_t, gocpp::error> ReformatString(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, jsonflags::Flags* flags)
     {
         // TODO: Should this update ValueFlags as input?
         ValueFlags valFlags = {};
@@ -246,8 +246,8 @@ namespace golang::encoding::json::internal::jsonwire
         // [jsonflags.EscapeForHTML] and [jsonflags.EscapeForJS] options.
         if(rec::Get(gocpp::recv(flags), jsonflags::PreserveRawStrings))
         {
-            int i = {};
-            int lastAppendIndex = {};
+            int64_t i = {};
+            int64_t lastAppendIndex = {};
             for(; i < n; )
             {
                 if(auto c = src[i]; c < utf8::RuneSelf)
@@ -295,7 +295,7 @@ namespace golang::encoding::json::internal::jsonwire
     // For 32-bit floating-point numbers,
     // the output is a 32-bit equivalent of the algorithm.
     // Note that ECMA-262 specifies no algorithm for 32-bit numbers.
-    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double src, int bits)
+    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double src, int64_t bits)
     {
         if(bits == 32)
         {
@@ -303,7 +303,7 @@ namespace golang::encoding::json::internal::jsonwire
         }
 
         auto abs = math::Abs(src);
-        auto fmt = (unsigned char)('f');
+        unsigned char fmt = (unsigned char)('f');
         if(abs != 0)
         {
             if(bits == 64 && (double(abs) < 1e-6 || double(abs) >= 1e21) ||
@@ -329,7 +329,7 @@ namespace golang::encoding::json::internal::jsonwire
     // ReformatNumber consumes a JSON number from src and appends it to dst,
     // canonicalizing it if specified.
     // It returns the appended output and the number of consumed input bytes.
-    std::tuple<gocpp::slice<unsigned char>, int, gocpp::error> ReformatNumber(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, jsonflags::Flags* flags)
+    std::tuple<gocpp::slice<unsigned char>, int64_t, gocpp::error> ReformatNumber(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, jsonflags::Flags* flags)
     {
         auto [n, err] = ConsumeNumber(src);
         if(err != nullptr)

@@ -21,7 +21,7 @@ namespace golang::os
 {
     std::tuple<Root*, gocpp::error> openRootNolog(gocpp::string name);
     std::tuple<Root*, gocpp::error> openRootInRoot(Root* r, gocpp::string name);
-    std::tuple<File*, gocpp::error> rootOpenFileNolog(Root* root, gocpp::string name, int flag, FileMode perm);
+    std::tuple<File*, gocpp::error> rootOpenFileNolog(Root* root, gocpp::string name, int64_t flag, FileMode perm);
     std::tuple<FileInfo, gocpp::error> rootStat(Root* r, gocpp::string name, bool lstat);
     gocpp::error rootSymlink(Root* r, gocpp::string oldname, gocpp::string newname);
     bool isDirectoryLink(FileInfo fi);
@@ -48,8 +48,8 @@ namespace golang::os
     std::tuple<gocpp::string, gocpp::error> readReparseLinkAt(syscall::Handle dirfd, gocpp::string name);
     std::tuple<syscall::Handle, gocpp::error> rootOpenDir(syscall::Handle parent, gocpp::string name);
     gocpp::error chmodat(syscall::Handle parent, gocpp::string name, FileMode mode);
-    gocpp::error chownat(syscall::Handle parent, gocpp::string name, int uid, int gid);
-    gocpp::error lchownat(syscall::Handle parent, gocpp::string name, int uid, int gid);
+    gocpp::error chownat(syscall::Handle parent, gocpp::string name, int64_t uid, int64_t gid);
+    gocpp::error lchownat(syscall::Handle parent, gocpp::string name, int64_t uid, int64_t gid);
     gocpp::error mkdirat(syscall::Handle dirfd, gocpp::string name, FileMode perm);
     gocpp::error removeat(syscall::Handle dirfd, gocpp::string name);
     gocpp::error removefileat(syscall::Handle dirfd, gocpp::string name);

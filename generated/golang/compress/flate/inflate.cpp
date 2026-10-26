@@ -234,7 +234,7 @@ namespace golang::compress::flate
     // tree (i.e., neither over-subscribed nor under-subscribed). The exception is a
     // degenerate case where the tree has only a single symbol with length 1. Empty
     // trees are permitted.
-    bool rec::init(huffmanDecoder* h, gocpp::slice<int> lengths)
+    bool rec::init(huffmanDecoder* h, gocpp::slice<int64_t> lengths)
     {
         // Sanity enables additional runtime tests during Huffman
         // table construction. It's intended to be used during
@@ -248,9 +248,9 @@ namespace golang::compress::flate
 
         // Count number of codes of each length,
         // compute min and max length.
-        gocpp::array<int, maxCodeLen> count = {};
-        int min = {};
-        int max = {};
+        gocpp::array<int64_t, maxCodeLen> count = {};
+        int64_t min = {};
+        int64_t max = {};
         for(auto [gocpp_ignored, n] : lengths)
         {
             if(n == 0)
@@ -280,8 +280,8 @@ namespace golang::compress::flate
             return true;
         }
 
-        auto code = 0;
-        gocpp::array<int, maxCodeLen> nextcode = {};
+        int64_t code = 0;
+        gocpp::array<int64_t, maxCodeLen> nextcode = {};
         for(auto i = min; i <= max; i++)
         {
             code <<= 1;
@@ -294,7 +294,7 @@ namespace golang::compress::flate
         // Exception: To be compatible with zlib, we also need to
         // accept degenerate single-code codings. See also
         // TestDegenerateHuffmanCoding.
-        if(code != (1 << (unsigned int)(max)) && ! (code == 1 && max == 1))
+        if(code != (1 << (uint64_t)(max)) && ! (code == 1 && max == 1))
         {
             return false;
         }
@@ -302,17 +302,17 @@ namespace golang::compress::flate
         h->min = min;
         if(max > huffmanChunkBits)
         {
-            auto numLinks = 1 << ((unsigned int)(max) - huffmanChunkBits);
+            auto numLinks = 1 << ((uint64_t)(max) - huffmanChunkBits);
             h->linkMask = uint32_t(numLinks - 1);
 
             // create link tables
             auto link = nextcode[huffmanChunkBits + 1] >> 1;
             h->links = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<uint32_t>>>(), huffmanNumChunks - link);
-            for(auto j = (unsigned int)(link); j < huffmanNumChunks; j++)
+            for(auto j = (uint64_t)(link); j < huffmanNumChunks; j++)
             {
-                auto reverse = int(bits::Reverse16(uint16_t(j)));
-                reverse >>= (unsigned int)(16 - huffmanChunkBits);
-                auto off = j - (unsigned int)(link);
+                auto reverse = int64_t(bits::Reverse16(uint16_t(j)));
+                reverse >>= (uint64_t)(16 - huffmanChunkBits);
+                auto off = j - (uint64_t)(link);
                 if(sanity && h->chunks[reverse] != 0)
                 {
                     gocpp::panic("impossible: overwriting existing chunk"_s);
@@ -331,11 +331,11 @@ namespace golang::compress::flate
             auto code = nextcode[n];
             nextcode[n]++;
             auto chunk = uint32_t((i << huffmanValueShift) | n);
-            auto reverse = int(bits::Reverse16(uint16_t(code)));
-            reverse >>= (unsigned int)(16 - n);
+            auto reverse = int64_t(bits::Reverse16(uint16_t(code)));
+            reverse >>= (uint64_t)(16 - n);
             if(n <= huffmanChunkBits)
             {
-                for(auto off = reverse; off < len(h->chunks); off += 1 << (unsigned int)(n))
+                for(auto off = reverse; off < len(h->chunks); off += 1 << (uint64_t)(n))
                 {
                     // We should never need to overwrite
                     // an existing chunk. Also, 0 is
@@ -361,7 +361,7 @@ namespace golang::compress::flate
                 auto value = h->chunks[j] >> huffmanValueShift;
                 auto linktab = h->links[value];
                 reverse >>= huffmanChunkBits;
-                for(auto off = reverse; off < len(linktab); off += 1 << (unsigned int)(n - huffmanChunkBits))
+                for(auto off = reverse; off < len(linktab); off += 1 << (uint64_t)(n - huffmanChunkBits))
                 {
                     if(sanity && linktab[off] != 0)
                     {
@@ -442,12 +442,12 @@ namespace golang::compress::flate
 
     namespace rec
     {
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct Reader, false>& self, gocpp::slice<unsigned char> p)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct Reader, false>& self, gocpp::slice<unsigned char> p)
         {
             return self.ptr->value()->vRead(p);
         }
 
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct Reader>& self, gocpp::slice<unsigned char> p)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct Reader>& self, gocpp::slice<unsigned char> p)
         {
             return self.obj.value()->vRead(p);
         }
@@ -605,7 +605,7 @@ namespace golang::compress::flate
         }
     }
 
-    std::tuple<int, gocpp::error> rec::Read(decompressor* f, gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> rec::Read(decompressor* f, gocpp::slice<unsigned char> b)
     {
         for(; ; )
         {
@@ -641,7 +641,7 @@ namespace golang::compress::flate
         return f->err;
     }
 
-    gocpp::array<int, 19> codeOrder = gocpp::array<int, 19> {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
+    gocpp::array<int64_t, 19> codeOrder = gocpp::array<int64_t, 19> {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
     gocpp::error rec::readHuffman(decompressor* f)
     {
         // HLIT[5], HDIST[5], HCLEN[4].
@@ -652,25 +652,25 @@ namespace golang::compress::flate
                 return err;
             }
         }
-        auto nlit = int(f->b & 0x1F) + 257;
+        auto nlit = int64_t(f->b & 0x1F) + 257;
         if(nlit > maxNumLit)
         {
             return gocpp::error(CorruptInputError(f->roffset));
         }
         f->b >>= 5;
-        auto ndist = int(f->b & 0x1F) + 1;
+        auto ndist = int64_t(f->b & 0x1F) + 1;
         if(ndist > maxNumDist)
         {
             return gocpp::error(CorruptInputError(f->roffset));
         }
         f->b >>= 5;
-        auto nclen = int(f->b & 0xF) + 4;
+        auto nclen = int64_t(f->b & 0xF) + 4;
         // numCodes is 19, so nclen is always valid.
         f->b >>= 4;
         f->nb -= 5 + 5 + 4;
 
         // (HCLEN+4)*3 bits: code lengths in the magic codeOrder order.
-        for(auto i = 0; i < nclen; i++)
+        for(int64_t i = 0; i < nclen; i++)
         {
             for(; f->nb < 3; )
             {
@@ -679,7 +679,7 @@ namespace golang::compress::flate
                     return err;
                 }
             }
-            f->codebits[codeOrder[i]] = int(f->b & 0x7);
+            f->codebits[codeOrder[i]] = int64_t(f->b & 0x7);
             f->b >>= 3;
             f->nb -= 3;
         }
@@ -709,9 +709,9 @@ namespace golang::compress::flate
                 continue;
             }
             // Repeat previous length or zero.
-            int rep = {};
-            unsigned int nb = {};
-            int b = {};
+            int64_t rep = {};
+            uint64_t nb = {};
+            int64_t b = {};
             //Go switch emulation
             {
                 auto condition = x;
@@ -752,14 +752,14 @@ namespace golang::compress::flate
                     return err;
                 }
             }
-            rep += int(f->b & uint32_t((1 << nb) - 1));
+            rep += int64_t(f->b & uint32_t((1 << nb) - 1));
             f->b >>= nb;
             f->nb -= nb;
             if(i + rep > n)
             {
                 return gocpp::error(CorruptInputError(f->roffset));
             }
-            for(auto j = 0; j < rep; j++)
+            for(int64_t j = 0; j < rep; j++)
             {
                 f->bits[i] = b;
                 i++;
@@ -820,8 +820,8 @@ namespace golang::compress::flate
                 return;
             }
             // number of bits extra
-            unsigned int n = {};
-            int length = {};
+            uint64_t n = {};
+            int64_t length = {};
             //Go switch emulation
             {
                 int conditionId = -1;
@@ -896,12 +896,12 @@ namespace golang::compress::flate
                         return;
                     }
                 }
-                length += int(f->b & uint32_t((1 << n) - 1));
+                length += int64_t(f->b & uint32_t((1 << n) - 1));
                 f->b >>= n;
                 f->nb -= n;
             }
 
-            int dist = {};
+            int64_t dist = {};
             if(f->hd == nullptr)
             {
                 for(; f->nb < 5; )
@@ -912,7 +912,7 @@ namespace golang::compress::flate
                         return;
                     }
                 }
-                dist = int(bits::Reverse8(uint8_t(f->b & 0x1F << 3)));
+                dist = int64_t(bits::Reverse8(uint8_t(f->b & 0x1F << 3)));
                 f->b >>= 5;
                 f->nb -= 5;
             }
@@ -937,7 +937,7 @@ namespace golang::compress::flate
                         break;
                     case 1:
                     {
-                        auto nb = (unsigned int)(dist - 2) >> 1;
+                        auto nb = (uint64_t)(dist - 2) >> 1;
                         // have 1 bit in bottom of dist, need nb more.
                         auto extra = (dist & 1) << nb;
                         for(; f->nb < nb; )
@@ -948,7 +948,7 @@ namespace golang::compress::flate
                                 return;
                             }
                         }
-                        extra |= int(f->b & uint32_t((1 << nb) - 1));
+                        extra |= int64_t(f->b & uint32_t((1 << nb) - 1));
                         f->b >>= nb;
                         f->nb -= nb;
                         dist = (1 << (nb + 1)) + 1 + extra;
@@ -1011,8 +1011,8 @@ namespace golang::compress::flate
             f->err = noEOF(err);
             return;
         }
-        auto n = int(f->buf[0]) | (int(f->buf[1]) << 8);
-        auto nn = int(f->buf[2]) | (int(f->buf[3]) << 8);
+        auto n = int64_t(f->buf[0]) | (int64_t(f->buf[1]) << 8);
+        auto nn = int64_t(f->buf[2]) | (int64_t(f->buf[3]) << 8);
         if(uint16_t(nn) != uint16_t(~ n))
         {
             f->err = CorruptInputError(f->roffset);
@@ -1096,13 +1096,13 @@ namespace golang::compress::flate
     }
 
     // Read the next Huffman-encoded symbol from f according to h.
-    std::tuple<int, gocpp::error> rec::huffSym(decompressor* f, huffmanDecoder* h)
+    std::tuple<int64_t, gocpp::error> rec::huffSym(decompressor* f, huffmanDecoder* h)
     {
         // Since a huffmanDecoder can be empty or be composed of a degenerate tree
         // with single element, huffSym must error on these two edge cases. In both
         // cases, the chunks slice will be 0 for the invalid sequence, leading it
         // satisfy the n == 0 check below.
-        auto n = (unsigned int)(h->min);
+        auto n = (uint64_t)(h->min);
         // Optimization. Compiler isn't smart enough to keep f.b,f.nb in registers,
         // but is smart enough to keep local variables in registers, so use nb and b,
         // inline call to moreBits and reassign b,nb back to f on return.
@@ -1123,11 +1123,11 @@ namespace golang::compress::flate
                 nb += 8;
             }
             auto chunk = h->chunks[b & (huffmanNumChunks - 1)];
-            n = (unsigned int)(chunk & huffmanCountMask);
+            n = (uint64_t)(chunk & huffmanCountMask);
             if(n > huffmanChunkBits)
             {
                 chunk = h->links[chunk >> huffmanValueShift][(b >> huffmanChunkBits) & h->linkMask];
-                n = (unsigned int)(chunk & huffmanCountMask);
+                n = (uint64_t)(chunk & huffmanCountMask);
             }
             if(n <= nb)
             {
@@ -1140,7 +1140,7 @@ namespace golang::compress::flate
                 }
                 f->b = b >> (n & 31);
                 f->nb = nb - n;
-                return {int(chunk >> huffmanValueShift), nullptr};
+                return {int64_t(chunk >> huffmanValueShift), nullptr};
             }
         }
     }
@@ -1171,20 +1171,20 @@ namespace golang::compress::flate
         rec::Do(gocpp::recv(fixedOnce), [=]() mutable -> void
         {
             // These come from the RFC section 3.2.6.
-            gocpp::array<int, 288> bits = {};
-            for(auto i = 0; i < 144; i++)
+            gocpp::array<int64_t, 288> bits = {};
+            for(int64_t i = 0; i < 144; i++)
             {
                 bits[i] = 8;
             }
-            for(auto i = 144; i < 256; i++)
+            for(int64_t i = 144; i < 256; i++)
             {
                 bits[i] = 9;
             }
-            for(auto i = 256; i < 280; i++)
+            for(int64_t i = 256; i < 280; i++)
             {
                 bits[i] = 7;
             }
-            for(auto i = 280; i < 288; i++)
+            for(int64_t i = 280; i < 288; i++)
             {
                 bits[i] = 8;
             }
@@ -1220,8 +1220,8 @@ namespace golang::compress::flate
 
         decompressor f = {};
         rec::makeReader(gocpp::recv(f), r);
-        f.bits = gocpp::array_ptr(new gocpp::array<int, 316>{});
-        f.codebits = gocpp::array_ptr(new gocpp::array<int, 19>{});
+        f.bits = gocpp::array_ptr(new gocpp::array<int64_t, 316>{});
+        f.codebits = gocpp::array_ptr(new gocpp::array<int64_t, 19>{});
         f.step = [&](auto x){ return rec::nextBlock(x); };
         rec::init(gocpp::recv(f.dict), maxMatchOffset, nullptr);
         return & f;
@@ -1240,8 +1240,8 @@ namespace golang::compress::flate
 
         decompressor f = {};
         rec::makeReader(gocpp::recv(f), r);
-        f.bits = gocpp::array_ptr(new gocpp::array<int, 316>{});
-        f.codebits = gocpp::array_ptr(new gocpp::array<int, 19>{});
+        f.bits = gocpp::array_ptr(new gocpp::array<int64_t, 316>{});
+        f.codebits = gocpp::array_ptr(new gocpp::array<int64_t, 19>{});
         f.step = [&](auto x){ return rec::nextBlock(x); };
         rec::init(gocpp::recv(f.dict), maxMatchOffset, dict);
         return & f;

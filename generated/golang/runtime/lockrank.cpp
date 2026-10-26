@@ -97,7 +97,7 @@ namespace golang::runtime
         {
             return "LEAF"_s;
         }
-        if(rank < 0 || int(rank) >= len(lockNames))
+        if(rank < 0 || int64_t(rank) >= len(lockNames))
         {
             return "BAD RANK"_s;
         }

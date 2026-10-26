@@ -115,13 +115,13 @@ namespace golang::io::fs
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(file)); });
 
-            int size = {};
+            int64_t size = {};
             if(auto [info, err] = rec::Stat(gocpp::recv(file)); err == nullptr)
             {
                 auto size64 = rec::Size(gocpp::recv(info));
-                if(int64_t(int(size64)) == size64)
+                if(int64_t(int64_t(size64)) == size64)
                 {
-                    size = int(size64);
+                    size = int64_t(size64);
                 }
             }
 

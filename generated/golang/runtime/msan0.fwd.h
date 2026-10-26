@@ -6,5 +6,5 @@
 
 namespace golang::runtime
 {
-    const bool msanenabled = false;
+    inline constexpr bool msanenabled = false;
 }

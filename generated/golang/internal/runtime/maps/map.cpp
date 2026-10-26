@@ -237,7 +237,7 @@ namespace golang::internal::runtime::maps
         // The number of entries that reference the same table doubles for each
         // time the globalDepth grows without the table splitting.
         auto entries = 1 << (m->globalDepth - nt->localDepth);
-        for(auto i = 0; i < entries; i++)
+        for(int64_t i = 0; i < entries; i++)
         {
             // m.directory[nt.index+i] = nt
             rec::directorySet(gocpp::recv(m), uintptr_t(nt->index + i), nt);
@@ -538,7 +538,7 @@ namespace golang::internal::runtime::maps
             x.data = m->dirPtr;
         });
 
-        for(auto i = uintptr_t(0); i < abi::MapGroupSlots; i++)
+        for(uintptr_t i = uintptr_t(0); i < abi::MapGroupSlots; i++)
         {
             if((rec::get(gocpp::recv(rec::ctrls(gocpp::recv(g))), i) & ctrlEmpty) == ctrlEmpty)
             {
@@ -875,7 +875,7 @@ namespace golang::internal::runtime::maps
                 case 6:
                 {
                     auto a = (abi::ArrayType*)(gocpp::unsafe_pointer(t));
-                    for(auto i = uintptr_t(0); i < a->Len; i++)
+                    for(uintptr_t i = uintptr_t(0); i < a->Len; i++)
                     {
                         if(auto err = mapKeyError2(a->Elem, gocpp::unsafe_pointer(uintptr_t(p) + i * a->Elem->Size_)); err != nullptr)
                         {

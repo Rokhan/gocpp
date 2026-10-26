@@ -12,12 +12,12 @@
 
 namespace golang::runtime
 {
-    int GOMAXPROCS(int n);
+    int64_t GOMAXPROCS(int64_t n);
     void SetDefaultGOMAXPROCS();
-    int NumCPU();
+    int64_t NumCPU();
     int64_t NumCgoCall();
     int64_t totalMutexWaitTimeNanos();
-    int NumGoroutine();
+    int64_t NumGoroutine();
     gocpp::string debug_modinfo();
     void mayMoreStackPreempt();
     void mayMoreStackMove();

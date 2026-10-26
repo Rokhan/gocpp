@@ -194,7 +194,7 @@ namespace golang::math::big
             clear(t);
             // the initial square
             std::tie(z[1], z[0]) = mulWW(x[0], x[0]);
-            for(auto i = 1; i < n; i++)
+            for(int64_t i = 1; i < n; i++)
             {
                 auto d = x[i];
                 // z collects the squares x[i] * x[i]

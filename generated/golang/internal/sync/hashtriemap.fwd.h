@@ -11,13 +11,13 @@ namespace golang::internal::sync
     // load performance: any smaller and we lose out on
     // 50% or more in CPU performance. Any larger and the
     // returns are minuscule (~1% improvement for 32 children).
-    const long nChildrenLog2 = 4;
+    inline constexpr long nChildrenLog2 = 4;
     template<typename K, typename V> struct indirect;
     template<typename K, typename V> struct entry;
     template<typename K, typename V> struct node;
-    const int nChildren = 1 << nChildrenLog2;
+    inline constexpr int64_t nChildren = 1 << nChildrenLog2;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     using hashFunc = std::function<uintptr_t (gocpp::unsafe_pointer _1, uintptr_t _2)>;
     using equalFunc = std::function<bool (gocpp::unsafe_pointer _1, gocpp::unsafe_pointer _2)>;
-    const int nChildrenMask = nChildren - 1;
+    inline constexpr int64_t nChildrenMask = nChildren - 1;
 }

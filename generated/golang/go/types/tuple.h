@@ -52,8 +52,8 @@ namespace golang::go::types
 
     namespace rec
     {
-        int Len(Tuple* t);
-        Var* At(Tuple* t, int i);
+        int64_t Len(Tuple* t);
+        Var* At(Tuple* t, int64_t i);
         golang::go::types::Type Underlying(Tuple* t);
         gocpp::string String(Tuple* t);
     }

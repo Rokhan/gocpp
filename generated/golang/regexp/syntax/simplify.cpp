@@ -113,7 +113,7 @@ namespace golang::regexp::syntax
                             x.Op = OpConcat;
                         });
                         nre->Sub = nre->Sub0.make_slice(0, 0);
-                        for(auto i = 0; i < re->Min - 1; i++)
+                        for(int64_t i = 0; i < re->Min - 1; i++)
                         {
                             nre->Sub = append(nre->Sub, sub);
                         }
@@ -137,7 +137,7 @@ namespace golang::regexp::syntax
                             x.Op = OpConcat;
                         });
                         prefix->Sub = prefix->Sub0.make_slice(0, 0);
-                        for(auto i = 0; i < re->Min; i++)
+                        for(int64_t i = 0; i < re->Min; i++)
                         {
                             prefix->Sub = append(prefix->Sub, sub);
                         }

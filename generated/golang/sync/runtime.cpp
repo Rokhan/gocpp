@@ -38,10 +38,10 @@ namespace golang::sync
     // The different forms of this function just tell the runtime how to present
     // the reason for waiting in a backtrace, and is used to compute some metrics.
     // Otherwise they're functionally identical.
-    void runtime_SemacquireRWMutexR(uint32_t* s, bool lifo, int skipframes)
+    void runtime_SemacquireRWMutexR(uint32_t* s, bool lifo, int64_t skipframes)
     /* convertBlockStmt, nil block */;
 
-    void runtime_SemacquireRWMutex(uint32_t* s, bool lifo, int skipframes)
+    void runtime_SemacquireRWMutex(uint32_t* s, bool lifo, int64_t skipframes)
     /* convertBlockStmt, nil block */;
 
     // Semrelease atomically increments *s and notifies a waiting goroutine
@@ -51,7 +51,7 @@ namespace golang::sync
     // If handoff is true, pass count directly to the first waiter.
     // skipframes is the number of frames to omit during tracing, counting from
     // runtime_Semrelease's caller.
-    void runtime_Semrelease(uint32_t* s, bool handoff, int skipframes)
+    void runtime_Semrelease(uint32_t* s, bool handoff, int64_t skipframes)
     /* convertBlockStmt, nil block */;
 
     // See runtime/sema.go for documentation.

@@ -29,14 +29,19 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    struct GoTag_mSpanState { };
+    using mSpanState = gocpp::defined<uint8_t, GoTag_mSpanState>;
     // mSpanStateNames are the names of the span states, indexed by
     // mSpanState.
     extern gocpp::slice<gocpp::string> mSpanStateNames;
-    spanClass makeSpanClass(uint8_t sizeclass, bool noscan);
-    arenaIdx arenaIndex(uintptr_t p);
-    uintptr_t arenaBase(arenaIdx i);
+    struct GoTag_spanClass { };
+    using spanClass = gocpp::defined<uint8_t, GoTag_spanClass>;
+    struct GoTag_arenaIdx { };
+    using arenaIdx = gocpp::defined<uint64_t, GoTag_arenaIdx>;
     bool inheap(uintptr_t b);
     bool inHeapOrStack(uintptr_t b);
+    struct GoTag_spanAllocType { };
+    using spanAllocType = gocpp::defined<uint8_t, GoTag_spanAllocType>;
     void runtime_debug_freeOSMemory();
     void clearFinalizerContext(uintptr_t ptr);
     void clearCleanupContext(uintptr_t ptr, uint64_t cleanupID);
@@ -77,6 +82,9 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gcBitsHeader& value);
     void nextMarkBitArenaEpoch();
+    spanClass makeSpanClass(uint8_t sizeclass, bool noscan);
+    arenaIdx arenaIndex(uintptr_t p);
+    uintptr_t arenaBase(arenaIdx i);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/malloc.h"
@@ -102,7 +110,7 @@ namespace golang::runtime
     //
     // Must be a multiple of the pageInUse bitmap element size and
     // must also evenly divide pagesPerArena.
-    const int pagesPerReclaimerChunk = gocpp::min(512, pagesPerArena);
+    inline constexpr int64_t pagesPerReclaimerChunk = gocpp::min(512, pagesPerArena);
     void recordspan(gocpp::unsafe_pointer vh, gocpp::unsafe_pointer p);
     bool addfinalizer(gocpp::unsafe_pointer p, funcval* f, uintptr_t nret, _type* fint, ptrtype* ot);
     void removefinalizer(gocpp::unsafe_pointer p);
@@ -114,7 +122,7 @@ namespace golang::runtime
     gocpp::unsafe_pointer internal_weak_runtime_makeStrongFromWeak(gocpp::unsafe_pointer u);
     m* gcParkStrongFromWeak();
     void setprofilebucket(gocpp::unsafe_pointer p, bucket* b);
-    /*const uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<gcBitsHeader>() [known mising deps] */;
+    /*inline constexpr uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<gcBitsHeader>() [known mising deps] */;
     struct gcBitsArenasStruct
     {
         mutex lock{};
@@ -871,8 +879,8 @@ namespace golang::runtime
         uintptr_t base(mspan* s);
         int8_t sizeclass(spanClass sc);
         bool noscan(spanClass sc);
-        unsigned int l1(arenaIdx i);
-        unsigned int l2(arenaIdx i);
+        uint64_t l1(arenaIdx i);
+        uint64_t l2(arenaIdx i);
         void init(mheap* h);
         void reclaim(mheap* h, uintptr_t npage);
         uintptr_t reclaimChunk(mheap* h, gocpp::slice<arenaIdx> arenas, uintptr_t pageIdx, uintptr_t n);

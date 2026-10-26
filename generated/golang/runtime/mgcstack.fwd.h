@@ -6,7 +6,7 @@
 
 namespace golang::runtime
 {
-    const bool stackTraceDebug = false;
+    inline constexpr bool stackTraceDebug = false;
     struct stackWorkBuf;
     struct stackWorkBufHdr;
     struct stackObjectBuf;

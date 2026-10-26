@@ -9,9 +9,9 @@ namespace golang::os
     // Seek whence values.
     //
     // Deprecated: Use io.SeekStart, io.SeekCurrent, and io.SeekEnd.
-    const int go_SEEK_SET = 0;
-    const int go_SEEK_CUR = 1;
-    const int go_SEEK_END = 2;
+    inline constexpr int64_t go_SEEK_SET = 0;
+    inline constexpr int64_t go_SEEK_CUR = 1;
+    inline constexpr int64_t go_SEEK_END = 2;
     struct LinkError;
     struct noReadFrom;
     struct fileWithoutReadFrom;
@@ -30,13 +30,13 @@ namespace golang::os
     // Flags to OpenFile wrapping those of the underlying system. Not all
     // flags may be implemented on a given system.
     // Exactly one of O_RDONLY, O_WRONLY, or O_RDWR must be specified.
-    const int O_RDONLY = syscall::O_RDONLY;
-    const int O_WRONLY = syscall::O_WRONLY;
-    const int O_RDWR = syscall::O_RDWR;
+    inline constexpr int64_t O_RDONLY = syscall::O_RDONLY;
+    inline constexpr int64_t O_WRONLY = syscall::O_WRONLY;
+    inline constexpr int64_t O_RDWR = syscall::O_RDWR;
     // The remaining values may be or'ed in to control behavior.
-    const int O_APPEND = syscall::O_APPEND;
-    const int O_CREATE = syscall::O_CREAT;
-    const int O_EXCL = syscall::O_EXCL;
-    const int O_SYNC = syscall::O_SYNC;
-    const int O_TRUNC = syscall::O_TRUNC;
+    inline constexpr int64_t O_APPEND = syscall::O_APPEND;
+    inline constexpr int64_t O_CREATE = syscall::O_CREAT;
+    inline constexpr int64_t O_EXCL = syscall::O_EXCL;
+    inline constexpr int64_t O_SYNC = syscall::O_SYNC;
+    inline constexpr int64_t O_TRUNC = syscall::O_TRUNC;
 }

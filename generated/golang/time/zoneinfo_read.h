@@ -38,8 +38,8 @@ namespace golang::time
     gocpp::string byteString(gocpp::slice<unsigned char> p);
     extern gocpp::error errBadData;
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfoFromDirOrZip(gocpp::string dir, gocpp::string name);
-    int get4(gocpp::slice<unsigned char> b);
-    int get2(gocpp::slice<unsigned char> b);
+    int64_t get4(gocpp::slice<unsigned char> b);
+    int64_t get2(gocpp::slice<unsigned char> b);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfoFromZip(gocpp::string zipfile, gocpp::string name);
     // loadTzinfoFromTzdata returns the time zone information of the time zone
     // with the given name, from a tzdata database file as they are typically
@@ -53,13 +53,13 @@ namespace golang::time
 namespace golang::time
 {
     std::tuple<golang::time::Location*, gocpp::error> LoadLocationFromTZData(gocpp::string name, gocpp::slice<unsigned char> data);
-    int findZone(gocpp::slice<zone> zones, gocpp::string name, int offset, bool isDST);
+    int64_t findZone(gocpp::slice<zone> zones, gocpp::string name, int64_t offset, bool isDST);
     std::tuple<golang::time::Location*, gocpp::error> loadLocation(gocpp::string name, gocpp::slice<gocpp::string> sources);
 
     namespace rec
     {
         gocpp::string Error(fileSizeError f);
-        gocpp::slice<unsigned char> read(dataIO* d, int n);
+        gocpp::slice<unsigned char> read(dataIO* d, int64_t n);
         std::tuple<uint32_t, bool> big4(dataIO* d);
         std::tuple<uint64_t, bool> big8(dataIO* d);
         std::tuple<unsigned char, bool> byte(dataIO* d);

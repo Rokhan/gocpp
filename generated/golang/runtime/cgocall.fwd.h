@@ -9,7 +9,8 @@ namespace golang::runtime
     struct GoTag_cgoCallers;
     using cgoCallers = gocpp::defined<gocpp::array<uintptr_t, 32>, GoTag_cgoCallers>;
     struct argset;
-    using cgoErrorMsg = int;
-    const cgoErrorMsg cgoCheckPointerFail = 0;
-    const cgoErrorMsg cgoResultFail = 1;
+    struct GoTag_cgoErrorMsg;
+    using cgoErrorMsg = gocpp::defined<int64_t, GoTag_cgoErrorMsg>;
+    inline constexpr cgoErrorMsg cgoCheckPointerFail = 0;
+    inline constexpr cgoErrorMsg cgoResultFail = 1;
 }

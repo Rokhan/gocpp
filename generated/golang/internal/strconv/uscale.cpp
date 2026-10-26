@@ -40,7 +40,7 @@ namespace golang::internal::strconv
     // pack64 takes m, e and returns f = m * 2**e.
     // It assumes the caller has provided a 53-bit mantissa m
     // and an exponent that is in range for the mantissa.
-    std::tuple<double, gocpp::error> pack64(uint64_t m, int e)
+    std::tuple<double, gocpp::error> pack64(uint64_t m, int64_t e)
     {
         if(m & (1 << 52) == 0)
         {
@@ -56,7 +56,7 @@ namespace golang::internal::strconv
     // pack32 takes m, e and returns f = m * 2**e.
     // It assumes the caller has provided a 24-bit mantissa m
     // and an exponent that is in range for the mantissa.
-    std::tuple<double, gocpp::error> pack32(uint32_t m, int e)
+    std::tuple<double, gocpp::error> pack32(uint32_t m, int64_t e)
     {
         if(m & (1 << 23) == 0)
         {
@@ -95,7 +95,7 @@ namespace golang::internal::strconv
         return uint64_t((u + 3) >> 2);
     }
 
-    unrounded rec::nudge(unrounded u, int δ)
+    unrounded rec::nudge(unrounded u, int64_t δ)
     {
         return u + unrounded(δ);
     }
@@ -106,20 +106,20 @@ namespace golang::internal::strconv
         return unrounded(x / d) | u & 1 | bool2<strconv::unrounded>(x % d != 0);
     }
 
-    unrounded rec::rsh(unrounded u, int s)
+    unrounded rec::rsh(unrounded u, int64_t s)
     {
         return (u >> s) | u & 1 | bool2<strconv::unrounded>(u & ((1 << s) - 1) != 0);
     }
 
     // log10Pow2(x) returns ⌊log₁₀ 2**x⌋ = ⌊x * log₁₀ 2⌋.
-    int log10Pow2(int x)
+    int64_t log10Pow2(int64_t x)
     {
         // log₁₀ 2 ≈ 0.30102999566 ≈ 78913 / 2^18
         return (x * 78913) >> 18;
     }
 
     // log2Pow10(x) returns ⌊log₂ 10**x⌋ = ⌊x * log₂ 10⌋.
-    int log2Pow10(int x)
+    int64_t log2Pow10(int64_t x)
     {
         // log₂ 10 ≈ 3.32192809489 ≈ 108853 / 2^15
         return (x * 108853) >> 15;
@@ -134,10 +134,10 @@ namespace golang::internal::strconv
     // n can be at most 18.
     // If fmt == 'f' then n is a conservative estimate of the number of digits,
     // and digits are discarded to match prec.
-    std::tuple<uint64_t, int> fixedWidthFloat(uint64_t m, int e, int n, int prec, unsigned char fmt)
+    std::tuple<uint64_t, int64_t> fixedWidthFloat(uint64_t m, int64_t e, int64_t n, int64_t prec, unsigned char fmt)
     {
         uint64_t d;
-        int p;
+        int64_t p;
         p = n - 1 - log10Pow2(e + 63);
         scaler pre = {};
         prescale(& pre, e, p, log2Pow10(p));
@@ -161,7 +161,7 @@ namespace golang::internal::strconv
     // parseFloat64 rounds d * 10**p to the nearest float64 f.
     // d can have at most 19 digits.
     // It returns ErrRange if the result rounds to infinity.
-    std::tuple<double, gocpp::error> parseFloat64(uint64_t d, int p, uint64_t sign)
+    std::tuple<double, gocpp::error> parseFloat64(uint64_t d, int64_t p, uint64_t sign)
     {
         auto b = bits::Len64(d);
         auto lp = log2Pow10(p);
@@ -179,7 +179,7 @@ namespace golang::internal::strconv
         // u = u.rsh(1)
         // e = e - 1
         // }
-        auto s = bool2<int>(u >= unmin(1 << 53));
+        auto s = bool2<int64_t>(u >= unmin(1 << 53));
         u = (u >> s) | u & 1;
         e = e - s;
 
@@ -189,7 +189,7 @@ namespace golang::internal::strconv
     // parseFloat32 rounds d * 10**p to the nearest float32 f.
     // d can have at most 19 digits.
     // It returns ErrRange if the result rounds to infinity.
-    std::tuple<double, gocpp::error> parseFloat32(uint64_t d, int p, uint32_t sign)
+    std::tuple<double, gocpp::error> parseFloat32(uint64_t d, int64_t p, uint32_t sign)
     {
         auto b = bits::Len64(d);
         auto lp = log2Pow10(p);
@@ -207,7 +207,7 @@ namespace golang::internal::strconv
         // u = u.rsh(1)
         // e = e - 1
         // }
-        auto s = bool2<int>(u >= unmin(1 << 24));
+        auto s = bool2<int64_t>(u >= unmin(1 << 24));
         u = (u >> s) | u & 1;
         e = e - s;
 
@@ -224,13 +224,13 @@ namespace golang::internal::strconv
     // using as few digits as possible that will still round trip
     // back to the original float.
     template<typename F>
-    std::tuple<uint64_t, int> shortFloat(uint64_t m, int e)
+    std::tuple<uint64_t, int64_t> shortFloat(uint64_t m, int64_t e)
     {
         uint64_t d;
-        int p;
+        int64_t p;
         // parameterized constants
-        int mantBits = {};
-        int minExp = {};
+        int64_t mantBits = {};
+        int64_t minExp = {};
         //Go switch emulation
         {
             auto condition = 8 * gocpp::Sizeof<F>();
@@ -255,7 +255,7 @@ namespace golang::internal::strconv
         // allowing the compiler to greatly simplify the code.
         uint64_t min = {};
         uint64_t max = {};
-        int odd = {};
+        int64_t odd = {};
         auto z = 63 - mantBits;
         if(m == (1 << 63) && e > minExp)
         {
@@ -264,7 +264,7 @@ namespace golang::internal::strconv
             min = m - (1 << (z - 2));
             // max = m + 1/2 * 2**(e+z)
             max = m + (1 << (z - 1));
-            odd = int(m >> z) & 1;
+            odd = int64_t(m >> z) & 1;
         }
         else
         if(e >= minExp)
@@ -274,7 +274,7 @@ namespace golang::internal::strconv
             min = m - (1 << (z - 1));
             // max = m + 1/2 * 2**(e+z)
             max = m + (1 << (z - 1));
-            odd = int(m >> z) & 1;
+            odd = int64_t(m >> z) & 1;
         }
         else
         {
@@ -284,7 +284,7 @@ namespace golang::internal::strconv
             min = m - (1 << (z - 1));
             // max = m + 1/2 * 2**(e+z)
             max = m + (1 << (z - 1));
-            odd = int(m >> z) & 1;
+            odd = int64_t(m >> z) & 1;
         }
 
         scaler pre = {};
@@ -305,7 +305,7 @@ namespace golang::internal::strconv
 
     // skewed computes the skewed footprint of m * 2**e,
     // which is ⌊log₁₀ 3/4 * 2**e⌋ = ⌊e*(log₁₀ 2)-(log₁₀ 4/3)⌋.
-    int skewed(int e)
+    int64_t skewed(int64_t e)
     {
         return (e * 631305 - 261663) >> 21;
     }
@@ -387,7 +387,7 @@ namespace golang::internal::strconv
     // In practice, pre.s < 0 would indicate a buggy caller
     // and pre.s >= 64 can only happen for parsing and is
     // picked off at those call sites.
-    void prescale(scaler* pre, int e, int p, int lp)
+    void prescale(scaler* pre, int64_t e, int64_t p, int64_t lp)
     {
         pre->pmHi = pow10Tab[p - pow10Min].hi;
         pre->pmLo = pow10Tab[p - pow10Min].lo;
@@ -415,10 +415,10 @@ namespace golang::internal::strconv
     }
 
     // setDigits sets digs to the nd digits described by d, p.
-    std::tuple<int, int> setDigits(gocpp::slice<unsigned char> s, uint64_t d, int p, int nd)
+    std::tuple<int64_t, int64_t> setDigits(gocpp::slice<unsigned char> s, uint64_t d, int64_t p, int64_t nd)
     {
-        int dp;
-        int nzd;
+        int64_t dp;
+        int64_t nzd;
         // Note: nd <= len(s) is guaranteed by caller,
         // but writing it explicitly here lets the compiler know,
         // so that it can remove the bounds check in the loop.
@@ -437,10 +437,10 @@ namespace golang::internal::strconv
 
     // numDigits returns the number of decimal digits in d.
     // It requires d ≥ 1.
-    int numDigits(uint64_t d)
+    int64_t numDigits(uint64_t d)
     {
         auto nd = log10Pow2(bits::Len64(d));
-        return nd + bool2<int>(d >= uint64pow10[nd]);
+        return nd + bool2<int64_t>(d >= uint64pow10[nd]);
     }
 
 }

@@ -7,30 +7,32 @@
 namespace golang::reflect
 {
     struct Value;
-    using flag = uintptr_t;
-    const long flagKindWidth = 5;
-    const long flagMethodShift = 10;
+    struct GoTag_flag;
+    using flag = gocpp::defined<uintptr_t, GoTag_flag>;
+    inline constexpr long flagKindWidth = 5;
+    inline constexpr long flagMethodShift = 10;
     struct ValueError;
     struct nonEmptyInterface;
-    const bool debugReflectCall = false;
+    inline constexpr bool debugReflectCall = false;
     struct StringHeader;
     struct SliceHeader;
     struct runtimeSelect;
-    using SelectDir = int;
+    struct GoTag_SelectDir;
+    using SelectDir = gocpp::defined<int64_t, GoTag_SelectDir>;
     struct SelectCase;
     // stackAllocSelectCases represents the length of a slice that we
     // pre-allocate in [Select] to avoid heap allocations.
-    const long stackAllocSelectCases = 4;
+    inline constexpr long stackAllocSelectCases = 4;
     struct dummyStruct;
-    const flag flagKindMask = (1 << flagKindWidth) - 1;
-    const flag flagStickyRO = 1 << 5;
-    const flag flagEmbedRO = 1 << 6;
-    const flag flagIndir = 1 << 7;
-    const flag flagAddr = 1 << 8;
-    const flag flagMethod = 1 << 9;
-    const SelectDir _ = 0;
-    const SelectDir SelectSend = 1;
-    const SelectDir SelectRecv = 2;
-    const SelectDir SelectDefault = 3;
-    const flag flagRO = flagStickyRO | flagEmbedRO;
+    inline constexpr flag flagKindMask = (1 << flagKindWidth) - 1;
+    inline constexpr flag flagStickyRO = 1 << 5;
+    inline constexpr flag flagEmbedRO = 1 << 6;
+    inline constexpr flag flagIndir = 1 << 7;
+    inline constexpr flag flagAddr = 1 << 8;
+    inline constexpr flag flagMethod = 1 << 9;
+    inline constexpr SelectDir _ = 0;
+    inline constexpr SelectDir SelectSend = 1;
+    inline constexpr SelectDir SelectRecv = 2;
+    inline constexpr SelectDir SelectDefault = 3;
+    inline constexpr flag flagRO = flagStickyRO | flagEmbedRO;
 }

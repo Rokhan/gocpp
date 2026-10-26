@@ -14,9 +14,9 @@ namespace golang::sync
 {
     void runtime_Semacquire(uint32_t* s);
     void runtime_SemacquireWaitGroup(uint32_t* s, bool synctestDurable);
-    void runtime_SemacquireRWMutexR(uint32_t* s, bool lifo, int skipframes);
-    void runtime_SemacquireRWMutex(uint32_t* s, bool lifo, int skipframes);
-    void runtime_Semrelease(uint32_t* s, bool handoff, int skipframes);
+    void runtime_SemacquireRWMutexR(uint32_t* s, bool lifo, int64_t skipframes);
+    void runtime_SemacquireRWMutex(uint32_t* s, bool lifo, int64_t skipframes);
+    void runtime_Semrelease(uint32_t* s, bool handoff, int64_t skipframes);
     void runtime_notifyListCheck(uintptr_t size);
     void init();
     void go_throw(gocpp::string);

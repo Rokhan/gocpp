@@ -39,7 +39,7 @@ namespace golang::math::big
         std::tuple<golang::math::big::nat, golang::math::big::nat> divLarge(golang::math::big::nat z, stack* stk, golang::math::big::nat u, golang::math::big::nat uIn, golang::math::big::nat vIn);
         void divBasic(golang::math::big::nat q, stack* stk, golang::math::big::nat u, golang::math::big::nat v);
         void divRecursive(golang::math::big::nat z, stack* stk, golang::math::big::nat u, golang::math::big::nat v);
-        void divRecursiveStep(golang::math::big::nat z, stack* stk, golang::math::big::nat u, golang::math::big::nat v, int depth);
+        void divRecursiveStep(golang::math::big::nat z, stack* stk, golang::math::big::nat u, golang::math::big::nat v, int64_t depth);
     }
 }
 

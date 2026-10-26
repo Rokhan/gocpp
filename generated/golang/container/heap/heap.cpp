@@ -104,32 +104,32 @@ namespace golang::container::heap
             return self.obj.value()->vPop();
         }
 
-        int Len(const gocpp::PtrRecv<struct Interface, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct Interface, false>& self)
         {
             return self.ptr->value()->vLen();
         }
 
-        int Len(const gocpp::ObjRecv<struct Interface>& self)
+        int64_t Len(const gocpp::ObjRecv<struct Interface>& self)
         {
             return self.obj.value()->vLen();
         }
 
-        bool Less(const gocpp::PtrRecv<struct Interface, false>& self, int i, int j)
+        bool Less(const gocpp::PtrRecv<struct Interface, false>& self, int64_t i, int64_t j)
         {
             return self.ptr->value()->vLess(i, j);
         }
 
-        bool Less(const gocpp::ObjRecv<struct Interface>& self, int i, int j)
+        bool Less(const gocpp::ObjRecv<struct Interface>& self, int64_t i, int64_t j)
         {
             return self.obj.value()->vLess(i, j);
         }
 
-        void Swap(const gocpp::PtrRecv<struct Interface, false>& self, int i, int j)
+        void Swap(const gocpp::PtrRecv<struct Interface, false>& self, int64_t i, int64_t j)
         {
             return self.ptr->value()->vSwap(i, j);
         }
 
-        void Swap(const gocpp::ObjRecv<struct Interface>& self, int i, int j)
+        void Swap(const gocpp::ObjRecv<struct Interface>& self, int64_t i, int64_t j)
         {
             return self.obj.value()->vSwap(i, j);
         }
@@ -175,7 +175,7 @@ namespace golang::container::heap
 
     // Remove removes and returns the element at index i from the heap.
     // The complexity is O(log n) where n = h.Len().
-    go_any Remove(Interface h, int i)
+    go_any Remove(Interface h, int64_t i)
     {
         auto n = rec::Len(gocpp::recv(h)) - 1;
         if(n != i)
@@ -193,7 +193,7 @@ namespace golang::container::heap
     // Changing the value of the element at index i and then calling Fix is equivalent to,
     // but less expensive than, calling [Remove](h, i) followed by a Push of the new value.
     // The complexity is O(log n) where n = h.Len().
-    void Fix(Interface h, int i)
+    void Fix(Interface h, int64_t i)
     {
         if(! down(h, i, rec::Len(gocpp::recv(h))))
         {
@@ -201,7 +201,7 @@ namespace golang::container::heap
         }
     }
 
-    void up(Interface h, int j)
+    void up(Interface h, int64_t j)
     {
         for(; ; )
         {
@@ -216,7 +216,7 @@ namespace golang::container::heap
         }
     }
 
-    bool down(Interface h, int i0, int n)
+    bool down(Interface h, int64_t i0, int64_t n)
     {
         auto i = i0;
         for(; ; )

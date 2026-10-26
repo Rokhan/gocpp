@@ -6,6 +6,6 @@
 
 namespace golang::internal::goexperiment
 {
-    const bool RandomizedHeapBase64 = true;
-    const long RandomizedHeapBase64Int = 1;
+    inline constexpr bool RandomizedHeapBase64 = true;
+    inline constexpr long RandomizedHeapBase64Int = 1;
 }

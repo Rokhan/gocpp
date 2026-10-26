@@ -53,7 +53,7 @@ namespace golang::math
         }
         auto ix = Float64bits(x);
         // normalize x
-        auto exp = int((ix >> shift) & mask);
+        auto exp = int64_t((ix >> shift) & mask);
         if(exp == 0)
         {
             // subnormal x
@@ -81,7 +81,7 @@ namespace golang::math
         uint64_t q = {};
         uint64_t s = {};
         // r = moving bit from MSB to LSB
-        auto r = uint64_t(1 << (shift + 1));
+        uint64_t r = uint64_t(1 << (shift + 1));
         for(; r != 0; )
         {
             auto t = s + r;

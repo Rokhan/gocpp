@@ -8,6 +8,6 @@ namespace golang::encoding::json::jsontext
 {
     struct GoTag_Value;
     using Value = gocpp::defined<gocpp::slice<unsigned char>, GoTag_Value>;
-    const gocpp::string commaAndWhitespace = ", \n\r\t"_s;
+    inline const gocpp::string commaAndWhitespace = ", \n\r\t"_s;
     struct objectMember;
 }

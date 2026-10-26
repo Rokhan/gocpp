@@ -12,7 +12,7 @@
 
 namespace golang::syscall
 {
-    std::tuple<gocpp::string, gocpp::error> TranslateAccountName(gocpp::string username, uint32_t from, uint32_t to, int initSize);
+    std::tuple<gocpp::string, gocpp::error> TranslateAccountName(gocpp::string username, uint32_t from, uint32_t to, int64_t initSize);
     struct UserInfo10
     {
         uint16_t* Name{};
@@ -80,7 +80,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Tokenprimarygroup& value);
-    std::tuple<Token, gocpp::error> OpenCurrentProcessToken();
+    struct GoTag_Token { };
     std::tuple<SID*, gocpp::error> StringToSid(gocpp::string s);
     std::tuple<SID*, gocpp::string, uint32_t, gocpp::error> LookupSID(gocpp::string system, gocpp::string account);
     struct Tokenuser
@@ -99,16 +99,23 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Tokenuser& value);
+}
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::syscall
+{
+    using Token = gocpp::defined<golang::syscall::Handle, GoTag_Token>;
+    std::tuple<Token, gocpp::error> OpenCurrentProcessToken();
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 
     namespace rec
     {
         std::tuple<gocpp::string, gocpp::error> String(SID* sid);
-        int Len(SID* sid);
+        int64_t Len(SID* sid);
         std::tuple<SID*, gocpp::error> Copy(SID* sid);
         std::tuple<gocpp::string, gocpp::string, uint32_t, gocpp::error> LookupAccount(SID* sid, gocpp::string system);
         gocpp::error Close(Token t);
-        std::tuple<gocpp::unsafe_pointer, gocpp::error> getInfo(Token t, uint32_t go_class, int initSize);
+        std::tuple<gocpp::unsafe_pointer, gocpp::error> getInfo(Token t, uint32_t go_class, int64_t initSize);
         std::tuple<Tokenuser*, gocpp::error> GetTokenUser(Token t);
         std::tuple<Tokenprimarygroup*, gocpp::error> GetTokenPrimaryGroup(Token t);
         std::tuple<gocpp::string, gocpp::error> GetUserProfileDirectory(Token t);

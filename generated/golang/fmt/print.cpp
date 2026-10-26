@@ -88,22 +88,22 @@ namespace golang::fmt
     }
 
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<int, gocpp::error> State::StateImpl<T, TStore, TInterface>::vWrite(gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> State::StateImpl<T, TStore, TInterface>::vWrite(gocpp::slice<unsigned char> b)
     {
         return rec::Write(gocpp::PtrRecv<T, false>(value.get()), b);
     }
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<int, bool> State::StateImpl<T, TStore, TInterface>::vWidth()
+    std::tuple<int64_t, bool> State::StateImpl<T, TStore, TInterface>::vWidth()
     {
         return rec::Width(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<int, bool> State::StateImpl<T, TStore, TInterface>::vPrecision()
+    std::tuple<int64_t, bool> State::StateImpl<T, TStore, TInterface>::vPrecision()
     {
         return rec::Precision(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    bool State::StateImpl<T, TStore, TInterface>::vFlag(int c)
+    bool State::StateImpl<T, TStore, TInterface>::vFlag(int64_t c)
     {
         return rec::Flag(gocpp::PtrRecv<T, false>(value.get()), c);
     }
@@ -116,42 +116,42 @@ namespace golang::fmt
 
     namespace rec
     {
-        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct State, false>& self, gocpp::slice<unsigned char> b)
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct State, false>& self, gocpp::slice<unsigned char> b)
         {
             return self.ptr->value()->vWrite(b);
         }
 
-        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct State>& self, gocpp::slice<unsigned char> b)
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::ObjRecv<struct State>& self, gocpp::slice<unsigned char> b)
         {
             return self.obj.value()->vWrite(b);
         }
 
-        std::tuple<int, bool> Width(const gocpp::PtrRecv<struct State, false>& self)
+        std::tuple<int64_t, bool> Width(const gocpp::PtrRecv<struct State, false>& self)
         {
             return self.ptr->value()->vWidth();
         }
 
-        std::tuple<int, bool> Width(const gocpp::ObjRecv<struct State>& self)
+        std::tuple<int64_t, bool> Width(const gocpp::ObjRecv<struct State>& self)
         {
             return self.obj.value()->vWidth();
         }
 
-        std::tuple<int, bool> Precision(const gocpp::PtrRecv<struct State, false>& self)
+        std::tuple<int64_t, bool> Precision(const gocpp::PtrRecv<struct State, false>& self)
         {
             return self.ptr->value()->vPrecision();
         }
 
-        std::tuple<int, bool> Precision(const gocpp::ObjRecv<struct State>& self)
+        std::tuple<int64_t, bool> Precision(const gocpp::ObjRecv<struct State>& self)
         {
             return self.obj.value()->vPrecision();
         }
 
-        bool Flag(const gocpp::PtrRecv<struct State, false>& self, int c)
+        bool Flag(const gocpp::PtrRecv<struct State, false>& self, int64_t c)
         {
             return self.ptr->value()->vFlag(c);
         }
 
-        bool Flag(const gocpp::ObjRecv<struct State>& self, int c)
+        bool Flag(const gocpp::ObjRecv<struct State>& self, int64_t c)
         {
             return self.obj.value()->vFlag(c);
         }
@@ -350,7 +350,7 @@ namespace golang::fmt
         for(auto [gocpp_ignored, c] : " +-#0"_s)
         {
             // All known flags
-            if(rec::Flag(gocpp::recv(state), int(c)))
+            if(rec::Flag(gocpp::recv(state), int64_t(c)))
             {
                 // The argument is an int for historical reasons.
                 b = append(b, (unsigned char)(c));
@@ -484,21 +484,21 @@ namespace golang::fmt
         rec::Put(gocpp::recv(ppFree), p);
     }
 
-    std::tuple<int, bool> rec::Width(pp* p)
+    std::tuple<int64_t, bool> rec::Width(pp* p)
     {
-        int wid;
+        int64_t wid;
         bool ok;
         return {p->fmt.wid, p->fmt.fmtFlags.widPresent};
     }
 
-    std::tuple<int, bool> rec::Precision(pp* p)
+    std::tuple<int64_t, bool> rec::Precision(pp* p)
     {
-        int prec;
+        int64_t prec;
         bool ok;
         return {p->fmt.prec, p->fmt.fmtFlags.precPresent};
     }
 
-    bool rec::Flag(pp* p, int b)
+    bool rec::Flag(pp* p, int64_t b)
     {
         //Go switch emulation
         {
@@ -533,9 +533,9 @@ namespace golang::fmt
 
     // Write implements [io.Writer] so we can call [Fprintf] on a pp (through [State]), for
     // recursive use in custom verbs.
-    std::tuple<int, gocpp::error> rec::Write(pp* p, gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> rec::Write(pp* p, gocpp::slice<unsigned char> b)
     {
-        int ret;
+        int64_t ret;
         gocpp::error err;
         rec::write(gocpp::recv(p->buf), b);
         return {len(b), nullptr};
@@ -543,9 +543,9 @@ namespace golang::fmt
 
     // WriteString implements [io.StringWriter] so that we can call [io.WriteString]
     // on a pp (through state), for efficiency.
-    std::tuple<int, gocpp::error> rec::WriteString(pp* p, gocpp::string s)
+    std::tuple<int64_t, gocpp::error> rec::WriteString(pp* p, gocpp::string s)
     {
-        int ret;
+        int64_t ret;
         gocpp::error err;
         rec::writeString(gocpp::recv(p->buf), s);
         return {len(s), nullptr};
@@ -553,9 +553,9 @@ namespace golang::fmt
 
     // Fprintf formats according to a format specifier and writes to w.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto p = newPrinter();
         rec::doPrintf(gocpp::recv(p), format, a);
@@ -566,9 +566,9 @@ namespace golang::fmt
 
     // Printf formats according to a format specifier and writes to standard output.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, gocpp::error> Printf(gocpp::string format, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Printf(gocpp::string format, gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return Fprintf(os::Stdout, format, a);
     }
@@ -597,9 +597,9 @@ namespace golang::fmt
     // Fprint formats using the default formats for its operands and writes to w.
     // Spaces are added between operands when neither is a string.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto p = newPrinter();
         rec::doPrint(gocpp::recv(p), a);
@@ -611,9 +611,9 @@ namespace golang::fmt
     // Print formats using the default formats for its operands and writes to standard output.
     // Spaces are added between operands when neither is a string.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, gocpp::error> Print(gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Print(gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return Fprint(os::Stdout, a);
     }
@@ -644,9 +644,9 @@ namespace golang::fmt
     // Fprintln formats using the default formats for its operands and writes to w.
     // Spaces are always added between operands and a newline is appended.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto p = newPrinter();
         rec::doPrintln(gocpp::recv(p), a);
@@ -658,9 +658,9 @@ namespace golang::fmt
     // Println formats using the default formats for its operands and writes to standard output.
     // Spaces are always added between operands and a newline is appended.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, gocpp::error> Println(gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Println(gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return Fprintln(os::Stdout, a);
     }
@@ -691,7 +691,7 @@ namespace golang::fmt
     // getField gets the i'th field of the struct value.
     // If the field itself is a non-nil interface, return a value for
     // the thing inside the interface, not the interface itself.
-    reflect::Value getField(reflect::Value v, int i)
+    reflect::Value getField(reflect::Value v, int64_t i)
     {
         auto val = rec::Field(gocpp::recv(v), i);
         if(rec::Kind(gocpp::recv(val)) == reflect::Interface && ! rec::IsNil(gocpp::recv(val)))
@@ -703,18 +703,18 @@ namespace golang::fmt
 
     // tooLarge reports whether the magnitude of the integer is
     // too large to be used as a formatting width or precision.
-    bool tooLarge(int x)
+    bool tooLarge(int64_t x)
     {
-        int max = 1e6;
+        int64_t max = 1e6;
         return x > max || x < - max;
     }
 
     // parsenum converts ASCII to integer.  num is 0 (and isnum is false) if no number present.
-    std::tuple<int, bool, int> parsenum(gocpp::string s, int start, int end)
+    std::tuple<int64_t, bool, int64_t> parsenum(gocpp::string s, int64_t start, int64_t end)
     {
-        int num;
+        int64_t num;
         bool isnum;
-        int newi;
+        int64_t newi;
         if(start >= end)
         {
             return {0, false, end};
@@ -726,7 +726,7 @@ namespace golang::fmt
                 // Overflow; crazy long number most likely.
                 return {0, false, end};
             }
-            num = num * 10 + int(s[newi] - '0');
+            num = num * 10 + int64_t(s[newi] - '0');
             isnum = true;
         }
         return {num, isnum, newi};
@@ -870,7 +870,7 @@ namespace golang::fmt
 
     // fmtFloat formats a float. The default precision for each verb
     // is specified as last argument in the call to fmt_float.
-    void rec::fmtFloat(pp* p, go_any arg, reflect::Value value, double v, int size, gocpp::rune verb)
+    void rec::fmtFloat(pp* p, go_any arg, reflect::Value value, double v, int64_t size, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -916,7 +916,7 @@ namespace golang::fmt
     // fmtComplex formats a complex number v with
     // r = real(v) and j = imag(v) as (r+ji) using
     // fmtFloat for r and j formatting.
-    void rec::fmtComplex(pp* p, go_any arg, reflect::Value value, struct gocpp::complex128 v, int size, gocpp::rune verb)
+    void rec::fmtComplex(pp* p, go_any arg, reflect::Value value, struct gocpp::complex128 v, int64_t size, gocpp::rune verb)
     {
         // Make sure any unsupported verbs are found before the
         // calls to fmtFloat to not generate an incorrect error string.
@@ -1366,12 +1366,12 @@ namespace golang::fmt
             else if(gocpp_id_2 == typeid(double)) { conditionId = 2; }
             else if(gocpp_id_2 == typeid(gocpp::complex64)) { conditionId = 3; }
             else if(gocpp_id_2 == typeid(gocpp::complex128)) { conditionId = 4; }
-            else if(gocpp_id_2 == typeid(int)) { conditionId = 5; }
+            else if(gocpp_id_2 == typeid(int64_t)) { conditionId = 5; }
             else if(gocpp_id_2 == typeid(int8_t)) { conditionId = 6; }
             else if(gocpp_id_2 == typeid(int16_t)) { conditionId = 7; }
             else if(gocpp_id_2 == typeid(int32_t)) { conditionId = 8; }
             else if(gocpp_id_2 == typeid(int64_t)) { conditionId = 9; }
-            else if(gocpp_id_2 == typeid(unsigned int)) { conditionId = 10; }
+            else if(gocpp_id_2 == typeid(uint64_t)) { conditionId = 10; }
             else if(gocpp_id_2 == typeid(uint8_t)) { conditionId = 11; }
             else if(gocpp_id_2 == typeid(uint16_t)) { conditionId = 12; }
             else if(gocpp_id_2 == typeid(uint32_t)) { conditionId = 13; }
@@ -1414,7 +1414,7 @@ namespace golang::fmt
                 }
                 case 5:
                 {
-                    int f = gocpp::any_cast<int>(arg);
+                    int64_t f = gocpp::any_cast<int64_t>(arg);
                     rec::fmtInteger(gocpp::recv(p), arg, reflect::Value {}, uint64_t(f), go_signed, verb);
                     break;
                 }
@@ -1444,7 +1444,7 @@ namespace golang::fmt
                 }
                 case 10:
                 {
-                    unsigned int f = gocpp::any_cast<unsigned int>(arg);
+                    uint64_t f = gocpp::any_cast<uint64_t>(arg);
                     rec::fmtInteger(gocpp::recv(p), arg, reflect::Value {}, uint64_t(f), go_unsigned, verb);
                     break;
                 }
@@ -1525,7 +1525,7 @@ namespace golang::fmt
 
     // printValue is similar to printArg but starts with a reflect value, not an interface{} value.
     // It does not handle 'p' and 'T' verbs because these should have been already handled by printArg.
-    void rec::printValue(pp* p, reflect::Value value, gocpp::rune verb, int depth)
+    void rec::printValue(pp* p, reflect::Value value, gocpp::rune verb, int64_t depth)
     {
         // Handle values with special methods if not already handled by printArg (depth == 0).
         if(depth > 0 && rec::IsValid(gocpp::recv(value)) && rec::CanInterface(gocpp::recv(value)))
@@ -1679,7 +1679,7 @@ namespace golang::fmt
                         rec::writeString(gocpp::recv(p->buf), rec::String(gocpp::recv(rec::Type(gocpp::recv(f)))));
                     }
                     rec::writeByte(gocpp::recv(p->buf), '{');
-                    for(auto i = 0; i < rec::NumField(gocpp::recv(f)); i++)
+                    for(int64_t i = 0; i < rec::NumField(gocpp::recv(f)); i++)
                     {
                         if(i > 0)
                         {
@@ -1778,7 +1778,7 @@ namespace golang::fmt
                             return;
                         }
                         rec::writeByte(gocpp::recv(p->buf), '{');
-                        for(auto i = 0; i < rec::Len(gocpp::recv(f)); i++)
+                        for(int64_t i = 0; i < rec::Len(gocpp::recv(f)); i++)
                         {
                             if(i > 0)
                             {
@@ -1791,7 +1791,7 @@ namespace golang::fmt
                     else
                     {
                         rec::writeByte(gocpp::recv(p->buf), '[');
-                        for(auto i = 0; i < rec::Len(gocpp::recv(f)); i++)
+                        for(int64_t i = 0; i < rec::Len(gocpp::recv(f)); i++)
                         {
                             if(i > 0)
                             {
@@ -1842,16 +1842,16 @@ namespace golang::fmt
     }
 
     // intFromArg gets the argNumth element of a. On return, isInt reports whether the argument has integer type.
-    std::tuple<int, bool, int> intFromArg(gocpp::slice<go_any> a, int argNum)
+    std::tuple<int64_t, bool, int64_t> intFromArg(gocpp::slice<go_any> a, int64_t argNum)
     {
-        int num;
+        int64_t num;
         bool isInt;
-        int newArgNum;
+        int64_t newArgNum;
         newArgNum = argNum;
         if(argNum < len(a))
         {
             // Almost always OK.
-            std::tie(num, isInt) = gocpp::getValue<int>(a[argNum]);
+            std::tie(num, isInt) = gocpp::getValue<int64_t>(a[argNum]);
             if(! isInt)
             {
                 // Work harder.
@@ -1880,9 +1880,9 @@ namespace golang::fmt
                         case 4:
                         {
                             auto n = rec::Int(gocpp::recv(v));
-                            if(int64_t(int(n)) == n)
+                            if(int64_t(int64_t(n)) == n)
                             {
-                                num = int(n);
+                                num = int64_t(n);
                                 isInt = true;
                             }
                             break;
@@ -1895,9 +1895,9 @@ namespace golang::fmt
                         case 10:
                         {
                             auto n = rec::Uint(gocpp::recv(v));
-                            if(int64_t(n) >= 0 && uint64_t(int(n)) == n)
+                            if(int64_t(n) >= 0 && uint64_t(int64_t(n)) == n)
                             {
-                                num = int(n);
+                                num = int64_t(n);
                                 isInt = true;
                             }
                             break;
@@ -1924,10 +1924,10 @@ namespace golang::fmt
     // The returned values are the index, the number of bytes to consume
     // up to the closing paren, if present, and whether the number parsed
     // ok. The bytes to consume will be 1 if no closing paren is present.
-    std::tuple<int, int, bool> parseArgNumber(gocpp::string format)
+    std::tuple<int64_t, int64_t, bool> parseArgNumber(gocpp::string format)
     {
-        int index;
-        int wid;
+        int64_t index;
+        int64_t wid;
         bool ok;
         // There must be at least 3 bytes: [n].
         if(len(format) < 3)
@@ -1936,7 +1936,7 @@ namespace golang::fmt
         }
 
         // Find closing bracket.
-        for(auto i = 1; i < len(format); i++)
+        for(int64_t i = 1; i < len(format); i++)
         {
             if(format[i] == ']')
             {
@@ -1955,10 +1955,10 @@ namespace golang::fmt
     // argNumber returns the next argument to evaluate, which is either the value of the passed-in
     // argNum or the value of the bracketed integer that begins format[i:]. It also returns
     // the new value of i, that is, the index of the next byte of the format to process.
-    std::tuple<int, int, bool> rec::argNumber(pp* p, int argNum, gocpp::string format, int i, int numArgs)
+    std::tuple<int64_t, int64_t, bool> rec::argNumber(pp* p, int64_t argNum, gocpp::string format, int64_t i, int64_t numArgs)
     {
-        int newArgNum;
-        int newi;
+        int64_t newArgNum;
+        int64_t newi;
         bool found;
         if(len(format) <= i || format[i] != '[')
         {
@@ -1992,12 +1992,12 @@ namespace golang::fmt
     {
         auto end = len(format);
         // we process one argument per non-trivial format
-        auto argNum = 0;
+        int64_t argNum = 0;
         // previous item in format was an index like [3].
-        auto afterIndex = false;
+        bool afterIndex = false;
         p->reordered = false;
         formatLoop:
-        for(auto i = 0; i < end; )
+        for(int64_t i = 0; i < end; )
         {
             if(false) {
             formatLoop_continue:
@@ -2251,7 +2251,7 @@ namespace golang::fmt
 
     void rec::doPrint(pp* p, gocpp::slice<go_any> a)
     {
-        auto prevString = false;
+        bool prevString = false;
         for(auto [argNum, arg] : a)
         {
             auto isString = arg != nullptr && rec::Kind(gocpp::recv(reflect::TypeOf(arg))) == reflect::String;

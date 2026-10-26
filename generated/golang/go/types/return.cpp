@@ -192,7 +192,7 @@ namespace golang::go::types
 
     bool rec::isTerminatingSwitch(Checker* check, ast::BlockStmt* body, gocpp::string label)
     {
-        auto hasDefault = false;
+        bool hasDefault = false;
         for(auto [gocpp_ignored, s] : body->List)
         {
             auto cc = gocpp::getValue<ast::CaseClause*>(s);

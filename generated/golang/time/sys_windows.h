@@ -14,9 +14,9 @@ namespace golang::time
 {
     void interrupt();
     std::tuple<uintptr_t, gocpp::error> open(gocpp::string name);
-    std::tuple<int, gocpp::error> read(uintptr_t fd, gocpp::slice<unsigned char> buf);
+    std::tuple<int64_t, gocpp::error> read(uintptr_t fd, gocpp::slice<unsigned char> buf);
     void closefd(uintptr_t fd);
-    gocpp::error preadn(uintptr_t fd, gocpp::slice<unsigned char> buf, int off);
+    gocpp::error preadn(uintptr_t fd, gocpp::slice<unsigned char> buf, int64_t off);
 
     namespace rec
     {

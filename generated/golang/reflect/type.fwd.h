@@ -6,10 +6,12 @@
 
 namespace golang::reflect
 {
-    using Kind = unsigned int;
+    struct GoTag_Kind;
+    using Kind = gocpp::defined<uint64_t, GoTag_Kind>;
     struct common;
     struct rtype;
-    using ChanDir = int;
+    struct GoTag_ChanDir;
+    using ChanDir = gocpp::defined<int64_t, GoTag_ChanDir>;
     struct interfaceType;
     struct ptrType;
     struct sliceType;
@@ -25,40 +27,40 @@ namespace golang::reflect
     struct layoutKey;
     struct layoutType;
     struct bitVector;
-    const golang::reflect::Kind Invalid = 0;
-    const golang::reflect::Kind Bool = 1;
-    const golang::reflect::Kind Int = 2;
-    const golang::reflect::Kind Int8 = 3;
-    const golang::reflect::Kind Int16 = 4;
-    const golang::reflect::Kind Int32 = 5;
-    const golang::reflect::Kind Int64 = 6;
-    const golang::reflect::Kind Uint = 7;
-    const golang::reflect::Kind Uint8 = 8;
-    const golang::reflect::Kind Uint16 = 9;
-    const golang::reflect::Kind Uint32 = 10;
-    const golang::reflect::Kind Uint64 = 11;
-    const golang::reflect::Kind Uintptr = 12;
-    const golang::reflect::Kind Float32 = 13;
-    const golang::reflect::Kind Float64 = 14;
-    const golang::reflect::Kind Complex64 = 15;
-    const golang::reflect::Kind Complex128 = 16;
-    const golang::reflect::Kind Array = 17;
-    const golang::reflect::Kind Chan = 18;
-    const golang::reflect::Kind Func = 19;
-    const golang::reflect::Kind Interface = 20;
-    const golang::reflect::Kind Map = 21;
-    const golang::reflect::Kind Pointer = 22;
-    const golang::reflect::Kind Slice = 23;
-    const golang::reflect::Kind String = 24;
-    const golang::reflect::Kind Struct = 25;
-    const golang::reflect::Kind UnsafePointer = 26;
-    const golang::reflect::ChanDir RecvDir = 1 << 0;
-    const golang::reflect::ChanDir SendDir = 1 << 1;
+    inline constexpr golang::reflect::Kind Invalid = 0;
+    inline constexpr golang::reflect::Kind Bool = 1;
+    inline constexpr golang::reflect::Kind Int = 2;
+    inline constexpr golang::reflect::Kind Int8 = 3;
+    inline constexpr golang::reflect::Kind Int16 = 4;
+    inline constexpr golang::reflect::Kind Int32 = 5;
+    inline constexpr golang::reflect::Kind Int64 = 6;
+    inline constexpr golang::reflect::Kind Uint = 7;
+    inline constexpr golang::reflect::Kind Uint8 = 8;
+    inline constexpr golang::reflect::Kind Uint16 = 9;
+    inline constexpr golang::reflect::Kind Uint32 = 10;
+    inline constexpr golang::reflect::Kind Uint64 = 11;
+    inline constexpr golang::reflect::Kind Uintptr = 12;
+    inline constexpr golang::reflect::Kind Float32 = 13;
+    inline constexpr golang::reflect::Kind Float64 = 14;
+    inline constexpr golang::reflect::Kind Complex64 = 15;
+    inline constexpr golang::reflect::Kind Complex128 = 16;
+    inline constexpr golang::reflect::Kind Array = 17;
+    inline constexpr golang::reflect::Kind Chan = 18;
+    inline constexpr golang::reflect::Kind Func = 19;
+    inline constexpr golang::reflect::Kind Interface = 20;
+    inline constexpr golang::reflect::Kind Map = 21;
+    inline constexpr golang::reflect::Kind Pointer = 22;
+    inline constexpr golang::reflect::Kind Slice = 23;
+    inline constexpr golang::reflect::Kind String = 24;
+    inline constexpr golang::reflect::Kind Struct = 25;
+    inline constexpr golang::reflect::Kind UnsafePointer = 26;
+    inline constexpr golang::reflect::ChanDir RecvDir = 1 << 0;
+    inline constexpr golang::reflect::ChanDir SendDir = 1 << 1;
     // Ptr is the old name for the [Pointer] kind.
     //
     //go:fix inline
-    const Kind Ptr = reflect::Pointer;
-    const ChanDir BothDir = RecvDir | SendDir;
+    inline constexpr Kind Ptr = reflect::Pointer;
+    inline constexpr ChanDir BothDir = RecvDir | SendDir;
 }
 #include "golang/internal/abi/funcpc.fwd.h"
 #include "golang/internal/abi/type.fwd.h"

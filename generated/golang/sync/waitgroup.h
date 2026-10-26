@@ -45,7 +45,7 @@ namespace golang::sync
 
     namespace rec
     {
-        void Add(WaitGroup* wg, int delta);
+        void Add(WaitGroup* wg, int64_t delta);
         void Done(WaitGroup* wg);
         void Wait(WaitGroup* wg);
         void Go(WaitGroup* wg, std::function<void ()> f);

@@ -50,7 +50,7 @@ namespace golang::internal::filepathlite
             return false;
         }
         // contains . or .. path elements
-        auto hasDots = false;
+        bool hasDots = false;
         for(auto p = path; p != ""_s; )
         {
             gocpp::string part = {};
@@ -77,7 +77,7 @@ namespace golang::internal::filepathlite
 
     std::tuple<gocpp::string, gocpp::error> localize(gocpp::string path)
     {
-        for(auto i = 0; i < len(path); i++)
+        for(int64_t i = 0; i < len(path); i++)
         {
             //Go switch emulation
             {
@@ -96,7 +96,7 @@ namespace golang::internal::filepathlite
                 }
             }
         }
-        auto containsSlash = false;
+        bool containsSlash = false;
         for(auto p = path; p != ""_s; )
         {
             // Find the next path element.
@@ -143,7 +143,7 @@ namespace golang::internal::filepathlite
     {
         // Device names can have arbitrary trailing characters following a dot or colon.
         auto base = name;
-        for(auto i = 0; i < len(base); i++)
+        for(int64_t i = 0; i < len(base); i++)
         {
             //Go switch emulation
             {
@@ -268,7 +268,7 @@ namespace golang::internal::filepathlite
         {
             return false;
         }
-        for(auto i = 0; i < len(a); i++)
+        for(int64_t i = 0; i < len(a); i++)
         {
             if(toUpper(a[i]) != toUpper(b[i]))
             {
@@ -315,7 +315,7 @@ namespace golang::internal::filepathlite
     // See:
     // https://learn.microsoft.com/en-us/dotnet/standard/io/file-path-formats
     // https://googleprojectzero.blogspot.com/2016/02/the-definitive-guide-on-win32-to-nt.html
-    int volumeNameLen(gocpp::string path)
+    int64_t volumeNameLen(gocpp::string path)
     {
         //Go switch emulation
         {
@@ -389,7 +389,7 @@ namespace golang::internal::filepathlite
 
     // validVolumeNameLen returns n if path[:n] is a valid Windows volume name.
     // If the volume name contains a ".." path component, it returns 0.
-    int validVolumeNameLen(gocpp::string path, int n)
+    int64_t validVolumeNameLen(gocpp::string path, int64_t n)
     {
         for(auto p = path.make_slice(0, n); p != ""_s; )
         {
@@ -412,7 +412,7 @@ namespace golang::internal::filepathlite
         {
             return false;
         }
-        for(auto i = 0; i < len(prefix); i++)
+        for(int64_t i = 0; i < len(prefix); i++)
         {
             if(IsPathSeparator(prefix[i]))
             {
@@ -437,9 +437,9 @@ namespace golang::internal::filepathlite
     // uncLen returns the length of the volume prefix of a UNC path.
     // prefixLen is the prefix prior to the start of the UNC host;
     // for example, for "//host/share", the prefixLen is len("//")==2.
-    int uncLen(gocpp::string path, int prefixLen)
+    int64_t uncLen(gocpp::string path, int64_t prefixLen)
     {
-        auto count = 0;
+        int64_t count = 0;
         for(auto i = prefixLen; i < len(path); i++)
         {
             if(IsPathSeparator(path[i]))

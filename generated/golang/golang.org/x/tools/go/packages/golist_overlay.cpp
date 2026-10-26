@@ -78,7 +78,7 @@ namespace golang::golang_org::x::tools::go::packages
         }
         auto roots = gocpp::map<gocpp::string, gocpp::string> {gocpp::non_nil};
         auto modules = gocpp::map<gocpp::string, gocpp::string> {gocpp::non_nil};
-        int i = {};
+        int64_t i = {};
         for(auto dec = json::NewDecoder(out); rec::More(gocpp::recv(dec)); )
         {
             auto mod = new gocommand::ModuleJSON{};

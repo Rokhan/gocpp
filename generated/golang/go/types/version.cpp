@@ -44,7 +44,7 @@ namespace golang::go::types
 
     // cmp returns -1, 0, or +1 depending on whether x < y, x == y, or x > y,
     // interpreted as Go versions.
-    int rec::cmp(goVersion x, goVersion y)
+    int64_t rec::cmp(goVersion x, goVersion y)
     {
         return version::Compare(gocpp::string(x), gocpp::string(y));
     }

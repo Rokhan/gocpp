@@ -80,24 +80,24 @@ namespace golang::container::heap
         go_any Pop(const gocpp::PtrRecv<struct Interface, false>& self);
         go_any Pop(const gocpp::ObjRecv<struct Interface>& self);
 
-        int Len(const gocpp::PtrRecv<struct Interface, false>& self);
-        int Len(const gocpp::ObjRecv<struct Interface>& self);
+        int64_t Len(const gocpp::PtrRecv<struct Interface, false>& self);
+        int64_t Len(const gocpp::ObjRecv<struct Interface>& self);
 
-        bool Less(const gocpp::PtrRecv<struct Interface, false>& self, int i, int j);
-        bool Less(const gocpp::ObjRecv<struct Interface>& self, int i, int j);
+        bool Less(const gocpp::PtrRecv<struct Interface, false>& self, int64_t i, int64_t j);
+        bool Less(const gocpp::ObjRecv<struct Interface>& self, int64_t i, int64_t j);
 
-        void Swap(const gocpp::PtrRecv<struct Interface, false>& self, int i, int j);
-        void Swap(const gocpp::ObjRecv<struct Interface>& self, int i, int j);
+        void Swap(const gocpp::PtrRecv<struct Interface, false>& self, int64_t i, int64_t j);
+        void Swap(const gocpp::ObjRecv<struct Interface>& self, int64_t i, int64_t j);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
     void Init(Interface h);
     void Push(Interface h, go_any x);
     go_any Pop(Interface h);
-    go_any Remove(Interface h, int i);
-    void Fix(Interface h, int i);
-    void up(Interface h, int j);
-    bool down(Interface h, int i0, int n);
+    go_any Remove(Interface h, int64_t i);
+    void Fix(Interface h, int64_t i);
+    void up(Interface h, int64_t j);
+    bool down(Interface h, int64_t i0, int64_t n);
 
     namespace rec
     {

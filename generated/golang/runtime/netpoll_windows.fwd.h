@@ -10,15 +10,15 @@ namespace golang::runtime
     // The source values are arbitrary. There is no risk of collision with user
     // defined values because the only way to set the key of an overlapped entry
     // is using the iocphandle, which is not accessible to user code.
-    const int netpollSourceReady = 0 + 1;
-    const int netpollSourceBreak = 1 + 1;
-    const int netpollSourceTimer = 2 + 1;
+    inline constexpr int64_t netpollSourceReady = 0 + 1;
+    inline constexpr int64_t netpollSourceBreak = 1 + 1;
+    inline constexpr int64_t netpollSourceTimer = 2 + 1;
     // sourceBits is the number of bits needed to represent a source.
     // 4 bits can hold 16 different sources, which is more than enough.
     // It is set to a low value so the overlapped entry key can
     // contain as much bits as possible for the pollDesc pointer.
-    const long sourceBits = 4;
+    inline constexpr long sourceBits = 4;
     struct pollOperation;
     struct overlappedEntry;
-    const int sourceMasks = (1 << sourceBits) - 1;
+    inline constexpr int64_t sourceMasks = (1 << sourceBits) - 1;
 }

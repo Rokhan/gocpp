@@ -265,15 +265,15 @@ namespace golang::internal::bisect
         }
 
         // Parse actual pattern syntax.
-        auto result = true;
-        auto bits = uint64_t(0);
-        auto start = 0;
+        bool result = true;
+        uint64_t bits = uint64_t(0);
+        int64_t start = 0;
         // 1-bit (binary); sometimes 4-bit (hex)
-        auto wid = 1;
-        for(auto i = 0; i <= len(p); i++)
+        int64_t wid = 1;
+        for(int64_t i = 0; i <= len(p); i++)
         {
             // Imagine a trailing - at the end of the pattern to flush final suffix
-            auto c = (unsigned char)('-');
+            unsigned char c = (unsigned char)('-');
             if(i < len(p))
             {
                 c = p[i];
@@ -529,7 +529,7 @@ namespace golang::internal::bisect
 
     // FileLine reports whether the change identified by file and line should be enabled.
     // If the change should be printed, FileLine prints a one-line report to w.
-    bool rec::FileLine(Matcher* m, Writer w, gocpp::string file, int line)
+    bool rec::FileLine(Matcher* m, Writer w, gocpp::string file, int64_t line)
     {
         if(m == nullptr)
         {
@@ -540,7 +540,7 @@ namespace golang::internal::bisect
 
     // fileLine does the real work for FileLine.
     // This lets FileLine's body handle m == nil and potentially be inlined.
-    bool rec::fileLine(Matcher* m, Writer w, gocpp::string file, int line)
+    bool rec::fileLine(Matcher* m, Writer w, gocpp::string file, int64_t line)
     {
         auto h = Hash(file, line);
         if(rec::ShouldPrint(gocpp::recv(m), h))
@@ -558,7 +558,7 @@ namespace golang::internal::bisect
     }
 
     // printFileLine prints a non-marker-only report for file:line to w.
-    gocpp::error printFileLine(Writer w, uint64_t h, gocpp::string file, int line)
+    gocpp::error printFileLine(Writer w, uint64_t h, gocpp::string file, int64_t line)
     {
         // overestimate
         auto markerLen = 40;
@@ -571,18 +571,18 @@ namespace golang::internal::bisect
     }
 
     // appendFileLine appends file:line to dst, returning the extended slice.
-    gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, gocpp::string file, int line)
+    gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, gocpp::string file, int64_t line)
     {
         dst = append(dst, file);
         dst = append(dst, ':');
-        auto u = (unsigned int)(line);
+        auto u = (uint64_t)(line);
         if(line < 0)
         {
             dst = append(dst, '-');
             u = - u;
         }
         gocpp::array<unsigned char, 24> buf = {};
-        auto i = len(buf);
+        int64_t i = len(buf);
         for(; i == len(buf) || u > 0; )
         {
             i--;
@@ -693,7 +693,7 @@ namespace golang::internal::bisect
     }
 
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<int, gocpp::error> Writer::WriterImpl<T, TStore, TInterface>::vWrite(gocpp::slice<unsigned char> _1)
+    std::tuple<int64_t, gocpp::error> Writer::WriterImpl<T, TStore, TInterface>::vWrite(gocpp::slice<unsigned char> _1)
     {
         return rec::Write(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
@@ -706,12 +706,12 @@ namespace golang::internal::bisect
 
     namespace rec
     {
-        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Writer, false>& self, gocpp::slice<unsigned char> _1)
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct Writer, false>& self, gocpp::slice<unsigned char> _1)
         {
             return self.ptr->value()->vWrite(_1);
         }
 
-        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Writer>& self, gocpp::slice<unsigned char> _1)
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::ObjRecv<struct Writer>& self, gocpp::slice<unsigned char> _1)
         {
             return self.obj.value()->vWrite(_1);
         }
@@ -778,7 +778,7 @@ namespace golang::internal::bisect
         auto prefix = "[bisect-match 0x"_s;
         gocpp::array<unsigned char, len(prefix) + 16 + 1> buf = {};
         copy(buf.make_slice(0), prefix);
-        for(auto i = 0; i < 16; i++)
+        for(int64_t i = 0; i < 16; i++)
         {
             buf[len(prefix) + i] = "0123456789abcdef"_s[id >> 60];
             id <<= 4;
@@ -798,8 +798,8 @@ namespace golang::internal::bisect
         uint64_t id;
         bool ok;
         // Find first instance of prefix.
-        auto prefix = "[bisect-match "_s;
-        auto i = 0;
+        gocpp::string prefix = "[bisect-match "_s;
+        int64_t i = 0;
         for(; ; i++)
         {
             if(i >= len(line) - len(prefix))
@@ -833,7 +833,7 @@ namespace golang::internal::bisect
                 // max 0x + 16 digits
                 return {line, 0, false};
             }
-            for(auto i = 2; i < len(idstr); i++)
+            for(int64_t i = 2; i < len(idstr); i++)
             {
                 id <<= 4;
                 //Go switch emulation
@@ -866,7 +866,7 @@ namespace golang::internal::bisect
                 return {line, 0, false};
             }
             // parse binary
-            for(auto i = 0; i < len(idstr); i++)
+            for(int64_t i = 0; i < len(idstr); i++)
             {
                 id <<= 1;
                 //Go switch emulation
@@ -912,7 +912,7 @@ namespace golang::internal::bisect
     // each of which must be of type string, byte, int, uint, int32, uint32, int64, uint64, uintptr, or a slice of one of those types.
     uint64_t Hash(gocpp::slice<go_any> data)
     {
-        auto h = offset64;
+        uint64_t h = offset64;
         for(auto [gocpp_ignored, v] : data)
         {
             //Go type switch emulation
@@ -922,8 +922,8 @@ namespace golang::internal::bisect
                 int conditionId = -1;
                 if(gocpp_id_3 == typeid(gocpp::string)) { conditionId = 0; }
                 else if(gocpp_id_3 == typeid(unsigned char)) { conditionId = 1; }
-                else if(gocpp_id_3 == typeid(int)) { conditionId = 2; }
-                else if(gocpp_id_3 == typeid(unsigned int)) { conditionId = 3; }
+                else if(gocpp_id_3 == typeid(int64_t)) { conditionId = 2; }
+                else if(gocpp_id_3 == typeid(uint64_t)) { conditionId = 3; }
                 else if(gocpp_id_3 == typeid(int32_t)) { conditionId = 4; }
                 else if(gocpp_id_3 == typeid(uint32_t)) { conditionId = 5; }
                 else if(gocpp_id_3 == typeid(int64_t)) { conditionId = 6; }
@@ -931,8 +931,8 @@ namespace golang::internal::bisect
                 else if(gocpp_id_3 == typeid(uintptr_t)) { conditionId = 8; }
                 else if(gocpp_id_3 == typeid(gocpp::slice<gocpp::string>)) { conditionId = 9; }
                 else if(gocpp_id_3 == typeid(gocpp::slice<unsigned char>)) { conditionId = 10; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<int>)) { conditionId = 11; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<unsigned int>)) { conditionId = 12; }
+                else if(gocpp_id_3 == typeid(gocpp::slice<int64_t>)) { conditionId = 11; }
+                else if(gocpp_id_3 == typeid(gocpp::slice<uint64_t>)) { conditionId = 12; }
                 else if(gocpp_id_3 == typeid(gocpp::slice<int32_t>)) { conditionId = 13; }
                 else if(gocpp_id_3 == typeid(gocpp::slice<uint32_t>)) { conditionId = 14; }
                 else if(gocpp_id_3 == typeid(gocpp::slice<int64_t>)) { conditionId = 15; }
@@ -965,13 +965,13 @@ namespace golang::internal::bisect
                     }
                     case 2:
                     {
-                        int v = gocpp::any_cast<int>(v_ref);
+                        int64_t v = gocpp::any_cast<int64_t>(v_ref);
                         h = fnvUint64(h, uint64_t(v));
                         break;
                     }
                     case 3:
                     {
-                        unsigned int v = gocpp::any_cast<unsigned int>(v_ref);
+                        uint64_t v = gocpp::any_cast<uint64_t>(v_ref);
                         h = fnvUint64(h, uint64_t(v));
                         break;
                     }
@@ -1025,7 +1025,7 @@ namespace golang::internal::bisect
                     }
                     case 11:
                     {
-                        gocpp::slice<int> v = gocpp::any_cast<gocpp::slice<int>>(v_ref);
+                        gocpp::slice<int64_t> v = gocpp::any_cast<gocpp::slice<int64_t>>(v_ref);
                         for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint64(h, uint64_t(x));
@@ -1034,7 +1034,7 @@ namespace golang::internal::bisect
                     }
                     case 12:
                     {
-                        gocpp::slice<unsigned int> v = gocpp::any_cast<gocpp::slice<unsigned int>>(v_ref);
+                        gocpp::slice<uint64_t> v = gocpp::any_cast<gocpp::slice<uint64_t>>(v_ref);
                         for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint64(h, uint64_t(x));
@@ -1137,7 +1137,7 @@ namespace golang::internal::bisect
 
     uint64_t fnvString(uint64_t h, gocpp::string x)
     {
-        for(auto i = 0; i < len(x); i++)
+        for(int64_t i = 0; i < len(x); i++)
         {
             h ^= uint64_t(x[i]);
             h *= prime64;
@@ -1147,7 +1147,7 @@ namespace golang::internal::bisect
 
     uint64_t fnvUint64(uint64_t h, uint64_t x)
     {
-        for(auto i = 0; i < 8; i++)
+        for(int64_t i = 0; i < 8; i++)
         {
             h ^= x & 0xFF;
             x >>= 8;
@@ -1158,7 +1158,7 @@ namespace golang::internal::bisect
 
     uint64_t fnvUint32(uint64_t h, uint32_t x)
     {
-        for(auto i = 0; i < 4; i++)
+        for(int64_t i = 0; i < 4; i++)
         {
             h ^= uint64_t(x & 0xFF);
             x >>= 8;
@@ -1230,8 +1230,8 @@ namespace golang::internal::bisect
     // overwriting whatever was there before.
     bool rec::seenLossy(dedup* d, uint64_t h)
     {
-        auto cache = gocpp::make_array_ptr(d->recent[(unsigned int)(h) % (unsigned int)(len(d->recent))]);
-        for(auto i = 0; i < len(cache); i++)
+        auto cache = gocpp::make_array_ptr(d->recent[(uint64_t)(h) % (uint64_t)(len(d->recent))]);
+        for(int64_t i = 0; i < len(cache); i++)
         {
             if(atomic::LoadUint64(& cache[i]) == h)
             {
@@ -1240,12 +1240,12 @@ namespace golang::internal::bisect
         }
 
         // Compute index in set to evict as hash of current set.
-        auto ch = offset64;
+        uint64_t ch = offset64;
         for(auto [gocpp_ignored, x] : cache)
         {
             ch = fnvUint64(ch, x);
         }
-        atomic::StoreUint64(& cache[(unsigned int)(ch) % (unsigned int)(len(cache))], h);
+        atomic::StoreUint64(& cache[(uint64_t)(ch) % (uint64_t)(len(cache))], h);
         return false;
     }
 

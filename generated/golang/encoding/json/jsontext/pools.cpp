@@ -102,7 +102,7 @@ namespace golang::encoding::json::jsontext
             // Round up to nearest 2ⁿ to make best use of malloc size classes.
             // See runtime/sizeclasses.go on Go1.15.
             // Logical OR with 63 to ensure 64 as the minimum buffer size.
-            auto n = 1 << bits::Len((unsigned int)(e->s.encodeBuffer.bufStats.prevLen | 63));
+            auto n = 1 << bits::Len((uint64_t)(e->s.encodeBuffer.bufStats.prevLen | 63));
             e->s.encodeBuffer.Buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, n);
         }
         rec::reset(gocpp::recv(e->s), e->s.encodeBuffer.Buf.make_slice(0, 0), nullptr, opts);

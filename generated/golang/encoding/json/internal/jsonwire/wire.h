@@ -17,7 +17,7 @@ namespace golang::encoding::json::internal::jsonwire
     bool HasSuffixByte(gocpp::slice<unsigned char> b, unsigned char c);
     gocpp::slice<unsigned char> TrimSuffixByte(gocpp::slice<unsigned char> b, unsigned char c);
     gocpp::string QuoteRune(gocpp::slice<unsigned char> b);
-    int CompareUTF16(gocpp::slice<unsigned char> x, gocpp::slice<unsigned char> y);
+    int64_t CompareUTF16(gocpp::slice<unsigned char> x, gocpp::slice<unsigned char> y);
     // TODO(https://go.dev/issue/70547): Use utf8.ErrInvalid instead.
     extern gocpp::error ErrInvalidUTF8;
 
@@ -44,8 +44,8 @@ namespace golang::encoding::json::internal::jsonwire
     };
 
     std::ostream& operator<<(std::ostream& os, const struct InvalidTextError& value);
-    gocpp::string TruncatePointer(gocpp::string s, int n);
-    bool isInvalidUTF8(gocpp::rune r, int rn);
+    gocpp::string TruncatePointer(gocpp::string s, int64_t n);
+    bool isInvalidUTF8(gocpp::rune r, int64_t rn);
 
     namespace rec
     {

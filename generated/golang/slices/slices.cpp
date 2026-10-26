@@ -78,7 +78,7 @@ namespace golang::slices
     // considered less than the longer one.
     // The result is 0 if s1 == s2, -1 if s1 < s2, and +1 if s1 > s2.
     template<template<typename> class  S, typename E>
-    int Compare(S<E> s1, S<E> s2)
+    int64_t Compare(S<E> s1, S<E> s2)
     {
         for(auto [i, v1] : s1)
         {
@@ -105,7 +105,7 @@ namespace golang::slices
     // returns 0 the result is 0 if len(s1) == len(s2), -1 if len(s1) < len(s2),
     // and +1 if len(s1) > len(s2).
     template<template<typename> class  S1, template<typename> class  S2, typename E1, typename E2>
-    int CompareFunc(S1<E1> s1, S2<E2> s2, std::function<int (E1 _1, E2 _2)> cmp)
+    int64_t CompareFunc(S1<E1> s1, S2<E2> s2, std::function<int64_t (E1 _1, E2 _2)> cmp)
     {
         for(auto [i, v1] : s1)
         {
@@ -129,7 +129,7 @@ namespace golang::slices
     // Index returns the index of the first occurrence of v in s,
     // or -1 if not present.
     template<template<typename> class  S, typename E>
-    int Index(S<E> s, E v)
+    int64_t Index(S<E> s, E v)
     {
         for(auto [i, gocpp_ignored] : s)
         {
@@ -144,7 +144,7 @@ namespace golang::slices
     // IndexFunc returns the first index i satisfying f(s[i]),
     // or -1 if none do.
     template<template<typename> class  S, typename E>
-    int IndexFunc(S<E> s, std::function<bool (E _1)> f)
+    int64_t IndexFunc(S<E> s, std::function<bool (E _1)> f)
     {
         for(auto [i, gocpp_ignored] : s)
         {
@@ -181,7 +181,7 @@ namespace golang::slices
     // This function is O(len(s) + len(v)).
     // If the result is empty, it has the same nilness as s.
     template<template<typename> class  S, typename E>
-    S<E> Insert(S<E> s, int i, gocpp::slice<E> v)
+    S<E> Insert(S<E> s, int64_t i, gocpp::slice<E> v)
     {
         // bounds check
         _ = s.make_slice(i);
@@ -271,7 +271,7 @@ namespace golang::slices
     // Delete zeroes the elements s[len(s)-(j-i):len(s)].
     // If the result is empty, it has the same nilness as s.
     template<template<typename> class  S, typename E>
-    S<E> Delete(S<E> s, int i, int j)
+    S<E> Delete(S<E> s, int64_t i, int64_t j)
     {
         // bounds check
         _ = s.make_slice(i, j, len(s));
@@ -320,7 +320,7 @@ namespace golang::slices
     // When len(v) < (j-i), Replace zeroes the elements between the new length and the original length.
     // If the result is empty, it has the same nilness as s.
     template<template<typename> class  S, typename E>
-    S<E> Replace(S<E> s, int i, int j, gocpp::slice<E> v)
+    S<E> Replace(S<E> s, int64_t i, int64_t j, gocpp::slice<E> v)
     {
         // bounds check
         _ = s.make_slice(i, j);
@@ -450,12 +450,12 @@ namespace golang::slices
         {
             return s;
         }
-        for(auto k = 1; k < len(s); k++)
+        for(int64_t k = 1; k < len(s); k++)
         {
             if(s[k] == s[k - 1])
             {
                 auto s2 = s.make_slice(k);
-                for(auto k2 = 1; k2 < len(s2); k2++)
+                for(int64_t k2 = 1; k2 < len(s2); k2++)
                 {
                     if(s2[k2] != s2[k2 - 1])
                     {
@@ -483,12 +483,12 @@ namespace golang::slices
         {
             return s;
         }
-        for(auto k = 1; k < len(s); k++)
+        for(int64_t k = 1; k < len(s); k++)
         {
             if(eq(s[k], s[k - 1]))
             {
                 auto s2 = s.make_slice(k);
-                for(auto k2 = 1; k2 < len(s2); k2++)
+                for(int64_t k2 = 1; k2 < len(s2); k2++)
                 {
                     if(! eq(s2[k2], s2[k2 - 1]))
                     {
@@ -511,7 +511,7 @@ namespace golang::slices
     // allocate the memory, Grow panics.
     // The result preserves the nilness of s.
     template<template<typename> class  S, typename E>
-    S<E> Grow(S<E> s, int n)
+    S<E> Grow(S<E> s, int64_t n)
     {
         if(n < 0)
         {
@@ -536,7 +536,7 @@ namespace golang::slices
     // rotateLeft rotates s left by r spaces.
     // s_final[i] = s_orig[i+r], wrapping around.
     template<typename E>
-    void rotateLeft(gocpp::slice<E> s, int r)
+    void rotateLeft(gocpp::slice<E> s, int64_t r)
     {
         Reverse(s.make_slice(0, r));
         Reverse(s.make_slice(r));
@@ -544,7 +544,7 @@ namespace golang::slices
     }
 
     template<typename E>
-    void rotateRight(gocpp::slice<E> s, int r)
+    void rotateRight(gocpp::slice<E> s, int64_t r)
     {
         rotateLeft(s, len(s) - r);
     }
@@ -571,7 +571,7 @@ namespace golang::slices
     // startIdx returns the index in haystack where the needle starts.
     // prerequisite: the needle must be aliased entirely inside the haystack.
     template<typename E>
-    int startIdx(gocpp::slice<E> haystack, gocpp::slice<E> needle)
+    int64_t startIdx(gocpp::slice<E> haystack, gocpp::slice<E> needle)
     {
         auto p = & needle[0];
         for(auto [i, gocpp_ignored] : haystack)
@@ -600,7 +600,7 @@ namespace golang::slices
     template<template<typename> class  S, typename E>
     S<E> Concat(gocpp::slice<S<E>> slices)
     {
-        auto size = 0;
+        int64_t size = 0;
         for(auto [gocpp_ignored, s] : slices)
         {
             size += len(s);
@@ -626,22 +626,22 @@ namespace golang::slices
     // Repeat panics if count is negative or if the result of (len(x) * count)
     // overflows.
     template<template<typename> class  S, typename E>
-    S<E> Repeat(S<E> x, int count)
+    S<E> Repeat(S<E> x, int64_t count)
     {
         if(count < 0)
         {
             gocpp::panic("cannot be negative"_s);
         }
 
-        auto maxInt = ~ (unsigned int)(0) >> 1;
-        auto [hi, lo] = bits::Mul((unsigned int)(len(x)), (unsigned int)(count));
+        auto maxInt = ~ (uint64_t)(0) >> 1;
+        auto [hi, lo] = bits::Mul((uint64_t)(len(x)), (uint64_t)(count));
         if(hi > 0 || lo > maxInt)
         {
             gocpp::panic("the result of (len(x) * count) overflows"_s);
         }
 
         // lo = len(x) * count
-        auto newslice = gocpp::make(gocpp::Tag<S>(), int(lo));
+        auto newslice = gocpp::make(gocpp::Tag<S>(), int64_t(lo));
         auto n = copy(newslice, x);
         for(; n < len(newslice); )
         {

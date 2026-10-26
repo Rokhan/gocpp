@@ -192,7 +192,7 @@ namespace golang::runtime
     // ordinal position of its respective select{recv,send,default} call.
     // Also, if the chosen scase was a receive operation, it reports whether
     // a value was received.
-    std::tuple<int, bool> selectgo(scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block)
+    std::tuple<int64_t, bool> selectgo(scase* cas0, uint16_t* order0, uintptr_t* pc0, int64_t nsends, int64_t nrecvs, bool block)
     {
         auto gp = getg();
         if(debugSelect)
@@ -221,7 +221,7 @@ namespace golang::runtime
             auto pc1 = (gocpp::array_ptr<gocpp::array<uintptr_t, 1 << 16>>)(gocpp::unsafe_pointer(pc0));
             pcs = pc1.make_slice(0, ncases, ncases);
         }
-        auto casePC = [=](int casi) mutable -> uintptr_t
+        auto casePC = [=](int64_t casi) mutable -> uintptr_t
         {
             if(pcs == nullptr)
             {
@@ -244,8 +244,8 @@ namespace golang::runtime
         // cases correctly, and they are rare enough not to bother
         // optimizing (and needing to test).
         // generate permuted order
-        auto norder = 0;
-        auto allSynctest = true;
+        int64_t norder = 0;
+        bool allSynctest = true;
         for(auto [i, gocpp_ignored] : scases)
         {
             auto cas = & scases[i];
@@ -283,7 +283,7 @@ namespace golang::runtime
         pollorder = pollorder.make_slice(0, norder);
         lockorder = lockorder.make_slice(0, norder);
 
-        auto waitReason = waitReasonSelect;
+        waitReason waitReason = waitReasonSelect;
         if(gp->bubble != nullptr && allSynctest)
         {
             // Every channel selected on is in a synctest bubble,
@@ -311,7 +311,7 @@ namespace golang::runtime
             auto o = lockorder[i];
             auto c = scases[o].c;
             lockorder[i] = lockorder[0];
-            auto j = 0;
+            int64_t j = 0;
             for(; ; )
             {
                 auto k = j * 2 + 1;
@@ -336,7 +336,7 @@ namespace golang::runtime
 
         if(debugSelect)
         {
-            for(auto i = 0; i + 1 < len(lockorder); i++)
+            for(int64_t i = 0; i + 1 < len(lockorder); i++)
             {
                 if(rec::sortkey(gocpp::recv(scases[lockorder[i]].c)) > rec::sortkey(gocpp::recv(scases[lockorder[i + 1]].c)))
                 {
@@ -358,14 +358,14 @@ namespace golang::runtime
         sudog** nextp = {};
 
         // pass 1 - look for something already waiting
-        int casi = {};
+        int64_t casi = {};
         scase* cas = {};
         bool caseSuccess = {};
         int64_t caseReleaseTime = - 1;
         bool recvOK = {};
         for(auto [gocpp_ignored, casei] : pollorder)
         {
-            casi = int(casei);
+            casi = int64_t(casei);
             cas = & scases[casi];
             c = cas->c;
 
@@ -422,7 +422,7 @@ namespace golang::runtime
         nextp = & gp->waiting;
         for(auto [gocpp_ignored, casei] : lockorder)
         {
-            casi = int(casei);
+            casi = int64_t(casei);
             cas = & scases[casi];
             c = cas->c;
             auto sg = acquireSudog();
@@ -499,7 +499,7 @@ namespace golang::runtime
             if(sg == sglist)
             {
                 // sg has already been dequeued by the G that woke us up.
-                casi = int(casei);
+                casi = int64_t(casei);
                 cas = k;
                 caseSuccess = sglist->success;
                 if(sglist->releasetime > 0)
@@ -510,7 +510,7 @@ namespace golang::runtime
             else
             {
                 c = k->c;
-                if(int(casei) < nsends)
+                if(int64_t(casei) < nsends)
                 {
                     rec::dequeueSudoG(gocpp::recv(c->sendq), sglist);
                 }
@@ -759,19 +759,19 @@ namespace golang::runtime
 
     // These values must match ../reflect/value.go:/SelectDir.
     //go:linkname reflect_rselect reflect.rselect
-    std::tuple<int, bool> reflect_rselect(gocpp::slice<runtimeSelect> cases)
+    std::tuple<int64_t, bool> reflect_rselect(gocpp::slice<runtimeSelect> cases)
     {
         if(len(cases) == 0)
         {
             block();
         }
         auto sel = gocpp::make(gocpp::Tag<gocpp::slice<scase>>(), len(cases));
-        auto orig = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), len(cases));
+        auto orig = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), len(cases));
         auto [nsends, nrecvs] = std::tuple{0, 0};
-        auto dflt = - 1;
+        int64_t dflt = - 1;
         for(auto [i, rc] : cases)
         {
-            int j = {};
+            int64_t j = {};
             //Go switch emulation
             {
                 auto condition = rc.dir;

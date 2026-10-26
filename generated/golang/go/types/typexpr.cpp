@@ -617,7 +617,7 @@ namespace golang::go::types
                     {
                         ast::ChanType* e = gocpp::any_cast<ast::ChanType*>(e0);
                         auto typ = new types::Chan{};
-                        auto dir = SendRecv;
+                        types::ChanDir dir = SendRecv;
                         //Go switch emulation
                         {
                             auto condition = e->Dir;

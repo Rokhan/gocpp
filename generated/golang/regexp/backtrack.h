@@ -16,7 +16,7 @@ namespace golang::regexp
     {
         uint32_t pc{};
         bool arg{};
-        int pos{};
+        int64_t pos{};
 
         using isGoStruct = void;
 
@@ -37,9 +37,9 @@ namespace golang::regexp
 {
     struct bitState
     {
-        int end{};
-        gocpp::slice<int> cap{};
-        gocpp::slice<int> matchcap{};
+        int64_t end{};
+        gocpp::slice<int64_t> cap{};
+        gocpp::slice<int64_t> matchcap{};
         gocpp::slice<job> jobs{};
         gocpp::slice<uint32_t> visited{};
         inputs inputs{};
@@ -72,7 +72,7 @@ namespace golang::regexp
 namespace golang::regexp
 {
     extern sync::Pool bitStatePool;
-    int maxBitStateLen(syntax::Prog* prog);
+    int64_t maxBitStateLen(syntax::Prog* prog);
     bool shouldBacktrack(syntax::Prog* prog);
 }
 
@@ -84,11 +84,11 @@ namespace golang::regexp
 
     namespace rec
     {
-        void reset(bitState* b, syntax::Prog* prog, int end, int ncap);
-        bool shouldVisit(bitState* b, uint32_t pc, int pos);
-        void push(bitState* b, Regexp* re, uint32_t pc, int pos, bool arg);
-        bool tryBacktrack(Regexp* re, bitState* b, input i, uint32_t pc, int pos);
-        gocpp::slice<int> backtrack(Regexp* re, gocpp::slice<unsigned char> ib, gocpp::string is, int pos, int ncap, gocpp::slice<int> dstCap);
+        void reset(bitState* b, syntax::Prog* prog, int64_t end, int64_t ncap);
+        bool shouldVisit(bitState* b, uint32_t pc, int64_t pos);
+        void push(bitState* b, Regexp* re, uint32_t pc, int64_t pos, bool arg);
+        bool tryBacktrack(Regexp* re, bitState* b, input i, uint32_t pc, int64_t pos);
+        gocpp::slice<int64_t> backtrack(Regexp* re, gocpp::slice<unsigned char> ib, gocpp::string is, int64_t pos, int64_t ncap, gocpp::slice<int64_t> dstCap);
     }
 }
 

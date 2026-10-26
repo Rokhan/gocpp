@@ -102,19 +102,19 @@ namespace golang::go::types
     }
 
     // NumFields returns the number of fields in the struct (including blank and embedded fields).
-    int rec::NumFields(Struct* s)
+    int64_t rec::NumFields(Struct* s)
     {
         return len(s->fields);
     }
 
     // Field returns the i'th field for 0 <= i < NumFields().
-    Var* rec::Field(Struct* s, int i)
+    Var* rec::Field(Struct* s, int64_t i)
     {
         return s->fields[i];
     }
 
     // Tag returns the i'th field tag for 0 <= i < NumFields().
-    gocpp::string rec::Tag(Struct* s, int i)
+    gocpp::string rec::Tag(Struct* s, int64_t i)
     {
         if(i < len(s->tags))
         {

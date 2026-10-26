@@ -104,7 +104,7 @@ namespace golang::main
 
         struct IAdder
         {
-            virtual void vAdd(int f) = 0;
+            virtual void vAdd(int64_t f) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -116,7 +116,7 @@ namespace golang::main
                 value.reset(ptr);
             }
 
-            void vAdd(int f) override;
+            void vAdd(int64_t f) override;
 
             void* getPtr() override
             {
@@ -133,8 +133,8 @@ namespace golang::main
 
     namespace rec
     {
-        void Add(const gocpp::PtrRecv<struct Adder, false>& self, int f);
-        void Add(const gocpp::ObjRecv<struct Adder>& self, int f);
+        void Add(const gocpp::PtrRecv<struct Adder, false>& self, int64_t f);
+        void Add(const gocpp::ObjRecv<struct Adder>& self, int64_t f);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Adder& value);
@@ -167,7 +167,7 @@ namespace golang::main
 
         struct IMultiplier
         {
-            virtual void vMul(int f) = 0;
+            virtual void vMul(int64_t f) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -179,7 +179,7 @@ namespace golang::main
                 value.reset(ptr);
             }
 
-            void vMul(int f) override;
+            void vMul(int64_t f) override;
 
             void* getPtr() override
             {
@@ -196,8 +196,8 @@ namespace golang::main
 
     namespace rec
     {
-        void Mul(const gocpp::PtrRecv<struct Multiplier, false>& self, int f);
-        void Mul(const gocpp::ObjRecv<struct Multiplier>& self, int f);
+        void Mul(const gocpp::PtrRecv<struct Multiplier, false>& self, int64_t f);
+        void Mul(const gocpp::ObjRecv<struct Multiplier>& self, int64_t f);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Multiplier& value);
@@ -266,7 +266,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Context& value);
     struct num
     {
-        int value{};
+        int64_t value{};
 
         using isGoStruct = void;
 
@@ -347,6 +347,8 @@ namespace golang::main
     void main();
     void testNilDeref();
     void f();
+    struct GoTag_MyFloat { };
+    using MyFloat = gocpp::defined<double, GoTag_MyFloat>;
     struct Vertex
     {
         double X{};
@@ -425,19 +427,19 @@ namespace golang::main
         void Print(const gocpp::PtrRecv<struct MultAdder, false>& self);
         void Print(const gocpp::ObjRecv<struct MultAdder>& self);
 
-        void Add(const gocpp::PtrRecv<struct MultAdder, false>& self, int f);
-        void Add(const gocpp::ObjRecv<struct MultAdder>& self, int f);
+        void Add(const gocpp::PtrRecv<struct MultAdder, false>& self, int64_t f);
+        void Add(const gocpp::ObjRecv<struct MultAdder>& self, int64_t f);
 
-        void Mul(const gocpp::PtrRecv<struct MultAdder, false>& self, int f);
-        void Mul(const gocpp::ObjRecv<struct MultAdder>& self, int f);
+        void Mul(const gocpp::PtrRecv<struct MultAdder, false>& self, int64_t f);
+        void Mul(const gocpp::ObjRecv<struct MultAdder>& self, int64_t f);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct MultAdder& value);
 
     namespace rec
     {
-        void Add(num* n, int f);
-        void Mul(num* n, int f);
+        void Add(num* n, int64_t f);
+        void Mul(num* n, int64_t f);
         void Print(num* n);
         double Abs(MyFloat f);
         double Abs(Vertex* v);

@@ -233,7 +233,7 @@ namespace golang::regexp::syntax
                 case 1:
                     // If literal is fold-sensitive, return 0, flagI - (?i) has been compiled out.
                     // If literal is not fold-sensitive, return 0, 0.
-                    for(auto i = 0; i < len(re->Rune); i += 2)
+                    for(int64_t i = 0; i < len(re->Rune); i += 2)
                     {
                         auto lo = gocpp::max(minFold, re->Rune[i]);
                         auto hi = gocpp::min(maxFold, re->Rune[i + 1]);
@@ -290,9 +290,9 @@ namespace golang::regexp::syntax
                     printFlags must = {};
                     printFlags cant = {};
                     printFlags allCant = {};
-                    auto start = 0;
-                    auto last = 0;
-                    auto did = false;
+                    int64_t start = 0;
+                    int64_t last = 0;
+                    bool did = false;
                     for(auto [i, sub] : re->Sub)
                     {
                         auto [subMust, subCant] = calcFlags(sub, flags);
@@ -413,7 +413,7 @@ namespace golang::regexp::syntax
                 switch(conditionId)
                 {
                     default:
-                        rec::WriteString(gocpp::recv(b), "<invalid op"_s + strconv::Itoa(int(re->Op)) + ">"_s);
+                        rec::WriteString(gocpp::recv(b), "<invalid op"_s + strconv::Itoa(int64_t(re->Op)) + ">"_s);
                         break;
                     case 0:
                         rec::WriteString(gocpp::recv(b), "[^\\x00-\\x{10FFFF}]"_s);
@@ -444,7 +444,7 @@ namespace golang::regexp::syntax
                             // Contains 0 and MaxRune. Probably a negated class.
                             // Print the gaps.
                             rec::WriteRune(gocpp::recv(b), '^');
-                            for(auto i = 1; i < len(re->Rune) - 1; i += 2)
+                            for(int64_t i = 1; i < len(re->Rune) - 1; i += 2)
                             {
                                 auto [lo, hi] = std::tuple{re->Rune[i] + 1, re->Rune[i + 1] - 1};
                                 escape(b, lo, lo == '-');
@@ -460,7 +460,7 @@ namespace golang::regexp::syntax
                         }
                         else
                         {
-                            for(auto i = 0; i < len(re->Rune); i += 2)
+                            for(int64_t i = 0; i < len(re->Rune); i += 2)
                             {
                                 auto [lo, hi] = std::tuple{re->Rune[i], re->Rune[i + 1]};
                                 escape(b, lo, lo == '-');
@@ -527,7 +527,7 @@ namespace golang::regexp::syntax
                     case 15:
                     case 16:
                     {
-                        auto p = printFlags(0);
+                        syntax::printFlags p = printFlags(0);
                         auto sub = re->Sub[0];
                         if(sub->Op > OpCapture || sub->Op == OpLiteral && len(sub->Rune) > 1)
                         {
@@ -577,7 +577,7 @@ namespace golang::regexp::syntax
                     case 17:
                         for(auto [gocpp_ignored, sub] : re->Sub)
                         {
-                            auto p = printFlags(0);
+                            syntax::printFlags p = printFlags(0);
                             if(sub->Op == OpAlternate)
                             {
                                 p = flagPrec;
@@ -681,9 +681,9 @@ namespace golang::regexp::syntax
     }
 
     // MaxCap walks the regexp to find the maximum capture index.
-    int rec::MaxCap(Regexp* re)
+    int64_t rec::MaxCap(Regexp* re)
     {
-        auto m = 0;
+        int64_t m = 0;
         if(re->Op == OpCapture)
         {
             m = re->Cap;

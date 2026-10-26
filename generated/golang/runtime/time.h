@@ -243,8 +243,8 @@ namespace golang::runtime
         void verify(timers* ts);
         void updateMinWhenHeap(timers* ts);
         void updateMinWhenModified(timers* ts, int64_t when);
-        void siftUp(timers* ts, int i);
-        void siftDown(timers* ts, int i);
+        void siftUp(timers* ts, int64_t i);
+        void siftDown(timers* ts, int64_t i);
         void initHeap(timers* ts);
         void maybeRunChan(timer* t, golang::runtime::hchan* c);
     }

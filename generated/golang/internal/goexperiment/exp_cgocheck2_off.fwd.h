@@ -6,6 +6,6 @@
 
 namespace golang::internal::goexperiment
 {
-    const bool CgoCheck2 = false;
-    const long CgoCheck2Int = 0;
+    inline constexpr bool CgoCheck2 = false;
+    inline constexpr long CgoCheck2Int = 0;
 }

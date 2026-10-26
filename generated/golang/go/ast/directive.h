@@ -97,8 +97,8 @@ namespace golang::go::ast
         token::Pos Pos(Directive* d);
         token::Pos End(Directive* d);
         std::tuple<gocpp::slice<DirectiveArg>, gocpp::error> ParseArgs(Directive* d);
-        void skip(directiveScanner* s, int n);
-        gocpp::string take(directiveScanner* s, int n);
+        void skip(directiveScanner* s, int64_t n);
+        gocpp::string take(directiveScanner* s, int64_t n);
         gocpp::string takeNonSpace(directiveScanner* s);
         void skipSpace(directiveScanner* s);
     }

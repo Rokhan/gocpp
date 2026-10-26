@@ -17,7 +17,7 @@ namespace golang::internal::bytealg
     {
     }
 
-    int LastIndexByte(gocpp::slice<unsigned char> s, unsigned char c)
+    int64_t LastIndexByte(gocpp::slice<unsigned char> s, unsigned char c)
     {
         for(auto i = len(s) - 1; i >= 0; i--)
         {
@@ -29,7 +29,7 @@ namespace golang::internal::bytealg
         return - 1;
     }
 
-    int LastIndexByteString(gocpp::string s, unsigned char c)
+    int64_t LastIndexByteString(gocpp::string s, unsigned char c)
     {
         for(auto i = len(s) - 1; i >= 0; i--)
         {

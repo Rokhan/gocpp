@@ -77,7 +77,7 @@ namespace golang::main
 
     // Crawl uses fetcher to recursively crawl
     // pages starting with url, to a maximum of depth.
-    void Crawl(gocpp::string url, int depth, Fetcher fetcher)
+    void Crawl(gocpp::string url, int64_t depth, Fetcher fetcher)
     {
         // TODO: Fetch URLs in parallel.
         // TODO: Don't fetch the same URL twice.

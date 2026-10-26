@@ -12,6 +12,10 @@
 
 namespace golang::main
 {
+    struct GoTag_MyInt { };
+    using MyInt = gocpp::defined<int64_t, GoTag_MyInt>;
+    struct GoTag_MyFloat { };
+    using MyFloat = gocpp::defined<double, GoTag_MyFloat>;
     struct Vertex
     {
         double X{};

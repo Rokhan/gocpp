@@ -33,19 +33,19 @@ namespace golang::unicode::utf8
     std::ostream& operator<<(std::ostream& os, const struct acceptRange& value);
     bool FullRune(gocpp::slice<unsigned char> p);
     bool FullRuneInString(gocpp::string s);
-    std::tuple<gocpp::rune, int> DecodeRune(gocpp::slice<unsigned char> p);
-    std::tuple<gocpp::rune, int> decodeRuneSlow(gocpp::slice<unsigned char> p);
-    std::tuple<gocpp::rune, int> DecodeRuneInString(gocpp::string s);
-    std::tuple<gocpp::rune, int> decodeRuneInStringSlow(gocpp::string s);
-    std::tuple<gocpp::rune, int> DecodeLastRune(gocpp::slice<unsigned char> p);
-    std::tuple<gocpp::rune, int> DecodeLastRuneInString(gocpp::string s);
-    int RuneLen(gocpp::rune r);
-    int EncodeRune(gocpp::slice<unsigned char> p, gocpp::rune r);
-    int encodeRuneNonASCII(gocpp::slice<unsigned char> p, gocpp::rune r);
+    std::tuple<gocpp::rune, int64_t> DecodeRune(gocpp::slice<unsigned char> p);
+    std::tuple<gocpp::rune, int64_t> decodeRuneSlow(gocpp::slice<unsigned char> p);
+    std::tuple<gocpp::rune, int64_t> DecodeRuneInString(gocpp::string s);
+    std::tuple<gocpp::rune, int64_t> decodeRuneInStringSlow(gocpp::string s);
+    std::tuple<gocpp::rune, int64_t> DecodeLastRune(gocpp::slice<unsigned char> p);
+    std::tuple<gocpp::rune, int64_t> DecodeLastRuneInString(gocpp::string s);
+    int64_t RuneLen(gocpp::rune r);
+    int64_t EncodeRune(gocpp::slice<unsigned char> p, gocpp::rune r);
+    int64_t encodeRuneNonASCII(gocpp::slice<unsigned char> p, gocpp::rune r);
     gocpp::slice<unsigned char> AppendRune(gocpp::slice<unsigned char> p, gocpp::rune r);
     gocpp::slice<unsigned char> appendRuneNonASCII(gocpp::slice<unsigned char> p, gocpp::rune r);
-    int RuneCount(gocpp::slice<unsigned char> p);
-    int RuneCountInString(gocpp::string s);
+    int64_t RuneCount(gocpp::slice<unsigned char> p);
+    int64_t RuneCountInString(gocpp::string s);
     bool RuneStart(unsigned char b);
 
     template<typename T>

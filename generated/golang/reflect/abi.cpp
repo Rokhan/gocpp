@@ -56,8 +56,8 @@ namespace golang::reflect
     // that uses text/template). The values that are currently
     // commented out there should be the actual values once
     // we're ready to use the register ABI everywhere.
-    int intArgRegs = abi::IntArgRegs;
-    int floatArgRegs = abi::FloatArgRegs;
+    int64_t intArgRegs = abi::IntArgRegs;
+    int64_t floatArgRegs = abi::FloatArgRegs;
     uintptr_t floatRegSize = uintptr_t(abi::EffectiveFloatRegSize);
     // abiStep represents an ABI "instruction." Each instruction
     // describes one part of how to translate between a Go value
@@ -173,10 +173,10 @@ namespace golang::reflect
     // stepsForValue returns the ABI instructions for translating
     // the i'th Go argument or return value represented by this
     // abiSeq to the Go ABI.
-    gocpp::slice<abiStep> rec::stepsForValue(abiSeq* a, int i)
+    gocpp::slice<abiStep> rec::stepsForValue(abiSeq* a, int64_t i)
     {
         auto s = a->valueStart[i];
-        int e = {};
+        int64_t e = {};
         if(i == len(a->valueStart) - 1)
         {
             e = len(a->steps);
@@ -424,7 +424,7 @@ namespace golang::reflect
     // n must be <= 8.
     //
     // Returns whether assignment succeeded.
-    bool rec::assignIntN(abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap)
+    bool rec::assignIntN(abiSeq* a, uintptr_t offset, uintptr_t size, int64_t n, uint8_t ptrMap)
     {
         if(n > 8 || n < 0)
         {
@@ -438,9 +438,9 @@ namespace golang::reflect
         {
             return false;
         }
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
-            auto kind = abiStepIntReg;
+            abiStepKind kind = abiStepIntReg;
             if(ptrMap & (uint8_t(1) << i) != 0)
             {
                 kind = abiStepPointer;
@@ -462,7 +462,7 @@ namespace golang::reflect
     // next n floating-point registers.
     //
     // Returns whether assignment succeeded.
-    bool rec::assignFloatN(abiSeq* a, uintptr_t offset, uintptr_t size, int n)
+    bool rec::assignFloatN(abiSeq* a, uintptr_t offset, uintptr_t size, int64_t n)
     {
         if(n < 0)
         {
@@ -472,7 +472,7 @@ namespace golang::reflect
         {
             return false;
         }
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             a->steps = append(a->steps, gocpp::Init<abiStep>([=](auto& x) {
                 x.kind = abiStepFloatReg;
@@ -572,9 +572,9 @@ namespace golang::reflect
 
     void dumpPtrBitMap(abi::IntArgRegBitmap b)
     {
-        for(auto i = 0; i < intArgRegs; i++)
+        for(int64_t i = 0; i < intArgRegs; i++)
         {
-            auto x = 0;
+            int64_t x = 0;
             if(rec::Get(gocpp::recv(b), i))
             {
                 x = 1;
@@ -591,7 +591,7 @@ namespace golang::reflect
         // of each register-allocated type.
         // TODO(mknyszek): Remove this when we no longer have
         // caller reserved spill space.
-        auto spill = uintptr_t(0);
+        uintptr_t spill = uintptr_t(0);
 
         // Compute gc program & stack bitmap for stack arguments
         auto stackPtrs = new bitVector{};
@@ -687,7 +687,7 @@ namespace golang::reflect
     // intFromReg loads an argSize sized integer from reg and places it at to.
     //
     // argSize must be non-zero, fit in a register, and a power-of-two.
-    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to)
+    void intFromReg(abi::RegArgs* r, int64_t reg, uintptr_t argSize, gocpp::unsafe_pointer to)
     {
         memmove(to, rec::IntRegArgAddr(gocpp::recv(r), reg, argSize), argSize);
     }
@@ -695,7 +695,7 @@ namespace golang::reflect
     // intToReg loads an argSize sized integer and stores it into reg.
     //
     // argSize must be non-zero, fit in a register, and a power-of-two.
-    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from)
+    void intToReg(abi::RegArgs* r, int64_t reg, uintptr_t argSize, gocpp::unsafe_pointer from)
     {
         memmove(rec::IntRegArgAddr(gocpp::recv(r), reg, argSize), from, argSize);
     }
@@ -703,7 +703,7 @@ namespace golang::reflect
     // floatFromReg loads a float value from its register representation in r.
     //
     // argSize must be 4 or 8.
-    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to)
+    void floatFromReg(abi::RegArgs* r, int64_t reg, uintptr_t argSize, gocpp::unsafe_pointer to)
     {
         //Go switch emulation
         {
@@ -729,7 +729,7 @@ namespace golang::reflect
     // floatToReg stores a float value in its register representation in r.
     //
     // argSize must be either 4 or 8.
-    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from)
+    void floatToReg(abi::RegArgs* r, int64_t reg, uintptr_t argSize, gocpp::unsafe_pointer from)
     {
         //Go switch emulation
         {

@@ -15,20 +15,20 @@ namespace golang::strconv
     std::tuple<bool, gocpp::error> ParseBool(gocpp::string str);
     gocpp::string FormatBool(bool b);
     gocpp::slice<unsigned char> AppendBool(gocpp::slice<unsigned char> dst, bool b);
-    std::tuple<struct gocpp::complex128, gocpp::error> ParseComplex(gocpp::string s, int bitSize);
-    std::tuple<double, gocpp::error> ParseFloat(gocpp::string s, int bitSize);
-    std::tuple<uint64_t, gocpp::error> ParseUint(gocpp::string s, int base, int bitSize);
-    std::tuple<int64_t, gocpp::error> ParseInt(gocpp::string s, int base, int bitSize);
-    std::tuple<int, gocpp::error> Atoi(gocpp::string s);
-    gocpp::string FormatComplex(struct gocpp::complex128 c, unsigned char fmt, int prec, int bitSize);
-    gocpp::string FormatFloat(double f, unsigned char fmt, int prec, int bitSize);
-    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double f, unsigned char fmt, int prec, int bitSize);
-    gocpp::string FormatUint(uint64_t i, int base);
-    gocpp::string FormatInt(int64_t i, int base);
-    gocpp::string Itoa(int i);
-    gocpp::slice<unsigned char> AppendInt(gocpp::slice<unsigned char> dst, int64_t i, int base);
-    gocpp::slice<unsigned char> AppendUint(gocpp::slice<unsigned char> dst, uint64_t i, int base);
-    gocpp::error toError(gocpp::string fn, gocpp::string s, int base, int bitSize, gocpp::error err);
+    std::tuple<struct gocpp::complex128, gocpp::error> ParseComplex(gocpp::string s, int64_t bitSize);
+    std::tuple<double, gocpp::error> ParseFloat(gocpp::string s, int64_t bitSize);
+    std::tuple<uint64_t, gocpp::error> ParseUint(gocpp::string s, int64_t base, int64_t bitSize);
+    std::tuple<int64_t, gocpp::error> ParseInt(gocpp::string s, int64_t base, int64_t bitSize);
+    std::tuple<int64_t, gocpp::error> Atoi(gocpp::string s);
+    gocpp::string FormatComplex(struct gocpp::complex128 c, unsigned char fmt, int64_t prec, int64_t bitSize);
+    gocpp::string FormatFloat(double f, unsigned char fmt, int64_t prec, int64_t bitSize);
+    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double f, unsigned char fmt, int64_t prec, int64_t bitSize);
+    gocpp::string FormatUint(uint64_t i, int64_t base);
+    gocpp::string FormatInt(int64_t i, int64_t base);
+    gocpp::string Itoa(int64_t i);
+    gocpp::slice<unsigned char> AppendInt(gocpp::slice<unsigned char> dst, int64_t i, int64_t base);
+    gocpp::slice<unsigned char> AppendUint(gocpp::slice<unsigned char> dst, uint64_t i, int64_t base);
+    gocpp::error toError(gocpp::string fn, gocpp::string s, int64_t base, int64_t bitSize, gocpp::error err);
     // ErrRange indicates that a value is out of range for the target type.
     extern gocpp::error ErrRange;
     // ErrSyntax indicates that a value does not have the right syntax for the target type.
@@ -53,8 +53,8 @@ namespace golang::strconv
     std::ostream& operator<<(std::ostream& os, const struct NumError& value);
     NumError* syntaxError(gocpp::string fn, gocpp::string str);
     NumError* rangeError(gocpp::string fn, gocpp::string str);
-    NumError* baseError(gocpp::string fn, gocpp::string str, int base);
-    NumError* bitSizeError(gocpp::string fn, gocpp::string str, int bitSize);
+    NumError* baseError(gocpp::string fn, gocpp::string str, int64_t base);
+    NumError* bitSizeError(gocpp::string fn, gocpp::string str, int64_t bitSize);
 
     namespace rec
     {

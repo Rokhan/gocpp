@@ -46,8 +46,8 @@ namespace golang::go::types
     {
         mocklib::Mutex mu{};
         gocpp::map<gocpp::string, gocpp::slice<ctxtEntry>> typeMap{}; // type hash -> instances entries
-        int nextID{}; // next unique ID
-        gocpp::map<golang::go::types::Type, int> originIDs{}; // origin type -> unique ID
+        int64_t nextID{}; // next unique ID
+        gocpp::map<golang::go::types::Type, int64_t> originIDs{}; // origin type -> unique ID
 
         using isGoStruct = void;
 
@@ -74,7 +74,7 @@ namespace golang::go::types
         gocpp::string instanceHash(Context* ctxt, golang::go::types::Type orig, gocpp::slice<golang::go::types::Type> targs);
         golang::go::types::Type lookup(Context* ctxt, gocpp::string h, golang::go::types::Type orig, gocpp::slice<golang::go::types::Type> targs);
         golang::go::types::Type update(Context* ctxt, gocpp::string h, golang::go::types::Type orig, gocpp::slice<golang::go::types::Type> targs, golang::go::types::Type inst);
-        int getID(Context* ctxt, golang::go::types::Type t);
+        int64_t getID(Context* ctxt, golang::go::types::Type t);
     }
 }
 

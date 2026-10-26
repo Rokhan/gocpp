@@ -16,12 +16,12 @@ namespace golang::internal::reflectlite
     namespace abi = golang::internal::abi;
     struct Type;
     using Kind = abi::Kind;
-    const abi::Kind Ptr = abi::Pointer;
+    inline constexpr abi::Kind Ptr = abi::Pointer;
     // Import-and-export these constants as necessary
-    const abi::Kind Interface = abi::Interface;
-    const abi::Kind Slice = abi::Slice;
-    const abi::Kind String = abi::String;
-    const abi::Kind Struct = abi::Struct;
+    inline constexpr abi::Kind Interface = abi::Interface;
+    inline constexpr abi::Kind Slice = abi::Slice;
+    inline constexpr abi::Kind String = abi::String;
+    inline constexpr abi::Kind Struct = abi::Struct;
     using nameOff = abi::NameOff;
     using typeOff = abi::TypeOff;
     using textOff = abi::TextOff;

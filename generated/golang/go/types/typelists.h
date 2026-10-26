@@ -58,12 +58,12 @@ namespace golang::go::types
 
     namespace rec
     {
-        int Len(TypeParamList* l);
-        TypeParam* At(TypeParamList* l, int i);
+        int64_t Len(TypeParamList* l);
+        TypeParam* At(TypeParamList* l, int64_t i);
         gocpp::slice<TypeParam*> list(TypeParamList* l);
         gocpp::string String(TypeParamList* l);
-        int Len(TypeList* l);
-        golang::go::types::Type At(TypeList* l, int i);
+        int64_t Len(TypeList* l);
+        golang::go::types::Type At(TypeList* l, int64_t i);
         gocpp::slice<golang::go::types::Type> list(TypeList* l);
         gocpp::string String(TypeList* l);
     }

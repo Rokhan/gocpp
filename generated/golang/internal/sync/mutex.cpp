@@ -110,9 +110,9 @@ namespace golang::internal::sync
     void rec::lockSlow(Mutex* m)
     {
         int64_t waitStartTime = {};
-        auto starving = false;
-        auto awoke = false;
-        auto iter = 0;
+        bool starving = false;
+        bool awoke = false;
+        int64_t iter = 0;
         auto old = m->state;
         for(; ; )
         {
@@ -187,7 +187,7 @@ namespace golang::internal::sync
                     {
                         go_throw("sync: inconsistent mutex state"_s);
                     }
-                    auto delta = int32_t(mutexLocked - (1 << mutexWaiterShift));
+                    int32_t delta = int32_t(mutexLocked - (1 << mutexWaiterShift));
                     if(! starving || (old >> mutexWaiterShift) == 1)
                     {
                         // Exit starvation mode.

@@ -113,8 +113,8 @@ namespace golang::runtime
         // For example, stack growth (newstack) will changegstatus
         // from _Grunning to _Gcopystack. This is uninteresting to synctest,
         // but if stack growth occurs while bubble.mu is held, we must not recursively lock.
-        auto totalDelta = 0;
-        auto wasRunning = true;
+        int64_t totalDelta = 0;
+        bool wasRunning = true;
         //Go switch emulation
         {
             auto condition = oldval;
@@ -137,7 +137,7 @@ namespace golang::runtime
                     break;
             }
         }
-        auto isRunning = true;
+        bool isRunning = true;
         //Go switch emulation
         {
             auto condition = newval;
@@ -428,7 +428,7 @@ namespace golang::runtime
     bool synctestidle_c(g* gp, gocpp::unsafe_pointer _1)
     {
         lock(& gp->bubble->mu);
-        auto canIdle = true;
+        bool canIdle = true;
         if(gp->bubble->running == 0 && gp->bubble->active == 1)
         {
             // All goroutines in the bubble have blocked or exited.
@@ -585,9 +585,9 @@ namespace golang::runtime
     // It returns ok==true if p is associated with bubbleid
     // (including if a new association was added),
     // and ok==false if not.
-    int getOrSetBubbleSpecial(gocpp::unsafe_pointer p, uint64_t bubbleid, bool add)
+    int64_t getOrSetBubbleSpecial(gocpp::unsafe_pointer p, uint64_t bubbleid, bool add)
     {
-        int assoc;
+        int64_t assoc;
         auto span = spanOfHeap(uintptr_t(p));
         if(span == nullptr)
         {
@@ -654,7 +654,7 @@ namespace golang::runtime
     // It returns false if p is already associated with a different bubble.
     //
     //go:linkname synctest_associate internal/synctest.associate
-    int synctest_associate(gocpp::unsafe_pointer p)
+    int64_t synctest_associate(gocpp::unsafe_pointer p)
     {
         return getOrSetBubbleSpecial(p, getg()->bubble->id, true);
     }

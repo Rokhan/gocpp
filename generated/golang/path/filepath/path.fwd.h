@@ -16,7 +16,7 @@ namespace golang::path::filepath
 {
     namespace os = golang::os;
     namespace fs = golang::io::fs;
-    const gocpp::rune Separator = os::PathSeparator;
-    const gocpp::rune ListSeparator = os::PathListSeparator;
+    inline constexpr gocpp::rune Separator = os::PathSeparator;
+    inline constexpr gocpp::rune ListSeparator = os::PathListSeparator;
     using WalkFunc = std::function<gocpp::error (gocpp::string path, fs::FileInfo info, gocpp::error err)>;
 }

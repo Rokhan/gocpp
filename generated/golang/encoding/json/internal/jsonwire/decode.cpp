@@ -48,9 +48,9 @@ namespace golang::encoding::json::internal::jsonwire
     }
 
     // ConsumeWhitespace consumes leading JSON whitespace per RFC 7159, section 2.
-    int ConsumeWhitespace(gocpp::slice<unsigned char> b)
+    int64_t ConsumeWhitespace(gocpp::slice<unsigned char> b)
     {
-        int n;
+        int64_t n;
         // NOTE: The arguments and logic are kept simple to keep this inlinable.
         for(; len(b) > n && (b[n] == ' ' || b[n] == '\t' || b[n] == '\r' || b[n] == '\n'); )
         {
@@ -61,7 +61,7 @@ namespace golang::encoding::json::internal::jsonwire
 
     // ConsumeNull consumes the next JSON null literal per RFC 7159, section 3.
     // It returns 0 if it is invalid, in which case ConsumeLiteral should be used.
-    int ConsumeNull(gocpp::slice<unsigned char> b)
+    int64_t ConsumeNull(gocpp::slice<unsigned char> b)
     {
         // NOTE: The arguments and logic are kept simple to keep this inlinable.
         auto literal = "null"_s;
@@ -74,7 +74,7 @@ namespace golang::encoding::json::internal::jsonwire
 
     // ConsumeFalse consumes the next JSON false literal per RFC 7159, section 3.
     // It returns 0 if it is invalid, in which case ConsumeLiteral should be used.
-    int ConsumeFalse(gocpp::slice<unsigned char> b)
+    int64_t ConsumeFalse(gocpp::slice<unsigned char> b)
     {
         // NOTE: The arguments and logic are kept simple to keep this inlinable.
         auto literal = "false"_s;
@@ -87,7 +87,7 @@ namespace golang::encoding::json::internal::jsonwire
 
     // ConsumeTrue consumes the next JSON true literal per RFC 7159, section 3.
     // It returns 0 if it is invalid, in which case ConsumeLiteral should be used.
-    int ConsumeTrue(gocpp::slice<unsigned char> b)
+    int64_t ConsumeTrue(gocpp::slice<unsigned char> b)
     {
         // NOTE: The arguments and logic are kept simple to keep this inlinable.
         auto literal = "true"_s;
@@ -100,11 +100,11 @@ namespace golang::encoding::json::internal::jsonwire
 
     // ConsumeLiteral consumes the next JSON literal per RFC 7159, section 3.
     // If the input appears truncated, it returns io.ErrUnexpectedEOF.
-    std::tuple<int, gocpp::error> ConsumeLiteral(gocpp::slice<unsigned char> b, gocpp::string lit)
+    std::tuple<int64_t, gocpp::error> ConsumeLiteral(gocpp::slice<unsigned char> b, gocpp::string lit)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
-        for(auto i = 0; i < len(b) && i < len(lit); i++)
+        for(int64_t i = 0; i < len(b) && i < len(lit); i++)
         {
             if(b[i] != lit[i])
             {
@@ -127,9 +127,9 @@ namespace golang::encoding::json::internal::jsonwire
     // always escaped in the v1 implementation. Thus, if this function reports
     // non-zero then we know that the string would be encoded the same way
     // under both v1 or v2 escape semantics.
-    int ConsumeSimpleString(gocpp::slice<unsigned char> b)
+    int64_t ConsumeSimpleString(gocpp::slice<unsigned char> b)
     {
-        int n;
+        int64_t n;
         // NOTE: The arguments and logic are kept simple to keep this inlinable.
         if(len(b) > 0 && b[0] == '"')
         {
@@ -138,7 +138,7 @@ namespace golang::encoding::json::internal::jsonwire
             {
                 n++;
             }
-            if((unsigned int)(len(b)) > (unsigned int)(n) && b[n] == '"')
+            if((uint64_t)(len(b)) > (uint64_t)(n) && b[n] == '"')
             {
                 n++;
                 return n;
@@ -152,25 +152,25 @@ namespace golang::encoding::json::internal::jsonwire
     // characters within the string itself.
     // It reports the number of bytes consumed and whether an error was encountered.
     // If the input appears truncated, it returns io.ErrUnexpectedEOF.
-    std::tuple<int, gocpp::error> ConsumeString(ValueFlags* flags, gocpp::slice<unsigned char> b, bool validateUTF8)
+    std::tuple<int64_t, gocpp::error> ConsumeString(ValueFlags* flags, gocpp::slice<unsigned char> b, bool validateUTF8)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return ConsumeStringResumable(flags, b, 0, validateUTF8);
     }
 
     // ConsumeStringResumable is identical to [ConsumeString] but supports resuming
     // from a previous call that returned io.ErrUnexpectedEOF.
-    std::tuple<int, gocpp::error> ConsumeStringResumable(ValueFlags* flags, gocpp::slice<unsigned char> b, int resumeOffset, bool validateUTF8)
+    std::tuple<int64_t, gocpp::error> ConsumeStringResumable(ValueFlags* flags, gocpp::slice<unsigned char> b, int64_t resumeOffset, bool validateUTF8)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         // Consume the leading double quote.
         //Go switch emulation
         {
             int conditionId = -1;
             if(resumeOffset > 0) { conditionId = 0; }
-            else if((unsigned int)(len(b)) == 0) { conditionId = 1; }
+            else if((uint64_t)(len(b)) == 0) { conditionId = 1; }
             else if(b[0] == '"') { conditionId = 2; }
             switch(conditionId)
             {
@@ -191,18 +191,18 @@ namespace golang::encoding::json::internal::jsonwire
         }
 
         // Consume every character in the string.
-        for(; (unsigned int)(len(b)) > (unsigned int)(n); )
+        for(; (uint64_t)(len(b)) > (uint64_t)(n); )
         {
             // Optimize for long sequences of unescaped characters.
             auto noEscape = [=](unsigned char c) mutable -> bool
             {
                 return c < utf8::RuneSelf && ' ' <= c && c != '\\' && c != '"';
             };
-            for(; (unsigned int)(len(b)) > (unsigned int)(n) && noEscape(b[n]); )
+            for(; (uint64_t)(len(b)) > (uint64_t)(n) && noEscape(b[n]); )
             {
                 n++;
             }
-            if((unsigned int)(len(b)) <= (unsigned int)(n))
+            if((uint64_t)(len(b)) <= (uint64_t)(n))
             {
                 return {n, io::ErrUnexpectedEOF};
             }
@@ -234,7 +234,7 @@ namespace golang::encoding::json::internal::jsonwire
                     case 1:
                         rec::Join(gocpp::recv(flags), stringNonVerbatim);
                         resumeOffset = n;
-                        if((unsigned int)(len(b)) < (unsigned int)(n + 2))
+                        if((uint64_t)(len(b)) < (uint64_t)(n + 2))
                         {
                             return {resumeOffset, io::ErrUnexpectedEOF};
                         }
@@ -271,7 +271,7 @@ namespace golang::encoding::json::internal::jsonwire
                                     break;
                                 case 8:
                                 {
-                                    if((unsigned int)(len(b)) < (unsigned int)(n + 6))
+                                    if((uint64_t)(len(b)) < (uint64_t)(n + 6))
                                     {
                                         if(hasEscapedUTF16Prefix(b.make_slice(n), false))
                                         {
@@ -331,7 +331,7 @@ namespace golang::encoding::json::internal::jsonwire
                                     auto r = gocpp::rune(v1);
                                     if(validateUTF8 && utf16::IsSurrogate(r))
                                     {
-                                        if((unsigned int)(len(b)) < (unsigned int)(n + 6))
+                                        if((uint64_t)(len(b)) < (uint64_t)(n + 6))
                                         {
                                             if(hasEscapedUTF16Prefix(b.make_slice(n), true))
                                             {
@@ -404,12 +404,12 @@ namespace golang::encoding::json::internal::jsonwire
         dst = slices::Grow(dst, len(src));
 
         // Consume the leading double quote.
-        int i = {};
-        int n = {};
+        int64_t i = {};
+        int64_t n = {};
         //Go switch emulation
         {
             int conditionId = -1;
-            if((unsigned int)(len(src)) == 0) { conditionId = 0; }
+            if((uint64_t)(len(src)) == 0) { conditionId = 0; }
             else if(src[0] == '"') { conditionId = 1; }
             switch(conditionId)
             {
@@ -426,18 +426,18 @@ namespace golang::encoding::json::internal::jsonwire
         }
 
         // Consume every character in the string.
-        for(; (unsigned int)(len(src)) > (unsigned int)(n); )
+        for(; (uint64_t)(len(src)) > (uint64_t)(n); )
         {
             // Optimize for long sequences of unescaped characters.
             auto noEscape = [=](unsigned char c) mutable -> bool
             {
                 return c < utf8::RuneSelf && ' ' <= c && c != '\\' && c != '"';
             };
-            for(; (unsigned int)(len(src)) > (unsigned int)(n) && noEscape(src[n]); )
+            for(; (uint64_t)(len(src)) > (uint64_t)(n) && noEscape(src[n]); )
             {
                 n++;
             }
-            if((unsigned int)(len(src)) <= (unsigned int)(n))
+            if((uint64_t)(len(src)) <= (uint64_t)(n))
             {
                 dst = append(dst, src.make_slice(i, n));
                 return {dst, io::ErrUnexpectedEOF};
@@ -475,7 +475,7 @@ namespace golang::encoding::json::internal::jsonwire
                     case 1:
                         dst = append(dst, src.make_slice(i, n));
                         // Handle escape sequence.
-                        if((unsigned int)(len(src)) < (unsigned int)(n + 2))
+                        if((uint64_t)(len(src)) < (uint64_t)(n + 2))
                         {
                             return {dst, io::ErrUnexpectedEOF};
                         }
@@ -523,7 +523,7 @@ namespace golang::encoding::json::internal::jsonwire
                                     break;
                                 case 8:
                                 {
-                                    if((unsigned int)(len(src)) < (unsigned int)(n + 6))
+                                    if((uint64_t)(len(src)) < (uint64_t)(n + 6))
                                     {
                                         if(hasEscapedUTF16Prefix(src.make_slice(n), false))
                                         {
@@ -543,7 +543,7 @@ namespace golang::encoding::json::internal::jsonwire
                                     {
                                         // assume failure unless the following succeeds
                                         r = utf8::RuneError;
-                                        if((unsigned int)(len(src)) < (unsigned int)(n + 6))
+                                        if((uint64_t)(len(src)) < (uint64_t)(n + 6))
                                         {
                                             if(hasEscapedUTF16Prefix(src.make_slice(n), true))
                                             {
@@ -665,9 +665,9 @@ namespace golang::encoding::json::internal::jsonwire
     // but is limited to the grammar for a non-negative integer.
     // It returns 0 if it is invalid or more complicated than a simple integer,
     // in which case ConsumeNumber should be called.
-    int ConsumeSimpleNumber(gocpp::slice<unsigned char> b)
+    int64_t ConsumeSimpleNumber(gocpp::slice<unsigned char> b)
     {
-        int n;
+        int64_t n;
         // NOTE: The arguments and logic are kept simple to keep this inlinable.
         if(len(b) > 0)
         {
@@ -688,7 +688,7 @@ namespace golang::encoding::json::internal::jsonwire
             {
                 return 0;
             }
-            if((unsigned int)(len(b)) <= (unsigned int)(n) || (b[n] != '.' && b[n] != 'e' && b[n] != 'E'))
+            if((uint64_t)(len(b)) <= (uint64_t)(n) || (b[n] != '.' && b[n] != 'e' && b[n] != 'E'))
             {
                 return n;
             }
@@ -703,9 +703,9 @@ namespace golang::encoding::json::internal::jsonwire
     // Note that JSON numbers are not self-terminating.
     // If the entire input is consumed, then the caller needs to consider whether
     // there may be subsequent unread data that may still be part of this number.
-    std::tuple<int, gocpp::error> ConsumeNumber(gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> ConsumeNumber(gocpp::slice<unsigned char> b)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         std::tie(n, std::ignore, err) = ConsumeNumberResumable(b, 0, consumeNumberInit);
         return {n, err};
@@ -713,9 +713,9 @@ namespace golang::encoding::json::internal::jsonwire
 
     // ConsumeNumberResumable is identical to ConsumeNumber but supports resuming
     // from a previous call that returned io.ErrUnexpectedEOF.
-    std::tuple<int, ConsumeNumberState, gocpp::error> ConsumeNumberResumable(gocpp::slice<unsigned char> b, int resumeOffset, ConsumeNumberState state)
+    std::tuple<int64_t, ConsumeNumberState, gocpp::error> ConsumeNumberResumable(gocpp::slice<unsigned char> b, int64_t resumeOffset, ConsumeNumberState state)
     {
-        int n;
+        int64_t n;
         ConsumeNumberState _1;
         gocpp::error err;
         // Jump to the right state when resuming from a partial consumption.
@@ -736,11 +736,11 @@ namespace golang::encoding::json::internal::jsonwire
                     case 1:
                     case 2:
                         // Consume leading digits.
-                        for(; (unsigned int)(len(b)) > (unsigned int)(n) && ('0' <= b[n] && b[n] <= '9'); )
+                        for(; (uint64_t)(len(b)) > (uint64_t)(n) && ('0' <= b[n] && b[n] <= '9'); )
                         {
                             n++;
                         }
-                        if((unsigned int)(len(b)) <= (unsigned int)(n))
+                        if((uint64_t)(len(b)) <= (uint64_t)(n))
                         {
                             // still within the same state
                             return {n, state, nullptr};
@@ -777,14 +777,14 @@ namespace golang::encoding::json::internal::jsonwire
         // Consume required integer component (with optional minus sign).
         beforeInteger:
         resumeOffset = n;
-        if((unsigned int)(len(b)) > 0 && b[0] == '-')
+        if((uint64_t)(len(b)) > 0 && b[0] == '-')
         {
             n++;
         }
         //Go switch emulation
         {
             int conditionId = -1;
-            if((unsigned int)(len(b)) <= (unsigned int)(n)) { conditionId = 0; }
+            if((uint64_t)(len(b)) <= (uint64_t)(n)) { conditionId = 0; }
             else if(b[n] == '0') { conditionId = 1; }
             else if('1' <= b[n] && b[n] <= '9') { conditionId = 2; }
             switch(conditionId)
@@ -798,7 +798,7 @@ namespace golang::encoding::json::internal::jsonwire
                     break;
                 case 2:
                     n++;
-                    for(; (unsigned int)(len(b)) > (unsigned int)(n) && ('0' <= b[n] && b[n] <= '9'); )
+                    for(; (uint64_t)(len(b)) > (uint64_t)(n) && ('0' <= b[n] && b[n] <= '9'); )
                     {
                         n++;
                     }
@@ -812,14 +812,14 @@ namespace golang::encoding::json::internal::jsonwire
 
         // Consume optional fractional component.
         beforeFractional:
-        if((unsigned int)(len(b)) > (unsigned int)(n) && b[n] == '.')
+        if((uint64_t)(len(b)) > (uint64_t)(n) && b[n] == '.')
         {
             resumeOffset = n;
             n++;
             //Go switch emulation
             {
                 int conditionId = -1;
-                if((unsigned int)(len(b)) <= (unsigned int)(n)) { conditionId = 0; }
+                if((uint64_t)(len(b)) <= (uint64_t)(n)) { conditionId = 0; }
                 else if('0' <= b[n] && b[n] <= '9') { conditionId = 1; }
                 switch(conditionId)
                 {
@@ -834,7 +834,7 @@ namespace golang::encoding::json::internal::jsonwire
                         break;
                 }
             }
-            for(; (unsigned int)(len(b)) > (unsigned int)(n) && ('0' <= b[n] && b[n] <= '9'); )
+            for(; (uint64_t)(len(b)) > (uint64_t)(n) && ('0' <= b[n] && b[n] <= '9'); )
             {
                 n++;
             }
@@ -843,18 +843,18 @@ namespace golang::encoding::json::internal::jsonwire
 
         // Consume optional exponent component.
         beforeExponent:
-        if((unsigned int)(len(b)) > (unsigned int)(n) && (b[n] == 'e' || b[n] == 'E'))
+        if((uint64_t)(len(b)) > (uint64_t)(n) && (b[n] == 'e' || b[n] == 'E'))
         {
             resumeOffset = n;
             n++;
-            if((unsigned int)(len(b)) > (unsigned int)(n) && (b[n] == '-' || b[n] == '+'))
+            if((uint64_t)(len(b)) > (uint64_t)(n) && (b[n] == '-' || b[n] == '+'))
             {
                 n++;
             }
             //Go switch emulation
             {
                 int conditionId = -1;
-                if((unsigned int)(len(b)) <= (unsigned int)(n)) { conditionId = 0; }
+                if((uint64_t)(len(b)) <= (uint64_t)(n)) { conditionId = 0; }
                 else if('0' <= b[n] && b[n] <= '9') { conditionId = 1; }
                 switch(conditionId)
                 {
@@ -869,7 +869,7 @@ namespace golang::encoding::json::internal::jsonwire
                         break;
                 }
             }
-            for(; (unsigned int)(len(b)) > (unsigned int)(n) && ('0' <= b[n] && b[n] <= '9'); )
+            for(; (uint64_t)(len(b)) > (uint64_t)(n) && ('0' <= b[n] && b[n] <= '9'); )
             {
                 n++;
             }
@@ -930,7 +930,7 @@ namespace golang::encoding::json::internal::jsonwire
         bool ok;
         // len(fmt.Sprint(uint64(math.MaxUint64)))
         auto unsafeWidth = 20;
-        int n = {};
+        int64_t n = {};
         for(; len(b) > n && ('0' <= b[n] && b[n] <= '9'); n++)
         {
             v = 10 * v + uint64_t(b[n] - '0');

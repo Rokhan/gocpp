@@ -258,11 +258,11 @@ namespace golang::encoding::json::v2
         };
 
         // Setup a queue for a breadth-first search.
-        int queueIndex = {};
+        int64_t queueIndex = {};
         struct queueEntry
         {
             reflect::Type typ{};
-            gocpp::slice<int> index{};
+            gocpp::slice<int64_t> index{};
             bool visitChildren{}; // whether to recursively visit embedded field in this struct
 
             using isGoStruct = void;
@@ -291,9 +291,9 @@ namespace golang::encoding::json::v2
 
             auto t = qe.typ;
             // index of last embedded fallback field in current struct
-            auto embeddedFallbackIndex = - 1;
+            int64_t embeddedFallbackIndex = - 1;
             // index of each field with a given JSON object name in current struct
-            auto namesIndex = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+            auto namesIndex = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int64_t>>());
             // whether any Go struct field has a `json` tag
             bool hasAnyJSONTag = {};
             // whether any JSON serializable fields exist in current struct
@@ -317,7 +317,7 @@ namespace golang::encoding::json::v2
                 }
                 hasAnyJSONField = true;
                 auto f = gocpp::Init<structField>([=](auto& x) {
-                    x.index = append(append(gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 0, len(qe.index) + 1), qe.index), i);
+                    x.index = append(append(gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), 0, len(qe.index) + 1), qe.index), i);
                     x.typ = sf.Type;
                     x.fieldOptions = options;
                 });
@@ -585,14 +585,14 @@ namespace golang::encoding::json::v2
         // or the one that is uniquely tagged with a JSON name.
         // Otherwise, no dominant field exists for the set.
         auto flattened = allFields.make_slice(0, 0);
-        slices::SortStableFunc(allFields, [=](structField x, structField y) mutable -> int
+        slices::SortStableFunc(allFields, [=](structField x, structField y) mutable -> int64_t
         {
             return cmp::Or(strings::Compare(x.fieldOptions.name, y.fieldOptions.name), cmp::Compare(len(x.index), len(y.index)), boolsCompare(! x.fieldOptions.hasName, ! y.fieldOptions.hasName));
         });
         for(; len(allFields) > 0; )
         {
             // number of fields with the same exact name
-            auto n = 1;
+            int64_t n = 1;
             for(; n < len(allFields) && allFields[n - 1].fieldOptions.name == allFields[n].fieldOptions.name; )
             {
                 n++;
@@ -608,7 +608,7 @@ namespace golang::encoding::json::v2
         // Sort the fields according to a breadth-first ordering
         // so that we can re-number IDs with the smallest possible values.
         // This optimizes use of uintSet such that it fits in the 64-entry bit set.
-        slices::SortFunc(flattened, [=](structField x, structField y) mutable -> int
+        slices::SortFunc(flattened, [=](structField x, structField y) mutable -> int64_t
         {
             return cmp::Compare(x.id, y.id);
         });
@@ -619,7 +619,7 @@ namespace golang::encoding::json::v2
 
         // Sort the fields according to a depth-first ordering
         // as the typical order that fields are marshaled.
-        slices::SortFunc(flattened, [=](structField x, structField y) mutable -> int
+        slices::SortFunc(flattened, [=](structField x, structField y) mutable -> int64_t
         {
             return slices::Compare(x.index, y.index);
         });
@@ -644,7 +644,7 @@ namespace golang::encoding::json::v2
             {
                 // The precedence order for conflicting case-insensitive names
                 // is by breadth-first order, rather than depth-first order.
-                slices::SortFunc(fields, [=](structField* x, structField* y) mutable -> int
+                slices::SortFunc(fields, [=](structField* x, structField* y) mutable -> int64_t
                 {
                     return cmp::Compare(x->id, y->id);
                 });
@@ -1020,7 +1020,7 @@ namespace golang::encoding::json::v2
     // which is either a Go identifier or a single-quoted string.
     // If the next option is invalid, it returns all of in until the next comma,
     // and reports an error.
-    std::tuple<gocpp::string, int, gocpp::error> consumeTagOption(gocpp::string in, bool allowQuoted)
+    std::tuple<gocpp::string, int64_t, gocpp::error> consumeTagOption(gocpp::string in, bool allowQuoted)
     {
         // For legacy compatibility with v1, assume options are comma-separated.
         auto i = strings::IndexByte(in, ',');
@@ -1060,7 +1060,7 @@ namespace golang::encoding::json::v2
                     // strconv.Unquote to handle the rest.
                     bool inEscape = {};
                     auto b = gocpp::slice<unsigned char> {'"'};
-                    auto n = len("'"_s);
+                    int64_t n = len("'"_s);
                     for(; len(in) > n; )
                     {
                         auto [r, rn] = utf8::DecodeRuneInString(in.make_slice(n));
@@ -1133,7 +1133,7 @@ namespace golang::encoding::json::v2
     }
 
     // boolsCompare compares x and y, ordering false before true.
-    int boolsCompare(bool x, bool y)
+    int64_t boolsCompare(bool x, bool y)
     {
         //Go switch emulation
         {

@@ -14,7 +14,7 @@
 namespace golang::go::types
 {
     gocpp::string pathString(gocpp::slice<Object> path);
-    int firstInSrc(gocpp::slice<Object> path);
+    int64_t firstInSrc(gocpp::slice<Object> path);
 }
 #include "golang/go/ast/ast.fwd.h"
 
@@ -108,7 +108,7 @@ namespace golang::go::types
     struct constDecl
     {
         ast::ValueSpec* spec{};
-        int iota{};
+        int64_t iota{};
         ast::Expr typ{};
         gocpp::slice<ast::Expr> init{};
         bool inherited{};
@@ -195,7 +195,7 @@ namespace golang::go::types
         void declare(Checker* check, golang::go::types::Scope* scope, ast::Ident* id, Object obj, token::Pos pos);
         void objDecl(Checker* check, Object obj);
         bool validCycle(Checker* check, Object obj);
-        void cycleError(Checker* check, gocpp::slice<Object> cycle, int start);
+        void cycleError(Checker* check, gocpp::slice<Object> cycle, int64_t start);
         ast::Node node(importDecl d);
         ast::Node node(golang::go::types::constDecl d);
         ast::Node node(golang::go::types::varDecl d);

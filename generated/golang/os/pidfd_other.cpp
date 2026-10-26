@@ -35,7 +35,7 @@ namespace golang::os
         return {0, false};
     }
 
-    std::tuple<uintptr_t, gocpp::error> pidfdFind(int _1)
+    std::tuple<uintptr_t, gocpp::error> pidfdFind(int64_t _1)
     {
         return {0, gocpp::error(syscall::go_ENOSYS)};
     }

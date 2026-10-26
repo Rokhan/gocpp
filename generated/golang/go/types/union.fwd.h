@@ -9,7 +9,7 @@ namespace golang::go::types
     struct Union;
     struct GoTag_Term;
     // Avoid excessive type-checking times due to quadratic termlist operations.
-    const long maxTermCount = 100;
+    inline constexpr long maxTermCount = 100;
 }
 #include "golang/go/types/typeterm.fwd.h"
 

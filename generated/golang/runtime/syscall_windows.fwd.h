@@ -8,19 +8,20 @@ namespace golang::runtime
 {
     struct cbsStruct;
     struct winCallback;
-    using abiPartKind = int;
+    struct GoTag_abiPartKind;
+    using abiPartKind = gocpp::defined<int64_t, GoTag_abiPartKind>;
     struct abiPart;
     struct abiDesc;
     struct winCallbackKey;
     struct callbackArgs;
-    const abiPartKind abiPartBad = 0;
-    const abiPartKind abiPartStack = 1;
-    const abiPartKind abiPartReg = 2;
+    inline constexpr abiPartKind abiPartBad = 0;
+    inline constexpr abiPartKind abiPartStack = 1;
+    inline constexpr abiPartKind abiPartReg = 2;
 }
 #include "golang/internal/goarch/goarch.fwd.h"
 
 namespace golang::runtime
 {
     namespace goarch = golang::internal::goarch;
-    const int callbackMaxFrame = 64 * goarch::PtrSize;
+    inline constexpr int64_t callbackMaxFrame = 64 * goarch::PtrSize;
 }

@@ -68,7 +68,7 @@ namespace golang::sort
     //		})
     //		fmt.Printf("Your number is %d.\n", answer)
     //	}
-    int Search(int n, std::function<bool (int _1)> f)
+    int64_t Search(int64_t n, std::function<bool (int64_t _1)> f)
     {
         // Define f(-1) == false and f(n) == true.
         // Invariant: f(i-1) == false, f(j) == true.
@@ -76,7 +76,7 @@ namespace golang::sort
         for(; i < j; )
         {
             // avoid overflow when computing h
-            auto h = int((unsigned int)(i + j) >> 1);
+            auto h = int64_t((uint64_t)(i + j) >> 1);
             // i ≤ h < j
             if(! f(h))
             {
@@ -117,19 +117,19 @@ namespace golang::sort
     //	} else {
     //	    fmt.Printf("%s not found, would insert at %d", target, i)
     //	}
-    std::tuple<int, bool> Find(int n, std::function<int (int _1)> cmp)
+    std::tuple<int64_t, bool> Find(int64_t n, std::function<int64_t (int64_t _1)> cmp)
     {
-        int i;
+        int64_t i;
         bool found;
         // The invariants here are similar to the ones in Search.
         // Define cmp(-1) > 0 and cmp(n) <= 0
         // Invariant: cmp(i-1) > 0, cmp(j) <= 0
-        int j;
+        int64_t j;
         std::tie(i, j) = std::tuple{0, n};
         for(; i < j; )
         {
             // avoid overflow when computing h
-            auto h = int((unsigned int)(i + j) >> 1);
+            auto h = int64_t((uint64_t)(i + j) >> 1);
             // i ≤ h < j
             if(cmp(h) > 0)
             {
@@ -150,9 +150,9 @@ namespace golang::sort
     // as specified by [Search]. The return value is the index to insert x if x is
     // not present (it could be len(a)).
     // The slice must be sorted in ascending order.
-    int SearchInts(gocpp::slice<int> a, int x)
+    int64_t SearchInts(gocpp::slice<int64_t> a, int64_t x)
     {
-        return Search(len(a), [=](int i) mutable -> bool
+        return Search(len(a), [=](int64_t i) mutable -> bool
         {
             return a[i] >= x;
         });
@@ -162,9 +162,9 @@ namespace golang::sort
     // as specified by [Search]. The return value is the index to insert x if x is not
     // present (it could be len(a)).
     // The slice must be sorted in ascending order.
-    int SearchFloat64s(gocpp::slice<double> a, double x)
+    int64_t SearchFloat64s(gocpp::slice<double> a, double x)
     {
-        return Search(len(a), [=](int i) mutable -> bool
+        return Search(len(a), [=](int64_t i) mutable -> bool
         {
             return a[i] >= x;
         });
@@ -174,28 +174,28 @@ namespace golang::sort
     // as specified by Search. The return value is the index to insert x if x is not
     // present (it could be len(a)).
     // The slice must be sorted in ascending order.
-    int SearchStrings(gocpp::slice<gocpp::string> a, gocpp::string x)
+    int64_t SearchStrings(gocpp::slice<gocpp::string> a, gocpp::string x)
     {
-        return Search(len(a), [=](int i) mutable -> bool
+        return Search(len(a), [=](int64_t i) mutable -> bool
         {
             return a[i] >= x;
         });
     }
 
     // Search returns the result of applying [SearchInts] to the receiver and x.
-    int rec::Search(golang::sort::IntSlice p, int x)
+    int64_t rec::Search(golang::sort::IntSlice p, int64_t x)
     {
         return SearchInts(p, x);
     }
 
     // Search returns the result of applying [SearchFloat64s] to the receiver and x.
-    int rec::Search(golang::sort::Float64Slice p, double x)
+    int64_t rec::Search(golang::sort::Float64Slice p, double x)
     {
         return SearchFloat64s(p, x);
     }
 
     // Search returns the result of applying [SearchStrings] to the receiver and x.
-    int rec::Search(golang::sort::StringSlice p, gocpp::string x)
+    int64_t rec::Search(golang::sort::StringSlice p, gocpp::string x)
     {
         return SearchStrings(p, x);
     }

@@ -159,8 +159,8 @@ namespace golang::internal::cpu
         // e.g. setting the xsavedisable boot option on Windows 10.
         X86.HasOSXSAVE = isSet(ecx1, cpuid_OSXSAVE);
 
-        auto osSupportsAVX = false;
-        auto osSupportsAVX512 = false;
+        bool osSupportsAVX = false;
+        bool osSupportsAVX512 = false;
         // For XGETBV, OSXSAVE bit is required and sufficient.
         if(X86.HasOSXSAVE)
         {

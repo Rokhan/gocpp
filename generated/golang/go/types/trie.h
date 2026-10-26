@@ -13,13 +13,13 @@
 namespace golang::go::types
 {
     template<typename V> struct GoTag_trie { };
-    template<typename V> using trie = gocpp::defined<gocpp::map<int, go_any>, GoTag_trie>;
+    template<typename V> using trie = gocpp::defined<gocpp::map<int64_t, go_any>, GoTag_trie<V>>;
 
     namespace rec
     {
         
         template<typename V>
-        std::tuple<V, int> insert(trie<V> tr, gocpp::slice<int> key, V val);
+        std::tuple<V, int64_t> insert(trie<V> tr, gocpp::slice<int64_t> key, V val);
         
         template<typename V>
         go_any pickValue(trie<V> tr);

@@ -12,6 +12,8 @@
 
 namespace golang::main
 {
+    struct GoTag_Kind { };
+    using Kind = gocpp::defined<uint64_t, GoTag_Kind>;
     void main();
 
     namespace rec

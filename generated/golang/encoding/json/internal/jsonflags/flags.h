@@ -12,6 +12,8 @@
 
 namespace golang::encoding::json::internal::jsonflags
 {
+    struct GoTag_Bools { };
+    using Bools = gocpp::defined<uint64_t, GoTag_Bools>;
     struct Flags
     {
         uint64_t Presence{};

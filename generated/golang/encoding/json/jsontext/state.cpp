@@ -187,7 +187,7 @@ namespace golang::encoding::json::jsontext
             for(; len(p) > 0; )
             {
                 p = Pointer(strings::TrimPrefix(gocpp::string(p), "/"_s));
-                auto i = gocpp::min((unsigned int)(strings::IndexByte(gocpp::string(p), '/')), (unsigned int)(len(p)));
+                auto i = gocpp::min((uint64_t)(strings::IndexByte(gocpp::string(p), '/')), (uint64_t)(len(p)));
                 if(! yield(unescapePointerToken(gocpp::string(p).make_slice(0, i))))
                 {
                     return;
@@ -225,14 +225,14 @@ namespace golang::encoding::json::jsontext
     //     then it points to the parent JSON object.
     //
     // Invariant: Must call s.names.copyQuotedBuffer beforehand.
-    gocpp::slice<unsigned char> rec::appendStackPointer(state s, gocpp::slice<unsigned char> b, int where)
+    gocpp::slice<unsigned char> rec::appendStackPointer(state s, gocpp::slice<unsigned char> b, int64_t where)
     {
-        int objectDepth = {};
-        for(auto i = 1; i < rec::Depth(gocpp::recv(s.Tokens)); i++)
+        int64_t objectDepth = {};
+        for(int64_t i = 1; i < rec::Depth(gocpp::recv(s.Tokens)); i++)
         {
             auto e = rec::index(gocpp::recv(s.Tokens), i);
             // by default point to previous array element
-            auto arrayDelta = - 1;
+            int64_t arrayDelta = - 1;
             if(auto isLast = i == rec::Depth(gocpp::recv(s.Tokens)) - 1; isLast)
             {
                 //Go switch emulation
@@ -358,14 +358,14 @@ namespace golang::encoding::json::jsontext
 
     // Depth is the current nested depth of JSON objects and arrays.
     // It is one-indexed (i.e., top-level values have a depth of 1).
-    int rec::Depth(stateMachine m)
+    int64_t rec::Depth(stateMachine m)
     {
         return len(m.Stack) + 1;
     }
 
     // index returns a reference to the ith entry.
     // It is only valid until the next push method call.
-    stateEntry* rec::index(stateMachine* m, int i)
+    stateEntry* rec::index(stateMachine* m, int64_t i)
     {
         if(i == len(m->Stack))
         {
@@ -376,7 +376,7 @@ namespace golang::encoding::json::jsontext
 
     // DepthLength reports the current nested depth and
     // the length of the last JSON object or array.
-    std::tuple<int, int64_t> rec::DepthLength(stateMachine m)
+    std::tuple<int64_t, int64_t> rec::DepthLength(stateMachine m)
     {
         return {rec::Depth(gocpp::recv(m)), rec::Length(gocpp::recv(m.Last))};
     }
@@ -556,9 +556,9 @@ namespace golang::encoding::json::jsontext
     // A zero value means that no whitespace should be injected.
     // A positive value means '\n', indentPrefix, and (n-1) copies of indentBody
     // should be appended to the output immediately before the next token.
-    int rec::NeedIndent(stateMachine m, golang::encoding::json::jsontext::Kind next)
+    int64_t rec::NeedIndent(stateMachine m, golang::encoding::json::jsontext::Kind next)
     {
-        int n;
+        int64_t n;
         auto willEnd = next == '}' || next == ']';
         //Go switch emulation
         {
@@ -809,7 +809,7 @@ namespace golang::encoding::json::jsontext
         }
     }
 
-    int rec::length(objectNameStack* ns)
+    int64_t rec::length(objectNameStack* ns)
     {
         return len(ns->offsets);
     }
@@ -818,7 +818,7 @@ namespace golang::encoding::json::jsontext
     // It returns an empty string if the last object is empty.
     //
     // Invariant: Must call copyQuotedBuffer beforehand.
-    gocpp::slice<unsigned char> rec::getUnquoted(objectNameStack* ns, int i)
+    gocpp::slice<unsigned char> rec::getUnquoted(objectNameStack* ns, int64_t i)
     {
         rec::ensureCopiedBuffer(gocpp::recv(ns));
         if(i == 0)
@@ -840,7 +840,7 @@ namespace golang::encoding::json::jsontext
     // ReplaceLastQuotedOffset replaces the last name with the starting offset
     // to the quoted name in some remote buffer. All offsets provided must be
     // relative to the same buffer until copyQuotedBuffer is called.
-    void rec::ReplaceLastQuotedOffset(objectNameStack* ns, int i)
+    void rec::ReplaceLastQuotedOffset(objectNameStack* ns, int64_t i)
     {
         // Use bit-wise inversion instead of naive multiplication by -1 to avoid
         // ambiguity regarding zero (which is a valid offset into the names field).
@@ -856,7 +856,7 @@ namespace golang::encoding::json::jsontext
     void rec::replaceLastUnquotedName(objectNameStack* ns, gocpp::string s)
     {
         rec::ensureCopiedBuffer(gocpp::recv(ns));
-        int startOffset = {};
+        int64_t startOffset = {};
         if(len(ns->offsets) > 1)
         {
             startOffset = ns->offsets[len(ns->offsets) - 2];
@@ -885,7 +885,7 @@ namespace golang::encoding::json::jsontext
     void rec::copyQuotedBuffer(objectNameStack* ns, gocpp::slice<unsigned char> b)
     {
         // Find the first negative offset.
-        int i = {};
+        int64_t i = {};
         for(i = len(ns->offsets) - 1; i >= 0 && ns->offsets[i] < 0; i--)
         {
             continue;
@@ -918,7 +918,7 @@ namespace golang::encoding::json::jsontext
             }
 
             // Append the unquoted name to the local buffer.
-            int startOffset = {};
+            int64_t startOffset = {};
             if(i > 0)
             {
                 startOffset = ns->offsets[i - 1];
@@ -1040,13 +1040,13 @@ namespace golang::encoding::json::jsontext
     }
 
     // length reports the number of names in the namespace.
-    int rec::length(objectNamespace* ns)
+    int64_t rec::length(objectNamespace* ns)
     {
         return len(ns->endOffsets);
     }
 
     // getUnquoted retrieves the ith unquoted name in the namespace.
-    gocpp::slice<unsigned char> rec::getUnquoted(objectNamespace* ns, int i)
+    gocpp::slice<unsigned char> rec::getUnquoted(objectNamespace* ns, int64_t i)
     {
         if(i == 0)
         {
@@ -1099,7 +1099,7 @@ namespace golang::encoding::json::jsontext
         if(ns->mapNames == nullptr && (rec::length(gocpp::recv(ns)) > 64 || len(ns->allUnquotedNames) > 1024))
         {
             ns->mapNames = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::empty_struct>>());
-            unsigned int startOffset = {};
+            uint64_t startOffset = {};
             for(auto [gocpp_ignored, endOffset] : ns->endOffsets)
             {
                 auto name = ns->allUnquotedNames.make_slice(startOffset, endOffset);
@@ -1113,7 +1113,7 @@ namespace golang::encoding::json::jsontext
         {
             // Perform linear search over the buffer to find matching names.
             // It provides O(n) lookup, but does not require any allocations.
-            unsigned int startOffset = {};
+            uint64_t startOffset = {};
             for(auto [gocpp_ignored, endOffset] : ns->endOffsets)
             {
                 if(gocpp::string(ns->allUnquotedNames.make_slice(startOffset, endOffset)) == gocpp::string(name))
@@ -1136,7 +1136,7 @@ namespace golang::encoding::json::jsontext
         }
 
         ns->allUnquotedNames = allNames;
-        ns->endOffsets = append(ns->endOffsets, (unsigned int)(len(ns->allUnquotedNames)));
+        ns->endOffsets = append(ns->endOffsets, (uint64_t)(len(ns->allUnquotedNames)));
         return true;
     }
 

@@ -29,6 +29,12 @@ namespace golang::math::big
 
     std::ostream& operator<<(std::ostream& os, const struct ErrNaN& value);
     extern gocpp::error _;
+    struct GoTag_form { };
+    using form = gocpp::defined<unsigned char, GoTag_form>;
+    struct GoTag_RoundingMode { };
+    using RoundingMode = gocpp::defined<unsigned char, GoTag_RoundingMode>;
+    struct GoTag_Accuracy { };
+    using Accuracy = gocpp::defined<int8_t, GoTag_Accuracy>;
     Accuracy makeAcc(bool above);
 }
 #include "golang/math/big/nat.h"
@@ -73,22 +79,22 @@ namespace golang::math::big
     namespace rec
     {
         gocpp::string Error(ErrNaN err);
-        Float* SetPrec(Float* z, unsigned int prec);
+        Float* SetPrec(Float* z, uint64_t prec);
         Float* SetMode(Float* z, RoundingMode mode);
-        unsigned int Prec(Float* x);
-        unsigned int MinPrec(Float* x);
+        uint64_t Prec(Float* x);
+        uint64_t MinPrec(Float* x);
         RoundingMode Mode(Float* x);
         Accuracy Acc(Float* x);
-        int Sign(Float* x);
-        int MantExp(Float* x, Float* mant);
-        void setExpAndRound(Float* z, int64_t exp, unsigned int sbit);
-        Float* SetMantExp(Float* z, Float* mant, int exp);
+        int64_t Sign(Float* x);
+        int64_t MantExp(Float* x, Float* mant);
+        void setExpAndRound(Float* z, int64_t exp, uint64_t sbit);
+        Float* SetMantExp(Float* z, Float* mant, int64_t exp);
         bool Signbit(Float* x);
         bool IsInf(Float* x);
         bool IsInt(Float* x);
         void validate(Float* x);
         gocpp::string validate0(Float* x);
-        void round(Float* z, unsigned int sbit);
+        void round(Float* z, uint64_t sbit);
         Float* setBits64(Float* z, bool neg, uint64_t x);
         Float* SetUint64(Float* z, uint64_t x);
         Float* SetInt64(Float* z, int64_t x);
@@ -110,13 +116,13 @@ namespace golang::math::big
         void usub(Float* z, Float* x, Float* y);
         void umul(Float* z, Float* x, Float* y);
         void uquo(Float* z, Float* x, Float* y);
-        int ucmp(Float* x, Float* y);
+        int64_t ucmp(Float* x, Float* y);
         Float* Add(Float* z, Float* x, Float* y);
         Float* Sub(Float* z, Float* x, Float* y);
         Float* Mul(Float* z, Float* x, Float* y);
         Float* Quo(Float* z, Float* x, Float* y);
-        int Cmp(Float* x, Float* y);
-        int ord(Float* x);
+        int64_t Cmp(Float* x, Float* y);
+        int64_t ord(Float* x);
     }
 }
 

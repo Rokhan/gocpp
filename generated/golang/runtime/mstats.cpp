@@ -290,14 +290,14 @@ namespace golang::runtime
 
     void init()
     {
-        if(auto offset = gocpp::Offsetof<mstats>(&mstats::heapStats); offset % 8 != 0)
+        if(uintptr_t offset = gocpp::Offsetof<mstats>(&mstats::heapStats); offset % 8 != 0)
         {
             println(offset);
             go_throw("memstats.heapStats not aligned to 8 bytes"_s);
         }
         // Ensure the size of heapStatsDelta causes adjacent fields/slots (e.g.
         // [3]heapStatsDelta) to be 8-byte aligned.
-        if(auto size = gocpp::Sizeof<heapStatsDelta>(); size % 8 != 0)
+        if(uintptr_t size = gocpp::Sizeof<heapStatsDelta>(); size % 8 != 0)
         {
             println(size);
             go_throw("heapStatsDelta not a multiple of 8 bytes in size"_s);
@@ -595,7 +595,7 @@ namespace golang::runtime
         // from there to go back farther in time. We deliver the times
         // most recent first (in p[0]).
         p = p.make_slice(0, cap(p));
-        for(auto i = uint32_t(0); i < n; i++)
+        for(uint32_t i = uint32_t(0); i < n; i++)
         {
             auto j = (memstats.numgc - 1 - i) % uint32_t(len(memstats.pause_ns));
             p[i] = memstats.pause_ns[j];
@@ -614,7 +614,7 @@ namespace golang::runtime
     // The world must be stopped.
     //
     //go:nowritebarrier
-    void flushmcache(int i)
+    void flushmcache(int64_t i)
     {
         assertWorldStopped();
 
@@ -637,7 +637,7 @@ namespace golang::runtime
     {
         assertWorldStopped();
 
-        for(auto i = 0; i < int(gomaxprocs); i++)
+        for(int64_t i = 0; i < int64_t(gomaxprocs); i++)
         {
             flushmcache(i);
         }

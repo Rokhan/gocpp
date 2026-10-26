@@ -308,7 +308,7 @@ namespace golang::compress::flate
     //	numLiterals      The number of literals in literalEncoding
     //	numOffsets       The number of offsets in offsetEncoding
     //	litenc, offenc   The literal and offset encoder to use
-    void rec::generateCodegen(huffmanBitWriter* w, int numLiterals, int numOffsets, huffmanEncoder* litEnc, huffmanEncoder* offEnc)
+    void rec::generateCodegen(huffmanBitWriter* w, int64_t numLiterals, int64_t numOffsets, huffmanEncoder* litEnc, huffmanEncoder* offEnc)
     {
         clear(w->codegenFreq.make_slice(0));
         // Note that we are using codegen both as a temporary variable for holding
@@ -332,9 +332,9 @@ namespace golang::compress::flate
         codegen[numLiterals + numOffsets] = badCode;
 
         auto size = codegen[0];
-        auto count = 1;
-        auto outIndex = 0;
-        for(auto inIndex = 1; size != badCode; inIndex++)
+        int64_t count = 1;
+        int64_t outIndex = 0;
+        for(int64_t inIndex = 1; size != badCode; inIndex++)
         {
             // INVARIANT: We have seen "count" copies of size that have not yet
             // had output generated for them.
@@ -401,9 +401,9 @@ namespace golang::compress::flate
     }
 
     // codegens returns current number of non-zero codegens.
-    int rec::codegens(huffmanBitWriter* w)
+    int64_t rec::codegens(huffmanBitWriter* w)
     {
-        auto numCodegens = len(w->codegenFreq);
+        int64_t numCodegens = len(w->codegenFreq);
         for(; numCodegens > 4 && w->codegenFreq[codegenOrder[numCodegens - 1]] == 0; )
         {
             numCodegens--;
@@ -412,10 +412,10 @@ namespace golang::compress::flate
     }
 
     // headerSize returns the size of the header with the current encodings.
-    std::tuple<int, int> rec::headerSize(huffmanBitWriter* w)
+    std::tuple<int64_t, int64_t> rec::headerSize(huffmanBitWriter* w)
     {
-        int size;
-        int numCodegens;
+        int64_t size;
+        int64_t numCodegens;
         numCodegens = len(w->codegenFreq);
         for(; numCodegens > 4 && w->codegenFreq[codegenOrder[numCodegens - 1]] == 0; )
         {
@@ -423,26 +423,26 @@ namespace golang::compress::flate
         }
         return {3 + 5 + 5 + 4 + (3 * numCodegens) +
                 rec::bitLength(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0)) +
-                int(w->codegenFreq[16]) * 2 +
-                int(w->codegenFreq[17]) * 3 +
-                int(w->codegenFreq[18]) * 7, numCodegens};
+                int64_t(w->codegenFreq[16]) * 2 +
+                int64_t(w->codegenFreq[17]) * 3 +
+                int64_t(w->codegenFreq[18]) * 7, numCodegens};
     }
 
     // dynamicSize returns the size of dynamically encoded data in bits.
-    int rec::dynamicReuseSize(huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc)
+    int64_t rec::dynamicReuseSize(huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc)
     {
-        int size;
+        int64_t size;
         size = rec::bitLength(gocpp::recv(litEnc), w->literalFreq.make_slice(0)) +
                 rec::bitLength(gocpp::recv(offEnc), w->offsetFreq.make_slice(0));
         return size;
     }
 
     // dynamicSize returns the size of dynamically encoded data in bits.
-    std::tuple<int, int> rec::dynamicSize(huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc, int extraBits)
+    std::tuple<int64_t, int64_t> rec::dynamicSize(huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc, int64_t extraBits)
     {
-        int size;
-        int numCodegens;
-        int header;
+        int64_t size;
+        int64_t numCodegens;
+        int64_t header;
         std::tie(header, numCodegens) = rec::headerSize(gocpp::recv(w));
         size = header +
                 rec::bitLength(gocpp::recv(litEnc), w->literalFreq.make_slice(0)) +
@@ -453,22 +453,22 @@ namespace golang::compress::flate
 
     // extraBitSize returns the number of bits that will be written
     // as "extra" bits on matches.
-    int rec::extraBitSize(huffmanBitWriter* w)
+    int64_t rec::extraBitSize(huffmanBitWriter* w)
     {
-        auto total = 0;
+        int64_t total = 0;
         for(auto [i, n] : w->literalFreq.make_slice(257, literalCount))
         {
-            total += int(n) * int(lengthExtraBits[i & 31]);
+            total += int64_t(n) * int64_t(lengthExtraBits[i & 31]);
         }
         for(auto [i, n] : w->offsetFreq.make_slice(0, offsetCodeCount))
         {
-            total += int(n) * int(offsetExtraBits[i & 31]);
+            total += int64_t(n) * int64_t(offsetExtraBits[i & 31]);
         }
         return total;
     }
 
     // fixedSize returns the size of dynamically encoded data in bits.
-    int rec::fixedSize(huffmanBitWriter* w, int extraBits)
+    int64_t rec::fixedSize(huffmanBitWriter* w, int64_t extraBits)
     {
         return 3 +
                 rec::bitLength(gocpp::recv(fixedLiteralEncoding()), w->literalFreq.make_slice(0)) +
@@ -479,7 +479,7 @@ namespace golang::compress::flate
     // storedSize calculates the stored size, including header.
     // The function returns the size in bits and whether the block
     // fits inside a single block.
-    std::tuple<int, bool> rec::storedSize(huffmanBitWriter* w, gocpp::slice<unsigned char> in)
+    std::tuple<int64_t, bool> rec::storedSize(huffmanBitWriter* w, gocpp::slice<unsigned char> in)
     {
         if(in == nullptr)
         {
@@ -534,7 +534,7 @@ namespace golang::compress::flate
     // numLiterals is the number of literals specified in codegen.
     // numOffsets is the number of offsets specified in codegen.
     // numCodegens is the number of codegens used in codegen.
-    void rec::writeDynamicHeader(huffmanBitWriter* w, int numLiterals, int numOffsets, int numCodegens, bool isEof)
+    void rec::writeDynamicHeader(huffmanBitWriter* w, int64_t numLiterals, int64_t numOffsets, int64_t numCodegens, bool isEof)
     {
         if(w->err != nullptr)
         {
@@ -552,11 +552,11 @@ namespace golang::compress::flate
 
         for(int i = 0; i < numCodegens; ++i)
         {
-            auto value = (unsigned int)(rec::len(gocpp::recv(w->codegenEncoding->codes[codegenOrder[i]])));
+            auto value = (uint64_t)(rec::len(gocpp::recv(w->codegenEncoding->codes[codegenOrder[i]])));
             rec::writeBits(gocpp::recv(w), int32_t(value), 3);
         }
 
-        auto i = 0;
+        int64_t i = 0;
         for(; ; )
         {
             auto codeWord = uint32_t(w->codegen[i]);
@@ -596,7 +596,7 @@ namespace golang::compress::flate
     // writeStoredHeader writes a stored header.
     // If the stored block is only used for EOF,
     // it is replaced with a fixed huffman block.
-    void rec::writeStoredHeader(huffmanBitWriter* w, int length, bool isEof)
+    void rec::writeStoredHeader(huffmanBitWriter* w, int64_t length, bool isEof)
     {
         if(w->err != nullptr)
         {
@@ -674,7 +674,7 @@ namespace golang::compress::flate
         }
         auto [numLiterals, numOffsets] = rec::indexTokens(gocpp::recv(w), tokens);
         rec::generate(gocpp::recv(w));
-        int extraBits = {};
+        int64_t extraBits = {};
         auto [storedSize, storable] = rec::storedSize(gocpp::recv(w), input);
         if(storable)
         {
@@ -692,13 +692,13 @@ namespace golang::compress::flate
         }
 
         // Dynamic Huffman?
-        int numCodegens = {};
+        int64_t numCodegens = {};
 
         // Generate codegen and codegenFrequencies, which indicates how to encode
         // the literalEncoding and the offsetEncoding.
         rec::generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, w->offsetEncoding);
         rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0), 7);
-        int dynamicSize;
+        int64_t dynamicSize;
         std::tie(dynamicSize, numCodegens) = rec::dynamicSize(gocpp::recv(w), w->literalEncoding, w->offsetEncoding, extraBits);
 
         if(dynamicSize < size)
@@ -767,7 +767,7 @@ namespace golang::compress::flate
         }
 
         auto [numLiterals, numOffsets] = rec::indexTokens(gocpp::recv(w), tokens);
-        auto extraBits = 0;
+        int64_t extraBits = 0;
         auto [ssize, storable] = rec::storedSize(gocpp::recv(w), input);
 
         if(storable || w->prevHeader > 0)
@@ -775,7 +775,7 @@ namespace golang::compress::flate
             extraBits = rec::extraBitSize(gocpp::recv(w));
         }
 
-        int size = {};
+        int64_t size = {};
 
         // Check whether we should reuse the previous Huffman table.
         if(w->prevHeader > 0)
@@ -786,7 +786,7 @@ namespace golang::compress::flate
 
             // The estimated size is calculated as an optimal table.
             // We add a penalty to make it more realistic and re-use a bit more.
-            newSize += int(rec::len(gocpp::recv(w->literalEncoding->codes[endBlockMarker]))) + (newSize >> w->logNewTablePenalty);
+            newSize += int64_t(rec::len(gocpp::recv(w->literalEncoding->codes[endBlockMarker]))) + (newSize >> w->logNewTablePenalty);
 
             // Calculate the size for reusing the current table.
             auto reuseSize = rec::dynamicReuseSize(gocpp::recv(w), w->literalEncoding, w->offsetEncoding) + extraBits;
@@ -846,7 +846,7 @@ namespace golang::compress::flate
             rec::generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, w->offsetEncoding);
             rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0), 7);
 
-            int numCodegens = {};
+            int64_t numCodegens = {};
             std::tie(size, numCodegens) = rec::dynamicSize(gocpp::recv(w), w->literalEncoding, w->offsetEncoding, extraBits);
 
             // Store predefined or raw, if we don't get a reasonable improvement.
@@ -899,10 +899,10 @@ namespace golang::compress::flate
     // indexTokens indexes a slice of tokens, updates literalFreq and offsetFreq,
     // and generates literalEncoding and offsetEncoding.
     // It returns the number of literal and offset tokens.
-    std::tuple<int, int> rec::indexTokens(huffmanBitWriter* w, tokens* t)
+    std::tuple<int64_t, int64_t> rec::indexTokens(huffmanBitWriter* w, tokens* t)
     {
-        int numLiterals;
-        int numOffsets;
+        int64_t numLiterals;
+        int64_t numOffsets;
         *gocpp::slice_to_array_ptr<256>(w->literalFreq.make_slice(0)) = t->litHist;
         *gocpp::slice_to_array_ptr<32>(w->literalFreq.make_slice(256)) = t->extraHist;
         w->offsetFreq = t->offHist;
@@ -1148,7 +1148,7 @@ namespace golang::compress::flate
             // If so, we quickly store the data uncompressed.
             // This will typically only trigger on random data.
             // Most other data will typically exit after only a few iterations.
-            auto abs = double(0);
+            double abs = double(0);
             auto avg = double(len(input)) / 256;
             auto max = double(len(input) * 2);
             for(auto [gocpp_ignored, v] : w->literalFreq.make_slice(0, 256))

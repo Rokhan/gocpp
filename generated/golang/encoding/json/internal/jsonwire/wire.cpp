@@ -99,7 +99,7 @@ namespace golang::encoding::json::internal::jsonwire
     // CompareUTF16 lexicographically compares x to y according
     // to the UTF-16 codepoints of the UTF-8 encoded input strings.
     // This implements the ordering specified in RFC 8785, section 3.2.3.
-    int CompareUTF16(gocpp::slice<unsigned char> x, gocpp::slice<unsigned char> y)
+    int64_t CompareUTF16(gocpp::slice<unsigned char> x, gocpp::slice<unsigned char> y)
     {
         // NOTE: This is an optimized, mostly allocation-free implementation
         // of CompareUTF16Simple in wire_test.go. FuzzCompareUTF16 verifies that the
@@ -254,7 +254,7 @@ namespace golang::encoding::json::internal::jsonwire
 
     // TruncatePointer optionally truncates the JSON pointer,
     // enforcing that the length roughly does not exceed n.
-    gocpp::string TruncatePointer(gocpp::string s, int n)
+    gocpp::string TruncatePointer(gocpp::string s, int64_t n)
     {
         if(len(s) <= n)
         {
@@ -315,7 +315,7 @@ namespace golang::encoding::json::internal::jsonwire
         return s.make_slice(0, i) + middle + s.make_slice(j);
     }
 
-    bool isInvalidUTF8(gocpp::rune r, int rn)
+    bool isInvalidUTF8(gocpp::rune r, int64_t rn)
     {
         return r == utf8::RuneError && rn == 1;
     }

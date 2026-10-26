@@ -6,21 +6,23 @@
 
 namespace golang::golang_org::x::tools::internal::pkgbits
 {
-    using RelocKind = int32_t;
-    using Index = int32_t;
+    struct GoTag_RelocKind;
+    using RelocKind = gocpp::defined<int32_t, GoTag_RelocKind>;
+    struct GoTag_Index;
+    using Index = gocpp::defined<int32_t, GoTag_Index>;
     struct RelocEnt;
-    const int numRelocs = 10;
+    inline constexpr int64_t numRelocs = 10;
     // Reserved indices within the meta relocation section.
-    const Index PublicRootIdx = 0;
-    const Index PrivateRootIdx = 1;
-    const RelocKind RelocString = 0;
-    const RelocKind RelocMeta = 1;
-    const RelocKind RelocPosBase = 2;
-    const RelocKind RelocPkg = 3;
-    const RelocKind RelocName = 4;
-    const RelocKind RelocType = 5;
-    const RelocKind RelocObj = 6;
-    const RelocKind RelocObjExt = 7;
-    const RelocKind RelocObjDict = 8;
-    const RelocKind RelocBody = 9;
+    inline constexpr Index PublicRootIdx = 0;
+    inline constexpr Index PrivateRootIdx = 1;
+    inline constexpr RelocKind RelocString = 0;
+    inline constexpr RelocKind RelocMeta = 1;
+    inline constexpr RelocKind RelocPosBase = 2;
+    inline constexpr RelocKind RelocPkg = 3;
+    inline constexpr RelocKind RelocName = 4;
+    inline constexpr RelocKind RelocType = 5;
+    inline constexpr RelocKind RelocObj = 6;
+    inline constexpr RelocKind RelocObjExt = 7;
+    inline constexpr RelocKind RelocObjDict = 8;
+    inline constexpr RelocKind RelocBody = 9;
 }

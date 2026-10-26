@@ -15,7 +15,7 @@ namespace golang::runtime
     struct functab;
     struct textsect;
     struct findfuncbucket;
-    const bool debugPcln = false;
+    inline constexpr bool debugPcln = false;
     struct funcInfo;
     struct srcFunc;
     struct pcvalueCache;

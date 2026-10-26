@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    std::tuple<int, int> split(int sum);
+    std::tuple<int64_t, int64_t> split(int64_t sum);
     void main();
 
     namespace rec

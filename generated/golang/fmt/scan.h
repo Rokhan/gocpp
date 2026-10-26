@@ -45,7 +45,7 @@ namespace golang::fmt
             // If invoked during Scanln, Fscanln, or Sscanln, ReadRune() will
             // return EOF after returning the first '\n' or when reading beyond
             // the specified width.
-            virtual std::tuple<gocpp::rune, int, gocpp::error> vReadRune() = 0;
+            virtual std::tuple<gocpp::rune, int64_t, gocpp::error> vReadRune() = 0;
             // UnreadRune causes the next call to ReadRune to return the same rune.
             virtual gocpp::error vUnreadRune() = 0;
             // SkipSpace skips space in the input. Newlines are treated appropriately
@@ -63,11 +63,11 @@ namespace golang::fmt
             virtual std::tuple<gocpp::slice<unsigned char>, gocpp::error> vToken(bool skipSpace, std::function<bool (gocpp::rune _1)> f) = 0;
             // Width returns the value of the width option and whether it has been set.
             // The unit is Unicode code points.
-            virtual std::tuple<int, bool> vWidth() = 0;
+            virtual std::tuple<int64_t, bool> vWidth() = 0;
             // Because ReadRune is implemented by the interface, Read should never be
             // called by the scanning routines and a valid implementation of
             // ScanState may choose always to return an error from Read.
-            virtual std::tuple<int, gocpp::error> vRead(gocpp::slice<unsigned char> buf) = 0;
+            virtual std::tuple<int64_t, gocpp::error> vRead(gocpp::slice<unsigned char> buf) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -79,7 +79,7 @@ namespace golang::fmt
                 value.reset(ptr);
             }
 
-            std::tuple<gocpp::rune, int, gocpp::error> vReadRune() override;
+            std::tuple<gocpp::rune, int64_t, gocpp::error> vReadRune() override;
 
             gocpp::error vUnreadRune() override;
 
@@ -87,9 +87,9 @@ namespace golang::fmt
 
             std::tuple<gocpp::slice<unsigned char>, gocpp::error> vToken(bool skipSpace, std::function<bool (gocpp::rune _1)> f) override;
 
-            std::tuple<int, bool> vWidth() override;
+            std::tuple<int64_t, bool> vWidth() override;
 
-            std::tuple<int, gocpp::error> vRead(gocpp::slice<unsigned char> buf) override;
+            std::tuple<int64_t, gocpp::error> vRead(gocpp::slice<unsigned char> buf) override;
 
             void* getPtr() override
             {
@@ -106,8 +106,8 @@ namespace golang::fmt
 
     namespace rec
     {
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct ScanState, false>& self);
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::ObjRecv<struct ScanState>& self);
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::PtrRecv<struct ScanState, false>& self);
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::ObjRecv<struct ScanState>& self);
 
         gocpp::error UnreadRune(const gocpp::PtrRecv<struct ScanState, false>& self);
         gocpp::error UnreadRune(const gocpp::ObjRecv<struct ScanState>& self);
@@ -118,11 +118,11 @@ namespace golang::fmt
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> Token(const gocpp::PtrRecv<struct ScanState, false>& self, bool skipSpace, std::function<bool (gocpp::rune _1)> f);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> Token(const gocpp::ObjRecv<struct ScanState>& self, bool skipSpace, std::function<bool (gocpp::rune _1)> f);
 
-        std::tuple<int, bool> Width(const gocpp::PtrRecv<struct ScanState, false>& self);
-        std::tuple<int, bool> Width(const gocpp::ObjRecv<struct ScanState>& self);
+        std::tuple<int64_t, bool> Width(const gocpp::PtrRecv<struct ScanState, false>& self);
+        std::tuple<int64_t, bool> Width(const gocpp::ObjRecv<struct ScanState>& self);
 
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ScanState, false>& self, gocpp::slice<unsigned char> buf);
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ScanState>& self, gocpp::slice<unsigned char> buf);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct ScanState, false>& self, gocpp::slice<unsigned char> buf);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct ScanState>& self, gocpp::slice<unsigned char> buf);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ScanState& value);
@@ -189,81 +189,81 @@ namespace golang::fmt
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Scanner& value);
-    std::tuple<int, gocpp::error> Scan(gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Scan(gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Scan(Args... a)
+    std::tuple<int64_t, gocpp::error> Scan(Args... a)
     {
         return Scan(gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Scan(go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Scan(go_any value, Args... a)
     {
         return Scan(gocpp::ToSlice<go_any>(value, a...));
     }
-    std::tuple<int, gocpp::error> Scanln(gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Scanln(gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Scanln(Args... a)
+    std::tuple<int64_t, gocpp::error> Scanln(Args... a)
     {
         return Scanln(gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Scanln(go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Scanln(go_any value, Args... a)
     {
         return Scanln(gocpp::ToSlice<go_any>(value, a...));
     }
-    std::tuple<int, gocpp::error> Scanf(gocpp::string format, gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Scanf(gocpp::string format, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Scanf(gocpp::string format, Args... a)
+    std::tuple<int64_t, gocpp::error> Scanf(gocpp::string format, Args... a)
     {
         return Scanf(format, gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Scanf(gocpp::string format, go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Scanf(gocpp::string format, go_any value, Args... a)
     {
         return Scanf(format, gocpp::ToSlice<go_any>(value, a...));
     }
-    std::tuple<int, gocpp::error> Sscan(gocpp::string str, gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Sscan(gocpp::string str, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Sscan(gocpp::string str, Args... a)
+    std::tuple<int64_t, gocpp::error> Sscan(gocpp::string str, Args... a)
     {
         return Sscan(str, gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Sscan(gocpp::string str, go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Sscan(gocpp::string str, go_any value, Args... a)
     {
         return Sscan(str, gocpp::ToSlice<go_any>(value, a...));
     }
-    std::tuple<int, gocpp::error> Sscanln(gocpp::string str, gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Sscanln(gocpp::string str, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Sscanln(gocpp::string str, Args... a)
+    std::tuple<int64_t, gocpp::error> Sscanln(gocpp::string str, Args... a)
     {
         return Sscanln(str, gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Sscanln(gocpp::string str, go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Sscanln(gocpp::string str, go_any value, Args... a)
     {
         return Sscanln(str, gocpp::ToSlice<go_any>(value, a...));
     }
-    std::tuple<int, gocpp::error> Sscanf(gocpp::string str, gocpp::string format, gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Sscanf(gocpp::string str, gocpp::string format, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Sscanf(gocpp::string str, gocpp::string format, Args... a)
+    std::tuple<int64_t, gocpp::error> Sscanf(gocpp::string str, gocpp::string format, Args... a)
     {
         return Sscanf(str, format, gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Sscanf(gocpp::string str, gocpp::string format, go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Sscanf(gocpp::string str, gocpp::string format, go_any value, Args... a)
     {
         return Sscanf(str, format, gocpp::ToSlice<go_any>(value, a...));
     }
@@ -288,9 +288,9 @@ namespace golang::fmt
         bool validSave{}; // is or was a part of an actual ss.
         bool nlIsEnd{}; // whether newline terminates scan
         bool nlIsSpace{}; // whether newline counts as white space
-        int argLimit{}; // max value of ss.count for this arg; argLimit <= limit
-        int limit{}; // max value of ss.count.
-        int maxWid{}; // width of this arg.
+        int64_t argLimit{}; // max value of ss.count for this arg; argLimit <= limit
+        int64_t limit{}; // max value of ss.count.
+        int64_t maxWid{}; // width of this arg.
 
         using isGoStruct = void;
 
@@ -311,9 +311,9 @@ namespace golang::fmt
     bool notSpace(gocpp::rune r);
     extern gocpp::error errComplex;
     extern gocpp::error errBool;
-    int indexRune(gocpp::string s, gocpp::rune r);
+    int64_t indexRune(gocpp::string s, gocpp::rune r);
     bool hasX(gocpp::string s);
-    std::tuple<int, bool> hexDigit(gocpp::rune d);
+    std::tuple<int64_t, bool> hexDigit(gocpp::rune d);
     void errorHandler(gocpp::error* errp);
 }
 #include "golang/io/io.fwd.h"
@@ -332,42 +332,42 @@ namespace golang::fmt
 {
     namespace utf8 = golang::unicode::utf8;
     namespace sync = golang::sync;
-    std::tuple<int, gocpp::error> Fscan(io::Reader r, gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Fscan(io::Reader r, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Fscan(io::Reader r, Args... a)
+    std::tuple<int64_t, gocpp::error> Fscan(io::Reader r, Args... a)
     {
         return Fscan(r, gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Fscan(io::Reader r, go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Fscan(io::Reader r, go_any value, Args... a)
     {
         return Fscan(r, gocpp::ToSlice<go_any>(value, a...));
     }
-    std::tuple<int, gocpp::error> Fscanln(io::Reader r, gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Fscanln(io::Reader r, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Fscanln(io::Reader r, Args... a)
+    std::tuple<int64_t, gocpp::error> Fscanln(io::Reader r, Args... a)
     {
         return Fscanln(r, gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Fscanln(io::Reader r, go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Fscanln(io::Reader r, go_any value, Args... a)
     {
         return Fscanln(r, gocpp::ToSlice<go_any>(value, a...));
     }
-    std::tuple<int, gocpp::error> Fscanf(io::Reader r, gocpp::string format, gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Fscanf(io::Reader r, gocpp::string format, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Fscanf(io::Reader r, gocpp::string format, Args... a)
+    std::tuple<int64_t, gocpp::error> Fscanf(io::Reader r, gocpp::string format, Args... a)
     {
         return Fscanf(r, format, gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Fscanf(io::Reader r, gocpp::string format, go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Fscanf(io::Reader r, gocpp::string format, go_any value, Args... a)
     {
         return Fscanf(r, format, gocpp::ToSlice<go_any>(value, a...));
     }
@@ -375,7 +375,7 @@ namespace golang::fmt
     {
         io::RuneScanner rs{}; // where to read input
         buffer buf{}; // token accumulator
-        int count{}; // runes consumed so far.
+        int64_t count{}; // runes consumed so far.
         bool atEOF{}; // already read EOF
         ssave ssave{};
 
@@ -395,7 +395,7 @@ namespace golang::fmt
     {
         io::Reader reader{};
         gocpp::array<unsigned char, utf8::UTFMax> buf{}; // used only inside ReadRune
-        int pending{}; // number of bytes in pendBuf; only >0 for bad UTF-8
+        int64_t pending{}; // number of bytes in pendBuf; only >0 for bad UTF-8
         gocpp::array<unsigned char, utf8::UTFMax> pendBuf{}; // bytes left over
         gocpp::rune peekRune{}; // if >=0 next rune; when <0 is ^(previous Rune)
 
@@ -416,10 +416,10 @@ namespace golang::fmt
 
     namespace rec
     {
-        std::tuple<int, gocpp::error> Read(stringReader* r, gocpp::slice<unsigned char> b);
-        std::tuple<int, gocpp::error> Read(ss* s, gocpp::slice<unsigned char> buf);
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(ss* s);
-        std::tuple<int, bool> Width(ss* s);
+        std::tuple<int64_t, gocpp::error> Read(stringReader* r, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> Read(ss* s, gocpp::slice<unsigned char> buf);
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(ss* s);
+        std::tuple<int64_t, bool> Width(ss* s);
         gocpp::rune getRune(ss* s);
         gocpp::rune mustReadRune(ss* s);
         gocpp::error UnreadRune(ss* s);
@@ -427,7 +427,7 @@ namespace golang::fmt
         void errorString(ss* s, gocpp::string err);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> Token(ss* s, bool skipSpace, std::function<bool (gocpp::rune _1)> f);
         std::tuple<unsigned char, gocpp::error> readByte(readRune* r);
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(readRune* r);
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(readRune* r);
         gocpp::error UnreadRune(readRune* r);
         void free(ss* s, ssave old);
         void SkipSpace(ss* s);
@@ -438,25 +438,25 @@ namespace golang::fmt
         bool accept(ss* s, gocpp::string ok);
         bool okVerb(ss* s, gocpp::rune verb, gocpp::string okVerbs, gocpp::string typ);
         bool scanBool(ss* s, gocpp::rune verb);
-        std::tuple<int, gocpp::string> getBase(ss* s, gocpp::rune verb);
+        std::tuple<int64_t, gocpp::string> getBase(ss* s, gocpp::rune verb);
         gocpp::string scanNumber(ss* s, gocpp::string digits, bool haveDigits);
-        int64_t scanRune(ss* s, int bitSize);
-        std::tuple<int, gocpp::string, bool> scanBasePrefix(ss* s);
-        int64_t scanInt(ss* s, gocpp::rune verb, int bitSize);
-        uint64_t scanUint(ss* s, gocpp::rune verb, int bitSize);
+        int64_t scanRune(ss* s, int64_t bitSize);
+        std::tuple<int64_t, gocpp::string, bool> scanBasePrefix(ss* s);
+        int64_t scanInt(ss* s, gocpp::rune verb, int64_t bitSize);
+        uint64_t scanUint(ss* s, gocpp::rune verb, int64_t bitSize);
         gocpp::string floatToken(ss* s);
         std::tuple<gocpp::string, gocpp::string> complexTokens(ss* s);
-        double convertFloat(ss* s, gocpp::string str, int n);
-        struct gocpp::complex128 scanComplex(ss* s, gocpp::rune verb, int n);
+        double convertFloat(ss* s, gocpp::string str, int64_t n);
+        struct gocpp::complex128 scanComplex(ss* s, gocpp::rune verb, int64_t n);
         gocpp::string convertString(ss* s, gocpp::rune verb);
         gocpp::string quotedString(ss* s);
         std::tuple<unsigned char, bool> hexByte(ss* s);
         gocpp::string hexString(ss* s);
         void scanPercent(ss* s);
         void scanOne(ss* s, gocpp::rune verb, go_any arg);
-        std::tuple<int, gocpp::error> doScan(ss* s, gocpp::slice<go_any> a);
-        int advance(ss* s, gocpp::string format);
-        std::tuple<int, gocpp::error> doScanf(ss* s, gocpp::string format, gocpp::slice<go_any> a);
+        std::tuple<int64_t, gocpp::error> doScan(ss* s, gocpp::slice<go_any> a);
+        int64_t advance(ss* s, gocpp::string format);
+        std::tuple<int64_t, gocpp::error> doScanf(ss* s, gocpp::string format, gocpp::slice<go_any> a);
     }
 }
 

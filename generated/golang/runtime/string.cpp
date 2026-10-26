@@ -54,9 +54,9 @@ namespace golang::runtime
     // if small enough.
     gocpp::string concatstrings(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::string> a)
     {
-        auto idx = 0;
-        auto l = 0;
-        auto count = 0;
+        int64_t idx = 0;
+        int64_t l = 0;
+        int64_t count = 0;
         for(auto [i, x] : a)
         {
             auto n = len(x);
@@ -121,7 +121,7 @@ namespace golang::runtime
     // The operands are passed in the slice a.
     gocpp::slice<unsigned char> concatbytes(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::string> a)
     {
-        auto l = 0;
+        int64_t l = 0;
         for(auto [gocpp_ignored, x] : a)
         {
             auto n = len(x);
@@ -147,7 +147,7 @@ namespace golang::runtime
         {
             b = rawbyteslice(l);
         }
-        auto offset = 0;
+        int64_t offset = 0;
         for(auto [gocpp_ignored, x] : a)
         {
             copy(b.make_slice(offset), x);
@@ -186,7 +186,7 @@ namespace golang::runtime
     // n is the length of the slice.
     // Buf is a fixed-size buffer for the result,
     // it is not nil if the result does not escape.
-    gocpp::string slicebytetostring(gocpp::array_ptr<tmpBuf> buf, unsigned char* ptr, int n)
+    gocpp::string slicebytetostring(gocpp::array_ptr<tmpBuf> buf, unsigned char* ptr, int64_t n)
     {
         if(n == 0)
         {
@@ -239,7 +239,7 @@ namespace golang::runtime
         return stk.lo <= ptr && ptr < stk.hi;
     }
 
-    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(gocpp::array_ptr<tmpBuf> buf, int l)
+    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(gocpp::array_ptr<tmpBuf> buf, int64_t l)
     {
         gocpp::string s;
         gocpp::slice<unsigned char> b;
@@ -269,7 +269,7 @@ namespace golang::runtime
     //     where k is []byte, T1 to Tn is a nesting of struct and array literals.
     //   - Used for "<"+string(b)+">" concatenation where b is []byte.
     //   - Used for string(b)=="foo" comparison where b is []byte.
-    gocpp::string slicebytetostringtmp(unsigned char* ptr, int n)
+    gocpp::string slicebytetostringtmp(unsigned char* ptr, int64_t n)
     {
         if(raceenabled && n > 0)
         {
@@ -306,7 +306,7 @@ namespace golang::runtime
     {
         // two passes.
         // unlike slicerunetostring, no race because strings are immutable.
-        auto n = 0;
+        int64_t n = 0;
         for(const auto& _ : s)
         {
             n++;
@@ -347,13 +347,13 @@ namespace golang::runtime
             asanread(gocpp::unsafe_pointer(& a[0]), uintptr_t(len(a)) * gocpp::Sizeof<gocpp::rune>());
         }
         gocpp::array<unsigned char, 4> dum = {};
-        auto size1 = 0;
+        int64_t size1 = 0;
         for(auto [gocpp_ignored, r] : a)
         {
             size1 += encoderune(dum.make_slice(0), r);
         }
         auto [s, b] = rawstringtmp(buf, size1 + 3);
-        auto size2 = 0;
+        int64_t size2 = 0;
         for(auto [gocpp_ignored, r] : a)
         {
             // check for race
@@ -461,7 +461,7 @@ namespace golang::runtime
     // string and byte slice both refer to the same storage.
     // The storage is not zeroed. Callers should use
     // b to set the string contents and then drop b.
-    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstring(int size)
+    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstring(int64_t size)
     {
         gocpp::string s;
         gocpp::slice<unsigned char> b;
@@ -470,7 +470,7 @@ namespace golang::runtime
     }
 
     // rawbyteslice allocates a new byte slice. The byte slice is not zeroed.
-    gocpp::slice<unsigned char> rawbyteslice(int size)
+    gocpp::slice<unsigned char> rawbyteslice(int64_t size)
     {
         gocpp::slice<unsigned char> b;
         auto cap = roundupsize(uintptr_t(size), true);
@@ -480,12 +480,12 @@ namespace golang::runtime
             memclrNoHeapPointers(add(p, uintptr_t(size)), cap - uintptr_t(size));
         }
 
-        *(golang::runtime::slice*)(gocpp::unsafe_pointer(& b)) = golang::runtime::slice {p, size, int(cap)};
+        *(golang::runtime::slice*)(gocpp::unsafe_pointer(& b)) = golang::runtime::slice {p, size, int64_t(cap)};
         return b;
     }
 
     // rawruneslice allocates a new rune slice. The rune slice is not zeroed.
-    gocpp::slice<gocpp::rune> rawruneslice(int size)
+    gocpp::slice<gocpp::rune> rawruneslice(int64_t size)
     {
         gocpp::slice<gocpp::rune> b;
         if(uintptr_t(size) > maxAlloc / 4)
@@ -499,12 +499,12 @@ namespace golang::runtime
             memclrNoHeapPointers(add(p, uintptr_t(size) * 4), mem - uintptr_t(size) * 4);
         }
 
-        *(golang::runtime::slice*)(gocpp::unsafe_pointer(& b)) = golang::runtime::slice {p, size, int(mem / 4)};
+        *(golang::runtime::slice*)(gocpp::unsafe_pointer(& b)) = golang::runtime::slice {p, size, int64_t(mem / 4)};
         return b;
     }
 
     // used by cmd/cgo
-    gocpp::slice<unsigned char> gobytes(unsigned char* p, int n)
+    gocpp::slice<unsigned char> gobytes(unsigned char* p, int64_t n)
     {
         gocpp::slice<unsigned char> b;
         if(n == 0)
@@ -547,7 +547,7 @@ namespace golang::runtime
         return gostring(p);
     }
 
-    gocpp::string gostringn(unsigned char* p, int l)
+    gocpp::string gostringn(unsigned char* p, int64_t l)
     {
         if(l == 0)
         {
@@ -618,7 +618,7 @@ namespace golang::runtime
         {
             return {0, false};
         }
-        auto power = 0;
+        int64_t power = 0;
         //Go switch emulation
         {
             auto condition = s[len(s) - 3];
@@ -647,8 +647,8 @@ namespace golang::runtime
                     break;
             }
         }
-        auto m = uint64_t(1);
-        for(auto i = 0; i < power; i++)
+        uint64_t m = uint64_t(1);
+        for(int64_t i = 0; i < power; i++)
         {
             m *= 1024;
         }
@@ -673,7 +673,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    int findnull(unsigned char* s)
+    int64_t findnull(unsigned char* s)
     {
         if(s == nullptr)
         {
@@ -686,7 +686,7 @@ namespace golang::runtime
         if(GOOS == "plan9"_s)
         {
             auto p = (gocpp::array_ptr<gocpp::array<unsigned char, maxAlloc / 2 - 1>>)(gocpp::unsafe_pointer(s));
-            auto l = 0;
+            int64_t l = 0;
             for(; p[l] != 0; )
             {
                 l++;
@@ -702,12 +702,12 @@ namespace golang::runtime
         // might be enforced. See issue 59090.
         auto pageSize = 4096 * (1 - goos::IsAndroid) + 16 * goos::IsAndroid;
 
-        auto offset = 0;
+        int64_t offset = 0;
         auto ptr = gocpp::unsafe_pointer(s);
         // IndexByteString uses wide reads, so we need to be careful
         // with page boundaries. Call IndexByteString on
         // [ptr, endOfPage) interval.
-        auto safeLen = int(pageSize - uintptr_t(ptr) % pageSize);
+        auto safeLen = int64_t(pageSize - uintptr_t(ptr) % pageSize);
 
         for(; ; )
         {
@@ -724,14 +724,14 @@ namespace golang::runtime
         }
     }
 
-    int findnullw(uint16_t* s)
+    int64_t findnullw(uint16_t* s)
     {
         if(s == nullptr)
         {
             return 0;
         }
         auto p = (gocpp::array_ptr<gocpp::array<uint16_t, maxAlloc / 2 / 2 - 1>>)(gocpp::unsafe_pointer(s));
-        auto l = 0;
+        int64_t l = 0;
         for(; p[l] != 0; )
         {
             l++;
@@ -754,14 +754,14 @@ namespace golang::runtime
     {
         gocpp::array<unsigned char, 8> buf = {};
         auto str = (gocpp::array_ptr<gocpp::array<uint16_t, maxAlloc / 2 / 2 - 1>>)(gocpp::unsafe_pointer(strw));
-        auto n1 = 0;
-        for(auto i = 0; str[i] != 0; i++)
+        int64_t n1 = 0;
+        for(int64_t i = 0; str[i] != 0; i++)
         {
             n1 += encoderune(buf.make_slice(0), gocpp::rune(str[i]));
         }
         auto [s, b] = rawstring(n1 + 4);
-        auto n2 = 0;
-        for(auto i = 0; str[i] != 0; i++)
+        int64_t n2 = 0;
+        for(int64_t i = 0; str[i] != 0; i++)
         {
             // check for race
             if(n2 >= n1)

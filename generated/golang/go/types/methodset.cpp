@@ -90,13 +90,13 @@ namespace golang::go::types
     }
 
     // Len returns the number of methods in s.
-    int rec::Len(MethodSet* s)
+    int64_t rec::Len(MethodSet* s)
     {
         return len(s->list);
     }
 
     // At returns the i'th method in s for 0 <= i < s.Len().
-    Selection* rec::At(MethodSet* s, int i)
+    Selection* rec::At(MethodSet* s, int64_t i)
     {
         return s->list[i];
     }
@@ -110,7 +110,7 @@ namespace golang::go::types
         }
 
         auto key = types::Id(pkg, name);
-        auto i_tmp = sort::Search(len(s->list), [=](int i) mutable -> bool
+        auto i_tmp = sort::Search(len(s->list), [=](int64_t i) mutable -> bool
         {
             auto m = s->list[i];
             return rec::Id(gocpp::recv(m->obj)) >= key;
@@ -196,7 +196,7 @@ namespace golang::go::types
                     }
                     rec::add(gocpp::recv(seen), named);
 
-                    for(auto i = 0; i < rec::NumMethods(gocpp::recv(named)); i++)
+                    for(int64_t i = 0; i < rec::NumMethods(gocpp::recv(named)); i++)
                     {
                         mset = rec::addOne(gocpp::recv(mset), rec::Method(gocpp::recv(named), i), concat(e.index, i), e.indirect, e.multiples);
                     }
@@ -301,7 +301,7 @@ namespace golang::go::types
             }
         }
         // sort by unique name
-        sort::Slice(list, [=](int i, int j) mutable -> bool
+        sort::Slice(list, [=](int64_t i, int64_t j) mutable -> bool
         {
             return rec::Id(gocpp::recv(list[i]->obj)) < rec::Id(gocpp::recv(list[j]->obj));
         });
@@ -315,7 +315,7 @@ namespace golang::go::types
     // Add adds all functions in list to the method set s.
     // If multiples is set, every function in list appears multiple times
     // and is treated as a collision.
-    methodSet rec::add(methodSet s, gocpp::slice<Func*> list, gocpp::slice<int> index, bool indirect, bool multiples)
+    methodSet rec::add(methodSet s, gocpp::slice<Func*> list, gocpp::slice<int64_t> index, bool indirect, bool multiples)
     {
         if(len(list) == 0)
         {
@@ -328,7 +328,7 @@ namespace golang::go::types
         return s;
     }
 
-    methodSet rec::addOne(methodSet s, Func* f, gocpp::slice<int> index, bool indirect, bool multiples)
+    methodSet rec::addOne(methodSet s, Func* f, gocpp::slice<int64_t> index, bool indirect, bool multiples)
     {
         if(s == nullptr)
         {

@@ -100,7 +100,7 @@ namespace golang::compress::flate
     }
 
     // newFastEnc returns a fastEnc encoder for the given compression level (1-6).
-    fastEnc newFastEnc(int level)
+    fastEnc newFastEnc(int64_t level)
     {
         //Go switch emulation
         {
@@ -229,7 +229,7 @@ namespace golang::compress::flate
     // matchLenLimited returns the match length between offsets s and t in src.
     // The maximum length returned is maxMatchLength - 4.
     // It is assumed that s > t, that t >= 0 and s < len(src).
-    int32_t rec::matchLenLimited(fastGen* e, int s, int t, gocpp::slice<unsigned char> src)
+    int32_t rec::matchLenLimited(fastGen* e, int64_t s, int64_t t, gocpp::slice<unsigned char> src)
     {
         auto a = src.make_slice(s, gocpp::min(s + maxMatchLength - 4, len(src)));
         auto b = src.make_slice(t);
@@ -238,7 +238,7 @@ namespace golang::compress::flate
 
     // matchLenLong returns the match length between offsets s and t in src.
     // It is assumed that s > t, that t >= 0 and s < len(src).
-    int32_t rec::matchLenLong(fastGen* e, int s, int t, gocpp::slice<unsigned char> src)
+    int32_t rec::matchLenLong(fastGen* e, int64_t s, int64_t t, gocpp::slice<unsigned char> src)
     {
         return int32_t(matchLen(src.make_slice(s), src.make_slice(t)));
     }
@@ -368,9 +368,9 @@ namespace golang::compress::flate
 
     // matchLen returns the maximum common prefix length of a and b.
     // a must be the shortest of the two.
-    int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
+    int64_t matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     {
-        int n;
+        int64_t n;
         auto left = len(a);
         for(; left >= 8; )
         {

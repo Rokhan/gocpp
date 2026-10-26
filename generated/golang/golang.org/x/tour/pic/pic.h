@@ -12,7 +12,7 @@
 
 namespace golang::golang_org::x::tour::pic
 {
-    void Show(std::function<gocpp::slice<gocpp::slice<uint8_t>> (int dx, int dy)> f);
+    void Show(std::function<gocpp::slice<gocpp::slice<uint8_t>> (int64_t dx, int64_t dy)> f);
 }
 #include "golang/image/geom.fwd.h"
 #include "golang/image/image.fwd.h"

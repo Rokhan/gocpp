@@ -6,9 +6,11 @@
 
 namespace golang::internal::trace::tracev2
 {
-    using EventType = uint8_t;
+    struct GoTag_EventType;
+    using EventType = gocpp::defined<uint8_t, GoTag_EventType>;
     struct EventSpec;
-    using Experiment = unsigned int;
+    struct GoTag_Experiment;
+    using Experiment = gocpp::defined<uint64_t, GoTag_Experiment>;
     // NoExperiment is the reserved ID 0 indicating no experiment.
-    const Experiment NoExperiment = 0;
+    inline constexpr Experiment NoExperiment = 0;
 }

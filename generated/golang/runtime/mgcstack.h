@@ -40,7 +40,7 @@ namespace golang::runtime
         // Objects are in increasing address order.
         stackObjectBuf* head{};
         stackObjectBuf* tail{};
-        int nobjs{};
+        int64_t nobjs{};
         // root of binary tree for fast object lookup by address
         // Initialized by buildIndex.
         stackObject* root{};
@@ -170,7 +170,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackObjectBuf& value);
-    std::tuple<stackObject*, stackObjectBuf*, int> binarySearchTree(stackObjectBuf* x, int idx, int n);
+    std::tuple<stackObject*, stackObjectBuf*, int64_t> binarySearchTree(stackObjectBuf* x, int64_t idx, int64_t n);
 }
 
 #include "golang/runtime/stack.h"

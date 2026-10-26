@@ -58,7 +58,7 @@ namespace golang::internal::runtime::maps
         // sequential indices.
         // index is -1 if the table is stale (no longer installed in the
         // directory).
-        int index{};
+        int64_t index{};
         // groups is an array of slot groups. Each group holds abi.MapGroupSlots
         // key/elem slots and their control bytes. A table has a fixed size
         // groups array. The table is replaced (in rehash) when more space is
@@ -93,7 +93,7 @@ namespace golang::internal::runtime::maps
 
 namespace golang::internal::runtime::maps
 {
-    table* newTable(abi::MapType* typ, uint64_t capacity, int index, uint8_t localDepth);
+    table* newTable(abi::MapType* typ, uint64_t capacity, int64_t index, uint8_t localDepth);
     struct Iter
     {
         gocpp::unsafe_pointer key{}; // Must be in first position.  Write nil to indicate iteration end (see cmd/compile/internal/walk/range.go).
@@ -113,7 +113,7 @@ namespace golang::internal::runtime::maps
         uint8_t globalDepth{};
         // dirIdx is the current directory index, prior to adjustment by
         // dirOffset.
-        int dirIdx{};
+        int64_t dirIdx{};
         // tab is the table at dirIdx during the previous call to Next.
         table* tab{};
         // group is the group at entryIdx during the previous call to Next.

@@ -16,7 +16,7 @@ namespace golang::sync
     extern gocpp::array<uint64_t, 128> poolRaceHash;
     void poolCleanup();
     void init();
-    int runtime_procPin();
+    int64_t runtime_procPin();
     void runtime_procUnpin();
     void runtime_registerPoolCleanup(std::function<void ()> cleanup);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
@@ -96,15 +96,15 @@ namespace golang::sync
     // oldPools is the set of pools that may have non-empty victim
     // caches. Protected by STW.
     extern gocpp::slice<Pool*> oldPools;
-    poolLocal* indexLocal(gocpp::unsafe_pointer l, int i);
+    poolLocal* indexLocal(gocpp::unsafe_pointer l, int64_t i);
 
     namespace rec
     {
         void Put(Pool* p, go_any x);
         go_any Get(Pool* p);
-        go_any getSlow(Pool* p, int pid);
-        std::tuple<poolLocal*, int> pin(Pool* p);
-        std::tuple<poolLocal*, int> pinSlow(Pool* p);
+        go_any getSlow(Pool* p, int64_t pid);
+        std::tuple<poolLocal*, int64_t> pin(Pool* p);
+        std::tuple<poolLocal*, int64_t> pinSlow(Pool* p);
     }
 }
 

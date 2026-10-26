@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    void fill(gocpp::channel<int> c);
+    void fill(gocpp::channel<int64_t> c);
     void main();
 
     namespace rec

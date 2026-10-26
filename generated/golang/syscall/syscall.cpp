@@ -127,10 +127,10 @@ namespace golang::syscall
         return int64_t(tv->Sec) * 1e9 + int64_t(tv->Usec) * 1000;
     }
 
-    int Getpagesize()
+    int64_t Getpagesize()
     /* convertBlockStmt, nil block */;
 
-    void Exit(int code)
+    void Exit(int64_t code)
     /* convertBlockStmt, nil block */;
 
     // runtimeSetenv and runtimeUnsetenv are provided by the runtime.
@@ -142,7 +142,7 @@ namespace golang::syscall
 
     // runtimeClearenv is provided by the runtime (on platforms without
     // clearenv(3), it is just a wrapper around runtimeUnsetenv).
-    void runtimeClearenv(gocpp::map<gocpp::string, int> env)
+    void runtimeClearenv(gocpp::map<gocpp::string, int64_t> env)
     /* convertBlockStmt, nil block */;
 
 }

@@ -12,29 +12,37 @@
 
 namespace golang::runtime
 {
+    struct GoTag_chunkIdx { };
+    using chunkIdx = gocpp::defined<uint64_t, GoTag_chunkIdx>;
+    uint64_t chunkPageIndex(uintptr_t p);
+    std::tuple<int64_t, int64_t> addrsToSummaryRange(int64_t level, uintptr_t base, uintptr_t limit);
+    std::tuple<int64_t, int64_t> blockAlignSummaryRange(int64_t level, int64_t lo, int64_t hi);
+    struct GoTag_pallocSum { };
+    using pallocSum = gocpp::defined<uint64_t, GoTag_pallocSum>;
     chunkIdx chunkIndex(uintptr_t p);
     uintptr_t chunkBase(chunkIdx ci);
-    unsigned int chunkPageIndex(uintptr_t p);
-    std::tuple<int, int> addrsToSummaryRange(int level, uintptr_t base, uintptr_t limit);
-    std::tuple<int, int> blockAlignSummaryRange(int level, int lo, int hi);
-    pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end);
-    pallocSum mergeSummaries(gocpp::slice<pallocSum> sums, unsigned int logMaxPagesPerSum);
+    pallocSum packPallocSum(uint64_t start, uint64_t max, uint64_t end);
+    pallocSum mergeSummaries(gocpp::slice<pallocSum> sums, uint64_t logMaxPagesPerSum);
 }
 #include "golang/runtime/mranges.h"
 
 namespace golang::runtime
 {
     offAddr maxSearchAddr();
-    int offAddrToLevelIndex(int level, offAddr addr);
-    offAddr levelIndexToOffAddr(int level, int idx);
+    int64_t offAddrToLevelIndex(int64_t level, offAddr addr);
+    offAddr levelIndexToOffAddr(int64_t level, int64_t idx);
 }
 #include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/runtime/atomic/types.h"
-#include "golang/runtime/mgcscavenge.h"
 
 namespace golang::runtime
 {
     namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/runtime/mgcscavenge.h"
+
+namespace golang::runtime
+{
     struct gocpp_id_0
     {
         // index is an efficient index of chunks that have pages available to
@@ -179,8 +187,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        unsigned int l1(chunkIdx i);
-        unsigned int l2(chunkIdx i);
+        uint64_t l1(chunkIdx i);
+        uint64_t l2(chunkIdx i);
         void init(pageAlloc* p, mutex* mheapLock, sysMemStat* sysStat, bool test);
         pallocData* tryChunkOf(pageAlloc* p, chunkIdx ci);
         pallocData* chunkOf(pageAlloc* p, chunkIdx ci);
@@ -193,10 +201,10 @@ namespace golang::runtime
         std::tuple<uintptr_t, uintptr_t> alloc(pageAlloc* p, uintptr_t npages);
         void free(pageAlloc* p, uintptr_t base, uintptr_t npages);
         void markRandomPaddingPages(pageAlloc* p, uintptr_t base, uintptr_t npages);
-        unsigned int start(pallocSum p);
-        unsigned int max(pallocSum p);
-        unsigned int end(pallocSum p);
-        std::tuple<unsigned int, unsigned int, unsigned int> unpack(pallocSum p);
+        uint64_t start(pallocSum p);
+        uint64_t max(pallocSum p);
+        uint64_t end(pallocSum p);
+        std::tuple<uint64_t, uint64_t, uint64_t> unpack(pallocSum p);
     }
 }
 

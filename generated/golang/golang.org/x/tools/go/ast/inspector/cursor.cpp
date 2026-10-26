@@ -116,7 +116,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
         {
             gocpp::panic("negative index"_s);
         }
-        if(int(index) >= len(in->events))
+        if(int64_t(index) >= len(in->events))
         {
             gocpp::panic("index out of range for this inspector"_s);
         }
@@ -384,7 +384,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
     // If called on a child of the Root node, it returns ([edge.Invalid], -1).
     //
     // ParentEdge must not be called on the Root node (whose [Cursor.Node] returns nil).
-    std::tuple<edge::Kind, int> rec::ParentEdge(Cursor c)
+    std::tuple<edge::Kind, int64_t> rec::ParentEdge(Cursor c)
     {
         if(c.index < 0)
         {
@@ -403,7 +403,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
     }
 
     // ParentEdgeIndex returns the index component of the result of [Cursor.ParentEdge].
-    int rec::ParentEdgeIndex(Cursor c)
+    int64_t rec::ParentEdgeIndex(Cursor c)
     {
         auto [gocpp_id_1, index] = rec::ParentEdge(gocpp::recv(c));
         return index;
@@ -417,7 +417,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
     // ChildAt must not be called on the Root node (whose [Cursor.Node] returns nil).
     //
     // Invariant: c.Parent().ChildAt(c.ParentEdge()) == c.
-    Cursor rec::ChildAt(Cursor c, edge::Kind k, int idx)
+    Cursor rec::ChildAt(Cursor c, edge::Kind k, int64_t idx)
     {
         auto target = packEdgeKindAndIndex(k, idx);
 
@@ -698,7 +698,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
         // but it is about 2.5x slower.
         // best is the push-index of the latest (=innermost) node containing range.
         // (Beware: latest is not always innermost because FuncDecl.{Name,Type} overlap.)
-        auto best = int32_t(- 1);
+        int32_t best = int32_t(- 1);
         for(auto [i, limit] = rec::indices(gocpp::recv(c)); i < limit; i++)
         {
             auto ev = events[i];

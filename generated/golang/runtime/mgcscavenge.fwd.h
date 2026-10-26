@@ -10,7 +10,7 @@ namespace golang::runtime
     //
     // scavengePercent represents the portion of mutator time we're willing
     // to spend on scavenging in percent.
-    const long scavengePercent = 1;
+    inline constexpr long scavengePercent = 1;
     // retainExtraPercent represents the amount of memory over the heap goal
     // that the scavenger should keep as a buffer space for the allocator.
     // This constant is used when we do not have a memory limit set.
@@ -19,7 +19,7 @@ namespace golang::runtime
     // unscavenged memory available for allocation (since using scavenged memory
     // incurs an additional cost), to account for heap fragmentation and
     // the ever-changing layout of the heap.
-    const long retainExtraPercent = 10;
+    inline constexpr long retainExtraPercent = 10;
     // reduceExtraPercent represents the amount of memory under the limit
     // that the scavenger should target. For example, 5 means we target 95%
     // of the limit.
@@ -29,34 +29,35 @@ namespace golang::runtime
     // we have a memory limit set but are far away from it, there's no harm
     // in leaving up to 100-retainExtraPercent live, and it's more efficient
     // anyway, for the same reasons that retainExtraPercent exists.
-    const long reduceExtraPercent = 5;
+    inline constexpr long reduceExtraPercent = 5;
     // scavChunkHiOcFrac indicates the fraction of pages that need to be allocated
     // in the chunk in a single GC cycle for it to be considered high density.
-    const double scavChunkHiOccFrac = 0.96875;
+    inline constexpr double scavChunkHiOccFrac = 0.96875;
     struct scavengeStruct;
     // It doesn't really matter what value we start at, but we can't be zero, because
     // that'll cause divide-by-zero issues. Pick something conservative which we'll
     // also use as a fallback.
-    const double startingScavSleepRatio = 0.001;
+    inline constexpr double startingScavSleepRatio = 0.001;
     // Spend at least 1 ms scavenging, otherwise the corresponding
     // sleep time to maintain our desired utilization is too low to
     // be reliable.
-    const double minScavWorkTime = 1e6;
+    inline constexpr double minScavWorkTime = 1e6;
     struct scavengerState;
     struct scavengeIndex;
     struct atomicScavChunkData;
     struct scavChunkData;
     // scavChunkMaxFlags is the maximum number of flags we can have, given how
     // a scavChunkData is packed into 8 bytes.
-    const long scavChunkMaxFlags = 6;
-    using scavChunkFlags = uint8_t;
+    inline constexpr long scavChunkMaxFlags = 6;
+    struct GoTag_scavChunkFlags;
+    using scavChunkFlags = gocpp::defined<uint8_t, GoTag_scavChunkFlags>;
     struct piController;
     // scavChunkHasFree indicates whether the chunk has anything left to
     // scavenge. This is the opposite of "empty," used elsewhere in this
     // file. The reason we say "HasFree" here is so the zero value is
     // correct for a newly-grown chunk. (New memory is scavenged.)
-    const scavChunkFlags scavChunkHasFree = 1 << 0;
-    const int scavChunkFlagsMask = (1 << scavChunkMaxFlags) - 1;
+    inline constexpr scavChunkFlags scavChunkHasFree = 1 << 0;
+    inline constexpr int64_t scavChunkFlagsMask = (1 << scavChunkMaxFlags) - 1;
 }
 #include "golang/runtime/malloc.fwd.h"
 #include "golang/runtime/mheap.fwd.h"
@@ -66,19 +67,19 @@ namespace golang::runtime
 {
     // maxPagesPerPhysPage is the maximum number of supported runtime pages per
     // physical page, based on maxPhysPageSize.
-    const int maxPagesPerPhysPage = maxPhysPageSize / pageSize;
-    const uint16_t scavChunkHiOccPages = uint16_t(scavChunkHiOccFrac * pallocChunkPages);
+    inline constexpr int64_t maxPagesPerPhysPage = maxPhysPageSize / pageSize;
+    inline constexpr uint16_t scavChunkHiOccPages = uint16_t(scavChunkHiOccFrac * pallocChunkPages);
     // logScavChunkInUseMax is the number of bits needed to represent the number
     // of pages allocated in a single chunk. This is 1 more than log2 of the
     // number of pages in the chunk because we need to represent a fully-allocated
     // chunk.
-    const int logScavChunkInUseMax = logPallocChunkPages + 1;
+    inline constexpr int64_t logScavChunkInUseMax = logPallocChunkPages + 1;
 }
 #include "golang/internal/goos/zgoos_windows.fwd.h"
 
 namespace golang::runtime
 {
-    const int scavChunkInUseMask = (1 << logScavChunkInUseMax) - 1;
+    inline constexpr int64_t scavChunkInUseMask = (1 << logScavChunkInUseMax) - 1;
     namespace goos = golang::internal::goos;
     // scavengeCostRatio is the approximate ratio between the costs of using previously
     // scavenged memory and scavenging memory.
@@ -89,5 +90,5 @@ namespace golang::runtime
     //
     // This ratio is used as part of multiplicative factor to help the scavenger account
     // for the additional costs of using scavenged memory in its pacing.
-    const double scavengeCostRatio = 0.7 * (goos::IsDarwin + goos::IsIos);
+    inline constexpr double scavengeCostRatio = 0.7 * (goos::IsDarwin + goos::IsIos);
 }

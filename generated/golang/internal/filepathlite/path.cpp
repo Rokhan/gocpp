@@ -77,7 +77,7 @@ namespace golang::internal::filepathlite
         return value.PrintTo(os);
     }
 
-    unsigned char rec::index(lazybuf* b, int i)
+    unsigned char rec::index(lazybuf* b, int64_t i)
     {
         if(b->buf != nullptr)
         {
@@ -241,7 +241,7 @@ namespace golang::internal::filepathlite
         {
             return false;
         }
-        auto hasDots = false;
+        bool hasDots = false;
         for(auto p = path; p != ""_s; )
         {
             gocpp::string part = {};
@@ -395,7 +395,7 @@ namespace golang::internal::filepathlite
 
     // VolumeNameLen returns the length of the leading volume name on Windows.
     // It returns 0 elsewhere.
-    int VolumeNameLen(gocpp::string path)
+    int64_t VolumeNameLen(gocpp::string path)
     {
         return volumeNameLen(path);
     }

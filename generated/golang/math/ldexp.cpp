@@ -30,7 +30,7 @@ namespace golang::math
     //	Ldexp(±0, exp) = ±0
     //	Ldexp(±Inf, exp) = ±Inf
     //	Ldexp(NaN, exp) = NaN
-    double Ldexp(double frac, int exp)
+    double Ldexp(double frac, int64_t exp)
     {
         if(haveArchLdexp)
         {
@@ -39,7 +39,7 @@ namespace golang::math
         return ldexp(frac, exp);
     }
 
-    double ldexp(double frac, int exp)
+    double ldexp(double frac, int64_t exp)
     {
         // special cases
         //Go switch emulation
@@ -62,7 +62,7 @@ namespace golang::math
         auto& frac = frac_tmp;
         exp += e;
         auto x = Float64bits(frac);
-        exp += int(x >> shift) & mask - bias;
+        exp += int64_t(x >> shift) & mask - bias;
         if(exp < - 1075)
         {
             // underflow

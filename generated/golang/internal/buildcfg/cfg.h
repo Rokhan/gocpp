@@ -16,11 +16,11 @@ namespace golang::internal::buildcfg
     extern gocpp::string GOARCH;
     extern gocpp::string GOOS;
     extern gocpp::string GO386;
-    extern int GOAMD64;
+    extern int64_t GOAMD64;
     extern gocpp::string GOMIPS;
     extern gocpp::string GOMIPS64;
-    extern int GOPPC64;
-    extern int GORISCV64;
+    extern int64_t GOPPC64;
+    extern int64_t GORISCV64;
     extern gocpp::slice<gocpp::string> ToolTags;
     extern gocpp::string GO_LDSO;
     extern gocpp::string GOFIPS140;
@@ -29,13 +29,13 @@ namespace golang::internal::buildcfg
     extern gocpp::error Error;
     void Check();
     gocpp::string envOr(gocpp::string key, gocpp::string value);
-    int goamd64();
+    int64_t goamd64();
     gocpp::string gofips140();
     bool isFIPSVersion(gocpp::string v);
     std::tuple<gocpp::string, bool> cutNum(gocpp::string s);
     struct GoarmFeatures
     {
-        int Version{};
+        int64_t Version{};
         bool SoftFloat{};
 
         using isGoStruct = void;
@@ -76,8 +76,8 @@ namespace golang::internal::buildcfg
     std::ostream& operator<<(std::ostream& os, const struct Goarm64Features& value);
     gocpp::string gomips();
     gocpp::string gomips64();
-    int goppc64();
-    int goriscv64();
+    int64_t goppc64();
+    int64_t goriscv64();
     struct gowasmFeatures
     {
 

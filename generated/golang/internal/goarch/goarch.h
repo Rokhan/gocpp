@@ -9,8 +9,11 @@
 #include "golang/internal/goarch/goarch.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::internal::goarch
 {
+    struct GoTag_ArchFamilyType { };
+    using ArchFamilyType = gocpp::defined<int64_t, GoTag_ArchFamilyType>;
 
     namespace rec
     {

@@ -7,15 +7,16 @@
 namespace golang::internal::reflectlite
 {
     struct Value;
-    using flag = uintptr_t;
-    const long flagKindWidth = 5;
-    const long flagMethodShift = 10;
+    struct GoTag_flag;
+    using flag = gocpp::defined<uintptr_t, GoTag_flag>;
+    inline constexpr long flagKindWidth = 5;
+    inline constexpr long flagMethodShift = 10;
     struct ValueError;
-    const flag flagKindMask = (1 << flagKindWidth) - 1;
-    const flag flagStickyRO = 1 << 5;
-    const flag flagEmbedRO = 1 << 6;
-    const flag flagIndir = 1 << 7;
-    const flag flagAddr = 1 << 8;
-    const flag flagMethod = 1 << 9;
-    const flag flagRO = flagStickyRO | flagEmbedRO;
+    inline constexpr flag flagKindMask = (1 << flagKindWidth) - 1;
+    inline constexpr flag flagStickyRO = 1 << 5;
+    inline constexpr flag flagEmbedRO = 1 << 6;
+    inline constexpr flag flagIndir = 1 << 7;
+    inline constexpr flag flagAddr = 1 << 8;
+    inline constexpr flag flagMethod = 1 << 9;
+    inline constexpr flag flagRO = flagStickyRO | flagEmbedRO;
 }

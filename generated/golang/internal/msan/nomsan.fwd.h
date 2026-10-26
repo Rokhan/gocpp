@@ -6,5 +6,5 @@
 
 namespace golang::internal::msan
 {
-    const bool Enabled = false;
+    inline constexpr bool Enabled = false;
 }

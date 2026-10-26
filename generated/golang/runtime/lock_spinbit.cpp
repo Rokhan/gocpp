@@ -196,7 +196,7 @@ namespace golang::runtime
         int64_t startTime = {};
         // On uniprocessors, no point spinning.
         // On multiprocessors, spin for mutexActiveSpinCount attempts.
-        auto spin = 0;
+        int64_t spin = 0;
         if(numCPUStartup > 1)
         {
             spin = mutexActiveSpinCount;
@@ -207,7 +207,7 @@ namespace golang::runtime
         bool haveTimers = {};
         auto v = atomic::Loaduintptr(& l->key);
         tryAcquire:
-        for(auto i = 0; ; i++)
+        for(int64_t i = 0; ; i++)
         {
             if(false) {
             tryAcquire_continue:

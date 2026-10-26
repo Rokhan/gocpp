@@ -36,7 +36,7 @@ namespace golang::regexp
     std::tuple<gocpp::slice<gocpp::rune>, gocpp::slice<uint32_t>> mergeRuneSets(gocpp::slice<gocpp::rune>* leftRunes, gocpp::slice<gocpp::rune>* rightRunes, uint32_t leftPC, uint32_t rightPC);
     extern gocpp::slice<gocpp::rune> anyRuneNotNL;
     extern gocpp::slice<gocpp::rune> anyRune;
-    queueOnePass* newQueue(int size);
+    queueOnePass* newQueue(int64_t size);
 }
 #include "golang/regexp/syntax/parse.fwd.h"
 #include "golang/regexp/syntax/prog.fwd.h"
@@ -69,7 +69,7 @@ namespace golang::regexp
     {
         bool MatchEmptyWidth(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune before, gocpp::rune after);
         bool MatchRune(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r);
-        int MatchRunePos(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r);
+        int64_t MatchRunePos(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r);
         gocpp::string String(const gocpp::PtrRecv<struct onePassInst, false>& self);
         syntax::InstOp op(const gocpp::PtrRecv<struct onePassInst, false>& self);
     }
@@ -80,8 +80,8 @@ namespace golang::regexp
     struct onePassProg
     {
         gocpp::slice<onePassInst> Inst{};
-        int Start{}; // index of start instruction
-        int NumCap{}; // number of InstCapture insts in re
+        int64_t Start{}; // index of start instruction
+        int64_t NumCap{}; // number of InstCapture insts in re
 
         using isGoStruct = void;
 

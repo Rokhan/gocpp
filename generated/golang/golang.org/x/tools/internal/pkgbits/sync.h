@@ -26,6 +26,8 @@ namespace golang::golang_org::x::tools::internal::pkgbits
         return fmtFrames(gocpp::ToSlice<uintptr_t>(value, pcs...));
     }
     void walkFrames(gocpp::slice<uintptr_t> pcs, frameVisitor visit);
+    struct GoTag_SyncMarker { };
+    using SyncMarker = gocpp::defined<int64_t, GoTag_SyncMarker>;
 
     namespace rec
     {

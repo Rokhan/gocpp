@@ -16,8 +16,8 @@ namespace golang::internal::unsafeheader
     struct Slice
     {
         gocpp::unsafe_pointer Data{};
-        int Len{};
-        int Cap{};
+        int64_t Len{};
+        int64_t Cap{};
 
         using isGoStruct = void;
 
@@ -34,7 +34,7 @@ namespace golang::internal::unsafeheader
     struct String
     {
         gocpp::unsafe_pointer Data{};
-        int Len{};
+        int64_t Len{};
 
         using isGoStruct = void;
 

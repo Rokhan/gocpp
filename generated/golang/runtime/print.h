@@ -12,11 +12,13 @@
 
 namespace golang::runtime
 {
+    struct GoTag_hex { };
+    using hex = gocpp::defined<uint64_t, GoTag_hex>;
     gocpp::slice<unsigned char> bytes(gocpp::string s);
     // printBacklog is a circular buffer of messages written with the builtin
     // print* functions, for use in postmortem analysis of core dumps.
     extern gocpp::array<unsigned char, 512> printBacklog;
-    extern int printBacklogIndex;
+    extern int64_t printBacklogIndex;
     void recordForPanic(gocpp::slice<unsigned char> b);
     void printlock();
     void printunlock();
@@ -31,7 +33,7 @@ namespace golang::runtime
     void printuint(uint64_t v);
     void printint(int64_t v);
     extern long minhexdigits;
-    void printhexopts(bool include0x, int mindigits, uint64_t v);
+    void printhexopts(bool include0x, int64_t mindigits, uint64_t v);
     void printhex(uint64_t v);
     void printquoted(gocpp::string s);
     void printuintptr(uintptr_t p);

@@ -14,8 +14,8 @@ namespace golang::main
 {
     struct Vertex
     {
-        int X{};
-        int Y{};
+        int64_t X{};
+        int64_t Y{};
 
         using isGoStruct = void;
 

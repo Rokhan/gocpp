@@ -6,10 +6,10 @@
 
 namespace golang::internal::chacha8rand
 {
-    const long ctrInc = 4;
-    const long ctrMax = 16;
-    const long chunk = 32;
-    const long reseed = 4;
+    inline constexpr long ctrInc = 4;
+    inline constexpr long ctrMax = 16;
+    inline constexpr long chunk = 32;
+    inline constexpr long reseed = 4;
     struct State;
     struct errUnmarshalChaCha8;
 }

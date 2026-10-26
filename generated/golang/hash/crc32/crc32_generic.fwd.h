@@ -7,7 +7,7 @@
 namespace golang::hash::crc32
 {
     // Use slicing-by-8 when payload >= this value.
-    const long slicing8Cutoff = 16;
+    inline constexpr long slicing8Cutoff = 16;
     struct GoTag_slicing8Table;
 }
 #include "golang/hash/crc32/crc32.fwd.h"

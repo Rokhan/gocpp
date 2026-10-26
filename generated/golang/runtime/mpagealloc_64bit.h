@@ -16,7 +16,7 @@ namespace golang::runtime
     // structure.
     //
     // The sum of all the entries of levelBits should equal heapAddrBits.
-    extern gocpp::array<unsigned int, summaryLevels> levelBits;
+    extern gocpp::array<uint64_t, summaryLevels> levelBits;
     // levelShift is the number of bits to shift to acquire the radix for a given level
     // in the super summary structure.
     //
@@ -24,12 +24,12 @@ namespace golang::runtime
     // pointer p by doing:
     //
     //	p >> levelShift[l]
-    extern gocpp::array<unsigned int, summaryLevels> levelShift;
+    extern gocpp::array<uint64_t, summaryLevels> levelShift;
     // levelLogPages is log2 the maximum number of runtime pages in the address space
     // a summary in the given level represents.
     //
     // The leaf level always represents exactly log2 of 1 chunk's worth of pages.
-    extern gocpp::array<unsigned int, summaryLevels> levelLogPages;
+    extern gocpp::array<uint64_t, summaryLevels> levelLogPages;
 }
 
 #include "golang/runtime/mgcscavenge.h"

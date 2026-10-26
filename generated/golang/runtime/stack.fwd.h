@@ -7,18 +7,18 @@
 namespace golang::runtime
 {
     // The minimum size of stack used by Go code
-    const long stackMin = 2048;
+    inline constexpr long stackMin = 2048;
     // stackDebug == 0: no logging
     //            == 1: logging of per-stack operations
     //            == 2: logging of per-frame operations
     //            == 3: logging of per-word updates
     //            == 4: logging of per-word reads
-    const long stackDebug = 0;
-    const long stackFromSystem = 0;
-    const long stackFaultOnFree = 0;
-    const long stackNoCache = 0;
+    inline constexpr long stackDebug = 0;
+    inline constexpr long stackFromSystem = 0;
+    inline constexpr long stackFaultOnFree = 0;
+    inline constexpr long stackNoCache = 0;
     // check the BP links during traceback.
-    const bool debugCheckBP = false;
+    inline constexpr bool debugCheckBP = false;
     struct stackpoolStruct;
     struct stackpoolItem;
     struct stackLargeStruct;
@@ -45,38 +45,38 @@ namespace golang::runtime
     // to each stack below the usual guard area for OS-specific
     // purposes like signal handling. Used on Windows, Plan 9,
     // and iOS because they do not use a separate stack.
-    const int stackSystem = goos::IsWindows * 4096 + goos::IsPlan9 * 512 + goos::IsIos * goarch::IsArm64 * 1024;
+    inline constexpr int64_t stackSystem = goos::IsWindows * 4096 + goos::IsPlan9 * 512 + goos::IsIos * goarch::IsArm64 * 1024;
     // stackNosplit is the maximum number of bytes that a chain of NOSPLIT
     // functions can use.
     // This arithmetic must match that in cmd/internal/objabi/stack.go:StackNosplit.
-    const int stackNosplit = abi::StackNosplitBase * sys::StackGuardMultiplier;
-    const int uintptrMask = (1 << (8 * goarch::PtrSize)) - 1;
+    inline constexpr int64_t stackNosplit = abi::StackNosplitBase * sys::StackGuardMultiplier;
+    inline constexpr uint64_t uintptrMask = uint64_t((1_bi << (8 * goarch::PtrSize)) - 1_bi);
     // The minimum stack size to allocate.
     // The hackery here rounds fixedStack0 up to a power of 2.
-    const int fixedStack0 = stackMin + stackSystem;
+    inline constexpr int64_t fixedStack0 = stackMin + stackSystem;
     // The stack guard is a pointer this many bytes above the
     // bottom of the stack.
     //
     // The guard leaves enough room for a stackNosplit chain of NOSPLIT calls
     // plus one stackSmall frame plus stackSystem bytes for the OS.
     // This arithmetic must match that in cmd/internal/objabi/stack.go:StackLimit.
-    const int stackGuard = stackNosplit + stackSystem + abi::StackSmall;
+    inline constexpr int64_t stackGuard = stackNosplit + stackSystem + abi::StackSmall;
     // Goroutine preemption request.
     // 0xfffffade in hex.
-    const int stackPreempt = uintptrMask & - 1314;
+    inline constexpr uint64_t stackPreempt = uint64_t(gocpp::bigint(uintptrMask) & - 1314_bi);
     // Thread is forking. Causes a split stack check failure.
     // 0xfffffb2e in hex.
-    const int stackFork = uintptrMask & - 1234;
+    inline constexpr uint64_t stackFork = uint64_t(gocpp::bigint(uintptrMask) & - 1234_bi);
     // Force a stack movement. Used for debugging.
     // 0xfffffeed in hex.
-    const int stackForceMove = uintptrMask & - 275;
+    inline constexpr uint64_t stackForceMove = uint64_t(gocpp::bigint(uintptrMask) & - 275_bi);
     // stackPoisonMin is the lowest allowed stack poison value.
-    const int stackPoisonMin = uintptrMask & - 4096;
-    const int fixedStack1 = fixedStack0 - 1;
-    const int fixedStack2 = fixedStack1 | (fixedStack1 >> 1);
-    const int fixedStack3 = fixedStack2 | (fixedStack2 >> 2);
-    const int fixedStack4 = fixedStack3 | (fixedStack3 >> 4);
-    const int fixedStack5 = fixedStack4 | (fixedStack4 >> 8);
-    const int fixedStack6 = fixedStack5 | (fixedStack5 >> 16);
-    const int fixedStack = fixedStack6 + 1;
+    inline constexpr uint64_t stackPoisonMin = uint64_t(gocpp::bigint(uintptrMask) & - 4096_bi);
+    inline constexpr int64_t fixedStack1 = fixedStack0 - 1;
+    inline constexpr int64_t fixedStack2 = fixedStack1 | (fixedStack1 >> 1);
+    inline constexpr int64_t fixedStack3 = fixedStack2 | (fixedStack2 >> 2);
+    inline constexpr int64_t fixedStack4 = fixedStack3 | (fixedStack3 >> 4);
+    inline constexpr int64_t fixedStack5 = fixedStack4 | (fixedStack4 >> 8);
+    inline constexpr int64_t fixedStack6 = fixedStack5 | (fixedStack5 >> 16);
+    inline constexpr int64_t fixedStack = fixedStack6 + 1;
 }

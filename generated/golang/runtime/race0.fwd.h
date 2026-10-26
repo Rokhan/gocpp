@@ -6,5 +6,5 @@
 
 namespace golang::runtime
 {
-    const bool raceenabled = false;
+    inline constexpr bool raceenabled = false;
 }

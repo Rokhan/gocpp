@@ -17,7 +17,7 @@ namespace golang::go::doc
     using embeddedSet = gocpp::defined<gocpp::map<namedType*, bool>, GoTag_embeddedSet>;
     extern gocpp::string noteMarker;
     gocpp::string clean(gocpp::string s);
-    gocpp::slice<gocpp::string> sortedKeys(gocpp::map<gocpp::string, int> m);
+    gocpp::slice<gocpp::string> sortedKeys(gocpp::map<gocpp::string, int64_t> m);
     gocpp::string removeStar(gocpp::string s);
     bool IsPredeclared(gocpp::string s);
     extern gocpp::map<gocpp::string, bool> predeclaredTypes;
@@ -30,7 +30,7 @@ namespace golang::go::doc
 namespace golang::go::doc
 {
     using methodSet = gocpp::defined<gocpp::map<gocpp::string, Func*>, GoTag_methodSet>;
-    Func* customizeRecv(Func* f, gocpp::string recvTypeName, bool embeddedIsPtr, int level);
+    Func* customizeRecv(Func* f, gocpp::string recvTypeName, bool embeddedIsPtr, int64_t level);
     gocpp::slice<gocpp::string> noteBodies(gocpp::slice<Note*> notes);
 }
 #include "golang/go/ast/ast.fwd.h"
@@ -86,12 +86,12 @@ namespace golang::go::doc
         gocpp::slice<gocpp::string> filenames{};
         gocpp::map<gocpp::string, gocpp::slice<Note*>> notes{};
         // imports
-        gocpp::map<gocpp::string, int> imports{};
+        gocpp::map<gocpp::string, int64_t> imports{};
         bool hasDotImp{}; // if set, package contains a dot import
         gocpp::map<gocpp::string, gocpp::string> importByName{};
         // declarations
         gocpp::slice<Value*> values{}; // consts and vars
-        int order{}; // sort order of const and var declarations (when we can't use a name)
+        int64_t order{}; // sort order of const and var declarations (when we can't use a name)
         gocpp::map<gocpp::string, namedType*> types{};
         methodSet funcs{};
         // support for package-local shadowing of predeclared types
@@ -143,7 +143,7 @@ namespace golang::go::doc
         void readNotes(reader* r, gocpp::slice<ast::CommentGroup*> comments);
         void readFile(reader* r, ast::File* src);
         void readPackage(reader* r, ast::Package* pkg, Mode mode);
-        void collectEmbeddedMethods(reader* r, methodSet mset, namedType* typ, gocpp::string recvTypeName, bool embeddedIsPtr, int level, embeddedSet visited);
+        void collectEmbeddedMethods(reader* r, methodSet mset, namedType* typ, gocpp::string recvTypeName, bool embeddedIsPtr, int64_t level, embeddedSet visited);
         void computeMethodSets(reader* r);
         void cleanupTypes(reader* r);
     }

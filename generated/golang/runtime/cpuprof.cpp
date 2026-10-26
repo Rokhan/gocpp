@@ -90,7 +90,7 @@ namespace golang::runtime
     // Most clients should use the [runtime/pprof] package or
     // the [testing] package's -test.cpuprofile flag instead of calling
     // SetCPUProfileRate directly.
-    void SetCPUProfileRate(int hz)
+    void SetCPUProfileRate(int64_t hz)
     {
         // Clamp hz to something reasonable.
         if(hz < 0)
@@ -211,10 +211,10 @@ namespace golang::runtime
     {
         // Copy accumulated non-Go profile events.
         auto hdr = gocpp::array<uint64_t, 1> {1};
-        for(auto i = 0; i < p->numExtra; )
+        for(int64_t i = 0; i < p->numExtra; )
         {
-            rec::write(gocpp::recv(p->log), nullptr, 0, hdr.make_slice(0), p->extra.make_slice(i + 1, i + int(p->extra[i])));
-            i += int(p->extra[i]);
+            rec::write(gocpp::recv(p->log), nullptr, 0, hdr.make_slice(0), p->extra.make_slice(i + 1, i + int64_t(p->extra[i])));
+            i += int64_t(p->extra[i]);
         }
         p->numExtra = 0;
 
@@ -293,7 +293,7 @@ namespace golang::runtime
         lock(& cpuprof.lock);
         auto log = cpuprof.log;
         unlock(& cpuprof.lock);
-        auto readMode = profBufBlocking;
+        profBufReadMode readMode = profBufBlocking;
         if(GOOS == "darwin"_s || GOOS == "ios"_s)
         {
             // For #61768; on Darwin notes are not async-signal-safe.  See sigNoteSetup in os_darwin.go.

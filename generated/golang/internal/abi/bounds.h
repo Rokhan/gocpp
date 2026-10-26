@@ -12,8 +12,10 @@
 
 namespace golang::internal::abi
 {
-    int BoundsEncode(BoundsErrorCode code, bool go_signed, bool xIsReg, bool yIsReg, int xVal, int yVal);
-    std::tuple<BoundsErrorCode, bool, bool, bool, int, int> BoundsDecode(int v);
+    struct GoTag_BoundsErrorCode { };
+    using BoundsErrorCode = gocpp::defined<uint8_t, GoTag_BoundsErrorCode>;
+    int64_t BoundsEncode(BoundsErrorCode code, bool go_signed, bool xIsReg, bool yIsReg, int64_t xVal, int64_t yVal);
+    std::tuple<BoundsErrorCode, bool, bool, bool, int64_t, int64_t> BoundsDecode(int64_t v);
 
     namespace rec
     {

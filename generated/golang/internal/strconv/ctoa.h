@@ -12,8 +12,8 @@
 
 namespace golang::internal::strconv
 {
-    gocpp::string FormatComplex(struct gocpp::complex128 c, unsigned char fmt, int prec, int bitSize);
-    gocpp::slice<unsigned char> AppendComplex(gocpp::slice<unsigned char> dst, struct gocpp::complex128 c, unsigned char fmt, int prec, int bitSize);
+    gocpp::string FormatComplex(struct gocpp::complex128 c, unsigned char fmt, int64_t prec, int64_t bitSize);
+    gocpp::slice<unsigned char> AppendComplex(gocpp::slice<unsigned char> dst, struct gocpp::complex128 c, unsigned char fmt, int64_t prec, int64_t bitSize);
 
     namespace rec
     {

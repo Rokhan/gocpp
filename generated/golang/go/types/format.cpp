@@ -217,7 +217,7 @@ namespace golang::go::types
     // ndigits returns the number of decimal digits in x.
     // For x < 10, the result is always 1.
     // For x > 100, the result is always 3.
-    int ndigits(int x)
+    int64_t ndigits(int64_t x)
     {
         //Go switch emulation
         {

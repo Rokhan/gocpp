@@ -61,7 +61,7 @@ namespace golang::main
         }
     }
 
-    void g(int i)
+    void g(int64_t i)
     {
         gocpp::Defer defer;
         try
@@ -90,7 +90,7 @@ namespace golang::main
             const auto& gocpp_id_0 = gocpp::type_info(arg);
             int conditionId = -1;
             if(gocpp_id_0 == typeid(bool*)) { conditionId = 0; }
-            else if(gocpp_id_0 == typeid(int*)) { conditionId = 1; }
+            else if(gocpp_id_0 == typeid(int64_t*)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -101,7 +101,7 @@ namespace golang::main
                 }
                 case 1:
                 {
-                    int* v = gocpp::any_cast<int*>(arg);
+                    int64_t* v = gocpp::any_cast<int64_t*>(arg);
                     *v = 0;
                     break;
                 }
@@ -172,9 +172,9 @@ namespace golang::main
     }
 
     // doScan does the real work for scanning without a format string.
-    std::tuple<int, gocpp::error> doScan(gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> doScan(gocpp::slice<go_any> a)
     {
-        int numProcessed;
+        int64_t numProcessed;
         gocpp::error err;
         gocpp::Defer defer;
         try

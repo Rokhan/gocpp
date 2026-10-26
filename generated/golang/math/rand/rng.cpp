@@ -241,7 +241,7 @@ namespace golang::math::rand
         }
 
         auto x = int32_t(seed);
-        for(auto i = - 20; i < rngLen; i++)
+        for(int64_t i = - 20; i < rngLen; i++)
         {
             x = seedrand(x);
             if(i >= 0)

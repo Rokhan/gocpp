@@ -9,10 +9,10 @@ namespace golang::golang_org::x::tools::internal::typesinternal
 {
     namespace types = golang::go::types;
     using VarKind = types::VarKind;
-    const types::VarKind PackageVar = types::PackageVar;
-    const types::VarKind LocalVar = types::LocalVar;
-    const types::VarKind RecvVar = types::RecvVar;
-    const types::VarKind ParamVar = types::ParamVar;
-    const types::VarKind ResultVar = types::ResultVar;
-    const types::VarKind FieldVar = types::FieldVar;
+    inline constexpr types::VarKind PackageVar = types::PackageVar;
+    inline constexpr types::VarKind LocalVar = types::LocalVar;
+    inline constexpr types::VarKind RecvVar = types::RecvVar;
+    inline constexpr types::VarKind ParamVar = types::ParamVar;
+    inline constexpr types::VarKind ResultVar = types::ResultVar;
+    inline constexpr types::VarKind FieldVar = types::FieldVar;
 }

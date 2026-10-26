@@ -9,32 +9,32 @@ namespace golang::runtime
     // debugLogBytes is the size of each per-M ring buffer. This is
     // allocated off-heap to avoid blowing up the M and hence the GC'd
     // heap size.
-    const int debugLogBytes = 16 << 10;
+    inline constexpr int64_t debugLogBytes = 16 << 10;
     struct dloggerImpl;
     struct dloggerFake;
-    const int debugLogUnknown = 1 + 0;
-    const int debugLogBoolTrue = 1 + 1;
-    const int debugLogBoolFalse = 1 + 2;
-    const int debugLogInt = 1 + 3;
-    const int debugLogUint = 1 + 4;
-    const int debugLogHex = 1 + 5;
-    const int debugLogPtr = 1 + 6;
-    const int debugLogString = 1 + 7;
-    const int debugLogConstString = 1 + 8;
-    const int debugLogHexdump = 1 + 9;
-    const int debugLogOverflow = 1 + 10;
-    const int debugLogPC = 1 + 11;
-    const int debugLogTraceback = 1 + 12;
+    inline constexpr int64_t debugLogUnknown = 1 + 0;
+    inline constexpr int64_t debugLogBoolTrue = 1 + 1;
+    inline constexpr int64_t debugLogBoolFalse = 1 + 2;
+    inline constexpr int64_t debugLogInt = 1 + 3;
+    inline constexpr int64_t debugLogUint = 1 + 4;
+    inline constexpr int64_t debugLogHex = 1 + 5;
+    inline constexpr int64_t debugLogPtr = 1 + 6;
+    inline constexpr int64_t debugLogString = 1 + 7;
+    inline constexpr int64_t debugLogConstString = 1 + 8;
+    inline constexpr int64_t debugLogHexdump = 1 + 9;
+    inline constexpr int64_t debugLogOverflow = 1 + 10;
+    inline constexpr int64_t debugLogPC = 1 + 11;
+    inline constexpr int64_t debugLogTraceback = 1 + 12;
     struct debugLogWriter;
     struct debugLogBuf;
     // debugLogHeaderSize is the number of bytes in the framing
     // header of every dlog record.
-    const long debugLogHeaderSize = 2;
+    inline constexpr long debugLogHeaderSize = 2;
     struct debugLogReader;
     struct gocpp_id_0;
     // debugLogStringLimit is the maximum number of bytes in a string.
     // Above this, the string will be truncated with "..(n more bytes).."
-    const int debugLogStringLimit = debugLogBytes / 8;
+    inline constexpr int64_t debugLogStringLimit = debugLogBytes / 8;
     // debugLogSyncSize is the number of bytes in a sync record.
-    const int debugLogSyncSize = debugLogHeaderSize + 2 * 8;
+    inline constexpr int64_t debugLogSyncSize = debugLogHeaderSize + 2 * 8;
 }

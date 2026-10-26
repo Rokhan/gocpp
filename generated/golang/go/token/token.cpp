@@ -120,14 +120,14 @@ namespace golang::go::token
     // constant name (e.g. for the token [IDENT], the string is "IDENT").
     gocpp::string rec::String(Token tok)
     {
-        auto s = ""_s;
+        gocpp::string s = ""_s;
         if(0 <= tok && tok < Token(len(tokens)))
         {
             s = tokens[tok];
         }
         if(s == ""_s)
         {
-            s = "token("_s + strconv::Itoa(int(tok)) + ")"_s;
+            s = "token("_s + strconv::Itoa(int64_t(tok)) + ")"_s;
         }
         return s;
     }
@@ -135,7 +135,7 @@ namespace golang::go::token
     // Precedence returns the operator precedence of the binary
     // operator op. If op is not a binary operator, the result
     // is LowestPrecedence.
-    int rec::Precedence(Token op)
+    int64_t rec::Precedence(Token op)
     {
         //Go switch emulation
         {
@@ -200,7 +200,7 @@ namespace golang::go::token
     void init()
     {
         keywords = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Token>>(), keyword_end - (keyword_beg + 1));
-        for(auto i = keyword_beg + 1; i < keyword_end; i++)
+        for(token::Token i = keyword_beg + 1; i < keyword_end; i++)
         {
             keywords.ref(tokens[i]) = i;
         }

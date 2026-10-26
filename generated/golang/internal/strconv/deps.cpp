@@ -38,7 +38,7 @@ namespace golang::internal::strconv
         return *(uint32_t*)(gocpp::unsafe_pointer(& f));
     }
 
-    double inf(int sign)
+    double inf(int64_t sign)
     {
         uint64_t v = {};
         if(sign >= 0)

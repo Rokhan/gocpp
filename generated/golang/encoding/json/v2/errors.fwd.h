@@ -6,7 +6,7 @@
 
 namespace golang::encoding::json::v2
 {
-    const gocpp::string errorPrefix = "json: "_s;
+    inline const gocpp::string errorPrefix = "json: "_s;
     struct SemanticError;
 }
 #include "golang/encoding/json/jsontext/decode.fwd.h"

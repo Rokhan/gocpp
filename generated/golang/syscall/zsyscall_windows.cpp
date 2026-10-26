@@ -1136,7 +1136,7 @@ namespace golang::syscall
         return;
     }
 
-    std::tuple<golang::syscall::Handle, gocpp::error> GetStdHandle(int stdhandle)
+    std::tuple<golang::syscall::Handle, gocpp::error> GetStdHandle(int64_t stdhandle)
     {
         golang::syscall::Handle handle;
         gocpp::error err;

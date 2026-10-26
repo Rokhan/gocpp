@@ -25,9 +25,9 @@ namespace golang::runtime
     // runtimeInitTime is the nanotime() at which the runtime started.
     extern int64_t runtimeInitTime;
     void main();
-    void os_beforeExit(int exitCode);
+    void os_beforeExit(int64_t exitCode);
     void init();
-    void runExitHooks(int code);
+    void runExitHooks(int64_t code);
     void init();
     void forcegchelper();
     void Gosched();
@@ -63,29 +63,12 @@ namespace golang::runtime
     // casgstatusAlwaysTrack is a debug flag that causes casgstatus to always track
     // various latencies on every transition instead of sampling them.
     extern bool casgstatusAlwaysTrack;
+    struct GoTag_stwReason { };
+    using stwReason = gocpp::defined<uint8_t, GoTag_stwReason>;
     // If you add to this list, also add it to src/internal/trace/parser.go.
     // If you change the values of any of the stw* constants, bump the trace
     // version number and make a copy of this.
     extern gocpp::array<gocpp::string, 17> stwReasonStrings;
-    struct worldStop
-    {
-        stwReason reason{};
-        int64_t startedStopping{};
-        int64_t finishedStopping{};
-        int64_t stoppingCPUTime{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct worldStop& value);
     // Holding worldsema grants an M the right to try to stop the world.
     extern uint32_t worldsema;
     // Holding gcsema grants the M the right to block a GC, and blocks
@@ -148,7 +131,7 @@ namespace golang::runtime
     void unlockOSThread();
     void badunlockosthread();
     int32_t gcount(bool includeSys);
-    int goroutineleakcount();
+    int64_t goroutineleakcount();
     int32_t mcount();
     void _System();
     void _ExternalCode();
@@ -196,16 +179,16 @@ namespace golang::runtime
     void schedEnableUser(bool enable);
     struct GoTag_pMask { };
     using pMask = gocpp::defined<gocpp::slice<uint32_t>, GoTag_pMask>;
-    int setMaxThreads(int in);
-    int procPin();
+    int64_t setMaxThreads(int64_t in);
+    int64_t procPin();
     void procUnpin();
-    int sync_runtime_procPin();
+    int64_t sync_runtime_procPin();
     void sync_runtime_procUnpin();
-    int sync_atomic_runtime_procPin();
+    int64_t sync_atomic_runtime_procPin();
     void sync_atomic_runtime_procUnpin();
-    bool internal_sync_runtime_canSpin(int i);
+    bool internal_sync_runtime_canSpin(int64_t i);
     void internal_sync_runtime_doSpin();
-    bool sync_runtime_canSpin(int i);
+    bool sync_runtime_canSpin(int64_t i);
     void sync_runtime_doSpin();
     struct randomOrder
     {
@@ -285,16 +268,25 @@ namespace golang::runtime
     extern gocpp::slice<initTask*> runtime_inittasks;
     void switchToCrashStack(std::function<void ()> fn);
     void switchToCrashStack0(std::function<void ()> fn);
-    // Temporary variable for stopTheWorld, when it can't write to the stack.
-    //
-    // Protected by worldsema.
-    extern worldStop stopTheWorldContext;
-    worldStop stopTheWorld(stwReason reason);
-    void startTheWorld(worldStop w);
-    worldStop stopTheWorldGC(stwReason reason);
-    void startTheWorldGC(worldStop w);
-    worldStop stopTheWorldWithSema(stwReason reason);
-    int64_t startTheWorldWithSema(int64_t now, worldStop w);
+    struct worldStop
+    {
+        stwReason reason{};
+        int64_t startedStopping{};
+        int64_t finishedStopping{};
+        int64_t stoppingCPUTime{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct worldStop& value);
     extern randomOrder stealOrder;
     // inittrace stores statistics for init functions which are
     // updated by malloc and newproc when active is true.
@@ -319,9 +311,9 @@ namespace golang::runtime
     extern mutex raceFiniLock;
     // Value to use for signal mask for newly created M's.
     extern sigset initSigmask;
-    void gopark(std::function<bool (g* _1, gocpp::unsafe_pointer _2)> unlockf, gocpp::unsafe_pointer lock, waitReason reason, traceBlockReason traceReason, int traceskip);
-    void goparkunlock(mutex* lock, waitReason reason, traceBlockReason traceReason, int traceskip);
-    void goready(g* gp, int traceskip);
+    void gopark(std::function<bool (g* _1, gocpp::unsafe_pointer _2)> unlockf, gocpp::unsafe_pointer lock, waitReason reason, traceBlockReason traceReason, int64_t traceskip);
+    void goparkunlock(mutex* lock, waitReason reason, traceBlockReason traceReason, int64_t traceskip);
+    void goready(g* gp, int64_t traceskip);
     sudog* acquireSudog();
     void releaseSudog(sudog* s);
     void badmcall(std::function<void (g* _1)> fn);
@@ -345,7 +337,7 @@ namespace golang::runtime
     void dumpgstatus(g* gp);
     void mcommoninit(m* mp, int64_t id);
     void mProfStackInit(m* mp);
-    void ready(g* gp, int traceskip, bool next);
+    void ready(g* gp, int64_t traceskip, bool next);
     uint32_t readgstatus(g* gp);
     void casfrom_Gscanstatus(g* gp, uint32_t oldval, uint32_t newval);
     bool castogscanstatus(g* gp, uint32_t oldval, uint32_t newval);
@@ -354,6 +346,16 @@ namespace golang::runtime
     void casGToWaitingForSuspendG(g* gp, uint32_t old, waitReason reason);
     void casGToPreemptScan(g* gp, uint32_t old, uint32_t go_new);
     bool casGFromPreempted(g* gp, uint32_t old, uint32_t go_new);
+    // Temporary variable for stopTheWorld, when it can't write to the stack.
+    //
+    // Protected by worldsema.
+    extern worldStop stopTheWorldContext;
+    worldStop stopTheWorld(stwReason reason);
+    void startTheWorld(worldStop w);
+    worldStop stopTheWorldGC(stwReason reason);
+    void startTheWorldGC(worldStop w);
+    worldStop stopTheWorldWithSema(stwReason reason);
+    int64_t startTheWorldWithSema(int64_t now, worldStop w);
     void forEachP(waitReason reason, std::function<void (golang::runtime::p* _1)> fn);
     void forEachPInternal(std::function<void (golang::runtime::p* _1)> fn);
     // When running with cgo, we call _cgo_thread_start

@@ -9,6 +9,12 @@
 #include "golang/runtime/traceevent.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    struct GoTag_traceArg { };
+    using traceArg = gocpp::defined<uint64_t, GoTag_traceArg>;
+}
 #include "golang/runtime/traceruntime.h"
 
 namespace golang::runtime
@@ -58,7 +64,7 @@ namespace golang::runtime
         {
             return event(e, ev, gocpp::ToSlice<traceArg>(value, args...));
         }
-        traceArg stack(traceLocker tl, int skip);
+        traceArg stack(traceLocker tl, int64_t skip);
         traceArg startPC(traceLocker tl, uintptr_t pc);
         traceArg string(traceLocker tl, gocpp::string s);
         traceArg uniqueString(traceLocker tl, gocpp::string s);

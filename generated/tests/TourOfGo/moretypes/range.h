@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    extern gocpp::slice<int> pow;
+    extern gocpp::slice<int64_t> pow;
     void main();
 
     namespace rec

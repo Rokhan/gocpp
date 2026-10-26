@@ -294,7 +294,7 @@ namespace golang::encoding::json::v2
             else
             {
                 auto names = getStrings(len(obj));
-                int i = {};
+                int64_t i = {};
                 for(auto [name, gocpp_ignored] : obj)
                 {
                     (*names)[i] = name;

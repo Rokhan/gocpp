@@ -185,7 +185,7 @@ namespace golang::regexp::syntax
         rec::init(gocpp::recv(c));
         auto f = rec::compile(gocpp::recv(c), re);
         rec::patch(gocpp::recv(f.out), c.p, rec::inst(gocpp::recv(c), InstMatch).i);
-        c.p->Start = int(f.i);
+        c.p->Start = int64_t(f.i);
         return {c.p, nullptr};
     }
 
@@ -358,9 +358,9 @@ namespace golang::regexp::syntax
         f.out = makePatchList(f.i << 1);
         c->p->Inst[f.i].Arg = arg;
 
-        if(c->p->NumCap < int(arg) + 1)
+        if(c->p->NumCap < int64_t(arg) + 1)
         {
-            c->p->NumCap = int(arg) + 1;
+            c->p->NumCap = int64_t(arg) + 1;
         }
         return f;
     }

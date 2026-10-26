@@ -494,7 +494,7 @@ namespace golang::os
             // If the file is a symlink, the symlink target should have already been
             // resolved when the fileStat was created, so we don't need to worry about
             // resolving symlink reparse points again here.
-            auto attrs = uint32_t(syscall::FILE_FLAG_BACKUP_SEMANTICS | syscall::FILE_FLAG_OPEN_REPARSE_POINT);
+            uint32_t attrs = uint32_t(syscall::FILE_FLAG_BACKUP_SEMANTICS | syscall::FILE_FLAG_OPEN_REPARSE_POINT);
 
             syscall::Handle h;
             std::tie(h, err) = syscall::CreateFile(pathp, 0, 0, nullptr, syscall::OPEN_EXISTING, attrs, 0);

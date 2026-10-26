@@ -491,7 +491,7 @@ namespace golang::runtime
             return;
         }
 
-        auto hasPins = false;
+        bool hasPins = false;
         auto bytes = alignUp(rec::pinnerBitSize(gocpp::recv(s)), 8);
 
         // Iterate over each 8-byte chunk and check for pins. Note that

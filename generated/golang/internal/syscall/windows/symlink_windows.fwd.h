@@ -6,28 +6,28 @@
 
 namespace golang::internal::syscall::windows
 {
-    const long FILE_SUPPORTS_OBJECT_IDS = 0x00010000;
-    const long FILE_SUPPORTS_OPEN_BY_FILE_ID = 0x01000000;
+    inline constexpr long FILE_SUPPORTS_OBJECT_IDS = 0x00010000;
+    inline constexpr long FILE_SUPPORTS_OPEN_BY_FILE_ID = 0x01000000;
     // symlink support for CreateSymbolicLink() starting with Windows 10 (1703, v10.0.14972)
-    const long SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE = 0x2;
+    inline constexpr long SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE = 0x2;
     // FileInformationClass values
-    const long FileBasicInfo = 0;
-    const long FileStandardInfo = 1;
-    const long FileNameInfo = 2;
-    const long FileDispositionInfo = 4;
-    const long FileStreamInfo = 7;
-    const long FileCompressionInfo = 8;
-    const long FileAttributeTagInfo = 9;
-    const long FileIdBothDirectoryInfo = 0xa;
-    const long FileIdBothDirectoryRestartInfo = 0xb;
-    const long FileRemoteProtocolInfo = 0xd;
-    const long FileFullDirectoryInfo = 0xe;
-    const long FileFullDirectoryRestartInfo = 0xf;
-    const long FileStorageInfo = 0x10;
-    const long FileAlignmentInfo = 0x11;
-    const long FileIdInfo = 0x12;
-    const long FileIdExtdDirectoryInfo = 0x13;
-    const long FileIdExtdDirectoryRestartInfo = 0x14;
+    inline constexpr long FileBasicInfo = 0;
+    inline constexpr long FileStandardInfo = 1;
+    inline constexpr long FileNameInfo = 2;
+    inline constexpr long FileDispositionInfo = 4;
+    inline constexpr long FileStreamInfo = 7;
+    inline constexpr long FileCompressionInfo = 8;
+    inline constexpr long FileAttributeTagInfo = 9;
+    inline constexpr long FileIdBothDirectoryInfo = 0xa;
+    inline constexpr long FileIdBothDirectoryRestartInfo = 0xb;
+    inline constexpr long FileRemoteProtocolInfo = 0xd;
+    inline constexpr long FileFullDirectoryInfo = 0xe;
+    inline constexpr long FileFullDirectoryRestartInfo = 0xf;
+    inline constexpr long FileStorageInfo = 0x10;
+    inline constexpr long FileAlignmentInfo = 0x11;
+    inline constexpr long FileIdInfo = 0x12;
+    inline constexpr long FileIdExtdDirectoryInfo = 0x13;
+    inline constexpr long FileIdExtdDirectoryRestartInfo = 0x14;
     struct FILE_ATTRIBUTE_TAG_INFO;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
@@ -35,5 +35,5 @@ namespace golang::internal::syscall::windows
 namespace golang::internal::syscall::windows
 {
     namespace syscall = golang::syscall;
-    const syscall::Errno ERROR_INVALID_PARAMETER = 87;
+    inline constexpr syscall::Errno ERROR_INVALID_PARAMETER = 87;
 }

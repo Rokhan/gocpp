@@ -83,12 +83,12 @@ namespace golang::go::types
         return new Union {terms};
     }
 
-    int rec::Len(Union* u)
+    int64_t rec::Len(Union* u)
     {
         return len(u->terms);
     }
 
-    golang::go::types::Term* rec::Term(Union* u, int i)
+    golang::go::types::Term* rec::Term(Union* u, int64_t i)
     {
         return u->terms[i];
     }
@@ -282,7 +282,7 @@ namespace golang::go::types
     // overlapping (not disjoint) from y. The result is < 0 if there is no
     // such term. The type of term y must not be an interface, and terms
     // with an interface type are ignored in the terms list.
-    int overlappingTerm(gocpp::slice<golang::go::types::Term*> terms, golang::go::types::Term* y)
+    int64_t overlappingTerm(gocpp::slice<golang::go::types::Term*> terms, golang::go::types::Term* y)
     {
         assert(! IsInterface(y->typ));
         for(auto [i, x] : terms)

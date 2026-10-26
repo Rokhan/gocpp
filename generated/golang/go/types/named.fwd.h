@@ -8,11 +8,12 @@ namespace golang::go::types
 {
     struct Named;
     struct instance;
-    using stateMask = uint32_t;
+    struct GoTag_stateMask;
+    using stateMask = gocpp::defined<uint32_t, GoTag_stateMask>;
     // initially, type parameters, RHS, underlying, and methods might be unavailable
-    const stateMask lazyLoaded = 1 << 0;
-    const stateMask unpacked = 1 << 1;
-    const stateMask hasMethods = 1 << 2;
-    const stateMask hasUnder = 1 << 3;
-    const stateMask hasVarSize = 1 << 4;
+    inline constexpr stateMask lazyLoaded = 1 << 0;
+    inline constexpr stateMask unpacked = 1 << 1;
+    inline constexpr stateMask hasMethods = 1 << 2;
+    inline constexpr stateMask hasUnder = 1 << 3;
+    inline constexpr stateMask hasVarSize = 1 << 4;
 }

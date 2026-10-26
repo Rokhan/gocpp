@@ -14,9 +14,9 @@ namespace golang::internal::strconv
 {
     struct floatInfo
     {
-        unsigned int mantbits{};
-        unsigned int expbits{};
-        int bias{};
+        uint64_t mantbits{};
+        uint64_t expbits{};
+        int64_t bias{};
 
         using isGoStruct = void;
 
@@ -31,23 +31,23 @@ namespace golang::internal::strconv
 
     std::ostream& operator<<(std::ostream& os, const struct floatInfo& value);
     extern bool optimize;
-    int commonPrefixLenIgnoreCase(gocpp::string s, gocpp::string prefix);
-    std::tuple<double, int, bool> special(gocpp::string s);
-    std::tuple<uint64_t, int, bool, bool, bool, int, bool> readFloat(gocpp::string s);
+    int64_t commonPrefixLenIgnoreCase(gocpp::string s, gocpp::string prefix);
+    std::tuple<double, int64_t, bool> special(gocpp::string s);
+    std::tuple<uint64_t, int64_t, bool, bool, bool, int64_t, bool> readFloat(gocpp::string s);
     // decimal power of ten to binary power of two.
-    extern gocpp::slice<int> powtab;
+    extern gocpp::slice<int64_t> powtab;
     // Exact powers of 10.
     extern gocpp::slice<double> float64pow10;
     extern gocpp::slice<float> float32pow10;
-    std::tuple<double, bool> atof64exact(uint64_t mantissa, int exp, bool neg);
-    std::tuple<double, bool> atof32exact(uint64_t mantissa, int exp, bool neg);
-    std::tuple<double, int, gocpp::error> atof32(gocpp::string s);
-    std::tuple<double, int, gocpp::error> atof64(gocpp::string s);
-    std::tuple<double, gocpp::error> ParseFloat(gocpp::string s, int bitSize);
-    std::tuple<double, int, gocpp::error> parseFloatPrefix(gocpp::string s, int bitSize);
+    std::tuple<double, bool> atof64exact(uint64_t mantissa, int64_t exp, bool neg);
+    std::tuple<double, bool> atof32exact(uint64_t mantissa, int64_t exp, bool neg);
+    std::tuple<double, int64_t, gocpp::error> atof32(gocpp::string s);
+    std::tuple<double, int64_t, gocpp::error> atof64(gocpp::string s);
+    std::tuple<double, gocpp::error> ParseFloat(gocpp::string s, int64_t bitSize);
+    std::tuple<double, int64_t, gocpp::error> parseFloatPrefix(gocpp::string s, int64_t bitSize);
     extern floatInfo float32info;
     extern floatInfo float64info;
-    std::tuple<double, gocpp::error> atofHex(gocpp::string s, floatInfo* flt, uint64_t mantissa, int exp, bool neg, bool trunc);
+    std::tuple<double, gocpp::error> atofHex(gocpp::string s, floatInfo* flt, uint64_t mantissa, int64_t exp, bool neg, bool trunc);
 }
 
 #include "golang/internal/strconv/decimal.h"

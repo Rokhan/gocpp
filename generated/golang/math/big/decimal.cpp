@@ -59,7 +59,7 @@ namespace golang::math::big
     }
 
     // at returns the i'th mantissa digit, starting with the most significant digit at 0.
-    unsigned char rec::at(decimal* d, int i)
+    unsigned char rec::at(decimal* d, int64_t i)
     {
         if(0 <= i && i < len(d->mant))
         {
@@ -70,7 +70,7 @@ namespace golang::math::big
 
     // Init initializes x to the decimal representation of m << shift (for
     // shift >= 0), or m >> -shift (for shift < 0).
-    void rec::init(decimal* x, golang::math::big::nat m, int shift)
+    void rec::init(decimal* x, golang::math::big::nat m, int64_t shift)
     {
         // special case 0
         if(len(m) == 0)
@@ -86,20 +86,20 @@ namespace golang::math::big
         if(shift < 0)
         {
             auto ntz = rec::trailingZeroBits(gocpp::recv(m));
-            auto s = (unsigned int)(- shift);
+            auto s = (uint64_t)(- shift);
             if(s >= ntz)
             {
                 // shift at most ntz bits
                 s = ntz;
             }
             m = rec::rsh(gocpp::recv(nat(nullptr)), m, s);
-            shift += int(s);
+            shift += int64_t(s);
         }
 
         // Do any shift left in binary representation.
         if(shift > 0)
         {
-            m = rec::lsh(gocpp::recv(nat(nullptr)), m, (unsigned int)(shift));
+            m = rec::lsh(gocpp::recv(nat(nullptr)), m, (uint64_t)(shift));
             shift = 0;
         }
 
@@ -123,17 +123,17 @@ namespace golang::math::big
                 big::rsh(x, maxShift);
                 shift += maxShift;
             }
-            big::rsh(x, (unsigned int)(- shift));
+            big::rsh(x, (uint64_t)(- shift));
         }
     }
 
     // rsh implements x >> s, for s <= maxShift.
-    void rsh(decimal* x, unsigned int s)
+    void rsh(decimal* x, uint64_t s)
     {
         // Division by 1<<s using shift-and-subtract algorithm.
         // pick up enough leading digits to cover first shift
         // read index
-        auto r = 0;
+        int64_t r = 0;
         Word n = {};
         for(; (n >> s) == 0 && r < len(x->mant); )
         {
@@ -156,7 +156,7 @@ namespace golang::math::big
 
         // read a digit, write a digit
         // write index
-        auto w = 0;
+        int64_t w = 0;
         auto mask = (Word(1) << s) - 1;
         for(; r < len(x->mant); )
         {
@@ -239,7 +239,7 @@ namespace golang::math::big
     }
 
     // appendZeros appends n 0 digits to buf and returns buf.
-    gocpp::slice<unsigned char> appendZeros(gocpp::slice<unsigned char> buf, int n)
+    gocpp::slice<unsigned char> appendZeros(gocpp::slice<unsigned char> buf, int64_t n)
     {
         for(; n > 0; n--)
         {
@@ -251,7 +251,7 @@ namespace golang::math::big
     // shouldRoundUp reports if x should be rounded up
     // if shortened to n digits. n must be a valid index
     // for x.mant.
-    bool shouldRoundUp(decimal* x, int n)
+    bool shouldRoundUp(decimal* x, int64_t n)
     {
         if(x->mant[n] == '5' && n + 1 == len(x->mant))
         {
@@ -265,7 +265,7 @@ namespace golang::math::big
     // round sets x to (at most) n mantissa digits by rounding it
     // to the nearest even value with n (or fever) mantissa digits.
     // If n < 0, x remains unchanged.
-    void rec::round(decimal* x, int n)
+    void rec::round(decimal* x, int64_t n)
     {
         if(n < 0 || n >= len(x->mant))
         {
@@ -283,7 +283,7 @@ namespace golang::math::big
         }
     }
 
-    void rec::roundUp(decimal* x, int n)
+    void rec::roundUp(decimal* x, int64_t n)
     {
         // 0 <= n < len(x.mant)
         if(n < 0 || n >= len(x->mant))
@@ -315,7 +315,7 @@ namespace golang::math::big
         x->mant = x->mant.make_slice(0, n);
     }
 
-    void rec::roundDown(decimal* x, int n)
+    void rec::roundDown(decimal* x, int64_t n)
     {
         if(n < 0 || n >= len(x->mant))
         {

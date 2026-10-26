@@ -7,16 +7,22 @@
 namespace golang::internal::abi
 {
     struct Type;
-    using Kind = uint8_t;
-    using TFlag = uint8_t;
-    using NameOff = int32_t;
-    using TypeOff = int32_t;
-    using TextOff = int32_t;
+    struct GoTag_Kind;
+    using Kind = gocpp::defined<uint8_t, GoTag_Kind>;
+    struct GoTag_TFlag;
+    using TFlag = gocpp::defined<uint8_t, GoTag_TFlag>;
+    struct GoTag_NameOff;
+    using NameOff = gocpp::defined<int32_t, GoTag_NameOff>;
+    struct GoTag_TypeOff;
+    using TypeOff = gocpp::defined<int32_t, GoTag_TypeOff>;
+    struct GoTag_TextOff;
+    using TextOff = gocpp::defined<int32_t, GoTag_TextOff>;
     struct Method;
     struct UncommonType;
     struct Imethod;
     struct ArrayType;
-    using ChanDir = int;
+    struct GoTag_ChanDir;
+    using ChanDir = gocpp::defined<int64_t, GoTag_ChanDir>;
     struct ChanType;
     struct structTypeUncommon;
     struct InterfaceType;
@@ -26,8 +32,8 @@ namespace golang::internal::abi
     struct StructField;
     struct StructType;
     struct Name;
-    const long TraceArgsLimit = 10;
-    const long TraceArgsMaxDepth = 5;
+    inline constexpr long TraceArgsLimit = 10;
+    inline constexpr long TraceArgsMaxDepth = 5;
     // Populate the data.
     // The data is a stream of bytes, which contains the offsets and sizes of the
     // non-aggregate arguments or non-aggregate fields/elements of aggregate-typed
@@ -40,12 +46,12 @@ namespace golang::internal::abi
     //   - 0xfd - print } (at the end of an aggregate-typed argument)
     //   - 0xfc - print ... (more args/fields/elements)
     //   - 0xfb - print _ (offset too large)
-    const long TraceArgsEndSeq = 0xff;
-    const long TraceArgsStartAgg = 0xfe;
-    const long TraceArgsEndAgg = 0xfd;
-    const long TraceArgsDotdotdot = 0xfc;
-    const long TraceArgsOffsetTooLarge = 0xfb;
-    const long TraceArgsSpecial = 0xf0;
+    inline constexpr long TraceArgsEndSeq = 0xff;
+    inline constexpr long TraceArgsStartAgg = 0xfe;
+    inline constexpr long TraceArgsEndAgg = 0xfd;
+    inline constexpr long TraceArgsDotdotdot = 0xfc;
+    inline constexpr long TraceArgsOffsetTooLarge = 0xfb;
+    inline constexpr long TraceArgsSpecial = 0xf0;
     // MaxPtrmaskBytes is the maximum length of a GC ptrmask bitmap,
     // which holds 1-bit entries describing where pointers are in a given type.
     // Above this length, the runtime computes the GC ptrmask bitmap as needed.
@@ -60,34 +66,34 @@ namespace golang::internal::abi
     // and types with more pointers are computed at run time.
     // This tradeoff sounds reasonable, and 16 was the cutoff back when
     // we used GC programs, but this has not been benchmarked.
-    const long MaxPtrmaskBytes = 16;
-    const golang::internal::abi::Kind Invalid = 0;
-    const golang::internal::abi::Kind Bool = 1;
-    const golang::internal::abi::Kind Int = 2;
-    const golang::internal::abi::Kind Int8 = 3;
-    const golang::internal::abi::Kind Int16 = 4;
-    const golang::internal::abi::Kind Int32 = 5;
-    const golang::internal::abi::Kind Int64 = 6;
-    const golang::internal::abi::Kind Uint = 7;
-    const golang::internal::abi::Kind Uint8 = 8;
-    const golang::internal::abi::Kind Uint16 = 9;
-    const golang::internal::abi::Kind Uint32 = 10;
-    const golang::internal::abi::Kind Uint64 = 11;
-    const golang::internal::abi::Kind Uintptr = 12;
-    const golang::internal::abi::Kind Float32 = 13;
-    const golang::internal::abi::Kind Float64 = 14;
-    const golang::internal::abi::Kind Complex64 = 15;
-    const golang::internal::abi::Kind Complex128 = 16;
-    const golang::internal::abi::Kind Array = 17;
-    const golang::internal::abi::Kind Chan = 18;
-    const golang::internal::abi::Kind Func = 19;
-    const golang::internal::abi::Kind Interface = 20;
-    const golang::internal::abi::Kind Map = 21;
-    const golang::internal::abi::Kind Pointer = 22;
-    const golang::internal::abi::Kind Slice = 23;
-    const golang::internal::abi::Kind String = 24;
-    const golang::internal::abi::Kind Struct = 25;
-    const golang::internal::abi::Kind UnsafePointer = 26;
+    inline constexpr long MaxPtrmaskBytes = 16;
+    inline constexpr golang::internal::abi::Kind Invalid = 0;
+    inline constexpr golang::internal::abi::Kind Bool = 1;
+    inline constexpr golang::internal::abi::Kind Int = 2;
+    inline constexpr golang::internal::abi::Kind Int8 = 3;
+    inline constexpr golang::internal::abi::Kind Int16 = 4;
+    inline constexpr golang::internal::abi::Kind Int32 = 5;
+    inline constexpr golang::internal::abi::Kind Int64 = 6;
+    inline constexpr golang::internal::abi::Kind Uint = 7;
+    inline constexpr golang::internal::abi::Kind Uint8 = 8;
+    inline constexpr golang::internal::abi::Kind Uint16 = 9;
+    inline constexpr golang::internal::abi::Kind Uint32 = 10;
+    inline constexpr golang::internal::abi::Kind Uint64 = 11;
+    inline constexpr golang::internal::abi::Kind Uintptr = 12;
+    inline constexpr golang::internal::abi::Kind Float32 = 13;
+    inline constexpr golang::internal::abi::Kind Float64 = 14;
+    inline constexpr golang::internal::abi::Kind Complex64 = 15;
+    inline constexpr golang::internal::abi::Kind Complex128 = 16;
+    inline constexpr golang::internal::abi::Kind Array = 17;
+    inline constexpr golang::internal::abi::Kind Chan = 18;
+    inline constexpr golang::internal::abi::Kind Func = 19;
+    inline constexpr golang::internal::abi::Kind Interface = 20;
+    inline constexpr golang::internal::abi::Kind Map = 21;
+    inline constexpr golang::internal::abi::Kind Pointer = 22;
+    inline constexpr golang::internal::abi::Kind Slice = 23;
+    inline constexpr golang::internal::abi::Kind String = 24;
+    inline constexpr golang::internal::abi::Kind Struct = 25;
+    inline constexpr golang::internal::abi::Kind UnsafePointer = 26;
     // TFlagUncommon means that there is a data with a type, UncommonType,
     // just beyond the shared-per-type common data.  That is, the data
     // for struct types will store their UncommonType at one offset, the
@@ -103,38 +109,38 @@ namespace golang::internal::abi
     //		u UncommonType
     //	}
     //	u := &(*structTypeUncommon)(unsafe.Pointer(t)).u
-    const TFlag TFlagUncommon = 1 << 0;
+    inline constexpr TFlag TFlagUncommon = 1 << 0;
     // TFlagExtraStar means the name in the str field has an
     // extraneous '*' prefix. This is because for most types T in
     // a program, the type *T also exists and reusing the str data
     // saves binary size.
-    const TFlag TFlagExtraStar = 1 << 1;
+    inline constexpr TFlag TFlagExtraStar = 1 << 1;
     // TFlagNamed means the type has a name.
-    const TFlag TFlagNamed = 1 << 2;
+    inline constexpr TFlag TFlagNamed = 1 << 2;
     // TFlagRegularMemory means that equal and hash functions can treat
     // this type as a single region of t.size bytes.
-    const TFlag TFlagRegularMemory = 1 << 3;
+    inline constexpr TFlag TFlagRegularMemory = 1 << 3;
     // TFlagGCMaskOnDemand means that the GC pointer bitmask will be
     // computed on demand at runtime instead of being precomputed at
     // compile time. If this flag is set, the GCData field effectively
     // has type **byte instead of *byte. The runtime will store a
     // pointer to the GC pointer bitmask in *GCData.
-    const TFlag TFlagGCMaskOnDemand = 1 << 4;
+    inline constexpr TFlag TFlagGCMaskOnDemand = 1 << 4;
     // TFlagDirectIface means that a value of this type is stored directly
     // in the data field of an interface, instead of indirectly.
     // This flag is just a cached computation of Size_ == PtrBytes == goarch.PtrSize.
-    const TFlag TFlagDirectIface = 1 << 5;
+    inline constexpr TFlag TFlagDirectIface = 1 << 5;
     // Leaving this breadcrumb behind for dlv. It should not be used, and no
     // Kind should be big enough to set this bit.
-    const golang::internal::abi::Kind KindDirectIface = 1 << 5;
-    const golang::internal::abi::ChanDir RecvDir = 1 << 0;
-    const golang::internal::abi::ChanDir SendDir = 1 << 1;
-    const golang::internal::abi::ChanDir InvalidDir = 0;
+    inline constexpr golang::internal::abi::Kind KindDirectIface = 1 << 5;
+    inline constexpr golang::internal::abi::ChanDir RecvDir = 1 << 0;
+    inline constexpr golang::internal::abi::ChanDir SendDir = 1 << 1;
+    inline constexpr golang::internal::abi::ChanDir InvalidDir = 0;
     // maxLen is a (conservative) upper bound of the byte stream length. For
     // each arg/component, it has no more than 2 bytes of data (size, offset),
     // and no more than one {, }, ... at each level (it cannot have both the
     // data and ... unless it is the last one, just be conservative). Plus 1
     // for _endSeq.
-    const int TraceArgsMaxLen = (TraceArgsMaxDepth * 3 + 2) * TraceArgsLimit + 1;
-    const abi::ChanDir BothDir = RecvDir | SendDir;
+    inline constexpr int64_t TraceArgsMaxLen = (TraceArgsMaxDepth * 3 + 2) * TraceArgsLimit + 1;
+    inline constexpr abi::ChanDir BothDir = RecvDir | SendDir;
 }

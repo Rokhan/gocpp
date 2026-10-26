@@ -9,13 +9,13 @@ namespace golang::main
     struct gocpp_id_0;
     struct GoTag_semTable1;
     using semTable1 = gocpp::defined<gocpp::array<gocpp_id_0, 10>, GoTag_semTable1>;
-    const int ten = 10;
+    inline constexpr int64_t ten = 10;
     struct gocpp_id_1;
     struct GoTag_semTable2;
     using semTable2 = gocpp::defined<gocpp::array<gocpp_id_1, ten>, GoTag_semTable2>;
     struct GoTag_asciiSet;
     using asciiSet = gocpp::defined<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
     struct GoTag_quad;
-    using quad = gocpp::defined<gocpp::array<int, 4>, GoTag_quad>;
-    const int half = ten / 2;
+    using quad = gocpp::defined<gocpp::array<int64_t, 4>, GoTag_quad>;
+    inline constexpr int64_t half = ten / 2;
 }

@@ -145,7 +145,7 @@ namespace golang::go::types
         int64_t Sizeof(StdSizes* s, golang::go::types::Type T);
         int64_t go_alignof(Config* conf, golang::go::types::Type T);
         gocpp::slice<int64_t> offsetsof(Config* conf, Struct* T);
-        int64_t go_offsetof(Config* conf, golang::go::types::Type T, gocpp::slice<int> index);
+        int64_t go_offsetof(Config* conf, golang::go::types::Type T, gocpp::slice<int64_t> index);
         int64_t go_sizeof(Config* conf, golang::go::types::Type T);
     }
 }

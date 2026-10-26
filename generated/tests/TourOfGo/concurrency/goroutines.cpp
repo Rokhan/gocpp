@@ -25,7 +25,7 @@ namespace golang::main
 
     void say(gocpp::string s)
     {
-        for(auto i = 0; i < 5; i++)
+        for(int64_t i = 0; i < 5; i++)
         {
             mocklib::Sleep(100 * mocklib::Millisecond);
             mocklib::Println(s);

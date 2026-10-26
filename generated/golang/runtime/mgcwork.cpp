@@ -138,7 +138,7 @@ namespace golang::runtime
     //go:nowritebarrierrec
     void rec::putObj(gcWork* w, uintptr_t obj)
     {
-        auto flushed = false;
+        bool flushed = false;
         auto wbuf = w->wbuf1;
         // Record that this may acquire the wbufSpans or heap lock to
         // allocate a workbuf.
@@ -213,7 +213,7 @@ namespace golang::runtime
             return;
         }
 
-        auto flushed = false;
+        bool flushed = false;
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr)
         {
@@ -550,7 +550,7 @@ namespace golang::runtime
             }
             // Slice up the span into new workbufs. Return one and
             // put the rest on the empty list.
-            for(auto i = uintptr_t(0); i + _WorkbufSize <= workbufAlloc; i += _WorkbufSize)
+            for(uintptr_t i = uintptr_t(0); i + _WorkbufSize <= workbufAlloc; i += _WorkbufSize)
             {
                 auto newb = (workbuf*)(gocpp::unsafe_pointer(rec::base(gocpp::recv(s)) + i));
                 newb->workbufhdr.nobj = 0;
@@ -652,7 +652,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             auto gp = getg()->m->curg;
-            for(auto i = 0; i < batchSize && ! (preemptible && gp->preempt); i++)
+            for(int64_t i = 0; i < batchSize && ! (preemptible && gp->preempt); i++)
             {
                 auto span = work.wbufSpans.free.first;
                 if(span == nullptr)

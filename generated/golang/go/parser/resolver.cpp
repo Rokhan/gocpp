@@ -117,7 +117,7 @@ namespace golang::go::parser
         assert(r->labelScope == nullptr, "unbalanced label scopes"_s);
 
         // resolve global identifiers within the same file
-        auto i = 0;
+        int64_t i = 0;
         for(auto [gocpp_ignored, ident] : r->unresolved)
         {
             // i <= index for current ident
@@ -297,7 +297,7 @@ namespace golang::go::parser
                 }
                 if(auto alt = rec::Insert(gocpp::recv(scope), obj); alt != nullptr && r->declErr != nullptr)
                 {
-                    auto prevDecl = ""_s;
+                    gocpp::string prevDecl = ""_s;
                     if(auto pos = rec::Pos(gocpp::recv(alt)); rec::IsValid(gocpp::recv(pos)))
                     {
                         prevDecl = rec::sprintf(gocpp::recv(r), "\n\tprevious declaration at %v"_s, pos);
@@ -314,7 +314,7 @@ namespace golang::go::parser
         // provided they were originally declared in the same block with
         // the same type, and at least one of the non-blank variables is new.
         // number of new variables
-        auto n = 0;
+        int64_t n = 0;
         for(auto [gocpp_ignored, x] : decl->Lhs)
         {
             if(auto [ident, isIdent] = gocpp::getValue<ast::Ident*>(x); isIdent)
@@ -787,7 +787,7 @@ namespace golang::go::parser
                                     {
                                         auto spec_tmp = gocpp::getValue<ast::ValueSpec*>(spec);
                                         auto& spec = spec_tmp;
-                                        auto kind = ast::Con;
+                                        ast::ObjKind kind = ast::Con;
                                         if(n->Tok == token::VAR)
                                         {
                                             kind = ast::Var;

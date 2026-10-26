@@ -225,7 +225,7 @@ namespace golang::runtime
         // Find the arena and page index into that arena for this shard.
         struct report
         {
-            int issues{};
+            int64_t issues{};
             uintptr_t ptr{};
             special* sp{};
 
@@ -242,7 +242,7 @@ namespace golang::runtime
             }
         };
         gocpp::array<report, 50> reports = {};
-        int nreports = {};
+        int64_t nreports = {};
         bool more = {};
         uintptr_t lastTinyBlock = {};
 
@@ -299,7 +299,7 @@ namespace golang::runtime
             {
                 return true;
             }
-            int issues = {};
+            int64_t issues = {};
             if(atomic::Load8(bytep) & mask != 0)
             {
                 issues |= reportCycle;
@@ -323,7 +323,7 @@ namespace golang::runtime
 
         if(nreports > 0)
         {
-            auto lastPtr = uintptr_t(0);
+            uintptr_t lastPtr = uintptr_t(0);
             println("WARNING: LIKELY CLEANUP/FINALIZER ISSUES"_s);
             println();
             for(auto [gocpp_ignored, r] : reports.make_slice(0, nreports))
@@ -439,7 +439,7 @@ namespace golang::runtime
                 {
                     continue;
                 }
-                for(auto j = (unsigned int)(0); j < 8; j++)
+                for(uint64_t j = (uint64_t)(0); j < 8; j++)
                 {
                     if(specials & (1 << j) == 0)
                     {
@@ -450,7 +450,7 @@ namespace golang::runtime
                     // specials implies that the span is in-use, and since we're
                     // currently marking we can be sure that we don't have to worry
                     // about the span being freed and re-used.
-                    auto s = ha->spans[(unsigned int)(i) * 8 + j];
+                    auto s = ha->spans[(uint64_t)(i) * 8 + j];
 
                     // Lock the specials to prevent a special from being
                     // removed from the list while we're traversing it.

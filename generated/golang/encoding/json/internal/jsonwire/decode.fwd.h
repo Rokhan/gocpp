@@ -6,16 +6,18 @@
 
 namespace golang::encoding::json::internal::jsonwire
 {
-    using ValueFlags = unsigned int;
-    using ConsumeNumberState = unsigned int;
-    const ValueFlags _ = (1 << 0) / 2;
-    const ValueFlags stringNonVerbatim = (1 << 1) / 2;
-    const ValueFlags stringNonCanonical = (1 << 2) / 2;
-    const ConsumeNumberState consumeNumberInit = 0;
-    const ConsumeNumberState beforeIntegerDigits = 1;
-    const ConsumeNumberState withinIntegerDigits = 2;
-    const ConsumeNumberState beforeFractionalDigits = 3;
-    const ConsumeNumberState withinFractionalDigits = 4;
-    const ConsumeNumberState beforeExponentDigits = 5;
-    const ConsumeNumberState withinExponentDigits = 6;
+    struct GoTag_ValueFlags;
+    using ValueFlags = gocpp::defined<uint64_t, GoTag_ValueFlags>;
+    struct GoTag_ConsumeNumberState;
+    using ConsumeNumberState = gocpp::defined<uint64_t, GoTag_ConsumeNumberState>;
+    inline constexpr ValueFlags _ = (1 << 0) / 2;
+    inline constexpr ValueFlags stringNonVerbatim = (1 << 1) / 2;
+    inline constexpr ValueFlags stringNonCanonical = (1 << 2) / 2;
+    inline constexpr ConsumeNumberState consumeNumberInit = 0;
+    inline constexpr ConsumeNumberState beforeIntegerDigits = 1;
+    inline constexpr ConsumeNumberState withinIntegerDigits = 2;
+    inline constexpr ConsumeNumberState beforeFractionalDigits = 3;
+    inline constexpr ConsumeNumberState withinFractionalDigits = 4;
+    inline constexpr ConsumeNumberState beforeExponentDigits = 5;
+    inline constexpr ConsumeNumberState withinExponentDigits = 6;
 }

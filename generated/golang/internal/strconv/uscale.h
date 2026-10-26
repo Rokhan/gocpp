@@ -15,20 +15,21 @@ namespace golang::internal::strconv
 
     template<typename T>
     T bool2(bool b);
-    std::tuple<double, gocpp::error> pack64(uint64_t m, int e);
-    std::tuple<double, gocpp::error> pack32(uint32_t m, int e);
-    int log10Pow2(int x);
-    int log2Pow10(int x);
+    std::tuple<double, gocpp::error> pack64(uint64_t m, int64_t e);
+    std::tuple<double, gocpp::error> pack32(uint32_t m, int64_t e);
+    struct GoTag_unrounded { };
+    using unrounded = gocpp::defined<uint64_t, GoTag_unrounded>;
+    int64_t log10Pow2(int64_t x);
+    int64_t log2Pow10(int64_t x);
     // uint64pow10[x] is 10**x.
     extern gocpp::array<uint64_t, 20> uint64pow10;
-    std::tuple<uint64_t, int> fixedWidthFloat(uint64_t m, int e, int n, int prec, unsigned char fmt);
-    std::tuple<double, gocpp::error> parseFloat64(uint64_t d, int p, uint64_t sign);
-    std::tuple<double, gocpp::error> parseFloat32(uint64_t d, int p, uint32_t sign);
-    unrounded unmin(uint64_t x);
+    std::tuple<uint64_t, int64_t> fixedWidthFloat(uint64_t m, int64_t e, int64_t n, int64_t prec, unsigned char fmt);
+    std::tuple<double, gocpp::error> parseFloat64(uint64_t d, int64_t p, uint64_t sign);
+    std::tuple<double, gocpp::error> parseFloat32(uint64_t d, int64_t p, uint32_t sign);
 
     template<typename F>
-    std::tuple<uint64_t, int> shortFloat(uint64_t m, int e);
-    int skewed(int e);
+    std::tuple<uint64_t, int64_t> shortFloat(uint64_t m, int64_t e);
+    int64_t skewed(int64_t e);
     struct pmHiLo
     {
         uint64_t hi{};
@@ -51,7 +52,7 @@ namespace golang::internal::strconv
         // Note: using pm pmHiLo here nudges uscale just over the inlining boundary. Don't.
         uint64_t pmHi{};
         uint64_t pmLo{};
-        int s{};
+        int64_t s{};
 
         using isGoStruct = void;
 
@@ -65,9 +66,10 @@ namespace golang::internal::strconv
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scaler& value);
-    std::tuple<int, int> setDigits(gocpp::slice<unsigned char> s, uint64_t d, int p, int nd);
-    int numDigits(uint64_t d);
-    void prescale(scaler* pre, int e, int p, int lp);
+    std::tuple<int64_t, int64_t> setDigits(gocpp::slice<unsigned char> s, uint64_t d, int64_t p, int64_t nd);
+    int64_t numDigits(uint64_t d);
+    unrounded unmin(uint64_t x);
+    void prescale(scaler* pre, int64_t e, int64_t p, int64_t lp);
     unrounded uscale(uint64_t x, scaler* c);
 
     namespace rec
@@ -77,9 +79,9 @@ namespace golang::internal::strconv
         uint64_t round(unrounded u);
         uint64_t roundHalfUp(unrounded u);
         uint64_t ceil(unrounded u);
-        unrounded nudge(unrounded u, int δ);
+        unrounded nudge(unrounded u, int64_t δ);
         unrounded div(unrounded u, uint64_t d);
-        unrounded rsh(unrounded u, int s);
+        unrounded rsh(unrounded u, int64_t s);
     }
 }
 

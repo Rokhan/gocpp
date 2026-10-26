@@ -148,7 +148,7 @@ namespace golang::internal::godebug
         void IncNonDefault(Setting* s);
         void go_register(Setting* s);
         gocpp::string Value(Setting* s);
-        std::tuple<int, gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b);
     }
 }
 

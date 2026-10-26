@@ -579,8 +579,8 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             // Track iterations for some rudimentary deadlock detection.
-            auto i = 0;
-            auto detectedDeadlock = false;
+            int64_t i = 0;
+            bool detectedDeadlock = false;
 
             for(; mToFlush != nullptr; )
             {

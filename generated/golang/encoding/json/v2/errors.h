@@ -62,7 +62,7 @@ namespace golang::encoding::json::v2
 
         struct Igocpp_id_4
         {
-            virtual gocpp::slice<unsigned char> vAppendStackPointer(gocpp::slice<unsigned char> _1, int _2) = 0;
+            virtual gocpp::slice<unsigned char> vAppendStackPointer(gocpp::slice<unsigned char> _1, int64_t _2) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -74,7 +74,7 @@ namespace golang::encoding::json::v2
                 value.reset(ptr);
             }
 
-            gocpp::slice<unsigned char> vAppendStackPointer(gocpp::slice<unsigned char> _1, int _2) override;
+            gocpp::slice<unsigned char> vAppendStackPointer(gocpp::slice<unsigned char> _1, int64_t _2) override;
 
             void* getPtr() override
             {
@@ -91,8 +91,8 @@ namespace golang::encoding::json::v2
 
     namespace rec
     {
-        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_id_4, false>& self, gocpp::slice<unsigned char> _1, int _2);
-        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_id_4>& self, gocpp::slice<unsigned char> _1, int _2);
+        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_id_4, false>& self, gocpp::slice<unsigned char> _1, int64_t _2);
+        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_id_4>& self, gocpp::slice<unsigned char> _1, int64_t _2);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
@@ -249,7 +249,7 @@ namespace golang::encoding::json::v2
     extern std::function<gocpp::string (void)> errorModalVerb;
     gocpp::error newDuplicateNameError(jsontext::Pointer ptr, gocpp::slice<unsigned char> quotedName, int64_t offset);
     gocpp::error newInvalidFormatError(coder c, reflect::Type t);
-    gocpp::error newSemanticErrorWithPosition(coder c, reflect::Type t, int prevDepth, int64_t prevLength, gocpp::error err);
+    gocpp::error newSemanticErrorWithPosition(coder c, reflect::Type t, int64_t prevDepth, int64_t prevLength, gocpp::error err);
 
     namespace rec
     {

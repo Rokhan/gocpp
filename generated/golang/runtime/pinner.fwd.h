@@ -7,7 +7,7 @@
 namespace golang::runtime
 {
     struct Pinner;
-    const long pinnerSize = 64;
+    inline constexpr long pinnerSize = 64;
     struct pinner;
     struct pinState;
     struct GoTag_pinnerBits;

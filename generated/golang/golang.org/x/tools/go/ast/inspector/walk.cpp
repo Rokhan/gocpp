@@ -36,7 +36,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
         }
     }
 
-    void walk(visitor* v, edge::Kind ek, int index, ast::Node node)
+    void walk(visitor* v, edge::Kind ek, int64_t index, ast::Node node)
     {
         rec::push(gocpp::recv(v), ek, index, node);
 

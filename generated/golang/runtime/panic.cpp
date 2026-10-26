@@ -104,7 +104,7 @@ namespace golang::runtime
     // failures in the comparisons for s[x], 0 <= x < y (y == len(s))
     //
     //go:yeswritebarrierrec
-    void goPanicIndex(int x, int y)
+    void goPanicIndex(int64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "index out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -116,7 +116,7 @@ namespace golang::runtime
     }
 
     //go:yeswritebarrierrec
-    void goPanicIndexU(unsigned int x, int y)
+    void goPanicIndexU(uint64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "index out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -130,7 +130,7 @@ namespace golang::runtime
     // failures in the comparisons for s[:x], 0 <= x <= y (y == len(s) or cap(s))
     //
     //go:yeswritebarrierrec
-    void goPanicSliceAlen(int x, int y)
+    void goPanicSliceAlen(int64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -142,7 +142,7 @@ namespace golang::runtime
     }
 
     //go:yeswritebarrierrec
-    void goPanicSliceAlenU(unsigned int x, int y)
+    void goPanicSliceAlenU(uint64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -154,7 +154,7 @@ namespace golang::runtime
     }
 
     //go:yeswritebarrierrec
-    void goPanicSliceAcap(int x, int y)
+    void goPanicSliceAcap(int64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -166,7 +166,7 @@ namespace golang::runtime
     }
 
     //go:yeswritebarrierrec
-    void goPanicSliceAcapU(unsigned int x, int y)
+    void goPanicSliceAcapU(uint64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -180,7 +180,7 @@ namespace golang::runtime
     // failures in the comparisons for s[x:y], 0 <= x <= y
     //
     //go:yeswritebarrierrec
-    void goPanicSliceB(int x, int y)
+    void goPanicSliceB(int64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -192,7 +192,7 @@ namespace golang::runtime
     }
 
     //go:yeswritebarrierrec
-    void goPanicSliceBU(unsigned int x, int y)
+    void goPanicSliceBU(uint64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -204,7 +204,7 @@ namespace golang::runtime
     }
 
     // failures in the comparisons for s[::x], 0 <= x <= y (y == len(s) or cap(s))
-    void goPanicSlice3Alen(int x, int y)
+    void goPanicSlice3Alen(int64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -215,7 +215,7 @@ namespace golang::runtime
         }));
     }
 
-    void goPanicSlice3AlenU(unsigned int x, int y)
+    void goPanicSlice3AlenU(uint64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -226,7 +226,7 @@ namespace golang::runtime
         }));
     }
 
-    void goPanicSlice3Acap(int x, int y)
+    void goPanicSlice3Acap(int64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -237,7 +237,7 @@ namespace golang::runtime
         }));
     }
 
-    void goPanicSlice3AcapU(unsigned int x, int y)
+    void goPanicSlice3AcapU(uint64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -249,7 +249,7 @@ namespace golang::runtime
     }
 
     // failures in the comparisons for s[:x:y], 0 <= x <= y
-    void goPanicSlice3B(int x, int y)
+    void goPanicSlice3B(int64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -260,7 +260,7 @@ namespace golang::runtime
         }));
     }
 
-    void goPanicSlice3BU(unsigned int x, int y)
+    void goPanicSlice3BU(uint64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -272,7 +272,7 @@ namespace golang::runtime
     }
 
     // failures in the comparisons for s[x:y:], 0 <= x <= y
-    void goPanicSlice3C(int x, int y)
+    void goPanicSlice3C(int64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -283,7 +283,7 @@ namespace golang::runtime
         }));
     }
 
-    void goPanicSlice3CU(unsigned int x, int y)
+    void goPanicSlice3CU(uint64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice bounds out of range"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -295,7 +295,7 @@ namespace golang::runtime
     }
 
     // failures in the conversion ([x]T)(s) or (*[x]T)(s), 0 <= x <= y, y == len(s)
-    void goPanicSliceConvert(int x, int y)
+    void goPanicSliceConvert(int64_t x, int64_t y)
     {
         panicCheck1(sys::GetCallerPC(), "slice length too short to convert to array or pointer to array"_s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
@@ -319,7 +319,7 @@ namespace golang::runtime
         auto f = findfunc(pc);
         auto v = pcdatavalue(f, abi::PCDATA_PanicBounds, pc - 1);
 
-        auto [code, go_signed, xIsReg, yIsReg, xVal, yVal] = abi::BoundsDecode(int(v));
+        auto [code, go_signed, xIsReg, yIsReg, xVal, yVal] = abi::BoundsDecode(int64_t(v));
 
         if(code == abi::BoundsIndex)
         {
@@ -343,7 +343,7 @@ namespace golang::runtime
         }
         if(yIsReg)
         {
-            e.y = int(regs[yVal]);
+            e.y = int64_t(regs[yVal]);
         }
         else
         {
@@ -358,7 +358,7 @@ namespace golang::runtime
         auto f = findfunc(pc);
         auto v = pcdatavalue(f, abi::PCDATA_PanicBounds, pc - 1);
 
-        auto [code, go_signed, xIsReg, yIsReg, xVal, yVal] = abi::BoundsDecode(int(v));
+        auto [code, go_signed, xIsReg, yIsReg, xVal, yVal] = abi::BoundsDecode(int64_t(v));
 
         if(code == abi::BoundsIndex)
         {
@@ -389,7 +389,7 @@ namespace golang::runtime
         }
         if(yIsReg)
         {
-            e.y = int(regs[yVal]);
+            e.y = int64_t(regs[yVal]);
         }
         else
         {
@@ -404,7 +404,7 @@ namespace golang::runtime
         auto f = findfunc(pc);
         auto v = pcdatavalue(f, abi::PCDATA_PanicBounds, pc - 1);
 
-        auto [code, go_signed, xIsReg, yIsReg, xVal, yVal] = abi::BoundsDecode(int(v));
+        auto [code, go_signed, xIsReg, yIsReg, xVal, yVal] = abi::BoundsDecode(int64_t(v));
 
         if(code == abi::BoundsIndex)
         {
@@ -431,7 +431,7 @@ namespace golang::runtime
         }
         if(yIsReg)
         {
-            e.y = int(regs[yVal]);
+            e.y = int64_t(regs[yVal]);
         }
         else
         {
@@ -520,7 +520,7 @@ namespace golang::runtime
     gocpp::error rangeExhaustedError = error(errorString("range function continued iteration after whole loop exit"_s));
     gocpp::error rangeMissingPanicError = error(errorString("range function recovered a loop body panic and did not resume panicking"_s));
     //go:noinline
-    void panicrangestate(int state)
+    void panicrangestate(int64_t state)
     {
         //Go switch emulation
         {
@@ -903,7 +903,7 @@ namespace golang::runtime
         {
             defer.push_back([=]{ [=]() mutable -> void
             {
-                auto text = "panic while printing panic value"_s;
+                gocpp::string text = "panic while printing panic value"_s;
                 //Go type switch emulation
                 {
                     const auto& gocpp_id_0 = gocpp::type_info(gocpp::recover());
@@ -1016,7 +1016,7 @@ namespace golang::runtime
     std::tuple<uint32_t, gocpp::unsafe_pointer> readvarintUnsafe(gocpp::unsafe_pointer fd)
     {
         uint32_t r = {};
-        int shift = {};
+        int64_t shift = {};
         for(; ; )
         {
             auto b = *(uint8_t*)(fd);
@@ -1173,7 +1173,7 @@ namespace golang::runtime
         // should not return
         fatalpanic(& p);
         // not reached
-        *(int*)(nullptr) = 0;
+        *(int64_t*)(nullptr) = 0;
     }
 
     // start initializes a panic to start unwinding the stack.
@@ -1452,7 +1452,7 @@ namespace golang::runtime
         // We don't recover this:
         // defer recover()
         // because there are 0 non-wrapper frames.
-        auto canRecover = false;
+        bool canRecover = false;
         systemstack([=]() mutable -> void
         {
             unwinder u = {};
@@ -1461,7 +1461,7 @@ namespace golang::runtime
             rec::next(gocpp::recv(u));
             // skip gorecover
             rec::next(gocpp::recv(u));
-            auto nonWrapperFrames = 0;
+            int64_t nonWrapperFrames = 0;
             loop:
             for(; rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
             {
@@ -1836,7 +1836,7 @@ namespace golang::runtime
         });
 
         // not reached
-        *(int*)(nullptr) = 0;
+        *(int64_t*)(nullptr) = 0;
     }
 
     // fatalpanic implements an unrecoverable panic. It is like fatalthrow, except
@@ -1891,7 +1891,7 @@ namespace golang::runtime
         });
 
         // not reached
-        *(int*)(nullptr) = 0;
+        *(int64_t*)(nullptr) = 0;
     }
 
     // startpanic_m prepares for an unrecoverable panic.
@@ -2186,7 +2186,7 @@ namespace golang::runtime
                     uint32_t slotsOffset;
                     std::tie(slotsOffset, fd) = readvarintUnsafe(fd);
                     auto slots = u.frame.varp - uintptr_t(slotsOffset);
-                    for(auto i = 7; i >= 0; i--)
+                    for(int64_t i = 7; i >= 0; i--)
                     {
                         if((m >> i) & 1 == 0)
                         {

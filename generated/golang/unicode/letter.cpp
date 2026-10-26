@@ -208,11 +208,11 @@ namespace golang::unicode
         }
 
         // binary search over ranges
-        auto lo = 0;
+        int64_t lo = 0;
         auto hi = len(ranges);
         for(; lo < hi; )
         {
-            auto m = int((unsigned int)(lo + hi) >> 1);
+            auto m = int64_t((uint64_t)(lo + hi) >> 1);
             auto range_ = & ranges[m];
             if(range_->Lo <= r && r <= range_->Hi)
             {
@@ -251,11 +251,11 @@ namespace golang::unicode
         }
 
         // binary search over ranges
-        auto lo = 0;
+        int64_t lo = 0;
         auto hi = len(ranges);
         for(; lo < hi; )
         {
-            auto m = int((unsigned int)(lo + hi) >> 1);
+            auto m = int64_t((uint64_t)(lo + hi) >> 1);
             auto range_ = ranges[m];
             if(range_.Lo <= r && r <= range_.Hi)
             {
@@ -343,11 +343,11 @@ namespace golang::unicode
     CaseRange* lookupCaseRange(gocpp::rune r, gocpp::slice<CaseRange> caseRange)
     {
         // binary search over ranges
-        auto lo = 0;
+        int64_t lo = 0;
         auto hi = len(caseRange);
         for(; lo < hi; )
         {
-            auto m = int((unsigned int)(lo + hi) >> 1);
+            auto m = int64_t((uint64_t)(lo + hi) >> 1);
             auto cr = & caseRange[m];
             if(gocpp::rune(cr->Lo) <= r && r <= gocpp::rune(cr->Hi))
             {
@@ -366,7 +366,7 @@ namespace golang::unicode
     }
 
     // convertCase converts r to _case using CaseRange cr.
-    gocpp::rune convertCase(int _case, gocpp::rune r, CaseRange* cr)
+    gocpp::rune convertCase(int64_t _case, gocpp::rune r, CaseRange* cr)
     {
         auto delta = cr->Delta[_case];
         if(delta > MaxRune)
@@ -388,7 +388,7 @@ namespace golang::unicode
 
     // to maps the rune using the specified case mapping.
     // It additionally reports whether caseRange contained a mapping for r.
-    std::tuple<gocpp::rune, bool> to(int _case, gocpp::rune r, gocpp::slice<CaseRange> caseRange)
+    std::tuple<gocpp::rune, bool> to(int64_t _case, gocpp::rune r, gocpp::slice<CaseRange> caseRange)
     {
         gocpp::rune mappedRune;
         bool foundMapping;
@@ -405,7 +405,7 @@ namespace golang::unicode
     }
 
     // To maps the rune to the specified case: [UpperCase], [LowerCase], or [TitleCase].
-    gocpp::rune To(int _case, gocpp::rune r)
+    gocpp::rune To(int64_t _case, gocpp::rune r)
     {
         std::tie(r, std::ignore) = to(_case, r, CaseRanges);
         return r;
@@ -548,17 +548,17 @@ namespace golang::unicode
             return r;
         }
 
-        if(int(r) < len(asciiFold))
+        if(int64_t(r) < len(asciiFold))
         {
             return gocpp::rune(asciiFold[r]);
         }
 
         // Consult caseOrbit table for special cases.
-        auto lo = 0;
+        int64_t lo = 0;
         auto hi = len(caseOrbit);
         for(; lo < hi; )
         {
-            auto m = int((unsigned int)(lo + hi) >> 1);
+            auto m = int64_t((uint64_t)(lo + hi) >> 1);
             if(gocpp::rune(caseOrbit[m].From) < r)
             {
                 lo = m + 1;

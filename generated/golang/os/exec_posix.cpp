@@ -197,7 +197,7 @@ namespace golang::os
     }
 
     // Pid returns the process id of the exited process.
-    int rec::Pid(ProcessState* p)
+    int64_t rec::Pid(ProcessState* p)
     {
         return p->pid;
     }
@@ -229,7 +229,7 @@ namespace golang::os
             return "<nil>"_s;
         }
         auto status = gocpp::getValue<syscall::WaitStatus>(rec::Sys(gocpp::recv(p)));
-        auto res = ""_s;
+        gocpp::string res = ""_s;
         //Go switch emulation
         {
             int conditionId = -1;
@@ -242,7 +242,7 @@ namespace golang::os
                 case 0:
                 {
                     auto code = rec::ExitStatus(gocpp::recv(status));
-                    if(mocklib::GOOS == "windows"_s && (unsigned int)(code) >= (1 << 16))
+                    if(mocklib::GOOS == "windows"_s && (uint64_t)(code) >= (1 << 16))
                     {
                         // windows uses large hex numbers
                         res = "exit status 0x"_s + strconv::FormatUint(uint64_t(code), 16);
@@ -279,7 +279,7 @@ namespace golang::os
 
     // ExitCode returns the exit code of the exited process, or -1
     // if the process hasn't exited or was terminated by a signal.
-    int rec::ExitCode(ProcessState* p)
+    int64_t rec::ExitCode(ProcessState* p)
     {
         // return -1 if the process hasn't started.
         if(p == nullptr)

@@ -6,5 +6,6 @@
 
 namespace golang::runtime
 {
-    using lfstack = uint64_t;
+    struct GoTag_lfstack;
+    using lfstack = gocpp::defined<uint64_t, GoTag_lfstack>;
 }

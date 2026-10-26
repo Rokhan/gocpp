@@ -12,7 +12,9 @@
 
 namespace golang::golang_org::x::tools::go::packages
 {
-    std::tuple<gocpp::slice<gocpp::slice<gocpp::string>>, gocpp::error> splitIntoChunks(gocpp::slice<gocpp::string> patterns, int argMax);
+    struct GoTag_LoadMode { };
+    using LoadMode = gocpp::defined<int64_t, GoTag_LoadMode>;
+    std::tuple<gocpp::slice<gocpp::slice<gocpp::string>>, gocpp::error> splitIntoChunks(gocpp::slice<gocpp::string> patterns, int64_t argMax);
     struct ModuleError
     {
         gocpp::string Err{}; // the error itself
@@ -30,26 +32,9 @@ namespace golang::golang_org::x::tools::go::packages
 
     std::ostream& operator<<(std::ostream& os, const struct ModuleError& value);
     void init();
-    struct Error
-    {
-        gocpp::string Pos{}; // "file:line:col" or "file:line" or "" or "-"
-        gocpp::string Msg{};
-        ErrorKind Kind{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Error& value);
+    struct GoTag_ErrorKind { };
+    using ErrorKind = gocpp::defined<int64_t, GoTag_ErrorKind>;
     bool sameFile(gocpp::string x, gocpp::string y);
-    LoadMode impliedLoadMode(LoadMode loadMode);
     struct unit
     {
 
@@ -68,6 +53,47 @@ namespace golang::golang_org::x::tools::go::packages
 
     template<typename T>
     T cond(bool cond, T t, T f);
+    struct Error
+    {
+        gocpp::string Pos{}; // "file:line:col" or "file:line" or "" or "-"
+        gocpp::string Msg{};
+        ErrorKind Kind{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Error& value);
+    // We use a counting semaphore to limit
+    // the number of parallel I/O calls or CPU threads per process.
+    extern gocpp::channel<packages::unit> ioLimit;
+    extern gocpp::channel<packages::unit> cpuLimit;
+    LoadMode impliedLoadMode(LoadMode loadMode);
+}
+#include "golang/golang.org/x/tools/go/packages/external.fwd.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    DriverResponse* mergeResponses(gocpp::slice<DriverResponse*> responses);
+
+    template<typename... Args>
+    DriverResponse* mergeResponses(Args... responses)
+    {
+        return mergeResponses(gocpp::ToSlice<DriverResponse*>(responses...));
+    }
+
+    template<typename... Args>
+    DriverResponse* mergeResponses(DriverResponse* value, Args... responses)
+    {
+        return mergeResponses(gocpp::ToSlice<DriverResponse*>(value, responses...));
+    }
     struct flatPackage
     {
         gocpp::string ID{};
@@ -95,28 +121,6 @@ namespace golang::golang_org::x::tools::go::packages
     };
 
     std::ostream& operator<<(std::ostream& os, const struct flatPackage& value);
-    // We use a counting semaphore to limit
-    // the number of parallel I/O calls or CPU threads per process.
-    extern gocpp::channel<packages::unit> ioLimit;
-    extern gocpp::channel<packages::unit> cpuLimit;
-}
-#include "golang/golang.org/x/tools/go/packages/external.fwd.h"
-
-namespace golang::golang_org::x::tools::go::packages
-{
-    DriverResponse* mergeResponses(gocpp::slice<DriverResponse*> responses);
-
-    template<typename... Args>
-    DriverResponse* mergeResponses(Args... responses)
-    {
-        return mergeResponses(gocpp::ToSlice<DriverResponse*>(responses...));
-    }
-
-    template<typename... Args>
-    DriverResponse* mergeResponses(DriverResponse* value, Args... responses)
-    {
-        return mergeResponses(gocpp::ToSlice<DriverResponse*>(value, responses...));
-    }
 }
 #include "golang/context/context.fwd.h"
 #include "golang/go/ast/ast.fwd.h"
@@ -136,12 +140,12 @@ namespace golang::golang_org::x::tools::go::packages
 namespace golang::golang_org::x::tools::go::packages
 {
     namespace context = golang::context;
+    namespace token = golang::go::token;
 }
 #include "golang/context/context.h"
 
 namespace golang::golang_org::x::tools::go::packages
 {
-    namespace token = golang::go::token;
     namespace ast = golang::go::ast;
     namespace types = golang::go::types;
 }
@@ -371,7 +375,7 @@ namespace golang::golang_org::x::tools::go::packages
         bool needsrc{}; // load from source (Mode >= LoadTypes)
         bool needtypes{}; // type information is either requested or depended on
         bool initial{}; // package was matched by a pattern
-        int goVersion{}; // minor version number of go command on PATH
+        int64_t goVersion{}; // minor version number of go command on PATH
 
         using isGoStruct = void;
 

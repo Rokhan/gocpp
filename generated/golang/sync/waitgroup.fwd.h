@@ -8,5 +8,5 @@ namespace golang::sync
 {
     struct WaitGroup;
     // waitGroupBubbleFlag indicates that a WaitGroup is associated with a synctest bubble.
-    const long waitGroupBubbleFlag = 0x80000000;
+    inline constexpr long waitGroupBubbleFlag = 0x80000000LL;
 }

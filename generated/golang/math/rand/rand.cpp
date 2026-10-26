@@ -308,11 +308,11 @@ namespace golang::math::rand
     }
 
     // Int returns a non-negative pseudo-random int.
-    int rec::Int(Rand* r)
+    int64_t rec::Int(Rand* r)
     {
-        auto u = (unsigned int)(rec::Int63(gocpp::recv(r)));
+        auto u = (uint64_t)(rec::Int63(gocpp::recv(r)));
         // clear sign bit if int == int32
-        return int((u << 1) >> 1);
+        return int64_t((u << 1) >> 1);
     }
 
     // Int63n returns, as an int64, a non-negative pseudo-random number in the half-open interval [0,n).
@@ -388,7 +388,7 @@ namespace golang::math::rand
 
     // Intn returns, as an int, a non-negative pseudo-random number in the half-open interval [0,n).
     // It panics if n <= 0.
-    int rec::Intn(Rand* r, int n)
+    int64_t rec::Intn(Rand* r, int64_t n)
     {
         if(n <= 0)
         {
@@ -396,9 +396,9 @@ namespace golang::math::rand
         }
         if(n <= (1 << 31) - 1)
         {
-            return int(rec::Int31n(gocpp::recv(r), int32_t(n)));
+            return int64_t(rec::Int31n(gocpp::recv(r), int32_t(n)));
         }
-        return int(rec::Int63n(gocpp::recv(r), int64_t(n)));
+        return int64_t(rec::Int63n(gocpp::recv(r), int64_t(n)));
     }
 
     // Float64 returns, as a float64, a pseudo-random number in the half-open interval [0.0,1.0).
@@ -446,15 +446,15 @@ namespace golang::math::rand
 
     // Perm returns, as a slice of n ints, a pseudo-random permutation of the integers
     // in the half-open interval [0,n).
-    gocpp::slice<int> rec::Perm(Rand* r, int n)
+    gocpp::slice<int64_t> rec::Perm(Rand* r, int64_t n)
     {
-        auto m = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), n);
+        auto m = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), n);
         // In the following loop, the iteration when i=0 always swaps m[0] with m[0].
         // A change to remove this useless iteration is to assign 1 to i in the init
         // statement. But Perm also effects r. Making this change will affect
         // the final state of r. So this change can't be made for compatibility
         // reasons for Go 1.
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             auto j = rec::Intn(gocpp::recv(r), i + 1);
             m[i] = m[j];
@@ -466,7 +466,7 @@ namespace golang::math::rand
     // Shuffle pseudo-randomizes the order of elements.
     // n is the number of elements. Shuffle panics if n < 0.
     // swap swaps the elements with indexes i and j.
-    void rec::Shuffle(Rand* r, int n, std::function<void (int i, int j)> swap)
+    void rec::Shuffle(Rand* r, int64_t n, std::function<void (int64_t i, int64_t j)> swap)
     {
         if(n < 0)
         {
@@ -482,12 +482,12 @@ namespace golang::math::rand
         auto i = n - 1;
         for(; i > (1 << 31) - 1 - 1; i--)
         {
-            auto j = int(rec::Int63n(gocpp::recv(r), int64_t(i + 1)));
+            auto j = int64_t(rec::Int63n(gocpp::recv(r), int64_t(i + 1)));
             swap(i, j);
         }
         for(; i > 0; i--)
         {
-            auto j = int(rec::int31n(gocpp::recv(r), int32_t(i + 1)));
+            auto j = int64_t(rec::int31n(gocpp::recv(r), int32_t(i + 1)));
             swap(i, j);
         }
     }
@@ -495,9 +495,9 @@ namespace golang::math::rand
     // Read generates len(p) random bytes and writes them into p. It
     // always returns len(p) and a nil error.
     // Read should not be called concurrently with any other Rand method.
-    std::tuple<int, gocpp::error> rec::Read(Rand* r, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Read(Rand* r, gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         //Go type switch emulation
         {
@@ -524,9 +524,9 @@ namespace golang::math::rand
         return rand::read(p, r->src, & r->readVal, & r->readPos);
     }
 
-    std::tuple<int, gocpp::error> read(gocpp::slice<unsigned char> p, Source src, int64_t* readVal, int8_t* readPos)
+    std::tuple<int64_t, gocpp::error> read(gocpp::slice<unsigned char> p, Source src, int64_t* readVal, int8_t* readPos)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto pos = *readPos;
         auto val = *readVal;
@@ -651,9 +651,9 @@ namespace golang::math::rand
         return runtime_rand();
     }
 
-    std::tuple<int, gocpp::error> rec::read(runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
+    std::tuple<int64_t, gocpp::error> rec::read(runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         rec::Lock(gocpp::recv(fs->mu));
         std::tie(n, err) = rand::read(p, fs, readVal, readPos);
@@ -745,7 +745,7 @@ namespace golang::math::rand
     }
 
     // Int returns a non-negative pseudo-random int from the default [Source].
-    int Int()
+    int64_t Int()
     {
         return rec::Int(gocpp::recv(globalRand()));
     }
@@ -769,7 +769,7 @@ namespace golang::math::rand
     // Intn returns, as an int, a non-negative pseudo-random number in the half-open interval [0,n)
     // from the default [Source].
     // It panics if n <= 0.
-    int Intn(int n)
+    int64_t Intn(int64_t n)
     {
         return rec::Intn(gocpp::recv(globalRand()), n);
     }
@@ -790,7 +790,7 @@ namespace golang::math::rand
 
     // Perm returns, as a slice of n ints, a pseudo-random permutation of the integers
     // in the half-open interval [0,n) from the default [Source].
-    gocpp::slice<int> Perm(int n)
+    gocpp::slice<int64_t> Perm(int64_t n)
     {
         return rec::Perm(gocpp::recv(globalRand()), n);
     }
@@ -798,7 +798,7 @@ namespace golang::math::rand
     // Shuffle pseudo-randomizes the order of elements using the default [Source].
     // n is the number of elements. Shuffle panics if n < 0.
     // swap swaps the elements with indexes i and j.
-    void Shuffle(int n, std::function<void (int i, int j)> swap)
+    void Shuffle(int64_t n, std::function<void (int64_t i, int64_t j)> swap)
     {
         rec::Shuffle(gocpp::recv(globalRand()), n, swap);
     }
@@ -809,9 +809,9 @@ namespace golang::math::rand
     //
     // Deprecated: For almost all use cases, [crypto/rand.Read] is more appropriate.
     // If a deterministic source is required, use [math/rand/v2.ChaCha8.Read].
-    std::tuple<int, gocpp::error> Read(gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> Read(gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return rec::Read(gocpp::recv(globalRand()), p);
     }
@@ -922,9 +922,9 @@ namespace golang::math::rand
     }
 
     // read implements Read for a lockedSource without a race condition.
-    std::tuple<int, gocpp::error> rec::read(lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
+    std::tuple<int64_t, gocpp::error> rec::read(lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         rec::Lock(gocpp::recv(r->lk));
         std::tie(n, err) = rand::read(p, r->s, readVal, readPos);

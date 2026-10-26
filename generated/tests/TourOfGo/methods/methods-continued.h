@@ -12,6 +12,8 @@
 
 namespace golang::main
 {
+    struct GoTag_MyFloat { };
+    using MyFloat = gocpp::defined<double, GoTag_MyFloat>;
     void main();
 
     namespace rec

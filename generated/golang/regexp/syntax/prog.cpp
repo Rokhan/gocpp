@@ -83,7 +83,7 @@ namespace golang::regexp::syntax
     };
     gocpp::string rec::String(InstOp i)
     {
-        if((unsigned int)(i) >= (unsigned int)(len(instOpNames)))
+        if((uint64_t)(i) >= (uint64_t)(len(instOpNames)))
         {
             return ""_s;
         }
@@ -321,7 +321,7 @@ namespace golang::regexp::syntax
     // (or, when len(i.Rune) == 1, rune singleton).
     // If not, MatchRunePos returns -1.
     // MatchRunePos should only be called when i.Op == [InstRune].
-    int rec::MatchRunePos(Inst* i, gocpp::rune r)
+    int64_t rec::MatchRunePos(Inst* i, gocpp::rune r)
     {
         auto rune = i->Rune;
 
@@ -376,7 +376,7 @@ namespace golang::regexp::syntax
                 case 5:
                     // Linear search for a few pairs.
                     // Should handle ASCII well.
-                    for(auto j = 0; j < len(rune); j += 2)
+                    for(int64_t j = 0; j < len(rune); j += 2)
                     {
                         if(r < rune[j])
                         {
@@ -393,11 +393,11 @@ namespace golang::regexp::syntax
         }
 
         // Otherwise binary search.
-        auto lo = 0;
+        int64_t lo = 0;
         auto hi = len(rune) / 2;
         for(; lo < hi; )
         {
-            auto m = int((unsigned int)(lo + hi) >> 1);
+            auto m = int64_t((uint64_t)(lo + hi) >> 1);
             if(auto c = rune[2 * m]; c <= r)
             {
                 if(r <= rune[2 * m + 1])

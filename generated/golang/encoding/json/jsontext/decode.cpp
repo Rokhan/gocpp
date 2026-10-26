@@ -163,12 +163,12 @@ namespace golang::encoding::json::jsontext
             return rec::PreviousTokenOrValue(gocpp::recv(self.ptr->decodeBuffer));
         }
 
-        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct decoderState, false>& self, gocpp::slice<unsigned char> b, int where)
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct decoderState, false>& self, gocpp::slice<unsigned char> b, int64_t where)
         {
             return rec::appendStackPointer(gocpp::recv(self.ptr->state), b, where);
         }
 
-        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct decoderState>& self, gocpp::slice<unsigned char> b, int where)
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct decoderState>& self, gocpp::slice<unsigned char> b, int64_t where)
         {
             return rec::appendStackPointer(gocpp::recv(self.obj.state), b, where);
         }
@@ -178,7 +178,7 @@ namespace golang::encoding::json::jsontext
             return rec::invalidatePreviousRead(gocpp::recv(self.ptr->decodeBuffer));
         }
 
-        bool needMore(const gocpp::PtrRecv<struct decoderState, false>& self, int pos)
+        bool needMore(const gocpp::PtrRecv<struct decoderState, false>& self, int64_t pos)
         {
             return rec::needMore(gocpp::recv(self.ptr->decodeBuffer), pos);
         }
@@ -188,7 +188,7 @@ namespace golang::encoding::json::jsontext
             return rec::needObjectValue(gocpp::recv(self.ptr->state));
         }
 
-        int64_t offsetAt(const gocpp::PtrRecv<struct decoderState, false>& self, int pos)
+        int64_t offsetAt(const gocpp::PtrRecv<struct decoderState, false>& self, int64_t pos)
         {
             return rec::offsetAt(gocpp::recv(self.ptr->decodeBuffer), pos);
         }
@@ -494,7 +494,7 @@ namespace golang::encoding::json::jsontext
             auto [gocpp_id_1, ok] = gocpp::getValue<bytes::Buffer*>(r);
             return ok;
         };
-        if(d->rd != nullptr && ! isBytesBuffer(d->rd) && d->prevStart < d->prevEnd && (unsigned int)(d->prevStart) < (unsigned int)(len(d->buf)))
+        if(d->rd != nullptr && ! isBytesBuffer(d->rd) && d->prevStart < d->prevEnd && (uint64_t)(d->prevStart) < (uint64_t)(len(d->buf)))
         {
             d->buf[d->prevStart] = invalidateBufferByte;
             d->prevStart = d->prevEnd;
@@ -502,13 +502,13 @@ namespace golang::encoding::json::jsontext
     }
 
     // needMore reports whether there are no more unread bytes.
-    bool rec::needMore(decodeBuffer* d, int pos)
+    bool rec::needMore(decodeBuffer* d, int64_t pos)
     {
         // NOTE: The arguments and logic are kept simple to keep this inlinable.
         return pos == len(d->buf);
     }
 
-    int64_t rec::offsetAt(decodeBuffer* d, int pos)
+    int64_t rec::offsetAt(decodeBuffer* d, int64_t pos)
     {
         return d->baseOffset + int64_t(pos);
     }
@@ -652,7 +652,7 @@ namespace golang::encoding::json::jsontext
     // CountNextDelimWhitespace counts the number of upcoming bytes of
     // delimiter or whitespace characters.
     // This method is used for error reporting at the semantic layer.
-    int rec::CountNextDelimWhitespace(decoderState* d)
+    int64_t rec::CountNextDelimWhitespace(decoderState* d)
     {
         // populate unreadBuffer
         rec::PeekKind(gocpp::recv(d));
@@ -662,7 +662,7 @@ namespace golang::encoding::json::jsontext
     // checkDelim checks whether delim is valid for the given next kind.
     gocpp::error rec::checkDelim(decoderState* d, unsigned char delim, golang::encoding::json::jsontext::Kind next)
     {
-        auto where = "at start of value"_s;
+        gocpp::string where = "at start of value"_s;
         //Go switch emulation
         {
             auto condition = rec::needDelim(gocpp::recv(d->state.Tokens), next);
@@ -766,7 +766,7 @@ namespace golang::encoding::json::jsontext
 
     // SkipUntil skips all tokens until the state machine
     // is at or past the specified depth and length.
-    gocpp::error rec::SkipUntil(decoderState* d, int depth, int64_t length)
+    gocpp::error rec::SkipUntil(decoderState* d, int64_t depth, int64_t length)
     {
         for(; rec::Depth(gocpp::recv(d->state.Tokens)) > depth || (rec::Depth(gocpp::recv(d->state.Tokens)) == depth && rec::Length(gocpp::recv(d->state.Tokens.Last)) < length); )
         {
@@ -850,7 +850,7 @@ namespace golang::encoding::json::jsontext
         }
 
         // Handle the next token.
-        int n = {};
+        int64_t n = {};
         //Go switch emulation
         {
             auto condition = next;
@@ -940,7 +940,7 @@ namespace golang::encoding::json::jsontext
                         auto oldAbsPos = d->decodeBuffer.baseOffset + int64_t(pos);
                         std::tie(pos, err) = rec::consumeString(gocpp::recv(d), & flags, pos);
                         auto newAbsPos = d->decodeBuffer.baseOffset + int64_t(pos);
-                        n = int(newAbsPos - oldAbsPos);
+                        n = int64_t(newAbsPos - oldAbsPos);
                         if(err != nullptr)
                         {
                             return {Token {}, wrapSyntacticError(d, err, pos, + 1)};
@@ -988,7 +988,7 @@ namespace golang::encoding::json::jsontext
                         auto oldAbsPos = d->decodeBuffer.baseOffset + int64_t(pos);
                         std::tie(pos, err) = rec::consumeNumber(gocpp::recv(d), pos);
                         auto newAbsPos = d->decodeBuffer.baseOffset + int64_t(pos);
-                        n = int(newAbsPos - oldAbsPos);
+                        n = int64_t(newAbsPos - oldAbsPos);
                         if(err != nullptr)
                         {
                             return {Token {}, wrapSyntacticError(d, err, pos, + 1)};
@@ -1155,7 +1155,7 @@ namespace golang::encoding::json::jsontext
         auto oldAbsPos = d->decodeBuffer.baseOffset + int64_t(pos);
         std::tie(pos, err) = rec::consumeValue(gocpp::recv(d), flags, pos, rec::Depth(gocpp::recv(d->state.Tokens)));
         auto newAbsPos = d->decodeBuffer.baseOffset + int64_t(pos);
-        auto n = int(newAbsPos - oldAbsPos);
+        auto n = int64_t(newAbsPos - oldAbsPos);
         if(err != nullptr)
         {
             return {nullptr, wrapSyntacticError(d, err, pos, + 1)};
@@ -1277,7 +1277,7 @@ namespace golang::encoding::json::jsontext
         return rec::checkEOF(gocpp::recv(d), d->decodeBuffer.prevEnd);
     }
 
-    gocpp::error rec::checkEOF(decoderState* d, int pos)
+    gocpp::error rec::checkEOF(decoderState* d, int64_t pos)
     {
         //Go switch emulation
         {
@@ -1322,9 +1322,9 @@ namespace golang::encoding::json::jsontext
     // consumeWhitespace must be inlined. The body of the if statement is
     // executed only in rare situations where we need to fetch more data.
     // Since fetching may return an error, we also need to check the error.
-    std::tuple<int, gocpp::error> rec::consumeWhitespace(decoderState* d, int pos)
+    std::tuple<int64_t, gocpp::error> rec::consumeWhitespace(decoderState* d, int64_t pos)
     {
-        int newPos;
+        int64_t newPos;
         gocpp::error err;
         for(; ; )
         {
@@ -1334,7 +1334,7 @@ namespace golang::encoding::json::jsontext
                 auto absPos = d->decodeBuffer.baseOffset + int64_t(pos);
                 // will mutate d.buf and invalidate pos
                 err = rec::fetch(gocpp::recv(d));
-                pos = int(absPos - d->decodeBuffer.baseOffset);
+                pos = int64_t(absPos - d->decodeBuffer.baseOffset);
                 if(err != nullptr)
                 {
                     return {pos, err};
@@ -1347,13 +1347,13 @@ namespace golang::encoding::json::jsontext
 
     // consumeValue consumes a single JSON value starting at d.buf[pos:].
     // It returns the new position in d.buf immediately after the value.
-    std::tuple<int, gocpp::error> rec::consumeValue(decoderState* d, jsonwire::ValueFlags* flags, int pos, int depth)
+    std::tuple<int64_t, gocpp::error> rec::consumeValue(decoderState* d, jsonwire::ValueFlags* flags, int64_t pos, int64_t depth)
     {
-        int newPos;
+        int64_t newPos;
         gocpp::error err;
         for(; ; )
         {
-            int n = {};
+            int64_t n = {};
             gocpp::error err = {};
             //Go switch emulation
             {
@@ -1421,7 +1421,7 @@ namespace golang::encoding::json::jsontext
                 auto absPos = d->decodeBuffer.baseOffset + int64_t(pos);
                 // will mutate d.buf and invalidate pos
                 err = rec::fetch(gocpp::recv(d));
-                pos = int(absPos - d->decodeBuffer.baseOffset);
+                pos = int64_t(absPos - d->decodeBuffer.baseOffset);
                 if(err != nullptr)
                 {
                     return {pos + n, err};
@@ -1434,9 +1434,9 @@ namespace golang::encoding::json::jsontext
 
     // consumeLiteral consumes a single JSON literal starting at d.buf[pos:].
     // It returns the new position in d.buf immediately after the literal.
-    std::tuple<int, gocpp::error> rec::consumeLiteral(decoderState* d, int pos, gocpp::string lit)
+    std::tuple<int64_t, gocpp::error> rec::consumeLiteral(decoderState* d, int64_t pos, gocpp::string lit)
     {
-        int newPos;
+        int64_t newPos;
         gocpp::error err;
         for(; ; )
         {
@@ -1446,7 +1446,7 @@ namespace golang::encoding::json::jsontext
                 auto absPos = d->decodeBuffer.baseOffset + int64_t(pos);
                 // will mutate d.buf and invalidate pos
                 err = rec::fetch(gocpp::recv(d));
-                pos = int(absPos - d->decodeBuffer.baseOffset);
+                pos = int64_t(absPos - d->decodeBuffer.baseOffset);
                 if(err != nullptr)
                 {
                     return {pos + n, err};
@@ -1459,11 +1459,11 @@ namespace golang::encoding::json::jsontext
 
     // consumeString consumes a single JSON string starting at d.buf[pos:].
     // It returns the new position in d.buf immediately after the string.
-    std::tuple<int, gocpp::error> rec::consumeString(decoderState* d, jsonwire::ValueFlags* flags, int pos)
+    std::tuple<int64_t, gocpp::error> rec::consumeString(decoderState* d, jsonwire::ValueFlags* flags, int64_t pos)
     {
-        int newPos;
+        int64_t newPos;
         gocpp::error err;
-        int n = {};
+        int64_t n = {};
         for(; ; )
         {
             std::tie(n, err) = jsonwire::ConsumeStringResumable(flags, d->decodeBuffer.buf.make_slice(pos), n, ! rec::Get(gocpp::recv(d->Struct.Flags), jsonflags::AllowInvalidUTF8));
@@ -1472,7 +1472,7 @@ namespace golang::encoding::json::jsontext
                 auto absPos = d->decodeBuffer.baseOffset + int64_t(pos);
                 // will mutate d.buf and invalidate pos
                 err = rec::fetch(gocpp::recv(d));
-                pos = int(absPos - d->decodeBuffer.baseOffset);
+                pos = int64_t(absPos - d->decodeBuffer.baseOffset);
                 if(err != nullptr)
                 {
                     return {pos + n, err};
@@ -1485,11 +1485,11 @@ namespace golang::encoding::json::jsontext
 
     // consumeNumber consumes a single JSON number starting at d.buf[pos:].
     // It returns the new position in d.buf immediately after the number.
-    std::tuple<int, gocpp::error> rec::consumeNumber(decoderState* d, int pos)
+    std::tuple<int64_t, gocpp::error> rec::consumeNumber(decoderState* d, int64_t pos)
     {
-        int newPos;
+        int64_t newPos;
         gocpp::error err;
-        int n = {};
+        int64_t n = {};
         jsonwire::ConsumeNumberState state = {};
         for(; ; )
         {
@@ -1502,7 +1502,7 @@ namespace golang::encoding::json::jsontext
                 auto absPos = d->decodeBuffer.baseOffset + int64_t(pos);
                 // will mutate d.buf and invalidate pos
                 err = rec::fetch(gocpp::recv(d));
-                pos = int(absPos - d->decodeBuffer.baseOffset);
+                pos = int64_t(absPos - d->decodeBuffer.baseOffset);
                 if(err != nullptr)
                 {
                     if(mayTerminate && err == io::ErrUnexpectedEOF)
@@ -1519,14 +1519,14 @@ namespace golang::encoding::json::jsontext
 
     // consumeObject consumes a single JSON object starting at d.buf[pos:].
     // It returns the new position in d.buf immediately after the object.
-    std::tuple<int, gocpp::error> rec::consumeObject(decoderState* d, jsonwire::ValueFlags* flags, int pos, int depth)
+    std::tuple<int64_t, gocpp::error> rec::consumeObject(decoderState* d, jsonwire::ValueFlags* flags, int64_t pos, int64_t depth)
     {
-        int newPos;
+        int64_t newPos;
         gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            int n = {};
+            int64_t n = {};
             objectNamespace* names = {};
             if(! rec::Get(gocpp::recv(d->Struct.Flags), jsonflags::AllowDuplicateNames))
             {
@@ -1536,7 +1536,7 @@ namespace golang::encoding::json::jsontext
             }
 
             // Handle before start.
-            if((unsigned int)(pos) >= (unsigned int)(len(d->decodeBuffer.buf)) || d->decodeBuffer.buf[pos] != '{')
+            if((uint64_t)(pos) >= (uint64_t)(len(d->decodeBuffer.buf)) || d->decodeBuffer.buf[pos] != '{')
             {
                 gocpp::panic("BUG: consumeObject must be called with a buffer that starts with '{'"_s);
             }
@@ -1580,7 +1580,7 @@ namespace golang::encoding::json::jsontext
                     auto oldAbsPos = d->decodeBuffer.baseOffset + int64_t(pos);
                     std::tie(pos, err) = rec::consumeString(gocpp::recv(d), & flags2, pos);
                     auto newAbsPos = d->decodeBuffer.baseOffset + int64_t(pos);
-                    n = int(newAbsPos - oldAbsPos);
+                    n = int64_t(newAbsPos - oldAbsPos);
                     rec::Join(gocpp::recv(flags), flags2);
                     if(err != nullptr)
                     {
@@ -1669,12 +1669,12 @@ namespace golang::encoding::json::jsontext
 
     // consumeArray consumes a single JSON array starting at d.buf[pos:].
     // It returns the new position in d.buf immediately after the array.
-    std::tuple<int, gocpp::error> rec::consumeArray(decoderState* d, jsonwire::ValueFlags* flags, int pos, int depth)
+    std::tuple<int64_t, gocpp::error> rec::consumeArray(decoderState* d, jsonwire::ValueFlags* flags, int64_t pos, int64_t depth)
     {
-        int newPos;
+        int64_t newPos;
         gocpp::error err;
         // Handle before start.
-        if((unsigned int)(pos) >= (unsigned int)(len(d->decodeBuffer.buf)) || d->decodeBuffer.buf[pos] != '[')
+        if((uint64_t)(pos) >= (uint64_t)(len(d->decodeBuffer.buf)) || d->decodeBuffer.buf[pos] != '[')
         {
             gocpp::panic("BUG: consumeArray must be called with a buffer that starts with '['"_s);
         }
@@ -1806,7 +1806,7 @@ namespace golang::encoding::json::jsontext
     //   - After decoding the inner '[', StackDepth reports 2.
     //   - After decoding the inner ']', StackDepth reports 1.
     //   - After decoding the outer '}', StackDepth reports 0.
-    int rec::StackDepth(golang::encoding::json::jsontext::Decoder* d)
+    int64_t rec::StackDepth(golang::encoding::json::jsontext::Decoder* d)
     {
         // NOTE: Keep in sync with Encoder.StackDepth.
         return rec::Depth(gocpp::recv(d->s.state.Tokens)) - 1;
@@ -1824,7 +1824,7 @@ namespace golang::encoding::json::jsontext
     // Each name and value in a JSON object is counted separately,
     // so the effective number of members is half the length.
     // A complete JSON object must have an even length.
-    std::tuple<golang::encoding::json::jsontext::Kind, int64_t> rec::StackIndex(golang::encoding::json::jsontext::Decoder* d, int i)
+    std::tuple<golang::encoding::json::jsontext::Kind, int64_t> rec::StackIndex(golang::encoding::json::jsontext::Decoder* d, int64_t i)
     {
         // NOTE: Keep in sync with Encoder.StackIndex.
         //Go switch emulation
@@ -1854,7 +1854,7 @@ namespace golang::encoding::json::jsontext
         return Pointer(rec::AppendStackPointer(gocpp::recv(d->s), nullptr, - 1));
     }
 
-    gocpp::slice<unsigned char> rec::AppendStackPointer(decoderState* d, gocpp::slice<unsigned char> b, int where)
+    gocpp::slice<unsigned char> rec::AppendStackPointer(decoderState* d, gocpp::slice<unsigned char> b, int64_t where)
     {
         rec::copyQuotedBuffer(gocpp::recv(d->state.Names), d->decodeBuffer.buf);
         return rec::appendStackPointer(gocpp::recv(d->state), b, where);

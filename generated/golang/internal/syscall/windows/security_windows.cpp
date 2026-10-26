@@ -410,7 +410,7 @@ namespace golang::internal::syscall::windows
     // in the specified format.
     std::tuple<gocpp::string, gocpp::error> GetUserName(uint32_t format)
     {
-        auto n = uint32_t(50);
+        uint32_t n = uint32_t(50);
         for(; ; )
         {
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
@@ -431,7 +431,7 @@ namespace golang::internal::syscall::windows
     }
 
     // getTokenInfo retrieves a specified type of information about an access token.
-    std::tuple<gocpp::unsafe_pointer, gocpp::error> getTokenInfo(syscall::Token t, uint32_t go_class, int initSize)
+    std::tuple<gocpp::unsafe_pointer, gocpp::error> getTokenInfo(syscall::Token t, uint32_t go_class, int64_t initSize)
     {
         auto n = uint32_t(initSize);
         for(; ; )

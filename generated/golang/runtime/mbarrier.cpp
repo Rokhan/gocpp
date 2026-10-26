@@ -198,7 +198,7 @@ namespace golang::runtime
     //
     //go:linkname typedslicecopy
     //go:nosplit
-    int typedslicecopy(_type* typ, gocpp::unsafe_pointer dstPtr, int dstLen, gocpp::unsafe_pointer srcPtr, int srcLen)
+    int64_t typedslicecopy(_type* typ, gocpp::unsafe_pointer dstPtr, int64_t dstLen, gocpp::unsafe_pointer srcPtr, int64_t srcLen)
     {
         auto n = dstLen;
         if(n > srcLen)
@@ -274,7 +274,7 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname reflect_typedslicecopy reflect.typedslicecopy
-    int reflect_typedslicecopy(_type* elemType, golang::runtime::slice dst, golang::runtime::slice src)
+    int64_t reflect_typedslicecopy(_type* elemType, golang::runtime::slice dst, golang::runtime::slice src)
     {
         if(! rec::Pointers(gocpp::recv(elemType)))
         {
@@ -341,7 +341,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_typedarrayclear reflect.typedarrayclear
-    void reflect_typedarrayclear(_type* typ, gocpp::unsafe_pointer ptr, int len)
+    void reflect_typedarrayclear(_type* typ, gocpp::unsafe_pointer ptr, int64_t len)
     {
         auto size = typ->Size_ * uintptr_t(len);
         if(writeBarrier.enabled && rec::Pointers(gocpp::recv(typ)))

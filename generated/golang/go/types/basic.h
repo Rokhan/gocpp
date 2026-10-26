@@ -12,6 +12,10 @@
 
 namespace golang::go::types
 {
+    struct GoTag_BasicKind { };
+    using BasicKind = gocpp::defined<int64_t, GoTag_BasicKind>;
+    struct GoTag_BasicInfo { };
+    using BasicInfo = gocpp::defined<int64_t, GoTag_BasicInfo>;
     struct Basic
     {
         BasicKind kind{};

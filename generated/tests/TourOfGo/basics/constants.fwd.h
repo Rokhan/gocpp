@@ -6,5 +6,5 @@
 
 namespace golang::main
 {
-    const double Pi = 3.14;
+    inline constexpr double Pi = 3.14;
 }

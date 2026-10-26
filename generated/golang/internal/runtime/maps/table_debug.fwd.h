@@ -6,5 +6,5 @@
 
 namespace golang::internal::runtime::maps
 {
-    const bool debugLog = false;
+    inline constexpr bool debugLog = false;
 }

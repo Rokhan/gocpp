@@ -71,13 +71,13 @@ namespace golang::main
     bool RemoveOne(gocpp::channel<T> dummy);
 
     template<typename T>
-    int UnusedGenericParameter();
+    int64_t UnusedGenericParameter();
 
     template<typename T>
     T Zero();
 
     template<template<typename> class  S, typename E>
-    S<E> Grow(S<E> s, int n);
+    S<E> Grow(S<E> s, int64_t n);
     template<typename T> 
     struct Pointer
     {
@@ -118,6 +118,8 @@ namespace golang::main
 
     template<typename K, typename V>
     std::tuple<K, V> MakePair(K k, V v);
+    template<typename T> struct GoTag_Boxed { };
+    template<typename T> using Boxed = gocpp::defined<int64_t, GoTag_Boxed<T>>;
     template<typename K, typename V> 
     struct Pair
     {
@@ -137,15 +139,17 @@ namespace golang::main
 
     template<typename K, typename V>
     std::ostream& operator<<(std::ostream& os, const struct Pair<K, V>& value);
-    int RealIndexing(gocpp::slice<int> arr, int i);
-    std::function<int (int _1)> FuncInstantiationAsValue();
-    int FuncInstantiationCalled();
-    Boxed<int> TypeInstantiationConverted(int x);
-    std::function<std::tuple<int, gocpp::string> (int _1, gocpp::string _2)> FuncInstantiationAsValue2();
-    std::tuple<int, gocpp::string> FuncInstantiationCalled2();
-    BoxedPair<int, gocpp::string> TypeInstantiationConverted2(int x);
+    int64_t RealIndexing(gocpp::slice<int64_t> arr, int64_t i);
+    std::function<int64_t (int64_t _1)> FuncInstantiationAsValue();
+    int64_t FuncInstantiationCalled();
+    std::function<std::tuple<int64_t, gocpp::string> (int64_t _1, gocpp::string _2)> FuncInstantiationAsValue2();
+    std::tuple<int64_t, gocpp::string> FuncInstantiationCalled2();
+    template<typename K, typename V> struct GoTag_BoxedPair { };
+    template<typename K, typename V> using BoxedPair = gocpp::defined<int64_t, GoTag_BoxedPair<K ,V>>;
     entry* newEntry(go_any i);
-    Pair<int, gocpp::string> NewPair();
+    Boxed<int64_t> TypeInstantiationConverted(int64_t x);
+    BoxedPair<int64_t, gocpp::string> TypeInstantiationConverted2(int64_t x);
+    Pair<int64_t, gocpp::string> NewPair();
 
     namespace rec
     {

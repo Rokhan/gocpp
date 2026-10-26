@@ -13,6 +13,7 @@ namespace golang::main
     struct Context;
     struct num;
     struct dummy;
-    using MyFloat = double;
+    struct GoTag_MyFloat;
+    using MyFloat = gocpp::defined<double, GoTag_MyFloat>;
     struct Vertex;
 }

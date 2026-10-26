@@ -37,7 +37,7 @@ namespace golang::internal::bytealg
     // before switching over to Index.
     // n is the number of bytes processed so far.
     // See the bytes.Index implementation for details.
-    int Cutover(int n)
+    int64_t Cutover(int64_t n)
     {
         // 1 error per 8 characters, plus a few slop to start.
         return (n + 16) / 8;

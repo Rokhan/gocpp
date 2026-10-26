@@ -7,38 +7,38 @@
 namespace golang::image::png
 {
     // Color type, as per the PNG spec.
-    const long ctGrayscale = 0;
-    const long ctTrueColor = 2;
-    const long ctPaletted = 3;
-    const long ctGrayscaleAlpha = 4;
-    const long ctTrueColorAlpha = 6;
+    inline constexpr long ctGrayscale = 0;
+    inline constexpr long ctTrueColor = 2;
+    inline constexpr long ctPaletted = 3;
+    inline constexpr long ctGrayscaleAlpha = 4;
+    inline constexpr long ctTrueColorAlpha = 6;
     // A cb is a combination of color type and bit depth.
-    const int cbInvalid = 0;
-    const int cbG1 = 1;
-    const int cbG2 = 2;
-    const int cbG4 = 3;
-    const int cbG8 = 4;
-    const int cbGA8 = 5;
-    const int cbTC8 = 6;
-    const int cbP1 = 7;
-    const int cbP2 = 8;
-    const int cbP4 = 9;
-    const int cbP8 = 10;
-    const int cbTCA8 = 11;
-    const int cbG16 = 12;
-    const int cbGA16 = 13;
-    const int cbTC16 = 14;
-    const int cbTCA16 = 15;
+    inline constexpr int64_t cbInvalid = 0;
+    inline constexpr int64_t cbG1 = 1;
+    inline constexpr int64_t cbG2 = 2;
+    inline constexpr int64_t cbG4 = 3;
+    inline constexpr int64_t cbG8 = 4;
+    inline constexpr int64_t cbGA8 = 5;
+    inline constexpr int64_t cbTC8 = 6;
+    inline constexpr int64_t cbP1 = 7;
+    inline constexpr int64_t cbP2 = 8;
+    inline constexpr int64_t cbP4 = 9;
+    inline constexpr int64_t cbP8 = 10;
+    inline constexpr int64_t cbTCA8 = 11;
+    inline constexpr int64_t cbG16 = 12;
+    inline constexpr int64_t cbGA16 = 13;
+    inline constexpr int64_t cbTC16 = 14;
+    inline constexpr int64_t cbTCA16 = 15;
     // Filter type, as per the PNG spec.
-    const long ftNone = 0;
-    const long ftSub = 1;
-    const long ftUp = 2;
-    const long ftAverage = 3;
-    const long ftPaeth = 4;
-    const long nFilter = 5;
+    inline constexpr long ftNone = 0;
+    inline constexpr long ftSub = 1;
+    inline constexpr long ftUp = 2;
+    inline constexpr long ftAverage = 3;
+    inline constexpr long ftPaeth = 4;
+    inline constexpr long nFilter = 5;
     // Interlace type.
-    const long itNone = 0;
-    const long itAdam7 = 1;
+    inline constexpr long itNone = 0;
+    inline constexpr long itAdam7 = 1;
     struct interlaceScan;
     // Decoding stage.
     // The PNG specification says that the IHDR, PLTE (if present), tRNS (if
@@ -46,13 +46,13 @@ namespace golang::image::png
     // multiple IDAT chunks, and IDAT chunks must be sequential (i.e. they may not
     // have any other chunks between them).
     // https://www.w3.org/TR/PNG/#5ChunkOrdering
-    const int dsStart = 0;
-    const int dsSeenIHDR = 1;
-    const int dsSeenPLTE = 2;
-    const int dsSeentRNS = 3;
-    const int dsSeenIDAT = 4;
-    const int dsSeenIEND = 5;
-    const gocpp::string pngHeader = "\x89PNG\r\n\x1a\n"_s;
+    inline constexpr int64_t dsStart = 0;
+    inline constexpr int64_t dsSeenIHDR = 1;
+    inline constexpr int64_t dsSeenPLTE = 2;
+    inline constexpr int64_t dsSeentRNS = 3;
+    inline constexpr int64_t dsSeenIDAT = 4;
+    inline constexpr int64_t dsSeenIEND = 5;
+    inline const gocpp::string pngHeader = "\x89PNG\r\n\x1a\n"_s;
     struct decoder;
     using FormatError = gocpp::string;
     using UnsupportedError = gocpp::string;

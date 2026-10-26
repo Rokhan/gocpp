@@ -22,7 +22,7 @@ namespace golang::strings
         // first. Priority is positive if this node is a complete key, and zero
         // otherwise. In the example above, positive/zero priorities are marked
         // with a trailing "+" or "-".
-        int priority{};
+        int64_t priority{};
         // prefix is the difference in keys between this trie node and the next.
         // In the example above, node n4 has prefix "cbc" and n4's next node is n5.
         // Node n5 has no children and so has zero prefix, next and table fields.
@@ -80,7 +80,7 @@ namespace golang::strings
         trieNode root{};
         // tableSize is the size of a trie node's lookup table. It is the number
         // of unique key bytes.
-        int tableSize{};
+        int64_t tableSize{};
         // mapping maps from key bytes to a dense index for trieNode.table.
         gocpp::array<unsigned char, 256> mapping{};
 
@@ -162,7 +162,7 @@ namespace golang::strings
         struct Ireplacer
         {
             virtual gocpp::string vReplace(gocpp::string s) = 0;
-            virtual std::tuple<int, gocpp::error> vWriteString(io::Writer w, gocpp::string s) = 0;
+            virtual std::tuple<int64_t, gocpp::error> vWriteString(io::Writer w, gocpp::string s) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -176,7 +176,7 @@ namespace golang::strings
 
             gocpp::string vReplace(gocpp::string s) override;
 
-            std::tuple<int, gocpp::error> vWriteString(io::Writer w, gocpp::string s) override;
+            std::tuple<int64_t, gocpp::error> vWriteString(io::Writer w, gocpp::string s) override;
 
             void* getPtr() override
             {
@@ -196,8 +196,8 @@ namespace golang::strings
         gocpp::string Replace(const gocpp::PtrRecv<struct replacer, false>& self, gocpp::string s);
         gocpp::string Replace(const gocpp::ObjRecv<struct replacer>& self, gocpp::string s);
 
-        std::tuple<int, gocpp::error> WriteString(const gocpp::PtrRecv<struct replacer, false>& self, io::Writer w, gocpp::string s);
-        std::tuple<int, gocpp::error> WriteString(const gocpp::ObjRecv<struct replacer>& self, io::Writer w, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteString(const gocpp::PtrRecv<struct replacer, false>& self, io::Writer w, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteString(const gocpp::ObjRecv<struct replacer>& self, io::Writer w, gocpp::string s);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct replacer& value);
@@ -272,20 +272,20 @@ namespace golang::strings
         void buildOnce(Replacer* r);
         replacer build(Replacer* b);
         gocpp::string Replace(Replacer* r, gocpp::string s);
-        std::tuple<int, gocpp::error> WriteString(Replacer* r, io::Writer w, gocpp::string s);
-        void add(trieNode* t, gocpp::string key, gocpp::string val, int priority, genericReplacer* r);
-        std::tuple<gocpp::string, int, bool> lookup(genericReplacer* r, gocpp::string s, bool ignoreRoot);
-        std::tuple<int, gocpp::error> Write(appendSliceWriter* w, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> WriteString(appendSliceWriter* w, gocpp::string s);
-        std::tuple<int, gocpp::error> WriteString(stringWriter w, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteString(Replacer* r, io::Writer w, gocpp::string s);
+        void add(trieNode* t, gocpp::string key, gocpp::string val, int64_t priority, genericReplacer* r);
+        std::tuple<gocpp::string, int64_t, bool> lookup(genericReplacer* r, gocpp::string s, bool ignoreRoot);
+        std::tuple<int64_t, gocpp::error> Write(appendSliceWriter* w, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> WriteString(appendSliceWriter* w, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteString(stringWriter w, gocpp::string s);
         gocpp::string Replace(genericReplacer* r, gocpp::string s);
-        std::tuple<int, gocpp::error> WriteString(genericReplacer* r, io::Writer w, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteString(genericReplacer* r, io::Writer w, gocpp::string s);
         gocpp::string Replace(singleStringReplacer* r, gocpp::string s);
-        std::tuple<int, gocpp::error> WriteString(singleStringReplacer* r, io::Writer w, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteString(singleStringReplacer* r, io::Writer w, gocpp::string s);
         gocpp::string Replace(gocpp::array_ptr<byteReplacer> r, gocpp::string s);
-        std::tuple<int, gocpp::error> WriteString(gocpp::array_ptr<byteReplacer> r, io::Writer w, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteString(gocpp::array_ptr<byteReplacer> r, io::Writer w, gocpp::string s);
         gocpp::string Replace(byteStringReplacer* r, gocpp::string s);
-        std::tuple<int, gocpp::error> WriteString(byteStringReplacer* r, io::Writer w, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteString(byteStringReplacer* r, io::Writer w, gocpp::string s);
     }
 }
 

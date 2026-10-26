@@ -106,7 +106,7 @@ namespace golang::main
 
     void testNil()
     {
-        gocpp::map<gocpp::string, int> nm = {};
+        gocpp::map<gocpp::string, int64_t> nm = {};
         mocklib::Println(nm == nullptr, nm != nullptr, len(nm), nm);
         mocklib::Println(nm.get("x"_s));
         auto [v, ok] = nm.lookup("x"_s);
@@ -122,9 +122,9 @@ namespace golang::main
 
     void testNotNil()
     {
-        auto made = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
-        auto lit = gocpp::map<gocpp::string, int> {gocpp::non_nil};
-        auto full = gocpp::map<gocpp::string, int> {{ "a"_s, 1 }};
+        auto made = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int64_t>>());
+        auto lit = gocpp::map<gocpp::string, int64_t> {gocpp::non_nil};
+        auto full = gocpp::map<gocpp::string, int64_t> {{ "a"_s, 1 }};
         mocklib::Println(made == nullptr, lit == nullptr, full == nullptr);
 
         clear(full);
@@ -135,14 +135,14 @@ namespace golang::main
         mocklib::Println(full == nullptr, len(full));
     }
 
-    void fill(gocpp::map<gocpp::string, int> m)
+    void fill(gocpp::map<gocpp::string, int64_t> m)
     {
         m.ref("filled"_s) = 1;
     }
 
     void testAliasing()
     {
-        auto a = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+        auto a = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int64_t>>());
         auto b = a;
         b.ref("k"_s) = 1;
         mocklib::Println(a, b, len(a));
@@ -165,7 +165,7 @@ namespace golang::main
             x.name = "r1"_s;
         });
         mocklib::Println(r1.items == nullptr);
-        r1.items = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+        r1.items = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int64_t>>());
         // struct copy shares the map
         auto r2 = r1;
         r2.items.ref("x"_s) = 1;
@@ -208,7 +208,7 @@ namespace golang::main
                     mocklib::Println("recovered"_s);
                 }
             }(); });
-            gocpp::map<gocpp::string, int> nm = {};
+            gocpp::map<gocpp::string, int64_t> nm = {};
             mocklib::Println("before"_s);
             nm.ref("x"_s) = 1;
             mocklib::Println("not reached"_s);

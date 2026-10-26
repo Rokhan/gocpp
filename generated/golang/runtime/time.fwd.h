@@ -11,13 +11,13 @@ namespace golang::runtime
     struct timerWhen;
     // Timer state field.
     // timerHeaped is set when the timer is stored in some P's heap.
-    const uint8_t timerHeaped = 1 << 0;
+    inline constexpr uint8_t timerHeaped = 1 << 0;
     // timerModified is set when t.when has been modified
     // but the heap's heap[i].when entry still needs to be updated.
     // That change waits until the heap in which
     // the timer appears can be locked and rearranged.
     // timerModified is only set when timerHeaped is also set.
-    const uint8_t timerModified = 1 << 1;
+    inline constexpr uint8_t timerModified = 1 << 1;
     // timerZombie is set when the timer has been stopped
     // but is still present in some P's heap.
     // Only set when timerHeaped is also set.
@@ -26,14 +26,14 @@ namespace golang::runtime
     // A timer sending to a channel may be placed in timerZombie
     // to take it out of the heap even though the timer is not stopped,
     // as long as nothing is reading from the channel.
-    const uint8_t timerZombie = 1 << 2;
+    inline constexpr uint8_t timerZombie = 1 << 2;
     // timerDebug enables printing a textual debug trace of all timer operations to stderr.
-    const bool timerDebug = false;
+    inline constexpr bool timerDebug = false;
     // maxWhen is the maximum value for timer's when field.
-    const int maxWhen = (1 << 63) - 1;
+    inline constexpr int64_t maxWhen = int64_t((1_bi << 63) - 1_bi);
     // verifyTimers can be set to true to add debugging checks that the
     // timer heaps are valid.
-    const bool verifyTimers = false;
+    inline constexpr bool verifyTimers = false;
     struct timeTimer;
-    const long timerHeapN = 4;
+    inline constexpr long timerHeapN = 4;
 }

@@ -61,7 +61,7 @@ namespace golang::main
         gocpp::panic("not implemented"_s);
     }
 
-    color::Color rec::At(Image, int x, int y)
+    color::Color rec::At(Image, int64_t x, int64_t y)
     {
         gocpp::panic("not implemented"_s);
     }

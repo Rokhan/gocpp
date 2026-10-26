@@ -18,7 +18,7 @@ namespace golang::compress::flate
         int32_t lazy{}; // don't try to find a later, better match above this length
         int32_t nice{}; // stop looking for a better match above this length
         int32_t chain{}; // maximum number of hash chain entries to search
-        int level{};
+        int64_t level{};
 
         using isGoStruct = void;
 
@@ -83,7 +83,7 @@ namespace golang::compress::flate
         huffmanEncoder* h{}; // huffman encoder, with state
         huffmanBitWriter* w{}; // writer for blocks
         // compression algorithm
-        std::function<int (compressor* _1, gocpp::slice<unsigned char> _2)> fill{}; // copy data to window
+        std::function<int64_t (compressor* _1, gocpp::slice<unsigned char> _2)> fill{}; // copy data to window
         std::function<void (compressor* _1)> step{}; // process window
         gocpp::slice<unsigned char> window{}; // current window - size depends on encoder level
         int32_t windowEnd{}; // filled bytes in window
@@ -132,8 +132,8 @@ namespace golang::compress::flate
 namespace golang::compress::flate
 {
     namespace io = golang::io;
-    std::tuple<Writer*, gocpp::error> NewWriter(io::Writer w, int level);
-    std::tuple<Writer*, gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
+    std::tuple<Writer*, gocpp::error> NewWriter(io::Writer w, int64_t level);
+    std::tuple<Writer*, gocpp::error> NewWriterDict(io::Writer w, int64_t level, gocpp::slice<unsigned char> dict);
 }
 
 #include "golang/compress/flate/token.h"
@@ -144,7 +144,7 @@ namespace golang::compress::flate
 
     namespace rec
     {
-        int fillDeflate(compressor* d, gocpp::slice<unsigned char> b);
+        int64_t fillDeflate(compressor* d, gocpp::slice<unsigned char> b);
         gocpp::error writeBlock(compressor* d, tokens* tok, int32_t index, bool eof);
         gocpp::error writeBlockSkip(compressor* d, tokens* tok, int32_t index, bool eof);
         void fillWindow(compressor* d, gocpp::slice<unsigned char> b);
@@ -155,15 +155,15 @@ namespace golang::compress::flate
         bool skipLiterals(compressor* d);
         void deflateLazy(compressor* d);
         void store(compressor* d);
-        int fillBlock(compressor* d, gocpp::slice<unsigned char> b);
+        int64_t fillBlock(compressor* d, gocpp::slice<unsigned char> b);
         void deflateHuff(compressor* d);
         void deflateFast(compressor* d);
-        std::tuple<int, gocpp::error> write(compressor* d, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> write(compressor* d, gocpp::slice<unsigned char> b);
         gocpp::error syncFlush(compressor* d);
-        gocpp::error init(compressor* d, io::Writer w, int level);
+        gocpp::error init(compressor* d, io::Writer w, int64_t level);
         void reset(compressor* d, io::Writer w);
         gocpp::error close(compressor* d);
-        std::tuple<int, gocpp::error> Write(Writer* w, gocpp::slice<unsigned char> data);
+        std::tuple<int64_t, gocpp::error> Write(Writer* w, gocpp::slice<unsigned char> data);
         gocpp::error Flush(Writer* w);
         gocpp::error Close(Writer* w);
         void Reset(Writer* w, io::Writer dst);

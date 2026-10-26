@@ -58,9 +58,9 @@ namespace golang::go::types
 
     namespace rec
     {
-        int NumFields(Struct* s);
-        Var* Field(Struct* s, int i);
-        gocpp::string Tag(Struct* s, int i);
+        int64_t NumFields(Struct* s);
+        Var* Field(Struct* s, int64_t i);
+        gocpp::string Tag(Struct* s, int64_t i);
         golang::go::types::Type Underlying(Struct* t);
         gocpp::string String(Struct* t);
         void markComplete(Struct* s);

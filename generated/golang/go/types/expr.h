@@ -18,7 +18,9 @@ namespace golang::go::types
     // This is only used for operations that may cause overflow.
     extern gocpp::array<gocpp::string, 21> op2str2;
     void init();
-    gocpp::string nth(int n, gocpp::string what);
+    struct GoTag_exprKind { };
+    using exprKind = gocpp::defined<int64_t, GoTag_exprKind>;
+    gocpp::string nth(int64_t n, gocpp::string what);
 }
 #include "golang/go/types/signature.fwd.h"
 
@@ -110,7 +112,7 @@ namespace golang::go::types
         void genericExpr(Checker* check, operand* x, ast::Expr e, golang::go::types::Type hint);
         std::tuple<gocpp::slice<operand*>, bool> multiExpr(Checker* check, ast::Expr e, bool allowCommaOk);
         void exprOrType(Checker* check, operand* x, ast::Expr e, bool allowGeneric);
-        void exclude(Checker* check, operand* x, unsigned int modeset);
+        void exclude(Checker* check, operand* x, uint64_t modeset);
         void singleValue(Checker* check, operand* x);
     }
 }

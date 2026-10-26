@@ -7,16 +7,17 @@
 namespace golang::runtime
 {
     struct sweepdata;
-    using sweepClass = uint32_t;
-    const int sweepDrainedMask = 1 << 31;
+    struct GoTag_sweepClass;
+    using sweepClass = gocpp::defined<uint32_t, GoTag_sweepClass>;
+    inline constexpr int64_t sweepDrainedMask = 1LL << 31;
     struct activeSweep;
     struct sweepLocker;
     struct sweepLocked;
-    const sweepClass sweepClassDone = sweepClass(~ uint32_t(0));
+    inline constexpr sweepClass sweepClassDone = sweepClass(~ uint32_t(0LL));
 }
 #include "golang/runtime/mheap.fwd.h"
 
 namespace golang::runtime
 {
-    const int numSweepClasses = numSpanClasses * 2;
+    inline constexpr int64_t numSweepClasses = numSpanClasses * 2;
 }

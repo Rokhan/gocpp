@@ -13,8 +13,8 @@
 namespace golang::main
 {
     void main();
-    void printSlice(gocpp::slice<int> s);
-    void appendValue(gocpp::slice<int> s, int value);
+    void printSlice(gocpp::slice<int64_t> s);
+    void appendValue(gocpp::slice<int64_t> s, int64_t value);
 
     namespace rec
     {

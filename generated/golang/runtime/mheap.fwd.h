@@ -9,46 +9,50 @@ namespace golang::runtime
     // minPhysPageSize is a lower-bound on the physical page size. The
     // true physical page size may be larger than this. In contrast,
     // sys.PhysPageSize is an upper-bound on the physical page size.
-    const long minPhysPageSize = 4096;
+    inline constexpr long minPhysPageSize = 4096;
     // maxPhysPageSize is the maximum page size the runtime supports.
-    const int maxPhysPageSize = 512 << 10;
+    inline constexpr int64_t maxPhysPageSize = 512 << 10;
     struct mheap;
     struct heapArena;
     struct arenaHint;
-    using mSpanState = uint8_t;
+    struct GoTag_mSpanState;
+    using mSpanState = gocpp::defined<uint8_t, GoTag_mSpanState>;
     struct mSpanStateBox;
     struct mspan;
-    using spanClass = uint8_t;
-    using arenaIdx = unsigned int;
-    using spanAllocType = uint8_t;
+    struct GoTag_spanClass;
+    using spanClass = gocpp::defined<uint8_t, GoTag_spanClass>;
+    struct GoTag_arenaIdx;
+    using arenaIdx = gocpp::defined<uint64_t, GoTag_arenaIdx>;
+    struct GoTag_spanAllocType;
+    using spanAllocType = gocpp::defined<uint8_t, GoTag_spanAllocType>;
     struct mSpanList;
     // _KindSpecialTinyBlock indicates that a given allocation is a tiny block.
     // Ordered before KindSpecialFinalizer and KindSpecialCleanup so that it
     // always appears first in the specials list.
     // Used only if debug.checkfinalizers != 0.
-    const long _KindSpecialTinyBlock = 1;
+    inline constexpr long _KindSpecialTinyBlock = 1;
     // _KindSpecialFinalizer is for tracking finalizers.
-    const long _KindSpecialFinalizer = 2;
+    inline constexpr long _KindSpecialFinalizer = 2;
     // _KindSpecialWeakHandle is used for creating weak pointers.
-    const long _KindSpecialWeakHandle = 3;
+    inline constexpr long _KindSpecialWeakHandle = 3;
     // _KindSpecialProfile is for memory profiling.
-    const long _KindSpecialProfile = 4;
+    inline constexpr long _KindSpecialProfile = 4;
     // _KindSpecialReachable is a special used for tracking
     // reachability during testing.
-    const long _KindSpecialReachable = 5;
+    inline constexpr long _KindSpecialReachable = 5;
     // _KindSpecialPinCounter is a special used for objects that are pinned
     // multiple times
-    const long _KindSpecialPinCounter = 6;
+    inline constexpr long _KindSpecialPinCounter = 6;
     // _KindSpecialCleanup is for tracking cleanups.
-    const long _KindSpecialCleanup = 7;
+    inline constexpr long _KindSpecialCleanup = 7;
     // _KindSpecialCheckFinalizer adds additional context to a finalizer or cleanup.
     // Used only if debug.checkfinalizers != 0.
-    const long _KindSpecialCheckFinalizer = 8;
+    inline constexpr long _KindSpecialCheckFinalizer = 8;
     // _KindSpecialBubble is used to associate objects with synctest bubbles.
-    const long _KindSpecialBubble = 9;
+    inline constexpr long _KindSpecialBubble = 9;
     // _KindSpecialSecret is a special used to mark an object
     // as needing zeroing immediately upon freeing.
-    const long _KindSpecialSecret = 10;
+    inline constexpr long _KindSpecialSecret = 10;
     struct special;
     struct specialfinalizer;
     struct specialCleanup;
@@ -63,16 +67,16 @@ namespace golang::runtime
     struct specialSecret;
     struct specialsIter;
     struct gcBits;
-    const uintptr_t gcBitsChunkBytes = uintptr_t(64 << 10);
+    inline constexpr uintptr_t gcBitsChunkBytes = uintptr_t(64 << 10);
     struct gcBitsHeader;
     struct gcBitsArena;
     struct gcBitsArenasStruct;
-    const mSpanState mSpanDead = 0;
-    const mSpanState mSpanInUse = 1;
-    const mSpanState mSpanManual = 2;
-    const spanAllocType spanAllocHeap = 0;
-    const spanAllocType spanAllocStack = 1;
-    const spanAllocType spanAllocWorkBuf = 2;
+    inline constexpr mSpanState mSpanDead = 0;
+    inline constexpr mSpanState mSpanInUse = 1;
+    inline constexpr mSpanState mSpanManual = 2;
+    inline constexpr spanAllocType spanAllocHeap = 0;
+    inline constexpr spanAllocType spanAllocStack = 1;
+    inline constexpr spanAllocType spanAllocWorkBuf = 2;
 }
 #include "golang/runtime/extern.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
@@ -82,12 +86,12 @@ namespace golang::runtime
 {
     // maxPhysHugePageSize sets an upper-bound on the maximum huge page size
     // that the runtime supports.
-    const int maxPhysHugePageSize = pallocChunkBytes;
+    inline constexpr int64_t maxPhysHugePageSize = pallocChunkBytes;
     // physPageAlignedStacks indicates whether stack allocations must be
     // physical page aligned. This is a requirement for MAP_STACK on
     // OpenBSD.
-    const bool physPageAlignedStacks = GOOS == "openbsd"_s;
-    const spanClass tinySpanClass = spanClass((tinySizeClass << 1) | 1);
+    inline const bool physPageAlignedStacks = GOOS == "openbsd"_s;
+    inline constexpr spanClass tinySpanClass = spanClass((tinySizeClass << 1) | 1);
 }
 #include "golang/internal/runtime/gc/malloc.fwd.h"
 #include "golang/internal/runtime/gc/sizeclasses.fwd.h"
@@ -95,5 +99,5 @@ namespace golang::runtime
 namespace golang::runtime
 {
     namespace gc = golang::internal::runtime::gc;
-    const int numSpanClasses = gc::NumSizeClasses << 1;
+    inline constexpr int64_t numSpanClasses = gc::NumSizeClasses << 1;
 }

@@ -12,25 +12,27 @@
 
 namespace golang::runtime
 {
+    struct GoTag_throwType { };
+    using throwType = gocpp::defined<uint32_t, GoTag_throwType>;
     void panicCheck1(uintptr_t pc, gocpp::string msg);
     void panicCheck2(gocpp::string err);
-    void goPanicIndex(int x, int y);
-    void goPanicIndexU(unsigned int x, int y);
-    void goPanicSliceAlen(int x, int y);
-    void goPanicSliceAlenU(unsigned int x, int y);
-    void goPanicSliceAcap(int x, int y);
-    void goPanicSliceAcapU(unsigned int x, int y);
-    void goPanicSliceB(int x, int y);
-    void goPanicSliceBU(unsigned int x, int y);
-    void goPanicSlice3Alen(int x, int y);
-    void goPanicSlice3AlenU(unsigned int x, int y);
-    void goPanicSlice3Acap(int x, int y);
-    void goPanicSlice3AcapU(unsigned int x, int y);
-    void goPanicSlice3B(int x, int y);
-    void goPanicSlice3BU(unsigned int x, int y);
-    void goPanicSlice3C(int x, int y);
-    void goPanicSlice3CU(unsigned int x, int y);
-    void goPanicSliceConvert(int x, int y);
+    void goPanicIndex(int64_t x, int64_t y);
+    void goPanicIndexU(uint64_t x, int64_t y);
+    void goPanicSliceAlen(int64_t x, int64_t y);
+    void goPanicSliceAlenU(uint64_t x, int64_t y);
+    void goPanicSliceAcap(int64_t x, int64_t y);
+    void goPanicSliceAcapU(uint64_t x, int64_t y);
+    void goPanicSliceB(int64_t x, int64_t y);
+    void goPanicSliceBU(uint64_t x, int64_t y);
+    void goPanicSlice3Alen(int64_t x, int64_t y);
+    void goPanicSlice3AlenU(uint64_t x, int64_t y);
+    void goPanicSlice3Acap(int64_t x, int64_t y);
+    void goPanicSlice3AcapU(uint64_t x, int64_t y);
+    void goPanicSlice3B(int64_t x, int64_t y);
+    void goPanicSlice3BU(uint64_t x, int64_t y);
+    void goPanicSlice3C(int64_t x, int64_t y);
+    void goPanicSlice3CU(uint64_t x, int64_t y);
+    void goPanicSliceConvert(int64_t x, int64_t y);
     void panicBounds();
     void panicExtend();
     void panicBounds64(uintptr_t pc, gocpp::array_ptr<gocpp::array<int64_t, 16>> regs);
@@ -53,7 +55,7 @@ namespace golang::runtime
     extern gocpp::error rangePanicError;
     extern gocpp::error rangeExhaustedError;
     extern gocpp::error rangeMissingPanicError;
-    void panicrangestate(int state);
+    void panicrangestate(int64_t state);
     go_any deferrangefunc();
     void deferreturn();
     void Goexit();
@@ -92,7 +94,6 @@ namespace golang::runtime
     void cgroup_throw(gocpp::string s);
     void go_throw(gocpp::string s);
     void fatal(gocpp::string s);
-    void fatalthrow(throwType t);
     bool startpanic_m();
     extern bool didothers;
     bool canpanic();
@@ -100,16 +101,17 @@ namespace golang::runtime
     gocpp::string pcName(uintptr_t pc);
     void deferproc(std::function<void ()> fn);
     void deferprocat(std::function<void ()> fn, go_any frame);
+    void fatalthrow(throwType t);
     gocpp::string fnName(std::function<void ()> fn);
 }
 #include "golang/runtime/print.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/runtime.fwd.h"
 
 namespace golang::runtime
 {
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/runtime.fwd.h"
 #include "golang/runtime/synctest.fwd.h"
 
 namespace golang::runtime

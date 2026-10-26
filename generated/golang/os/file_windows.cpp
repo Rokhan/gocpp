@@ -129,7 +129,7 @@ namespace golang::os
     // If nonBlocking is true, it tries to add the file to the runtime poller.
     File* newFile(syscall::Handle h, gocpp::string name, newFileKind kind, bool nonBlocking)
     {
-        auto typ = "file"_s;
+        gocpp::string typ = "file"_s;
         //Go switch emulation
         {
             auto condition = kind;
@@ -239,7 +239,7 @@ namespace golang::os
     }
 
     // openFileNolog is the Windows implementation of OpenFile.
-    std::tuple<File*, gocpp::error> openFileNolog(gocpp::string name, int flag, FileMode perm)
+    std::tuple<File*, gocpp::error> openFileNolog(gocpp::string name, int64_t flag, FileMode perm)
     {
         if(name == ""_s)
         {
@@ -301,7 +301,7 @@ namespace golang::os
     // according to whence: 0 means relative to the origin of the file, 1 means
     // relative to the current offset, and 2 means relative to the end.
     // It returns the new offset and an error, if any.
-    std::tuple<int64_t, gocpp::error> rec::seek(File* f, int64_t offset, int whence)
+    std::tuple<int64_t, gocpp::error> rec::seek(File* f, int64_t offset, int64_t whence)
     {
         int64_t ret;
         gocpp::error err;
@@ -442,7 +442,7 @@ namespace golang::os
         {
             getTempPath = windows::GetTempPath2;
         }
-        auto n = uint32_t(syscall::MAX_PATH);
+        uint32_t n = uint32_t(syscall::MAX_PATH);
         for(; ; )
         {
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
@@ -577,7 +577,7 @@ namespace golang::os
         {
             return {0, err};
         }
-        auto attrs = uint32_t(syscall::FILE_FLAG_BACKUP_SEMANTICS);
+        uint32_t attrs = uint32_t(syscall::FILE_FLAG_BACKUP_SEMANTICS);
         // Use FILE_FLAG_OPEN_REPARSE_POINT, otherwise CreateFile will follow symlink.
         // See https://docs.microsoft.com/en-us/windows/desktop/FileIO/symbolic-link-effects-on-file-systems-functions#createfile-and-createfiletransacted
         attrs |= syscall::FILE_FLAG_OPEN_REPARSE_POINT;

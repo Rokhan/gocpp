@@ -41,7 +41,7 @@ namespace golang::go::types
 namespace golang::go::types
 {
     Union* NewUnion(gocpp::slice<golang::go::types::Term*> terms);
-    int overlappingTerm(gocpp::slice<golang::go::types::Term*> terms, golang::go::types::Term* y);
+    int64_t overlappingTerm(gocpp::slice<golang::go::types::Term*> terms, golang::go::types::Term* y);
     namespace ast = golang::go::ast;
 }
 #include "golang/go/ast/ast.h"
@@ -63,8 +63,8 @@ namespace golang::go::types
 
     namespace rec
     {
-        int Len(Union* u);
-        golang::go::types::Term* Term(Union* u, int i);
+        int64_t Len(Union* u);
+        golang::go::types::Term* Term(Union* u, int64_t i);
         golang::go::types::Type Underlying(Union* u);
         gocpp::string String(Union* u);
         bool Tilde(golang::go::types::Term* t);

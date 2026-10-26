@@ -241,7 +241,7 @@ namespace golang::runtime
         // buffer, or just track globally whether there are any
         // un-shaded stacks and flush after each stack scan.
         auto gcw = & pp->gcw;
-        auto pos = 0;
+        int64_t pos = 0;
         for(auto [gocpp_ignored, ptr] : ptrs)
         {
             if(ptr < minLegalPointer)

@@ -139,12 +139,12 @@ namespace golang::go::doc::comment
             return rec::headingID(gocpp::recv(self.obj.Printer), h);
         }
 
-        int headingLevel(const gocpp::PtrRecv<struct textPrinter, false>& self)
+        int64_t headingLevel(const gocpp::PtrRecv<struct textPrinter, false>& self)
         {
             return rec::headingLevel(gocpp::recv(self.ptr->Printer));
         }
 
-        int headingLevel(const gocpp::ObjRecv<struct textPrinter>& self)
+        int64_t headingLevel(const gocpp::ObjRecv<struct textPrinter>& self)
         {
             return rec::headingLevel(gocpp::recv(self.obj.Printer));
         }
@@ -184,7 +184,7 @@ namespace golang::go::doc::comment
             }
             rec::block(gocpp::recv(tp), & out, x);
         }
-        auto anyUsed = false;
+        bool anyUsed = false;
         for(auto [gocpp_ignored, def] : d->Links)
         {
             if(def->Used)
@@ -213,7 +213,7 @@ namespace golang::go::doc::comment
     {
         // Trim trailing spaces.
         auto data = rec::Bytes(gocpp::recv(out));
-        auto n = 0;
+        int64_t n = 0;
         for(; n < len(data) && (data[len(data) - n - 1] == ' ' || data[len(data) - n - 1] == '\t'); )
         {
             n++;
@@ -328,17 +328,17 @@ namespace golang::go::doc::comment
         auto words = mocklib::StringsFields(rec::String(gocpp::recv(p->long)));
         rec::Reset(gocpp::recv(p->long));
 
-        gocpp::slice<int> seq = {};
+        gocpp::slice<int64_t> seq = {};
         if(p->width < 0 || len(words) == 0)
         {
             // one long line
-            seq = gocpp::slice<int> {0, len(words)};
+            seq = gocpp::slice<int64_t> {0, len(words)};
         }
         else
         {
             seq = wrap(words, p->width - utf8::RuneCountInString(indent));
         }
-        for(auto i = 0; i + 1 < len(seq); i++)
+        for(int64_t i = 0; i + 1 < len(seq); i++)
         {
             if(i > 0)
             {
@@ -419,9 +419,9 @@ namespace golang::go::doc::comment
     // “[The least weight subsequence problem],” FOCS 1985, pp. 137-143.
     //
     // [The least weight subsequence problem]: https://doi.org/10.1109/SFCS.1985.60
-    gocpp::slice<int> wrap(gocpp::slice<gocpp::string> words, int max)
+    gocpp::slice<int64_t> wrap(gocpp::slice<gocpp::string> words, int64_t max)
     {
-        gocpp::slice<int> seq;
+        gocpp::slice<int64_t> seq;
         // The algorithm requires that our scoring function be concave,
         // meaning that for all i₀ ≤ i₁ < j₀ ≤ j₁,
         // weight(i₀, j₀) + weight(i₁, j₁) ≤ weight(i₀, j₁) + weight(i₁, j₀).
@@ -468,7 +468,7 @@ namespace golang::go::doc::comment
         {
             return score {s.hi + t.hi, s.lo + t.lo};
         };
-        auto cmp = [=](score s, score t) mutable -> int
+        auto cmp = [=](score s, score t) mutable -> int64_t
         {
             //Go switch emulation
             {
@@ -498,7 +498,7 @@ namespace golang::go::doc::comment
 
         // total[j] is the total number of runes
         // (including separating spaces) in words[:j].
-        auto total = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), len(words) + 1);
+        auto total = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), len(words) + 1);
         total[0] = 0;
         for(auto [i, s] : words)
         {
@@ -506,7 +506,7 @@ namespace golang::go::doc::comment
         }
 
         // weight returns weight(i, j).
-        auto weight = [=](int i, int j) mutable -> score
+        auto weight = [=](int64_t i, int64_t j) mutable -> score
         {
             // On the last line, there is zero weight for being too short.
             auto n = total[j] - 1 - total[i];
@@ -532,14 +532,14 @@ namespace golang::go::doc::comment
         // Hirschberg and Larmore's conference paper,
         // using the same names as in the paper.
         auto f = gocpp::slice<score> {{0, 0}};
-        auto g = [=](int i, int j) mutable -> score
+        auto g = [=](int64_t i, int64_t j) mutable -> score
         {
             return add(f[i], weight(i, j));
         };
 
-        auto bridge = [=](int a, int b, int c) mutable -> bool
+        auto bridge = [=](int64_t a, int64_t b, int64_t c) mutable -> bool
         {
-            auto k_tmp = c + sort::Search(len(words) + 1 - c, [=](int k) mutable -> bool
+            auto k_tmp = c + sort::Search(len(words) + 1 - c, [=](int64_t k) mutable -> bool
             {
                 k += c;
                 return cmp(g(a, k), g(b, k)) > 0;
@@ -553,11 +553,11 @@ namespace golang::go::doc::comment
         };
 
         // d is a one-ended deque implemented as a slice.
-        auto d = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 1, len(words));
+        auto d = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), 1, len(words));
         d[0] = 0;
-        auto bestleft = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 1, len(words));
+        auto bestleft = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), 1, len(words));
         bestleft[0] = - 1;
-        for(auto m = 1; m < len(words); m++)
+        for(int64_t m = 1; m < len(words); m++)
         {
             f = append(f, g(d[0], m));
             bestleft = append(bestleft, d[0]);
@@ -587,12 +587,12 @@ namespace golang::go::doc::comment
         bestleft = append(bestleft, d[0]);
 
         // Recover least weight sequence from bestleft.
-        auto n = 1;
+        int64_t n = 1;
         for(auto m = len(words); m > 0; m = bestleft[m])
         {
             n++;
         }
-        seq = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), n);
+        seq = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), n);
         for(auto m = len(words); m > 0; m = bestleft[m])
         {
             n--;

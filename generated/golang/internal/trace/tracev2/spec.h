@@ -12,6 +12,14 @@
 
 namespace golang::internal::trace::tracev2
 {
+    struct GoTag_EventType { };
+    using EventType = gocpp::defined<uint8_t, GoTag_EventType>;
+    // EventArgTypes is a list of valid argument types for use in Args.
+    //
+    // See the documentation of Args for more details.
+    extern gocpp::array<gocpp::string, 10> EventArgTypes;
+    struct GoTag_Experiment { };
+    using Experiment = gocpp::defined<uint64_t, GoTag_Experiment>;
     struct EventSpec
     {
         // Name is the human-readable name of the trace event.
@@ -30,11 +38,11 @@ namespace golang::internal::trace::tracev2
         // in the ArgTypes variable.
         gocpp::slice<gocpp::string> Args{};
         // StringIDs indicates which of the arguments are string IDs.
-        gocpp::slice<int> StringIDs{};
+        gocpp::slice<int64_t> StringIDs{};
         // StackIDs indicates which of the arguments are stack IDs.
         // The list is not sorted. The first index always refers to
         // the main stack for the current execution context of the event.
-        gocpp::slice<int> StackIDs{};
+        gocpp::slice<int64_t> StackIDs{};
         // StartEv indicates the event type of the corresponding "start"
         // event, if this event is an "end," for a pair of events that
         // represent a time range.
@@ -73,10 +81,6 @@ namespace golang::internal::trace::tracev2
     };
 
     std::ostream& operator<<(std::ostream& os, const struct EventSpec& value);
-    // EventArgTypes is a list of valid argument types for use in Args.
-    //
-    // See the documentation of Args for more details.
-    extern gocpp::array<gocpp::string, 10> EventArgTypes;
     gocpp::map<gocpp::string, EventType> EventNames(gocpp::slice<EventSpec> specs);
 
     namespace rec

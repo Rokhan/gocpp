@@ -6,13 +6,13 @@
 
 namespace golang::syscall
 {
-    const long surr1 = 0xd800;
-    const long surr2 = 0xdc00;
-    const long surr3 = 0xe000;
-    const long tx = 0b10000000;
-    const long t3 = 0b11100000;
-    const long maskx = 0b00111111;
-    const long mask3 = 0b00001111;
-    const int rune1Max = (1 << 7) - 1;
-    const int rune2Max = (1 << 11) - 1;
+    inline constexpr long surr1 = 0xd800;
+    inline constexpr long surr2 = 0xdc00;
+    inline constexpr long surr3 = 0xe000;
+    inline constexpr long tx = 0b10000000;
+    inline constexpr long t3 = 0b11100000;
+    inline constexpr long maskx = 0b00111111;
+    inline constexpr long mask3 = 0b00001111;
+    inline constexpr int64_t rune1Max = (1 << 7) - 1;
+    inline constexpr int64_t rune2Max = (1 << 11) - 1;
 }

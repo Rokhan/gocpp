@@ -83,7 +83,7 @@ namespace golang::math::big
         auto expMask = (1 << 11) - 1;
         auto bits = math::Float64bits(f);
         auto mantissa = bits & ((1 << 52) - 1);
-        auto exp = int((bits >> 52) & expMask);
+        auto exp = int64_t((bits >> 52) & expMask);
         //Go switch emulation
         {
             auto condition = exp;
@@ -120,11 +120,11 @@ namespace golang::math::big
         rec::Set(gocpp::recv(z->b), intOne);
         if(shift > 0)
         {
-            rec::Lsh(gocpp::recv(z->b), & z->b, (unsigned int)(shift));
+            rec::Lsh(gocpp::recv(z->b), & z->b, (uint64_t)(shift));
         }
         else
         {
-            rec::Lsh(gocpp::recv(z->a), & z->a, (unsigned int)(- shift));
+            rec::Lsh(gocpp::recv(z->a), & z->a, (uint64_t)(- shift));
         }
         return rec::norm(gocpp::recv(z));
     }
@@ -171,12 +171,12 @@ namespace golang::math::big
         b2 = rec::set(gocpp::recv(b2), b);
         if(auto shift = Msize2 - exp; shift > 0)
         {
-            a2 = rec::lsh(gocpp::recv(a2), a2, (unsigned int)(shift));
+            a2 = rec::lsh(gocpp::recv(a2), a2, (uint64_t)(shift));
         }
         else
         if(shift < 0)
         {
-            b2 = rec::lsh(gocpp::recv(b2), b2, (unsigned int)(- shift));
+            b2 = rec::lsh(gocpp::recv(b2), b2, (uint64_t)(- shift));
         }
 
         // 2. Compute quotient and remainder (q, r).  NB: due to the
@@ -211,7 +211,7 @@ namespace golang::math::big
         {
             // Denormal case; lose 'shift' bits of precision.
             // [1..Esize1)
-            auto shift = (unsigned int)(Emin - (exp - 1));
+            auto shift = (uint64_t)(Emin - (exp - 1));
             auto lostbits = mantissa & ((1 << shift) - 1);
             haveRem = haveRem || lostbits != 0;
             mantissa >>= shift;
@@ -286,12 +286,12 @@ namespace golang::math::big
         b2 = rec::set(gocpp::recv(b2), b);
         if(auto shift = Msize2 - exp; shift > 0)
         {
-            a2 = rec::lsh(gocpp::recv(a2), a2, (unsigned int)(shift));
+            a2 = rec::lsh(gocpp::recv(a2), a2, (uint64_t)(shift));
         }
         else
         if(shift < 0)
         {
-            b2 = rec::lsh(gocpp::recv(b2), b2, (unsigned int)(- shift));
+            b2 = rec::lsh(gocpp::recv(b2), b2, (uint64_t)(- shift));
         }
 
         // 2. Compute quotient and remainder (q, r).  NB: due to the
@@ -326,7 +326,7 @@ namespace golang::math::big
         {
             // Denormal case; lose 'shift' bits of precision.
             // [1..Esize1)
-            auto shift = (unsigned int)(Emin - (exp - 1));
+            auto shift = (uint64_t)(Emin - (exp - 1));
             auto lostbits = mantissa & ((1 << shift) - 1);
             haveRem = haveRem || lostbits != 0;
             mantissa >>= shift;
@@ -534,7 +534,7 @@ namespace golang::math::big
     //   - -1 if x < 0;
     //   - 0 if x == 0;
     //   - +1 if x > 0.
-    int rec::Sign(golang::math::big::Rat* x)
+    int64_t rec::Sign(golang::math::big::Rat* x)
     {
         return rec::Sign(gocpp::recv(x->a));
     }
@@ -665,7 +665,7 @@ namespace golang::math::big
     //   - -1 if x < y;
     //   - 0 if x == y;
     //   - +1 if x > y.
-    int rec::Cmp(golang::math::big::Rat* x, golang::math::big::Rat* y)
+    int64_t rec::Cmp(golang::math::big::Rat* x, golang::math::big::Rat* y)
     {
         gocpp::Defer defer;
         try

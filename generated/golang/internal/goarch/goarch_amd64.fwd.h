@@ -6,14 +6,14 @@
 
 namespace golang::internal::goarch
 {
-    const long _DefaultPhysPageSize = 4096;
-    const long _PCQuantum = 1;
-    const long _MinFrameSize = 0;
+    inline constexpr long _DefaultPhysPageSize = 4096;
+    inline constexpr long _PCQuantum = 1;
+    inline constexpr long _MinFrameSize = 0;
 }
 #include "golang/internal/goarch/goarch.fwd.h"
 
 namespace golang::internal::goarch
 {
-    const goarch::ArchFamilyType _ArchFamily = AMD64;
-    const int _StackAlign = PtrSize;
+    inline constexpr goarch::ArchFamilyType _ArchFamily = AMD64;
+    inline constexpr int64_t _StackAlign = PtrSize;
 }

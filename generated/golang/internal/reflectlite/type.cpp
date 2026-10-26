@@ -295,12 +295,12 @@ namespace golang::internal::reflectlite
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct rtype, false>& self)
+        int64_t Align(const gocpp::PtrRecv<struct rtype, false>& self)
         {
             return abi::rec::Align(gocpp::recv(self.ptr->Type));
         }
 
-        int Align(const gocpp::ObjRecv<struct rtype>& self)
+        int64_t Align(const gocpp::ObjRecv<struct rtype>& self)
         {
             return abi::rec::Align(gocpp::recv(self.obj.Type));
         }
@@ -345,12 +345,12 @@ namespace golang::internal::reflectlite
             return abi::rec::Common(gocpp::recv(self.obj.Type));
         }
 
-        int DescriptorSize(const gocpp::PtrRecv<struct rtype, false>& self)
+        int64_t DescriptorSize(const gocpp::PtrRecv<struct rtype, false>& self)
         {
             return abi::rec::DescriptorSize(gocpp::recv(self.ptr->Type));
         }
 
-        int DescriptorSize(const gocpp::ObjRecv<struct rtype>& self)
+        int64_t DescriptorSize(const gocpp::ObjRecv<struct rtype>& self)
         {
             return abi::rec::DescriptorSize(gocpp::recv(self.obj.Type));
         }
@@ -375,12 +375,12 @@ namespace golang::internal::reflectlite
             return abi::rec::ExportedMethods(gocpp::recv(self.obj.Type));
         }
 
-        int FieldAlign(const gocpp::PtrRecv<struct rtype, false>& self)
+        int64_t FieldAlign(const gocpp::PtrRecv<struct rtype, false>& self)
         {
             return abi::rec::FieldAlign(gocpp::recv(self.ptr->Type));
         }
 
-        int FieldAlign(const gocpp::ObjRecv<struct rtype>& self)
+        int64_t FieldAlign(const gocpp::ObjRecv<struct rtype>& self)
         {
             return abi::rec::FieldAlign(gocpp::recv(self.obj.Type));
         }
@@ -455,12 +455,12 @@ namespace golang::internal::reflectlite
             return abi::rec::Kind(gocpp::recv(self.obj.Type));
         }
 
-        int Len(const gocpp::PtrRecv<struct rtype, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct rtype, false>& self)
         {
             return abi::rec::Len(gocpp::recv(self.ptr->Type));
         }
 
-        int Len(const gocpp::ObjRecv<struct rtype>& self)
+        int64_t Len(const gocpp::ObjRecv<struct rtype>& self)
         {
             return abi::rec::Len(gocpp::recv(self.obj.Type));
         }
@@ -475,12 +475,12 @@ namespace golang::internal::reflectlite
             return abi::rec::MapType(gocpp::recv(self.obj.Type));
         }
 
-        int NumMethod(const gocpp::PtrRecv<struct rtype, false>& self)
+        int64_t NumMethod(const gocpp::PtrRecv<struct rtype, false>& self)
         {
             return abi::rec::NumMethod(gocpp::recv(self.ptr->Type));
         }
 
-        int NumMethod(const gocpp::ObjRecv<struct rtype>& self)
+        int64_t NumMethod(const gocpp::ObjRecv<struct rtype>& self)
         {
             return abi::rec::NumMethod(gocpp::recv(self.obj.Type));
         }
@@ -612,7 +612,7 @@ namespace golang::internal::reflectlite
         return value.PrintTo(os);
     }
 
-    unsigned char* rec::data(golang::internal::reflectlite::name n, int off, gocpp::string whySafe)
+    unsigned char* rec::data(golang::internal::reflectlite::name n, int64_t off, gocpp::string whySafe)
     {
         return (unsigned char*)(add(gocpp::unsafe_pointer(n.bytes), uintptr_t(off), whySafe));
     }
@@ -634,13 +634,13 @@ namespace golang::internal::reflectlite
 
     // readVarint parses a varint as encoded by encoding/binary.
     // It returns the number of encoded bytes and the encoded value.
-    std::tuple<int, int> rec::readVarint(golang::internal::reflectlite::name n, int off)
+    std::tuple<int64_t, int64_t> rec::readVarint(golang::internal::reflectlite::name n, int64_t off)
     {
-        auto v = 0;
-        for(auto i = 0; ; i++)
+        int64_t v = 0;
+        for(int64_t i = 0; ; i++)
         {
             auto x = *rec::data(gocpp::recv(n), off + i, "read varint"_s);
-            v += int(x & 0x7f) << (7 * i);
+            v += int64_t(x & 0x7f) << (7 * i);
             if(x & 0x80 == 0)
             {
                 return {i + 1, v};
@@ -748,7 +748,7 @@ namespace golang::internal::reflectlite
         return rec::ExportedMethods(gocpp::recv(ut));
     }
 
-    int rec::NumMethod(rtype t)
+    int64_t rec::NumMethod(rtype t)
     {
         auto tt = rec::InterfaceType(gocpp::recv(t.Type));
         if(tt != nullptr)
@@ -780,7 +780,7 @@ namespace golang::internal::reflectlite
         }
         auto s = rec::String(gocpp::recv(t));
         auto i = len(s) - 1;
-        auto sqBrackets = 0;
+        int64_t sqBrackets = 0;
         for(; i >= 0 && (s[i] != '.' || sqBrackets != 0); )
         {
             //Go switch emulation
@@ -824,7 +824,7 @@ namespace golang::internal::reflectlite
         return toType(elem(rec::common(gocpp::recv(t))));
     }
 
-    golang::internal::reflectlite::Type rec::In(rtype t, int i)
+    golang::internal::reflectlite::Type rec::In(rtype t, int64_t i)
     {
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -844,17 +844,17 @@ namespace golang::internal::reflectlite
         return toType(tt->Key);
     }
 
-    int rec::Len(rtype t)
+    int64_t rec::Len(rtype t)
     {
         auto tt = rec::ArrayType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
             gocpp::panic("reflect: Len of non-array type"_s);
         }
-        return int(tt->Len);
+        return int64_t(tt->Len);
     }
 
-    int rec::NumField(rtype t)
+    int64_t rec::NumField(rtype t)
     {
         auto tt = rec::StructType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -864,17 +864,17 @@ namespace golang::internal::reflectlite
         return len(tt->Fields);
     }
 
-    int rec::NumIn(rtype t)
+    int64_t rec::NumIn(rtype t)
     {
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
             gocpp::panic("reflect: NumIn of non-func type"_s);
         }
-        return int(tt->InCount);
+        return int64_t(tt->InCount);
     }
 
-    int rec::NumOut(rtype t)
+    int64_t rec::NumOut(rtype t)
     {
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -884,7 +884,7 @@ namespace golang::internal::reflectlite
         return rec::NumOut(gocpp::recv(tt));
     }
 
-    golang::internal::reflectlite::Type rec::Out(rtype t, int i)
+    golang::internal::reflectlite::Type rec::Out(rtype t, int64_t i)
     {
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -972,8 +972,8 @@ namespace golang::internal::reflectlite
         if(rec::Kind(gocpp::recv(V)) == Interface)
         {
             auto v = (interfaceType*)(gocpp::unsafe_pointer(V));
-            auto i = 0;
-            for(auto j = 0; j < len(v->Methods); j++)
+            int64_t i = 0;
+            for(int64_t j = 0; j < len(v->Methods); j++)
             {
                 auto tm = & t->Methods[i];
                 auto tmName = rec::nameOff(gocpp::recv(rT), tm->Name);
@@ -1012,9 +1012,9 @@ namespace golang::internal::reflectlite
         {
             return false;
         }
-        auto i = 0;
+        int64_t i = 0;
         auto vmethods = rec::Methods(gocpp::recv(v));
-        for(auto j = 0; j < int(v->Mcount); j++)
+        for(int64_t j = 0; j < int64_t(v->Mcount); j++)
         {
             auto tm = & t->Methods[i];
             auto tmName = rec::nameOff(gocpp::recv(rT), tm->Name);
@@ -1146,14 +1146,14 @@ namespace golang::internal::reflectlite
                     {
                         return false;
                     }
-                    for(auto i = 0; i < rec::NumIn(gocpp::recv(t)); i++)
+                    for(int64_t i = 0; i < rec::NumIn(gocpp::recv(t)); i++)
                     {
                         if(! haveIdenticalType(rec::In(gocpp::recv(t), i), rec::In(gocpp::recv(v), i), cmpTags))
                         {
                             return false;
                         }
                     }
-                    for(auto i = 0; i < rec::NumOut(gocpp::recv(t)); i++)
+                    for(int64_t i = 0; i < rec::NumOut(gocpp::recv(t)); i++)
                     {
                         if(! haveIdenticalType(rec::Out(gocpp::recv(t), i), rec::Out(gocpp::recv(v), i), cmpTags))
                         {

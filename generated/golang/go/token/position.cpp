@@ -207,13 +207,13 @@ namespace golang::go::token
     }
 
     // Base returns the base offset of file f as registered with AddFile.
-    int rec::Base(golang::go::token::File* f)
+    int64_t rec::Base(golang::go::token::File* f)
     {
         return f->base;
     }
 
     // Size returns the size of file f as registered with AddFile.
-    int rec::Size(golang::go::token::File* f)
+    int64_t rec::Size(golang::go::token::File* f)
     {
         return f->size;
     }
@@ -225,7 +225,7 @@ namespace golang::go::token
     }
 
     // LineCount returns the number of lines in file f.
-    int rec::LineCount(golang::go::token::File* f)
+    int64_t rec::LineCount(golang::go::token::File* f)
     {
         rec::Lock(gocpp::recv(f->mutex));
         auto n = len(f->lines);
@@ -236,7 +236,7 @@ namespace golang::go::token
     // AddLine adds the line offset for a new line.
     // The line offset must be larger than the offset for the previous line
     // and smaller than the file size; otherwise the line offset is ignored.
-    void rec::AddLine(golang::go::token::File* f, int offset)
+    void rec::AddLine(golang::go::token::File* f, int64_t offset)
     {
         rec::Lock(gocpp::recv(f->mutex));
         if(auto i = len(f->lines); (i == 0 || f->lines[i - 1] < offset) && offset < f->size)
@@ -250,7 +250,7 @@ namespace golang::go::token
     // the newline character at the end of the line with a space (to not change the
     // remaining offsets). To obtain the line number, consult e.g. [Position.Line].
     // MergeLine will panic if given an invalid line number.
-    void rec::MergeLine(golang::go::token::File* f, int line)
+    void rec::MergeLine(golang::go::token::File* f, int64_t line)
     {
         gocpp::Defer defer;
         try
@@ -281,7 +281,7 @@ namespace golang::go::token
 
     // Lines returns the effective line offset table of the form described by [File.SetLines].
     // Callers must not mutate the result.
-    gocpp::slice<int> rec::Lines(golang::go::token::File* f)
+    gocpp::slice<int64_t> rec::Lines(golang::go::token::File* f)
     {
         rec::Lock(gocpp::recv(f->mutex));
         auto lines = f->lines;
@@ -297,7 +297,7 @@ namespace golang::go::token
     // and smaller than the file size; otherwise SetLines fails and returns
     // false.
     // Callers must not mutate the provided slice after SetLines returns.
-    bool rec::SetLines(golang::go::token::File* f, gocpp::slice<int> lines)
+    bool rec::SetLines(golang::go::token::File* f, gocpp::slice<int64_t> lines)
     {
         // verify validity of lines table
         auto size = f->size;
@@ -320,8 +320,8 @@ namespace golang::go::token
     // It ignores position-altering //line comments.
     void rec::SetLinesForContent(golang::go::token::File* f, gocpp::slice<unsigned char> content)
     {
-        gocpp::slice<int> lines = {};
-        auto line = 0;
+        gocpp::slice<int64_t> lines = {};
+        int64_t line = 0;
         for(auto [offset, b] : content)
         {
             if(line >= 0)
@@ -344,7 +344,7 @@ namespace golang::go::token
     // LineStart returns the [Pos] value of the start of the specified line.
     // It ignores any alternative positions set using [File.AddLineColumnInfo].
     // LineStart panics if the 1-based line number is invalid.
-    golang::go::token::Pos rec::LineStart(golang::go::token::File* f, int line)
+    golang::go::token::Pos rec::LineStart(golang::go::token::File* f, int64_t line)
     {
         gocpp::Defer defer;
         try
@@ -410,7 +410,7 @@ namespace golang::go::token
 
     // AddLineInfo is like [File.AddLineColumnInfo] with a column = 1 argument.
     // It is here for backward-compatibility for code prior to Go 1.11.
-    void rec::AddLineInfo(golang::go::token::File* f, int offset, gocpp::string filename, int line)
+    void rec::AddLineInfo(golang::go::token::File* f, int64_t offset, gocpp::string filename, int64_t line)
     {
         rec::AddLineColumnInfo(gocpp::recv(f), offset, filename, line, 1);
     }
@@ -423,7 +423,7 @@ namespace golang::go::token
     //
     // AddLineColumnInfo is typically used to register alternative position
     // information for line directives such as //line filename:line:column.
-    void rec::AddLineColumnInfo(golang::go::token::File* f, int offset, gocpp::string filename, int line, int column)
+    void rec::AddLineColumnInfo(golang::go::token::File* f, int64_t offset, gocpp::string filename, int64_t line, int64_t column)
     {
         rec::Lock(gocpp::recv(f->mutex));
         if(auto i = len(f->infos); (i == 0 || f->infos[i - 1].Offset < offset) && offset < f->size)
@@ -434,7 +434,7 @@ namespace golang::go::token
     }
 
     // fixOffset fixes an out-of-bounds offset such that 0 <= offset <= f.size.
-    int rec::fixOffset(golang::go::token::File* f, int offset)
+    int64_t rec::fixOffset(golang::go::token::File* f, int64_t offset)
     {
         if(debug && ! (0 <= offset && offset <= f->size))
         {
@@ -452,7 +452,7 @@ namespace golang::go::token
     // The following invariant, though not true for Pos values
     // in general, holds for the result p:
     // f.Pos(f.Offset(p)) == p.
-    golang::go::token::Pos rec::Pos(golang::go::token::File* f, int offset)
+    golang::go::token::Pos rec::Pos(golang::go::token::File* f, int64_t offset)
     {
         return Pos(f->base + rec::fixOffset(gocpp::recv(f), offset));
     }
@@ -466,21 +466,21 @@ namespace golang::go::token
     // The following invariant, though not true for offset values
     // in general, holds for the result offset:
     // f.Offset(f.Pos(offset)) == offset
-    int rec::Offset(golang::go::token::File* f, golang::go::token::Pos p)
+    int64_t rec::Offset(golang::go::token::File* f, golang::go::token::Pos p)
     {
-        return rec::fixOffset(gocpp::recv(f), int(p) - f->base);
+        return rec::fixOffset(gocpp::recv(f), int64_t(p) - f->base);
     }
 
     // Line returns the line number for the given file position p;
     // p must be a [Pos] value in that file or [NoPos].
-    int rec::Line(golang::go::token::File* f, golang::go::token::Pos p)
+    int64_t rec::Line(golang::go::token::File* f, golang::go::token::Pos p)
     {
         return rec::Position(gocpp::recv(f), p).Line;
     }
 
-    int searchLineInfos(gocpp::slice<lineInfo> a, int x)
+    int64_t searchLineInfos(gocpp::slice<lineInfo> a, int64_t x)
     {
-        auto [i, found] = slices::BinarySearchFunc(a, x, [=](lineInfo a, int x) mutable -> int
+        auto [i, found] = slices::BinarySearchFunc(a, x, [=](lineInfo a, int64_t x) mutable -> int64_t
         {
             return cmp::Compare(a.Offset, x);
         });
@@ -496,11 +496,11 @@ namespace golang::go::token
     // unpack returns the filename and line and column number for a file offset.
     // If adjusted is set, unpack will return the filename and line information
     // possibly adjusted by //line comments; otherwise those comments are ignored.
-    std::tuple<gocpp::string, int, int> rec::unpack(golang::go::token::File* f, int offset, bool adjusted)
+    std::tuple<gocpp::string, int64_t, int64_t> rec::unpack(golang::go::token::File* f, int64_t offset, bool adjusted)
     {
         gocpp::string filename;
-        int line;
-        int column;
+        int64_t line;
+        int64_t column;
         rec::Lock(gocpp::recv(f->mutex));
         filename = f->name;
         if(auto i = searchInts(f->lines, offset); i >= 0)
@@ -547,7 +547,7 @@ namespace golang::go::token
     golang::go::token::Position rec::position(golang::go::token::File* f, golang::go::token::Pos p, bool adjusted)
     {
         golang::go::token::Position pos;
-        auto offset = rec::fixOffset(gocpp::recv(f), int(p) - f->base);
+        auto offset = rec::fixOffset(gocpp::recv(f), int64_t(p) - f->base);
         pos.Offset = offset;
         std::tie(pos.Filename, pos.Line, pos.Column) = rec::unpack(gocpp::recv(f), offset, adjusted);
         return pos;
@@ -647,7 +647,7 @@ namespace golang::go::token
 
     // Base returns the minimum base offset that must be provided to
     // [FileSet.AddFile] when adding the next file.
-    int rec::Base(FileSet* s)
+    int64_t rec::Base(FileSet* s)
     {
         rec::RLock(gocpp::recv(s->mutex));
         auto b = s->base;
@@ -670,7 +670,7 @@ namespace golang::go::token
     // with offs in the range [0, size] and thus p in the range [base, base+size].
     // For convenience, [File.Pos] may be used to create file-specific position
     // values from a file offset.
-    golang::go::token::File* rec::AddFile(FileSet* s, gocpp::string filename, int base, int size)
+    golang::go::token::File* rec::AddFile(FileSet* s, gocpp::string filename, int64_t base, int64_t size)
     {
         gocpp::Defer defer;
         try
@@ -679,7 +679,7 @@ namespace golang::go::token
             auto f = gocpp::InitPtr<golang::go::token::File>([=](auto& x) {
                 x.name = filename;
                 x.size = size;
-                x.lines = gocpp::slice<int> {0};
+                x.lines = gocpp::slice<int64_t> {0};
             });
 
             rec::Lock(gocpp::recv(s->mutex));
@@ -824,7 +824,7 @@ namespace golang::go::token
         try
         {
             // common case: p is in last file.
-            if(auto f = rec::Load<token::File>(gocpp::recv(s->last)); f != nullptr && f->base <= int(p) && int(p) <= f->base + f->size)
+            if(auto f = rec::Load<token::File>(gocpp::recv(s->last)); f != nullptr && f->base <= int64_t(p) && int64_t(p) <= f->base + f->size)
             {
                 return f;
             }
@@ -832,7 +832,7 @@ namespace golang::go::token
             rec::RLock(gocpp::recv(s->mutex));
             defer.push_back([=]{ rec::RUnlock(gocpp::recv(s->mutex)); });
 
-            auto [pn, gocpp_id_1] = rec::locate(gocpp::recv(s->tree), golang::go::token::key {int(p), int(p)});
+            auto [pn, gocpp_id_1] = rec::locate(gocpp::recv(s->tree), golang::go::token::key {int64_t(p), int64_t(p)});
             if(auto n = *pn; n != nullptr)
             {
                 // Update cache of last file. A race is ok,
@@ -886,7 +886,7 @@ namespace golang::go::token
         return rec::PositionFor(gocpp::recv(s), p, true);
     }
 
-    int searchInts(gocpp::slice<int> a, int x)
+    int64_t searchInts(gocpp::slice<int64_t> a, int64_t x)
     {
         // This function body is a manually inlined version of:
         // return sort.Search(len(a), func(i int) bool { return a[i] > x }) - 1
@@ -899,7 +899,7 @@ namespace golang::go::token
         for(; i < j; )
         {
             // avoid overflow when computing h
-            auto h = int((unsigned int)(i + j) >> 1);
+            auto h = int64_t((uint64_t)(i + j) >> 1);
             // i ≤ h < j
             if(a[h] <= x)
             {

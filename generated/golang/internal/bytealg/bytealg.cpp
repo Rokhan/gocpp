@@ -22,14 +22,14 @@ namespace golang::internal::bytealg
 
     // MaxLen is the maximum length of the string to be searched for (argument b) in Index.
     // If MaxLen is not 0, make sure MaxLen >= 4.
-    int MaxLen;
+    int64_t MaxLen;
     // hashStr returns the hash and the appropriate multiplicative
     // factor for use in Rabin-Karp algorithm.
     template<typename T>
     std::tuple<uint32_t, uint32_t> hashStr(T sep)
     {
-        auto hash = uint32_t(0);
-        for(auto i = 0; i < len(sep); i++)
+        uint32_t hash = uint32_t(0);
+        for(int64_t i = 0; i < len(sep); i++)
         {
             hash = hash * primeRK + uint32_t(sep[i]);
         }
@@ -51,7 +51,7 @@ namespace golang::internal::bytealg
     template<typename T>
     std::tuple<uint32_t, uint32_t> hashStrRev(T sep)
     {
-        auto hash = uint32_t(0);
+        uint32_t hash = uint32_t(0);
         for(auto i = len(sep) - 1; i >= 0; i--)
         {
             hash = hash * primeRK + uint32_t(sep[i]);
@@ -72,13 +72,13 @@ namespace golang::internal::bytealg
     // IndexRabinKarp uses the Rabin-Karp search algorithm to return the index of the
     // first occurrence of sep in s, or -1 if not present.
     template<typename T>
-    int IndexRabinKarp(T s, T sep)
+    int64_t IndexRabinKarp(T s, T sep)
     {
         // Rabin-Karp search
         auto [hashss, pow] = hashStr(sep);
         auto n = len(sep);
         uint32_t h = {};
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             h = h * primeRK + uint32_t(s[i]);
         }
@@ -103,7 +103,7 @@ namespace golang::internal::bytealg
     // LastIndexRabinKarp uses the Rabin-Karp search algorithm to return the last index of the
     // occurrence of sep in s, or -1 if not present.
     template<typename T>
-    int LastIndexRabinKarp(T s, T sep)
+    int64_t LastIndexRabinKarp(T s, T sep)
     {
         // Rabin-Karp search from the end of the string
         auto [hashss, pow] = hashStrRev(sep);
@@ -135,7 +135,7 @@ namespace golang::internal::bytealg
     // without zeroing the bytes (including the bytes between len and cap).
     // It is the caller's responsibility to ensure uninitialized bytes
     // do not leak to the end user.
-    gocpp::slice<unsigned char> MakeNoZero(int n)
+    gocpp::slice<unsigned char> MakeNoZero(int64_t n)
     /* convertBlockStmt, nil block */;
 
 }

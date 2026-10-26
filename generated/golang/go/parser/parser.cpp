@@ -291,23 +291,23 @@ namespace golang::go::parser
     }
 
     // lineFor returns the line of pos, ignoring line directive adjustments.
-    int rec::lineFor(golang::go::parser::parser* p, token::Pos pos)
+    int64_t rec::lineFor(golang::go::parser::parser* p, token::Pos pos)
     {
         return rec::PositionFor(gocpp::recv(p->file), pos, false).Line;
     }
 
     // Consume a comment and return it and the line on which it ends.
-    std::tuple<ast::Comment*, int> rec::consumeComment(golang::go::parser::parser* p)
+    std::tuple<ast::Comment*, int64_t> rec::consumeComment(golang::go::parser::parser* p)
     {
         ast::Comment* comment;
-        int endline;
+        int64_t endline;
         // /*-style comments may end on a different line than where they start.
         // Scan the comment for '\n' chars and adjust endline accordingly.
         endline = rec::lineFor(gocpp::recv(p), p->pos);
         if(p->lit[1] == '*')
         {
             // don't use range here - no need to decode Unicode code points
-            for(auto i = 0; i < len(p->lit); i++)
+            for(int64_t i = 0; i < len(p->lit); i++)
             {
                 if(p->lit[i] == '\n')
                 {
@@ -329,10 +329,10 @@ namespace golang::go::parser
     // comments list, and return it together with the line at which
     // the last comment in the group ends. A non-comment token or n
     // empty lines terminate a comment group.
-    std::tuple<ast::CommentGroup*, int> rec::consumeCommentGroup(golang::go::parser::parser* p, int n)
+    std::tuple<ast::CommentGroup*, int64_t> rec::consumeCommentGroup(golang::go::parser::parser* p, int64_t n)
     {
         ast::CommentGroup* comments;
-        int endline;
+        int64_t endline;
         gocpp::slice<ast::Comment*> list = {};
         endline = rec::lineFor(gocpp::recv(p), p->pos);
         for(; p->tok == token::COMMENT && rec::lineFor(gocpp::recv(p), p->pos) <= endline + n; )
@@ -375,7 +375,7 @@ namespace golang::go::parser
         if(p->tok == token::COMMENT)
         {
             ast::CommentGroup* comment = {};
-            int endline = {};
+            int64_t endline = {};
 
             if(rec::lineFor(gocpp::recv(p), p->pos) == rec::lineFor(gocpp::recv(p), prev))
             {
@@ -605,7 +605,7 @@ namespace golang::go::parser
         }
         if(p->tok != follow)
         {
-            auto msg = "missing ','"_s;
+            gocpp::string msg = "missing ','"_s;
             if(p->tok == token::SEMICOLON && p->lit == "\n"_s)
             {
                 msg += " before newline"_s;
@@ -693,7 +693,7 @@ namespace golang::go::parser
     ast::Ident* rec::parseIdent(golang::go::parser::parser* p)
     {
         auto pos = p->pos;
-        auto name = "_"_s;
+        gocpp::string name = "_"_s;
         if(p->tok == token::IDENT)
         {
             name = p->lit;
@@ -928,7 +928,7 @@ namespace golang::go::parser
 
             auto lbrack = rec::expect(gocpp::recv(p), token::LBRACK);
             // if valid, the position of a trailing comma preceding the ']'
-            auto trailingComma = token::NoPos;
+            token::Pos trailingComma = token::NoPos;
             gocpp::slice<ast::Expr> args = {};
             if(p->tok != token::RBRACK)
             {
@@ -1466,9 +1466,9 @@ namespace golang::go::parser
             // converted into an []*ast.Field.
             gocpp::slice<field> list = {};
             // number of parameters that have an explicit name and type
-            int named = {};
+            int64_t named = {};
             // number of parameters that have an explicit type
-            int typed = {};
+            int64_t typed = {};
 
             for(; name0 != nullptr || p->tok != closing && p->tok != token::go_EOF; )
             {
@@ -1633,7 +1633,7 @@ namespace golang::go::parser
 
             // check use of ...
             // only report first occurrence
-            auto first = true;
+            bool first = true;
             for(auto [i, _] : list)
             {
                 auto f = & list[i];
@@ -2154,7 +2154,7 @@ namespace golang::go::parser
             }
 
             auto pos = p->pos;
-            auto dir = ast::SEND | ast::RECV;
+            ast::ChanDir dir = ast::SEND | ast::RECV;
             token::Pos arrow = {};
             if(p->tok == token::CHAN)
             {
@@ -2624,7 +2624,7 @@ namespace golang::go::parser
                 // so even if we see a (named) type we are not going to be in type context.
                 index[0] = rec::parseRhs(gocpp::recv(p));
             }
-            auto ncolons = 0;
+            int64_t ncolons = 0;
             //Go switch emulation
             {
                 auto condition = p->tok;
@@ -2667,7 +2667,7 @@ namespace golang::go::parser
             if(ncolons > 0)
             {
                 // slice expression
-                auto slice3 = false;
+                bool slice3 = false;
                 if(ncolons == 2)
                 {
                     slice3 = true;
@@ -2903,7 +2903,7 @@ namespace golang::go::parser
             // We track the nesting here rather than at the entry for the function,
             // since it can iteratively produce a nested output, and we want to
             // limit how deep a structure we generate.
-            int n = {};
+            int64_t n = {};
             defer.push_back([=]{ [=]() mutable -> void
             {
                 p->nestLev -= n;
@@ -3111,7 +3111,7 @@ namespace golang::go::parser
                         {
                             // (<-type)
                             // re-associate position info and <-
-                            auto dir = ast::SEND;
+                            ast::ChanDir dir = ast::SEND;
                             for(; ok && dir == ast::SEND; )
                             {
                                 if(typ->Dir == ast::RECV)
@@ -3162,7 +3162,7 @@ namespace golang::go::parser
         }
     }
 
-    std::tuple<token::Token, int> rec::tokPrec(golang::go::parser::parser* p)
+    std::tuple<token::Token, int64_t> rec::tokPrec(golang::go::parser::parser* p)
     {
         auto tok = p->tok;
         if(p->inRhs && tok == token::ASSIGN)
@@ -3176,7 +3176,7 @@ namespace golang::go::parser
     // If x is non-nil, it is used as the left operand.
     //
     // TODO(rfindley): parseBinaryExpr has become overloaded. Consider refactoring.
-    ast::Expr rec::parseBinaryExpr(golang::go::parser::parser* p, ast::Expr x, int prec1)
+    ast::Expr rec::parseBinaryExpr(golang::go::parser::parser* p, ast::Expr x, int64_t prec1)
     {
         gocpp::Defer defer;
         try
@@ -3193,7 +3193,7 @@ namespace golang::go::parser
             // We track the nesting here rather than at the entry for the function,
             // since it can iteratively produce a nested output, and we want to
             // limit how deep a structure we generate.
-            int n = {};
+            int64_t n = {};
             defer.push_back([=]{ [=]() mutable -> void
             {
                 p->nestLev -= n;
@@ -3254,7 +3254,7 @@ namespace golang::go::parser
     // of a range clause (with mode == rangeOk). The returned statement is an
     // assignment with a right-hand side that is a single unary expression of
     // the form "range x". No guarantees are given for the left-hand side.
-    std::tuple<ast::Stmt, bool> rec::parseSimpleStmt(golang::go::parser::parser* p, int mode)
+    std::tuple<ast::Stmt, bool> rec::parseSimpleStmt(golang::go::parser::parser* p, int64_t mode)
     {
         gocpp::Defer defer;
         try
@@ -3303,7 +3303,7 @@ namespace golang::go::parser
                         auto [pos, tok] = std::tuple{p->pos, p->tok};
                         rec::next(gocpp::recv(p));
                         gocpp::slice<ast::Expr> y = {};
-                        auto isRange = false;
+                        bool isRange = false;
                         if(mode == rangeOk && p->tok == token::RANGE && (tok == token::DEFINE || tok == token::ASSIGN))
                         {
                             auto pos = p->pos;
@@ -3575,7 +3575,7 @@ namespace golang::go::parser
         {
             return es->X;
         }
-        auto found = "simple statement"_s;
+        gocpp::string found = "simple statement"_s;
         if(auto [gocpp_id_6, isAss] = gocpp::getValue<ast::AssignStmt*>(s); isAss)
         {
             found = "assignment"_s;
@@ -4369,7 +4369,7 @@ namespace golang::go::parser
         }
     }
 
-    ast::Spec rec::parseImportSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token _1, int _2)
+    ast::Spec rec::parseImportSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token _1, int64_t _2)
     {
         gocpp::Defer defer;
         try
@@ -4445,7 +4445,7 @@ namespace golang::go::parser
         }
     }
 
-    ast::Spec rec::parseValueSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token keyword, int iota)
+    ast::Spec rec::parseValueSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token keyword, int64_t iota)
     {
         gocpp::Defer defer;
         try
@@ -4542,7 +4542,7 @@ namespace golang::go::parser
         }
     }
 
-    ast::Spec rec::parseTypeSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token _1, int _2)
+    ast::Spec rec::parseTypeSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token _1, int64_t _2)
     {
         gocpp::Defer defer;
         try
@@ -4808,7 +4808,7 @@ namespace golang::go::parser
             {
                 lparen = p->pos;
                 rec::next(gocpp::recv(p));
-                for(auto 1 = 0; p->tok != token::RPAREN && p->tok != token::go_EOF; 1++)
+                for(int64_t 1 = 0; p->tok != token::RPAREN && p->tok != token::go_EOF; 1++)
                 {
                     list = append(list, f(p->leadComment, keyword, 1));
                 }
@@ -5022,7 +5022,7 @@ namespace golang::go::parser
                 if(p->mode & ImportsOnly == 0)
                 {
                     // rest of package body
-                    auto prev = token::IMPORT;
+                    token::Token prev = token::IMPORT;
                     for(; p->tok != token::go_EOF; )
                     {
                         // Continue to accept import declarations for error tolerance, but complain.

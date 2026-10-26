@@ -37,7 +37,7 @@ namespace golang::go::types
         void recordDef(Checker* check, ast::Ident* id, Object obj);
         void recordUse(Checker* check, ast::Ident* id, Object obj);
         void recordImplicit(Checker* check, ast::Node node, Object obj);
-        void recordSelection(Checker* check, ast::SelectorExpr* x, SelectionKind kind, golang::go::types::Type recv, Object obj, gocpp::slice<int> index, bool indirect);
+        void recordSelection(Checker* check, ast::SelectorExpr* x, SelectionKind kind, golang::go::types::Type recv, Object obj, gocpp::slice<int64_t> index, bool indirect);
         void recordScope(Checker* check, ast::Node node, golang::go::types::Scope* scope);
     }
 }

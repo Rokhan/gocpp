@@ -69,7 +69,7 @@ namespace golang::go::types
                         break;
                     case 2:
                     {
-                        auto codepoint = unicode::ReplacementChar;
+                        gocpp::rune codepoint = unicode::ReplacementChar;
                         if(auto [i, ok] = constant::Uint64Val(x->val); ok && i <= unicode::MaxRune)
                         {
                             codepoint = gocpp::rune(i);

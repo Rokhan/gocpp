@@ -9,22 +9,22 @@ namespace golang::runtime
     // defined constants
     // _Gidle means this goroutine was just allocated and has not
     // yet been initialized.
-    const int _Gidle = 0;
+    inline constexpr int64_t _Gidle = 0;
     // _Grunnable means this goroutine is on a run queue. It is
     // not currently executing user code. The stack is not owned.
-    const int _Grunnable = 1;
+    inline constexpr int64_t _Grunnable = 1;
     // _Grunning means this goroutine may execute user code. The
     // stack is owned by this goroutine. It is not on a run queue.
     // It is assigned an M (g.m is valid) and it usually has a P
     // (g.m.p is valid), but there are small windows of time where
     // it might not, namely upon entering and exiting _Gsyscall.
-    const int _Grunning = 2;
+    inline constexpr int64_t _Grunning = 2;
     // _Gsyscall means this goroutine is executing a system call.
     // It is not executing user code. The stack is owned by this
     // goroutine. It is not on a run queue. It is assigned an M.
     // It may have a P attached, but it does not own it. Code
     // executing in this state must not touch g.m.p.
-    const int _Gsyscall = 3;
+    inline constexpr int64_t _Gsyscall = 3;
     // _Gwaiting means this goroutine is blocked in the runtime.
     // It is not executing user code. It is not on a run queue,
     // but should be recorded somewhere (e.g., a channel wait
@@ -33,34 +33,34 @@ namespace golang::runtime
     // write parts of the stack under the appropriate channel
     // lock. Otherwise, it is not safe to access the stack after a
     // goroutine enters _Gwaiting (e.g., it may get moved).
-    const int _Gwaiting = 4;
+    inline constexpr int64_t _Gwaiting = 4;
     // _Gmoribund_unused is currently unused, but hardcoded in gdb
     // scripts.
-    const int _Gmoribund_unused = 5;
+    inline constexpr int64_t _Gmoribund_unused = 5;
     // _Gdead means this goroutine is currently unused. It may be
     // just exited, on a free list, or just being initialized. It
     // is not executing user code. It may or may not have a stack
     // allocated. The G and its stack (if any) are owned by the M
     // that is exiting the G or that obtained the G from the free
     // list.
-    const int _Gdead = 6;
+    inline constexpr int64_t _Gdead = 6;
     // _Genqueue_unused is currently unused.
-    const int _Genqueue_unused = 7;
+    inline constexpr int64_t _Genqueue_unused = 7;
     // _Gcopystack means this goroutine's stack is being moved. It
     // is not executing user code and is not on a run queue. The
     // stack is owned by the goroutine that put it in _Gcopystack.
-    const int _Gcopystack = 8;
+    inline constexpr int64_t _Gcopystack = 8;
     // _Gpreempted means this goroutine stopped itself for a
     // suspendG preemption. It is like _Gwaiting, but nothing is
     // yet responsible for ready()ing it. Some suspendG must CAS
     // the status to _Gwaiting to take responsibility for
     // ready()ing this G.
-    const int _Gpreempted = 9;
+    inline constexpr int64_t _Gpreempted = 9;
     // _Gleaked represents a leaked goroutine caught by the GC.
-    const int _Gleaked = 10;
+    inline constexpr int64_t _Gleaked = 10;
     // _Gdeadextra is a _Gdead goroutine that's attached to an extra M
     // used for cgo callbacks.
-    const int _Gdeadextra = 11;
+    inline constexpr int64_t _Gdeadextra = 11;
     // _Gscan combined with one of the above states other than
     // _Grunning indicates that GC is scanning the stack. The
     // goroutine is not executing user code and the stack is owned
@@ -72,7 +72,7 @@ namespace golang::runtime
     //
     // atomicstatus&~Gscan gives the state the goroutine will
     // return to when the scan completes.
-    const long _Gscan = 0x1000;
+    inline constexpr long _Gscan = 0x1000;
     // _Pidle means a P is not being used to run user code or the
     // scheduler. Typically, it's on the idle P list and available
     // to the scheduler, but it may just be transitioning between
@@ -80,7 +80,7 @@ namespace golang::runtime
     //
     // The P is owned by the idle list or by whatever is
     // transitioning its state. Its run queue is empty.
-    const int _Pidle = 0;
+    inline constexpr int64_t _Pidle = 0;
     // _Prunning means a P is owned by an M and is being used to
     // run user code or the scheduler. Only the M that owns this P
     // is allowed to change the P's status from _Prunning. The M
@@ -88,11 +88,11 @@ namespace golang::runtime
     // do), or _Pgcstop (to halt for the GC). The M may also hand
     // ownership of the P off directly to another M (for example,
     // to schedule a locked G).
-    const int _Prunning = 1;
+    inline constexpr int64_t _Prunning = 1;
     // _Psyscall_unused is a now-defunct state for a P. A P is
     // identified as "in a system call" by looking at the goroutine's
     // state.
-    const int _Psyscall_unused = 2;
+    inline constexpr int64_t _Psyscall_unused = 2;
     // _Pgcstop means a P is halted for STW and owned by the M
     // that stopped the world. The M that stopped the world
     // continues to use its P, even in _Pgcstop. Transitioning
@@ -101,19 +101,22 @@ namespace golang::runtime
     //
     // The P retains its run queue and startTheWorld will restart
     // the scheduler on Ps with non-empty run queues.
-    const int _Pgcstop = 3;
+    inline constexpr int64_t _Pgcstop = 3;
     // _Pdead means a P is no longer used (GOMAXPROCS shrank). We
     // reuse Ps if GOMAXPROCS increases. A dead P is mostly
     // stripped of its resources, though a few things remain
     // (e.g., trace buffers).
-    const int _Pdead = 4;
+    inline constexpr int64_t _Pdead = 4;
     struct mutex;
     struct funcval;
     struct iface;
     struct eface;
-    using guintptr = uintptr_t;
-    using puintptr = uintptr_t;
-    using muintptr = uintptr_t;
+    struct GoTag_guintptr;
+    using guintptr = gocpp::defined<uintptr_t, GoTag_guintptr>;
+    struct GoTag_puintptr;
+    using puintptr = gocpp::defined<uintptr_t, GoTag_puintptr>;
+    struct GoTag_muintptr;
+    using muintptr = gocpp::defined<uintptr_t, GoTag_muintptr>;
     struct gobuf;
     struct maybeTraceablePtr;
     struct maybeTraceableChan;
@@ -124,29 +127,29 @@ namespace golang::runtime
     struct g;
     // gTrackingPeriod is the number of transitions out of _Grunning between
     // latency tracking runs.
-    const long gTrackingPeriod = 8;
+    inline constexpr long gTrackingPeriod = 8;
     // tlsSlots is the number of pointer-sized slots reserved for TLS on some platforms,
     // like Windows.
-    const long tlsSlots = 6;
+    inline constexpr long tlsSlots = 6;
     // Values for m.freeWait.
-    const long freeMStack = 0;
-    const long freeMRef = 1;
-    const long freeMWait = 2;
+    inline constexpr long freeMStack = 0;
+    inline constexpr long freeMRef = 1;
+    inline constexpr long freeMWait = 2;
     struct m;
     struct mPadded;
     struct mWeakPointer;
     struct p;
     struct schedt;
     // Values for the flags field of a sigTabT.
-    const int _SigNotify = 1 << 0;
-    const int _SigKill = 1 << 1;
-    const int _SigThrow = 1 << 2;
-    const int _SigPanic = 1 << 3;
-    const int _SigDefault = 1 << 4;
-    const int _SigGoExit = 1 << 5;
-    const int _SigSetStack = 1 << 6;
-    const int _SigUnblock = 1 << 7;
-    const int _SigIgn = 1 << 8;
+    inline constexpr int64_t _SigNotify = 1 << 0;
+    inline constexpr int64_t _SigKill = 1 << 1;
+    inline constexpr int64_t _SigThrow = 1 << 2;
+    inline constexpr int64_t _SigPanic = 1 << 3;
+    inline constexpr int64_t _SigDefault = 1 << 4;
+    inline constexpr int64_t _SigGoExit = 1 << 5;
+    inline constexpr int64_t _SigSetStack = 1 << 6;
+    inline constexpr int64_t _SigUnblock = 1 << 7;
+    inline constexpr int64_t _SigIgn = 1 << 8;
     struct _func;
     struct funcinl;
     struct lfnode;
@@ -155,70 +158,71 @@ namespace golang::runtime
     struct _panic;
     struct savedOpenDeferState;
     struct ancestorInfo;
-    using waitReason = uint8_t;
-    const int _Gscanrunnable = _Gscan + _Grunnable;
-    const int _Gscanrunning = _Gscan + _Grunning;
-    const int _Gscansyscall = _Gscan + _Gsyscall;
-    const int _Gscanwaiting = _Gscan + _Gwaiting;
-    const int _Gscanpreempted = _Gscan + _Gpreempted;
-    const int _Gscanleaked = _Gscan + _Gleaked;
-    const int _Gscandeadextra = _Gscan + _Gdeadextra;
-    const waitReason waitReasonZero = 0;
-    const waitReason waitReasonGCAssistMarking = 1;
-    const waitReason waitReasonIOWait = 2;
-    const waitReason waitReasonDumpingHeap = 3;
-    const waitReason waitReasonGarbageCollection = 4;
-    const waitReason waitReasonGarbageCollectionScan = 5;
-    const waitReason waitReasonPanicWait = 6;
-    const waitReason waitReasonGCAssistWait = 7;
-    const waitReason waitReasonGCSweepWait = 8;
-    const waitReason waitReasonGCScavengeWait = 9;
-    const waitReason waitReasonFinalizerWait = 10;
-    const waitReason waitReasonForceGCIdle = 11;
-    const waitReason waitReasonUpdateGOMAXPROCSIdle = 12;
-    const waitReason waitReasonSemacquire = 13;
-    const waitReason waitReasonSleep = 14;
-    const waitReason waitReasonChanReceiveNilChan = 15;
-    const waitReason waitReasonChanSendNilChan = 16;
-    const waitReason waitReasonSelectNoCases = 17;
-    const waitReason waitReasonSelect = 18;
-    const waitReason waitReasonChanReceive = 19;
-    const waitReason waitReasonChanSend = 20;
-    const waitReason waitReasonSyncCondWait = 21;
-    const waitReason waitReasonSyncMutexLock = 22;
-    const waitReason waitReasonSyncRWMutexRLock = 23;
-    const waitReason waitReasonSyncRWMutexLock = 24;
-    const waitReason waitReasonSyncWaitGroupWait = 25;
-    const waitReason waitReasonTraceReaderBlocked = 26;
-    const waitReason waitReasonWaitForGCCycle = 27;
-    const waitReason waitReasonGCWorkerIdle = 28;
-    const waitReason waitReasonGCWorkerActive = 29;
-    const waitReason waitReasonPreempted = 30;
-    const waitReason waitReasonDebugCall = 31;
-    const waitReason waitReasonGCMarkTermination = 32;
-    const waitReason waitReasonStoppingTheWorld = 33;
-    const waitReason waitReasonFlushProcCaches = 34;
-    const waitReason waitReasonTraceGoroutineStatus = 35;
-    const waitReason waitReasonTraceProcStatus = 36;
-    const waitReason waitReasonPageTraceFlush = 37;
-    const waitReason waitReasonCoroutine = 38;
-    const waitReason waitReasonGCWeakToStrongWait = 39;
-    const waitReason waitReasonSynctestRun = 40;
-    const waitReason waitReasonSynctestWait = 41;
-    const waitReason waitReasonSynctestChanReceive = 42;
-    const waitReason waitReasonSynctestChanSend = 43;
-    const waitReason waitReasonSynctestSelect = 44;
-    const waitReason waitReasonSynctestWaitGroupWait = 45;
-    const waitReason waitReasonCleanupWait = 46;
+    struct GoTag_waitReason;
+    using waitReason = gocpp::defined<uint8_t, GoTag_waitReason>;
+    inline constexpr int64_t _Gscanrunnable = _Gscan + _Grunnable;
+    inline constexpr int64_t _Gscanrunning = _Gscan + _Grunning;
+    inline constexpr int64_t _Gscansyscall = _Gscan + _Gsyscall;
+    inline constexpr int64_t _Gscanwaiting = _Gscan + _Gwaiting;
+    inline constexpr int64_t _Gscanpreempted = _Gscan + _Gpreempted;
+    inline constexpr int64_t _Gscanleaked = _Gscan + _Gleaked;
+    inline constexpr int64_t _Gscandeadextra = _Gscan + _Gdeadextra;
+    inline constexpr waitReason waitReasonZero = 0;
+    inline constexpr waitReason waitReasonGCAssistMarking = 1;
+    inline constexpr waitReason waitReasonIOWait = 2;
+    inline constexpr waitReason waitReasonDumpingHeap = 3;
+    inline constexpr waitReason waitReasonGarbageCollection = 4;
+    inline constexpr waitReason waitReasonGarbageCollectionScan = 5;
+    inline constexpr waitReason waitReasonPanicWait = 6;
+    inline constexpr waitReason waitReasonGCAssistWait = 7;
+    inline constexpr waitReason waitReasonGCSweepWait = 8;
+    inline constexpr waitReason waitReasonGCScavengeWait = 9;
+    inline constexpr waitReason waitReasonFinalizerWait = 10;
+    inline constexpr waitReason waitReasonForceGCIdle = 11;
+    inline constexpr waitReason waitReasonUpdateGOMAXPROCSIdle = 12;
+    inline constexpr waitReason waitReasonSemacquire = 13;
+    inline constexpr waitReason waitReasonSleep = 14;
+    inline constexpr waitReason waitReasonChanReceiveNilChan = 15;
+    inline constexpr waitReason waitReasonChanSendNilChan = 16;
+    inline constexpr waitReason waitReasonSelectNoCases = 17;
+    inline constexpr waitReason waitReasonSelect = 18;
+    inline constexpr waitReason waitReasonChanReceive = 19;
+    inline constexpr waitReason waitReasonChanSend = 20;
+    inline constexpr waitReason waitReasonSyncCondWait = 21;
+    inline constexpr waitReason waitReasonSyncMutexLock = 22;
+    inline constexpr waitReason waitReasonSyncRWMutexRLock = 23;
+    inline constexpr waitReason waitReasonSyncRWMutexLock = 24;
+    inline constexpr waitReason waitReasonSyncWaitGroupWait = 25;
+    inline constexpr waitReason waitReasonTraceReaderBlocked = 26;
+    inline constexpr waitReason waitReasonWaitForGCCycle = 27;
+    inline constexpr waitReason waitReasonGCWorkerIdle = 28;
+    inline constexpr waitReason waitReasonGCWorkerActive = 29;
+    inline constexpr waitReason waitReasonPreempted = 30;
+    inline constexpr waitReason waitReasonDebugCall = 31;
+    inline constexpr waitReason waitReasonGCMarkTermination = 32;
+    inline constexpr waitReason waitReasonStoppingTheWorld = 33;
+    inline constexpr waitReason waitReasonFlushProcCaches = 34;
+    inline constexpr waitReason waitReasonTraceGoroutineStatus = 35;
+    inline constexpr waitReason waitReasonTraceProcStatus = 36;
+    inline constexpr waitReason waitReasonPageTraceFlush = 37;
+    inline constexpr waitReason waitReasonCoroutine = 38;
+    inline constexpr waitReason waitReasonGCWeakToStrongWait = 39;
+    inline constexpr waitReason waitReasonSynctestRun = 40;
+    inline constexpr waitReason waitReasonSynctestWait = 41;
+    inline constexpr waitReason waitReasonSynctestChanReceive = 42;
+    inline constexpr waitReason waitReasonSynctestChanSend = 43;
+    inline constexpr waitReason waitReasonSynctestSelect = 44;
+    inline constexpr waitReason waitReasonSynctestWaitGroupWait = 45;
+    inline constexpr waitReason waitReasonCleanupWait = 46;
 }
 #include "golang/runtime/asan0.fwd.h"
 #include "golang/runtime/extern.fwd.h"
 
 namespace golang::runtime
 {
-    const int mRedZoneSize = (16 << 3) * asanenabledBit;
+    inline constexpr int64_t mRedZoneSize = (16 << 3) * asanenabledBit;
     // Must agree with internal/buildcfg.FramePointerEnabled.
-    const bool framepointer_enabled = GOARCH == "amd64"_s || GOARCH == "arm64"_s;
+    inline const bool framepointer_enabled = GOARCH == "amd64"_s || GOARCH == "arm64"_s;
 }
 #include "golang/internal/abi/iface.fwd.h"
 #include "golang/internal/abi/symtab.fwd.h"
@@ -229,6 +233,6 @@ namespace golang::runtime
 {
     namespace goarch = golang::internal::goarch;
     namespace abi = golang::internal::abi;
-    const int tlsSize = tlsSlots * goarch::PtrSize;
+    inline constexpr int64_t tlsSize = tlsSlots * goarch::PtrSize;
     using itab = abi::ITab;
 }

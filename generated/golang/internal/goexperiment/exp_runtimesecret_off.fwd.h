@@ -6,6 +6,6 @@
 
 namespace golang::internal::goexperiment
 {
-    const bool RuntimeSecret = false;
-    const long RuntimeSecretInt = 0;
+    inline constexpr bool RuntimeSecret = false;
+    inline constexpr long RuntimeSecretInt = 0;
 }

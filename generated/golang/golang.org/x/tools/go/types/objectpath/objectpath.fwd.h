@@ -59,22 +59,22 @@ namespace golang::golang_org::x::tools::go::types::objectpath
     // followed by an A, for example---but this simplifies the
     // encoder and decoder.
     // object->type operators
-    const char opType = '.';
+    inline constexpr char opType = '.';
     // type->type operators
-    const char opElem = 'E';
-    const char opKey = 'K';
-    const char opParams = 'P';
-    const char opResults = 'R';
-    const char opUnderlying = 'U';
-    const char opTypeParam = 'T';
-    const char opRecvTypeParam = 'r';
-    const char opConstraint = 'C';
-    const char opRhs = 'a';
+    inline constexpr char opElem = 'E';
+    inline constexpr char opKey = 'K';
+    inline constexpr char opParams = 'P';
+    inline constexpr char opResults = 'R';
+    inline constexpr char opUnderlying = 'U';
+    inline constexpr char opTypeParam = 'T';
+    inline constexpr char opRecvTypeParam = 'r';
+    inline constexpr char opConstraint = 'C';
+    inline constexpr char opRhs = 'a';
     // type->object operators
-    const char opAt = 'A';
-    const char opField = 'F';
-    const char opMethod = 'M';
-    const char opObj = 'O';
+    inline constexpr char opAt = 'A';
+    inline constexpr char opField = 'F';
+    inline constexpr char opMethod = 'M';
+    inline constexpr char opObj = 'O';
     struct Encoder;
     struct traversal;
     struct pkgIndex;

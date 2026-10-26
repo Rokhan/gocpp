@@ -40,7 +40,7 @@ namespace golang::internal::cpu
 
     std::ostream& operator<<(std::ostream& os, const struct option& value);
     void processOptions(gocpp::string env);
-    int indexByte(gocpp::string s, unsigned char c);
+    int64_t indexByte(gocpp::string s, unsigned char c);
     // options contains the cpu debug options that can be used in GODEBUG.
     // Options are arch dependent and are added by the arch specific doinit functions.
     // Features that are mandatory for the specific GOARCH should not be added to options

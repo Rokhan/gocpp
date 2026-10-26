@@ -655,7 +655,7 @@ namespace golang::encoding::json::v2
 
     bool rec::isNumeric(timeArshaler* a)
     {
-        return int(a->base) > 0;
+        return int64_t(a->base) > 0;
     }
 
     bool rec::hasCustomFormat(timeArshaler* a)
@@ -1166,7 +1166,7 @@ namespace golang::encoding::json::v2
                 case 2:
                 {
                     // compute len(strconv.Itoa(pow10-1))
-                    auto width = int(math::Log10(double(pow10)));
+                    auto width = int64_t(math::Log10(double(pow10)));
                     // parse the upper whole field
                     std::tie(whole, okWhole) = jsonwire::ParseUint(wholeBytes.make_slice(0, len(wholeBytes) - width));
                     // parse the lower whole field
@@ -1277,7 +1277,7 @@ namespace golang::encoding::json::v2
     {
         uint64_t n;
         bool ok;
-        auto pow10 = uint64_t(1);
+        uint64_t pow10 = uint64_t(1);
         for(; pow10 < max10; )
         {
             n *= 10;

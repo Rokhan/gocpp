@@ -20,7 +20,7 @@ namespace golang::sort
     }
 
     // insertionSort_func sorts data[a:b] using insertion sort.
-    void insertionSort_func(lessSwap data, int a, int b)
+    void insertionSort_func(lessSwap data, int64_t a, int64_t b)
     {
         for(auto i = a + 1; i < b; i++)
         {
@@ -33,7 +33,7 @@ namespace golang::sort
 
     // siftDown_func implements the heap property on data[lo:hi].
     // first is an offset into the array where the root of the heap lies.
-    void siftDown_func(lessSwap data, int lo, int hi, int first)
+    void siftDown_func(lessSwap data, int64_t lo, int64_t hi, int64_t first)
     {
         auto root = lo;
         for(; ; )
@@ -56,10 +56,10 @@ namespace golang::sort
         }
     }
 
-    void heapSort_func(lessSwap data, int a, int b)
+    void heapSort_func(lessSwap data, int64_t a, int64_t b)
     {
         auto first = a;
-        auto lo = 0;
+        int64_t lo = 0;
         auto hi = b - a;
 
         // Build heap with greatest element at top.
@@ -82,7 +82,7 @@ namespace golang::sort
     // C++ implementation: https://github.com/orlp/pdqsort
     // Rust implementation: https://docs.rs/pdqsort/latest/pdqsort/
     // limit is the number of allowed bad (very unbalanced) pivots before falling back to heapsort.
-    void pdqsort_func(lessSwap data, int a, int b, int limit)
+    void pdqsort_func(lessSwap data, int64_t a, int64_t b, int64_t limit)
     {
         auto maxInsertion = 12;
 
@@ -166,9 +166,9 @@ namespace golang::sort
     // Let p = data[pivot]
     // Moves elements in data[a:b] around, so that data[i]<p and data[j]>=p for i<newpivot and j>newpivot.
     // On return, data[newpivot] = p
-    std::tuple<int, bool> partition_func(lessSwap data, int a, int b, int pivot)
+    std::tuple<int64_t, bool> partition_func(lessSwap data, int64_t a, int64_t b, int64_t pivot)
     {
-        int newpivot;
+        int64_t newpivot;
         bool alreadyPartitioned;
         data.Swap(a, pivot);
         // i and j are inclusive of the elements remaining to be partitioned
@@ -215,9 +215,9 @@ namespace golang::sort
 
     // partitionEqual_func partitions data[a:b] into elements equal to data[pivot] followed by elements greater than data[pivot].
     // It assumed that data[a:b] does not contain elements smaller than the data[pivot].
-    int partitionEqual_func(lessSwap data, int a, int b, int pivot)
+    int64_t partitionEqual_func(lessSwap data, int64_t a, int64_t b, int64_t pivot)
     {
-        int newpivot;
+        int64_t newpivot;
         data.Swap(a, pivot);
         // i and j are inclusive of the elements remaining to be partitioned
         auto [i, j] = std::tuple{a + 1, b - 1};
@@ -244,12 +244,12 @@ namespace golang::sort
     }
 
     // partialInsertionSort_func partially sorts a slice, returns true if the slice is sorted at the end.
-    bool partialInsertionSort_func(lessSwap data, int a, int b)
+    bool partialInsertionSort_func(lessSwap data, int64_t a, int64_t b)
     {
         auto maxSteps = 5;
         auto shortestShifting = 50;
         auto i = a + 1;
-        for(auto j = 0; j < maxSteps; j++)
+        for(int64_t j = 0; j < maxSteps; j++)
         {
             for(; i < b && ! data.Less(i, i - 1); )
             {
@@ -298,7 +298,7 @@ namespace golang::sort
 
     // breakPatterns_func scatters some elements around in an attempt to break some patterns
     // that might cause imbalanced partitions in quicksort.
-    void breakPatterns_func(lessSwap data, int a, int b)
+    void breakPatterns_func(lessSwap data, int64_t a, int64_t b)
     {
         auto length = b - a;
         if(length >= 8)
@@ -308,7 +308,7 @@ namespace golang::sort
 
             for(auto idx = a + (length / 4) * 2 - 1; idx <= a + (length / 4) * 2 + 1; idx++)
             {
-                auto other = int((unsigned int)(rec::Next(gocpp::recv(random))) & (modulus - 1));
+                auto other = int64_t((uint64_t)(rec::Next(gocpp::recv(random))) & (modulus - 1));
                 if(other >= length)
                 {
                     other -= length;
@@ -323,16 +323,16 @@ namespace golang::sort
     // [0,8): chooses a static pivot.
     // [8,shortestNinther): uses the simple median-of-three method.
     // [shortestNinther,∞): uses the Tukey ninther method.
-    std::tuple<int, sortedHint> choosePivot_func(lessSwap data, int a, int b)
+    std::tuple<int64_t, sortedHint> choosePivot_func(lessSwap data, int64_t a, int64_t b)
     {
-        int pivot;
+        int64_t pivot;
         sortedHint hint;
         auto shortestNinther = 50;
         auto maxSwaps = 4 * 3;
 
         auto l = b - a;
 
-        int swaps = {};
+        int64_t swaps = {};
         auto i = a + l / 4 * 1;
         auto j = a + l / 4 * 2;
         auto k = a + l / 4 * 3;
@@ -372,7 +372,7 @@ namespace golang::sort
     }
 
     // order2_func returns x,y where data[x] <= data[y], where x,y=a,b or x,y=b,a.
-    std::tuple<int, int> order2_func(lessSwap data, int a, int b, int* swaps)
+    std::tuple<int64_t, int64_t> order2_func(lessSwap data, int64_t a, int64_t b, int64_t* swaps)
     {
         if(data.Less(b, a))
         {
@@ -383,7 +383,7 @@ namespace golang::sort
     }
 
     // median_func returns x where data[x] is the median of data[a],data[b],data[c], where x is a, b, or c.
-    int median_func(lessSwap data, int a, int b, int c, int* swaps)
+    int64_t median_func(lessSwap data, int64_t a, int64_t b, int64_t c, int64_t* swaps)
     {
         std::tie(a, b) = order2_func(data, a, b, swaps);
         std::tie(b, c) = order2_func(data, b, c, swaps);
@@ -392,12 +392,12 @@ namespace golang::sort
     }
 
     // medianAdjacent_func finds the median of data[a - 1], data[a], data[a + 1] and stores the index into a.
-    int medianAdjacent_func(lessSwap data, int a, int* swaps)
+    int64_t medianAdjacent_func(lessSwap data, int64_t a, int64_t* swaps)
     {
         return median_func(data, a - 1, a, a + 1, swaps);
     }
 
-    void reverseRange_func(lessSwap data, int a, int b)
+    void reverseRange_func(lessSwap data, int64_t a, int64_t b)
     {
         auto i = a;
         auto j = b - 1;
@@ -409,18 +409,18 @@ namespace golang::sort
         }
     }
 
-    void swapRange_func(lessSwap data, int a, int b, int n)
+    void swapRange_func(lessSwap data, int64_t a, int64_t b, int64_t n)
     {
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             data.Swap(a + i, b + i);
         }
     }
 
-    void stable_func(lessSwap data, int n)
+    void stable_func(lessSwap data, int64_t n)
     {
         // must be > 0
-        auto blockSize = 20;
+        int64_t blockSize = 20;
         auto [a, b] = std::tuple{0, blockSize};
         for(; b <= n; )
         {
@@ -466,7 +466,7 @@ namespace golang::sort
     // symMerge assumes non-degenerate arguments: a < m && m < b.
     // Having the caller check this condition eliminates many leaf recursion calls,
     // which improves performance.
-    void symMerge_func(lessSwap data, int a, int m, int b)
+    void symMerge_func(lessSwap data, int64_t a, int64_t m, int64_t b)
     {
         // Avoid unnecessary recursions of symMerge
         // by direct insertion of data[a] into data[m:b]
@@ -480,7 +480,7 @@ namespace golang::sort
             auto j = b;
             for(; i < j; )
             {
-                auto h = int((unsigned int)(i + j) >> 1);
+                auto h = int64_t((uint64_t)(i + j) >> 1);
                 if(data.Less(h, a))
                 {
                     i = h + 1;
@@ -510,7 +510,7 @@ namespace golang::sort
             auto j = m;
             for(; i < j; )
             {
-                auto h = int((unsigned int)(i + j) >> 1);
+                auto h = int64_t((uint64_t)(i + j) >> 1);
                 if(! data.Less(m, h))
                 {
                     i = h + 1;
@@ -528,10 +528,10 @@ namespace golang::sort
             return;
         }
 
-        auto mid = int((unsigned int)(a + b) >> 1);
+        auto mid = int64_t((uint64_t)(a + b) >> 1);
         auto n = mid + m;
-        int start = {};
-        int r = {};
+        int64_t start = {};
+        int64_t r = {};
         if(m > mid)
         {
             start = n - b;
@@ -546,7 +546,7 @@ namespace golang::sort
 
         for(; start < r; )
         {
-            auto c = int((unsigned int)(start + r) >> 1);
+            auto c = int64_t((uint64_t)(start + r) >> 1);
             if(! data.Less(p - c, c))
             {
                 start = c + 1;
@@ -576,7 +576,7 @@ namespace golang::sort
     // Data of the form 'x u v y' is changed to 'x v u y'.
     // rotate performs at most b-a many calls to data.Swap,
     // and it assumes non-degenerate arguments: a < m && m < b.
-    void rotate_func(lessSwap data, int a, int m, int b)
+    void rotate_func(lessSwap data, int64_t a, int64_t m, int64_t b)
     {
         auto i = m - a;
         auto j = b - m;

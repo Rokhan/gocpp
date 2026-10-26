@@ -55,11 +55,11 @@ namespace golang::go::types
     namespace rec
     {
         gocpp::string String(MethodSet* s);
-        int Len(MethodSet* s);
-        Selection* At(MethodSet* s, int i);
+        int64_t Len(MethodSet* s);
+        Selection* At(MethodSet* s, int64_t i);
         Selection* Lookup(MethodSet* s, Package* pkg, gocpp::string name);
-        methodSet add(methodSet s, gocpp::slice<Func*> list, gocpp::slice<int> index, bool indirect, bool multiples);
-        methodSet addOne(methodSet s, Func* f, gocpp::slice<int> index, bool indirect, bool multiples);
+        methodSet add(methodSet s, gocpp::slice<Func*> list, gocpp::slice<int64_t> index, bool indirect, bool multiples);
+        methodSet addOne(methodSet s, Func* f, gocpp::slice<int64_t> index, bool indirect, bool multiples);
     }
 }
 

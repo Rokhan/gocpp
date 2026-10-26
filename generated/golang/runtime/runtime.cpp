@@ -169,9 +169,9 @@ namespace golang::runtime
     }
 
     //go:linkname syscall_Getpagesize syscall.Getpagesize
-    int syscall_Getpagesize()
+    int64_t syscall_Getpagesize()
     {
-        return int(physPageSize);
+        return int64_t(physPageSize);
     }
 
     //go:linkname os_runtime_args os.runtime_args
@@ -182,7 +182,7 @@ namespace golang::runtime
 
     //go:linkname syscall_Exit syscall.Exit
     //go:nosplit
-    void syscall_Exit(int code)
+    void syscall_Exit(int64_t code)
     {
         exit(int32_t(code));
     }

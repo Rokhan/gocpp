@@ -6,10 +6,10 @@
 
 namespace golang::bufio
 {
-    const long defaultBufSize = 4096;
+    inline constexpr long defaultBufSize = 4096;
     struct Reader;
-    const long minReadBufferSize = 16;
-    const long maxConsecutiveEmptyReads = 100;
+    inline constexpr long minReadBufferSize = 16;
+    inline constexpr long maxConsecutiveEmptyReads = 100;
     struct Writer;
     struct ReadWriter;
 }

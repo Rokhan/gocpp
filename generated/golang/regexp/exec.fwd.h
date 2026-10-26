@@ -11,6 +11,7 @@ namespace golang::regexp
     struct thread;
     struct machine;
     struct inputs;
-    using lazyFlag = uint64_t;
+    struct GoTag_lazyFlag;
+    using lazyFlag = gocpp::defined<uint64_t, GoTag_lazyFlag>;
     struct onePassMachine;
 }

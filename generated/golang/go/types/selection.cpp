@@ -205,7 +205,7 @@ namespace golang::go::types
     //
     // The earlier index entries are the indices of the embedded fields implicitly
     // traversed to get from (the type of) x to f, starting at embedding depth 0.
-    gocpp::slice<int> rec::Index(Selection* s)
+    gocpp::slice<int64_t> rec::Index(Selection* s)
     {
         return s->index;
     }

@@ -7,5 +7,5 @@
 namespace golang::image::png
 {
     // intSize is either 32 or 64.
-    const int intSize = 32 << (~ (unsigned int)(0) >> 63);
+    inline constexpr int64_t intSize = 32 << (~ (uint64_t)(0) >> 63);
 }

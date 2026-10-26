@@ -44,7 +44,7 @@ namespace golang::os
     // Getuid returns the numeric user id of the caller.
     //
     // On Windows, it returns -1.
-    int Getuid()
+    int64_t Getuid()
     {
         return syscall::Getuid();
     }
@@ -52,7 +52,7 @@ namespace golang::os
     // Geteuid returns the numeric effective user id of the caller.
     //
     // On Windows, it returns -1.
-    int Geteuid()
+    int64_t Geteuid()
     {
         return syscall::Geteuid();
     }
@@ -60,7 +60,7 @@ namespace golang::os
     // Getgid returns the numeric group id of the caller.
     //
     // On Windows, it returns -1.
-    int Getgid()
+    int64_t Getgid()
     {
         return syscall::Getgid();
     }
@@ -68,7 +68,7 @@ namespace golang::os
     // Getegid returns the numeric effective group id of the caller.
     //
     // On Windows, it returns -1.
-    int Getegid()
+    int64_t Getegid()
     {
         return syscall::Getegid();
     }
@@ -77,7 +77,7 @@ namespace golang::os
     //
     // On Windows, it returns [syscall.EWINDOWS]. See the [os/user] package
     // for a possible alternative.
-    std::tuple<gocpp::slice<int>, gocpp::error> Getgroups()
+    std::tuple<gocpp::slice<int64_t>, gocpp::error> Getgroups()
     {
         auto [gids, e] = syscall::Getgroups();
         return {gids, NewSyscallError("getgroups"_s, e)};
@@ -88,7 +88,7 @@ namespace golang::os
     // The program terminates immediately; deferred functions are not run.
     //
     // For portability, the status code should be in the range [0, 125].
-    void Exit(int code)
+    void Exit(int64_t code)
     {
         if(code == 0 && testlog::PanicOnExit0())
         {
@@ -108,7 +108,7 @@ namespace golang::os
         syscall::Exit(code);
     }
 
-    void runtime_beforeExit(int exitCode)
+    void runtime_beforeExit(int64_t exitCode)
     /* convertBlockStmt, nil block */;
 
 }

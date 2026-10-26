@@ -14,7 +14,7 @@ namespace golang::main
 {
     void main();
     void f();
-    void g(int i);
+    void g(int64_t i);
     void scanOne(go_any arg);
     struct scanError
     {
@@ -34,7 +34,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct scanError& value);
     void errorString(gocpp::string err);
     void errorHandler(gocpp::error* errp);
-    std::tuple<int, gocpp::error> doScan(gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> doScan(gocpp::slice<go_any> a);
 
     namespace rec
     {

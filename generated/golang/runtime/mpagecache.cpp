@@ -111,7 +111,7 @@ namespace golang::runtime
     // allocated region in bytes.
     std::tuple<uintptr_t, uintptr_t> rec::allocN(pageCache* c, uintptr_t npages)
     {
-        auto i = findBitRange64(c->cache, (unsigned int)(npages));
+        auto i = findBitRange64(c->cache, (uint64_t)(npages));
         if(i >= 64)
         {
             return {0, 0};
@@ -147,7 +147,7 @@ namespace golang::runtime
 
         // This method is called very infrequently, so just do the
         // slower, safer thing by iterating over each bit individually.
-        for(auto i = (unsigned int)(0); i < 64; i++)
+        for(uint64_t i = (uint64_t)(0); i < 64; i++)
         {
             if(c->cache & (1 << i) != 0)
             {
@@ -200,7 +200,7 @@ namespace golang::runtime
             // Fast path: there's free pages at or near the searchAddr address.
             chunk = rec::chunkOf(gocpp::recv(p), ci);
             auto [j, gocpp_id_0] = rec::find(gocpp::recv(chunk), 1, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))));
-            if(j == ~ (unsigned int)(0))
+            if(j == ~ (uint64_t)(0))
             {
                 go_throw("bad summary data"_s);
             }
@@ -241,7 +241,7 @@ namespace golang::runtime
         rec::update(gocpp::recv(p), c.base, pageCachePages, false, true);
 
         // Update density statistics.
-        rec::alloc(gocpp::recv(p->scav.index), ci, (unsigned int)(sys::OnesCount64(c.cache)));
+        rec::alloc(gocpp::recv(p->scav.index), ci, (uint64_t)(sys::OnesCount64(c.cache)));
 
         // Set the search address to the last page represented by the cache.
         // Since all of the pages in this block are going to the cache, and we

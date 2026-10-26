@@ -152,16 +152,16 @@ namespace golang::strconv
                                 r = 0xFFFD;
                             case 2:
                                 buf = append(buf, "\\u"_s);
-                                for(auto s = 12; s >= 0; s -= 4)
+                                for(int64_t s = 12; s >= 0; s -= 4)
                                 {
-                                    buf = append(buf, lowerhex[(r >> (unsigned int)(s)) & 0xF]);
+                                    buf = append(buf, lowerhex[(r >> (uint64_t)(s)) & 0xF]);
                                 }
                                 break;
                             default:
                                 buf = append(buf, "\\U"_s);
-                                for(auto s = 28; s >= 0; s -= 4)
+                                for(int64_t s = 28; s >= 0; s -= 4)
                                 {
-                                    buf = append(buf, lowerhex[(r >> (unsigned int)(s)) & 0xF]);
+                                    buf = append(buf, lowerhex[(r >> (uint64_t)(s)) & 0xF]);
                                 }
                                 break;
                         }
@@ -442,7 +442,7 @@ namespace golang::strconv
                 case 8:
                 case 9:
                 {
-                    auto n = 0;
+                    int64_t n = 0;
                     //Go switch emulation
                     {
                         auto condition = c;
@@ -469,7 +469,7 @@ namespace golang::strconv
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
-                    for(auto j = 0; j < n; j++)
+                    for(int64_t j = 0; j < n; j++)
                     {
                         auto [x, ok] = unhex(s[j]);
                         if(! ok)
@@ -510,7 +510,7 @@ namespace golang::strconv
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
-                    for(auto j = 0; j < 2; j++)
+                    for(int64_t j = 0; j < 2; j++)
                     {
                         // one digit already; two more
                         auto x = gocpp::rune(s[j]) - '0';
@@ -629,7 +629,7 @@ namespace golang::strconv
                                 // Carriage return characters ('\r') inside raw string literals
                                 // are discarded from the raw string value.
                                 auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, end - len("`"_s) - len("\r"_s) - len("`"_s));
-                                for(auto i = len("`"_s); i < end - len("`"_s); i++)
+                                for(int64_t i = len("`"_s); i < end - len("`"_s); i++)
                                 {
                                     if(in[i] != '\r')
                                     {
@@ -749,7 +749,7 @@ namespace golang::strconv
     // bsearch is semantically the same as [slices.BinarySearch] (without NaN checks)
     // We copied this function because we can not import "slices" here.
     template<template<typename> class  S, typename E>
-    std::tuple<int, bool> bsearch(S<E> s, E v)
+    std::tuple<int64_t, bool> bsearch(S<E> s, E v)
     {
         auto n = len(s);
         auto [i, j] = std::tuple{0, n};

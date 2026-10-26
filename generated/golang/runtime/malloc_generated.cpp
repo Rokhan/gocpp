@@ -81,7 +81,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
@@ -100,7 +100,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -257,7 +257,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
@@ -276,7 +276,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -433,7 +433,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
@@ -452,7 +452,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -609,7 +609,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
@@ -628,7 +628,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -785,7 +785,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
@@ -804,7 +804,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -961,7 +961,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
@@ -980,7 +980,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -1137,7 +1137,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
@@ -1156,7 +1156,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -1344,7 +1344,7 @@ namespace golang::runtime
             return x;
         }
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto span = c->alloc[tinySpanClass];
 
         auto nbytes = 8192;
@@ -1359,7 +1359,7 @@ namespace golang::runtime
                 auto freeidx = result + 1;
                 if(! (freeidx % 64 == 0 && freeidx != nelems))
                 {
-                    span->allocCache >>= (unsigned int)(theBit + 1);
+                    span->allocCache >>= (uint64_t)(theBit + 1);
                     span->freeindex = freeidx;
                     span->allocCount++;
                     nextFreeFastResult = gclinkptr(uintptr_t(result) * 16 + rec::base(gocpp::recv(span)));
@@ -1442,7 +1442,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(1);
         auto span = c->alloc[spc];
@@ -1470,7 +1470,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -1551,7 +1551,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(1);
         auto span = c->alloc[spc];
@@ -1579,7 +1579,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -1660,7 +1660,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(1);
         auto span = c->alloc[spc];
@@ -1688,7 +1688,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -1769,7 +1769,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(1);
         auto span = c->alloc[spc];
@@ -1797,7 +1797,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -1878,7 +1878,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(1);
         auto span = c->alloc[spc];
@@ -1906,7 +1906,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -1987,7 +1987,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto spc = spanClass(sizeclass << 1) | spanClass(1);
         auto span = c->alloc[spc];
@@ -2015,7 +2015,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -2158,7 +2158,7 @@ namespace golang::runtime
             return x;
         }
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto span = c->alloc[tinySpanClass];
 
         auto nbytes = 8192;
@@ -2173,7 +2173,7 @@ namespace golang::runtime
                 auto freeidx = result + 1;
                 if(! (freeidx % 64 == 0 && freeidx != nelems))
                 {
-                    span->allocCache >>= (unsigned int)(theBit + 1);
+                    span->allocCache >>= (uint64_t)(theBit + 1);
                     span->freeindex = freeidx;
                     span->allocCount++;
                     nextFreeFastResult = gclinkptr(uintptr_t(result) * 16 + rec::base(gocpp::recv(span)));
@@ -2283,7 +2283,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
 
         auto span = c->alloc[spc];
@@ -2302,7 +2302,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));
@@ -2490,7 +2490,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
 
         auto span = c->alloc[spc];
@@ -2518,7 +2518,7 @@ namespace golang::runtime
                     auto freeidx = result + 1;
                     if(! (freeidx % 64 == 0 && freeidx != span->nelems))
                     {
-                        span->allocCache >>= (unsigned int)(theBit + 1);
+                        span->allocCache >>= (uint64_t)(theBit + 1);
                         span->freeindex = freeidx;
                         span->allocCount++;
                         nextFreeFastResult = gclinkptr(uintptr_t(result) * elemsize + rec::base(gocpp::recv(span)));

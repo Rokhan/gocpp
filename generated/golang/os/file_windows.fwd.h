@@ -7,22 +7,23 @@
 namespace golang::os
 {
     // This matches the value in syscall/syscall_windows.go.
-    const long _UTIME_OMIT = - 1;
+    inline constexpr long _UTIME_OMIT = - 1;
     struct file;
-    using newFileKind = int;
+    struct GoTag_newFileKind;
+    using newFileKind = gocpp::defined<int64_t, GoTag_newFileKind>;
     // DevNull is the name of the operating system's “null device.”
     // On Unix-like systems, it is "/dev/null"; on Windows, "NUL".
-    const gocpp::string DevNull = "NUL"_s;
+    inline const gocpp::string DevNull = "NUL"_s;
     // kindNewFile means that the descriptor was passed to us via NewFile.
-    const newFileKind kindNewFile = 0;
+    inline constexpr newFileKind kindNewFile = 0;
     // kindOpenFile means that the descriptor was opened using
     // Open, Create, or OpenFile.
-    const newFileKind kindOpenFile = 1;
+    inline constexpr newFileKind kindOpenFile = 1;
     // kindPipe means that the descriptor was opened using Pipe.
-    const newFileKind kindPipe = 2;
+    inline constexpr newFileKind kindPipe = 2;
     // kindSock means that the descriptor is a network file descriptor
     // that was created from net package and was opened using net_newUnixFile.
-    const newFileKind kindSock = 3;
+    inline constexpr newFileKind kindSock = 3;
     // kindConsole means that the descriptor is a console handle.
-    const newFileKind kindConsole = 4;
+    inline constexpr newFileKind kindConsole = 4;
 }

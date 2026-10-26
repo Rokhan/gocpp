@@ -68,7 +68,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     {
         int64_t size;
         gocpp::error err;
-        int arsize;
+        int64_t arsize;
         std::tie(arsize, err) = FindPackageDefinition(r);
         if(err != nullptr)
         {
@@ -165,7 +165,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         auto minBufferSize = 4096;
         r = bufio::NewReaderSize(r, minBufferSize);
 
-        int size;
+        int64_t size;
         std::tie(size, err) = FindPackageDefinition(r);
         if(err != nullptr)
         {
@@ -186,7 +186,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             n -= len(h);
         }
 
-        int hdrlen;
+        int64_t hdrlen;
         std::tie(hdrlen, err) = ReadExportDataHeader(r);
         if(err != nullptr)
         {
@@ -236,9 +236,9 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     // this function, and "__.PKGDEF" is assumed to be the first file in the archive.
     //
     // See cmd/internal/archive for details on the archive format.
-    std::tuple<int, gocpp::error> FindPackageDefinition(bufio::Reader* r)
+    std::tuple<int64_t, gocpp::error> FindPackageDefinition(bufio::Reader* r)
     {
-        int size;
+        int64_t size;
         gocpp::error err;
         // Uses ReadSlice to limit risk of malformed inputs.
         // Read first line to make sure this is an object file.
@@ -329,9 +329,9 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     //
     // The only currently supported format is binary export data in the
     // unified export format.
-    std::tuple<int, gocpp::error> ReadExportDataHeader(bufio::Reader* r)
+    std::tuple<int64_t, gocpp::error> ReadExportDataHeader(bufio::Reader* r)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         // Read export data header.
         gocpp::slice<unsigned char> line;

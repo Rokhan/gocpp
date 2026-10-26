@@ -22,10 +22,10 @@ namespace golang::main
     {
     }
 
-    std::function<int (int _1)> adder()
+    std::function<int64_t (int64_t _1)> adder()
     {
-        auto sum = 0;
-        return [=](int x) mutable -> int
+        int64_t sum = 0;
+        return [=](int64_t x) mutable -> int64_t
         {
             sum += x;
             return sum;
@@ -101,7 +101,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    int rec::fillStore(compressor* d, gocpp::slice<unsigned char> b)
+    int64_t rec::fillStore(compressor* d, gocpp::slice<unsigned char> b)
     {
         mocklib::Println("fillStore called"_s);
         return 0;
@@ -119,9 +119,9 @@ namespace golang::main
         return nullptr;
     }
 
-    std::tuple<int, gocpp::error> rec::write(compressor* d, gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> rec::write(compressor* d, gocpp::slice<unsigned char> b)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto i = d->fill(d, b);
         return {i, nullptr};
@@ -130,7 +130,7 @@ namespace golang::main
     void main()
     {
         auto [pos, neg] = std::tuple{adder(), adder()};
-        for(auto i = 0; i < 10; i++)
+        for(int64_t i = 0; i < 10; i++)
         {
             mocklib::Println(pos(i), neg(- 2 * i));
         }

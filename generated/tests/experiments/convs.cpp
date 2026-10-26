@@ -127,7 +127,7 @@ namespace golang::main
             {
                 n = 1;
             }
-            for(auto i = 0; i < n; i++)
+            for(int64_t i = 0; i < n; i++)
             {
                 out = append(out, t);
             }
@@ -155,11 +155,11 @@ namespace golang::main
     gocpp::slice<gocpp::string> missingMethods(types::Interface* have, types::Interface* want)
     {
         gocpp::slice<gocpp::string> missing = {};
-        for(auto i = 0; i < rec::NumMethods(gocpp::recv(want)); i++)
+        for(int64_t i = 0; i < rec::NumMethods(gocpp::recv(want)); i++)
         {
             auto m = rec::Method(gocpp::recv(want), i);
-            auto found = false;
-            for(auto j = 0; j < rec::NumMethods(gocpp::recv(have)); j++)
+            bool found = false;
+            for(int64_t j = 0; j < rec::NumMethods(gocpp::recv(have)); j++)
             {
                 auto hm = rec::Method(gocpp::recv(have), j);
                 if(rec::Name(gocpp::recv(hm)) == rec::Name(gocpp::recv(m)) && types::Identical(rec::Type(gocpp::recv(hm)), rec::Type(gocpp::recv(m))))

@@ -18,9 +18,9 @@ namespace golang::runtime
     }
 
     // countrunes returns the number of runes in s.
-    int countrunes(gocpp::string s)
+    int64_t countrunes(gocpp::string s)
     {
-        auto n = 0;
+        int64_t n = 0;
         for(const auto& _ : s)
         {
             n++;
@@ -37,13 +37,13 @@ namespace golang::runtime
     // If the string appears to be incomplete or decoding problems
     // are encountered (runeerror, k + 1) is returned to ensure
     // progress when decoderune is used to iterate over a string.
-    std::tuple<gocpp::rune, unsigned int> decoderune(gocpp::string s, unsigned int k)
+    std::tuple<gocpp::rune, uint64_t> decoderune(gocpp::string s, uint64_t k)
     {
         gocpp::rune r;
-        unsigned int pos;
+        uint64_t pos;
         pos = k;
 
-        if(k >= (unsigned int)(len(s)))
+        if(k >= (uint64_t)(len(s)))
         {
             return {runeError, k + 1};
         }
@@ -102,7 +102,7 @@ namespace golang::runtime
 
     // encoderune writes into p (which must be large enough) the UTF-8 encoding of the rune.
     // It returns the number of bytes written.
-    int encoderune(gocpp::slice<unsigned char> p, gocpp::rune r)
+    int64_t encoderune(gocpp::slice<unsigned char> p, gocpp::rune r)
     {
         // Negative values are erroneous. Making it unsigned addresses the problem.
         //Go switch emulation

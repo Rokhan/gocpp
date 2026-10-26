@@ -51,7 +51,7 @@ namespace golang::go::types
     {
         if(! p)
         {
-            auto msg = "assertion failed"_s;
+            gocpp::string msg = "assertion failed"_s;
             // Include information about the assertion location. Due to panic recovery,
             // this location is otherwise buried in the middle of the panicking stack.
             if(auto [gocpp_id_0, file, line, ok] = runtime::Caller(1); ok)
@@ -243,10 +243,10 @@ namespace golang::go::types
         // In go/types, if there is a sub-error with a valid position,
         // call the typechecker error handler for each sub-error.
         // Otherwise, call it once, with a single combined message.
-        auto multiError = false;
+        bool multiError = false;
         if(! isTypes2)
         {
-            for(auto i = 1; i < len(err->desc); i++)
+            for(int64_t i = 1; i < len(err->desc); i++)
             {
                 if(rec::IsValid(gocpp::recv(rec::Pos(gocpp::recv(err->desc[i].posn)))))
                 {
@@ -274,7 +274,7 @@ namespace golang::go::types
     }
 
     // handleError should only be called by error_.report.
-    void rec::handleError(Checker* check, int index, positioner posn, errors::Code code, gocpp::string msg, bool soft)
+    void rec::handleError(Checker* check, int64_t index, positioner posn, errors::Code code, gocpp::string msg, bool soft)
     {
         assert(code != 0);
 

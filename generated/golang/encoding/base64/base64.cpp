@@ -91,7 +91,7 @@ namespace golang::encoding::base64
         copy(e->encode.make_slice(0), encoder);
         copy(e->decodeMap.make_slice(0), decodeMapInitialize);
 
-        for(auto i = 0; i < len(encoder); i++)
+        for(int64_t i = 0; i < len(encoder); i++)
         {
             // Note: While we document that the alphabet cannot contain
             // the padding character, we do not enforce it since we do not know
@@ -189,7 +189,7 @@ namespace golang::encoding::base64
         for(; len(src) >= 3; )
         {
             // Convert 3x 8bit source bytes into 4 bytes
-            auto val = ((unsigned int)(src[0]) << 16) | ((unsigned int)(src[1]) << 8) | (unsigned int)(src[2]);
+            auto val = ((uint64_t)(src[0]) << 16) | ((uint64_t)(src[1]) << 8) | (uint64_t)(src[2]);
 
             // Eliminate bounds checks below.
             _ = dst[3];
@@ -217,7 +217,7 @@ namespace golang::encoding::base64
                     break;
                 case 1:
                 {
-                    auto val = (unsigned int)(src[0]) << 16;
+                    auto val = (uint64_t)(src[0]) << 16;
                     dst[0] = enc->encode[(val >> 18) & 0x3F];
                     dst[1] = enc->encode[(val >> 12) & 0x3F];
                     if(enc->padChar != NoPadding)
@@ -229,7 +229,7 @@ namespace golang::encoding::base64
                 }
                 case 2:
                 {
-                    auto val = ((unsigned int)(src[0]) << 16) | ((unsigned int)(src[1]) << 8);
+                    auto val = ((uint64_t)(src[0]) << 16) | ((uint64_t)(src[1]) << 8);
                     dst[0] = enc->encode[(val >> 18) & 0x3F];
                     dst[1] = enc->encode[(val >> 12) & 0x3F];
                     dst[2] = enc->encode[(val >> 6) & 0x3F];
@@ -305,9 +305,9 @@ namespace golang::encoding::base64
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         if(e->err != nullptr)
         {
@@ -317,7 +317,7 @@ namespace golang::encoding::base64
         // Leading fringe.
         if(e->nbuf > 0)
         {
-            int i = {};
+            int64_t i = {};
             for(i = 0; i < len(p) && e->nbuf < 3; i++)
             {
                 e->buf[e->nbuf] = p[i];
@@ -340,7 +340,7 @@ namespace golang::encoding::base64
         // Large interior chunks.
         for(; len(p) >= 3; )
         {
-            auto nn = len(e->out) / 4 * 3;
+            int64_t nn = len(e->out) / 4 * 3;
             if(nn > len(p))
             {
                 nn = len(p);
@@ -391,7 +391,7 @@ namespace golang::encoding::base64
 
     // EncodedLen returns the length in bytes of the base64 encoding
     // of an input buffer of length n.
-    int rec::EncodedLen(Encoding* enc, int n)
+    int64_t rec::EncodedLen(Encoding* enc, int64_t n)
     {
         if(enc->padChar == NoPadding)
         {
@@ -412,19 +412,19 @@ namespace golang::encoding::base64
     // source buffer si.
     // It returns the number of bytes read from src, the number of bytes written
     // to dst, and an error, if any.
-    std::tuple<int, int, gocpp::error> rec::decodeQuantum(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si)
+    std::tuple<int64_t, int64_t, gocpp::error> rec::decodeQuantum(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int64_t si)
     {
-        int nsi;
-        int n;
+        int64_t nsi;
+        int64_t n;
         gocpp::error err;
         // Decode quantum using the base64 alphabet
         gocpp::array<unsigned char, 4> dbuf = {};
-        auto dlen = 4;
+        int64_t dlen = 4;
 
         // Lift the nil check outside of the loop.
         _ = enc->decodeMap;
 
-        for(auto j = 0; j < len(dbuf); j++)
+        for(int64_t j = 0; j < len(dbuf); j++)
         {
             if(len(src) == si)
             {
@@ -521,7 +521,7 @@ namespace golang::encoding::base64
         }
 
         // Convert 4x 6bit source bytes into 3 bytes
-        auto val = ((unsigned int)(dbuf[0]) << 18) | ((unsigned int)(dbuf[1]) << 12) | ((unsigned int)(dbuf[2]) << 6) | (unsigned int)(dbuf[3]);
+        auto val = ((uint64_t)(dbuf[0]) << 18) | ((uint64_t)(dbuf[1]) << 12) | ((uint64_t)(dbuf[2]) << 6) | (uint64_t)(dbuf[3]);
         std::tie(dbuf[2], dbuf[1], dbuf[0]) = std::tuple{(unsigned char)(val >> 0), (unsigned char)(val >> 8), (unsigned char)(val >> 16)};
         //Go switch emulation
         {
@@ -635,9 +635,9 @@ namespace golang::encoding::base64
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         // Use leftover decoded output from last read.
         if(len(d->out) > 0)
@@ -674,7 +674,7 @@ namespace golang::encoding::base64
             if(d->enc->padChar == NoPadding && d->nbuf > 0)
             {
                 // Decode final fragment, without padding.
-                int nw = {};
+                int64_t nw = {};
                 std::tie(nw, d->err) = rec::Decode(gocpp::recv(d->enc), d->outbuf.make_slice(0), d->buf.make_slice(0, d->nbuf));
                 d->nbuf = 0;
                 d->out = d->outbuf.make_slice(0, nw);
@@ -722,9 +722,9 @@ namespace golang::encoding::base64
     // the decoded data. If src contains invalid base64 data, it will return the
     // number of bytes successfully written and [CorruptInputError].
     // New line characters (\r and \n) are ignored.
-    std::tuple<int, gocpp::error> rec::Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    std::tuple<int64_t, gocpp::error> rec::Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         if(len(src) == 0)
         {
@@ -736,7 +736,7 @@ namespace golang::encoding::base64
         // receiver can't be nil.
         _ = enc->decodeMap;
 
-        auto si = 0;
+        int64_t si = 0;
         for(; strconv::IntSize >= 64 && len(src) - si >= 8 && len(dst) - n >= 8; )
         {
             auto src2 = src.make_slice(si, si + 8);
@@ -748,7 +748,7 @@ namespace golang::encoding::base64
             }
             else
             {
-                int ninc = {};
+                int64_t ninc = {};
                 std::tie(si, ninc, err) = rec::decodeQuantum(gocpp::recv(enc), dst.make_slice(n), src, si);
                 n += ninc;
                 if(err != nullptr)
@@ -769,7 +769,7 @@ namespace golang::encoding::base64
             }
             else
             {
-                int ninc = {};
+                int64_t ninc = {};
                 std::tie(si, ninc, err) = rec::decodeQuantum(gocpp::recv(enc), dst.make_slice(n), src, si);
                 n += ninc;
                 if(err != nullptr)
@@ -781,7 +781,7 @@ namespace golang::encoding::base64
 
         for(; si < len(src); )
         {
-            int ninc = {};
+            int64_t ninc = {};
             std::tie(si, ninc, err) = rec::decodeQuantum(gocpp::recv(enc), dst.make_slice(n), src, si);
             n += ninc;
             if(err != nullptr)
@@ -863,12 +863,12 @@ namespace golang::encoding::base64
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> rec::Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p)
     {
         auto [n, err] = rec::Read(gocpp::recv(r->wrapped), p);
         for(; n > 0; )
         {
-            auto offset = 0;
+            int64_t offset = 0;
             for(auto [i, b] : p.make_slice(0, n))
             {
                 if(b != '\r' && b != '\n')
@@ -901,12 +901,12 @@ namespace golang::encoding::base64
 
     // DecodedLen returns the maximum length in bytes of the decoded data
     // corresponding to n bytes of base64-encoded data.
-    int rec::DecodedLen(Encoding* enc, int n)
+    int64_t rec::DecodedLen(Encoding* enc, int64_t n)
     {
         return decodedLen(n, enc->padChar);
     }
 
-    int decodedLen(int n, gocpp::rune padChar)
+    int64_t decodedLen(int64_t n, gocpp::rune padChar)
     {
         if(padChar == NoPadding)
         {

@@ -6,10 +6,10 @@
 
 namespace golang::compress::flate
 {
-    const long NoCompression = 0;
-    const long BestSpeed = 1;
-    const long BestCompression = 9;
-    const long DefaultCompression = - 1;
+    inline constexpr long NoCompression = 0;
+    inline constexpr long BestSpeed = 1;
+    inline constexpr long BestCompression = 9;
+    inline constexpr long DefaultCompression = - 1;
     // HuffmanOnly disables Lempel-Ziv match searching and only performs Huffman
     // entropy encoding. This mode is useful in compressing data that has
     // already been compressed with an LZ style algorithm (e.g. Snappy or LZ4)
@@ -19,32 +19,32 @@ namespace golang::compress::flate
     // Note that HuffmanOnly produces a compressed output that is
     // RFC 1951 compliant. That is, any valid DEFLATE decompressor will
     // continue to be able to decompress this output.
-    const long HuffmanOnly = - 2;
-    const long logWindowSize = 15;
-    const long minMatchLength = 4;
-    const long maxMatchLength = 258;
-    const long minOffsetSize = 1;
+    inline constexpr long HuffmanOnly = - 2;
+    inline constexpr long logWindowSize = 15;
+    inline constexpr long minMatchLength = 4;
+    inline constexpr long maxMatchLength = 258;
+    inline constexpr long minOffsetSize = 1;
     // The maximum number of tokens we will encode at the time.
     // Smaller sizes usually creates less optimal blocks.
     // Bigger can make context switching slow.
     // We use this for levels 7-9, so we make it big.
-    const int maxFlateBlockTokens = 1 << 15;
-    const long maxStoreBlockSize = 65535;
-    const long hashBits = 17;
-    const int maxHashOffset = 1 << 28;
+    inline constexpr int64_t maxFlateBlockTokens = 1 << 15;
+    inline constexpr long maxStoreBlockSize = 65535;
+    inline constexpr long hashBits = 17;
+    inline constexpr int64_t maxHashOffset = 1 << 28;
     struct compressionLevel;
     struct advancedState;
     struct compressor;
     struct Writer;
-    const int windowSize = 1 << logWindowSize;
-    const int hashSize = 1 << hashBits;
-    const int hashMask = (1 << hashBits) - 1;
-    const int windowMask = windowSize - 1;
+    inline constexpr int64_t windowSize = 1 << logWindowSize;
+    inline constexpr int64_t hashSize = 1 << hashBits;
+    inline constexpr int64_t hashMask = (1 << hashBits) - 1;
+    inline constexpr int64_t windowMask = windowSize - 1;
 }
 #include "golang/math/const.fwd.h"
 
 namespace golang::compress::flate
 {
     namespace math = golang::math;
-    const int skipNever = math::MaxInt32;
+    inline constexpr int64_t skipNever = math::MaxInt32;
 }

@@ -15,16 +15,18 @@ namespace golang::runtime
     struct GoTag_semTable { };
     void sync_runtime_Semacquire(uint32_t* addr);
     void poll_runtime_Semacquire(uint32_t* addr);
-    void sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes);
-    void internal_sync_runtime_SemacquireMutex(uint32_t* addr, bool lifo, int skipframes);
-    void sync_runtime_SemacquireRWMutexR(uint32_t* addr, bool lifo, int skipframes);
-    void sync_runtime_SemacquireRWMutex(uint32_t* addr, bool lifo, int skipframes);
+    void sync_runtime_Semrelease(uint32_t* addr, bool handoff, int64_t skipframes);
+    void internal_sync_runtime_SemacquireMutex(uint32_t* addr, bool lifo, int64_t skipframes);
+    void sync_runtime_SemacquireRWMutexR(uint32_t* addr, bool lifo, int64_t skipframes);
+    void sync_runtime_SemacquireRWMutex(uint32_t* addr, bool lifo, int64_t skipframes);
     void sync_runtime_SemacquireWaitGroup(uint32_t* addr, bool synctestDurable);
     void poll_runtime_Semrelease(uint32_t* addr);
-    void internal_sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes);
+    void internal_sync_runtime_Semrelease(uint32_t* addr, bool handoff, int64_t skipframes);
+    struct GoTag_semaProfileFlags { };
+    using semaProfileFlags = gocpp::defined<int64_t, GoTag_semaProfileFlags>;
     void semacquire(uint32_t* addr);
     void semrelease(uint32_t* addr);
-    void semrelease1(uint32_t* addr, bool handoff, int skipframes);
+    void semrelease1(uint32_t* addr, bool handoff, int64_t skipframes);
     bool cansemacquire(uint32_t* addr);
     bool less(uint32_t a, uint32_t b);
     void notifyListCheck(uintptr_t sz);
@@ -34,8 +36,8 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    void readyWithTime(sudog* s, int traceskip);
-    void semacquire1(uint32_t* addr, bool lifo, semaProfileFlags profile, int skipframes, waitReason reason);
+    void readyWithTime(sudog* s, int64_t traceskip);
+    void semacquire1(uint32_t* addr, bool lifo, semaProfileFlags profile, int64_t skipframes, waitReason reason);
 }
 #include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
 #include "golang/internal/runtime/atomic/stubs.fwd.h"

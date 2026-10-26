@@ -9,6 +9,16 @@
 #include "golang/golang.org/x/tools/internal/pkgbits/codes.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::golang_org::x::tools::internal::pkgbits
+{
+    struct GoTag_CodeVal { };
+    using CodeVal = gocpp::defined<int64_t, GoTag_CodeVal>;
+    struct GoTag_CodeType { };
+    using CodeType = gocpp::defined<int64_t, GoTag_CodeType>;
+    struct GoTag_CodeObj { };
+    using CodeObj = gocpp::defined<int64_t, GoTag_CodeObj>;
+}
 #include "golang/golang.org/x/tools/internal/pkgbits/sync.h"
 
 namespace golang::golang_org::x::tools::internal::pkgbits
@@ -45,7 +55,7 @@ namespace golang::golang_org::x::tools::internal::pkgbits
             // Marker returns the SyncMarker for the Code's dynamic type.
             virtual SyncMarker vMarker() = 0;
             // Value returns the Code's ordinal value.
-            virtual int vValue() = 0;
+            virtual int64_t vValue() = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -59,7 +69,7 @@ namespace golang::golang_org::x::tools::internal::pkgbits
 
             SyncMarker vMarker() override;
 
-            int vValue() override;
+            int64_t vValue() override;
 
             void* getPtr() override
             {
@@ -79,8 +89,8 @@ namespace golang::golang_org::x::tools::internal::pkgbits
         SyncMarker Marker(const gocpp::PtrRecv<struct Code, false>& self);
         SyncMarker Marker(const gocpp::ObjRecv<struct Code>& self);
 
-        int Value(const gocpp::PtrRecv<struct Code, false>& self);
-        int Value(const gocpp::ObjRecv<struct Code>& self);
+        int64_t Value(const gocpp::PtrRecv<struct Code, false>& self);
+        int64_t Value(const gocpp::ObjRecv<struct Code>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Code& value);
@@ -94,11 +104,11 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     namespace rec
     {
         SyncMarker Marker(CodeVal c);
-        int Value(CodeVal c);
+        int64_t Value(CodeVal c);
         SyncMarker Marker(CodeType c);
-        int Value(CodeType c);
+        int64_t Value(CodeType c);
         SyncMarker Marker(CodeObj c);
-        int Value(CodeObj c);
+        int64_t Value(CodeObj c);
     }
 }
 

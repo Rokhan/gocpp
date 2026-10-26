@@ -9,6 +9,12 @@
 #include "golang/runtime/lfstack.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    struct GoTag_lfstack { };
+    using lfstack = gocpp::defined<uint64_t, GoTag_lfstack>;
+}
 #include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime

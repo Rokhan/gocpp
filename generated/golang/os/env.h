@@ -16,7 +16,7 @@ namespace golang::os
     gocpp::string ExpandEnv(gocpp::string s);
     bool isShellSpecialVar(uint8_t c);
     bool isAlphaNum(uint8_t c);
-    std::tuple<gocpp::string, int> getShellName(gocpp::string s);
+    std::tuple<gocpp::string, int64_t> getShellName(gocpp::string s);
     gocpp::string Getenv(gocpp::string key);
     std::tuple<gocpp::string, bool> LookupEnv(gocpp::string key);
     gocpp::error Setenv(gocpp::string key, gocpp::string value);

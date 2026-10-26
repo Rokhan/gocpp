@@ -79,7 +79,7 @@ namespace golang::internal::abi
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct MapType, false>& self)
+        int64_t Align(const gocpp::PtrRecv<struct MapType, false>& self)
         {
             return rec::Align(gocpp::recv(self.ptr->Type));
         }
@@ -104,7 +104,7 @@ namespace golang::internal::abi
             return rec::Common(gocpp::recv(self.ptr->Type));
         }
 
-        int DescriptorSize(const gocpp::PtrRecv<struct MapType, false>& self)
+        int64_t DescriptorSize(const gocpp::PtrRecv<struct MapType, false>& self)
         {
             return rec::DescriptorSize(gocpp::recv(self.ptr->Type));
         }
@@ -114,7 +114,7 @@ namespace golang::internal::abi
             return rec::ExportedMethods(gocpp::recv(self.ptr->Type));
         }
 
-        int FieldAlign(const gocpp::PtrRecv<struct MapType, false>& self)
+        int64_t FieldAlign(const gocpp::PtrRecv<struct MapType, false>& self)
         {
             return rec::FieldAlign(gocpp::recv(self.ptr->Type));
         }
@@ -149,7 +149,7 @@ namespace golang::internal::abi
             return rec::Kind(gocpp::recv(self.ptr->Type));
         }
 
-        int Len(const gocpp::PtrRecv<struct MapType, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct MapType, false>& self)
         {
             return rec::Len(gocpp::recv(self.ptr->Type));
         }
@@ -159,7 +159,7 @@ namespace golang::internal::abi
             return rec::MapType(gocpp::recv(self.ptr->Type));
         }
 
-        int NumMethod(const gocpp::PtrRecv<struct MapType, false>& self)
+        int64_t NumMethod(const gocpp::PtrRecv<struct MapType, false>& self)
         {
             return rec::NumMethod(gocpp::recv(self.ptr->Type));
         }

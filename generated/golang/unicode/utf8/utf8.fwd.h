@@ -7,46 +7,46 @@
 namespace golang::unicode::utf8
 {
     // Numbers fundamental to the encoding.
-    const char RuneError = '\uFFFD';
-    const long RuneSelf = 0x80;
-    const char MaxRune = '\U0010FFFF';
-    const long UTFMax = 4;
+    inline constexpr char RuneError = '\uFFFD';
+    inline constexpr long RuneSelf = 0x80;
+    inline constexpr char MaxRune = '\U0010FFFF';
+    inline constexpr long UTFMax = 4;
     // Code points in the surrogate range are not valid for UTF-8.
-    const long surrogateMin = 0xD800;
-    const long surrogateMax = 0xDFFF;
-    const long t1 = 0b00000000;
-    const long tx = 0b10000000;
-    const long t2 = 0b11000000;
-    const long t3 = 0b11100000;
-    const long t4 = 0b11110000;
-    const long t5 = 0b11111000;
-    const long maskx = 0b00111111;
-    const long mask2 = 0b00011111;
-    const long mask3 = 0b00001111;
-    const long mask4 = 0b00000111;
-    const int rune1Max = (1 << 7) - 1;
-    const int rune2Max = (1 << 11) - 1;
-    const int rune3Max = (1 << 16) - 1;
+    inline constexpr long surrogateMin = 0xD800;
+    inline constexpr long surrogateMax = 0xDFFF;
+    inline constexpr long t1 = 0b00000000;
+    inline constexpr long tx = 0b10000000;
+    inline constexpr long t2 = 0b11000000;
+    inline constexpr long t3 = 0b11100000;
+    inline constexpr long t4 = 0b11110000;
+    inline constexpr long t5 = 0b11111000;
+    inline constexpr long maskx = 0b00111111;
+    inline constexpr long mask2 = 0b00011111;
+    inline constexpr long mask3 = 0b00001111;
+    inline constexpr long mask4 = 0b00000111;
+    inline constexpr int64_t rune1Max = (1 << 7) - 1;
+    inline constexpr int64_t rune2Max = (1 << 11) - 1;
+    inline constexpr int64_t rune3Max = (1 << 16) - 1;
     // The default lowest and highest continuation byte.
-    const long locb = 0b10000000;
-    const long hicb = 0b10111111;
+    inline constexpr long locb = 0b10000000;
+    inline constexpr long hicb = 0b10111111;
     // These names of these constants are chosen to give nice alignment in the
     // table below. The first nibble is an index into acceptRanges or F for
     // special one-byte cases. The second nibble is the Rune length or the
     // Status for the special one-byte case.
-    const long xx = 0xF1;
-    const long as = 0xF0;
-    const long s1 = 0x02;
-    const long s2 = 0x13;
-    const long s3 = 0x03;
-    const long s4 = 0x23;
-    const long s5 = 0x34;
-    const long s6 = 0x04;
-    const long s7 = 0x44;
+    inline constexpr long xx = 0xF1;
+    inline constexpr long as = 0xF0;
+    inline constexpr long s1 = 0x02;
+    inline constexpr long s2 = 0x13;
+    inline constexpr long s3 = 0x03;
+    inline constexpr long s4 = 0x23;
+    inline constexpr long s5 = 0x34;
+    inline constexpr long s6 = 0x04;
+    inline constexpr long s7 = 0x44;
     struct acceptRange;
-    const int ptrSize = 4 << (~ uintptr_t(0) >> 63);
-    const gocpp::rune runeErrorByte0 = t3 | (RuneError >> 12);
-    const gocpp::rune runeErrorByte1 = tx | (RuneError >> 6) & maskx;
-    const gocpp::rune runeErrorByte2 = tx | RuneError & maskx;
-    const int hiBits = 0x8080808080808080 >> (64 - 8 * ptrSize);
+    inline constexpr int64_t ptrSize = 4 << (~ uintptr_t(0) >> 63);
+    inline constexpr gocpp::rune runeErrorByte0 = t3 | (RuneError >> 12);
+    inline constexpr gocpp::rune runeErrorByte1 = tx | (RuneError >> 6) & maskx;
+    inline constexpr gocpp::rune runeErrorByte2 = tx | RuneError & maskx;
+    inline constexpr uint64_t hiBits = uint64_t(0x8080808080808080_bi >> (64 - 8 * ptrSize));
 }

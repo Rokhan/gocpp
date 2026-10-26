@@ -66,7 +66,7 @@ namespace golang::internal::poll
     {
         auto protos = gocpp::array<int32_t, 2> {syscall::IPPROTO_TCP, 0};
         gocpp::array<syscall::WSAProtocolInfo, 32> buf = {};
-        auto len = uint32_t(gocpp::Sizeof<gocpp::array<syscall::WSAProtocolInfo, 32>>());
+        uint32_t len = uint32_t(gocpp::Sizeof<gocpp::array<syscall::WSAProtocolInfo, 32>>());
         auto [n, err] = syscall::WSAEnumProtocols(& protos[0], & buf[0], & len);
         if(err != nullptr)
         {
@@ -96,7 +96,7 @@ namespace golang::internal::poll
             return true;
         }
         syscall::WSAProtocolInfo info = {};
-        auto size = int32_t(gocpp::Sizeof<syscall::WSAProtocolInfo>());
+        int32_t size = int32_t(gocpp::Sizeof<syscall::WSAProtocolInfo>());
         if(syscall::Getsockopt(h, syscall::SOL_SOCKET, windows::SO_PROTOCOL_INFOW, (unsigned char*)(gocpp::unsafe_pointer(& info)), & size) != nullptr)
         {
             return false;
@@ -248,7 +248,7 @@ namespace golang::internal::poll
     });
     // newWSAMsg creates a new WSAMsg with the provided parameters.
     // Use [freeWSAMsg] to free it.
-    windows::WSAMsg* newWSAMsg(gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, wsaRsa* rsa)
+    windows::WSAMsg* newWSAMsg(gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int64_t flags, wsaRsa* rsa)
     {
         // The returned object can't be allocated in the stack because it is accessed asynchronously
         // by Windows in between several system calls. If the stack frame is moved while that happens,
@@ -354,7 +354,7 @@ namespace golang::internal::poll
             return err;
         }
         // Wait for our request to complete.
-        auto err = rec::wait(gocpp::recv(fd->pd), int(o->mode), fd->isFile);
+        auto err = rec::wait(gocpp::recv(fd->pd), int64_t(o->mode), fd->isFile);
         //Go switch emulation
         {
             auto condition = err;
@@ -379,7 +379,7 @@ namespace golang::internal::poll
                         // TODO(brainman): maybe do something else, but panic.
                         gocpp::panic(err);
                     }
-                    rec::waitCanceled(gocpp::recv(fd->pd), int(o->mode));
+                    rec::waitCanceled(gocpp::recv(fd->pd), int64_t(o->mode));
                     break;
                 default:
                     // No other error is expected.
@@ -394,7 +394,7 @@ namespace golang::internal::poll
     // It supports both synchronous and asynchronous IO.
     // pinPtrs is a list of pointers that will be pinned to a fixed location in memory
     // during the lifetime of the operation.
-    std::tuple<int, gocpp::error> rec::execIO(FD* fd, int mode, std::function<std::tuple<uint32_t, gocpp::error> (operation* o)> submit, gocpp::slice<go_any> pinPtrs)
+    std::tuple<int64_t, gocpp::error> rec::execIO(FD* fd, int64_t mode, std::function<std::tuple<uint32_t, gocpp::error> (operation* o)> submit, gocpp::slice<go_any> pinPtrs)
     {
         gocpp::Defer defer;
         try
@@ -504,7 +504,7 @@ namespace golang::internal::poll
                         break;
                 }
             }
-            return {int(qty), err};
+            return {int64_t(qty), err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -613,7 +613,7 @@ namespace golang::internal::poll
     }
 
     // addOffset adds the given offset to the current offset.
-    void rec::addOffset(FD* fd, int off)
+    void rec::addOffset(FD* fd, int64_t off)
     {
         fd->offset += int64_t(off);
     }
@@ -683,7 +683,7 @@ namespace golang::internal::poll
         // FILE_SKIP_SET_EVENT_ON_HANDLE is always safe to use. We don't use that feature
         // and it adds some overhead to the Windows I/O manager.
         // See https://devblogs.microsoft.com/oldnewthing/20200221-00/?p=103466.
-        auto modes = uint8_t(syscall::FILE_SKIP_SET_EVENT_ON_HANDLE);
+        uint8_t modes = uint8_t(syscall::FILE_SKIP_SET_EVENT_ON_HANDLE);
         if(canSkipCompletionPortOnSuccess(fd->Sysfd, fd->kind == kindNet))
         {
             modes |= syscall::FILE_SKIP_COMPLETION_PORT_ON_SUCCESS;
@@ -806,7 +806,7 @@ namespace golang::internal::poll
     }
 
     // Read implements io.Reader.
-    std::tuple<int, gocpp::error> rec::Read(FD* fd, gocpp::slice<unsigned char> buf)
+    std::tuple<int64_t, gocpp::error> rec::Read(FD* fd, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
         try
@@ -833,7 +833,7 @@ namespace golang::internal::poll
                 buf = buf.make_slice(0, maxRW);
             }
 
-            int n = {};
+            int64_t n = {};
             gocpp::error err = {};
             //Go switch emulation
             {
@@ -911,7 +911,7 @@ namespace golang::internal::poll
     // readConsole reads utf16 characters from console File,
     // encodes them into utf8 and stores them in buffer b.
     // It returns the number of utf8 bytes read and an error, if any.
-    std::tuple<int, gocpp::error> rec::readConsole(FD* fd, gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> rec::readConsole(FD* fd, gocpp::slice<unsigned char> b)
     {
         if(len(b) == 0)
         {
@@ -940,10 +940,10 @@ namespace golang::internal::poll
             {
                 return {0, err};
             }
-            auto uint16s = fd->readuint16.make_slice(0, len(fd->readuint16) + int(nw));
+            auto uint16s = fd->readuint16.make_slice(0, len(fd->readuint16) + int64_t(nw));
             fd->readuint16 = fd->readuint16.make_slice(0, 0);
             auto buf = fd->readbyte.make_slice(0, 0);
-            for(auto i = 0; i < len(uint16s); i++)
+            for(int64_t i = 0; i < len(uint16s); i++)
             {
                 auto r = gocpp::rune(uint16s[i]);
                 if(utf16::IsSurrogate(r))
@@ -979,7 +979,7 @@ namespace golang::internal::poll
         }
 
         auto src = fd->readbyte.make_slice(fd->readbyteOffset);
-        int i = {};
+        int64_t i = {};
         for(i = 0; i < len(src) && i < len(b); i++)
         {
             auto x = src[i];
@@ -999,7 +999,7 @@ namespace golang::internal::poll
     }
 
     // Pread emulates the Unix pread system call.
-    std::tuple<int, gocpp::error> rec::Pread(FD* fd, gocpp::slice<unsigned char> buf, int64_t off)
+    std::tuple<int64_t, gocpp::error> rec::Pread(FD* fd, gocpp::slice<unsigned char> buf, int64_t off)
     {
         gocpp::Defer defer;
         try
@@ -1071,7 +1071,7 @@ namespace golang::internal::poll
     }
 
     // ReadFrom wraps the recvfrom network call.
-    std::tuple<int, syscall::Sockaddr, gocpp::error> rec::ReadFrom(FD* fd, gocpp::slice<unsigned char> buf)
+    std::tuple<int64_t, syscall::Sockaddr, gocpp::error> rec::ReadFrom(FD* fd, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
         try
@@ -1116,7 +1116,7 @@ namespace golang::internal::poll
     }
 
     // ReadFromInet4 wraps the recvfrom network call for IPv4.
-    std::tuple<int, gocpp::error> rec::ReadFromInet4(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4)
+    std::tuple<int64_t, gocpp::error> rec::ReadFromInet4(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4)
     {
         gocpp::Defer defer;
         try
@@ -1161,7 +1161,7 @@ namespace golang::internal::poll
     }
 
     // ReadFromInet6 wraps the recvfrom network call for IPv6.
-    std::tuple<int, gocpp::error> rec::ReadFromInet6(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6)
+    std::tuple<int64_t, gocpp::error> rec::ReadFromInet6(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6)
     {
         gocpp::Defer defer;
         try
@@ -1206,7 +1206,7 @@ namespace golang::internal::poll
     }
 
     // Write implements io.Writer.
-    std::tuple<int, gocpp::error> rec::Write(FD* fd, gocpp::slice<unsigned char> buf)
+    std::tuple<int64_t, gocpp::error> rec::Write(FD* fd, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
         try
@@ -1228,7 +1228,7 @@ namespace golang::internal::poll
                 defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             }
 
-            int ntotal = {};
+            int64_t ntotal = {};
             for(; ; )
             {
                 auto max = len(buf);
@@ -1237,7 +1237,7 @@ namespace golang::internal::poll
                     max = ntotal + maxRW;
                 }
                 auto b = buf.make_slice(ntotal, max);
-                int n = {};
+                int64_t n = {};
                 gocpp::error err = {};
                 //Go switch emulation
                 {
@@ -1297,7 +1297,7 @@ namespace golang::internal::poll
 
     // writeConsole writes len(b) bytes to the console File.
     // It returns the number of bytes written and an error, if any.
-    std::tuple<int, gocpp::error> rec::writeConsole(FD* fd, gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> rec::writeConsole(FD* fd, gocpp::slice<unsigned char> b)
     {
         auto n = len(b);
         auto runes = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::rune>>(), 0, 256);
@@ -1346,7 +1346,7 @@ namespace golang::internal::poll
     }
 
     // Pwrite emulates the Unix pwrite system call.
-    std::tuple<int, gocpp::error> rec::Pwrite(FD* fd, gocpp::slice<unsigned char> buf, int64_t off)
+    std::tuple<int64_t, gocpp::error> rec::Pwrite(FD* fd, gocpp::slice<unsigned char> buf, int64_t off)
     {
         gocpp::Defer defer;
         try
@@ -1363,7 +1363,7 @@ namespace golang::internal::poll
             }
             defer.push_back([=]{ rec::readWriteUnlock(gocpp::recv(fd)); });
 
-            int ntotal = {};
+            int64_t ntotal = {};
             for(; ; )
             {
                 auto max = len(buf);
@@ -1465,7 +1465,7 @@ namespace golang::internal::poll
     }
 
     // WriteTo wraps the sendto network call.
-    std::tuple<int, gocpp::error> rec::WriteTo(FD* fd, gocpp::slice<unsigned char> buf, syscall::Sockaddr sa)
+    std::tuple<int64_t, gocpp::error> rec::WriteTo(FD* fd, gocpp::slice<unsigned char> buf, syscall::Sockaddr sa)
     {
         gocpp::Defer defer;
         try
@@ -1490,7 +1490,7 @@ namespace golang::internal::poll
                 return {n, err};
             }
 
-            auto ntotal = 0;
+            int64_t ntotal = 0;
             for(; len(buf) > 0; )
             {
                 auto b = buf;
@@ -1506,7 +1506,7 @@ namespace golang::internal::poll
                     return {qty, err};
                 }, unsafe::SliceData(b));
                 auto& err = err_tmp;
-                ntotal += int(n);
+                ntotal += int64_t(n);
                 if(err != nullptr)
                 {
                     return {ntotal, err};
@@ -1522,7 +1522,7 @@ namespace golang::internal::poll
     }
 
     // WriteToInet4 is WriteTo, specialized for syscall.SockaddrInet4.
-    std::tuple<int, gocpp::error> rec::WriteToInet4(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4)
+    std::tuple<int64_t, gocpp::error> rec::WriteToInet4(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4)
     {
         gocpp::Defer defer;
         try
@@ -1547,7 +1547,7 @@ namespace golang::internal::poll
                 return {n, err};
             }
 
-            auto ntotal = 0;
+            int64_t ntotal = 0;
             for(; len(buf) > 0; )
             {
                 auto b = buf;
@@ -1563,7 +1563,7 @@ namespace golang::internal::poll
                     return {qty, err};
                 }, unsafe::SliceData(b));
                 auto& err = err_tmp;
-                ntotal += int(n);
+                ntotal += int64_t(n);
                 if(err != nullptr)
                 {
                     return {ntotal, err};
@@ -1579,7 +1579,7 @@ namespace golang::internal::poll
     }
 
     // WriteToInet6 is WriteTo, specialized for syscall.SockaddrInet6.
-    std::tuple<int, gocpp::error> rec::WriteToInet6(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6)
+    std::tuple<int64_t, gocpp::error> rec::WriteToInet6(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6)
     {
         gocpp::Defer defer;
         try
@@ -1604,7 +1604,7 @@ namespace golang::internal::poll
                 return {n, err};
             }
 
-            auto ntotal = 0;
+            int64_t ntotal = 0;
             for(; len(buf) > 0; )
             {
                 auto b = buf;
@@ -1620,7 +1620,7 @@ namespace golang::internal::poll
                     return {qty, err};
                 }, unsafe::SliceData(b));
                 auto& err = err_tmp;
-                ntotal += int(n);
+                ntotal += int64_t(n);
                 if(err != nullptr)
                 {
                     return {ntotal, err};
@@ -1650,7 +1650,7 @@ namespace golang::internal::poll
     std::tuple<gocpp::string, gocpp::error> rec::acceptOne(FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa)
     {
         // Submit accept request.
-        auto rsan = uint32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
+        uint32_t rsan = uint32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
         auto [gocpp_id_3, err_tmp] = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
         {
             uint32_t qty;
@@ -1741,7 +1741,7 @@ namespace golang::internal::poll
     }
 
     // Seek wraps syscall.Seek.
-    std::tuple<int64_t, gocpp::error> rec::Seek(FD* fd, int64_t offset, int whence)
+    std::tuple<int64_t, gocpp::error> rec::Seek(FD* fd, int64_t offset, int64_t whence)
     {
         gocpp::Defer defer;
         try
@@ -2009,7 +2009,7 @@ namespace golang::internal::poll
     {
         auto pp = (syscall::RawSockaddrInet4*)(gocpp::unsafe_pointer(rsa));
         auto p = (gocpp::array_ptr<gocpp::array<unsigned char, 2>>)(gocpp::unsafe_pointer(& pp->Port));
-        sa->Port = (int(p[0]) << 8) + int(p[1]);
+        sa->Port = (int64_t(p[0]) << 8) + int64_t(p[1]);
         sa->Addr = pp->Addr;
     }
 
@@ -2017,7 +2017,7 @@ namespace golang::internal::poll
     {
         auto pp = (syscall::RawSockaddrInet6*)(gocpp::unsafe_pointer(rsa));
         auto p = (gocpp::array_ptr<gocpp::array<unsigned char, 2>>)(gocpp::unsafe_pointer(& pp->Port));
-        sa->Port = (int(p[0]) << 8) + int(p[1]);
+        sa->Port = (int64_t(p[0]) << 8) + int64_t(p[1]);
         sa->ZoneId = pp->Scope_id;
         sa->Addr = pp->Addr;
     }
@@ -2058,7 +2058,7 @@ namespace golang::internal::poll
     }
 
     // ReadMsg wraps the WSARecvMsg network call.
-    std::tuple<int, int, int, syscall::Sockaddr, gocpp::error> rec::ReadMsg(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags)
+    std::tuple<int64_t, int64_t, int64_t, syscall::Sockaddr, gocpp::error> rec::ReadMsg(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int64_t flags)
     {
         gocpp::Defer defer;
         try
@@ -2092,7 +2092,7 @@ namespace golang::internal::poll
             {
                 std::tie(sa, err) = rec::Sockaddr(gocpp::recv(msg->Name));
             }
-            return {n, int(msg->Control.Len), int(msg->Flags), sa, err};
+            return {n, int64_t(msg->Control.Len), int64_t(msg->Flags), sa, err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -2101,7 +2101,7 @@ namespace golang::internal::poll
     }
 
     // ReadMsgInet4 is ReadMsg, but specialized to return a syscall.SockaddrInet4.
-    std::tuple<int, int, int, gocpp::error> rec::ReadMsgInet4(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, syscall::SockaddrInet4* sa4)
+    std::tuple<int64_t, int64_t, int64_t, gocpp::error> rec::ReadMsgInet4(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int64_t flags, syscall::SockaddrInet4* sa4)
     {
         gocpp::Defer defer;
         try
@@ -2134,7 +2134,7 @@ namespace golang::internal::poll
             {
                 rawToSockaddrInet4(msg->Name, sa4);
             }
-            return {n, int(msg->Control.Len), int(msg->Flags), err};
+            return {n, int64_t(msg->Control.Len), int64_t(msg->Flags), err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -2143,7 +2143,7 @@ namespace golang::internal::poll
     }
 
     // ReadMsgInet6 is ReadMsg, but specialized to return a syscall.SockaddrInet6.
-    std::tuple<int, int, int, gocpp::error> rec::ReadMsgInet6(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, syscall::SockaddrInet6* sa6)
+    std::tuple<int64_t, int64_t, int64_t, gocpp::error> rec::ReadMsgInet6(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int64_t flags, syscall::SockaddrInet6* sa6)
     {
         gocpp::Defer defer;
         try
@@ -2176,7 +2176,7 @@ namespace golang::internal::poll
             {
                 rawToSockaddrInet6(msg->Name, sa6);
             }
-            return {n, int(msg->Control.Len), int(msg->Flags), err};
+            return {n, int64_t(msg->Control.Len), int64_t(msg->Flags), err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -2185,7 +2185,7 @@ namespace golang::internal::poll
     }
 
     // WriteMsg wraps the WSASendMsg network call.
-    std::tuple<int, int, gocpp::error> rec::WriteMsg(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::Sockaddr sa)
+    std::tuple<int64_t, int64_t, gocpp::error> rec::WriteMsg(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::Sockaddr sa)
     {
         gocpp::Defer defer;
         try
@@ -2223,7 +2223,7 @@ namespace golang::internal::poll
                 return {qty, err};
             }, rsa, msg);
             auto& err = err_tmp;
-            return {n, int(msg->Control.Len), err};
+            return {n, int64_t(msg->Control.Len), err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -2232,7 +2232,7 @@ namespace golang::internal::poll
     }
 
     // WriteMsgInet4 is WriteMsg specialized for syscall.SockaddrInet4.
-    std::tuple<int, int, gocpp::error> rec::WriteMsgInet4(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet4* sa)
+    std::tuple<int64_t, int64_t, gocpp::error> rec::WriteMsgInet4(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet4* sa)
     {
         gocpp::Defer defer;
         try
@@ -2265,7 +2265,7 @@ namespace golang::internal::poll
                 return {qty, err};
             }, rsa, msg);
             auto& err = err_tmp;
-            return {n, int(msg->Control.Len), err};
+            return {n, int64_t(msg->Control.Len), err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -2274,7 +2274,7 @@ namespace golang::internal::poll
     }
 
     // WriteMsgInet6 is WriteMsg specialized for syscall.SockaddrInet6.
-    std::tuple<int, int, gocpp::error> rec::WriteMsgInet6(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet6* sa)
+    std::tuple<int64_t, int64_t, gocpp::error> rec::WriteMsgInet6(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet6* sa)
     {
         gocpp::Defer defer;
         try
@@ -2307,7 +2307,7 @@ namespace golang::internal::poll
                 return {qty, err};
             }, rsa, msg);
             auto& err = err_tmp;
-            return {n, int(msg->Control.Len), err};
+            return {n, int64_t(msg->Control.Len), err};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -2315,7 +2315,7 @@ namespace golang::internal::poll
         }
     }
 
-    std::tuple<int, gocpp::string, gocpp::error> DupCloseOnExec(int fd)
+    std::tuple<int64_t, gocpp::string, gocpp::error> DupCloseOnExec(int64_t fd)
     {
         auto [proc, err] = syscall::GetCurrentProcess();
         if(err != nullptr)
@@ -2330,7 +2330,7 @@ namespace golang::internal::poll
         {
             return {0, "DuplicateHandle"_s, err};
         }
-        return {int(nfd), ""_s, nullptr};
+        return {int64_t(nfd), ""_s, nullptr};
     }
 
 }

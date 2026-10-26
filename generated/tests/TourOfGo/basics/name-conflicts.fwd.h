@@ -6,7 +6,8 @@
 
 namespace golang::main
 {
-    const double Pi = 3.14;
-    using titi = double;
+    inline constexpr double Pi = 3.14;
+    struct GoTag_titi;
+    using titi = gocpp::defined<double, GoTag_titi>;
     struct toto;
 }

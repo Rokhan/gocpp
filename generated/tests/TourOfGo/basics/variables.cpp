@@ -24,12 +24,12 @@ namespace golang::main
     bool c;
     bool python;
     bool java;
-    int ii = 3;
-    int jj = 4;
-    int kk = 5;
+    int64_t ii = 3;
+    int64_t jj = 4;
+    int64_t kk = 5;
     bool debug = gocpp::init_multi(ParseBool("True"_s), _);
     gocpp::string v2;
-    int v3;
+    int64_t v3;
     double v4;
     bool v1 = gocpp::init_multi(FourValues(), v2, v3, v4);
     gocpp::string u2;
@@ -71,19 +71,19 @@ namespace golang::main
     {
         mocklib::Println("funcVar"_s);
     };
-    std::function<int (int)> funcVar2 = [](int i) mutable -> int
+    std::function<int64_t (int64_t)> funcVar2 = [](int64_t i) mutable -> int64_t
     {
         mocklib::Println("funcVar,"_s, i);
         return 3;
     };
-    std::function<std::tuple<int, gocpp::string> (int)> funcVar3 = [](int i) mutable -> std::tuple<int, gocpp::string>
+    std::function<std::tuple<int64_t, gocpp::string> (int64_t)> funcVar3 = [](int64_t i) mutable -> std::tuple<int64_t, gocpp::string>
     {
         mocklib::Println("funcVar,"_s, i);
         return {3, "zz"_s};
     };
     void main()
     {
-        int i = {};
+        int64_t i = {};
         mocklib::Println(i, c, python, java);
         mocklib::Println(ii, jj, kk);
 
@@ -124,9 +124,9 @@ namespace golang::main
         mocklib::Println(u1, u2, u3);
     }
 
-    std::tuple<int, gocpp::string> withNamedResults()
+    std::tuple<int64_t, gocpp::string> withNamedResults()
     {
-        int i;
+        int64_t i;
         gocpp::string s;
         i = 3;
         s = "hello"_s;
@@ -142,14 +142,14 @@ namespace golang::main
             auto p_tmp = p.y;
             auto& p = p_tmp;
             auto k = i;
-            auto s = "world"_s;
+            gocpp::string s = "world"_s;
             mocklib::Println("withNamedResults:"_s, i, s, j, k, x, p);
         }
         mocklib::Println("withNamedResults:"_s, i, s);
         return {i, s};
     }
 
-    void inlineAssign(int i)
+    void inlineAssign(int64_t i)
     {
         if(auto [i, ok1] = std::tuple{1, true}; ok1)
         {
@@ -178,7 +178,7 @@ namespace golang::main
         mocklib::Println("inlineAssign:"_s, i);
 
         {
-            auto i = 66;
+            int64_t i = 66;
             if(auto [i, ok1] = std::tuple{4, true}; ok1)
             {
                 mocklib::Println("inlineAssign:"_s, i);
@@ -262,7 +262,7 @@ namespace golang::main
         return {false, mocklib::Errorf("ParseBool: %s"_s, str)};
     }
 
-    std::tuple<bool, gocpp::string, int, double> FourValues()
+    std::tuple<bool, gocpp::string, int64_t, double> FourValues()
     {
         return {true, "aaa"_s, 123, 1.23};
     }

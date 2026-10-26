@@ -162,12 +162,12 @@ namespace golang::runtime
         {
             v ^= 0xa0761d6478bd642f;
             v *= 0xe7037ed1a0b428db;
-            auto size = 8;
+            int64_t size = 8;
             if(len(r) < 8)
             {
                 size = len(r);
             }
-            for(auto i = 0; i < size; i++)
+            for(int64_t i = 0; i < size; i++)
             {
                 r[i] ^= (unsigned char)(v >> (8 * i));
             }

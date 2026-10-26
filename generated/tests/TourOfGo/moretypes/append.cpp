@@ -22,7 +22,7 @@ namespace golang::main
 
     void main()
     {
-        gocpp::slice<int> s = {};
+        gocpp::slice<int64_t> s = {};
         printSlice(s);
 
         // append works on nil slices.
@@ -41,13 +41,13 @@ namespace golang::main
         printSlice(s);
     }
 
-    void printSlice(gocpp::slice<int> s)
+    void printSlice(gocpp::slice<int64_t> s)
     {
         // fmt.Printf("-- len=%d cap=%d %v\n", len(s), cap(s), s)
         mocklib::Printf("## len=%v cap=%v %v\n"_s, len(s), cap(s), s);
     }
 
-    void appendValue(gocpp::slice<int> s, int value)
+    void appendValue(gocpp::slice<int64_t> s, int64_t value)
     {
         s = append(s, value);
     }

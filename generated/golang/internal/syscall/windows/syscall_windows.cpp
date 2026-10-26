@@ -46,7 +46,7 @@ namespace golang::internal::syscall::windows
             return ""_s;
         }
         auto end = gocpp::unsafe_pointer(p);
-        auto n = 0;
+        int64_t n = 0;
         for(; *(uint16_t*)(end) != 0; )
         {
             end = gocpp::unsafe_pointer(uintptr_t(end) + gocpp::Sizeof<uint16_t>());

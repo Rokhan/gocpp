@@ -6,7 +6,8 @@
 
 namespace golang::internal::strconv
 {
-    using unrounded = uint64_t;
+    struct GoTag_unrounded;
+    using unrounded = gocpp::defined<uint64_t, GoTag_unrounded>;
     struct pmHiLo;
     struct scaler;
 }

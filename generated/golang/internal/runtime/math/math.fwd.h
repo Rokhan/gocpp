@@ -6,9 +6,9 @@
 
 namespace golang::internal::runtime::math
 {
-    const uint16_t MaxUint16 = ~ uint16_t(0);
-    const uint32_t MaxUint32 = ~ uint32_t(0);
-    const uint64_t MaxUint64 = ~ uint64_t(0);
-    const uintptr_t MaxUintptr = ~ uintptr_t(0);
-    const int64_t MaxInt64 = int64_t(MaxUint64 >> 1);
+    inline constexpr uint16_t MaxUint16 = ~ uint16_t(0);
+    inline constexpr uint32_t MaxUint32 = ~ uint32_t(0LL);
+    inline constexpr uint64_t MaxUint64 = ~ uint64_t(0);
+    inline constexpr uintptr_t MaxUintptr = ~ uintptr_t(0);
+    inline constexpr int64_t MaxInt64 = int64_t(int64_t(MaxUint64) >> 1);
 }

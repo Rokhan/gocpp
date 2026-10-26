@@ -602,7 +602,7 @@ namespace golang::encoding::binary
 
         // Fallback to reflect-based decoding.
         auto v = reflect::ValueOf(data);
-        auto size = - 1;
+        int64_t size = - 1;
         //Go switch emulation
         {
             auto condition = rec::Kind(gocpp::recv(v));
@@ -641,7 +641,7 @@ namespace golang::encoding::binary
     // the given byte order.
     // It returns an error if buf is too small, otherwise the number of
     // bytes consumed from buf.
-    std::tuple<int, gocpp::error> Decode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data)
+    std::tuple<int64_t, gocpp::error> Decode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data)
     {
         if(auto [n, gocpp_id_3] = intDataSize(data); n != 0)
         {
@@ -658,7 +658,7 @@ namespace golang::encoding::binary
 
         // Fallback to reflect-based decoding.
         auto v = reflect::ValueOf(data);
-        auto size = - 1;
+        int64_t size = - 1;
         //Go switch emulation
         {
             auto condition = rec::Kind(gocpp::recv(v));
@@ -943,7 +943,7 @@ namespace golang::encoding::binary
     // the given byte order.
     // It returns an error if buf is too small, otherwise the number of
     // bytes written into buf.
-    std::tuple<int, gocpp::error> Encode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data)
+    std::tuple<int64_t, gocpp::error> Encode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data)
     {
         // Fast path for basic types and slices.
         if(auto [n, gocpp_id_7] = intDataSize(data); n != 0)
@@ -1307,7 +1307,7 @@ namespace golang::encoding::binary
     // Size returns how many bytes [Write] would generate to encode the value v, which
     // must be a fixed-size value or a slice of fixed-size values, or a pointer to such data.
     // If v is neither of these, Size returns -1.
-    int Size(go_any v)
+    int64_t Size(go_any v)
     {
         //Go type switch emulation
         {
@@ -1575,7 +1575,7 @@ namespace golang::encoding::binary
     // For compound structures, it sums the sizes of the elements. Thus, for instance, for a slice
     // it returns the length of the slice times the element size and does not count the memory
     // occupied by the header. If the type of v is not acceptable, dataSize returns -1.
-    int dataSize(reflect::Value v)
+    int64_t dataSize(reflect::Value v)
     {
         //Go switch emulation
         {
@@ -1592,7 +1592,7 @@ namespace golang::encoding::binary
                     auto t = rec::Elem(gocpp::recv(rec::Type(gocpp::recv(v))));
                     if(auto [size, ok] = rec::Load(gocpp::recv(structSize), t); ok)
                     {
-                        return gocpp::getValue<int>(size) * rec::Len(gocpp::recv(v));
+                        return gocpp::getValue<int64_t>(size) * rec::Len(gocpp::recv(v));
                     }
                     auto size = go_sizeof(t);
                     if(size >= 0)
@@ -1611,7 +1611,7 @@ namespace golang::encoding::binary
                     auto t = rec::Type(gocpp::recv(v));
                     if(auto [size, ok] = rec::Load(gocpp::recv(structSize), t); ok)
                     {
-                        return gocpp::getValue<int>(size);
+                        return gocpp::getValue<int64_t>(size);
                     }
                     auto size = go_sizeof(t);
                     rec::Store(gocpp::recv(structSize), t, size);
@@ -1632,7 +1632,7 @@ namespace golang::encoding::binary
     }
 
     // sizeof returns the size >= 0 of variables for the given type or -1 if the type is not acceptable.
-    int go_sizeof(reflect::Type t)
+    int64_t go_sizeof(reflect::Type t)
     {
         //Go switch emulation
         {
@@ -1664,7 +1664,7 @@ namespace golang::encoding::binary
 
                 case 1:
                 {
-                    auto sum = 0;
+                    int64_t sum = 0;
                     for(auto [i, n] = std::tuple{0, rec::NumField(gocpp::recv(t))}; i < n; i++)
                     {
                         auto s = go_sizeof(rec::Field(gocpp::recv(t), i).Type);
@@ -1691,7 +1691,7 @@ namespace golang::encoding::binary
                 case 12:
                 case 13:
                 case 14:
-                    return int(rec::Size(gocpp::recv(t)));
+                    return int64_t(rec::Size(gocpp::recv(t)));
                     break;
             }
         }
@@ -1873,7 +1873,7 @@ namespace golang::encoding::binary
                 case 0:
                 {
                     auto l = rec::Len(gocpp::recv(v));
-                    for(auto i = 0; i < l; i++)
+                    for(int64_t i = 0; i < l; i++)
                     {
                         rec::value(gocpp::recv(d), rec::Index(gocpp::recv(v), i));
                     }
@@ -1884,7 +1884,7 @@ namespace golang::encoding::binary
                 {
                     auto t = rec::Type(gocpp::recv(v));
                     auto l = rec::NumField(gocpp::recv(v));
-                    for(auto i = 0; i < l; i++)
+                    for(int64_t i = 0; i < l; i++)
                     {
                         // Note: Calling v.CanSet() below is an optimization.
                         // It would be sufficient to check the field name,
@@ -1909,7 +1909,7 @@ namespace golang::encoding::binary
                 case 2:
                 {
                     auto l = rec::Len(gocpp::recv(v));
-                    for(auto i = 0; i < l; i++)
+                    for(int64_t i = 0; i < l; i++)
                     {
                         rec::value(gocpp::recv(d), rec::Index(gocpp::recv(v), i));
                     }
@@ -1990,7 +1990,7 @@ namespace golang::encoding::binary
                 case 0:
                 {
                     auto l = rec::Len(gocpp::recv(v));
-                    for(auto i = 0; i < l; i++)
+                    for(int64_t i = 0; i < l; i++)
                     {
                         rec::value(gocpp::recv(e), rec::Index(gocpp::recv(v), i));
                     }
@@ -2001,7 +2001,7 @@ namespace golang::encoding::binary
                 {
                     auto t = rec::Type(gocpp::recv(v));
                     auto l = rec::NumField(gocpp::recv(v));
-                    for(auto i = 0; i < l; i++)
+                    for(int64_t i = 0; i < l; i++)
                     {
                         // see comment for corresponding code in decoder.value()
                         {
@@ -2022,7 +2022,7 @@ namespace golang::encoding::binary
                 case 2:
                 {
                     auto l = rec::Len(gocpp::recv(v));
-                    for(auto i = 0; i < l; i++)
+                    for(int64_t i = 0; i < l; i++)
                     {
                         rec::value(gocpp::recv(e), rec::Index(gocpp::recv(v), i));
                     }
@@ -2099,7 +2099,7 @@ namespace golang::encoding::binary
     // intDataSize returns the size of the data required to represent the data when encoded,
     // and optionally a byte slice containing the encoded data if no conversion is necessary.
     // It returns zero, nil if the type cannot be implemented by the fast path in Read or Write.
-    std::tuple<int, gocpp::slice<unsigned char>> intDataSize(go_any data)
+    std::tuple<int64_t, gocpp::slice<unsigned char>> intDataSize(go_any data)
     {
         //Go type switch emulation
         {
@@ -2266,7 +2266,7 @@ namespace golang::encoding::binary
 
     // ensure grows buf to length len(buf) + n and returns the grown buffer
     // and a slice starting at the original length of buf (that is, buf2[len(buf):]).
-    std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>> ensure(gocpp::slice<unsigned char> buf, int n)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>> ensure(gocpp::slice<unsigned char> buf, int64_t n)
     {
         gocpp::slice<unsigned char> buf2;
         gocpp::slice<unsigned char> pos;

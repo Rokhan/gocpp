@@ -128,9 +128,9 @@ namespace golang::go::doc
         for(auto [gocpp_ignored, file] : testFiles)
         {
             // file contains tests, fuzz test, or benchmarks
-            auto hasTests = false;
+            bool hasTests = false;
             // number of non-import declarations in the file
-            auto numDecl = 0;
+            int64_t numDecl = 0;
             gocpp::slice<Example*> flist = {};
             for(auto [gocpp_ignored, decl] : file->Decls)
             {
@@ -199,7 +199,7 @@ namespace golang::go::doc
             list = append(list, flist);
         }
         // sort by name
-        slices::SortFunc(list, [=](Example* a, Example* b) mutable -> int
+        slices::SortFunc(list, [=](Example* a, Example* b) mutable -> int64_t
         {
             return cmp::Compare(a->Name, b->Name);
         });
@@ -504,11 +504,11 @@ namespace golang::go::doc
         decls = append(decls, depDecls);
         decls = append(decls, funcDecl);
 
-        slices::SortFunc(decls, [=](ast::Decl a, ast::Decl b) mutable -> int
+        slices::SortFunc(decls, [=](ast::Decl a, ast::Decl b) mutable -> int64_t
         {
             return cmp::Compare(rec::Pos(gocpp::recv(a)), rec::Pos(gocpp::recv(b)));
         });
-        slices::SortFunc(comments, [=](ast::CommentGroup* a, ast::CommentGroup* b) mutable -> int
+        slices::SortFunc(comments, [=](ast::CommentGroup* a, ast::CommentGroup* b) mutable -> int64_t
         {
             return cmp::Compare(rec::Pos(gocpp::recv(a)), rec::Pos(gocpp::recv(b)));
         });
@@ -613,7 +613,7 @@ namespace golang::go::doc
         ast::Inspect(body, inspectFunc);
         // Now loop over them, adding to the list when we find a new decl that the
         // body depends on. Keep going until we don't find anything new.
-        for(auto i = 0; i < len(depDecls); i++)
+        for(int64_t i = 0; i < len(depDecls); i++)
         {
             //Go type switch emulation
             {
@@ -711,7 +711,7 @@ namespace golang::go::doc
                     {
                         ast::GenDecl* d = gocpp::any_cast<ast::GenDecl*>(d_ref);
                         // does any spec have iota?
-                        auto containsIota = false;
+                        bool containsIota = false;
                         // Collect all Specs that were mentioned in the example.
                         gocpp::slice<ast::Spec> specs = {};
                         for(auto [gocpp_ignored, s] : d->Specs)
@@ -837,14 +837,14 @@ namespace golang::go::doc
         auto imps = gocpp::make(gocpp::Tag<gocpp::slice<ast::ImportSpec*>>(), len(origImps));
         copy(imps, origImps);
         // Assume the imports are sorted by position.
-        slices::SortFunc(imps, [=](ast::ImportSpec* a, ast::ImportSpec* b) mutable -> int
+        slices::SortFunc(imps, [=](ast::ImportSpec* a, ast::ImportSpec* b) mutable -> int64_t
         {
             return cmp::Compare(rec::Pos(gocpp::recv(a)), rec::Pos(gocpp::recv(b)));
         });
         // Assume gofmt has been applied, so there is a blank line between adjacent imps
         // if and only if they are more than 2 positions apart (newline, tab).
         gocpp::slice<ast::ImportSpec*> groupStarts = {};
-        auto prevEnd = token::Pos(- 2);
+        token::Pos prevEnd = token::Pos(- 2);
         for(auto [gocpp_ignored, imp] : imps)
         {
             if(rec::Pos(gocpp::recv(imp)) - prevEnd > 2)
@@ -919,9 +919,9 @@ namespace golang::go::doc
     }
 
     // lastComment returns the last comment inside the provided block.
-    std::tuple<int, ast::CommentGroup*> lastComment(ast::BlockStmt* b, gocpp::slice<ast::CommentGroup*> c)
+    std::tuple<int64_t, ast::CommentGroup*> lastComment(ast::BlockStmt* b, gocpp::slice<ast::CommentGroup*> c)
     {
-        int i;
+        int64_t i;
         ast::CommentGroup* last;
         if(b == nullptr)
         {
@@ -1027,7 +1027,7 @@ namespace golang::go::doc
         // Sort list of example according to the user-specified suffix name.
         for(auto [gocpp_ignored, exs] : ids)
         {
-            slices::SortFunc(*exs, [=](Example* a, Example* b) mutable -> int
+            slices::SortFunc(*exs, [=](Example* a, Example* b) mutable -> int64_t
             {
                 return cmp::Compare(a->Suffix, b->Suffix);
             });
@@ -1061,7 +1061,7 @@ namespace golang::go::doc
     // be preceded by '_'.
     //
     // One of i == len(s) or s[i] == '_' must be true.
-    std::tuple<gocpp::string, gocpp::string, bool> splitExampleName(gocpp::string s, int i)
+    std::tuple<gocpp::string, gocpp::string, bool> splitExampleName(gocpp::string s, int64_t i)
     {
         gocpp::string prefix;
         gocpp::string suffix;

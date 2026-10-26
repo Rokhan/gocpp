@@ -12,10 +12,12 @@
 
 namespace golang::runtime
 {
+    struct GoTag_unwindFlags { };
+    using unwindFlags = gocpp::defined<uint8_t, GoTag_unwindFlags>;
     std::tuple<gocpp::string, gocpp::string, gocpp::string, gocpp::string, gocpp::string> funcNamePiecesForPrint(gocpp::string name);
     gocpp::string funcNameForPrint(gocpp::string name);
     void printFuncName(gocpp::string name);
-    int callers(int skip, gocpp::slice<uintptr_t> pcbuf);
+    int64_t callers(int64_t skip, gocpp::slice<uintptr_t> pcbuf);
     bool isExportedRuntime(gocpp::string name);
     extern gocpp::array<gocpp::string, 12> gStatusStrings;
     bool tracebackStringNeedsQuoting(gocpp::string s);
@@ -98,13 +100,13 @@ namespace golang::runtime
     void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp, unwindFlags flags);
     void printAncestorTraceback(ancestorInfo ancestor);
     void printAncestorTracebackFuncInfo(golang::runtime::funcInfo f, uintptr_t pc);
-    int gcallers(g* gp, int skip, gocpp::slice<uintptr_t> pcbuf);
+    int64_t gcallers(g* gp, int64_t skip, gocpp::slice<uintptr_t> pcbuf);
     void goroutineheader(g* gp);
     void tracebackothers(g* me);
     void tracebacksomeothers(g* me, std::function<bool (g* _1)> showf);
     void tracebackHexdump(golang::runtime::stack stk, stkframe* frame, uintptr_t bad);
     bool isSystemGoroutine(g* gp, bool fixed);
-    void SetCgoTraceback(int version, gocpp::unsafe_pointer traceback, gocpp::unsafe_pointer context, gocpp::unsafe_pointer symbolizer);
+    void SetCgoTraceback(int64_t version, gocpp::unsafe_pointer traceback, gocpp::unsafe_pointer context, gocpp::unsafe_pointer symbolizer);
     extern gocpp::unsafe_pointer cgoTraceback;
     extern gocpp::unsafe_pointer cgoContext;
     extern gocpp::unsafe_pointer cgoSymbolizer;
@@ -112,12 +114,12 @@ namespace golang::runtime
 }
 #include "golang/internal/abi/symtab.fwd.h"
 #include "golang/internal/abi/type.fwd.h"
+#include "golang/internal/abi/symtab.h"
 
 namespace golang::runtime
 {
     namespace abi = golang::internal::abi;
 }
-#include "golang/internal/abi/symtab.h"
 #include "golang/runtime/stkframe.h"
 
 namespace golang::runtime
@@ -133,7 +135,7 @@ namespace golang::runtime
         golang::runtime::guintptr g{};
         // cgoCtxt is the index into g.cgoCtxt of the next frame on the cgo stack.
         // The cgo stack is unwound in tandem with the Go stack as we find marker frames.
-        int cgoCtxt{};
+        int64_t cgoCtxt{};
         // calleeFuncID is the function ID of the caller of the current
         // frame.
         abi::FuncID calleeFuncID{};
@@ -157,8 +159,8 @@ namespace golang::runtime
     bool showframe(golang::runtime::srcFunc sf, g* gp, bool firstFrame, abi::FuncID calleeID);
     bool showfuncinfo(golang::runtime::srcFunc sf, bool firstFrame, abi::FuncID calleeID);
     bool elideWrapperCalling(abi::FuncID id);
-    int tracebackPCs(unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf);
-    std::tuple<int, int> traceback2(unwinder* u, bool showRuntime, int skip, int max);
+    int64_t tracebackPCs(unwinder* u, int64_t skip, gocpp::slice<uintptr_t> pcBuf);
+    std::tuple<int64_t, int64_t> traceback2(unwinder* u, bool showRuntime, int64_t skip, int64_t max);
 }
 
 #include "golang/runtime/runtime2.h"
@@ -175,7 +177,7 @@ namespace golang::runtime
         void next(unwinder* u);
         void finishInternal(unwinder* u);
         uintptr_t symPC(unwinder* u);
-        int cgoCallers(unwinder* u, gocpp::slice<uintptr_t> pcBuf);
+        int64_t cgoCallers(unwinder* u, gocpp::slice<uintptr_t> pcBuf);
     }
 }
 

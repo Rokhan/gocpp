@@ -120,7 +120,7 @@ namespace golang::internal::fmtsort
         {
             sorted = append(sorted, KeyValue {rec::Key(gocpp::recv(iter)), rec::Value(gocpp::recv(iter))});
         }
-        slices::SortStableFunc(sorted, [=](KeyValue a, KeyValue b) mutable -> int
+        slices::SortStableFunc(sorted, [=](KeyValue a, KeyValue b) mutable -> int64_t
         {
             return compare(a.Key, b.Key);
         });
@@ -131,7 +131,7 @@ namespace golang::internal::fmtsort
     // according to whether a > b (1), a == b (0), or a < b (-1).
     // If the types differ, it returns -1.
     // See the comment on Sort for the comparison rules.
-    int compare(reflect::Value aVal, reflect::Value bVal)
+    int64_t compare(reflect::Value aVal, reflect::Value bVal)
     {
         auto [aType, bType] = std::tuple{rec::Type(gocpp::recv(aVal)), rec::Type(gocpp::recv(bVal))};
         if(aType != bType)
@@ -236,7 +236,7 @@ namespace golang::internal::fmtsort
                     return cmp::Compare(rec::Pointer(gocpp::recv(aVal)), rec::Pointer(gocpp::recv(bVal)));
                     break;
                 case 20:
-                    for(auto i = 0; i < rec::NumField(gocpp::recv(aVal)); i++)
+                    for(int64_t i = 0; i < rec::NumField(gocpp::recv(aVal)); i++)
                     {
                         if(auto c = compare(rec::Field(gocpp::recv(aVal), i), rec::Field(gocpp::recv(bVal), i)); c != 0)
                         {
@@ -246,7 +246,7 @@ namespace golang::internal::fmtsort
                     return 0;
                     break;
                 case 21:
-                    for(auto i = 0; i < rec::Len(gocpp::recv(aVal)); i++)
+                    for(int64_t i = 0; i < rec::Len(gocpp::recv(aVal)); i++)
                     {
                         if(auto c = compare(rec::Index(gocpp::recv(aVal), i), rec::Index(gocpp::recv(bVal), i)); c != 0)
                         {
@@ -282,7 +282,7 @@ namespace golang::internal::fmtsort
     // value. The comparison is defined to be 0 if both are nil, otherwise the one
     // nil value compares low. Both arguments must represent a chan, func,
     // interface, map, pointer, or slice.
-    std::tuple<int, bool> nilCompare(reflect::Value aVal, reflect::Value bVal)
+    std::tuple<int64_t, bool> nilCompare(reflect::Value aVal, reflect::Value bVal)
     {
         if(rec::IsNil(gocpp::recv(aVal)))
         {

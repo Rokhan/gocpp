@@ -112,7 +112,7 @@ namespace golang::context
 
     std::ostream& operator<<(std::ostream& os, const struct afterFuncer& value);
     // &cancelCtxKey is the key that a cancelCtx returns itself for.
-    extern int cancelCtxKey;
+    extern int64_t cancelCtxKey;
     struct canceler : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;

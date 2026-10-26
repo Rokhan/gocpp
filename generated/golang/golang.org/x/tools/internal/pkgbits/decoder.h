@@ -110,10 +110,10 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     {
         gocpp::string PkgPath(PkgDecoder* pr);
         bool SyncMarkers(PkgDecoder* pr);
-        int NumElems(PkgDecoder* pr, RelocKind k);
-        int TotalElems(PkgDecoder* pr);
+        int64_t NumElems(PkgDecoder* pr, RelocKind k);
+        int64_t TotalElems(PkgDecoder* pr);
         gocpp::array<unsigned char, 8> Fingerprint(PkgDecoder* pr);
-        int AbsIdx(PkgDecoder* pr, RelocKind k, Index idx);
+        int64_t AbsIdx(PkgDecoder* pr, RelocKind k, Index idx);
         gocpp::string DataIdx(PkgDecoder* pr, RelocKind k, Index idx);
         gocpp::string StringIdx(PkgDecoder* pr, Index idx);
         Decoder NewDecoder(PkgDecoder* pr, RelocKind k, Index idx, SyncMarker marker);
@@ -124,15 +124,15 @@ namespace golang::golang_org::x::tools::internal::pkgbits
         void checkErr(Decoder* r, gocpp::error err);
         uint64_t rawUvarint(Decoder* r);
         int64_t rawVarint(Decoder* r);
-        Index rawReloc(Decoder* r, RelocKind k, int idx);
+        Index rawReloc(Decoder* r, RelocKind k, int64_t idx);
         void Sync(Decoder* r, SyncMarker mWant);
         bool Bool(Decoder* r);
         int64_t Int64(Decoder* r);
         uint64_t Uint64(Decoder* r);
-        int Len(Decoder* r);
-        int Int(Decoder* r);
-        unsigned int Uint(Decoder* r);
-        int Code(Decoder* r, SyncMarker mark);
+        int64_t Len(Decoder* r);
+        int64_t Int(Decoder* r);
+        uint64_t Uint(Decoder* r);
+        int64_t Code(Decoder* r, SyncMarker mark);
         Index Reloc(Decoder* r, RelocKind k);
         gocpp::string String(Decoder* r);
         gocpp::slice<gocpp::string> Strings(Decoder* r);

@@ -324,11 +324,11 @@ namespace golang::runtime
     // the program counter, the file name (using forward slashes as path separator, even
     // on Windows), and the line number within the file of the corresponding call.
     // The boolean ok is false if it was not possible to recover the information.
-    std::tuple<uintptr_t, gocpp::string, int, bool> Caller(int skip)
+    std::tuple<uintptr_t, gocpp::string, int64_t, bool> Caller(int64_t skip)
     {
         uintptr_t pc;
         gocpp::string file;
-        int line;
+        int64_t line;
         bool ok;
         auto rpc = gocpp::make(gocpp::Tag<gocpp::slice<uintptr_t>>(), 1);
         auto n = callers(skip + 1, rpc);
@@ -353,7 +353,7 @@ namespace golang::runtime
     // directly is discouraged, as is using [FuncForPC] on any of the
     // returned PCs, since these cannot account for inlining or return
     // program counter adjustment.
-    int Callers(int skip, gocpp::slice<uintptr_t> pc)
+    int64_t Callers(int64_t skip, gocpp::slice<uintptr_t> pc)
     {
         // runtime.callers uses pc.array==nil as a signal
         // to print a stack trace. Pick off 0-length pc here

@@ -12,22 +12,26 @@
 
 namespace golang::encoding::json::internal::jsonwire
 {
-    int ConsumeWhitespace(gocpp::slice<unsigned char> b);
-    int ConsumeNull(gocpp::slice<unsigned char> b);
-    int ConsumeFalse(gocpp::slice<unsigned char> b);
-    int ConsumeTrue(gocpp::slice<unsigned char> b);
-    std::tuple<int, gocpp::error> ConsumeLiteral(gocpp::slice<unsigned char> b, gocpp::string lit);
-    int ConsumeSimpleString(gocpp::slice<unsigned char> b);
-    std::tuple<int, gocpp::error> ConsumeString(ValueFlags* flags, gocpp::slice<unsigned char> b, bool validateUTF8);
-    std::tuple<int, gocpp::error> ConsumeStringResumable(ValueFlags* flags, gocpp::slice<unsigned char> b, int resumeOffset, bool validateUTF8);
+    struct GoTag_ValueFlags { };
+    using ValueFlags = gocpp::defined<uint64_t, GoTag_ValueFlags>;
+    int64_t ConsumeWhitespace(gocpp::slice<unsigned char> b);
+    int64_t ConsumeNull(gocpp::slice<unsigned char> b);
+    int64_t ConsumeFalse(gocpp::slice<unsigned char> b);
+    int64_t ConsumeTrue(gocpp::slice<unsigned char> b);
+    std::tuple<int64_t, gocpp::error> ConsumeLiteral(gocpp::slice<unsigned char> b, gocpp::string lit);
+    int64_t ConsumeSimpleString(gocpp::slice<unsigned char> b);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendUnquote(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     bool hasEscapedUTF16Prefix(gocpp::slice<unsigned char> b, bool lowerSurrogateHalf);
     gocpp::slice<unsigned char> UnquoteMayCopy(gocpp::slice<unsigned char> b, bool isVerbatim);
-    int ConsumeSimpleNumber(gocpp::slice<unsigned char> b);
-    std::tuple<int, gocpp::error> ConsumeNumber(gocpp::slice<unsigned char> b);
-    std::tuple<int, ConsumeNumberState, gocpp::error> ConsumeNumberResumable(gocpp::slice<unsigned char> b, int resumeOffset, ConsumeNumberState state);
+    int64_t ConsumeSimpleNumber(gocpp::slice<unsigned char> b);
+    struct GoTag_ConsumeNumberState { };
+    using ConsumeNumberState = gocpp::defined<uint64_t, GoTag_ConsumeNumberState>;
+    std::tuple<int64_t, gocpp::error> ConsumeNumber(gocpp::slice<unsigned char> b);
     std::tuple<uint16_t, bool> parseHexUint16(gocpp::slice<unsigned char> b);
     std::tuple<uint64_t, bool> ParseUint(gocpp::slice<unsigned char> b);
+    std::tuple<int64_t, gocpp::error> ConsumeString(ValueFlags* flags, gocpp::slice<unsigned char> b, bool validateUTF8);
+    std::tuple<int64_t, gocpp::error> ConsumeStringResumable(ValueFlags* flags, gocpp::slice<unsigned char> b, int64_t resumeOffset, bool validateUTF8);
+    std::tuple<int64_t, ConsumeNumberState, gocpp::error> ConsumeNumberResumable(gocpp::slice<unsigned char> b, int64_t resumeOffset, ConsumeNumberState state);
 
     namespace rec
     {

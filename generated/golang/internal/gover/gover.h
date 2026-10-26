@@ -32,13 +32,13 @@ namespace golang::internal::gover
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Version& value);
-    int Compare(gocpp::string x, gocpp::string y);
+    int64_t Compare(gocpp::string x, gocpp::string y);
     gocpp::string Max(gocpp::string x, gocpp::string y);
     bool IsLang(gocpp::string x);
     gocpp::string Lang(gocpp::string x);
     bool IsValid(gocpp::string x);
     std::tuple<gocpp::string, gocpp::string, bool> cutInt(gocpp::string x);
-    int CmpInt(gocpp::string x, gocpp::string y);
+    int64_t CmpInt(gocpp::string x, gocpp::string y);
     gocpp::string DecInt(gocpp::string decimal);
     Version Parse(gocpp::string x);
 

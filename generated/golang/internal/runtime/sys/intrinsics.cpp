@@ -28,18 +28,18 @@ namespace golang::internal::runtime::sys
         54, 26, 40, 15, 34, 20, 31, 10, 25, 14, 19, 9, 13, 8, 7, 6
     };
     // TrailingZeros32 returns the number of trailing zero bits in x; the result is 32 for x == 0.
-    int TrailingZeros32(uint32_t x)
+    int64_t TrailingZeros32(uint32_t x)
     {
         if(x == 0)
         {
             return 32;
         }
         // see comment in TrailingZeros64
-        return int(deBruijn32tab[(x & - x) * deBruijn32 >> (32 - 5)]);
+        return int64_t(deBruijn32tab[(x & - x) * deBruijn32 >> (32 - 5)]);
     }
 
     // TrailingZeros64 returns the number of trailing zero bits in x; the result is 64 for x == 0.
-    int TrailingZeros64(uint64_t x)
+    int64_t TrailingZeros64(uint64_t x)
     {
         if(x == 0)
         {
@@ -55,13 +55,13 @@ namespace golang::internal::runtime::sys
         // find by how many bits it was shifted by looking at which six bit
         // substring ended up at the top of the word.
         // (Knuth, volume 4, section 7.3.1)
-        return int(deBruijn64tab[(x & - x) * deBruijn64 >> (64 - 6)]);
+        return int64_t(deBruijn64tab[(x & - x) * deBruijn64 >> (64 - 6)]);
     }
 
     // TrailingZeros8 returns the number of trailing zero bits in x; the result is 8 for x == 0.
-    int TrailingZeros8(uint8_t x)
+    int64_t TrailingZeros8(uint8_t x)
     {
-        return int(ntz8tab[x]);
+        return int64_t(ntz8tab[x]);
     }
 
     // Len64 returns the minimum number of bits required to represent x; the result is 0 for x == 0.
@@ -69,9 +69,9 @@ namespace golang::internal::runtime::sys
     // nosplit because this is used in src/runtime/histogram.go, which make run in sensitive contexts.
     //
     //go:nosplit
-    int Len64(uint64_t x)
+    int64_t Len64(uint64_t x)
     {
-        int n;
+        int64_t n;
         if(x >= (1 << 32))
         {
             x >>= 32;
@@ -87,11 +87,11 @@ namespace golang::internal::runtime::sys
             x >>= 8;
             n += 8;
         }
-        return n + int(len8tab[uint8_t(x)]);
+        return n + int64_t(len8tab[uint8_t(x)]);
     }
 
     // OnesCount64 returns the number of one bits ("population count") in x.
-    int OnesCount64(uint64_t x)
+    int64_t OnesCount64(uint64_t x)
     {
         // Implementation: Parallel summing of adjacent bits.
         // See "Hacker's Delight", Chap. 5: Counting Bits.
@@ -117,40 +117,40 @@ namespace golang::internal::runtime::sys
         x += x >> 8;
         x += x >> 16;
         x += x >> 32;
-        return int(x) & ((1 << 7) - 1);
+        return int64_t(x) & ((1 << 7) - 1);
     }
 
     // LeadingZeros64 returns the number of leading zero bits in x; the result is 64 for x == 0.
-    int LeadingZeros64(uint64_t x)
+    int64_t LeadingZeros64(uint64_t x)
     {
         return 64 - Len64(x);
     }
 
     // LeadingZeros8 returns the number of leading zero bits in x; the result is 8 for x == 0.
-    int LeadingZeros8(uint8_t x)
+    int64_t LeadingZeros8(uint8_t x)
     {
         return 8 - Len8(x);
     }
 
     // Len8 returns the minimum number of bits required to represent x; the result is 0 for x == 0.
-    int Len8(uint8_t x)
+    int64_t Len8(uint8_t x)
     {
-        return int(len8tab[x]);
+        return int64_t(len8tab[x]);
     }
 
     // Bswap64 returns its input with byte order reversed
     // 0x0102030405060708 -> 0x0807060504030201
     uint64_t Bswap64(uint64_t x)
     {
-        auto c8 = uint64_t(0x00ff00ff00ff00ff);
+        uint64_t c8 = uint64_t(0x00ff00ff00ff00ff);
         auto a = (x >> 8) & c8;
         auto b = (x & c8) << 8;
         x = a | b;
-        auto c16 = uint64_t(0x0000ffff0000ffff);
+        uint64_t c16 = uint64_t(0x0000ffff0000ffff);
         a = (x >> 16) & c16;
         b = (x & c16) << 16;
         x = a | b;
-        auto c32 = uint64_t(0x00000000ffffffff);
+        uint64_t c32 = uint64_t(0x00000000ffffffff);
         a = (x >> 32) & c32;
         b = (x & c32) << 32;
         x = a | b;
@@ -161,11 +161,11 @@ namespace golang::internal::runtime::sys
     // 0x01020304 -> 0x04030201
     uint32_t Bswap32(uint32_t x)
     {
-        auto c8 = uint32_t(0x00ff00ff);
+        uint32_t c8 = uint32_t(0x00ff00ff);
         auto a = (x >> 8) & c8;
         auto b = (x & c8) << 8;
         x = a | b;
-        auto c16 = uint32_t(0x0000ffff);
+        uint32_t c16 = uint32_t(0x0000ffff);
         a = (x >> 16) & c16;
         b = (x & c16) << 16;
         x = a | b;

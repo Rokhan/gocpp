@@ -604,16 +604,16 @@ namespace golang::internal::reflectlite
     }
 
     //go:noescape
-    int chanlen(gocpp::unsafe_pointer)
+    int64_t chanlen(gocpp::unsafe_pointer)
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    int maplen(gocpp::unsafe_pointer)
+    int64_t maplen(gocpp::unsafe_pointer)
     /* convertBlockStmt, nil block */;
 
     // Len returns v's length.
     // It panics if v's Kind is not Array, Chan, Map, Slice, or String.
-    int rec::Len(Value v)
+    int64_t rec::Len(Value v)
     {
         auto k = rec::kind(gocpp::recv(v));
         //Go switch emulation
@@ -630,7 +630,7 @@ namespace golang::internal::reflectlite
                 case 0:
                 {
                     auto tt = (arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
-                    return int(tt->Len);
+                    return int64_t(tt->Len);
                     break;
                 }
                 case 1:
@@ -653,7 +653,7 @@ namespace golang::internal::reflectlite
     }
 
     // NumMethod returns the number of exported methods in the value's method set.
-    int rec::numMethod(Value v)
+    int64_t rec::numMethod(Value v)
     {
         if(rec::typ(gocpp::recv(v)) == nullptr)
         {
@@ -777,7 +777,7 @@ namespace golang::internal::reflectlite
     // because then the result will point outside the array.
     // whySafe must explain why i < len. (Passing "i < len" is fine;
     // the benefit is to surface this assumption at the call site.)
-    gocpp::unsafe_pointer arrayAt(gocpp::unsafe_pointer p, int i, uintptr_t eltSize, gocpp::string whySafe)
+    gocpp::unsafe_pointer arrayAt(gocpp::unsafe_pointer p, int64_t i, uintptr_t eltSize, gocpp::string whySafe)
     {
         return add(p, uintptr_t(i) * eltSize, "i < len"_s);
     }

@@ -24,7 +24,7 @@ namespace golang::os
 
     std::tuple<gocpp::string, gocpp::error> getModuleFileName(syscall::Handle handle)
     {
-        auto n = uint32_t(1024);
+        uint32_t n = uint32_t(1024);
         gocpp::slice<uint16_t> buf = {};
         for(; ; )
         {

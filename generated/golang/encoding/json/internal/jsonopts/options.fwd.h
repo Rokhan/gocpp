@@ -12,8 +12,10 @@ namespace golang::encoding::json::internal::jsonopts
     struct ArshalValues;
     using Indent = gocpp::string;
     using IndentPrefix = gocpp::string;
-    using ByteLimit = int64_t;
-    using DepthLimit = int;
+    struct GoTag_ByteLimit;
+    using ByteLimit = gocpp::defined<int64_t, GoTag_ByteLimit>;
+    struct GoTag_DepthLimit;
+    using DepthLimit = gocpp::defined<int64_t, GoTag_DepthLimit>;
 }
 #include "golang/encoding/json/internal/internal.fwd.h"
 

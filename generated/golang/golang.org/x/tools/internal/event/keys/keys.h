@@ -161,7 +161,7 @@ namespace golang::golang_org::x::tools::internal::event::keys
         gocpp::string Name(Int* k);
         gocpp::string Description(Int* k);
         gocpp::slice<unsigned char> Append(Int* k, gocpp::slice<unsigned char> buf, label::Label l);
-        label::Label Of(Int* k, int v);
+        label::Label Of(Int* k, int64_t v);
         label::Label Of64(Int* k, int64_t v);
         int64_t Get(Int* k, label::Map lm);
         int64_t From(Int* k, label::Label t);

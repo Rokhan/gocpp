@@ -26,6 +26,8 @@ namespace golang::runtime
     void metricsUnlock();
     void initMetrics();
     void godebug_registerMetric(gocpp::string name, std::function<uint64_t ()> read);
+    struct GoTag_statDep { };
+    using statDep = gocpp::defined<uint64_t, GoTag_statDep>;
     struct GoTag_statDepSet { };
     using statDepSet = gocpp::defined<gocpp::array<uint64_t, 1>, GoTag_statDepSet>;
     struct sysStatsAggregate
@@ -115,6 +117,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct schedStatsAggregate& value);
     double nsToSec(int64_t ns);
+    struct GoTag_metricKind { };
+    using metricKind = gocpp::defined<int64_t, GoTag_metricKind>;
     struct metricFloat64Histogram
     {
         gocpp::slice<uint64_t> counts{};
@@ -132,23 +136,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct metricFloat64Histogram& value);
-    struct metricName
-    {
-        gocpp::string name{};
-        metricKind kind{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct metricName& value);
     gocpp::slice<gocpp::string> readMetricNames();
     struct metricData
     {
@@ -185,6 +172,23 @@ namespace golang::runtime
     {
         return makeStatDepSet(gocpp::ToSlice<statDep>(value, deps...));
     }
+    struct metricName
+    {
+        gocpp::string name{};
+        metricKind kind{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricName& value);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/mstats.h"
@@ -269,8 +273,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct metricValue& value);
-    void readMetrics(gocpp::unsafe_pointer samplesp, int len, int cap);
-    void readMetricsLocked(gocpp::unsafe_pointer samplesp, int len, int cap);
+    void readMetrics(gocpp::unsafe_pointer samplesp, int64_t len, int64_t cap);
+    void readMetricsLocked(gocpp::unsafe_pointer samplesp, int64_t len, int64_t cap);
     struct statAggregate
     {
         statDepSet ensured{};

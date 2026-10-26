@@ -28,7 +28,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     }
 
     // Copy of $GOROOT/src/cmd/internal/archive.ReadHeader.
-    int readArchiveHeader(bufio::Reader* b, gocpp::string name)
+    int64_t readArchiveHeader(bufio::Reader* b, gocpp::string name)
     {
         // architecture-independent object file output
         auto HeaderSize = 60;

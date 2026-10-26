@@ -30,9 +30,11 @@ namespace golang::reflect
     // that uses text/template). The values that are currently
     // commented out there should be the actual values once
     // we're ready to use the register ABI everywhere.
-    extern int intArgRegs;
-    extern int floatArgRegs;
+    extern int64_t intArgRegs;
+    extern int64_t floatArgRegs;
     extern uintptr_t floatRegSize;
+    struct GoTag_abiStepKind { };
+    using abiStepKind = gocpp::defined<int64_t, GoTag_abiStepKind>;
     struct abiStep
     {
         abiStepKind kind{};
@@ -42,8 +44,8 @@ namespace golang::reflect
         uintptr_t size{}; // size in bytes of the part
         // These fields describe the ABI side of the translation.
         uintptr_t stkOff{}; // stack offset, used if kind == abiStepStack
-        int ireg{}; // integer register index, used if kind == abiStepIntReg or kind == abiStepPointer
-        int freg{}; // FP register index, used if kind == abiStepFloatReg
+        int64_t ireg{}; // integer register index, used if kind == abiStepIntReg or kind == abiStepPointer
+        int64_t freg{}; // FP register index, used if kind == abiStepFloatReg
 
         using isGoStruct = void;
 
@@ -71,10 +73,10 @@ namespace golang::reflect
         // that begins a new argument will have its offset
         // field == 0.
         gocpp::slice<abiStep> steps{};
-        gocpp::slice<int> valueStart{};
+        gocpp::slice<int64_t> valueStart{};
         uintptr_t stackBytes{}; // stack space used
-        int iregs{}; // registers used
-        int fregs{};
+        int64_t iregs{}; // registers used
+        int64_t fregs{};
 
         using isGoStruct = void;
 
@@ -98,11 +100,20 @@ namespace golang::reflect
     namespace abi = golang::internal::abi;
 }
 #include "golang/internal/abi/abi.h"
-#include "golang/reflect/type.fwd.h"
 
 namespace golang::reflect
 {
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    void dumpPtrBitMap(abi::IntArgRegBitmap b);
+    void intFromReg(abi::RegArgs* r, int64_t reg, uintptr_t argSize, gocpp::unsafe_pointer to);
+    void intToReg(abi::RegArgs* r, int64_t reg, uintptr_t argSize, gocpp::unsafe_pointer from);
+    void floatFromReg(abi::RegArgs* r, int64_t reg, uintptr_t argSize, gocpp::unsafe_pointer to);
+    void floatToReg(abi::RegArgs* r, int64_t reg, uintptr_t argSize, gocpp::unsafe_pointer from);
+}
+#include "golang/reflect/type.fwd.h"
+
+namespace golang::reflect
+{
     struct abiDesc
     {
         // call and ret represent the translation steps for
@@ -147,11 +158,6 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
-    void dumpPtrBitMap(abi::IntArgRegBitmap b);
-    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
-    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
-    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
-    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
     abiDesc newAbiDesc(funcType* t, abi::Type* rcvr);
 }
 
@@ -163,12 +169,12 @@ namespace golang::reflect
     namespace rec
     {
         void dump(abiSeq* a);
-        gocpp::slice<abiStep> stepsForValue(abiSeq* a, int i);
+        gocpp::slice<abiStep> stepsForValue(abiSeq* a, int64_t i);
         abiStep* addArg(abiSeq* a, abi::Type* t);
         std::tuple<abiStep*, bool> addRcvr(abiSeq* a, abi::Type* rcvr);
         bool regAssign(abiSeq* a, abi::Type* t, uintptr_t offset);
-        bool assignIntN(abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap);
-        bool assignFloatN(abiSeq* a, uintptr_t offset, uintptr_t size, int n);
+        bool assignIntN(abiSeq* a, uintptr_t offset, uintptr_t size, int64_t n, uint8_t ptrMap);
+        bool assignFloatN(abiSeq* a, uintptr_t offset, uintptr_t size, int64_t n);
         void stackAssign(abiSeq* a, uintptr_t size, uintptr_t alignment);
         void dump(abiDesc* a);
     }

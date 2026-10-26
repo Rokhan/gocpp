@@ -24,10 +24,10 @@ namespace golang::main
     {
     }
 
-    gocpp::map<gocpp::string, int> WordCount(gocpp::string s)
+    gocpp::map<gocpp::string, int64_t> WordCount(gocpp::string s)
     {
         auto fields = mocklib::StringsFields(s);
-        auto wc = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+        auto wc = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int64_t>>());
 
         for(auto [gocpp_ignored, f] : fields)
         {

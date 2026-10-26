@@ -86,7 +86,7 @@ namespace golang::runtime
     // between runnable and blocked Gs.
     //
     // The world must be stopped or allglock must be held.
-    std::tuple<gocpp::slice<g*>, int> allGsSnapshotSortedForGC()
+    std::tuple<gocpp::slice<g*>, int64_t> allGsSnapshotSortedForGC()
     {
         assertWorldStoppedOrLockHeld(& allglock);
 
@@ -135,9 +135,9 @@ namespace golang::runtime
         assertWorldStopped();
 
         // Compute how many data and BSS root blocks there are.
-        auto nBlocks = [=](uintptr_t bytes) mutable -> int
+        auto nBlocks = [=](uintptr_t bytes) mutable -> int64_t
         {
-            return int(divRoundUp(bytes, rootBlockBytes));
+            return int64_t(divRoundUp(bytes, rootBlockBytes));
         };
 
         work.nDataRoots = 0;
@@ -215,7 +215,7 @@ namespace golang::runtime
         // We only check the first nStackRoots Gs that we should have scanned.
         // Since we don't care about newer Gs (see comment in
         // gcPrepareMarkRoots), no locking is required.
-        auto i = 0;
+        int64_t i = 0;
         forEachGRace([=](g* gp) mutable -> void
         {
             if(i >= work.nStackRoots)
@@ -266,7 +266,7 @@ namespace golang::runtime
                     workCounter = & gcController.globalsScanWork;
                     for(auto [gocpp_ignored, datap] : activeModules())
                     {
-                        workDone += markrootBlock(datap->data, datap->edata - datap->data, datap->gcdatamask.bytedata, gcw, int(i - work.baseData));
+                        workDone += markrootBlock(datap->data, datap->edata - datap->data, datap->gcdatamask.bytedata, gcw, int64_t(i - work.baseData));
                     }
                     break;
 
@@ -274,7 +274,7 @@ namespace golang::runtime
                     workCounter = & gcController.globalsScanWork;
                     for(auto [gocpp_ignored, datap] : activeModules())
                     {
-                        workDone += markrootBlock(datap->bss, datap->ebss - datap->bss, datap->gcbssmask.bytedata, gcw, int(i - work.baseBSS));
+                        workDone += markrootBlock(datap->bss, datap->ebss - datap->bss, datap->gcbssmask.bytedata, gcw, int64_t(i - work.baseBSS));
                     }
                     break;
 
@@ -304,7 +304,7 @@ namespace golang::runtime
 
                 case 5:
                     // mark mspan.specials
-                    markrootSpans(gcw, int(i - work.baseSpans));
+                    markrootSpans(gcw, int64_t(i - work.baseSpans));
                     break;
 
                 default:
@@ -388,7 +388,7 @@ namespace golang::runtime
     // Returns the amount of work done.
     //
     //go:nowritebarrier
-    int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, gcWork* gcw, int shard)
+    int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, gcWork* gcw, int64_t shard)
     {
         if(rootBlockBytes % (8 * goarch::PtrSize) != 0)
         {
@@ -406,7 +406,7 @@ namespace golang::runtime
         }
         auto b = b0 + off;
         auto ptrmask = (uint8_t*)(add(gocpp::unsafe_pointer(ptrmask0), uintptr_t(shard) * (rootBlockBytes / (8 * goarch::PtrSize))));
-        auto n = uintptr_t(rootBlockBytes);
+        uintptr_t n = uintptr_t(rootBlockBytes);
         if(off + n > n0)
         {
             n = n0 - off;
@@ -459,7 +459,7 @@ namespace golang::runtime
     // markrootSpans marks roots for one shard of markArenas.
     //
     //go:nowritebarrier
-    void markrootSpans(gcWork* gcw, int shard)
+    void markrootSpans(gcWork* gcw, int64_t shard)
     {
         // Objects with finalizers have two GC-related invariants:
         // 1) Everything reachable from the object must be marked.
@@ -479,7 +479,7 @@ namespace golang::runtime
         // Find the arena and page index into that arena for this shard.
         auto ai = mheap_.markArenas[shard / (pagesPerArena / pagesPerSpanRoot)];
         auto ha = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
-        auto arenaPage = (unsigned int)(uintptr_t(shard) * pagesPerSpanRoot % pagesPerArena);
+        auto arenaPage = (uint64_t)(uintptr_t(shard) * pagesPerSpanRoot % pagesPerArena);
 
         // Construct slice of bitmap which we'll iterate over.
         auto specialsbits = ha->pageSpecials.make_slice(arenaPage / 8);
@@ -492,7 +492,7 @@ namespace golang::runtime
             {
                 continue;
             }
-            for(auto j = (unsigned int)(0); j < 8; j++)
+            for(uint64_t j = (uint64_t)(0); j < 8; j++)
             {
                 if(specials & (1 << j) == 0)
                 {
@@ -503,7 +503,7 @@ namespace golang::runtime
                 // specials implies that the span is in-use, and since we're
                 // currently marking we can be sure that we don't have to worry
                 // about the span being freed and re-used.
-                auto s = ha->spans[arenaPage + (unsigned int)(i) * 8 + j];
+                auto s = ha->spans[arenaPage + (uint64_t)(i) * 8 + j];
 
                 // The state must be mSpanInUse if the specials bit is set, so
                 // sanity check that.
@@ -624,7 +624,7 @@ namespace golang::runtime
             // a consistent trace result.
             // TODO(mknyszek): Hide the details of inMarkAssist in tracer
             // functions and simplify all the state tracking. This is a lot.
-            auto enteredMarkAssistForTracing = false;
+            bool enteredMarkAssistForTracing = false;
             retry:
             if(rec::limiting(gocpp::recv(gcCPULimiter)))
             {
@@ -677,7 +677,7 @@ namespace golang::runtime
             // again, so in the long run it doesn't really matter, but we
             // do have to handle the negative credit case.
             auto bgScanCredit = rec::Load(gocpp::recv(gcController.bgScanCredit));
-            auto stolen = int64_t(0);
+            int64_t stolen = int64_t(0);
             if(bgScanCredit > 0)
             {
                 if(bgScanCredit < scanWork)
@@ -1238,7 +1238,7 @@ namespace golang::runtime
             state.head = x->stackObjectBufHdr.next;
             if(stackTraceDebug)
             {
-                for(auto i = 0; i < x->stackObjectBufHdr.workbufhdr.nobj; i++)
+                for(int64_t i = 0; i < x->stackObjectBufHdr.workbufhdr.nobj; i++)
                 {
                     auto obj = & x->obj[i];
                     if(obj->r == nullptr)
@@ -1389,7 +1389,7 @@ namespace golang::runtime
     // mark time in profiles.
     void gcDrainMarkWorkerDedicated(gcWork* gcw, bool untilPreempt)
     {
-        auto flags = gcDrainFlushBgCredit;
+        gcDrainFlags flags = gcDrainFlushBgCredit;
         if(untilPreempt)
         {
             flags |= gcDrainUntilPreempt;
@@ -1479,7 +1479,7 @@ namespace golang::runtime
 
         // checkWork is the scan work before performing the next
         // self-preempt check.
-        auto checkWork = int64_t((1 << 63) - 1);
+        int64_t checkWork = int64_t((1 << 63) - 1);
         std::function<bool ()> check = {};
         if(flags & (gcDrainIdle | gcDrainFractional) != 0)
         {
@@ -1761,7 +1761,7 @@ namespace golang::runtime
         auto b = b0;
         auto n = n0;
 
-        for(auto i = uintptr_t(0); i < n; )
+        for(uintptr_t i = uintptr_t(0); i < n; )
         {
             // Find bits for the next word.
             auto bits = uint32_t(*addb(ptrmask, i / (goarch::PtrSize * 8)));
@@ -1770,7 +1770,7 @@ namespace golang::runtime
                 i += goarch::PtrSize * 8;
                 continue;
             }
-            for(auto j = 0; j < 8 && i < n; j++)
+            for(int64_t j = 0; j < 8 && i < n; j++)
             {
                 if(bits & 1 != 0)
                 {
@@ -1850,7 +1850,7 @@ namespace golang::runtime
             printunlock();
         }
 
-        for(auto i = uintptr_t(0); i < n; i += goarch::PtrSize)
+        for(uintptr_t i = uintptr_t(0); i < n; i += goarch::PtrSize)
         {
             if(ptrmask != nullptr)
             {
@@ -2021,7 +2021,7 @@ namespace golang::runtime
             return;
         }
         print(" s.base()="_s, hex(rec::base(gocpp::recv(s))), " s.limit="_s, hex(s->limit), " s.spanclass="_s, s->spanclass, " s.elemsize="_s, s->elemsize, " s.state="_s);
-        if(auto state = rec::get(gocpp::recv(s->state)); 0 <= state && int(state) < len(mSpanStateNames))
+        if(auto state = rec::get(gocpp::recv(s->state)); 0 <= state && int64_t(state) < len(mSpanStateNames))
         {
             print(mSpanStateNames[state], "\n"_s);
         }
@@ -2030,7 +2030,7 @@ namespace golang::runtime
             print("unknown("_s, state, ")\n"_s);
         }
 
-        auto skipped = false;
+        bool skipped = false;
         auto size = s->elemsize;
         if(rec::get(gocpp::recv(s->state)) == mSpanManual && size == 0)
         {
@@ -2039,7 +2039,7 @@ namespace golang::runtime
             // including off.
             size = off + goarch::PtrSize;
         }
-        for(auto i = uintptr_t(0); i < size; i += goarch::PtrSize)
+        for(uintptr_t i = uintptr_t(0); i < size; i += goarch::PtrSize)
         {
             // For big objects, just print the beginning (because
             // that usually hints at the object's type) and the

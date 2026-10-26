@@ -67,7 +67,7 @@ namespace golang::golang_org::x::tools::go::ast::edge
     // Get returns the direct child of n identified by (k, idx).
     // n's type must match k.NodeType().
     // idx must be a valid slice index, or -1 for a non-slice.
-    ast::Node rec::Get(Kind k, ast::Node n, int idx)
+    ast::Node rec::Get(Kind k, ast::Node n, int64_t idx)
     {
         if(rec::NodeType(gocpp::recv(k)) != reflect::TypeOf(n))
         {

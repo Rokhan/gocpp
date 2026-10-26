@@ -15,21 +15,21 @@ namespace golang::main
     extern bool c;
     extern bool python;
     extern bool java;
-    extern int ii;
-    extern int jj;
-    extern int kk;
+    extern int64_t ii;
+    extern int64_t jj;
+    extern int64_t kk;
     extern bool debug;
     extern bool v1;
     extern gocpp::string v2;
-    extern int v3;
+    extern int64_t v3;
     extern double v4;
     extern bool u1;
     extern gocpp::string u2;
     extern double u3;
     struct pos
     {
-        int x{};
-        int y{};
+        int64_t x{};
+        int64_t y{};
 
         using isGoStruct = void;
 
@@ -43,11 +43,11 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pos& value);
-    extern std::function<int (int)> funcVar2;
-    extern std::function<std::tuple<int, gocpp::string> (int)> funcVar3;
+    extern std::function<int64_t (int64_t)> funcVar2;
+    extern std::function<std::tuple<int64_t, gocpp::string> (int64_t)> funcVar3;
     void main();
-    std::tuple<int, gocpp::string> withNamedResults();
-    void inlineAssign(int i);
+    std::tuple<int64_t, gocpp::string> withNamedResults();
+    void inlineAssign(int64_t i);
     void dummy_vars();
     void dummy_funcs();
     void go_do();
@@ -55,7 +55,7 @@ namespace golang::main
     void go_template();
     void go_class();
     std::tuple<bool, gocpp::error> ParseBool(gocpp::string str);
-    std::tuple<bool, gocpp::string, int, double> FourValues();
+    std::tuple<bool, gocpp::string, int64_t, double> FourValues();
     extern std::function<void (void)> funcVar1;
 
     namespace rec

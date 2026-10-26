@@ -14,5 +14,5 @@ namespace golang::internal::buildcfg
 {
     // DefaultGOEXPERIMENT is the embedded default GOEXPERIMENT string.
     // It is not guaranteed to be canonical.
-    const gocpp::string DefaultGOEXPERIMENT = defaultGOEXPERIMENT;
+    inline const gocpp::string DefaultGOEXPERIMENT = defaultGOEXPERIMENT;
 }

@@ -22,10 +22,10 @@ namespace golang::main
 
     void main()
     {
-        auto a = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 5);
+        auto a = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), 5);
         printSlice("a"_s, a);
 
-        auto b = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 0, 5);
+        auto b = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), 0, 5);
         printSlice("b"_s, b);
 
         auto bc = b.make_slice(0, 2);
@@ -41,7 +41,7 @@ namespace golang::main
         printSlice("bd"_s, ad);
     }
 
-    void printSlice(gocpp::string s, gocpp::slice<int> x)
+    void printSlice(gocpp::string s, gocpp::slice<int64_t> x)
     {
         // fmt.Printf("%s len=%d cap=%d %v\n", s, len(x), cap(x), x)
         mocklib::Printf("%v len=%v cap=%v %v\n"_s, s, len(x), cap(x), x);

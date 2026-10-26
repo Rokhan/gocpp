@@ -12,18 +12,20 @@
 
 namespace golang::go::token
 {
+    struct GoTag_Token { };
+    using Token = gocpp::defined<int64_t, GoTag_Token>;
     extern gocpp::array<gocpp::string, 89> tokens;
-    extern gocpp::map<gocpp::string, Token> keywords;
     void init();
-    Token Lookup(gocpp::string ident);
     bool IsExported(gocpp::string name);
     bool IsKeyword(gocpp::string name);
     bool IsIdentifier(gocpp::string name);
+    extern gocpp::map<gocpp::string, Token> keywords;
+    Token Lookup(gocpp::string ident);
 
     namespace rec
     {
         gocpp::string String(Token tok);
-        int Precedence(Token op);
+        int64_t Precedence(Token op);
         bool IsLiteral(Token tok);
         bool IsOperator(Token tok);
         bool IsKeyword(Token tok);

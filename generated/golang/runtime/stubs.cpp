@@ -531,11 +531,11 @@ namespace golang::runtime
     /* convertBlockStmt, nil block */;
 
     // bool2int returns 0 if x is false or 1 if x is true.
-    int bool2int(bool x)
+    int64_t bool2int(bool x)
     {
         // Avoid branches. In the SSA compiler, this compiles to
         // exactly what you would want it to.
-        return int(*(uint8_t*)(gocpp::unsafe_pointer(& x)));
+        return int64_t(*(uint8_t*)(gocpp::unsafe_pointer(& x)));
     }
 
     // abort crashes the runtime in situations where even throw might not
@@ -620,6 +620,6 @@ namespace golang::runtime
     // registers the system supports.
     //
     // Protected by finlock.
-    int intArgRegs = abi::IntArgRegs;
+    int64_t intArgRegs = abi::IntArgRegs;
 }
 

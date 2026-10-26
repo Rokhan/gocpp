@@ -247,7 +247,7 @@ namespace golang::go::scanner
         }
     }
 
-    void rec::error(Scanner* s, int offs, gocpp::string msg)
+    void rec::error(Scanner* s, int64_t offs, gocpp::string msg)
     {
         if(s->err != nullptr)
         {
@@ -256,7 +256,7 @@ namespace golang::go::scanner
         s->ErrorCount++;
     }
 
-    void rec::errorf(Scanner* s, int offs, gocpp::string format, gocpp::slice<go_any> args)
+    void rec::errorf(Scanner* s, int64_t offs, gocpp::string format, gocpp::slice<go_any> args)
     {
         rec::error(gocpp::recv(s), offs, mocklib::Sprintf(format, args));
     }
@@ -264,16 +264,16 @@ namespace golang::go::scanner
     // scanComment returns the text of the comment and (if nonzero)
     // the offset of the first newline within it, which implies a
     // /*...*/ comment.
-    std::tuple<gocpp::string, int> rec::scanComment(Scanner* s)
+    std::tuple<gocpp::string, int64_t> rec::scanComment(Scanner* s)
     {
         // initial '/' already consumed; s.ch == '/' || s.ch == '*'
         // position of initial '/'
         auto offs = s->offset - 1;
         // position immediately following the comment; < 0 means invalid comment
-        auto next = - 1;
-        auto numCR = 0;
+        int64_t next = - 1;
+        int64_t numCR = 0;
         // offset of first newline within /*...*/ comment
-        auto nlOffset = 0;
+        int64_t nlOffset = 0;
 
         if(s->ch == '/')
         {
@@ -355,7 +355,7 @@ namespace golang::go::scanner
     // updateLineInfo parses the incoming comment text at offset offs
     // as a line directive. If successful, it updates the line info table
     // for the position next per the line directive.
-    void rec::updateLineInfo(Scanner* s, int next, int offs, gocpp::slice<unsigned char> text)
+    void rec::updateLineInfo(Scanner* s, int64_t next, int64_t offs, gocpp::slice<unsigned char> text)
     {
         // extract comment text
         if(text[1] == '*')
@@ -387,8 +387,8 @@ namespace golang::go::scanner
         // 30 bits allows for some additional space before wrapping an int32.
         // Keep this consistent with cmd/compile/internal/syntax.PosMax.
         auto maxLineCol = 1 << 30;
-        int line = {};
-        int col = {};
+        int64_t line = {};
+        int64_t col = {};
         auto [i2, n2, ok2] = trailingDigits(text.make_slice(0, i - 1));
         if(ok2)
         {
@@ -439,7 +439,7 @@ namespace golang::go::scanner
         rec::AddLineColumnInfo(gocpp::recv(s->file), next, filename, line, col);
     }
 
-    std::tuple<int, int, bool> trailingDigits(gocpp::slice<unsigned char> text)
+    std::tuple<int64_t, int64_t, bool> trailingDigits(gocpp::slice<unsigned char> text)
     {
         // look from right (Windows filenames may contain ':')
         auto i = bytes::LastIndexByte(text, ':');
@@ -450,7 +450,7 @@ namespace golang::go::scanner
         }
         // i >= 0
         auto [n, err] = strconv::ParseUint(gocpp::string(text.make_slice(i + 1)), 10, 0);
-        return {i + 1, int(n), err == nullptr};
+        return {i + 1, int64_t(n), err == nullptr};
     }
 
     bool isLetter(gocpp::rune ch)
@@ -515,7 +515,7 @@ namespace golang::go::scanner
         return gocpp::string(s->src.make_slice(offs, s->offset));
     }
 
-    int digitVal(gocpp::rune ch)
+    int64_t digitVal(gocpp::rune ch)
     {
         //Go switch emulation
         {
@@ -525,10 +525,10 @@ namespace golang::go::scanner
             switch(conditionId)
             {
                 case 0:
-                    return int(ch - '0');
+                    return int64_t(ch - '0');
                     break;
                 case 1:
-                    return int(lower(ch) - 'a' + 10);
+                    return int64_t(lower(ch) - 'a' + 10);
                     break;
             }
         }
@@ -557,15 +557,15 @@ namespace golang::go::scanner
     // in *invalid, if *invalid < 0.
     // digits returns a bitset describing whether the sequence contained
     // digits (bit 0 is set), or separators '_' (bit 1 is set).
-    int rec::digits(Scanner* s, int base, int* invalid)
+    int64_t rec::digits(Scanner* s, int64_t base, int64_t* invalid)
     {
-        int digsep;
+        int64_t digsep;
         if(base <= 10)
         {
             auto max = gocpp::rune('0' + base);
             for(; isDecimal(s->ch) || s->ch == '_'; )
             {
-                auto ds = 1;
+                int64_t ds = 1;
                 if(s->ch == '_')
                 {
                     ds = 2;
@@ -584,7 +584,7 @@ namespace golang::go::scanner
         {
             for(; isHex(s->ch) || s->ch == '_'; )
             {
-                auto ds = 1;
+                int64_t ds = 1;
                 if(s->ch == '_')
                 {
                     ds = 2;
@@ -599,16 +599,16 @@ namespace golang::go::scanner
     std::tuple<token::Token, gocpp::string> rec::scanNumber(Scanner* s)
     {
         auto offs = s->offset;
-        auto tok = token::ILLEGAL;
+        token::Token tok = token::ILLEGAL;
 
         // number base
-        auto base = 10;
+        int64_t base = 10;
         // one of 0 (decimal), '0' (0-octal), 'x', 'o', or 'b'
-        auto prefix = gocpp::rune(0);
+        gocpp::rune prefix = gocpp::rune(0);
         // bit 0: digit present, bit 1: '_' present
-        auto digsep = 0;
+        int64_t digsep = 0;
         // index of invalid digit in literal, or < 0
-        auto invalid = - 1;
+        int64_t invalid = - 1;
 
         // integer part
         if(s->ch != '.')
@@ -754,13 +754,13 @@ namespace golang::go::scanner
     }
 
     // invalidSep returns the index of the first invalid separator in x, or -1.
-    int invalidSep(gocpp::string x)
+    int64_t invalidSep(gocpp::string x)
     {
         // prefix char, we only care if it's 'x'
-        auto x1 = ' ';
+        gocpp::rune x1 = ' ';
         // digit, one of '_', '0' (a digit), or '.' (anything else)
-        auto d = '.';
-        auto i = 0;
+        gocpp::rune d = '.';
+        int64_t i = 0;
 
         // a prefix counts as a digit
         if(len(x) >= 2 && x[0] == '0')
@@ -821,7 +821,7 @@ namespace golang::go::scanner
     {
         auto offs = s->offset;
 
-        int n = {};
+        int64_t n = {};
         uint32_t base = {};
         uint32_t max = {};
         //Go switch emulation
@@ -886,7 +886,7 @@ namespace golang::go::scanner
                     break;
                 default:
                 {
-                    auto msg = "unknown escape sequence"_s;
+                    gocpp::string msg = "unknown escape sequence"_s;
                     if(s->ch < 0)
                     {
                         msg = "escape sequence not terminated"_s;
@@ -931,8 +931,8 @@ namespace golang::go::scanner
         // '\'' opening already consumed
         auto offs = s->offset - 1;
 
-        auto valid = true;
-        auto n = 0;
+        bool valid = true;
+        int64_t n = 0;
         for(; ; )
         {
             auto ch = s->ch;
@@ -1000,7 +1000,7 @@ namespace golang::go::scanner
     gocpp::slice<unsigned char> stripCR(gocpp::slice<unsigned char> b, bool comment)
     {
         auto c = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(b));
-        auto i = 0;
+        int64_t i = 0;
         for(auto [j, ch] : b)
         {
             // In a /*-style comment, don't strip \r from *\r/ (incl.
@@ -1022,7 +1022,7 @@ namespace golang::go::scanner
         // '`' opening already consumed
         auto offs = s->offset - 1;
 
-        auto hasCR = false;
+        bool hasCR = false;
         for(; ; )
         {
             auto ch = s->ch;
@@ -1177,7 +1177,7 @@ namespace golang::go::scanner
         pos = rec::Pos(gocpp::recv(s->file), s->offset);
 
         // determine token value
-        auto insertSemi = false;
+        bool insertSemi = false;
         //Go switch emulation
         {
             auto ch = s->ch;

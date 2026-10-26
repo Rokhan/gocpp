@@ -9,7 +9,8 @@ namespace golang::runtime
     struct mstats;
     struct MemStats;
     struct gocpp_id_1;
-    using sysMemStat = uint64_t;
+    struct GoTag_sysMemStat;
+    using sysMemStat = gocpp::defined<uint64_t, GoTag_sysMemStat>;
     struct heapStatsDelta;
     struct consistentHeapStats;
     struct cpuStats;

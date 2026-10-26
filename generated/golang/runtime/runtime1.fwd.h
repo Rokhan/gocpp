@@ -11,9 +11,9 @@ namespace golang::runtime
     // The cached value is a uint32 in which the low bits
     // are the "crash" and "all" settings and the remaining
     // bits are the traceback value (0 off, 1 on, 2 include system).
-    const int tracebackCrash = 1 << 0;
-    const int tracebackAll = 1 << 1;
-    const int tracebackShift = 2;
+    inline constexpr int64_t tracebackCrash = 1 << 0;
+    inline constexpr int64_t tracebackAll = 1 << 1;
+    inline constexpr int64_t tracebackShift = 2;
     struct dbgVar;
     struct debugStruct;
     struct invalidGODEBUGStruct;

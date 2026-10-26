@@ -21,14 +21,14 @@ namespace golang::internal::bytealg
     // Requires 2 <= len(b) <= MaxLen.
     //
     //go:noescape
-    int Index(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
+    int64_t Index(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     /* convertBlockStmt, nil block */;
 
     // IndexString returns the index of the first instance of b in a, or -1 if b is not present in a.
     // Requires 2 <= len(b) <= MaxLen.
     //
     //go:noescape
-    int IndexString(gocpp::string a, gocpp::string b)
+    int64_t IndexString(gocpp::string a, gocpp::string b)
     /* convertBlockStmt, nil block */;
 
 }

@@ -139,7 +139,7 @@ namespace golang::runtime
         void StoreMarked(atomicOffAddr* b, uintptr_t addr);
         std::tuple<uintptr_t, bool> Load(atomicOffAddr* b);
         void init(addrRanges* a, sysMemStat* sysStat);
-        int findSucc(addrRanges* a, uintptr_t addr);
+        int64_t findSucc(addrRanges* a, uintptr_t addr);
         std::tuple<uintptr_t, bool> findAddrGreaterEqual(addrRanges* a, uintptr_t addr);
         bool contains(addrRanges* a, uintptr_t addr);
         void add(addrRanges* a, addrRange r);

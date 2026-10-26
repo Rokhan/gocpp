@@ -29,6 +29,10 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Scope& value);
+    struct GoTag_ObjKind { };
+    using ObjKind = gocpp::defined<int64_t, GoTag_ObjKind>;
+    extern gocpp::array<gocpp::string, 7> objKindStrings;
+    Scope* NewScope(Scope* outer);
     struct Object
     {
         ObjKind Kind{};
@@ -49,8 +53,6 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Object& value);
-    extern gocpp::array<gocpp::string, 7> objKindStrings;
-    Scope* NewScope(Scope* outer);
     Object* NewObj(ObjKind kind, gocpp::string name);
 }
 

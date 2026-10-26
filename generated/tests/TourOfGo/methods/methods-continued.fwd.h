@@ -6,5 +6,6 @@
 
 namespace golang::main
 {
-    using MyFloat = double;
+    struct GoTag_MyFloat;
+    using MyFloat = gocpp::defined<double, GoTag_MyFloat>;
 }

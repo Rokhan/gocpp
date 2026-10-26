@@ -272,7 +272,7 @@ namespace golang::go::types
         }
 
         // <untyped kind>
-        auto hasType = false;
+        bool hasType = false;
         //Go switch emulation
         {
             auto condition = rec::mode(gocpp::recv(x));
@@ -678,8 +678,8 @@ namespace golang::go::types
         // x is assignable to each specific type in T's type set.
         if(! hasName(V) && Tp != nullptr)
         {
-            auto ok = false;
-            auto code = IncompatibleAssign;
+            bool ok = false;
+            errors::Code code = IncompatibleAssign;
             rec::is(gocpp::recv(Tp), [=](golang::go::types::term* T) mutable -> bool
             {
                 if(T == nullptr)
@@ -706,8 +706,8 @@ namespace golang::go::types
             // don't clobber outer x
             auto x_tmp = *x;
             auto& x = x_tmp;
-            auto ok = false;
-            auto code = IncompatibleAssign;
+            bool ok = false;
+            errors::Code code = IncompatibleAssign;
             rec::is(gocpp::recv(Vp), [=](golang::go::types::term* V) mutable -> bool
             {
                 if(V == nullptr)

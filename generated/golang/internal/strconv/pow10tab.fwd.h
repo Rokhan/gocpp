@@ -6,6 +6,6 @@
 
 namespace golang::internal::strconv
 {
-    const long pow10Min = - 348;
-    const long pow10Max = 347;
+    inline constexpr long pow10Min = - 348;
+    inline constexpr long pow10Max = 347;
 }

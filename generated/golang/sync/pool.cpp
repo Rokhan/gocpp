@@ -272,7 +272,7 @@ namespace golang::sync
         return x;
     }
 
-    go_any rec::getSlow(Pool* p, int pid)
+    go_any rec::getSlow(Pool* p, int64_t pid)
     {
         // See the comment in pin regarding ordering of the loads.
         // load-acquire
@@ -280,9 +280,9 @@ namespace golang::sync
         // load-consume
         auto locals = p->local;
         // Try to steal one element from other procs.
-        for(auto i = 0; i < int(size); i++)
+        for(int64_t i = 0; i < int64_t(size); i++)
         {
-            auto l = indexLocal(locals, (pid + i + 1) % int(size));
+            auto l = indexLocal(locals, (pid + i + 1) % int64_t(size));
             if(auto [x, gocpp_id_1] = rec::popTail(gocpp::recv(l->poolLocalInternal.shared)); x != nullptr)
             {
                 return x;
@@ -304,9 +304,9 @@ namespace golang::sync
             l->poolLocalInternal.go_private = nullptr;
             return x;
         }
-        for(auto i = 0; i < int(size); i++)
+        for(int64_t i = 0; i < int64_t(size); i++)
         {
-            auto l = indexLocal(locals, (pid + i) % int(size));
+            auto l = indexLocal(locals, (pid + i) % int64_t(size));
             if(auto [x, gocpp_id_2] = rec::popTail(gocpp::recv(l->poolLocalInternal.shared)); x != nullptr)
             {
                 return x;
@@ -323,7 +323,7 @@ namespace golang::sync
     // pin pins the current goroutine to P, disables preemption and
     // returns poolLocal pool for the P and the P's id.
     // Caller must call runtime_procUnpin() when done with the pool.
-    std::tuple<poolLocal*, int> rec::pin(Pool* p)
+    std::tuple<poolLocal*, int64_t> rec::pin(Pool* p)
     {
         // Check whether p is nil to get a panic.
         // Otherwise the nil dereference happens while the m is pinned,
@@ -349,7 +349,7 @@ namespace golang::sync
         return rec::pinSlow(gocpp::recv(p));
     }
 
-    std::tuple<poolLocal*, int> rec::pinSlow(Pool* p)
+    std::tuple<poolLocal*, int64_t> rec::pinSlow(Pool* p)
     {
         gocpp::Defer defer;
         try
@@ -436,7 +436,7 @@ namespace golang::sync
         runtime_registerPoolCleanup(poolCleanup);
     }
 
-    poolLocal* indexLocal(gocpp::unsafe_pointer l, int i)
+    poolLocal* indexLocal(gocpp::unsafe_pointer l, int64_t i)
     {
         auto lp = gocpp::unsafe_pointer(uintptr_t(l) + uintptr_t(i) * gocpp::Sizeof<poolLocal>());
         return (poolLocal*)(lp);
@@ -446,7 +446,7 @@ namespace golang::sync
     void runtime_registerPoolCleanup(std::function<void ()> cleanup)
     /* convertBlockStmt, nil block */;
 
-    int runtime_procPin()
+    int64_t runtime_procPin()
     /* convertBlockStmt, nil block */;
 
     void runtime_procUnpin()

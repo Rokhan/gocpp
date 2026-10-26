@@ -12,11 +12,11 @@
 
 namespace golang::sort
 {
-    int Search(int n, std::function<bool (int _1)> f);
-    std::tuple<int, bool> Find(int n, std::function<int (int _1)> cmp);
-    int SearchInts(gocpp::slice<int> a, int x);
-    int SearchFloat64s(gocpp::slice<double> a, double x);
-    int SearchStrings(gocpp::slice<gocpp::string> a, gocpp::string x);
+    int64_t Search(int64_t n, std::function<bool (int64_t _1)> f);
+    std::tuple<int64_t, bool> Find(int64_t n, std::function<int64_t (int64_t _1)> cmp);
+    int64_t SearchInts(gocpp::slice<int64_t> a, int64_t x);
+    int64_t SearchFloat64s(gocpp::slice<double> a, double x);
+    int64_t SearchStrings(gocpp::slice<gocpp::string> a, gocpp::string x);
 }
 
 #include "golang/sort/sort.h"
@@ -26,9 +26,9 @@ namespace golang::sort
 
     namespace rec
     {
-        int Search(golang::sort::IntSlice p, int x);
-        int Search(golang::sort::Float64Slice p, double x);
-        int Search(golang::sort::StringSlice p, gocpp::string x);
+        int64_t Search(golang::sort::IntSlice p, int64_t x);
+        int64_t Search(golang::sort::Float64Slice p, double x);
+        int64_t Search(golang::sort::StringSlice p, gocpp::string x);
     }
 }
 

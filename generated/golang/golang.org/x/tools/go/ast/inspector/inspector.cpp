@@ -82,19 +82,19 @@ namespace golang::golang_org::x::tools::go::ast::inspector
         return value.PrintTo(os);
     }
 
-    int32_t packEdgeKindAndIndex(edge::Kind ek, int index)
+    int32_t packEdgeKindAndIndex(edge::Kind ek, int64_t index)
     {
         return int32_t((uint32_t(index + 1) << 7) | uint32_t(ek));
     }
 
     // unpackEdgeKindAndIndex unpacks the edge kind and edge index (within
     // an []ast.Node slice) from the parent field of a pop event.
-    std::tuple<edge::Kind, int> unpackEdgeKindAndIndex(int32_t x)
+    std::tuple<edge::Kind, int64_t> unpackEdgeKindAndIndex(int32_t x)
     {
         // The "parent" field of a pop node holds the
         // edge Kind in the lower 7 bits and the index+1
         // in the upper 25.
-        return {edge::Kind(x & 0x7f), int(x >> 7) - 1};
+        return {edge::Kind(x & 0x7f), int64_t(x >> 7) - 1};
     }
 
     // New returns an Inspector for the specified syntax trees.
@@ -169,7 +169,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
         // return true
         // })
         auto mask = maskOf(types);
-        for(auto i = int32_t(0); i < int32_t(len(in->events)); )
+        for(int32_t i = int32_t(0); i < int32_t(len(in->events)); )
         {
             auto ev = in->events[i];
             if(ev.index > i)
@@ -212,7 +212,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
     void rec::Nodes(golang::golang_org::x::tools::go::ast::inspector::Inspector* in, gocpp::slice<ast::Node> types, std::function<bool (ast::Node n, bool push)> f)
     {
         auto mask = maskOf(types);
-        for(auto i = int32_t(0); i < int32_t(len(in->events)); )
+        for(int32_t i = int32_t(0); i < int32_t(len(in->events)); )
         {
             auto ev = in->events[i];
             if(ev.index > i)
@@ -265,7 +265,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
     {
         auto mask = maskOf(types);
         gocpp::slice<ast::Node> stack = {};
-        for(auto i = int32_t(0); i < int32_t(len(in->events)); )
+        for(int32_t i = int32_t(0); i < int32_t(len(in->events)); )
         {
             auto ev = in->events[i];
             if(ev.index > i)
@@ -311,10 +311,10 @@ namespace golang::golang_org::x::tools::go::ast::inspector
         // (We use End-Pos not FileStart-FileEnd to neglect
         // the effect of long doc comments.)
         // This makes traverse faster by 4x (!).
-        int extent = {};
+        int64_t extent = {};
         for(auto [gocpp_ignored, f] : files)
         {
-            extent += int(rec::End(gocpp::recv(f)) - rec::Pos(gocpp::recv(f)));
+            extent += int64_t(rec::End(gocpp::recv(f)) - rec::Pos(gocpp::recv(f)));
         }
         // This estimate is based on the net/http package.
         // impose some reasonable maximum (1M)
@@ -403,7 +403,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
         return value.PrintTo(os);
     }
 
-    void rec::push(visitor* v, edge::Kind ek, int eindex, ast::Node node)
+    void rec::push(visitor* v, edge::Kind ek, int64_t eindex, ast::Node node)
     {
         auto index = int32_t(len(v->events));
         auto parentIndex = v->stack[len(v->stack) - 1].index;

@@ -65,7 +65,7 @@ namespace golang::golang_org::x::tools::internal::packagesinternal
         return mocklib::Sprintf("%s: %s (import stack: %s)"_s, err.Pos, err.Err, err.ImportStack);
     }
 
-    int TypecheckCgo;
-    int DepsErrors;
+    int64_t TypecheckCgo;
+    int64_t DepsErrors;
 }
 

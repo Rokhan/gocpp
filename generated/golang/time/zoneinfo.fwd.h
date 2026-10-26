@@ -11,11 +11,12 @@ namespace golang::time
     struct zoneTrans;
     // alpha and omega are the beginning and end of time for zone
     // transitions.
-    const int alpha = - 1 << 63;
-    const int omega = (1 << 63) - 1;
-    using ruleKind = int;
+    inline constexpr int64_t alpha = - 1LL << 63;
+    inline constexpr int64_t omega = int64_t((1_bi << 63) - 1_bi);
+    struct GoTag_ruleKind;
+    using ruleKind = gocpp::defined<int64_t, GoTag_ruleKind>;
     struct rule;
-    const ruleKind ruleJulian = 0;
-    const ruleKind ruleDOY = 1;
-    const ruleKind ruleMonthWeekDay = 2;
+    inline constexpr ruleKind ruleJulian = 0;
+    inline constexpr ruleKind ruleDOY = 1;
+    inline constexpr ruleKind ruleMonthWeekDay = 2;
 }

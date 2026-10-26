@@ -43,7 +43,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
     // In that case, callers should either downgrade to the version of
     // go used to build the application, or report an error that the
     // application is too old to use the go command on the PATH.
-    std::tuple<int, gocpp::error> GoVersion(context::Context ctx, Invocation inv, Runner* r)
+    std::tuple<int64_t, gocpp::error> GoVersion(context::Context ctx, Invocation inv, Runner* r)
     {
         inv.Verb = "list"_s;
         inv.Args = gocpp::slice<gocpp::string> {"-e"_s, "-f"_s, "{{context.ReleaseTags}}"_s, "--"_s, "unsafe"_s};
@@ -70,7 +70,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
         auto tags = mocklib::StringsFields(go_stdout.make_slice(1, len(go_stdout) - 2));
         for(auto [gocpp_ignored, tag] : slices::Backward(tags))
         {
-            int version = {};
+            int64_t version = {};
             if(auto [gocpp_id_0, err] = fmt::Sscanf(tag, "go1.%d"_s, & version); err != nullptr)
             {
                 continue;

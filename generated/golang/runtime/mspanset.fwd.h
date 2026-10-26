@@ -7,15 +7,16 @@
 namespace golang::runtime
 {
     struct spanSet;
-    const long spanSetBlockEntries = 512;
-    const long spanSetInitSpineCap = 256;
+    inline constexpr long spanSetBlockEntries = 512;
+    inline constexpr long spanSetInitSpineCap = 256;
     struct spanSetBlockHeader;
     struct spanSetBlockHeader2;
     struct spanSetBlock;
     struct atomicSpanSetSpinePointer;
     struct spanSetSpinePointer;
     struct spanSetBlockAlloc;
-    using headTailIndex = uint64_t;
+    struct GoTag_headTailIndex;
+    using headTailIndex = gocpp::defined<uint64_t, GoTag_headTailIndex>;
     struct atomicHeadTailIndex;
     struct atomicMSpanPointer;
 }

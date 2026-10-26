@@ -203,7 +203,7 @@ namespace golang::reflect
                 x.argLen = abid.stackCallArgsSize;
                 x.regPtrs = abid.inRegPtrs;
             });
-            x.method = int(v.flag) >> flagMethodShift;
+            x.method = int64_t(v.flag) >> flagMethodShift;
             x.rcvr = rcvr;
         });
 

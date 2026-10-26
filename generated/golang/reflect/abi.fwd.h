@@ -7,12 +7,13 @@
 namespace golang::reflect
 {
     struct abiStep;
-    using abiStepKind = int;
+    struct GoTag_abiStepKind;
+    using abiStepKind = gocpp::defined<int64_t, GoTag_abiStepKind>;
     struct abiSeq;
     struct abiDesc;
-    const abiStepKind abiStepBad = 0;
-    const abiStepKind abiStepStack = 1;
-    const abiStepKind abiStepIntReg = 2;
-    const abiStepKind abiStepPointer = 3;
-    const abiStepKind abiStepFloatReg = 4;
+    inline constexpr abiStepKind abiStepBad = 0;
+    inline constexpr abiStepKind abiStepStack = 1;
+    inline constexpr abiStepKind abiStepIntReg = 2;
+    inline constexpr abiStepKind abiStepPointer = 3;
+    inline constexpr abiStepKind abiStepFloatReg = 4;
 }

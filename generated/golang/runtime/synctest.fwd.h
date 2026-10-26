@@ -10,7 +10,7 @@ namespace golang::runtime
     struct synctestDeadlockError;
     struct specialBubble;
     // Keep these in sync with internal/synctest.
-    const int bubbleAssocUnbubbled = 0;
-    const int bubbleAssocCurrentBubble = 1;
-    const int bubbleAssocOtherBubble = 2;
+    inline constexpr int64_t bubbleAssocUnbubbled = 0;
+    inline constexpr int64_t bubbleAssocCurrentBubble = 1;
+    inline constexpr int64_t bubbleAssocOtherBubble = 2;
 }

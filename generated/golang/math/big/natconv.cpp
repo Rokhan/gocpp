@@ -45,10 +45,10 @@ namespace golang::math::big
     // For instance maxPow(10) == (1e19, 19) for 19 decimal digits in a 64bit Word.
     // In other words, at most n digits in base b fit into a Word.
     // TODO(gri) replace this with a table, generated at build time.
-    std::tuple<Word, int> maxPow(Word b)
+    std::tuple<Word, int64_t> maxPow(Word b)
     {
         Word p;
-        int n;
+        int64_t n;
         // assuming b <= _M
         std::tie(p, n) = std::tuple{b, 1};
         for(auto max = _M / b; p <= max; )
@@ -62,7 +62,7 @@ namespace golang::math::big
     }
 
     // pow returns x**n for n > 0, and 1 otherwise.
-    Word pow(Word x, int n)
+    Word pow(Word x, int64_t n)
     {
         Word p;
         // n == sum of bi * 2**i, for 0 <= i < imax, and bi is 0 or 1
@@ -128,11 +128,11 @@ namespace golang::math::big
     // parsed. A digit count <= 0 indicates the presence of a period (if fracOk
     // is set, only), and -count is the number of fractional digits found.
     // In this case, the actual value of the scanned number is res * b**count.
-    std::tuple<golang::math::big::nat, int, int, gocpp::error> rec::scan(golang::math::big::nat z, io::ByteScanner r, int base, bool fracOk)
+    std::tuple<golang::math::big::nat, int64_t, int64_t, gocpp::error> rec::scan(golang::math::big::nat z, io::ByteScanner r, int64_t base, bool fracOk)
     {
         golang::math::big::nat res;
-        int b;
-        int count;
+        int64_t b;
+        int64_t count;
         gocpp::error err;
         // Reject invalid bases.
         auto baseOk = base == 0 ||
@@ -147,15 +147,15 @@ namespace golang::math::big
         // of '_', '0' (a digit), or '.' (anything else). A
         // valid separator '_' may only occur after a digit
         // and if base == 0.
-        auto prev = '.';
-        auto invalSep = false;
+        gocpp::rune prev = '.';
+        bool invalSep = false;
 
         // one char look-ahead
         unsigned char ch;
         std::tie(ch, err) = rec::ReadByte(gocpp::recv(r));
 
         // Determine actual base.
-        int prefix;
+        int64_t prefix;
         std::tie(b, prefix) = std::tuple{base, 0};
         if(base == 0)
         {
@@ -228,7 +228,7 @@ namespace golang::math::big
         // b1**n (or 0 for the special bit-packing cases b=2,4,16)
         Word bn = {};
         // max digits that fit into Word
-        int n = {};
+        int64_t n = {};
         //Go switch emulation
         {
             auto condition = b;
@@ -253,11 +253,11 @@ namespace golang::math::big
             }
         }
         // 0 <= di < b1**i < bn
-        auto di = Word(0);
+        big::Word di = Word(0);
         // 0 <= i < n
-        auto i = 0;
+        int64_t i = 0;
         // position of decimal point
-        auto dp = - 1;
+        int64_t dp = - 1;
         for(; err == nullptr; )
         {
             if(ch == '.' && fracOk)
@@ -380,7 +380,7 @@ namespace golang::math::big
             z = rec::norm(gocpp::recv(z));
             if(i > 0)
             {
-                z = rec::rsh(gocpp::recv(z), z, (unsigned int)(n - i) * (unsigned int)(_W / n));
+                z = rec::rsh(gocpp::recv(z), z, (uint64_t)(n - i) * (uint64_t)(_W / n));
             }
         }
         else
@@ -405,13 +405,13 @@ namespace golang::math::big
 
     // utoa converts x to an ASCII representation in the given base;
     // base must be between 2 and MaxBase, inclusive.
-    gocpp::slice<unsigned char> rec::utoa(golang::math::big::nat x, int base)
+    gocpp::slice<unsigned char> rec::utoa(golang::math::big::nat x, int64_t base)
     {
         return rec::itoa(gocpp::recv(x), false, base);
     }
 
     // itoa is like utoa but it prepends a '-' if neg && x != 0.
-    gocpp::slice<unsigned char> rec::itoa(golang::math::big::nat x, bool neg, int base)
+    gocpp::slice<unsigned char> rec::itoa(golang::math::big::nat x, bool neg, int64_t base)
     {
         gocpp::Defer defer;
         try
@@ -431,7 +431,7 @@ namespace golang::math::big
 
             // allocate buffer for conversion
             // off by 1 at most
-            auto i = int(double(rec::bitLen(gocpp::recv(x))) / math::Log2(double(base))) + 1;
+            auto i = int64_t(double(rec::bitLen(gocpp::recv(x))) / math::Log2(double(base))) + 1;
             if(neg)
             {
                 i++;
@@ -443,15 +443,15 @@ namespace golang::math::big
             {
                 // shift is base b digit size in bits
                 // shift > 0 because b >= 2
-                auto shift = (unsigned int)(bits::TrailingZeros((unsigned int)(b)));
+                auto shift = (uint64_t)(bits::TrailingZeros((uint64_t)(b)));
                 auto mask = Word((1 << shift) - 1);
                 // current word
                 auto w = x[0];
                 // number of unprocessed bits in w
-                auto nbits = (unsigned int)(_W);
+                uint64_t nbits = (uint64_t)(_W);
 
                 // convert less-significant words (include leading zeros)
-                for(auto k = 1; k < len(x); k++)
+                for(int64_t k = 1; k < len(x); k++)
                 {
                     // convert full digits
                     for(; nbits >= shift; )
@@ -546,7 +546,7 @@ namespace golang::math::big
     // range 2..64 shows that values of 8 and 16 work well, with a 4x speedup at medium lengths and
     // ~30x for 20000 digits. Use nat_test.go's BenchmarkLeafSize tests to optimize leafSize for
     // specific hardware.
-    void rec::convertWords(golang::math::big::nat q, stack* stk, gocpp::slice<unsigned char> s, Word b, int ndigits, Word bb, gocpp::slice<divisor> table)
+    void rec::convertWords(golang::math::big::nat q, stack* stk, gocpp::slice<unsigned char> s, Word b, int64_t ndigits, Word bb, gocpp::slice<divisor> table)
     {
         // split larger blocks recursively
         if(table != nullptr)
@@ -596,7 +596,7 @@ namespace golang::math::big
             {
                 // extract least significant, base bb "digit"
                 std::tie(q, r) = rec::divW(gocpp::recv(q), q, bb);
-                for(auto j = 0; j < ndigits && i > 0; j++)
+                for(int64_t j = 0; j < ndigits && i > 0; j++)
                 {
                     i--;
                     // avoid % computation since r%10 == r - int(r/10)*10;
@@ -614,7 +614,7 @@ namespace golang::math::big
             {
                 // extract least significant, base bb "digit"
                 std::tie(q, r) = rec::divW(gocpp::recv(q), q, bb);
-                for(auto j = 0; j < ndigits && i > 0; j++)
+                for(int64_t j = 0; j < ndigits && i > 0; j++)
                 {
                     i--;
                     s[i] = digits[r % b];
@@ -637,7 +637,7 @@ namespace golang::math::big
     //
     //	8 and 16 effective on 3.0 GHz Xeon "Clovertown" CPU (128 byte cache lines)
     //	8 and 16 effective on 2.66 GHz Core 2 Duo "Penryn" CPU
-    int leafSize = 8;
+    int64_t leafSize = 8;
     
     template<typename T> requires gocpp::GoStruct<T>
     divisor::operator T()
@@ -732,7 +732,7 @@ namespace golang::math::big
     }
 
     // construct table of powers of bb*leafSize to use in subdivisions.
-    gocpp::slice<divisor> divisors(stack* stk, int m, Word b, int ndigits, Word bb)
+    gocpp::slice<divisor> divisors(stack* stk, int64_t m, Word b, int64_t ndigits, Word bb)
     {
         // only compute table when recursive conversion is enabled and x is large
         if(leafSize == 0 || m <= leafSize)
@@ -741,7 +741,7 @@ namespace golang::math::big
         }
 
         // determine k where (bb**leafSize)**(2**k) >= sqrt(x)
-        auto k = 1;
+        int64_t k = 1;
         for(auto words = leafSize; words < (m >> 1) && k < len(cacheBase10.table); words <<= 1)
         {
             k++;
@@ -767,7 +767,7 @@ namespace golang::math::big
         {
             // add new entries as needed
             golang::math::big::nat larger = {};
-            for(auto i = 0; i < k; i++)
+            for(int64_t i = 0; i < k; i++)
             {
                 if(table[i].ndigits == 0)
                 {

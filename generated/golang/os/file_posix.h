@@ -12,8 +12,8 @@
 
 namespace golang::os
 {
-    gocpp::error Chown(gocpp::string name, int uid, int gid);
-    gocpp::error Lchown(gocpp::string name, int uid, int gid);
+    gocpp::error Chown(gocpp::string name, int64_t uid, int64_t gid);
+    gocpp::error Lchown(gocpp::string name, int64_t uid, int64_t gid);
     gocpp::error ignoringEINTR(std::function<gocpp::error ()> fn);
 
     template<typename T>
@@ -60,12 +60,12 @@ namespace golang::os
     namespace rec
     {
         gocpp::error Close(File* f);
-        std::tuple<int, gocpp::error> read(File* f, gocpp::slice<unsigned char> b);
-        std::tuple<int, gocpp::error> pread(File* f, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<int, gocpp::error> write(File* f, gocpp::slice<unsigned char> b);
-        std::tuple<int, gocpp::error> pwrite(File* f, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int64_t, gocpp::error> read(File* f, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> pread(File* f, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int64_t, gocpp::error> write(File* f, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> pwrite(File* f, gocpp::slice<unsigned char> b, int64_t off);
         gocpp::error chmod(File* f, FileMode mode);
-        gocpp::error Chown(File* f, int uid, int gid);
+        gocpp::error Chown(File* f, int64_t uid, int64_t gid);
         gocpp::error Truncate(File* f, int64_t size);
         gocpp::error Sync(File* f);
         gocpp::error Chdir(File* f);

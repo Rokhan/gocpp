@@ -41,22 +41,22 @@ namespace golang::internal::poll
     void runtime_pollServerInit()
     /* convertBlockStmt, nil block */;
 
-    std::tuple<uintptr_t, int> runtime_pollOpen(uintptr_t fd)
+    std::tuple<uintptr_t, int64_t> runtime_pollOpen(uintptr_t fd)
     /* convertBlockStmt, nil block */;
 
     void runtime_pollClose(uintptr_t ctx)
     /* convertBlockStmt, nil block */;
 
-    int runtime_pollWait(uintptr_t ctx, int mode)
+    int64_t runtime_pollWait(uintptr_t ctx, int64_t mode)
     /* convertBlockStmt, nil block */;
 
-    void runtime_pollWaitCanceled(uintptr_t ctx, int mode)
+    void runtime_pollWaitCanceled(uintptr_t ctx, int64_t mode)
     /* convertBlockStmt, nil block */;
 
-    int runtime_pollReset(uintptr_t ctx, int mode)
+    int64_t runtime_pollReset(uintptr_t ctx, int64_t mode)
     /* convertBlockStmt, nil block */;
 
-    void runtime_pollSetDeadline(uintptr_t ctx, int64_t d, int mode)
+    void runtime_pollSetDeadline(uintptr_t ctx, int64_t d, int64_t mode)
     /* convertBlockStmt, nil block */;
 
     void runtime_pollUnblock(uintptr_t ctx)
@@ -127,7 +127,7 @@ namespace golang::internal::poll
         runtime_pollUnblock(pd->runtimeCtx);
     }
 
-    gocpp::error rec::prepare(pollDesc* pd, int mode, bool isFile)
+    gocpp::error rec::prepare(pollDesc* pd, int64_t mode, bool isFile)
     {
         if(pd->runtimeCtx == 0)
         {
@@ -147,7 +147,7 @@ namespace golang::internal::poll
         return rec::prepare(gocpp::recv(pd), 'w', isFile);
     }
 
-    gocpp::error rec::wait(pollDesc* pd, int mode, bool isFile)
+    gocpp::error rec::wait(pollDesc* pd, int64_t mode, bool isFile)
     {
         if(pd->runtimeCtx == 0)
         {
@@ -167,7 +167,7 @@ namespace golang::internal::poll
         return rec::wait(gocpp::recv(pd), 'w', isFile);
     }
 
-    void rec::waitCanceled(pollDesc* pd, int mode)
+    void rec::waitCanceled(pollDesc* pd, int64_t mode)
     {
         if(pd->runtimeCtx == 0)
         {
@@ -181,7 +181,7 @@ namespace golang::internal::poll
         return pd->runtimeCtx != 0;
     }
 
-    gocpp::error convertErr(int res, bool isFile)
+    gocpp::error convertErr(int64_t res, bool isFile)
     {
         //Go switch emulation
         {
@@ -229,7 +229,7 @@ namespace golang::internal::poll
         return setDeadlineImpl(fd, t, 'w');
     }
 
-    gocpp::error setDeadlineImpl(FD* fd, mocklib::Date t, int mode)
+    gocpp::error setDeadlineImpl(FD* fd, mocklib::Date t, int64_t mode)
     {
         gocpp::Defer defer;
         try

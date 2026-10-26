@@ -7,10 +7,10 @@
 namespace golang::internal::sync
 {
     struct Mutex;
-    const int mutexLocked = 1 << 0;
-    const int mutexWoken = 1 << 1;
-    const int mutexStarving = 1 << 2;
-    const int mutexWaiterShift = 3;
+    inline constexpr int64_t mutexLocked = 1 << 0;
+    inline constexpr int64_t mutexWoken = 1 << 1;
+    inline constexpr int64_t mutexStarving = 1 << 2;
+    inline constexpr int64_t mutexWaiterShift = 3;
     // Mutex fairness.
     //
     // Mutex can be in 2 modes of operations: normal and starvation.
@@ -35,5 +35,5 @@ namespace golang::internal::sync
     // Normal mode has considerably better performance as a goroutine can acquire
     // a mutex several times in a row even if there are blocked waiters.
     // Starvation mode is important to prevent pathological cases of tail latency.
-    const double starvationThresholdNs = 1e6;
+    inline constexpr double starvationThresholdNs = 1e6;
 }

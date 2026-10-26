@@ -13,6 +13,6 @@ namespace golang::os
     // the FILE_ID_BOTH_DIR_INFO structure is 105 bytes, so dirBufSize
     // should not be set below 1024 bytes (512+105+safety buffer).
     // Windows 8.1 and earlier only works with buffer sizes up to 64 kB.
-    const int dirBufSize = 64 * 1024;
+    inline constexpr int64_t dirBufSize = 64 * 1024;
     struct dirEntry;
 }

@@ -9,8 +9,11 @@
 #include "golang/internal/abi/rangefuncconsts.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::internal::abi
 {
+    struct GoTag_RF_State { };
+    using RF_State = gocpp::defined<int64_t, GoTag_RF_State>;
 
     namespace rec
     {

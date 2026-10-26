@@ -168,24 +168,24 @@ namespace golang::golang_org::x::tools::internal::pkgbits
         pr.elemData = input.make_slice(pos);
 
         auto fingerprintSize = 8;
-        assert(len(pr.elemData) - fingerprintSize == int(pr.elemEnds[len(pr.elemEnds) - 1]));
+        assert(len(pr.elemData) - fingerprintSize == int64_t(pr.elemEnds[len(pr.elemEnds) - 1]));
 
         return pr;
     }
 
     // NumElems returns the number of elements in section k.
-    int rec::NumElems(PkgDecoder* pr, RelocKind k)
+    int64_t rec::NumElems(PkgDecoder* pr, RelocKind k)
     {
-        auto count = int(pr->elemEndsEnds[k]);
+        auto count = int64_t(pr->elemEndsEnds[k]);
         if(k > 0)
         {
-            count -= int(pr->elemEndsEnds[k - 1]);
+            count -= int64_t(pr->elemEndsEnds[k - 1]);
         }
         return count;
     }
 
     // TotalElems returns the total number of elements across all sections.
-    int rec::TotalElems(PkgDecoder* pr)
+    int64_t rec::TotalElems(PkgDecoder* pr)
     {
         return len(pr->elemEnds);
     }
@@ -200,14 +200,14 @@ namespace golang::golang_org::x::tools::internal::pkgbits
 
     // AbsIdx returns the absolute index for the given (section, index)
     // pair.
-    int rec::AbsIdx(PkgDecoder* pr, RelocKind k, Index idx)
+    int64_t rec::AbsIdx(PkgDecoder* pr, RelocKind k, Index idx)
     {
-        auto absIdx = int(idx);
+        auto absIdx = int64_t(idx);
         if(k > 0)
         {
-            absIdx += int(pr->elemEndsEnds[k - 1]);
+            absIdx += int64_t(pr->elemEndsEnds[k - 1]);
         }
-        if(absIdx >= int(pr->elemEndsEnds[k]))
+        if(absIdx >= int64_t(pr->elemEndsEnds[k]))
         {
             panicf("%v:%v is out of bounds; %v"_s, k, idx, pr->elemEndsEnds);
         }
@@ -378,7 +378,7 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     std::tuple<uint64_t, gocpp::error> readUvarint(strings::Reader* r)
     {
         uint64_t x = {};
-        unsigned int s = {};
+        uint64_t s = {};
         for(int i = 0; i < binary::MaxVarintLen64; ++i)
         {
             auto [b, err] = rec::ReadByte(gocpp::recv(r));
@@ -418,7 +418,7 @@ namespace golang::golang_org::x::tools::internal::pkgbits
         return x;
     }
 
-    Index rec::rawReloc(Decoder* r, RelocKind k, int idx)
+    Index rec::rawReloc(Decoder* r, RelocKind k, int64_t idx)
     {
         auto e = r->Relocs[idx];
         assert(e.Kind == k);
@@ -438,10 +438,10 @@ namespace golang::golang_org::x::tools::internal::pkgbits
 
         auto [pos, gocpp_id_0] = rec::Seek(gocpp::recv(r->Data), 0, io::SeekCurrent);
         auto mHave = SyncMarker(rec::rawUvarint(gocpp::recv(r)));
-        auto writerPCs = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), rec::rawUvarint(gocpp::recv(r)));
+        auto writerPCs = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), rec::rawUvarint(gocpp::recv(r)));
         for(auto [i, gocpp_ignored] : writerPCs)
         {
-            writerPCs[i] = int(rec::rawUvarint(gocpp::recv(r)));
+            writerPCs[i] = int64_t(rec::rawUvarint(gocpp::recv(r)));
         }
 
         if(mHave == mWant)
@@ -513,28 +513,28 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     }
 
     // Len decodes and returns a non-negative int value from the element bitstream.
-    int rec::Len(Decoder* r)
+    int64_t rec::Len(Decoder* r)
     {
         auto x = rec::Uint64(gocpp::recv(r));
-        auto v = int(x);
+        auto v = int64_t(x);
         assert(uint64_t(v) == x);
         return v;
     }
 
     // Int decodes and returns an int value from the element bitstream.
-    int rec::Int(Decoder* r)
+    int64_t rec::Int(Decoder* r)
     {
         auto x = rec::Int64(gocpp::recv(r));
-        auto v = int(x);
+        auto v = int64_t(x);
         assert(int64_t(v) == x);
         return v;
     }
 
     // Uint decodes and returns a uint value from the element bitstream.
-    unsigned int rec::Uint(Decoder* r)
+    uint64_t rec::Uint(Decoder* r)
     {
         auto x = rec::Uint64(gocpp::recv(r));
-        auto v = (unsigned int)(x);
+        auto v = (uint64_t)(x);
         assert(uint64_t(v) == x);
         return v;
     }
@@ -546,7 +546,7 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     // TODO(mdempsky): Ideally this method would have signature "Code[T
     // Code] T" instead, but we don't allow generic methods and the
     // compiler can't depend on generics yet anyway.
-    int rec::Code(Decoder* r, SyncMarker mark)
+    int64_t rec::Code(Decoder* r, SyncMarker mark)
     {
         rec::Sync(gocpp::recv(r), mark);
         return rec::Len(gocpp::recv(r));
@@ -679,7 +679,7 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     {
         Index ridx = {};
         gocpp::string name = {};
-        int rcode = {};
+        int64_t rcode = {};
         {
             auto r = rec::TempDecoder(gocpp::recv(pr), RelocName, idx, SyncObject1);
             rec::Sync(gocpp::recv(r), SyncSym);

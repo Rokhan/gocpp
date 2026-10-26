@@ -12,6 +12,8 @@
 
 namespace golang::go::types
 {
+    struct GoTag_operandMode { };
+    using operandMode = gocpp::defined<unsigned char, GoTag_operandMode>;
     extern gocpp::array<gocpp::string, 12> operandModeString;
 }
 #include "golang/go/types/type.h"

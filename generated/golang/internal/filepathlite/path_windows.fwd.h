@@ -6,6 +6,6 @@
 
 namespace golang::internal::filepathlite
 {
-    const char Separator = '\\';
-    const char ListSeparator = ';';
+    inline constexpr char Separator = '\\';
+    inline constexpr char ListSeparator = ';';
 }

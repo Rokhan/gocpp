@@ -27,7 +27,7 @@ namespace golang::main
     });
     struct gocpp_id_0
         {
-            int i{};
+            int64_t i{};
             bool b{};
 
             using isGoStruct = void;
@@ -67,7 +67,7 @@ namespace golang::main
 
     void main()
     {
-        auto q = gocpp::slice<int> {2, 3, 5, 7, 11, 13};
+        auto q = gocpp::slice<int64_t> {2, 3, 5, 7, 11, 13};
         mocklib::Println(q);
 
         auto r = gocpp::slice<bool> {true, false, true, true, false, true};

@@ -301,7 +301,7 @@ namespace golang::go::types
 
                             // If disambiguating one struct for another, look for the first unexported field.
                             // Do this first in case of nested structs; tag the first-outermost field.
-                            auto pkgAnnotate = false;
+                            bool pkgAnnotate = false;
                             if(w->qf == nullptr && w->pkgInfo && ! isExported(f->object.name))
                             {
                                 // note for embedded types, type name is field name, and "string" etc are lower case hence unexported.
@@ -409,7 +409,7 @@ namespace golang::go::types
                             rec::string(gocpp::recv(w), "/* implicit */ "_s);
                         }
                         rec::string(gocpp::recv(w), "interface{"_s);
-                        auto first = true;
+                        bool first = true;
                         if(w->ctxt != nullptr)
                         {
                             rec::typeSet(gocpp::recv(w), rec::typeSet(gocpp::recv(t)));
@@ -615,7 +615,7 @@ namespace golang::go::types
     void rec::typeSet(typeWriter* w, _TypeSet* s)
     {
         assert(w->ctxt != nullptr);
-        auto first = true;
+        bool first = true;
         for(auto [gocpp_ignored, m] : s->methods)
         {
             if(! first)
@@ -818,7 +818,7 @@ namespace golang::go::types
         // all digits 0...9 have the same utf8 width
         auto w = len("₀"_s);
         gocpp::array<unsigned char, 32 * w> buf = {};
-        auto i = len(buf);
+        int64_t i = len(buf);
         for(; ; )
         {
             i -= w;

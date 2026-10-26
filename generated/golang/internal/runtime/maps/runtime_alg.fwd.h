@@ -9,5 +9,5 @@
 namespace golang::internal::runtime::maps
 {
     namespace goarch = golang::internal::goarch;
-    const int hashRandomBytes = goarch::PtrSize / 4 * 64;
+    inline constexpr int64_t hashRandomBytes = goarch::PtrSize / 4 * 64;
 }

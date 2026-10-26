@@ -28,6 +28,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct funcval& value);
+    struct GoTag_guintptr { };
+    using guintptr = gocpp::defined<uintptr_t, GoTag_guintptr>;
+    struct GoTag_puintptr { };
+    using puintptr = gocpp::defined<uintptr_t, GoTag_puintptr>;
+    struct GoTag_muintptr { };
+    using muintptr = gocpp::defined<uintptr_t, GoTag_muintptr>;
     struct libcall
     {
         uintptr_t fn{};
@@ -140,6 +146,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ancestorInfo& value);
+    struct GoTag_waitReason { };
+    using waitReason = gocpp::defined<uint8_t, GoTag_waitReason>;
     extern gocpp::array<gocpp::string, 47> waitReasonStrings;
     // isWaitingForSuspendG indicates that a goroutine is only entering _Gwaiting and
     // setting a waitReason because it needs to be able to let the suspendG
@@ -321,7 +329,7 @@ namespace golang::runtime
         // and eliminating the write barrier/keeping it eliminated from
         // slice updates is tricky, more so than just managing the length
         // ourselves.
-        int len{};
+        int64_t len{};
         gocpp::array<mspan*, 128> buf{};
 
         using isGoStruct = void;
@@ -857,7 +865,7 @@ namespace golang::runtime
         // there's no stack to put them on. That is their sole purpose.
         std::function<bool (g* _1, gocpp::unsafe_pointer _2)> waitunlockf{};
         gocpp::unsafe_pointer waitlock{};
-        int waitTraceSkip{};
+        int64_t waitTraceSkip{};
         traceBlockReason waitTraceBlockReason{};
         uint32_t syscalltick{};
         m* freelink{}; // on sched.freem
@@ -883,7 +891,7 @@ namespace golang::runtime
         uint32_t cheaprand{};
         uint64_t cheaprand64{};
         // Up to 10 locks held by this m, maintained by the lock ranking code.
-        int locksHeldLen{};
+        int64_t locksHeldLen{};
         gocpp::array<heldLockInfo, 10> locksHeld{};
         // self points this M until mexit clears it to return nil.
         mWeakPointer self{};

@@ -80,7 +80,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     std::tuple<types::Package*, gocpp::error> IImportShallow(token::FileSet* fset, GetPackagesFunc getPackages, gocpp::slice<unsigned char> data, gocpp::string path, ReportFunc reportf);
     gocpp::error IExportData(io::Writer out, token::FileSet* fset, types::Package* pkg);
     gocpp::error IExportBundle(io::Writer out, token::FileSet* fset, gocpp::slice<types::Package*> pkgs);
-    gocpp::error iexportCommon(io::Writer out, token::FileSet* fset, bool bundle, bool shallow, int version, gocpp::slice<types::Package*> pkgs, ReportFunc reportf);
+    gocpp::error iexportCommon(io::Writer out, token::FileSet* fset, bool bundle, bool shallow, int64_t version, gocpp::slice<types::Package*> pkgs, ReportFunc reportf);
     struct filePositions
     {
         token::File* file{};
@@ -118,42 +118,42 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     namespace rec
     {
-        int Available(const gocpp::PtrRecv<struct intWriter, false>& self);
+        int64_t Available(const gocpp::PtrRecv<struct intWriter, false>& self);
         gocpp::slice<unsigned char> AvailableBuffer(const gocpp::PtrRecv<struct intWriter, false>& self);
         gocpp::slice<unsigned char> Bytes(const gocpp::PtrRecv<struct intWriter, false>& self);
-        int Cap(const gocpp::PtrRecv<struct intWriter, false>& self);
-        void Grow(const gocpp::PtrRecv<struct intWriter, false>& self, int n);
-        int Len(const gocpp::PtrRecv<struct intWriter, false>& self);
-        gocpp::slice<unsigned char> Next(const gocpp::PtrRecv<struct intWriter, false>& self, int n);
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct intWriter, false>& self, int n);
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::slice<unsigned char> p);
+        int64_t Cap(const gocpp::PtrRecv<struct intWriter, false>& self);
+        void Grow(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
+        int64_t Len(const gocpp::PtrRecv<struct intWriter, false>& self);
+        gocpp::slice<unsigned char> Next(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::slice<unsigned char> p);
         std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct intWriter, false>& self);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadBytes(const gocpp::PtrRecv<struct intWriter, false>& self, unsigned char delim);
         std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::PtrRecv<struct intWriter, false>& self, io::Reader r);
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct intWriter, false>& self);
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::PtrRecv<struct intWriter, false>& self);
         std::tuple<gocpp::string, gocpp::error> ReadString(const gocpp::PtrRecv<struct intWriter, false>& self, unsigned char delim);
         void Reset(const gocpp::PtrRecv<struct intWriter, false>& self);
         gocpp::string String(const gocpp::PtrRecv<struct intWriter, false>& self);
-        void Truncate(const gocpp::PtrRecv<struct intWriter, false>& self, int n);
+        void Truncate(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
         gocpp::error UnreadByte(const gocpp::PtrRecv<struct intWriter, false>& self);
         gocpp::error UnreadRune(const gocpp::PtrRecv<struct intWriter, false>& self);
-        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::slice<unsigned char> p);
         gocpp::error WriteByte(const gocpp::PtrRecv<struct intWriter, false>& self, unsigned char c);
-        std::tuple<int, gocpp::error> WriteRune(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::rune r);
-        std::tuple<int, gocpp::error> WriteString(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteRune(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::rune r);
+        std::tuple<int64_t, gocpp::error> WriteString(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::string s);
         std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::PtrRecv<struct intWriter, false>& self, io::Writer w);
         bool empty(const gocpp::PtrRecv<struct intWriter, false>& self);
-        int grow(const gocpp::PtrRecv<struct intWriter, false>& self, int n);
+        int64_t grow(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> readSlice(const gocpp::PtrRecv<struct intWriter, false>& self, unsigned char delim);
-        std::tuple<int, bool> tryGrowByReslice(const gocpp::PtrRecv<struct intWriter, false>& self, int n);
+        std::tuple<int64_t, bool> tryGrowByReslice(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct intWriter& value);
     struct objQueue
     {
         gocpp::slice<types::Object> ring{};
-        int head{};
-        int tail{};
+        int64_t head{};
+        int64_t tail{};
 
         using isGoStruct = void;
 
@@ -201,7 +201,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     struct iexporter
     {
         token::FileSet* fset{};
-        int version{};
+        int64_t version{};
         bool shallow{}; // don't put types from other packages in the index
         objectpath::Encoder* objEncoder{}; // encodes objects from other packages in shallow mode; lazily allocated
         types::Package* localpkg{}; // (nil in bundle mode)
@@ -221,7 +221,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         gocpp::map<types::Object, uint64_t> declIndex{};
         gocpp::map<types::Object, gocpp::string> tparamNames{}; // typeparam->exported name
         gocpp::map<types::Type, uint64_t> typIndex{};
-        int indent{}; // for tracing support
+        int64_t indent{}; // for tracing support
 
         using isGoStruct = void;
 

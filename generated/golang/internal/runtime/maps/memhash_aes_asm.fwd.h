@@ -6,5 +6,5 @@
 
 namespace golang::internal::runtime::maps
 {
-    const bool memHashUsesVAES = false;
+    inline constexpr bool memHashUsesVAES = false;
 }

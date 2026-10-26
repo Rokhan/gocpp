@@ -26,7 +26,7 @@ namespace golang::syscall
     // UTF-16 encoding of s.
     gocpp::slice<uint16_t> encodeWTF16(gocpp::string s, gocpp::slice<uint16_t> buf)
     {
-        for(auto i = 0; i < len(s); )
+        for(int64_t i = 0; i < len(s); )
         {
             // Cannot use 'for range s' because it expects valid
             // UTF-8 runes.
@@ -52,7 +52,7 @@ namespace golang::syscall
     // the potentially ill-formed UTF-16 s.
     gocpp::slice<unsigned char> decodeWTF16(gocpp::slice<uint16_t> s, gocpp::slice<unsigned char> buf)
     {
-        for(auto i = 0; i < len(s); i++)
+        for(int64_t i = 0; i < len(s); i++)
         {
             gocpp::rune ar = {};
             //Go switch emulation

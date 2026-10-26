@@ -112,7 +112,7 @@ namespace golang::go::build::constraint
     std::ostream& operator<<(std::ostream& os, const struct TagExpr& value);
     struct SyntaxError
     {
-        int Offset{}; // byte offset in input where error was detected
+        int64_t Offset{}; // byte offset in input where error was detected
         gocpp::string Err{}; // description of error
 
         using isGoStruct = void;
@@ -133,11 +133,11 @@ namespace golang::go::build::constraint
     struct exprParser
     {
         gocpp::string s{}; // input string
-        int i{}; // next read location in s
+        int64_t i{}; // next read location in s
         gocpp::string tok{}; // last token read
         bool isTag{};
-        int pos{}; // position (start) of last token
-        int size{};
+        int64_t pos{}; // position (start) of last token
+        int64_t size{};
 
         using isGoStruct = void;
 

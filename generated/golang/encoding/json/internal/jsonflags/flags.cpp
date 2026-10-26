@@ -34,7 +34,7 @@ namespace golang::encoding::json::internal::jsonflags
     }
 
     // Static compile check that bitsUsed and maxArshalV1Flag are in sync.
-    uint64_t gocpp_id_0 = uint64_t((1 << bitsUsed) - maxArshalV1Flag) + uint64_t(maxArshalV1Flag - (1 << bitsUsed));
+    uint64_t gocpp_id_0 = uint64_t((1LL << bitsUsed) - int64_t(maxArshalV1Flag)) + uint64_t(int64_t(maxArshalV1Flag) - (1LL << bitsUsed));
     // Flags is a set of boolean flags.
     // If the presence bit is zero, then the value bit must also be zero.
     // The least-significant bit of both fields is always zero.

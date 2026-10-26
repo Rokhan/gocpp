@@ -772,7 +772,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
                     {
                         log::Printf("Handling hanging Go command: running ps: %v"_s, err);
                     }
-                    auto listFiles = "lsof"_s;
+                    gocpp::string listFiles = "lsof"_s;
                     if(mocklib::GOOS == "freebsd"_s || mocklib::GOOS == "netbsd"_s)
                     {
                         listFiles = "fstat"_s;
@@ -798,7 +798,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
                             switch(conditionId)
                             {
                                 case 0:
-                                    auto go_stderr = "not a bytes.Buffer"_s;
+                                    gocpp::string go_stderr = "not a bytes.Buffer"_s;
                                     if(auto [buf, gocpp_id_5] = gocpp::getValue<bytes::Buffer*>(cmd->Stderr); buf != nullptr)
                                     {
                                         go_stderr = rec::String(gocpp::recv(buf));

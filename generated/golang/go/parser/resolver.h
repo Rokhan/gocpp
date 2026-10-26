@@ -100,7 +100,7 @@ namespace golang::go::parser
         ast::Scope* pkgScope{}; // pkgScope.Outer == nil
         ast::Scope* topScope{}; // top-most scope; may be pkgScope
         gocpp::slice<ast::Ident*> unresolved{}; // unresolved identifiers
-        int depth{}; // scope depth
+        int64_t depth{}; // scope depth
         // Label scopes
         // (maintained by open/close LabelScope)
         ast::Scope* labelScope{}; // label scope for current function

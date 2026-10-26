@@ -10,7 +10,7 @@ namespace golang::runtime
 {
     namespace goarch = golang::internal::goarch;
     // We use 32-bit hash on Wasm, see hash32.go.
-    const int hashSize = (1 - goarch::IsWasm) * goarch::PtrSize + goarch::IsWasm * 4;
-    const uintptr_t c0 = uintptr_t((8 - hashSize) / 4 * 2860486313 + (hashSize - 4) / 4 * 33054211828000289);
-    const uintptr_t c1 = uintptr_t((8 - hashSize) / 4 * 3267000013 + (hashSize - 4) / 4 * 23344194077549503);
+    inline constexpr int64_t hashSize = (1 - goarch::IsWasm) * goarch::PtrSize + goarch::IsWasm * 4;
+    inline constexpr uintptr_t c0 = uintptr_t((8LL - int64_t(hashSize)) / 4LL * 2860486313LL + (int64_t(hashSize) - 4LL) / 4LL * 33054211828000289LL);
+    inline constexpr uintptr_t c1 = uintptr_t((8LL - int64_t(hashSize)) / 4LL * 3267000013LL + (int64_t(hashSize) - 4LL) / 4LL * 23344194077549503LL);
 }

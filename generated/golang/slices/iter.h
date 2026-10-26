@@ -21,10 +21,10 @@ namespace golang::slices
 {
 
     template<template<typename> class  Slice, typename E>
-    iter::Seq2<int, E> All(Slice<E> s);
+    iter::Seq2<int64_t, E> All(Slice<E> s);
 
     template<template<typename> class  Slice, typename E>
-    iter::Seq2<int, E> Backward(Slice<E> s);
+    iter::Seq2<int64_t, E> Backward(Slice<E> s);
 
     template<template<typename> class  Slice, typename E>
     iter::Seq<E> Values(Slice<E> s);
@@ -39,7 +39,7 @@ namespace golang::slices
     gocpp::slice<E> Sorted(iter::Seq<E> seq);
 
     template<typename E>
-    gocpp::slice<E> SortedFunc(iter::Seq<E> seq, std::function<int (E _1, E _2)> cmp);
+    gocpp::slice<E> SortedFunc(iter::Seq<E> seq, std::function<int64_t (E _1, E _2)> cmp);
 
     template<typename E, typename F1>
     decltype(auto) SortedFunc(iter::Seq<E> seq, F1&& cmp)
@@ -48,7 +48,7 @@ namespace golang::slices
     }
 
     template<typename E>
-    gocpp::slice<E> SortedStableFunc(iter::Seq<E> seq, std::function<int (E _1, E _2)> cmp);
+    gocpp::slice<E> SortedStableFunc(iter::Seq<E> seq, std::function<int64_t (E _1, E _2)> cmp);
 
     template<typename E, typename F1>
     decltype(auto) SortedStableFunc(iter::Seq<E> seq, F1&& cmp)
@@ -57,7 +57,7 @@ namespace golang::slices
     }
 
     template<template<typename> class  Slice, typename E>
-    iter::Seq<Slice> Chunk(Slice<E> s, int n);
+    iter::Seq<Slice> Chunk(Slice<E> s, int64_t n);
 
     namespace rec
     {

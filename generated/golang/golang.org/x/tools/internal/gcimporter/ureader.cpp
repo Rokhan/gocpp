@@ -170,7 +170,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     namespace rec
     {
-        int AbsIdx(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx)
+        int64_t AbsIdx(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx)
         {
             return pkgbits::rec::AbsIdx(gocpp::recv(self.ptr->PkgDecoder), k, idx);
         }
@@ -195,7 +195,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return pkgbits::rec::NewDecoderRaw(gocpp::recv(self.ptr->PkgDecoder), k, idx);
         }
 
-        int NumElems(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k)
+        int64_t NumElems(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k)
         {
             return pkgbits::rec::NumElems(gocpp::recv(self.ptr->PkgDecoder), k);
         }
@@ -240,7 +240,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return pkgbits::rec::TempDecoderRaw(gocpp::recv(self.ptr->PkgDecoder), k, idx);
         }
 
-        int TotalElems(const gocpp::PtrRecv<struct pkgReader, false>& self)
+        int64_t TotalElems(const gocpp::PtrRecv<struct pkgReader, false>& self)
         {
             return pkgbits::rec::TotalElems(gocpp::recv(self.ptr->PkgDecoder));
         }
@@ -320,9 +320,9 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         return value.PrintTo(os);
     }
 
-    std::tuple<int, types::Package*, gocpp::error> UImportData(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::slice<unsigned char> data, gocpp::string path)
+    std::tuple<int64_t, types::Package*, gocpp::error> UImportData(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::slice<unsigned char> data, gocpp::string path)
     {
-        int _1;
+        int64_t _1;
         types::Package* pkg;
         gocpp::error err;
         gocpp::Defer defer;
@@ -356,7 +356,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     {
         if(pr->laterFors == nullptr)
         {
-            pr->laterFors = gocpp::make(gocpp::Tag<gocpp::map<types::Type, int>>());
+            pr->laterFors = gocpp::make(gocpp::Tag<gocpp::map<types::Type, int64_t>>());
         }
         pr->laterFors.ref(t) = len(pr->laterFns);
         pr->laterFns = append(pr->laterFns, fn);
@@ -475,12 +475,12 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return pkgbits::rec::Bool(gocpp::recv(self.ptr->Decoder));
         }
 
-        int Code(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::SyncMarker mark)
+        int64_t Code(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::SyncMarker mark)
         {
             return pkgbits::rec::Code(gocpp::recv(self.ptr->Decoder), mark);
         }
 
-        int Int(const gocpp::PtrRecv<struct reader, false>& self)
+        int64_t Int(const gocpp::PtrRecv<struct reader, false>& self)
         {
             return pkgbits::rec::Int(gocpp::recv(self.ptr->Decoder));
         }
@@ -490,7 +490,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return pkgbits::rec::Int64(gocpp::recv(self.ptr->Decoder));
         }
 
-        int Len(const gocpp::PtrRecv<struct reader, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct reader, false>& self)
         {
             return pkgbits::rec::Len(gocpp::recv(self.ptr->Decoder));
         }
@@ -515,7 +515,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return pkgbits::rec::Sync(gocpp::recv(self.ptr->Decoder), mWant);
         }
 
-        unsigned int Uint(const gocpp::PtrRecv<struct reader, false>& self)
+        uint64_t Uint(const gocpp::PtrRecv<struct reader, false>& self)
         {
             return pkgbits::rec::Uint(gocpp::recv(self.ptr->Decoder));
         }
@@ -550,7 +550,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return pkgbits::rec::checkErr(gocpp::recv(self.ptr->Decoder), err);
         }
 
-        pkgbits::Index rawReloc(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::RelocKind k, int idx)
+        pkgbits::Index rawReloc(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::RelocKind k, int64_t idx)
         {
             return pkgbits::rec::rawReloc(gocpp::recv(self.ptr->Decoder), k, idx);
         }
@@ -655,7 +655,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         auto posBase = rec::posBase(gocpp::recv(r));
         auto line = rec::Uint(gocpp::recv(r));
         auto col = rec::Uint(gocpp::recv(r));
-        return rec::pos(gocpp::recv(r->p->fake), posBase, int(line), int(col));
+        return rec::pos(gocpp::recv(r->p->fake), posBase, int64_t(line), int64_t(col));
     }
 
     gocpp::string rec::posBase(reader* r)
@@ -1274,7 +1274,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                 errorf("unexpected object with %v implicit type parameter(s)"_s, implicits);
             }
 
-            auto nreceivers = 0;
+            int64_t nreceivers = 0;
             if(rec::Has(gocpp::recv(rec::Version(gocpp::recv(r))), pkgbits::GenericMethods))
             {
                 nreceivers = rec::Len(gocpp::recv(r));

@@ -203,7 +203,7 @@ namespace golang::time
     sync::Once unnamedFixedZonesOnce;
     // FixedZone returns a [Location] that always uses
     // the given zone name and offset (seconds east of UTC).
-    golang::time::Location* FixedZone(gocpp::string name, int offset)
+    golang::time::Location* FixedZone(gocpp::string name, int64_t offset)
     {
         // Most calls to FixedZone have an unnamed zone with an offset by the hour.
         // Optimize for that case by returning the same *Location for a given hour.
@@ -215,7 +215,7 @@ namespace golang::time
             rec::Do(gocpp::recv(unnamedFixedZonesOnce), [=]() mutable -> void
             {
                 unnamedFixedZones = gocpp::make(gocpp::Tag<gocpp::slice<golang::time::Location*>>(), hoursBeforeUTC + 1 + hoursAfterUTC);
-                for(auto hr = - hoursBeforeUTC; hr <= + hoursAfterUTC; hr++)
+                for(int64_t hr = - hoursBeforeUTC; hr <= + hoursAfterUTC; hr++)
                 {
                     unnamedFixedZones[hr + hoursBeforeUTC] = fixedZone(""_s, hr * 60 * 60);
                 }
@@ -225,7 +225,7 @@ namespace golang::time
         return fixedZone(name, offset);
     }
 
-    golang::time::Location* fixedZone(gocpp::string name, int offset)
+    golang::time::Location* fixedZone(gocpp::string name, int64_t offset)
     {
         auto l = gocpp::InitPtr<golang::time::Location>([=](auto& x) {
             x.name = name;
@@ -245,10 +245,10 @@ namespace golang::time
     // the start and end times bracketing sec when that zone is in effect,
     // the offset in seconds east of UTC (such as -5*60*60), and whether
     // the daylight savings is being observed at that time.
-    std::tuple<gocpp::string, int, int64_t, int64_t, bool> rec::lookup(golang::time::Location* l, int64_t sec)
+    std::tuple<gocpp::string, int64_t, int64_t, int64_t, bool> rec::lookup(golang::time::Location* l, int64_t sec)
     {
         gocpp::string name;
-        int offset;
+        int64_t offset;
         int64_t start;
         int64_t end;
         bool isDST;
@@ -296,11 +296,11 @@ namespace golang::time
         // Not using sort.Search to avoid dependencies.
         auto tx = l->tx;
         end = omega;
-        auto lo = 0;
+        int64_t lo = 0;
         auto hi = len(tx);
         for(; hi - lo > 1; )
         {
-            auto m = int((unsigned int)(lo + hi) >> 1);
+            auto m = int64_t((uint64_t)(lo + hi) >> 1);
             auto lim = tx[m].when;
             if(sec < lim)
             {
@@ -347,7 +347,7 @@ namespace golang::time
     //  3. Otherwise, use the first zone that is not daylight time, if
     //     there is one.
     //  4. Otherwise, use the first zone.
-    int rec::lookupFirstZone(golang::time::Location* l)
+    int64_t rec::lookupFirstZone(golang::time::Location* l)
     {
         // Case 1.
         if(! rec::firstZoneUsed(gocpp::recv(l)))
@@ -358,7 +358,7 @@ namespace golang::time
         // Case 2.
         if(len(l->tx) > 0 && l->zone[l->tx[0].index].isDST)
         {
-            for(auto zi = int(l->tx[0].index) - 1; zi >= 0; zi--)
+            for(auto zi = int64_t(l->tx[0].index) - 1; zi >= 0; zi--)
             {
                 if(! l->zone[zi].isDST)
                 {
@@ -400,18 +400,18 @@ namespace golang::time
     // We call this a tzset string since in C the function tzset reads TZ.
     // The return values are as for lookup, plus ok which reports whether the
     // parse succeeded.
-    std::tuple<gocpp::string, int, int64_t, int64_t, bool, bool> tzset(gocpp::string s, int64_t lastTxSec, int64_t sec)
+    std::tuple<gocpp::string, int64_t, int64_t, int64_t, bool, bool> tzset(gocpp::string s, int64_t lastTxSec, int64_t sec)
     {
         gocpp::string name;
-        int offset;
+        int64_t offset;
         int64_t start;
         int64_t end;
         bool isDST;
         bool ok;
         gocpp::string stdName = {};
         gocpp::string dstName = {};
-        int stdOffset = {};
-        int dstOffset = {};
+        int64_t stdOffset = {};
+        int64_t dstOffset = {};
 
         std::tie(stdName, s, ok) = tzsetName(s);
         if(ok)
@@ -593,16 +593,16 @@ namespace golang::time
     // tzsetOffset returns the timezone offset at the start of the tzset string s,
     // and the remainder of s, and reports whether the parsing is OK.
     // The timezone offset is returned as a number of seconds.
-    std::tuple<int, gocpp::string, bool> tzsetOffset(gocpp::string s)
+    std::tuple<int64_t, gocpp::string, bool> tzsetOffset(gocpp::string s)
     {
-        int offset;
+        int64_t offset;
         gocpp::string rest;
         bool ok;
         if(len(s) == 0)
         {
             return {0, ""_s, false};
         }
-        auto neg = false;
+        bool neg = false;
         if(s[0] == '+')
         {
             s = s.make_slice(1);
@@ -616,7 +616,7 @@ namespace golang::time
 
         // The tzdata code permits values up to 24 * 7 here,
         // although POSIX does not.
-        int hours = {};
+        int64_t hours = {};
         std::tie(hours, s, ok) = tzsetNum(s, 0, 24 * 7);
         if(! ok)
         {
@@ -632,7 +632,7 @@ namespace golang::time
             return {off, s, true};
         }
 
-        int mins = {};
+        int64_t mins = {};
         std::tie(mins, s, ok) = tzsetNum(s.make_slice(1), 0, 59);
         if(! ok)
         {
@@ -648,7 +648,7 @@ namespace golang::time
             return {off, s, true};
         }
 
-        int secs = {};
+        int64_t secs = {};
         std::tie(secs, s, ok) = tzsetNum(s.make_slice(1), 0, 59);
         if(! ok)
         {
@@ -715,10 +715,10 @@ namespace golang::time
         {
             return {rule {}, ""_s, false};
         }
-        auto ok = false;
+        bool ok = false;
         if(s[0] == 'J')
         {
-            int jday = {};
+            int64_t jday = {};
             std::tie(jday, s, ok) = tzsetNum(s.make_slice(1), 1, 365);
             if(! ok)
             {
@@ -730,19 +730,19 @@ namespace golang::time
         else
         if(s[0] == 'M')
         {
-            int mon = {};
+            int64_t mon = {};
             std::tie(mon, s, ok) = tzsetNum(s.make_slice(1), 1, 12);
             if(! ok || len(s) == 0 || s[0] != '.')
             {
                 return {rule {}, ""_s, false};
             }
-            int week = {};
+            int64_t week = {};
             std::tie(week, s, ok) = tzsetNum(s.make_slice(1), 1, 5);
             if(! ok || len(s) == 0 || s[0] != '.')
             {
                 return {rule {}, ""_s, false};
             }
-            int day = {};
+            int64_t day = {};
             std::tie(day, s, ok) = tzsetNum(s.make_slice(1), 0, 6);
             if(! ok)
             {
@@ -755,7 +755,7 @@ namespace golang::time
         }
         else
         {
-            int day = {};
+            int64_t day = {};
             std::tie(day, s, ok) = tzsetNum(s, 0, 365);
             if(! ok)
             {
@@ -772,7 +772,7 @@ namespace golang::time
             return {r, s, true};
         }
 
-        int offset;
+        int64_t offset;
         std::tie(offset, s_tmp, ok) = tzsetOffset(s.make_slice(1));
         auto& s = s_tmp;
         if(! ok)
@@ -787,9 +787,9 @@ namespace golang::time
     // tzsetNum parses a number from a tzset string.
     // It returns the number, and the remainder of the string, and reports success.
     // The number must be between min and max.
-    std::tuple<int, gocpp::string, bool> tzsetNum(gocpp::string s, int min, int max)
+    std::tuple<int64_t, gocpp::string, bool> tzsetNum(gocpp::string s, int64_t min, int64_t max)
     {
-        int num;
+        int64_t num;
         gocpp::string rest;
         bool ok;
         if(len(s) == 0)
@@ -808,7 +808,7 @@ namespace golang::time
                 return {num, s.make_slice(i), true};
             }
             num *= 10;
-            num += int(r) - '0';
+            num += int64_t(r) - '0';
             if(num > max)
             {
                 return {0, ""_s, false};
@@ -824,9 +824,9 @@ namespace golang::time
     // tzruleTime takes a year, a rule, and a timezone offset,
     // and returns the number of seconds since the start of the year
     // that the rule takes effect.
-    int tzruleTime(int year, rule r, int off)
+    int64_t tzruleTime(int64_t year, rule r, int64_t off)
     {
-        int s = {};
+        int64_t s = {};
         //Go switch emulation
         {
             auto condition = r.kind;
@@ -869,7 +869,7 @@ namespace golang::time
                     {
                         d += 7;
                     }
-                    for(auto i = 1; i < r.week; i++)
+                    for(int64_t i = 1; i < r.week; i++)
                     {
                         if(d + 7 >= daysIn(Month(r.mon), year))
                         {
@@ -894,9 +894,9 @@ namespace golang::time
     // lookupName returns information about the time zone with
     // the given name (such as "EST") at the given pseudo-Unix time
     // (what the given time of day would be in UTC).
-    std::tuple<int, bool> rec::lookupName(golang::time::Location* l, gocpp::string name, int64_t unix)
+    std::tuple<int64_t, bool> rec::lookupName(golang::time::Location* l, gocpp::string name, int64_t unix)
     {
-        int offset;
+        int64_t offset;
         bool ok;
         l = rec::get(gocpp::recv(l));
 
@@ -1009,7 +1009,7 @@ namespace golang::time
         {
             return false;
         }
-        for(auto i = 0; i < len(s) - 1; i++)
+        for(int64_t i = 0; i < len(s) - 1; i++)
         {
             if(s[i] == '.' && s[i + 1] == '.')
             {

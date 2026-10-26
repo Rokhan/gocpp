@@ -13,11 +13,11 @@
 namespace golang::main
 {
     void main();
-    void testFor(int k);
-    void testRange(int k);
+    void testFor(int64_t k);
+    void testRange(int64_t k);
     void testGoTo();
-    void testSwitchWithLabel1(gocpp::slice<int> items);
-    void testSwitchWithLabel2(gocpp::string data, int offset);
+    void testSwitchWithLabel1(gocpp::slice<int64_t> items);
+    void testSwitchWithLabel2(gocpp::string data, int64_t offset);
 
     namespace rec
     {

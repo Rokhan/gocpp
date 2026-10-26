@@ -20,10 +20,10 @@ namespace golang::main
     {
     }
 
-    void fibonacci(int n, gocpp::channel<int> c)
+    void fibonacci(int64_t n, gocpp::channel<int64_t> c)
     {
         auto [x, y] = std::tuple{0, 1};
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             c.send(x);
             std::tie(x, y) = std::tuple{y, x + y};
@@ -33,7 +33,7 @@ namespace golang::main
 
     void main()
     {
-        auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>(), 10);
+        auto c = gocpp::make(gocpp::Tag<gocpp::channel<int64_t>>(), 10);
         gocpp::go([&]{ fibonacci(cap(c), c); });
         for(auto [i, gocpp_ignored] : c)
         {

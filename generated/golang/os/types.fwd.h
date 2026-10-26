@@ -22,20 +22,20 @@ namespace golang::os
     // changed, although new bits might be added.
     // The single letters are the abbreviations
     // used by the String method's formatting.
-    const fs::FileMode ModeDir = fs::ModeDir;
-    const fs::FileMode ModeAppend = fs::ModeAppend;
-    const fs::FileMode ModeExclusive = fs::ModeExclusive;
-    const fs::FileMode ModeTemporary = fs::ModeTemporary;
-    const fs::FileMode ModeSymlink = fs::ModeSymlink;
-    const fs::FileMode ModeDevice = fs::ModeDevice;
-    const fs::FileMode ModeNamedPipe = fs::ModeNamedPipe;
-    const fs::FileMode ModeSocket = fs::ModeSocket;
-    const fs::FileMode ModeSetuid = fs::ModeSetuid;
-    const fs::FileMode ModeSetgid = fs::ModeSetgid;
-    const fs::FileMode ModeCharDevice = fs::ModeCharDevice;
-    const fs::FileMode ModeSticky = fs::ModeSticky;
-    const fs::FileMode ModeIrregular = fs::ModeIrregular;
+    inline constexpr fs::FileMode ModeDir = fs::ModeDir;
+    inline constexpr fs::FileMode ModeAppend = fs::ModeAppend;
+    inline constexpr fs::FileMode ModeExclusive = fs::ModeExclusive;
+    inline constexpr fs::FileMode ModeTemporary = fs::ModeTemporary;
+    inline constexpr fs::FileMode ModeSymlink = fs::ModeSymlink;
+    inline constexpr fs::FileMode ModeDevice = fs::ModeDevice;
+    inline constexpr fs::FileMode ModeNamedPipe = fs::ModeNamedPipe;
+    inline constexpr fs::FileMode ModeSocket = fs::ModeSocket;
+    inline constexpr fs::FileMode ModeSetuid = fs::ModeSetuid;
+    inline constexpr fs::FileMode ModeSetgid = fs::ModeSetgid;
+    inline constexpr fs::FileMode ModeCharDevice = fs::ModeCharDevice;
+    inline constexpr fs::FileMode ModeSticky = fs::ModeSticky;
+    inline constexpr fs::FileMode ModeIrregular = fs::ModeIrregular;
     // Mask for the type bits. For regular files, none will be set.
-    const fs::FileMode ModeType = fs::ModeType;
-    const fs::FileMode ModePerm = fs::ModePerm;
+    inline constexpr fs::FileMode ModeType = fs::ModeType;
+    inline constexpr fs::FileMode ModePerm = fs::ModePerm;
 }

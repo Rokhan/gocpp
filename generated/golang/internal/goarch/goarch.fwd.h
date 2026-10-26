@@ -6,25 +6,26 @@
 
 namespace golang::internal::goarch
 {
-    using ArchFamilyType = int;
+    struct GoTag_ArchFamilyType;
+    using ArchFamilyType = gocpp::defined<int64_t, GoTag_ArchFamilyType>;
     // PtrSize is the size of a pointer in bytes - unsafe.Sizeof(uintptr(0)) but as an ideal constant.
     // It is also the size of the machine's native word size (that is, 4 on 32-bit systems, 8 on 64-bit).
-    const int PtrSize = 4 << (~ uintptr_t(0) >> 63);
-    const ArchFamilyType AMD64 = 0;
-    const ArchFamilyType ARM = 1;
-    const ArchFamilyType ARM64 = 2;
-    const ArchFamilyType I386 = 3;
-    const ArchFamilyType LOONG64 = 4;
-    const ArchFamilyType MIPS = 5;
-    const ArchFamilyType MIPS64 = 6;
-    const ArchFamilyType PPC64 = 7;
-    const ArchFamilyType RISCV64 = 8;
-    const ArchFamilyType S390X = 9;
-    const ArchFamilyType WASM = 10;
+    inline constexpr int64_t PtrSize = 4 << (~ uintptr_t(0) >> 63);
+    inline constexpr ArchFamilyType AMD64 = 0;
+    inline constexpr ArchFamilyType ARM = 1;
+    inline constexpr ArchFamilyType ARM64 = 2;
+    inline constexpr ArchFamilyType I386 = 3;
+    inline constexpr ArchFamilyType LOONG64 = 4;
+    inline constexpr ArchFamilyType MIPS = 5;
+    inline constexpr ArchFamilyType MIPS64 = 6;
+    inline constexpr ArchFamilyType PPC64 = 7;
+    inline constexpr ArchFamilyType RISCV64 = 8;
+    inline constexpr ArchFamilyType S390X = 9;
+    inline constexpr ArchFamilyType WASM = 10;
     // PtrBits is bit width of a pointer.
-    const int PtrBits = PtrSize * 8;
+    inline constexpr int64_t PtrBits = PtrSize * 8;
     // Int64Align is the required alignment for a 64-bit integer (4 on 32-bit systems, 8 on 64-bit).
-    const int Int64Align = PtrSize;
+    inline constexpr int64_t Int64Align = PtrSize;
 }
 #include "golang/internal/goarch/goarch_amd64.fwd.h"
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
@@ -32,21 +33,21 @@ namespace golang::internal::goarch
 namespace golang::internal::goarch
 {
     // ArchFamily is the architecture family (AMD64, ARM, ...)
-    const ArchFamilyType ArchFamily = _ArchFamily;
+    inline constexpr ArchFamilyType ArchFamily = _ArchFamily;
     // BigEndian reports whether the architecture is big-endian.
-    const bool BigEndian = IsArmbe | IsArm64be | IsMips | IsMips64 | IsPpc | IsPpc64 | IsS390 | IsS390x | IsSparc | IsSparc64 == 1;
+    inline constexpr bool BigEndian = IsArmbe | IsArm64be | IsMips | IsMips64 | IsPpc | IsPpc64 | IsS390 | IsS390x | IsSparc | IsSparc64 == 1;
     // DefaultPhysPageSize is the default physical page size.
-    const int DefaultPhysPageSize = _DefaultPhysPageSize;
+    inline constexpr int64_t DefaultPhysPageSize = _DefaultPhysPageSize;
     // PCQuantum is the minimal unit for a program counter (1 on x86, 4 on most other systems).
     // The various PC tables record PC deltas pre-divided by PCQuantum.
-    const int PCQuantum = _PCQuantum;
+    inline constexpr int64_t PCQuantum = _PCQuantum;
     // MinFrameSize is the size of the system-reserved words at the bottom
     // of a frame (just above the architectural stack pointer).
     // It is zero on x86 and PtrSize on most non-x86 (LR-based) systems.
     // On PowerPC it is larger, to cover three more reserved words:
     // the compiler word, the link editor word, and the TOC save word.
-    const int MinFrameSize = _MinFrameSize;
+    inline constexpr int64_t MinFrameSize = _MinFrameSize;
     // StackAlign is the required alignment of the SP register.
     // The stack must be at least word aligned, but some architectures require more.
-    const int StackAlign = _StackAlign;
+    inline constexpr int64_t StackAlign = _StackAlign;
 }

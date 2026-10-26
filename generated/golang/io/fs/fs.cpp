@@ -132,7 +132,7 @@ namespace golang::io::fs
         // Iterate over elements in name, checking each.
         for(; ; )
         {
-            auto i = 0;
+            int64_t i = 0;
             for(; i < len(name) && name[i] != '/'; )
             {
                 i++;
@@ -185,7 +185,7 @@ namespace golang::io::fs
         return rec::Stat(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<int, gocpp::error> File::FileImpl<T, TStore, TInterface>::vRead(gocpp::slice<unsigned char> _1)
+    std::tuple<int64_t, gocpp::error> File::FileImpl<T, TStore, TInterface>::vRead(gocpp::slice<unsigned char> _1)
     {
         return rec::Read(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
@@ -213,12 +213,12 @@ namespace golang::io::fs
             return self.obj.value()->vStat();
         }
 
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct File, false>& self, gocpp::slice<unsigned char> _1)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct File, false>& self, gocpp::slice<unsigned char> _1)
         {
             return self.ptr->value()->vRead(_1);
         }
 
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct File>& self, gocpp::slice<unsigned char> _1)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct File>& self, gocpp::slice<unsigned char> _1)
         {
             return self.obj.value()->vRead(_1);
         }
@@ -369,7 +369,7 @@ namespace golang::io::fs
     }
 
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDirFile::ReadDirFileImpl<T, TStore, TInterface>::vReadDir(int n)
+    std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDirFile::ReadDirFileImpl<T, TStore, TInterface>::vReadDir(int64_t n)
     {
         return rec::ReadDir(gocpp::PtrRecv<T, false>(value.get()), n);
     }
@@ -382,12 +382,12 @@ namespace golang::io::fs
 
     namespace rec
     {
-        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::PtrRecv<struct ReadDirFile, false>& self, int n)
+        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::PtrRecv<struct ReadDirFile, false>& self, int64_t n)
         {
             return self.ptr->value()->vReadDir(n);
         }
 
-        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::ObjRecv<struct ReadDirFile>& self, int n)
+        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::ObjRecv<struct ReadDirFile>& self, int64_t n)
         {
             return self.obj.value()->vReadDir(n);
         }
@@ -402,12 +402,12 @@ namespace golang::io::fs
             return self.obj.value()->vClose();
         }
 
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadDirFile, false>& self, gocpp::slice<unsigned char> param0)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct ReadDirFile, false>& self, gocpp::slice<unsigned char> param0)
         {
             return self.ptr->value()->vRead(param0);
         }
 
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadDirFile>& self, gocpp::slice<unsigned char> param0)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct ReadDirFile>& self, gocpp::slice<unsigned char> param0)
         {
             return self.obj.value()->vRead(param0);
         }
@@ -603,10 +603,10 @@ namespace golang::io::fs
         auto str = "dalTLDpSugct?"_s;
         // Mode is uint32.
         gocpp::array<unsigned char, 32> buf = {};
-        auto w = 0;
+        int64_t w = 0;
         for(auto [i, c] : str)
         {
-            if(m & (1 << (unsigned int)(32 - 1 - i)) != 0)
+            if(m & (1 << (uint64_t)(32 - 1 - i)) != 0)
             {
                 buf[w] = (unsigned char)(c);
                 w++;
@@ -620,7 +620,7 @@ namespace golang::io::fs
         auto rwx = "rwxrwxrwx"_s;
         for(auto [i, c] : rwx)
         {
-            if(m & (1 << (unsigned int)(9 - 1 - i)) != 0)
+            if(m & (1 << (uint64_t)(9 - 1 - i)) != 0)
             {
                 buf[w] = (unsigned char)(c);
             }

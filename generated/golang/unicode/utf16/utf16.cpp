@@ -54,7 +54,7 @@ namespace golang::unicode::utf16
 
     // RuneLen returns the number of 16-bit words in the UTF-16 encoding of the rune.
     // It returns -1 if the rune is not a valid value to encode in UTF-16.
-    int RuneLen(gocpp::rune r)
+    int64_t RuneLen(gocpp::rune r)
     {
         //Go switch emulation
         {
@@ -169,7 +169,7 @@ namespace golang::unicode::utf16
     // by the UTF-16 encoding s and return the extended buffer.
     gocpp::slice<gocpp::rune> decode(gocpp::slice<uint16_t> s, gocpp::slice<gocpp::rune> buf)
     {
-        for(auto i = 0; i < len(s); i++)
+        for(int64_t i = 0; i < len(s); i++)
         {
             gocpp::rune ar = {};
             //Go switch emulation

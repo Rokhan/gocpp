@@ -20,10 +20,10 @@ namespace golang::internal::filepathlite
     bool equalFold(gocpp::string a, gocpp::string b);
     unsigned char toUpper(unsigned char c);
     bool IsAbs(gocpp::string path);
-    int volumeNameLen(gocpp::string path);
-    int validVolumeNameLen(gocpp::string path, int n);
+    int64_t volumeNameLen(gocpp::string path);
+    int64_t validVolumeNameLen(gocpp::string path, int64_t n);
     bool pathHasPrefixFold(gocpp::string s, gocpp::string prefix);
-    int uncLen(gocpp::string path, int prefixLen);
+    int64_t uncLen(gocpp::string path, int64_t prefixLen);
     std::tuple<gocpp::string, gocpp::string, bool> cutPath(gocpp::string path);
 }
 #include "golang/internal/filepathlite/path.fwd.h"

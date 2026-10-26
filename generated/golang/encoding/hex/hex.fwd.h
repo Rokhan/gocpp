@@ -6,8 +6,8 @@
 
 namespace golang::encoding::hex
 {
-    const gocpp::string hextable = "0123456789abcdef"_s;
-    const gocpp::string reverseHexTable = ""_s +
+    inline const gocpp::string hextable = "0123456789abcdef"_s;
+    inline const gocpp::string reverseHexTable = ""_s +
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s +
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s +
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s +
@@ -24,9 +24,10 @@ namespace golang::encoding::hex
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s +
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s +
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s;
-    using InvalidByteError = unsigned char;
+    struct GoTag_InvalidByteError;
+    using InvalidByteError = gocpp::defined<unsigned char, GoTag_InvalidByteError>;
     // bufferSize is the number of hexadecimal characters to buffer in encoder and decoder.
-    const long bufferSize = 1024;
+    inline constexpr long bufferSize = 1024;
     struct encoder;
     struct decoder;
     struct dumper;

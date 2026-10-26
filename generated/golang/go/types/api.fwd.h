@@ -8,7 +8,8 @@ namespace golang::go::types
 {
     struct Error;
     struct ArgumentError;
-    using ImportMode = int;
+    struct GoTag_ImportMode;
+    using ImportMode = gocpp::defined<int64_t, GoTag_ImportMode>;
     struct Config;
     struct Info;
     struct TypeAndValue;

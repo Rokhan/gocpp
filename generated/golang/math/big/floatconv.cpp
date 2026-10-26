@@ -53,10 +53,10 @@ namespace golang::math::big
     // floating point number from an io.ByteScanner rather than a string. It serves
     // as the implementation of Parse. It does not recognize ±Inf and does not expect
     // EOF at the end.
-    std::tuple<Float*, int, gocpp::error> rec::scan(Float* z, io::ByteScanner r, int base)
+    std::tuple<Float*, int64_t, gocpp::error> rec::scan(Float* z, io::ByteScanner r, int64_t base)
     {
         Float* f;
-        int b;
+        int64_t b;
         gocpp::error err;
         auto prec = z->prec;
         if(prec == 0)
@@ -76,7 +76,7 @@ namespace golang::math::big
 
         // mantissa
         // fractional digit count; valid if <= 0
-        int fcount = {};
+        int64_t fcount = {};
         std::tie(z->mant, b, fcount, err) = rec::scan(gocpp::recv(z->mant), r, base, true);
         if(err != nullptr)
         {
@@ -85,7 +85,7 @@ namespace golang::math::big
 
         // exponent
         int64_t exp = {};
-        int ebase = {};
+        int64_t ebase = {};
         std::tie(exp, ebase, err) = scanExponent(r, true, base == 0);
         if(err != nullptr)
         {
@@ -116,7 +116,7 @@ namespace golang::math::big
         // needed for base-10 exponents.
         // normalize mantissa and determine initial exponent contributions
         auto exp2 = int64_t(len(z->mant)) * _W - fnorm(z->mant);
-        auto exp5 = int64_t(0);
+        int64_t exp5 = int64_t(0);
 
         // determine binary or decimal exponent contribution of radix point
         if(fcount < 0)
@@ -330,10 +330,10 @@ namespace golang::math::big
     //
     // The returned *Float f is nil and the value of z is valid but not
     // defined if an error is reported.
-    std::tuple<Float*, int, gocpp::error> rec::Parse(Float* z, gocpp::string s, int base)
+    std::tuple<Float*, int64_t, gocpp::error> rec::Parse(Float* z, gocpp::string s, int64_t base)
     {
         Float* f;
-        int b;
+        int64_t b;
         gocpp::error err;
         // scan doesn't handle ±Inf
         if(len(s) == 3 && (s == "Inf"_s || s == "inf"_s))
@@ -369,10 +369,10 @@ namespace golang::math::big
 
     // ParseFloat is like f.Parse(s, base) with f set to the given precision
     // and rounding mode.
-    std::tuple<Float*, int, gocpp::error> ParseFloat(gocpp::string s, int base, unsigned int prec, RoundingMode mode)
+    std::tuple<Float*, int64_t, gocpp::error> ParseFloat(gocpp::string s, int64_t base, uint64_t prec, RoundingMode mode)
     {
         Float* f;
-        int b;
+        int64_t b;
         gocpp::error err;
         return rec::Parse(gocpp::recv(rec::SetMode(gocpp::recv(rec::SetPrec(gocpp::recv(new big::Float{}), prec)), mode)), s, base);
     }

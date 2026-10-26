@@ -9,8 +9,11 @@
 #include "golang/runtime/tagptr.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::runtime
 {
+    struct GoTag_taggedPointer { };
+    using taggedPointer = gocpp::defined<uint64_t, GoTag_taggedPointer>;
 
     namespace rec
     {

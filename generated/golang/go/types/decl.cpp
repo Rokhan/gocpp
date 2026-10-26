@@ -333,11 +333,11 @@ namespace golang::go::types
             assert(found);
             auto cycle = check->objPath.make_slice(start);
             // if set, the cycle is through a type parameter list
-            auto tparCycle = false;
+            bool tparCycle = false;
             // number of (constant or variable) values in the cycle
-            auto nval = 0;
+            int64_t nval = 0;
             // number of type definitions in the cycle
-            auto ndef = 0;
+            int64_t ndef = 0;
             loop:
             for(auto [gocpp_ignored, obj] : cycle)
             {
@@ -455,7 +455,7 @@ namespace golang::go::types
     }
 
     // cycleError reports a declaration cycle starting with the object at cycle[start].
-    void rec::cycleError(Checker* check, gocpp::slice<Object> cycle, int start)
+    void rec::cycleError(Checker* check, gocpp::slice<Object> cycle, int64_t start)
     {
         // name returns the (possibly qualified) object name.
         // This is needed because with generic types, cycles
@@ -517,7 +517,7 @@ namespace golang::go::types
 
     // firstInSrc reports the index of the object with the "smallest"
     // source position in path. path must not be empty.
-    int firstInSrc(gocpp::slice<Object> path)
+    int64_t firstInSrc(gocpp::slice<Object> path)
     {
         auto [fst, pos] = std::tuple{0, rec::Pos(gocpp::recv(path[0]))};
         for(auto [i, t] : path.make_slice(1))
@@ -829,7 +829,7 @@ namespace golang::go::types
                                             case 0:
                                             {
                                                 // determine which initialization expressions to use
-                                                auto inherited = true;
+                                                bool inherited = true;
                                                 //Go switch emulation
                                                 {
                                                     int conditionId = -1;
@@ -1044,7 +1044,7 @@ namespace golang::go::types
             assert(obj->object.typ == nullptr);
 
             // Only report a version error if we have not reported one already.
-            auto versionErr = false;
+            bool versionErr = false;
 
             golang::go::types::Type rhs = {};
             rec::describef(gocpp::recv(rec::later(gocpp::recv(check), [=]() mutable -> void
@@ -1184,7 +1184,7 @@ namespace golang::go::types
                 check->environment.inTParamList = false;
             }(); });
 
-            auto index = 0;
+            int64_t index = 0;
             for(auto [gocpp_ignored, f] : list->List)
             {
                 golang::go::types::Type bound = {};
@@ -1225,7 +1225,7 @@ namespace golang::go::types
         // A type set literal of the form ~T and A|B may only appear as constraint;
         // embed it in an implicit interface so that only interface type-checking
         // needs to take care of such type expressions.
-        auto wrap = false;
+        bool wrap = false;
         //Go type switch emulation
         {
             const auto& gocpp_id_8 = gocpp::type_info(x);
@@ -1323,7 +1323,7 @@ namespace golang::go::types
             // Checker.Files may be called multiple times; additional package files
             // may add methods to already type-checked types. Add pre-existing methods
             // so that we can detect redeclarations.
-            for(auto i = 0; i < rec::NumMethods(gocpp::recv(base)); i++)
+            for(int64_t i = 0; i < rec::NumMethods(gocpp::recv(base)); i++)
             {
                 auto m = rec::Method(gocpp::recv(base), i);
                 assert(m->object.name != "_"_s);
@@ -1362,7 +1362,7 @@ namespace golang::go::types
         if(auto [t, gocpp_id_10] = gocpp::getValue<Struct*>(rec::Underlying(gocpp::recv(base))); t != nullptr)
         {
             objset mset = {};
-            for(auto i = 0; i < rec::NumMethods(gocpp::recv(base)); i++)
+            for(int64_t i = 0; i < rec::NumMethods(gocpp::recv(base)); i++)
             {
                 auto m = rec::Method(gocpp::recv(base), i);
                 assert(m->object.name != "_"_s);

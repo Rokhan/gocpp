@@ -405,7 +405,7 @@ namespace golang::runtime
         c->scanAlloc = 0;
 
         auto sg = mheap_.sweepgen;
-        auto dHeapLive = int64_t(0);
+        int64_t dHeapLive = int64_t(0);
         for(auto [i, gocpp_ignored] : c->alloc)
         {
             auto s = c->alloc[i];

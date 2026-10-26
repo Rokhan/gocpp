@@ -6,13 +6,13 @@
 
 namespace golang::runtime
 {
-    const int fixedRootFinalizers = 0;
-    const int fixedRootFreeGStacks = 1;
-    const int fixedRootCleanups = 2;
-    const int fixedRootCount = 3;
+    inline constexpr int64_t fixedRootFinalizers = 0;
+    inline constexpr int64_t fixedRootFreeGStacks = 1;
+    inline constexpr int64_t fixedRootCleanups = 2;
+    inline constexpr int64_t fixedRootCount = 3;
     // rootBlockBytes is the number of bytes to scan per data or
     // BSS root.
-    const int rootBlockBytes = 256 << 10;
+    inline constexpr int64_t rootBlockBytes = 256 << 10;
     // maxObletBytes is the maximum bytes of an object to scan at
     // once. Larger objects will be split up into "oblets" of at
     // most this size. Since we can scan 1–2 MB/ms, 128 KB bounds
@@ -20,17 +20,18 @@ namespace golang::runtime
     //
     // This must be > _MaxSmallSize so that the object base is the
     // span base.
-    const int maxObletBytes = 128 << 10;
+    inline constexpr int64_t maxObletBytes = 128 << 10;
     // drainCheckThreshold specifies how many units of work to do
     // between self-preemption checks in gcDrain. Assuming a scan
     // rate of 1 MB/ms, this is ~100 µs. Lower values have higher
     // overhead in the scan loop (the scheduler check may perform
     // a syscall, so its overhead is nontrivial). Higher values
     // make the system less responsive to incoming work.
-    const long drainCheckThreshold = 100000;
-    using gcDrainFlags = int;
-    const gcDrainFlags gcDrainUntilPreempt = 1 << 0;
-    const gcDrainFlags gcDrainFlushBgCredit = 1 << 1;
-    const gcDrainFlags gcDrainIdle = 1 << 2;
-    const gcDrainFlags gcDrainFractional = 1 << 3;
+    inline constexpr long drainCheckThreshold = 100000;
+    struct GoTag_gcDrainFlags;
+    using gcDrainFlags = gocpp::defined<int64_t, GoTag_gcDrainFlags>;
+    inline constexpr gcDrainFlags gcDrainUntilPreempt = 1 << 0;
+    inline constexpr gcDrainFlags gcDrainFlushBgCredit = 1 << 1;
+    inline constexpr gcDrainFlags gcDrainIdle = 1 << 2;
+    inline constexpr gcDrainFlags gcDrainFractional = 1 << 3;
 }

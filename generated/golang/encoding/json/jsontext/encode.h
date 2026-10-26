@@ -28,7 +28,7 @@ namespace golang::encoding::json::jsontext
         int64_t baseOffset{};
         io::Writer wr{};
         // maxValue is the approximate maximum Value size passed to WriteValue.
-        int maxValue{};
+        int64_t maxValue{};
         // availBuffer is the buffer returned by the AvailableBuffer method.
         gocpp::slice<unsigned char> availBuffer{}; // always has zero length
         // bufStats is statistics about buffer utilization.
@@ -83,10 +83,10 @@ namespace golang::encoding::json::jsontext
         void InitializeMultiline(const gocpp::PtrRecv<struct encoderState, false>& self);
         void JSONOptions(const gocpp::PtrRecv<struct encoderState, false>& self, internal::NotForPublicUse arg0);
         void Join(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<jsonopts::Options> srcs);
-        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<unsigned char> b, int where);
-        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct encoderState>& self, gocpp::slice<unsigned char> b, int where);
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<unsigned char> b, int64_t where);
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct encoderState>& self, gocpp::slice<unsigned char> b, int64_t where);
         bool needObjectValue(const gocpp::PtrRecv<struct encoderState, false>& self);
-        int64_t offsetAt(const gocpp::PtrRecv<struct encoderState, false>& self, int pos);
+        int64_t offsetAt(const gocpp::PtrRecv<struct encoderState, false>& self, int64_t pos);
         int64_t previousOffsetEnd(const gocpp::PtrRecv<struct encoderState, false>& self);
         void reset(const gocpp::PtrRecv<struct encoderState, false>& self);
         gocpp::slice<unsigned char> unflushedBuffer(const gocpp::PtrRecv<struct encoderState, false>& self);
@@ -171,7 +171,7 @@ namespace golang::encoding::json::jsontext
         jsonopts::Struct* options(encoderState* e);
         bool NeedFlush(encoderState* e);
         gocpp::error Flush(encoderState* e);
-        int64_t offsetAt(encodeBuffer* e, int pos);
+        int64_t offsetAt(encodeBuffer* e, int64_t pos);
         int64_t previousOffsetEnd(encodeBuffer* e);
         gocpp::slice<unsigned char> unflushedBuffer(encodeBuffer* e);
         bool avoidFlush(encoderState* e);
@@ -182,18 +182,18 @@ namespace golang::encoding::json::jsontext
         gocpp::error AppendRaw(encoderState* e, golang::encoding::json::jsontext::Kind k, bool safeASCII, std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char> _1)> appendFn);
         gocpp::error WriteValue(golang::encoding::json::jsontext::Encoder* e, Value v);
         gocpp::error WriteValue(encoderState* e, Value v);
-        int CountNextDelimWhitespace(encoderState* e);
+        int64_t CountNextDelimWhitespace(encoderState* e);
         gocpp::slice<unsigned char> appendWhitespace(encoderState* e, gocpp::slice<unsigned char> b, golang::encoding::json::jsontext::Kind next);
-        gocpp::slice<unsigned char> AppendIndent(encoderState* e, gocpp::slice<unsigned char> b, int n);
-        std::tuple<gocpp::slice<unsigned char>, int, gocpp::error> reformatValue(encoderState* e, gocpp::slice<unsigned char> dst, Value src, int depth);
-        std::tuple<gocpp::slice<unsigned char>, int, gocpp::error> reformatObject(encoderState* e, gocpp::slice<unsigned char> dst, Value src, int depth);
-        std::tuple<gocpp::slice<unsigned char>, int, gocpp::error> reformatArray(encoderState* e, gocpp::slice<unsigned char> dst, Value src, int depth);
+        gocpp::slice<unsigned char> AppendIndent(encoderState* e, gocpp::slice<unsigned char> b, int64_t n);
+        std::tuple<gocpp::slice<unsigned char>, int64_t, gocpp::error> reformatValue(encoderState* e, gocpp::slice<unsigned char> dst, Value src, int64_t depth);
+        std::tuple<gocpp::slice<unsigned char>, int64_t, gocpp::error> reformatObject(encoderState* e, gocpp::slice<unsigned char> dst, Value src, int64_t depth);
+        std::tuple<gocpp::slice<unsigned char>, int64_t, gocpp::error> reformatArray(encoderState* e, gocpp::slice<unsigned char> dst, Value src, int64_t depth);
         int64_t OutputOffset(golang::encoding::json::jsontext::Encoder* e);
         gocpp::slice<unsigned char> AvailableBuffer(golang::encoding::json::jsontext::Encoder* e);
-        int StackDepth(golang::encoding::json::jsontext::Encoder* e);
-        std::tuple<golang::encoding::json::jsontext::Kind, int64_t> StackIndex(golang::encoding::json::jsontext::Encoder* e, int i);
+        int64_t StackDepth(golang::encoding::json::jsontext::Encoder* e);
+        std::tuple<golang::encoding::json::jsontext::Kind, int64_t> StackIndex(golang::encoding::json::jsontext::Encoder* e, int64_t i);
         Pointer StackPointer(golang::encoding::json::jsontext::Encoder* e);
-        gocpp::slice<unsigned char> AppendStackPointer(encoderState* e, gocpp::slice<unsigned char> b, int where);
+        gocpp::slice<unsigned char> AppendStackPointer(encoderState* e, gocpp::slice<unsigned char> b, int64_t where);
     }
 }
 

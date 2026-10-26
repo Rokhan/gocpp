@@ -27,7 +27,7 @@ namespace golang::compress::zlib
     struct Writer
     {
         io::Writer w{};
-        int level{};
+        int64_t level{};
         gocpp::slice<unsigned char> dict{};
         flate::Writer* compressor{};
         hash::Hash32 digest{};
@@ -48,8 +48,8 @@ namespace golang::compress::zlib
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
     Writer* NewWriter(io::Writer w);
-    std::tuple<Writer*, gocpp::error> NewWriterLevel(io::Writer w, int level);
-    std::tuple<Writer*, gocpp::error> NewWriterLevelDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
+    std::tuple<Writer*, gocpp::error> NewWriterLevel(io::Writer w, int64_t level);
+    std::tuple<Writer*, gocpp::error> NewWriterLevelDict(io::Writer w, int64_t level, gocpp::slice<unsigned char> dict);
 }
 
 #include "golang/io/io.h"
@@ -61,7 +61,7 @@ namespace golang::compress::zlib
     {
         void Reset(Writer* z, io::Writer w);
         gocpp::error writeHeader(Writer* z);
-        std::tuple<int, gocpp::error> Write(Writer* z, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(Writer* z, gocpp::slice<unsigned char> p);
         gocpp::error Flush(Writer* z);
         gocpp::error Close(Writer* z);
     }

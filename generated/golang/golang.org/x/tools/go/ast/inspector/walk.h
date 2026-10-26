@@ -30,7 +30,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
 
     template<typename N>
     void walkList(visitor* v, edge::Kind ek, gocpp::slice<N> list);
-    void walk(visitor* v, edge::Kind ek, int index, ast::Node node);
+    void walk(visitor* v, edge::Kind ek, int64_t index, ast::Node node);
 
     namespace rec
     {

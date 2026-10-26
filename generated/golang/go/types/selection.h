@@ -9,6 +9,12 @@
 #include "golang/go/types/selection.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::go::types
+{
+    struct GoTag_SelectionKind { };
+    using SelectionKind = gocpp::defined<int64_t, GoTag_SelectionKind>;
+}
 #include "golang/go/types/object.h"
 #include "golang/go/types/type.h"
 
@@ -19,7 +25,7 @@ namespace golang::go::types
         SelectionKind kind{};
         golang::go::types::Type recv{}; // type of x
         Object obj{}; // object denoted by x.f
-        gocpp::slice<int> index{}; // path from x to x.f
+        gocpp::slice<int64_t> index{}; // path from x to x.f
         bool indirect{}; // set if there was any pointer indirection on the path
 
         using isGoStruct = void;
@@ -54,7 +60,7 @@ namespace golang::go::types
         golang::go::types::Type Recv(Selection* s);
         Object Obj(Selection* s);
         golang::go::types::Type Type(Selection* s);
-        gocpp::slice<int> Index(Selection* s);
+        gocpp::slice<int64_t> Index(Selection* s);
         bool Indirect(Selection* s);
         gocpp::string String(Selection* s);
     }

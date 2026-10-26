@@ -14,7 +14,11 @@ namespace golang::runtime
 {
     void traceLockInit();
     void lockRankMayTraceFlush();
+    struct GoTag_traceBlockReason { };
+    using traceBlockReason = gocpp::defined<uint8_t, GoTag_traceBlockReason>;
     extern gocpp::array<gocpp::string, 17> traceBlockReasonStrings;
+    struct GoTag_traceGoStopReason { };
+    using traceGoStopReason = gocpp::defined<uint8_t, GoTag_traceGoStopReason>;
     extern gocpp::array<gocpp::string, 3> traceGoStopReasonStrings;
     bool traceEnabled();
     bool traceAllocFreeEnabled();
@@ -186,8 +190,8 @@ namespace golang::runtime
         void GoSched(traceLocker tl);
         void GoPreempt(traceLocker tl);
         void GoStop(traceLocker tl, traceGoStopReason reason);
-        void GoPark(traceLocker tl, traceBlockReason reason, int skip);
-        void GoUnpark(traceLocker tl, g* gp, int skip);
+        void GoPark(traceLocker tl, traceBlockReason reason, int64_t skip);
+        void GoUnpark(traceLocker tl, g* gp, int64_t skip);
         void GoSwitch(traceLocker tl, g* nextg, bool destroy);
         void emitUnblockStatus(traceLocker tl, g* gp, uintptr_t gen);
         void GoSysCall(traceLocker tl);

@@ -56,7 +56,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> rec::Read(rot13Reader r13, gocpp::slice<unsigned char> buf)
+    std::tuple<int64_t, gocpp::error> rec::Read(rot13Reader r13, gocpp::slice<unsigned char> buf)
     {
         auto [n, err] = rec::Read(gocpp::recv(r13.r), buf);
         if(err != nullptr)
@@ -64,7 +64,7 @@ namespace golang::main
             return {n, err};
         }
 
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             buf[i] += 13;
         }

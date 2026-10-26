@@ -34,7 +34,7 @@ namespace golang::math::big
 {
     namespace io = golang::io;
     extern fmt::Scanner _;
-    std::tuple<int64_t, int, gocpp::error> scanExponent(io::ByteScanner r, bool base2ok, bool sepOk);
+    std::tuple<int64_t, int64_t, gocpp::error> scanExponent(io::ByteScanner r, bool base2ok, bool sepOk);
 }
 
 #include "golang/fmt/scan.h"
@@ -50,8 +50,8 @@ namespace golang::math::big
         gocpp::string String(golang::math::big::Rat* x);
         gocpp::slice<unsigned char> marshal(golang::math::big::Rat* x, gocpp::slice<unsigned char> buf);
         gocpp::string RatString(golang::math::big::Rat* x);
-        gocpp::string FloatString(golang::math::big::Rat* x, int prec);
-        std::tuple<int, bool> FloatPrec(golang::math::big::Rat* x);
+        gocpp::string FloatString(golang::math::big::Rat* x, int64_t prec);
+        std::tuple<int64_t, bool> FloatPrec(golang::math::big::Rat* x);
     }
 }
 

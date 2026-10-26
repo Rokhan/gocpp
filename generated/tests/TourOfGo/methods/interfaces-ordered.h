@@ -92,6 +92,8 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
+    struct GoTag_MyFloat { };
+    using MyFloat = gocpp::defined<double, GoTag_MyFloat>;
     void main();
 
     namespace rec

@@ -32,15 +32,15 @@ namespace golang::runtime
 namespace golang::runtime
 {
     // Offsets into internal/cpu records for use in assembly.
-    const uintptr_t offsetX86HasAVX = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX);
-    const uintptr_t offsetX86HasAVX2 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX2);
-    const uintptr_t offsetX86HasAVX512 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX512);
-    const uintptr_t offsetX86HasERMS = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasERMS);
-    const uintptr_t offsetX86HasRDTSCP = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasRDTSCP);
-    const uintptr_t offsetARMHasIDIVA = gocpp::Offsetof<cpu::ARMStruct>(&cpu::ARMStruct::HasIDIVA);
-    const uintptr_t offsetMIPS64XHasMSA = gocpp::Offsetof<cpu::MIPS64XStruct>(&cpu::MIPS64XStruct::HasMSA);
-    const uintptr_t offsetLOONG64HasLSX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLSX);
-    const uintptr_t offsetLOONG64HasLASX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLASX);
+    inline const uintptr_t offsetX86HasAVX = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX);
+    inline const uintptr_t offsetX86HasAVX2 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX2);
+    inline const uintptr_t offsetX86HasAVX512 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX512);
+    inline const uintptr_t offsetX86HasERMS = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasERMS);
+    inline const uintptr_t offsetX86HasRDTSCP = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasRDTSCP);
+    inline const uintptr_t offsetARMHasIDIVA = gocpp::Offsetof<cpu::ARMStruct>(&cpu::ARMStruct::HasIDIVA);
+    inline const uintptr_t offsetMIPS64XHasMSA = gocpp::Offsetof<cpu::MIPS64XStruct>(&cpu::MIPS64XStruct::HasMSA);
+    inline const uintptr_t offsetLOONG64HasLSX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLSX);
+    inline const uintptr_t offsetLOONG64HasLASX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLASX);
 
     namespace rec
     {

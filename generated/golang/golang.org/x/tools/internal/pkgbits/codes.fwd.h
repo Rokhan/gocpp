@@ -6,33 +6,36 @@
 
 namespace golang::golang_org::x::tools::internal::pkgbits
 {
-    using CodeVal = int;
-    using CodeType = int;
-    using CodeObj = int;
-    const CodeVal ValBool = 0;
-    const CodeVal ValString = 1;
-    const CodeVal ValInt64 = 2;
-    const CodeVal ValBigInt = 3;
-    const CodeVal ValBigRat = 4;
-    const CodeVal ValBigFloat = 5;
-    const CodeType TypeBasic = 0;
-    const CodeType TypeNamed = 1;
-    const CodeType TypePointer = 2;
-    const CodeType TypeSlice = 3;
-    const CodeType TypeArray = 4;
-    const CodeType TypeChan = 5;
-    const CodeType TypeMap = 6;
-    const CodeType TypeSignature = 7;
-    const CodeType TypeStruct = 8;
-    const CodeType TypeInterface = 9;
-    const CodeType TypeUnion = 10;
-    const CodeType TypeTypeParam = 11;
-    const CodeObj ObjAlias = 0;
-    const CodeObj ObjConst = 1;
-    const CodeObj ObjType = 2;
-    const CodeObj ObjFunc = 3;
-    const CodeObj ObjVar = 4;
-    const CodeObj ObjStub = 5;
+    struct GoTag_CodeVal;
+    using CodeVal = gocpp::defined<int64_t, GoTag_CodeVal>;
+    struct GoTag_CodeType;
+    using CodeType = gocpp::defined<int64_t, GoTag_CodeType>;
+    struct GoTag_CodeObj;
+    using CodeObj = gocpp::defined<int64_t, GoTag_CodeObj>;
+    inline constexpr CodeVal ValBool = 0;
+    inline constexpr CodeVal ValString = 1;
+    inline constexpr CodeVal ValInt64 = 2;
+    inline constexpr CodeVal ValBigInt = 3;
+    inline constexpr CodeVal ValBigRat = 4;
+    inline constexpr CodeVal ValBigFloat = 5;
+    inline constexpr CodeType TypeBasic = 0;
+    inline constexpr CodeType TypeNamed = 1;
+    inline constexpr CodeType TypePointer = 2;
+    inline constexpr CodeType TypeSlice = 3;
+    inline constexpr CodeType TypeArray = 4;
+    inline constexpr CodeType TypeChan = 5;
+    inline constexpr CodeType TypeMap = 6;
+    inline constexpr CodeType TypeSignature = 7;
+    inline constexpr CodeType TypeStruct = 8;
+    inline constexpr CodeType TypeInterface = 9;
+    inline constexpr CodeType TypeUnion = 10;
+    inline constexpr CodeType TypeTypeParam = 11;
+    inline constexpr CodeObj ObjAlias = 0;
+    inline constexpr CodeObj ObjConst = 1;
+    inline constexpr CodeObj ObjType = 2;
+    inline constexpr CodeObj ObjFunc = 3;
+    inline constexpr CodeObj ObjVar = 4;
+    inline constexpr CodeObj ObjStub = 5;
 }
 #include "golang/golang.org/x/tools/internal/pkgbits/sync.fwd.h"
 

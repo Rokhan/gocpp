@@ -26,7 +26,7 @@ namespace golang::os
     }
 
     // Getpagesize returns the underlying system's memory page size.
-    int Getpagesize()
+    int64_t Getpagesize()
     {
         return syscall::Getpagesize();
     }

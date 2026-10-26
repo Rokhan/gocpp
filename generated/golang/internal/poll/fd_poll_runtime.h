@@ -14,12 +14,12 @@ namespace golang::internal::poll
 {
     int64_t runtimeNano();
     void runtime_pollServerInit();
-    std::tuple<uintptr_t, int> runtime_pollOpen(uintptr_t fd);
+    std::tuple<uintptr_t, int64_t> runtime_pollOpen(uintptr_t fd);
     void runtime_pollClose(uintptr_t ctx);
-    int runtime_pollWait(uintptr_t ctx, int mode);
-    void runtime_pollWaitCanceled(uintptr_t ctx, int mode);
-    int runtime_pollReset(uintptr_t ctx, int mode);
-    void runtime_pollSetDeadline(uintptr_t ctx, int64_t d, int mode);
+    int64_t runtime_pollWait(uintptr_t ctx, int64_t mode);
+    void runtime_pollWaitCanceled(uintptr_t ctx, int64_t mode);
+    int64_t runtime_pollReset(uintptr_t ctx, int64_t mode);
+    void runtime_pollSetDeadline(uintptr_t ctx, int64_t d, int64_t mode);
     void runtime_pollUnblock(uintptr_t ctx);
     bool runtime_isPollServerDescriptor(uintptr_t fd);
     struct pollDesc
@@ -38,7 +38,7 @@ namespace golang::internal::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pollDesc& value);
-    gocpp::error convertErr(int res, bool isFile);
+    gocpp::error convertErr(int64_t res, bool isFile);
     bool IsPollDescriptor(uintptr_t fd);
 }
 #include "golang/sync/once.fwd.h"
@@ -56,7 +56,7 @@ namespace golang::internal::poll
 namespace golang::internal::poll
 {
     extern sync::Once serverInit;
-    gocpp::error setDeadlineImpl(FD* fd, mocklib::Date t, int mode);
+    gocpp::error setDeadlineImpl(FD* fd, mocklib::Date t, int64_t mode);
 }
 
 #include "golang/internal/poll/fd_windows.h"
@@ -70,13 +70,13 @@ namespace golang::internal::poll
         gocpp::error init(pollDesc* pd, FD* fd);
         void close(pollDesc* pd);
         void evict(pollDesc* pd);
-        gocpp::error prepare(pollDesc* pd, int mode, bool isFile);
+        gocpp::error prepare(pollDesc* pd, int64_t mode, bool isFile);
         gocpp::error prepareRead(pollDesc* pd, bool isFile);
         gocpp::error prepareWrite(pollDesc* pd, bool isFile);
-        gocpp::error wait(pollDesc* pd, int mode, bool isFile);
+        gocpp::error wait(pollDesc* pd, int64_t mode, bool isFile);
         gocpp::error waitRead(pollDesc* pd, bool isFile);
         gocpp::error waitWrite(pollDesc* pd, bool isFile);
-        void waitCanceled(pollDesc* pd, int mode);
+        void waitCanceled(pollDesc* pd, int64_t mode);
         bool pollable(pollDesc* pd);
         gocpp::error SetDeadline(FD* fd, mocklib::Date t);
         gocpp::error SetReadDeadline(FD* fd, mocklib::Date t);

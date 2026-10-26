@@ -12,7 +12,7 @@
 
 namespace golang::golang_org::x::tools::go::types::objectpath
 {
-    gocpp::slice<unsigned char> appendOpArg(gocpp::slice<unsigned char> path, unsigned char op, int index);
+    gocpp::slice<unsigned char> appendOpArg(gocpp::slice<unsigned char> path, unsigned char op, int64_t index);
 }
 #include "golang/go/types/alias.fwd.h"
 #include "golang/go/types/map.fwd.h"
@@ -116,10 +116,10 @@ namespace golang::golang_org::x::tools::go::types::objectpath
         void traverse(traversal* tr);
         void visitType(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, types::Type T);
         void tparams(traversal* tr, types::TypeParamList* list, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op);
-        void typ(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op, int index, types::Type t);
-        void object(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op, int index, types::Object obj);
-        uint32_t emitPackageLevel(pkgIndex* p, int index);
-        uint32_t emitPathSegment(pkgIndex* p, uint32_t parent, unsigned char op, int index);
+        void typ(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op, int64_t index, types::Type t);
+        void object(traversal* tr, gocpp::slice<unsigned char> path, uint32_t offset, unsigned char op, int64_t index, types::Object obj);
+        uint32_t emitPackageLevel(pkgIndex* p, int64_t index);
+        uint32_t emitPathSegment(pkgIndex* p, uint32_t parent, unsigned char op, int64_t index);
         Path path(pkgIndex* p, uint32_t offset);
         std::tuple<Path, bool> concreteMethod(Encoder* enc, types::Func* meth);
     }

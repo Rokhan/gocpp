@@ -176,12 +176,12 @@ namespace golang::hash::crc32
         return New(IEEETable);
     }
 
-    int rec::Size(digest* d)
+    int64_t rec::Size(digest* d)
     {
         return crc32::Size;
     }
 
-    int rec::BlockSize(digest* d)
+    int64_t rec::BlockSize(digest* d)
     {
         return 1;
     }
@@ -262,9 +262,9 @@ namespace golang::hash::crc32
         return update(crc, tab, p, true);
     }
 
-    std::tuple<int, gocpp::error> rec::Write(digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Write(digest* d, gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         // We only create digest objects through New() which takes care of
         // initialization in this case.

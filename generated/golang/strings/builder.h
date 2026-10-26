@@ -37,15 +37,15 @@ namespace golang::strings
     {
         void copyCheck(Builder* b);
         gocpp::string String(Builder* b);
-        int Len(Builder* b);
-        int Cap(Builder* b);
+        int64_t Len(Builder* b);
+        int64_t Cap(Builder* b);
         void Reset(Builder* b);
-        void grow(Builder* b, int n);
-        void Grow(Builder* b, int n);
-        std::tuple<int, gocpp::error> Write(Builder* b, gocpp::slice<unsigned char> p);
+        void grow(Builder* b, int64_t n);
+        void Grow(Builder* b, int64_t n);
+        std::tuple<int64_t, gocpp::error> Write(Builder* b, gocpp::slice<unsigned char> p);
         gocpp::error WriteByte(Builder* b, unsigned char c);
-        std::tuple<int, gocpp::error> WriteRune(Builder* b, gocpp::rune r);
-        std::tuple<int, gocpp::error> WriteString(Builder* b, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteRune(Builder* b, gocpp::rune r);
+        std::tuple<int64_t, gocpp::error> WriteString(Builder* b, gocpp::string s);
     }
 }
 

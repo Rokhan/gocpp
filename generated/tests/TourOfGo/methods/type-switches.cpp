@@ -28,13 +28,13 @@ namespace golang::main
         {
             const auto& gocpp_id_0 = gocpp::type_info(i);
             int conditionId = -1;
-            if(gocpp_id_0 == typeid(int)) { conditionId = 0; }
+            if(gocpp_id_0 == typeid(int64_t)) { conditionId = 0; }
             else if(gocpp_id_0 == typeid(gocpp::string)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
                 {
-                    int v = gocpp::any_cast<int>(i);
+                    int64_t v = gocpp::any_cast<int64_t>(i);
                     mocklib::Printf("Twice %v is %v\n"_s, v, v * 2);
                     break;
                 }
@@ -60,13 +60,13 @@ namespace golang::main
         {
             const auto& gocpp_id_1 = gocpp::type_info(i);
             int conditionId = -1;
-            if(gocpp_id_1 == typeid(int)) { conditionId = 0; }
+            if(gocpp_id_1 == typeid(int64_t)) { conditionId = 0; }
             else if(gocpp_id_1 == typeid(gocpp::string)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
                 {
-                    int v = gocpp::any_cast<int>(i);
+                    int64_t v = gocpp::any_cast<int64_t>(i);
                     mocklib::Printf("Twice %v is %v\n"_s, v, v * 2);
                     break;
                 }
@@ -83,7 +83,7 @@ namespace golang::main
                     mocklib::Print("\nGo runs on "_s);
                     //Go switch emulation
                     {
-                        auto os = mocklib::GOOS;
+                        gocpp::string os = mocklib::GOOS;
                         auto condition = os;
                         int conditionId = -1;
                         if(condition == "darwin"_s) { conditionId = 0; }
@@ -117,7 +117,7 @@ namespace golang::main
         {
             const auto& gocpp_id_2 = gocpp::type_info(i);
             int conditionId = -1;
-            if(gocpp_id_2 == typeid(int)) { conditionId = 0; }
+            if(gocpp_id_2 == typeid(int64_t)) { conditionId = 0; }
             else if(gocpp_id_2 == typeid(gocpp::string)) { conditionId = 1; }
             switch(conditionId)
             {
@@ -147,13 +147,13 @@ namespace golang::main
             const auto& gocpp_id_3 = gocpp::type_info(v);
             const auto& v_ref = v;
             int conditionId = -1;
-            if(gocpp_id_3 == typeid(int)) { conditionId = 0; }
+            if(gocpp_id_3 == typeid(int64_t)) { conditionId = 0; }
             else if(gocpp_id_3 == typeid(gocpp::string)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
                 {
-                    int v = gocpp::any_cast<int>(v_ref);
+                    int64_t v = gocpp::any_cast<int64_t>(v_ref);
                     mocklib::Printf("Twice %v is %v\n"_s, v, v * 2);
                     break;
                 }

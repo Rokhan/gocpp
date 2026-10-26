@@ -24,7 +24,7 @@ namespace golang::main
 
     // Walk walks the tree t sending all values
     // from the tree to the channel ch.
-    void Walk(tree::Tree* t, gocpp::channel<int> ch)
+    void Walk(tree::Tree* t, gocpp::channel<int64_t> ch)
     {
         gocpp::panic("Not implemented"_s);
     }

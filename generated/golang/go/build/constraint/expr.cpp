@@ -812,7 +812,7 @@ namespace golang::go::build::constraint
         // This is much less than the limit for "new" syntax,
         // but uses of old syntax were always very simple.
         auto maxOldSize = 100;
-        auto size = 0;
+        int64_t size = 0;
 
         Expr x = {};
         for(auto [clause, gocpp_ignored] : strings::FieldsSeq(text))
@@ -948,7 +948,7 @@ namespace golang::go::build::constraint
         // If all the ORs have length 1 (no actual OR'ing going on),
         // push the top-level ANDs to the bottom level, so that we get
         // one // +build line instead of many.
-        auto maxOr = 0;
+        int64_t maxOr = 0;
         for(auto [gocpp_ignored, or] : split)
         {
             if(maxOr < len(or))

@@ -6,27 +6,30 @@
 
 namespace golang::math::big
 {
-    const bool debugFloat = false;
+    inline constexpr bool debugFloat = false;
     struct Float;
     struct ErrNaN;
-    using form = unsigned char;
-    using RoundingMode = unsigned char;
-    using Accuracy = int8_t;
+    struct GoTag_form;
+    using form = gocpp::defined<unsigned char, GoTag_form>;
+    struct GoTag_RoundingMode;
+    using RoundingMode = gocpp::defined<unsigned char, GoTag_RoundingMode>;
+    struct GoTag_Accuracy;
+    using Accuracy = gocpp::defined<int8_t, GoTag_Accuracy>;
     // The form value order is relevant - do not change!
-    const form zero = 0;
-    const form finite = 1;
-    const form inf = 2;
+    inline constexpr form zero = 0;
+    inline constexpr form finite = 1;
+    inline constexpr form inf = 2;
     // These constants define supported rounding modes.
-    const RoundingMode ToNearestEven = 0;
-    const RoundingMode ToNearestAway = 1;
-    const RoundingMode ToZero = 2;
-    const RoundingMode AwayFromZero = 3;
-    const RoundingMode ToNegativeInf = 4;
-    const RoundingMode ToPositiveInf = 5;
+    inline constexpr RoundingMode ToNearestEven = 0;
+    inline constexpr RoundingMode ToNearestAway = 1;
+    inline constexpr RoundingMode ToZero = 2;
+    inline constexpr RoundingMode AwayFromZero = 3;
+    inline constexpr RoundingMode ToNegativeInf = 4;
+    inline constexpr RoundingMode ToPositiveInf = 5;
     // Constants describing the [Accuracy] of a [Float].
-    const Accuracy Below = - 1;
-    const Accuracy Exact = 0;
-    const Accuracy Above = + 1;
+    inline constexpr Accuracy Below = - 1;
+    inline constexpr Accuracy Exact = 0;
+    inline constexpr Accuracy Above = + 1;
 }
 #include "golang/math/bits.fwd.h"
 #include "golang/math/const.fwd.h"
@@ -38,7 +41,7 @@ namespace golang::math::big
 {
     namespace math = golang::math;
     // Exponent and precision limits.
-    const int MaxExp = math::MaxInt32;
-    const int MinExp = math::MinInt32;
-    const int MaxPrec = math::MaxUint32;
+    inline constexpr int64_t MaxExp = math::MaxInt32;
+    inline constexpr int64_t MinExp = math::MinInt32;
+    inline constexpr int64_t MaxPrec = math::MaxUint32;
 }

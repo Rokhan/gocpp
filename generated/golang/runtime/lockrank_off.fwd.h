@@ -6,6 +6,6 @@
 
 namespace golang::runtime
 {
-    const bool staticLockRanking = false;
+    inline constexpr bool staticLockRanking = false;
     struct lockRankStruct;
 }

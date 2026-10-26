@@ -14,6 +14,10 @@ namespace golang::internal::trace::tracev2
 {
     gocpp::slice<gocpp::string> Experiments();
     extern gocpp::array<gocpp::string, 2> experiments;
+    struct GoTag_GoStatus { };
+    using GoStatus = gocpp::defined<uint8_t, GoTag_GoStatus>;
+    struct GoTag_ProcStatus { };
+    using ProcStatus = gocpp::defined<uint8_t, GoTag_ProcStatus>;
 }
 #include "golang/internal/trace/tracev2/spec.h"
 

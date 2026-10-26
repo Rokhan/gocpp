@@ -12,7 +12,7 @@
 
 namespace golang::internal::reflectlite
 {
-    std::function<void (int i, int j)> Swapper(go_any slice);
+    std::function<void (int64_t i, int64_t j)> Swapper(go_any slice);
 
     namespace rec
     {

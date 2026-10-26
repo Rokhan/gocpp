@@ -22,11 +22,11 @@ namespace golang::main
 
     // fibonacci is a function that returns
     // a function that returns an int.
-    std::function<int ()> fibonacci()
+    std::function<int64_t ()> fibonacci()
     {
-        auto f0 = 0;
-        auto f1 = 1;
-        return [=]() mutable -> int
+        int64_t f0 = 0;
+        int64_t f1 = 1;
+        return [=]() mutable -> int64_t
         {
             auto result = f0;
             auto f2 = f0 + f1;
@@ -39,7 +39,7 @@ namespace golang::main
     void main()
     {
         auto f = fibonacci();
-        for(auto i = 0; i < 10; i++)
+        for(int64_t i = 0; i < 10; i++)
         {
             mocklib::Println(f());
         }

@@ -6,6 +6,6 @@
 
 namespace golang::internal::goexperiment
 {
-    const bool MapSplitGroup = false;
-    const long MapSplitGroupInt = 0;
+    inline constexpr bool MapSplitGroup = false;
+    inline constexpr long MapSplitGroupInt = 0;
 }

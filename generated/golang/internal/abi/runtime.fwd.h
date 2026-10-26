@@ -7,5 +7,5 @@
 namespace golang::internal::abi
 {
     // ZeroValSize is the size in bytes of runtime.zeroVal.
-    const long ZeroValSize = 1024;
+    inline constexpr long ZeroValSize = 1024;
 }

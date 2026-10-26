@@ -22,14 +22,14 @@ namespace golang::main
 
     void main()
     {
-        auto primes0 = gocpp::array<int, 6> {2, 3, 5, 7, 11, 13};
+        auto primes0 = gocpp::array<int64_t, 6> {2, 3, 5, 7, 11, 13};
 
-        gocpp::slice<int> s = primes0.make_slice(1, 4);
+        gocpp::slice<int64_t> s = primes0.make_slice(1, 4);
         mocklib::Println(s);
 
-        auto primes1 = gocpp::slice<int> {2, 3, 5, 7, 11, 13};
-        auto primes2 = gocpp::slice<int> {17, 19, 23};
-        auto primes3 = gocpp::slice<int> {29, 31, 37};
+        auto primes1 = gocpp::slice<int64_t> {2, 3, 5, 7, 11, 13};
+        auto primes2 = gocpp::slice<int64_t> {17, 19, 23};
+        auto primes3 = gocpp::slice<int64_t> {29, 31, 37};
         mocklib::Println(primes1);
         mocklib::Println(primes2);
 

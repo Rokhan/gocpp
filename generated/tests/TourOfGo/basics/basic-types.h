@@ -15,10 +15,30 @@ namespace golang::main
     extern bool ToBe;
     extern uint64_t MaxInt;
     extern gocpp::complex128 z;
+    struct GoTag_Meters { };
+    using Meters = gocpp::defined<int64_t, GoTag_Meters>;
+    struct GoTag_Feet { };
+    using Feet = gocpp::defined<int64_t, GoTag_Feet>;
+    struct GoTag_Celsius { };
+    using Celsius = gocpp::defined<double, GoTag_Celsius>;
+    struct GoTag_Level { };
+    using Level = gocpp::defined<uint8_t, GoTag_Level>;
+    struct GoTag_Kind { };
+    using Kind = gocpp::defined<int64_t, GoTag_Kind>;
+    gocpp::string classify(go_any v);
+    void testDistinctTypes();
+    void testArithmetic();
+    void testWraparound();
+    void testFloat();
+    void testIotaKinds();
+    void testConstLength();
     void main();
 
     namespace rec
     {
+        gocpp::string Describe(Meters m);
+        gocpp::string Describe(Feet f);
+        bool IsHot(Kind k);
     }
 }
 

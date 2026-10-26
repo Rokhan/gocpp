@@ -6,10 +6,11 @@
 
 namespace golang::compress::flate
 {
-    const long maxBitsLimit = 16;
+    inline constexpr long maxBitsLimit = 16;
     // number of valid literals
-    const long literalCount = 286;
-    using hcode = uint32_t;
+    inline constexpr long literalCount = 286;
+    struct GoTag_hcode;
+    using hcode = gocpp::defined<uint32_t, GoTag_hcode>;
     struct huffmanEncoder;
     struct literalNode;
     struct levelInfo;

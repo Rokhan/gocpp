@@ -100,7 +100,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         return value.PrintTo(os);
     }
 
-    token::Pos rec::pos(fakeFileSet* s, gocpp::string file, int line, int column)
+    token::Pos rec::pos(fakeFileSet* s, gocpp::string file, int64_t line, int64_t column)
     {
         // TODO(mdempsky): Make use of column.
         _ = column;
@@ -134,7 +134,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     {
         rec::Do(gocpp::recv(fakeLinesOnce), [=]() mutable -> void
         {
-            fakeLines = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), maxlines);
+            fakeLines = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), maxlines);
             for(auto [i, gocpp_ignored] : fakeLines)
             {
                 fakeLines[i] = i;
@@ -146,9 +146,9 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         }
     }
 
-    gocpp::slice<int> fakeLines;
+    gocpp::slice<int64_t> fakeLines;
     sync::Once fakeLinesOnce;
-    types::ChanDir chanDir(int d)
+    types::ChanDir chanDir(int64_t d)
     {
         // tag values must match the constants in cmd/compile/internal/gc/go.go
         //Go switch emulation

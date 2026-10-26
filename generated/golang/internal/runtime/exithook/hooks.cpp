@@ -92,7 +92,7 @@ namespace golang::internal::runtime::exithook
     // If an exit hook panics, Run will throw with the panic on the stack.
     // If an exit hook invokes exit in the same goroutine, the goroutine will throw.
     // If an exit hook invokes exit in another goroutine, that exit will block.
-    void Run(int code)
+    void Run(int64_t code)
     {
         gocpp::Defer defer;
         try

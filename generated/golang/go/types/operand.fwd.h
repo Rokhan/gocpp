@@ -6,18 +6,19 @@
 
 namespace golang::go::types
 {
-    using operandMode = unsigned char;
+    struct GoTag_operandMode;
+    using operandMode = gocpp::defined<unsigned char, GoTag_operandMode>;
     struct operand;
-    const operandMode invalid = 0;
-    const operandMode novalue = 1;
-    const operandMode builtin = 2;
-    const operandMode typexpr = 3;
-    const operandMode constant_ = 4;
-    const operandMode variable = 5;
-    const operandMode mapindex = 6;
-    const operandMode value = 7;
-    const operandMode nilvalue = 8;
-    const operandMode commaok = 9;
-    const operandMode commaerr = 10;
-    const operandMode cgofunc = 11;
+    inline constexpr operandMode invalid = 0;
+    inline constexpr operandMode novalue = 1;
+    inline constexpr operandMode builtin = 2;
+    inline constexpr operandMode typexpr = 3;
+    inline constexpr operandMode constant_ = 4;
+    inline constexpr operandMode variable = 5;
+    inline constexpr operandMode mapindex = 6;
+    inline constexpr operandMode value = 7;
+    inline constexpr operandMode nilvalue = 8;
+    inline constexpr operandMode commaok = 9;
+    inline constexpr operandMode commaerr = 10;
+    inline constexpr operandMode cgofunc = 11;
 }

@@ -20,12 +20,12 @@ namespace golang::main
     {
     }
 
-    std::tuple<gocpp::string, int, gocpp::slice<gocpp::string>> f1()
+    std::tuple<gocpp::string, int64_t, gocpp::slice<gocpp::string>> f1()
     {
         return {"f1"_s, 1001, gocpp::slice<gocpp::string> {"a"_s, "b"_s}};
     }
 
-    std::tuple<gocpp::string, int, gocpp::array<gocpp::string, 3>> f2()
+    std::tuple<gocpp::string, int64_t, gocpp::array<gocpp::string, 3>> f2()
     {
         return {"f2"_s, 1002, gocpp::array<gocpp::string, 3> {"c"_s, "d"_s, "e"_s}};
     }
@@ -35,7 +35,7 @@ namespace golang::main
         auto [s1, i1] = std::tuple{"string1"_s, 1};
         mocklib::Println(s1, i1);
 
-        int i2;
+        int64_t i2;
         std::tie(s1, i2) = std::tuple{"string2"_s, 2};
         mocklib::Println(s1, i2);
 

@@ -200,8 +200,8 @@ namespace golang::internal::reflectlite
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct rtype, false>& self);
-        int Align(const gocpp::ObjRecv<struct rtype>& self);
+        int64_t Align(const gocpp::PtrRecv<struct rtype, false>& self);
+        int64_t Align(const gocpp::ObjRecv<struct rtype>& self);
         abi::ArrayType* ArrayType(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::ArrayType* ArrayType(const gocpp::ObjRecv<struct rtype>& self);
         abi::ChanDir ChanDir(const gocpp::PtrRecv<struct rtype, false>& self);
@@ -210,14 +210,14 @@ namespace golang::internal::reflectlite
         abi::ChanType* ChanType(const gocpp::ObjRecv<struct rtype>& self);
         abi::Type* Common(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::Type* Common(const gocpp::ObjRecv<struct rtype>& self);
-        int DescriptorSize(const gocpp::PtrRecv<struct rtype, false>& self);
-        int DescriptorSize(const gocpp::ObjRecv<struct rtype>& self);
+        int64_t DescriptorSize(const gocpp::PtrRecv<struct rtype, false>& self);
+        int64_t DescriptorSize(const gocpp::ObjRecv<struct rtype>& self);
         abi::Type* Elem(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::Type* Elem(const gocpp::ObjRecv<struct rtype>& self);
         gocpp::slice<abi::Method> ExportedMethods(const gocpp::PtrRecv<struct rtype, false>& self);
         gocpp::slice<abi::Method> ExportedMethods(const gocpp::ObjRecv<struct rtype>& self);
-        int FieldAlign(const gocpp::PtrRecv<struct rtype, false>& self);
-        int FieldAlign(const gocpp::ObjRecv<struct rtype>& self);
+        int64_t FieldAlign(const gocpp::PtrRecv<struct rtype, false>& self);
+        int64_t FieldAlign(const gocpp::ObjRecv<struct rtype>& self);
         abi::FuncType* FuncType(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::FuncType* FuncType(const gocpp::ObjRecv<struct rtype>& self);
         gocpp::slice<unsigned char> GcSlice(const gocpp::PtrRecv<struct rtype, false>& self, uintptr_t begin, uintptr_t end);
@@ -232,12 +232,12 @@ namespace golang::internal::reflectlite
         abi::Type* Key(const gocpp::ObjRecv<struct rtype>& self);
         abi::Kind Kind(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::Kind Kind(const gocpp::ObjRecv<struct rtype>& self);
-        int Len(const gocpp::PtrRecv<struct rtype, false>& self);
-        int Len(const gocpp::ObjRecv<struct rtype>& self);
+        int64_t Len(const gocpp::PtrRecv<struct rtype, false>& self);
+        int64_t Len(const gocpp::ObjRecv<struct rtype>& self);
         abi::MapType* MapType(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::MapType* MapType(const gocpp::ObjRecv<struct rtype>& self);
-        int NumMethod(const gocpp::PtrRecv<struct rtype, false>& self);
-        int NumMethod(const gocpp::ObjRecv<struct rtype>& self);
+        int64_t NumMethod(const gocpp::PtrRecv<struct rtype, false>& self);
+        int64_t NumMethod(const gocpp::ObjRecv<struct rtype>& self);
         abi::PtrType* PointerType(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::PtrType* PointerType(const gocpp::ObjRecv<struct rtype>& self);
         bool Pointers(const gocpp::PtrRecv<struct rtype, false>& self);
@@ -271,11 +271,11 @@ namespace golang::internal::reflectlite
 
     namespace rec
     {
-        unsigned char* data(golang::internal::reflectlite::name n, int off, gocpp::string whySafe);
+        unsigned char* data(golang::internal::reflectlite::name n, int64_t off, gocpp::string whySafe);
         bool isExported(golang::internal::reflectlite::name n);
         bool hasTag(golang::internal::reflectlite::name n);
         bool embedded(golang::internal::reflectlite::name n);
-        std::tuple<int, int> readVarint(golang::internal::reflectlite::name n, int off);
+        std::tuple<int64_t, int64_t> readVarint(golang::internal::reflectlite::name n, int64_t off);
         gocpp::string name(golang::internal::reflectlite::name n);
         gocpp::string tag(golang::internal::reflectlite::name n);
         abi::Name nameOff(rtype t, golang::internal::reflectlite::nameOff off);
@@ -284,17 +284,17 @@ namespace golang::internal::reflectlite
         gocpp::string String(rtype t);
         abi::Type* common(rtype t);
         gocpp::slice<abi::Method> exportedMethods(rtype t);
-        int NumMethod(rtype t);
+        int64_t NumMethod(rtype t);
         gocpp::string PkgPath(rtype t);
         gocpp::string Name(rtype t);
         golang::internal::reflectlite::Type Elem(rtype t);
-        golang::internal::reflectlite::Type In(rtype t, int i);
+        golang::internal::reflectlite::Type In(rtype t, int64_t i);
         golang::internal::reflectlite::Type Key(rtype t);
-        int Len(rtype t);
-        int NumField(rtype t);
-        int NumIn(rtype t);
-        int NumOut(rtype t);
-        golang::internal::reflectlite::Type Out(rtype t, int i);
+        int64_t Len(rtype t);
+        int64_t NumField(rtype t);
+        int64_t NumIn(rtype t);
+        int64_t NumOut(rtype t);
+        golang::internal::reflectlite::Type Out(rtype t, int64_t i);
         bool Implements(rtype t, golang::internal::reflectlite::Type u);
         bool AssignableTo(rtype t, golang::internal::reflectlite::Type u);
         bool Comparable(rtype t);

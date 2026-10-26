@@ -6,14 +6,14 @@
 
 namespace golang::internal::syscall::windows::registry
 {
-    const long _REG_OPTION_NON_VOLATILE = 0;
-    const long _REG_CREATED_NEW_KEY = 1;
-    const long _REG_OPENED_EXISTING_KEY = 2;
+    inline constexpr long _REG_OPTION_NON_VOLATILE = 0;
+    inline constexpr long _REG_CREATED_NEW_KEY = 1;
+    inline constexpr long _REG_OPENED_EXISTING_KEY = 2;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
 
 namespace golang::internal::syscall::windows::registry
 {
     namespace syscall = golang::syscall;
-    const syscall::Errno _ERROR_NO_MORE_ITEMS = 259;
+    inline constexpr syscall::Errno _ERROR_NO_MORE_ITEMS = 259;
 }

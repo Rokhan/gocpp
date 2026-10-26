@@ -7,7 +7,7 @@
 namespace golang::regexp
 {
     struct Regexp;
-    const gocpp::rune endOfText = - 1;
+    inline constexpr gocpp::rune endOfText = - 1;
     struct inputString;
     struct inputBytes;
     struct inputReader;

@@ -795,7 +795,7 @@ namespace golang::runtime
             t->seq = seq;
         }
 
-        auto wake = false;
+        bool wake = false;
         auto pending = t->when > 0;
         t->when = when;
         if(t->state & timerHeaped != 0)
@@ -955,8 +955,8 @@ namespace golang::runtime
         rec::cleanHead(gocpp::recv(ts));
         rec::lock(gocpp::recv(t));
         rec::trace(gocpp::recv(t), "maybeAdd"_s);
-        auto when = int64_t(0);
-        auto wake = false;
+        int64_t when = int64_t(0);
+        bool wake = false;
         if(rec::needsAdd(gocpp::recv(t)))
         {
             if(t->isFake)
@@ -1165,8 +1165,8 @@ namespace golang::runtime
         rec::Store(gocpp::recv(ts->minWhenHeap), rec::wakeTime(gocpp::recv(ts)));
         rec::Store(gocpp::recv(ts->minWhenModified), 0);
 
-        auto changed = false;
-        for(auto i = 0; i < len(ts->heap); i++)
+        bool changed = false;
+        for(int64_t i = 0; i < len(ts->heap); i++)
         {
             auto tw = & ts->heap[i];
             auto t = tw->timer;
@@ -1290,7 +1290,7 @@ namespace golang::runtime
         {
             badTimer();
         }
-        auto force = ts == & rec::ptr(gocpp::recv(getg()->m->p))->timers && int(zombies) > int(rec::Load(gocpp::recv(ts->len))) / 4;
+        auto force = ts == & rec::ptr(gocpp::recv(getg()->m->p))->timers && int64_t(zombies) > int64_t(rec::Load(gocpp::recv(ts->len))) / 4;
 
         if(now < next && ! force)
         {
@@ -1321,7 +1321,7 @@ namespace golang::runtime
             // is significantly faster under contention, such as in
             // package time's BenchmarkTimerAdjust10000,
             // though we do not fully understand why.
-            force = ts == & rec::ptr(gocpp::recv(getg()->m->p))->timers && int(rec::Load(gocpp::recv(ts->zombies))) > int(rec::Load(gocpp::recv(ts->len))) / 4;
+            force = ts == & rec::ptr(gocpp::recv(getg()->m->p))->timers && int64_t(rec::Load(gocpp::recv(ts->zombies))) > int64_t(rec::Load(gocpp::recv(ts->len))) / 4;
             if(force)
             {
                 rec::adjust(gocpp::recv(ts), now, true);
@@ -1577,14 +1577,14 @@ namespace golang::runtime
             }
 
             // The heap is timerHeapN-ary. See siftupTimer and siftdownTimer.
-            auto p = int((unsigned int)(i - 1) / timerHeapN);
+            auto p = int64_t((uint64_t)(i - 1) / timerHeapN);
             if(rec::less(gocpp::recv(tw), ts->heap[p]))
             {
                 print("bad timer heap at "_s, i, ": "_s, p, ": "_s, ts->heap[p].when, ", "_s, i, ": "_s, tw.when, "\n"_s);
                 go_throw("bad timer heap"_s);
             }
         }
-        if(auto n = int(rec::Load(gocpp::recv(ts->len))); len(ts->heap) != n)
+        if(auto n = int64_t(rec::Load(gocpp::recv(ts->len))); len(ts->heap) != n)
         {
             println("timer heap len"_s, len(ts->heap), "!= atomic len"_s, n);
             go_throw("bad timer heap len"_s);
@@ -1629,7 +1629,7 @@ namespace golang::runtime
     // This is only called by sysmon and checkdead.
     int64_t timeSleepUntil()
     {
-        auto next = int64_t(maxWhen);
+        int64_t next = int64_t(maxWhen);
 
         // Prevent allp slice changes. This is like retake.
         lock(& allpLock);
@@ -1654,7 +1654,7 @@ namespace golang::runtime
 
     // siftUp puts the timer at position i in the right place
     // in the heap by moving it up toward the top of the heap.
-    void rec::siftUp(timers* ts, int i)
+    void rec::siftUp(timers* ts, int64_t i)
     {
         auto heap = ts->heap;
         if(i >= len(heap))
@@ -1669,7 +1669,7 @@ namespace golang::runtime
         for(; i > 0; )
         {
             // parent
-            auto p = int((unsigned int)(i - 1) / timerHeapN);
+            auto p = int64_t((uint64_t)(i - 1) / timerHeapN);
             if(! rec::less(gocpp::recv(tw), heap[p]))
             {
                 break;
@@ -1685,7 +1685,7 @@ namespace golang::runtime
 
     // siftDown puts the timer at position i in the right place
     // in the heap by moving it down toward the bottom of the heap.
-    void rec::siftDown(timers* ts, int i)
+    void rec::siftDown(timers* ts, int64_t i)
     {
         auto heap = ts->heap;
         auto n = len(heap);
@@ -1710,7 +1710,7 @@ namespace golang::runtime
                 break;
             }
             auto w = tw;
-            auto c = - 1;
+            int64_t c = - 1;
             for(auto [j, tw] : heap.make_slice(leftChild, gocpp::min(leftChild + timerHeapN, n)))
             {
                 if(rec::less(gocpp::recv(tw), w))
@@ -1742,7 +1742,7 @@ namespace golang::runtime
         {
             return;
         }
-        for(auto i = int((unsigned int)(len(ts->heap) - 1 - 1) / timerHeapN); i >= 0; i--)
+        for(auto i = int64_t((uint64_t)(len(ts->heap) - 1 - 1) / timerHeapN); i >= 0; i--)
         {
             rec::siftDown(gocpp::recv(ts), i);
         }

@@ -6,5 +6,5 @@
 
 namespace golang::math
 {
-    const bool haveArchExp = true;
+    inline constexpr bool haveArchExp = true;
 }

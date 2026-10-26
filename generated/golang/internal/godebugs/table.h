@@ -16,7 +16,7 @@ namespace golang::internal::godebugs
     {
         gocpp::string Name{}; // name of the setting ("panicnil")
         gocpp::string Package{}; // package that uses the setting ("runtime")
-        int Changed{}; // minor version when default changed, if any; 21 means Go 1.21
+        int64_t Changed{}; // minor version when default changed, if any; 21 means Go 1.21
         gocpp::string Old{}; // value that restores behavior prior to Changed
         bool Opaque{}; // setting does not export information to runtime/metrics using [internal/godebug.Setting.IncNonDefault]
         bool Immutable{}; // setting cannot be changed after program start
@@ -36,7 +36,7 @@ namespace golang::internal::godebugs
     struct RemovedInfo
     {
         gocpp::string Name{}; // name of the removed GODEBUG setting.
-        int Removed{}; // minor version of Go, when the removal happened
+        int64_t Removed{}; // minor version of Go, when the removal happened
         std::function<bool (gocpp::string _1)> Old{}; // reports whether the GODEBUG value (argument) is an old (invalid) value
 
         using isGoStruct = void;

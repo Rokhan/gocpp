@@ -16,6 +16,8 @@ namespace golang::internal::syscall::windows
     // TestDeleteatFallback should only be used for testing purposes.
     // When set, [Deleteat] uses the fallback path unconditionally.
     extern bool TestDeleteatFallback;
+    struct GoTag_SymlinkatFlags { };
+    using SymlinkatFlags = gocpp::defined<uint64_t, GoTag_SymlinkatFlags>;
     gocpp::error withPrivilege(gocpp::string privilege, std::function<gocpp::error ()> f);
 }
 #include "golang/syscall/security_windows.fwd.h"

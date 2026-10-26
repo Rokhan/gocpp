@@ -12,6 +12,8 @@
 
 namespace golang::compress::flate
 {
+    struct GoTag_CorruptInputError { };
+    using CorruptInputError = gocpp::defined<int64_t, GoTag_CorruptInputError>;
     struct ReadError
     {
         int64_t Offset{}; // byte offset where error occurred
@@ -48,7 +50,7 @@ namespace golang::compress::flate
     std::ostream& operator<<(std::ostream& os, const struct WriteError& value);
     struct huffmanDecoder
     {
-        int min{}; // the minimum code length
+        int64_t min{}; // the minimum code length
         gocpp::array<uint32_t, huffmanNumChunks> chunks{}; // chunks as described above
         gocpp::slice<gocpp::slice<uint32_t>> links{}; // overflow links
         uint32_t linkMask{}; // mask the width of the link table
@@ -65,7 +67,7 @@ namespace golang::compress::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct huffmanDecoder& value);
-    extern gocpp::array<int, 19> codeOrder;
+    extern gocpp::array<int64_t, 19> codeOrder;
     gocpp::error noEOF(gocpp::error e);
     void fixedHuffmanDecoderInit();
     extern huffmanDecoder fixedHuffmanDecoder;
@@ -205,8 +207,8 @@ namespace golang::compress::flate
 
     namespace rec
     {
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct Reader, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct Reader>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct Reader, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct Reader>& self, gocpp::slice<unsigned char> p);
 
         std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct Reader, false>& self);
         std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<struct Reader>& self);
@@ -234,13 +236,13 @@ namespace golang::compress::flate
         int64_t roffset{};
         // Input bits, in top of b.
         uint32_t b{};
-        unsigned int nb{};
+        uint64_t nb{};
         // Huffman decoders for literal/length, distance.
         huffmanDecoder h1{};
         huffmanDecoder h2{};
         // Length arrays used to define Huffman codes.
-        gocpp::array_ptr<gocpp::array<int, maxNumLit + maxNumDist>> bits{};
-        gocpp::array_ptr<gocpp::array<int, numCodes>> codebits{};
+        gocpp::array_ptr<gocpp::array<int64_t, maxNumLit + maxNumDist>> bits{};
+        gocpp::array_ptr<gocpp::array<int64_t, numCodes>> codebits{};
         // Output history, buffer.
         dictDecoder dict{};
         // Temporary buffer (avoids repeated allocation).
@@ -248,14 +250,14 @@ namespace golang::compress::flate
         // Next step in the decompression,
         // and decompression state.
         std::function<void (decompressor* _1)> step{};
-        int stepState{};
+        int64_t stepState{};
         bool final{};
         gocpp::error err{};
         gocpp::slice<unsigned char> toRead{};
         huffmanDecoder* hl{};
         huffmanDecoder* hd{};
-        int copyLen{};
-        int copyDist{};
+        int64_t copyLen{};
+        int64_t copyDist{};
 
         using isGoStruct = void;
 
@@ -282,9 +284,9 @@ namespace golang::compress::flate
         gocpp::string Error(InternalError e);
         gocpp::string Error(ReadError* e);
         gocpp::string Error(WriteError* e);
-        bool init(huffmanDecoder* h, gocpp::slice<int> lengths);
+        bool init(huffmanDecoder* h, gocpp::slice<int64_t> lengths);
         void nextBlock(decompressor* f);
-        std::tuple<int, gocpp::error> Read(decompressor* f, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> Read(decompressor* f, gocpp::slice<unsigned char> b);
         gocpp::error Close(decompressor* f);
         gocpp::error readHuffman(decompressor* f);
         void huffmanBlock(decompressor* f);
@@ -292,7 +294,7 @@ namespace golang::compress::flate
         void copyData(decompressor* f);
         void finishBlock(decompressor* f);
         gocpp::error moreBits(decompressor* f);
-        std::tuple<int, gocpp::error> huffSym(decompressor* f, huffmanDecoder* h);
+        std::tuple<int64_t, gocpp::error> huffSym(decompressor* f, huffmanDecoder* h);
         void makeReader(decompressor* f, io::Reader r);
         gocpp::error Reset(decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict);
     }

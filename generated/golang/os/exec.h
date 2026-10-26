@@ -18,6 +18,8 @@ namespace golang::os
     extern gocpp::error errProcessReleased;
     // ErrNoHandle indicates a [Process] does not have a handle.
     extern gocpp::error ErrNoHandle;
+    struct GoTag_processStatus { };
+    using processStatus = gocpp::defined<uint32_t, GoTag_processStatus>;
     struct Signal : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -87,8 +89,8 @@ namespace golang::os
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Signal& value);
-    int Getpid();
-    int Getppid();
+    int64_t Getpid();
+    int64_t Getppid();
 }
 #include "golang/runtime/extern.fwd.h"
 #include "golang/runtime/mcleanup.fwd.h"
@@ -119,7 +121,7 @@ namespace golang::os
     struct Process
     {
         // Pid is the operating system process ID.
-        int Pid{};
+        int64_t Pid{};
         // state contains the atomic process state.
         // This consists of the processStatus fields,
         // which indicate if the process is done/released.
@@ -207,10 +209,10 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ProcAttr& value);
-    Process* newPIDProcess(int pid);
-    Process* newHandleProcess(int pid, uintptr_t handle);
-    Process* newDoneProcess(int pid);
-    std::tuple<Process*, gocpp::error> FindProcess(int pid);
+    Process* newPIDProcess(int64_t pid);
+    Process* newHandleProcess(int64_t pid, uintptr_t handle);
+    Process* newDoneProcess(int64_t pid);
+    std::tuple<Process*, gocpp::error> FindProcess(int64_t pid);
     std::tuple<Process*, gocpp::error> StartProcess(gocpp::string name, gocpp::slice<gocpp::string> argv, ProcAttr* attr);
 }
 

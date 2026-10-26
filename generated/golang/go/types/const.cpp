@@ -172,7 +172,7 @@ namespace golang::go::types
                                 switch(conditionId)
                                 {
                                     case 0:
-                                        auto s = (unsigned int)(go_sizeof(typ)) * 8;
+                                        auto s = (uint64_t)(go_sizeof(typ)) * 8;
                                         return (int64_t(- 1) << (s - 1)) <= x && x <= (int64_t(1) << (s - 1)) - 1;
                                         break;
                                     case 1:
@@ -199,7 +199,7 @@ namespace golang::go::types
                                         break;
                                     case 6:
                                     case 7:
-                                        if(auto s = (unsigned int)(go_sizeof(typ)) * 8; s < 64)
+                                        if(auto s = (uint64_t)(go_sizeof(typ)) * 8; s < 64)
                                         {
                                             return 0 <= x && x <= (int64_t(1) << s) - 1;
                                         }
@@ -247,8 +247,8 @@ namespace golang::go::types
                         {
                             case 0:
                             case 1:
-                                auto s = (unsigned int)(go_sizeof(typ)) * 8;
-                                return constant::Sign(x) >= 0 && n <= int(s);
+                                auto s = (uint64_t)(go_sizeof(typ)) * 8;
+                                return constant::Sign(x) >= 0 && n <= int64_t(s);
                                 break;
                             case 2:
                                 return constant::Sign(x) >= 0 && n <= 64;
@@ -470,7 +470,7 @@ namespace golang::go::types
 
     void rec::invalidConversion(Checker* check, errors::Code code, operand* x, golang::go::types::Type target)
     {
-        auto msg = "cannot convert %s to type %s"_s;
+        gocpp::string msg = "cannot convert %s to type %s"_s;
         //Go switch emulation
         {
             auto condition = code;

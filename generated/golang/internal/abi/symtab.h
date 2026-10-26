@@ -9,8 +9,15 @@
 #include "golang/internal/abi/symtab.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::internal::abi
 {
+    struct GoTag_PCLnTabMagic { };
+    using PCLnTabMagic = gocpp::defined<uint32_t, GoTag_PCLnTabMagic>;
+    struct GoTag_FuncFlag { };
+    using FuncFlag = gocpp::defined<uint8_t, GoTag_FuncFlag>;
+    struct GoTag_FuncID { };
+    using FuncID = gocpp::defined<uint8_t, GoTag_FuncID>;
 
     namespace rec
     {

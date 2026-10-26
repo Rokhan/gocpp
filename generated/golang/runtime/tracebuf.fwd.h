@@ -7,7 +7,7 @@
 namespace golang::runtime
 {
     // Maximum number of bytes required to encode uint64 in base-128.
-    const long traceBytesPerNumber = 10;
+    inline constexpr long traceBytesPerNumber = 10;
     struct traceWriter;
     struct traceBufQueue;
     struct traceBufHeader;

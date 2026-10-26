@@ -611,7 +611,7 @@ namespace golang::runtime
     void rec::GoCreate(traceLocker tl, g* newg, uintptr_t pc, bool blocked)
     {
         rec::setStatusTraced(gocpp::recv(newg->trace), tl.gen);
-        auto ev = tracev2::EvGoCreate;
+        tracev2::EventType ev = tracev2::EvGoCreate;
         if(blocked)
         {
             ev = tracev2::EvGoCreateBlocked;
@@ -664,13 +664,13 @@ namespace golang::runtime
     //
     // TODO(mknyszek): Replace traceBlockReason with waitReason. It's silly
     // that we have both, and waitReason is way more descriptive.
-    void rec::GoPark(traceLocker tl, traceBlockReason reason, int skip)
+    void rec::GoPark(traceLocker tl, traceBlockReason reason, int64_t skip)
     {
         rec::event(gocpp::recv(rec::eventWriter(gocpp::recv(tl), tracev2::GoRunning, tracev2::ProcRunning)), tracev2::EvGoBlock, runtime::trace.goBlockReasons[tl.gen % 2][reason], rec::stack(gocpp::recv(tl), skip));
     }
 
     // GoUnpark emits a GoUnblock event.
-    void rec::GoUnpark(traceLocker tl, g* gp, int skip)
+    void rec::GoUnpark(traceLocker tl, g* gp, int64_t skip)
     {
         // Emit a GoWaiting status if necessary for the unblocked goroutine.
         rec::emitUnblockStatus(gocpp::recv(tl), gp, tl.gen);
@@ -684,7 +684,7 @@ namespace golang::runtime
         // Emit a GoWaiting status if necessary for the unblocked goroutine.
         rec::emitUnblockStatus(gocpp::recv(tl), nextg, tl.gen);
         auto w = rec::eventWriter(gocpp::recv(tl), tracev2::GoRunning, tracev2::ProcRunning);
-        auto ev = tracev2::EvGoSwitch;
+        tracev2::EventType ev = tracev2::EvGoSwitch;
         if(destroy)
         {
             ev = tracev2::EvGoSwitchDestroy;
@@ -727,9 +727,9 @@ namespace golang::runtime
     // - The goroutine lost its P and acquired a different one, and is now running with that P.
     void rec::GoSysExit(traceLocker tl, bool lostP)
     {
-        auto ev = tracev2::EvGoSyscallEnd;
+        tracev2::EventType ev = tracev2::EvGoSyscallEnd;
         // Procs implicitly enter tracev2.ProcSyscall on GoSyscallBegin.
-        auto procStatus = tracev2::ProcSyscall;
+        tracev2::ProcStatus procStatus = tracev2::ProcSyscall;
         if(lostP)
         {
             ev = tracev2::EvGoSyscallEndBlocked;
@@ -770,8 +770,8 @@ namespace golang::runtime
         // ourselves specifically to keep running. The two contexts look different, but can be summarized
         // fairly succinctly. In the former, we're a regular running goroutine and proc, if we have either.
         // In the latter, we're a goroutine in a syscall.
-        auto goStatus = tracev2::GoRunning;
-        auto procStatus = tracev2::ProcRunning;
+        tracev2::GoStatus goStatus = tracev2::GoRunning;
+        tracev2::ProcStatus procStatus = tracev2::ProcRunning;
         if(tl.mp->curg != nullptr && tl.mp->curg->syscallsp != 0)
         {
             goStatus = tracev2::GoSyscall;

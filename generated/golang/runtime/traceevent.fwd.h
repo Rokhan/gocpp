@@ -6,6 +6,7 @@
 
 namespace golang::runtime
 {
-    using traceArg = uint64_t;
+    struct GoTag_traceArg;
+    using traceArg = gocpp::defined<uint64_t, GoTag_traceArg>;
     struct traceEventWriter;
 }

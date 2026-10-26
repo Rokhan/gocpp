@@ -80,7 +80,7 @@ namespace golang::encoding::json::internal::jsonopts
         gocpp::string Indent{}; // jsonflags.Indent
         gocpp::string IndentPrefix{}; // jsonflags.IndentPrefix
         int64_t ByteLimit{}; // jsonflags.ByteLimit
-        int DepthLimit{}; // jsonflags.DepthLimit
+        int64_t DepthLimit{}; // jsonflags.DepthLimit
 
         using isGoStruct = void;
 
@@ -112,6 +112,10 @@ namespace golang::encoding::json::internal::jsonopts
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ArshalValues& value);
+    struct GoTag_ByteLimit { };
+    using ByteLimit = gocpp::defined<int64_t, GoTag_ByteLimit>;
+    struct GoTag_DepthLimit { };
+    using DepthLimit = gocpp::defined<int64_t, GoTag_DepthLimit>;
 }
 #include "golang/encoding/json/internal/internal.fwd.h"
 #include "golang/encoding/json/internal/jsonflags/flags.fwd.h"

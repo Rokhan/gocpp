@@ -15,7 +15,7 @@ namespace golang::math::big
     struct decimal
     {
         gocpp::slice<unsigned char> mant{}; // mantissa ASCII digits, big-endian
-        int exp{}; // exponent
+        int64_t exp{}; // exponent
 
         using isGoStruct = void;
 
@@ -29,9 +29,9 @@ namespace golang::math::big
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decimal& value);
-    gocpp::slice<unsigned char> appendZeros(gocpp::slice<unsigned char> buf, int n);
-    void rsh(decimal* x, unsigned int s);
-    bool shouldRoundUp(decimal* x, int n);
+    gocpp::slice<unsigned char> appendZeros(gocpp::slice<unsigned char> buf, int64_t n);
+    void rsh(decimal* x, uint64_t s);
+    bool shouldRoundUp(decimal* x, int64_t n);
     void trim(decimal* x);
 }
 
@@ -42,12 +42,12 @@ namespace golang::math::big
 
     namespace rec
     {
-        unsigned char at(decimal* d, int i);
-        void init(decimal* x, golang::math::big::nat m, int shift);
+        unsigned char at(decimal* d, int64_t i);
+        void init(decimal* x, golang::math::big::nat m, int64_t shift);
         gocpp::string String(decimal* x);
-        void round(decimal* x, int n);
-        void roundUp(decimal* x, int n);
-        void roundDown(decimal* x, int n);
+        void round(decimal* x, int64_t n);
+        void roundUp(decimal* x, int64_t n);
+        void roundDown(decimal* x, int64_t n);
     }
 }
 

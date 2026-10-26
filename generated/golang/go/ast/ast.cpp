@@ -374,7 +374,7 @@ namespace golang::go::ast
 
     token::Pos rec::End(Comment* c)
     {
-        return token::Pos(int(c->Slash) + len(c->Text));
+        return token::Pos(int64_t(c->Slash) + len(c->Text));
     }
 
     // A CommentGroup represents a sequence of comments
@@ -504,7 +504,7 @@ namespace golang::go::ast
 
         // Remove leading blank lines; convert runs of
         // interior blank lines to a single blank line.
-        auto n = 0;
+        int64_t n = 0;
         for(auto [gocpp_ignored, line] : lines)
         {
             if(line != ""_s || n > 0 && lines[n - 1] != ""_s)
@@ -544,7 +544,7 @@ namespace golang::go::ast
         {
             return false;
         }
-        for(auto i = 0; i <= colon + 1; i++)
+        for(int64_t i = 0; i <= colon + 1; i++)
         {
             if(i == colon)
             {
@@ -703,9 +703,9 @@ namespace golang::go::ast
     }
 
     // NumFields returns the number of parameters or struct fields represented by a [FieldList].
-    int rec::NumFields(FieldList* f)
+    int64_t rec::NumFields(FieldList* f)
     {
-        auto n = 0;
+        int64_t n = 0;
         if(f != nullptr)
         {
             for(auto [gocpp_ignored, g] : f->List)
@@ -1742,7 +1742,7 @@ namespace golang::go::ast
 
     token::Pos rec::End(Ident* x)
     {
-        return token::Pos(int(x->NamePos) + len(x->Name));
+        return token::Pos(int64_t(x->NamePos) + len(x->Name));
     }
 
     token::Pos rec::End(Ellipsis* x)
@@ -1762,7 +1762,7 @@ namespace golang::go::ast
             // Not from parser; use a heuristic.
             // (Incorrect for `...` containing \r\n;
             // see https://go.dev/issue/76031.)
-            return token::Pos(int(x->ValuePos) + len(x->Value));
+            return token::Pos(int64_t(x->ValuePos) + len(x->Value));
         }
         return x->ValueEnd;
     }
@@ -2947,7 +2947,7 @@ namespace golang::go::ast
         {
             return rec::End(gocpp::recv(s->Label));
         }
-        return token::Pos(int(s->TokPos) + len(rec::String(gocpp::recv(s->Tok))));
+        return token::Pos(int64_t(s->TokPos) + len(rec::String(gocpp::recv(s->Tok))));
     }
 
     token::Pos rec::End(BlockStmt* s)

@@ -46,7 +46,7 @@ namespace golang::hash::crc32
 namespace golang::hash::crc32
 {
     // Offset into internal/cpu records for use in assembly.
-    const uintptr_t offsetX86HasAVX512VPCLMULQDQL = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX512VPCLMULQDQ);
+    inline const uintptr_t offsetX86HasAVX512VPCLMULQDQL = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX512VPCLMULQDQ);
 
     namespace rec
     {

@@ -63,9 +63,9 @@ namespace golang::runtime
         // For example, park_m can choose to immediately unpark a goroutine after parking it.
         // It increments the active count to keep the bubble active until it has determined
         // that the park operation has completed.
-        int total{}; // total goroutines
-        int running{}; // non-blocked goroutines
-        int active{}; // other sources of activity
+        int64_t total{}; // total goroutines
+        int64_t running{}; // non-blocked goroutines
+        int64_t active{}; // other sources of activity
 
         using isGoStruct = void;
 
@@ -81,8 +81,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct synctestBubble& value);
     bool synctestidle_c(g* gp, gocpp::unsafe_pointer _1);
     bool synctestwait_c(g* gp, gocpp::unsafe_pointer _1);
-    int getOrSetBubbleSpecial(gocpp::unsafe_pointer p, uint64_t bubbleid, bool add);
-    int synctest_associate(gocpp::unsafe_pointer p);
+    int64_t getOrSetBubbleSpecial(gocpp::unsafe_pointer p, uint64_t bubbleid, bool add);
+    int64_t synctest_associate(gocpp::unsafe_pointer p);
     void synctest_disassociate(gocpp::unsafe_pointer p);
     bool synctest_isAssociated(gocpp::unsafe_pointer p);
 }

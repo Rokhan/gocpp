@@ -10,7 +10,7 @@ namespace golang::runtime
     // pcBuf[1:] holds a logical stack requiring no further processing. Any other
     // value at pcBuf[0] represents a skip value to apply to the physical stack in
     // pcBuf[1:] after inline expansion.
-    const uintptr_t logicalStackSentinel = ~ uintptr_t(0);
+    inline constexpr uintptr_t logicalStackSentinel = ~ uintptr_t(0);
     struct traceStackTable;
     struct traceFrame;
 }

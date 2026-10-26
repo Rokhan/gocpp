@@ -399,7 +399,7 @@ namespace golang::go::build
     // Keep consistent with cmd/go/internal/cfg.defaultGOPATH.
     gocpp::string defaultGOPATH()
     {
-        auto env = "HOME"_s;
+        gocpp::string env = "HOME"_s;
         if(mocklib::GOOS == "windows"_s)
         {
             env = "USERPROFILE"_s;
@@ -467,7 +467,7 @@ namespace golang::go::build
         // built before Go 1.x (perhaps it is the stub to use in that
         // case) should say "go:build !go1.x".
         // The last element in ReleaseTags is the current release.
-        for(auto i = 1; i <= goversion::Version; i++)
+        for(int64_t i = 1; i <= goversion::Version; i++)
         {
             c.ReleaseTags = append(c.ReleaseTags, "go1."_s + strconv::Itoa(i));
         }
@@ -914,7 +914,7 @@ namespace golang::go::build
         gocpp::string pkgtargetroot = {};
         gocpp::string pkga = {};
         gocpp::error pkgerr = {};
-        auto suffix = ""_s;
+        gocpp::string suffix = ""_s;
         if(ctxt->InstallSuffix != ""_s)
         {
             suffix = "_"_s + ctxt->InstallSuffix;
@@ -963,7 +963,7 @@ namespace golang::go::build
         };
         setPkga();
 
-        auto binaryOnly = false;
+        bool binaryOnly = false;
         if(IsLocalImport(path))
         {
             // local imports have no installed path
@@ -1186,7 +1186,7 @@ namespace golang::go::build
 
             // package was not found
             gocpp::slice<gocpp::string> paths = {};
-            auto format = "\t%s (vendor tree)"_s;
+            gocpp::string format = "\t%s (vendor tree)"_s;
             for(auto [gocpp_ignored, dir] : tried.vendor)
             {
                 paths = append(paths, mocklib::Sprintf(format, dir));
@@ -1395,7 +1395,7 @@ namespace golang::go::build
             }
 
             auto isTest = strings::HasSuffix(name, "_test.go"_s);
-            auto isXTest = false;
+            bool isXTest = false;
             if(isTest && strings::HasSuffix(pkg, "_test"_s) && p->Name != pkg)
             {
                 isXTest = true;
@@ -1450,7 +1450,7 @@ namespace golang::go::build
             }
 
             // Record imports and information about cgo.
-            auto isCgo = false;
+            bool isCgo = false;
             for(auto [gocpp_ignored, imp] : info->imports)
             {
                 if(imp.path == "C"_s)
@@ -1819,7 +1819,7 @@ namespace golang::go::build
         cmd->Stdout = & go_stdout;
         cmd->Stderr = & go_stderr;
 
-        auto cgo = "0"_s;
+        gocpp::string cgo = "0"_s;
         if(ctxt->CgoEnabled)
         {
             cgo = "1"_s;
@@ -1872,10 +1872,10 @@ namespace golang::go::build
         return false;
     }
 
-    std::tuple<gocpp::string, int> findImportComment(gocpp::slice<unsigned char> data)
+    std::tuple<gocpp::string, int64_t> findImportComment(gocpp::slice<unsigned char> data)
     {
         gocpp::string s;
-        int line;
+        int64_t line;
         // expect keyword package
         auto [word, data_tmp] = parseWord(data);
         auto& data = data_tmp;
@@ -2402,12 +2402,12 @@ namespace golang::go::build
         gocpp::slice<unsigned char> goBuild;
         bool sawBinaryOnly;
         gocpp::error err;
-        auto end = 0;
+        int64_t end = 0;
         auto p = content;
         // found non-blank, non-// line, so stopped accepting //go:build lines
-        auto ended = false;
+        bool ended = false;
         // in /* */ comment
-        auto inSlashStar = false;
+        bool inSlashStar = false;
 
         Lines:
         for(; len(p) > 0; )
@@ -2540,7 +2540,7 @@ namespace golang::go::build
             auto [cond, verb] = std::tuple{f.make_slice(0, len(f) - 1), f[len(f) - 1]};
             if(len(cond) > 0)
             {
-                auto ok = false;
+                bool ok = false;
                 for(auto [gocpp_ignored, c] : cond)
                 {
                     if(rec::matchAuto(gocpp::recv(ctxt), c, nullptr))
@@ -2644,7 +2644,7 @@ namespace golang::go::build
         {
             return {str, safeCgoName(str)};
         }
-        auto ok = true;
+        bool ok = true;
         for(auto [gocpp_ignored, chunk] : chunks)
         {
             ok = ok && (chunk == ""_s || safeCgoName(chunk));
@@ -2667,7 +2667,7 @@ namespace golang::go::build
     // inherently system-dependent.
     void rec::makePathsAbsolute(Context* ctxt, gocpp::slice<gocpp::string> args, gocpp::string srcDir)
     {
-        auto nextPath = false;
+        bool nextPath = false;
         for(auto [i, arg] : args)
         {
             if(nextPath)
@@ -2702,7 +2702,7 @@ namespace golang::go::build
         {
             return false;
         }
-        for(auto i = 0; i < len(s); i++)
+        for(int64_t i = 0; i < len(s); i++)
         {
             if(auto c = s[i]; c < utf8::RuneSelf && strings::IndexByte(safeString, c) < 0)
             {
@@ -2733,10 +2733,10 @@ namespace golang::go::build
         gocpp::error err;
         gocpp::slice<gocpp::string> args = {};
         auto arg = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::rune>>(), len(s));
-        auto escaped = false;
-        auto quoted = false;
-        auto quote = '\x00';
-        auto i = 0;
+        bool escaped = false;
+        bool quoted = false;
+        gocpp::rune quote = '\x00';
+        int64_t i = 0;
         for(auto [gocpp_ignored, rune] : s)
         {
             //Go switch emulation

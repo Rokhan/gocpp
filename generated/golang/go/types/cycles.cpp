@@ -39,7 +39,7 @@ namespace golang::go::types
     // See directCycle for details.
     void rec::directCycles(Checker* check)
     {
-        auto pathIdx = gocpp::make(gocpp::Tag<gocpp::map<TypeName*, int>>());
+        auto pathIdx = gocpp::make(gocpp::Tag<gocpp::map<TypeName*, int64_t>>());
         for(auto [gocpp_ignored, obj] : check->objList)
         {
             if(auto [tname, ok] = gocpp::getValue<TypeName*>(obj); ok)
@@ -68,7 +68,7 @@ namespace golang::go::types
     // When directCycle returns, the pathIdx entries for all type names on the path
     // that starts at tname are marked black, regardless of whether there was a cycle.
     // This ensures that a type name is traversed only once.
-    void rec::directCycle(Checker* check, TypeName* tname, gocpp::map<TypeName*, int> pathIdx)
+    void rec::directCycle(Checker* check, TypeName* tname, gocpp::map<TypeName*, int64_t> pathIdx)
     {
         if(debug && check->conf->_Trace)
         {

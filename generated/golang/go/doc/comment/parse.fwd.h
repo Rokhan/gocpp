@@ -22,11 +22,12 @@ namespace golang::go::doc::comment
     struct Parser;
     struct parseDoc;
     struct span;
-    using spanKind = int;
-    const spanKind _ = 0;
-    const spanKind spanCode = 1;
-    const spanKind spanHeading = 2;
-    const spanKind spanList = 3;
-    const spanKind spanOldHeading = 4;
-    const spanKind spanPara = 5;
+    struct GoTag_spanKind;
+    using spanKind = gocpp::defined<int64_t, GoTag_spanKind>;
+    inline constexpr spanKind _ = 0;
+    inline constexpr spanKind spanCode = 1;
+    inline constexpr spanKind spanHeading = 2;
+    inline constexpr spanKind spanList = 3;
+    inline constexpr spanKind spanOldHeading = 4;
+    inline constexpr spanKind spanPara = 5;
 }

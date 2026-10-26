@@ -8,7 +8,7 @@ namespace golang::main
 {
     // Create a huge number by shifting a 1 bit left 100 places.
     // In other words, the binary number that is 1 followed by 100 zeroes.
-    const int Big = 1 << 100;
+    inline constexpr gocpp::bigint Big = 1_bi << 100;
     // Shift it right again 99 places, so we end up with 1<<1, or 2.
-    const int Small = Big >> 99;
+    inline constexpr int64_t Small = int64_t(gocpp::bigint(Big) >> 99);
 }

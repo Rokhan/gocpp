@@ -7,7 +7,7 @@
 namespace golang::runtime
 {
     // size of bucket hash table
-    const long buckHashSize = 179999;
+    inline constexpr long buckHashSize = 179999;
     // maxSkip is to account for deferred inline expansion
     // when using frame pointer unwinding. We record the stack
     // with "physical" frame pointers but handle skipping "logical"
@@ -16,12 +16,13 @@ namespace golang::runtime
     // desired maximum number of frames after expansion.
     // This should be at least as large as the largest skip value
     // used for profiling; otherwise stacks may be truncated inconsistently
-    const long maxSkip = 6;
+    inline constexpr long maxSkip = 6;
     // maxProfStackDepth is the highest valid value for debug.profstackdepth.
     // It's used for the bucket.stk func.
     // TODO(fg): can we get rid of this?
-    const long maxProfStackDepth = 1024;
-    using bucketType = int;
+    inline constexpr long maxProfStackDepth = 1024;
+    struct GoTag_bucketType;
+    using bucketType = gocpp::defined<int64_t, GoTag_bucketType>;
     struct bucket;
     struct memRecord;
     struct memRecordCycle;
@@ -33,14 +34,15 @@ namespace golang::runtime
     struct MemProfileRecord;
     struct BlockProfileRecord;
     struct gocpp_id_0;
-    using goroutineProfileState = uint32_t;
+    struct GoTag_goroutineProfileState;
+    using goroutineProfileState = gocpp::defined<uint32_t, GoTag_goroutineProfileState>;
     // profile types
-    const bucketType memProfile = 1 + 0;
-    const bucketType blockProfile = 1 + 1;
-    const bucketType mutexProfile = 1 + 2;
-    const goroutineProfileState goroutineProfileAbsent = 0;
-    const goroutineProfileState goroutineProfileInProgress = 1;
-    const goroutineProfileState goroutineProfileSatisfied = 2;
+    inline constexpr bucketType memProfile = 1 + 0;
+    inline constexpr bucketType blockProfile = 1 + 1;
+    inline constexpr bucketType mutexProfile = 1 + 2;
+    inline constexpr goroutineProfileState goroutineProfileAbsent = 0;
+    inline constexpr goroutineProfileState goroutineProfileInProgress = 1;
+    inline constexpr goroutineProfileState goroutineProfileSatisfied = 2;
 }
 #include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
 #include "golang/internal/runtime/atomic/types.fwd.h"

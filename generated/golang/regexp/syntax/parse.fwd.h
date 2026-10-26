@@ -8,7 +8,8 @@ namespace golang::regexp::syntax
 {
     struct Error;
     using ErrorCode = gocpp::string;
-    using Flags = uint16_t;
+    struct GoTag_Flags;
+    using Flags = gocpp::defined<uint16_t, GoTag_Flags>;
     // maxHeight is the maximum height of a regexp parse tree.
     // It is somewhat arbitrarily chosen, but the idea is to be large enough
     // that no one will actually hit in real use but at the same time small enough
@@ -21,53 +22,53 @@ namespace golang::regexp::syntax
     // Using depth 1000 should be plenty of margin.
     // As an optimization, we don't even bother calculating heights
     // until we've allocated at least maxHeight Regexp structures.
-    const long maxHeight = 1000;
-    const int instSize = 5 * 8;
-    const long runeSize = 4;
+    inline constexpr long maxHeight = 1000;
+    inline constexpr int64_t instSize = 5 * 8;
+    inline constexpr long runeSize = 4;
     struct parser;
     struct charGroup;
     struct aliasesStruct;
     // minimum and maximum runes involved in folding.
     // checked during test.
-    const long minFold = 0x0041;
-    const long maxFold = 0x1e943;
+    inline constexpr long minFold = 0x0041;
+    inline constexpr long maxFold = 0x1e943;
     struct ranges;
     // Unexpected error
-    const ErrorCode ErrInternalError = "regexp/syntax: internal error"_s;
+    inline const ErrorCode ErrInternalError = "regexp/syntax: internal error"_s;
     // Parse errors
-    const ErrorCode ErrInvalidCharClass = "invalid character class"_s;
-    const ErrorCode ErrInvalidCharRange = "invalid character class range"_s;
-    const ErrorCode ErrInvalidEscape = "invalid escape sequence"_s;
-    const ErrorCode ErrInvalidNamedCapture = "invalid named capture"_s;
-    const ErrorCode ErrInvalidPerlOp = "invalid or unsupported Perl syntax"_s;
-    const ErrorCode ErrInvalidRepeatOp = "invalid nested repetition operator"_s;
-    const ErrorCode ErrInvalidRepeatSize = "invalid repeat count"_s;
-    const ErrorCode ErrInvalidUTF8 = "invalid UTF-8"_s;
-    const ErrorCode ErrMissingBracket = "missing closing ]"_s;
-    const ErrorCode ErrMissingParen = "missing closing )"_s;
-    const ErrorCode ErrMissingRepeatArgument = "missing argument to repetition operator"_s;
-    const ErrorCode ErrTrailingBackslash = "trailing backslash at end of expression"_s;
-    const ErrorCode ErrUnexpectedParen = "unexpected )"_s;
-    const ErrorCode ErrNestingDepth = "expression nests too deeply"_s;
-    const ErrorCode ErrLarge = "expression too large"_s;
-    const Flags FoldCase = 1 << 0;
-    const Flags Literal = 1 << 1;
-    const Flags ClassNL = 1 << 2;
-    const Flags DotNL = 1 << 3;
-    const Flags OneLine = 1 << 4;
-    const Flags NonGreedy = 1 << 5;
-    const Flags PerlX = 1 << 6;
-    const Flags UnicodeGroups = 1 << 7;
-    const Flags WasDollar = 1 << 8;
-    const Flags Simple = 1 << 9;
-    const Flags POSIX = 0;
+    inline const ErrorCode ErrInvalidCharClass = "invalid character class"_s;
+    inline const ErrorCode ErrInvalidCharRange = "invalid character class range"_s;
+    inline const ErrorCode ErrInvalidEscape = "invalid escape sequence"_s;
+    inline const ErrorCode ErrInvalidNamedCapture = "invalid named capture"_s;
+    inline const ErrorCode ErrInvalidPerlOp = "invalid or unsupported Perl syntax"_s;
+    inline const ErrorCode ErrInvalidRepeatOp = "invalid nested repetition operator"_s;
+    inline const ErrorCode ErrInvalidRepeatSize = "invalid repeat count"_s;
+    inline const ErrorCode ErrInvalidUTF8 = "invalid UTF-8"_s;
+    inline const ErrorCode ErrMissingBracket = "missing closing ]"_s;
+    inline const ErrorCode ErrMissingParen = "missing closing )"_s;
+    inline const ErrorCode ErrMissingRepeatArgument = "missing argument to repetition operator"_s;
+    inline const ErrorCode ErrTrailingBackslash = "trailing backslash at end of expression"_s;
+    inline const ErrorCode ErrUnexpectedParen = "unexpected )"_s;
+    inline const ErrorCode ErrNestingDepth = "expression nests too deeply"_s;
+    inline const ErrorCode ErrLarge = "expression too large"_s;
+    inline constexpr Flags FoldCase = 1 << 0;
+    inline constexpr Flags Literal = 1 << 1;
+    inline constexpr Flags ClassNL = 1 << 2;
+    inline constexpr Flags DotNL = 1 << 3;
+    inline constexpr Flags OneLine = 1 << 4;
+    inline constexpr Flags NonGreedy = 1 << 5;
+    inline constexpr Flags PerlX = 1 << 6;
+    inline constexpr Flags UnicodeGroups = 1 << 7;
+    inline constexpr Flags WasDollar = 1 << 8;
+    inline constexpr Flags Simple = 1 << 9;
+    inline constexpr Flags POSIX = 0;
     // maxSize is the maximum size of a compiled regexp in Insts.
     // It too is somewhat arbitrarily chosen, but the idea is to be large enough
     // to allow significant regexps while at the same time small enough that
     // the compiled form will not take up too much memory.
     // 128 MB is enough for a 3.3 million Inst structures, which roughly
     // corresponds to a 3.3 MB regexp.
-    const int maxSize = (128 << 20) / instSize;
+    inline constexpr int64_t maxSize = (128 << 20) / instSize;
     // maxRunes is the maximum number of runes allowed in a regexp tree
     // counting the runes in all the nodes.
     // Ignoring character classes p.numRunes is always less than the length of the regexp.
@@ -83,15 +84,15 @@ namespace golang::regexp::syntax
     // there is not an opportunity to change the representation to allow
     // partial sharing between different character classes.
     // So the limit is the best we can do.
-    const int maxRunes = (128 << 20) / runeSize;
+    inline constexpr int64_t maxRunes = (128 << 20) / runeSize;
 }
 #include "golang/regexp/syntax/regexp.fwd.h"
 
 namespace golang::regexp::syntax
 {
-    const syntax::Flags MatchNL = ClassNL | DotNL;
-    const syntax::Flags Perl = ClassNL | OneLine | PerlX | UnicodeGroups;
+    inline constexpr syntax::Flags MatchNL = ClassNL | DotNL;
+    inline constexpr syntax::Flags Perl = ClassNL | OneLine | PerlX | UnicodeGroups;
     // Pseudo-ops for parsing stack.
-    const syntax::Op opLeftParen = opPseudo + 0;
-    const syntax::Op opVerticalBar = opPseudo + 1;
+    inline constexpr syntax::Op opLeftParen = opPseudo + 0;
+    inline constexpr syntax::Op opVerticalBar = opPseudo + 1;
 }

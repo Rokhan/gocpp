@@ -97,7 +97,7 @@ namespace golang::internal::lazyregexp
         return rec::FindStringSubmatch(gocpp::recv(rec::re(gocpp::recv(r))), s);
     }
 
-    gocpp::slice<int> rec::FindStringSubmatchIndex(Regexp* r, gocpp::string s)
+    gocpp::slice<int64_t> rec::FindStringSubmatchIndex(Regexp* r, gocpp::string s)
     {
         return rec::FindStringSubmatchIndex(gocpp::recv(rec::re(gocpp::recv(r))), s);
     }
@@ -117,7 +117,7 @@ namespace golang::internal::lazyregexp
         return rec::FindString(gocpp::recv(rec::re(gocpp::recv(r))), s);
     }
 
-    gocpp::slice<gocpp::string> rec::FindAllString(Regexp* r, gocpp::string s, int n)
+    gocpp::slice<gocpp::string> rec::FindAllString(Regexp* r, gocpp::string s, int64_t n)
     {
         return rec::FindAllString(gocpp::recv(rec::re(gocpp::recv(r))), s, n);
     }

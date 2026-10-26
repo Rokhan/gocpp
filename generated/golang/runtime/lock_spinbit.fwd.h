@@ -6,17 +6,17 @@
 
 namespace golang::runtime
 {
-    const long active_spin = 4;
-    const long active_spin_cnt = 30;
-    const long mutexLocked = 0x001;
-    const long mutexSleeping = 0x002;
-    const long mutexSpinning = 0x100;
-    const long mutexStackLocked = 0x200;
-    const long mutexMMask = 0x3FF;
-    const long mutexActiveSpinCount = 4;
-    const long mutexActiveSpinSize = 30;
-    const long mutexPassiveSpinCount = 1;
-    const long mutexTailWakePeriod = 16;
+    inline constexpr long active_spin = 4;
+    inline constexpr long active_spin_cnt = 30;
+    inline constexpr long mutexLocked = 0x001;
+    inline constexpr long mutexSleeping = 0x002;
+    inline constexpr long mutexSpinning = 0x100;
+    inline constexpr long mutexStackLocked = 0x200;
+    inline constexpr long mutexMMask = 0x3FF;
+    inline constexpr long mutexActiveSpinCount = 4;
+    inline constexpr long mutexActiveSpinSize = 30;
+    inline constexpr long mutexPassiveSpinCount = 1;
+    inline constexpr long mutexTailWakePeriod = 16;
     // mutexMLocksDelta is the change in gp.m.locks for each lock/unlock of a
     // mutex. The gp.m.locks field is shared with acquirem/releasem, and with
     // other code that needs to disable preemption, which changes its value by
@@ -24,7 +24,7 @@ namespace golang::runtime
     // the M is releasing its last mutex (so it can safely acquire another
     // mutex, for profiling), even if the M has preemption disabled for other
     // reasons.
-    const long mutexMLocksDelta = 16;
+    inline constexpr long mutexMLocksDelta = 16;
     struct mWaitList;
 }
 #include "golang/internal/runtime/gc/malloc.fwd.h"
@@ -32,5 +32,5 @@ namespace golang::runtime
 namespace golang::runtime
 {
     namespace gc = golang::internal::runtime::gc;
-    const int mutexMOffset = gc::MallocHeaderSize;
+    inline constexpr int64_t mutexMOffset = gc::MallocHeaderSize;
 }

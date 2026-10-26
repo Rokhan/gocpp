@@ -170,7 +170,7 @@ namespace golang::internal::buildcfg
             auto names = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, std::function<void (bool _1)>>>());
             auto rv = rec::Elem(gocpp::recv(reflect::ValueOf(& flags->Flags)));
             auto rt = rec::Type(gocpp::recv(rv));
-            for(auto i = 0; i < rec::NumField(gocpp::recv(rt)); i++)
+            for(int64_t i = 0; i < rec::NumField(gocpp::recv(rt)); i++)
             {
                 auto field = rec::Field(gocpp::recv(rv), i);
                 names.ref(strings::ToLower(rec::Field(gocpp::recv(rt), i).Name)) = [&](auto x){ return reflect::rec::SetBool(field, x); };
@@ -201,7 +201,7 @@ namespace golang::internal::buildcfg
                     flags->Flags = goexperiment::Flags {};
                     continue;
                 }
-                auto val = true;
+                bool val = true;
                 if(strings::HasPrefix(f, "no"_s))
                 {
                     std::tie(f, val) = std::tuple{f.make_slice(2), false};
@@ -255,11 +255,11 @@ namespace golang::internal::buildcfg
             rBase = rec::Elem(gocpp::recv(reflect::ValueOf(base)));
         }
         auto rt = rec::Type(gocpp::recv(rv));
-        for(auto i = 0; i < rec::NumField(gocpp::recv(rt)); i++)
+        for(int64_t i = 0; i < rec::NumField(gocpp::recv(rt)); i++)
         {
             auto name = strings::ToLower(rec::Field(gocpp::recv(rt), i).Name);
             auto val = rec::Bool(gocpp::recv(rec::Field(gocpp::recv(rv), i)));
-            auto baseVal = false;
+            bool baseVal = false;
             if(base != nullptr)
             {
                 baseVal = rec::Bool(gocpp::recv(rec::Field(gocpp::recv(rBase), i)));

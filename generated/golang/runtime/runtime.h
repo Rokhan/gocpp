@@ -16,9 +16,9 @@ namespace golang::runtime
     extern gocpp::slice<gocpp::string> envs;
     extern gocpp::slice<gocpp::string> argslice;
     gocpp::slice<gocpp::string> syscall_runtime_envs();
-    int syscall_Getpagesize();
+    int64_t syscall_Getpagesize();
     gocpp::slice<gocpp::string> os_runtime_args();
-    void syscall_Exit(int code);
+    void syscall_Exit(int64_t code);
     extern gocpp::string godebugDefault;
     void godebug_setUpdate(std::function<void (gocpp::string _1, gocpp::string _2)> update);
     void godebug_setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault);

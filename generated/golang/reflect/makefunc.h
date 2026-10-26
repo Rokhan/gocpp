@@ -75,7 +75,7 @@ namespace golang::reflect
     struct methodValue
     {
         makeFuncCtxt makeFuncCtxt{};
-        int method{};
+        int64_t method{};
         /* golang::reflect::Value rcvr; [Known incomplete type] */
 
         using isGoStruct = void;

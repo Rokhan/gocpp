@@ -110,7 +110,7 @@ namespace golang::runtime
             return;
         }
         argslice = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), argc);
-        for(auto i = int32_t(0); i < argc; i++)
+        for(int32_t i = int32_t(0); i < argc; i++)
         {
             argslice[i] = gostringnocopy(argv_index(argv, i));
         }
@@ -121,14 +121,14 @@ namespace golang::runtime
         // TODO(austin): ppc64 in dynamic linking mode doesn't
         // guarantee env[] will immediately follow argv. Might cause
         // problems.
-        auto n = int32_t(0);
+        int32_t n = int32_t(0);
         for(; argv_index(argv, argc + 1 + n) != nullptr; )
         {
             n++;
         }
 
         envs = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), n);
-        for(auto i = int32_t(0); i < n; i++)
+        for(int32_t i = int32_t(0); i < n; i++)
         {
             envs[i] = gostring(argv_index(argv, argc + 1 + i));
         }
@@ -1004,7 +1004,7 @@ namespace golang::runtime
                     }
                 default:
                     t = tracebackAll;
-                    if(auto [n, err] = strconv::Atoi(level); err == nullptr && n == int(uint32_t(n)))
+                    if(auto [n, err] = strconv::Atoi(level); err == nullptr && n == int64_t(uint32_t(n)))
                     {
                         t |= uint32_t(n) << tracebackShift;
                     }

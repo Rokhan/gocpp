@@ -75,7 +75,7 @@ namespace golang::cmp
     bool Less(T x, T y);
 
     template<typename T>
-    int Compare(T x, T y);
+    int64_t Compare(T x, T y);
 
     template<typename T>
     bool isNaN(T x);

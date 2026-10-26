@@ -318,7 +318,7 @@ namespace golang::reflect
         // doesn't escape this function.
         auto mptr = abi::NoEscape(rec::pointer(gocpp::recv(v)));
         auto m = (maps::Map*)(mptr);
-        auto mlen = int(0);
+        int64_t mlen = int64_t(0);
         if(m != nullptr)
         {
             mlen = maplen(mptr);
@@ -326,7 +326,7 @@ namespace golang::reflect
         maps::Iter it = {};
         mapIterStart(tt, m, & it);
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<golang::reflect::Value>>(), mlen);
-        int i = {};
+        int64_t i = {};
         for(i = 0; i < len(a); i++)
         {
             auto key = rec::Key(gocpp::recv(it));

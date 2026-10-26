@@ -7,11 +7,14 @@
 namespace golang::runtime
 {
     struct profBuf;
-    using profAtomic = uint64_t;
-    using profIndex = uint64_t;
-    using profBufReadMode = int;
-    const profIndex profReaderSleeping = 1 << 32;
-    const profIndex profWriteExtra = 1 << 33;
-    const profBufReadMode profBufBlocking = 0;
-    const profBufReadMode profBufNonBlocking = 1;
+    struct GoTag_profAtomic;
+    using profAtomic = gocpp::defined<uint64_t, GoTag_profAtomic>;
+    struct GoTag_profIndex;
+    using profIndex = gocpp::defined<uint64_t, GoTag_profIndex>;
+    struct GoTag_profBufReadMode;
+    using profBufReadMode = gocpp::defined<int64_t, GoTag_profBufReadMode>;
+    inline constexpr profIndex profReaderSleeping = 1LL << 32;
+    inline constexpr profIndex profWriteExtra = 1LL << 33;
+    inline constexpr profBufReadMode profBufBlocking = 0;
+    inline constexpr profBufReadMode profBufNonBlocking = 1;
 }

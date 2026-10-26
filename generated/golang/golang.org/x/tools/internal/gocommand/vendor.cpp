@@ -234,7 +234,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
             return {nullptr, mocklib::Errorf("unexpected stdout: %q"_s, rec::String(gocpp::recv(go_stdout)))};
         }
         auto mods = gocpp::make(gocpp::Tag<gocpp::slice<ModuleJSON*>>(), 0, len(lines) / 4);
-        for(auto i = 0; i < len(lines); i += 4)
+        for(int64_t i = 0; i < len(lines); i += 4)
         {
             mods = append(mods, gocpp::InitPtr<ModuleJSON>([=](auto& x) {
                 x.Path = lines[i];

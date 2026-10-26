@@ -173,7 +173,7 @@ namespace golang::go::types
                     // The first type parameter couldn't be inferred.
                     // If none of them could be inferred, don't try
                     // to provide the inferred type in the error msg.
-                    auto allFailed = true;
+                    bool allFailed = true;
                     for(auto [gocpp_ignored, targ] : targs)
                     {
                         if(targ != nullptr)
@@ -213,7 +213,7 @@ namespace golang::go::types
             };
 
             // indices of generic parameters with untyped arguments, for later use
-            gocpp::slice<int> untyped = {};
+            gocpp::slice<int64_t> untyped = {};
 
             // --- 1 ---
             // use information from function arguments
@@ -290,7 +290,7 @@ namespace golang::go::types
             // here could handle the respective type parameters only,
             // but that will come at a cost of extra complexity which
             // may not be worth it.)
-            for(auto i = 0; ; i++)
+            for(int64_t i = 0; ; i++)
             {
                 auto nn = rec::unknowns(gocpp::recv(u));
                 if(traceInference)
@@ -506,7 +506,7 @@ namespace golang::go::types
             // dirty tracks the indices of all types that may still contain type parameters.
             // We know that nil type entries and entries corresponding to provided (non-nil)
             // type arguments are clean, so exclude them from the start.
-            gocpp::slice<int> dirty = {};
+            gocpp::slice<int64_t> dirty = {};
             for(auto [i, typ] : inferred)
             {
                 if(typ != nullptr && (i >= len(targs) || targs[i] == nullptr))
@@ -525,7 +525,7 @@ namespace golang::go::types
                 // provide an update operation for substMaps and only change when
                 // needed. Optimization.
                 auto smap = makeSubstMap(tparams, inferred);
-                auto n = 0;
+                int64_t n = 0;
                 for(auto [gocpp_ignored, index] : dirty)
                 {
                     auto t0 = inferred[index];
@@ -910,7 +910,7 @@ namespace golang::go::types
     // term has a tilde. In all other cases coreTerm returns (nil, false).
     std::tuple<golang::go::types::term*, bool> coreTerm(TypeParam* tpar)
     {
-        auto n = 0;
+        int64_t n = 0;
         // valid if n == 1
         golang::go::types::term* single = {};
         bool tilde = {};

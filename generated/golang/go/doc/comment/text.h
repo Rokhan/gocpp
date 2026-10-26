@@ -12,7 +12,7 @@
 
 namespace golang::go::doc::comment
 {
-    gocpp::slice<int> wrap(gocpp::slice<gocpp::string> words, int max);
+    gocpp::slice<int64_t> wrap(gocpp::slice<gocpp::string> words, int64_t max);
     int64_t wrapPenalty(gocpp::string s);
 }
 #include "golang/bytes/buffer.fwd.h"
@@ -36,7 +36,7 @@ namespace golang::go::doc::comment
         strings::Builder long{};
         gocpp::string prefix{};
         gocpp::string codePrefix{};
-        int width{};
+        int64_t width{};
 
         using isGoStruct = void;
 
@@ -63,8 +63,8 @@ namespace golang::go::doc::comment
         gocpp::string docLinkURL(const gocpp::ObjRecv<struct textPrinter>& self, comment::DocLink* link);
         gocpp::string headingID(const gocpp::PtrRecv<struct textPrinter, false>& self, comment::Heading* h);
         gocpp::string headingID(const gocpp::ObjRecv<struct textPrinter>& self, comment::Heading* h);
-        int headingLevel(const gocpp::PtrRecv<struct textPrinter, false>& self);
-        int headingLevel(const gocpp::ObjRecv<struct textPrinter>& self);
+        int64_t headingLevel(const gocpp::PtrRecv<struct textPrinter, false>& self);
+        int64_t headingLevel(const gocpp::ObjRecv<struct textPrinter>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct textPrinter& value);

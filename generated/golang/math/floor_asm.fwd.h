@@ -6,7 +6,7 @@
 
 namespace golang::math
 {
-    const bool haveArchFloor = true;
-    const bool haveArchCeil = true;
-    const bool haveArchTrunc = true;
+    inline constexpr bool haveArchFloor = true;
+    inline constexpr bool haveArchCeil = true;
+    inline constexpr bool haveArchTrunc = true;
 }

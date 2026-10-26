@@ -78,7 +78,7 @@ namespace golang::compress::flate
     // init initializes dictDecoder to have a sliding window dictionary of the given
     // size. If a preset dict is provided, it will initialize the dictionary with
     // the contents of dict.
-    void rec::init(dictDecoder* dd, int size, gocpp::slice<unsigned char> dict)
+    void rec::init(dictDecoder* dd, int64_t size, gocpp::slice<unsigned char> dict)
     {
         *dd = gocpp::Init<dictDecoder>([=](auto& x) {
             x.hist = dd->hist;
@@ -104,7 +104,7 @@ namespace golang::compress::flate
     }
 
     // histSize reports the total amount of historical data in the dictionary.
-    int rec::histSize(dictDecoder* dd)
+    int64_t rec::histSize(dictDecoder* dd)
     {
         if(dd->full)
         {
@@ -114,13 +114,13 @@ namespace golang::compress::flate
     }
 
     // availRead reports the number of bytes that can be flushed by readFlush.
-    int rec::availRead(dictDecoder* dd)
+    int64_t rec::availRead(dictDecoder* dd)
     {
         return dd->wrPos - dd->rdPos;
     }
 
     // availWrite reports the available amount of output buffer space.
-    int rec::availWrite(dictDecoder* dd)
+    int64_t rec::availWrite(dictDecoder* dd)
     {
         return len(dd->hist) - dd->wrPos;
     }
@@ -136,7 +136,7 @@ namespace golang::compress::flate
     // writeMark advances the writer pointer by cnt.
     //
     // This invariant must be kept: 0 <= cnt <= availWrite()
-    void rec::writeMark(dictDecoder* dd, int cnt)
+    void rec::writeMark(dictDecoder* dd, int64_t cnt)
     {
         dd->wrPos += cnt;
     }
@@ -155,7 +155,7 @@ namespace golang::compress::flate
     // length if the available space in the output buffer is too small.
     //
     // This invariant must be kept: 0 < dist <= histSize()
-    int rec::writeCopy(dictDecoder* dd, int dist, int length)
+    int64_t rec::writeCopy(dictDecoder* dd, int64_t dist, int64_t length)
     {
         auto dstBase = dd->wrPos;
         auto dstPos = dstBase;
@@ -201,7 +201,7 @@ namespace golang::compress::flate
     // This method is designed to be inlined for performance reasons.
     //
     // This invariant must be kept: 0 < dist <= histSize()
-    int rec::tryWriteCopy(dictDecoder* dd, int dist, int length)
+    int64_t rec::tryWriteCopy(dictDecoder* dd, int64_t dist, int64_t length)
     {
         auto dstPos = dd->wrPos;
         auto endPos = dstPos + length;

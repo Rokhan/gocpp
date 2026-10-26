@@ -12,9 +12,9 @@
 
 namespace golang::internal::sync
 {
-    void runtime_SemacquireMutex(uint32_t* s, bool lifo, int skipframes);
-    void runtime_Semrelease(uint32_t* s, bool handoff, int skipframes);
-    bool runtime_canSpin(int i);
+    void runtime_SemacquireMutex(uint32_t* s, bool lifo, int64_t skipframes);
+    void runtime_Semrelease(uint32_t* s, bool handoff, int64_t skipframes);
+    bool runtime_canSpin(int64_t i);
     void runtime_doSpin();
     int64_t runtime_nanotime();
     void go_throw(gocpp::string);

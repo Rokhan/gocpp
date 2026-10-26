@@ -193,14 +193,14 @@ namespace golang::compress::zlib
         return {z, nullptr};
     }
 
-    std::tuple<int, gocpp::error> rec::Read(reader* z, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Read(reader* z, gocpp::slice<unsigned char> p)
     {
         if(z->err != nullptr)
         {
             return {0, z->err};
         }
 
-        int n = {};
+        int64_t n = {};
         std::tie(n, z->err) = rec::Read(gocpp::recv(z->decompressor), p);
         rec::Write(gocpp::recv(z->digest), p.make_slice(0, n));
         if(z->err != io::go_EOF)

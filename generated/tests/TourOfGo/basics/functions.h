@@ -12,9 +12,9 @@
 
 namespace golang::main
 {
-    int add(int x, int y);
-    gocpp::map<int, int> returnMap(int x, int y);
-    gocpp::go_any returnAny(int x, int y);
+    int64_t add(int64_t x, int64_t y);
+    gocpp::map<int64_t, int64_t> returnMap(int64_t x, int64_t y);
+    gocpp::go_any returnAny(int64_t x, int64_t y);
     void main();
 
     namespace rec

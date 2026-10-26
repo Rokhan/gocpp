@@ -8,29 +8,30 @@ namespace golang::encoding::json::jsontext
 {
     // Per RFC 8259, section 9, implementations may enforce a maximum depth.
     // Such a limit is necessary to prevent stack overflows.
-    const long maxNestingDepth = 10000;
+    inline constexpr long maxNestingDepth = 10000;
     struct state;
     using Pointer = gocpp::string;
     struct stateMachine;
-    using stateEntry = uint64_t;
+    struct GoTag_stateEntry;
+    using stateEntry = gocpp::defined<uint64_t, GoTag_stateEntry>;
     struct objectNameStack;
     struct GoTag_objectNamespaceStack;
     struct objectNamespace;
     // The type mask (1 bit) records whether this is a JSON object or array.
-    const stateEntry stateTypeMask = 0x8000000000000000;
-    const stateEntry stateTypeObject = 0x8000000000000000;
-    const stateEntry stateTypeArray = 0x0000000000000000;
+    inline constexpr stateEntry stateTypeMask = 0x8000000000000000;
+    inline constexpr stateEntry stateTypeObject = 0x8000000000000000;
+    inline constexpr stateEntry stateTypeArray = 0x0000000000000000;
     // The name check mask (2 bits) records whether to update
     // the namespaces for the current JSON object and
     // whether the namespace is valid.
-    const stateEntry stateNamespaceMask = 0x6000000000000000;
-    const stateEntry stateDisableNamespace = 0x4000000000000000;
-    const stateEntry stateInvalidNamespace = 0x2000000000000000;
+    inline constexpr stateEntry stateNamespaceMask = 0x6000000000000000LL;
+    inline constexpr stateEntry stateDisableNamespace = 0x4000000000000000LL;
+    inline constexpr stateEntry stateInvalidNamespace = 0x2000000000000000LL;
     // The count mask (61 bits) records the number of elements.
-    const stateEntry stateCountMask = 0x1fffffffffffffff;
-    const stateEntry stateCountLSBMask = 0x0000000000000001;
-    const stateEntry stateCountOdd = 0x0000000000000001;
-    const stateEntry stateCountEven = 0x0000000000000000;
+    inline constexpr stateEntry stateCountMask = 0x1fffffffffffffffLL;
+    inline constexpr stateEntry stateCountLSBMask = 0x0000000000000001;
+    inline constexpr stateEntry stateCountOdd = 0x0000000000000001;
+    inline constexpr stateEntry stateCountEven = 0x0000000000000000;
     using objectNamespaceStack = gocpp::defined<gocpp::slice<objectNamespace>, GoTag_objectNamespaceStack>;
 }
 #include "golang/math/const.fwd.h"
@@ -39,5 +40,5 @@ namespace golang::encoding::json::jsontext
 {
     namespace math = golang::math;
     // invalidOffset indicates that the last JSON object currently has no name.
-    const int invalidOffset = math::MinInt;
+    inline constexpr int64_t invalidOffset = math::MinInt;
 }

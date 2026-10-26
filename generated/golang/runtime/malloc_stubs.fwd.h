@@ -12,11 +12,11 @@ namespace golang::runtime
     // zero because we divide by it in nextFreeFastTiny, and the compiler would
     // complain about a division by zero. Its replaced value will always be greater
     // than zero.
-    const long elemsize_ = 8;
-    const long sizeclass_ = 0;
-    const long noscanint_ = 0;
-    const bool isNoScan_ = false;
-    const long size_ = 0;
-    const bool isTiny_ = false;
-    const bool isSlowPath_ = false;
+    inline constexpr long elemsize_ = 8;
+    inline constexpr long sizeclass_ = 0;
+    inline constexpr long noscanint_ = 0;
+    inline constexpr bool isNoScan_ = false;
+    inline constexpr long size_ = 0;
+    inline constexpr bool isTiny_ = false;
+    inline constexpr bool isSlowPath_ = false;
 }

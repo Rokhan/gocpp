@@ -25,8 +25,8 @@ namespace golang::main
     template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep)
     {
-        auto hash = uint32_t(0);
-        for(auto i = 0; i < len(sep); i++)
+        uint32_t hash = uint32_t(0);
+        for(int64_t i = 0; i < len(sep); i++)
         {
             hash = hash * PrimeRK + uint32_t(sep[i]);
         }
@@ -133,7 +133,7 @@ namespace golang::main
     }
 
     template<typename T>
-    int UnusedGenericParameter()
+    int64_t UnusedGenericParameter()
     {
         return 3;
     }
@@ -147,7 +147,7 @@ namespace golang::main
 
     // from slices/slices.go
     template<template<typename> class  S, typename E>
-    S<E> Grow(S<E> s, int n)
+    S<E> Grow(S<E> s, int64_t n)
     {
         if(n < 0)
         {
@@ -246,20 +246,20 @@ namespace golang::main
         auto o2 = Or(0, 1, 2, 2, 3, 0, 0);
         mocklib::Printf("o1: %v, o2:%v\n"_s, o1, o2);
 
-        mocklib::Printf("Zero: %v\n"_s, Zero<int>());
+        mocklib::Printf("Zero: %v\n"_s, Zero<int64_t>());
 
         mocklib::Printf("Unused: %v\n"_s, UnusedGenericParameter<double>());
-        mocklib::Printf("OneOrDefault: %v\n"_s, OneOrDefault(gocpp::map<int, gocpp::string> {{ 1, "toto"_s }}));
+        mocklib::Printf("OneOrDefault: %v\n"_s, OneOrDefault(gocpp::map<int64_t, gocpp::string> {{ 1, "toto"_s }}));
 
-        auto w1 = gocpp::Init<Wrapper<int>>([=](auto& x) {
+        auto w1 = gocpp::Init<Wrapper<int64_t>>([=](auto& x) {
             x.value = 42;
         });
         auto w2 = gocpp::Init<Wrapper<gocpp::string>>([=](auto& x) {
             x.value = "hello"_s;
         });
-        mocklib::Printf("Wrapper: %v, %v\n"_s, rec::Get<int>(gocpp::recv(w1)), rec::Get<gocpp::string>(gocpp::recv(w2)));
+        mocklib::Printf("Wrapper: %v, %v\n"_s, rec::Get<int64_t>(gocpp::recv(w1)), rec::Get<gocpp::string>(gocpp::recv(w2)));
 
-        auto s1 = gocpp::slice<int> {1, 2, 3};
+        auto s1 = gocpp::slice<int64_t> {1, 2, 3};
         auto s2 = Grow(s1, 10);
         mocklib::Printf("Grow: %v, %v\n"_s, s1, s2);
     }
@@ -319,54 +319,54 @@ namespace golang::main
     //  1. Real indexing — NOT generic at all. Exercises the "else" branch
     //     (%s[%s]) for its intended purpose. tv.IsType() should be false,
     //     IsFunc should be false.
-    int RealIndexing(gocpp::slice<int> arr, int i)
+    int64_t RealIndexing(gocpp::slice<int64_t> arr, int64_t i)
     {
         return arr[i];
     }
 
     //  2. Generic function instantiation, used as a value (not called).
     //     IsFunc(n.X) && IsFunc(n) == true -> "%s<%s>" via the existing branch.
-    std::function<int (int _1)> FuncInstantiationAsValue()
+    std::function<int64_t (int64_t _1)> FuncInstantiationAsValue()
     {
-        auto f = Identity<int>;
+        auto f = Identity<int64_t>;
         return f;
     }
 
     //  3. Generic function instantiation, called directly.
     //     Same IsFunc branch, but n is the Fun of a CallExpr.
-    int FuncInstantiationCalled()
+    int64_t FuncInstantiationCalled()
     {
-        return Identity<int>(42);
+        return Identity<int64_t>(42);
     }
 
     //  4. Generic TYPE instantiation used as an explicit conversion.
     //     tv.IsType() == true, IsFunc == false -> this is the case that was
     //     previously falling into the wrong "%s[%s]" branch.
-    Boxed<int> TypeInstantiationConverted(int x)
+    Boxed<int64_t> TypeInstantiationConverted(int64_t x)
     {
-        return Boxed<int>(x);
+        return Boxed<int64_t>(x);
     }
 
     // 5. Generic function instantiation with 2 type params, used as a value.
-    std::function<std::tuple<int, gocpp::string> (int _1, gocpp::string _2)> FuncInstantiationAsValue2()
+    std::function<std::tuple<int64_t, gocpp::string> (int64_t _1, gocpp::string _2)> FuncInstantiationAsValue2()
     {
-        auto f = MakePair<int, gocpp::string>;
+        auto f = MakePair<int64_t, gocpp::string>;
         return f;
     }
 
     // 6. Generic function instantiation with 2 type params, called directly.
-    std::tuple<int, gocpp::string> FuncInstantiationCalled2()
+    std::tuple<int64_t, gocpp::string> FuncInstantiationCalled2()
     {
-        return MakePair<int, gocpp::string>(1, "a"_s);
+        return MakePair<int64_t, gocpp::string>(1, "a"_s);
     }
 
     //  7. Generic TYPE instantiation with 2 type params, as an explicit
     //     conversion. This is the IndexListExpr analog of case 4 — the one
     //     IsFunc(n.X) && IsFunc(n) would miss entirely (falls to default in
     //     CallExpr, then wrongly emitted "%s[%s]" before the fix).
-    BoxedPair<int, gocpp::string> TypeInstantiationConverted2(int x)
+    BoxedPair<int64_t, gocpp::string> TypeInstantiationConverted2(int64_t x)
     {
-        return BoxedPair<int, gocpp::string>(x);
+        return BoxedPair<int64_t, gocpp::string>(x);
     }
 
     //  8. Generic type with 2 type params used as a receiver — exercises the
@@ -380,9 +380,9 @@ namespace golang::main
 
     //  9. Composite literal with 2 type params — exercises convertTypeExpr's
     //     IndexListExpr case directly (type position, not expression position).
-    Pair<int, gocpp::string> NewPair()
+    Pair<int64_t, gocpp::string> NewPair()
     {
-        return gocpp::Init<Pair<int, gocpp::string>>([=](auto& x) {
+        return gocpp::Init<Pair<int64_t, gocpp::string>>([=](auto& x) {
             x.Key = 1;
             x.Val = "a"_s;
         });

@@ -455,7 +455,7 @@ namespace golang::runtime
 
         // idealFraction is the ideal % of overall application CPU time that we
         // spend scavenging.
-        auto idealFraction = double(scavengePercent) / 100.0;
+        double idealFraction = double(scavengePercent) / 100.0;
 
         // Calculate the CPU time spent.
         // This may be slightly inaccurate with respect to GOMAXPROCS, but we're
@@ -579,7 +579,7 @@ namespace golang::runtime
     // The background scavenger maintains the RSS of the application below
     // the line described by the proportional scavenging statistics in
     // the mheap struct.
-    void bgscavenge(gocpp::channel<int> c)
+    void bgscavenge(gocpp::channel<int64_t> c)
     {
         rec::init(gocpp::recv(scavenger));
 
@@ -610,7 +610,7 @@ namespace golang::runtime
     // only fail to do so if the heap is exhausted for now.
     uintptr_t rec::scavenge(pageAlloc* p, uintptr_t nbytes, std::function<bool ()> shouldStop, bool force)
     {
-        auto released = uintptr_t(0);
+        uintptr_t released = uintptr_t(0);
         for(; released < nbytes; )
         {
             auto [ci, pageIdx] = rec::find(gocpp::recv(p->scav.index), force);
@@ -670,7 +670,7 @@ namespace golang::runtime
     // Must run on the systemstack because it acquires p.mheapLock.
     //
     //go:systemstack
-    uintptr_t rec::scavengeOne(pageAlloc* p, chunkIdx ci, unsigned int searchIdx, uintptr_t max)
+    uintptr_t rec::scavengeOne(pageAlloc* p, chunkIdx ci, uint64_t searchIdx, uintptr_t max)
     {
         // Calculate the maximum number of pages to scavenge.
         // This should be alignUp(max, pageSize) / pageSize but max can and will
@@ -694,7 +694,7 @@ namespace golang::runtime
         }
 
         runtime::lock(p->mheapLock);
-        if(rec::max(gocpp::recv(p->summary[len(p->summary) - 1][ci])) >= (unsigned int)(minPages))
+        if(rec::max(gocpp::recv(p->summary[len(p->summary) - 1][ci])) >= (uint64_t)(minPages))
         {
             // We only bother looking for a candidate if there at least
             // minPages free pages at all.
@@ -766,7 +766,7 @@ namespace golang::runtime
     // Note that if m == 1, this is a no-op.
     //
     // m must be a power of 2 <= maxPagesPerPhysPage.
-    uint64_t fillAligned(uint64_t x, unsigned int m)
+    uint64_t fillAligned(uint64_t x, uint64_t m)
     {
         auto apply = [=](uint64_t x, uint64_t c) mutable -> uint64_t
         {
@@ -861,7 +861,7 @@ namespace golang::runtime
     // will round up). That is, even if max is small, the returned size is not guaranteed
     // to be equal to max. max is allowed to be less than min, in which case it is as if
     // max == min.
-    std::tuple<unsigned int, unsigned int> rec::findScavengeCandidate(pallocData* m, unsigned int searchIdx, uintptr_t minimum, uintptr_t max)
+    std::tuple<uint64_t, uint64_t> rec::findScavengeCandidate(pallocData* m, uint64_t searchIdx, uintptr_t minimum, uintptr_t max)
     {
         if(minimum & (minimum - 1) != 0 || minimum == 0)
         {
@@ -888,12 +888,12 @@ namespace golang::runtime
             max = alignUp(max, minimum);
         }
 
-        auto i = int(searchIdx / 64);
+        auto i = int64_t(searchIdx / 64);
         // Start by quickly skipping over blocks of non-free or scavenged pages.
         for(; i >= 0; i--)
         {
             // 1s are scavenged OR non-free => 0s are unscavenged AND free
-            auto x = fillAligned(m->scavenged[i] | m->pallocBits[i], (unsigned int)(minimum));
+            auto x = fillAligned(m->scavenged[i] | m->pallocBits[i], (uint64_t)(minimum));
             if(x != ~ uint64_t(0))
             {
                 break;
@@ -910,14 +910,14 @@ namespace golang::runtime
 
 
         // 1s are scavenged OR non-free => 0s are unscavenged AND free
-        auto x = fillAligned(m->scavenged[i] | m->pallocBits[i], (unsigned int)(minimum));
-        auto z1 = (unsigned int)(sys::LeadingZeros64(~ x));
-        auto [run, end] = std::tuple{(unsigned int)(0), (unsigned int)(i) * 64 + (64 - z1)};
+        auto x = fillAligned(m->scavenged[i] | m->pallocBits[i], (uint64_t)(minimum));
+        auto z1 = (uint64_t)(sys::LeadingZeros64(~ x));
+        auto [run, end] = std::tuple{(uint64_t)(0), (uint64_t)(i) * 64 + (64 - z1)};
         if((x << z1) != 0)
         {
             // After shifting out z1 bits, we still have 1s,
             // so the run ends inside this word.
-            run = (unsigned int)(sys::LeadingZeros64(x << z1));
+            run = (uint64_t)(sys::LeadingZeros64(x << z1));
         }
         else
         {
@@ -927,8 +927,8 @@ namespace golang::runtime
             run = 64 - z1;
             for(auto j = i - 1; j >= 0; j--)
             {
-                auto x = fillAligned(m->scavenged[j] | m->pallocBits[j], (unsigned int)(minimum));
-                run += (unsigned int)(sys::LeadingZeros64(x));
+                auto x = fillAligned(m->scavenged[j] | m->pallocBits[j], (uint64_t)(minimum));
+                run += (uint64_t)(sys::LeadingZeros64(x));
                 if(x != 0)
                 {
                     // The run stopped in this word.
@@ -939,7 +939,7 @@ namespace golang::runtime
 
         // Split the run we found if it's larger than max but hold on to
         // our original length, since we may need it later.
-        auto size = gocpp::min(run, (unsigned int)(max));
+        auto size = gocpp::min(run, (uint64_t)(max));
         auto start = end - size;
 
         // Each huge page is guaranteed to fit in a single palloc chunk.
@@ -954,14 +954,14 @@ namespace golang::runtime
             // to include that huge page.
             // Compute the huge page boundary above our candidate.
             auto pagesPerHugePage = physHugePageSize / pageSize;
-            auto hugePageAbove = (unsigned int)(alignUp(uintptr_t(start), pagesPerHugePage));
+            auto hugePageAbove = (uint64_t)(alignUp(uintptr_t(start), pagesPerHugePage));
 
             // If that boundary is within our current candidate, then we may be breaking
             // a huge page.
             if(hugePageAbove <= end)
             {
                 // Compute the huge page boundary below our candidate.
-                auto hugePageBelow = (unsigned int)(alignDown(uintptr_t(start), pagesPerHugePage));
+                auto hugePageBelow = (uint64_t)(alignDown(uintptr_t(start), pagesPerHugePage));
 
                 if(hugePageBelow >= end - run)
                 {
@@ -1061,7 +1061,7 @@ namespace golang::runtime
 
     // find returns the highest chunk index that may contain pages available to scavenge.
     // It also returns an offset to start searching in the highest chunk.
-    std::tuple<chunkIdx, unsigned int> rec::find(scavengeIndex* s, bool force)
+    std::tuple<chunkIdx, uint64_t> rec::find(scavengeIndex* s, bool force)
     {
         auto cursor = & s->searchAddrBg;
         if(force)
@@ -1124,7 +1124,7 @@ namespace golang::runtime
     // eagerly collapsing).
     //
     // alloc may only run concurrently with find.
-    void rec::alloc(scavengeIndex* s, chunkIdx ci, unsigned int npages)
+    void rec::alloc(scavengeIndex* s, chunkIdx ci, uint64_t npages)
     {
         auto sc = rec::load(gocpp::recv(s->chunks[ci]));
         rec::alloc(gocpp::recv(sc), npages, s->gen);
@@ -1140,7 +1140,7 @@ namespace golang::runtime
     // a free of npages occurred.
     //
     // free may only run concurrently with find.
-    void rec::free(scavengeIndex* s, chunkIdx ci, unsigned int page, unsigned int npages)
+    void rec::free(scavengeIndex* s, chunkIdx ci, uint64_t page, uint64_t npages)
     {
         auto sc = rec::load(gocpp::recv(s->chunks[ci]));
         rec::free(gocpp::recv(sc), npages, s->gen);
@@ -1362,9 +1362,9 @@ namespace golang::runtime
     }
 
     // alloc updates sc given that npages were allocated in the corresponding chunk.
-    void rec::alloc(scavChunkData* sc, unsigned int npages, uint32_t newGen)
+    void rec::alloc(scavChunkData* sc, uint64_t npages, uint32_t newGen)
     {
-        if((unsigned int)(sc->inUse) + npages > pallocChunkPages)
+        if((uint64_t)(sc->inUse) + npages > pallocChunkPages)
         {
             print("runtime: inUse="_s, sc->inUse, " npages="_s, npages, "\n"_s);
             go_throw("too many pages allocated in chunk?"_s);
@@ -1383,9 +1383,9 @@ namespace golang::runtime
     }
 
     // free updates sc given that npages was freed in the corresponding chunk.
-    void rec::free(scavChunkData* sc, unsigned int npages, uint32_t newGen)
+    void rec::free(scavChunkData* sc, uint64_t npages, uint32_t newGen)
     {
-        if((unsigned int)(sc->inUse) < npages)
+        if((uint64_t)(sc->inUse) < npages)
         {
             print("runtime: inUse="_s, sc->inUse, " npages="_s, npages, "\n"_s);
             go_throw("allocated pages below zero?"_s);

@@ -209,8 +209,8 @@ namespace golang::runtime
         // Create data array.
         auto sl = gocpp::Init<notInHeapSlice>([=](auto& x) {
             x.array = rec::alloc(gocpp::recv(tab->mem), size);
-            x.len = int(size);
-            x.cap = int(size);
+            x.len = int64_t(size);
+            x.cap = int64_t(size);
         });
         memmove(gocpp::unsafe_pointer(sl.array), data, size);
 

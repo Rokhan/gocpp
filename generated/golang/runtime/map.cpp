@@ -49,11 +49,11 @@ namespace golang::runtime
     gocpp::error maps_errNilAssign = plainError("assignment to entry in nil map"_s);
     maps::Map* makemap64(abi::MapType* t, int64_t hint, maps::Map* m)
     {
-        if(int64_t(int(hint)) != hint)
+        if(int64_t(int64_t(hint)) != hint)
         {
             hint = 0;
         }
-        return makemap(t, int(hint), m);
+        return makemap(t, int64_t(hint), m);
     }
 
     // makemap_small implements Go map creation for make(map[k]v) and
@@ -89,7 +89,7 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname makemap
-    maps::Map* makemap(abi::MapType* t, int hint, maps::Map* m)
+    maps::Map* makemap(abi::MapType* t, int64_t hint, maps::Map* m)
     {
         if(hint < 0)
         {
@@ -248,7 +248,7 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname reflect_makemap reflect.makemap
-    maps::Map* reflect_makemap(abi::MapType* t, int cap)
+    maps::Map* reflect_makemap(abi::MapType* t, int64_t cap)
     {
         // Check invariants and reflects math.
         // TODO: other checks
@@ -339,7 +339,7 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname reflect_maplen reflect.maplen
-    int reflect_maplen(maps::Map* m)
+    int64_t reflect_maplen(maps::Map* m)
     {
         if(m == nullptr)
         {
@@ -350,7 +350,7 @@ namespace golang::runtime
             auto callerpc = sys::GetCallerPC();
             racereadpc(gocpp::unsafe_pointer(m), callerpc, abi::FuncPCABIInternal(reflect_maplen));
         }
-        return int(rec::Used(gocpp::recv(m)));
+        return int64_t(rec::Used(gocpp::recv(m)));
     }
 
     //go:linkname reflect_mapclear reflect.mapclear
@@ -360,7 +360,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflectlite_maplen internal/reflectlite.maplen
-    int reflectlite_maplen(maps::Map* m)
+    int64_t reflectlite_maplen(maps::Map* m)
     {
         if(m == nullptr)
         {
@@ -371,7 +371,7 @@ namespace golang::runtime
             auto callerpc = sys::GetCallerPC();
             racereadpc(gocpp::unsafe_pointer(m), callerpc, abi::FuncPCABIInternal(reflect_maplen));
         }
-        return int(rec::Used(gocpp::recv(m)));
+        return int64_t(rec::Used(gocpp::recv(m)));
     }
 
     // mapinitnoop is a no-op function known the Go linker; if a given global

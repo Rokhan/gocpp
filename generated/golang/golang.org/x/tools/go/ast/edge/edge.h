@@ -9,6 +9,12 @@
 #include "golang/golang.org/x/tools/go/ast/edge/edge.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::golang_org::x::tools::go::ast::edge
+{
+    struct GoTag_Kind { };
+    using Kind = gocpp::defined<uint8_t, GoTag_Kind>;
+}
 #include "golang/reflect/type.fwd.h"
 #include "golang/reflect/value.fwd.h"
 #include "golang/reflect/type.h"
@@ -20,7 +26,7 @@ namespace golang::golang_org::x::tools::go::ast::edge
     {
         reflect::Type nodeType{}; // pointer-to-struct type of ast.Node implementation
         gocpp::string name{};
-        int index{};
+        int64_t index{};
         reflect::Type fieldType{};
 
         using isGoStruct = void;
@@ -54,7 +60,7 @@ namespace golang::golang_org::x::tools::go::ast::edge
         reflect::Type NodeType(Kind k);
         gocpp::string FieldName(Kind k);
         reflect::Type FieldType(Kind k);
-        ast::Node Get(Kind k, ast::Node n, int idx);
+        ast::Node Get(Kind k, ast::Node n, int64_t idx);
     }
 }
 

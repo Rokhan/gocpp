@@ -15,6 +15,8 @@ namespace golang::go::types
     void defPredeclaredTypes();
     void defPredeclaredConsts();
     void defPredeclaredNil();
+    struct GoTag_builtinId { };
+    using builtinId = gocpp::defined<int64_t, GoTag_builtinId>;
     void defPredeclaredFuncs();
     void DefPredeclaredTestFuncs();
     void init();

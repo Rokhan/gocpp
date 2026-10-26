@@ -57,7 +57,7 @@ namespace golang::go::types
         auto inaccessible = 4;
 
         // determine case
-        auto e = missing;
+        int64_t e = missing;
         // alternative spelling of selector; if any
         gocpp::string alt = {};
         if(obj != nullptr)
@@ -126,7 +126,7 @@ namespace golang::go::types
         }
         else
         {
-            auto what = "object"_s;
+            gocpp::string what = "object"_s;
             //Go type switch emulation
             {
                 const auto& gocpp_id_0 = gocpp::type_info(obj);

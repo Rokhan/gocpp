@@ -9,5 +9,5 @@ namespace golang::encoding::json::jsontext
     struct Decoder;
     struct decoderState;
     struct decodeBuffer;
-    const char invalidateBufferByte = '#';
+    inline constexpr char invalidateBufferByte = '#';
 }

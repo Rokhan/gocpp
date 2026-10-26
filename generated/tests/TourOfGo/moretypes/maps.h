@@ -35,7 +35,7 @@ namespace golang::main
     struct Registry
     {
         gocpp::string name{};
-        gocpp::map<gocpp::string, int> items{};
+        gocpp::map<gocpp::string, int64_t> items{};
 
         using isGoStruct = void;
 
@@ -51,7 +51,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Registry& value);
     void testNil();
     void testNotNil();
-    void fill(gocpp::map<gocpp::string, int> m);
+    void fill(gocpp::map<gocpp::string, int64_t> m);
     void testAliasing();
     void removeChild(gocpp::map<gocpp::string, gocpp::empty_struct> children, gocpp::string key);
     void testNamedAndEmptyStruct();

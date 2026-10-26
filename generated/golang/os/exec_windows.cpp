@@ -163,7 +163,7 @@ namespace golang::os
         syscall::CloseHandle(syscall::Handle(ph->handle));
     }
 
-    std::tuple<Process*, gocpp::error> findProcess(int pid)
+    std::tuple<Process*, gocpp::error> findProcess(int64_t pid)
     {
         Process* p;
         gocpp::error err;
@@ -192,7 +192,7 @@ namespace golang::os
     }
 
     // appendBSBytes appends n '\\' bytes to b and returns the resulting slice.
-    gocpp::slice<unsigned char> appendBSBytes(gocpp::slice<unsigned char> b, int n)
+    gocpp::slice<unsigned char> appendBSBytes(gocpp::slice<unsigned char> b, int64_t n)
     {
         for(; n > 0; n--)
         {
@@ -209,7 +209,7 @@ namespace golang::os
         gocpp::string rest;
         gocpp::slice<unsigned char> b = {};
         bool inquote = {};
-        int nslash = {};
+        int64_t nslash = {};
         for(; len(cmd) > 0; cmd = cmd.make_slice(1))
         {
             auto c = cmd[0];

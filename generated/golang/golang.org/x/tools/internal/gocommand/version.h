@@ -25,7 +25,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
 
 namespace golang::golang_org::x::tools::internal::gocommand
 {
-    std::tuple<int, gocpp::error> GoVersion(context::Context ctx, Invocation inv, Runner* r);
+    std::tuple<int64_t, gocpp::error> GoVersion(context::Context ctx, Invocation inv, Runner* r);
     std::tuple<gocpp::string, gocpp::error> GoVersionOutput(context::Context ctx, Invocation inv, Runner* r);
 
     namespace rec

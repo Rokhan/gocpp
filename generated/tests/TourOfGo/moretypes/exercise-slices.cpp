@@ -20,14 +20,14 @@ namespace golang::main
     {
     }
 
-    gocpp::slice<gocpp::slice<uint8_t>> Pic(int dx, int dy)
+    gocpp::slice<gocpp::slice<uint8_t>> Pic(int64_t dx, int64_t dy)
     {
         auto result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<uint8_t>>>(), dx);
 
-        for(auto i = 0; i < dx; i++)
+        for(int64_t i = 0; i < dx; i++)
         {
             result[i] = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), dy);
-            for(auto j = 0; j < dy; j++)
+            for(int64_t j = 0; j < dy; j++)
             {
                 result[i][j] = uint8_t((i / 2 + j / 2) * (i / 2 - j / 2));
             }

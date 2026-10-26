@@ -12,7 +12,7 @@
 
 namespace golang::os
 {
-    int Getpagesize();
+    int64_t Getpagesize();
     bool SameFile(FileInfo fi1, FileInfo fi2);
 }
 #include "golang/os/file_windows.fwd.h"

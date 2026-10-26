@@ -135,7 +135,7 @@ namespace golang::fmt
     }
 
     // writePadding generates n bytes of padding.
-    void rec::writePadding(golang::fmt::fmt* f, int n)
+    void rec::writePadding(golang::fmt::fmt* f, int64_t n)
     {
         if(n <= 0)
         {
@@ -152,7 +152,7 @@ namespace golang::fmt
             copy(buf, *f->buf);
         }
         // Decide which byte the padding should be filled with.
-        auto padByte = (unsigned char)(' ');
+        unsigned char padByte = (unsigned char)(' ');
         // Zero padding is allowed only to the left.
         if(f->fmtFlags.zero && ! f->fmtFlags.minus)
         {
@@ -234,7 +234,7 @@ namespace golang::fmt
         // With default precision set the maximum needed buf length is 18
         // for formatting -1 with %#U ("U+FFFFFFFFFFFFFFFF") which fits
         // into the already allocated intbuf with a capacity of 68 bytes.
-        auto prec = 4;
+        int64_t prec = 4;
         if(f->fmtFlags.precPresent && f->prec > 4)
         {
             prec = f->prec;
@@ -292,7 +292,7 @@ namespace golang::fmt
     }
 
     // fmtInteger formats signed and unsigned integers.
-    void rec::fmtInteger(golang::fmt::fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, gocpp::string digits)
+    void rec::fmtInteger(golang::fmt::fmt* f, uint64_t u, int64_t base, bool isSigned, gocpp::rune verb, gocpp::string digits)
     {
         auto negative = isSigned && int64_t(u) < 0;
         if(negative)
@@ -318,7 +318,7 @@ namespace golang::fmt
         // Two ways to ask for extra leading zero digits: %.3d or %03d.
         // If both are specified the f.zero flag is ignored and
         // padding with spaces is used instead.
-        auto prec = 0;
+        int64_t prec = 0;
         if(f->fmtFlags.precPresent)
         {
             prec = f->prec;
@@ -500,7 +500,7 @@ namespace golang::fmt
         if(f->fmtFlags.precPresent)
         {
             auto n = f->prec;
-            for(auto i = 0; i < len(b); )
+            for(int64_t i = 0; i < len(b); )
             {
                 n--;
                 if(n < 0)
@@ -585,7 +585,7 @@ namespace golang::fmt
             buf = append(buf, '0', digits[16]);
         }
         unsigned char c = {};
-        for(auto i = 0; i < length; i++)
+        for(int64_t i = 0; i < length; i++)
         {
             if(f->fmtFlags.space && i > 0)
             {
@@ -689,7 +689,7 @@ namespace golang::fmt
 
     // fmtFloat formats a float64. It assumes that verb is a valid format specifier
     // for strconv.AppendFloat and therefore fits into a byte.
-    void rec::fmtFloat(golang::fmt::fmt* f, double v, int size, gocpp::rune verb, int prec)
+    void rec::fmtFloat(golang::fmt::fmt* f, double v, int64_t size, gocpp::rune verb, int64_t prec)
     {
         // Explicit precision in format specifier overrules default precision.
         if(f->fmtFlags.precPresent)
@@ -731,7 +731,7 @@ namespace golang::fmt
         // and retains trailing zeros, which we may need to restore.
         if(f->fmtFlags.sharp && verb != 'b')
         {
-            auto digits = 0;
+            int64_t digits = 0;
             //Go switch emulation
             {
                 auto condition = verb;
@@ -761,10 +761,10 @@ namespace golang::fmt
             gocpp::array<unsigned char, 6> tailBuf = {};
             auto tail = tailBuf.make_slice(0, 0);
 
-            auto hasDecimalPoint = false;
-            auto sawNonzeroDigit = false;
+            bool hasDecimalPoint = false;
+            bool sawNonzeroDigit = false;
             // Starting from i = 1 to skip sign at num[0].
-            for(auto i = 1; i < len(num); i++)
+            for(int64_t i = 1; i < len(num); i++)
             {
                 //Go switch emulation
                 {

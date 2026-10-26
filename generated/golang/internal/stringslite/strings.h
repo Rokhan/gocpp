@@ -14,8 +14,8 @@ namespace golang::internal::stringslite
 {
     bool HasPrefix(gocpp::string s, gocpp::string prefix);
     bool HasSuffix(gocpp::string s, gocpp::string suffix);
-    int IndexByte(gocpp::string s, unsigned char c);
-    int Index(gocpp::string s, gocpp::string substr);
+    int64_t IndexByte(gocpp::string s, unsigned char c);
+    int64_t Index(gocpp::string s, gocpp::string substr);
     std::tuple<gocpp::string, gocpp::string, bool> Cut(gocpp::string s, gocpp::string sep);
     std::tuple<gocpp::string, bool> CutPrefix(gocpp::string s, gocpp::string prefix);
     std::tuple<gocpp::string, bool> CutSuffix(gocpp::string s, gocpp::string suffix);

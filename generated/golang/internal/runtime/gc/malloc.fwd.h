@@ -10,14 +10,14 @@ namespace golang::internal::runtime::gc
     // we need to use 8 here to ensure 8-byte alignment of allocations
     // on 32-bit platforms. It's wasteful, but a lot of code relies on
     // 8-byte alignment for 8-byte atomics.
-    const long MallocHeaderSize = 8;
+    inline constexpr long MallocHeaderSize = 8;
 }
 #include "golang/internal/runtime/gc/sizeclasses.fwd.h"
 
 namespace golang::internal::runtime::gc
 {
     // PageSize is the increment in which spans are managed.
-    const int PageSize = 1 << PageShift;
+    inline constexpr int64_t PageSize = 1 << PageShift;
 }
 #include "golang/internal/goarch/goarch.fwd.h"
 
@@ -25,7 +25,7 @@ namespace golang::internal::runtime::gc
 {
     namespace goarch = golang::internal::goarch;
     // PageWords is the number of pointer-words per page.
-    const int PageWords = PageSize / goarch::PtrSize;
+    inline constexpr int64_t PageWords = PageSize / goarch::PtrSize;
     // The minimum object size that has a malloc header, exclusive.
     //
     // The size of this value controls overheads from the malloc header.
@@ -54,5 +54,5 @@ namespace golang::internal::runtime::gc
     // would not be invariant to size-class rounding. Eschewing this property means a
     // more complex check or possibly storing additional state to determine whether a
     // span has malloc headers.
-    const int MinSizeForMallocHeader = goarch::PtrSize * goarch::PtrBits;
+    inline constexpr int64_t MinSizeForMallocHeader = goarch::PtrSize * goarch::PtrBits;
 }

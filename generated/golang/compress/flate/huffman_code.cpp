@@ -96,10 +96,10 @@ namespace golang::compress::flate
     }
 
     // newHuffmanEncoder returns a new huffmanEncoder with the given size.
-    huffmanEncoder* newHuffmanEncoder(int size)
+    huffmanEncoder* newHuffmanEncoder(int64_t size)
     {
         // Make capacity to next power of two.
-        auto c = (unsigned int)(bits::Len32(uint32_t(size - 1)));
+        auto c = (uint64_t)(bits::Len32(uint32_t(size - 1)));
         return gocpp::InitPtr<huffmanEncoder>([=](auto& x) {
             x.codes = gocpp::make(gocpp::Tag<gocpp::slice<hcode>>(), size, 1 << c);
         });
@@ -252,14 +252,14 @@ namespace golang::compress::flate
     std::function<flate::huffmanEncoder* (void)> fixedLiteralEncoding = sync::OnceValue(generateFixedLiteralEncoding);
     std::function<flate::huffmanEncoder* (void)> fixedOffsetEncoding = sync::OnceValue(generateFixedOffsetEncoding);
     // bitLength returns the number of bits needed to encode freq.
-    int rec::bitLength(huffmanEncoder* h, gocpp::slice<uint16_t> freq)
+    int64_t rec::bitLength(huffmanEncoder* h, gocpp::slice<uint16_t> freq)
     {
-        int total = {};
+        int64_t total = {};
         for(auto [i, f] : freq)
         {
             if(f != 0)
             {
-                total += int(f) * int(rec::len(gocpp::recv(h->codes[i])));
+                total += int64_t(f) * int64_t(rec::len(gocpp::recv(h->codes[i])));
             }
         }
         return total;
@@ -267,21 +267,21 @@ namespace golang::compress::flate
 
     // bitLengthRaw will return the number of bits needed to encode b.
     // For unset codes 1 bit/entry will be added.
-    int rec::bitLengthRaw(huffmanEncoder* h, gocpp::slice<unsigned char> b)
+    int64_t rec::bitLengthRaw(huffmanEncoder* h, gocpp::slice<unsigned char> b)
     {
-        int total = {};
+        int64_t total = {};
         for(auto [gocpp_ignored, f] : b)
         {
-            total += gocpp::max(1, int(rec::len(gocpp::recv(h->codes[f]))));
+            total += gocpp::max(1, int64_t(rec::len(gocpp::recv(h->codes[f]))));
         }
         return total;
     }
 
     // canEncodeLen returns the number of bits to encode freq.
     // It returns math.MaxInt32 if freq cannot be encoded.
-    int rec::canEncodeLen(huffmanEncoder* h, gocpp::slice<uint16_t> freq)
+    int64_t rec::canEncodeLen(huffmanEncoder* h, gocpp::slice<uint16_t> freq)
     {
-        int total = {};
+        int64_t total = {};
         for(auto [i, f] : freq)
         {
             if(f != 0)
@@ -291,7 +291,7 @@ namespace golang::compress::flate
                 {
                     return math::MaxInt32;
                 }
-                total += int(f) * int(rec::len(gocpp::recv(code)));
+                total += int64_t(f) * int64_t(rec::len(gocpp::recv(code)));
             }
         }
         return total;
@@ -340,7 +340,7 @@ namespace golang::compress::flate
 
         // check bounds here instead of in loop
         _ = list[2];
-        for(auto level = int32_t(1); level <= maxBits; level++)
+        for(int32_t level = int32_t(1); level <= maxBits; level++)
         {
             // For every level, the first two items are the first two characters.
             // We initialize the levels as if we had already figured this out.
@@ -439,7 +439,7 @@ namespace golang::compress::flate
         }
 
         auto bitCount = h->bitCount.make_slice(0, maxBits + 1);
-        auto bits = 1;
+        int64_t bits = 1;
         auto counts = gocpp::make_array_ptr(leafCounts[maxBits]);
         for(auto level = maxBits; level > 0; level--)
         {
@@ -455,7 +455,7 @@ namespace golang::compress::flate
     // as specified in RFC 1951 3.2.2.
     void rec::assignEncodingAndSize(huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list)
     {
-        auto code = uint16_t(0);
+        uint16_t code = uint16_t(0);
         for(auto [n, bits] : bitCount)
         {
             code <<= 1;
@@ -467,18 +467,18 @@ namespace golang::compress::flate
             // are encoded using "bits" bits, and get the values
             // code, code + 1, ....  The code values are
             // assigned in literal order (not frequency order).
-            auto chunk = list.make_slice(len(list) - int(bits));
+            auto chunk = list.make_slice(len(list) - int64_t(bits));
 
-            slices::SortFunc(chunk, [=](literalNode a, literalNode b) mutable -> int
+            slices::SortFunc(chunk, [=](literalNode a, literalNode b) mutable -> int64_t
             {
-                return int(a.literal) - int(b.literal);
+                return int64_t(a.literal) - int64_t(b.literal);
             });
             for(auto [gocpp_ignored, node] : chunk)
             {
                 h->codes[node.literal] = newhcode(reverseBits(code, uint8_t(n)), uint8_t(n));
                 code++;
             }
-            list = list.make_slice(0, len(list) - int(bits));
+            list = list.make_slice(0, len(list) - int64_t(bits));
         }
     }
 
@@ -490,7 +490,7 @@ namespace golang::compress::flate
         auto list = h->freqcache.make_slice(0, len(freq) + 1);
         auto codes = h->codes.make_slice(0, len(freq));
         // Number of non-zero literals
-        auto count = 0;
+        int64_t count = 0;
         // Set list to be the set of all non-zero literals and their frequencies
         for(auto [i, f] : freq)
         {
@@ -518,10 +518,10 @@ namespace golang::compress::flate
             }
             return;
         }
-        slices::SortFunc(list, [=](literalNode a, literalNode b) mutable -> int
+        slices::SortFunc(list, [=](literalNode a, literalNode b) mutable -> int64_t
         {
             // Literals can be contained in 9 bits, so we shift freq to be branchless.
-            return ((int(a.freq) << 10) + int(a.literal)) - ((int(b.freq) << 10) + int(b.literal));
+            return ((int64_t(a.freq) << 10) + int64_t(a.literal)) - ((int64_t(b.freq) << 10) + int64_t(b.literal));
         });
 
         // Get the number of literals for each bit count

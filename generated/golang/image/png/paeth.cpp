@@ -17,7 +17,7 @@ namespace golang::image::png
     {
     }
 
-    int abs(int x)
+    int64_t abs(int64_t x)
     {
         // m := -1 if x < 0. m := 0 otherwise.
         auto m = x >> (intSize - 1);
@@ -40,9 +40,9 @@ namespace golang::image::png
         // but the optimized form uses fewer arithmetic operations:
         // pa := int(b) - int(c)
         // pa = abs(pa)
-        auto pc = int(c);
-        auto pa = int(b) - pc;
-        auto pb = int(a) - pc;
+        auto pc = int64_t(c);
+        auto pa = int64_t(b) - pc;
+        auto pb = int64_t(a) - pc;
         pc = abs(pa + pb);
         pa = abs(pa);
         pb = abs(pb);
@@ -60,20 +60,20 @@ namespace golang::image::png
 
     // filterPaeth applies the Paeth filter to the cdat slice.
     // cdat is the current row's data, pdat is the previous row's data.
-    void filterPaeth(gocpp::slice<unsigned char> cdat, gocpp::slice<unsigned char> pdat, int bytesPerPixel)
+    void filterPaeth(gocpp::slice<unsigned char> cdat, gocpp::slice<unsigned char> pdat, int64_t bytesPerPixel)
     {
-        int a = {};
-        int b = {};
-        int c = {};
-        int pa = {};
-        int pb = {};
-        int pc = {};
-        for(auto i = 0; i < bytesPerPixel; i++)
+        int64_t a = {};
+        int64_t b = {};
+        int64_t c = {};
+        int64_t pa = {};
+        int64_t pb = {};
+        int64_t pc = {};
+        for(int64_t i = 0; i < bytesPerPixel; i++)
         {
             std::tie(a, c) = std::tuple{0, 0};
             for(auto j = i; j < len(cdat); j += bytesPerPixel)
             {
-                b = int(pdat[j]);
+                b = int64_t(pdat[j]);
                 pa = b - c;
                 pb = a - c;
                 pc = abs(pa + pb);
@@ -92,7 +92,7 @@ namespace golang::image::png
                 {
                     a = c;
                 }
-                a += int(cdat[j]);
+                a += int64_t(cdat[j]);
                 a &= 0xff;
                 cdat[j] = uint8_t(a);
                 c = b;

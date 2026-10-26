@@ -101,7 +101,7 @@ namespace golang::runtime
     // arena_arena_Slice is a wrapper around (*userArena).slice.
     //
     //go:linkname arena_arena_Slice arena.runtime_arena_arena_Slice
-    void arena_arena_Slice(gocpp::unsafe_pointer arena, go_any slice, int cap)
+    void arena_arena_Slice(gocpp::unsafe_pointer arena, go_any slice, int64_t cap)
     {
         rec::slice(gocpp::recv(((userArena*)(arena))), slice, cap);
     }
@@ -305,7 +305,7 @@ namespace golang::runtime
     //
     // This operation is not safe to call concurrently with other operations on the
     // same arena.
-    void rec::slice(userArena* a, go_any sl, int cap)
+    void rec::slice(userArena* a, go_any sl, int64_t cap)
     {
         if(cap < 0)
         {
@@ -393,7 +393,7 @@ namespace golang::runtime
     // in a new chunk. If cap is negative, the type will be taken literally, otherwise
     // it will be considered as an element type for a slice backing store with capacity
     // cap.
-    gocpp::unsafe_pointer rec::alloc(userArena* a, _type* typ, int cap)
+    gocpp::unsafe_pointer rec::alloc(userArena* a, _type* typ, int64_t cap)
     {
         auto s = a->active;
         gocpp::unsafe_pointer x = {};
@@ -508,12 +508,12 @@ namespace golang::runtime
             return rec::base(gocpp::recv(self.obj.mspan));
         }
 
-        int countAlloc(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
+        int64_t countAlloc(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self)
         {
             return rec::countAlloc(gocpp::recv(self.ptr->mspan));
         }
 
-        int countAlloc(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
+        int64_t countAlloc(const gocpp::ObjRecv<struct liveUserArenaChunk>& self)
         {
             return rec::countAlloc(gocpp::recv(self.obj.mspan));
         }
@@ -848,12 +848,12 @@ namespace golang::runtime
             return rec::typePointersOfUnchecked(gocpp::recv(self.obj.mspan), addr);
         }
 
-        unsafe::Pointer userArenaNextFree(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, _type* typ, int cap)
+        unsafe::Pointer userArenaNextFree(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, _type* typ, int64_t cap)
         {
             return rec::userArenaNextFree(gocpp::recv(self.ptr->mspan), typ, cap);
         }
 
-        unsafe::Pointer userArenaNextFree(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, _type* typ, int cap)
+        unsafe::Pointer userArenaNextFree(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, _type* typ, int64_t cap)
         {
             return rec::userArenaNextFree(gocpp::recv(self.obj.mspan), typ, cap);
         }
@@ -923,7 +923,7 @@ namespace golang::runtime
     userArenaStateStruct userArenaState;
     // userArenaNextFree reserves space in the user arena for an item of the specified
     // type. If cap is not -1, this is for an array of cap elements of type t.
-    gocpp::unsafe_pointer rec::userArenaNextFree(mspan* s, _type* typ, int cap)
+    gocpp::unsafe_pointer rec::userArenaNextFree(mspan* s, _type* typ, int64_t cap)
     {
         auto size = typ->Size_;
         if(cap > 0)
@@ -1035,14 +1035,14 @@ namespace golang::runtime
     // userArenaHeapBitsSetSliceType is the equivalent of heapBitsSetType but for
     // Go slice backing store values allocated in a user arena chunk. It sets up the
     // heap bitmap for n consecutive values with type typ allocated at address ptr.
-    void userArenaHeapBitsSetSliceType(_type* typ, int n, gocpp::unsafe_pointer ptr, mspan* s)
+    void userArenaHeapBitsSetSliceType(_type* typ, int64_t n, gocpp::unsafe_pointer ptr, mspan* s)
     {
         auto [mem, overflow] = math::MulUintptr(typ->Size_, uintptr_t(n));
         if(overflow || n < 0 || mem > maxAlloc)
         {
             gocpp::panic(plainError("runtime: allocation size out of range"_s));
         }
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             userArenaHeapBitsSetType(typ, add(ptr, uintptr_t(i) * typ->Size_), s);
         }
@@ -1061,7 +1061,7 @@ namespace golang::runtime
         auto p = getGCMask(typ);
         auto nb = typ->PtrBytes / goarch::PtrSize;
 
-        for(auto i = uintptr_t(0); i < nb; i += ptrBits)
+        for(uintptr_t i = uintptr_t(0); i < nb; i += ptrBits)
         {
             auto k = nb - i;
             if(k > ptrBits)
@@ -1638,7 +1638,7 @@ namespace golang::runtime
                 // heapArenaSize > userArenaChunkSize, or if sysAlloc just returns
                 // some extra as a result of trying to find an aligned region.
                 // Divide it up and put it on the ready list.
-                for(auto i = userArenaChunkBytes; i < size; i += userArenaChunkBytes)
+                for(uintptr_t i = userArenaChunkBytes; i < size; i += userArenaChunkBytes)
                 {
                     auto s = rec::allocMSpanLocked(gocpp::recv(h));
                     rec::init(gocpp::recv(s), uintptr_t(v) + i, userArenaChunkPages);

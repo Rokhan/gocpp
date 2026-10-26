@@ -158,7 +158,7 @@ namespace golang::runtime
         void setMarkedNonAtomic(markBits m);
         void clearMarked(markBits m);
         void advance(markBits* m);
-        int countAlloc(mspan* s);
+        int64_t countAlloc(mspan* s);
     }
 }
 

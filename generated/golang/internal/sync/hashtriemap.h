@@ -154,7 +154,7 @@ namespace golang::internal::sync
         std::tuple<V, bool> LoadOrStore(HashTrieMap<K, V>* ht, K key, V value);
         
         template<typename K, typename V>
-        node<K, V>* expand(HashTrieMap<K, V>* ht, golang::internal::sync::entry<K, V>* oldEntry, golang::internal::sync::entry<K, V>* newEntry, uintptr_t newHash, unsigned int hashShift, golang::internal::sync::indirect<K, V>* parent);
+        node<K, V>* expand(HashTrieMap<K, V>* ht, golang::internal::sync::entry<K, V>* oldEntry, golang::internal::sync::entry<K, V>* newEntry, uintptr_t newHash, uint64_t hashShift, golang::internal::sync::indirect<K, V>* parent);
         
         template<typename K, typename V>
         void Store(HashTrieMap<K, V>* ht, K key, V go_new);
@@ -175,7 +175,7 @@ namespace golang::internal::sync
         bool CompareAndDelete(HashTrieMap<K, V>* ht, K key, V old);
         
         template<typename K, typename V>
-        std::tuple<golang::internal::sync::indirect<K, V>*, unsigned int, atomic::Pointer<node<K, V>>*, node<K, V>*> find(HashTrieMap<K, V>* ht, K key, uintptr_t hash, equalFunc valEqual, V value);
+        std::tuple<golang::internal::sync::indirect<K, V>*, uint64_t, atomic::Pointer<node<K, V>>*, node<K, V>*> find(HashTrieMap<K, V>* ht, K key, uintptr_t hash, equalFunc valEqual, V value);
         
         template<typename K, typename V>
         std::function<void (std::function<bool (K _1, V _2)> yield)> All(HashTrieMap<K, V>* ht);

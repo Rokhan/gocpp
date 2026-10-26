@@ -166,7 +166,7 @@ namespace golang::os
         }
     }
 
-    std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, gocpp::error> rec::readdir(File* file, int n, readdirMode mode)
+    std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, gocpp::error> rec::readdir(File* file, int64_t n, readdirMode mode)
     {
         gocpp::slice<gocpp::string> names;
         gocpp::slice<DirEntry> dirents;
@@ -282,7 +282,7 @@ namespace golang::os
                         nextEntryOffset = info->NextEntryOffset;
                         nameslice = unsafe::Slice(& info->FileName[0], info->FileNameLength / 2);
                     }
-                    d->bufp += int(nextEntryOffset);
+                    d->bufp += int64_t(nextEntryOffset);
                     islast = nextEntryOffset == 0;
                     if(islast)
                     {

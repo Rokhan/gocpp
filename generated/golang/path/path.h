@@ -16,7 +16,7 @@ namespace golang::path
     {
         gocpp::string s{};
         gocpp::slice<unsigned char> buf{};
-        int w{};
+        int64_t w{};
 
         using isGoStruct = void;
 
@@ -52,7 +52,7 @@ namespace golang::path
 
     namespace rec
     {
-        unsigned char index(lazybuf* b, int i);
+        unsigned char index(lazybuf* b, int64_t i);
         void append(lazybuf* b, unsigned char c);
         gocpp::string string(lazybuf* b);
     }

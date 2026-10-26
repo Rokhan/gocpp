@@ -8,10 +8,10 @@ namespace golang::runtime
 {
     // Error codes returned by runtime_pollReset and runtime_pollWait.
     // These must match the values in internal/poll/fd_poll_runtime.go.
-    const long pollNoError = 0;
-    const long pollErrClosing = 1;
-    const long pollErrTimeout = 2;
-    const long pollErrNotPollable = 3;
+    inline constexpr long pollNoError = 0;
+    inline constexpr long pollErrClosing = 1;
+    inline constexpr long pollErrTimeout = 2;
+    inline constexpr long pollErrNotPollable = 3;
     // pollDesc contains 2 binary semaphores, rg and wg, to park reader and writer
     // goroutines respectively. The semaphore can be in the following states:
     //
@@ -25,18 +25,19 @@ namespace golang::runtime
     //	            io notification or timeout/close changes the state to pdReady or pdNil respectively
     //	            and unparks the goroutine.
     //	pdNil - none of the above.
-    const uintptr_t pdNil = 0;
-    const uintptr_t pdReady = 1;
-    const uintptr_t pdWait = 2;
-    const int pollBlockSize = 4 * 1024;
+    inline constexpr uintptr_t pdNil = 0;
+    inline constexpr uintptr_t pdReady = 1;
+    inline constexpr uintptr_t pdWait = 2;
+    inline constexpr int64_t pollBlockSize = 4 * 1024;
     struct pollDesc;
-    using pollInfo = uint32_t;
-    const int pollClosing = 1 << 0;
-    const int pollEventErr = 1 << 1;
-    const int pollExpiredReadDeadline = 1 << 2;
-    const int pollExpiredWriteDeadline = 1 << 3;
-    const int pollFDSeq = 1 << 4;
-    const long pollFDSeqBits = 20;
+    struct GoTag_pollInfo;
+    using pollInfo = gocpp::defined<uint32_t, GoTag_pollInfo>;
+    inline constexpr int64_t pollClosing = 1 << 0;
+    inline constexpr int64_t pollEventErr = 1 << 1;
+    inline constexpr int64_t pollExpiredReadDeadline = 1 << 2;
+    inline constexpr int64_t pollExpiredWriteDeadline = 1 << 3;
+    inline constexpr int64_t pollFDSeq = 1 << 4;
+    inline constexpr long pollFDSeqBits = 20;
     struct pollCache;
-    const int pollFDSeqMask = (1 << pollFDSeqBits) - 1;
+    inline constexpr int64_t pollFDSeqMask = (1 << pollFDSeqBits) - 1;
 }

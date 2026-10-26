@@ -27,8 +27,8 @@ namespace golang::main
             gocpp::panic("error, Sqrt(x) with x<1"_s);
         }
 
-        auto z = 1.0;
-        for(auto i = 0; i < 15; i++)
+        double z = 1.0;
+        for(int64_t i = 0; i < 15; i++)
         {
             // fmt.Printf("z: %v\n", z)
             z -= (z * z - 2) / (2 * x);

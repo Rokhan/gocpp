@@ -29,8 +29,8 @@ namespace golang::os
     {
         gocpp::slice<unsigned char> buf = {};
         // ${} is all ASCII, so bytes are fine for this operation.
-        auto i = 0;
-        for(auto j = 0; j < len(s); j++)
+        int64_t i = 0;
+        for(int64_t j = 0; j < len(s); j++)
         {
             if(s[j] == '$' && j + 1 < len(s))
             {
@@ -135,7 +135,7 @@ namespace golang::os
     // getShellName returns the name that begins the string and the number of bytes
     // consumed to extract it. If the name is enclosed in {}, it's part of a ${}
     // expansion and two more bytes are needed than the length of the name.
-    std::tuple<gocpp::string, int> getShellName(gocpp::string s)
+    std::tuple<gocpp::string, int64_t> getShellName(gocpp::string s)
     {
         //Go switch emulation
         {
@@ -151,7 +151,7 @@ namespace golang::os
                         return {s.make_slice(1, 2), 3};
                     }
                     // Scan to closing brace
-                    for(auto i = 1; i < len(s); i++)
+                    for(int64_t i = 1; i < len(s); i++)
                     {
                         if(s[i] == '}')
                         {
@@ -171,7 +171,7 @@ namespace golang::os
             }
         }
         // Scan alphanumerics.
-        int i = {};
+        int64_t i = {};
         for(i = 0; i < len(s) && isAlphaNum(s[i]); i++)
         {
         }

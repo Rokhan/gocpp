@@ -234,30 +234,14 @@ namespace golang::go::doc::comment
     std::ostream& operator<<(std::ostream& os, const struct parseDoc& value);
     bool isStdPkg(gocpp::string path);
     std::tuple<gocpp::string, bool> DefaultLookupPackage(gocpp::string name);
-    struct span
-    {
-        int start{};
-        int end{};
-        spanKind kind{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct span& value);
+    struct GoTag_spanKind { };
+    using spanKind = gocpp::defined<int64_t, GoTag_spanKind>;
     bool indented(gocpp::string line);
     gocpp::slice<gocpp::string> unindent(gocpp::slice<gocpp::string> lines);
     bool isBlank(gocpp::string s);
     gocpp::string commonPrefix(gocpp::string a, gocpp::string b);
     gocpp::string leadingSpace(gocpp::string s);
-    bool isOldHeading(gocpp::string line, gocpp::slice<gocpp::string> all, int off);
+    bool isOldHeading(gocpp::string line, gocpp::slice<gocpp::string> all, int64_t off);
     bool isHeading(gocpp::string line);
     std::tuple<gocpp::string, gocpp::string, bool> listMarker(gocpp::string line);
     bool isList(gocpp::string line);
@@ -440,8 +424,26 @@ namespace golang::go::doc::comment
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Parser& value);
-    gocpp::slice<span> parseSpans(gocpp::slice<gocpp::string> lines);
+    struct span
+    {
+        int64_t start{};
+        int64_t end{};
+        spanKind kind{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct span& value);
     std::tuple<LinkDef*, bool> parseLink(gocpp::string line);
+    gocpp::slice<span> parseSpans(gocpp::slice<gocpp::string> lines);
 
     namespace rec
     {

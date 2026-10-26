@@ -6,36 +6,39 @@
 
 namespace golang::runtime
 {
-    const long _DebugGC = 0;
+    inline constexpr long _DebugGC = 0;
     // concurrentSweep is a debug flag. Disabling this flag
     // ensures all spans are swept while the world is stopped.
-    const bool concurrentSweep = true;
+    inline constexpr bool concurrentSweep = true;
     // debugScanConservative enables debug logging for stack
     // frames that are scanned conservatively.
-    const bool debugScanConservative = false;
+    inline constexpr bool debugScanConservative = false;
     // sweepMinHeapDistance is a lower bound on the heap distance
     // (in bytes) reserved for concurrent sweeping between GC
     // cycles.
-    const int sweepMinHeapDistance = 1024 * 1024;
+    inline constexpr int64_t sweepMinHeapDistance = 1024 * 1024;
     struct writeBarrierStruct;
-    const int _GCoff = 0;
-    const int _GCmark = 1;
-    const int _GCmarktermination = 2;
-    using gcMarkWorkerMode = int;
+    inline constexpr int64_t _GCoff = 0;
+    inline constexpr int64_t _GCmark = 1;
+    inline constexpr int64_t _GCmarktermination = 2;
+    struct GoTag_gcMarkWorkerMode;
+    using gcMarkWorkerMode = gocpp::defined<int64_t, GoTag_gcMarkWorkerMode>;
     struct workType;
-    using gcMode = int;
+    struct GoTag_gcMode;
+    using gcMode = gocpp::defined<int64_t, GoTag_gcMode>;
     struct gcTrigger;
-    using gcTriggerKind = int;
+    struct GoTag_gcTriggerKind;
+    using gcTriggerKind = gocpp::defined<int64_t, GoTag_gcTriggerKind>;
     struct gcDebugMarkDoneStruct;
     struct gcBgMarkWorkerNode;
     struct gcBgMarkWorkerNodePadded;
     // gcMarkWorkerNotWorker indicates that the next scheduled G is not
     // starting work and the mode should be ignored.
-    const gcMarkWorkerMode gcMarkWorkerNotWorker = 0;
+    inline constexpr gcMarkWorkerMode gcMarkWorkerNotWorker = 0;
     // gcMarkWorkerDedicatedMode indicates that the P of a mark
     // worker is dedicated to running that mark worker. The mark
     // worker should run without preemption.
-    const gcMarkWorkerMode gcMarkWorkerDedicatedMode = 1;
+    inline constexpr gcMarkWorkerMode gcMarkWorkerDedicatedMode = 1;
     // gcMarkWorkerFractionalMode indicates that a P is currently
     // running the "fractional" mark worker. The fractional worker
     // is necessary when GOMAXPROCS*gcBackgroundUtilization is not
@@ -44,31 +47,31 @@ namespace golang::runtime
     // The fractional worker should run until it is preempted and
     // will be scheduled to pick up the fractional part of
     // GOMAXPROCS*gcBackgroundUtilization.
-    const gcMarkWorkerMode gcMarkWorkerFractionalMode = 2;
+    inline constexpr gcMarkWorkerMode gcMarkWorkerFractionalMode = 2;
     // gcMarkWorkerIdleMode indicates that a P is running the mark
     // worker because it has nothing else to do. The idle worker
     // should run until it is preempted and account its time
     // against gcController.idleMarkTime.
-    const gcMarkWorkerMode gcMarkWorkerIdleMode = 3;
-    const gcMode gcBackgroundMode = 0;
-    const gcMode gcForceMode = 1;
-    const gcMode gcForceBlockMode = 2;
+    inline constexpr gcMarkWorkerMode gcMarkWorkerIdleMode = 3;
+    inline constexpr gcMode gcBackgroundMode = 0;
+    inline constexpr gcMode gcForceMode = 1;
+    inline constexpr gcMode gcForceBlockMode = 2;
     // gcTriggerHeap indicates that a cycle should be started when
     // the heap size reaches the trigger heap size computed by the
     // controller.
-    const gcTriggerKind gcTriggerHeap = 0;
+    inline constexpr gcTriggerKind gcTriggerHeap = 0;
     // gcTriggerTime indicates that a cycle should be started when
     // it's been more than forcegcperiod nanoseconds since the
     // previous GC cycle.
-    const gcTriggerKind gcTriggerTime = 1;
+    inline constexpr gcTriggerKind gcTriggerTime = 1;
     // gcTriggerCycle indicates that a cycle should be started if
     // we have not yet started cycle number gcTrigger.n (relative
     // to work.cycles).
-    const gcTriggerKind gcTriggerCycle = 2;
+    inline constexpr gcTriggerKind gcTriggerCycle = 2;
 }
 #include "golang/runtime/asan0.fwd.h"
 
 namespace golang::runtime
 {
-    const int gcBgMarkWorkerNodeRedZoneSize = (16 << 2) * asanenabledBit;
+    inline constexpr int64_t gcBgMarkWorkerNodeRedZoneSize = (16 << 2) * asanenabledBit;
 }

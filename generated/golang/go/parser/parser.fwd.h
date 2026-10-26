@@ -8,13 +8,13 @@ namespace golang::go::parser
 {
     struct parser;
     // maxNestLev is the deepest we're willing to recurse during parsing
-    const int maxNestLev = 1e5;
+    inline constexpr int64_t maxNestLev = 1e5;
     struct bailout;
     struct field;
     // Parsing modes for parseSimpleStmt.
-    const int basic = 0;
-    const int labelOk = 1;
-    const int rangeOk = 2;
+    inline constexpr int64_t basic = 0;
+    inline constexpr int64_t labelOk = 1;
+    inline constexpr int64_t rangeOk = 2;
     struct gocpp_id_7;
 }
 #include "golang/go/ast/ast.fwd.h"
@@ -25,5 +25,5 @@ namespace golang::go::parser
 {
     namespace token = golang::go::token;
     namespace ast = golang::go::ast;
-    using parseSpecFunction = std::function<ast::Spec (ast::CommentGroup* doc, token::Token keyword, int iota)>;
+    using parseSpecFunction = std::function<ast::Spec (ast::CommentGroup* doc, token::Token keyword, int64_t iota)>;
 }

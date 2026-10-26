@@ -7,7 +7,7 @@
 namespace golang::encoding::binary
 {
     // MaxVarintLenN is the maximum length of a varint-encoded N-bit integer.
-    const long MaxVarintLen16 = 3;
-    const long MaxVarintLen32 = 5;
-    const long MaxVarintLen64 = 10;
+    inline constexpr long MaxVarintLen16 = 3;
+    inline constexpr long MaxVarintLen32 = 5;
+    inline constexpr long MaxVarintLen64 = 10;
 }

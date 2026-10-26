@@ -118,7 +118,7 @@ namespace golang::runtime
         auto spanBytes = uintptr_t(gc::SizeClassToNPages[rec::sizeclass(gocpp::recv(c->spanclass))]) * pageSize;
         deductSweepCredit(spanBytes, 0);
 
-        auto traceDone = false;
+        bool traceDone = false;
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
         {
@@ -138,7 +138,7 @@ namespace golang::runtime
         // still has very poor throughput. We could instead keep a
         // running free-to-used budget and switch to fresh span
         // allocation if the budget runs low.
-        auto spanBudget = 100;
+        int64_t spanBudget = 100;
 
         mspan* s = {};
         sweepLocker sl = {};
@@ -235,7 +235,7 @@ namespace golang::runtime
                 traceRelease(trace);
             }
         }
-        auto n = int(s->nelems) - int(s->allocCount);
+        auto n = int64_t(s->nelems) - int64_t(s->allocCount);
         if(n == 0 || s->freeindex == s->nelems || s->allocCount == s->nelems)
         {
             go_throw("span has no free objects"_s);
@@ -296,7 +296,7 @@ namespace golang::runtime
         }
         else
         {
-            if(int(s->nelems) - int(s->allocCount) > 0)
+            if(int64_t(s->nelems) - int64_t(s->allocCount) > 0)
             {
                 // Put it back on the partial swept list.
                 rec::push(gocpp::recv(rec::partialSwept(gocpp::recv(c), sg)), s);

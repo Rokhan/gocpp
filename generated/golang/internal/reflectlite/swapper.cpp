@@ -33,7 +33,7 @@ namespace golang::internal::reflectlite
     // slice.
     //
     // Swapper panics if the provided interface is not a slice.
-    std::function<void (int i, int j)> Swapper(go_any slice)
+    std::function<void (int64_t i, int64_t j)> Swapper(go_any slice)
     {
         auto v = ValueOf(slice);
         if(rec::Kind(gocpp::recv(v)) != Slice)
@@ -53,13 +53,13 @@ namespace golang::internal::reflectlite
             switch(conditionId)
             {
                 case 0:
-                    return [=](int i, int j) mutable -> void
+                    return [=](int64_t i, int64_t j) mutable -> void
                     {
                         gocpp::panic("reflect: slice index out of range"_s);
                     };
                     break;
                 case 1:
-                    return [=](int i, int j) mutable -> void
+                    return [=](int64_t i, int64_t j) mutable -> void
                     {
                         if(i != 0 || j != 0)
                         {
@@ -80,7 +80,7 @@ namespace golang::internal::reflectlite
             if(size == goarch::PtrSize)
             {
                 auto ps = *(gocpp::slice<gocpp::unsafe_pointer>*)(v.ptr);
-                return [=](int i, int j) mutable -> void
+                return [=](int64_t i, int64_t j) mutable -> void
                 {
                     std::tie(ps[i], ps[j]) = std::tuple{ps[j], ps[i]};
                 };
@@ -88,7 +88,7 @@ namespace golang::internal::reflectlite
             if(rec::Kind(gocpp::recv(typ)) == reflectlite::String)
             {
                 auto ss = *(gocpp::slice<gocpp::string>*)(v.ptr);
-                return [=](int i, int j) mutable -> void
+                return [=](int64_t i, int64_t j) mutable -> void
                 {
                     std::tie(ss[i], ss[j]) = std::tuple{ss[j], ss[i]};
                 };
@@ -109,7 +109,7 @@ namespace golang::internal::reflectlite
                     case 0:
                     {
                         auto is = *(gocpp::slice<int64_t>*)(v.ptr);
-                        return [=](int i, int j) mutable -> void
+                        return [=](int64_t i, int64_t j) mutable -> void
                         {
                             std::tie(is[i], is[j]) = std::tuple{is[j], is[i]};
                         };
@@ -118,7 +118,7 @@ namespace golang::internal::reflectlite
                     case 1:
                     {
                         auto is = *(gocpp::slice<int32_t>*)(v.ptr);
-                        return [=](int i, int j) mutable -> void
+                        return [=](int64_t i, int64_t j) mutable -> void
                         {
                             std::tie(is[i], is[j]) = std::tuple{is[j], is[i]};
                         };
@@ -127,7 +127,7 @@ namespace golang::internal::reflectlite
                     case 2:
                     {
                         auto is = *(gocpp::slice<int16_t>*)(v.ptr);
-                        return [=](int i, int j) mutable -> void
+                        return [=](int64_t i, int64_t j) mutable -> void
                         {
                             std::tie(is[i], is[j]) = std::tuple{is[j], is[i]};
                         };
@@ -136,7 +136,7 @@ namespace golang::internal::reflectlite
                     case 3:
                     {
                         auto is = *(gocpp::slice<int8_t>*)(v.ptr);
-                        return [=](int i, int j) mutable -> void
+                        return [=](int64_t i, int64_t j) mutable -> void
                         {
                             std::tie(is[i], is[j]) = std::tuple{is[j], is[i]};
                         };
@@ -150,9 +150,9 @@ namespace golang::internal::reflectlite
         // swap scratch space
         auto tmp = unsafe_New(typ);
 
-        return [=](int i, int j) mutable -> void
+        return [=](int64_t i, int64_t j) mutable -> void
         {
-            if((unsigned int)(i) >= (unsigned int)(s->Len) || (unsigned int)(j) >= (unsigned int)(s->Len))
+            if((uint64_t)(i) >= (uint64_t)(s->Len) || (uint64_t)(j) >= (uint64_t)(s->Len))
             {
                 gocpp::panic("reflect: slice index out of range"_s);
             }

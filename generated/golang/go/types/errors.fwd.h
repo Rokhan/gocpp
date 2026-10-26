@@ -8,8 +8,8 @@ namespace golang::go::types
 {
     struct errorDesc;
     struct error_;
-    const gocpp::string invalidArg = "invalid argument: "_s;
-    const gocpp::string invalidOp = "invalid operation: "_s;
+    inline const gocpp::string invalidArg = "invalid argument: "_s;
+    inline const gocpp::string invalidOp = "invalid operation: "_s;
     struct posSpan;
 }
 #include "golang/go/token/position.fwd.h"

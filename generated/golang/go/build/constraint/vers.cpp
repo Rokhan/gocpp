@@ -57,7 +57,7 @@ namespace golang::go::build::constraint
 
     // minVersion returns the minimum Go major version (9 for go1.9)
     // implied by expression z, or if sign < 0, by expression !z.
-    int minVersion(Expr z, int sign)
+    int64_t minVersion(Expr z, int64_t sign)
     {
         //Go type switch emulation
         {
@@ -137,7 +137,7 @@ namespace golang::go::build::constraint
     // andVersion returns the minimum Go version
     // implied by the AND of two minimum Go versions,
     // which is the max of the versions.
-    int andVersion(int x, int y)
+    int64_t andVersion(int64_t x, int64_t y)
     {
         if(x > y)
         {
@@ -149,7 +149,7 @@ namespace golang::go::build::constraint
     // orVersion returns the minimum Go version
     // implied by the OR of two minimum Go versions,
     // which is the min of the versions.
-    int orVersion(int x, int y)
+    int64_t orVersion(int64_t x, int64_t y)
     {
         if(x < y)
         {

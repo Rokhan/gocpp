@@ -6,7 +6,9 @@
 
 namespace golang::main
 {
-    using MyInt = int;
-    using MyFloat = double;
+    struct GoTag_MyInt;
+    using MyInt = gocpp::defined<int64_t, GoTag_MyInt>;
+    struct GoTag_MyFloat;
+    using MyFloat = gocpp::defined<double, GoTag_MyFloat>;
     struct Vertex;
 }

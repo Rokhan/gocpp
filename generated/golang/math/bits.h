@@ -12,11 +12,11 @@
 
 namespace golang::math
 {
-    double Inf(int sign);
+    double Inf(int64_t sign);
     double NaN();
     bool IsNaN(double f);
-    bool IsInf(double f, int sign);
-    std::tuple<double, int> normalize(double x);
+    bool IsInf(double f, int64_t sign);
+    std::tuple<double, int64_t> normalize(double x);
 
     namespace rec
     {

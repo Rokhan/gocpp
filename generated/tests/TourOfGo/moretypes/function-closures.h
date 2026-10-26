@@ -12,13 +12,13 @@
 
 namespace golang::main
 {
-    std::function<int (int _1)> adder();
+    std::function<int64_t (int64_t _1)> adder();
     struct GoTag_SpecialCase { };
     gocpp::rune ToUpper(gocpp::rune r);
     struct compressor
     {
         std::function<void (gocpp::slice<unsigned char> _1, gocpp::slice<uint32_t> _2)> bulkHasher{};
-        std::function<int (compressor* _1, gocpp::slice<unsigned char> _2)> fill{}; // copy data to window
+        std::function<int64_t (compressor* _1, gocpp::slice<unsigned char> _2)> fill{}; // copy data to window
         std::function<void (compressor* _1)> step{}; // process window
 
         using isGoStruct = void;
@@ -54,10 +54,10 @@ namespace golang::main
     namespace rec
     {
         gocpp::rune ToUpper(SpecialCase special, gocpp::rune r);
-        int fillStore(compressor* d, gocpp::slice<unsigned char> b);
+        int64_t fillStore(compressor* d, gocpp::slice<unsigned char> b);
         void store(compressor* d);
         gocpp::error init(compressor* d);
-        std::tuple<int, gocpp::error> write(compressor* d, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> write(compressor* d, gocpp::slice<unsigned char> b);
     }
 }
 

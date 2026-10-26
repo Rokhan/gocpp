@@ -45,8 +45,8 @@ namespace golang::golang_org::x::tools::go::ast::inspector
 namespace golang::golang_org::x::tools::go::ast::inspector
 {
     namespace ast = golang::go::ast;
-    int32_t packEdgeKindAndIndex(edge::Kind ek, int index);
-    std::tuple<edge::Kind, int> unpackEdgeKindAndIndex(int32_t x);
+    int32_t packEdgeKindAndIndex(edge::Kind ek, int64_t index);
+    std::tuple<edge::Kind, int64_t> unpackEdgeKindAndIndex(int32_t x);
     struct event
     {
         ast::Node node{};
@@ -114,7 +114,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
         void Preorder(golang::golang_org::x::tools::go::ast::inspector::Inspector* in, gocpp::slice<ast::Node> types, std::function<void (ast::Node _1)> f);
         void Nodes(golang::golang_org::x::tools::go::ast::inspector::Inspector* in, gocpp::slice<ast::Node> types, std::function<bool (ast::Node n, bool push)> f);
         void WithStack(golang::golang_org::x::tools::go::ast::inspector::Inspector* in, gocpp::slice<ast::Node> types, std::function<bool (ast::Node n, bool push, gocpp::slice<ast::Node> stack)> f);
-        void push(visitor* v, edge::Kind ek, int eindex, ast::Node node);
+        void push(visitor* v, edge::Kind ek, int64_t eindex, ast::Node node);
         void pop(visitor* v, ast::Node node);
     }
 }

@@ -7,39 +7,39 @@
 namespace golang::math
 {
     // Mathematical constants.
-    const double E = 2.71828182845904523536028747135266249775724709369995957496696763;
-    const double Pi = 3.14159265358979323846264338327950288419716939937510582097494459;
-    const double Phi = 1.61803398874989484820458683436563811772030917980576286213544862;
-    const double Sqrt2 = 1.41421356237309504880168872420969807856967187537694807317667974;
-    const double SqrtE = 1.64872127070012814684865078781416357165377610071014801157507931;
-    const double SqrtPi = 1.77245385090551602729816748334114518279754945612238712821380779;
-    const double SqrtPhi = 1.27201964951406896425242246173749149171560804184009624861664038;
-    const double Ln2 = 0.693147180559945309417232121458176568075500134360255254120680009;
-    const double Ln10 = 2.30258509299404568401799145468436420760110148862877297603332790;
+    inline constexpr double E = 2.71828182845904523536028747135266249775724709369995957496696763;
+    inline constexpr double Pi = 3.14159265358979323846264338327950288419716939937510582097494459;
+    inline constexpr double Phi = 1.61803398874989484820458683436563811772030917980576286213544862;
+    inline constexpr double Sqrt2 = 1.41421356237309504880168872420969807856967187537694807317667974;
+    inline constexpr double SqrtE = 1.64872127070012814684865078781416357165377610071014801157507931;
+    inline constexpr double SqrtPi = 1.77245385090551602729816748334114518279754945612238712821380779;
+    inline constexpr double SqrtPhi = 1.27201964951406896425242246173749149171560804184009624861664038;
+    inline constexpr double Ln2 = 0.693147180559945309417232121458176568075500134360255254120680009;
+    inline constexpr double Ln10 = 2.30258509299404568401799145468436420760110148862877297603332790;
     // Floating-point limit values.
     // Max is the largest finite value representable by the type.
     // SmallestNonzero is the smallest positive, non-zero value representable by the type.
-    const double MaxFloat32 = 0x1p127 * (1 + (1 - 0x1p-23));
-    const double SmallestNonzeroFloat32 = 0x1p-126 * 0x1p-23;
-    const double MaxFloat64 = 0x1p1023 * (1 + (1 - 0x1p-52));
-    const double SmallestNonzeroFloat64 = 0x1p-1022 * 0x1p-52;
+    inline constexpr double MaxFloat32 = 0x1p127 * (1 + (1 - 0x1p-23));
+    inline constexpr double SmallestNonzeroFloat32 = 0x1p-126 * 0x1p-23;
+    inline constexpr double MaxFloat64 = 0x1p1023 * (1 + (1 - 0x1p-52));
+    inline constexpr double SmallestNonzeroFloat64 = 0x1p-1022 * 0x1p-52;
     // Integer limit values.
-    const int intSize = 32 << (~ (unsigned int)(0) >> 63);
-    const int MaxInt8 = (1 << 7) - 1;
-    const int MinInt8 = - 1 << 7;
-    const int MaxInt16 = (1 << 15) - 1;
-    const int MinInt16 = - 1 << 15;
-    const int MaxInt32 = (1 << 31) - 1;
-    const int MinInt32 = - 1 << 31;
-    const int MaxInt64 = (1 << 63) - 1;
-    const int MinInt64 = - 1 << 63;
-    const int MaxUint8 = (1 << 8) - 1;
-    const int MaxUint16 = (1 << 16) - 1;
-    const int MaxUint32 = (1 << 32) - 1;
-    const int MaxUint64 = (1 << 64) - 1;
-    const double Log2E = 1 / Ln2;
-    const double Log10E = 1 / Ln10;
-    const int MaxInt = (1 << (intSize - 1)) - 1;
-    const int MinInt = - 1 << (intSize - 1);
-    const int MaxUint = (1 << intSize) - 1;
+    inline constexpr int64_t intSize = 32 << (~ (uint64_t)(0) >> 63);
+    inline constexpr int64_t MaxInt8 = (1 << 7) - 1;
+    inline constexpr int64_t MinInt8 = - 1 << 7;
+    inline constexpr int64_t MaxInt16 = (1 << 15) - 1;
+    inline constexpr int64_t MinInt16 = - 1 << 15;
+    inline constexpr int64_t MaxInt32 = (1LL << 31) - 1LL;
+    inline constexpr int64_t MinInt32 = - 1 << 31;
+    inline constexpr int64_t MaxInt64 = int64_t((1_bi << 63) - 1_bi);
+    inline constexpr int64_t MinInt64 = - 1LL << 63;
+    inline constexpr int64_t MaxUint8 = (1 << 8) - 1;
+    inline constexpr int64_t MaxUint16 = (1 << 16) - 1;
+    inline constexpr int64_t MaxUint32 = (1LL << 32) - 1LL;
+    inline constexpr uint64_t MaxUint64 = uint64_t((1_bi << 64) - 1_bi);
+    inline constexpr double Log2E = 1 / Ln2;
+    inline constexpr double Log10E = 1 / Ln10;
+    inline constexpr int64_t MaxInt = int64_t((1_bi << (intSize - 1)) - 1_bi);
+    inline constexpr int64_t MinInt = - 1LL << (intSize - 1);
+    inline constexpr uint64_t MaxUint = uint64_t((1_bi << intSize) - 1_bi);
 }

@@ -102,8 +102,8 @@ namespace golang::go::types
     namespace rec
     {
         golang::go::types::Type instance(Checker* check, token::Pos pos, golang::go::types::genericType orig, gocpp::slice<golang::go::types::Type> targs, Named* expanding, Context* ctxt);
-        bool validateTArgLen(Checker* check, token::Pos pos, gocpp::string name, int want, int got);
-        std::tuple<int, gocpp::error> verify(Checker* check, token::Pos pos, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> targs, Context* ctxt);
+        bool validateTArgLen(Checker* check, token::Pos pos, gocpp::string name, int64_t want, int64_t got);
+        std::tuple<int64_t, gocpp::error> verify(Checker* check, token::Pos pos, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> targs, Context* ctxt);
         bool implements(Checker* check, golang::go::types::Type V, golang::go::types::Type T, bool constraint, gocpp::string* cause);
     }
 }

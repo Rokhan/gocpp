@@ -260,7 +260,7 @@ namespace golang::regexp
         }
     }
 
-    std::tuple<input, int> rec::init(inputs* i, io::RuneReader r, gocpp::slice<unsigned char> b, gocpp::string s)
+    std::tuple<input, int64_t> rec::init(inputs* i, io::RuneReader r, gocpp::slice<unsigned char> b, gocpp::string s)
     {
         if(r != nullptr)
         {
@@ -273,7 +273,7 @@ namespace golang::regexp
         return {rec::newString(gocpp::recv(i), s), len(s)};
     }
 
-    void rec::init(machine* m, int ncap)
+    void rec::init(machine* m, int64_t ncap)
     {
         for(auto [gocpp_ignored, t] : m->pool)
         {
@@ -295,7 +295,7 @@ namespace golang::regexp
         else
         {
             t = new thread{};
-            t->cap = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), len(m->matchcap), cap(m->matchcap));
+            t->cap = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), len(m->matchcap), cap(m->matchcap));
         }
         t->inst = i;
         return t;
@@ -373,7 +373,7 @@ namespace golang::regexp
     // match runs the machine over the input starting at pos.
     // It reports whether a match was found.
     // If so, m.matchcap holds the submatch information.
-    bool rec::match(machine* m, input i, int pos)
+    bool rec::match(machine* m, input i, int64_t pos)
     {
         auto startCond = m->re->cond;
         if(startCond == ~ syntax::EmptyOp(0))
@@ -480,10 +480,10 @@ namespace golang::regexp
     // The step processes the rune c (which may be endOfText),
     // which starts at position pos and ends at nextPos.
     // nextCond gives the setting for the empty-width flags after c.
-    void rec::step(machine* m, queue* runq, queue* nextq, int pos, int nextPos, gocpp::rune c, lazyFlag* nextCond)
+    void rec::step(machine* m, queue* runq, queue* nextq, int64_t pos, int64_t nextPos, gocpp::rune c, lazyFlag* nextCond)
     {
         auto longest = m->re->longest;
-        for(auto j = 0; j < len(runq->dense); j++)
+        for(int64_t j = 0; j < len(runq->dense); j++)
         {
             auto d = & runq->dense[j];
             auto t = d->t;
@@ -497,7 +497,7 @@ namespace golang::regexp
                 continue;
             }
             auto i = t->inst;
-            auto add = false;
+            bool add = false;
             //Go switch emulation
             {
                 auto condition = i->Op;
@@ -564,7 +564,7 @@ namespace golang::regexp
     // It also recursively adds an entry for all instructions reachable from pc by following
     // empty-width conditions satisfied by cond.  pos gives the current position
     // in the input.
-    thread* rec::add(machine* m, queue* q, uint32_t pc, int pos, gocpp::slice<int> cap, lazyFlag* cond, thread* t)
+    thread* rec::add(machine* m, queue* q, uint32_t pc, int64_t pos, gocpp::slice<int64_t> cap, lazyFlag* cond, thread* t)
     {
         Again:
         if(pc == 0)
@@ -625,7 +625,7 @@ namespace golang::regexp
                     goto Again;
                     break;
                 case 5:
-                    if(int(i->Arg) < len(cap))
+                    if(int64_t(i->Arg) < len(cap))
                     {
                         auto opos = cap[i->Arg];
                         cap[i->Arg] = pos;
@@ -713,7 +713,7 @@ namespace golang::regexp
     }
 
     // doOnePass implements r.find using the one-pass execution engine.
-    gocpp::slice<int> rec::doOnePass(Regexp* re, io::RuneReader ir, gocpp::slice<unsigned char> ib, gocpp::string is, int pos, int ncap, gocpp::slice<int> dstCap)
+    gocpp::slice<int64_t> rec::doOnePass(Regexp* re, io::RuneReader ir, gocpp::slice<unsigned char> ib, gocpp::string is, int64_t pos, int64_t ncap, gocpp::slice<int64_t> dstCap)
     {
         auto startCond = re->cond;
         if(startCond == ~ syntax::EmptyOp(0))
@@ -725,14 +725,14 @@ namespace golang::regexp
         auto m = newOnePassMachine();
         if(cap(m->matchcap) < ncap)
         {
-            m->matchcap = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), ncap);
+            m->matchcap = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), ncap);
         }
         else
         {
             m->matchcap = m->matchcap.make_slice(0, ncap);
         }
 
-        auto matched = false;
+        bool matched = false;
         for(auto [i, gocpp_ignored] : m->matchcap)
         {
             m->matchcap[i] = - 1;
@@ -771,12 +771,12 @@ namespace golang::regexp
             std::tie(r, width) = rec::step(gocpp::recv(i), pos);
             std::tie(r1, width1) = rec::step(gocpp::recv(i), pos + width);
             flag = rec::context(gocpp::recv(i), pos);
-            pc = int(re->prefixEnd);
+            pc = int64_t(re->prefixEnd);
         }
         for(; ; )
         {
             inst = & re->onepass->Inst[pc];
-            pc = int(inst->Inst.Out);
+            pc = int64_t(inst->Inst.Out);
             //Go switch emulation
             {
                 auto condition = inst->Inst.Op;
@@ -830,7 +830,7 @@ namespace golang::regexp
                     // peek at the input rune to see which branch of the Alt to take
                     case 5:
                     case 6:
-                        pc = int(onePassNext(inst, r));
+                        pc = int64_t(onePassNext(inst, r));
                         continue;
                         break;
                     case 7:
@@ -847,7 +847,7 @@ namespace golang::regexp
                         continue;
                         break;
                     case 10:
-                        if(int(inst->Inst.Arg) < len(m->matchcap))
+                        if(int64_t(inst->Inst.Arg) < len(m->matchcap))
                         {
                             m->matchcap[inst->Inst.Arg] = pos;
                         }
@@ -890,7 +890,7 @@ namespace golang::regexp
     // of its subexpressions to dstCap and returns dstCap.
     //
     // nil is returned if no matches are found and non-nil if matches are found.
-    gocpp::slice<int> rec::find(Regexp* re, io::RuneReader r, gocpp::slice<unsigned char> b, gocpp::string s, int pos, int ncap, gocpp::slice<int> dstCap)
+    gocpp::slice<int64_t> rec::find(Regexp* re, io::RuneReader r, gocpp::slice<unsigned char> b, gocpp::string s, int64_t pos, int64_t ncap, gocpp::slice<int64_t> dstCap)
     {
         if(dstCap == nullptr)
         {
@@ -929,6 +929,6 @@ namespace golang::regexp
 
     // arrayNoInts is returned by find match if nil dstCap is passed
     // to it with ncap=0.
-    gocpp::array<int, 0> arrayNoInts;
+    gocpp::array<int64_t, 0> arrayNoInts;
 }
 

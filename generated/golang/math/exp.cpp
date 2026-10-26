@@ -75,7 +75,7 @@ namespace golang::math
         }
 
         // reduce; computed as r = hi - lo for extra precision.
-        int k = {};
+        int64_t k = {};
         //Go switch emulation
         {
             int conditionId = -1;
@@ -84,10 +84,10 @@ namespace golang::math
             switch(conditionId)
             {
                 case 0:
-                    k = int(Log2e * x - 0.5);
+                    k = int64_t(Log2e * x - 0.5);
                     break;
                 case 1:
-                    k = int(Log2e * x + 0.5);
+                    k = int64_t(Log2e * x + 0.5);
                     break;
             }
         }
@@ -140,7 +140,7 @@ namespace golang::math
 
         // argument reduction; x = r×lg(e) + k with |r| ≤ ln(2)/2.
         // computed as r = hi - lo for extra precision.
-        int k = {};
+        int64_t k = {};
         //Go switch emulation
         {
             int conditionId = -1;
@@ -149,10 +149,10 @@ namespace golang::math
             switch(conditionId)
             {
                 case 0:
-                    k = int(x + 0.5);
+                    k = int64_t(x + 0.5);
                     break;
                 case 1:
-                    k = int(x - 0.5);
+                    k = int64_t(x - 0.5);
                     break;
             }
         }
@@ -165,7 +165,7 @@ namespace golang::math
     }
 
     // exp1 returns e**r × 2**k where r = hi - lo and |r| ≤ ln(2)/2.
-    double expmulti(double hi, double lo, int k)
+    double expmulti(double hi, double lo, int64_t k)
     {
         auto P1 = 1.66666666666666657415e-01;
         auto P2 = - 2.77777777770155933842e-03;

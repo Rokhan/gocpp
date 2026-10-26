@@ -49,8 +49,8 @@ namespace golang::go::doc::comment
         gocpp::string docLinkURL(const gocpp::ObjRecv<struct htmlPrinter>& self, comment::DocLink* link);
         gocpp::string headingID(const gocpp::PtrRecv<struct htmlPrinter, false>& self, comment::Heading* h);
         gocpp::string headingID(const gocpp::ObjRecv<struct htmlPrinter>& self, comment::Heading* h);
-        int headingLevel(const gocpp::PtrRecv<struct htmlPrinter, false>& self);
-        int headingLevel(const gocpp::ObjRecv<struct htmlPrinter>& self);
+        int64_t headingLevel(const gocpp::PtrRecv<struct htmlPrinter, false>& self);
+        int64_t headingLevel(const gocpp::ObjRecv<struct htmlPrinter>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct htmlPrinter& value);

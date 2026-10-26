@@ -46,7 +46,7 @@ namespace golang::time
         return {uintptr_t(fd), nullptr};
     }
 
-    std::tuple<int, gocpp::error> read(uintptr_t fd, gocpp::slice<unsigned char> buf)
+    std::tuple<int64_t, gocpp::error> read(uintptr_t fd, gocpp::slice<unsigned char> buf)
     {
         return syscall::Read(syscall::Handle(fd), buf);
     }
@@ -56,9 +56,9 @@ namespace golang::time
         syscall::Close(syscall::Handle(fd));
     }
 
-    gocpp::error preadn(uintptr_t fd, gocpp::slice<unsigned char> buf, int off)
+    gocpp::error preadn(uintptr_t fd, gocpp::slice<unsigned char> buf, int64_t off)
     {
-        auto whence = seekStart;
+        int64_t whence = seekStart;
         if(off < 0)
         {
             whence = seekEnd;

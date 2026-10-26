@@ -350,7 +350,7 @@ namespace golang::go::types
     // validateTArgLen checks that the number of type arguments (got) matches the
     // number of type parameters (want); if they don't match an error is reported.
     // If validation fails and check is nil, validateTArgLen panics.
-    bool rec::validateTArgLen(Checker* check, token::Pos pos, gocpp::string name, int want, int got)
+    bool rec::validateTArgLen(Checker* check, token::Pos pos, gocpp::string name, int64_t want, int64_t got)
     {
         gocpp::string qual = {};
         //Go switch emulation
@@ -383,7 +383,7 @@ namespace golang::go::types
     }
 
     // check may be nil; pos is used only if check is non-nil.
-    std::tuple<int, gocpp::error> rec::verify(Checker* check, token::Pos pos, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> targs, Context* ctxt)
+    std::tuple<int64_t, gocpp::error> rec::verify(Checker* check, token::Pos pos, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> targs, Context* ctxt)
     {
         auto smap = makeSubstMap(tparams, targs);
         for(auto [i, tpar] : tparams)
@@ -425,7 +425,7 @@ namespace golang::go::types
             return true;
         }
 
-        auto verb = "implement"_s;
+        gocpp::string verb = "implement"_s;
         if(constraint)
         {
             verb = "satisfy"_s;

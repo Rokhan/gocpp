@@ -8,45 +8,46 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 {
     struct intReader;
     // Keep this in sync with constants in iexport.go.
-    const long iexportVersionGo1_11 = 0;
-    const long iexportVersionPosCol = 1;
-    const long iexportVersionGo1_18 = 2;
-    const long iexportVersionGenerics = 2;
-    const long iexportVersionGenericMethods = 3;
-    const long iexportVersionCurrent = 3;
+    inline constexpr long iexportVersionGo1_11 = 0;
+    inline constexpr long iexportVersionPosCol = 1;
+    inline constexpr long iexportVersionGo1_18 = 2;
+    inline constexpr long iexportVersionGenerics = 2;
+    inline constexpr long iexportVersionGenericMethods = 3;
+    inline constexpr long iexportVersionCurrent = 3;
     struct ident;
-    const long predeclReserved = 32;
-    using itag = uint64_t;
+    inline constexpr long predeclReserved = 32;
+    struct GoTag_itag;
+    using itag = gocpp::defined<uint64_t, GoTag_itag>;
     // Object tags
-    const char varTag = 'V';
-    const char funcTag = 'F';
-    const char genericFuncTag = 'G';
-    const char constTag = 'C';
-    const char aliasTag = 'A';
-    const char genericAliasTag = 'B';
-    const char typeParamTag = 'P';
-    const char typeTag = 'T';
-    const char genericTypeTag = 'U';
+    inline constexpr char varTag = 'V';
+    inline constexpr char funcTag = 'F';
+    inline constexpr char genericFuncTag = 'G';
+    inline constexpr char constTag = 'C';
+    inline constexpr char aliasTag = 'A';
+    inline constexpr char genericAliasTag = 'B';
+    inline constexpr char typeParamTag = 'P';
+    inline constexpr char typeTag = 'T';
+    inline constexpr char genericTypeTag = 'U';
     struct GetPackagesItem;
     struct setConstraintArgs;
     struct iimporter;
     struct importReader;
     struct GoTag_byPath;
-    const int iexportVersion = iexportVersionGenericMethods;
+    inline constexpr int64_t iexportVersion = iexportVersionGenericMethods;
     // Types
-    const itag definedType = 0;
-    const itag pointerType = 1;
-    const itag sliceType = 2;
-    const itag arrayType = 3;
-    const itag chanType = 4;
-    const itag mapType = 5;
-    const itag signatureType = 6;
-    const itag structType = 7;
-    const itag interfaceType = 8;
-    const itag typeParamType = 9;
-    const itag instanceType = 10;
-    const itag unionType = 11;
-    const itag aliasType = 12;
+    inline constexpr itag definedType = 0;
+    inline constexpr itag pointerType = 1;
+    inline constexpr itag sliceType = 2;
+    inline constexpr itag arrayType = 3;
+    inline constexpr itag chanType = 4;
+    inline constexpr itag mapType = 5;
+    inline constexpr itag signatureType = 6;
+    inline constexpr itag structType = 7;
+    inline constexpr itag interfaceType = 8;
+    inline constexpr itag typeParamType = 9;
+    inline constexpr itag instanceType = 10;
+    inline constexpr itag unionType = 11;
+    inline constexpr itag aliasType = 12;
     using GetPackagesFunc = std::function<gocpp::error (gocpp::slice<GetPackagesItem> items)>;
 }
 #include "golang/go/types/alias.fwd.h"

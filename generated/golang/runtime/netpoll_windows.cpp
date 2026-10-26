@@ -199,7 +199,7 @@ namespace golang::runtime
         return 0;
     }
 
-    void netpollarm(pollDesc* pd, int mode)
+    void netpollarm(pollDesc* pd, int64_t mode)
     {
         go_throw("runtime: unused"_s);
     }
@@ -281,7 +281,7 @@ namespace golang::runtime
         {
             wait = uint32_t(delay / 1e6);
         }
-        auto n = len(entries) / int(gomaxprocs);
+        auto n = len(entries) / int64_t(gomaxprocs);
         if(n < 8)
         {
             n = 8;
@@ -302,8 +302,8 @@ namespace golang::runtime
             go_throw("runtime: netpoll failed"_s);
         }
         mp->blocked = false;
-        auto delta = int32_t(0);
-        for(auto i = 0; i < n; i++)
+        int32_t delta = int32_t(0);
+        for(int64_t i = 0; i < n; i++)
         {
             auto e = & entries[i];
             //Go switch emulation

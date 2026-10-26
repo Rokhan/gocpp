@@ -22,9 +22,9 @@ namespace golang::main
 
     void main()
     {
-        int i = 1;
-        int j = 2;
-        auto k = 3;
+        int64_t i = 1;
+        int64_t j = 2;
+        int64_t k = 3;
         auto [c, python, java] = std::tuple{true, false, "no!"_s};
 
         mocklib::Println(i, j, k, c, python, java);

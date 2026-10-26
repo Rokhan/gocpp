@@ -53,7 +53,7 @@ namespace golang::syscall
         {
             return "\"\""_s;
         }
-        for(auto i = 0; i < len(s); i++)
+        for(int64_t i = 0; i < len(s); i++)
         {
             //Go switch emulation
             {
@@ -91,9 +91,9 @@ namespace golang::syscall
             return append(b, "\"\""_s);
         }
 
-        auto needsBackslash = false;
-        auto hasSpace = false;
-        for(auto i = 0; i < len(s); i++)
+        bool needsBackslash = false;
+        bool hasSpace = false;
+        for(int64_t i = 0; i < len(s); i++)
         {
             //Go switch emulation
             {
@@ -134,8 +134,8 @@ namespace golang::syscall
         {
             b = append(b, '"');
         }
-        auto slashes = 0;
-        for(auto i = 0; i < len(s); i++)
+        int64_t slashes = 0;
+        for(int64_t i = 0; i < len(s); i++)
         {
             auto c = s[i];
             //Go switch emulation
@@ -231,7 +231,7 @@ namespace golang::syscall
             return v;
         };
 
-        auto cmpEnv = [=](gocpp::string a, gocpp::string b) mutable -> int
+        auto cmpEnv = [=](gocpp::string a, gocpp::string b) mutable -> int64_t
         {
             return bytealg::Compare(lowerKey(a), lowerKey(b));
         };
@@ -261,7 +261,7 @@ namespace golang::syscall
         // alphabetically by name."
         envv = envSorted(envv);
 
-        int length = {};
+        int64_t length = {};
         for(auto [gocpp_ignored, s] : envv)
         {
             if(bytealg::IndexByteString(s, 0) != - 1)
@@ -307,7 +307,7 @@ namespace golang::syscall
         {
             return {""_s, err};
         }
-        auto n = uint32_t(100);
+        uint32_t n = uint32_t(100);
         for(; ; )
         {
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
@@ -346,7 +346,7 @@ namespace golang::syscall
         return {ndir, nullptr};
     }
 
-    int volToUpper(int ch)
+    int64_t volToUpper(int64_t ch)
     {
         if('a' <= ch && ch <= 'z')
         {
@@ -386,7 +386,7 @@ namespace golang::syscall
                 {
                     return {""_s, err};
                 }
-                if(volToUpper(int(p[0])) == volToUpper(int(d[0])))
+                if(volToUpper(int64_t(p[0])) == volToUpper(int64_t(d[0])))
                 {
                     return FullPath(d + "\\"_s + p.make_slice(2));
                 }
@@ -508,9 +508,9 @@ namespace golang::syscall
 
     ProcAttr zeroProcAttr;
     SysProcAttr zeroSysProcAttr;
-    std::tuple<int, uintptr_t, gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, ProcAttr* attr)
+    std::tuple<int64_t, uintptr_t, gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, ProcAttr* attr)
     {
-        int pid;
+        int64_t pid;
         uintptr_t handle;
         gocpp::error err;
         gocpp::Defer defer;
@@ -644,7 +644,7 @@ namespace golang::syscall
 
             // The presence of a NULL handle in the list is enough to cause PROC_THREAD_ATTRIBUTE_HANDLE_LIST
             // to treat the entire list as empty, so remove NULL handles.
-            auto j = 0;
+            int64_t j = 0;
             for(auto [i, gocpp_ignored] : fd)
             {
                 if(fd[i] != 0)
@@ -693,7 +693,7 @@ namespace golang::syscall
             runtime::KeepAlive(fd);
             runtime::KeepAlive(sys);
 
-            return {int(pi->ProcessId), uintptr_t(pi->Process), nullptr};
+            return {int64_t(pi->ProcessId), uintptr_t(pi->Process), nullptr};
         }
         catch(gocpp::GoPanic& gp)
         {

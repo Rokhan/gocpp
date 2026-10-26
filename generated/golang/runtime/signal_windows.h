@@ -58,7 +58,7 @@ namespace golang::runtime
     namespace windows = golang::internal::runtime::syscall::windows;
     bool isAbort(windows::Context* r);
     bool isgoexception(windows::ExceptionRecord* info, windows::Context* r);
-    int32_t sigtrampgo(windows::ExceptionPointers* ep, int kind);
+    int32_t sigtrampgo(windows::ExceptionPointers* ep, int64_t kind);
     int32_t exceptionhandler(windows::ExceptionRecord* info, windows::Context* r, g* gp);
     int32_t sehhandler(windows::ExceptionRecord* _1, uint64_t _2, windows::Context* _3, windows::DISPATCHER_CONTEXT* dctxt);
     int32_t firstcontinuehandler(windows::ExceptionRecord* info, windows::Context* r, g* gp);

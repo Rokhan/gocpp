@@ -15,7 +15,7 @@ namespace golang::time
     struct zone
     {
         gocpp::string name{}; // abbreviated name, "CET"
-        int offset{}; // seconds east of UTC
+        int64_t offset{}; // seconds east of UTC
         bool isDST{}; // is this zone Daylight Savings Time?
 
         using isGoStruct = void;
@@ -49,30 +49,12 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct zoneTrans& value);
-    std::tuple<gocpp::string, int, int64_t, int64_t, bool, bool> tzset(gocpp::string s, int64_t lastTxSec, int64_t sec);
+    std::tuple<gocpp::string, int64_t, int64_t, int64_t, bool, bool> tzset(gocpp::string s, int64_t lastTxSec, int64_t sec);
     std::tuple<gocpp::string, gocpp::string, bool> tzsetName(gocpp::string s);
-    std::tuple<int, gocpp::string, bool> tzsetOffset(gocpp::string s);
-    struct rule
-    {
-        ruleKind kind{};
-        int day{};
-        int week{};
-        int mon{};
-        int time{}; // transition time
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct rule& value);
-    std::tuple<int, gocpp::string, bool> tzsetNum(gocpp::string s, int min, int max);
+    std::tuple<int64_t, gocpp::string, bool> tzsetOffset(gocpp::string s);
+    struct GoTag_ruleKind { };
+    using ruleKind = gocpp::defined<int64_t, GoTag_ruleKind>;
+    std::tuple<int64_t, gocpp::string, bool> tzsetNum(gocpp::string s, int64_t min, int64_t max);
     extern gocpp::error errLocation;
     extern gocpp::string* zoneinfo;
     bool containsDotDot(gocpp::string s);
@@ -112,8 +94,26 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Location& value);
-    std::tuple<rule, gocpp::string, bool> tzsetRule(gocpp::string s);
-    int tzruleTime(int year, rule r, int off);
+    struct rule
+    {
+        ruleKind kind{};
+        int64_t day{};
+        int64_t week{};
+        int64_t mon{};
+        int64_t time{}; // transition time
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct rule& value);
     // UTC represents Universal Coordinated Time (UTC).
     extern golang::time::Location* UTC;
     // utcLoc is separate so that get can refer to &utcLoc
@@ -131,8 +131,10 @@ namespace golang::time
     // it even if a client has changed Local.
     extern golang::time::Location localLoc;
     extern gocpp::slice<golang::time::Location*> unnamedFixedZones;
-    golang::time::Location* FixedZone(gocpp::string name, int offset);
-    golang::time::Location* fixedZone(gocpp::string name, int offset);
+    golang::time::Location* FixedZone(gocpp::string name, int64_t offset);
+    golang::time::Location* fixedZone(gocpp::string name, int64_t offset);
+    std::tuple<rule, gocpp::string, bool> tzsetRule(gocpp::string s);
+    int64_t tzruleTime(int64_t year, rule r, int64_t off);
     std::tuple<golang::time::Location*, gocpp::error> LoadLocation(gocpp::string name);
 }
 #include "golang/sync/once.fwd.h"
@@ -153,10 +155,10 @@ namespace golang::time
     {
         golang::time::Location* get(golang::time::Location* l);
         gocpp::string String(golang::time::Location* l);
-        std::tuple<gocpp::string, int, int64_t, int64_t, bool> lookup(golang::time::Location* l, int64_t sec);
-        int lookupFirstZone(golang::time::Location* l);
+        std::tuple<gocpp::string, int64_t, int64_t, int64_t, bool> lookup(golang::time::Location* l, int64_t sec);
+        int64_t lookupFirstZone(golang::time::Location* l);
         bool firstZoneUsed(golang::time::Location* l);
-        std::tuple<int, bool> lookupName(golang::time::Location* l, gocpp::string name, int64_t unix);
+        std::tuple<int64_t, bool> lookupName(golang::time::Location* l, gocpp::string name, int64_t unix);
     }
 }
 

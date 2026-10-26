@@ -60,11 +60,11 @@ namespace golang::compress::flate
         // If prevHeader is non-zero the Huffman table can be reused.
         // It also indicates that an EOB has not yet been emitted, so if a new table
         // is generated, an EOB with the previous table must be written.
-        int prevHeader{};
+        int64_t prevHeader{};
         // logNewTablePenalty is a log2 penalty reduction for creating new tables.
         // The initial penalty is 100%.
         // Adding 1 will cut the penalty in half.
-        unsigned int logNewTablePenalty{};
+        uint64_t logNewTablePenalty{};
         gocpp::array<unsigned char, 256 + 8> bytes{};
         gocpp::array<uint16_t, lengthCodesStart + 32> literalFreq{};
         gocpp::array<uint16_t, 32> offsetFreq{};
@@ -105,22 +105,22 @@ namespace golang::compress::flate
         void write(huffmanBitWriter* w, gocpp::slice<unsigned char> b);
         void writeBits(huffmanBitWriter* w, int32_t b, uint8_t nb);
         void writeBytes(huffmanBitWriter* w, gocpp::slice<unsigned char> bytes);
-        void generateCodegen(huffmanBitWriter* w, int numLiterals, int numOffsets, huffmanEncoder* litEnc, huffmanEncoder* offEnc);
-        int codegens(huffmanBitWriter* w);
-        std::tuple<int, int> headerSize(huffmanBitWriter* w);
-        int dynamicReuseSize(huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc);
-        std::tuple<int, int> dynamicSize(huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc, int extraBits);
-        int extraBitSize(huffmanBitWriter* w);
-        int fixedSize(huffmanBitWriter* w, int extraBits);
-        std::tuple<int, bool> storedSize(huffmanBitWriter* w, gocpp::slice<unsigned char> in);
+        void generateCodegen(huffmanBitWriter* w, int64_t numLiterals, int64_t numOffsets, huffmanEncoder* litEnc, huffmanEncoder* offEnc);
+        int64_t codegens(huffmanBitWriter* w);
+        std::tuple<int64_t, int64_t> headerSize(huffmanBitWriter* w);
+        int64_t dynamicReuseSize(huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc);
+        std::tuple<int64_t, int64_t> dynamicSize(huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc, int64_t extraBits);
+        int64_t extraBitSize(huffmanBitWriter* w);
+        int64_t fixedSize(huffmanBitWriter* w, int64_t extraBits);
+        std::tuple<int64_t, bool> storedSize(huffmanBitWriter* w, gocpp::slice<unsigned char> in);
         void writeCode(huffmanBitWriter* w, hcode c);
         void flushBits(huffmanBitWriter* w);
-        void writeDynamicHeader(huffmanBitWriter* w, int numLiterals, int numOffsets, int numCodegens, bool isEof);
-        void writeStoredHeader(huffmanBitWriter* w, int length, bool isEof);
+        void writeDynamicHeader(huffmanBitWriter* w, int64_t numLiterals, int64_t numOffsets, int64_t numCodegens, bool isEof);
+        void writeStoredHeader(huffmanBitWriter* w, int64_t length, bool isEof);
         void writeFixedHeader(huffmanBitWriter* w, bool isEof);
         void writeBlock(huffmanBitWriter* w, tokens* tokens, bool eof, gocpp::slice<unsigned char> input);
         void writeBlockDynamic(huffmanBitWriter* w, tokens* tokens, bool eof, gocpp::slice<unsigned char> input, bool sync);
-        std::tuple<int, int> indexTokens(huffmanBitWriter* w, tokens* t);
+        std::tuple<int64_t, int64_t> indexTokens(huffmanBitWriter* w, tokens* t);
         void generate(huffmanBitWriter* w);
         void writeTokens(huffmanBitWriter* w, gocpp::slice<token> tokens, gocpp::slice<hcode> lenCodes, gocpp::slice<hcode> offCodes);
         void writeBlockHuff(huffmanBitWriter* w, bool eof, gocpp::slice<unsigned char> input, bool sync);

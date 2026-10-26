@@ -35,10 +35,10 @@ namespace golang::hash::crc32
     // for use with simpleUpdate.
     void simplePopulateTable(uint32_t poly, gocpp::array_ptr<Table> t)
     {
-        for(auto i = 0; i < 256; i++)
+        for(int64_t i = 0; i < 256; i++)
         {
             auto crc = uint32_t(i);
-            for(auto j = 0; j < 8; j++)
+            for(int64_t j = 0; j < 8; j++)
             {
                 if(crc & 1 == 1)
                 {
@@ -72,10 +72,10 @@ namespace golang::hash::crc32
     {
         auto t = gocpp::array_ptr(new crc32::slicing8Table{});
         simplePopulateTable(poly, gocpp::make_array_ptr(t[0]));
-        for(auto i = 0; i < 256; i++)
+        for(int64_t i = 0; i < 256; i++)
         {
             auto crc = t[0][i];
-            for(auto j = 1; j < 8; j++)
+            for(int64_t j = 1; j < 8; j++)
             {
                 crc = t[0][crc & 0xFF] ^ (crc >> 8);
                 t[j][i] = crc;

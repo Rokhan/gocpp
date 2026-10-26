@@ -6,7 +6,7 @@
 
 namespace golang::encoding::json::jsontext
 {
-    const gocpp::string errorPrefix = "jsontext: "_s;
+    inline const gocpp::string errorPrefix = "jsontext: "_s;
     struct ioError;
     struct numError;
     struct SyntacticError;

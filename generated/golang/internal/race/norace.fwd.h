@@ -6,5 +6,5 @@
 
 namespace golang::internal::race
 {
-    const bool Enabled = false;
+    inline constexpr bool Enabled = false;
 }

@@ -126,12 +126,12 @@ namespace golang::go::doc::comment
             return rec::headingID(gocpp::recv(self.obj.Printer), h);
         }
 
-        int headingLevel(const gocpp::PtrRecv<struct mdPrinter, false>& self)
+        int64_t headingLevel(const gocpp::PtrRecv<struct mdPrinter, false>& self)
         {
             return rec::headingLevel(gocpp::recv(self.ptr->Printer));
         }
 
-        int headingLevel(const gocpp::ObjRecv<struct mdPrinter>& self)
+        int64_t headingLevel(const gocpp::ObjRecv<struct mdPrinter>& self)
         {
             return rec::headingLevel(gocpp::recv(self.obj.Printer));
         }
@@ -311,7 +311,7 @@ namespace golang::go::doc::comment
                 case 12:
                 case 13:
                 {
-                    auto i = 1;
+                    int64_t i = 1;
                     for(; i < len(line) && '0' <= line[i] && line[i] <= '9'; )
                     {
                         i++;
@@ -401,8 +401,8 @@ namespace golang::go::doc::comment
     // as Markdown markup sequences.
     void rec::escape(mdPrinter* p, bytes::Buffer* out, gocpp::string s)
     {
-        auto start = 0;
-        for(auto i = 0; i < len(s); i++)
+        int64_t start = 0;
+        for(int64_t i = 0; i < len(s); i++)
         {
             //Go switch emulation
             {

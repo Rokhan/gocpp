@@ -22,7 +22,7 @@ namespace golang::main
 
     void main()
     {
-        auto m = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+        auto m = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int64_t>>());
 
         m.ref("Answer"_s) = 42;
         mocklib::Println("The value:"_s, m.get("Answer"_s));
@@ -49,7 +49,7 @@ namespace golang::main
 
     void testReadsDoNotInsert()
     {
-        auto m = gocpp::map<gocpp::string, int> {{ "a"_s, 1 }};
+        auto m = gocpp::map<gocpp::string, int64_t> {{ "a"_s, 1 }};
         _ = m.get("absent"_s);
         auto [v, ok] = m.lookup("absent"_s);
         mocklib::Println(v, ok, len(m));
@@ -65,7 +65,7 @@ namespace golang::main
 
     void testCompoundOps()
     {
-        auto m = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+        auto m = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int64_t>>());
         m.ref("inc"_s)++;
         m.ref("dec"_s)--;
         m.ref("add"_s) += 5;
@@ -83,7 +83,7 @@ namespace golang::main
 
     void testCopyAndSwap()
     {
-        auto m = gocpp::map<gocpp::string, int> {{ "a"_s, 1 }, { "b"_s, 2 }};
+        auto m = gocpp::map<gocpp::string, int64_t> {{ "a"_s, 1 }, { "b"_s, 2 }};
         m.ref("c"_s) = m.get("a"_s);
         std::tie(m.ref("a"_s), m.ref("b"_s)) = std::tuple{m.get("b"_s), m.get("a"_s)};
         mocklib::Println(m);
@@ -95,7 +95,7 @@ namespace golang::main
 
     void testAppendIdiom()
     {
-        auto g = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::slice<int>>>());
+        auto g = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::slice<int64_t>>>());
         g.ref("a"_s) = append(g.get("a"_s), 1);
         g.ref("a"_s) = append(g.get("a"_s), 2);
         g.ref("b"_s) = append(g.get("b"_s), 3);
@@ -149,10 +149,10 @@ namespace golang::main
 
     void testNested()
     {
-        auto n = gocpp::map<gocpp::string, gocpp::map<gocpp::string, int>> {gocpp::non_nil};
+        auto n = gocpp::map<gocpp::string, gocpp::map<gocpp::string, int64_t>> {gocpp::non_nil};
         // nil inner map read
         mocklib::Println(n.get("x"_s).get("y"_s), len(n));
-        n.ref("a"_s) = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+        n.ref("a"_s) = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int64_t>>());
         n.get("a"_s).ref("b"_s) = 1;
         n.get("a"_s).ref("b"_s)++;
         mocklib::Println(n);
@@ -160,7 +160,7 @@ namespace golang::main
 
     void testDeleteDuringRange()
     {
-        auto m = gocpp::map<int, int> {{ 1, 1 }, { 2, 2 }, { 3, 3 }, { 4, 4 }};
+        auto m = gocpp::map<int64_t, int64_t> {{ 1, 1 }, { 2, 2 }, { 3, 3 }, { 4, 4 }};
         for(auto [k, gocpp_ignored] : m)
         {
             if(k % 2 == 0)
@@ -183,7 +183,7 @@ namespace golang::main
                     mocklib::Println("recovered"_s);
                 }
             }(); });
-            gocpp::map<gocpp::string, int> m = {};
+            gocpp::map<gocpp::string, int64_t> m = {};
             // legal
             remove(m, "a"_s);
             // panics
@@ -198,8 +198,8 @@ namespace golang::main
 
     void testCommaOkAssign()
     {
-        auto m = gocpp::map<gocpp::string, int> {{ "a"_s, 1 }};
-        int v = {};
+        auto m = gocpp::map<gocpp::string, int64_t> {{ "a"_s, 1 }};
+        int64_t v = {};
         bool ok = {};
         std::tie(v, ok) = m.lookup("a"_s);
         mocklib::Println(v, ok);

@@ -6,8 +6,8 @@
 
 namespace golang::compress::zlib
 {
-    const long zlibDeflate = 8;
-    const long zlibMaxWindow = 7;
+    inline constexpr long zlibDeflate = 8;
+    inline constexpr long zlibMaxWindow = 7;
     struct reader;
 }
 #include "golang/io/io.fwd.h"

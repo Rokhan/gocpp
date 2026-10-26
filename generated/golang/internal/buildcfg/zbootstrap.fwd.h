@@ -6,26 +6,26 @@
 
 namespace golang::internal::buildcfg
 {
-    const gocpp::string DefaultGO386 = "sse2"_s;
-    const gocpp::string DefaultGOAMD64 = "v1"_s;
-    const gocpp::string DefaultGOARM = "7"_s;
-    const gocpp::string DefaultGOARM64 = "v8.0"_s;
-    const gocpp::string DefaultGOMIPS = "hardfloat"_s;
-    const gocpp::string DefaultGOMIPS64 = "hardfloat"_s;
-    const gocpp::string DefaultGOPPC64 = "power8"_s;
-    const gocpp::string DefaultGORISCV64 = "rva20u64"_s;
-    const gocpp::string defaultGOEXPERIMENT = ""_s;
-    const gocpp::string defaultGO_EXTLINK_ENABLED = ""_s;
-    const gocpp::string defaultGO_LDSO = ""_s;
-    const gocpp::string version = "go1.27.1"_s;
-    const gocpp::string DefaultGOFIPS140 = "off"_s;
-    const gocpp::string DefaultCGO_ENABLED = ""_s;
+    inline const gocpp::string DefaultGO386 = "sse2"_s;
+    inline const gocpp::string DefaultGOAMD64 = "v1"_s;
+    inline const gocpp::string DefaultGOARM = "7"_s;
+    inline const gocpp::string DefaultGOARM64 = "v8.0"_s;
+    inline const gocpp::string DefaultGOMIPS = "hardfloat"_s;
+    inline const gocpp::string DefaultGOMIPS64 = "hardfloat"_s;
+    inline const gocpp::string DefaultGOPPC64 = "power8"_s;
+    inline const gocpp::string DefaultGORISCV64 = "rva20u64"_s;
+    inline const gocpp::string defaultGOEXPERIMENT = ""_s;
+    inline const gocpp::string defaultGO_EXTLINK_ENABLED = ""_s;
+    inline const gocpp::string defaultGO_LDSO = ""_s;
+    inline const gocpp::string version = "go1.27.1"_s;
+    inline const gocpp::string DefaultGOFIPS140 = "off"_s;
+    inline const gocpp::string DefaultCGO_ENABLED = ""_s;
 }
 #include "golang/runtime/extern.fwd.h"
 
 namespace golang::internal::buildcfg
 {
     namespace runtime = golang::runtime;
-    const gocpp::string defaultGOOS = mocklib::GOOS;
-    const gocpp::string defaultGOARCH = runtime::GOARCH;
+    inline const gocpp::string defaultGOOS = mocklib::GOOS;
+    inline const gocpp::string defaultGOARCH = runtime::GOARCH;
 }

@@ -19,6 +19,8 @@ namespace golang::encoding::json::v2
     extern gocpp::error errInvalidStringTag;
     extern gocpp::error errArrayUnderflow;
     extern gocpp::error errArrayOverflow;
+    struct GoTag_uintSet64 { };
+    using uintSet64 = gocpp::defined<uint64_t, GoTag_uintSet64>;
     struct uintSet
     {
         uintSet64 lo{};
@@ -86,7 +88,7 @@ namespace golang::encoding::json::v2
     {
         reflect::Type typ{};
         go_any ptr{}; // always stores unsafe.Pointer, but avoids depending on unsafe
-        int len{}; // remember slice length to avoid false positives
+        int64_t len{}; // remember slice length to avoid false positives
 
         using isGoStruct = void;
 
@@ -102,7 +104,7 @@ namespace golang::encoding::json::v2
     std::ostream& operator<<(std::ostream& os, const struct typedPointer& value);
     gocpp::error visitPointer(seenPointers* m, reflect::Value v);
     void leavePointer(seenPointers* m, reflect::Value v);
-    int sliceLen(reflect::Value v);
+    int64_t sliceLen(reflect::Value v);
     arshaler* makeDefaultArshaler(reflect::Type t);
     arshaler* makeBoolArshaler(reflect::Type t);
     arshaler* makeStringArshaler(reflect::Type t);
@@ -111,11 +113,11 @@ namespace golang::encoding::json::v2
     extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase32Hex;
     extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase64;
     extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase64URL;
-    extern std::function<int (int)> encodedLenBase16;
-    extern std::function<int (int)> encodedLenBase32;
-    extern std::function<int (int)> encodedLenBase32Hex;
-    extern std::function<int (int)> encodedLenBase64;
-    extern std::function<int (int)> encodedLenBase64URL;
+    extern std::function<int64_t (int64_t)> encodedLenBase16;
+    extern std::function<int64_t (int64_t)> encodedLenBase32;
+    extern std::function<int64_t (int64_t)> encodedLenBase32Hex;
+    extern std::function<int64_t (int64_t)> encodedLenBase64;
+    extern std::function<int64_t (int64_t)> encodedLenBase64URL;
     extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase16;
     extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase32;
     extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase32Hex;
@@ -144,12 +146,12 @@ namespace golang::encoding::json::v2
 
     namespace rec
     {
-        addressableValue fieldByIndex(addressableValue va, gocpp::slice<int> index, bool mayAlloc);
+        addressableValue fieldByIndex(addressableValue va, gocpp::slice<int64_t> index, bool mayAlloc);
         addressableValue indirect(addressableValue va, bool mayAlloc);
-        bool has(uintSet64 s, unsigned int i);
-        void set(uintSet64* s, unsigned int i);
-        bool has(uintSet* s, unsigned int i);
-        bool insert(uintSet* s, unsigned int i);
+        bool has(uintSet64 s, uint64_t i);
+        void set(uintSet64* s, uint64_t i);
+        bool has(uintSet* s, uint64_t i);
+        bool insert(uintSet* s, uint64_t i);
     }
 }
 

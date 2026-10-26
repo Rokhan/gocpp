@@ -12,9 +12,9 @@
 
 namespace golang::main
 {
-    extern int i;
-    extern int j;
-    std::tuple<gocpp::string, int, uint64_t> locabs();
+    extern int64_t i;
+    extern int64_t j;
+    std::tuple<gocpp::string, int64_t, uint64_t> locabs();
     void main();
 
     namespace rec

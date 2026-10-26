@@ -151,7 +151,7 @@ namespace golang::go::token
     // This allows us to use strict < comparisons.
     // Use key{p, p} to search for a zero-width position
     // even at the start or end of a file.
-    int compareKey(golang::go::token::key x, golang::go::token::key y)
+    int64_t compareKey(golang::go::token::key x, golang::go::token::key y)
     {
         //Go switch emulation
         {

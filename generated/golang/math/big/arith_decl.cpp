@@ -54,7 +54,7 @@ namespace golang::math::big
     // See go.dev/issue/67401.
     //
     //go:linkname shlVU
-    Word shlVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
+    Word shlVU(gocpp::slice<Word> z, gocpp::slice<Word> x, uint64_t s)
     {
         Word c;
         if(s == 0)
@@ -68,13 +68,13 @@ namespace golang::math::big
     // lshVU sets z = x<<s, returning the high bits c. 1 ≤ s ≤ _B-1.
     //
     //go:noescape
-    Word lshVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
+    Word lshVU(gocpp::slice<Word> z, gocpp::slice<Word> x, uint64_t s)
     /* convertBlockStmt, nil block */;
 
     // rshVU sets z = x>>s, returning the low bits c. 1 ≤ s ≤ _B-1.
     //
     //go:noescape
-    Word rshVU(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s)
+    Word rshVU(gocpp::slice<Word> z, gocpp::slice<Word> x, uint64_t s)
     /* convertBlockStmt, nil block */;
 
     // mulAddVWW should be an internal detail,

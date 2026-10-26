@@ -14,8 +14,8 @@ namespace golang::encoding::json::jsontext
 {
     struct bufferStatistics
     {
-        int strikes{}; // number of times the buffer was under-utilized
-        int prevLen{}; // length of previous buffer
+        int64_t strikes{}; // number of times the buffer was under-utilized
+        int64_t prevLen{}; // length of previous buffer
 
         using isGoStruct = void;
 

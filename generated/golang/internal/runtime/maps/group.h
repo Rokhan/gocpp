@@ -12,6 +12,14 @@
 
 namespace golang::internal::runtime::maps
 {
+    struct GoTag_bitset { };
+    using bitset = gocpp::defined<uint64_t, GoTag_bitset>;
+    struct GoTag_ctrl { };
+    using ctrl = gocpp::defined<uint8_t, GoTag_ctrl>;
+    struct GoTag_ctrlGroup { };
+    using ctrlGroup = gocpp::defined<uint64_t, GoTag_ctrlGroup>;
+    uintptr_t alignUp(uintptr_t n, uintptr_t a);
+    std::tuple<uint64_t, bool> alignUpPow2(uint64_t n);
     uintptr_t bitsetFirst(bitset b);
     bitset bitsetRemoveBelow(bitset b, uintptr_t i);
     bool bitsetLowestSet(bitset b);
@@ -20,8 +28,6 @@ namespace golang::internal::runtime::maps
     bitset ctrlGroupMatchEmpty(ctrlGroup g);
     bitset ctrlGroupMatchEmptyOrDeleted(ctrlGroup g);
     bitset ctrlGroupMatchFull(ctrlGroup g);
-    uintptr_t alignUp(uintptr_t n, uintptr_t a);
-    std::tuple<uint64_t, bool> alignUpPow2(uint64_t n);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct groupReference
     {
@@ -101,7 +107,7 @@ namespace golang::internal::runtime::maps
         bitset removeBelow(bitset b, uintptr_t i);
         bool lowestSet(bitset b);
         bitset shiftOutLowest(bitset b);
-        int count(bitset b);
+        int64_t count(bitset b);
         ctrl get(ctrlGroup* g, uintptr_t i);
         void set(ctrlGroup* g, uintptr_t i, ctrl c);
         void setEmpty(ctrlGroup* g);

@@ -118,7 +118,7 @@ namespace golang::go::ast
         {
             return {Directive {}, false};
         }
-        for(auto i = 0; i <= colon + 1; i++)
+        for(int64_t i = 0; i <= colon + 1; i++)
         {
             if(i == colon)
             {
@@ -153,7 +153,7 @@ namespace golang::go::ast
 
     token::Pos rec::End(Directive* d)
     {
-        return token::Pos(int(d->ArgsPos) + len(d->Args));
+        return token::Pos(int64_t(d->ArgsPos) + len(d->Args));
     }
 
     // A DirectiveArg is an argument to a directive comment.
@@ -281,13 +281,13 @@ namespace golang::go::ast
         return value.PrintTo(os);
     }
 
-    void rec::skip(directiveScanner* s, int n)
+    void rec::skip(directiveScanner* s, int64_t n)
     {
         s->pos += token::Pos(n);
         s->str = s->str.make_slice(n);
     }
 
-    gocpp::string rec::take(directiveScanner* s, int n)
+    gocpp::string rec::take(directiveScanner* s, int64_t n)
     {
         auto res = s->str.make_slice(0, n);
         rec::skip(gocpp::recv(s), n);

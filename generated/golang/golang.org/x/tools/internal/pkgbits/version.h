@@ -12,6 +12,10 @@
 
 namespace golang::golang_org::x::tools::internal::pkgbits
 {
+    struct GoTag_Version { };
+    using Version = gocpp::defined<uint32_t, GoTag_Version>;
+    struct GoTag_Field { };
+    using Field = gocpp::defined<int64_t, GoTag_Field>;
     // introduced is the version a field was added.
     extern gocpp::array<golang::golang_org::x::tools::internal::pkgbits::Version, numFields> introduced;
     // removed is the version a field was removed in or 0 for fields

@@ -85,7 +85,7 @@ namespace golang::encoding::base32
         copy(e->encode.make_slice(0), encoder);
         copy(e->decodeMap.make_slice(0), decodeMapInitialize);
 
-        for(auto i = 0; i < len(encoder); i++)
+        for(int64_t i = 0; i < len(encoder); i++)
         {
             // Note: While we document that the alphabet cannot contain
             // the padding character, we do not enforce it since we do not know
@@ -189,7 +189,7 @@ namespace golang::encoding::base32
         }
 
         // Encode the remaining bytes in reverse order.
-        auto val = uint32_t(0);
+        uint32_t val = uint32_t(0);
         //Go switch emulation
         {
             auto condition = len(src);
@@ -292,9 +292,9 @@ namespace golang::encoding::base32
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         if(e->err != nullptr)
         {
@@ -304,7 +304,7 @@ namespace golang::encoding::base32
         // Leading fringe.
         if(e->nbuf > 0)
         {
-            int i = {};
+            int64_t i = {};
             for(i = 0; i < len(p) && e->nbuf < 5; i++)
             {
                 e->buf[e->nbuf] = p[i];
@@ -327,7 +327,7 @@ namespace golang::encoding::base32
         // Large interior chunks.
         for(; len(p) >= 5; )
         {
-            auto nn = len(e->out) / 8 * 5;
+            int64_t nn = len(e->out) / 8 * 5;
             if(nn > len(p))
             {
                 nn = len(p);
@@ -379,7 +379,7 @@ namespace golang::encoding::base32
 
     // EncodedLen returns the length in bytes of the base32 encoding
     // of an input buffer of length n.
-    int rec::EncodedLen(Encoding* enc, int n)
+    int64_t rec::EncodedLen(Encoding* enc, int64_t n)
     {
         if(enc->padChar == NoPadding)
         {
@@ -397,24 +397,24 @@ namespace golang::encoding::base32
     // indicates if end-of-message padding was encountered and thus any
     // additional data is an error. This method assumes that src has been
     // stripped of all supported whitespace ('\r' and '\n').
-    std::tuple<int, bool, gocpp::error> rec::decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    std::tuple<int64_t, bool, gocpp::error> rec::decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
-        int n;
+        int64_t n;
         bool end;
         gocpp::error err;
         // Lift the nil check outside of the loop.
         _ = enc->decodeMap;
 
-        auto dsti = 0;
+        int64_t dsti = 0;
         auto olen = len(src);
 
         for(; len(src) > 0 && ! end; )
         {
             // Decode quantum using the base32 alphabet
             gocpp::array<unsigned char, 8> dbuf = {};
-            auto dlen = 8;
+            int64_t dlen = 8;
 
-            for(auto j = 0; j < 8; )
+            for(int64_t j = 0; j < 8; )
             {
                 if(len(src) == 0)
                 {
@@ -437,7 +437,7 @@ namespace golang::encoding::base32
                         // not enough padding
                         return {n, false, gocpp::error(CorruptInputError(olen))};
                     }
-                    for(auto k = 0; k < 8 - 1 - j; k++)
+                    for(int64_t k = 0; k < 8 - 1 - j; k++)
                     {
                         if(len(src) > k && src[k] != (unsigned char)(enc->padChar))
                         {
@@ -507,9 +507,9 @@ namespace golang::encoding::base32
     // the decoded data. If src contains invalid base32 data, it will return the
     // number of bytes successfully written and [CorruptInputError].
     // Newline characters (\r and \n) are ignored.
-    std::tuple<int, gocpp::error> rec::Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    std::tuple<int64_t, gocpp::error> rec::Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(src));
         auto l = stripNewlines(buf, src);
@@ -598,13 +598,13 @@ namespace golang::encoding::base32
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> readEncodedData(io::Reader r, gocpp::slice<unsigned char> buf, int min, bool expectsPadding)
+    std::tuple<int64_t, gocpp::error> readEncodedData(io::Reader r, gocpp::slice<unsigned char> buf, int64_t min, bool expectsPadding)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         for(; n < min && err == nullptr; )
         {
-            int nn = {};
+            int64_t nn = {};
             std::tie(nn, err) = rec::Read(gocpp::recv(r), buf.make_slice(n));
             n += nn;
         }
@@ -623,9 +623,9 @@ namespace golang::encoding::base32
         return {n, err};
     }
 
-    std::tuple<int, gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         // Use leftover decoded output from last read.
         if(len(d->out) > 0)
@@ -656,7 +656,7 @@ namespace golang::encoding::base32
         }
 
         // Minimum amount of bytes that needs to be read each cycle
-        int min = {};
+        int64_t min = {};
         bool expectsPadding = {};
         if(d->enc->padChar == NoPadding)
         {
@@ -681,7 +681,7 @@ namespace golang::encoding::base32
         }
 
         // Decode chunk into p, or d.out and then p if p is too small.
-        int nr = {};
+        int64_t nr = {};
         if(d->enc->padChar == NoPadding)
         {
             nr = d->nbuf;
@@ -704,7 +704,7 @@ namespace golang::encoding::base32
             std::tie(n, d->end, err) = rec::decode(gocpp::recv(d->enc), p, d->buf.make_slice(0, nr));
         }
         d->nbuf -= nr;
-        for(auto i = 0; i < d->nbuf; i++)
+        for(int64_t i = 0; i < d->nbuf; i++)
         {
             d->buf[i] = d->buf[i + nr];
         }
@@ -757,9 +757,9 @@ namespace golang::encoding::base32
 
     // stripNewlines removes newline characters and returns the number
     // of non-newline characters copied to dst.
-    int stripNewlines(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    int64_t stripNewlines(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
-        auto offset = 0;
+        int64_t offset = 0;
         for(auto [gocpp_ignored, b] : src)
         {
             if(b == '\r' || b == '\n')
@@ -772,7 +772,7 @@ namespace golang::encoding::base32
         return offset;
     }
 
-    std::tuple<int, gocpp::error> rec::Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p)
     {
         auto [n, err] = rec::Read(gocpp::recv(r->wrapped), p);
         for(; n > 0; )
@@ -800,12 +800,12 @@ namespace golang::encoding::base32
 
     // DecodedLen returns the maximum length in bytes of the decoded data
     // corresponding to n bytes of base32-encoded data.
-    int rec::DecodedLen(Encoding* enc, int n)
+    int64_t rec::DecodedLen(Encoding* enc, int64_t n)
     {
         return decodedLen(n, enc->padChar);
     }
 
-    int decodedLen(int n, gocpp::rune padChar)
+    int64_t decodedLen(int64_t n, gocpp::rune padChar)
     {
         if(padChar == NoPadding)
         {

@@ -98,7 +98,7 @@ namespace golang::runtime
 
             // Find all allocated objects.
             auto abits = rec::allocBitsForIndex(gocpp::recv(s), 0);
-            for(auto i = uintptr_t(0); i < uintptr_t(s->nelems); i++)
+            for(uintptr_t i = uintptr_t(0); i < uintptr_t(s->nelems); i++)
             {
                 if(abits.index < uintptr_t(s->freeindex) || rec::isMarked(gocpp::recv(abits)))
                 {

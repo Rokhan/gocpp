@@ -6,5 +6,5 @@
 
 namespace golang::math::rand
 {
-    const double rn = 3.442619855899;
+    inline constexpr double rn = 3.442619855899;
 }

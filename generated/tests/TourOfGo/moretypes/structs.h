@@ -64,8 +64,8 @@ namespace golang::main
     struct Dummy
     {
         // before declaration
-        int i{}; // after declaration
-        int j{};
+        int64_t i{}; // after declaration
+        int64_t j{};
 
         using isGoStruct = void;
 
@@ -99,7 +99,7 @@ namespace golang::main
     struct Person
     {
         gocpp_id_0* identity{};
-        int age{};
+        int64_t age{};
 
         using isGoStruct = void;
 
@@ -115,7 +115,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Person& value);
     struct gocpp_id_1
     {
-        int a{};
+        int64_t a{};
 
         using isGoStruct = void;
 
@@ -138,7 +138,7 @@ namespace golang::main
     {
         Dummy Dummy{}; // Comment 1: Dummy
         Vertex Vertex{}; // Comment 2: Vertex
-        int i{}; // Comment 3: i
+        int64_t i{}; // Comment 3: i
 
         using isGoStruct = void;
 
@@ -156,8 +156,8 @@ namespace golang::main
     struct Dummy3
     {
         Dummy2 Dummy2{};
-        int zzz{}; // Comment: yyy and zzz 2
-        int xxx{};
+        int64_t zzz{}; // Comment: yyy and zzz 2
+        int64_t xxx{};
 
         using isGoStruct = void;
 

@@ -98,7 +98,7 @@ namespace golang::encoding::json::v2
         auto prime3 = 0xc2b2ae3d;
         auto prime4 = 0x27d4eb2f;
         auto prime5 = 0x165667b1;
-        auto h = prime5 + uint32_t(8);
+        uint32_t h = prime5 + uint32_t(8);
         h += lo * prime3;
         h = bits::RotateLeft32(h, 17) * prime4;
         h += hi * prime3;

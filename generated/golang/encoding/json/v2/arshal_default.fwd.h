@@ -9,14 +9,15 @@ namespace golang::encoding::json::v2
     // optimizeCommon specifies whether to use optimizations targeted for certain
     // common patterns, rather than using the slower, but more general logic.
     // All tests should pass regardless of whether this is true or not.
-    const bool optimizeCommon = true;
-    const long startDetectingCyclesAfter = 1000;
+    inline constexpr bool optimizeCommon = true;
+    inline constexpr long startDetectingCyclesAfter = 1000;
     using seenPointers = gocpp::map<go_any, gocpp::empty_struct>;
     struct typedPointer;
     struct gocpp_id_6;
     struct gocpp_id_7;
     struct gocpp_id_8;
     struct gocpp_id_9;
-    using uintSet64 = uint64_t;
+    struct GoTag_uintSet64;
+    using uintSet64 = gocpp::defined<uint64_t, GoTag_uintSet64>;
     struct uintSet;
 }

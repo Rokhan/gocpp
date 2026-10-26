@@ -36,7 +36,7 @@ namespace golang::os
 {
     struct ProcessState
     {
-        int pid{}; // The process's id.
+        int64_t pid{}; // The process's id.
         syscall::WaitStatus status{}; // System-dependent status info.
         syscall::Rusage* rusage{};
 
@@ -63,13 +63,13 @@ namespace golang::os
     {
         gocpp::error kill(Process* p);
         gocpp::error withHandle(Process* p, std::function<void (uintptr_t handle)> f);
-        int Pid(ProcessState* p);
+        int64_t Pid(ProcessState* p);
         bool exited(ProcessState* p);
         bool success(ProcessState* p);
         go_any sys(ProcessState* p);
         go_any sysUsage(ProcessState* p);
         gocpp::string String(ProcessState* p);
-        int ExitCode(ProcessState* p);
+        int64_t ExitCode(ProcessState* p);
     }
 }
 

@@ -84,10 +84,10 @@ namespace golang::golang_org::x::tools::go::ast::inspector
             return Enclosing(c, gocpp::ToSlice<ast::Node>(value, types...));
         }
         Cursor Parent(Cursor c);
-        std::tuple<edge::Kind, int> ParentEdge(Cursor c);
+        std::tuple<edge::Kind, int64_t> ParentEdge(Cursor c);
         edge::Kind ParentEdgeKind(Cursor c);
-        int ParentEdgeIndex(Cursor c);
-        Cursor ChildAt(Cursor c, edge::Kind k, int idx);
+        int64_t ParentEdgeIndex(Cursor c);
+        Cursor ChildAt(Cursor c, edge::Kind k, int64_t idx);
         Cursor Child(Cursor c, ast::Node n);
         std::tuple<Cursor, bool> NextSibling(Cursor c);
         std::tuple<Cursor, bool> PrevSibling(Cursor c);

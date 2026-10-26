@@ -12,6 +12,8 @@
 
 namespace golang::internal::reflectlite
 {
+    struct GoTag_flag { };
+    using flag = gocpp::defined<uintptr_t, GoTag_flag>;
     gocpp::string methodName();
     struct gocpp_id_3 : virtual gocpp::Interface
     {
@@ -162,9 +164,9 @@ namespace golang::internal::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
-    int chanlen(gocpp::unsafe_pointer);
-    int maplen(gocpp::unsafe_pointer);
-    gocpp::unsafe_pointer arrayAt(gocpp::unsafe_pointer p, int i, uintptr_t eltSize, gocpp::string whySafe);
+    int64_t chanlen(gocpp::unsafe_pointer);
+    int64_t maplen(gocpp::unsafe_pointer);
+    gocpp::unsafe_pointer arrayAt(gocpp::unsafe_pointer p, int64_t i, uintptr_t eltSize, gocpp::string whySafe);
 }
 #include "golang/internal/abi/escape.fwd.h"
 #include "golang/internal/abi/iface.fwd.h"
@@ -247,8 +249,8 @@ namespace golang::internal::reflectlite
         bool IsNil(Value v);
         bool IsValid(Value v);
         golang::internal::reflectlite::Kind Kind(Value v);
-        int Len(Value v);
-        int numMethod(Value v);
+        int64_t Len(Value v);
+        int64_t numMethod(Value v);
         void Set(Value v, Value x);
         golang::internal::reflectlite::Type Type(Value v);
         Value assignTo(Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target);

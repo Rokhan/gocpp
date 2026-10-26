@@ -28,7 +28,7 @@ namespace golang::go::types
 namespace golang::go::types
 {
     namespace constant = golang::go::constant;
-    int cmpPos(token::Pos p, token::Pos q);
+    int64_t cmpPos(token::Pos p, token::Pos q);
     bool hasDots(ast::CallExpr* call);
     positioner dddErrPos(ast::CallExpr* call);
     bool isdddArray(ast::ArrayType* atyp);

@@ -104,7 +104,7 @@ namespace golang::math
         }
 
         auto b = Float64bits(x);
-        auto e = (unsigned int)(b >> shift) & mask - bias;
+        auto e = (uint64_t)(b >> shift) & mask - bias;
 
         // Keep the top 12+e bits, the integer part; clear the rest.
         if(e < 64 - 12)
@@ -132,7 +132,7 @@ namespace golang::math
         // return t
         // }
         auto bits = Float64bits(x);
-        auto e = (unsigned int)(bits >> shift) & mask;
+        auto e = (uint64_t)(bits >> shift) & mask;
         if(e < bias)
         {
             // Round abs(x) < 1 including denormals.
@@ -177,7 +177,7 @@ namespace golang::math
         // return t
         // }
         auto bits = Float64bits(x);
-        auto e = (unsigned int)(bits >> shift) & mask;
+        auto e = (uint64_t)(bits >> shift) & mask;
         if(e >= bias)
         {
             // Round abs(x) >= 1.

@@ -153,7 +153,7 @@ namespace golang::golang_org::x::tools::go::packages
     driver findExternalDriver(Config* cfg)
     {
         auto toolPrefix = "GOPACKAGESDRIVER="_s;
-        auto tool = ""_s;
+        gocpp::string tool = ""_s;
         for(auto [gocpp_ignored, env] : cfg->Env)
         {
             if(auto [val, ok] = strings::CutPrefix(env, toolPrefix); ok)

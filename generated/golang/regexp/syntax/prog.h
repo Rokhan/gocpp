@@ -12,9 +12,14 @@
 
 namespace golang::regexp::syntax
 {
+    struct GoTag_InstOp { };
+    using InstOp = gocpp::defined<uint8_t, GoTag_InstOp>;
     extern gocpp::slice<gocpp::string> instOpNames;
-    EmptyOp EmptyOpContext(gocpp::rune r1, gocpp::rune r2);
+    struct GoTag_EmptyOp { };
+    using EmptyOp = gocpp::defined<uint8_t, GoTag_EmptyOp>;
     bool IsWordChar(gocpp::rune r);
+    gocpp::string u32(uint32_t i);
+    EmptyOp EmptyOpContext(gocpp::rune r1, gocpp::rune r2);
     struct Inst
     {
         InstOp Op{};
@@ -34,12 +39,11 @@ namespace golang::regexp::syntax
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Inst& value);
-    gocpp::string u32(uint32_t i);
     struct Prog
     {
         gocpp::slice<Inst> Inst{};
-        int Start{}; // index of start instruction
-        int NumCap{}; // number of InstCapture insts in re
+        int64_t Start{}; // index of start instruction
+        int64_t NumCap{}; // number of InstCapture insts in re
 
         using isGoStruct = void;
 
@@ -84,7 +88,7 @@ namespace golang::regexp::syntax
         std::tuple<gocpp::string, bool> Prefix(Prog* p);
         EmptyOp StartCond(Prog* p);
         bool MatchRune(Inst* i, gocpp::rune r);
-        int MatchRunePos(Inst* i, gocpp::rune r);
+        int64_t MatchRunePos(Inst* i, gocpp::rune r);
         bool MatchEmptyWidth(Inst* i, gocpp::rune before, gocpp::rune after);
         gocpp::string String(Inst* i);
     }

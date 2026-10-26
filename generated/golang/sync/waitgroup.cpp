@@ -116,7 +116,7 @@ namespace golang::sync
     // If a WaitGroup is reused to wait for several independent sets of events,
     // new Add calls must happen after all previous Wait calls have returned.
     // See the WaitGroup example.
-    void rec::Add(WaitGroup* wg, int delta)
+    void rec::Add(WaitGroup* wg, int64_t delta)
     {
         gocpp::Defer defer;
         try
@@ -131,7 +131,7 @@ namespace golang::sync
                 race::Disable();
                 defer.push_back([=]{ race::Enable(); });
             }
-            auto bubbled = false;
+            bool bubbled = false;
             if(synctest::IsInBubble())
             {
                 // If Add is called from within a bubble, then all Add calls must be made
@@ -276,7 +276,7 @@ namespace golang::sync
                     // otherwise concurrent Waits will race with each other.
                     race::Write(gocpp::unsafe_pointer(& wg->sema));
                 }
-                auto synctestDurable = false;
+                bool synctestDurable = false;
                 if(state & waitGroupBubbleFlag != 0 && synctest::IsInBubble())
                 {
                     if(race::Enabled)

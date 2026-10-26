@@ -281,7 +281,7 @@ namespace golang::runtime
             go_throw("gp.xRegs.state == nil on a scanstack attempt during async preemption"_s);
         }
         auto b = uintptr_t(gocpp::unsafe_pointer(& gp->xRegs.state->regs));
-        auto n = uintptr_t(gocpp::Sizeof<xRegs>());
+        uintptr_t n = uintptr_t(gocpp::Sizeof<xRegs>());
         if(debugScanConservative)
         {
             print("begin scan xRegs of goroutine "_s, gp->goid, " at ["_s, hex(b), ","_s, hex(b + n), ")\n"_s);

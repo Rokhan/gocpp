@@ -339,7 +339,7 @@ namespace golang::image::color
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(Gray16 c);
         Color Convert(modelFunc* m, Color c);
         Color Convert(Palette p, Color c);
-        int Index(Palette p, Color c);
+        int64_t Index(Palette p, Color c);
     }
 }
 

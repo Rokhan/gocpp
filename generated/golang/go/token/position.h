@@ -15,9 +15,9 @@ namespace golang::go::token
     struct Position
     {
         gocpp::string Filename{}; // filename, if any
-        int Offset{}; // offset, starting at 0
-        int Line{}; // line number, starting at 1
-        int Column{}; // column number, starting at 1 (byte count)
+        int64_t Offset{}; // offset, starting at 0
+        int64_t Line{}; // line number, starting at 1
+        int64_t Column{}; // column number, starting at 1 (byte count)
 
         using isGoStruct = void;
 
@@ -31,13 +31,15 @@ namespace golang::go::token
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Position& value);
+    struct GoTag_Pos { };
+    using Pos = gocpp::defined<int64_t, GoTag_Pos>;
     struct lineInfo
     {
         // fields are exported to make them accessible to gob
-        int Offset{};
+        int64_t Offset{};
         gocpp::string Filename{};
-        int Line{};
-        int Column{};
+        int64_t Line{};
+        int64_t Column{};
 
         using isGoStruct = void;
 
@@ -51,8 +53,8 @@ namespace golang::go::token
     };
 
     std::ostream& operator<<(std::ostream& os, const struct lineInfo& value);
-    int searchInts(gocpp::slice<int> a, int x);
-    int searchLineInfos(gocpp::slice<lineInfo> a, int x);
+    int64_t searchInts(gocpp::slice<int64_t> a, int64_t x);
+    int64_t searchLineInfos(gocpp::slice<lineInfo> a, int64_t x);
 }
 #include "golang/sync/mutex.fwd.h"
 #include "golang/sync/rwmutex.fwd.h"
@@ -68,11 +70,11 @@ namespace golang::go::token
     struct File
     {
         gocpp::string name{}; // file name as provided to AddFile
-        int base{}; // Pos value range for this file is [base...base+size]
-        int size{}; // file size as provided to AddFile
+        int64_t base{}; // Pos value range for this file is [base...base+size]
+        int64_t size{}; // file size as provided to AddFile
         // lines and infos are protected by mutex
         mocklib::Mutex mutex{};
-        gocpp::slice<int> lines{}; // lines contains the offset of the first character for each line (the first entry is always 0)
+        gocpp::slice<int64_t> lines{}; // lines contains the offset of the first character for each line (the first entry is always 0)
         gocpp::slice<lineInfo> infos{};
 
         using isGoStruct = void;
@@ -99,7 +101,7 @@ namespace golang::go::token
     struct FileSet
     {
         sync::RWMutex mutex{}; // protects the file set
-        int base{}; // base offset for the next file
+        int64_t base{}; // base offset for the next file
         tree tree{}; // tree of files in ascending base order
         atomic::Pointer<golang::go::token::File> last{}; // cache of last file looked up
 
@@ -124,28 +126,28 @@ namespace golang::go::token
         bool IsValid(golang::go::token::Pos p);
         gocpp::string String(golang::go::token::File* f);
         gocpp::string Name(golang::go::token::File* f);
-        int Base(golang::go::token::File* f);
-        int Size(golang::go::token::File* f);
+        int64_t Base(golang::go::token::File* f);
+        int64_t Size(golang::go::token::File* f);
         golang::go::token::Pos End(golang::go::token::File* f);
-        int LineCount(golang::go::token::File* f);
-        void AddLine(golang::go::token::File* f, int offset);
-        void MergeLine(golang::go::token::File* f, int line);
-        gocpp::slice<int> Lines(golang::go::token::File* f);
-        bool SetLines(golang::go::token::File* f, gocpp::slice<int> lines);
+        int64_t LineCount(golang::go::token::File* f);
+        void AddLine(golang::go::token::File* f, int64_t offset);
+        void MergeLine(golang::go::token::File* f, int64_t line);
+        gocpp::slice<int64_t> Lines(golang::go::token::File* f);
+        bool SetLines(golang::go::token::File* f, gocpp::slice<int64_t> lines);
         void SetLinesForContent(golang::go::token::File* f, gocpp::slice<unsigned char> content);
-        golang::go::token::Pos LineStart(golang::go::token::File* f, int line);
-        void AddLineInfo(golang::go::token::File* f, int offset, gocpp::string filename, int line);
-        void AddLineColumnInfo(golang::go::token::File* f, int offset, gocpp::string filename, int line, int column);
-        int fixOffset(golang::go::token::File* f, int offset);
-        golang::go::token::Pos Pos(golang::go::token::File* f, int offset);
-        int Offset(golang::go::token::File* f, golang::go::token::Pos p);
-        int Line(golang::go::token::File* f, golang::go::token::Pos p);
-        std::tuple<gocpp::string, int, int> unpack(golang::go::token::File* f, int offset, bool adjusted);
+        golang::go::token::Pos LineStart(golang::go::token::File* f, int64_t line);
+        void AddLineInfo(golang::go::token::File* f, int64_t offset, gocpp::string filename, int64_t line);
+        void AddLineColumnInfo(golang::go::token::File* f, int64_t offset, gocpp::string filename, int64_t line, int64_t column);
+        int64_t fixOffset(golang::go::token::File* f, int64_t offset);
+        golang::go::token::Pos Pos(golang::go::token::File* f, int64_t offset);
+        int64_t Offset(golang::go::token::File* f, golang::go::token::Pos p);
+        int64_t Line(golang::go::token::File* f, golang::go::token::Pos p);
+        std::tuple<gocpp::string, int64_t, int64_t> unpack(golang::go::token::File* f, int64_t offset, bool adjusted);
         golang::go::token::Position position(golang::go::token::File* f, golang::go::token::Pos p, bool adjusted);
         golang::go::token::Position PositionFor(golang::go::token::File* f, golang::go::token::Pos p, bool adjusted);
         golang::go::token::Position Position(golang::go::token::File* f, golang::go::token::Pos p);
-        int Base(FileSet* s);
-        golang::go::token::File* AddFile(FileSet* s, gocpp::string filename, int base, int size);
+        int64_t Base(FileSet* s);
+        golang::go::token::File* AddFile(FileSet* s, gocpp::string filename, int64_t base, int64_t size);
         void AddExistingFiles(FileSet* s, gocpp::slice<golang::go::token::File*> files);
         
         template<typename... Args>

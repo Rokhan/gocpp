@@ -6,14 +6,15 @@
 
 namespace golang::internal::types::errors
 {
-    using Code = int;
+    struct GoTag_Code;
+    using Code = gocpp::defined<int64_t, GoTag_Code>;
     // InvalidSyntaxTree occurs if an invalid syntax tree is provided
     // to the type checker. It should never happen.
-    const Code InvalidSyntaxTree = - 1;
+    inline constexpr Code InvalidSyntaxTree = - 1;
     // The zero Code value indicates an unset (invalid) error code.
-    const Code _ = 0;
+    inline constexpr Code _ = 0;
     // Test is reserved for errors that only apply while in self-test mode.
-    const Code Test = 1;
+    inline constexpr Code Test = 1;
     // BlankPkgName occurs when a package name is the blank identifier "_".
     //
     // Per the spec:
@@ -21,10 +22,10 @@ namespace golang::internal::types::errors
     //
     // Example:
     //  package _
-    const Code BlankPkgName = 2;
+    inline constexpr Code BlankPkgName = 2;
     // MismatchedPkgName occurs when a file's package name doesn't match the
     // package name already established by other files.
-    const Code MismatchedPkgName = 3;
+    inline constexpr Code MismatchedPkgName = 3;
     // InvalidPkgUse occurs when a package identifier is used outside of a
     // selector expression.
     //
@@ -32,27 +33,27 @@ namespace golang::internal::types::errors
     //  import "fmt"
     //
     //  var _ = fmt
-    const Code InvalidPkgUse = 4;
+    inline constexpr Code InvalidPkgUse = 4;
     // BadImportPath occurs when an import path is not valid.
-    const Code BadImportPath = 5;
+    inline constexpr Code BadImportPath = 5;
     // BrokenImport occurs when importing a package fails.
     //
     // Example:
     //  import "amissingpackage"
-    const Code BrokenImport = 6;
+    inline constexpr Code BrokenImport = 6;
     // ImportCRenamed occurs when the special import "C" is renamed. "C" is a
     // pseudo-package, and must not be renamed.
     //
     // Example:
     //  import _ "C"
-    const Code ImportCRenamed = 7;
+    inline constexpr Code ImportCRenamed = 7;
     // UnusedImport occurs when an import is unused.
     //
     // Example:
     //  import "fmt"
     //
     //  func main() {}
-    const Code UnusedImport = 8;
+    inline constexpr Code UnusedImport = 8;
     // InvalidInitCycle occurs when an invalid cycle is detected within the
     // initialization graph.
     //
@@ -60,13 +61,13 @@ namespace golang::internal::types::errors
     //  var x int = f()
     //
     //  func f() int { return x }
-    const Code InvalidInitCycle = 9;
+    inline constexpr Code InvalidInitCycle = 9;
     // DuplicateDecl occurs when an identifier is declared multiple times.
     //
     // Example:
     //  var x = 1
     //  var x = 2
-    const Code DuplicateDecl = 10;
+    inline constexpr Code DuplicateDecl = 10;
     // InvalidDeclCycle occurs when a declaration cycle is not valid.
     //
     // Example:
@@ -78,17 +79,17 @@ namespace golang::internal::types::errors
     //  import "unsafe"
     //
     //  type T [unsafe.Sizeof(T{})]int
-    const Code InvalidDeclCycle = 11;
+    inline constexpr Code InvalidDeclCycle = 11;
     // InvalidTypeCycle occurs when a cycle in type definitions results in a
     // type that is not well-defined.
-    const Code InvalidTypeCycle = 12;
+    inline constexpr Code InvalidTypeCycle = 12;
     // InvalidConstInit occurs when a const declaration has a non-constant
     // initializer.
     //
     // Example:
     //  var x int
     //  const _ = x
-    const Code InvalidConstInit = 13;
+    inline constexpr Code InvalidConstInit = 13;
     // InvalidConstVal occurs when a const value cannot be converted to its
     // target type.
     //
@@ -97,26 +98,26 @@ namespace golang::internal::types::errors
     //
     // Example:
     //  const _ = 1 << "hello"
-    const Code InvalidConstVal = 14;
+    inline constexpr Code InvalidConstVal = 14;
     // InvalidConstType occurs when the underlying type in a const declaration
     // is not a valid constant type.
     //
     // Example:
     //  const c *int = 4
-    const Code InvalidConstType = 15;
+    inline constexpr Code InvalidConstType = 15;
     // UntypedNilUse occurs when the predeclared (untyped) value nil is used to
     // initialize a variable declared without an explicit type.
     //
     // Example:
     //  var x = nil
-    const Code UntypedNilUse = 16;
+    inline constexpr Code UntypedNilUse = 16;
     // WrongAssignCount occurs when the number of values on the right-hand side
     // of an assignment or initialization expression does not match the number
     // of variables on the left-hand side.
     //
     // Example:
     //  var x = 1, 2
-    const Code WrongAssignCount = 17;
+    inline constexpr Code WrongAssignCount = 17;
     // UnassignableOperand occurs when the left-hand side of an assignment is
     // not assignable.
     //
@@ -125,7 +126,7 @@ namespace golang::internal::types::errors
     //  	const c = 1
     //  	c = 2
     //  }
-    const Code UnassignableOperand = 18;
+    inline constexpr Code UnassignableOperand = 18;
     // NoNewVar occurs when a short variable declaration (':=') does not declare
     // new variables.
     //
@@ -134,7 +135,7 @@ namespace golang::internal::types::errors
     //  	x := 1
     //  	x := 2
     //  }
-    const Code NoNewVar = 19;
+    inline constexpr Code NoNewVar = 19;
     // MultiValAssignOp occurs when an assignment operation (+=, *=, etc) does
     // not have single-valued left-hand or right-hand side.
     //
@@ -148,7 +149,7 @@ namespace golang::internal::types::errors
     //  	x, y += 1
     //  	return x + y
     //  }
-    const Code MultiValAssignOp = 20;
+    inline constexpr Code MultiValAssignOp = 20;
     // InvalidIfaceAssign occurs when a value of type T is used as an
     // interface, but T does not implement a method of the expected interface.
     //
@@ -160,7 +161,7 @@ namespace golang::internal::types::errors
     //  type T int
     //
     //  var x I = T(1)
-    const Code InvalidIfaceAssign = 21;
+    inline constexpr Code InvalidIfaceAssign = 21;
     // InvalidChanAssign occurs when a chan assignment is invalid.
     //
     // Per the spec, a value x is assignable to a channel type T if:
@@ -175,7 +176,7 @@ namespace golang::internal::types::errors
     //  var x T1
     //  // Invalid assignment because both types are named
     //  var _ T2 = x
-    const Code InvalidChanAssign = 22;
+    inline constexpr Code InvalidChanAssign = 22;
     // IncompatibleAssign occurs when the type of the right-hand side expression
     // in an assignment cannot be assigned to the type of the variable being
     // assigned.
@@ -183,7 +184,7 @@ namespace golang::internal::types::errors
     // Example:
     //  var x []int
     //  var _ int = x
-    const Code IncompatibleAssign = 23;
+    inline constexpr Code IncompatibleAssign = 23;
     // UnaddressableFieldAssign occurs when trying to assign to a struct field
     // in a map value.
     //
@@ -192,7 +193,7 @@ namespace golang::internal::types::errors
     //  	m := make(map[string]struct{i int})
     //  	m["foo"].i = 42
     //  }
-    const Code UnaddressableFieldAssign = 24;
+    inline constexpr Code UnaddressableFieldAssign = 24;
     // NotAType occurs when the identifier used as the underlying type in a type
     // declaration or the right-hand side of a type alias does not denote a type.
     //
@@ -200,13 +201,13 @@ namespace golang::internal::types::errors
     //  var S = 2
     //
     //  type T S
-    const Code NotAType = 25;
+    inline constexpr Code NotAType = 25;
     // InvalidArrayLen occurs when an array length is not a constant value.
     //
     // Example:
     //  var n = 3
     //  var _ = [n]int{}
-    const Code InvalidArrayLen = 26;
+    inline constexpr Code InvalidArrayLen = 26;
     // BlankIfaceMethod occurs when a method name is '_'.
     //
     // Per the spec:
@@ -217,7 +218,7 @@ namespace golang::internal::types::errors
     //  type T interface {
     //  	_(int)
     //  }
-    const Code BlankIfaceMethod = 27;
+    inline constexpr Code BlankIfaceMethod = 27;
     // IncomparableMapKey occurs when a map key type does not support the == and
     // != operators.
     //
@@ -229,10 +230,10 @@ namespace golang::internal::types::errors
     //  var x map[T]int
     //
     //  type T []int
-    const Code IncomparableMapKey = 28;
+    inline constexpr Code IncomparableMapKey = 28;
     // InvalidIfaceEmbed occurs when a non-interface type is embedded in an
     // interface (for go 1.17 or earlier).
-    const Code _ = 29;
+    inline constexpr Code _ = 29;
     // InvalidPtrEmbed occurs when an embedded field is of the pointer form *T,
     // and T itself is itself a pointer, an unsafe.Pointer, or an interface.
     //
@@ -246,13 +247,13 @@ namespace golang::internal::types::errors
     //  type S struct {
     //  	*T
     //  }
-    const Code InvalidPtrEmbed = 30;
+    inline constexpr Code InvalidPtrEmbed = 30;
     // BadRecv occurs when a method declaration does not have exactly one
     // receiver parameter.
     //
     // Example:
     //  func () _() {}
-    const Code BadRecv = 31;
+    inline constexpr Code BadRecv = 31;
     // InvalidRecv occurs when a receiver type expression is not of the form T
     // or *T, or T is a pointer type.
     //
@@ -260,7 +261,7 @@ namespace golang::internal::types::errors
     //  type T struct {}
     //
     //  func (**T) m() {}
-    const Code InvalidRecv = 32;
+    inline constexpr Code InvalidRecv = 32;
     // DuplicateFieldAndMethod occurs when an identifier appears as both a field
     // and method name.
     //
@@ -270,7 +271,7 @@ namespace golang::internal::types::errors
     //  }
     //
     //  func (T) m() {}
-    const Code DuplicateFieldAndMethod = 33;
+    inline constexpr Code DuplicateFieldAndMethod = 33;
     // DuplicateMethod occurs when two methods on the same receiver type have
     // the same name.
     //
@@ -278,7 +279,7 @@ namespace golang::internal::types::errors
     //  type T struct {}
     //  func (T) m() {}
     //  func (T) m(i int) int { return i }
-    const Code DuplicateMethod = 34;
+    inline constexpr Code DuplicateMethod = 34;
     // InvalidBlank occurs when a blank identifier is used as a value or type.
     //
     // Per the spec:
@@ -287,24 +288,24 @@ namespace golang::internal::types::errors
     //
     // Example:
     //  var x = _
-    const Code InvalidBlank = 35;
+    inline constexpr Code InvalidBlank = 35;
     // InvalidIota occurs when the predeclared identifier iota is used outside
     // of a constant declaration.
     //
     // Example:
     //  var x = iota
-    const Code InvalidIota = 36;
+    inline constexpr Code InvalidIota = 36;
     // MissingInitBody occurs when an init function is missing its body.
     //
     // Example:
     //  func init()
-    const Code MissingInitBody = 37;
+    inline constexpr Code MissingInitBody = 37;
     // InvalidInitSig occurs when an init function declares parameters or
     // results.
     //
     // Deprecated: no longer emitted by the type checker. _InvalidInitDecl is
     // used instead.
-    const Code InvalidInitSig = 38;
+    inline constexpr Code InvalidInitSig = 38;
     // InvalidInitDecl occurs when init is declared as anything other than a
     // function.
     //
@@ -313,10 +314,10 @@ namespace golang::internal::types::errors
     //
     // Example:
     //  func init() int { return 1 }
-    const Code InvalidInitDecl = 39;
+    inline constexpr Code InvalidInitDecl = 39;
     // InvalidMainDecl occurs when main is declared as anything other than a
     // function, in a main package.
-    const Code InvalidMainDecl = 40;
+    inline constexpr Code InvalidMainDecl = 40;
     // TooManyValues occurs when a function returns too many values for the
     // expression context in which it is used.
     //
@@ -326,7 +327,7 @@ namespace golang::internal::types::errors
     //  }
     //
     //  var x = ReturnTwo()
-    const Code TooManyValues = 41;
+    inline constexpr Code TooManyValues = 41;
     // NotAnExpr occurs when a type expression is used where a value expression
     // is expected.
     //
@@ -336,24 +337,24 @@ namespace golang::internal::types::errors
     //  func f() {
     //  	T
     //  }
-    const Code NotAnExpr = 42;
+    inline constexpr Code NotAnExpr = 42;
     // TruncatedFloat occurs when a float constant is truncated to an integer
     // value.
     //
     // Example:
     //  var _ int = 98.6
-    const Code TruncatedFloat = 43;
+    inline constexpr Code TruncatedFloat = 43;
     // NumericOverflow occurs when a numeric constant overflows its target type.
     //
     // Example:
     //  var x int8 = 1000
-    const Code NumericOverflow = 44;
+    inline constexpr Code NumericOverflow = 44;
     // UndefinedOp occurs when an operator is not defined for the type(s) used
     // in an operation.
     //
     // Example:
     //  var c = "a" - "b"
-    const Code UndefinedOp = 45;
+    inline constexpr Code UndefinedOp = 45;
     // MismatchedTypes occurs when operand types are incompatible in a binary
     // operation.
     //
@@ -361,14 +362,14 @@ namespace golang::internal::types::errors
     //  var a = "hello"
     //  var b = 1
     //  var c = a - b
-    const Code MismatchedTypes = 46;
+    inline constexpr Code MismatchedTypes = 46;
     // DivByZero occurs when a division operation is provable at compile
     // time to be a division by zero.
     //
     // Example:
     //  const divisor = 0
     //  var x int = 1/divisor
-    const Code DivByZero = 47;
+    inline constexpr Code DivByZero = 47;
     // NonNumericIncDec occurs when an increment or decrement operator is
     // applied to a non-numeric value.
     //
@@ -377,27 +378,27 @@ namespace golang::internal::types::errors
     //  	var c = "c"
     //  	c++
     //  }
-    const Code NonNumericIncDec = 48;
+    inline constexpr Code NonNumericIncDec = 48;
     // UnaddressableOperand occurs when the & operator is applied to an
     // unaddressable expression.
     //
     // Example:
     //  var x = &1
-    const Code UnaddressableOperand = 49;
+    inline constexpr Code UnaddressableOperand = 49;
     // InvalidIndirection occurs when a non-pointer value is indirected via the
     // '*' operator.
     //
     // Example:
     //  var x int
     //  var y = *x
-    const Code InvalidIndirection = 50;
+    inline constexpr Code InvalidIndirection = 50;
     // NonIndexableOperand occurs when an index operation is applied to a value
     // that cannot be indexed.
     //
     // Example:
     //  var x = 1
     //  var y = x[1]
-    const Code NonIndexableOperand = 51;
+    inline constexpr Code NonIndexableOperand = 51;
     // InvalidIndex occurs when an index argument is not of integer type,
     // negative, or out-of-bounds.
     //
@@ -413,13 +414,13 @@ namespace golang::internal::types::errors
     //  var s = []int{1,2,3}
     //  var i string
     //  var _ = s[i]
-    const Code InvalidIndex = 52;
+    inline constexpr Code InvalidIndex = 52;
     // SwappedSliceIndices occurs when constant indices in a slice expression
     // are decreasing in value.
     //
     // Example:
     //  var _ = []int{1,2,3}[2:1]
-    const Code SwappedSliceIndices = 53;
+    inline constexpr Code SwappedSliceIndices = 53;
     // NonSliceableOperand occurs when a slice operation is applied to a value
     // whose type is not sliceable, or is unaddressable.
     //
@@ -429,14 +430,14 @@ namespace golang::internal::types::errors
     // Example:
     //  var x = 1
     //  var y = 1[:1]
-    const Code NonSliceableOperand = 54;
+    inline constexpr Code NonSliceableOperand = 54;
     // InvalidSliceExpr occurs when a three-index slice expression (a[x:y:z]) is
     // applied to a string.
     //
     // Example:
     //  var s = "hello"
     //  var x = s[1:2:3]
-    const Code InvalidSliceExpr = 55;
+    inline constexpr Code InvalidSliceExpr = 55;
     // InvalidShiftCount occurs when the right-hand side of a shift operation is
     // either non-integer, negative, or too large.
     //
@@ -445,13 +446,13 @@ namespace golang::internal::types::errors
     //  	x string
     //  	y int = 1 << x
     //  )
-    const Code InvalidShiftCount = 56;
+    inline constexpr Code InvalidShiftCount = 56;
     // InvalidShiftOperand occurs when the shifted operand is not an integer.
     //
     // Example:
     //  var s = "hello"
     //  var x = s << 2
-    const Code InvalidShiftOperand = 57;
+    inline constexpr Code InvalidShiftOperand = 57;
     // InvalidReceive occurs when there is a channel receive from a value that
     // is either not a channel, or is a send-only channel.
     //
@@ -460,7 +461,7 @@ namespace golang::internal::types::errors
     //  	var x = 1
     //  	<-x
     //  }
-    const Code InvalidReceive = 58;
+    inline constexpr Code InvalidReceive = 58;
     // InvalidSend occurs when there is a channel send to a value that is not a
     // channel, or is a receive-only channel.
     //
@@ -469,7 +470,7 @@ namespace golang::internal::types::errors
     //  	var x = 1
     //  	x <- "hello!"
     //  }
-    const Code InvalidSend = 59;
+    inline constexpr Code InvalidSend = 59;
     // DuplicateLitKey occurs when an index is duplicated in a slice, array, or
     // map literal.
     //
@@ -478,56 +479,56 @@ namespace golang::internal::types::errors
     //
     // Example:
     //  var _ = map[string]int{"a": 1, "a": 2}
-    const Code DuplicateLitKey = 60;
+    inline constexpr Code DuplicateLitKey = 60;
     // MissingLitKey occurs when a map literal is missing a key expression.
     //
     // Example:
     //  var _ = map[string]int{1}
-    const Code MissingLitKey = 61;
+    inline constexpr Code MissingLitKey = 61;
     // InvalidLitIndex occurs when the key in a key-value element of a slice or
     // array literal is not an integer constant.
     //
     // Example:
     //  var i = 0
     //  var x = []string{i: "world"}
-    const Code InvalidLitIndex = 62;
+    inline constexpr Code InvalidLitIndex = 62;
     // OversizeArrayLit occurs when an array literal exceeds its length.
     //
     // Example:
     //  var _ = [2]int{1,2,3}
-    const Code OversizeArrayLit = 63;
+    inline constexpr Code OversizeArrayLit = 63;
     // MixedStructLit occurs when a struct literal contains a mix of positional
     // and named elements.
     //
     // Example:
     //  var _ = struct{i, j int}{i: 1, 2}
-    const Code MixedStructLit = 64;
+    inline constexpr Code MixedStructLit = 64;
     // InvalidStructLit occurs when a positional struct literal has an incorrect
     // number of values.
     //
     // Example:
     //  var _ = struct{i, j int}{1,2,3}
-    const Code InvalidStructLit = 65;
+    inline constexpr Code InvalidStructLit = 65;
     // MissingLitField occurs when a struct literal refers to a field that does
     // not exist on the struct type.
     //
     // Example:
     //  var _ = struct{i int}{j: 2}
-    const Code MissingLitField = 66;
+    inline constexpr Code MissingLitField = 66;
     // DuplicateLitField occurs when a struct literal contains duplicated
     // fields.
     //
     // Example:
     //  var _ = struct{i int}{i: 1, i: 2}
-    const Code DuplicateLitField = 67;
+    inline constexpr Code DuplicateLitField = 67;
     // UnexportedLitField occurs when a positional struct literal implicitly
     // assigns an unexported field of an imported type.
-    const Code UnexportedLitField = 68;
+    inline constexpr Code UnexportedLitField = 68;
     // InvalidLitField occurs when a field name is not a valid identifier.
     //
     // Example:
     //  var _ = struct{i int}{1: 1}
-    const Code InvalidLitField = 69;
+    inline constexpr Code InvalidLitField = 69;
     // UntypedLit occurs when a composite literal omits a required type
     // identifier.
     //
@@ -537,7 +538,7 @@ namespace golang::internal::types::errors
     //  }
     //
     //  var _ = outer{inner: {1}}
-    const Code UntypedLit = 70;
+    inline constexpr Code UntypedLit = 70;
     // InvalidLit occurs when a composite literal expression does not match its
     // type.
     //
@@ -546,7 +547,7 @@ namespace golang::internal::types::errors
     //  	x int
     //  }
     //  var _ = P {}
-    const Code InvalidLit = 71;
+    inline constexpr Code InvalidLit = 71;
     // AmbiguousSelector occurs when a selector is ambiguous.
     //
     // Example:
@@ -556,7 +557,7 @@ namespace golang::internal::types::errors
     //
     //  var x T
     //  var _ = x.i
-    const Code AmbiguousSelector = 72;
+    inline constexpr Code AmbiguousSelector = 72;
     // UndeclaredImportedName occurs when a package-qualified identifier is
     // undeclared by the imported package.
     //
@@ -564,7 +565,7 @@ namespace golang::internal::types::errors
     //  import "go/types"
     //
     //  var _ = types.NotAnActualIdentifier
-    const Code UndeclaredImportedName = 73;
+    inline constexpr Code UndeclaredImportedName = 73;
     // UnexportedName occurs when a selector refers to an unexported identifier
     // of an imported package.
     //
@@ -572,13 +573,13 @@ namespace golang::internal::types::errors
     //  import "reflect"
     //
     //  type _ reflect.flag
-    const Code UnexportedName = 74;
+    inline constexpr Code UnexportedName = 74;
     // UndeclaredName occurs when an identifier is not declared in the current
     // scope.
     //
     // Example:
     //  var x T
-    const Code UndeclaredName = 75;
+    inline constexpr Code UndeclaredName = 75;
     // MissingFieldOrMethod occurs when a selector references a field or method
     // that does not exist.
     //
@@ -586,13 +587,13 @@ namespace golang::internal::types::errors
     //  type T struct {}
     //
     //  var x = T{}.f
-    const Code MissingFieldOrMethod = 76;
+    inline constexpr Code MissingFieldOrMethod = 76;
     // BadDotDotDotSyntax occurs when a "..." occurs in a context where it is
     // not valid.
     //
     // Example:
     //  var _ = map[int][...]int{0: {}}
-    const Code BadDotDotDotSyntax = 77;
+    inline constexpr Code BadDotDotDotSyntax = 77;
     // NonVariadicDotDotDot occurs when a "..." is used on the final argument to
     // a non-variadic function.
     //
@@ -607,18 +608,18 @@ namespace golang::internal::types::errors
     //  	s := []string{"a", "b", "c"}
     //  	printArgs(s...)
     //  }
-    const Code NonVariadicDotDotDot = 78;
+    inline constexpr Code NonVariadicDotDotDot = 78;
     // MisplacedDotDotDot occurs when a "..." is used somewhere other than the
     // final argument in a function declaration.
-    const Code _ = 79;
-    const Code _ = 80;
+    inline constexpr Code _ = 79;
+    inline constexpr Code _ = 80;
     // InvalidDotDotDot occurs when a "..." is used in a non-variadic built-in
     // function.
     //
     // Example:
     //  var s = []int{1, 2, 3}
     //  var l = len(s...)
-    const Code InvalidDotDotDot = 81;
+    inline constexpr Code InvalidDotDotDot = 81;
     // UncalledBuiltin occurs when a built-in function is used as a
     // function-valued expression, instead of being called.
     //
@@ -628,13 +629,13 @@ namespace golang::internal::types::errors
     //
     // Example:
     //  var _ = copy
-    const Code UncalledBuiltin = 82;
+    inline constexpr Code UncalledBuiltin = 82;
     // InvalidAppend occurs when append is called with a first argument that is
     // not a slice.
     //
     // Example:
     //  var _ = append(1, 2)
-    const Code InvalidAppend = 83;
+    inline constexpr Code InvalidAppend = 83;
     // InvalidCap occurs when an argument to the cap built-in function is not of
     // supported type.
     //
@@ -644,7 +645,7 @@ namespace golang::internal::types::errors
     // Example:
     //  var s = 2
     //  var x = cap(s)
-    const Code InvalidCap = 84;
+    inline constexpr Code InvalidCap = 84;
     // InvalidClose occurs when close(...) is called with an argument that is
     // not of channel type, or that is a receive-only channel.
     //
@@ -653,7 +654,7 @@ namespace golang::internal::types::errors
     //  	var x int
     //  	close(x)
     //  }
-    const Code InvalidClose = 85;
+    inline constexpr Code InvalidClose = 85;
     // InvalidCopy occurs when the arguments are not of slice type or do not
     // have compatible type.
     //
@@ -666,13 +667,13 @@ namespace golang::internal::types::errors
     //  	y := []int64{1,2,3}
     //  	copy(x, y)
     //  }
-    const Code InvalidCopy = 86;
+    inline constexpr Code InvalidCopy = 86;
     // InvalidComplex occurs when the complex built-in function is called with
     // arguments with incompatible types.
     //
     // Example:
     //  var _ = complex(float32(1), float64(2))
-    const Code InvalidComplex = 87;
+    inline constexpr Code InvalidComplex = 87;
     // InvalidDelete occurs when the delete built-in function is called with a
     // first argument that is not a map.
     //
@@ -681,13 +682,13 @@ namespace golang::internal::types::errors
     //  	m := "hello"
     //  	delete(m, "e")
     //  }
-    const Code InvalidDelete = 88;
+    inline constexpr Code InvalidDelete = 88;
     // InvalidImag occurs when the imag built-in function is called with an
     // argument that does not have complex type.
     //
     // Example:
     //  var _ = imag(int(1))
-    const Code InvalidImag = 89;
+    inline constexpr Code InvalidImag = 89;
     // InvalidLen occurs when an argument to the len built-in function is not of
     // supported type.
     //
@@ -697,13 +698,13 @@ namespace golang::internal::types::errors
     // Example:
     //  var s = 2
     //  var x = len(s)
-    const Code InvalidLen = 90;
+    inline constexpr Code InvalidLen = 90;
     // SwappedMakeArgs occurs when make is called with three arguments, and its
     // length argument is larger than its capacity argument.
     //
     // Example:
     //  var x = make([]int, 3, 2)
-    const Code SwappedMakeArgs = 91;
+    inline constexpr Code SwappedMakeArgs = 91;
     // InvalidMake occurs when make is called with an unsupported type argument.
     //
     // See https://golang.org/ref/spec#Making_slices_maps_and_channels for
@@ -711,20 +712,20 @@ namespace golang::internal::types::errors
     //
     // Example:
     //  var x = make(int)
-    const Code InvalidMake = 92;
+    inline constexpr Code InvalidMake = 92;
     // InvalidReal occurs when the real built-in function is called with an
     // argument that does not have complex type.
     //
     // Example:
     //  var _ = real(int(1))
-    const Code InvalidReal = 93;
+    inline constexpr Code InvalidReal = 93;
     // InvalidAssert occurs when a type assertion is applied to a
     // value that is not of interface type.
     //
     // Example:
     //  var x = 1
     //  var _ = x.(float64)
-    const Code InvalidAssert = 94;
+    inline constexpr Code InvalidAssert = 94;
     // ImpossibleAssert occurs for a type assertion x.(T) when the value x of
     // interface cannot have dynamic type T, due to a missing or mismatching
     // method on T.
@@ -738,7 +739,7 @@ namespace golang::internal::types::errors
     //
     //  var x I
     //  var _ = x.(T)
-    const Code ImpossibleAssert = 95;
+    inline constexpr Code ImpossibleAssert = 95;
     // InvalidConversion occurs when the argument type cannot be converted to the
     // target.
     //
@@ -748,7 +749,7 @@ namespace golang::internal::types::errors
     // Example:
     //  var x float64
     //  var _ = string(x)
-    const Code InvalidConversion = 96;
+    inline constexpr Code InvalidConversion = 96;
     // InvalidUntypedConversion occurs when there is no valid implicit
     // conversion from an untyped value satisfying the type constraints of the
     // context in which it is used.
@@ -757,7 +758,7 @@ namespace golang::internal::types::errors
     //  func f[T ~int8 | ~int16 | ~int32 | ~int64](x T) T {
     //  	return x + 1024
     //  }
-    const Code InvalidUntypedConversion = 97;
+    inline constexpr Code InvalidUntypedConversion = 97;
     // BadOffsetofSyntax occurs when unsafe.Offsetof is called with an argument
     // that is not a selector expression.
     //
@@ -766,7 +767,7 @@ namespace golang::internal::types::errors
     //
     //  var x int
     //  var _ = unsafe.Offsetof(x)
-    const Code BadOffsetofSyntax = 98;
+    inline constexpr Code BadOffsetofSyntax = 98;
     // InvalidOffsetof occurs when unsafe.Offsetof is called with a method
     // selector, rather than a field selector, or when the field is embedded via
     // a pointer.
@@ -793,7 +794,7 @@ namespace golang::internal::types::errors
     //
     //  var s S
     //  var _ = unsafe.Offsetof(s.m)
-    const Code InvalidOffsetof = 99;
+    inline constexpr Code InvalidOffsetof = 99;
     // UnusedExpr occurs when a side-effect free expression is used as a
     // statement. Such a statement has no effect.
     //
@@ -801,20 +802,20 @@ namespace golang::internal::types::errors
     //  func f(i int) {
     //  	i*i
     //  }
-    const Code UnusedExpr = 100;
+    inline constexpr Code UnusedExpr = 100;
     // UnusedVar occurs when a variable is declared but unused.
     //
     // Example:
     //  func f() {
     //  	x := 1
     //  }
-    const Code UnusedVar = 101;
+    inline constexpr Code UnusedVar = 101;
     // MissingReturn occurs when a function with results is missing a return
     // statement.
     //
     // Example:
     //  func f() int {}
-    const Code MissingReturn = 102;
+    inline constexpr Code MissingReturn = 102;
     // WrongResultCount occurs when a return statement returns an incorrect
     // number of values.
     //
@@ -822,7 +823,7 @@ namespace golang::internal::types::errors
     //  func ReturnOne() int {
     //  	return 1, 2
     //  }
-    const Code WrongResultCount = 103;
+    inline constexpr Code WrongResultCount = 103;
     // OutOfScopeResult occurs when the name of a value implicitly returned by
     // an empty return statement is shadowed in a nested scope.
     //
@@ -835,7 +836,7 @@ namespace golang::internal::types::errors
     //  	}
     //  	return 0
     //  }
-    const Code OutOfScopeResult = 104;
+    inline constexpr Code OutOfScopeResult = 104;
     // InvalidCond occurs when an if condition is not a boolean expression.
     //
     // Example:
@@ -844,7 +845,7 @@ namespace golang::internal::types::errors
     //  		panic("non-zero return")
     //  	}
     //  }
-    const Code InvalidCond = 105;
+    inline constexpr Code InvalidCond = 105;
     // InvalidPostDecl occurs when there is a declaration in a for-loop post
     // statement.
     //
@@ -852,8 +853,8 @@ namespace golang::internal::types::errors
     //  func f() {
     //  	for i := 0; i < 10; j := 0 {}
     //  }
-    const Code InvalidPostDecl = 106;
-    const Code _ = 107;
+    inline constexpr Code InvalidPostDecl = 106;
+    inline constexpr Code _ = 107;
     // InvalidIterVar occurs when two iteration variables are used while ranging
     // over a channel.
     //
@@ -863,7 +864,7 @@ namespace golang::internal::types::errors
     //  		println(k, v)
     //  	}
     //  }
-    const Code InvalidIterVar = 108;
+    inline constexpr Code InvalidIterVar = 108;
     // InvalidRangeExpr occurs when the type of a range expression is not
     // a valid type for use with a range loop.
     //
@@ -873,7 +874,7 @@ namespace golang::internal::types::errors
     //  		println(j)
     //  	}
     //  }
-    const Code InvalidRangeExpr = 109;
+    inline constexpr Code InvalidRangeExpr = 109;
     // MisplacedBreak occurs when a break statement is not within a for, switch,
     // or select statement of the innermost function definition.
     //
@@ -881,7 +882,7 @@ namespace golang::internal::types::errors
     //  func f() {
     //  	break
     //  }
-    const Code MisplacedBreak = 110;
+    inline constexpr Code MisplacedBreak = 110;
     // MisplacedContinue occurs when a continue statement is not within a for
     // loop of the innermost function definition.
     //
@@ -899,7 +900,7 @@ namespace golang::internal::types::errors
     //  	}
     //  	return sum
     //  }
-    const Code MisplacedContinue = 111;
+    inline constexpr Code MisplacedContinue = 111;
     // MisplacedFallthrough occurs when a fallthrough statement is not within an
     // expression switch.
     //
@@ -913,7 +914,7 @@ namespace golang::internal::types::errors
     //  	}
     //  	return "unsupported"
     //  }
-    const Code MisplacedFallthrough = 112;
+    inline constexpr Code MisplacedFallthrough = 112;
     // DuplicateCase occurs when a type or expression switch has duplicate
     // cases.
     //
@@ -926,7 +927,7 @@ namespace golang::internal::types::errors
     //  		println("One")
     //  	}
     //  }
-    const Code DuplicateCase = 113;
+    inline constexpr Code DuplicateCase = 113;
     // DuplicateDefault occurs when a type or expression switch has multiple
     // default clauses.
     //
@@ -941,7 +942,7 @@ namespace golang::internal::types::errors
     //  		println("1")
     //  	}
     //  }
-    const Code DuplicateDefault = 114;
+    inline constexpr Code DuplicateDefault = 114;
     // BadTypeKeyword occurs when a .(type) expression is used anywhere other
     // than a type switch.
     //
@@ -951,7 +952,7 @@ namespace golang::internal::types::errors
     //  }
     //  var t I
     //  var _ = t.(type)
-    const Code BadTypeKeyword = 115;
+    inline constexpr Code BadTypeKeyword = 115;
     // InvalidTypeSwitch occurs when .(type) is used on an expression that is
     // not of interface type.
     //
@@ -959,7 +960,7 @@ namespace golang::internal::types::errors
     //  func f(i int) {
     //  	switch x := i.(type) {}
     //  }
-    const Code InvalidTypeSwitch = 116;
+    inline constexpr Code InvalidTypeSwitch = 116;
     // InvalidExprSwitch occurs when a switch expression is not comparable.
     //
     // Example:
@@ -968,7 +969,7 @@ namespace golang::internal::types::errors
     //  	switch a /* ERROR cannot switch on a */ {
     //  	}
     //  }
-    const Code InvalidExprSwitch = 117;
+    inline constexpr Code InvalidExprSwitch = 117;
     // InvalidSelectCase occurs when a select case is not a channel send or
     // receive.
     //
@@ -981,14 +982,14 @@ namespace golang::internal::types::errors
     //  		return false
     //  	}
     //  }
-    const Code InvalidSelectCase = 118;
+    inline constexpr Code InvalidSelectCase = 118;
     // UndeclaredLabel occurs when an undeclared label is jumped to.
     //
     // Example:
     //  func f() {
     //  	goto L
     //  }
-    const Code UndeclaredLabel = 119;
+    inline constexpr Code UndeclaredLabel = 119;
     // DuplicateLabel occurs when a label is declared more than once.
     //
     // Example:
@@ -997,7 +998,7 @@ namespace golang::internal::types::errors
     //  L:
     //  	return 1
     //  }
-    const Code DuplicateLabel = 120;
+    inline constexpr Code DuplicateLabel = 120;
     // MisplacedLabel occurs when a break or continue label is not on a for,
     // switch, or select statement.
     //
@@ -1012,14 +1013,14 @@ namespace golang::internal::types::errors
     //  		println(a)
     //  	}
     //  }
-    const Code MisplacedLabel = 121;
+    inline constexpr Code MisplacedLabel = 121;
     // UnusedLabel occurs when a label is declared and not used.
     //
     // Example:
     //  func f() {
     //  L:
     //  }
-    const Code UnusedLabel = 122;
+    inline constexpr Code UnusedLabel = 122;
     // JumpOverDecl occurs when a label jumps over a variable declaration.
     //
     // Example:
@@ -1030,7 +1031,7 @@ namespace golang::internal::types::errors
     //  	x++
     //  	return x
     //  }
-    const Code JumpOverDecl = 123;
+    inline constexpr Code JumpOverDecl = 123;
     // JumpIntoBlock occurs when a forward jump goes to a label inside a nested
     // block.
     //
@@ -1042,7 +1043,7 @@ namespace golang::internal::types::errors
     //  		print("inside block")
     //  	}
     // }
-    const Code JumpIntoBlock = 124;
+    inline constexpr Code JumpIntoBlock = 124;
     // InvalidMethodExpr occurs when a pointer method is called but the argument
     // is not addressable.
     //
@@ -1052,21 +1053,21 @@ namespace golang::internal::types::errors
     //  func (*T) m() int { return 1 }
     //
     //  var _ = T.m(T{})
-    const Code InvalidMethodExpr = 125;
+    inline constexpr Code InvalidMethodExpr = 125;
     // WrongArgCount occurs when too few or too many arguments are passed by a
     // function call.
     //
     // Example:
     //  func f(i int) {}
     //  var x = f()
-    const Code WrongArgCount = 126;
+    inline constexpr Code WrongArgCount = 126;
     // InvalidCall occurs when an expression is called that is not of function
     // type.
     //
     // Example:
     //  var x = "x"
     //  var y = x()
-    const Code InvalidCall = 127;
+    inline constexpr Code InvalidCall = 127;
     // UnusedResults occurs when a restricted expression-only built-in function
     // is suspended via go or defer. Such a suspension discards the results of
     // these side-effect free built-in functions, and therefore is ineffectual.
@@ -1076,7 +1077,7 @@ namespace golang::internal::types::errors
     //  	defer len(a)
     //  	return i
     //  }
-    const Code UnusedResults = 128;
+    inline constexpr Code UnusedResults = 128;
     // InvalidDefer occurs when a deferred expression is not a function call,
     // for example if the expression is a type conversion.
     //
@@ -1085,7 +1086,7 @@ namespace golang::internal::types::errors
     //  	defer int32(i)
     //  	return i
     //  }
-    const Code InvalidDefer = 129;
+    inline constexpr Code InvalidDefer = 129;
     // InvalidGo occurs when a go expression is not a function call, for example
     // if the expression is a type conversion.
     //
@@ -1094,9 +1095,9 @@ namespace golang::internal::types::errors
     //  	go int32(i)
     //  	return i
     //  }
-    const Code InvalidGo = 130;
+    inline constexpr Code InvalidGo = 130;
     // BadDecl occurs when a declaration has invalid syntax.
-    const Code BadDecl = 131;
+    inline constexpr Code BadDecl = 131;
     // RepeatedDecl occurs when an identifier occurs more than once on the left
     // hand side of a short variable declaration.
     //
@@ -1104,7 +1105,7 @@ namespace golang::internal::types::errors
     //  func _() {
     //  	x, y, y := 1, 2, 3
     //  }
-    const Code RepeatedDecl = 132;
+    inline constexpr Code RepeatedDecl = 132;
     // InvalidUnsafeAdd occurs when unsafe.Add is called with a
     // length argument that is not of integer type.
     // It also occurs if it is used in a package compiled for a
@@ -1115,7 +1116,7 @@ namespace golang::internal::types::errors
     //
     //  var p unsafe.Pointer
     //  var _ = unsafe.Add(p, float64(1))
-    const Code InvalidUnsafeAdd = 133;
+    inline constexpr Code InvalidUnsafeAdd = 133;
     // InvalidUnsafeSlice occurs when unsafe.Slice is called with a
     // pointer argument that is not of pointer type or a length argument
     // that is not of integer type, negative, or out of bounds.
@@ -1145,10 +1146,10 @@ namespace golang::internal::types::errors
     //
     //  var x int
     //  var _ = unsafe.Slice(&x, uint64(1) << 63)
-    const Code InvalidUnsafeSlice = 134;
+    inline constexpr Code InvalidUnsafeSlice = 134;
     // UnsupportedFeature occurs when a language feature is used that is not
     // supported at this Go version.
-    const Code UnsupportedFeature = 135;
+    inline constexpr Code UnsupportedFeature = 135;
     // NotAGenericType occurs when a non-generic type is used where a generic
     // type is expected: in type or function instantiation.
     //
@@ -1156,7 +1157,7 @@ namespace golang::internal::types::errors
     //  type T int
     //
     //  var _ T[int]
-    const Code NotAGenericType = 136;
+    inline constexpr Code NotAGenericType = 136;
     // WrongTypeArgCount occurs when a type or function is instantiated with an
     // incorrect number of type arguments, including when a generic type or
     // function is used without instantiation.
@@ -1172,7 +1173,7 @@ namespace golang::internal::types::errors
     //  func f[T any]() {}
     //
     //  var x = f
-    const Code WrongTypeArgCount = 137;
+    inline constexpr Code WrongTypeArgCount = 137;
     // CannotInferTypeArgs occurs when type or function type argument inference
     // fails to infer all type arguments.
     //
@@ -1182,7 +1183,7 @@ namespace golang::internal::types::errors
     //  func _() {
     //  	f()
     //  }
-    const Code CannotInferTypeArgs = 138;
+    inline constexpr Code CannotInferTypeArgs = 138;
     // InvalidTypeArg occurs when a type argument does not satisfy its
     // corresponding type parameter constraints.
     //
@@ -1190,13 +1191,13 @@ namespace golang::internal::types::errors
     //  type T[P ~int] struct{}
     //
     //  var _ T[string]
-    const Code InvalidTypeArg = 139;
+    inline constexpr Code InvalidTypeArg = 139;
     // InvalidInstanceCycle occurs when an invalid cycle is detected
     // within the instantiation graph.
     //
     // Example:
     //  func f[T any]() { f[*T]() }
-    const Code InvalidInstanceCycle = 140;
+    inline constexpr Code InvalidInstanceCycle = 140;
     // InvalidUnion occurs when an embedded union or approximation element is
     // not valid.
     //
@@ -1204,7 +1205,7 @@ namespace golang::internal::types::errors
     //  type _ interface {
     //   	~int | interface{ m() }
     //  }
-    const Code InvalidUnion = 141;
+    inline constexpr Code InvalidUnion = 141;
     // MisplacedConstraintIface occurs when a constraint-type interface is used
     // outside of constraint position.
     //
@@ -1212,11 +1213,11 @@ namespace golang::internal::types::errors
     //   type I interface { ~int }
     //
     //   var _ I
-    const Code MisplacedConstraintIface = 142;
+    inline constexpr Code MisplacedConstraintIface = 142;
     // InvalidMethodTypeParams occurs when methods have type parameters.
     //
     // It cannot be encountered with an AST parsed using go/parser.
-    const Code InvalidMethodTypeParams = 143;
+    inline constexpr Code InvalidMethodTypeParams = 143;
     // MisplacedTypeParam occurs when a type parameter is used in a place where
     // it is not permitted.
     //
@@ -1225,7 +1226,7 @@ namespace golang::internal::types::errors
     //
     // Example:
     //  type T[P any] struct{ *P }
-    const Code MisplacedTypeParam = 144;
+    inline constexpr Code MisplacedTypeParam = 144;
     // InvalidUnsafeSliceData occurs when unsafe.SliceData is called with
     // an argument that is not of slice type. It also occurs if it is used
     // in a package compiled for a language version before go1.20.
@@ -1235,7 +1236,7 @@ namespace golang::internal::types::errors
     //
     //  var x int
     //  var _ = unsafe.SliceData(x)
-    const Code InvalidUnsafeSliceData = 145;
+    inline constexpr Code InvalidUnsafeSliceData = 145;
     // InvalidUnsafeString occurs when unsafe.String is called with
     // a length argument that is not of integer type, negative, or
     // out of bounds. It also occurs if it is used in a package
@@ -1246,10 +1247,10 @@ namespace golang::internal::types::errors
     //
     //  var b [10]byte
     //  var _ = unsafe.String(&b[0], -1)
-    const Code InvalidUnsafeString = 146;
+    inline constexpr Code InvalidUnsafeString = 146;
     // InvalidUnsafeStringData occurs if it is used in a package
     // compiled for a language version before go1.20.
-    const Code _ = 147;
+    inline constexpr Code _ = 147;
     // InvalidClear occurs when clear is called with an argument
     // that is not of map or slice type.
     //
@@ -1257,7 +1258,7 @@ namespace golang::internal::types::errors
     //  func _(x int) {
     //  	clear(x)
     //  }
-    const Code InvalidClear = 148;
+    inline constexpr Code InvalidClear = 148;
     // TypeTooLarge occurs if unsafe.Sizeof or unsafe.Offsetof is
     // called with an expression whose type is too large.
     //
@@ -1277,7 +1278,7 @@ namespace golang::internal::types::errors
     //  	x int
     //  }
     // var _ = unsafe.Offsetof(s.x)
-    const Code TypeTooLarge = 149;
+    inline constexpr Code TypeTooLarge = 149;
     // InvalidMinMaxOperand occurs if min or max is called
     // with an operand that cannot be ordered because it
     // does not support the < operator.
@@ -1288,12 +1289,12 @@ namespace golang::internal::types::errors
     // Example:
     //  var s, t []byte
     //  var _ = max(s, t)
-    const Code InvalidMinMaxOperand = 150;
+    inline constexpr Code InvalidMinMaxOperand = 150;
     // TooNew indicates that, through build tags or a go.mod file,
     // a source file requires a version of Go that is newer than
     // the logic of the type checker. As a consequence, the type
     // checker may produce spurious errors or fail to report real
     // errors. The solution is to rebuild the application with a
     // newer Go release.
-    const Code TooNew = 151;
+    inline constexpr Code TooNew = 151;
 }

@@ -129,7 +129,7 @@ namespace golang::regexp
 
     // maxBitStateLen returns the maximum length of a string to search with
     // the backtracker using prog.
-    int maxBitStateLen(syntax::Prog* prog)
+    int64_t maxBitStateLen(syntax::Prog* prog)
     {
         if(! shouldBacktrack(prog))
         {
@@ -148,7 +148,7 @@ namespace golang::regexp
     // reset resets the state of the backtracker.
     // end is the end position in the input.
     // ncap is the number of captures.
-    void rec::reset(bitState* b, syntax::Prog* prog, int end, int ncap)
+    void rec::reset(bitState* b, syntax::Prog* prog, int64_t end, int64_t ncap)
     {
         b->end = end;
 
@@ -175,7 +175,7 @@ namespace golang::regexp
 
         if(cap(b->cap) < ncap)
         {
-            b->cap = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), ncap);
+            b->cap = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), ncap);
         }
         else
         {
@@ -188,7 +188,7 @@ namespace golang::regexp
 
         if(cap(b->matchcap) < ncap)
         {
-            b->matchcap = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), ncap);
+            b->matchcap = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), ncap);
         }
         else
         {
@@ -202,9 +202,9 @@ namespace golang::regexp
 
     // shouldVisit reports whether the combination of (pc, pos) has not
     // been visited yet.
-    bool rec::shouldVisit(bitState* b, uint32_t pc, int pos)
+    bool rec::shouldVisit(bitState* b, uint32_t pc, int64_t pos)
     {
-        auto n = (unsigned int)(int(pc) * (b->end + 1) + pos);
+        auto n = (uint64_t)(int64_t(pc) * (b->end + 1) + pos);
         if(b->visited[n / visitedBits] & (1 << (n & (visitedBits - 1))) != 0)
         {
             return false;
@@ -215,7 +215,7 @@ namespace golang::regexp
 
     // push pushes (pc, pos, arg) onto the job stack if it should be
     // visited.
-    void rec::push(bitState* b, Regexp* re, uint32_t pc, int pos, bool arg)
+    void rec::push(bitState* b, Regexp* re, uint32_t pc, int64_t pos, bool arg)
     {
         // Only check shouldVisit when arg is false.
         // When arg is true, we are continuing a previous visit.
@@ -230,7 +230,7 @@ namespace golang::regexp
     }
 
     // tryBacktrack runs a backtracking search starting at pos.
-    bool rec::tryBacktrack(Regexp* re, bitState* b, input i, uint32_t pc, int pos)
+    bool rec::tryBacktrack(Regexp* re, bitState* b, input i, uint32_t pc, int64_t pos)
     {
         auto longest = re->longest;
 
@@ -466,7 +466,7 @@ namespace golang::regexp
     }
 
     // backtrack runs a backtracking search of prog on the input starting at pos.
-    gocpp::slice<int> rec::backtrack(Regexp* re, gocpp::slice<unsigned char> ib, gocpp::string is, int pos, int ncap, gocpp::slice<int> dstCap)
+    gocpp::slice<int64_t> rec::backtrack(Regexp* re, gocpp::slice<unsigned char> ib, gocpp::string is, int64_t pos, int64_t ncap, gocpp::slice<int64_t> dstCap)
     {
         auto startCond = re->cond;
         if(startCond == ~ syntax::EmptyOp(0))
@@ -505,7 +505,7 @@ namespace golang::regexp
             // This looks like it's quadratic in the size of the text,
             // but we are not clearing visited between calls to TrySearch,
             // so no work is duplicated and it ends up still being linear.
-            auto width = - 1;
+            int64_t width = - 1;
             for(; pos <= end && width != 0; pos += width)
             {
                 if(len(re->prefix) > 0)

@@ -12,21 +12,21 @@
 
 namespace golang::strings
 {
-    gocpp::slice<gocpp::string> explode(gocpp::string s, int n);
-    int Count(gocpp::string s, gocpp::string substr);
+    gocpp::slice<gocpp::string> explode(gocpp::string s, int64_t n);
+    int64_t Count(gocpp::string s, gocpp::string substr);
     bool Contains(gocpp::string s, gocpp::string substr);
     bool ContainsAny(gocpp::string s, gocpp::string chars);
     bool ContainsRune(gocpp::string s, gocpp::rune r);
     bool ContainsFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f);
-    int LastIndex(gocpp::string s, gocpp::string substr);
-    int IndexByte(gocpp::string s, unsigned char c);
-    int IndexRune(gocpp::string s, gocpp::rune r);
-    int IndexAny(gocpp::string s, gocpp::string chars);
-    int LastIndexAny(gocpp::string s, gocpp::string chars);
-    int LastIndexByte(gocpp::string s, unsigned char c);
-    gocpp::slice<gocpp::string> genSplit(gocpp::string s, gocpp::string sep, int sepSave, int n);
-    gocpp::slice<gocpp::string> SplitN(gocpp::string s, gocpp::string sep, int n);
-    gocpp::slice<gocpp::string> SplitAfterN(gocpp::string s, gocpp::string sep, int n);
+    int64_t LastIndex(gocpp::string s, gocpp::string substr);
+    int64_t IndexByte(gocpp::string s, unsigned char c);
+    int64_t IndexRune(gocpp::string s, gocpp::rune r);
+    int64_t IndexAny(gocpp::string s, gocpp::string chars);
+    int64_t LastIndexAny(gocpp::string s, gocpp::string chars);
+    int64_t LastIndexByte(gocpp::string s, unsigned char c);
+    gocpp::slice<gocpp::string> genSplit(gocpp::string s, gocpp::string sep, int64_t sepSave, int64_t n);
+    gocpp::slice<gocpp::string> SplitN(gocpp::string s, gocpp::string sep, int64_t n);
+    gocpp::slice<gocpp::string> SplitAfterN(gocpp::string s, gocpp::string sep, int64_t n);
     gocpp::slice<gocpp::string> Split(gocpp::string s, gocpp::string sep);
     gocpp::slice<gocpp::string> SplitAfter(gocpp::string s, gocpp::string sep);
     extern gocpp::array<uint8_t, 256> asciiSpace;
@@ -36,7 +36,7 @@ namespace golang::strings
     bool HasPrefix(gocpp::string s, gocpp::string prefix);
     bool HasSuffix(gocpp::string s, gocpp::string suffix);
     gocpp::string Map(std::function<gocpp::rune (gocpp::rune _1)> mapping, gocpp::string s);
-    gocpp::string Repeat(gocpp::string s, int count);
+    gocpp::string Repeat(gocpp::string s, int64_t count);
     gocpp::string ToUpper(gocpp::string s);
     gocpp::string ToLower(gocpp::string s);
     gocpp::string ToTitle(gocpp::string s);
@@ -46,13 +46,13 @@ namespace golang::strings
     gocpp::string TrimLeftFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f);
     gocpp::string TrimRightFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f);
     gocpp::string TrimFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f);
-    int IndexFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f);
-    int LastIndexFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f);
-    int indexFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f, bool truth);
-    int lastIndexFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f, bool truth);
+    int64_t IndexFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f);
+    int64_t LastIndexFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f);
+    int64_t indexFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f, bool truth);
+    int64_t lastIndexFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f, bool truth);
     struct GoTag_asciiSet { };
     using asciiSet = gocpp::defined<gocpp::array<bool, 256>, GoTag_asciiSet>;
-    bool shouldUseASCIISet(int bufLen);
+    bool shouldUseASCIISet(int64_t bufLen);
     gocpp::string Trim(gocpp::string s, gocpp::string cutset);
     gocpp::string TrimLeft(gocpp::string s, gocpp::string cutset);
     gocpp::string trimLeftByte(gocpp::string s, unsigned char c);
@@ -63,10 +63,10 @@ namespace golang::strings
     gocpp::string TrimSpace(gocpp::string s);
     gocpp::string TrimPrefix(gocpp::string s, gocpp::string prefix);
     gocpp::string TrimSuffix(gocpp::string s, gocpp::string suffix);
-    gocpp::string Replace(gocpp::string s, gocpp::string old, gocpp::string go_new, int n);
+    gocpp::string Replace(gocpp::string s, gocpp::string old, gocpp::string go_new, int64_t n);
     gocpp::string ReplaceAll(gocpp::string s, gocpp::string old, gocpp::string go_new);
     bool EqualFold(gocpp::string s, gocpp::string t);
-    int Index(gocpp::string s, gocpp::string substr);
+    int64_t Index(gocpp::string s, gocpp::string substr);
     std::tuple<gocpp::string, gocpp::string, bool> Cut(gocpp::string s, gocpp::string sep);
     std::tuple<gocpp::string, bool> CutPrefix(gocpp::string s, gocpp::string prefix);
     std::tuple<gocpp::string, bool> CutSuffix(gocpp::string s, gocpp::string suffix);

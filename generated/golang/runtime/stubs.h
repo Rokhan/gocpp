@@ -45,7 +45,7 @@ namespace golang::runtime
     uintptr_t alignUp(uintptr_t n, uintptr_t a);
     uintptr_t alignDown(uintptr_t n, uintptr_t a);
     uintptr_t divRoundUp(uintptr_t n, uintptr_t a);
-    int bool2int(bool x);
+    int64_t bool2int(bool x);
     void abort();
     void gcWriteBarrier1();
     void gcWriteBarrier2();
@@ -78,7 +78,7 @@ namespace golang::runtime
     // registers the system supports.
     //
     // Protected by finlock.
-    extern int intArgRegs;
+    extern int64_t intArgRegs;
     void systemstack(std::function<void ()> fn);
     void goexit(neverCallThisFunction);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;

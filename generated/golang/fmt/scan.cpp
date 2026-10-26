@@ -84,7 +84,7 @@ namespace golang::fmt
     }
 
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<gocpp::rune, int, gocpp::error> ScanState::ScanStateImpl<T, TStore, TInterface>::vReadRune()
+    std::tuple<gocpp::rune, int64_t, gocpp::error> ScanState::ScanStateImpl<T, TStore, TInterface>::vReadRune()
     {
         return rec::ReadRune(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -104,12 +104,12 @@ namespace golang::fmt
         return rec::Token(gocpp::PtrRecv<T, false>(value.get()), skipSpace, f);
     }
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<int, bool> ScanState::ScanStateImpl<T, TStore, TInterface>::vWidth()
+    std::tuple<int64_t, bool> ScanState::ScanStateImpl<T, TStore, TInterface>::vWidth()
     {
         return rec::Width(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<int, gocpp::error> ScanState::ScanStateImpl<T, TStore, TInterface>::vRead(gocpp::slice<unsigned char> buf)
+    std::tuple<int64_t, gocpp::error> ScanState::ScanStateImpl<T, TStore, TInterface>::vRead(gocpp::slice<unsigned char> buf)
     {
         return rec::Read(gocpp::PtrRecv<T, false>(value.get()), buf);
     }
@@ -122,12 +122,12 @@ namespace golang::fmt
 
     namespace rec
     {
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct ScanState, false>& self)
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::PtrRecv<struct ScanState, false>& self)
         {
             return self.ptr->value()->vReadRune();
         }
 
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::ObjRecv<struct ScanState>& self)
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::ObjRecv<struct ScanState>& self)
         {
             return self.obj.value()->vReadRune();
         }
@@ -162,22 +162,22 @@ namespace golang::fmt
             return self.obj.value()->vToken(skipSpace, f);
         }
 
-        std::tuple<int, bool> Width(const gocpp::PtrRecv<struct ScanState, false>& self)
+        std::tuple<int64_t, bool> Width(const gocpp::PtrRecv<struct ScanState, false>& self)
         {
             return self.ptr->value()->vWidth();
         }
 
-        std::tuple<int, bool> Width(const gocpp::ObjRecv<struct ScanState>& self)
+        std::tuple<int64_t, bool> Width(const gocpp::ObjRecv<struct ScanState>& self)
         {
             return self.obj.value()->vWidth();
         }
 
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ScanState, false>& self, gocpp::slice<unsigned char> buf)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct ScanState, false>& self, gocpp::slice<unsigned char> buf)
         {
             return self.ptr->value()->vRead(buf);
         }
 
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ScanState>& self, gocpp::slice<unsigned char> buf)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct ScanState>& self, gocpp::slice<unsigned char> buf)
         {
             return self.obj.value()->vRead(buf);
         }
@@ -250,18 +250,18 @@ namespace golang::fmt
     // space-separated values into successive arguments. Newlines count
     // as space. It returns the number of items successfully scanned.
     // If that is less than the number of arguments, err will report why.
-    std::tuple<int, gocpp::error> Scan(gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Scan(gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return Fscan(os::Stdin, a);
     }
 
     // Scanln is similar to [Scan], but stops scanning at a newline and
     // after the final item there must be a newline or EOF.
-    std::tuple<int, gocpp::error> Scanln(gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Scanln(gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return Fscanln(os::Stdin, a);
     }
@@ -273,16 +273,16 @@ namespace golang::fmt
     // Newlines in the input must match newlines in the format.
     // The one exception: the verb %c always scans the next rune in the
     // input, even if it is a space (or tab etc.) or newline.
-    std::tuple<int, gocpp::error> Scanf(gocpp::string format, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Scanf(gocpp::string format, gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return Fscanf(os::Stdin, format, a);
     }
 
-    std::tuple<int, gocpp::error> rec::Read(stringReader* r, gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> rec::Read(stringReader* r, gocpp::slice<unsigned char> b)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         n = copy(b, *r);
         *r = (*r).make_slice(n);
@@ -297,18 +297,18 @@ namespace golang::fmt
     // values into successive arguments. Newlines count as space. It
     // returns the number of items successfully scanned. If that is less
     // than the number of arguments, err will report why.
-    std::tuple<int, gocpp::error> Sscan(gocpp::string str, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Sscan(gocpp::string str, gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return Fscan((stringReader*)(& str), a);
     }
 
     // Sscanln is similar to [Sscan], but stops scanning at a newline and
     // after the final item there must be a newline or EOF.
-    std::tuple<int, gocpp::error> Sscanln(gocpp::string str, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Sscanln(gocpp::string str, gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return Fscanln((stringReader*)(& str), a);
     }
@@ -317,9 +317,9 @@ namespace golang::fmt
     // values into successive arguments as determined by the format. It
     // returns the number of items successfully parsed.
     // Newlines in the input must match newlines in the format.
-    std::tuple<int, gocpp::error> Sscanf(gocpp::string str, gocpp::string format, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Sscanf(gocpp::string str, gocpp::string format, gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return Fscanf((stringReader*)(& str), format, a);
     }
@@ -328,9 +328,9 @@ namespace golang::fmt
     // values into successive arguments. Newlines count as space. It
     // returns the number of items successfully scanned. If that is less
     // than the number of arguments, err will report why.
-    std::tuple<int, gocpp::error> Fscan(io::Reader r, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Fscan(io::Reader r, gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto [s, old] = newScanState(r, true, false);
         std::tie(n, err) = rec::doScan(gocpp::recv(s), a);
@@ -340,9 +340,9 @@ namespace golang::fmt
 
     // Fscanln is similar to [Fscan], but stops scanning at a newline and
     // after the final item there must be a newline or EOF.
-    std::tuple<int, gocpp::error> Fscanln(io::Reader r, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Fscanln(io::Reader r, gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto [s, old] = newScanState(r, false, true);
         std::tie(n, err) = rec::doScan(gocpp::recv(s), a);
@@ -354,9 +354,9 @@ namespace golang::fmt
     // values into successive arguments as determined by the format. It
     // returns the number of items successfully parsed.
     // Newlines in the input must match newlines in the format.
-    std::tuple<int, gocpp::error> Fscanf(io::Reader r, gocpp::string format, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> Fscanf(io::Reader r, gocpp::string format, gocpp::slice<go_any> a)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto [s, old] = newScanState(r, false, false);
         std::tie(n, err) = rec::doScanf(gocpp::recv(s), format, a);
@@ -486,17 +486,17 @@ namespace golang::fmt
     // The Read method is only in ScanState so that ScanState
     // satisfies io.Reader. It will never be called when used as
     // intended, so there is no need to make it actually work.
-    std::tuple<int, gocpp::error> rec::Read(ss* s, gocpp::slice<unsigned char> buf)
+    std::tuple<int64_t, gocpp::error> rec::Read(ss* s, gocpp::slice<unsigned char> buf)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         return {0, errors::New("ScanState's Read should not be called. Use ReadRune"_s)};
     }
 
-    std::tuple<gocpp::rune, int, gocpp::error> rec::ReadRune(ss* s)
+    std::tuple<gocpp::rune, int64_t, gocpp::error> rec::ReadRune(ss* s)
     {
         gocpp::rune r;
-        int size;
+        int64_t size;
         gocpp::error err;
         if(s->atEOF || s->count >= s->ssave.argLimit)
         {
@@ -521,9 +521,9 @@ namespace golang::fmt
         return {r, size, err};
     }
 
-    std::tuple<int, bool> rec::Width(ss* s)
+    std::tuple<int64_t, bool> rec::Width(ss* s)
     {
-        int wid;
+        int64_t wid;
         bool ok;
         if(s->ssave.maxWid == hugeWid)
         {
@@ -716,7 +716,7 @@ namespace golang::fmt
             r->pending--;
             return {b, err};
         }
-        int n;
+        int64_t n;
         std::tie(n, err) = io::ReadFull(r->reader, r->pendBuf.make_slice(0, 1));
         if(n != 1)
         {
@@ -727,10 +727,10 @@ namespace golang::fmt
 
     // ReadRune returns the next UTF-8 encoded code point from the
     // io.Reader inside r.
-    std::tuple<gocpp::rune, int, gocpp::error> rec::ReadRune(readRune* r)
+    std::tuple<gocpp::rune, int64_t, gocpp::error> rec::ReadRune(readRune* r)
     {
         gocpp::rune rr;
-        int size;
+        int64_t size;
         gocpp::error err;
         if(r->peekRune >= 0)
         {
@@ -754,7 +754,7 @@ namespace golang::fmt
             r->peekRune = ~ rr;
             return {rr, size, err};
         }
-        int n = {};
+        int64_t n = {};
         for(n = 1; ! utf8::FullRune(r->buf.make_slice(0, n)); n++)
         {
             std::tie(r->buf[n], err) = rec::readByte(gocpp::recv(r));
@@ -906,7 +906,7 @@ namespace golang::fmt
 
     gocpp::error errComplex = errors::New("syntax error scanning complex number"_s);
     gocpp::error errBool = errors::New("syntax error scanning boolean"_s);
-    int indexRune(gocpp::string s, gocpp::rune r)
+    int64_t indexRune(gocpp::string s, gocpp::rune r)
     {
         for(auto [i, c] : s)
         {
@@ -1034,9 +1034,9 @@ namespace golang::fmt
     }
 
     // getBase returns the numeric base represented by the verb and its digit string.
-    std::tuple<int, gocpp::string> rec::getBase(ss* s, gocpp::rune verb)
+    std::tuple<int64_t, gocpp::string> rec::getBase(ss* s, gocpp::rune verb)
     {
-        int base;
+        int64_t base;
         gocpp::string digits;
         // sets s.err
         rec::okVerb(gocpp::recv(s), verb, "bdoUxXv"_s, "integer"_s);
@@ -1090,11 +1090,11 @@ namespace golang::fmt
     }
 
     // scanRune returns the next rune value in the input.
-    int64_t rec::scanRune(ss* s, int bitSize)
+    int64_t rec::scanRune(ss* s, int64_t bitSize)
     {
         rec::notEOF(gocpp::recv(s));
         auto r = rec::getRune(gocpp::recv(s));
-        auto n = (unsigned int)(bitSize);
+        auto n = (uint64_t)(bitSize);
         auto x = (int64_t(r) << (64 - n)) >> (64 - n);
         if(x != int64_t(r))
         {
@@ -1106,9 +1106,9 @@ namespace golang::fmt
     // scanBasePrefix reports whether the integer begins with a base prefix
     // and returns the base, digit string, and whether a zero was found.
     // It is called only if the verb is %v.
-    std::tuple<int, gocpp::string, bool> rec::scanBasePrefix(ss* s)
+    std::tuple<int64_t, gocpp::string, bool> rec::scanBasePrefix(ss* s)
     {
-        int base;
+        int64_t base;
         gocpp::string digits;
         bool zeroFound;
         if(! rec::peek(gocpp::recv(s), "0"_s))
@@ -1146,7 +1146,7 @@ namespace golang::fmt
 
     // scanInt returns the value of the integer represented by the next
     // token, checking for overflow. Any error is stored in s.err.
-    int64_t rec::scanInt(ss* s, gocpp::rune verb, int bitSize)
+    int64_t rec::scanInt(ss* s, gocpp::rune verb, int64_t bitSize)
     {
         if(verb == 'c')
         {
@@ -1155,7 +1155,7 @@ namespace golang::fmt
         rec::SkipSpace(gocpp::recv(s));
         rec::notEOF(gocpp::recv(s));
         auto [base, digits] = rec::getBase(gocpp::recv(s), verb);
-        auto haveDigits = false;
+        bool haveDigits = false;
         if(verb == 'U')
         {
             if(! rec::consume(gocpp::recv(s), "U"_s, false) || ! rec::consume(gocpp::recv(s), "+"_s, false))
@@ -1178,7 +1178,7 @@ namespace golang::fmt
         {
             rec::error(gocpp::recv(s), err);
         }
-        auto n = (unsigned int)(bitSize);
+        auto n = (uint64_t)(bitSize);
         auto x = (i << (64 - n)) >> (64 - n);
         if(x != i)
         {
@@ -1189,7 +1189,7 @@ namespace golang::fmt
 
     // scanUint returns the value of the unsigned integer represented
     // by the next token, checking for overflow. Any error is stored in s.err.
-    uint64_t rec::scanUint(ss* s, gocpp::rune verb, int bitSize)
+    uint64_t rec::scanUint(ss* s, gocpp::rune verb, int64_t bitSize)
     {
         if(verb == 'c')
         {
@@ -1198,7 +1198,7 @@ namespace golang::fmt
         rec::SkipSpace(gocpp::recv(s));
         rec::notEOF(gocpp::recv(s));
         auto [base, digits] = rec::getBase(gocpp::recv(s), verb);
-        auto haveDigits = false;
+        bool haveDigits = false;
         if(verb == 'U')
         {
             if(! rec::consume(gocpp::recv(s), "U"_s, false) || ! rec::consume(gocpp::recv(s), "+"_s, false))
@@ -1217,7 +1217,7 @@ namespace golang::fmt
         {
             rec::error(gocpp::recv(s), err);
         }
-        auto n = (unsigned int)(bitSize);
+        auto n = (uint64_t)(bitSize);
         auto x = (i << (64 - n)) >> (64 - n);
         if(x != i)
         {
@@ -1244,8 +1244,8 @@ namespace golang::fmt
         {
             return gocpp::string(s->buf);
         }
-        auto digits = decimalDigits + "_"_s;
-        auto exp = exponent;
+        gocpp::string digits = decimalDigits + "_"_s;
+        gocpp::string exp = exponent;
         if(rec::accept(gocpp::recv(s), "0"_s) && rec::accept(gocpp::recv(s), "xX"_s))
         {
             digits = hexadecimalDigits + "_"_s;
@@ -1308,7 +1308,7 @@ namespace golang::fmt
 
     bool hasX(gocpp::string s)
     {
-        for(auto i = 0; i < len(s); i++)
+        for(int64_t i = 0; i < len(s); i++)
         {
             if(s[i] == 'x' || s[i] == 'X')
             {
@@ -1319,7 +1319,7 @@ namespace golang::fmt
     }
 
     // convertFloat converts the string to a float64value.
-    double rec::convertFloat(ss* s, gocpp::string str, int n)
+    double rec::convertFloat(ss* s, gocpp::string str, int64_t n)
     {
         // strconv.ParseFloat will handle "+0x1.fp+2",
         // but we have to implement our non-standard
@@ -1338,7 +1338,7 @@ namespace golang::fmt
                 }
                 rec::error(gocpp::recv(s), err);
             }
-            int m;
+            int64_t m;
             std::tie(m, err) = strconv::Atoi(str.make_slice(p + 1));
             if(err != nullptr)
             {
@@ -1363,7 +1363,7 @@ namespace golang::fmt
     // The atof argument is a type-specific reader for the underlying type.
     // If we're reading complex64, atof will parse float32s and convert them
     // to float64's to avoid reproducing this code for each complex type.
-    struct gocpp::complex128 rec::scanComplex(ss* s, gocpp::rune verb, int n)
+    struct gocpp::complex128 rec::scanComplex(ss* s, gocpp::rune verb, int64_t n)
     {
         if(! rec::okVerb(gocpp::recv(s), verb, floatVerbs, "complex"_s))
         {
@@ -1477,9 +1477,9 @@ namespace golang::fmt
     }
 
     // hexDigit returns the value of the hexadecimal digit.
-    std::tuple<int, bool> hexDigit(gocpp::rune d)
+    std::tuple<int64_t, bool> hexDigit(gocpp::rune d)
     {
-        auto digit = int(d);
+        auto digit = int64_t(d);
         //Go switch emulation
         {
             auto condition = digit;
@@ -1553,14 +1553,14 @@ namespace golang::fmt
         {
             return {b, ok};
         }
-        int value1;
+        int64_t value1;
         std::tie(value1, ok) = hexDigit(rune1);
         if(! ok)
         {
             rec::UnreadRune(gocpp::recv(s));
             return {b, ok};
         }
-        int value2;
+        int64_t value2;
         std::tie(value2, ok) = hexDigit(rec::mustReadRune(gocpp::recv(s)));
         if(! ok)
         {
@@ -1629,12 +1629,12 @@ namespace golang::fmt
             if(gocpp_id_1 == typeid(bool*)) { conditionId = 0; }
             else if(gocpp_id_1 == typeid(gocpp::complex64*)) { conditionId = 1; }
             else if(gocpp_id_1 == typeid(gocpp::complex128*)) { conditionId = 2; }
-            else if(gocpp_id_1 == typeid(int*)) { conditionId = 3; }
+            else if(gocpp_id_1 == typeid(int64_t*)) { conditionId = 3; }
             else if(gocpp_id_1 == typeid(int8_t*)) { conditionId = 4; }
             else if(gocpp_id_1 == typeid(int16_t*)) { conditionId = 5; }
             else if(gocpp_id_1 == typeid(int32_t*)) { conditionId = 6; }
             else if(gocpp_id_1 == typeid(int64_t*)) { conditionId = 7; }
-            else if(gocpp_id_1 == typeid(unsigned int*)) { conditionId = 8; }
+            else if(gocpp_id_1 == typeid(uint64_t*)) { conditionId = 8; }
             else if(gocpp_id_1 == typeid(uint8_t*)) { conditionId = 9; }
             else if(gocpp_id_1 == typeid(uint16_t*)) { conditionId = 10; }
             else if(gocpp_id_1 == typeid(uint32_t*)) { conditionId = 11; }
@@ -1666,8 +1666,8 @@ namespace golang::fmt
                 }
                 case 3:
                 {
-                    int* v = gocpp::any_cast<int*>(arg);
-                    *v = int(rec::scanInt(gocpp::recv(s), verb, intBits));
+                    int64_t* v = gocpp::any_cast<int64_t*>(arg);
+                    *v = int64_t(rec::scanInt(gocpp::recv(s), verb, intBits));
                     break;
                 }
                 case 4:
@@ -1696,8 +1696,8 @@ namespace golang::fmt
                 }
                 case 8:
                 {
-                    unsigned int* v = gocpp::any_cast<unsigned int*>(arg);
-                    *v = (unsigned int)(rec::scanUint(gocpp::recv(s), verb, intBits));
+                    uint64_t* v = gocpp::any_cast<uint64_t*>(arg);
+                    *v = (uint64_t)(rec::scanUint(gocpp::recv(s), verb, intBits));
                     break;
                 }
                 case 9:
@@ -1834,7 +1834,7 @@ namespace golang::fmt
                                 }
                                 auto str = rec::convertString(gocpp::recv(s), verb);
                                 rec::Set(gocpp::recv(v), reflect::MakeSlice(typ, len(str), len(str)));
-                                for(auto i = 0; i < len(str); i++)
+                                for(int64_t i = 0; i < len(str); i++)
                                 {
                                     rec::SetUint(gocpp::recv(rec::Index(gocpp::recv(v), i)), uint64_t(str[i]));
                                 }
@@ -1885,9 +1885,9 @@ namespace golang::fmt
     }
 
     // doScan does the real work for scanning without a format string.
-    std::tuple<int, gocpp::error> rec::doScan(ss* s, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> rec::doScan(ss* s, gocpp::slice<go_any> a)
     {
-        int numProcessed;
+        int64_t numProcessed;
         gocpp::error err;
         gocpp::Defer defer;
         try
@@ -1932,9 +1932,9 @@ namespace golang::fmt
     // This routine also handles the %% case. If the return value is zero,
     // either format starts with a % (with no following %) or the input
     // is empty. If it is negative, the input did not match the string.
-    int rec::advance(ss* s, gocpp::string format)
+    int64_t rec::advance(ss* s, gocpp::string format)
     {
-        int i;
+        int64_t i;
         for(; i < len(format); )
         {
             auto [fmtc, w] = utf8::DecodeRuneInString(format.make_slice(i));
@@ -1947,8 +1947,8 @@ namespace golang::fmt
             // Other spaces in the format match input of one or more spaces or end-of-input.
             if(isSpace(fmtc))
             {
-                auto newlines = 0;
-                auto trailingSpace = false;
+                int64_t newlines = 0;
+                bool trailingSpace = false;
                 for(; isSpace(fmtc) && i < len(format); )
                 {
                     if(fmtc == '\n')
@@ -1963,7 +1963,7 @@ namespace golang::fmt
                     i += w;
                     std::tie(fmtc, w) = utf8::DecodeRuneInString(format.make_slice(i));
                 }
-                for(auto j = 0; j < newlines; j++)
+                for(int64_t j = 0; j < newlines; j++)
                 {
                     auto inputc = rec::getRune(gocpp::recv(s));
                     for(; isSpace(inputc) && inputc != '\n'; )
@@ -2036,9 +2036,9 @@ namespace golang::fmt
 
     // doScanf does the real work when scanning with a format string.
     // At the moment, it handles only pointers to basic types.
-    std::tuple<int, gocpp::error> rec::doScanf(ss* s, gocpp::string format, gocpp::slice<go_any> a)
+    std::tuple<int64_t, gocpp::error> rec::doScanf(ss* s, gocpp::string format, gocpp::slice<go_any> a)
     {
-        int numProcessed;
+        int64_t numProcessed;
         gocpp::error err;
         gocpp::Defer defer;
         try
@@ -2046,7 +2046,7 @@ namespace golang::fmt
             defer.push_back([=, &err]{ errorHandler(& err); });
             auto end = len(format) - 1;
             // We process one item per non-trivial format
-            for(auto i = 0; i <= end; )
+            for(int64_t i = 0; i <= end; )
             {
                 auto w = rec::advance(gocpp::recv(s), format.make_slice(i));
                 if(w > 0)

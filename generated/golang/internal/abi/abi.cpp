@@ -100,13 +100,13 @@ namespace golang::internal::abi
     // architectures, since sub-word-sized arguments in big endian architectures
     // need to be "aligned" to the upper edge of the register to be interpreted
     // by the CPU correctly.
-    gocpp::unsafe_pointer rec::IntRegArgAddr(RegArgs* r, int reg, uintptr_t argSize)
+    gocpp::unsafe_pointer rec::IntRegArgAddr(RegArgs* r, int64_t reg, uintptr_t argSize)
     {
         if(argSize > goarch::PtrSize || argSize == 0 || argSize & (argSize - 1) != 0)
         {
             gocpp::panic("invalid argSize"_s);
         }
-        auto offset = uintptr_t(0);
+        uintptr_t offset = uintptr_t(0);
         if(goarch::BigEndian)
         {
             offset = goarch::PtrSize - argSize;
@@ -117,7 +117,7 @@ namespace golang::internal::abi
     // IntArgRegBitmap is a bitmap large enough to hold one bit per
     // integer argument/return register.
     // Set sets the i'th bit of the bitmap to 1.
-    void rec::Set(gocpp::array_ptr<IntArgRegBitmap> b, int i)
+    void rec::Set(gocpp::array_ptr<IntArgRegBitmap> b, int64_t i)
     {
         b[i / 8] |= uint8_t(1) << (i % 8);
     }
@@ -128,7 +128,7 @@ namespace golang::internal::abi
     // on the reflectcall return path.
     //
     //go:nosplit
-    bool rec::Get(gocpp::array_ptr<IntArgRegBitmap> b, int i)
+    bool rec::Get(gocpp::array_ptr<IntArgRegBitmap> b, int64_t i)
     {
         // Compute p=&b[i/8], but without a bounds check. We don't have the stack for it.
         auto p = (unsigned char*)(gocpp::unsafe_pointer(uintptr_t(gocpp::unsafe_pointer(b)) + uintptr_t(i / 8)));

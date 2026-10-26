@@ -6,6 +6,6 @@
 
 namespace golang::internal::goexperiment
 {
-    const bool GreenTeaGC = true;
-    const long GreenTeaGCInt = 1;
+    inline constexpr bool GreenTeaGC = true;
+    inline constexpr long GreenTeaGCInt = 1;
 }

@@ -54,9 +54,9 @@ namespace golang::path::filepath
 
         // Split path, respecting but preserving quotes.
         auto list = gocpp::slice<gocpp::string> {};
-        auto start = 0;
-        auto quo = false;
-        for(auto i = 0; i < len(path); i++)
+        int64_t start = 0;
+        bool quo = false;
+        for(int64_t i = 0; i < len(path); i++)
         {
             //Go switch emulation
             {

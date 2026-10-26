@@ -157,7 +157,7 @@ namespace golang::runtime
     struct pcvalueCache
     {
         gocpp::array<gocpp::array<pcvalueCacheEnt, 8>, 2> entries{};
-        int inUse{};
+        int64_t inUse{};
 
         using isGoStruct = void;
 
@@ -242,14 +242,14 @@ namespace golang::runtime
         // zero, respectively, if not known. The file name uses
         // forward slashes, even on Windows.
         gocpp::string File{};
-        int Line{};
+        int64_t Line{};
         // startLine is the line number of the beginning of the function in
         // this frame. Specifically, it is the line number of the func keyword
         // for Go functions. Note that //line directives can change the
         // filename and/or line number arbitrarily within a function, meaning
         // that the Line - startLine offset is not always meaningful.
         // This may be zero if not known.
-        int startLine{};
+        int64_t startLine{};
         // Entry point program counter for the function; may be zero
         // if not known. If Func is not nil then Entry ==
         // Func.Entry().
@@ -326,7 +326,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Frames& value);
-    int runtime_FrameStartLine(Frame* f);
+    int64_t runtime_FrameStartLine(Frame* f);
     gocpp::string runtime_FrameSymbolName(Frame* f);
     gocpp::slice<Frame> expandCgoFrames(uintptr_t pc);
     struct pcHeader
@@ -336,8 +336,8 @@ namespace golang::runtime
         uint8_t pad2{};
         uint8_t minLC{}; // min instruction size
         uint8_t ptrSize{}; // size of a ptr in bytes
-        int nfunc{}; // number of functions in the module
-        unsigned int nfiles{}; // number of entries in the file tab
+        int64_t nfunc{}; // number of functions in the module
+        uint64_t nfiles{}; // number of entries in the file tab
         // The next field used to be textStart. This is no longer stored
         // as it requires a relocation. Code should use the moduledata text
         // field instead. This unused field can be removed in coordination
@@ -481,7 +481,7 @@ namespace golang::runtime
         gocpp::string funcName(moduledata* md, int32_t nameOff);
         gocpp::string Name(Func* f);
         uintptr_t Entry(Func* f);
-        std::tuple<gocpp::string, int> FileLine(Func* f, uintptr_t pc);
+        std::tuple<gocpp::string, int64_t> FileLine(Func* f, uintptr_t pc);
         int32_t startLine(Func* f);
         bool valid(golang::runtime::funcInfo f);
         Func* _Func(golang::runtime::funcInfo f);

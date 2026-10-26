@@ -52,7 +52,7 @@ namespace golang::runtime
     // printBacklog is a circular buffer of messages written with the builtin
     // print* functions, for use in postmortem analysis of core dumps.
     gocpp::array<unsigned char, 512> printBacklog;
-    int printBacklogIndex;
+    int64_t printBacklogIndex;
     // recordForPanic maintains a circular buffer of messages written by the
     // runtime leading up to a process crash, allowing the messages to be
     // extracted from a core dump.
@@ -67,7 +67,7 @@ namespace golang::runtime
         if(rec::Load(gocpp::recv(panicking)) == 0)
         {
             // Not actively crashing: maintain circular buffer of print output.
-            for(auto i = 0; i < len(b); )
+            for(int64_t i = 0; i < len(b); )
             {
                 auto n = copy(printBacklog.make_slice(printBacklogIndex), b.make_slice(i));
                 i += n;
@@ -209,11 +209,11 @@ namespace golang::runtime
     }
 
     long minhexdigits = 0;
-    void printhexopts(bool include0x, int mindigits, uint64_t v)
+    void printhexopts(bool include0x, int64_t mindigits, uint64_t v)
     {
         auto dig = "0123456789abcdef"_s;
         gocpp::array<unsigned char, 100> buf = {};
-        auto i = len(buf);
+        int64_t i = len(buf);
         for(i--; i > 0; i--)
         {
             buf[i] = dig[v % 16];
@@ -277,7 +277,7 @@ namespace golang::runtime
                     // Fall through to quoting.
                     case 5:
                         // Distinguish errors from a valid encoding of U+FFFD.
-                        if(auto [gocpp_id_0, j] = decoderune(s, (unsigned int)(i)); j == (unsigned int)(i + 1))
+                        if(auto [gocpp_id_0, j] = decoderune(s, (uint64_t)(i)); j == (uint64_t)(i + 1))
                         {
                             gwrite(bytes("\\x"_s));
                             printhexopts(false, 2, uint64_t(s[i]));

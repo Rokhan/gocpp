@@ -109,13 +109,13 @@ namespace golang::runtime
     // The purpose of physHugePageShift is to avoid doing divisions in
     // performance critical functions.
     uintptr_t physHugePageSize;
-    unsigned int physHugePageShift;
+    uint64_t physHugePageShift;
     // heapRandSeed is a random value that is populated in mallocinit if
     // randomizeHeapBase is set. It is used in mallocinit, and mheap.grow, to
     // randomize the base heap address.
     uintptr_t heapRandSeed;
-    int heapRandSeedBitsRemaining;
-    uintptr_t nextHeapRandBits(int bits)
+    int64_t heapRandSeedBitsRemaining;
+    uintptr_t nextHeapRandBits(int64_t bits)
     {
         if(bits > heapRandSeedBitsRemaining)
         {
@@ -199,9 +199,9 @@ namespace golang::runtime
         // across different parts of the runtime.
         // While we're here, also check to make sure all these size classes'
         // span sizes are one page. Some code relies on this.
-        auto minSizeForMallocHeaderIsSizeClass = false;
-        auto sizeClassesUpToMinSizeForMallocHeaderAreOnePage = true;
-        for(auto i = 0; i < len(gc::SizeClassToSize); i++)
+        bool minSizeForMallocHeaderIsSizeClass = false;
+        bool sizeClassesUpToMinSizeForMallocHeaderAreOnePage = true;
+        for(int64_t i = 0; i < len(gc::SizeClassToSize); i++)
         {
             if(gc::SizeClassToNPages[i] > 1)
             {
@@ -309,7 +309,7 @@ namespace golang::runtime
             // bits in order to provide a good amount of room for the heap to grow
             // contiguously. On amd64, there are 48 bits, but the top bit is sign
             // extended, so we throw away another bit, just to be safe.
-            auto randHeapAddrBits = heapAddrBits - 1 - (goarch::IsAmd64 * 1);
+            int64_t randHeapAddrBits = heapAddrBits - 1 - (goarch::IsAmd64 * 1);
             if(randomizeHeapBase)
             {
                 // Generate a random value, and take the bottom heapAddrBits-logHeapArenaBytes
@@ -322,7 +322,7 @@ namespace golang::runtime
                 randHeapBasePrefix = (unsigned char)(randHeapBase >> (randHeapAddrBits - 8));
             }
 
-            int vmaSize = {};
+            int64_t vmaSize = {};
             if(GOARCH == "riscv64"_s)
             {
                 // Identify which memory layout is in use based on the system
@@ -338,7 +338,7 @@ namespace golang::runtime
                 }
             }
 
-            for(auto i = 0x7f; i >= 0; i--)
+            for(int64_t i = 0x7f; i >= 0; i--)
             {
                 uintptr_t p = {};
                 //Go switch emulation
@@ -706,7 +706,7 @@ namespace golang::runtime
                     go_throw("out of memory allocating allArenas"_s);
                 }
                 auto oldSlice = (*arenaList);
-                *(notInHeapSlice*)(gocpp::unsafe_pointer(& (*arenaList))) = notInHeapSlice {newArray, len((*arenaList)), int(size / goarch::PtrSize)};
+                *(notInHeapSlice*)(gocpp::unsafe_pointer(& (*arenaList))) = notInHeapSlice {newArray, len((*arenaList)), int64_t(size / goarch::PtrSize)};
                 // Do not free the old backing array because
                 // there may be concurrent readers. Since we
                 // double the array each time, this can lead
@@ -793,7 +793,7 @@ namespace golang::runtime
                 {
                     return 0;
                 }
-                s->allocCache >>= (unsigned int)(theBit + 1);
+                s->allocCache >>= (uint64_t)(theBit + 1);
                 s->freeindex = freeidx;
                 s->allocCount++;
                 return gclinkptr(uintptr_t(result) * s->elemsize + rec::base(gocpp::recv(s)));
@@ -1141,7 +1141,7 @@ namespace golang::runtime
             return {x, 0};
         }
         // Allocate a new maxTinySize block.
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto span = c->alloc[tinySpanClass];
         auto v = nextFreeFast(span);
         if(v == 0)
@@ -1255,7 +1255,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         uint8_t sizeclass = {};
         if(size <= gc::SmallSizeMax - 8)
@@ -1426,7 +1426,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         auto sizeclass = gc::SizeToSizeClass8[divRoundUp(size, gc::SmallSizeDiv)];
         auto spc = makeSpanClass(sizeclass, false);
@@ -1534,7 +1534,7 @@ namespace golang::runtime
         }
         mp->mallocing = 1;
 
-        auto checkGCTrigger = false;
+        bool checkGCTrigger = false;
         auto c = getMCache(mp);
         size += gc::MallocHeaderSize;
         uint8_t sizeclass = {};
@@ -1734,7 +1734,7 @@ namespace golang::runtime
     {
         if(debug.sbrk != 0)
         {
-            auto align = uintptr_t(16);
+            uintptr_t align = uintptr_t(16);
             if(typ != nullptr)
             {
                 // TODO(austin): This should be just
@@ -2178,7 +2178,7 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname newarray
-    gocpp::unsafe_pointer newarray(_type* typ, int n)
+    gocpp::unsafe_pointer newarray(_type* typ, int64_t n)
     {
         if(n == 1)
         {
@@ -2207,13 +2207,13 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname reflect_unsafe_NewArray reflect.unsafe_NewArray
-    gocpp::unsafe_pointer reflect_unsafe_NewArray(_type* typ, int n)
+    gocpp::unsafe_pointer reflect_unsafe_NewArray(_type* typ, int64_t n)
     {
         return newarray(typ, n);
     }
 
     //go:linkname maps_newarray internal/runtime/maps.newarray
-    gocpp::unsafe_pointer maps_newarray(_type* typ, int n)
+    gocpp::unsafe_pointer maps_newarray(_type* typ, int64_t n)
     {
         return newarray(typ, n);
     }
@@ -2258,7 +2258,7 @@ namespace golang::runtime
 
     // fastexprand returns a random number from an exponential distribution with
     // the specified mean.
-    int32_t fastexprand(int mean)
+    int32_t fastexprand(int64_t mean)
     {
         // Avoid overflow. Maximum possible step is
         // -ln(1/(1<<randomBitCount)) * mean, approximately 20 * mean.

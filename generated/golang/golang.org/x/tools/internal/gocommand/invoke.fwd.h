@@ -7,6 +7,6 @@
 namespace golang::golang_org::x::tools::internal::gocommand
 {
     struct Runner;
-    const long maxInFlight = 10;
+    inline constexpr long maxInFlight = 10;
     struct Invocation;
 }

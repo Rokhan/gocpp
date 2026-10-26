@@ -7,8 +7,8 @@
 namespace golang::regexp
 {
     struct job;
-    const long visitedBits = 32;
-    const long maxBacktrackProg = 500;
-    const int maxBacktrackVector = 256 * 1024;
+    inline constexpr long visitedBits = 32;
+    inline constexpr long maxBacktrackProg = 500;
+    inline constexpr int64_t maxBacktrackVector = 256 * 1024;
     struct bitState;
 }

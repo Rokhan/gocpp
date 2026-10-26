@@ -10,7 +10,7 @@ namespace golang::os
     // Maximum number of symbolic links we will follow when resolving a file in a root.
     // 8 is __POSIX_SYMLOOP_MAX (the minimum allowed value for SYMLOOP_MAX),
     // and a common limit.
-    const long rootMaxSymlinks = 8;
+    inline constexpr long rootMaxSymlinks = 8;
     struct GoTag_rootFS;
     using rootFS = gocpp::defined<Root, GoTag_rootFS>;
 }

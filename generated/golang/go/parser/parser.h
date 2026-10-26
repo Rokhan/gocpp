@@ -47,7 +47,7 @@ namespace golang::go::parser
         // Tracing/debugging
         Mode mode{}; // parsing mode
         bool trace{}; // == (mode&Trace != 0)
-        int indent{}; // indentation used for tracing output
+        int64_t indent{}; // indentation used for tracing output
         // Comments
         gocpp::slice<ast::CommentGroup*> comments{};
         ast::CommentGroup* leadComment{}; // last lead comment
@@ -63,14 +63,14 @@ namespace golang::go::parser
         // w/o making scanning progress - avoids potential endless
         // loops across multiple parser functions during error recovery)
         token::Pos syncPos{}; // last synchronization position
-        int syncCnt{}; // number of parser.advance calls without progress
+        int64_t syncCnt{}; // number of parser.advance calls without progress
         // Non-syntactic parser control
-        int exprLev{}; // < 0: in control clause, >= 0: in expression
+        int64_t exprLev{}; // < 0: in control clause, >= 0: in expression
         bool inRhs{}; // if set, the parser is parsing a rhs expression
         gocpp::slice<ast::ImportSpec*> imports{}; // list of imports
         // nestLev is used to track and limit the recursion depth
         // during parsing.
-        int nestLev{};
+        int64_t nestLev{};
 
         using isGoStruct = void;
 
@@ -157,9 +157,9 @@ namespace golang::go::parser
             return printTrace(p, gocpp::ToSlice<go_any>(value, a...));
         }
         void next0(golang::go::parser::parser* p);
-        int lineFor(golang::go::parser::parser* p, token::Pos pos);
-        std::tuple<ast::Comment*, int> consumeComment(golang::go::parser::parser* p);
-        std::tuple<ast::CommentGroup*, int> consumeCommentGroup(golang::go::parser::parser* p, int n);
+        int64_t lineFor(golang::go::parser::parser* p, token::Pos pos);
+        std::tuple<ast::Comment*, int64_t> consumeComment(golang::go::parser::parser* p);
+        std::tuple<ast::CommentGroup*, int64_t> consumeCommentGroup(golang::go::parser::parser* p, int64_t n);
         void next(golang::go::parser::parser* p);
         void error(golang::go::parser::parser* p, token::Pos pos, gocpp::string msg);
         void errorExpected(golang::go::parser::parser* p, token::Pos pos, gocpp::string msg);
@@ -210,11 +210,11 @@ namespace golang::go::parser
         ast::Expr parseLiteralValue(golang::go::parser::parser* p, ast::Expr typ);
         ast::Expr parsePrimaryExpr(golang::go::parser::parser* p, ast::Expr x);
         ast::Expr parseUnaryExpr(golang::go::parser::parser* p);
-        std::tuple<token::Token, int> tokPrec(golang::go::parser::parser* p);
-        ast::Expr parseBinaryExpr(golang::go::parser::parser* p, ast::Expr x, int prec1);
+        std::tuple<token::Token, int64_t> tokPrec(golang::go::parser::parser* p);
+        ast::Expr parseBinaryExpr(golang::go::parser::parser* p, ast::Expr x, int64_t prec1);
         ast::Expr parseExpr(golang::go::parser::parser* p);
         ast::Expr parseRhs(golang::go::parser::parser* p);
-        std::tuple<ast::Stmt, bool> parseSimpleStmt(golang::go::parser::parser* p, int mode);
+        std::tuple<ast::Stmt, bool> parseSimpleStmt(golang::go::parser::parser* p, int64_t mode);
         ast::CallExpr* parseCallExpr(golang::go::parser::parser* p, gocpp::string callType);
         ast::Stmt parseGoStmt(golang::go::parser::parser* p);
         ast::Stmt parseDeferStmt(golang::go::parser::parser* p);
@@ -230,10 +230,10 @@ namespace golang::go::parser
         ast::SelectStmt* parseSelectStmt(golang::go::parser::parser* p);
         ast::Stmt parseForStmt(golang::go::parser::parser* p);
         ast::Stmt parseStmt(golang::go::parser::parser* p);
-        ast::Spec parseImportSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token _1, int _2);
-        ast::Spec parseValueSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token keyword, int iota);
+        ast::Spec parseImportSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token _1, int64_t _2);
+        ast::Spec parseValueSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token keyword, int64_t iota);
         void parseGenericType(golang::go::parser::parser* p, ast::TypeSpec* spec, token::Pos openPos, ast::Ident* name0, ast::Expr typ0);
-        ast::Spec parseTypeSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token _1, int _2);
+        ast::Spec parseTypeSpec(golang::go::parser::parser* p, ast::CommentGroup* doc, token::Token _1, int64_t _2);
         ast::GenDecl* parseGenDecl(golang::go::parser::parser* p, token::Token keyword, parseSpecFunction f);
         ast::FuncDecl* parseFuncDecl(golang::go::parser::parser* p);
         ast::Decl parseDecl(golang::go::parser::parser* p, gocpp::map<token::Token, bool> sync);

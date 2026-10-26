@@ -414,7 +414,7 @@ namespace golang::internal::godebug
         // to temporarily use the ignored value before being
         // updated to the "correct" one.
         auto end = len(s);
-        auto eq = - 1;
+        int64_t eq = - 1;
         for(auto i = end - 1; i >= - 1; i--)
         {
             if(i == - 1 || s[i] == ',')
@@ -428,7 +428,7 @@ namespace golang::internal::godebug
                         auto v = gocpp::InitPtr<value>([=](auto& x) {
                             x.text = arg;
                         });
-                        for(auto j = 0; j < len(arg); j++)
+                        for(int64_t j = 0; j < len(arg); j++)
                         {
                             if(arg[j] == '#')
                             {
@@ -478,7 +478,7 @@ namespace golang::internal::godebug
     }
 
     runtimeStderr go_stderr;
-    std::tuple<int, gocpp::error> rec::Write(runtimeStderr*, gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> rec::Write(runtimeStderr*, gocpp::slice<unsigned char> b)
     {
         if(len(b) > 0)
         {

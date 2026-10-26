@@ -37,7 +37,7 @@ namespace golang::encoding::hex
 
     // EncodedLen returns the length of an encoding of n source bytes.
     // Specifically, it returns n * 2.
-    int EncodedLen(int n)
+    int64_t EncodedLen(int64_t n)
     {
         return n * 2;
     }
@@ -46,9 +46,9 @@ namespace golang::encoding::hex
     // bytes of dst. As a convenience, it returns the number
     // of bytes written to dst, but this value is always [EncodedLen](len(src)).
     // Encode implements hexadecimal encoding.
-    int Encode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    int64_t Encode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
-        auto j = 0;
+        int64_t j = 0;
         for(auto [gocpp_ignored, v] : src)
         {
             dst[j] = hextable[v >> 4];
@@ -80,7 +80,7 @@ namespace golang::encoding::hex
 
     // DecodedLen returns the length of a decoding of x source bytes.
     // Specifically, it returns x / 2.
-    int DecodedLen(int x)
+    int64_t DecodedLen(int64_t x)
     {
         return x / 2;
     }
@@ -92,7 +92,7 @@ namespace golang::encoding::hex
     // characters and that src has even length.
     // If the input is malformed, Decode returns the number
     // of bytes decoded before the error.
-    std::tuple<int, gocpp::error> Decode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    std::tuple<int64_t, gocpp::error> Decode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         auto [i, j] = std::tuple{0, 0};
         for(; j < len(src) - 1; j += 2)
@@ -223,19 +223,19 @@ namespace golang::encoding::hex
         });
     }
 
-    std::tuple<int, gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         for(; len(p) > 0 && e->err == nullptr; )
         {
-            auto chunkSize = bufferSize / 2;
+            int64_t chunkSize = bufferSize / 2;
             if(len(p) < chunkSize)
             {
                 chunkSize = len(p);
             }
 
-            int written = {};
+            int64_t written = {};
             auto encoded = Encode(e->out.make_slice(0), p.make_slice(0, chunkSize));
             std::tie(written, e->err) = rec::Write(gocpp::recv(e->w), e->out.make_slice(0, encoded));
             n += written / 2;
@@ -291,15 +291,15 @@ namespace golang::encoding::hex
         });
     }
 
-    std::tuple<int, gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         // Fill internal buffer with sufficient bytes to decode
         if(len(d->in) < 2 && d->err == nullptr)
         {
-            int numCopy = {};
-            int numRead = {};
+            int64_t numCopy = {};
+            int64_t numRead = {};
             // Copies either 0 or 1 bytes
             numCopy = copy(d->arr.make_slice(0), d->in);
             std::tie(numRead, d->err) = rec::Read(gocpp::recv(d->r), d->arr.make_slice(numCopy));
@@ -322,7 +322,7 @@ namespace golang::encoding::hex
         {
             p = p.make_slice(0, numAvail);
         }
-        int numDec;
+        int64_t numDec;
         std::tie(numDec, err) = Decode(p, d->in.make_slice(0, len(p) * 2));
         d->in = d->in.make_slice(2 * numDec);
         if(err != nullptr)
@@ -402,9 +402,9 @@ namespace golang::encoding::hex
         return b;
     }
 
-    std::tuple<int, gocpp::error> rec::Write(dumper* h, gocpp::slice<unsigned char> data)
+    std::tuple<int64_t, gocpp::error> rec::Write(dumper* h, gocpp::slice<unsigned char> data)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         if(h->closed)
         {
@@ -435,7 +435,7 @@ namespace golang::encoding::hex
             }
             Encode(h->buf.make_slice(0), data.make_slice(i, i + 1));
             h->buf[2] = ' ';
-            auto l = 3;
+            int64_t l = 3;
             if(h->used == 7)
             {
                 // There's an additional space after the 8th byte.
@@ -496,7 +496,7 @@ namespace golang::encoding::hex
         auto nBytes = h->used;
         for(; h->used < 16; )
         {
-            auto l = 3;
+            int64_t l = 3;
             if(h->used == 7)
             {
                 l = 4;

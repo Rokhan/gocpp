@@ -12,8 +12,10 @@
 
 namespace golang::runtime
 {
+    struct GoTag_sweepClass { };
+    using sweepClass = gocpp::defined<uint32_t, GoTag_sweepClass>;
     void finishsweep_m();
-    void bgsweep(gocpp::channel<int> c);
+    void bgsweep(gocpp::channel<int64_t> c);
     struct sweepLocker
     {
         // sweepGen is the sweep generation of the heap.
@@ -67,8 +69,8 @@ namespace golang::runtime
         markBits allocBitsForIndex(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t allocBitIndex);
         uintptr_t base(const gocpp::PtrRecv<struct sweepLocked, false>& self);
         uintptr_t base(const gocpp::ObjRecv<struct sweepLocked>& self);
-        int countAlloc(const gocpp::PtrRecv<struct sweepLocked, false>& self);
-        int countAlloc(const gocpp::ObjRecv<struct sweepLocked>& self);
+        int64_t countAlloc(const gocpp::PtrRecv<struct sweepLocked, false>& self);
+        int64_t countAlloc(const gocpp::ObjRecv<struct sweepLocked>& self);
         bool decPinCounter(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t offset);
         bool decPinCounter(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t offset);
         uintptr_t divideByElemSize(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t n);
@@ -135,8 +137,8 @@ namespace golang::runtime
         typePointers typePointersOfType(const gocpp::ObjRecv<struct sweepLocked>& self, abi::Type* typ, uintptr_t addr);
         typePointers typePointersOfUnchecked(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t addr);
         typePointers typePointersOfUnchecked(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t addr);
-        unsafe::Pointer userArenaNextFree(const gocpp::PtrRecv<struct sweepLocked, false>& self, _type* typ, int cap);
-        unsafe::Pointer userArenaNextFree(const gocpp::ObjRecv<struct sweepLocked>& self, _type* typ, int cap);
+        unsafe::Pointer userArenaNextFree(const gocpp::PtrRecv<struct sweepLocked, false>& self, _type* typ, int64_t cap);
+        unsafe::Pointer userArenaNextFree(const gocpp::ObjRecv<struct sweepLocked>& self, _type* typ, int64_t cap);
         uintptr_t writeHeapBitsSmall(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t x, uintptr_t dataSize, _type* typ);
         uintptr_t writeHeapBitsSmall(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t x, uintptr_t dataSize, _type* typ);
         runtime::writeUserArenaHeapBits writeUserArenaHeapBits(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t addr);

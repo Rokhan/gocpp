@@ -38,12 +38,12 @@ namespace golang::sort
     //
     // Note: in many situations, the newer [slices.SortFunc] function is more
     // ergonomic and runs faster.
-    void Slice(go_any x, std::function<bool (int i, int j)> less)
+    void Slice(go_any x, std::function<bool (int64_t i, int64_t j)> less)
     {
         auto rv = reflectlite::ValueOf(x);
         auto swap = reflectlite::Swapper(x);
         auto length = rec::Len(gocpp::recv(rv));
-        auto limit = bits::Len((unsigned int)(length));
+        auto limit = bits::Len((uint64_t)(length));
         pdqsort_func(lessSwap {less, swap}, 0, length, limit);
     }
 
@@ -56,7 +56,7 @@ namespace golang::sort
     //
     // Note: in many situations, the newer [slices.SortStableFunc] function is more
     // ergonomic and runs faster.
-    void SliceStable(go_any x, std::function<bool (int i, int j)> less)
+    void SliceStable(go_any x, std::function<bool (int64_t i, int64_t j)> less)
     {
         auto rv = reflectlite::ValueOf(x);
         auto swap = reflectlite::Swapper(x);
@@ -68,7 +68,7 @@ namespace golang::sort
     //
     // Note: in many situations, the newer [slices.IsSortedFunc] function is more
     // ergonomic and runs faster.
-    bool SliceIsSorted(go_any x, std::function<bool (int i, int j)> less)
+    bool SliceIsSorted(go_any x, std::function<bool (int64_t i, int64_t j)> less)
     {
         auto rv = reflectlite::ValueOf(x);
         auto n = rec::Len(gocpp::recv(rv));

@@ -578,7 +578,7 @@ namespace golang::go::types
             // Before Go 1.21, uninstantiated or partially instantiated argument functions are
             // not permitted. Checker.funcInst must infer missing type arguments in that case.
             // for -lang < go1.21
-            auto infer = true;
+            bool infer = true;
             auto n = len(elist);
             if(n > 0 && rec::allowVersion(gocpp::recv(check), go1_21))
             {
@@ -710,7 +710,7 @@ namespace golang::go::types
         // adjusted for variadic functions (may be nil for empty parameter lists!)
         auto sigParams = sig->params;
         // indicates if sigParams is different from sig.params
-        auto adjusted = false;
+        bool adjusted = false;
         if(sig->variadic)
         {
             if(ddd)
@@ -768,7 +768,7 @@ namespace golang::go::types
         if(nargs != npars)
         {
             positioner at = call;
-            auto qualifier = "not enough"_s;
+            gocpp::string qualifier = "not enough"_s;
             if(nargs > npars)
             {
                 // report at first extra argument
@@ -840,7 +840,7 @@ namespace golang::go::types
 
         // collect type parameters from generic function arguments
         // indices of generic function arguments
-        gocpp::slice<int> genericArgs = {};
+        gocpp::slice<int64_t> genericArgs = {};
         if(enableReverseTypeInference)
         {
             for(auto [i, arg] : args)
@@ -966,7 +966,7 @@ namespace golang::go::types
     {
         // these must be declared before the "goto Error" statements
         Object obj = {};
-        gocpp::slice<int> index = {};
+        gocpp::slice<int64_t> index = {};
         bool indirect = {};
 
         auto sel = e->Sel->Name;
@@ -985,7 +985,7 @@ namespace golang::go::types
                 auto pkg = pname->imported;
 
                 Object exp = {};
-                auto funcMode = value;
+                types::operandMode funcMode = value;
                 if(pkg->cgo)
                 {
                     // cgo special cases C.malloc: it's
@@ -1278,7 +1278,7 @@ namespace golang::go::types
                         // (An alternative would be to not print parameter names in errors,
                         // but it's useful to see them; this is cheap and method expressions
                         // are rare.)
-                        auto name = ""_s;
+                        gocpp::string name = ""_s;
                         if(len(params) > 0 && params[0]->object.name != ""_s)
                         {
                             // name needed
@@ -1311,7 +1311,7 @@ namespace golang::go::types
                         // custom method for a parameterized received type, the
                         // method set method doesn't match (no copy there). There
                         // /          may be other situations.
-                        auto disabled = true;
+                        bool disabled = true;
                         if(! disabled && debug)
                         {
                             // Verify that LookupFieldOrMethod and MethodSet.Lookup agree.
@@ -1406,7 +1406,7 @@ namespace golang::go::types
 
     bool rec::useN(Checker* check, gocpp::slice<ast::Expr> args, bool lhs)
     {
-        auto ok = true;
+        bool ok = true;
         for(auto [gocpp_ignored, e] : args)
         {
             if(! rec::use1(gocpp::recv(check), e, lhs))

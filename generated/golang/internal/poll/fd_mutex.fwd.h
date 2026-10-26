@@ -14,18 +14,18 @@ namespace golang::internal::poll
     // 20 bits - total number of references (read+write+misc).
     // 20 bits - number of outstanding read waiters.
     // 20 bits - number of outstanding write waiters.
-    const int mutexClosed = 1 << 0;
-    const int mutexRLock = 1 << 1;
-    const int mutexWLock = 1 << 2;
-    const int mutexRef = 1 << 3;
-    const int mutexRefMask = ((1 << 20) - 1) << 3;
-    const int mutexRWait = 1 << 23;
-    const int mutexRMask = ((1 << 20) - 1) << 23;
-    const int mutexWWait = 1 << 43;
-    const int mutexWMask = ((1 << 20) - 1) << 43;
-    const bool readlock = true;
-    const bool writeLock = false;
-    const bool waitLock = true;
-    const bool tryLock = false;
-    const gocpp::string overflowMsg = "too many concurrent operations on a single file or socket (max 1048575)"_s;
+    inline constexpr int64_t mutexClosed = 1 << 0;
+    inline constexpr int64_t mutexRLock = 1 << 1;
+    inline constexpr int64_t mutexWLock = 1 << 2;
+    inline constexpr int64_t mutexRef = 1 << 3;
+    inline constexpr int64_t mutexRefMask = ((1 << 20) - 1) << 3;
+    inline constexpr int64_t mutexRWait = 1 << 23;
+    inline constexpr int64_t mutexRMask = ((1LL << 20) - 1LL) << 23;
+    inline constexpr int64_t mutexWWait = 1LL << 43;
+    inline constexpr int64_t mutexWMask = ((1LL << 20) - 1LL) << 43;
+    inline constexpr bool readlock = true;
+    inline constexpr bool writeLock = false;
+    inline constexpr bool waitLock = true;
+    inline constexpr bool tryLock = false;
+    inline const gocpp::string overflowMsg = "too many concurrent operations on a single file or socket (max 1048575)"_s;
 }

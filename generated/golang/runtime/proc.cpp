@@ -230,7 +230,7 @@ namespace golang::runtime
             doInit(runtime_inittasks);
 
             // Defer unlock so that runtime.Goexit during init does the unlock too.
-            auto needUnlock = true;
+            bool needUnlock = true;
             defer.push_back([=]{ [=]() mutable -> void
             {
                 if(needUnlock)
@@ -350,7 +350,7 @@ namespace golang::runtime
             // No point in leak checking if no cgo calls, since leak checking
             // just looks for objects allocated using malloc and friends.
             // Just checking iscgo doesn't help because asan implies iscgo.
-            auto exitHooksRun = false;
+            bool exitHooksRun = false;
             if(asanenabled && (isarchive || islibrary || NumCgoCall() > 1))
             {
                 // lsandoleakcheck may not return
@@ -366,7 +366,7 @@ namespace golang::runtime
             if(rec::Load(gocpp::recv(runningPanicDefers)) != 0)
             {
                 // Running deferred functions should not take long.
-                for(auto c = 0; c < 1000; c++)
+                for(int64_t c = 0; c < 1000; c++)
                 {
                     if(rec::Load(gocpp::recv(runningPanicDefers)) == 0)
                     {
@@ -405,7 +405,7 @@ namespace golang::runtime
     // os_beforeExit is called from os.Exit(0).
     //
     //go:linkname os_beforeExit os.runtime_beforeExit
-    void os_beforeExit(int exitCode)
+    void os_beforeExit(int64_t exitCode)
     {
         runExitHooks(exitCode);
         if(exitCode == 0 && raceenabled)
@@ -430,7 +430,7 @@ namespace golang::runtime
         exithook::Throw = go_throw;
     }
 
-    void runExitHooks(int code)
+    void runExitHooks(int64_t code)
     {
         exithook::Run(code);
     }
@@ -531,7 +531,7 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname gopark
-    void gopark(std::function<bool (g* _1, gocpp::unsafe_pointer _2)> unlockf, gocpp::unsafe_pointer lock, waitReason reason, traceBlockReason traceReason, int traceskip)
+    void gopark(std::function<bool (g* _1, gocpp::unsafe_pointer _2)> unlockf, gocpp::unsafe_pointer lock, waitReason reason, traceBlockReason traceReason, int64_t traceskip)
     {
         if(reason != waitReasonSleep)
         {
@@ -557,7 +557,7 @@ namespace golang::runtime
 
     // Puts the current goroutine into a waiting state and unlocks the lock.
     // The goroutine can be made runnable again by calling goready(gp).
-    void goparkunlock(mutex* lock, waitReason reason, traceBlockReason traceReason, int traceskip)
+    void goparkunlock(mutex* lock, waitReason reason, traceBlockReason traceReason, int64_t traceskip)
     {
         gopark(parkunlock_c, gocpp::unsafe_pointer(lock), reason, traceReason, traceskip);
     }
@@ -572,7 +572,7 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname goready
-    void goready(g* gp, int traceskip)
+    void goready(g* gp, int64_t traceskip)
     {
         systemstack([=]() mutable -> void
         {
@@ -871,7 +871,7 @@ namespace golang::runtime
     void forEachGRace(std::function<void (g* gp)> fn)
     {
         auto [ptr, length] = atomicAllG();
-        for(auto i = uintptr_t(0); i < length; i++)
+        for(uintptr_t i = uintptr_t(0); i < length; i++)
         {
             auto gp = atomicAllGIndex(ptr, i);
             fn(gp);
@@ -968,12 +968,12 @@ namespace golang::runtime
                     // Similar to goenv_unix but extracts the environment value for
                     // GODEBUG directly.
                     // TODO(moehrmann): remove when general goenvs() can be called before cpuinit()
-                    auto n = int32_t(0);
+                    int32_t n = int32_t(0);
                     for(; argv_index(argv, argc + 1 + n) != nullptr; )
                     {
                         n++;
                     }
-                    for(auto i = int32_t(0); i < n; i++)
+                    for(int32_t i = int32_t(0); i < n; i++)
                     {
                         auto p = argv_index(argv, argc + 1 + i);
                         auto s = unsafe::String(p, findnull(p));
@@ -1320,7 +1320,7 @@ namespace golang::runtime
     }
 
     // Mark gp ready to run.
-    void ready(g* gp, int traceskip, bool next)
+    void ready(g* gp, int64_t traceskip, bool next)
     {
         auto status = readgstatus(gp);
 
@@ -1384,7 +1384,7 @@ namespace golang::runtime
         // stopwait and preemption requests can be lost
         // due to races with concurrently executing threads,
         // so try several times
-        for(auto i = 0; i < 5; i++)
+        for(int64_t i = 0; i < 5; i++)
         {
             // this should tell the scheduler to not start any new goroutines
             sched.stopwait = freezeStopWait;
@@ -1418,7 +1418,7 @@ namespace golang::runtime
     // we see an inconsistent state.
     void casfrom_Gscanstatus(g* gp, uint32_t oldval, uint32_t newval)
     {
-        auto success = false;
+        bool success = false;
 
         // Check that transition is valid.
         //Go switch emulation
@@ -1531,7 +1531,7 @@ namespace golang::runtime
 
         // loop if gp->atomicstatus is in a scan state giving
         // GC time to finish and change the state to oldval.
-        for(auto i = 0; ! rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), oldval, newval); i++)
+        for(int64_t i = 0; ! rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), oldval, newval); i++)
         {
             if(oldval == _Gwaiting && rec::Load(gocpp::recv(gp->atomicstatus)) == _Grunnable)
             {
@@ -1548,7 +1548,7 @@ namespace golang::runtime
             }
             if(nanotime() < nextYield)
             {
-                for(auto x = 0; x < 10 && rec::Load(gocpp::recv(gp->atomicstatus)) != oldval; x++)
+                for(int64_t x = 0; x < 10 && rec::Load(gocpp::recv(gp->atomicstatus)) != oldval; x++)
                 {
                     procyield(1);
                 }
@@ -2025,8 +2025,8 @@ namespace golang::runtime
         // Also accumulate all the time spent by each P in _Pgcstop up to the point
         // where everything was stopped. This will be accumulated into the total pause
         // CPU time by the caller.
-        auto stoppingCPUTime = int64_t(0);
-        auto bad = ""_s;
+        int64_t stoppingCPUTime = int64_t(0);
+        gocpp::string bad = ""_s;
         if(sched.stopwait != 0)
         {
             bad = "stopTheWorld: not stopped (stopwait != 0)"_s;
@@ -2961,7 +2961,7 @@ namespace golang::runtime
         auto c = rec::Swap(gocpp::recv(extraMWaiters), 0);
         if(c > 0)
         {
-            for(auto i = uint32_t(0); i < c; i++)
+            for(uint32_t i = uint32_t(0); i < c; i++)
             {
                 oneNewExtraM();
             }
@@ -3222,7 +3222,7 @@ namespace golang::runtime
     {
         auto locked = 1;
 
-        auto incr = false;
+        bool incr = false;
         for(; ; )
         {
             auto old = rec::Load(gocpp::recv(extraM));
@@ -4344,7 +4344,7 @@ namespace golang::runtime
             {
                 go_throw("findRunnable: netpoll with spinning"_s);
             }
-            auto delay = int64_t(- 1);
+            int64_t delay = int64_t(- 1);
             if(pollUntil != 0)
             {
                 if(now == 0)
@@ -4462,10 +4462,10 @@ namespace golang::runtime
         bool newWork;
         auto pp = rec::ptr(gocpp::recv(getg()->m->p));
 
-        auto ranTimer = false;
+        bool ranTimer = false;
 
         auto stealTries = 4;
-        for(auto i = 0; i < stealTries; i++)
+        for(int64_t i = 0; i < stealTries; i++)
         {
             auto stealTimersOrRunNextG = i == stealTries - 1;
 
@@ -6191,7 +6191,7 @@ namespace golang::runtime
         }
 
         // extra space in case of reads slightly beyond frame
-        auto totalSize = uintptr_t(4 * goarch::PtrSize + sys::MinFrameSize);
+        uintptr_t totalSize = uintptr_t(4 * goarch::PtrSize + sys::MinFrameSize);
         totalSize = alignUp(totalSize, sys::StackAlign);
         auto sp = newg->stack.hi - totalSize;
         if(usesLR)
@@ -6656,7 +6656,7 @@ namespace golang::runtime
     // the runtime.
     //
     //go:linkname goroutineleakcount runtime/pprof.runtime_goroutineleakcount
-    int goroutineleakcount()
+    int64_t goroutineleakcount()
     {
         return work.goroutineLeak.count;
     }
@@ -6790,10 +6790,10 @@ namespace golang::runtime
 
         unwinder u = {};
         gocpp::array<uintptr_t, maxCPUProfStack> stk = {};
-        auto n = 0;
+        int64_t n = 0;
         if(mp->ncgo > 0 && mp->curg != nullptr && mp->curg->syscallpc != 0 && mp->curg->syscallsp != 0)
         {
-            auto cgoOff = 0;
+            int64_t cgoOff = 0;
             // Check cgoCallersUse to make sure that we are not
             // interrupting other code that is fiddling with
             // cgoCallers.  We are running in a signal handler
@@ -7024,7 +7024,7 @@ namespace golang::runtime
         pp->deferpool = pp->deferpoolbuf.make_slice(0, 0);
         systemstack([=]() mutable -> void
         {
-            for(auto i = 0; i < pp->mspancache.len; i++)
+            for(int64_t i = 0; i < pp->mspancache.len; i++)
             {
                 // Safe to call since the world is stopped.
                 rec::free(gocpp::recv(mheap_.spanalloc), gocpp::unsafe_pointer(pp->mspancache.buf[i]));
@@ -7384,7 +7384,7 @@ namespace golang::runtime
             // on some platforms when built with -N -l. See #64113.
             systemstack([=]() mutable -> void
             {
-                auto id = int64_t(0);
+                int64_t id = int64_t(0);
                 if(pp->m != 0)
                 {
                     id = rec::ptr(gocpp::recv(pp->m))->id;
@@ -7494,7 +7494,7 @@ namespace golang::runtime
             go_throw("checkdead: inconsistent counts"_s);
         }
 
-        auto grunning = 0;
+        int64_t grunning = 0;
         forEachG([=](g* gp) mutable -> void
         {
             if(isSystemGoroutine(gp, false))
@@ -7600,11 +7600,11 @@ namespace golang::runtime
         checkdead();
         unlock(& sched.lock);
 
-        auto lastgomaxprocs = int64_t(0);
-        auto lasttrace = int64_t(0);
+        int64_t lastgomaxprocs = int64_t(0);
+        int64_t lasttrace = int64_t(0);
         // how many cycles in succession we had not wokeup somebody
-        auto idle = 0;
-        auto delay = uint32_t(0);
+        int64_t idle = 0;
+        uint32_t delay = uint32_t(0);
 
         for(; ; )
         {
@@ -7645,7 +7645,7 @@ namespace golang::runtime
                 lock(& sched.lock);
                 if(rec::Load(gocpp::recv(sched.gcwaiting)) || rec::Load(gocpp::recv(sched.npidle)) == gomaxprocs)
                 {
-                    auto syscallWake = false;
+                    bool syscallWake = false;
                     auto next = timeSleepUntil();
                     if(next > now)
                     {
@@ -7796,14 +7796,14 @@ namespace golang::runtime
 
     uint32_t retake(int64_t now)
     {
-        auto n = 0;
+        int64_t n = 0;
         // Prevent allp slice changes. This lock will be completely
         // uncontended unless we're already stopping the world.
         lock(& allpLock);
         // We can't use a range loop over allp because we may
         // temporarily drop the allpLock. Hence, we need to re-fetch
         // allp each time around the loop.
-        for(auto i = 0; i < len(allp); i++)
+        for(int64_t i = 0; i < len(allp); i++)
         {
             // Quickly filter out non-running Ps. Running Ps are either
             // in a syscall or are actually executing. Idle Ps don't
@@ -7820,7 +7820,7 @@ namespace golang::runtime
                 continue;
             }
             auto pd = & pp->sysmontick;
-            auto sysretake = false;
+            bool sysretake = false;
 
             // Preempt G if it's running on the same schedtick for
             // too long. This could be from a single long-running
@@ -8060,7 +8060,7 @@ namespace golang::runtime
     // Returns true if preemption request was issued to at least one goroutine.
     bool preemptall()
     {
-        auto res = false;
+        bool res = false;
         for(auto [gocpp_ignored, pp] : allp)
         {
             if(pp->status != _Prunning)
@@ -8869,7 +8869,7 @@ namespace golang::runtime
         {
             go_throw("runqputslow: queue is not full"_s);
         }
-        for(auto i = uint32_t(0); i < n; i++)
+        for(uint32_t i = uint32_t(0); i < n; i++)
         {
             batch[i] = rec::ptr(gocpp::recv(pp->runq[(h + i) % uint32_t(len(pp->runq))]));
         }
@@ -8882,7 +8882,7 @@ namespace golang::runtime
 
         if(randomizeScheduler)
         {
-            for(auto i = uint32_t(1); i <= n; i++)
+            for(uint32_t i = uint32_t(1); i <= n; i++)
             {
                 auto j = cheaprandn(i + 1);
                 std::tie(batch[i], batch[j]) = std::tuple{batch[j], batch[i]};
@@ -8890,7 +8890,7 @@ namespace golang::runtime
         }
 
         // Link the goroutines.
-        for(auto i = uint32_t(0); i < n; i++)
+        for(uint32_t i = uint32_t(0); i < n; i++)
         {
             rec::set(gocpp::recv(batch[i]->schedlink), batch[i + 1]);
         }
@@ -8915,7 +8915,7 @@ namespace golang::runtime
         }
         auto h = atomic::LoadAcq(& pp->runqhead);
         auto t = pp->runqtail;
-        auto n = uint32_t(0);
+        uint32_t n = uint32_t(0);
         for(; ! rec::empty(gocpp::recv(q)) && t - h < uint32_t(len(pp->runq)); )
         {
             auto gp = rec::pop(gocpp::recv(q));
@@ -8930,7 +8930,7 @@ namespace golang::runtime
             {
                 return (pp->runqtail + o) % uint32_t(len(pp->runq));
             };
-            for(auto i = uint32_t(1); i < n; i++)
+            for(uint32_t i = uint32_t(1); i < n; i++)
             {
                 auto j = cheaprandn(i + 1);
                 std::tie(pp->runq[off(i)], pp->runq[off(j)]) = std::tuple{pp->runq[off(j)], pp->runq[off(i)]};
@@ -9017,7 +9017,7 @@ namespace golang::runtime
         // so that we can update any gp.schedlink only after we take the full ownership of G,
         // meanwhile, other P's can't access to all G's in local P's runnable queue and steal them.
         // See https://groups.google.com/g/golang-dev/c/0pTKxEKhHSc/m/6Q85QjdVBQAJ for more details.
-        for(auto i = uint32_t(0); i < qn; i++)
+        for(uint32_t i = uint32_t(0); i < qn; i++)
         {
             auto gp = rec::ptr(gocpp::recv(pp->runq[(h + i) % uint32_t(len(pp->runq))]));
             rec::pushBack(gocpp::recv(drainQ), gp);
@@ -9100,7 +9100,7 @@ namespace golang::runtime
                 // read inconsistent h and t
                 continue;
             }
-            for(auto i = uint32_t(0); i < n; i++)
+            for(uint32_t i = uint32_t(0); i < n; i++)
             {
                 auto g = pp->runq[(h + i) % uint32_t(len(pp->runq))];
                 batch[(batchHead + i) % uint32_t(len(batch))] = g;
@@ -9330,11 +9330,11 @@ namespace golang::runtime
     }
 
     //go:linkname setMaxThreads runtime/debug.setMaxThreads
-    int setMaxThreads(int in)
+    int64_t setMaxThreads(int64_t in)
     {
-        int out;
+        int64_t out;
         lock(& sched.lock);
-        out = int(sched.maxmcount);
+        out = int64_t(sched.maxmcount);
         if(in > 0x7fffffff)
         {
             // MaxInt32
@@ -9361,13 +9361,13 @@ namespace golang::runtime
     //
     //go:linkname procPin
     //go:nosplit
-    int procPin()
+    int64_t procPin()
     {
         auto gp = getg();
         auto mp = gp->m;
 
         mp->locks++;
-        return int(rec::ptr(gocpp::recv(mp->p))->id);
+        return int64_t(rec::ptr(gocpp::recv(mp->p))->id);
     }
 
     // procUnpin should be an internal detail,
@@ -9390,7 +9390,7 @@ namespace golang::runtime
 
     //go:linkname sync_runtime_procPin sync.runtime_procPin
     //go:nosplit
-    int sync_runtime_procPin()
+    int64_t sync_runtime_procPin()
     {
         return procPin();
     }
@@ -9404,7 +9404,7 @@ namespace golang::runtime
 
     //go:linkname sync_atomic_runtime_procPin sync/atomic.runtime_procPin
     //go:nosplit
-    int sync_atomic_runtime_procPin()
+    int64_t sync_atomic_runtime_procPin()
     {
         return procPin();
     }
@@ -9420,7 +9420,7 @@ namespace golang::runtime
     //
     //go:linkname internal_sync_runtime_canSpin internal/sync.runtime_canSpin
     //go:nosplit
-    bool internal_sync_runtime_canSpin(int i)
+    bool internal_sync_runtime_canSpin(int64_t i)
     {
         // sync.Mutex is cooperative, so we are conservative with spinning.
         // Spin only few times and only if running on a multicore machine and
@@ -9459,7 +9459,7 @@ namespace golang::runtime
     //
     //go:linkname sync_runtime_canSpin sync.runtime_canSpin
     //go:nosplit
-    bool sync_runtime_canSpin(int i)
+    bool sync_runtime_canSpin(int64_t i)
     {
         return internal_sync_runtime_canSpin(i);
     }
@@ -9560,7 +9560,7 @@ namespace golang::runtime
     {
         ord->count = count;
         ord->coprimes = ord->coprimes.make_slice(0, 0);
-        for(auto i = uint32_t(1); i <= count; i++)
+        for(uint32_t i = uint32_t(1); i <= count; i++)
         {
             if(gcd(i, count) == 1)
             {
@@ -9722,7 +9722,7 @@ namespace golang::runtime
                         go_throw("inittask with no functions"_s);
                     }
                     auto firstFunc = add(gocpp::unsafe_pointer(t), 8);
-                    for(auto i = uint32_t(0); i < t->nfns; i++)
+                    for(uint32_t i = uint32_t(0); i < t->nfns; i++)
                     {
                         auto p = add(firstFunc, uintptr_t(i) * goarch::PtrSize);
                         auto f = *(std::function<void ()>*)(gocpp::unsafe_pointer(& p));

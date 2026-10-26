@@ -209,7 +209,7 @@ namespace golang::runtime
             }
 
             // Construct the stack for insertion to the stack table.
-            auto nstk = 1;
+            int64_t nstk = 1;
             pcBuf[0] = logicalStackSentinel;
             for(; nstk < len(pcBuf) && nstk - 1 < len(stk); nstk++)
             {
@@ -284,7 +284,7 @@ namespace golang::runtime
         // sure this thread's trace write flag is set. If it already is, then we're
         // in the tracer and we can just take advantage of that. If it isn't, then
         // we need to acquire it and read the generation.
-        auto locked = false;
+        bool locked = false;
         if(! rec::Load(gocpp::recv(mp->trace.writing)))
         {
             rec::Store(gocpp::recv(mp->trace.writing), true);

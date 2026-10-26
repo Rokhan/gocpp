@@ -169,20 +169,20 @@ namespace golang::go::types
     }
 
     // NumExplicitMethods returns the number of explicitly declared methods of interface t.
-    int rec::NumExplicitMethods(Interface* t)
+    int64_t rec::NumExplicitMethods(Interface* t)
     {
         return len(t->methods);
     }
 
     // ExplicitMethod returns the i'th explicitly declared method of interface t for 0 <= i < t.NumExplicitMethods().
     // The methods are ordered by their unique [Id].
-    Func* rec::ExplicitMethod(Interface* t, int i)
+    Func* rec::ExplicitMethod(Interface* t, int64_t i)
     {
         return t->methods[i];
     }
 
     // NumEmbeddeds returns the number of embedded types in interface t.
-    int rec::NumEmbeddeds(Interface* t)
+    int64_t rec::NumEmbeddeds(Interface* t)
     {
         return len(t->embeddeds);
     }
@@ -191,26 +191,26 @@ namespace golang::go::types
     // The result is nil if the i'th embedded type is not a defined type.
     //
     // Deprecated: Use [Interface.EmbeddedType] which is not restricted to defined (*[Named]) types.
-    Named* rec::Embedded(Interface* t, int i)
+    Named* rec::Embedded(Interface* t, int64_t i)
     {
         return asNamed(t->embeddeds[i]);
     }
 
     // EmbeddedType returns the i'th embedded type of interface t for 0 <= i < t.NumEmbeddeds().
-    golang::go::types::Type rec::EmbeddedType(Interface* t, int i)
+    golang::go::types::Type rec::EmbeddedType(Interface* t, int64_t i)
     {
         return t->embeddeds[i];
     }
 
     // NumMethods returns the total number of methods of interface t.
-    int rec::NumMethods(Interface* t)
+    int64_t rec::NumMethods(Interface* t)
     {
         return rec::NumMethods(gocpp::recv(rec::typeSet(gocpp::recv(t))));
     }
 
     // Method returns the i'th method of interface t for 0 <= i < t.NumMethods().
     // The methods are ordered by their unique Id.
-    Func* rec::Method(Interface* t, int i)
+    Func* rec::Method(Interface* t, int64_t i)
     {
         return rec::Method(gocpp::recv(rec::typeSet(gocpp::recv(t))), i);
     }

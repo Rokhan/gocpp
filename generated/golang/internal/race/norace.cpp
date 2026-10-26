@@ -65,15 +65,15 @@ namespace golang::internal::race
     {
     }
 
-    void ReadRange(gocpp::unsafe_pointer addr, int len)
+    void ReadRange(gocpp::unsafe_pointer addr, int64_t len)
     {
     }
 
-    void WriteRange(gocpp::unsafe_pointer addr, int len)
+    void WriteRange(gocpp::unsafe_pointer addr, int64_t len)
     {
     }
 
-    int Errors()
+    int64_t Errors()
     {
         return 0;
     }

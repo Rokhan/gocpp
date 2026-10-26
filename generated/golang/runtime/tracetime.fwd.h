@@ -6,7 +6,8 @@
 
 namespace golang::runtime
 {
-    using traceTime = uint64_t;
+    struct GoTag_traceTime;
+    using traceTime = gocpp::defined<uint64_t, GoTag_traceTime>;
 }
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 
@@ -45,5 +46,5 @@ namespace golang::runtime
     // The suggested increment frequency for PowerPC's time base register is
     // 512 MHz according to Power ISA v2.07 section 6.2, so we use 32 on ppc64
     // and ppc64le.
-    const int traceTimeDiv = (1 - osHasLowResClockInt) * 64 + osHasLowResClockInt * (256 - 224 * (goarch::IsPpc64 | goarch::IsPpc64le));
+    inline constexpr int64_t traceTimeDiv = (1 - osHasLowResClockInt) * 64 + osHasLowResClockInt * (256 - 224 * (goarch::IsPpc64 | goarch::IsPpc64le));
 }

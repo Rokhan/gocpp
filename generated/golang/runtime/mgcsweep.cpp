@@ -362,7 +362,7 @@ namespace golang::runtime
         nextMarkBitArenaEpoch();
     }
 
-    void bgsweep(gocpp::channel<int> c)
+    void bgsweep(gocpp::channel<int64_t> c)
     {
         runtime::sweep.g = getg();
 
@@ -389,7 +389,7 @@ namespace golang::runtime
             // time, helping to sweep can reduce allocation latencies by getting ahead of
             // the proportional sweeper and having spans ready to go for allocation.
             auto sweepBatchSize = 10;
-            auto nSwept = 0;
+            int64_t nSwept = 0;
             for(; sweepone() != ~ uintptr_t(0); )
             {
                 nSwept++;
@@ -502,12 +502,12 @@ namespace golang::runtime
             return rec::base(gocpp::recv(self.obj.mspan));
         }
 
-        int countAlloc(const gocpp::PtrRecv<struct sweepLocked, false>& self)
+        int64_t countAlloc(const gocpp::PtrRecv<struct sweepLocked, false>& self)
         {
             return rec::countAlloc(gocpp::recv(self.ptr->mspan));
         }
 
-        int countAlloc(const gocpp::ObjRecv<struct sweepLocked>& self)
+        int64_t countAlloc(const gocpp::ObjRecv<struct sweepLocked>& self)
         {
             return rec::countAlloc(gocpp::recv(self.obj.mspan));
         }
@@ -842,12 +842,12 @@ namespace golang::runtime
             return rec::typePointersOfUnchecked(gocpp::recv(self.obj.mspan), addr);
         }
 
-        unsafe::Pointer userArenaNextFree(const gocpp::PtrRecv<struct sweepLocked, false>& self, _type* typ, int cap)
+        unsafe::Pointer userArenaNextFree(const gocpp::PtrRecv<struct sweepLocked, false>& self, _type* typ, int64_t cap)
         {
             return rec::userArenaNextFree(gocpp::recv(self.ptr->mspan), typ, cap);
         }
 
-        unsafe::Pointer userArenaNextFree(const gocpp::ObjRecv<struct sweepLocked>& self, _type* typ, int cap)
+        unsafe::Pointer userArenaNextFree(const gocpp::ObjRecv<struct sweepLocked>& self, _type* typ, int64_t cap)
         {
             return rec::userArenaNextFree(gocpp::recv(self.obj.mspan), typ, cap);
         }
@@ -919,7 +919,7 @@ namespace golang::runtime
         }
 
         // Find a span to sweep.
-        auto npages = ~ uintptr_t(0);
+        uintptr_t npages = ~ uintptr_t(0);
         bool noMoreWork = {};
         for(; ; )
         {
@@ -1135,7 +1135,7 @@ namespace golang::runtime
             {
                 // This object is not marked and has at least one special record.
                 // Pass 1: see if it has a finalizer.
-                auto hasFinAndRevived = false;
+                bool hasFinAndRevived = false;
                 auto endOffset = p - rec::base(gocpp::recv(s)) + size;
                 for(auto tmp = siter.s; tmp != nullptr && tmp->offset < endOffset; tmp = tmp->next)
                 {
@@ -1211,7 +1211,7 @@ namespace golang::runtime
             // Find all newly freed objects.
             auto mbits = rec::markBitsForBase(gocpp::recv(s));
             auto abits = rec::allocBitsForIndex(gocpp::recv(s), 0);
-            for(auto i = uintptr_t(0); i < uintptr_t(s->nelems); i++)
+            for(uintptr_t i = uintptr_t(0); i < uintptr_t(s->nelems); i++)
             {
                 if(! rec::isMarked(gocpp::recv(mbits)) && (abits.index < uintptr_t(s->freeindex) || rec::isMarked(gocpp::recv(abits))))
                 {
@@ -1489,7 +1489,7 @@ namespace golang::runtime
         print("runtime: marked free object in span "_s, s, ", elemsize="_s, s->elemsize, " freeindex="_s, s->freeindex, " (bad use of unsafe.Pointer or having race conditions? try -d=checkptr or -race)\n"_s);
         auto mbits = rec::markBitsForBase(gocpp::recv(s));
         auto abits = rec::allocBitsForIndex(gocpp::recv(s), 0);
-        for(auto i = uintptr_t(0); i < uintptr_t(s->nelems); i++)
+        for(uintptr_t i = uintptr_t(0); i < uintptr_t(s->nelems); i++)
         {
             auto addr = rec::base(gocpp::recv(s)) + i * s->elemsize;
             print(hex(addr));
@@ -1613,7 +1613,7 @@ namespace golang::runtime
     void clobberfree(gocpp::unsafe_pointer x, uintptr_t size)
     {
         // size (span.elemsize) is always a multiple of 4.
-        for(auto i = uintptr_t(0); i < size; i += 4)
+        for(uintptr_t i = uintptr_t(0); i < size; i += 4)
         {
             *(uint32_t*)(add(x, i)) = 0xdeadbeef;
         }

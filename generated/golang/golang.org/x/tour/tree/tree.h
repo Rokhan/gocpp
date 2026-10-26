@@ -15,7 +15,7 @@ namespace golang::golang_org::x::tour::tree
     struct Tree
     {
         Tree* Left{};
-        int Value{};
+        int64_t Value{};
         Tree* Right{};
 
         using isGoStruct = void;
@@ -30,8 +30,8 @@ namespace golang::golang_org::x::tour::tree
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Tree& value);
-    Tree* New(int k);
-    Tree* insert(Tree* t, int v);
+    Tree* New(int64_t k);
+    Tree* insert(Tree* t, int64_t v);
 
     namespace rec
     {

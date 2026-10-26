@@ -9,6 +9,12 @@
 #include "golang/go/types/chan.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::go::types
+{
+    struct GoTag_ChanDir { };
+    using ChanDir = gocpp::defined<int64_t, GoTag_ChanDir>;
+}
 #include "golang/go/types/type.h"
 
 namespace golang::go::types

@@ -140,7 +140,7 @@ namespace golang::internal::sync
         auto hash = ht->keyHash(abi::NoEscape(gocpp::unsafe_pointer(& key)), ht->seed);
 
         auto i = rec::Load<sync::indirect<K, V>>(gocpp::recv(ht->root));
-        auto hashShift = 8 * goarch::PtrSize;
+        int64_t hashShift = 8 * goarch::PtrSize;
         for(; hashShift != 0; )
         {
             hashShift -= nChildrenLog2;
@@ -173,7 +173,7 @@ namespace golang::internal::sync
             rec::init<K, V>(gocpp::recv(ht));
             auto hash = ht->keyHash(abi::NoEscape(gocpp::unsafe_pointer(& key)), ht->seed);
             golang::internal::sync::indirect<K, V>* i = {};
-            unsigned int hashShift = {};
+            uint64_t hashShift = {};
             atomic::Pointer<node<K, V>>* slot = {};
             node<K, V>* n = {};
             for(; ; )
@@ -181,7 +181,7 @@ namespace golang::internal::sync
                 // Find the key or a candidate location for insertion.
                 i = rec::Load<sync::indirect<K, V>>(gocpp::recv(ht->root));
                 hashShift = 8 * goarch::PtrSize;
-                auto haveInsertPoint = false;
+                bool haveInsertPoint = false;
                 for(; hashShift != 0; )
                 {
                     hashShift -= nChildrenLog2;
@@ -266,7 +266,7 @@ namespace golang::internal::sync
     // expand takes oldEntry and newEntry whose hashes conflict from bit 64 down to hashShift and
     // produces a subtree of indirect nodes to hold the two new entries.
     template<typename K, typename V>
-    node<K, V>* rec::expand(HashTrieMap<K, V>* ht, golang::internal::sync::entry<K, V>* oldEntry, golang::internal::sync::entry<K, V>* newEntry, uintptr_t newHash, unsigned int hashShift, golang::internal::sync::indirect<K, V>* parent)
+    node<K, V>* rec::expand(HashTrieMap<K, V>* ht, golang::internal::sync::entry<K, V>* oldEntry, golang::internal::sync::entry<K, V>* newEntry, uintptr_t newHash, uint64_t hashShift, golang::internal::sync::indirect<K, V>* parent)
     {
         // Check for a hash collision.
         auto oldHash = ht->keyHash(gocpp::unsafe_pointer(& oldEntry->key), ht->seed);
@@ -323,7 +323,7 @@ namespace golang::internal::sync
             rec::init<K, V>(gocpp::recv(ht));
             auto hash = ht->keyHash(abi::NoEscape(gocpp::unsafe_pointer(& key)), ht->seed);
             golang::internal::sync::indirect<K, V>* i = {};
-            unsigned int hashShift = {};
+            uint64_t hashShift = {};
             atomic::Pointer<node<K, V>>* slot = {};
             node<K, V>* n = {};
             for(; ; )
@@ -331,7 +331,7 @@ namespace golang::internal::sync
                 // Find the key or a candidate location for insertion.
                 i = rec::Load<sync::indirect<K, V>>(gocpp::recv(ht->root));
                 hashShift = 8 * goarch::PtrSize;
-                auto haveInsertPoint = false;
+                bool haveInsertPoint = false;
                 for(; hashShift != 0; )
                 {
                     hashShift -= nChildrenLog2;
@@ -598,10 +598,10 @@ namespace golang::internal::sync
     //
     // If i != nil then i.mu is locked, and it is the caller's responsibility to unlock it.
     template<typename K, typename V>
-    std::tuple<golang::internal::sync::indirect<K, V>*, unsigned int, atomic::Pointer<node<K, V>>*, node<K, V>*> rec::find(HashTrieMap<K, V>* ht, K key, uintptr_t hash, equalFunc valEqual, V value)
+    std::tuple<golang::internal::sync::indirect<K, V>*, uint64_t, atomic::Pointer<node<K, V>>*, node<K, V>*> rec::find(HashTrieMap<K, V>* ht, K key, uintptr_t hash, equalFunc valEqual, V value)
     {
         golang::internal::sync::indirect<K, V>* i;
-        unsigned int hashShift;
+        uint64_t hashShift;
         atomic::Pointer<node<K, V>>* slot;
         node<K, V>* n;
         for(; ; )
@@ -609,7 +609,7 @@ namespace golang::internal::sync
             // Find the key or return if it's not there.
             i = rec::Load<sync::indirect<K, V>>(gocpp::recv(ht->root));
             hashShift = 8 * goarch::PtrSize;
-            auto found = false;
+            bool found = false;
             for(; hashShift != 0; )
             {
                 hashShift -= nChildrenLog2;
@@ -804,7 +804,7 @@ namespace golang::internal::sync
     template<typename K, typename V>
     bool rec::empty(golang::internal::sync::indirect<K, V>* i)
     {
-        auto nc = 0;
+        int64_t nc = 0;
         for(auto [j, gocpp_ignored] : i->children)
         {
             if(rec::Load<sync::node<K, V>>(gocpp::recv(i->children[j])) != nullptr)

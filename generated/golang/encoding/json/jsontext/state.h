@@ -39,23 +39,8 @@ namespace golang::encoding::json::jsontext
     extern gocpp::error errInvalidNamespace;
     gocpp::string unescapePointerToken(gocpp::string token);
     gocpp::slice<unsigned char> appendEscapePointerName(gocpp::slice<unsigned char> b, gocpp::slice<unsigned char> name);
-    struct stateMachine
-    {
-        gocpp::slice<stateEntry> Stack{};
-        stateEntry Last{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stateMachine& value);
+    struct GoTag_stateEntry { };
+    using stateEntry = gocpp::defined<uint64_t, GoTag_stateEntry>;
     struct objectNameStack
     {
         // offsets is a stack of offsets for each name.
@@ -64,7 +49,7 @@ namespace golang::encoding::json::jsontext
         // a remote buffer (e.g., encodeBuffer or decodeBuffer).
         // A math.MinInt offset at the end implies that the last object is empty.
         // Invariant: Positive offsets always occur before negative offsets.
-        gocpp::slice<int> offsets{};
+        gocpp::slice<int64_t> offsets{};
         // unquotedNames is a back-to-back concatenation of names.
         gocpp::slice<unsigned char> unquotedNames{};
 
@@ -85,7 +70,7 @@ namespace golang::encoding::json::jsontext
     {
         // endOffsets is a list of offsets to the end of each name in buffers.
         // The length of offsets is the number of names in the namespace.
-        gocpp::slice<unsigned int> endOffsets{};
+        gocpp::slice<uint64_t> endOffsets{};
         // allUnquotedNames is a back-to-back concatenation of every name in the namespace.
         gocpp::slice<unsigned char> allUnquotedNames{};
         // mapNames is a Go map containing every name in the namespace.
@@ -104,6 +89,23 @@ namespace golang::encoding::json::jsontext
     };
 
     std::ostream& operator<<(std::ostream& os, const struct objectNamespace& value);
+    struct stateMachine
+    {
+        gocpp::slice<stateEntry> Stack{};
+        stateEntry Last{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stateMachine& value);
     using objectNamespaceStack = gocpp::defined<gocpp::slice<objectNamespace>, GoTag_objectNamespaceStack>;
     struct state
     {
@@ -149,11 +151,11 @@ namespace golang::encoding::json::jsontext
         gocpp::string LastToken(Pointer p);
         Pointer AppendToken(Pointer p, gocpp::string tok);
         iter::Seq<gocpp::string> Tokens(Pointer p);
-        gocpp::slice<unsigned char> appendStackPointer(state s, gocpp::slice<unsigned char> b, int where);
+        gocpp::slice<unsigned char> appendStackPointer(state s, gocpp::slice<unsigned char> b, int64_t where);
         void reset(stateMachine* m);
-        int Depth(stateMachine m);
-        stateEntry* index(stateMachine* m, int i);
-        std::tuple<int, int64_t> DepthLength(stateMachine m);
+        int64_t Depth(stateMachine m);
+        stateEntry* index(stateMachine* m, int64_t i);
+        std::tuple<int64_t, int64_t> DepthLength(stateMachine m);
         gocpp::error appendLiteral(stateMachine* m);
         gocpp::error appendString(stateMachine* m);
         gocpp::error appendNumber(stateMachine* m);
@@ -161,7 +163,7 @@ namespace golang::encoding::json::jsontext
         gocpp::error popObject(stateMachine* m);
         gocpp::error pushArray(stateMachine* m);
         gocpp::error popArray(stateMachine* m);
-        int NeedIndent(stateMachine m, golang::encoding::json::jsontext::Kind next);
+        int64_t NeedIndent(stateMachine m, golang::encoding::json::jsontext::Kind next);
         gocpp::slice<unsigned char> MayAppendDelim(stateMachine m, gocpp::slice<unsigned char> b, golang::encoding::json::jsontext::Kind next);
         unsigned char needDelim(stateMachine m, golang::encoding::json::jsontext::Kind next);
         void InvalidateDisabledNamespaces(stateMachine* m);
@@ -179,10 +181,10 @@ namespace golang::encoding::json::jsontext
         void invalidateNamespace(stateEntry* e);
         bool isValidNamespace(stateEntry e);
         void reset(objectNameStack* ns);
-        int length(objectNameStack* ns);
-        gocpp::slice<unsigned char> getUnquoted(objectNameStack* ns, int i);
+        int64_t length(objectNameStack* ns);
+        gocpp::slice<unsigned char> getUnquoted(objectNameStack* ns, int64_t i);
         void push(objectNameStack* ns);
-        void ReplaceLastQuotedOffset(objectNameStack* ns, int i);
+        void ReplaceLastQuotedOffset(objectNameStack* ns, int64_t i);
         void replaceLastUnquotedName(objectNameStack* ns, gocpp::string s);
         void clearLast(objectNameStack* ns);
         void pop(objectNameStack* ns);
@@ -193,8 +195,8 @@ namespace golang::encoding::json::jsontext
         objectNamespace* Last(objectNamespaceStack nss);
         void pop(objectNamespaceStack* nss);
         void reset(objectNamespace* ns);
-        int length(objectNamespace* ns);
-        gocpp::slice<unsigned char> getUnquoted(objectNamespace* ns, int i);
+        int64_t length(objectNamespace* ns);
+        gocpp::slice<unsigned char> getUnquoted(objectNamespace* ns, int64_t i);
         gocpp::slice<unsigned char> lastUnquoted(objectNamespace* ns);
         bool insertQuoted(objectNamespace* ns, gocpp::slice<unsigned char> name, bool isVerbatim);
         bool InsertUnquoted(objectNamespace* ns, gocpp::slice<unsigned char> name);

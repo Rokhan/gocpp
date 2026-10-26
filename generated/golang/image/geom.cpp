@@ -77,13 +77,13 @@ namespace golang::image
     }
 
     // Mul returns the vector p*k.
-    Point rec::Mul(Point p, int k)
+    Point rec::Mul(Point p, int64_t k)
     {
         return Point {p.X * k, p.Y * k};
     }
 
     // Div returns the vector p/k.
-    Point rec::Div(Point p, int k)
+    Point rec::Div(Point p, int64_t k)
     {
         return Point {p.X / k, p.Y / k};
     }
@@ -125,7 +125,7 @@ namespace golang::image
     // Deprecated: Use a literal [image.Point] instead.
     Point ZP;
     // Pt is shorthand for [Point]{X, Y}.
-    Point Pt(int X, int Y)
+    Point Pt(int64_t X, int64_t Y)
     {
         return Point {X, Y};
     }
@@ -177,13 +177,13 @@ namespace golang::image
     }
 
     // Dx returns r's width.
-    int rec::Dx(Rectangle r)
+    int64_t rec::Dx(Rectangle r)
     {
         return r.Max.X - r.Min.X;
     }
 
     // Dy returns r's height.
-    int rec::Dy(Rectangle r)
+    int64_t rec::Dy(Rectangle r)
     {
         return r.Max.Y - r.Min.Y;
     }
@@ -218,7 +218,7 @@ namespace golang::image
     // Inset returns the rectangle r inset by n, which may be negative. If either
     // of r's dimensions is less than 2*n then an empty rectangle near the center
     // of r will be returned.
-    Rectangle rec::Inset(Rectangle r, int n)
+    Rectangle rec::Inset(Rectangle r, int64_t n)
     {
         if(rec::Dx(gocpp::recv(r)) < 2 * n)
         {
@@ -353,7 +353,7 @@ namespace golang::image
     }
 
     // At implements the [Image] interface.
-    color::Color rec::At(Rectangle r, int x, int y)
+    color::Color rec::At(Rectangle r, int64_t x, int64_t y)
     {
         if(rec::In(gocpp::recv((Point {x, y})), r))
         {
@@ -363,7 +363,7 @@ namespace golang::image
     }
 
     // RGBA64At implements the [RGBA64Image] interface.
-    color::RGBA64 rec::RGBA64At(Rectangle r, int x, int y)
+    color::RGBA64 rec::RGBA64At(Rectangle r, int64_t x, int64_t y)
     {
         if(rec::In(gocpp::recv((Point {x, y})), r))
         {
@@ -391,7 +391,7 @@ namespace golang::image
     // Rect is shorthand for [Rectangle]{Pt(x0, y0), [Pt](x1, y1)}. The returned
     // rectangle has minimum and maximum coordinates swapped if necessary so that
     // it is well-formed.
-    Rectangle Rect(int x0, int y0, int x1, int y1)
+    Rectangle Rect(int64_t x0, int64_t y0, int64_t x1, int64_t y1)
     {
         if(x0 > x1)
         {
@@ -406,7 +406,7 @@ namespace golang::image
 
     // mul3NonNeg returns (x * y * z), unless at least one argument is negative or
     // if the computation overflows the int type, in which case it returns -1.
-    int mul3NonNeg(int x, int y, int z)
+    int64_t mul3NonNeg(int64_t x, int64_t y, int64_t z)
     {
         if((x < 0) || (y < 0) || (z < 0))
         {
@@ -422,7 +422,7 @@ namespace golang::image
         {
             return - 1;
         }
-        auto a = int(lo);
+        auto a = int64_t(lo);
         if((a < 0) || (uint64_t(a) != lo))
         {
             return - 1;
@@ -432,7 +432,7 @@ namespace golang::image
 
     // add2NonNeg returns (x + y), unless at least one argument is negative or if
     // the computation overflows the int type, in which case it returns -1.
-    int add2NonNeg(int x, int y)
+    int64_t add2NonNeg(int64_t x, int64_t y)
     {
         if((x < 0) || (y < 0))
         {

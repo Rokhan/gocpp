@@ -202,7 +202,7 @@ namespace golang::runtime
         {
             h->wordBytes = goarch::PtrSize;
         }
-        auto wb = int(h->wordBytes);
+        auto wb = int64_t(h->wordBytes);
         if(wb < 0 || wb >= bytesPerLine || wb & (wb - 1) != 0)
         {
             go_throw("invalid wordBytes"_s);
@@ -212,14 +212,14 @@ namespace golang::runtime
         for(auto [i, gocpp_ignored] : h->toPos)
         {
             // First, calculate the "field" within the line, applying byte swizzling.
-            auto field = 0;
+            int64_t field = 0;
             if(goarch::BigEndian)
             {
                 field = i;
             }
             else
             {
-                field = i ^ int(wb - 1);
+                field = i ^ int64_t(wb - 1);
             }
             // Translate this field into a visual offset.
             // "00112233 44556677  8899AABB CCDDEEFF"
@@ -244,7 +244,7 @@ namespace golang::runtime
 
         auto maxAddrChars = 2 * goarch::PtrSize;
         auto addrSep = ": "_s;
-        auto dataStart = int(2 * h->addrBytes) + len(addrSep);
+        auto dataStart = int64_t(2 * h->addrBytes) + len(addrSep);
         // dataChars uses the same formula to toPos above. We calculate it with the
         // "last field", then add the size of the last field.
         auto dataChars = (bytesPerLine - 1) * 2 + (bytesPerLine - 1) / 4 + (bytesPerLine - 1) / 8 + 2;
@@ -268,7 +268,7 @@ namespace golang::runtime
             // Print column offsets header.
             for(auto [offset, pos] : h->toPos)
             {
-                rec::fmtHex(gocpp::recv(h), lineBuf.make_slice(dataStart + int(pos + 1)).make_slice(0, 1), uint64_t(offset));
+                rec::fmtHex(gocpp::recv(h), lineBuf.make_slice(dataStart + int64_t(pos + 1)).make_slice(0, 1), uint64_t(offset));
             }
             // Print ASCII offsets.
             for(int offset = 0; offset < asciiChars; ++offset)
@@ -287,16 +287,16 @@ namespace golang::runtime
         // Format data in hex and ASCII.
         for(auto [offset, b] : data)
         {
-            if(offset < int(h->dataSkip))
+            if(offset < int64_t(h->dataSkip))
             {
                 continue;
             }
 
             auto pos = h->toPos[offset];
-            rec::fmtHex(gocpp::recv(h), lineBuf.make_slice(dataStart + int(pos)).make_slice(0, 2), uint64_t(b));
+            rec::fmtHex(gocpp::recv(h), lineBuf.make_slice(dataStart + int64_t(pos)).make_slice(0, 2), uint64_t(b));
 
             copy(lineBuf.make_slice(dataStart + dataChars), asciiSep);
-            auto ascii = uint8_t('.');
+            uint8_t ascii = uint8_t('.');
             if(b >= ' ' && b <= '~')
             {
                 ascii = b;
@@ -315,15 +315,15 @@ namespace golang::runtime
         if(h->mark != nullptr)
         {
             clear();
-            for(auto offset = 0; offset + int(h->wordBytes) <= len(data); offset += int(h->wordBytes))
+            for(int64_t offset = 0; offset + int64_t(h->wordBytes) <= len(data); offset += int64_t(h->wordBytes))
             {
-                if(offset < int(h->dataSkip))
+                if(offset < int64_t(h->dataSkip))
                 {
                     continue;
                 }
                 auto addr = h->addr + uintptr_t(offset);
                 // Find the position of the left edge of this word
-                auto caret = dataStart + int(gocpp::min(h->toPos[offset], h->toPos[offset + int(h->wordBytes) - 1]));
+                auto caret = dataStart + int64_t(gocpp::min(h->toPos[offset], h->toPos[offset + int64_t(h->wordBytes) - 1]));
                 h->mark(addr, hexdumpMarker {caret});
             }
         }

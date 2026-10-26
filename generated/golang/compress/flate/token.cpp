@@ -241,12 +241,12 @@ namespace golang::compress::flate
     // optimal compression of t.
     // Minimum 1 bit is assigned per symbol.
     // Maximum 15 bits are assigned per symbol.
-    int rec::EstimatedBits(tokens* t)
+    int64_t rec::EstimatedBits(tokens* t)
     {
-        auto shannon = float(0);
-        auto bits = int(0);
-        auto nMatches = 0;
-        auto total = int(t->n) + t->nFilled;
+        float shannon = float(0);
+        int64_t bits = int64_t(0);
+        int64_t nMatches = 0;
+        auto total = int64_t(t->n) + t->nFilled;
         if(total > 0)
         {
             auto invTotal = 1.0 / float(total);
@@ -266,8 +266,8 @@ namespace golang::compress::flate
                 {
                     auto n = float(v);
                     shannon += gocpp::min(15, gocpp::max(1, - mFastLog2(n * invTotal))) * n;
-                    bits += int(lengthExtraBits[i & 31]) * int(v);
-                    nMatches += int(v);
+                    bits += int64_t(lengthExtraBits[i & 31]) * int64_t(v);
+                    nMatches += int64_t(v);
                 }
             }
         }
@@ -280,11 +280,11 @@ namespace golang::compress::flate
                 {
                     auto n = float(v);
                     shannon += gocpp::min(15, gocpp::max(1, - mFastLog2(n * invTotal))) * n;
-                    bits += int(offsetExtraBits[i & 31]) * int(v);
+                    bits += int64_t(offsetExtraBits[i & 31]) * int64_t(v);
                 }
             }
         }
-        return int(shannon) + bits;
+        return int64_t(shannon) + bits;
     }
 
     // AddMatch adds a match to the tokens.

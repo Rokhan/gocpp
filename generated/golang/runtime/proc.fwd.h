@@ -8,27 +8,28 @@ namespace golang::runtime
 {
     // Number of goroutine ids to grab from sched.goidgen to local per-P cache at once.
     // 16 seems to provide enough amortization, but other than that it's mostly arbitrary number.
-    const long _GoidCacheBatch = 16;
+    inline constexpr long _GoidCacheBatch = 16;
     // freezeStopWait is a large value that freezetheworld sets
     // sched.stopwait to in order to request that all Gs permanently stop.
-    const long freezeStopWait = 0x7fffffff;
-    using stwReason = uint8_t;
+    inline constexpr long freezeStopWait = 0x7fffffff;
+    struct GoTag_stwReason;
+    using stwReason = gocpp::defined<uint8_t, GoTag_stwReason>;
     struct worldStop;
     struct cgothreadstart;
     // These errors are reported (via writeErrStr) by some OS-specific
     // versions of newosproc and newosproc0.
-    const gocpp::string failthreadcreate = "runtime: failed to create new OS thread\n"_s;
-    const gocpp::string failallocatestack = "runtime: failed to allocate stack for the new OS thread\n"_s;
+    inline const gocpp::string failthreadcreate = "runtime: failed to create new OS thread\n"_s;
+    inline const gocpp::string failallocatestack = "runtime: failed to allocate stack for the new OS thread\n"_s;
     struct newmHandoffStruct;
     // debugExtendGrunningNoP is a debug mode that extends the windows in which
     // we're _Grunning without a P in order to try to shake out bugs with code
     // assuming this state is impossible.
-    const bool debugExtendGrunningNoP = false;
+    inline constexpr bool debugExtendGrunningNoP = false;
     struct profStruct;
     struct sysmontick;
     // forcePreemptNS is the time slice given to a G before it is
     // preempted.
-    const int forcePreemptNS = 10 * 1000 * 1000;
+    inline constexpr int64_t forcePreemptNS = 10 * 1000 * 1000;
     struct syscallingThread;
     struct updateMaxProcsGState;
     struct GoTag_pMask;
@@ -42,23 +43,23 @@ namespace golang::runtime
     // Reasons to stop-the-world.
     //
     // Avoid reusing reasons and add new ones instead.
-    const stwReason stwUnknown = 0;
-    const stwReason stwGCMarkTerm = 1;
-    const stwReason stwGCSweepTerm = 2;
-    const stwReason stwWriteHeapDump = 3;
-    const stwReason stwGoroutineProfile = 4;
-    const stwReason stwGoroutineProfileCleanup = 5;
-    const stwReason stwAllGoroutinesStack = 6;
-    const stwReason stwReadMemStats = 7;
-    const stwReason stwAllThreadsSyscall = 8;
-    const stwReason stwGOMAXPROCS = 9;
-    const stwReason stwStartTrace = 10;
-    const stwReason stwStopTrace = 11;
-    const stwReason stwForTestCountPagesInUse = 12;
-    const stwReason stwForTestReadMetricsSlow = 13;
-    const stwReason stwForTestReadMemStatsSlow = 14;
-    const stwReason stwForTestPageCachePagesLeaked = 15;
-    const stwReason stwForTestResetDebugLog = 16;
+    inline constexpr stwReason stwUnknown = 0;
+    inline constexpr stwReason stwGCMarkTerm = 1;
+    inline constexpr stwReason stwGCSweepTerm = 2;
+    inline constexpr stwReason stwWriteHeapDump = 3;
+    inline constexpr stwReason stwGoroutineProfile = 4;
+    inline constexpr stwReason stwGoroutineProfileCleanup = 5;
+    inline constexpr stwReason stwAllGoroutinesStack = 6;
+    inline constexpr stwReason stwReadMemStats = 7;
+    inline constexpr stwReason stwAllThreadsSyscall = 8;
+    inline constexpr stwReason stwGOMAXPROCS = 9;
+    inline constexpr stwReason stwStartTrace = 10;
+    inline constexpr stwReason stwStopTrace = 11;
+    inline constexpr stwReason stwForTestCountPagesInUse = 12;
+    inline constexpr stwReason stwForTestReadMetricsSlow = 13;
+    inline constexpr stwReason stwForTestReadMemStatsSlow = 14;
+    inline constexpr stwReason stwForTestPageCachePagesLeaked = 15;
+    inline constexpr stwReason stwForTestResetDebugLog = 16;
 }
 #include "golang/runtime/extern.fwd.h"
 #include "golang/runtime/race0.fwd.h"
@@ -68,14 +69,14 @@ namespace golang::runtime
     // Disable crash stack on Windows for now. Apparently, throwing an exception
     // on a non-system-allocated crash stack causes EXCEPTION_STACK_OVERFLOW and
     // hangs the process (see issue 63938).
-    const bool crashStackImplemented = GOOS != "windows"_s;
+    inline const bool crashStackImplemented = GOOS != "windows"_s;
     // osHasLowResTimer indicates that the platform's internal timer system has a low resolution,
     // typically on the order of 1 ms or more.
-    const bool osHasLowResTimer = GOOS == "windows"_s || GOOS == "openbsd"_s || GOOS == "netbsd"_s;
+    inline const bool osHasLowResTimer = GOOS == "windows"_s || GOOS == "openbsd"_s || GOOS == "netbsd"_s;
     // haveSysmon indicates whether there is sysmon thread support.
     //
     // No threads on wasm yet, so no sysmon.
-    const bool haveSysmon = GOARCH != "wasm"_s;
+    inline const bool haveSysmon = GOARCH != "wasm"_s;
     // To shake out latent assumptions about scheduling order,
     // we introduce some randomness into scheduling decisions
     // when running with the race detector.
@@ -85,7 +86,7 @@ namespace golang::runtime
     // With the randomness here, as long as the tests pass
     // consistently with -race, they shouldn't have latent scheduling
     // assumptions.
-    const bool randomizeScheduler = raceenabled;
+    inline constexpr bool randomizeScheduler = raceenabled;
 }
 #include "golang/internal/goos/zgoos_windows.fwd.h"
 
@@ -94,8 +95,8 @@ namespace golang::runtime
     namespace goos = golang::internal::goos;
     // osHasLowResClockInt is osHasLowResClock but in integer form, so it can be used to create
     // constants conditionally.
-    const int osHasLowResClockInt = goos::IsWindows;
+    inline constexpr int64_t osHasLowResClockInt = goos::IsWindows;
     // osHasLowResClock indicates that timestamps produced by nanotime on the platform have a
     // low resolution, typically on the order of 1 ms or more.
-    const bool osHasLowResClock = osHasLowResClockInt > 0;
+    inline constexpr bool osHasLowResClock = osHasLowResClockInt > 0;
 }

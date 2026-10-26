@@ -175,7 +175,7 @@ namespace golang::os
     }
 
     // newPIDProcess returns a [Process] for the given PID.
-    Process* newPIDProcess(int pid)
+    Process* newPIDProcess(int64_t pid)
     {
         auto p = gocpp::InitPtr<Process>([=](auto& x) {
             x.Pid = pid;
@@ -184,7 +184,7 @@ namespace golang::os
     }
 
     // newHandleProcess returns a [Process] with the given PID and handle.
-    Process* newHandleProcess(int pid, uintptr_t handle)
+    Process* newHandleProcess(int64_t pid, uintptr_t handle)
     {
         auto ph = gocpp::InitPtr<processHandle>([=](auto& x) {
             x.handle = handle;
@@ -207,7 +207,7 @@ namespace golang::os
     // newDoneProcess returns a [Process] for the given PID
     // that is already marked as done. This is used on Unix systems
     // if the process is known to not exist.
-    Process* newDoneProcess(int pid)
+    Process* newDoneProcess(int64_t pid)
     {
         auto p = gocpp::InitPtr<Process>([=](auto& x) {
             x.Pid = pid;
@@ -383,13 +383,13 @@ namespace golang::os
     }
 
     // Getpid returns the process id of the caller.
-    int Getpid()
+    int64_t Getpid()
     {
         return syscall::Getpid();
     }
 
     // Getppid returns the process id of the caller's parent.
-    int Getppid()
+    int64_t Getppid()
     {
         return syscall::Getppid();
     }
@@ -403,7 +403,7 @@ namespace golang::os
     // for the given pid, regardless of whether the process exists. To test whether
     // the process actually exists, see whether p.Signal(syscall.Signal(0)) reports
     // an error.
-    std::tuple<Process*, gocpp::error> FindProcess(int pid)
+    std::tuple<Process*, gocpp::error> FindProcess(int64_t pid)
     {
         return findProcess(pid);
     }

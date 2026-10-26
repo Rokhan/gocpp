@@ -16,8 +16,8 @@
 namespace golang::os
 {
     gocpp::error rootChmod(Root* r, gocpp::string name, FileMode mode);
-    gocpp::error rootChown(Root* r, gocpp::string name, int uid, int gid);
-    gocpp::error rootLchown(Root* r, gocpp::string name, int uid, int gid);
+    gocpp::error rootChown(Root* r, gocpp::string name, int64_t uid, int64_t gid);
+    gocpp::error rootLchown(Root* r, gocpp::string name, int64_t uid, int64_t gid);
     gocpp::error rootMkdir(Root* r, gocpp::string name, FileMode perm);
     gocpp::error rootMkdirAll(Root* r, gocpp::string fullname, FileMode perm);
     std::tuple<gocpp::string, gocpp::error> rootReadlink(Root* r, gocpp::string name);
@@ -27,10 +27,10 @@ namespace golang::os
     gocpp::error rootLink(Root* r, gocpp::string oldname, gocpp::string newname);
 
     template<typename T>
-    std::tuple<T, gocpp::error> doInRoot(Root* r, gocpp::string name, unsigned int flags, std::function<std::tuple<sysfdType, gocpp::error> (sysfdType parent, gocpp::string name)> openDirFunc, std::function<std::tuple<T, gocpp::error> (sysfdType parent, gocpp::string name, bool endsInSlash)> f);
+    std::tuple<T, gocpp::error> doInRoot(Root* r, gocpp::string name, uint64_t flags, std::function<std::tuple<sysfdType, gocpp::error> (sysfdType parent, gocpp::string name)> openDirFunc, std::function<std::tuple<T, gocpp::error> (sysfdType parent, gocpp::string name, bool endsInSlash)> f);
 
     template<typename F1, typename F2>
-    decltype(auto) doInRoot(Root* r, gocpp::string name, unsigned int flags, F1&& openDirFunc, F2&& f)
+    decltype(auto) doInRoot(Root* r, gocpp::string name, uint64_t flags, F1&& openDirFunc, F2&& f)
     {
         return doInRoot(r, name, flags, std::function(std::forward<F1>(openDirFunc)), std::function(std::forward<F2>(f)));
     }
@@ -57,7 +57,7 @@ namespace golang::os
         // fd is closed when closed is true and refs is 0.
         mocklib::Mutex mu{};
         sysfdType fd{};
-        int refs{}; // number of active operations
+        int64_t refs{}; // number of active operations
         bool closed{}; // set when closed
 
         using isGoStruct = void;

@@ -10,7 +10,8 @@ namespace golang::io::fs
     struct File;
     struct DirEntry;
     struct ReadDirFile;
-    using FileMode = uint32_t;
+    struct GoTag_FileMode;
+    using FileMode = gocpp::defined<uint32_t, GoTag_FileMode>;
     struct PathError;
     // The defined file mode bits are the most significant bits of the [FileMode].
     // The nine least-significant bits are the standard Unix rwxrwxrwx permissions.
@@ -19,22 +20,22 @@ namespace golang::io::fs
     // changed, although new bits might be added.
     // The single letters are the abbreviations
     // used by the String method's formatting.
-    const FileMode ModeDir = 1 << (32 - 1 - 0);
-    const FileMode ModeAppend = 1 << (32 - 1 - 1);
-    const FileMode ModeExclusive = 1 << (32 - 1 - 2);
-    const FileMode ModeTemporary = 1 << (32 - 1 - 3);
-    const FileMode ModeSymlink = 1 << (32 - 1 - 4);
-    const FileMode ModeDevice = 1 << (32 - 1 - 5);
-    const FileMode ModeNamedPipe = 1 << (32 - 1 - 6);
-    const FileMode ModeSocket = 1 << (32 - 1 - 7);
-    const FileMode ModeSetuid = 1 << (32 - 1 - 8);
-    const FileMode ModeSetgid = 1 << (32 - 1 - 9);
-    const FileMode ModeCharDevice = 1 << (32 - 1 - 10);
-    const FileMode ModeSticky = 1 << (32 - 1 - 11);
-    const FileMode ModeIrregular = 1 << (32 - 1 - 12);
-    const FileMode ModePerm = 0777;
+    inline constexpr FileMode ModeDir = 1 << (32 - 1 - 0);
+    inline constexpr FileMode ModeAppend = 1 << (32 - 1 - 1);
+    inline constexpr FileMode ModeExclusive = 1 << (32 - 1 - 2);
+    inline constexpr FileMode ModeTemporary = 1 << (32 - 1 - 3);
+    inline constexpr FileMode ModeSymlink = 1 << (32 - 1 - 4);
+    inline constexpr FileMode ModeDevice = 1 << (32 - 1 - 5);
+    inline constexpr FileMode ModeNamedPipe = 1 << (32 - 1 - 6);
+    inline constexpr FileMode ModeSocket = 1 << (32 - 1 - 7);
+    inline constexpr FileMode ModeSetuid = 1 << (32 - 1 - 8);
+    inline constexpr FileMode ModeSetgid = 1 << (32 - 1 - 9);
+    inline constexpr FileMode ModeCharDevice = 1 << (32 - 1 - 10);
+    inline constexpr FileMode ModeSticky = 1 << (32 - 1 - 11);
+    inline constexpr FileMode ModeIrregular = 1 << (32 - 1 - 12);
+    inline constexpr FileMode ModePerm = 0777;
     // Mask for the type bits. For regular files, none will be set.
-    const fs::FileMode ModeType = ModeDir | ModeSymlink | ModeNamedPipe | ModeSocket | ModeDevice | ModeCharDevice | ModeIrregular;
+    inline constexpr fs::FileMode ModeType = int64_t(ModeDir) | int64_t(ModeSymlink) | int64_t(ModeNamedPipe) | int64_t(ModeSocket) | int64_t(ModeDevice) | int64_t(ModeCharDevice) | int64_t(ModeIrregular);
 }
 #include "golang/time/time.fwd.h"
 

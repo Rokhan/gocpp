@@ -673,7 +673,7 @@ namespace golang::runtime
     // the registered cgo unwinder. It returns the number of PCs written to pcBuf.
     // If the current frame is not a cgo frame or if there's no registered cgo
     // unwinder, it returns 0.
-    int rec::cgoCallers(unwinder* u, gocpp::slice<uintptr_t> pcBuf)
+    int64_t rec::cgoCallers(unwinder* u, gocpp::slice<uintptr_t> pcBuf)
     {
         if(! cgoTracebackAvailable() || u->frame.fn._func.funcID != abi::FuncID_cgocallback || u->cgoCtxt < 0)
         {
@@ -704,10 +704,10 @@ namespace golang::runtime
     // If skip != 0, this skips this many logical frames.
     //
     // Callers should set the unwindSilentErrors flag on u.
-    int tracebackPCs(unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf)
+    int64_t tracebackPCs(unwinder* u, int64_t skip, gocpp::slice<uintptr_t> pcBuf)
     {
         gocpp::array<uintptr_t, 32> cgoBuf = {};
-        auto n = 0;
+        int64_t n = 0;
         for(; n < len(pcBuf) && rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
         {
             auto f = u->frame.fn;
@@ -761,7 +761,7 @@ namespace golang::runtime
         auto liveInfo = funcdata(f, abi::FUNCDATA_ArgLiveInfo);
         auto liveIdx = pcdatavalue(f, abi::PCDATA_ArgLiveIndex, pc);
         // smallest offset that needs liveness info (slots with a lower offset is always live)
-        auto startOffset = uint8_t(0xff);
+        uint8_t startOffset = uint8_t(0xff);
         if(liveInfo != nullptr)
         {
             startOffset = *(uint8_t*)(liveInfo);
@@ -805,7 +805,7 @@ namespace golang::runtime
             }
         };
 
-        auto start = true;
+        bool start = true;
         auto printcomma = [=]() mutable -> void
         {
             if(! start)
@@ -813,9 +813,9 @@ namespace golang::runtime
                 print(", "_s);
             }
         };
-        auto pi = 0;
+        int64_t pi = 0;
         // register arg spill slot index
-        auto slotIdx = uint8_t(0);
+        uint8_t slotIdx = uint8_t(0);
         printloop:
         for(; ; )
         {
@@ -916,7 +916,7 @@ namespace golang::runtime
         // or the compiler might have a bug in its naming-things department.
         // hope to return name[:i], "[...]", ___, "[...]", name[j+1:]
         // beginning after first "[", looking for balancing "]"
-        auto depth = 1;
+        int64_t depth = 1;
         auto [rbr, lbr] = std::tuple{- 1, - 1};
         for(auto [k, c] : interior)
         {
@@ -1117,9 +1117,9 @@ namespace golang::runtime
         // cgo expansion boundaries. It's not clear that's much simpler.
         flags |= unwindPrintErrors;
         unwinder u = {};
-        auto tracebackWithRuntime = [=](bool showRuntime) mutable -> int
+        auto tracebackWithRuntime = [=](bool showRuntime) mutable -> int64_t
         {
-            int maxInt = 0x7fffffff;
+            int64_t maxInt = 0x7fffffff;
             rec::initAt(gocpp::recv(u), pc, sp, lr, gp, flags);
             auto [n, lastN] = traceback2(& u, showRuntime, 0, tracebackInnerFrames);
             if(n < tracebackInnerFrames)
@@ -1170,10 +1170,10 @@ namespace golang::runtime
     // returns n, which is the number of logical frames skipped and printed, and
     // lastN, which is the number of logical frames skipped or printed just in the
     // physical frame that u references.
-    std::tuple<int, int> traceback2(unwinder* u, bool showRuntime, int skip, int max)
+    std::tuple<int64_t, int64_t> traceback2(unwinder* u, bool showRuntime, int64_t skip, int64_t max)
     {
-        int n;
-        int lastN;
+        int64_t n;
+        int64_t lastN;
         // commitFrame commits to a logical frame and returns whether this frame
         // should be printed and whether iteration should stop.
         auto commitFrame = [=]() mutable -> std::tuple<bool, bool>
@@ -1261,8 +1261,8 @@ namespace golang::runtime
             if(auto cgoN = rec::cgoCallers(gocpp::recv(u), cgoBuf.make_slice(0)); cgoN > 0)
             {
                 cgoSymbolizerArg arg = {};
-                auto anySymbolized = false;
-                auto stop = false;
+                bool anySymbolized = false;
+                bool stop = false;
                 for(auto [gocpp_ignored, pc] : cgoBuf.make_slice(0, cgoN))
                 {
                     if(! cgoSymbolizerAvailable())
@@ -1358,12 +1358,12 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname callers
-    int callers(int skip, gocpp::slice<uintptr_t> pcbuf)
+    int64_t callers(int64_t skip, gocpp::slice<uintptr_t> pcbuf)
     {
         auto sp = sys::GetCallerSP();
         auto pc = sys::GetCallerPC();
         auto gp = getg();
-        int n = {};
+        int64_t n = {};
         systemstack([=]() mutable -> void
         {
             unwinder u = {};
@@ -1373,7 +1373,7 @@ namespace golang::runtime
         return n;
     }
 
-    int gcallers(g* gp, int skip, gocpp::slice<uintptr_t> pcbuf)
+    int64_t gcallers(g* gp, int64_t skip, gocpp::slice<uintptr_t> pcbuf)
     {
         unwinder u = {};
         rec::init(gocpp::recv(u), gp, unwindSilentErrors);
@@ -1449,7 +1449,7 @@ namespace golang::runtime
         {
             return false;
         }
-        auto rcvr = ""_s;
+        gocpp::string rcvr = ""_s;
 
         // Extract receiver type, if any.
         // For example, runtime.(*Func).Entry
@@ -1960,7 +1960,7 @@ namespace golang::runtime
     // to Go will not show a traceback for the C portion of the call stack.
     //
     // SetCgoTraceback should be called only once, ideally from an init function.
-    void SetCgoTraceback(int version, gocpp::unsafe_pointer traceback, gocpp::unsafe_pointer context, gocpp::unsafe_pointer symbolizer)
+    void SetCgoTraceback(int64_t version, gocpp::unsafe_pointer traceback, gocpp::unsafe_pointer context, gocpp::unsafe_pointer symbolizer)
     {
         if(version != 0)
         {

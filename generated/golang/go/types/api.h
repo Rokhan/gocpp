@@ -14,7 +14,7 @@ namespace golang::go::types
 {
     struct ArgumentError
     {
-        int Index{};
+        int64_t Index{};
         gocpp::error Err{};
 
         using isGoStruct = void;
@@ -29,6 +29,8 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ArgumentError& value);
+    struct GoTag_ImportMode { };
+    using ImportMode = gocpp::defined<int64_t, GoTag_ImportMode>;
 }
 #include "golang/go/types/type.h"
 #include "golang/go/types/package.fwd.h"
@@ -207,12 +209,12 @@ namespace golang::go::types
 #include "golang/go/ast/ast.h"
 #include "golang/go/constant/value.h"
 #include "golang/go/token/position.h"
+#include "golang/go/types/operand.h"
 
 namespace golang::go::types
 {
     namespace ast = golang::go::ast;
 }
-#include "golang/go/types/operand.h"
 #include "golang/go/types/sizes.h"
 #include "golang/internal/types/errors/codes.h"
 #include "golang/go/types/context.fwd.h"

@@ -7,6 +7,6 @@
 namespace golang::runtime
 {
     // TODO: remove? These are used by tests but not the actual map
-    const long loadFactorNum = 7;
-    const long loadFactorDen = 8;
+    inline constexpr long loadFactorNum = 7;
+    inline constexpr long loadFactorDen = 8;
 }

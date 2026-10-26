@@ -20,12 +20,17 @@ namespace golang::compress::flate
     extern gocpp::array<uint32_t, 256> offsetCodes;
     // offsetCodes14 are offsetCodes, but with 14 added.
     extern gocpp::array<uint32_t, 256> offsetCodes14;
+    struct GoTag_token { };
+    using token = gocpp::defined<uint32_t, GoTag_token>;
+    double mFastLog2(double val);
+    uint8_t lengthCode(uint8_t len);
+    uint32_t offsetCode(uint32_t off);
     struct tokens
     {
         gocpp::array<uint16_t, 32> extraHist{}; // codes 256->maxnumlit
         gocpp::array<uint16_t, 32> offHist{}; // offset codes
         gocpp::array<uint16_t, 256> litHist{}; // codes 0->255
-        int nFilled{};
+        int64_t nFilled{};
         uint16_t n{}; // Must be able to contain maxStoreBlockSize
         gocpp::array<token, 65536> tokens{};
 
@@ -41,9 +46,6 @@ namespace golang::compress::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct tokens& value);
-    double mFastLog2(double val);
-    uint8_t lengthCode(uint8_t len);
-    uint32_t offsetCode(uint32_t off);
     tokens indexTokens(gocpp::slice<token> in);
     void emitLiterals(tokens* dst, gocpp::slice<unsigned char> lit);
 
@@ -52,7 +54,7 @@ namespace golang::compress::flate
         void Reset(tokens* t);
         void indexTokens(tokens* t, gocpp::slice<token> in);
         void AddLiteral(tokens* t, unsigned char lit);
-        int EstimatedBits(tokens* t);
+        int64_t EstimatedBits(tokens* t);
         void AddMatch(tokens* t, uint32_t xlength, uint32_t xoffset);
         void AddMatchLong(tokens* t, int32_t xlength, uint32_t xoffset);
         void AddEOB(tokens* t);

@@ -20,20 +20,20 @@ namespace golang::math::big
     //
     //	8 and 16 effective on 3.0 GHz Xeon "Clovertown" CPU (128 byte cache lines)
     //	8 and 16 effective on 2.66 GHz Core 2 Duo "Penryn" CPU
-    extern int leafSize;
+    extern int64_t leafSize;
 }
 #include "golang/math/big/arith.h"
 #include "golang/math/big/nat.h"
 
 namespace golang::math::big
 {
-    std::tuple<Word, int> maxPow(Word b);
-    Word pow(Word x, int n);
+    std::tuple<Word, int64_t> maxPow(Word b);
+    Word pow(Word x, int64_t n);
     struct divisor
     {
         golang::math::big::nat bbb{}; // divisor
-        int nbits{}; // bit length of divisor (discounting leading zeros) ~= log2(bbb)
-        int ndigits{}; // digit length of divisor in terms of output base digits
+        int64_t nbits{}; // bit length of divisor (discounting leading zeros) ~= log2(bbb)
+        int64_t ndigits{}; // digit length of divisor in terms of output base digits
 
         using isGoStruct = void;
 
@@ -82,7 +82,7 @@ namespace golang::math::big
     }
 
     std::ostream& operator<<(std::ostream& os, const struct cacheBase10Struct& value);
-    gocpp::slice<divisor> divisors(stack* stk, int m, Word b, int ndigits, Word bb);
+    gocpp::slice<divisor> divisors(stack* stk, int64_t m, Word b, int64_t ndigits, Word bb);
     extern cacheBase10Struct cacheBase10;
 }
 
@@ -96,10 +96,10 @@ namespace golang::math::big
 
     namespace rec
     {
-        std::tuple<golang::math::big::nat, int, int, gocpp::error> scan(golang::math::big::nat z, io::ByteScanner r, int base, bool fracOk);
-        gocpp::slice<unsigned char> utoa(golang::math::big::nat x, int base);
-        gocpp::slice<unsigned char> itoa(golang::math::big::nat x, bool neg, int base);
-        void convertWords(golang::math::big::nat q, stack* stk, gocpp::slice<unsigned char> s, Word b, int ndigits, Word bb, gocpp::slice<divisor> table);
+        std::tuple<golang::math::big::nat, int64_t, int64_t, gocpp::error> scan(golang::math::big::nat z, io::ByteScanner r, int64_t base, bool fracOk);
+        gocpp::slice<unsigned char> utoa(golang::math::big::nat x, int64_t base);
+        gocpp::slice<unsigned char> itoa(golang::math::big::nat x, bool neg, int64_t base);
+        void convertWords(golang::math::big::nat q, stack* stk, gocpp::slice<unsigned char> s, Word b, int64_t ndigits, Word bb, gocpp::slice<divisor> table);
         golang::math::big::nat expWW(golang::math::big::nat z, stack* stk, Word x, Word y);
     }
 }

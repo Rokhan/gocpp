@@ -20,7 +20,7 @@ namespace golang::strings
 namespace golang::strings
 {
     iter::Seq<gocpp::string> Lines(gocpp::string s);
-    iter::Seq<gocpp::string> splitSeq(gocpp::string s, gocpp::string sep, int sepSave);
+    iter::Seq<gocpp::string> splitSeq(gocpp::string s, gocpp::string sep, int64_t sepSave);
     iter::Seq<gocpp::string> SplitSeq(gocpp::string s, gocpp::string sep);
     iter::Seq<gocpp::string> SplitAfterSeq(gocpp::string s, gocpp::string sep);
     iter::Seq<gocpp::string> FieldsSeq(gocpp::string s);

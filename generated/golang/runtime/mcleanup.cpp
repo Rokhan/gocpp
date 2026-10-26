@@ -615,7 +615,7 @@ namespace golang::runtime
     }
 
     // addWork indicates that n units of parallelizable work have been added to the queue.
-    void rec::addWork(cleanupQueue* q, int n)
+    void rec::addWork(cleanupQueue* q, int64_t n)
     {
         rec::Add(gocpp::recv(q->workUnits), int64_t(n));
     }
@@ -727,9 +727,9 @@ namespace golang::runtime
     void rec::flush(cleanupQueue* q)
     {
         auto mp = acquirem();
-        auto flushed = 0;
-        auto emptied = 0;
-        auto missing = 0;
+        int64_t flushed = 0;
+        int64_t emptied = 0;
+        int64_t missing = 0;
 
         // Coalesce the partially-filled blocks to present a more accurate picture of demand.
         // We use the number of coalesced blocks to process as a signal for demand to create
@@ -956,7 +956,7 @@ namespace golang::runtime
             }
 
             rec::beginRunningCleanups(gocpp::recv(gcCleanups));
-            for(auto i = 0; i < int(b->cleanupBlockHeader.n); i++)
+            for(int64_t i = 0; i < int64_t(b->cleanupBlockHeader.n); i++)
             {
                 auto c = b->cleanups[i];
                 b->cleanups[i] = cleanupFn {};

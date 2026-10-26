@@ -93,17 +93,17 @@ namespace golang::go::scanner
     }
 
     // [ErrorList] implements the sort Interface.
-    int rec::Len(ErrorList p)
+    int64_t rec::Len(ErrorList p)
     {
         return len(p);
     }
 
-    void rec::Swap(ErrorList p, int i, int j)
+    void rec::Swap(ErrorList p, int64_t i, int64_t j)
     {
         std::tie(p[i], p[j]) = std::tuple{p[j], p[i]};
     }
 
-    bool rec::Less(ErrorList p, int i, int j)
+    bool rec::Less(ErrorList p, int64_t i, int64_t j)
     {
         auto e = & p[i]->Pos;
         auto f = & p[j]->Pos;
@@ -139,7 +139,7 @@ namespace golang::go::scanner
         sort::Sort(p);
         // initial last.Line is != any legal error line
         token::Position last = {};
-        auto i = 0;
+        int64_t i = 0;
         for(auto [gocpp_ignored, e] : *p)
         {
             if(e->Pos.Filename != last.Filename || e->Pos.Line != last.Line)

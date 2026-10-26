@@ -46,7 +46,7 @@ namespace golang::compress::flate
 
     std::ostream& operator<<(std::ostream& os, const struct tableEntry& value);
     uint32_t hashLen(uint64_t u, uint8_t b, uint8_t n);
-    int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
+    int64_t matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
     struct tableEntryPrev
     {
         tableEntry cur{};
@@ -140,13 +140,13 @@ namespace golang::compress::flate
     }
 
     std::ostream& operator<<(std::ostream& os, const struct fastEnc& value);
-    fastEnc newFastEnc(int level);
+    fastEnc newFastEnc(int64_t level);
 
     namespace rec
     {
         int32_t addBlock(fastGen* e, gocpp::slice<unsigned char> src);
-        int32_t matchLenLimited(fastGen* e, int s, int t, gocpp::slice<unsigned char> src);
-        int32_t matchLenLong(fastGen* e, int s, int t, gocpp::slice<unsigned char> src);
+        int32_t matchLenLimited(fastGen* e, int64_t s, int64_t t, gocpp::slice<unsigned char> src);
+        int32_t matchLenLong(fastGen* e, int64_t s, int64_t t, gocpp::slice<unsigned char> src);
         void reset(fastGen* e);
         fastGen* getFastGen(fastGen* f);
     }

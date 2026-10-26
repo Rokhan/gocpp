@@ -38,7 +38,7 @@ namespace golang::go::types
     namespace rec
     {
         bool isValid(goVersion v);
-        int cmp(goVersion x, goVersion y);
+        int64_t cmp(goVersion x, goVersion y);
         bool allowVersion(Checker* check, goVersion want);
         bool verifyVersionf(Checker* check, positioner at, goVersion v, gocpp::string format, gocpp::slice<go_any> args);
         

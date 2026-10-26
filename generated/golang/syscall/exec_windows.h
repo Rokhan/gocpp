@@ -20,7 +20,7 @@ namespace golang::syscall
     std::tuple<gocpp::string, gocpp::error> FullPath(gocpp::string name);
     bool isSlash(uint8_t c);
     std::tuple<gocpp::string, gocpp::error> normalizeDir(gocpp::string dir);
-    int volToUpper(int ch);
+    int64_t volToUpper(int64_t ch);
     std::tuple<gocpp::string, gocpp::error> joinExeDirAndFName(gocpp::string dir, gocpp::string p);
     struct ProcAttr
     {
@@ -43,7 +43,7 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct ProcAttr& value);
     gocpp::error Exec(gocpp::string argv0, gocpp::slice<gocpp::string> argv, gocpp::slice<gocpp::string> envv);
     extern ProcAttr zeroProcAttr;
-    std::tuple<int, uintptr_t, gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, ProcAttr* attr);
+    std::tuple<int64_t, uintptr_t, gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, ProcAttr* attr);
 }
 #include "golang/syscall/security_windows.h"
 #include "golang/syscall/syscall_windows.h"

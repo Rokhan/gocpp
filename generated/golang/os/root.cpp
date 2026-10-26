@@ -180,7 +180,7 @@ namespace golang::os
     //
     // If perm contains bits other than the nine least-significant bits (0o777),
     // OpenFile returns an error.
-    std::tuple<File*, gocpp::error> rec::OpenFile(Root* r, gocpp::string name, int flag, FileMode perm)
+    std::tuple<File*, gocpp::error> rec::OpenFile(Root* r, gocpp::string name, int64_t flag, FileMode perm)
     {
         if(perm & 0o777 != perm)
         {
@@ -254,14 +254,14 @@ namespace golang::os
 
     // Chown changes the numeric uid and gid of the named file in the root.
     // See [Chown] for more details.
-    gocpp::error rec::Chown(Root* r, gocpp::string name, int uid, int gid)
+    gocpp::error rec::Chown(Root* r, gocpp::string name, int64_t uid, int64_t gid)
     {
         return rootChown(r, name, uid, gid);
     }
 
     // Lchown changes the numeric uid and gid of the named file in the root.
     // See [Lchown] for more details.
-    gocpp::error rec::Lchown(Root* r, gocpp::string name, int uid, int gid)
+    gocpp::error rec::Lchown(Root* r, gocpp::string name, int64_t uid, int64_t gid)
     {
         return rootLchown(r, name, uid, gid);
     }
@@ -538,7 +538,7 @@ namespace golang::os
             defer.push_back([=]{ rec::Close(gocpp::recv(f)); });
             gocpp::slice<DirEntry> dirs;
             std::tie(dirs, err) = rec::ReadDir(gocpp::recv(f), - 1);
-            slices::SortFunc(dirs, [=](DirEntry a, DirEntry b) mutable -> int
+            slices::SortFunc(dirs, [=](DirEntry a, DirEntry b) mutable -> int64_t
             {
                 return bytealg::CompareString(rec::Name(gocpp::recv(a)), rec::Name(gocpp::recv(b)));
             });

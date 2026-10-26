@@ -132,6 +132,8 @@ namespace golang::internal::syscall::windows
     std::ostream& operator<<(std::ostream& os, const struct SERVICE_STATUS& value);
     int64_t QueryPerformanceCounter();
     int64_t QueryPerformanceFrequency();
+    struct GoTag_NTStatus { };
+    using NTStatus = gocpp::defined<uint32_t, GoTag_NTStatus>;
     uint32_t langID(uint16_t pri, uint16_t sub);
     struct FILE_MODE_INFORMATION
     {
@@ -490,7 +492,7 @@ namespace golang::internal::syscall::windows
     gocpp::error WSASendMsg(syscall::Handle fd, WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, syscall::Overlapped* overlapped, unsigned char* croutine);
     gocpp::error WSARecvMsg(syscall::Handle fd, WSAMsg* msg, uint32_t* bytesReceived, syscall::Overlapped* overlapped, unsigned char* croutine);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    const uintptr_t SizeofModuleEntry32 = gocpp::Sizeof<ModuleEntry32>();
+    inline constexpr uintptr_t SizeofModuleEntry32 = gocpp::Sizeof<ModuleEntry32>();
 }
 
 #include "golang/syscall/syscall_windows.h"

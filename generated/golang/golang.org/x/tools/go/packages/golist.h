@@ -74,8 +74,8 @@ namespace golang::golang_org::x::tools::go::packages
     };
 
     std::ostream& operator<<(std::ostream& os, const struct responseDeduper& value);
-    gocpp::string jsonFlag(Config* cfg, int goVersion);
-    gocpp::slice<gocpp::string> golistargs(Config* cfg, gocpp::slice<gocpp::string> words, int goVersion);
+    gocpp::string jsonFlag(Config* cfg, int64_t goVersion);
+    gocpp::slice<gocpp::string> golistargs(Config* cfg, gocpp::slice<gocpp::string> words, int64_t goVersion);
 }
 #include "golang/context/context.fwd.h"
 #include "golang/golang.org/x/tools/internal/gocommand/invoke.fwd.h"
@@ -120,7 +120,7 @@ namespace golang::golang_org::x::tools::go::packages
         gocpp::map<gocpp::string, gocpp::string> rootDirs{};
         sync::Once goVersionOnce{};
         gocpp::error goVersionError{};
-        int goVersion{}; // The X in Go 1.X.
+        int64_t goVersion{}; // The X in Go 1.X.
         // vendorDirs caches the (non)existence of vendor directories.
         gocpp::map<gocpp::string, bool> vendorDirs{};
 
@@ -223,7 +223,7 @@ namespace golang::golang_org::x::tools::go::packages
             return createDriverResponse(state, gocpp::ToSlice<gocpp::string>(value, words...));
         }
         bool shouldAddFilenameFromError(golistState* state, jsonPackage* p);
-        std::tuple<int, gocpp::error> getGoVersion(golistState* state);
+        std::tuple<int64_t, gocpp::error> getGoVersion(golistState* state);
         std::tuple<gocpp::string, bool, gocpp::error> getPkgPath(golistState* state, gocpp::string dir);
         gocommand::Invocation cfgInvocation(golistState* state);
         std::tuple<bytes::Buffer*, gocpp::error> invokeGo(golistState* state, gocpp::string verb, gocpp::slice<gocpp::string> args);

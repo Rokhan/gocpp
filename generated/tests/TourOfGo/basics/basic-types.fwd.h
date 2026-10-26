@@ -3,3 +3,21 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::main
+{
+    struct GoTag_Meters;
+    using Meters = gocpp::defined<int64_t, GoTag_Meters>;
+    struct GoTag_Feet;
+    using Feet = gocpp::defined<int64_t, GoTag_Feet>;
+    struct GoTag_Celsius;
+    using Celsius = gocpp::defined<double, GoTag_Celsius>;
+    struct GoTag_Level;
+    using Level = gocpp::defined<uint8_t, GoTag_Level>;
+    struct GoTag_Kind;
+    using Kind = gocpp::defined<int64_t, GoTag_Kind>;
+    inline constexpr Kind Cold = 0;
+    inline constexpr Kind Warm = 1;
+    inline constexpr Kind Hot = 2;
+    inline constexpr Kind Size = 3;
+}

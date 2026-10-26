@@ -289,7 +289,7 @@ namespace golang::runtime
     extern bool canUseLongPaths;
     void initLongPathSupport();
     void osinit();
-    int readRandom(gocpp::slice<unsigned char> r);
+    int64_t readRandom(gocpp::slice<unsigned char> r);
     void goenvs();
     // exiting is set to non-zero when the process is exiting.
     extern uint32_t exiting;
@@ -351,7 +351,7 @@ namespace golang::runtime
     extern gocpp::unsafe_pointer asmstdcallAddr;
     int32_t write1(uintptr_t fd, gocpp::unsafe_pointer buf, int32_t n);
     extern mutex utf16ConsoleBackLock;
-    int writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen);
+    int64_t writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen);
     void semawakeup(m* mp);
     void semacreate(m* mp);
     void newosproc(m* mp);

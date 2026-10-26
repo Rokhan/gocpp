@@ -334,7 +334,7 @@ namespace golang::time
 
     // Compare compares the time instant t with u. If t is before u, it returns -1;
     // if t is after u, it returns +1; if they're the same, it returns 0.
-    int rec::Compare(Time t, Time u)
+    int64_t rec::Compare(Time t, Time u)
     {
         int64_t tc = {};
         int64_t uc = {};
@@ -422,11 +422,11 @@ namespace golang::time
     // dateToAbsDays takes a standard year/month/day and returns the
     // number of days from the absolute epoch to that day.
     // The days argument can be out of range and in particular can be negative.
-    absDays dateToAbsDays(int64_t year, golang::time::Month month, int day)
+    absDays dateToAbsDays(int64_t year, golang::time::Month month, int64_t day)
     {
         // See “Computations on Times” comment above.
         auto amonth = uint32_t(month);
-        auto janFeb = uint32_t(0);
+        uint32_t janFeb = uint32_t(0);
         if(amonth < 3)
         {
             janFeb = 1;
@@ -500,10 +500,10 @@ namespace golang::time
     }
 
     // split splits ayday into absolute month and standard (1-based) day-in-month.
-    std::tuple<absMonth, int> rec::split(absYday ayday)
+    std::tuple<absMonth, int64_t> rec::split(absYday ayday)
     {
         absMonth m;
-        int mday;
+        int64_t mday;
         // See “Computations on Times” comment above.
         // For yday in the range [0,366],
         // amonth := (5 yday + 461) / 153
@@ -514,14 +514,14 @@ namespace golang::time
         // so do that instead, saving a few cycles.
         // See Neri and Schneider, section 8.3.
         auto d = 2141 * uint32_t(ayday) + 197913;
-        return {absMonth(d >> 16), 1 + int((d & 0xFFFF) / 2141)};
+        return {absMonth(d >> 16), 1 + int64_t((d & 0xFFFF) / 2141)};
     }
 
     // janFeb returns 1 if the March 1-based ayday is in January or February, 0 otherwise.
     absJanFeb rec::janFeb(absYday ayday)
     {
         // See “Computations on Times” comment above.
-        auto jf = absJanFeb(0);
+        absJanFeb jf = absJanFeb(0);
         if(ayday >= marchThruDecember)
         {
             jf = 1;
@@ -540,17 +540,17 @@ namespace golang::time
     absLeap rec::leap(absCentury century, absCyear cyear)
     {
         // See “Computations on Times” comment above.
-        auto y4ok = 0;
+        int64_t y4ok = 0;
         if(cyear % 4 == 0)
         {
             y4ok = 1;
         }
-        auto y100ok = 0;
+        int64_t y100ok = 0;
         if(cyear != 0)
         {
             y100ok = 1;
         }
-        auto y400ok = 0;
+        int64_t y400ok = 0;
         if(century % 4 == 0)
         {
             y400ok = 1;
@@ -559,25 +559,25 @@ namespace golang::time
     }
 
     // year returns the standard year for (century, cyear, janFeb).
-    int rec::year(absCentury century, absCyear cyear, absJanFeb janFeb)
+    int64_t rec::year(absCentury century, absCyear cyear, absJanFeb janFeb)
     {
         // See “Computations on Times” comment above.
-        return int(uint64_t(century) * 100 - absoluteYears) + int(cyear) + int(janFeb);
+        return int64_t(uint64_t(century) * 100 - absoluteYears) + int64_t(cyear) + int64_t(janFeb);
     }
 
     // yday returns the standard 1-based yday for (ayday, janFeb, leap).
-    int rec::yday(absYday ayday, absJanFeb janFeb, absLeap leap)
+    int64_t rec::yday(absYday ayday, absJanFeb janFeb, absLeap leap)
     {
         // See “Computations on Times” comment above.
-        return int(ayday) + (1 + 31 + 28) + int(leap) &^ int(janFeb) - 365 * int(janFeb);
+        return int64_t(ayday) + (1 + 31 + 28) + int64_t(leap) &^ int64_t(janFeb) - 365 * int64_t(janFeb);
     }
 
     // date converts days into standard year, month, day.
-    std::tuple<int, golang::time::Month, int> rec::date(absDays days)
+    std::tuple<int64_t, golang::time::Month, int64_t> rec::date(absDays days)
     {
-        int year;
+        int64_t year;
         golang::time::Month month;
-        int day;
+        int64_t day;
         auto [century, cyear, ayday] = rec::split(gocpp::recv(days));
         absMonth amonth;
         std::tie(amonth, day) = rec::split(gocpp::recv(ayday));
@@ -588,10 +588,10 @@ namespace golang::time
     }
 
     // yearYday converts days into the standard year and 1-based yday.
-    std::tuple<int, int> rec::yearYday(absDays days)
+    std::tuple<int64_t, int64_t> rec::yearYday(absDays days)
     {
-        int year;
-        int yday;
+        int64_t year;
+        int64_t yday;
         auto [century, cyear, ayday] = rec::split(gocpp::recv(days));
         auto janFeb = rec::janFeb(gocpp::recv(ayday));
         year = rec::year(gocpp::recv(century), cyear, janFeb);
@@ -629,10 +629,10 @@ namespace golang::time
 
     // locabs is a combination of the Zone and abs methods,
     // extracting both return values from a single zone lookup.
-    std::tuple<gocpp::string, int, absSeconds> rec::locabs(Time t)
+    std::tuple<gocpp::string, int64_t, absSeconds> rec::locabs(Time t)
     {
         gocpp::string name;
-        int offset;
+        int64_t offset;
         absSeconds abs;
         auto l = t.loc;
         if(l == nullptr || l == & localLoc)
@@ -663,16 +663,16 @@ namespace golang::time
     }
 
     // Date returns the year, month, and day in which t occurs.
-    std::tuple<int, golang::time::Month, int> rec::Date(Time t)
+    std::tuple<int64_t, golang::time::Month, int64_t> rec::Date(Time t)
     {
-        int year;
+        int64_t year;
         golang::time::Month month;
-        int day;
+        int64_t day;
         return rec::date(gocpp::recv(rec::days(gocpp::recv(rec::absSec(gocpp::recv(t))))));
     }
 
     // Year returns the year in which t occurs.
-    int rec::Year(Time t)
+    int64_t rec::Year(Time t)
     {
         auto [century, cyear, ayday] = rec::split(gocpp::recv(rec::days(gocpp::recv(rec::absSec(gocpp::recv(t))))));
         auto janFeb = rec::janFeb(gocpp::recv(ayday));
@@ -688,7 +688,7 @@ namespace golang::time
     }
 
     // Day returns the day of the month specified by t.
-    int rec::Day(Time t)
+    int64_t rec::Day(Time t)
     {
         auto [gocpp_id_7, gocpp_id_8, ayday] = rec::split(gocpp::recv(rec::days(gocpp::recv(rec::absSec(gocpp::recv(t))))));
         auto [gocpp_id_9, day] = rec::split(gocpp::recv(ayday));
@@ -712,10 +712,10 @@ namespace golang::time
     // Week ranges from 1 to 53. Jan 01 to Jan 03 of year n might belong to
     // week 52 or 53 of year n-1, and Dec 29 to Dec 31 might belong to week 1
     // of year n+1.
-    std::tuple<int, int> rec::ISOWeek(Time t)
+    std::tuple<int64_t, int64_t> rec::ISOWeek(Time t)
     {
-        int year;
-        int week;
+        int64_t year;
+        int64_t week;
         // According to the rule that the first calendar week of a calendar year is
         // the week including the first Thursday of that year, and that the last one is
         // the week immediately preceding the first calendar week of the next calendar year.
@@ -727,27 +727,27 @@ namespace golang::time
         // the offset to Thursday
         auto days = rec::days(gocpp::recv(rec::absSec(gocpp::recv(t))));
         auto thu = days + absDays(Thursday - (rec::weekday(gocpp::recv((days - 1))) + 1));
-        int yday;
+        int64_t yday;
         std::tie(year, yday) = rec::yearYday(gocpp::recv(thu));
         return {year, (yday - 1) / 7 + 1};
     }
 
     // Clock returns the hour, minute, and second within the day specified by t.
-    std::tuple<int, int, int> rec::Clock(Time t)
+    std::tuple<int64_t, int64_t, int64_t> rec::Clock(Time t)
     {
-        int hour;
-        int min;
-        int sec;
+        int64_t hour;
+        int64_t min;
+        int64_t sec;
         return rec::clock(gocpp::recv(rec::absSec(gocpp::recv(t))));
     }
 
     // clock returns the hour, minute, and second within the day specified by abs.
-    std::tuple<int, int, int> rec::clock(absSeconds abs)
+    std::tuple<int64_t, int64_t, int64_t> rec::clock(absSeconds abs)
     {
-        int hour;
-        int min;
-        int sec;
-        sec = int(abs % secondsPerDay);
+        int64_t hour;
+        int64_t min;
+        int64_t sec;
+        sec = int64_t(abs % secondsPerDay);
         hour = sec / secondsPerHour;
         sec -= hour * secondsPerHour;
         min = sec / secondsPerMinute;
@@ -756,33 +756,33 @@ namespace golang::time
     }
 
     // Hour returns the hour within the day specified by t, in the range [0, 23].
-    int rec::Hour(Time t)
+    int64_t rec::Hour(Time t)
     {
-        return int(rec::absSec(gocpp::recv(t)) % secondsPerDay) / secondsPerHour;
+        return int64_t(rec::absSec(gocpp::recv(t)) % secondsPerDay) / secondsPerHour;
     }
 
     // Minute returns the minute offset within the hour specified by t, in the range [0, 59].
-    int rec::Minute(Time t)
+    int64_t rec::Minute(Time t)
     {
-        return int(rec::absSec(gocpp::recv(t)) % secondsPerHour) / secondsPerMinute;
+        return int64_t(rec::absSec(gocpp::recv(t)) % secondsPerHour) / secondsPerMinute;
     }
 
     // Second returns the second offset within the minute specified by t, in the range [0, 59].
-    int rec::Second(Time t)
+    int64_t rec::Second(Time t)
     {
-        return int(rec::absSec(gocpp::recv(t)) % secondsPerMinute);
+        return int64_t(rec::absSec(gocpp::recv(t)) % secondsPerMinute);
     }
 
     // Nanosecond returns the nanosecond offset within the second specified by t,
     // in the range [0, 999999999].
-    int rec::Nanosecond(Time t)
+    int64_t rec::Nanosecond(Time t)
     {
-        return int(rec::nsec(gocpp::recv(t)));
+        return int64_t(rec::nsec(gocpp::recv(t)));
     }
 
     // YearDay returns the day of the year specified by t, in the range [1,365] for non-leap years,
     // and [1,366] in leap years.
-    int rec::YearDay(Time t)
+    int64_t rec::YearDay(Time t)
     {
         auto [gocpp_id_10, yday] = rec::yearYday(gocpp::recv(rec::days(gocpp::recv(rec::absSec(gocpp::recv(t))))));
         return yday;
@@ -806,10 +806,10 @@ namespace golang::time
 
     // format formats the representation of d into the end of buf and
     // returns the offset of the first character.
-    int rec::format(Duration d, gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf)
+    int64_t rec::format(Duration d, gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf)
     {
         // Largest time is 2540400h10m10.000000000s
-        auto w = len(buf);
+        int64_t w = len(buf);
 
         auto u = uint64_t(d);
         auto neg = d < 0;
@@ -822,7 +822,7 @@ namespace golang::time
         {
             // Special case: if duration is smaller than a second,
             // use smaller units, like 1.2ms
-            int prec = {};
+            int64_t prec = {};
             w--;
             buf[w] = 's';
             w--;
@@ -904,14 +904,14 @@ namespace golang::time
     // tail of buf, omitting trailing zeros. It omits the decimal
     // point too when the fraction is 0. It returns the index where the
     // output bytes begin and the value v/10**prec.
-    std::tuple<int, uint64_t> fmtFrac(gocpp::slice<unsigned char> buf, uint64_t v, int prec)
+    std::tuple<int64_t, uint64_t> fmtFrac(gocpp::slice<unsigned char> buf, uint64_t v, int64_t prec)
     {
-        int nw;
+        int64_t nw;
         uint64_t nv;
         // Omit trailing zeros up to and including decimal point.
         auto w = len(buf);
-        auto print = false;
-        for(auto i = 0; i < prec; i++)
+        bool print = false;
+        for(int64_t i = 0; i < prec; i++)
         {
             auto digit = v % 10;
             print = print || digit != 0;
@@ -932,7 +932,7 @@ namespace golang::time
 
     // fmtInt formats v into the tail of buf.
     // It returns the index where the output begins.
-    int fmtInt(gocpp::slice<unsigned char> buf, uint64_t v)
+    int64_t fmtInt(gocpp::slice<unsigned char> buf, uint64_t v)
     {
         auto w = len(buf);
         if(v == 0)
@@ -1203,18 +1203,18 @@ namespace golang::time
     // AddDate normalizes its result in the same way that Date does,
     // so, for example, adding one month to October 31 yields
     // December 1, the normalized form for November 31.
-    Time rec::AddDate(Time t, int years, int months, int days)
+    Time rec::AddDate(Time t, int64_t years, int64_t months, int64_t days)
     {
         auto [year, month, day] = rec::Date(gocpp::recv(t));
         auto [hour, min, sec] = rec::Clock(gocpp::recv(t));
-        return time::Date(year + years, month + Month(months), day + days, hour, min, sec, int(rec::nsec(gocpp::recv(t))), rec::Location(gocpp::recv(t)));
+        return time::Date(year + years, month + Month(months), day + days, hour, min, sec, int64_t(rec::nsec(gocpp::recv(t))), rec::Location(gocpp::recv(t)));
     }
 
     // daysBefore returns the number of days in a non-leap year before month m.
     // daysBefore(December+1) returns 365.
-    int daysBefore(golang::time::Month m)
+    int64_t daysBefore(golang::time::Month m)
     {
-        auto adj = 0;
+        int64_t adj = 0;
         if(m >= March)
         {
             adj = - 2;
@@ -1230,10 +1230,10 @@ namespace golang::time
         // integer approximation of the form (a×m + b)/c.
         // A brute force search over small a, b, c finds that
         // (214×m - 211) / 7 computes the function perfectly.
-        return (214 * int(m) - 211) / 7 + adj;
+        return (214 * int64_t(m) - 211) / 7 + adj;
     }
 
-    int daysIn(golang::time::Month m, int year)
+    int64_t daysIn(golang::time::Month m, int64_t year)
     {
         if(m == February)
         {
@@ -1247,7 +1247,7 @@ namespace golang::time
         // 31 30 31 30 31 30 31 31 30 31 30 31
         // Adding m&1 produces the basic alternation;
         // adding (m>>3)&1 inverts the alternation starting in August.
-        return 30 + int((m + (m >> 3)) & 1);
+        return 30 + int64_t((m + (m >> 3)) & 1);
     }
 
     // Provided by package runtime.
@@ -1360,10 +1360,10 @@ namespace golang::time
 
     // Zone computes the time zone in effect at time t, returning the abbreviated
     // name of the zone (such as "CET") and its offset in seconds east of UTC.
-    std::tuple<gocpp::string, int> rec::Zone(Time t)
+    std::tuple<gocpp::string, int64_t> rec::Zone(Time t)
     {
         gocpp::string name;
-        int offset;
+        int64_t offset;
         std::tie(name, offset, std::ignore, std::ignore, std::ignore) = rec::lookup(gocpp::recv(t.loc), rec::unixSec(gocpp::recv(t)));
         return {name, offset};
     }
@@ -1439,7 +1439,7 @@ namespace golang::time
         // minutes east of UTC. -1 is UTC.
         int16_t offsetMin = {};
         int8_t offsetSec = {};
-        auto version = timeBinaryVersionV1;
+        unsigned char version = timeBinaryVersionV1;
 
         if(rec::Location(gocpp::recv(t)) == time::UTC)
         {
@@ -1498,7 +1498,7 @@ namespace golang::time
             return errors::New("Time.UnmarshalBinary: unsupported version"_s);
         }
 
-        auto wantLen = 1 + 8 + 4 + 2;
+        int64_t wantLen = 1 + 8 + 4 + 2;
         if(version == timeBinaryVersionV2)
         {
             wantLen++;
@@ -1516,10 +1516,10 @@ namespace golang::time
         auto nsec = int32_t(buf[3]) | (int32_t(buf[2]) << 8) | (int32_t(buf[1]) << 16) | (int32_t(buf[0]) << 24);
 
         buf = buf.make_slice(4);
-        auto offset = int(int16_t(buf[1]) | (int16_t(buf[0]) << 8)) * 60;
+        auto offset = int64_t(int16_t(buf[1]) | (int16_t(buf[0]) << 8)) * 60;
         if(version == timeBinaryVersionV2)
         {
-            offset += int(int8_t(buf[2]));
+            offset += int64_t(int8_t(buf[2]));
         }
 
         *t = Time {};
@@ -1672,13 +1672,13 @@ namespace golang::time
         return isDST;
     }
 
-    bool isLeap(int year)
+    bool isLeap(int64_t year)
     {
         // year%4 == 0 && (year%100 != 0 || year%400 == 0)
         // Bottom 2 bits must be clear.
         // For multiples of 25, bottom 4 bits must be clear.
         // Thanks to Cassio Neri for this trick.
-        auto mask = 0xf;
+        int64_t mask = 0xf;
         if(year % 25 != 0)
         {
             mask = 3;
@@ -1690,10 +1690,10 @@ namespace golang::time
     //
     //	hi * base + lo == nhi * base + nlo
     //	0 <= nlo < base
-    std::tuple<int, int> norm(int hi, int lo, int base)
+    std::tuple<int64_t, int64_t> norm(int64_t hi, int64_t lo, int64_t base)
     {
-        int nhi;
-        int nlo;
+        int64_t nhi;
+        int64_t nlo;
         if(lo < 0)
         {
             auto n = (- lo - 1) / base + 1;
@@ -1727,7 +1727,7 @@ namespace golang::time
     // in the transition, but it does not guarantee which.
     //
     // Date panics if loc is nil.
-    Time Date(int year, golang::time::Month month, int day, int hour, int min, int sec, int nsec, golang::time::Location* loc)
+    Time Date(int64_t year, golang::time::Month month, int64_t day, int64_t hour, int64_t min, int64_t sec, int64_t nsec, golang::time::Location* loc)
     {
         if(loc == nullptr)
         {
@@ -1735,7 +1735,7 @@ namespace golang::time
         }
 
         // Normalize month, overflowing into year.
-        auto m = int(month) - 1;
+        auto m = int64_t(month) - 1;
         std::tie(year, m) = norm(year, m, 12);
         month = Month(m) + 1;
 
@@ -1816,11 +1816,11 @@ namespace golang::time
     // div divides t by d and returns the quotient parity and remainder.
     // We don't use the quotient parity anymore (round half up instead of round to even)
     // but it's still here in case we change our minds.
-    std::tuple<int, Duration> div(Time t, Duration d)
+    std::tuple<int64_t, Duration> div(Time t, Duration d)
     {
-        int qmod2;
+        int64_t qmod2;
         Duration r;
-        auto neg = false;
+        bool neg = false;
         auto nsec = rec::nsec(gocpp::recv(t));
         auto sec = rec::sec(gocpp::recv(t));
         if(sec < 0)
@@ -1846,7 +1846,7 @@ namespace golang::time
             {
                 // Special case: 2d divides 1 second.
                 case 0:
-                    qmod2 = int(nsec / int32_t(d)) & 1;
+                    qmod2 = int64_t(nsec / int32_t(d)) & 1;
                     r = Duration(nsec % int32_t(d));
                     break;
 
@@ -1854,7 +1854,7 @@ namespace golang::time
                 case 1:
                 {
                     auto d1 = int64_t(d / time::Second);
-                    qmod2 = int(sec / d1) & 1;
+                    qmod2 = int64_t(sec / d1) & 1;
                     r = Duration(sec % d1) * time::Second + Duration(nsec);
                     break;
                 }
@@ -1890,7 +1890,7 @@ namespace golang::time
                     {
                         d1 <<= 1;
                     }
-                    auto d0 = uint64_t(0);
+                    uint64_t d0 = uint64_t(0);
                     for(; ; )
                     {
                         qmod2 = 0;
@@ -1940,21 +1940,21 @@ namespace golang::time
     }
 
     //go:linkname legacyAbsClock time.absClock
-    std::tuple<int, int, int> legacyAbsClock(uint64_t abs)
+    std::tuple<int64_t, int64_t, int64_t> legacyAbsClock(uint64_t abs)
     {
-        int hour;
-        int min;
-        int sec;
+        int64_t hour;
+        int64_t min;
+        int64_t sec;
         return rec::clock(gocpp::recv(absSeconds(abs + marchThruDecember * secondsPerDay)));
     }
 
     //go:linkname legacyAbsDate time.absDate
-    std::tuple<int, golang::time::Month, int, int> legacyAbsDate(uint64_t abs, bool full)
+    std::tuple<int64_t, golang::time::Month, int64_t, int64_t> legacyAbsDate(uint64_t abs, bool full)
     {
-        int year;
+        int64_t year;
         golang::time::Month month;
-        int day;
-        int yday;
+        int64_t day;
+        int64_t yday;
         auto d = rec::days(gocpp::recv(absSeconds(abs + marchThruDecember * secondsPerDay)));
         std::tie(year, month, day) = rec::date(gocpp::recv(d));
         std::tie(std::ignore, yday) = rec::yearYday(gocpp::recv(d));

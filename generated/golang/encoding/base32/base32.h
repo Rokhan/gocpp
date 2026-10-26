@@ -35,23 +35,29 @@ namespace golang::encoding::base32
     // HexEncoding is the “Extended Hex Alphabet” defined in RFC 4648.
     // It is typically used in DNS.
     extern base32::Encoding* HexEncoding;
-    int stripNewlines(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
-    int decodedLen(int n, gocpp::rune padChar);
+    struct GoTag_CorruptInputError { };
+    using CorruptInputError = gocpp::defined<int64_t, GoTag_CorruptInputError>;
+    int64_t stripNewlines(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
+    int64_t decodedLen(int64_t n, gocpp::rune padChar);
     Encoding* NewEncoding(gocpp::string encoder);
 }
 #include "golang/io/io.fwd.h"
-#include "golang/io/io.h"
 
 namespace golang::encoding::base32
 {
     namespace io = golang::io;
+}
+#include "golang/io/io.h"
+
+namespace golang::encoding::base32
+{
     struct encoder
     {
         gocpp::error err{};
         Encoding* enc{};
         io::Writer w{};
         gocpp::array<unsigned char, 5> buf{}; // buffered data waiting to be encoded
-        int nbuf{}; // number of bytes in buf
+        int64_t nbuf{}; // number of bytes in buf
         gocpp::array<unsigned char, 1024> out{}; // output buffer
 
         using isGoStruct = void;
@@ -74,7 +80,7 @@ namespace golang::encoding::base32
         io::Reader r{};
         bool end{}; // saw end of message
         gocpp::array<unsigned char, 1024> buf{}; // leftover input
-        int nbuf{};
+        int64_t nbuf{};
         gocpp::slice<unsigned char> out{}; // leftover decoded output
         gocpp::array<unsigned char, 1024 / 8 * 5> outbuf{};
 
@@ -90,7 +96,7 @@ namespace golang::encoding::base32
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decoder& value);
-    std::tuple<int, gocpp::error> readEncodedData(io::Reader r, gocpp::slice<unsigned char> buf, int min, bool expectsPadding);
+    std::tuple<int64_t, gocpp::error> readEncodedData(io::Reader r, gocpp::slice<unsigned char> buf, int64_t min, bool expectsPadding);
     struct newlineFilteringReader
     {
         io::Reader wrapped{};
@@ -115,17 +121,17 @@ namespace golang::encoding::base32
         void Encode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
         gocpp::slice<unsigned char> AppendEncode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
         gocpp::string EncodeToString(Encoding* enc, gocpp::slice<unsigned char> src);
-        std::tuple<int, gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> p);
         gocpp::error Close(encoder* e);
-        int EncodedLen(Encoding* enc, int n);
+        int64_t EncodedLen(Encoding* enc, int64_t n);
         gocpp::string Error(CorruptInputError e);
-        std::tuple<int, bool, gocpp::error> decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
-        std::tuple<int, gocpp::error> Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
+        std::tuple<int64_t, bool, gocpp::error> decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
+        std::tuple<int64_t, gocpp::error> Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendDecode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> DecodeString(Encoding* enc, gocpp::string s);
-        std::tuple<int, gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p);
-        int DecodedLen(Encoding* enc, int n);
+        std::tuple<int64_t, gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p);
+        int64_t DecodedLen(Encoding* enc, int64_t n);
     }
 }
 

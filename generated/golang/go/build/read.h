@@ -42,7 +42,7 @@ namespace golang::go::build
         unsigned char peek{};
         gocpp::error err{};
         bool eof{};
-        int nerr{};
+        int64_t nerr{};
         token::Position pos{};
 
         using isGoStruct = void;

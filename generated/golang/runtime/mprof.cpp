@@ -333,7 +333,7 @@ namespace golang::runtime
     }
 
     // newBucket allocates a bucket with the given type and number of stack entries.
-    bucket* newBucket(bucketType typ, int nstk)
+    bucket* newBucket(bucketType typ, int64_t nstk)
     {
         auto size = gocpp::Sizeof<bucket>() + uintptr_t(nstk) * gocpp::Sizeof<uintptr_t>();
         //Go switch emulation
@@ -436,7 +436,7 @@ namespace golang::runtime
         h += h << 3;
         h ^= h >> 11;
 
-        auto i = int(h % buckHashSize);
+        auto i = int64_t(h % buckHashSize);
         // first check optimistically, without the lock
         for(auto b = (bucket*)(rec::Load(gocpp::recv(bh[i]))); b != nullptr; b = b->next)
         {
@@ -641,7 +641,7 @@ namespace golang::runtime
     //
     // To include every blocking event in the profile, pass rate = 1.
     // To turn off profiling entirely, pass rate <= 0.
-    void SetBlockProfileRate(int rate)
+    void SetBlockProfileRate(int64_t rate)
     {
         int64_t r = {};
         if(rate <= 0)
@@ -668,7 +668,7 @@ namespace golang::runtime
         atomic::Store64(& blockprofilerate, uint64_t(r));
     }
 
-    void blockevent(int64_t cycles, int skip)
+    void blockevent(int64_t cycles, int64_t skip)
     {
         if(cycles <= 0)
         {
@@ -700,7 +700,7 @@ namespace golang::runtime
     // The traceback will be recorded from the stack of the goroutine associated with the current m.
     // skip should be positive if this event is recorded from the current stack
     // (e.g. when this is not called from a system stack)
-    void saveblockevent(int64_t cycles, int64_t rate, int skip, bucketType which)
+    void saveblockevent(int64_t cycles, int64_t rate, int64_t skip, bucketType which)
     {
         if(debug.profstackdepth == 0)
         {
@@ -717,7 +717,7 @@ namespace golang::runtime
         // we must not be preempted while accessing profstack
         auto mp = acquirem();
 
-        int nstk = {};
+        int64_t nstk = {};
         if(tracefpunwindoff() || rec::hasCgoOnStack(gocpp::recv(gp->m)))
         {
             if(gp->m->curg == nullptr || gp->m->curg == gp)
@@ -759,10 +759,10 @@ namespace golang::runtime
     // This function will skip the given number of frames, properly accounting for
     // inlining, and save remaining frames as "physical" return addresses. The
     // consumer should later use CallersFrames or similar to expand inline frames.
-    int fpTracebackPartialExpand(int skip, gocpp::unsafe_pointer fp, gocpp::slice<uintptr_t> pcBuf)
+    int64_t fpTracebackPartialExpand(int64_t skip, gocpp::unsafe_pointer fp, gocpp::slice<uintptr_t> pcBuf)
     {
-        int n = {};
-        auto lastFuncID = abi::FuncIDNormal;
+        int64_t n = {};
+        abi::FuncID lastFuncID = abi::FuncIDNormal;
         auto skipOrAdd = [=](uintptr_t retPC) mutable -> bool
         {
             if(skip > 0)
@@ -965,7 +965,7 @@ namespace golang::runtime
         }
 
         // runtime.(*mLockProfile).recordUnlock runtime.unlock2Wake runtime.unlock2 runtime.unlockWithRank
-        auto skip = 4;
+        int64_t skip = 4;
         if(staticLockRanking)
         {
             // When static lock ranking is enabled, we'll always be on the system
@@ -982,7 +982,7 @@ namespace golang::runtime
         }
         prof->haveStack = true;
 
-        int nstk = {};
+        int64_t nstk = {};
         auto gp = getg();
         auto sp = sys::GetCallerSP();
         auto pc = sys::GetCallerPC();
@@ -1020,8 +1020,8 @@ namespace golang::runtime
         auto mp = acquirem();
         prof->disabled = true;
 
-        auto nstk = int(debug.profstackdepth);
-        for(auto i = 0; i < nstk; i++)
+        auto nstk = int64_t(debug.profstackdepth);
+        for(int64_t i = 0; i < nstk; i++)
         {
             if(auto pc = prof->stack[i]; pc == 0)
             {
@@ -1087,18 +1087,18 @@ namespace golang::runtime
     // To turn off profiling entirely, pass rate 0.
     // To just read the current rate, pass rate < 0.
     // (For n>1 the details of sampling may change.)
-    int SetMutexProfileFraction(int rate)
+    int64_t SetMutexProfileFraction(int64_t rate)
     {
         if(rate < 0)
         {
-            return int(mutexprofilerate);
+            return int64_t(mutexprofilerate);
         }
         auto old = mutexprofilerate;
         atomic::Store64(& mutexprofilerate, uint64_t(rate));
-        return int(old);
+        return int64_t(old);
     }
 
-    void mutexevent(int64_t cycles, int skip)
+    void mutexevent(int64_t cycles, int64_t skip)
     {
         if(cycles < 0)
         {
@@ -1169,7 +1169,7 @@ namespace golang::runtime
     // memory profiling rate should do so just once, as early as
     // possible in the execution of the program (for example,
     // at the beginning of main).
-    int MemProfileRate = 512 * 1024;
+    int64_t MemProfileRate = 512 * 1024;
     // disableMemoryProfiling is set by the linker if memory profiling
     // is not used and the link type guarantees nobody else could use it
     // elsewhere.
@@ -1265,9 +1265,9 @@ namespace golang::runtime
     // Most clients should use the runtime/pprof package or
     // the testing package's -test.memprofile flag instead
     // of calling MemProfile directly.
-    std::tuple<int, bool> MemProfile(gocpp::slice<MemProfileRecord> p, bool inuseZero)
+    std::tuple<int64_t, bool> MemProfile(gocpp::slice<MemProfileRecord> p, bool inuseZero)
     {
-        int n;
+        int64_t n;
         bool ok;
         return memProfileInternal(len(p), inuseZero, [=](profilerecord::MemProfileRecord r) mutable -> void
         {
@@ -1286,9 +1286,9 @@ namespace golang::runtime
     // See also disableMemoryProfiling above and cmd/link/internal/ld/lib.go:linksetup.
     //
     //go:noinline
-    std::tuple<int, bool> memProfileInternal(int size, bool inuseZero, std::function<void (profilerecord::MemProfileRecord _1)> copyFn)
+    std::tuple<int64_t, bool> memProfileInternal(int64_t size, bool inuseZero, std::function<void (profilerecord::MemProfileRecord _1)> copyFn)
     {
-        int n;
+        int64_t n;
         bool ok;
         auto cycle = rec::read(gocpp::recv(mProfCycle));
         // If we're between mProf_NextCycle and mProf_Flush, take care
@@ -1299,7 +1299,7 @@ namespace golang::runtime
         lock(& profMemFutureLock[index]);
         mProf_FlushLocked(index);
         unlock(& profMemFutureLock[index]);
-        auto clear = true;
+        bool clear = true;
         auto head = (bucket*)(rec::Load(gocpp::recv(mbuckets)));
         for(auto b = head; b != nullptr; b = b->allnext)
         {
@@ -1381,9 +1381,9 @@ namespace golang::runtime
     }
 
     //go:linkname pprof_memProfileInternal
-    std::tuple<int, bool> pprof_memProfileInternal(gocpp::slice<profilerecord::MemProfileRecord> p, bool inuseZero)
+    std::tuple<int64_t, bool> pprof_memProfileInternal(gocpp::slice<profilerecord::MemProfileRecord> p, bool inuseZero)
     {
-        int n;
+        int64_t n;
         bool ok;
         return memProfileInternal(len(p), inuseZero, [=](profilerecord::MemProfileRecord r) mutable -> void
         {
@@ -1456,11 +1456,11 @@ namespace golang::runtime
     // Most clients should use the [runtime/pprof] package or
     // the [testing] package's -test.blockprofile flag instead
     // of calling BlockProfile directly.
-    std::tuple<int, bool> BlockProfile(gocpp::slice<BlockProfileRecord> p)
+    std::tuple<int64_t, bool> BlockProfile(gocpp::slice<BlockProfileRecord> p)
     {
-        int n;
+        int64_t n;
         bool ok;
-        int m = {};
+        int64_t m = {};
         std::tie(n, ok) = blockProfileInternal(len(p), [=](profilerecord::BlockProfileRecord r) mutable -> void
         {
             copyBlockProfileRecord(& p[m], r);
@@ -1479,7 +1479,7 @@ namespace golang::runtime
         for(auto [i, gocpp_ignored] : p)
         {
             auto cf = CallersFrames(rec::Stack(gocpp::recv(p[i])));
-            auto j = 0;
+            int64_t j = 0;
             for(; j < len(expandedStack); )
             {
                 auto [f, more] = rec::Next(gocpp::recv(cf));
@@ -1500,9 +1500,9 @@ namespace golang::runtime
     // blockProfileInternal returns the number of records n in the profile. If there
     // are less than size records, copyFn is invoked for each record, and ok returns
     // true.
-    std::tuple<int, bool> blockProfileInternal(int size, std::function<void (profilerecord::BlockProfileRecord _1)> copyFn)
+    std::tuple<int64_t, bool> blockProfileInternal(int64_t size, std::function<void (profilerecord::BlockProfileRecord _1)> copyFn)
     {
-        int n;
+        int64_t n;
         bool ok;
         lock(& profBlockLock);
         auto head = (bucket*)(rec::Load(gocpp::recv(bbuckets)));
@@ -1562,9 +1562,9 @@ namespace golang::runtime
     }
 
     //go:linkname pprof_blockProfileInternal
-    std::tuple<int, bool> pprof_blockProfileInternal(gocpp::slice<profilerecord::BlockProfileRecord> p)
+    std::tuple<int64_t, bool> pprof_blockProfileInternal(gocpp::slice<profilerecord::BlockProfileRecord> p)
     {
-        int n;
+        int64_t n;
         bool ok;
         return blockProfileInternal(len(p), [=](profilerecord::BlockProfileRecord r) mutable -> void
         {
@@ -1579,11 +1579,11 @@ namespace golang::runtime
     //
     // Most clients should use the [runtime/pprof] package
     // instead of calling MutexProfile directly.
-    std::tuple<int, bool> MutexProfile(gocpp::slice<BlockProfileRecord> p)
+    std::tuple<int64_t, bool> MutexProfile(gocpp::slice<BlockProfileRecord> p)
     {
-        int n;
+        int64_t n;
         bool ok;
-        int m = {};
+        int64_t m = {};
         std::tie(n, ok) = mutexProfileInternal(len(p), [=](profilerecord::BlockProfileRecord r) mutable -> void
         {
             copyBlockProfileRecord(& p[m], r);
@@ -1599,9 +1599,9 @@ namespace golang::runtime
     // mutexProfileInternal returns the number of records n in the profile. If there
     // are less than size records, copyFn is invoked for each record, and ok returns
     // true.
-    std::tuple<int, bool> mutexProfileInternal(int size, std::function<void (profilerecord::BlockProfileRecord _1)> copyFn)
+    std::tuple<int64_t, bool> mutexProfileInternal(int64_t size, std::function<void (profilerecord::BlockProfileRecord _1)> copyFn)
     {
-        int n;
+        int64_t n;
         bool ok;
         lock(& profBlockLock);
         auto head = (bucket*)(rec::Load(gocpp::recv(xbuckets)));
@@ -1628,9 +1628,9 @@ namespace golang::runtime
     }
 
     //go:linkname pprof_mutexProfileInternal
-    std::tuple<int, bool> pprof_mutexProfileInternal(gocpp::slice<profilerecord::BlockProfileRecord> p)
+    std::tuple<int64_t, bool> pprof_mutexProfileInternal(gocpp::slice<profilerecord::BlockProfileRecord> p)
     {
-        int n;
+        int64_t n;
         bool ok;
         return mutexProfileInternal(len(p), [=](profilerecord::BlockProfileRecord r) mutable -> void
         {
@@ -1645,9 +1645,9 @@ namespace golang::runtime
     //
     // Most clients should use the runtime/pprof package instead
     // of calling ThreadCreateProfile directly.
-    std::tuple<int, bool> ThreadCreateProfile(gocpp::slice<StackRecord> p)
+    std::tuple<int64_t, bool> ThreadCreateProfile(gocpp::slice<StackRecord> p)
     {
-        int n;
+        int64_t n;
         bool ok;
         return threadCreateProfileInternal(len(p), [=](profilerecord::StackRecord r) mutable -> void
         {
@@ -1660,9 +1660,9 @@ namespace golang::runtime
     // threadCreateProfileInternal returns the number of records n in the profile.
     // If there are less than size records, copyFn is invoked for each record, and
     // ok returns true.
-    std::tuple<int, bool> threadCreateProfileInternal(int size, std::function<void (profilerecord::StackRecord _1)> copyFn)
+    std::tuple<int64_t, bool> threadCreateProfileInternal(int64_t size, std::function<void (profilerecord::StackRecord _1)> copyFn)
     {
-        int n;
+        int64_t n;
         bool ok;
         auto first = (m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm)));
         for(auto mp = first; mp != nullptr; mp = mp->alllink)
@@ -1684,9 +1684,9 @@ namespace golang::runtime
     }
 
     //go:linkname pprof_threadCreateInternal
-    std::tuple<int, bool> pprof_threadCreateInternal(gocpp::slice<profilerecord::StackRecord> p)
+    std::tuple<int64_t, bool> pprof_threadCreateInternal(gocpp::slice<profilerecord::StackRecord> p)
     {
-        int n;
+        int64_t n;
         bool ok;
         return threadCreateProfileInternal(len(p), [=](profilerecord::StackRecord r) mutable -> void
         {
@@ -1696,17 +1696,17 @@ namespace golang::runtime
     }
 
     //go:linkname pprof_goroutineProfileWithLabels
-    std::tuple<int, bool> pprof_goroutineProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    std::tuple<int64_t, bool> pprof_goroutineProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
-        int n;
+        int64_t n;
         bool ok;
         return goroutineProfileWithLabels(p, labels);
     }
 
     // labels may be nil. If labels is non-nil, it must have the same length as p.
-    std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    std::tuple<int64_t, bool> goroutineProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
-        int n;
+        int64_t n;
         bool ok;
         if(labels != nullptr && len(labels) != len(p))
         {
@@ -1717,17 +1717,17 @@ namespace golang::runtime
     }
 
     //go:linkname pprof_goroutineLeakProfileWithLabels
-    std::tuple<int, bool> pprof_goroutineLeakProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    std::tuple<int64_t, bool> pprof_goroutineLeakProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
-        int n;
+        int64_t n;
         bool ok;
         return goroutineLeakProfileWithLabels(p, labels);
     }
 
     // labels may be nil. If labels is non-nil, it must have the same length as p.
-    std::tuple<int, bool> goroutineLeakProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    std::tuple<int64_t, bool> goroutineLeakProfileWithLabels(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
-        int n;
+        int64_t n;
         bool ok;
         if(labels != nullptr && len(labels) != len(p))
         {
@@ -1818,9 +1818,9 @@ namespace golang::runtime
         return rec::CompareAndSwap(gocpp::recv((atomic::Uint32*)(p)), uint32_t(old), uint32_t(go_new));
     }
 
-    std::tuple<int, bool> goroutineLeakProfileWithLabelsConcurrent(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    std::tuple<int64_t, bool> goroutineLeakProfileWithLabelsConcurrent(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
-        int n;
+        int64_t n;
         bool ok;
         if(len(p) == 0)
         {
@@ -1843,7 +1843,7 @@ namespace golang::runtime
         }
 
         // Visit each leaked goroutine and try to record its stack.
-        int offset = {};
+        int64_t offset = {};
         forEachGRace([=](g* gp1) mutable -> void
         {
             if(readgstatus(gp1) &^ _Gscan == _Gleaked)
@@ -1868,9 +1868,9 @@ namespace golang::runtime
         return {n, true};
     }
 
-    std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    std::tuple<int64_t, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
-        int n;
+        int64_t n;
         bool ok;
         if(len(p) == 0)
         {
@@ -1878,7 +1878,7 @@ namespace golang::runtime
             // allocation estimate without bothering to STW. As long as
             // this is close, then we'll only need to STW once (on the next
             // call).
-            return {int(gcount(false)), false};
+            return {int64_t(gcount(false)), false};
         }
 
         semacquire(& goroutineProfile.sema);
@@ -1895,12 +1895,12 @@ namespace golang::runtime
         // goroutines that can vary between user and system to ensure that the count
         // doesn't change during the collection. So, check the finalizer goroutine
         // and cleanup goroutines in particular.
-        n = int(gcount(false));
+        n = int64_t(gcount(false));
         if(rec::Load(gocpp::recv(fingStatus)) & fingRunningFinalizer != 0)
         {
             n++;
         }
-        n += int(rec::Load(gocpp::recv(gcCleanups.running)));
+        n += int64_t(rec::Load(gocpp::recv(gcCleanups.running)));
 
         if(n > len(p))
         {
@@ -1969,7 +1969,7 @@ namespace golang::runtime
             raceacquire(gocpp::unsafe_pointer(& labelSync));
         }
 
-        if(n != int(endOffset))
+        if(n != int64_t(endOffset))
         {
         }
         // It's a big surprise that the number of goroutines changed while we
@@ -2079,7 +2079,7 @@ namespace golang::runtime
             go_throw("cannot read stack of running goroutine"_s);
         }
 
-        auto offset = int(rec::Add(gocpp::recv(goroutineProfile.offset), 1)) - 1;
+        auto offset = int64_t(rec::Add(gocpp::recv(goroutineProfile.offset), 1)) - 1;
 
         if(offset >= len(goroutineProfile.records))
         {
@@ -2107,9 +2107,9 @@ namespace golang::runtime
         }
     }
 
-    std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
+    std::tuple<int64_t, bool> goroutineProfileWithLabelsSync(gocpp::slice<profilerecord::StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
-        int n;
+        int64_t n;
         bool ok;
         auto gp = getg();
 
@@ -2213,9 +2213,9 @@ namespace golang::runtime
     //
     // Most clients should use the [runtime/pprof] package instead
     // of calling GoroutineProfile directly.
-    std::tuple<int, bool> GoroutineProfile(gocpp::slice<StackRecord> p)
+    std::tuple<int64_t, bool> GoroutineProfile(gocpp::slice<StackRecord> p)
     {
-        int n;
+        int64_t n;
         bool ok;
         auto records = gocpp::make(gocpp::Tag<gocpp::slice<profilerecord::StackRecord>>(), len(p));
         std::tie(n, ok) = goroutineProfileInternal(records);
@@ -2231,9 +2231,9 @@ namespace golang::runtime
         return {n, ok};
     }
 
-    std::tuple<int, bool> goroutineProfileInternal(gocpp::slice<profilerecord::StackRecord> p)
+    std::tuple<int64_t, bool> goroutineProfileInternal(gocpp::slice<profilerecord::StackRecord> p)
     {
-        int n;
+        int64_t n;
         bool ok;
         return goroutineProfileWithLabels(p, nullptr);
     }
@@ -2266,7 +2266,7 @@ namespace golang::runtime
     // and returns the number of bytes written to buf.
     // If all is true, Stack formats stack traces of all other goroutines
     // into buf after the trace for the current goroutine.
-    int Stack(gocpp::slice<unsigned char> buf, bool all)
+    int64_t Stack(gocpp::slice<unsigned char> buf, bool all)
     {
         worldStop stw = {};
         if(all)
@@ -2274,7 +2274,7 @@ namespace golang::runtime
             stw = stopTheWorld(stwAllGoroutinesStack);
         }
 
-        auto n = 0;
+        int64_t n = 0;
         if(len(buf) > 0)
         {
             auto gp = getg();

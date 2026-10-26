@@ -293,14 +293,14 @@ namespace golang::go::types
         gocpp::map<ast::Expr, exprInfo> untyped{}; // map of expressions without final type
         gocpp::slice<action> delayed{}; // stack of delayed action segments; segments are processed in FIFO order
         gocpp::slice<Object> objPath{}; // path of object dependencies during type-checking (for cycle reporting)
-        gocpp::map<Object, int> objPathIdx{}; // map of object to object path index during type-checking (for cycle reporting)
+        gocpp::map<Object, int64_t> objPathIdx{}; // map of object to object path index during type-checking (for cycle reporting)
         gocpp::slice<cleaner> cleaners{}; // list of types that may need a final cleanup at the end of type-checking
         // environment within which the current object is type-checked (valid only
         // for the duration of type-checking a specific object)
         environment environment{};
         // debugging
         gocpp::slice<positioner> posStack{}; // stack of source positions seen; used for panic tracing
-        int indent{}; // indentation for tracing
+        int64_t indent{}; // indentation for tracing
 
         using isGoStruct = void;
 
@@ -372,7 +372,7 @@ namespace golang::go::types
         void handleBailout(Checker* check, gocpp::error* err);
         gocpp::error Files(Checker* check, gocpp::slice<ast::File*> files);
         void checkFiles(Checker* check, gocpp::slice<ast::File*> files);
-        void processDelayed(Checker* check, int top);
+        void processDelayed(Checker* check, int64_t top);
         void cleanup(Checker* check);
         void recordTypeAndValueInSyntax(Checker* check, ast::Expr x, operandMode mode, golang::go::types::Type typ, constant::Value val);
         void recordCommaOkTypesInSyntax(Checker* check, ast::Expr x, golang::go::types::Type t0, golang::go::types::Type t1);

@@ -13,6 +13,8 @@
 namespace golang::go::parser
 {
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> readSource(gocpp::string filename, go_any src);
+    struct GoTag_Mode { };
+    using Mode = gocpp::defined<uint64_t, GoTag_Mode>;
 }
 #include "golang/go/ast/ast.fwd.h"
 #include "golang/go/ast/scope.fwd.h"

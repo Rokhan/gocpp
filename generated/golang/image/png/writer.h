@@ -82,6 +82,8 @@ namespace golang::image::png
 
     std::ostream& operator<<(std::ostream& os, const struct EncoderBufferPool& value);
     struct GoTag_EncoderBuffer { };
+    struct GoTag_CompressionLevel { };
+    using CompressionLevel = gocpp::defined<int64_t, GoTag_CompressionLevel>;
     struct opaquer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -145,8 +147,7 @@ namespace golang::image::png
     }
 
     std::ostream& operator<<(std::ostream& os, const struct opaquer& value);
-    int abs8(uint8_t d);
-    int levelToZlib(CompressionLevel l);
+    int64_t abs8(uint8_t d);
     struct Encoder
     {
         CompressionLevel CompressionLevel{};
@@ -166,12 +167,13 @@ namespace golang::image::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
+    int64_t levelToZlib(CompressionLevel l);
 }
 #include "golang/image/png/reader.fwd.h"
 
 namespace golang::image::png
 {
-    int filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int bpp);
+    int64_t filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int64_t bpp);
 }
 #include "golang/bufio/bufio.fwd.h"
 #include "golang/compress/zlib/writer.fwd.h"
@@ -195,7 +197,7 @@ namespace golang::image::png
         Encoder* enc{};
         io::Writer w{};
         image::Image m{};
-        int cb{};
+        int64_t cb{};
         gocpp::error err{};
         gocpp::array<unsigned char, 8> header{};
         gocpp::array<unsigned char, 4> footer{};
@@ -203,7 +205,7 @@ namespace golang::image::png
         gocpp::array<gocpp::slice<uint8_t>, nFilter> cr{};
         gocpp::slice<uint8_t> pr{};
         zlib::Writer* zw{};
-        int zwLevel{};
+        int64_t zwLevel{};
         bufio::Writer* bw{};
 
         using isGoStruct = void;
@@ -236,8 +238,8 @@ namespace golang::image::png
         void writeChunk(encoder* e, gocpp::slice<unsigned char> b, gocpp::string name);
         void writeIHDR(encoder* e);
         void writePLTEAndTRNS(encoder* e, color::Palette p);
-        std::tuple<int, gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> b);
-        gocpp::error writeImage(encoder* e, io::Writer w, image::Image m, int cb, int level);
+        std::tuple<int64_t, gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> b);
+        gocpp::error writeImage(encoder* e, io::Writer w, image::Image m, int64_t cb, int64_t level);
         void writeIDATs(encoder* e);
         void writeIEND(encoder* e);
         gocpp::error Encode(Encoder* enc, io::Writer w, image::Image m);

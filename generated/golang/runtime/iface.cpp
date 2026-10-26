@@ -191,7 +191,7 @@ namespace golang::runtime
         // We're guaranteed to hit all table entries using this probe sequence.
         auto mask = t->size - 1;
         auto h = itabHashFunc(inter, typ) & mask;
-        for(auto i = uintptr_t(1); ; i++)
+        for(uintptr_t i = uintptr_t(1); ; i++)
         {
             auto p = (itab**)(runtime::add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), h * goarch::PtrSize));
             // Use atomic read here so if we see m != nil, we also see
@@ -261,7 +261,7 @@ namespace golang::runtime
         // Insert new itab in the first empty spot in the probe sequence.
         auto mask = t->size - 1;
         auto h = itabHashFunc(m->Inter, m->Type) & mask;
-        for(auto i = uintptr_t(1); ; i++)
+        for(uintptr_t i = uintptr_t(1); ; i++)
         {
             auto p = (itab**)(runtime::add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), h * goarch::PtrSize));
             auto m2 = *p;
@@ -310,16 +310,16 @@ namespace golang::runtime
         // so can iterate over both in lock step;
         // the loop is O(ni+nt) not O(ni*nt).
         auto ni = len(inter->Methods);
-        auto nt = int(x->Mcount);
+        auto nt = int64_t(x->Mcount);
         auto xmhdr = unsafe::Slice((abi::Method*)(add(gocpp::unsafe_pointer(x), uintptr_t(x->Moff))), nt);
-        auto j = 0;
+        int64_t j = 0;
         // These are code pointers, not heap pointers. Use a uintptr slice so the
         // store emits no write barrier: on wasm a code pointer can look like a
         // heap pointer and make the GC crash (see issue 80472).
         auto methods = unsafe::Slice(& m->Fun[0], ni);
         gocpp::unsafe_pointer fun0 = {};
         imethods:
-        for(auto k = 0; k < ni; k++)
+        for(int64_t k = 0; k < ni; k++)
         {
             if(false) {
             imethods_continue:
@@ -678,7 +678,7 @@ namespace golang::runtime
         auto oldEntries = unsafe::Slice(& oldC->Entries[0], oldC->Mask + 1);
 
         // Count the number of entries we need.
-        auto n = 1;
+        int64_t n = 1;
         for(auto [gocpp_ignored, e] : oldEntries)
         {
             if(e.Typ != 0)
@@ -704,7 +704,7 @@ namespace golang::runtime
         // Fill the new table.
         auto addEntry = [=](_type* typ, itab* tab) mutable -> void
         {
-            auto h = int(typ->Hash) & (newN - 1);
+            auto h = int64_t(typ->Hash) & (newN - 1);
             for(; ; )
             {
                 if(newEntries[h].Typ == 0)
@@ -738,7 +738,7 @@ namespace golang::runtime
     // an itab for the pair <t, s.Cases[i]>.
     // If there is no match, return N,nil, where N is the number
     // of cases.
-    std::tuple<int, itab*> interfaceSwitch(abi::InterfaceSwitch* s, _type* t)
+    std::tuple<int64_t, itab*> interfaceSwitch(abi::InterfaceSwitch* s, _type* t)
     {
         auto cases = unsafe::Slice(& s->Cases[0], s->NCases);
 
@@ -796,12 +796,12 @@ namespace golang::runtime
     // buildInterfaceSwitchCache constructs an interface switch cache
     // containing all the entries from oldC plus the new entry
     // (typ,case_,tab).
-    abi::InterfaceSwitchCache* buildInterfaceSwitchCache(abi::InterfaceSwitchCache* oldC, _type* typ, int case_, itab* tab)
+    abi::InterfaceSwitchCache* buildInterfaceSwitchCache(abi::InterfaceSwitchCache* oldC, _type* typ, int64_t case_, itab* tab)
     {
         auto oldEntries = unsafe::Slice(& oldC->Entries[0], oldC->Mask + 1);
 
         // Count the number of entries we need.
-        auto n = 1;
+        int64_t n = 1;
         for(auto [gocpp_ignored, e] : oldEntries)
         {
             if(e.Typ != 0)
@@ -825,9 +825,9 @@ namespace golang::runtime
         auto newEntries = unsafe::Slice(& newC->Entries[0], newN);
 
         // Fill the new table.
-        auto addEntry = [=](_type* typ, int case_, itab* tab) mutable -> void
+        auto addEntry = [=](_type* typ, int64_t case_, itab* tab) mutable -> void
         {
-            auto h = int(typ->Hash) & (newN - 1);
+            auto h = int64_t(typ->Hash) & (newN - 1);
             for(; ; )
             {
                 if(newEntries[h].Typ == 0)
@@ -883,7 +883,7 @@ namespace golang::runtime
         // Note: only runs during stop the world or with itabLock held,
         // so no other locks/atomics needed.
         auto t = itabTable;
-        for(auto i = uintptr_t(0); i < t->size; i++)
+        for(uintptr_t i = uintptr_t(0); i < t->size; i++)
         {
             auto m = *(itab**)(add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), i * goarch::PtrSize));
             if(m != nullptr)

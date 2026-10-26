@@ -9,8 +9,8 @@ namespace golang::internal::poll
     struct pollDesc;
     // Error values returned by runtime_pollReset and runtime_pollWait.
     // These must match the values in runtime/netpoll.go.
-    const long pollNoError = 0;
-    const long pollErrClosing = 1;
-    const long pollErrTimeout = 2;
-    const long pollErrNotPollable = 3;
+    inline constexpr long pollNoError = 0;
+    inline constexpr long pollErrClosing = 1;
+    inline constexpr long pollErrTimeout = 2;
+    inline constexpr long pollErrNotPollable = 3;
 }

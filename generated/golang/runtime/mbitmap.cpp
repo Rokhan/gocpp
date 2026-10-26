@@ -252,7 +252,7 @@ namespace golang::runtime
             return {tp, 0};
         }
         // BSFQ
-        int i = {};
+        int64_t i = {};
         if(goarch::PtrSize == 8)
         {
             i = sys::TrailingZeros64(uint64_t(tp.mask));
@@ -668,7 +668,7 @@ namespace golang::runtime
     gocpp::slice<uintptr_t> heapBitsSlice(uintptr_t spanBase, uintptr_t spanSize, uintptr_t elemsize)
     {
         auto [base, bitmapSize] = spanHeapBitsRange(spanBase, spanSize, elemsize);
-        auto elems = int(bitmapSize / goarch::PtrSize);
+        auto elems = int64_t(bitmapSize / goarch::PtrSize);
         notInHeapSlice sl = {};
         sl = notInHeapSlice {(notInHeap*)(gocpp::unsafe_pointer(base)), elems, elems};
         return *(gocpp::slice<uintptr_t>*)(gocpp::unsafe_pointer(& sl));
@@ -950,11 +950,11 @@ namespace golang::runtime
         {
             maxIterBytes = dataSize;
         }
-        auto bad = false;
-        for(auto i = uintptr_t(0); i < maxIterBytes; i += goarch::PtrSize)
+        bool bad = false;
+        for(uintptr_t i = uintptr_t(0); i < maxIterBytes; i += goarch::PtrSize)
         {
             // Compute the pointer bit we want at offset i.
-            auto want = false;
+            bool want = false;
             if(i < span->elemsize)
             {
                 auto off = i % typ->Size_;
@@ -1012,7 +1012,7 @@ namespace golang::runtime
 
     void doubleCheckHeapPointersInterior(uintptr_t x, uintptr_t interior, uintptr_t size, uintptr_t dataSize, _type* typ, _type** header, mspan* span)
     {
-        auto bad = false;
+        bool bad = false;
         if(interior < x)
         {
             print("runtime: interior="_s, hex(interior), " x="_s, hex(x), "\n"_s);
@@ -1023,7 +1023,7 @@ namespace golang::runtime
         for(auto i = off; i < off + size; i += goarch::PtrSize)
         {
             // Compute the pointer bit we want at offset i.
-            auto want = false;
+            bool want = false;
             if(i < span->elemsize)
             {
                 auto off = i % typ->Size_;
@@ -1081,7 +1081,7 @@ namespace golang::runtime
         for(auto i = off; i < off + size; i += goarch::PtrSize)
         {
             // Compute the pointer bit we want at offset i.
-            auto want = false;
+            bool want = false;
             if(i < dataSize)
             {
                 auto off = i % typ->Size_;
@@ -1121,7 +1121,7 @@ namespace golang::runtime
         }
         auto tp0 = rec::typePointersOfType(gocpp::recv(s), typ, addr);
         auto tp1 = rec::typePointersOf(gocpp::recv(s), addr, size);
-        auto failed = false;
+        bool failed = false;
         for(; ; )
         {
             uintptr_t addr0 = {};
@@ -1166,7 +1166,7 @@ namespace golang::runtime
     {
         print("runtime: tp.elem="_s, hex(tp.elem), " tp.typ="_s, gocpp::unsafe_pointer(tp.typ), "\n"_s);
         print("runtime: tp.addr="_s, hex(tp.addr), " tp.mask="_s);
-        for(auto i = uintptr_t(0); i < ptrBits; i++)
+        for(uintptr_t i = uintptr_t(0); i < ptrBits; i++)
         {
             if(tp.mask & (uintptr_t(1) << i) != 0)
             {
@@ -1288,7 +1288,7 @@ namespace golang::runtime
     void rec::refillAllocCache(mspan* s, uint16_t whichByte)
     {
         auto bytes = (gocpp::array_ptr<gocpp::array<uint8_t, 8>>)(gocpp::unsafe_pointer(rec::bytep(gocpp::recv(s->allocBits), uintptr_t(whichByte))));
-        auto aCache = uint64_t(0);
+        uint64_t aCache = uint64_t(0);
         aCache |= uint64_t(bytes[0]);
         aCache |= uint64_t(bytes[1]) << (1 * 8);
         aCache |= uint64_t(bytes[2]) << (2 * 8);
@@ -1344,7 +1344,7 @@ namespace golang::runtime
             return snelems;
         }
 
-        s->allocCache >>= (unsigned int)(bitIndex + 1);
+        s->allocCache >>= (uint64_t)(bitIndex + 1);
         sfreeindex = result + 1;
 
         if(sfreeindex % 64 == 0 && sfreeindex != snelems)
@@ -1649,7 +1649,7 @@ namespace golang::runtime
         auto mask = uint8_t(1) << (word % 8);
 
         auto buf = & rec::ptr(gocpp::recv(getg()->m->p))->wbBuf;
-        for(auto i = uintptr_t(0); i < size; i += goarch::PtrSize)
+        for(uintptr_t i = uintptr_t(0); i < size; i += goarch::PtrSize)
         {
             if(mask == 0)
             {
@@ -1714,7 +1714,7 @@ namespace golang::runtime
         auto ptrmask = getGCMask(typ);
         auto buf = & rec::ptr(gocpp::recv(getg()->m->p))->wbBuf;
         uint32_t bits = {};
-        for(auto i = uintptr_t(0); i < typ->PtrBytes; i += goarch::PtrSize)
+        for(uintptr_t i = uintptr_t(0); i < typ->PtrBytes; i += goarch::PtrSize)
         {
             if(i & (goarch::PtrSize * 8 - 1) == 0)
             {
@@ -1738,15 +1738,15 @@ namespace golang::runtime
 
     // countAlloc returns the number of objects allocated in span s by
     // scanning the mark bitmap.
-    int rec::countAlloc(mspan* s)
+    int64_t rec::countAlloc(mspan* s)
     {
-        auto count = 0;
+        int64_t count = 0;
         auto bytes = divRoundUp(uintptr_t(s->nelems), 8);
         // Iterate over each 8-byte chunk and count allocations
         // with an intrinsic. Note that newMarkBits guarantees that
         // gcmarkBits will be 8-byte aligned, so we don't have to
         // worry about edge cases, irrelevant bits will simply be zero.
-        for(auto i = uintptr_t(0); i < bytes; i += 8)
+        for(uintptr_t i = uintptr_t(0); i < bytes; i += 8)
         {
             // Extract 64 bits from the byte pointer and get a OnesCount.
             // Note that the unsafe cast here doesn't preserve endianness,
@@ -1866,7 +1866,7 @@ namespace golang::runtime
                     goto Run_break;
                 }
                 auto nbyte = n / 8;
-                for(auto i = uintptr_t(0); i < nbyte; i++)
+                for(uintptr_t i = uintptr_t(0); i < nbyte; i++)
                 {
                     bits |= uintptr_t(*p) << nbits;
                     p = add1(p);
@@ -1886,7 +1886,7 @@ namespace golang::runtime
             // Repeat. If n == 0, it is encoded in a varint in the next bytes.
             if(n == 0)
             {
-                for(auto off = (unsigned int)(0); ; off += 7)
+                for(uint64_t off = (uint64_t)(0); ; off += 7)
                 {
                     auto x = uintptr_t(*p);
                     p = add1(p);
@@ -1899,8 +1899,8 @@ namespace golang::runtime
             }
 
             // Count is encoded in a varint in the next bytes.
-            auto c = uintptr_t(0);
-            for(auto off = (unsigned int)(0); ; off += 7)
+            uintptr_t c = uintptr_t(0);
+            for(uint64_t off = (uint64_t)(0); ; off += 7)
             {
                 auto x = uintptr_t(*p);
                 p = add1(p);
@@ -2060,7 +2060,7 @@ namespace golang::runtime
 
     void dumpGCProg(unsigned char* p)
     {
-        auto nptr = 0;
+        int64_t nptr = 0;
         for(; ; )
         {
             auto x = *p;
@@ -2073,37 +2073,37 @@ namespace golang::runtime
             if(x & 0x80 == 0)
             {
                 print("\t"_s, nptr, " lit "_s, x, ":"_s);
-                auto n = int(x + 7) / 8;
-                for(auto i = 0; i < n; i++)
+                auto n = int64_t(x + 7) / 8;
+                for(int64_t i = 0; i < n; i++)
                 {
                     print(" "_s, hex(*p));
                     p = add1(p);
                 }
                 print("\n"_s);
-                nptr += int(x);
+                nptr += int64_t(x);
             }
             else
             {
-                auto nbit = int(x &^ 0x80);
+                auto nbit = int64_t(x &^ 0x80);
                 if(nbit == 0)
                 {
-                    for(auto nb = (unsigned int)(0); ; nb += 7)
+                    for(uint64_t nb = (uint64_t)(0); ; nb += 7)
                     {
                         auto x = *p;
                         p = add1(p);
-                        nbit |= int(x & 0x7f) << nb;
+                        nbit |= int64_t(x & 0x7f) << nb;
                         if(x & 0x80 == 0)
                         {
                             break;
                         }
                     }
                 }
-                auto count = 0;
-                for(auto nb = (unsigned int)(0); ; nb += 7)
+                int64_t count = 0;
+                for(uint64_t nb = (uint64_t)(0); ; nb += 7)
                 {
                     auto x = *p;
                     p = add1(p);
-                    count |= int(x & 0x7f) << nb;
+                    count |= int64_t(x & 0x7f) << nb;
                     if(x & 0x80 == 0)
                     {
                         break;
@@ -2150,7 +2150,7 @@ namespace golang::runtime
                 auto bitmap = datap->gcdatamask.bytedata;
                 auto n = et->Size_;
                 mask = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n / goarch::PtrSize);
-                for(auto i = uintptr_t(0); i < n; i += goarch::PtrSize)
+                for(uintptr_t i = uintptr_t(0); i < n; i += goarch::PtrSize)
                 {
                     auto off = (uintptr_t(p) + i - datap->data) / goarch::PtrSize;
                     mask[i / goarch::PtrSize] = (*addb(bitmap, off / 8) >> (off % 8)) & 1;
@@ -2164,7 +2164,7 @@ namespace golang::runtime
                 auto bitmap = datap->gcbssmask.bytedata;
                 auto n = et->Size_;
                 mask = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n / goarch::PtrSize);
-                for(auto i = uintptr_t(0); i < n; i += goarch::PtrSize)
+                for(uintptr_t i = uintptr_t(0); i < n; i += goarch::PtrSize)
                 {
                     auto off = (uintptr_t(p) + i - datap->bss) / goarch::PtrSize;
                     mask[i / goarch::PtrSize] = (*addb(bitmap, off / 8) >> (off % 8)) & 1;
@@ -2240,7 +2240,7 @@ namespace golang::runtime
             // It's OK if maskFromType has pointers in elemsize that extend
             // past the actual populated space; we checked above that all
             // that space is zeroed, so just the GC will just see nil pointers.
-            auto differs = false;
+            bool differs = false;
             for(auto [i, gocpp_ignored] : maskFromHeap)
             {
                 if(maskFromHeap[i] != maskFromType[i])
@@ -2281,7 +2281,7 @@ namespace golang::runtime
         // stack
         if(auto gp = getg(); gp->m->curg->stack.lo <= uintptr_t(p) && uintptr_t(p) < gp->m->curg->stack.hi)
         {
-            auto found = false;
+            bool found = false;
             unwinder u = {};
             for(rec::initAt(gocpp::recv(u), gp->m->curg->sched.pc, gp->m->curg->sched.sp, 0, gp->m->curg, 0); rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
             {
@@ -2301,7 +2301,7 @@ namespace golang::runtime
                 auto size = uintptr_t(locals.n) * goarch::PtrSize;
                 auto n = (ptrtype*)(gocpp::unsafe_pointer(t))->Elem->Size_;
                 mask = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n / goarch::PtrSize);
-                for(auto i = uintptr_t(0); i < n; i += goarch::PtrSize)
+                for(uintptr_t i = uintptr_t(0); i < n; i += goarch::PtrSize)
                 {
                     auto off = (uintptr_t(p) + i - u.frame.varp + size) / goarch::PtrSize;
                     mask[i / goarch::PtrSize] = rec::ptrbit(gocpp::recv(locals), off);

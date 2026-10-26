@@ -54,7 +54,7 @@ namespace golang::unicode
     bool IsUpper(gocpp::rune r);
     bool IsLower(gocpp::rune r);
     bool IsTitle(gocpp::rune r);
-    gocpp::rune To(int _case, gocpp::rune r);
+    gocpp::rune To(int64_t _case, gocpp::rune r);
     gocpp::rune ToUpper(gocpp::rune r);
     gocpp::rune ToLower(gocpp::rune r);
     gocpp::rune ToTitle(gocpp::rune r);
@@ -80,7 +80,7 @@ namespace golang::unicode
     {
         gocpp::slice<Range16> R16{};
         gocpp::slice<Range32> R32{};
-        int LatinOffset{}; // number of entries in R16 with Hi <= MaxLatin1
+        int64_t LatinOffset{}; // number of entries in R16 with Hi <= MaxLatin1
 
         using isGoStruct = void;
 
@@ -118,8 +118,8 @@ namespace golang::unicode
     bool Is(RangeTable* rangeTab, gocpp::rune r);
     bool isExcludingLatin(RangeTable* rangeTab, gocpp::rune r);
     CaseRange* lookupCaseRange(gocpp::rune r, gocpp::slice<CaseRange> caseRange);
-    gocpp::rune convertCase(int _case, gocpp::rune r, CaseRange* cr);
-    std::tuple<gocpp::rune, bool> to(int _case, gocpp::rune r, gocpp::slice<CaseRange> caseRange);
+    gocpp::rune convertCase(int64_t _case, gocpp::rune r, CaseRange* cr);
+    std::tuple<gocpp::rune, bool> to(int64_t _case, gocpp::rune r, gocpp::slice<CaseRange> caseRange);
 
     namespace rec
     {

@@ -7,7 +7,7 @@
 namespace golang::internal::syscall::windows
 {
     // Openat flags supported by syscall.Open.
-    const long O_DIRECTORY = 0x04000;
+    inline constexpr long O_DIRECTORY = 0x04000;
     // Openat flags not supported by syscall.Open.
     //
     // These are invented values, use values in the 33-63 bit range
@@ -16,9 +16,10 @@ namespace golang::internal::syscall::windows
     // When adding a new flag here, add an unexported version to
     // the set of invented O_ values in syscall/types_windows.go
     // to avoid overlap.
-    const long O_NOFOLLOW_ANY = 0x200000000;
-    const long O_WRITE_ATTRS = 0x800000000;
-    using SymlinkatFlags = unsigned int;
-    const windows::SymlinkatFlags SYMLINKAT_DIRECTORY = SymlinkatFlags(1 << 0);
-    const windows::SymlinkatFlags SYMLINKAT_RELATIVE = SymlinkatFlags(1 << 1);
+    inline constexpr long O_NOFOLLOW_ANY = 0x200000000LL;
+    inline constexpr long O_WRITE_ATTRS = 0x800000000LL;
+    struct GoTag_SymlinkatFlags;
+    using SymlinkatFlags = gocpp::defined<uint64_t, GoTag_SymlinkatFlags>;
+    inline constexpr windows::SymlinkatFlags SYMLINKAT_DIRECTORY = SymlinkatFlags(1 << 0);
+    inline constexpr windows::SymlinkatFlags SYMLINKAT_RELATIVE = SymlinkatFlags(1 << 1);
 }

@@ -114,7 +114,7 @@ namespace golang::io::fs
         struct IFile
         {
             virtual std::tuple<FileInfo, gocpp::error> vStat() = 0;
-            virtual std::tuple<int, gocpp::error> vRead(gocpp::slice<unsigned char> _1) = 0;
+            virtual std::tuple<int64_t, gocpp::error> vRead(gocpp::slice<unsigned char> _1) = 0;
             virtual gocpp::error vClose() = 0;
             virtual void* getPtr() = 0;
         };
@@ -129,7 +129,7 @@ namespace golang::io::fs
 
             std::tuple<FileInfo, gocpp::error> vStat() override;
 
-            std::tuple<int, gocpp::error> vRead(gocpp::slice<unsigned char> _1) override;
+            std::tuple<int64_t, gocpp::error> vRead(gocpp::slice<unsigned char> _1) override;
 
             gocpp::error vClose() override;
 
@@ -151,8 +151,8 @@ namespace golang::io::fs
         std::tuple<FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct File, false>& self);
         std::tuple<FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct File>& self);
 
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct File, false>& self, gocpp::slice<unsigned char> _1);
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct File>& self, gocpp::slice<unsigned char> _1);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct File, false>& self, gocpp::slice<unsigned char> _1);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct File>& self, gocpp::slice<unsigned char> _1);
 
         gocpp::error Close(const gocpp::PtrRecv<struct File, false>& self);
         gocpp::error Close(const gocpp::ObjRecv<struct File>& self);
@@ -267,6 +267,8 @@ namespace golang::io::fs
     gocpp::error errExist();
     gocpp::error errNotExist();
     gocpp::error errClosed();
+    struct GoTag_FileMode { };
+    using FileMode = gocpp::defined<uint32_t, GoTag_FileMode>;
     struct PathError
     {
         gocpp::string Op{};
@@ -390,7 +392,7 @@ namespace golang::io::fs
             // to the end of the directory), it returns the slice and a nil error.
             // If it encounters an error before the end of the directory,
             // ReadDir returns the DirEntry list read until that point and a non-nil error.
-            virtual std::tuple<gocpp::slice<DirEntry>, gocpp::error> vReadDir(int n) = 0;
+            virtual std::tuple<gocpp::slice<DirEntry>, gocpp::error> vReadDir(int64_t n) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -402,7 +404,7 @@ namespace golang::io::fs
                 value.reset(ptr);
             }
 
-            std::tuple<gocpp::slice<DirEntry>, gocpp::error> vReadDir(int n) override;
+            std::tuple<gocpp::slice<DirEntry>, gocpp::error> vReadDir(int64_t n) override;
 
             void* getPtr() override
             {
@@ -419,14 +421,14 @@ namespace golang::io::fs
 
     namespace rec
     {
-        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::PtrRecv<struct ReadDirFile, false>& self, int n);
-        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::ObjRecv<struct ReadDirFile>& self, int n);
+        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::PtrRecv<struct ReadDirFile, false>& self, int64_t n);
+        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::ObjRecv<struct ReadDirFile>& self, int64_t n);
 
         gocpp::error Close(const gocpp::PtrRecv<struct ReadDirFile, false>& self);
         gocpp::error Close(const gocpp::ObjRecv<struct ReadDirFile>& self);
 
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadDirFile, false>& self, gocpp::slice<unsigned char> param0);
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadDirFile>& self, gocpp::slice<unsigned char> param0);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct ReadDirFile, false>& self, gocpp::slice<unsigned char> param0);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct ReadDirFile>& self, gocpp::slice<unsigned char> param0);
 
         std::tuple<fs::FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct ReadDirFile, false>& self);
         std::tuple<fs::FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct ReadDirFile>& self);

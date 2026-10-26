@@ -62,7 +62,7 @@ namespace golang::os
         // does not escape to the heap when returning
         // buf to dirBufPool.
         gocpp::slice<unsigned char>* buf{}; // buffer for directory I/O
-        int bufp{}; // location of next record in buf
+        int64_t bufp{}; // location of next record in buf
         syscall::Handle h{};
         uint32_t vol{};
         uint32_t go_class{}; // type of entries in buf
@@ -94,7 +94,7 @@ namespace golang::os
     {
         void close(dirInfo* d);
         void init(dirInfo* d, syscall::Handle h);
-        std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, gocpp::error> readdir(File* file, int n, readdirMode mode);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, gocpp::error> readdir(File* file, int64_t n, readdirMode mode);
         gocpp::string Name(dirEntry de);
         bool IsDir(dirEntry de);
         FileMode Type(dirEntry de);

@@ -117,7 +117,7 @@ namespace golang::compress::zlib
     // Note that the exact bytes written to w are not covered by the Go 1
     // compatibility promise. Callers, including tests, should not depend on the
     // exact written bytes.
-    std::tuple<Writer*, gocpp::error> NewWriterLevel(io::Writer w, int level)
+    std::tuple<Writer*, gocpp::error> NewWriterLevel(io::Writer w, int64_t level)
     {
         return NewWriterLevelDict(w, level, nullptr);
     }
@@ -131,7 +131,7 @@ namespace golang::compress::zlib
     // Note that the exact bytes written to w are not covered by the Go 1
     // compatibility promise. Callers, including tests, should not depend on the
     // exact written bytes.
-    std::tuple<Writer*, gocpp::error> NewWriterLevelDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
+    std::tuple<Writer*, gocpp::error> NewWriterLevelDict(io::Writer w, int64_t level, gocpp::slice<unsigned char> dict)
     {
         if(level < HuffmanOnly || level > BestCompression)
         {
@@ -255,9 +255,9 @@ namespace golang::compress::zlib
     // Write writes a compressed form of p to the underlying [io.Writer]. The
     // compressed bytes are not necessarily flushed until the [Writer] is closed or
     // explicitly flushed.
-    std::tuple<int, gocpp::error> rec::Write(Writer* z, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Write(Writer* z, gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         if(! z->wroteHeader)
         {

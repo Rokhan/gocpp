@@ -20,10 +20,10 @@ namespace golang::main
     {
     }
 
-    std::tuple<int, int> split(int sum)
+    std::tuple<int64_t, int64_t> split(int64_t sum)
     {
-        int x;
-        int y;
+        int64_t x;
+        int64_t y;
         x = sum * 4 / 9;
         y = sum - x;
         return {x, y};

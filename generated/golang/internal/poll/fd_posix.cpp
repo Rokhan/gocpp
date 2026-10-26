@@ -27,7 +27,7 @@ namespace golang::internal::poll
 
     // eofError returns io.EOF when fd is available for reading end of
     // file.
-    gocpp::error rec::eofError(FD* fd, int n, gocpp::error err)
+    gocpp::error rec::eofError(FD* fd, int64_t n, gocpp::error err)
     {
         if(n == 0 && err == nullptr && fd->ZeroReadIsEOF)
         {
@@ -37,7 +37,7 @@ namespace golang::internal::poll
     }
 
     // Shutdown wraps syscall.Shutdown.
-    gocpp::error rec::Shutdown(FD* fd, int how)
+    gocpp::error rec::Shutdown(FD* fd, int64_t how)
     {
         gocpp::Defer defer;
         try
@@ -56,7 +56,7 @@ namespace golang::internal::poll
     }
 
     // Fchown wraps syscall.Fchown.
-    gocpp::error rec::Fchown(FD* fd, int uid, int gid)
+    gocpp::error rec::Fchown(FD* fd, int64_t uid, int64_t gid)
     {
         gocpp::Defer defer;
         try

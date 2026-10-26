@@ -223,7 +223,7 @@ namespace golang::encoding::json::v2
         remove(*m, p);
     }
 
-    int sliceLen(reflect::Value v)
+    int64_t sliceLen(reflect::Value v)
     {
         if(rec::Kind(gocpp::recv(v)) == reflect::Slice)
         {
@@ -605,11 +605,11 @@ namespace golang::encoding::json::v2
     std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase32Hex = [&](auto x, auto y){ return base32::rec::AppendEncode(base32::HexEncoding, x, y); };
     std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase64 = [&](auto x, auto y){ return base64::rec::AppendEncode(base64::StdEncoding, x, y); };
     std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase64URL = [&](auto x, auto y){ return base64::rec::AppendEncode(base64::URLEncoding, x, y); };
-    std::function<int (int)> encodedLenBase16 = hex::EncodedLen;
-    std::function<int (int)> encodedLenBase32 = [&](auto x){ return base32::rec::EncodedLen(base32::StdEncoding, x); };
-    std::function<int (int)> encodedLenBase32Hex = [&](auto x){ return base32::rec::EncodedLen(base32::HexEncoding, x); };
-    std::function<int (int)> encodedLenBase64 = [&](auto x){ return base64::rec::EncodedLen(base64::StdEncoding, x); };
-    std::function<int (int)> encodedLenBase64URL = [&](auto x){ return base64::rec::EncodedLen(base64::URLEncoding, x); };
+    std::function<int64_t (int64_t)> encodedLenBase16 = hex::EncodedLen;
+    std::function<int64_t (int64_t)> encodedLenBase32 = [&](auto x){ return base32::rec::EncodedLen(base32::StdEncoding, x); };
+    std::function<int64_t (int64_t)> encodedLenBase32Hex = [&](auto x){ return base32::rec::EncodedLen(base32::HexEncoding, x); };
+    std::function<int64_t (int64_t)> encodedLenBase64 = [&](auto x){ return base64::rec::EncodedLen(base64::StdEncoding, x); };
+    std::function<int64_t (int64_t)> encodedLenBase64URL = [&](auto x){ return base64::rec::EncodedLen(base64::URLEncoding, x); };
     std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase16 = hex::AppendDecode;
     std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase32 = [&](auto x, auto y){ return base32::rec::AppendDecode(base32::StdEncoding, x, y); };
     std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase32Hex = [&](auto x, auto y){ return base32::rec::AppendDecode(base32::HexEncoding, x, y); };
@@ -952,7 +952,7 @@ namespace golang::encoding::json::v2
                         {
                             break;
                         }
-                        int negOffset = {};
+                        int64_t negOffset = {};
                         auto neg = len(val) > 0 && val[0] == '-';
                         if(neg)
                         {
@@ -1511,7 +1511,7 @@ namespace golang::encoding::json::v2
                                 // TODO: If AllowDuplicateNames is enabled, then sort according
                                 // to reflect.Value as well if the names are equal.
                                 // See internal/fmtsort.
-                                slices::SortFunc(members, [=](member x, member y) mutable -> int
+                                slices::SortFunc(members, [=](member x, member y) mutable -> int64_t
                                 {
                                     return strings::Compare(x.name, y.name);
                                 });
@@ -1812,7 +1812,7 @@ namespace golang::encoding::json::v2
                 return err;
             }
             uintSet seenIdxs = {};
-            auto prevIdx = - 1;
+            int64_t prevIdx = - 1;
             // we manually ensure unique names below
             rec::DisableNamespace(gocpp::recv(xe->state.Tokens.Last));
             for(auto [i, gocpp_ignored] : fields.flattened)
@@ -1950,7 +1950,7 @@ namespace golang::encoding::json::v2
                 // duplicate names with those from the embedded fallback.
                 if(! rec::Get(gocpp::recv(mo->Flags), jsonflags::AllowDuplicateNames) && fields.embeddedFallback != nullptr)
                 {
-                    rec::insert(gocpp::recv(seenIdxs), (unsigned int)(f->id));
+                    rec::insert(gocpp::recv(seenIdxs), (uint64_t)(f->id));
                 }
                 prevIdx = f->id;
             }
@@ -1967,13 +1967,13 @@ namespace golang::encoding::json::v2
                         {
                             if(auto f = fields.byActualName.get(gocpp::string(name)); f != nullptr)
                             {
-                                return rec::insert(gocpp::recv(seenIdxs), (unsigned int)(f->id));
+                                return rec::insert(gocpp::recv(seenIdxs), (uint64_t)(f->id));
                             }
                             for(auto [gocpp_ignored, f] : foldedFields)
                             {
                                 if(rec::matchFoldedName(gocpp::recv(f), name, & mo->Flags))
                                 {
-                                    return rec::insert(gocpp::recv(seenIdxs), (unsigned int)(f->id));
+                                    return rec::insert(gocpp::recv(seenIdxs), (uint64_t)(f->id));
                                 }
                             }
                         }
@@ -2056,7 +2056,7 @@ namespace golang::encoding::json::v2
                             auto f = fields.byActualName.get(gocpp::string(name));
                             if(f == nullptr)
                             {
-                                int numMatch = {};
+                                int64_t numMatch = {};
                                 for(auto [gocpp_ignored, f2] : rec::lookupByFoldedName(gocpp::recv(fields), name))
                                 {
                                     if(rec::matchFoldedName(gocpp::recv(f2), name, & uo->Flags))
@@ -2113,7 +2113,7 @@ namespace golang::encoding::json::v2
                                     continue;
                                 }
                             }
-                            if(! rec::Get(gocpp::recv(uo->Flags), jsonflags::AllowDuplicateNames) && ! rec::insert(gocpp::recv(seenIdxs), (unsigned int)(f->id)))
+                            if(! rec::Get(gocpp::recv(uo->Flags), jsonflags::AllowDuplicateNames) && ! rec::insert(gocpp::recv(seenIdxs), (uint64_t)(f->id)))
                             {
                                 // TODO: Unread the object name.
                                 return newDuplicateNameError(rec::StackPointer(gocpp::recv(dec)), nullptr, rec::InputOffset(gocpp::recv(dec)) - len64(val));
@@ -2179,7 +2179,7 @@ namespace golang::encoding::json::v2
         return & fncs;
     }
 
-    addressableValue rec::fieldByIndex(addressableValue va, gocpp::slice<int> index, bool mayAlloc)
+    addressableValue rec::fieldByIndex(addressableValue va, gocpp::slice<int64_t> index, bool mayAlloc)
     {
         for(auto [gocpp_ignored, i] : index)
         {
@@ -2443,13 +2443,13 @@ namespace golang::encoding::json::v2
                             std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, rec::Elem(gocpp::recv(t)));
                         }
                         // we do not know the cleanliness of unused capacity
-                        auto mustZero = true;
+                        bool mustZero = true;
                         auto cap = rec::Cap(gocpp::recv(va));
                         if(cap > 0)
                         {
                             rec::SetLen(gocpp::recv(va), cap);
                         }
-                        int i = {};
+                        int64_t i = {};
                         gocpp::error errUnmarshal = {};
                         for(; rec::PeekKind(gocpp::recv(dec)) != ']'; )
                         {
@@ -2592,7 +2592,7 @@ namespace golang::encoding::json::v2
                         {
                             std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, rec::Elem(gocpp::recv(t)));
                         }
-                        int i = {};
+                        int64_t i = {};
                         gocpp::error errUnmarshal = {};
                         for(; rec::PeekKind(gocpp::recv(dec)) != ']'; )
                         {
@@ -3247,12 +3247,12 @@ namespace golang::encoding::json::v2
         }
     }
 
-    bool rec::has(uintSet64 s, unsigned int i)
+    bool rec::has(uintSet64 s, uint64_t i)
     {
         return s & (1 << i) > 0;
     }
 
-    void rec::set(uintSet64* s, unsigned int i)
+    void rec::set(uintSet64* s, uint64_t i)
     {
         *s |= 1 << i;
     }
@@ -3292,7 +3292,7 @@ namespace golang::encoding::json::v2
     }
 
     // has reports whether i is in the set.
-    bool rec::has(uintSet* s, unsigned int i)
+    bool rec::has(uintSet* s, uint64_t i)
     {
         if(i < 64)
         {
@@ -3301,13 +3301,13 @@ namespace golang::encoding::json::v2
         else
         {
             i -= 64;
-            auto [iHi, iLo] = std::tuple{int(i / 64), i % 64};
+            auto [iHi, iLo] = std::tuple{int64_t(i / 64), i % 64};
             return iHi < len(s->hi) && rec::has(gocpp::recv(s->hi[iHi]), iLo);
         }
     }
 
     // insert inserts i into the set and reports whether it was the first insertion.
-    bool rec::insert(uintSet* s, unsigned int i)
+    bool rec::insert(uintSet* s, uint64_t i)
     {
         // TODO: Make this inlinable at least for the lower 64-bit case.
         if(i < 64)
@@ -3319,7 +3319,7 @@ namespace golang::encoding::json::v2
         else
         {
             i -= 64;
-            auto [iHi, iLo] = std::tuple{int(i / 64), i % 64};
+            auto [iHi, iLo] = std::tuple{int64_t(i / 64), i % 64};
             if(iHi >= len(s->hi))
             {
                 s->hi = append(s->hi, gocpp::make(gocpp::Tag<gocpp::slice<uintSet64>>(), iHi + 1 - len(s->hi)));

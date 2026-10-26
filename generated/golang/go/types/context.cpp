@@ -121,7 +121,7 @@ namespace golang::go::types
     {
         return gocpp::InitPtr<Context>([=](auto& x) {
             x.typeMap = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, gocpp::slice<ctxtEntry>>>());
-            x.originIDs = gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, int>>());
+            x.originIDs = gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, int64_t>>());
         });
     }
 
@@ -223,7 +223,7 @@ namespace golang::go::types
     }
 
     // getID returns a unique ID for the type t.
-    int rec::getID(Context* ctxt, golang::go::types::Type t)
+    int64_t rec::getID(Context* ctxt, golang::go::types::Type t)
     {
         gocpp::Defer defer;
         try

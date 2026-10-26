@@ -140,8 +140,8 @@ namespace golang::go::types
         dependency obj{}; // object represented by this node
         nodeSet pred{}; // consumers and dependencies of this node (lazily initialized)
         nodeSet succ{};
-        int index{}; // node index in graph slice/priority queue
-        int ndeps{}; // number of outstanding dependencies before this object can be initialized
+        int64_t index{}; // node index in graph slice/priority queue
+        int64_t ndeps{}; // number of outstanding dependencies before this object can be initialized
 
         using isGoStruct = void;
 
@@ -168,11 +168,11 @@ namespace golang::go::types
     {
         void initOrder(Checker* check);
         void reportCycle(Checker* check, gocpp::slice<Object> cycle);
-        int cost(graphNode* n);
+        int64_t cost(graphNode* n);
         void add(nodeSet* s, graphNode* p);
-        int Len(nodeQueue a);
-        void Swap(nodeQueue a, int i, int j);
-        bool Less(nodeQueue a, int i, int j);
+        int64_t Len(nodeQueue a);
+        void Swap(nodeQueue a, int64_t i, int64_t j);
+        bool Less(nodeQueue a, int64_t i, int64_t j);
         void Push(nodeQueue* a, go_any x);
         go_any Pop(nodeQueue* a);
     }

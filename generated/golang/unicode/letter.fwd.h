@@ -6,29 +6,29 @@
 
 namespace golang::unicode
 {
-    const char MaxRune = '\U0010FFFF';
-    const char ReplacementChar = '\uFFFD';
-    const char MaxASCII = '\u007F';
-    const char MaxLatin1 = '\u00FF';
+    inline constexpr char MaxRune = '\U0010FFFF';
+    inline constexpr char ReplacementChar = '\uFFFD';
+    inline constexpr char MaxASCII = '\u007F';
+    inline constexpr char MaxLatin1 = '\u00FF';
     struct RangeTable;
     struct Range16;
     struct Range32;
     struct CaseRange;
     struct GoTag_SpecialCase;
     // Indices into the Delta arrays inside CaseRanges for case mapping.
-    const int UpperCase = 0;
-    const int LowerCase = 1;
-    const int TitleCase = 2;
-    const int MaxCase = 3;
+    inline constexpr int64_t UpperCase = 0;
+    inline constexpr int64_t LowerCase = 1;
+    inline constexpr int64_t TitleCase = 2;
+    inline constexpr int64_t MaxCase = 3;
     struct GoTag_d;
     using d = gocpp::defined<gocpp::array<gocpp::rune, MaxCase>, GoTag_d>;
     // linearMax is the maximum size table for linear search for non-Latin1 rune.
     // Derived by running 'go test -calibrate'.
-    const long linearMax = 18;
+    inline constexpr long linearMax = 18;
     struct foldPair;
     using SpecialCase = gocpp::defined<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
     // If the Delta field of a [CaseRange] is UpperLower, it means
     // this CaseRange represents a sequence of the form (say)
     // [Upper] [Lower] [Upper] [Lower].
-    const gocpp::rune UpperLower = MaxRune + 1;
+    inline constexpr gocpp::rune UpperLower = MaxRune + 1;
 }

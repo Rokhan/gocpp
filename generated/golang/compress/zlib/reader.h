@@ -131,7 +131,7 @@ namespace golang::compress::zlib
 
     namespace rec
     {
-        std::tuple<int, gocpp::error> Read(reader* z, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(reader* z, gocpp::slice<unsigned char> p);
         gocpp::error Close(reader* z);
         gocpp::error Reset(reader* z, io::Reader r, gocpp::slice<unsigned char> dict);
     }

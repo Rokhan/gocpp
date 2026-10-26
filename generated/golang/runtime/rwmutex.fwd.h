@@ -7,5 +7,5 @@
 namespace golang::runtime
 {
     struct rwmutex;
-    const int rwmutexMaxReaders = 1 << 30;
+    inline constexpr int64_t rwmutexMaxReaders = 1 << 30;
 }

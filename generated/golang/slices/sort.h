@@ -17,7 +17,7 @@ namespace golang::slices
     void Sort(S<E> x);
 
     template<template<typename> class  S, typename E>
-    void SortFunc(S<E> x, std::function<int (E a, E b)> cmp);
+    void SortFunc(S<E> x, std::function<int64_t (E a, E b)> cmp);
 
     template<template<typename> class  S, typename E, typename F1>
     decltype(auto) SortFunc(S<E> x, F1&& cmp)
@@ -26,7 +26,7 @@ namespace golang::slices
     }
 
     template<template<typename> class  S, typename E>
-    void SortStableFunc(S<E> x, std::function<int (E a, E b)> cmp);
+    void SortStableFunc(S<E> x, std::function<int64_t (E a, E b)> cmp);
 
     template<template<typename> class  S, typename E, typename F1>
     decltype(auto) SortStableFunc(S<E> x, F1&& cmp)
@@ -38,7 +38,7 @@ namespace golang::slices
     bool IsSorted(S<E> x);
 
     template<template<typename> class  S, typename E>
-    bool IsSortedFunc(S<E> x, std::function<int (E a, E b)> cmp);
+    bool IsSortedFunc(S<E> x, std::function<int64_t (E a, E b)> cmp);
 
     template<template<typename> class  S, typename E, typename F1>
     decltype(auto) IsSortedFunc(S<E> x, F1&& cmp)
@@ -50,7 +50,7 @@ namespace golang::slices
     E Min(S<E> x);
 
     template<template<typename> class  S, typename E>
-    E MinFunc(S<E> x, std::function<int (E a, E b)> cmp);
+    E MinFunc(S<E> x, std::function<int64_t (E a, E b)> cmp);
 
     template<template<typename> class  S, typename E, typename F1>
     decltype(auto) MinFunc(S<E> x, F1&& cmp)
@@ -62,7 +62,7 @@ namespace golang::slices
     E Max(S<E> x);
 
     template<template<typename> class  S, typename E>
-    E MaxFunc(S<E> x, std::function<int (E a, E b)> cmp);
+    E MaxFunc(S<E> x, std::function<int64_t (E a, E b)> cmp);
 
     template<template<typename> class  S, typename E, typename F1>
     decltype(auto) MaxFunc(S<E> x, F1&& cmp)
@@ -71,17 +71,21 @@ namespace golang::slices
     }
 
     template<template<typename> class  S, typename E>
-    std::tuple<int, bool> BinarySearch(S<E> x, E target);
+    std::tuple<int64_t, bool> BinarySearch(S<E> x, E target);
 
     template<template<typename> class  S, typename E, typename T>
-    std::tuple<int, bool> BinarySearchFunc(S<E> x, T target, std::function<int (E _1, T _2)> cmp);
+    std::tuple<int64_t, bool> BinarySearchFunc(S<E> x, T target, std::function<int64_t (E _1, T _2)> cmp);
 
     template<template<typename> class  S, typename E, typename T, typename F1>
     decltype(auto) BinarySearchFunc(S<E> x, T target, F1&& cmp)
     {
         return BinarySearchFunc(x, target, std::function(std::forward<F1>(cmp)));
     }
-    unsigned int nextPowerOfTwo(int length);
+    struct GoTag_sortedHint { };
+    using sortedHint = gocpp::defined<int64_t, GoTag_sortedHint>;
+    struct GoTag_xorshift { };
+    using xorshift = gocpp::defined<uint64_t, GoTag_xorshift>;
+    uint64_t nextPowerOfTwo(int64_t length);
 
     template<typename T>
     bool isNaN(T x);

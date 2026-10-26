@@ -6,10 +6,10 @@
 
 namespace golang::math::rand
 {
-    const long rngLen = 607;
-    const long rngTap = 273;
-    const int rngMax = 1 << 63;
-    const int int32max = (1 << 31) - 1;
+    inline constexpr long rngLen = 607;
+    inline constexpr long rngTap = 273;
+    inline constexpr uint64_t rngMax = uint64_t(1_bi << 63);
+    inline constexpr int64_t int32max = (1LL << 31) - 1LL;
     struct rngSource;
-    const int rngMask = rngMax - 1;
+    inline constexpr int64_t rngMask = int64_t(gocpp::bigint(rngMax) - 1_bi);
 }

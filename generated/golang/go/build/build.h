@@ -35,6 +35,8 @@ namespace golang::go::build
     //go:linkname defaultReleaseTags
     extern gocpp::slice<gocpp::string> defaultReleaseTags;
     gocpp::string envOr(gocpp::string name, gocpp::string def);
+    struct GoTag_ImportMode { };
+    using ImportMode = gocpp::defined<uint64_t, GoTag_ImportMode>;
     struct NoGoError
     {
         gocpp::string Dir{};
@@ -72,7 +74,7 @@ namespace golang::go::build
     gocpp::string nameExt(gocpp::string name);
     gocpp::slice<gocpp::string> uniq(gocpp::slice<gocpp::string> list);
     extern gocpp::error errNoModules;
-    std::tuple<gocpp::string, int> findImportComment(gocpp::slice<unsigned char> data);
+    std::tuple<gocpp::string, int64_t> findImportComment(gocpp::slice<unsigned char> data);
     extern gocpp::slice<unsigned char> slashSlash;
     extern gocpp::slice<unsigned char> slashStar;
     extern gocpp::slice<unsigned char> starSlash;

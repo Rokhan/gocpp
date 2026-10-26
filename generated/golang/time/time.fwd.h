@@ -7,60 +7,71 @@
 namespace golang::time
 {
     struct Time;
-    const int hasMonotonic = 1 << 63;
-    const int nsecMask = (1 << 30) - 1;
-    const long nsecShift = 30;
-    using Month = int;
-    using Weekday = int;
+    inline constexpr uint64_t hasMonotonic = uint64_t(1_bi << 63);
+    inline constexpr int64_t nsecMask = (1 << 30) - 1;
+    inline constexpr long nsecShift = 30;
+    struct GoTag_Month;
+    using Month = gocpp::defined<int64_t, GoTag_Month>;
+    struct GoTag_Weekday;
+    using Weekday = gocpp::defined<int64_t, GoTag_Weekday>;
     // To keep the various units separate, we define integer types
     // for each. These are never stored in interfaces nor allocated,
     // so their type information does not appear in Go binaries.
-    const long secondsPerMinute = 60;
-    const int daysPer400Years = 365 * 400 + 97;
+    inline constexpr long secondsPerMinute = 60;
+    inline constexpr int64_t daysPer400Years = 365 * 400 + 97;
     // Days from March 1 through end of year
-    const int marchThruDecember = 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31;
+    inline constexpr int64_t marchThruDecember = 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31;
     // absoluteYears is the number of years we subtract from internal time to get absolute time.
     // This value must be 0 mod 400, and it defines the “absolute zero instant”
     // mentioned in the “Computations on Times” comment above: March 1, -absoluteYears.
     // Dates before the absolute epoch will not compute correctly,
     // but otherwise the value can be changed as needed.
-    const long absoluteYears = 292277022400;
+    inline constexpr long absoluteYears = 292277022400LL;
     // The year of the zero Time.
     // Assumed by the unixToInternal computation below.
-    const long internalYear = 1;
-    using absSeconds = uint64_t;
-    using absDays = uint64_t;
-    using absCentury = uint64_t;
-    using absCyear = int;
-    using absYday = int;
-    using absMonth = int;
-    using absLeap = int;
-    using absJanFeb = int;
-    using Duration = int64_t;
-    const unsigned char timeBinaryVersionV1 = 0 + 1;
-    const unsigned char timeBinaryVersionV2 = 1 + 1;
-    const golang::time::Month January = 1 + 0;
-    const golang::time::Month February = 1 + 1;
-    const golang::time::Month March = 1 + 2;
-    const golang::time::Month April = 1 + 3;
-    const golang::time::Month May = 1 + 4;
-    const golang::time::Month June = 1 + 5;
-    const golang::time::Month July = 1 + 6;
-    const golang::time::Month August = 1 + 7;
-    const golang::time::Month September = 1 + 8;
-    const golang::time::Month October = 1 + 9;
-    const golang::time::Month November = 1 + 10;
-    const golang::time::Month December = 1 + 11;
-    const golang::time::Weekday Sunday = 0;
-    const golang::time::Weekday Monday = 1;
-    const golang::time::Weekday Tuesday = 2;
-    const golang::time::Weekday Wednesday = 3;
-    const golang::time::Weekday Thursday = 4;
-    const golang::time::Weekday Friday = 5;
-    const golang::time::Weekday Saturday = 6;
-    const int secondsPerHour = 60 * secondsPerMinute;
-    const Duration minDuration = - 1 << 63;
-    const Duration maxDuration = (1 << 63) - 1;
+    inline constexpr long internalYear = 1;
+    struct GoTag_absSeconds;
+    using absSeconds = gocpp::defined<uint64_t, GoTag_absSeconds>;
+    struct GoTag_absDays;
+    using absDays = gocpp::defined<uint64_t, GoTag_absDays>;
+    struct GoTag_absCentury;
+    using absCentury = gocpp::defined<uint64_t, GoTag_absCentury>;
+    struct GoTag_absCyear;
+    using absCyear = gocpp::defined<int64_t, GoTag_absCyear>;
+    struct GoTag_absYday;
+    using absYday = gocpp::defined<int64_t, GoTag_absYday>;
+    struct GoTag_absMonth;
+    using absMonth = gocpp::defined<int64_t, GoTag_absMonth>;
+    struct GoTag_absLeap;
+    using absLeap = gocpp::defined<int64_t, GoTag_absLeap>;
+    struct GoTag_absJanFeb;
+    using absJanFeb = gocpp::defined<int64_t, GoTag_absJanFeb>;
+    struct GoTag_Duration;
+    using Duration = gocpp::defined<int64_t, GoTag_Duration>;
+    inline constexpr unsigned char timeBinaryVersionV1 = 0 + 1;
+    inline constexpr unsigned char timeBinaryVersionV2 = 1 + 1;
+    inline constexpr golang::time::Month January = 1 + 0;
+    inline constexpr golang::time::Month February = 1 + 1;
+    inline constexpr golang::time::Month March = 1 + 2;
+    inline constexpr golang::time::Month April = 1 + 3;
+    inline constexpr golang::time::Month May = 1 + 4;
+    inline constexpr golang::time::Month June = 1 + 5;
+    inline constexpr golang::time::Month July = 1 + 6;
+    inline constexpr golang::time::Month August = 1 + 7;
+    inline constexpr golang::time::Month September = 1 + 8;
+    inline constexpr golang::time::Month October = 1 + 9;
+    inline constexpr golang::time::Month November = 1 + 10;
+    inline constexpr golang::time::Month December = 1 + 11;
+    inline constexpr golang::time::Weekday Sunday = 0;
+    inline constexpr golang::time::Weekday Monday = 1;
+    inline constexpr golang::time::Weekday Tuesday = 2;
+    inline constexpr golang::time::Weekday Wednesday = 3;
+    inline constexpr golang::time::Weekday Thursday = 4;
+    inline constexpr golang::time::Weekday Friday = 5;
+    inline constexpr golang::time::Weekday Saturday = 6;
+    inline constexpr int64_t secondsPerHour = 60 * secondsPerMinute;
+    inline constexpr Duration minDuration = - 1LL << 63;
+    inline constexpr Duration maxDuration = Duration((1_bi << 63) - 1_bi);
     // Common durations. There is no definition for units of Day or larger
     // to avoid confusion across daylight savings time zone transitions.
     //
@@ -73,22 +84,22 @@ namespace golang::time
     //
     //	seconds := 10
     //	fmt.Print(time.Duration(seconds)*time.Second) // prints 10s
-    const Duration Nanosecond = 1;
-    const int secondsPerDay = 24 * secondsPerHour;
-    const Duration Microsecond = 1000 * time::Nanosecond;
-    const int secondsPerWeek = 7 * secondsPerDay;
+    inline constexpr Duration Nanosecond = 1;
+    inline constexpr int64_t secondsPerDay = 24 * secondsPerHour;
+    inline constexpr Duration Microsecond = 1000 * time::Nanosecond;
+    inline constexpr int64_t secondsPerWeek = 7 * secondsPerDay;
     // Offsets to convert between internal and absolute or Unix times.
-    const int64_t absoluteToInternal = - (absoluteYears * 365.2425 + marchThruDecember) * secondsPerDay;
-    const int64_t unixToInternal = (1969 * 365 + 1969 / 4 - 1969 / 100 + 1969 / 400) * secondsPerDay;
-    const int64_t wallToInternal = (1884 * 365 + 1884 / 4 - 1884 / 100 + 1884 / 400) * secondsPerDay;
-    const Duration Millisecond = 1000 * Microsecond;
-    const int64_t maxWall = wallToInternal + ((1 << 33) - 1);
-    const int64_t minWall = wallToInternal;
-    const int64_t internalToAbsolute = - absoluteToInternal;
-    const int64_t internalToUnix = - unixToInternal;
-    const Duration Second = 1000 * Millisecond;
-    const int64_t absoluteToUnix = absoluteToInternal + internalToUnix;
-    const int64_t unixToAbsolute = unixToInternal + internalToAbsolute;
-    const Duration Minute = 60 * time::Second;
-    const Duration Hour = 60 * time::Minute;
+    inline constexpr int64_t absoluteToInternal = - (int64_t(absoluteYears) * 365.2425 + int64_t(marchThruDecember)) * int64_t(secondsPerDay);
+    inline constexpr int64_t unixToInternal = (1969LL * 365LL + 1969LL / 4LL - 1969LL / 100LL + 1969LL / 400LL) * int64_t(secondsPerDay);
+    inline constexpr int64_t wallToInternal = (1884LL * 365LL + 1884LL / 4LL - 1884LL / 100LL + 1884LL / 400LL) * int64_t(secondsPerDay);
+    inline constexpr Duration Millisecond = 1000 * Microsecond;
+    inline constexpr int64_t maxWall = int64_t(wallToInternal) + ((1LL << 33) - 1LL);
+    inline constexpr int64_t minWall = int64_t(wallToInternal);
+    inline constexpr int64_t internalToAbsolute = - int64_t(absoluteToInternal);
+    inline constexpr int64_t internalToUnix = - int64_t(unixToInternal);
+    inline constexpr Duration Second = 1000 * Millisecond;
+    inline constexpr int64_t absoluteToUnix = int64_t(absoluteToInternal) + int64_t(internalToUnix);
+    inline constexpr int64_t unixToAbsolute = int64_t(unixToInternal) + int64_t(internalToAbsolute);
+    inline constexpr Duration Minute = 60LL * int64_t(time::Second);
+    inline constexpr Duration Hour = 60LL * int64_t(time::Minute);
 }

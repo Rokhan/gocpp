@@ -227,7 +227,7 @@ namespace golang::os
     // lstatNolog implements Lstat for Windows.
     std::tuple<FileInfo, gocpp::error> lstatNolog(gocpp::string name)
     {
-        auto followSurrogates = false;
+        bool followSurrogates = false;
         if(name != ""_s && IsPathSeparator(name[len(name) - 1]))
         {
             // We try to implement POSIX semantics for Lstat path resolution

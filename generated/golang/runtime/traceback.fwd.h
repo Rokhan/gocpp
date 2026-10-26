@@ -9,11 +9,12 @@ namespace golang::runtime
     // tracebackInnerFrames is the number of innermost frames to print in a
     // stack trace. The total maximum frames is tracebackInnerFrames +
     // tracebackOuterFrames.
-    const long tracebackInnerFrames = 50;
+    inline constexpr long tracebackInnerFrames = 50;
     // tracebackOuterFrames is the number of outermost frames to print in a
     // stack trace.
-    const long tracebackOuterFrames = 50;
-    using unwindFlags = uint8_t;
+    inline constexpr long tracebackOuterFrames = 50;
+    struct GoTag_unwindFlags;
+    using unwindFlags = gocpp::defined<uint8_t, GoTag_unwindFlags>;
     struct unwinder;
     struct cgoTracebackArg;
     struct cgoContextArg;
@@ -30,9 +31,9 @@ namespace golang::runtime
     //
     // Note that there are a small number of fatal situations that will throw
     // regardless of unwindPrintErrors or unwindSilentErrors.
-    const unwindFlags unwindPrintErrors = 1 << 0;
+    inline constexpr unwindFlags unwindPrintErrors = 1 << 0;
     // unwindSilentErrors silently ignores errors during unwinding.
-    const unwindFlags unwindSilentErrors = 1 << 1;
+    inline constexpr unwindFlags unwindSilentErrors = 1 << 1;
     // unwindTrap indicates that the initial PC and SP are from a trap, not a
     // return PC from a call.
     //
@@ -43,11 +44,11 @@ namespace golang::runtime
     // TODO: Distinguish frame.continpc, which is really the stack map PC, from
     // the actual continuation PC, which is computed differently depending on
     // this flag and a few other things.
-    const unwindFlags unwindTrap = 1 << 2;
+    inline constexpr unwindFlags unwindTrap = 1 << 2;
     // unwindJumpStack indicates that, if the traceback is on a system stack, it
     // should resume tracing at the user stack when the system stack is
     // exhausted.
-    const unwindFlags unwindJumpStack = 1 << 3;
+    inline constexpr unwindFlags unwindJumpStack = 1 << 3;
 }
 #include "golang/internal/runtime/sys/consts.fwd.h"
 #include "golang/internal/runtime/sys/intrinsics.fwd.h"
@@ -55,5 +56,5 @@ namespace golang::runtime
 namespace golang::runtime
 {
     namespace sys = golang::internal::runtime::sys;
-    const bool usesLR = sys::MinFrameSize > 0;
+    inline constexpr bool usesLR = sys::MinFrameSize > 0;
 }

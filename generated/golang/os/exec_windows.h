@@ -13,7 +13,7 @@
 namespace golang::os
 {
     void init();
-    gocpp::slice<unsigned char> appendBSBytes(gocpp::slice<unsigned char> b, int n);
+    gocpp::slice<unsigned char> appendBSBytes(gocpp::slice<unsigned char> b, int64_t n);
     std::tuple<gocpp::slice<unsigned char>, gocpp::string> readNextArg(gocpp::string cmd);
     gocpp::slice<gocpp::string> commandLineToArgv(gocpp::string cmd);
 }
@@ -21,7 +21,7 @@ namespace golang::os
 
 namespace golang::os
 {
-    std::tuple<Process*, gocpp::error> findProcess(int pid);
+    std::tuple<Process*, gocpp::error> findProcess(int64_t pid);
 }
 #include "golang/syscall/security_windows.fwd.h"
 #include "golang/syscall/syscall_windows.fwd.h"

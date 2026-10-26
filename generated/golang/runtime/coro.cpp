@@ -202,7 +202,7 @@ namespace golang::runtime
         // emitting an event for every single transition.
         auto trace = traceAcquire();
 
-        auto canCAS = true;
+        bool canCAS = true;
         auto bubble = gp->bubble;
         if(bubble != nullptr)
         {

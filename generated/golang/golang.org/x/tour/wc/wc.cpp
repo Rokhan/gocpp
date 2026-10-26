@@ -21,9 +21,9 @@ namespace golang::golang_org::x::tour::wc
     }
 
     // Test runs a test suite against f.
-    void Test(std::function<gocpp::map<gocpp::string, int> (gocpp::string _1)> f)
+    void Test(std::function<gocpp::map<gocpp::string, int64_t> (gocpp::string _1)> f)
     {
-        auto ok = true;
+        bool ok = true;
         for(auto [gocpp_ignored, c] : testCases)
         {
             auto got = f(c.in);
@@ -53,7 +53,7 @@ namespace golang::golang_org::x::tour::wc
     struct gocpp_id_0
     {
         gocpp::string in{};
-        gocpp::map<gocpp::string, int> want{};
+        gocpp::map<gocpp::string, int64_t> want{};
 
         using isGoStruct = void;
 
@@ -91,17 +91,17 @@ namespace golang::golang_org::x::tour::wc
 
 
     gocpp::slice<gocpp_id_0> testCases = gocpp::slice<gocpp_id_0> {
-        {"I am learning Go!"_s, gocpp::map<gocpp::string, int> {
+        {"I am learning Go!"_s, gocpp::map<gocpp::string, int64_t> {
         { "I"_s, 1 }, { "am"_s, 1 }, { "learning"_s, 1 }, { "Go!"_s, 1 }
     }},
-        {"The quick brown fox jumped over the lazy dog."_s, gocpp::map<gocpp::string, int> {
+        {"The quick brown fox jumped over the lazy dog."_s, gocpp::map<gocpp::string, int64_t> {
         { "The"_s, 1 }, { "quick"_s, 1 }, { "brown"_s, 1 }, { "fox"_s, 1 }, { "jumped"_s, 1 },
         { "over"_s, 1 }, { "the"_s, 1 }, { "lazy"_s, 1 }, { "dog."_s, 1 }
     }},
-        {"I ate a donut. Then I ate another donut."_s, gocpp::map<gocpp::string, int> {
+        {"I ate a donut. Then I ate another donut."_s, gocpp::map<gocpp::string, int64_t> {
         { "I"_s, 2 }, { "ate"_s, 2 }, { "a"_s, 1 }, { "donut."_s, 2 }, { "Then"_s, 1 }, { "another"_s, 1 }
     }},
-        {"A man a plan a canal panama."_s, gocpp::map<gocpp::string, int> {
+        {"A man a plan a canal panama."_s, gocpp::map<gocpp::string, int64_t> {
         { "A"_s, 1 }, { "man"_s, 1 }, { "a"_s, 2 }, { "plan"_s, 1 }, { "canal"_s, 1 }, { "panama."_s, 1 }
     }}
     };

@@ -201,7 +201,7 @@ namespace golang::runtime
         // Since the alignment is rather large in uses of this
         // function, we're not likely to get it by chance, so we ask
         // for a larger region and remove the parts we don't need.
-        auto retries = 0;
+        int64_t retries = 0;
         retry:
         auto p = uintptr_t(sysReserve(v, size + align, vmaName));
         //Go switch emulation

@@ -55,7 +55,7 @@ namespace golang::internal::runtime::atomic
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    unsigned int Loaduint(unsigned int* ptr)
+    uint64_t Loaduint(uint64_t* ptr)
     /* convertBlockStmt, nil block */;
 
     //go:noescape

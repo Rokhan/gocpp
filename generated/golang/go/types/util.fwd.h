@@ -6,5 +6,5 @@
 
 namespace golang::go::types
 {
-    const bool isTypes2 = false;
+    inline constexpr bool isTypes2 = false;
 }

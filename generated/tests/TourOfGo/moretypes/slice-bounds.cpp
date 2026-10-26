@@ -22,7 +22,7 @@ namespace golang::main
 
     void main()
     {
-        auto s = gocpp::slice<int> {2, 3, 5, 7, 11, 13};
+        auto s = gocpp::slice<int64_t> {2, 3, 5, 7, 11, 13};
 
         s = s.make_slice(1, 4);
         mocklib::Println(s);

@@ -66,9 +66,9 @@ namespace golang::internal::abi
     }
 
     // Size returns the size of the itab in memory.
-    int rec::Size(ITab* it)
+    int64_t rec::Size(ITab* it)
     {
-        auto size = int(gocpp::Sizeof<ITab>());
+        int64_t size = int64_t(gocpp::Sizeof<ITab>());
         if(it->Fun[0] == 0)
         {
             return size;

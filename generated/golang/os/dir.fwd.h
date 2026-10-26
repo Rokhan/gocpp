@@ -6,10 +6,11 @@
 
 namespace golang::os
 {
-    using readdirMode = int;
-    const readdirMode readdirName = 0;
-    const readdirMode readdirDirEntry = 1;
-    const readdirMode readdirFileInfo = 2;
+    struct GoTag_readdirMode;
+    using readdirMode = gocpp::defined<int64_t, GoTag_readdirMode>;
+    inline constexpr readdirMode readdirName = 0;
+    inline constexpr readdirMode readdirDirEntry = 1;
+    inline constexpr readdirMode readdirFileInfo = 2;
 }
 #include "golang/io/fs/fs.fwd.h"
 #include "golang/io/fs/readlink.fwd.h"

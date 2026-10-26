@@ -45,8 +45,10 @@ namespace golang::runtime
     extern bool doubleCheckReadMemStats;
     void readGCStats(gocpp::slice<uint64_t>* pauses);
     void readGCStats_m(gocpp::slice<uint64_t>* pauses);
-    void flushmcache(int i);
+    void flushmcache(int64_t i);
     void flushallmcaches();
+    struct GoTag_sysMemStat { };
+    using sysMemStat = gocpp::defined<uint64_t, GoTag_sysMemStat>;
     struct cpuStats
     {
         int64_t GCAssistTime{}; // GC assists

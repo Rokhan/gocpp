@@ -6,23 +6,23 @@
 
 namespace golang::internal::goos
 {
-    const gocpp::string GOOS = "windows"_s;
-    const long IsAix = 0;
-    const long IsAndroid = 0;
-    const long IsDarwin = 0;
-    const long IsDragonfly = 0;
-    const long IsFreebsd = 0;
-    const long IsHurd = 0;
-    const long IsIllumos = 0;
-    const long IsIos = 0;
-    const long IsJs = 0;
-    const long IsLinux = 0;
-    const long IsNacl = 0;
-    const long IsNetbsd = 0;
-    const long IsOpenbsd = 0;
-    const long IsPlan9 = 0;
-    const long IsSolaris = 0;
-    const long IsWasip1 = 0;
-    const long IsWindows = 1;
-    const long IsZos = 0;
+    inline const gocpp::string GOOS = "windows"_s;
+    inline constexpr long IsAix = 0;
+    inline constexpr long IsAndroid = 0;
+    inline constexpr long IsDarwin = 0;
+    inline constexpr long IsDragonfly = 0;
+    inline constexpr long IsFreebsd = 0;
+    inline constexpr long IsHurd = 0;
+    inline constexpr long IsIllumos = 0;
+    inline constexpr long IsIos = 0;
+    inline constexpr long IsJs = 0;
+    inline constexpr long IsLinux = 0;
+    inline constexpr long IsNacl = 0;
+    inline constexpr long IsNetbsd = 0;
+    inline constexpr long IsOpenbsd = 0;
+    inline constexpr long IsPlan9 = 0;
+    inline constexpr long IsSolaris = 0;
+    inline constexpr long IsWasip1 = 0;
+    inline constexpr long IsWindows = 1;
+    inline constexpr long IsZos = 0;
 }

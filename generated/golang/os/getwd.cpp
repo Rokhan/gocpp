@@ -185,7 +185,7 @@ namespace golang::os
         // and then find name of parent. Each iteration
         // adds /name to the beginning of dir.
         dir = ""_s;
-        for(auto parent = ".."_s; ; parent = "../"_s + parent)
+        for(gocpp::string parent = ".."_s; ; parent = "../"_s + parent)
         {
             if(len(parent) >= 1024)
             {

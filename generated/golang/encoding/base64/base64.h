@@ -44,9 +44,11 @@ namespace golang::encoding::base64
     // It is typically used in URLs and file names.
     // This is the same as [URLEncoding] but omits padding characters.
     extern base64::Encoding* RawURLEncoding;
+    struct GoTag_CorruptInputError { };
+    using CorruptInputError = gocpp::defined<int64_t, GoTag_CorruptInputError>;
     std::tuple<uint32_t, bool> assemble32(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4);
     std::tuple<uint64_t, bool> assemble64(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4, unsigned char n5, unsigned char n6, unsigned char n7, unsigned char n8);
-    int decodedLen(int n, gocpp::rune padChar);
+    int64_t decodedLen(int64_t n, gocpp::rune padChar);
     Encoding* NewEncoding(gocpp::string encoder);
 }
 #include "golang/io/io.fwd.h"
@@ -65,7 +67,7 @@ namespace golang::encoding::base64
         Encoding* enc{};
         io::Writer w{};
         gocpp::array<unsigned char, 3> buf{}; // buffered data waiting to be encoded
-        int nbuf{}; // number of bytes in buf
+        int64_t nbuf{}; // number of bytes in buf
         gocpp::array<unsigned char, 1024> out{}; // output buffer
 
         using isGoStruct = void;
@@ -88,7 +90,7 @@ namespace golang::encoding::base64
         Encoding* enc{};
         io::Reader r{};
         gocpp::array<unsigned char, 1024> buf{}; // leftover input
-        int nbuf{};
+        int64_t nbuf{};
         gocpp::slice<unsigned char> out{}; // leftover decoded output
         gocpp::array<unsigned char, 1024 / 4 * 3> outbuf{};
 
@@ -129,17 +131,17 @@ namespace golang::encoding::base64
         void Encode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
         gocpp::slice<unsigned char> AppendEncode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
         gocpp::string EncodeToString(Encoding* enc, gocpp::slice<unsigned char> src);
-        std::tuple<int, gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> p);
         gocpp::error Close(encoder* e);
-        int EncodedLen(Encoding* enc, int n);
+        int64_t EncodedLen(Encoding* enc, int64_t n);
         gocpp::string Error(CorruptInputError e);
-        std::tuple<int, int, gocpp::error> decodeQuantum(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si);
+        std::tuple<int64_t, int64_t, gocpp::error> decodeQuantum(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int64_t si);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendDecode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> DecodeString(Encoding* enc, gocpp::string s);
-        std::tuple<int, gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
-        std::tuple<int, gocpp::error> Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p);
-        int DecodedLen(Encoding* enc, int n);
+        std::tuple<int64_t, gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
+        std::tuple<int64_t, gocpp::error> Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p);
+        int64_t DecodedLen(Encoding* enc, int64_t n);
     }
 }
 

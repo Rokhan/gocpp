@@ -58,13 +58,13 @@ namespace golang::os
         gocpp::error Close(Root* r);
         std::tuple<File*, gocpp::error> Open(Root* r, gocpp::string name);
         std::tuple<File*, gocpp::error> Create(Root* r, gocpp::string name);
-        std::tuple<File*, gocpp::error> OpenFile(Root* r, gocpp::string name, int flag, FileMode perm);
+        std::tuple<File*, gocpp::error> OpenFile(Root* r, gocpp::string name, int64_t flag, FileMode perm);
         std::tuple<Root*, gocpp::error> OpenRoot(Root* r, gocpp::string name);
         gocpp::error Chmod(Root* r, gocpp::string name, FileMode mode);
         gocpp::error Mkdir(Root* r, gocpp::string name, FileMode perm);
         gocpp::error MkdirAll(Root* r, gocpp::string name, FileMode perm);
-        gocpp::error Chown(Root* r, gocpp::string name, int uid, int gid);
-        gocpp::error Lchown(Root* r, gocpp::string name, int uid, int gid);
+        gocpp::error Chown(Root* r, gocpp::string name, int64_t uid, int64_t gid);
+        gocpp::error Lchown(Root* r, gocpp::string name, int64_t uid, int64_t gid);
         gocpp::error Chtimes(Root* r, gocpp::string name, mocklib::Date atime, mocklib::Date mtime);
         gocpp::error Remove(Root* r, gocpp::string name);
         gocpp::error RemoveAll(Root* r, gocpp::string name);

@@ -13,5 +13,5 @@ namespace golang::runtime
 namespace golang::runtime
 {
     // exported value for testing
-    const float hashLoad = float(loadFactorNum) / float(loadFactorDen);
+    inline constexpr float hashLoad = float(loadFactorNum) / float(loadFactorDen);
 }

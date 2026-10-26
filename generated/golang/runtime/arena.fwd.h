@@ -7,7 +7,7 @@
 namespace golang::runtime
 {
     // userArenaChunkBytes is the size of a user arena chunk.
-    const int userArenaChunkBytesMax = 8 << 20;
+    inline constexpr int64_t userArenaChunkBytesMax = 8 << 20;
     struct userArena;
     struct liveUserArenaChunk;
     struct userArenaStateStruct;
@@ -17,12 +17,12 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    const uintptr_t userArenaChunkBytes = uintptr_t(int64_t(userArenaChunkBytesMax - heapArenaBytes) & (int64_t(userArenaChunkBytesMax - heapArenaBytes) >> 63) + heapArenaBytes);
+    inline constexpr uintptr_t userArenaChunkBytes = uintptr_t(int64_t(userArenaChunkBytesMax - heapArenaBytes) & (int64_t(userArenaChunkBytesMax - heapArenaBytes) >> 63) + heapArenaBytes);
     // userArenaChunkPages is the number of pages a user arena chunk uses.
-    const uintptr_t userArenaChunkPages = userArenaChunkBytes / pageSize;
+    inline constexpr uintptr_t userArenaChunkPages = userArenaChunkBytes / pageSize;
     // userArenaChunkMaxAllocBytes is the maximum size of an object that can
     // be allocated from an arena. This number is chosen to cap worst-case
     // fragmentation of user arenas to 25%. Larger allocations are redirected
     // to the heap.
-    const uintptr_t userArenaChunkMaxAllocBytes = userArenaChunkBytes / 4;
+    inline constexpr uintptr_t userArenaChunkMaxAllocBytes = userArenaChunkBytes / 4;
 }

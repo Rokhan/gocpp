@@ -6,29 +6,29 @@
 
 namespace golang::internal::goarch
 {
-    const gocpp::string GOARCH = "amd64"_s;
-    const long Is386 = 0;
-    const long IsAmd64 = 1;
-    const long IsAmd64p32 = 0;
-    const long IsArm = 0;
-    const long IsArmbe = 0;
-    const long IsArm64 = 0;
-    const long IsArm64be = 0;
-    const long IsLoong64 = 0;
-    const long IsMips = 0;
-    const long IsMipsle = 0;
-    const long IsMips64 = 0;
-    const long IsMips64le = 0;
-    const long IsMips64p32 = 0;
-    const long IsMips64p32le = 0;
-    const long IsPpc = 0;
-    const long IsPpc64 = 0;
-    const long IsPpc64le = 0;
-    const long IsRiscv = 0;
-    const long IsRiscv64 = 0;
-    const long IsS390 = 0;
-    const long IsS390x = 0;
-    const long IsSparc = 0;
-    const long IsSparc64 = 0;
-    const long IsWasm = 0;
+    inline const gocpp::string GOARCH = "amd64"_s;
+    inline constexpr long Is386 = 0;
+    inline constexpr long IsAmd64 = 1;
+    inline constexpr long IsAmd64p32 = 0;
+    inline constexpr long IsArm = 0;
+    inline constexpr long IsArmbe = 0;
+    inline constexpr long IsArm64 = 0;
+    inline constexpr long IsArm64be = 0;
+    inline constexpr long IsLoong64 = 0;
+    inline constexpr long IsMips = 0;
+    inline constexpr long IsMipsle = 0;
+    inline constexpr long IsMips64 = 0;
+    inline constexpr long IsMips64le = 0;
+    inline constexpr long IsMips64p32 = 0;
+    inline constexpr long IsMips64p32le = 0;
+    inline constexpr long IsPpc = 0;
+    inline constexpr long IsPpc64 = 0;
+    inline constexpr long IsPpc64le = 0;
+    inline constexpr long IsRiscv = 0;
+    inline constexpr long IsRiscv64 = 0;
+    inline constexpr long IsS390 = 0;
+    inline constexpr long IsS390x = 0;
+    inline constexpr long IsSparc = 0;
+    inline constexpr long IsSparc64 = 0;
+    inline constexpr long IsWasm = 0;
 }

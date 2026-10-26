@@ -63,7 +63,7 @@ namespace golang::strings
     {
         auto f = gocpp::InitPtr<stringFinder>([=](auto& x) {
             x.pattern = pattern;
-            x.goodSuffixSkip = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), len(pattern));
+            x.goodSuffixSkip = gocpp::make(gocpp::Tag<gocpp::slice<int64_t>>(), len(pattern));
         });
         // last is the index of the last character in the pattern.
         auto last = len(pattern) - 1;
@@ -77,7 +77,7 @@ namespace golang::strings
         // The loop condition is < instead of <= so that the last byte does not
         // have a zero distance to itself. Finding this byte out of place implies
         // that it is not in the last position.
-        for(auto i = 0; i < last; i++)
+        for(int64_t i = 0; i < last; i++)
         {
             f->badCharSkip[pattern[i]] = last - i;
         }
@@ -96,7 +96,7 @@ namespace golang::strings
             f->goodSuffixSkip[i] = lastPrefix + last - i;
         }
         // Second pass: find repeats of pattern's suffix starting from the front.
-        for(auto i = 0; i < last; i++)
+        for(int64_t i = 0; i < last; i++)
         {
             auto lenSuffix = longestCommonSuffix(pattern, pattern.make_slice(1, i + 1));
             if(pattern[i - lenSuffix] != pattern[last - lenSuffix])
@@ -109,9 +109,9 @@ namespace golang::strings
         return f;
     }
 
-    int longestCommonSuffix(gocpp::string a, gocpp::string b)
+    int64_t longestCommonSuffix(gocpp::string a, gocpp::string b)
     {
-        int i;
+        int64_t i;
         for(; i < len(a) && i < len(b); i++)
         {
             if(a[len(a) - 1 - i] != b[len(b) - 1 - i])
@@ -124,7 +124,7 @@ namespace golang::strings
 
     // next returns the index in text of the first occurrence of the pattern. If
     // the pattern is not found, it returns -1.
-    int rec::next(stringFinder* f, gocpp::string text)
+    int64_t rec::next(stringFinder* f, gocpp::string text)
     {
         auto i = len(f->pattern) - 1;
         for(; i < len(text); )

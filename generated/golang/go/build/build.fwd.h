@@ -7,7 +7,8 @@
 namespace golang::go::build
 {
     struct Context;
-    using ImportMode = unsigned int;
+    struct GoTag_ImportMode;
+    using ImportMode = gocpp::defined<uint64_t, GoTag_ImportMode>;
     struct Package;
     struct Directive;
     struct NoGoError;
@@ -23,11 +24,11 @@ namespace golang::go::build
     // The % is for Jenkins. See golang.org/issue/16959.
     // The ! is because module paths may use them. See golang.org/issue/26716.
     // The ~ and ^ are for sr.ht. See golang.org/issue/32260.
-    const gocpp::string safeString = "+-.,/0123456789=ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz:$@%! ~^"_s;
+    inline const gocpp::string safeString = "+-.,/0123456789=ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz:$@%! ~^"_s;
     // If FindOnly is set, Import stops after locating the directory
     // that should contain the sources for a package. It does not
     // read any files in the directory.
-    const ImportMode FindOnly = 1 << 0;
+    inline constexpr ImportMode FindOnly = 1 << 0;
     // If AllowBinary is set, Import can be satisfied by a compiled
     // package object without corresponding sources.
     //
@@ -37,12 +38,12 @@ namespace golang::go::build
     // the top of the file. Such a package will be recognized
     // regardless of this flag setting (because it has source code)
     // and will have BinaryOnly set to true in the returned Package.
-    const ImportMode AllowBinary = 1 << 1;
+    inline constexpr ImportMode AllowBinary = 1 << 1;
     // If ImportComment is set, parse import comments on package statements.
     // Import returns an error if it finds a comment it cannot understand
     // or finds conflicting comments in multiple source files.
     // See golang.org/s/go14customimport for more information.
-    const ImportMode ImportComment = 1 << 2;
+    inline constexpr ImportMode ImportComment = 1 << 2;
     // By default, Import searches vendor directories
     // that apply in the given source directory before searching
     // the GOROOT and GOPATH roots.
@@ -61,5 +62,5 @@ namespace golang::go::build
     // the returned package's Imports, TestImports, and XTestImports
     // are always the exact import paths from the source files:
     // Import makes no attempt to resolve or check those paths.
-    const ImportMode IgnoreVendor = 1 << 3;
+    inline constexpr ImportMode IgnoreVendor = 1 << 3;
 }

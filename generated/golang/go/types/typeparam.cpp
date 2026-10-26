@@ -143,7 +143,7 @@ namespace golang::go::types
 
     // Index returns the index of the type param within its param list, or -1 if
     // the type parameter has not yet been bound to a type.
-    int rec::Index(TypeParam* t)
+    int64_t rec::Index(TypeParam* t)
     {
         return t->index;
     }

@@ -6,66 +6,68 @@
 
 namespace golang::golang_org::x::tools::go::packages
 {
-    using LoadMode = int;
+    struct GoTag_LoadMode;
+    using LoadMode = gocpp::defined<int64_t, GoTag_LoadMode>;
     struct Config;
     struct Package;
     struct Module;
     struct ModuleError;
     struct Error;
-    using ErrorKind = int;
+    struct GoTag_ErrorKind;
+    using ErrorKind = gocpp::defined<int64_t, GoTag_ErrorKind>;
     struct flatPackage;
     struct loaderPackage;
     struct loader;
     struct parseValue;
     struct unit;
     // NeedName adds Name and PkgPath.
-    const LoadMode NeedName = 1 << 0;
+    inline constexpr LoadMode NeedName = 1 << 0;
     // NeedFiles adds Dir, GoFiles, OtherFiles, and IgnoredFiles
-    const LoadMode NeedFiles = 1 << 1;
+    inline constexpr LoadMode NeedFiles = 1 << 1;
     // NeedCompiledGoFiles adds CompiledGoFiles.
-    const LoadMode NeedCompiledGoFiles = 1 << 2;
+    inline constexpr LoadMode NeedCompiledGoFiles = 1 << 2;
     // NeedImports adds Imports. If NeedDeps is not set, the Imports field will contain
     // "placeholder" Packages with only the ID set.
-    const LoadMode NeedImports = 1 << 3;
+    inline constexpr LoadMode NeedImports = 1 << 3;
     // NeedDeps adds the fields requested by the LoadMode in the packages in Imports.
-    const LoadMode NeedDeps = 1 << 4;
+    inline constexpr LoadMode NeedDeps = 1 << 4;
     // NeedExportFile adds ExportFile.
-    const LoadMode NeedExportFile = 1 << 5;
+    inline constexpr LoadMode NeedExportFile = 1 << 5;
     // NeedTypes adds Types, Fset, and IllTyped.
-    const LoadMode NeedTypes = 1 << 6;
+    inline constexpr LoadMode NeedTypes = 1 << 6;
     // NeedSyntax adds Syntax and Fset.
-    const LoadMode NeedSyntax = 1 << 7;
+    inline constexpr LoadMode NeedSyntax = 1 << 7;
     // NeedTypesInfo adds TypesInfo and Fset.
-    const LoadMode NeedTypesInfo = 1 << 8;
+    inline constexpr LoadMode NeedTypesInfo = 1 << 8;
     // NeedTypesSizes adds TypesSizes.
-    const LoadMode NeedTypesSizes = 1 << 9;
+    inline constexpr LoadMode NeedTypesSizes = 1 << 9;
     // needInternalDepsErrors adds the internal deps errors field for use by gopls.
-    const LoadMode needInternalDepsErrors = 1 << 10;
+    inline constexpr LoadMode needInternalDepsErrors = 1 << 10;
     // NeedForTest adds ForTest.
     //
     // Tests must also be set on the context for this field to be populated.
-    const LoadMode NeedForTest = 1 << 11;
+    inline constexpr LoadMode NeedForTest = 1 << 11;
     // typecheckCgo enables full support for type checking cgo. Requires Go 1.15+.
     // Modifies CompiledGoFiles and Types, and has no effect on its own.
-    const LoadMode typecheckCgo = 1 << 12;
+    inline constexpr LoadMode typecheckCgo = 1 << 12;
     // NeedModule adds Module.
-    const LoadMode NeedModule = 1 << 13;
+    inline constexpr LoadMode NeedModule = 1 << 13;
     // NeedEmbedFiles adds EmbedFiles.
-    const LoadMode NeedEmbedFiles = 1 << 14;
+    inline constexpr LoadMode NeedEmbedFiles = 1 << 14;
     // NeedEmbedPatterns adds EmbedPatterns.
-    const LoadMode NeedEmbedPatterns = 1 << 15;
+    inline constexpr LoadMode NeedEmbedPatterns = 1 << 15;
     // NeedTarget adds Target.
-    const LoadMode NeedTarget = 1 << 16;
-    const ErrorKind UnknownError = 0;
-    const ErrorKind ListError = 1;
-    const ErrorKind ParseError = 2;
-    const ErrorKind TypeError = 3;
+    inline constexpr LoadMode NeedTarget = 1 << 16;
+    inline constexpr ErrorKind UnknownError = 0;
+    inline constexpr ErrorKind ListError = 1;
+    inline constexpr ErrorKind ParseError = 2;
+    inline constexpr ErrorKind TypeError = 3;
     // LoadFiles loads the name and file names for the initial packages.
-    const packages::LoadMode LoadFiles = NeedName | NeedFiles | NeedCompiledGoFiles;
+    inline constexpr packages::LoadMode LoadFiles = NeedName | NeedFiles | NeedCompiledGoFiles;
     // Deprecated: NeedExportsFile is a historical misspelling of NeedExportFile.
     //
     //go:fix inline
-    const packages::LoadMode NeedExportsFile = NeedExportFile;
+    inline constexpr packages::LoadMode NeedExportsFile = NeedExportFile;
 }
 #include "golang/go/types/api.fwd.h"
 #include "golang/go/types/check.fwd.h"
@@ -79,13 +81,13 @@ namespace golang::golang_org::x::tools::go::packages
 namespace golang::golang_org::x::tools::go::packages
 {
     // LoadImports loads the name, file names, and import mapping for the initial packages.
-    const packages::LoadMode LoadImports = LoadFiles | NeedImports;
+    inline constexpr packages::LoadMode LoadImports = LoadFiles | NeedImports;
     namespace types = golang::go::types;
     // LoadTypes loads exported type information for the initial packages.
-    const packages::LoadMode LoadTypes = LoadImports | NeedTypes | NeedTypesSizes;
+    inline constexpr packages::LoadMode LoadTypes = LoadImports | NeedTypes | NeedTypesSizes;
     using importerFunc = std::function<std::tuple<types::Package*, gocpp::error> (gocpp::string path)>;
     // LoadSyntax loads typed syntax for the initial packages.
-    const packages::LoadMode LoadSyntax = LoadTypes | NeedSyntax | NeedTypesInfo;
+    inline constexpr packages::LoadMode LoadSyntax = LoadTypes | NeedSyntax | NeedTypesInfo;
     // LoadAllSyntax loads typed syntax for the initial packages and all dependencies.
-    const packages::LoadMode LoadAllSyntax = LoadSyntax | NeedDeps;
+    inline constexpr packages::LoadMode LoadAllSyntax = LoadSyntax | NeedDeps;
 }

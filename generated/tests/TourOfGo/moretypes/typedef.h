@@ -12,10 +12,14 @@
 
 namespace golang::main
 {
+    struct GoTag_ArbitraryType { };
+    using ArbitraryType = gocpp::defined<int64_t, GoTag_ArbitraryType>;
+    struct GoTag_IntegerType { };
+    using IntegerType = gocpp::defined<int64_t, GoTag_IntegerType>;
     struct Vertex
     {
-        int X{};
-        int Y{};
+        int64_t X{};
+        int64_t Y{};
 
         using isGoStruct = void;
 

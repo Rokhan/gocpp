@@ -136,8 +136,8 @@ namespace golang::runtime
 
     void pluginftabverify(moduledata* md)
     {
-        auto badtable = false;
-        for(auto i = 0; i < len(md->ftab); i++)
+        bool badtable = false;
+        for(int64_t i = 0; i < len(md->ftab); i++)
         {
             auto entry = rec::textAddr(gocpp::recv(md), md->ftab[i].entryoff);
             if(md->minpc <= entry && entry <= md->maxpc)
@@ -151,8 +151,8 @@ namespace golang::runtime
             // A common bug is f.entry has a relocation to a duplicate
             // function symbol, meaning if we search for its PC we get
             // a valid entry with a name that is useful for debugging.
-            auto name2 = "none"_s;
-            auto entry2 = uintptr_t(0);
+            gocpp::string name2 = "none"_s;
+            uintptr_t entry2 = uintptr_t(0);
             auto f2 = findfunc(entry);
             if(rec::valid(gocpp::recv(f2)))
             {

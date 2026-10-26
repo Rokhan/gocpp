@@ -6,5 +6,5 @@
 
 namespace golang::internal::runtime::maps
 {
-    const long m5 = 0x1d8e4e27c47d124f;
+    inline constexpr long m5 = 0x1d8e4e27c47d124fLL;
 }

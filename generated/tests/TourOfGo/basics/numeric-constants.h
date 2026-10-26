@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    int needInt(int x);
+    int64_t needInt(int64_t x);
     double needFloat(double x);
     void main();
 

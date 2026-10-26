@@ -6,15 +6,16 @@
 
 namespace golang::math::big
 {
-    using Word = unsigned int;
+    struct GoTag_Word;
+    using Word = gocpp::defined<uint64_t, GoTag_Word>;
 }
 #include "golang/math/bits/bits.fwd.h"
 
 namespace golang::math::big
 {
     namespace bits = golang::math::bits;
-    const int _W = bits::UintSize;
-    const int go_S = _W / 8;
-    const int _B = 1 << _W;
-    const int _M = _B - 1;
+    inline constexpr int64_t _W = bits::UintSize;
+    inline constexpr int64_t go_S = _W / 8;
+    inline constexpr gocpp::bigint _B = 1_bi << _W;
+    inline constexpr uint64_t _M = uint64_t(gocpp::bigint(_B) - 1_bi);
 }

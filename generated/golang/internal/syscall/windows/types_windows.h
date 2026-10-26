@@ -12,6 +12,8 @@
 
 namespace golang::internal::syscall::windows
 {
+    struct GoTag_ACCESS_MASK { };
+    using ACCESS_MASK = gocpp::defined<uint32_t, GoTag_ACCESS_MASK>;
     struct ACL
     {
         unsigned char AclRevision{};
@@ -32,6 +34,8 @@ namespace golang::internal::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ACL& value);
+    struct GoTag_SECURITY_DESCRIPTOR_CONTROL { };
+    using SECURITY_DESCRIPTOR_CONTROL = gocpp::defined<uint16_t, GoTag_SECURITY_DESCRIPTOR_CONTROL>;
     struct SECURITY_QUALITY_OF_SERVICE
     {
         uint32_t Length{};

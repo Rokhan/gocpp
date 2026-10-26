@@ -136,7 +136,7 @@ namespace golang::main
         auto t1 = new T {"Hello1"_s};
         auto t2 = new T {"Hello2"_s};
         auto t3 = T {"Hello2"_s};
-        auto f = F(mocklib::Pi);
+        F f = F(mocklib::Pi);
 
         i = t1;
         // true

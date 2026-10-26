@@ -75,7 +75,7 @@ namespace golang::golang_org::x::sync::errgroup
         gocpp::error Wait(Group* g);
         void Go(Group* g, std::function<gocpp::error ()> f);
         bool TryGo(Group* g, std::function<gocpp::error ()> f);
-        void SetLimit(Group* g, int n);
+        void SetLimit(Group* g, int64_t n);
     }
 }
 

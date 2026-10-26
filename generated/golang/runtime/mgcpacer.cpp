@@ -226,7 +226,7 @@ namespace golang::runtime
     // startCycle resets the GC controller's state and computes estimates
     // for a new GC cycle. The caller must hold worldsema and the world
     // must be stopped.
-    void rec::startCycle(gcControllerState* c, int64_t markStartTime, int procs, gcTrigger trigger)
+    void rec::startCycle(gcControllerState* c, int64_t markStartTime, int64_t procs, gcTrigger trigger)
     {
         rec::Store(gocpp::recv(c->heapScanWork), 0);
         rec::Store(gocpp::recv(c->stackScanWork), 0);
@@ -450,7 +450,7 @@ namespace golang::runtime
     }
 
     // endCycle computes the consMark estimate for the next cycle.
-    void rec::endCycle(gcControllerState* c, int64_t now, int procs)
+    void rec::endCycle(gcControllerState* c, int64_t now, int64_t procs)
     {
         // Record last heap goal for the scavenger.
         // We'll be updating the heap goal soon.
@@ -460,7 +460,7 @@ namespace golang::runtime
         auto assistDuration = now - c->markStartTime;
 
         // Assume background mark hit its utilization goal.
-        auto utilization = gcBackgroundUtilization;
+        double utilization = gcBackgroundUtilization;
         // Add assist utilization; avoid divide by zero.
         if(assistDuration > 0)
         {
@@ -477,7 +477,7 @@ namespace golang::runtime
             // Ignore this case and don't update anything.
             return;
         }
-        auto idleUtilization = 0.0;
+        double idleUtilization = 0.0;
         if(assistDuration > 0)
         {
             idleUtilization = double(rec::Load(gocpp::recv(c->idleMarkTime))) / double(assistDuration * int64_t(procs));
@@ -524,8 +524,8 @@ namespace golang::runtime
         if(debug.gcpacertrace > 0)
         {
             printlock();
-            auto goal = gcGoalUtilization * 100;
-            print("pacer: "_s, int(utilization * 100), "% CPU ("_s, int(goal), " exp.) for "_s);
+            double goal = gcGoalUtilization * 100;
+            print("pacer: "_s, int64_t(utilization * 100), "% CPU ("_s, int64_t(goal), " exp.) for "_s);
             print(rec::Load(gocpp::recv(c->heapScanWork)), "+"_s, rec::Load(gocpp::recv(c->stackScanWork)), "+"_s, rec::Load(gocpp::recv(c->globalsScanWork)), " B work ("_s, c->lastHeapScan + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan)), " B exp.) "_s);
             auto live = rec::Load(gocpp::recv(c->heapLive));
             print("in "_s, c->triggered, " B -> "_s, live, " B (∆goal "_s, int64_t(live) - int64_t(c->lastHeapGoal), ", cons/mark "_s, oldConsMark, ")"_s);
@@ -590,7 +590,7 @@ namespace golang::runtime
             return;
         }
         auto myID = rec::ptr(gocpp::recv(gp->m->p))->id;
-        for(auto tries = 0; tries < 5; tries++)
+        for(int64_t tries = 0; tries < 5; tries++)
         {
             auto id = int32_t(cheaprandn(uint32_t(gomaxprocs - 1)));
             if(id >= myID)
@@ -1204,7 +1204,7 @@ namespace golang::runtime
         // Compute the next GC goal, which is when the allocated heap
         // has grown by GOGC/100 over where it started the last cycle,
         // plus additional runway for non-heap sources of GC work.
-        auto gcPercentHeapGoal = ~ uint64_t(0);
+        uint64_t gcPercentHeapGoal = ~ uint64_t(0);
         if(auto gcPercent = rec::Load(gocpp::recv(c->gcPercent)); gcPercent >= 0)
         {
             gcPercentHeapGoal = c->heapMarked + (c->heapMarked + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan))) * uint64_t(gcPercent) / 100;

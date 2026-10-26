@@ -6,13 +6,14 @@
 
 namespace golang::internal::strconv
 {
-    using Error = int;
-    const int intSize = 32 << (~ (unsigned int)(0) >> 63);
-    const golang::internal::strconv::Error _ = 0;
-    const golang::internal::strconv::Error ErrRange = 1;
-    const golang::internal::strconv::Error ErrSyntax = 2;
-    const golang::internal::strconv::Error ErrBase = 3;
-    const golang::internal::strconv::Error ErrBitSize = 4;
+    struct GoTag_Error;
+    using Error = gocpp::defined<int64_t, GoTag_Error>;
+    inline constexpr int64_t intSize = 32 << (~ (uint64_t)(0) >> 63);
+    inline constexpr golang::internal::strconv::Error _ = 0;
+    inline constexpr golang::internal::strconv::Error ErrRange = 1;
+    inline constexpr golang::internal::strconv::Error ErrSyntax = 2;
+    inline constexpr golang::internal::strconv::Error ErrBase = 3;
+    inline constexpr golang::internal::strconv::Error ErrBitSize = 4;
     // IntSize is the size in bits of an int or uint value.
-    const int IntSize = intSize;
+    inline constexpr int64_t IntSize = intSize;
 }

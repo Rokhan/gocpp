@@ -134,10 +134,10 @@ namespace golang::go::types
     //     the method's formal receiver base type, nor was the receiver addressable.
     //
     // See also [LookupSelection], which returns the result as a [Selection].
-    std::tuple<Object, gocpp::slice<int>, bool> LookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name)
+    std::tuple<Object, gocpp::slice<int64_t>, bool> LookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name)
     {
         Object obj;
-        gocpp::slice<int> index;
+        gocpp::slice<int64_t> index;
         bool indirect;
         if(T == nullptr)
         {
@@ -148,10 +148,10 @@ namespace golang::go::types
 
     // lookupFieldOrMethod is like LookupFieldOrMethod but with the additional foldCase parameter
     // (see Object.sameId for the meaning of foldCase).
-    std::tuple<Object, gocpp::slice<int>, bool> lookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase)
+    std::tuple<Object, gocpp::slice<int64_t>, bool> lookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase)
     {
         Object obj;
-        gocpp::slice<int> index;
+        gocpp::slice<int64_t> index;
         bool indirect;
         // Methods cannot be associated to a named pointer type.
         // (spec: "The type denoted by T is called the receiver base type;
@@ -210,10 +210,10 @@ namespace golang::go::types
     // and missingMethod (the latter doesn't care about struct fields).
     //
     // The resulting object may not be fully type-checked.
-    std::tuple<Object, gocpp::slice<int>, bool> lookupFieldOrMethodImpl(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase)
+    std::tuple<Object, gocpp::slice<int64_t>, bool> lookupFieldOrMethodImpl(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase)
     {
         Object obj;
-        gocpp::slice<int> index;
+        gocpp::slice<int64_t> index;
         bool indirect;
         // WARNING: The code in this function is extremely subtle - do not modify casually!
         if(name == "_"_s)
@@ -437,9 +437,9 @@ namespace golang::go::types
         }
 
         // number of entries w/ unique type
-        auto n = 0;
+        int64_t n = 0;
         // index at which type was previously seen
-        auto prev = gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, int>>());
+        auto prev = gocpp::make(gocpp::Tag<gocpp::map<golang::go::types::Type, int64_t>>());
         for(auto [gocpp_ignored, e] : list)
         {
             if(auto [i, found] = lookupType(prev, e.typ); found)
@@ -458,7 +458,7 @@ namespace golang::go::types
         return list.make_slice(0, n);
     }
 
-    std::tuple<int, bool> lookupType(gocpp::map<golang::go::types::Type, int> m, golang::go::types::Type typ)
+    std::tuple<int64_t, bool> lookupType(gocpp::map<golang::go::types::Type, int64_t> m, golang::go::types::Type typ)
     {
         // fast path: maybe the types are equal
         if(auto [i, found] = m.lookup(typ); found)
@@ -592,7 +592,7 @@ namespace golang::go::types
         auto field = 7;
         auto nointerface = 8;
 
-        auto state = ok;
+        int64_t state = ok;
         // method on T we're trying to implement
         Func* m = {};
         // method on V, if found (state is one of ok, wrongName, wrongSig)
@@ -947,16 +947,16 @@ namespace golang::go::types
 
     // concat returns the result of concatenating list and i.
     // The result does not share its underlying array with list.
-    gocpp::slice<int> concat(gocpp::slice<int> list, int i)
+    gocpp::slice<int64_t> concat(gocpp::slice<int64_t> list, int64_t i)
     {
-        gocpp::slice<int> t = {};
+        gocpp::slice<int64_t> t = {};
         t = append(t, list);
         return append(t, i);
     }
 
     // methodIndex returns the index of and method with matching package and name, or (-1, nil).
     // See Object.sameId for the meaning of foldCase.
-    std::tuple<int, Func*> methodIndex(gocpp::slice<Func*> methods, Package* pkg, gocpp::string name, bool foldCase)
+    std::tuple<int64_t, Func*> methodIndex(gocpp::slice<Func*> methods, Package* pkg, gocpp::string name, bool foldCase)
     {
         if(name != "_"_s)
         {
@@ -975,7 +975,7 @@ namespace golang::go::types
     // fieldPath returns the dot-separated concatenated field names for the
     // given index sequence (e.g. "a.b.c").
     // Use for error reporting etc. where speed is not important.
-    gocpp::string fieldPath(golang::go::types::Type typ, gocpp::slice<int> index)
+    gocpp::string fieldPath(golang::go::types::Type typ, gocpp::slice<int64_t> index)
     {
         gocpp::slice<gocpp::string> names = {};
         for(auto [gocpp_ignored, i] : index)

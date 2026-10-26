@@ -16,8 +16,8 @@ namespace golang::math::rand
     extern gocpp::array<int64_t, rngLen> rngCooked;
     struct rngSource
     {
-        int tap{}; // index into vec
-        int feed{}; // index into vec
+        int64_t tap{}; // index into vec
+        int64_t feed{}; // index into vec
         gocpp::array<int64_t, rngLen> vec{}; // current feedback register
 
         using isGoStruct = void;

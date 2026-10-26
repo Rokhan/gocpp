@@ -14,7 +14,7 @@ namespace golang::main
 {
     void main();
     struct GoTag_ints { };
-    using ints = gocpp::defined<gocpp::slice<int>, GoTag_ints>;
+    using ints = gocpp::defined<gocpp::slice<int64_t>, GoTag_ints>;
     struct GoTag_fakeFetcher { };
     using fakeFetcher = gocpp::defined<gocpp::map<gocpp::string, fakeResult*>, GoTag_fakeFetcher>;
     struct fakeResult

@@ -102,7 +102,7 @@ namespace golang::main
     }
 
     template<typename T, typename TStore, typename TInterface>
-    void Adder::AdderImpl<T, TStore, TInterface>::vAdd(int f)
+    void Adder::AdderImpl<T, TStore, TInterface>::vAdd(int64_t f)
     {
         return rec::Add(gocpp::PtrRecv<T, false>(value.get()), f);
     }
@@ -115,12 +115,12 @@ namespace golang::main
 
     namespace rec
     {
-        void Add(const gocpp::PtrRecv<struct Adder, false>& self, int f)
+        void Add(const gocpp::PtrRecv<struct Adder, false>& self, int64_t f)
         {
             return self.ptr->value()->vAdd(f);
         }
 
-        void Add(const gocpp::ObjRecv<struct Adder>& self, int f)
+        void Add(const gocpp::ObjRecv<struct Adder>& self, int64_t f)
         {
             return self.obj.value()->vAdd(f);
         }
@@ -156,7 +156,7 @@ namespace golang::main
     }
 
     template<typename T, typename TStore, typename TInterface>
-    void Multiplier::MultiplierImpl<T, TStore, TInterface>::vMul(int f)
+    void Multiplier::MultiplierImpl<T, TStore, TInterface>::vMul(int64_t f)
     {
         return rec::Mul(gocpp::PtrRecv<T, false>(value.get()), f);
     }
@@ -169,12 +169,12 @@ namespace golang::main
 
     namespace rec
     {
-        void Mul(const gocpp::PtrRecv<struct Multiplier, false>& self, int f)
+        void Mul(const gocpp::PtrRecv<struct Multiplier, false>& self, int64_t f)
         {
             return self.ptr->value()->vMul(f);
         }
 
-        void Mul(const gocpp::ObjRecv<struct Multiplier>& self, int f)
+        void Mul(const gocpp::ObjRecv<struct Multiplier>& self, int64_t f)
         {
             return self.obj.value()->vMul(f);
         }
@@ -233,22 +233,22 @@ namespace golang::main
             return self.obj.value()->vPrint();
         }
 
-        void Add(const gocpp::PtrRecv<struct MultAdder, false>& self, int f)
+        void Add(const gocpp::PtrRecv<struct MultAdder, false>& self, int64_t f)
         {
             return self.ptr->value()->vAdd(f);
         }
 
-        void Add(const gocpp::ObjRecv<struct MultAdder>& self, int f)
+        void Add(const gocpp::ObjRecv<struct MultAdder>& self, int64_t f)
         {
             return self.obj.value()->vAdd(f);
         }
 
-        void Mul(const gocpp::PtrRecv<struct MultAdder, false>& self, int f)
+        void Mul(const gocpp::PtrRecv<struct MultAdder, false>& self, int64_t f)
         {
             return self.ptr->value()->vMul(f);
         }
 
-        void Mul(const gocpp::ObjRecv<struct MultAdder>& self, int f)
+        void Mul(const gocpp::ObjRecv<struct MultAdder>& self, int64_t f)
         {
             return self.obj.value()->vMul(f);
         }
@@ -343,12 +343,12 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void rec::Add(num* n, int f)
+    void rec::Add(num* n, int64_t f)
     {
         n->value += f;
     }
 
-    void rec::Mul(num* n, int f)
+    void rec::Mul(num* n, int64_t f)
     {
         n->value *= f;
     }
@@ -430,7 +430,7 @@ namespace golang::main
     void main()
     {
         Abser a = nullptr;
-        auto f = MyFloat(- mocklib::Sqrt2);
+        MyFloat f = MyFloat(- mocklib::Sqrt2);
         auto v = Vertex {3, 4};
 
         // a MyFloat implements Abser

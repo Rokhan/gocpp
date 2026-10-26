@@ -10,7 +10,7 @@ namespace golang::internal::bisect
     struct cond;
     struct Writer;
     struct parseError;
-    const uint64_t offset64 = 14695981039346656037;
-    const uint64_t prime64 = 1099511628211;
+    inline constexpr uint64_t offset64 = 14695981039346656037;
+    inline constexpr uint64_t prime64 = 1099511628211LL;
     struct dedup;
 }

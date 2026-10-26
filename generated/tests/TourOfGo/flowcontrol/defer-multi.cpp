@@ -27,7 +27,7 @@ namespace golang::main
         {
             mocklib::Println("counting"_s);
 
-            for(auto i = 0; i < 10; i++)
+            for(int64_t i = 0; i < 10; i++)
             {
                 defer.push_back([=]{ mocklib::Println(i); });
             }

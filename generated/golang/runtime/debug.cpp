@@ -91,7 +91,7 @@ namespace golang::runtime
     // application is idle.
     //
     // [default]: https://go.dev/doc/godebug#default
-    int GOMAXPROCS(int n)
+    int64_t GOMAXPROCS(int64_t n)
     {
         if(GOARCH == "wasm"_s && n > 1)
         {
@@ -100,7 +100,7 @@ namespace golang::runtime
         }
 
         lock(& sched.lock);
-        auto ret = int(gomaxprocs);
+        auto ret = int64_t(gomaxprocs);
         if(n <= 0)
         {
             unlock(& sched.lock);
@@ -179,9 +179,9 @@ namespace golang::runtime
     // The set of available CPUs is checked by querying the operating system
     // at process startup. Changes to operating system CPU allocation after
     // process startup are not reflected.
-    int NumCPU()
+    int64_t NumCPU()
     {
-        return int(numCPUStartup);
+        return int64_t(numCPUStartup);
     }
 
     // NumCgoCall returns the number of cgo calls made by the current process.
@@ -209,9 +209,9 @@ namespace golang::runtime
     }
 
     // NumGoroutine returns the number of goroutines that currently exist.
-    int NumGoroutine()
+    int64_t NumGoroutine()
     {
-        return int(gcount(false));
+        return int64_t(gcount(false));
     }
 
     //go:linkname debug_modinfo runtime/debug.modinfo

@@ -26,10 +26,10 @@ namespace golang::slices
     }
 
     template<template<typename> class  S, typename E>
-    int Compare(S<E> s1, S<E> s2);
+    int64_t Compare(S<E> s1, S<E> s2);
 
     template<template<typename> class  S1, template<typename> class  S2, typename E1, typename E2>
-    int CompareFunc(S1<E1> s1, S2<E2> s2, std::function<int (E1 _1, E2 _2)> cmp);
+    int64_t CompareFunc(S1<E1> s1, S2<E2> s2, std::function<int64_t (E1 _1, E2 _2)> cmp);
 
     template<template<typename> class  S1, template<typename> class  S2, typename E1, typename E2, typename F1>
     decltype(auto) CompareFunc(S1<E1> s1, S2<E2> s2, F1&& cmp)
@@ -38,10 +38,10 @@ namespace golang::slices
     }
 
     template<template<typename> class  S, typename E>
-    int Index(S<E> s, E v);
+    int64_t Index(S<E> s, E v);
 
     template<template<typename> class  S, typename E>
-    int IndexFunc(S<E> s, std::function<bool (E _1)> f);
+    int64_t IndexFunc(S<E> s, std::function<bool (E _1)> f);
 
     template<template<typename> class  S, typename E, typename F1>
     decltype(auto) IndexFunc(S<E> s, F1&& f)
@@ -62,22 +62,22 @@ namespace golang::slices
     }
 
     template<template<typename> class  S, typename E>
-    S<E> Insert(S<E> s, int i, gocpp::slice<E> v);
+    S<E> Insert(S<E> s, int64_t i, gocpp::slice<E> v);
 
     template<template<typename> class  S, typename E, typename... Args>
-    S<E> Insert(S<E> s, int i, Args... v)
+    S<E> Insert(S<E> s, int64_t i, Args... v)
     {
         return Insert(s, i, gocpp::ToSlice<E>(v...));
     }
 
     template<template<typename> class  S, typename E, typename... Args>
-    S<E> Insert(S<E> s, int i, E value, Args... v)
+    S<E> Insert(S<E> s, int64_t i, E value, Args... v)
     {
         return Insert(s, i, gocpp::ToSlice<E>(value, v...));
     }
 
     template<template<typename> class  S, typename E>
-    S<E> Delete(S<E> s, int i, int j);
+    S<E> Delete(S<E> s, int64_t i, int64_t j);
 
     template<template<typename> class  S, typename E>
     S<E> DeleteFunc(S<E> s, std::function<bool (E _1)> del);
@@ -89,16 +89,16 @@ namespace golang::slices
     }
 
     template<template<typename> class  S, typename E>
-    S<E> Replace(S<E> s, int i, int j, gocpp::slice<E> v);
+    S<E> Replace(S<E> s, int64_t i, int64_t j, gocpp::slice<E> v);
 
     template<template<typename> class  S, typename E, typename... Args>
-    S<E> Replace(S<E> s, int i, int j, Args... v)
+    S<E> Replace(S<E> s, int64_t i, int64_t j, Args... v)
     {
         return Replace(s, i, j, gocpp::ToSlice<E>(v...));
     }
 
     template<template<typename> class  S, typename E, typename... Args>
-    S<E> Replace(S<E> s, int i, int j, E value, Args... v)
+    S<E> Replace(S<E> s, int64_t i, int64_t j, E value, Args... v)
     {
         return Replace(s, i, j, gocpp::ToSlice<E>(value, v...));
     }
@@ -119,22 +119,22 @@ namespace golang::slices
     }
 
     template<template<typename> class  S, typename E>
-    S<E> Grow(S<E> s, int n);
+    S<E> Grow(S<E> s, int64_t n);
 
     template<template<typename> class  S, typename E>
     S<E> Clip(S<E> s);
 
     template<typename E>
-    void rotateLeft(gocpp::slice<E> s, int r);
+    void rotateLeft(gocpp::slice<E> s, int64_t r);
 
     template<typename E>
-    void rotateRight(gocpp::slice<E> s, int r);
+    void rotateRight(gocpp::slice<E> s, int64_t r);
 
     template<typename E>
     bool overlaps(gocpp::slice<E> a, gocpp::slice<E> b);
 
     template<typename E>
-    int startIdx(gocpp::slice<E> haystack, gocpp::slice<E> needle);
+    int64_t startIdx(gocpp::slice<E> haystack, gocpp::slice<E> needle);
 
     template<template<typename> class  S, typename E>
     void Reverse(S<E> s);
@@ -155,7 +155,7 @@ namespace golang::slices
     }
 
     template<template<typename> class  S, typename E>
-    S<E> Repeat(S<E> x, int count);
+    S<E> Repeat(S<E> x, int64_t count);
 
     namespace rec
     {

@@ -6,5 +6,5 @@
 
 namespace golang::runtime
 {
-    const bool isSbrkPlatform = false;
+    inline constexpr bool isSbrkPlatform = false;
 }

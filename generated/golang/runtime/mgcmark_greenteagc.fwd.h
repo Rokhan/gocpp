@@ -6,14 +6,16 @@
 
 namespace golang::runtime
 {
-    const bool doubleCheckGreenTea = false;
+    inline constexpr bool doubleCheckGreenTea = false;
     struct spanInlineMarkBits;
-    using spanScanOwnership = uint8_t;
-    const int spanScanOneMark = 1 << 1;
+    struct GoTag_spanScanOwnership;
+    using spanScanOwnership = gocpp::defined<uint8_t, GoTag_spanScanOwnership>;
+    inline constexpr int64_t spanScanOneMark = 1 << 1;
     struct spanQueue;
     struct spanSPMC;
-    using objptr = uintptr_t;
+    struct GoTag_objptr;
+    using objptr = gocpp::defined<uintptr_t, GoTag_objptr>;
     struct sizeClassScanStats;
-    const spanScanOwnership spanScanUnowned = 0;
-    const spanScanOwnership spanScanManyMark = 1 << 2;
+    inline constexpr spanScanOwnership spanScanUnowned = 0;
+    inline constexpr spanScanOwnership spanScanManyMark = 1 << 2;
 }

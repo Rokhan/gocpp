@@ -489,7 +489,7 @@ namespace golang::os::exec
             {
                 if(c->Process != nullptr && c->ProcessState == nullptr)
                 {
-                    auto debugHint = ""_s;
+                    gocpp::string debugHint = ""_s;
                     if(c->createdByStack == nullptr)
                     {
                         debugHint = " (set GODEBUG=execwait=2 to capture stacks for debugging)"_s;
@@ -762,7 +762,7 @@ namespace golang::os::exec
                 return errors::New("exec: already started"_s);
             }
 
-            auto started = false;
+            bool started = false;
             defer.push_back([=]{ [=]() mutable -> void
             {
                 closeDescriptors(c->childIOFiles);
@@ -893,7 +893,7 @@ namespace golang::os::exec
 
                 struct goroutineStatus
                 {
-                    int running{};
+                    int64_t running{};
                     gocpp::error firstErr{};
 
                     using isGoStruct = void;
@@ -1040,7 +1040,7 @@ namespace golang::os::exec
         }
         std::this_thread::yield();
 
-        auto killed = false;
+        bool killed = false;
         if(auto killErr = rec::Kill(gocpp::recv(c->Process)); killErr == nullptr)
         {
             // We appear to have killed the process. c.Process.Wait should return a
@@ -1137,12 +1137,12 @@ namespace golang::os::exec
 
     namespace rec
     {
-        int ExitCode(const gocpp::PtrRecv<struct ExitError, false>& self)
+        int64_t ExitCode(const gocpp::PtrRecv<struct ExitError, false>& self)
         {
             return os::rec::ExitCode(gocpp::recv(self.ptr->ProcessState));
         }
 
-        int ExitCode(const gocpp::ObjRecv<struct ExitError>& self)
+        int64_t ExitCode(const gocpp::ObjRecv<struct ExitError>& self)
         {
             return os::rec::ExitCode(gocpp::recv(self.obj.ProcessState));
         }
@@ -1157,12 +1157,12 @@ namespace golang::os::exec
             return os::rec::Exited(gocpp::recv(self.obj.ProcessState));
         }
 
-        int Pid(const gocpp::PtrRecv<struct ExitError, false>& self)
+        int64_t Pid(const gocpp::PtrRecv<struct ExitError, false>& self)
         {
             return os::rec::Pid(gocpp::recv(self.ptr->ProcessState));
         }
 
-        int Pid(const gocpp::ObjRecv<struct ExitError>& self)
+        int64_t Pid(const gocpp::ObjRecv<struct ExitError>& self)
         {
             return os::rec::Pid(gocpp::recv(self.obj.ProcessState));
         }
@@ -1631,9 +1631,9 @@ namespace golang::os::exec
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> rec::Write(prefixSuffixSaver* w, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Write(prefixSuffixSaver* w, gocpp::slice<unsigned char> p)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         auto lenp = len(p);
         p = rec::fill(gocpp::recv(w), & w->prefix, p);
@@ -1836,7 +1836,7 @@ namespace golang::os::exec
         }
 
         // Now reverse the slice to restore the original order.
-        for(auto i = 0; i < len(out) / 2; i++)
+        for(int64_t i = 0; i < len(out) / 2; i++)
         {
             auto j = len(out) - i - 1;
             std::tie(out[i], out[j]) = std::tuple{out[j], out[i]};

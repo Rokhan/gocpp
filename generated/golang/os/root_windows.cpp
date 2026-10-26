@@ -202,7 +202,7 @@ namespace golang::os
     }
 
     // rootOpenFileNolog is Root.OpenFile.
-    std::tuple<File*, gocpp::error> rootOpenFileNolog(Root* root, gocpp::string name, int flag, FileMode perm)
+    std::tuple<File*, gocpp::error> rootOpenFileNolog(Root* root, gocpp::string name, int64_t flag, FileMode perm)
     {
         auto [fd, err] = doInRoot(root, name, doInRootNoHandleTerminalSlash, nullptr, [=](syscall::Handle parent, gocpp::string name, bool endsInSlash) mutable -> std::tuple<syscall::Handle, gocpp::error>
         {
@@ -293,7 +293,7 @@ namespace golang::os
 
     std::tuple<FileInfo, gocpp::error> rootStat(Root* r, gocpp::string name, bool lstat)
     {
-        unsigned int flags = {};
+        uint64_t flags = {};
         if(lstat)
         {
             // Follow symlinks in the last path component when the path
@@ -463,13 +463,13 @@ namespace golang::os
         }
     }
 
-    gocpp::error chownat(syscall::Handle parent, gocpp::string name, int uid, int gid)
+    gocpp::error chownat(syscall::Handle parent, gocpp::string name, int64_t uid, int64_t gid)
     {
         // matches syscall.Chown
         return gocpp::error(syscall::go_EWINDOWS);
     }
 
-    gocpp::error lchownat(syscall::Handle parent, gocpp::string name, int uid, int gid)
+    gocpp::error lchownat(syscall::Handle parent, gocpp::string name, int64_t uid, int64_t gid)
     {
         // matches syscall.Lchown
         return gocpp::error(syscall::go_EWINDOWS);

@@ -6,12 +6,12 @@
 
 namespace golang::internal::strconv
 {
-    const gocpp::string digits = "0123456789abcdefghijklmnopqrstuvwxyz"_s;
-    const long nSmalls = 100;
+    inline const gocpp::string digits = "0123456789abcdefghijklmnopqrstuvwxyz"_s;
+    inline constexpr long nSmalls = 100;
     // smalls is the formatting of 00..99 concatenated.
     // It is then padded out with 56 x's to 256 bytes,
     // so that smalls[x&0xFF] has no bounds check.
-    const gocpp::string smalls = "00010203040506070809"_s +
+    inline const gocpp::string smalls = "00010203040506070809"_s +
         "10111213141516171819"_s +
         "20212223242526272829"_s +
         "30313233343536373839"_s +

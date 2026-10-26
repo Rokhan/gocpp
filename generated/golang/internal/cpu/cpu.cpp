@@ -721,7 +721,7 @@ namespace golang::internal::cpu
             field_break:
                 break;
             }
-            auto field = ""_s;
+            gocpp::string field = ""_s;
             auto i = indexByte(env, ',');
             if(i < 0)
             {
@@ -810,9 +810,9 @@ namespace golang::internal::cpu
     // or -1 if c is not present in s.
     // indexByte is semantically the same as [strings.IndexByte].
     // We copy this function because "internal/cpu" should not have external dependencies.
-    int indexByte(gocpp::string s, unsigned char c)
+    int64_t indexByte(gocpp::string s, unsigned char c)
     {
-        for(auto i = 0; i < len(s); i++)
+        for(int64_t i = 0; i < len(s); i++)
         {
             if(s[i] == c)
             {

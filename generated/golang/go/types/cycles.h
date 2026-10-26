@@ -21,7 +21,7 @@ namespace golang::go::types
     namespace rec
     {
         void directCycles(Checker* check);
-        void directCycle(Checker* check, TypeName* tname, gocpp::map<TypeName*, int> pathIdx);
+        void directCycle(Checker* check, TypeName* tname, gocpp::map<TypeName*, int64_t> pathIdx);
         bool isComplete(Checker* check, golang::go::types::Type t);
     }
 }

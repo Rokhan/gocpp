@@ -12,12 +12,12 @@
 
 namespace golang::main
 {
-    int add(int x, int y);
-    extern int* Pointer;
+    int64_t add(int64_t x, int64_t y);
+    extern int64_t* Pointer;
     void main();
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    gocpp::unsafe_pointer toto1(int x, int y);
-    gocpp::unsafe_pointer toto2(int x, int y);
+    gocpp::unsafe_pointer toto1(int64_t x, int64_t y);
+    gocpp::unsafe_pointer toto2(int64_t x, int64_t y);
 }
 #include "golang/fmt/print.fwd.h"
 #include "golang/fmt/print.h"

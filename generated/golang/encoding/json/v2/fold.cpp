@@ -36,7 +36,7 @@ namespace golang::encoding::json::v2
 
     gocpp::slice<unsigned char> appendFoldedName(gocpp::slice<unsigned char> out, gocpp::slice<unsigned char> in)
     {
-        for(auto i = 0; i < len(in); )
+        for(int64_t i = 0; i < len(in); )
         {
             // Handle single-byte ASCII.
             if(auto c = in[i]; c < utf8::RuneSelf)

@@ -8,9 +8,10 @@ namespace golang::go::token
 {
     // If debug is set, invalid offset and position values cause a panic
     // (go.dev/issue/57490).
-    const bool debug = false;
+    inline constexpr bool debug = false;
     struct Position;
-    using Pos = int;
+    struct GoTag_Pos;
+    using Pos = gocpp::defined<int64_t, GoTag_Pos>;
     struct File;
     struct lineInfo;
     struct FileSet;
@@ -18,5 +19,5 @@ namespace golang::go::token
     // associated with it, and NoPos.IsValid() is false. NoPos is always
     // smaller than any other [Pos] value. The corresponding [Position] value
     // for NoPos is the zero value for [Position].
-    const golang::go::token::Pos NoPos = 0;
+    inline constexpr golang::go::token::Pos NoPos = 0;
 }

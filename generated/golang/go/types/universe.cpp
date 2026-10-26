@@ -216,7 +216,7 @@ namespace golang::go::types
     struct gocpp_id_1
     {
         gocpp::string name{};
-        int nargs{};
+        int64_t nargs{};
         bool variadic{};
         exprKind kind{};
 

@@ -561,7 +561,7 @@ namespace golang::go::types
     {
         if(check->objPathIdx == nullptr)
         {
-            check->objPathIdx = gocpp::make(gocpp::Tag<gocpp::map<Object, int>>());
+            check->objPathIdx = gocpp::make(gocpp::Tag<gocpp::map<Object, int64_t>>());
         }
         check->objPathIdx.ref(obj) = len(check->objPath);
         check->objPath = append(check->objPath, obj);
@@ -983,7 +983,7 @@ namespace golang::go::types
     }
 
     // processDelayed processes all delayed actions pushed after top.
-    void rec::processDelayed(Checker* check, int top)
+    void rec::processDelayed(Checker* check, int64_t top)
     {
         // If each delayed action pushes a new action, the
         // stack will continue to grow during this loop.
@@ -1026,7 +1026,7 @@ namespace golang::go::types
     void rec::cleanup(Checker* check)
     {
         // Don't use a range clause since Named.cleanup may add more cleaners.
-        for(auto i = 0; i < len(check->cleaners); i++)
+        for(int64_t i = 0; i < len(check->cleaners); i++)
         {
             rec::cleanup(gocpp::recv(check->cleaners[i]));
         }

@@ -194,7 +194,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
-                    for(auto i = 0; i < rec::Len(gocpp::recv(v1)); i++)
+                    for(int64_t i = 0; i < rec::Len(gocpp::recv(v1)); i++)
                     {
                         if(! deepValueEqual(rec::Index(gocpp::recv(v1), i), rec::Index(gocpp::recv(v2), i), visited))
                         {
@@ -221,7 +221,7 @@ namespace golang::reflect
                     {
                         return bytealg::Equal(rec::Bytes(gocpp::recv(v1)), rec::Bytes(gocpp::recv(v2)));
                     }
-                    for(auto i = 0; i < rec::Len(gocpp::recv(v1)); i++)
+                    for(int64_t i = 0; i < rec::Len(gocpp::recv(v1)); i++)
                     {
                         if(! deepValueEqual(rec::Index(gocpp::recv(v1), i), rec::Index(gocpp::recv(v2), i), visited))
                         {

@@ -12,5 +12,5 @@ namespace golang::encoding::json::v2
     // the Gregorian calendar, which has an extra day each year that is
     // a multiple of 4, unless it is evenly divisible by 100 but not by 400.
     // This does not take into account leap seconds, which are not deterministic.
-    const double daysPerYear = 365.2425;
+    inline constexpr double daysPerYear = 365.2425;
 }

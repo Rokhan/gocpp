@@ -70,7 +70,7 @@ namespace golang::main
     }
 
     // Value returns the current value of the counter for the given key.
-    int rec::Value(SafeCounter* c, gocpp::string key)
+    int64_t rec::Value(SafeCounter* c, gocpp::string key)
     {
         gocpp::Defer defer;
         try
@@ -89,9 +89,9 @@ namespace golang::main
     void main()
     {
         auto c = gocpp::InitPtr<SafeCounter>([=](auto& x) {
-            x.v = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+            x.v = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int64_t>>());
         });
-        for(auto i = 0; i < 1000; i++)
+        for(int64_t i = 0; i < 1000; i++)
         {
             gocpp::go([&]{ rec::Inc(gocpp::recv(c), "somekey"_s); });
         }

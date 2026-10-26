@@ -206,7 +206,7 @@ namespace golang::runtime
     }
 
     // stacklog2 returns ⌊log_2(n)⌋.
-    int stacklog2(uintptr_t n)
+    int64_t stacklog2(uintptr_t n)
     {
         if(n == 0)
         {
@@ -240,7 +240,7 @@ namespace golang::runtime
             }
             osStackAlloc(s);
             s->elemsize = fixedStack << order;
-            for(auto i = uintptr_t(0); i < _StackCacheSize; i += s->elemsize)
+            for(uintptr_t i = uintptr_t(0); i < _StackCacheSize; i += s->elemsize)
             {
                 auto x = gclinkptr(rec::base(gocpp::recv(s)) + i);
                 if(valgrindenabled)
@@ -365,7 +365,7 @@ namespace golang::runtime
         {
             print("stackcache clear\n"_s);
         }
-        for(auto order = uint8_t(0); order < _NumStackOrders; order++)
+        for(uint8_t order = uint8_t(0); order < _NumStackOrders; order++)
         {
             lock(& stackpool[order].item.mu);
             auto x = c->stackcache[order].list;
@@ -423,7 +423,7 @@ namespace golang::runtime
         gocpp::unsafe_pointer v = {};
         if(n < (fixedStack << _NumStackOrders) && n < _StackCacheSize)
         {
-            auto order = uint8_t(0);
+            uint8_t order = uint8_t(0);
             auto n2 = n;
             for(; n2 > fixedStack; )
             {
@@ -585,7 +585,7 @@ namespace golang::runtime
         }
         if(n < (fixedStack << _NumStackOrders) && n < _StackCacheSize)
         {
-            auto order = uint8_t(0);
+            uint8_t order = uint8_t(0);
             auto n2 = n;
             for(; n2 > fixedStack; )
             {
@@ -783,11 +783,11 @@ namespace golang::runtime
         // could race with adjusting those pointers. (The sent value
         // itself can never contain stack pointers.)
         auto useCAS = uintptr_t(scanp) < adjinfo->sghi;
-        for(auto i = uintptr_t(0); i < num; i += 8)
+        for(uintptr_t i = uintptr_t(0); i < num; i += 8)
         {
             if(stackDebug >= 4)
             {
-                for(auto j = uintptr_t(0); j < 8; j++)
+                for(uintptr_t j = uintptr_t(0); j < 8; j++)
                 {
                     print("        "_s, add(scanp, (i + j) * goarch::PtrSize), ":"_s, ptrnames[rec::ptrbit(gocpp::recv(bv), i + j)], ":"_s, hex(*(uintptr_t*)(add(scanp, (i + j) * goarch::PtrSize))), " # "_s, i, " "_s, *addb(bv->bytedata, i / 8), "\n"_s);
                 }
@@ -943,7 +943,7 @@ namespace golang::runtime
                     continue;
                 }
                 auto [ptrBytes, gcData] = rec::gcdata(gocpp::recv(obj));
-                for(auto i = uintptr_t(0); i < ptrBytes; i += goarch::PtrSize)
+                for(uintptr_t i = uintptr_t(0); i < ptrBytes; i += goarch::PtrSize)
                 {
                     if((*addb(gcData, i / (8 * goarch::PtrSize)) >> (i / goarch::PtrSize & 7)) & 1 != 0)
                     {
@@ -1227,7 +1227,7 @@ namespace golang::runtime
     // round x up to a power of 2.
     int32_t round2(int32_t x)
     {
-        auto s = (unsigned int)(0);
+        uint64_t s = (uint64_t)(0);
         for(; (1 << s) < x; )
         {
             s++;

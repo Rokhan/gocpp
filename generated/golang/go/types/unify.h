@@ -12,6 +12,8 @@
 
 namespace golang::go::types
 {
+    struct GoTag_unifyMode { };
+    using unifyMode = gocpp::defined<uint64_t, GoTag_unifyMode>;
     struct GoTag_typeParamsById { };
 }
 #include "golang/go/types/type.h"
@@ -34,7 +36,7 @@ namespace golang::go::types
         // automatically infer the same type for all other parameters
         // unified (joined) with P.
         gocpp::map<TypeParam*, golang::go::types::Type*> handles{};
-        int depth{}; // recursion depth during unification
+        int64_t depth{}; // recursion depth during unification
         bool enableInterfaceInference{}; // use shared methods for better inference
 
         using isGoStruct = void;
@@ -79,15 +81,15 @@ namespace golang::go::types
             return tracef(u, format, gocpp::ToSlice<go_any>(value, args...));
         }
         gocpp::string String(unifier* u);
-        int Len(typeParamsById s);
-        bool Less(typeParamsById s, int i, int j);
-        void Swap(typeParamsById s, int i, int j);
+        int64_t Len(typeParamsById s);
+        bool Less(typeParamsById s, int64_t i, int64_t j);
+        void Swap(typeParamsById s, int64_t i, int64_t j);
         bool join(unifier* u, TypeParam* x, TypeParam* y);
         TypeParam* asBoundTypeParam(unifier* u, golang::go::types::Type x);
         void setHandle(unifier* u, TypeParam* x, golang::go::types::Type* h);
         golang::go::types::Type at(unifier* u, TypeParam* x);
         void set(unifier* u, TypeParam* x, golang::go::types::Type t);
-        int unknowns(unifier* u);
+        int64_t unknowns(unifier* u);
         gocpp::slice<golang::go::types::Type> inferred(unifier* u, gocpp::slice<TypeParam*> tparams);
         bool nify(unifier* u, golang::go::types::Type x, golang::go::types::Type y, unifyMode mode, ifacePair* p);
     }

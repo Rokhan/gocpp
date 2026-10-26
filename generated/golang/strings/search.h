@@ -22,7 +22,7 @@ namespace golang::strings
         // Whenever a mismatch is found with byte b in the text, we can safely
         // shift the matching frame at least badCharSkip[b] until the next time
         // the matching char could be in alignment.
-        gocpp::array<int, 256> badCharSkip{};
+        gocpp::array<int64_t, 256> badCharSkip{};
         // goodSuffixSkip[i] defines how far we can shift the matching frame given
         // that the suffix pattern[i+1:] matches, but the byte pattern[i] does
         // not. There are two cases to consider:
@@ -41,7 +41,7 @@ namespace golang::strings
         // suffix "xxabc" is not found elsewhere in the pattern. However, its
         // rightmost "abc" (at position 6) is a prefix of the whole pattern, so
         // goodSuffixSkip[3] == shift+len(suffix) == 6+5 == 11.
-        gocpp::slice<int> goodSuffixSkip{};
+        gocpp::slice<int64_t> goodSuffixSkip{};
 
         using isGoStruct = void;
 
@@ -55,12 +55,12 @@ namespace golang::strings
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stringFinder& value);
-    int longestCommonSuffix(gocpp::string a, gocpp::string b);
+    int64_t longestCommonSuffix(gocpp::string a, gocpp::string b);
     stringFinder* makeStringFinder(gocpp::string pattern);
 
     namespace rec
     {
-        int next(stringFinder* f, gocpp::string text);
+        int64_t next(stringFinder* f, gocpp::string text);
     }
 }
 

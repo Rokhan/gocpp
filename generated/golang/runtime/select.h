@@ -16,6 +16,8 @@ namespace golang::runtime
     extern uintptr_t chanrecvpc;
     void selectsetpc(uintptr_t* pc);
     void block();
+    struct GoTag_selectDir { };
+    using selectDir = gocpp::defined<int64_t, GoTag_selectDir>;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/chan.fwd.h"
@@ -62,8 +64,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct runtimeSelect& value);
     void sellock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
     void selunlock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
-    std::tuple<int, bool> selectgo(scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block);
-    std::tuple<int, bool> reflect_rselect(gocpp::slice<runtimeSelect> cases);
+    std::tuple<int64_t, bool> selectgo(scase* cas0, uint16_t* order0, uintptr_t* pc0, int64_t nsends, int64_t nrecvs, bool block);
+    std::tuple<int64_t, bool> reflect_rselect(gocpp::slice<runtimeSelect> cases);
 }
 
 #include "golang/runtime/chan.h"

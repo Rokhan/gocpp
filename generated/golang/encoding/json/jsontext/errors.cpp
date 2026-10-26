@@ -209,12 +209,12 @@ namespace golang::encoding::json::jsontext
         return rec::options(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    int64_t gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::voffsetAt(int pos)
+    int64_t gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::voffsetAt(int64_t pos)
     {
         return rec::offsetAt(gocpp::PtrRecv<T, false>(value.get()), pos);
     }
     template<typename T, typename TStore, typename TInterface>
-    gocpp::slice<unsigned char> gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vAppendStackPointer(gocpp::slice<unsigned char> b, int where)
+    gocpp::slice<unsigned char> gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vAppendStackPointer(gocpp::slice<unsigned char> b, int64_t where)
     {
         return rec::AppendStackPointer(gocpp::PtrRecv<T, false>(value.get()), b, where);
     }
@@ -237,22 +237,22 @@ namespace golang::encoding::json::jsontext
             return self.obj.value()->voptions();
         }
 
-        int64_t offsetAt(const gocpp::PtrRecv<struct gocpp_id_0, false>& self, int pos)
+        int64_t offsetAt(const gocpp::PtrRecv<struct gocpp_id_0, false>& self, int64_t pos)
         {
             return self.ptr->value()->voffsetAt(pos);
         }
 
-        int64_t offsetAt(const gocpp::ObjRecv<struct gocpp_id_0>& self, int pos)
+        int64_t offsetAt(const gocpp::ObjRecv<struct gocpp_id_0>& self, int64_t pos)
         {
             return self.obj.value()->voffsetAt(pos);
         }
 
-        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_id_0, false>& self, gocpp::slice<unsigned char> b, int where)
+        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_id_0, false>& self, gocpp::slice<unsigned char> b, int64_t where)
         {
             return self.ptr->value()->vAppendStackPointer(b, where);
         }
 
-        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_id_0>& self, gocpp::slice<unsigned char> b, int where)
+        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_id_0>& self, gocpp::slice<unsigned char> b, int64_t where)
         {
             return self.obj.value()->vAppendStackPointer(b, where);
         }
@@ -263,7 +263,7 @@ namespace golang::encoding::json::jsontext
         return value.PrintTo(os);
     }
 
-    gocpp::error wrapSyntacticError(gocpp_id_0 state, gocpp::error err, int pos, int where)
+    gocpp::error wrapSyntacticError(gocpp_id_0 state, gocpp::error err, int64_t pos, int64_t where)
     {
         if(auto [gocpp_id_1, ok] = gocpp::getValue<ioError*>(err); err == io::go_EOF || ok)
         {
@@ -278,7 +278,7 @@ namespace golang::encoding::json::jsontext
         }
         if(auto [d, ok] = gocpp::getValue<decoderState*>(state); ok && err == errMismatchDelim)
         {
-            auto where = "at start of value"_s;
+            gocpp::string where = "at start of value"_s;
             if(len(d->state.Tokens.Stack) > 0 && rec::Length(gocpp::recv(d->state.Tokens.Last)) > 0)
             {
                 //Go switch emulation

@@ -6,8 +6,8 @@
 
 namespace golang::runtime
 {
-    const int callbackVEH = 0;
-    const int callbackFirstVCH = 1;
-    const int callbackLastVCH = 2;
+    inline constexpr int64_t callbackVEH = 0;
+    inline constexpr int64_t callbackFirstVCH = 1;
+    inline constexpr int64_t callbackLastVCH = 2;
     struct gsignalStack;
 }

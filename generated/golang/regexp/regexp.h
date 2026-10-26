@@ -18,7 +18,7 @@ namespace golang::regexp
     // On a 64-bit system each queue entry is 16 bytes,
     // so matchPool[0] has 16*2*128 = 4kB queues, etc.
     // The final matchPool is a catch-all for very large queues.
-    extern gocpp::array<int, 5> matchSize;
+    extern gocpp::array<int64_t, 5> matchSize;
     gocpp::string quote(gocpp::string s);
     struct inputString
     {
@@ -59,7 +59,7 @@ namespace golang::regexp
     bool special(unsigned char b);
     void init();
     gocpp::string QuoteMeta(gocpp::string s);
-    std::tuple<gocpp::string, int, gocpp::string, bool> extract(gocpp::string str);
+    std::tuple<gocpp::string, int64_t, gocpp::string, bool> extract(gocpp::string str);
 }
 #include "golang/regexp/exec.h"
 
@@ -94,11 +94,11 @@ namespace golang::regexp
 
         struct Iinput
         {
-            virtual std::tuple<gocpp::rune, int> vstep(int pos) = 0; // advance one rune
+            virtual std::tuple<gocpp::rune, int64_t> vstep(int64_t pos) = 0; // advance one rune
             virtual bool vcanCheckPrefix() = 0; // can we look ahead without losing info?
             virtual bool vhasPrefix(Regexp* re) = 0;
-            virtual int vindex(Regexp* re, int pos) = 0;
-            virtual lazyFlag vcontext(int pos) = 0;
+            virtual int64_t vindex(Regexp* re, int64_t pos) = 0;
+            virtual lazyFlag vcontext(int64_t pos) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -110,15 +110,15 @@ namespace golang::regexp
                 value.reset(ptr);
             }
 
-            std::tuple<gocpp::rune, int> vstep(int pos) override;
+            std::tuple<gocpp::rune, int64_t> vstep(int64_t pos) override;
 
             bool vcanCheckPrefix() override;
 
             bool vhasPrefix(Regexp* re) override;
 
-            int vindex(Regexp* re, int pos) override;
+            int64_t vindex(Regexp* re, int64_t pos) override;
 
-            lazyFlag vcontext(int pos) override;
+            lazyFlag vcontext(int64_t pos) override;
 
             void* getPtr() override
             {
@@ -135,8 +135,8 @@ namespace golang::regexp
 
     namespace rec
     {
-        std::tuple<gocpp::rune, int> step(const gocpp::PtrRecv<struct input, false>& self, int pos);
-        std::tuple<gocpp::rune, int> step(const gocpp::ObjRecv<struct input>& self, int pos);
+        std::tuple<gocpp::rune, int64_t> step(const gocpp::PtrRecv<struct input, false>& self, int64_t pos);
+        std::tuple<gocpp::rune, int64_t> step(const gocpp::ObjRecv<struct input>& self, int64_t pos);
 
         bool canCheckPrefix(const gocpp::PtrRecv<struct input, false>& self);
         bool canCheckPrefix(const gocpp::ObjRecv<struct input>& self);
@@ -144,11 +144,11 @@ namespace golang::regexp
         bool hasPrefix(const gocpp::PtrRecv<struct input, false>& self, Regexp* re);
         bool hasPrefix(const gocpp::ObjRecv<struct input>& self, Regexp* re);
 
-        int index(const gocpp::PtrRecv<struct input, false>& self, Regexp* re, int pos);
-        int index(const gocpp::ObjRecv<struct input>& self, Regexp* re, int pos);
+        int64_t index(const gocpp::PtrRecv<struct input, false>& self, Regexp* re, int64_t pos);
+        int64_t index(const gocpp::ObjRecv<struct input>& self, Regexp* re, int64_t pos);
 
-        lazyFlag context(const gocpp::PtrRecv<struct input, false>& self, int pos);
-        lazyFlag context(const gocpp::ObjRecv<struct input>& self, int pos);
+        lazyFlag context(const gocpp::PtrRecv<struct input, false>& self, int64_t pos);
+        lazyFlag context(const gocpp::ObjRecv<struct input>& self, int64_t pos);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct input& value);
@@ -182,18 +182,18 @@ namespace golang::regexp
         gocpp::string expr{}; // as passed to Compile
         syntax::Prog* prog{}; // compiled program
         onePassProg* onepass{}; // onepass program or nil
-        int numSubexp{};
-        int maxBitStateLen{};
+        int64_t numSubexp{};
+        int64_t maxBitStateLen{};
         gocpp::slice<gocpp::string> subexpNames{};
         gocpp::string prefix{}; // required prefix in unanchored matches
         gocpp::slice<unsigned char> prefixBytes{}; // prefix, as a []byte
         gocpp::rune prefixRune{}; // first rune in prefix
         uint32_t prefixEnd{}; // pc for last rune in prefix
-        int mpool{}; // pool for machines
-        int matchcap{}; // size of recorded match lengths
+        int64_t mpool{}; // pool for machines
+        int64_t matchcap{}; // size of recorded match lengths
         bool prefixComplete{}; // prefix is the entire regexp
         syntax::EmptyOp cond{}; // empty-width conditions required at start of match
-        int minInputLen{}; // minimum length of the input in bytes
+        int64_t minInputLen{}; // minimum length of the input in bytes
         // This field can be modified by the Longest method,
         // but it is otherwise read-only.
         bool longest{}; // whether regexp prefers leftmost-longest match
@@ -215,7 +215,7 @@ namespace golang::regexp
     {
         io::RuneReader r{};
         bool atEOT{};
-        int pos{};
+        int64_t pos{};
 
         using isGoStruct = void;
 
@@ -232,7 +232,7 @@ namespace golang::regexp
     std::tuple<bool, gocpp::error> MatchReader(gocpp::string pattern, io::RuneReader r);
     std::tuple<Regexp*, gocpp::error> Compile(gocpp::string expr);
     std::tuple<Regexp*, gocpp::error> CompilePOSIX(gocpp::string expr);
-    int minInputLen(syntax::Regexp* re);
+    int64_t minInputLen(syntax::Regexp* re);
     Regexp* MustCompile(gocpp::string str);
     Regexp* MustCompilePOSIX(gocpp::string str);
 }
@@ -258,24 +258,24 @@ namespace golang::regexp
         void Longest(Regexp* re);
         machine* get(Regexp* re);
         void put(Regexp* re, machine* m);
-        int NumSubexp(Regexp* re);
+        int64_t NumSubexp(Regexp* re);
         gocpp::slice<gocpp::string> SubexpNames(Regexp* re);
-        int SubexpIndex(Regexp* re, gocpp::string name);
-        std::tuple<gocpp::rune, int> step(inputString* i, int pos);
+        int64_t SubexpIndex(Regexp* re, gocpp::string name);
+        std::tuple<gocpp::rune, int64_t> step(inputString* i, int64_t pos);
         bool canCheckPrefix(inputString* i);
         bool hasPrefix(inputString* i, Regexp* re);
-        int index(inputString* i, Regexp* re, int pos);
-        lazyFlag context(inputString* i, int pos);
-        std::tuple<gocpp::rune, int> step(inputBytes* i, int pos);
+        int64_t index(inputString* i, Regexp* re, int64_t pos);
+        lazyFlag context(inputString* i, int64_t pos);
+        std::tuple<gocpp::rune, int64_t> step(inputBytes* i, int64_t pos);
         bool canCheckPrefix(inputBytes* i);
         bool hasPrefix(inputBytes* i, Regexp* re);
-        int index(inputBytes* i, Regexp* re, int pos);
-        lazyFlag context(inputBytes* i, int pos);
-        std::tuple<gocpp::rune, int> step(inputReader* i, int pos);
+        int64_t index(inputBytes* i, Regexp* re, int64_t pos);
+        lazyFlag context(inputBytes* i, int64_t pos);
+        std::tuple<gocpp::rune, int64_t> step(inputReader* i, int64_t pos);
         bool canCheckPrefix(inputReader* i);
         bool hasPrefix(inputReader* i, Regexp* re);
-        int index(inputReader* i, Regexp* re, int pos);
-        lazyFlag context(inputReader* i, int pos);
+        int64_t index(inputReader* i, Regexp* re, int64_t pos);
+        lazyFlag context(inputReader* i, int64_t pos);
         std::tuple<gocpp::string, bool> LiteralPrefix(Regexp* re);
         bool MatchReader(Regexp* re, io::RuneReader r);
         bool MatchString(Regexp* re, gocpp::string s);
@@ -283,50 +283,50 @@ namespace golang::regexp
         gocpp::string ReplaceAllString(Regexp* re, gocpp::string src, gocpp::string repl);
         gocpp::string ReplaceAllLiteralString(Regexp* re, gocpp::string src, gocpp::string repl);
         gocpp::string ReplaceAllStringFunc(Regexp* re, gocpp::string src, std::function<gocpp::string (gocpp::string _1)> repl);
-        gocpp::slice<unsigned char> replaceAll(Regexp* re, gocpp::slice<unsigned char> bsrc, gocpp::string src, int nmatch, std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char> dst, gocpp::slice<int> m)> repl);
+        gocpp::slice<unsigned char> replaceAll(Regexp* re, gocpp::slice<unsigned char> bsrc, gocpp::string src, int64_t nmatch, std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char> dst, gocpp::slice<int64_t> m)> repl);
         gocpp::slice<unsigned char> ReplaceAll(Regexp* re, gocpp::slice<unsigned char> src, gocpp::slice<unsigned char> repl);
         gocpp::slice<unsigned char> ReplaceAllLiteral(Regexp* re, gocpp::slice<unsigned char> src, gocpp::slice<unsigned char> repl);
         gocpp::slice<unsigned char> ReplaceAllFunc(Regexp* re, gocpp::slice<unsigned char> src, std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char> _1)> repl);
-        gocpp::slice<int> pad(Regexp* re, gocpp::slice<int> a);
-        iter::Seq<gocpp::slice<int>> matches(Regexp* re, gocpp::string s, gocpp::slice<unsigned char> b, int max, int ncap);
+        gocpp::slice<int64_t> pad(Regexp* re, gocpp::slice<int64_t> a);
+        iter::Seq<gocpp::slice<int64_t>> matches(Regexp* re, gocpp::string s, gocpp::slice<unsigned char> b, int64_t max, int64_t ncap);
         gocpp::slice<unsigned char> Find(Regexp* re, gocpp::slice<unsigned char> b);
         gocpp::string FindString(Regexp* re, gocpp::string s);
-        gocpp::slice<int> FindIndex(Regexp* re, gocpp::slice<unsigned char> b);
-        gocpp::slice<int> FindStringIndex(Regexp* re, gocpp::string s);
-        gocpp::slice<int> FindReaderIndex(Regexp* re, io::RuneReader r);
+        gocpp::slice<int64_t> FindIndex(Regexp* re, gocpp::slice<unsigned char> b);
+        gocpp::slice<int64_t> FindStringIndex(Regexp* re, gocpp::string s);
+        gocpp::slice<int64_t> FindReaderIndex(Regexp* re, io::RuneReader r);
         gocpp::slice<gocpp::slice<unsigned char>> FindSubmatch(Regexp* re, gocpp::slice<unsigned char> b);
         gocpp::slice<gocpp::string> FindStringSubmatch(Regexp* re, gocpp::string s);
-        gocpp::slice<int> FindSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b);
-        gocpp::slice<int> FindStringSubmatchIndex(Regexp* re, gocpp::string s);
-        gocpp::slice<int> FindReaderSubmatchIndex(Regexp* re, io::RuneReader r);
-        iter::Seq<gocpp::slice<unsigned char>> all(Regexp* re, gocpp::slice<unsigned char> b, int n);
-        iter::Seq<gocpp::string> allString(Regexp* re, gocpp::string s, int n);
-        iter::Seq<gocpp::slice<int>> allIndex(Regexp* re, gocpp::slice<unsigned char> b, int n);
-        iter::Seq<gocpp::slice<int>> allStringIndex(Regexp* re, gocpp::string s, int n);
-        iter::Seq<gocpp::slice<gocpp::slice<unsigned char>>> allSubmatch(Regexp* re, gocpp::slice<unsigned char> b, int n);
-        iter::Seq<gocpp::slice<gocpp::string>> allStringSubmatch(Regexp* re, gocpp::string s, int n);
-        iter::Seq<gocpp::slice<int>> allSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b, int n);
-        iter::Seq<gocpp::slice<int>> allStringSubmatchIndex(Regexp* re, gocpp::string s, int n);
+        gocpp::slice<int64_t> FindSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b);
+        gocpp::slice<int64_t> FindStringSubmatchIndex(Regexp* re, gocpp::string s);
+        gocpp::slice<int64_t> FindReaderSubmatchIndex(Regexp* re, io::RuneReader r);
+        iter::Seq<gocpp::slice<unsigned char>> all(Regexp* re, gocpp::slice<unsigned char> b, int64_t n);
+        iter::Seq<gocpp::string> allString(Regexp* re, gocpp::string s, int64_t n);
+        iter::Seq<gocpp::slice<int64_t>> allIndex(Regexp* re, gocpp::slice<unsigned char> b, int64_t n);
+        iter::Seq<gocpp::slice<int64_t>> allStringIndex(Regexp* re, gocpp::string s, int64_t n);
+        iter::Seq<gocpp::slice<gocpp::slice<unsigned char>>> allSubmatch(Regexp* re, gocpp::slice<unsigned char> b, int64_t n);
+        iter::Seq<gocpp::slice<gocpp::string>> allStringSubmatch(Regexp* re, gocpp::string s, int64_t n);
+        iter::Seq<gocpp::slice<int64_t>> allSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b, int64_t n);
+        iter::Seq<gocpp::slice<int64_t>> allStringSubmatchIndex(Regexp* re, gocpp::string s, int64_t n);
         iter::Seq<gocpp::slice<unsigned char>> _All(Regexp* re, gocpp::slice<unsigned char> b);
         iter::Seq<gocpp::string> _AllString(Regexp* re, gocpp::string s);
-        iter::Seq<gocpp::slice<int>> _AllIndex(Regexp* re, gocpp::slice<unsigned char> b);
-        iter::Seq<gocpp::slice<int>> _AllStringIndex(Regexp* re, gocpp::string s);
+        iter::Seq<gocpp::slice<int64_t>> _AllIndex(Regexp* re, gocpp::slice<unsigned char> b);
+        iter::Seq<gocpp::slice<int64_t>> _AllStringIndex(Regexp* re, gocpp::string s);
         iter::Seq<gocpp::slice<gocpp::slice<unsigned char>>> _AllSubmatch(Regexp* re, gocpp::slice<unsigned char> b);
         iter::Seq<gocpp::slice<gocpp::string>> _AllStringSubmatch(Regexp* re, gocpp::string s);
-        iter::Seq<gocpp::slice<int>> _AllSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b);
-        iter::Seq<gocpp::slice<int>> _AllStringSubmatchIndex(Regexp* re, gocpp::string s);
-        gocpp::slice<gocpp::slice<unsigned char>> FindAll(Regexp* re, gocpp::slice<unsigned char> b, int n);
-        gocpp::slice<gocpp::string> FindAllString(Regexp* re, gocpp::string s, int n);
-        gocpp::slice<gocpp::slice<int>> FindAllIndex(Regexp* re, gocpp::slice<unsigned char> b, int n);
-        gocpp::slice<gocpp::slice<int>> FindAllStringIndex(Regexp* re, gocpp::string s, int n);
-        gocpp::slice<gocpp::slice<gocpp::slice<unsigned char>>> FindAllSubmatch(Regexp* re, gocpp::slice<unsigned char> b, int n);
-        gocpp::slice<gocpp::slice<gocpp::string>> FindAllStringSubmatch(Regexp* re, gocpp::string s, int n);
-        gocpp::slice<gocpp::slice<int>> FindAllSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b, int n);
-        gocpp::slice<gocpp::slice<int>> FindAllStringSubmatchIndex(Regexp* re, gocpp::string s, int n);
-        gocpp::slice<unsigned char> Expand(Regexp* re, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> go_template, gocpp::slice<unsigned char> src, gocpp::slice<int> match);
-        gocpp::slice<unsigned char> ExpandString(Regexp* re, gocpp::slice<unsigned char> dst, gocpp::string go_template, gocpp::string src, gocpp::slice<int> match);
-        gocpp::slice<unsigned char> expand(Regexp* re, gocpp::slice<unsigned char> dst, gocpp::string go_template, gocpp::slice<unsigned char> bsrc, gocpp::string src, gocpp::slice<int> match);
-        gocpp::slice<gocpp::string> Split(Regexp* re, gocpp::string s, int n);
+        iter::Seq<gocpp::slice<int64_t>> _AllSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b);
+        iter::Seq<gocpp::slice<int64_t>> _AllStringSubmatchIndex(Regexp* re, gocpp::string s);
+        gocpp::slice<gocpp::slice<unsigned char>> FindAll(Regexp* re, gocpp::slice<unsigned char> b, int64_t n);
+        gocpp::slice<gocpp::string> FindAllString(Regexp* re, gocpp::string s, int64_t n);
+        gocpp::slice<gocpp::slice<int64_t>> FindAllIndex(Regexp* re, gocpp::slice<unsigned char> b, int64_t n);
+        gocpp::slice<gocpp::slice<int64_t>> FindAllStringIndex(Regexp* re, gocpp::string s, int64_t n);
+        gocpp::slice<gocpp::slice<gocpp::slice<unsigned char>>> FindAllSubmatch(Regexp* re, gocpp::slice<unsigned char> b, int64_t n);
+        gocpp::slice<gocpp::slice<gocpp::string>> FindAllStringSubmatch(Regexp* re, gocpp::string s, int64_t n);
+        gocpp::slice<gocpp::slice<int64_t>> FindAllSubmatchIndex(Regexp* re, gocpp::slice<unsigned char> b, int64_t n);
+        gocpp::slice<gocpp::slice<int64_t>> FindAllStringSubmatchIndex(Regexp* re, gocpp::string s, int64_t n);
+        gocpp::slice<unsigned char> Expand(Regexp* re, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> go_template, gocpp::slice<unsigned char> src, gocpp::slice<int64_t> match);
+        gocpp::slice<unsigned char> ExpandString(Regexp* re, gocpp::slice<unsigned char> dst, gocpp::string go_template, gocpp::string src, gocpp::slice<int64_t> match);
+        gocpp::slice<unsigned char> expand(Regexp* re, gocpp::slice<unsigned char> dst, gocpp::string go_template, gocpp::slice<unsigned char> bsrc, gocpp::string src, gocpp::slice<int64_t> match);
+        gocpp::slice<gocpp::string> Split(Regexp* re, gocpp::string s, int64_t n);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendText(Regexp* re, gocpp::slice<unsigned char> b);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalText(Regexp* re);
         gocpp::error UnmarshalText(Regexp* re, gocpp::slice<unsigned char> text);

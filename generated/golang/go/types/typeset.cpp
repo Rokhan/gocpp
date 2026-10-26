@@ -124,20 +124,20 @@ namespace golang::go::types
     }
 
     // NumMethods returns the number of methods available.
-    int rec::NumMethods(_TypeSet* s)
+    int64_t rec::NumMethods(_TypeSet* s)
     {
         return len(s->methods);
     }
 
     // Method returns the i'th method of s for 0 <= i < s.NumMethods().
     // The methods are ordered by their unique ID.
-    Func* rec::Method(_TypeSet* s, int i)
+    Func* rec::Method(_TypeSet* s, int64_t i)
     {
         return s->methods[i];
     }
 
     // LookupMethod returns the index of and method with matching package and name, or (-1, nil).
-    std::tuple<int, Func*> rec::LookupMethod(_TypeSet* s, Package* pkg, gocpp::string name, bool foldCase)
+    std::tuple<int64_t, Func*> rec::LookupMethod(_TypeSet* s, Package* pkg, gocpp::string name, bool foldCase)
     {
         return types::methodIndex(s->methods, pkg, name, foldCase);
     }
@@ -397,7 +397,7 @@ namespace golang::go::types
 
             // collect embedded elements
             auto allTerms = allTermlist;
-            auto allComparable = false;
+            bool allComparable = false;
             for(auto [i, typ] : ityp->embeddeds)
             {
                 // The embedding position is nil for imported interfaces.
@@ -506,7 +506,7 @@ namespace golang::go::types
         if(comp && ! rec::isAll(gocpp::recv(terms)))
         {
             // only keep comparable terms
-            auto i = 0;
+            int64_t i = 0;
             for(auto [gocpp_ignored, t] : terms)
             {
                 assert(t->typ != nullptr);
@@ -527,7 +527,7 @@ namespace golang::go::types
         return {terms, comp};
     }
 
-    int compareFunc(Func* a, Func* b)
+    int64_t compareFunc(Func* a, Func* b)
     {
         return rec::cmp(gocpp::recv(a), & b->object);
     }

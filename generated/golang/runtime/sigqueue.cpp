@@ -101,7 +101,7 @@ namespace golang::runtime
     // It runs from the signal handler, so it's limited in what it can do.
     bool sigsend(uint32_t s)
     {
-        auto bit = uint32_t(1) << (unsigned int)(s & 31);
+        auto bit = uint32_t(1) << (uint64_t)(s & 31);
         if(s >= uint32_t(32 * len(sig.wanted)))
         {
             return false;
@@ -194,7 +194,7 @@ namespace golang::runtime
         for(; ; )
         {
             // Serve any signals from local copy.
-            for(auto i = uint32_t(0); i < go__NSIG; i++)
+            for(uint32_t i = uint32_t(0); i < go__NSIG; i++)
             {
                 if(sig.recv[i / 32] & (1 << (i & 31)) != 0)
                 {

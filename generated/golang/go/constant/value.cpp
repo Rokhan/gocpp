@@ -449,8 +449,8 @@ namespace golang::go::constant
             // The string without the enclosing quotes is greater than maxLen-2 runes
             // long. Remove the last 3 runes (including the closing '"') by keeping
             // only the first maxLen-3 runes; then add "...".
-            auto i = 0;
-            for(auto n = 0; n < maxLen - 3; n++)
+            int64_t i = 0;
+            for(int64_t n = 0; n < maxLen - 3; n++)
             {
                 auto [gocpp_id_0, size] = utf8::DecodeRuneInString(s.make_slice(i));
                 i += size;
@@ -490,7 +490,7 @@ namespace golang::go::constant
     gocpp::slice<gocpp::string> reverse(gocpp::slice<gocpp::string> x)
     {
         auto n = len(x);
-        for(auto i = 0; i + i < n; i++)
+        for(int64_t i = 0; i + i < n; i++)
         {
             std::tie(x[i], x[n - 1 - i]) = std::tuple{x[n - 1 - i], x[i]};
         }
@@ -915,7 +915,7 @@ namespace golang::go::constant
     // tok value must be one of [token.INT], [token.FLOAT], [token.IMAG],
     // [token.CHAR], or [token.STRING]. The final argument must be zero.
     // If the literal string syntax is invalid, the result is an [Unknown].
-    Value MakeFromLiteral(gocpp::string lit, token::Token tok, unsigned int zero)
+    Value MakeFromLiteral(gocpp::string lit, token::Token tok, uint64_t zero)
     {
         if(zero != 0)
         {
@@ -1471,7 +1471,7 @@ namespace golang::go::constant
     // BitLen returns the number of bits required to represent
     // the absolute value x in binary representation; x must be an [Int] or an [Unknown].
     // If x is [Unknown], the result is 0.
-    int BitLen(Value x)
+    int64_t BitLen(Value x)
     {
         //Go type switch emulation
         {
@@ -1519,7 +1519,7 @@ namespace golang::go::constant
     // Sign returns -1, 0, or 1 depending on whether x < 0, x == 0, or x > 0;
     // x must be numeric or [Unknown]. For complex values x, the sign is 0 if x == 0,
     // otherwise it is != 0. If x is [Unknown], the result is 1.
-    int Sign(Value x)
+    int64_t Sign(Value x)
     {
         //Go type switch emulation
         {
@@ -1634,10 +1634,10 @@ namespace golang::go::constant
         auto words = rec::Bits(gocpp::recv(t.val));
         auto bytes = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(words) * wordSize);
 
-        auto i = 0;
+        int64_t i = 0;
         for(auto [gocpp_ignored, w] : words)
         {
-            for(auto j = 0; j < wordSize; j++)
+            for(int64_t j = 0; j < wordSize; j++)
             {
                 bytes[i] = (unsigned char)(w);
                 w >>= 8;
@@ -1659,9 +1659,9 @@ namespace golang::go::constant
     {
         auto words = gocpp::make(gocpp::Tag<gocpp::slice<big::Word>>(), (len(bytes) + (wordSize - 1)) / wordSize);
 
-        auto i = 0;
+        int64_t i = 0;
         big::Word w = {};
-        unsigned int s = {};
+        uint64_t s = {};
         for(auto [gocpp_ignored, b] : bytes)
         {
             w |= big::Word(b) << s;
@@ -2130,7 +2130,7 @@ namespace golang::go::constant
     // The operation must be defined for the operand.
     // If prec > 0 it specifies the ^ (xor) result size in bits.
     // If y is [Unknown], the result is [Unknown].
-    Value UnaryOp(token::Token op, Value y, unsigned int prec)
+    Value UnaryOp(token::Token op, Value y, uint64_t prec)
     {
         //Go switch emulation
         {
@@ -2313,7 +2313,7 @@ namespace golang::go::constant
         gocpp::panic(mocklib::Sprintf("invalid unary operation %s%v"_s, op, y));
     }
 
-    int ord(Value x)
+    int64_t ord(Value x)
     {
         //Go type switch emulation
         {
@@ -2907,7 +2907,7 @@ namespace golang::go::constant
     // Shift returns the result of the shift expression x op s
     // with op == [token.SHL] or [token.SHR] (<< or >>). x must be
     // an [Int] or an [Unknown]. If x is [Unknown], the result is x.
-    Value Shift(Value x, token::Token op, unsigned int s)
+    Value Shift(Value x, token::Token op, uint64_t s)
     {
         //Go type switch emulation
         {
@@ -2987,7 +2987,7 @@ namespace golang::go::constant
         gocpp::panic(mocklib::Sprintf("invalid shift %v %s %d"_s, x, op, s));
     }
 
-    bool cmpZero(int x, token::Token op)
+    bool cmpZero(int64_t x, token::Token op)
     {
         //Go switch emulation
         {

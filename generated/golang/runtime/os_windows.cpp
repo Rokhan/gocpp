@@ -528,7 +528,7 @@ namespace golang::runtime
         auto params = gocpp::Init<_DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS>([=](auto& x) {
             x.callback = compileCallback(*efaceOf(& fn), true);
         });
-        auto handle = uintptr_t(0);
+        uintptr_t handle = uintptr_t(0);
         stdcall(powerRegisterSuspendResumeNotification, _DEVICE_NOTIFY_CALLBACK, uintptr_t(gocpp::unsafe_pointer(& params)), uintptr_t(gocpp::unsafe_pointer(& handle)));
     }
 
@@ -539,11 +539,11 @@ namespace golang::runtime
         auto ret = stdcall(_GetProcessAffinityMask, windows::CurrentProcess, uintptr_t(gocpp::unsafe_pointer(& mask)), uintptr_t(gocpp::unsafe_pointer(& sysmask)));
         if(ret != 0)
         {
-            auto n = 0;
-            auto maskbits = int(gocpp::Sizeof<uintptr_t>() * 8);
-            for(auto i = 0; i < maskbits; i++)
+            int64_t n = 0;
+            int64_t maskbits = int64_t(gocpp::Sizeof<uintptr_t>() * 8);
+            for(int64_t i = 0; i < maskbits; i++)
             {
-                if(mask & (1 << (unsigned int)(i)) != 0)
+                if(mask & (1 << (uint64_t)(i)) != 0)
                 {
                     n++;
                 }
@@ -705,9 +705,9 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    int readRandom(gocpp::slice<unsigned char> r)
+    int64_t readRandom(gocpp::slice<unsigned char> r)
     {
-        auto n = 0;
+        int64_t n = 0;
         if(stdcall(_ProcessPrng, uintptr_t(gocpp::unsafe_pointer(& r[0])), uintptr_t(len(r))) & 0xff != 0)
         {
             n = len(r);
@@ -723,7 +723,7 @@ namespace golang::runtime
         auto strings = gocpp::unsafe_pointer(stdcall(_GetEnvironmentStringsW));
         auto p = (gocpp::array_ptr<gocpp::array<uint16_t, 1 << 24>>)(strings).make_slice(0);
 
-        auto n = 0;
+        int64_t n = 0;
         for(auto [from, i] = std::tuple{0, 0}; true; i++)
         {
             if(p[i] == 0)
@@ -805,7 +805,7 @@ namespace golang::runtime
                     break;
             }
         }
-        auto isASCII = true;
+        bool isASCII = true;
         auto b = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 30>>)(buf).make_slice(0, n);
         for(auto [gocpp_ignored, x] : b)
         {
@@ -836,7 +836,7 @@ namespace golang::runtime
     mutex utf16ConsoleBackLock;
     // writeConsole writes bufLen bytes from buf to the console File.
     // It returns the number of bytes written.
-    int writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen)
+    int64_t writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen)
     {
         auto surr2 = (surrogateMin + surrogateMax + 1) / 2;
 
@@ -849,7 +849,7 @@ namespace golang::runtime
         auto utf16tmp = utf16ConsoleBack.make_slice(0);
 
         auto total = len(s);
-        auto w = 0;
+        int64_t w = 0;
         for(auto [gocpp_ignored, r] : s)
         {
             if(w >= len(utf16tmp) - 2)
@@ -906,7 +906,7 @@ namespace golang::runtime
         else
         {
             auto start = nanotime();
-            auto elapsed = int64_t(0);
+            int64_t elapsed = int64_t(0);
             for(; ; )
             {
                 auto ms = (ns - elapsed) / 1000000;
@@ -1288,7 +1288,7 @@ namespace golang::runtime
         {
             mp->mOS.stdCallInfo.Args = uintptr_t(abi::NoEscape(gocpp::unsafe_pointer(& args[0])));
         }
-        auto resetLibcall = false;
+        bool resetLibcall = false;
         if(mp->profilehz != 0 && mp->libcallsp == 0)
         {
             // leave pc/sp for cpu profiler
@@ -1516,8 +1516,8 @@ namespace golang::runtime
 
     void setThreadCPUProfiler(int32_t hz)
     {
-        auto ms = int32_t(0);
-        auto due = ~ int64_t(~ uint64_t(1 << 63));
+        int32_t ms = int32_t(0);
+        int64_t due = ~ int64_t(~ uint64_t(1 << 63));
         if(hz > 0)
         {
             ms = 1000 / hz;

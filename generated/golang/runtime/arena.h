@@ -45,9 +45,9 @@ namespace golang::runtime
 {
     gocpp::unsafe_pointer arena_newArena();
     go_any arena_arena_New(gocpp::unsafe_pointer arena, go_any typ);
-    void arena_arena_Slice(gocpp::unsafe_pointer arena, go_any slice, int cap);
+    void arena_arena_Slice(gocpp::unsafe_pointer arena, go_any slice, int64_t cap);
     void arena_arena_Free(gocpp::unsafe_pointer arena);
-    void userArenaHeapBitsSetSliceType(_type* typ, int n, gocpp::unsafe_pointer ptr, mspan* s);
+    void userArenaHeapBitsSetSliceType(_type* typ, int64_t n, gocpp::unsafe_pointer ptr, mspan* s);
     void userArenaHeapBitsSetType(_type* typ, gocpp::unsafe_pointer ptr, mspan* s);
     std::tuple<gocpp::unsafe_pointer, mspan*> newUserArenaChunk();
     void freeUserArenaChunk(mspan* s, gocpp::unsafe_pointer x);
@@ -122,8 +122,8 @@ namespace golang::runtime
         markBits allocBitsForIndex(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t allocBitIndex);
         uintptr_t base(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self);
         uintptr_t base(const gocpp::ObjRecv<struct liveUserArenaChunk>& self);
-        int countAlloc(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self);
-        int countAlloc(const gocpp::ObjRecv<struct liveUserArenaChunk>& self);
+        int64_t countAlloc(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self);
+        int64_t countAlloc(const gocpp::ObjRecv<struct liveUserArenaChunk>& self);
         bool decPinCounter(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t offset);
         bool decPinCounter(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t offset);
         uintptr_t divideByElemSize(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t n);
@@ -190,8 +190,8 @@ namespace golang::runtime
         typePointers typePointersOfType(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, abi::Type* typ, uintptr_t addr);
         typePointers typePointersOfUnchecked(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t addr);
         typePointers typePointersOfUnchecked(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t addr);
-        unsafe::Pointer userArenaNextFree(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, _type* typ, int cap);
-        unsafe::Pointer userArenaNextFree(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, _type* typ, int cap);
+        unsafe::Pointer userArenaNextFree(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, _type* typ, int64_t cap);
+        unsafe::Pointer userArenaNextFree(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, _type* typ, int64_t cap);
         uintptr_t writeHeapBitsSmall(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t x, uintptr_t dataSize, _type* typ);
         uintptr_t writeHeapBitsSmall(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t x, uintptr_t dataSize, _type* typ);
         runtime::writeUserArenaHeapBits writeUserArenaHeapBits(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t addr);
@@ -241,11 +241,11 @@ namespace golang::runtime
     namespace rec
     {
         gocpp::unsafe_pointer go_new(userArena* a, _type* typ);
-        void slice(userArena* a, go_any sl, int cap);
+        void slice(userArena* a, go_any sl, int64_t cap);
         void free(userArena* a);
-        gocpp::unsafe_pointer alloc(userArena* a, _type* typ, int cap);
+        gocpp::unsafe_pointer alloc(userArena* a, _type* typ, int64_t cap);
         mspan* refill(userArena* a);
-        gocpp::unsafe_pointer userArenaNextFree(mspan* s, _type* typ, int cap);
+        gocpp::unsafe_pointer userArenaNextFree(mspan* s, _type* typ, int64_t cap);
         golang::runtime::writeUserArenaHeapBits writeUserArenaHeapBits(mspan* s, uintptr_t addr);
         golang::runtime::writeUserArenaHeapBits write(golang::runtime::writeUserArenaHeapBits h, mspan* s, uintptr_t bits, uintptr_t valid);
         golang::runtime::writeUserArenaHeapBits pad(golang::runtime::writeUserArenaHeapBits h, mspan* s, uintptr_t size);

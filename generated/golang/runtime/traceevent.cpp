@@ -113,7 +113,7 @@ namespace golang::runtime
     // stack takes a stack trace skipping the provided number of frames.
     // It then returns a traceArg representing that stack which may be
     // passed to write.
-    traceArg rec::stack(traceLocker tl, int skip)
+    traceArg rec::stack(traceLocker tl, int64_t skip)
     {
         return traceArg(traceStack(skip, nullptr, & runtime::trace.stackTab[tl.gen % 2]));
     }

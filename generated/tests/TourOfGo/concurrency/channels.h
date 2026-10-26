@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    void sum(gocpp::slice<int> s, gocpp::channel<int> c);
+    void sum(gocpp::slice<int64_t> s, gocpp::channel<int64_t> c);
     gocpp::channel<gocpp::empty_struct> NullChannel();
     void main();
 

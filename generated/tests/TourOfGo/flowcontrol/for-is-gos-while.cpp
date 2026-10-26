@@ -22,7 +22,7 @@ namespace golang::main
 
     void main()
     {
-        auto sum = 1;
+        int64_t sum = 1;
         for(; sum < 1000; )
         {
             sum += sum;

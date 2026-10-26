@@ -12,7 +12,7 @@
 
 namespace golang::go::types
 {
-    int ndigits(int x);
+    int64_t ndigits(int64_t x);
     gocpp::string stripAnnotations(gocpp::string s);
 }
 #include "golang/go/token/position.fwd.h"

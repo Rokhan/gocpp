@@ -38,8 +38,8 @@ namespace golang::runtime
     {
         traceBuf* link{}; // in trace.empty/full
         traceTime lastTime{}; // when we wrote the last event
-        int pos{}; // next write offset in arr
-        int lenPos{}; // position of batch length value
+        int64_t pos{}; // next write offset in arr
+        int64_t lenPos{}; // position of batch length value
 
         using isGoStruct = void;
 
@@ -121,8 +121,8 @@ namespace golang::runtime
         void GoDestroySyscall(const gocpp::ObjRecv<struct traceWriter>& self);
         void GoEnd(const gocpp::PtrRecv<struct traceWriter, false>& self);
         void GoEnd(const gocpp::ObjRecv<struct traceWriter>& self);
-        void GoPark(const gocpp::PtrRecv<struct traceWriter, false>& self, traceBlockReason reason, int skip);
-        void GoPark(const gocpp::ObjRecv<struct traceWriter>& self, traceBlockReason reason, int skip);
+        void GoPark(const gocpp::PtrRecv<struct traceWriter, false>& self, traceBlockReason reason, int64_t skip);
+        void GoPark(const gocpp::ObjRecv<struct traceWriter>& self, traceBlockReason reason, int64_t skip);
         void GoPreempt(const gocpp::PtrRecv<struct traceWriter, false>& self);
         void GoPreempt(const gocpp::ObjRecv<struct traceWriter>& self);
         void GoSched(const gocpp::PtrRecv<struct traceWriter, false>& self);
@@ -137,8 +137,8 @@ namespace golang::runtime
         void GoSysCall(const gocpp::ObjRecv<struct traceWriter>& self);
         void GoSysExit(const gocpp::PtrRecv<struct traceWriter, false>& self, bool lostP);
         void GoSysExit(const gocpp::ObjRecv<struct traceWriter>& self, bool lostP);
-        void GoUnpark(const gocpp::PtrRecv<struct traceWriter, false>& self, g* gp, int skip);
-        void GoUnpark(const gocpp::ObjRecv<struct traceWriter>& self, g* gp, int skip);
+        void GoUnpark(const gocpp::PtrRecv<struct traceWriter, false>& self, g* gp, int64_t skip);
+        void GoUnpark(const gocpp::ObjRecv<struct traceWriter>& self, g* gp, int64_t skip);
         void Gomaxprocs(const gocpp::PtrRecv<struct traceWriter, false>& self, int32_t procs);
         void Gomaxprocs(const gocpp::ObjRecv<struct traceWriter>& self, int32_t procs);
         void GoroutineStackAlloc(const gocpp::PtrRecv<struct traceWriter, false>& self, uintptr_t base, uintptr_t size);
@@ -173,8 +173,8 @@ namespace golang::runtime
         void SpanExists(const gocpp::ObjRecv<struct traceWriter>& self, mspan* s);
         void SpanFree(const gocpp::PtrRecv<struct traceWriter, false>& self, mspan* s);
         void SpanFree(const gocpp::ObjRecv<struct traceWriter>& self, mspan* s);
-        bool available(const gocpp::PtrRecv<struct traceWriter, false>& self, int size);
-        bool available(const gocpp::ObjRecv<struct traceWriter>& self, int size);
+        bool available(const gocpp::PtrRecv<struct traceWriter, false>& self, int64_t size);
+        bool available(const gocpp::ObjRecv<struct traceWriter>& self, int64_t size);
         void byte(const gocpp::PtrRecv<struct traceWriter, false>& self, unsigned char v);
         void byte(const gocpp::ObjRecv<struct traceWriter>& self, unsigned char v);
         void emitUnblockStatus(const gocpp::PtrRecv<struct traceWriter, false>& self, g* gp, uintptr_t gen);
@@ -189,8 +189,8 @@ namespace golang::runtime
         traceEventWriter rawEventWriter(const gocpp::ObjRecv<struct traceWriter>& self);
         traceArg rtype(const gocpp::PtrRecv<struct traceWriter, false>& self, abi::Type* typ);
         traceArg rtype(const gocpp::ObjRecv<struct traceWriter>& self, abi::Type* typ);
-        traceArg stack(const gocpp::PtrRecv<struct traceWriter, false>& self, int skip);
-        traceArg stack(const gocpp::ObjRecv<struct traceWriter>& self, int skip);
+        traceArg stack(const gocpp::PtrRecv<struct traceWriter, false>& self, int64_t skip);
+        traceArg stack(const gocpp::ObjRecv<struct traceWriter>& self, int64_t skip);
         traceArg startPC(const gocpp::PtrRecv<struct traceWriter, false>& self, uintptr_t pc);
         traceArg startPC(const gocpp::ObjRecv<struct traceWriter>& self, uintptr_t pc);
         traceArg string(const gocpp::PtrRecv<struct traceWriter, false>& self, gocpp::string s);
@@ -201,10 +201,10 @@ namespace golang::runtime
         traceArg uniqueString(const gocpp::ObjRecv<struct traceWriter>& self, gocpp::string s);
         void varint(const gocpp::PtrRecv<struct traceWriter, false>& self, uint64_t v);
         void varint(const gocpp::ObjRecv<struct traceWriter>& self, uint64_t v);
-        void varintAt(const gocpp::PtrRecv<struct traceWriter, false>& self, int pos, uint64_t v);
-        void varintAt(const gocpp::ObjRecv<struct traceWriter>& self, int pos, uint64_t v);
-        int varintReserve(const gocpp::PtrRecv<struct traceWriter, false>& self);
-        int varintReserve(const gocpp::ObjRecv<struct traceWriter>& self);
+        void varintAt(const gocpp::PtrRecv<struct traceWriter, false>& self, int64_t pos, uint64_t v);
+        void varintAt(const gocpp::ObjRecv<struct traceWriter>& self, int64_t pos, uint64_t v);
+        int64_t varintReserve(const gocpp::PtrRecv<struct traceWriter, false>& self);
+        int64_t varintReserve(const gocpp::ObjRecv<struct traceWriter>& self);
         traceWriter writer(const gocpp::PtrRecv<struct traceWriter, false>& self);
         traceWriter writer(const gocpp::ObjRecv<struct traceWriter>& self);
     }
@@ -257,7 +257,7 @@ namespace golang::runtime
             return event(w, ev, gocpp::ToSlice<traceArg>(value, args...));
         }
         void end(traceWriter w);
-        std::tuple<traceWriter, bool> ensure(traceWriter w, int maxSize);
+        std::tuple<traceWriter, bool> ensure(traceWriter w, int64_t maxSize);
         traceWriter flush(traceWriter w);
         traceWriter refill(traceWriter w);
         traceWriter expWriter(traceLocker tl, tracev2::Experiment exp);
@@ -266,10 +266,10 @@ namespace golang::runtime
         bool empty(traceBufQueue* q);
         void byte(traceBuf* buf, unsigned char v);
         void varint(traceBuf* buf, uint64_t v);
-        int varintReserve(traceBuf* buf);
+        int64_t varintReserve(traceBuf* buf);
         void stringData(traceBuf* buf, gocpp::string s);
-        bool available(traceBuf* buf, int size);
-        void varintAt(traceBuf* buf, int pos, uint64_t v);
+        bool available(traceBuf* buf, int64_t size);
+        void varintAt(traceBuf* buf, int64_t pos, uint64_t v);
     }
 }
 

@@ -71,7 +71,7 @@ namespace golang::os
             // its parent directory
             auto [parentDir, base] = splitPath(path);
 
-            auto flag = O_RDONLY;
+            int64_t flag = O_RDONLY;
             if(mocklib::GOOS == "windows"_s)
             {
                 // On Windows, the process might not have read permission on the parent directory,
@@ -140,7 +140,7 @@ namespace golang::os
         for(; ; )
         {
             auto reqSize = 1024;
-            int respSize = {};
+            int64_t respSize = {};
 
             // Open the directory to recurse into.
             auto [file, err] = openDirAt(parentFd, base);
@@ -174,7 +174,7 @@ namespace golang::os
 
             for(; ; )
             {
-                auto numErr = 0;
+                int64_t numErr = 0;
 
                 auto [names, readErr] = rec::Readdirnames(gocpp::recv(file), reqSize);
                 // Errors other than EOF should stop us from continuing.

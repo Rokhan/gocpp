@@ -200,14 +200,14 @@ namespace golang::runtime
     // len(data) or len(tags) apart, respectively).
     // tagCount wraps at 2^30, while dataCount wraps at 2^32.
     // This function works for both.
-    int countSub(uint32_t x, uint32_t y)
+    int64_t countSub(uint32_t x, uint32_t y)
     {
         // x-y is 32-bit signed or 30-bit signed; sign-extend to 32 bits and convert to int.
-        return int((int32_t(x - y) << 2) >> 2);
+        return int64_t((int32_t(x - y) << 2) >> 2);
     }
 
     // addCountsAndClearFlags returns the packed form of "x + (data, tag) - all flags".
-    profIndex rec::addCountsAndClearFlags(profIndex x, int data, int tag)
+    profIndex rec::addCountsAndClearFlags(profIndex x, int64_t data, int64_t tag)
     {
         return profIndex((((uint64_t(x) >> 34) + uint64_t((uint32_t(tag) << 2) >> 2)) << 34) | uint64_t(uint32_t(x) + uint32_t(data)));
     }
@@ -280,7 +280,7 @@ namespace golang::runtime
 
     // newProfBuf returns a new profiling buffer with room for
     // a header of hdrsize words and a buffer of at least bufwords words.
-    profBuf* newProfBuf(int hdrsize, int bufwords, int tags)
+    profBuf* newProfBuf(int64_t hdrsize, int64_t bufwords, int64_t tags)
     {
         if(auto min = 2 + hdrsize + 1; bufwords < min)
         {
@@ -295,7 +295,7 @@ namespace golang::runtime
         {
             go_throw("newProfBuf: buffer too large"_s);
         }
-        int i = {};
+        int64_t i = {};
         for(i = 1; i < bufwords; i <<= 1)
         {
         }
@@ -315,7 +315,7 @@ namespace golang::runtime
 
     // canWriteRecord reports whether the buffer has room
     // for a single contiguous record with a stack of length nstk.
-    bool rec::canWriteRecord(profBuf* b, int nstk)
+    bool rec::canWriteRecord(profBuf* b, int64_t nstk)
     {
         auto br = rec::load(gocpp::recv(b->r));
         auto bw = rec::load(gocpp::recv(b->w));
@@ -328,8 +328,8 @@ namespace golang::runtime
 
         // room for data?
         auto nd = countSub(rec::dataCount(gocpp::recv(br)), rec::dataCount(gocpp::recv(bw))) + len(b->data);
-        auto want = 2 + int(b->hdrsize) + nstk;
-        auto i = int(rec::dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
+        auto want = 2 + int64_t(b->hdrsize) + nstk;
+        auto i = int64_t(rec::dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
         if(i + want > len(b->data))
         {
             // Can't fit in trailing fragment of slice.
@@ -344,7 +344,7 @@ namespace golang::runtime
     // Each record must be contiguous on its own, but the two
     // records need not be contiguous (one can be at the end of the buffer
     // and the other can wrap around and start at the beginning of the buffer).
-    bool rec::canWriteTwoRecords(profBuf* b, int nstk1, int nstk2)
+    bool rec::canWriteTwoRecords(profBuf* b, int64_t nstk1, int64_t nstk2)
     {
         auto br = rec::load(gocpp::recv(b->r));
         auto bw = rec::load(gocpp::recv(b->w));
@@ -359,8 +359,8 @@ namespace golang::runtime
         auto nd = countSub(rec::dataCount(gocpp::recv(br)), rec::dataCount(gocpp::recv(bw))) + len(b->data);
 
         // first record
-        auto want = 2 + int(b->hdrsize) + nstk1;
-        auto i = int(rec::dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
+        auto want = 2 + int64_t(b->hdrsize) + nstk1;
+        auto i = int64_t(rec::dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
         if(i + want > len(b->data))
         {
             // Can't fit in trailing fragment of slice.
@@ -372,7 +372,7 @@ namespace golang::runtime
         nd -= want;
 
         // second record
-        want = 2 + int(b->hdrsize) + nstk2;
+        want = 2 + int64_t(b->hdrsize) + nstk2;
         if(i + want > len(b->data))
         {
             // Can't fit in trailing fragment of slice.
@@ -394,7 +394,7 @@ namespace golang::runtime
         {
             return;
         }
-        if(len(hdr) > int(b->hdrsize))
+        if(len(hdr) > int64_t(b->hdrsize))
         {
             go_throw("misuse of profBuf.write"_s);
         }
@@ -441,7 +441,7 @@ namespace golang::runtime
         // value we copied when scanning b.tags (heap-allocated).
         // We arrange that the store here is always overwriting a nil,
         // so there is no need for a deletion barrier on b.tags[wt].
-        auto wt = int(rec::tagCount(gocpp::recv(bw)) % uint32_t(len(b->tags)));
+        auto wt = int64_t(rec::tagCount(gocpp::recv(bw)) % uint32_t(len(b->tags)));
         if(tagPtr != nullptr)
         {
             *(uintptr_t*)(gocpp::unsafe_pointer(& b->tags[wt])) = uintptr_t(*tagPtr);
@@ -450,10 +450,10 @@ namespace golang::runtime
         // Main record.
         // It has to fit in a contiguous section of the slice, so if it doesn't fit at the end,
         // leave a rewind marker (0) and start over at the beginning of the slice.
-        auto wd = int(rec::dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
+        auto wd = int64_t(rec::dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
         auto nd = countSub(rec::dataCount(gocpp::recv(br)), rec::dataCount(gocpp::recv(bw))) + len(b->data);
-        auto skip = 0;
-        if(wd + 2 + int(b->hdrsize) + len(stk) > len(b->data))
+        int64_t skip = 0;
+        if(wd + 2 + int64_t(b->hdrsize) + len(stk) > len(b->data))
         {
             b->data[wd] = 0;
             skip = len(b->data) - wd;
@@ -478,7 +478,7 @@ namespace golang::runtime
             // Commit write.
             // Racing with reader setting flag bits in b.w, to avoid lost wakeups.
             auto old = rec::load(gocpp::recv(b->w));
-            auto go_new = rec::addCountsAndClearFlags(gocpp::recv(old), skip + 2 + len(stk) + int(b->hdrsize), 1);
+            auto go_new = rec::addCountsAndClearFlags(gocpp::recv(old), skip + 2 + len(stk) + int64_t(b->hdrsize), 1);
             // We re-load b.r here to reduce the likelihood of early wakeups
             // if the reader already consumed some data between the last
             // time we read b.r and now. This isn't strictly necessary.
@@ -572,8 +572,8 @@ namespace golang::runtime
         if(rPrev != br)
         {
             auto ntag = countSub(rec::tagCount(gocpp::recv(br)), rec::tagCount(gocpp::recv(rPrev)));
-            auto ti = int(rec::tagCount(gocpp::recv(rPrev)) % uint32_t(len(b->tags)));
-            for(auto i = 0; i < ntag; i++)
+            auto ti = int64_t(rec::tagCount(gocpp::recv(rPrev)) % uint32_t(len(b->tags)));
+            for(int64_t i = 0; i < ntag; i++)
             {
                 b->tags[ti] = nullptr;
                 if(ti++; ti == len(b->tags))
@@ -648,7 +648,7 @@ namespace golang::runtime
             // available in case of wraparound
             numData -= len(data);
         }
-        auto skip = 0;
+        int64_t skip = 0;
         if(data[0] == 0)
         {
             // Wraparound record. Go back to the beginning of the ring.
@@ -675,15 +675,15 @@ namespace golang::runtime
         // They are always in sync in the buffer, but due to an end-of-slice
         // wraparound we might need to stop early and return the rest
         // in the next call.
-        auto di = 0;
-        auto ti = 0;
+        int64_t di = 0;
+        int64_t ti = 0;
         for(; di < len(data) && data[di] != 0 && ti < len(tags); )
         {
             if(uintptr_t(di) + uintptr_t(data[di]) > uintptr_t(len(data)))
             {
                 go_throw("runtime: malformed profBuf buffer - invalid size"_s);
             }
-            di += int(data[di]);
+            di += int64_t(data[di]);
             ti++;
         }
 

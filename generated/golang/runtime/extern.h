@@ -12,8 +12,8 @@
 
 namespace golang::runtime
 {
-    std::tuple<uintptr_t, gocpp::string, int, bool> Caller(int skip);
-    int Callers(int skip, gocpp::slice<uintptr_t> pc);
+    std::tuple<uintptr_t, gocpp::string, int64_t, bool> Caller(int64_t skip);
+    int64_t Callers(int64_t skip, gocpp::slice<uintptr_t> pc);
     extern gocpp::string defaultGOROOT;
     gocpp::string GOROOT();
     // buildVersion is the Go tree's version string at build time.

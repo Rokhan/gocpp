@@ -89,12 +89,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct rtype, false>& self)
+        int64_t Align(const gocpp::PtrRecv<struct rtype, false>& self)
         {
             return abi::rec::Align(gocpp::recv(self.ptr->Type));
         }
 
-        int Align(const gocpp::ObjRecv<struct rtype>& self)
+        int64_t Align(const gocpp::ObjRecv<struct rtype>& self)
         {
             return abi::rec::Align(gocpp::recv(self.obj.Type));
         }
@@ -139,12 +139,12 @@ namespace golang::runtime
             return abi::rec::Common(gocpp::recv(self.obj.Type));
         }
 
-        int DescriptorSize(const gocpp::PtrRecv<struct rtype, false>& self)
+        int64_t DescriptorSize(const gocpp::PtrRecv<struct rtype, false>& self)
         {
             return abi::rec::DescriptorSize(gocpp::recv(self.ptr->Type));
         }
 
-        int DescriptorSize(const gocpp::ObjRecv<struct rtype>& self)
+        int64_t DescriptorSize(const gocpp::ObjRecv<struct rtype>& self)
         {
             return abi::rec::DescriptorSize(gocpp::recv(self.obj.Type));
         }
@@ -169,12 +169,12 @@ namespace golang::runtime
             return abi::rec::ExportedMethods(gocpp::recv(self.obj.Type));
         }
 
-        int FieldAlign(const gocpp::PtrRecv<struct rtype, false>& self)
+        int64_t FieldAlign(const gocpp::PtrRecv<struct rtype, false>& self)
         {
             return abi::rec::FieldAlign(gocpp::recv(self.ptr->Type));
         }
 
-        int FieldAlign(const gocpp::ObjRecv<struct rtype>& self)
+        int64_t FieldAlign(const gocpp::ObjRecv<struct rtype>& self)
         {
             return abi::rec::FieldAlign(gocpp::recv(self.obj.Type));
         }
@@ -249,12 +249,12 @@ namespace golang::runtime
             return abi::rec::Kind(gocpp::recv(self.obj.Type));
         }
 
-        int Len(const gocpp::PtrRecv<struct rtype, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct rtype, false>& self)
         {
             return abi::rec::Len(gocpp::recv(self.ptr->Type));
         }
 
-        int Len(const gocpp::ObjRecv<struct rtype>& self)
+        int64_t Len(const gocpp::ObjRecv<struct rtype>& self)
         {
             return abi::rec::Len(gocpp::recv(self.obj.Type));
         }
@@ -269,12 +269,12 @@ namespace golang::runtime
             return abi::rec::MapType(gocpp::recv(self.obj.Type));
         }
 
-        int NumMethod(const gocpp::PtrRecv<struct rtype, false>& self)
+        int64_t NumMethod(const gocpp::PtrRecv<struct rtype, false>& self)
         {
             return abi::rec::NumMethod(gocpp::recv(self.ptr->Type));
         }
 
-        int NumMethod(const gocpp::ObjRecv<struct rtype>& self)
+        int64_t NumMethod(const gocpp::ObjRecv<struct rtype>& self)
         {
             return abi::rec::NumMethod(gocpp::recv(self.obj.Type));
         }
@@ -368,7 +368,7 @@ namespace golang::runtime
         }
         auto s = rec::string(gocpp::recv(t));
         auto i = len(s) - 1;
-        auto sqBrackets = 0;
+        int64_t sqBrackets = 0;
         for(; i >= 0 && (s[i] != '.' || sqBrackets != 0); )
         {
             //Go switch emulation
@@ -642,7 +642,7 @@ namespace golang::runtime
                         goto top;
                     }
                     auto e = a->Elem;
-                    for(auto i = uintptr_t(0); i < a->Len; i++)
+                    for(uintptr_t i = uintptr_t(0); i < a->Len; i++)
                     {
                         buildGCMask(e, dst);
                         dst = rec::offset(gocpp::recv(dst), e->Size_ / goarch::PtrSize);
@@ -1194,7 +1194,7 @@ namespace golang::runtime
                         return false;
                     }
                     auto [tin, vin] = std::tuple{rec::InSlice(gocpp::recv(ft)), rec::InSlice(gocpp::recv(fv))};
-                    for(auto i = 0; i < len(tin); i++)
+                    for(int64_t i = 0; i < len(tin); i++)
                     {
                         if(! typesEqual(tin[i], vin[i], seen))
                         {
@@ -1202,7 +1202,7 @@ namespace golang::runtime
                         }
                     }
                     auto [tout, vout] = std::tuple{rec::OutSlice(gocpp::recv(ft)), rec::OutSlice(gocpp::recv(fv))};
-                    for(auto i = 0; i < len(tout); i++)
+                    for(int64_t i = 0; i < len(tout); i++)
                     {
                         if(! typesEqual(tout[i], vout[i], seen))
                         {

@@ -95,7 +95,7 @@ namespace golang::sync::atomic
 
     // For testing *Pointer[T]'s methods can be inlined.
     // Keep in sync with cmd/compile/internal/test/inl_test.go:TestIntendedInlining.
-    Pointer<int>* gocpp_id_0 = new Pointer<int> {};
+    Pointer<int64_t>* gocpp_id_0 = new Pointer<int64_t> {};
     // A Pointer is an atomic pointer of type *T. The zero value is a nil *T.
     //
     // Pointer must not be copied after first use.

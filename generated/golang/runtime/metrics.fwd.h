@@ -8,7 +8,8 @@ namespace golang::runtime
 {
     struct metricData;
     using metricReader = std::function<uint64_t ()>;
-    using statDep = unsigned int;
+    struct GoTag_statDep;
+    using statDep = gocpp::defined<uint64_t, GoTag_statDep>;
     struct GoTag_statDepSet;
     using statDepSet = gocpp::defined<gocpp::array<uint64_t, 1>, GoTag_statDepSet>;
     struct heapStatsAggregate;
@@ -18,22 +19,23 @@ namespace golang::runtime
     struct finalStatsAggregate;
     struct schedStatsAggregate;
     struct statAggregate;
-    using metricKind = int;
+    struct GoTag_metricKind;
+    using metricKind = gocpp::defined<int64_t, GoTag_metricKind>;
     struct metricSample;
     struct metricValue;
     struct metricFloat64Histogram;
     struct metricName;
-    const statDep heapStatsDep = 0;
-    const statDep sysStatsDep = 1;
-    const statDep cpuStatsDep = 2;
-    const statDep gcStatsDep = 3;
-    const statDep finalStatsDep = 4;
-    const statDep schedStatsDep = 5;
-    const statDep numStatsDeps = 6;
+    inline constexpr statDep heapStatsDep = 0;
+    inline constexpr statDep sysStatsDep = 1;
+    inline constexpr statDep cpuStatsDep = 2;
+    inline constexpr statDep gcStatsDep = 3;
+    inline constexpr statDep finalStatsDep = 4;
+    inline constexpr statDep schedStatsDep = 5;
+    inline constexpr statDep numStatsDeps = 6;
     // These values must be kept identical to their corresponding Kind* values
     // in the runtime/metrics package.
-    const metricKind metricKindBad = 0;
-    const metricKind metricKindUint64 = 1;
-    const metricKind metricKindFloat64 = 2;
-    const metricKind metricKindFloat64Histogram = 3;
+    inline constexpr metricKind metricKindBad = 0;
+    inline constexpr metricKind metricKindUint64 = 1;
+    inline constexpr metricKind metricKindFloat64 = 2;
+    inline constexpr metricKind metricKindFloat64Histogram = 3;
 }

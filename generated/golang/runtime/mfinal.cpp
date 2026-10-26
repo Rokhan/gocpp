@@ -260,7 +260,7 @@ namespace golang::runtime
     {
         for(auto fb = allfin; fb != nullptr; fb = fb->alllink)
         {
-            for(auto i = uint32_t(0); i < fb->cnt; i++)
+            for(uint32_t i = uint32_t(0); i < fb->cnt; i++)
             {
                 auto f = & fb->fin[i];
                 callback(f->fn, f->arg, f->nret, f->fint, f->ot);
@@ -311,7 +311,7 @@ namespace golang::runtime
     {
         gocpp::unsafe_pointer frame = {};
         uintptr_t framecap = {};
-        int argRegs = {};
+        int64_t argRegs = {};
 
         auto gp = getg();
         lock(& finlock);
@@ -703,7 +703,7 @@ namespace golang::runtime
         go_throw("runtime.SetFinalizer: cannot pass "_s + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer "_s + rec::string(gocpp::recv(toRType(ftyp))));
         okarg:
         // compute size needed for return parameters
-        auto nret = uintptr_t(0);
+        uintptr_t nret = uintptr_t(0);
         for(auto [gocpp_ignored, t] : rec::OutSlice(gocpp::recv(ft)))
         {
             nret = alignUp(nret, uintptr_t(t->Align_)) + t->Size_;

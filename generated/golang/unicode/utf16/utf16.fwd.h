@@ -6,13 +6,13 @@
 
 namespace golang::unicode::utf16
 {
-    const char replacementChar = '\uFFFD';
-    const char maxRune = '\U0010FFFF';
+    inline constexpr char replacementChar = '\uFFFD';
+    inline constexpr char maxRune = '\U0010FFFF';
     // 0xd800-0xdc00 encodes the high 10 bits of a pair.
     // 0xdc00-0xe000 encodes the low 10 bits of a pair.
     // the value is those 20 bits plus 0x10000.
-    const long surr1 = 0xd800;
-    const long surr2 = 0xdc00;
-    const long surr3 = 0xe000;
-    const long surrSelf = 0x10000;
+    inline constexpr long surr1 = 0xd800;
+    inline constexpr long surr2 = 0xdc00;
+    inline constexpr long surr3 = 0xe000;
+    inline constexpr long surrSelf = 0x10000;
 }

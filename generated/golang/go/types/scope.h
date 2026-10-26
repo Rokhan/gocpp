@@ -36,7 +36,7 @@ namespace golang::go::types
     {
         golang::go::types::Scope* parent{};
         gocpp::slice<golang::go::types::Scope*> children{};
-        int number{}; // parent.children[number-1] is this scope; 0 if there is no parent
+        int64_t number{}; // parent.children[number-1] is this scope; 0 if there is no parent
         gocpp::map<gocpp::string, Object> elems{}; // lazily allocated
         token::Pos pos{}; // scope extent; may be invalid
         token::Pos end{};
@@ -90,16 +90,16 @@ namespace golang::go::types
     namespace rec
     {
         golang::go::types::Scope* Parent(golang::go::types::Scope* s);
-        int Len(golang::go::types::Scope* s);
+        int64_t Len(golang::go::types::Scope* s);
         gocpp::slice<gocpp::string> Names(golang::go::types::Scope* s);
-        int NumChildren(golang::go::types::Scope* s);
-        golang::go::types::Scope* Child(golang::go::types::Scope* s, int i);
+        int64_t NumChildren(golang::go::types::Scope* s);
+        golang::go::types::Scope* Child(golang::go::types::Scope* s, int64_t i);
         Object Lookup(golang::go::types::Scope* s, gocpp::string name);
         gocpp::slice<Object> lookupIgnoringCase(golang::go::types::Scope* s, gocpp::string name, bool exported);
         Object Insert(golang::go::types::Scope* s, Object obj);
         bool _InsertLazy(golang::go::types::Scope* s, gocpp::string name, std::function<Object ()> resolve);
         void insert(golang::go::types::Scope* s, gocpp::string name, Object obj);
-        void WriteTo(golang::go::types::Scope* s, io::Writer w, int n, bool recurse);
+        void WriteTo(golang::go::types::Scope* s, io::Writer w, int64_t n, bool recurse);
         gocpp::string String(golang::go::types::Scope* s);
         golang::go::types::Scope* Parent(lazyObject*);
         token::Pos Pos(lazyObject*);

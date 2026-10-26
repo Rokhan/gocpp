@@ -13,7 +13,7 @@
 namespace golang::internal::bytealg
 {
     void init();
-    int Cutover(int n);
+    int64_t Cutover(int64_t n);
 
     namespace rec
     {

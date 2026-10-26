@@ -7,26 +7,26 @@
 namespace golang::runtime
 {
     // Numbers fundamental to the encoding.
-    const char runeError = '\uFFFD';
-    const long runeSelf = 0x80;
-    const char maxRune = '\U0010FFFF';
+    inline constexpr char runeError = '\uFFFD';
+    inline constexpr long runeSelf = 0x80;
+    inline constexpr char maxRune = '\U0010FFFF';
     // Code points in the surrogate range are not valid for UTF-8.
-    const long surrogateMin = 0xD800;
-    const long surrogateMax = 0xDFFF;
-    const long t1 = 0x00;
-    const long tx = 0x80;
-    const long t2 = 0xC0;
-    const long t3 = 0xE0;
-    const long t4 = 0xF0;
-    const long t5 = 0xF8;
-    const long maskx = 0x3F;
-    const long mask2 = 0x1F;
-    const long mask3 = 0x0F;
-    const long mask4 = 0x07;
-    const int rune1Max = (1 << 7) - 1;
-    const int rune2Max = (1 << 11) - 1;
-    const int rune3Max = (1 << 16) - 1;
+    inline constexpr long surrogateMin = 0xD800;
+    inline constexpr long surrogateMax = 0xDFFF;
+    inline constexpr long t1 = 0x00;
+    inline constexpr long tx = 0x80;
+    inline constexpr long t2 = 0xC0;
+    inline constexpr long t3 = 0xE0;
+    inline constexpr long t4 = 0xF0;
+    inline constexpr long t5 = 0xF8;
+    inline constexpr long maskx = 0x3F;
+    inline constexpr long mask2 = 0x1F;
+    inline constexpr long mask3 = 0x0F;
+    inline constexpr long mask4 = 0x07;
+    inline constexpr int64_t rune1Max = (1 << 7) - 1;
+    inline constexpr int64_t rune2Max = (1 << 11) - 1;
+    inline constexpr int64_t rune3Max = (1 << 16) - 1;
     // The default lowest and highest continuation byte.
-    const long locb = 0x80;
-    const long hicb = 0xBF;
+    inline constexpr long locb = 0x80;
+    inline constexpr long hicb = 0xBF;
 }

@@ -32,20 +32,20 @@ namespace golang::runtime
     // The purpose of physHugePageShift is to avoid doing divisions in
     // performance critical functions.
     extern uintptr_t physHugePageSize;
-    extern unsigned int physHugePageShift;
+    extern uint64_t physHugePageShift;
     // heapRandSeed is a random value that is populated in mallocinit if
     // randomizeHeapBase is set. It is used in mallocinit, and mheap.grow, to
     // randomize the base heap address.
     extern uintptr_t heapRandSeed;
-    extern int heapRandSeedBitsRemaining;
-    uintptr_t nextHeapRandBits(int bits);
+    extern int64_t heapRandSeedBitsRemaining;
+    uintptr_t nextHeapRandBits(int64_t bits);
     void mallocinit();
     // base address for all 0-byte allocations
     extern uintptr_t zerobase;
     void addAssistCredit(uintptr_t size);
     bool reusableSize(uintptr_t size);
     int64_t nextSample();
-    int32_t fastexprand(int mean);
+    int32_t fastexprand(int64_t mean);
     struct persistentAlloc
     {
         notInHeap* base{};
@@ -115,9 +115,9 @@ namespace golang::runtime
     gocpp::unsafe_pointer maps_newobject(_type* typ);
     gocpp::unsafe_pointer reflect_unsafe_New(_type* typ);
     gocpp::unsafe_pointer reflectlite_unsafe_New(_type* typ);
-    gocpp::unsafe_pointer newarray(_type* typ, int n);
-    gocpp::unsafe_pointer reflect_unsafe_NewArray(_type* typ, int n);
-    gocpp::unsafe_pointer maps_newarray(_type* typ, int n);
+    gocpp::unsafe_pointer newarray(_type* typ, int64_t n);
+    gocpp::unsafe_pointer reflect_unsafe_NewArray(_type* typ, int64_t n);
+    gocpp::unsafe_pointer maps_newarray(_type* typ, int64_t n);
     void profilealloc(m* mp, gocpp::unsafe_pointer x, uintptr_t size);
     struct globalAllocStruct
     {

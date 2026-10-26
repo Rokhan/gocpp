@@ -64,7 +64,7 @@ namespace golang::golang_org::x::tools::go::packages
         // GoVersion is the minor version number used by the driver
         // (e.g. the go command on the PATH) when selecting .go files.
         // Zero means unknown.
-        int GoVersion{};
+        int64_t GoVersion{};
 
         using isGoStruct = void;
 

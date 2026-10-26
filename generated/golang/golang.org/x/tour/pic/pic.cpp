@@ -52,15 +52,15 @@ namespace golang::golang_org::x::tour::pic
     // interpreted as bluescale values,
     // where the value 0 means full blue,
     // and the value 255 means full white.
-    void Show(std::function<gocpp::slice<gocpp::slice<uint8_t>> (int dx, int dy)> f)
+    void Show(std::function<gocpp::slice<gocpp::slice<uint8_t>> (int64_t dx, int64_t dy)> f)
     {
         auto dx = 256;
         auto dy = 256;
         auto data = f(dx, dy);
         auto m = image::NewNRGBA(image::Rect(0, 0, dx, dy));
-        for(auto y = 0; y < dy; y++)
+        for(int64_t y = 0; y < dy; y++)
         {
-            for(auto x = 0; x < dx; x++)
+            for(int64_t x = 0; x < dx; x++)
             {
                 auto v = data[y][x];
                 auto i = y * m->Stride + x * 4;

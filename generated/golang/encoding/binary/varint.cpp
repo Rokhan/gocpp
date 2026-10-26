@@ -37,9 +37,9 @@ namespace golang::encoding::binary
 
     // PutUvarint encodes a uint64 into buf and returns the number of bytes written.
     // If the buffer is too small, PutUvarint will panic.
-    int PutUvarint(gocpp::slice<unsigned char> buf, uint64_t x)
+    int64_t PutUvarint(gocpp::slice<unsigned char> buf, uint64_t x)
     {
-        auto i = 0;
+        int64_t i = 0;
         for(; x >= 0x80; )
         {
             buf[i] = (unsigned char)(x) | 0x80;
@@ -56,10 +56,10 @@ namespace golang::encoding::binary
     //   - n == 0: buf too small;
     //   - n < 0: value larger than 64 bits (overflow) and -n is the number of
     //     bytes read.
-    std::tuple<uint64_t, int> Uvarint(gocpp::slice<unsigned char> buf)
+    std::tuple<uint64_t, int64_t> Uvarint(gocpp::slice<unsigned char> buf)
     {
         uint64_t x = {};
-        unsigned int s = {};
+        uint64_t s = {};
         for(auto [i, b] : buf)
         {
             if(i == MaxVarintLen64)
@@ -98,7 +98,7 @@ namespace golang::encoding::binary
 
     // PutVarint encodes an int64 into buf and returns the number of bytes written.
     // If the buffer is too small, PutVarint will panic.
-    int PutVarint(gocpp::slice<unsigned char> buf, int64_t x)
+    int64_t PutVarint(gocpp::slice<unsigned char> buf, int64_t x)
     {
         auto ux = uint64_t(x) << 1;
         if(x < 0)
@@ -114,7 +114,7 @@ namespace golang::encoding::binary
     //   - n == 0: buf too small;
     //   - n < 0: value larger than 64 bits (overflow)
     //     and -n is the number of bytes read.
-    std::tuple<int64_t, int> Varint(gocpp::slice<unsigned char> buf)
+    std::tuple<int64_t, int64_t> Varint(gocpp::slice<unsigned char> buf)
     {
         // ok to continue in presence of error
         auto [ux, n] = Uvarint(buf);
@@ -134,8 +134,8 @@ namespace golang::encoding::binary
     std::tuple<uint64_t, gocpp::error> ReadUvarint(io::ByteReader r)
     {
         uint64_t x = {};
-        unsigned int s = {};
-        for(auto i = 0; i < MaxVarintLen64; i++)
+        uint64_t s = {};
+        for(int64_t i = 0; i < MaxVarintLen64; i++)
         {
             auto [b, err] = rec::ReadByte(gocpp::recv(r));
             if(err != nullptr)

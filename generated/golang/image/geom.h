@@ -14,8 +14,8 @@ namespace golang::image
 {
     struct Point
     {
-        int X{};
-        int Y{};
+        int64_t X{};
+        int64_t Y{};
 
         using isGoStruct = void;
 
@@ -29,13 +29,13 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Point& value);
-    int mul3NonNeg(int x, int y, int z);
-    int add2NonNeg(int x, int y);
+    int64_t mul3NonNeg(int64_t x, int64_t y, int64_t z);
+    int64_t add2NonNeg(int64_t x, int64_t y);
     // ZP is the zero [Point].
     //
     // Deprecated: Use a literal [image.Point] instead.
     extern Point ZP;
-    Point Pt(int X, int Y);
+    Point Pt(int64_t X, int64_t Y);
     struct Rectangle
     {
         Point Min{};
@@ -57,7 +57,7 @@ namespace golang::image
     //
     // Deprecated: Use a literal [image.Rectangle] instead.
     extern Rectangle ZR;
-    Rectangle Rect(int x0, int y0, int x1, int y1);
+    Rectangle Rect(int64_t x0, int64_t y0, int64_t x1, int64_t y1);
 }
 
 #include "golang/image/color/color.h"
@@ -71,18 +71,18 @@ namespace golang::image
         gocpp::string String(Point p);
         Point Add(Point p, Point q);
         Point Sub(Point p, Point q);
-        Point Mul(Point p, int k);
-        Point Div(Point p, int k);
+        Point Mul(Point p, int64_t k);
+        Point Div(Point p, int64_t k);
         bool In(Point p, Rectangle r);
         Point Mod(Point p, Rectangle r);
         bool Eq(Point p, Point q);
         gocpp::string String(Rectangle r);
-        int Dx(Rectangle r);
-        int Dy(Rectangle r);
+        int64_t Dx(Rectangle r);
+        int64_t Dy(Rectangle r);
         Point Size(Rectangle r);
         Rectangle Add(Rectangle r, Point p);
         Rectangle Sub(Rectangle r, Point p);
-        Rectangle Inset(Rectangle r, int n);
+        Rectangle Inset(Rectangle r, int64_t n);
         Rectangle Intersect(Rectangle r, Rectangle s);
         Rectangle Union(Rectangle r, Rectangle s);
         bool Empty(Rectangle r);
@@ -90,8 +90,8 @@ namespace golang::image
         bool Overlaps(Rectangle r, Rectangle s);
         bool In(Rectangle r, Rectangle s);
         Rectangle Canon(Rectangle r);
-        color::Color At(Rectangle r, int x, int y);
-        color::RGBA64 RGBA64At(Rectangle r, int x, int y);
+        color::Color At(Rectangle r, int64_t x, int64_t y);
+        color::RGBA64 RGBA64At(Rectangle r, int64_t x, int64_t y);
         Rectangle Bounds(Rectangle r);
         color::Model ColorModel(Rectangle r);
     }

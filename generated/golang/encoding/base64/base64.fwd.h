@@ -7,9 +7,9 @@
 namespace golang::encoding::base64
 {
     struct Encoding;
-    const gocpp::rune StdPadding = '=';
-    const gocpp::rune NoPadding = - 1;
-    const gocpp::string decodeMapInitialize = ""_s +
+    inline constexpr gocpp::rune StdPadding = '=';
+    inline constexpr gocpp::rune NoPadding = - 1;
+    inline const gocpp::string decodeMapInitialize = ""_s +
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s +
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s +
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s +
@@ -26,9 +26,10 @@ namespace golang::encoding::base64
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s +
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s +
             "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s;
-    const char invalidIndex = '\xff';
+    inline constexpr char invalidIndex = '\xff';
     struct encoder;
-    using CorruptInputError = int64_t;
+    struct GoTag_CorruptInputError;
+    using CorruptInputError = gocpp::defined<int64_t, GoTag_CorruptInputError>;
     struct decoder;
     struct newlineFilteringReader;
 }

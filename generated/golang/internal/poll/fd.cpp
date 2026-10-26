@@ -161,7 +161,7 @@ namespace golang::internal::poll
     }
 
     // TestHookDidWritev is a hook for testing writev.
-    std::function<void (int)> TestHookDidWritev = [](int wrote) mutable -> void
+    std::function<void (int64_t)> TestHookDidWritev = [](int64_t wrote) mutable -> void
     {
     };
     // String is an internal string definition for methods/functions

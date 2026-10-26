@@ -42,7 +42,7 @@ namespace golang::main
     {
         color::Model ColorModel(Image);
         image::Rectangle Bounds(Image);
-        color::Color At(Image, int x, int y);
+        color::Color At(Image, int64_t x, int64_t y);
     }
 }
 

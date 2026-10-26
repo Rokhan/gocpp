@@ -67,7 +67,7 @@ namespace golang::math::big
         return z.make_slice(0, i);
     }
 
-    golang::math::big::nat rec::make(golang::math::big::nat z, int n)
+    golang::math::big::nat rec::make(golang::math::big::nat z, int64_t n)
     {
         if(n <= cap(z))
         {
@@ -201,9 +201,9 @@ namespace golang::math::big
         return rec::norm(gocpp::recv(z));
     }
 
-    int rec::cmp(golang::math::big::nat x, golang::math::big::nat y)
+    int64_t rec::cmp(golang::math::big::nat x, golang::math::big::nat y)
     {
-        int r;
+        int64_t r;
         auto m = len(x);
         auto n = len(y);
         if(m != n || m == 0)
@@ -259,7 +259,7 @@ namespace golang::math::big
     // In the terminology of that paper, this is an "Almost Montgomery Multiplication":
     // x and y are required to satisfy 0 <= z < 2**(n*_W) and then the result
     // z is guaranteed to satisfy 0 <= z < 2**(n*_W), but it may not be < m.
-    golang::math::big::nat rec::montgomery(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y, golang::math::big::nat m, Word k, int n)
+    golang::math::big::nat rec::montgomery(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y, golang::math::big::nat m, Word k, int64_t n)
     {
         // This code assumes x, y, m are all the same length, n.
         // (required by addMulVVW and the for loop).
@@ -272,7 +272,7 @@ namespace golang::math::big
         z = rec::make(gocpp::recv(z), n * 2);
         clear(z);
         Word c = {};
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             auto d = y[i];
             auto c2 = addMulVVWW(z.make_slice(i, n + i), z.make_slice(i, n + i), x, d, 0);
@@ -433,7 +433,7 @@ namespace golang::math::big
     // save returns the current stack pointer.
     // A future call to restore with the same value
     // frees any temporaries allocated on the stack after the call to save.
-    int rec::save(stackInner* s)
+    int64_t rec::save(stackInner* s)
     {
         return len(s->w);
     }
@@ -445,13 +445,13 @@ namespace golang::math::big
     //
     // which makes sure to pop any temporaries allocated in the current function
     // from the stack before returning.
-    void rec::restore(stackInner* s, int n)
+    void rec::restore(stackInner* s, int64_t n)
     {
         s->w = s->w.make_slice(0, n);
     }
 
     // nat returns a nat of n words, allocated on the stack.
-    golang::math::big::nat rec::nat(stackInner* s, int n)
+    golang::math::big::nat rec::nat(stackInner* s, int64_t n)
     {
         // round up to multiple of 4
         auto nr = (n + 3) &^ 3;
@@ -516,7 +516,7 @@ namespace golang::math::big
         }
     }
 
-    int rec::save(stack* s)
+    int64_t rec::save(stack* s)
     {
         auto si = s->si;
         if(si == nullptr)
@@ -526,7 +526,7 @@ namespace golang::math::big
         return rec::save(gocpp::recv(si));
     }
 
-    void rec::restore(stack* s, int n)
+    void rec::restore(stack* s, int64_t n)
     {
         auto si = s->si;
         if(si == nullptr)
@@ -536,7 +536,7 @@ namespace golang::math::big
         rec::restore(gocpp::recv(si), n);
     }
 
-    golang::math::big::nat rec::nat(stack* s, int n)
+    golang::math::big::nat rec::nat(stack* s, int64_t n)
     {
         auto si = s->si;
         if(si == nullptr)
@@ -566,7 +566,7 @@ namespace golang::math::big
 
     // bitLen returns the length of x in bits.
     // Unlike most methods, it works even if x is not normalized.
-    int rec::bitLen(golang::math::big::nat x)
+    int64_t rec::bitLen(golang::math::big::nat x)
     {
         // This function is used in cryptographic operations. It must not leak
         // anything but the Int's sign and bit size through side-channels. Any
@@ -576,7 +576,7 @@ namespace golang::math::big
             // bits.Len uses a lookup table for the low-order bits on some
             // architectures. Neutralize any input-dependent behavior by setting all
             // bits after the first one bit.
-            auto top = (unsigned int)(x[i]);
+            auto top = (uint64_t)(x[i]);
             top |= top >> 1;
             top |= top >> 2;
             top |= top >> 4;
@@ -591,32 +591,32 @@ namespace golang::math::big
 
     // trailingZeroBits returns the number of consecutive least significant zero
     // bits of x.
-    unsigned int rec::trailingZeroBits(golang::math::big::nat x)
+    uint64_t rec::trailingZeroBits(golang::math::big::nat x)
     {
         if(len(x) == 0)
         {
             return 0;
         }
-        unsigned int i = {};
+        uint64_t i = {};
         for(; x[i] == 0; )
         {
             i++;
         }
         // x[i] != 0
-        return i * _W + (unsigned int)(bits::TrailingZeros((unsigned int)(x[i])));
+        return i * _W + (uint64_t)(bits::TrailingZeros((uint64_t)(x[i])));
     }
 
     // isPow2 returns i, true when x == 2**i and 0, false otherwise.
-    std::tuple<unsigned int, bool> rec::isPow2(golang::math::big::nat x)
+    std::tuple<uint64_t, bool> rec::isPow2(golang::math::big::nat x)
     {
-        unsigned int i = {};
+        uint64_t i = {};
         for(; x[i] == 0; )
         {
             i++;
         }
-        if(i == (unsigned int)(len(x)) - 1 && x[i] & (x[i] - 1) == 0)
+        if(i == (uint64_t)(len(x)) - 1 && x[i] & (x[i] - 1) == 0)
         {
-            return {i * _W + (unsigned int)(bits::TrailingZeros((unsigned int)(x[i]))), true};
+            return {i * _W + (uint64_t)(bits::TrailingZeros((uint64_t)(x[i]))), true};
         }
         return {0, false};
     }
@@ -627,7 +627,7 @@ namespace golang::math::big
     }
 
     // z = x << s
-    golang::math::big::nat rec::lsh(golang::math::big::nat z, golang::math::big::nat x, unsigned int s)
+    golang::math::big::nat rec::lsh(golang::math::big::nat z, golang::math::big::nat x, uint64_t s)
     {
         if(s == 0)
         {
@@ -649,7 +649,7 @@ namespace golang::math::big
         }
 
 
-        auto n = m + int(s / _W);
+        auto n = m + int64_t(s / _W);
         z = rec::make(gocpp::recv(z), n + 1);
         if(s %= _W; s == 0)
         {
@@ -666,7 +666,7 @@ namespace golang::math::big
     }
 
     // z = x >> s
-    golang::math::big::nat rec::rsh(golang::math::big::nat z, golang::math::big::nat x, unsigned int s)
+    golang::math::big::nat rec::rsh(golang::math::big::nat z, golang::math::big::nat x, uint64_t s)
     {
         if(s == 0)
         {
@@ -681,7 +681,7 @@ namespace golang::math::big
         }
 
         auto m = len(x);
-        auto n = m - int(s / _W);
+        auto n = m - int64_t(s / _W);
         // n > 0
         if(n <= 0)
         {
@@ -702,9 +702,9 @@ namespace golang::math::big
         return rec::norm(gocpp::recv(z));
     }
 
-    golang::math::big::nat rec::setBit(golang::math::big::nat z, golang::math::big::nat x, unsigned int i, unsigned int b)
+    golang::math::big::nat rec::setBit(golang::math::big::nat z, golang::math::big::nat x, uint64_t i, uint64_t b)
     {
-        auto j = int(i / _W);
+        auto j = int64_t(i / _W);
         auto m = Word(1) << (i % _W);
         auto n = len(x);
         //Go switch emulation
@@ -747,23 +747,23 @@ namespace golang::math::big
     }
 
     // bit returns the value of the i'th bit, with lsb == bit 0.
-    unsigned int rec::bit(golang::math::big::nat x, unsigned int i)
+    uint64_t rec::bit(golang::math::big::nat x, uint64_t i)
     {
         auto j = i / _W;
-        if(j >= (unsigned int)(len(x)))
+        if(j >= (uint64_t)(len(x)))
         {
             return 0;
         }
         // 0 <= j < len(x)
-        return (unsigned int)((x[j] >> (i % _W)) & 1);
+        return (uint64_t)((x[j] >> (i % _W)) & 1);
     }
 
     // sticky returns 1 if there's a 1 bit within the
     // i least significant bits, otherwise it returns 0.
-    unsigned int rec::sticky(golang::math::big::nat x, unsigned int i)
+    uint64_t rec::sticky(golang::math::big::nat x, uint64_t i)
     {
         auto j = i / _W;
-        if(j >= (unsigned int)(len(x)))
+        if(j >= (uint64_t)(len(x)))
         {
             if(len(x) == 0)
             {
@@ -798,7 +798,7 @@ namespace golang::math::big
 
 
         z = rec::make(gocpp::recv(z), m);
-        for(auto i = 0; i < m; i++)
+        for(int64_t i = 0; i < m; i++)
         {
             z[i] = x[i] & y[i];
         }
@@ -807,14 +807,14 @@ namespace golang::math::big
     }
 
     // trunc returns z = x mod 2ⁿ.
-    golang::math::big::nat rec::trunc(golang::math::big::nat z, golang::math::big::nat x, unsigned int n)
+    golang::math::big::nat rec::trunc(golang::math::big::nat z, golang::math::big::nat x, uint64_t n)
     {
         auto w = (n + _W - 1) / _W;
-        if((unsigned int)(len(x)) < w)
+        if((uint64_t)(len(x)) < w)
         {
             return rec::set(gocpp::recv(z), x);
         }
-        z = rec::make(gocpp::recv(z), int(w));
+        z = rec::make(gocpp::recv(z), int64_t(w));
         copy(z, x);
         if(n % _W != 0)
         {
@@ -835,7 +835,7 @@ namespace golang::math::big
 
 
         z = rec::make(gocpp::recv(z), m);
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             z[i] = x[i] &^ y[i];
         }
@@ -858,7 +858,7 @@ namespace golang::math::big
 
 
         z = rec::make(gocpp::recv(z), m);
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             z[i] = x[i] | y[i];
         }
@@ -881,7 +881,7 @@ namespace golang::math::big
 
 
         z = rec::make(gocpp::recv(z), m);
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             z[i] = x[i] ^ y[i];
         }
@@ -892,7 +892,7 @@ namespace golang::math::big
 
     // random creates a random integer in [0..limit), using the space in z if
     // possible. n is the bit length of limit.
-    golang::math::big::nat rec::random(golang::math::big::nat z, rand::Rand* rand, golang::math::big::nat limit, int n)
+    golang::math::big::nat rec::random(golang::math::big::nat z, rand::Rand* rand, golang::math::big::nat limit, int64_t n)
     {
         if(alias(z, limit))
         {
@@ -901,7 +901,7 @@ namespace golang::math::big
         }
         z = rec::make(gocpp::recv(z), len(limit));
 
-        auto bitLengthOfMSW = (unsigned int)(n % _W);
+        auto bitLengthOfMSW = (uint64_t)(n % _W);
         if(bitLengthOfMSW == 0)
         {
             bitLengthOfMSW = _W;
@@ -1044,12 +1044,12 @@ namespace golang::math::big
             // We walk through the bits of the exponent one by one. Each time we
             // see a bit, we square, thus doubling the power. If the bit is a one,
             // we also multiply by x, thus adding one to the power.
-            auto w = _W - int(shift);
+            auto w = _W - int64_t(shift);
             // zz and r are used to avoid allocating in mul and div as
             // otherwise the arguments would alias.
             nat zz = {};
             nat r = {};
-            for(auto j = 0; j < w; j++)
+            for(int64_t j = 0; j < w; j++)
             {
                 zz = rec::sqr(gocpp::recv(zz), stk, z);
                 std::tie(zz, z) = std::tuple{z, zz};
@@ -1073,7 +1073,7 @@ namespace golang::math::big
             {
                 v = y[i];
 
-                for(auto j = 0; j < _W; j++)
+                for(int64_t j = 0; j < _W; j++)
                 {
                     zz = rec::sqr(gocpp::recv(zz), stk, z);
                     std::tie(zz, z) = std::tuple{z, zz};
@@ -1154,7 +1154,7 @@ namespace golang::math::big
 
     // expNNWindowed calculates x**y mod m using a fixed, 4-bit window,
     // where m = 2**logM.
-    golang::math::big::nat rec::expNNWindowed(golang::math::big::nat z, stack* stk, golang::math::big::nat x, golang::math::big::nat y, unsigned int logM)
+    golang::math::big::nat rec::expNNWindowed(golang::math::big::nat z, stack* stk, golang::math::big::nat x, golang::math::big::nat y, uint64_t logM)
     {
         gocpp::Defer defer;
         try
@@ -1177,7 +1177,7 @@ namespace golang::math::big
             // zz is used to avoid allocating in mul as otherwise
             // the arguments would alias.
             defer.push_back([=]{ rec::restore(gocpp::recv(stk), rec::save(gocpp::recv(stk))); });
-            auto w = int((logM + _W - 1) / _W);
+            auto w = int64_t((logM + _W - 1) / _W);
             auto zz = rec::nat(gocpp::recv(stk), w);
 
             auto n = 4;
@@ -1189,7 +1189,7 @@ namespace golang::math::big
             }
             powers[0] = rec::set(gocpp::recv(powers[0]), natOne);
             powers[1] = rec::trunc(gocpp::recv(powers[1]), x, logM);
-            for(auto i = 2; i < (1 << n); i += 2)
+            for(int64_t i = 2; i < (1 << n); i += 2)
             {
                 auto [p2, p, p1] = std::tuple{& powers[i / 2], & powers[i], & powers[i + 1]};
                 *p = rec::sqr(gocpp::recv(p), stk, *p2);
@@ -1205,8 +1205,8 @@ namespace golang::math::big
             // and truncate it appropriately at the start of the loop.
             auto i = len(y) - 1;
             // -2 because the top word of N bits is the (N-1)/W'th word.
-            auto mtop = int((logM - 2) / _W);
-            auto mmask = ~ Word(0);
+            auto mtop = int64_t((logM - 2) / _W);
+            big::Word mmask = ~ Word(0);
             if(auto mbits = (logM - 1) & (_W - 1); mbits != 0)
             {
                 mmask = (1 << mbits) - 1;
@@ -1215,7 +1215,7 @@ namespace golang::math::big
             {
                 i = mtop;
             }
-            auto advance = false;
+            bool advance = false;
             z = rec::setWord(gocpp::recv(z), 1);
             for(; i >= 0; i--)
             {
@@ -1224,7 +1224,7 @@ namespace golang::math::big
                 {
                     yi &= mmask;
                 }
-                for(auto j = 0; j < _W; j += n)
+                for(int64_t j = 0; j < _W; j += n)
                 {
                     if(advance)
                     {
@@ -1291,7 +1291,7 @@ namespace golang::math::big
         // Iteration for Multiplicative Inverses Modulo Prime Powers".
         auto k0 = 2 - m[0];
         auto t = m[0] - 1;
-        for(auto i = 1; i < _W; i <<= 1)
+        for(int64_t i = 1; i < _W; i <<= 1)
         {
             t *= t;
             k0 *= (t + 1);
@@ -1300,7 +1300,7 @@ namespace golang::math::big
 
         // RR = 2**(2*_W*len(m)) mod m
         auto RR = rec::setWord(gocpp::recv(nat(nullptr)), 1);
-        auto zz = rec::lsh(gocpp::recv(nat(nullptr)), RR, (unsigned int)(2 * numWords * _W));
+        auto zz = rec::lsh(gocpp::recv(nat(nullptr)), RR, (uint64_t)(2 * numWords * _W));
         std::tie(std::ignore, RR) = rec::div(gocpp::recv(nat(nullptr)), stk, RR, zz, m);
         if(len(RR) < numWords)
         {
@@ -1317,7 +1317,7 @@ namespace golang::math::big
         gocpp::array<nat, 1 << n> powers = {};
         powers[0] = rec::montgomery(gocpp::recv(powers[0]), one, RR, m, k0, numWords);
         powers[1] = rec::montgomery(gocpp::recv(powers[1]), x, RR, m, k0, numWords);
-        for(auto i = 2; i < (1 << n); i++)
+        for(int64_t i = 2; i < (1 << n); i++)
         {
             powers[i] = rec::montgomery(gocpp::recv(powers[i]), powers[i - 1], powers[1], m, k0, numWords);
         }
@@ -1332,7 +1332,7 @@ namespace golang::math::big
         for(auto i = len(y) - 1; i >= 0; i--)
         {
             auto yi = y[i];
-            for(auto j = 0; j < _W; j += n)
+            for(int64_t j = 0; j < _W; j += n)
             {
                 if(i != len(y) - 1 || j != 0)
                 {
@@ -1374,16 +1374,16 @@ namespace golang::math::big
     // The value of z is encoded in the slice buf[i:]. If the value of z
     // cannot be represented in buf, bytes panics. The number i of unused
     // bytes at the beginning of buf is returned as result.
-    int rec::bytes(golang::math::big::nat z, gocpp::slice<unsigned char> buf)
+    int64_t rec::bytes(golang::math::big::nat z, gocpp::slice<unsigned char> buf)
     {
-        int i;
+        int64_t i;
         // This function is used in cryptographic operations. It must not leak
         // anything but the Int's sign and bit size through side-channels. Any
         // changes must be reviewed by a security expert.
         i = len(buf);
         for(auto [gocpp_ignored, d] : z)
         {
-            for(auto j = 0; j < go_S; j++)
+            for(int64_t j = 0; j < go_S; j++)
             {
                 i--;
                 if(i >= 0)
@@ -1428,7 +1428,7 @@ namespace golang::math::big
         z = rec::make(gocpp::recv(z), (len(buf) + go_S - 1) / go_S);
 
         auto i = len(buf);
-        for(auto k = 0; i >= go_S; k++)
+        for(int64_t k = 0; i >= go_S; k++)
         {
             z[k] = bigEndianWord(buf.make_slice(i - go_S, i));
             i -= go_S;
@@ -1436,7 +1436,7 @@ namespace golang::math::big
         if(i > 0)
         {
             Word d = {};
-            for(auto s = (unsigned int)(0); i > 0; s += 8)
+            for(uint64_t s = (uint64_t)(0); i > 0; s += 8)
             {
                 d |= Word(buf[i - 1]) << s;
                 i--;
@@ -1479,8 +1479,8 @@ namespace golang::math::big
             z1 = z;
             z1 = rec::setUint64(gocpp::recv(z1), 1);
             // must be ≥ √x
-            z1 = rec::lsh(gocpp::recv(z1), z1, (unsigned int)(rec::bitLen(gocpp::recv(x)) + 1) / 2);
-            for(auto n = 0; ; n++)
+            z1 = rec::lsh(gocpp::recv(z1), z1, (uint64_t)(rec::bitLen(gocpp::recv(x)) + 1) / 2);
+            for(int64_t n = 0; ; n++)
             {
                 std::tie(z2, std::ignore) = rec::div(gocpp::recv(z2), stk, nullptr, x, z1);
                 z2 = rec::add(gocpp::recv(z2), z2, z1);
@@ -1505,9 +1505,9 @@ namespace golang::math::big
     }
 
     // subMod2N returns z = (x - y) mod 2ⁿ.
-    golang::math::big::nat rec::subMod2N(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y, unsigned int n)
+    golang::math::big::nat rec::subMod2N(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y, uint64_t n)
     {
-        if((unsigned int)(rec::bitLen(gocpp::recv(x))) > n)
+        if((uint64_t)(rec::bitLen(gocpp::recv(x))) > n)
         {
             if(alias(z, x))
             {
@@ -1519,7 +1519,7 @@ namespace golang::math::big
                 x = rec::trunc(gocpp::recv(nat(nullptr)), x, n);
             }
         }
-        if((unsigned int)(rec::bitLen(gocpp::recv(y))) > n)
+        if((uint64_t)(rec::bitLen(gocpp::recv(y))) > n)
         {
             if(alias(z, y))
             {
@@ -1537,7 +1537,7 @@ namespace golang::math::big
         }
         // x - y < 0; x - y mod 2ⁿ = x - y + 2ⁿ = 2ⁿ - (y - x) = 1 + 2ⁿ-1 - (y - x) = 1 + ^(y - x).
         z = rec::sub(gocpp::recv(z), y, x);
-        for(; (unsigned int)(len(z)) * _W < n; )
+        for(; (uint64_t)(len(z)) * _W < n; )
         {
             z = append(z, 0);
         }

@@ -7,7 +7,7 @@
 namespace golang::runtime
 {
     struct sigStruct;
-    const int sigIdle = 0;
-    const int sigReceiving = 1;
-    const int sigSending = 2;
+    inline constexpr int64_t sigIdle = 0;
+    inline constexpr int64_t sigReceiving = 1;
+    inline constexpr int64_t sigSending = 2;
 }

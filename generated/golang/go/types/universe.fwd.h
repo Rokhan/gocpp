@@ -7,37 +7,38 @@
 namespace golang::go::types
 {
     struct gocpp_id_0;
-    using builtinId = int;
+    struct GoTag_builtinId;
+    using builtinId = gocpp::defined<int64_t, GoTag_builtinId>;
     struct gocpp_id_1;
     // universe scope
-    const builtinId _Append = 0;
-    const builtinId _Cap = 1;
-    const builtinId _Clear = 2;
-    const builtinId _Close = 3;
-    const builtinId _Complex = 4;
-    const builtinId _Copy = 5;
-    const builtinId _Delete = 6;
-    const builtinId _Imag = 7;
-    const builtinId _Len = 8;
-    const builtinId _Make = 9;
-    const builtinId _Max = 10;
-    const builtinId _Min = 11;
-    const builtinId _New = 12;
-    const builtinId _Panic = 13;
-    const builtinId _Print = 14;
-    const builtinId _Println = 15;
-    const builtinId _Real = 16;
-    const builtinId _Recover = 17;
+    inline constexpr builtinId _Append = 0;
+    inline constexpr builtinId _Cap = 1;
+    inline constexpr builtinId _Clear = 2;
+    inline constexpr builtinId _Close = 3;
+    inline constexpr builtinId _Complex = 4;
+    inline constexpr builtinId _Copy = 5;
+    inline constexpr builtinId _Delete = 6;
+    inline constexpr builtinId _Imag = 7;
+    inline constexpr builtinId _Len = 8;
+    inline constexpr builtinId _Make = 9;
+    inline constexpr builtinId _Max = 10;
+    inline constexpr builtinId _Min = 11;
+    inline constexpr builtinId _New = 12;
+    inline constexpr builtinId _Panic = 13;
+    inline constexpr builtinId _Print = 14;
+    inline constexpr builtinId _Println = 15;
+    inline constexpr builtinId _Real = 16;
+    inline constexpr builtinId _Recover = 17;
     // package unsafe
-    const builtinId _Add = 18;
-    const builtinId _Alignof = 19;
-    const builtinId _Offsetof = 20;
-    const builtinId _Sizeof = 21;
-    const builtinId _Slice = 22;
-    const builtinId _SliceData = 23;
-    const builtinId _String = 24;
-    const builtinId _StringData = 25;
+    inline constexpr builtinId _Add = 18;
+    inline constexpr builtinId _Alignof = 19;
+    inline constexpr builtinId _Offsetof = 20;
+    inline constexpr builtinId _Sizeof = 21;
+    inline constexpr builtinId _Slice = 22;
+    inline constexpr builtinId _SliceData = 23;
+    inline constexpr builtinId _String = 24;
+    inline constexpr builtinId _StringData = 25;
     // testing support
-    const builtinId _Assert = 26;
-    const builtinId _Trace = 27;
+    inline constexpr builtinId _Assert = 26;
+    inline constexpr builtinId _Trace = 27;
 }

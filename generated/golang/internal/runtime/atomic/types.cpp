@@ -310,7 +310,7 @@ namespace golang::internal::runtime::atomic
     //go:nosplit
     void rec::Store(Bool* b, bool value)
     {
-        auto s = uint8_t(0);
+        uint8_t s = uint8_t(0);
         if(value)
         {
             s = 1;

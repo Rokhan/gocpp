@@ -20,9 +20,9 @@ namespace golang::main
     {
     }
 
-    void sum(gocpp::slice<int> s, gocpp::channel<int> c)
+    void sum(gocpp::slice<int64_t> s, gocpp::channel<int64_t> c)
     {
-        auto sum = 0;
+        int64_t sum = 0;
         for(auto [gocpp_ignored, v] : s)
         {
             sum += v;
@@ -38,9 +38,9 @@ namespace golang::main
 
     void main()
     {
-        auto s = gocpp::slice<int> {7, 2, 8, - 9, 4, 0};
+        auto s = gocpp::slice<int64_t> {7, 2, 8, - 9, 4, 0};
 
-        auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>());
+        auto c = gocpp::make(gocpp::Tag<gocpp::channel<int64_t>>());
         gocpp::go([&]{ sum(s.make_slice(0, len(s) / 2), c); });
         gocpp::go([&]{ sum(s.make_slice(len(s) / 2), c); });
         // TODO: check evaluation order
@@ -50,7 +50,7 @@ namespace golang::main
         std::tie(x, y) = std::tuple{gocpp::min(x, y), gocpp::max(x, y)};
         mocklib::Println(x, y, x + y);
 
-        c = gocpp::make(gocpp::Tag<gocpp::channel<int>>());
+        c = gocpp::make(gocpp::Tag<gocpp::channel<int64_t>>());
         gocpp::go([&]{ sum(s.make_slice(0, len(s) / 2), c); });
         gocpp::go([&]{ sum(s.make_slice(len(s) / 2), c); });
         // receive from c

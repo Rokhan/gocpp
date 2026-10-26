@@ -65,7 +65,7 @@ namespace golang::internal::trace::tracev2
         x[EvCPUSample] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "CPUSample"_s;
             x.Args = gocpp::slice<gocpp::string> {"time"_s, "m"_s, "p"_s, "g"_s, "stack"_s};
-            x.StackIDs = gocpp::slice<int> {4};
+            x.StackIDs = gocpp::slice<int64_t> {4};
         });
         x[EvFrequency] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "Frequency"_s;
@@ -86,7 +86,7 @@ namespace golang::internal::trace::tracev2
             x.Name = "ProcsChange"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "procs_value"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {2};
+            x.StackIDs = gocpp::slice<int64_t> {2};
         });
         x[EvProcStart] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "ProcStart"_s;
@@ -112,7 +112,7 @@ namespace golang::internal::trace::tracev2
             x.Name = "GoCreate"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "new_g"_s, "new_stack"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {3, 2};
+            x.StackIDs = gocpp::slice<int64_t> {3, 2};
         });
         x[EvGoCreateSyscall] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "GoCreateSyscall"_s;
@@ -138,27 +138,27 @@ namespace golang::internal::trace::tracev2
             x.Name = "GoStop"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "reason_string"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {2};
-            x.StringIDs = gocpp::slice<int> {1};
+            x.StackIDs = gocpp::slice<int64_t> {2};
+            x.StringIDs = gocpp::slice<int64_t> {1};
         });
         x[EvGoBlock] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "GoBlock"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "reason_string"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {2};
-            x.StringIDs = gocpp::slice<int> {1};
+            x.StackIDs = gocpp::slice<int64_t> {2};
+            x.StringIDs = gocpp::slice<int64_t> {1};
         });
         x[EvGoUnblock] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "GoUnblock"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "g"_s, "g_seq"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {3};
+            x.StackIDs = gocpp::slice<int64_t> {3};
         });
         x[EvGoSyscallBegin] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "GoSyscallBegin"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "p_seq"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {2};
+            x.StackIDs = gocpp::slice<int64_t> {2};
         });
         x[EvGoSyscallEnd] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "GoSyscallEnd"_s;
@@ -181,8 +181,8 @@ namespace golang::internal::trace::tracev2
             x.Name = "STWBegin"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "kind_string"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {2};
-            x.StringIDs = gocpp::slice<int> {1};
+            x.StackIDs = gocpp::slice<int64_t> {2};
+            x.StringIDs = gocpp::slice<int64_t> {1};
         });
         x[EvSTWEnd] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "STWEnd"_s;
@@ -200,7 +200,7 @@ namespace golang::internal::trace::tracev2
             x.Name = "GCBegin"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "gc_seq"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {2};
+            x.StackIDs = gocpp::slice<int64_t> {2};
         });
         x[EvGCEnd] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "GCEnd"_s;
@@ -218,7 +218,7 @@ namespace golang::internal::trace::tracev2
             x.Name = "GCSweepBegin"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {1};
+            x.StackIDs = gocpp::slice<int64_t> {1};
         });
         x[EvGCSweepEnd] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "GCSweepEnd"_s;
@@ -236,7 +236,7 @@ namespace golang::internal::trace::tracev2
             x.Name = "GCMarkAssistBegin"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {1};
+            x.StackIDs = gocpp::slice<int64_t> {1};
         });
         x[EvGCMarkAssistEnd] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "GCMarkAssistEnd"_s;
@@ -258,42 +258,42 @@ namespace golang::internal::trace::tracev2
             x.Name = "GoLabel"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "label_string"_s};
             x.IsTimedEvent = true;
-            x.StringIDs = gocpp::slice<int> {1};
+            x.StringIDs = gocpp::slice<int64_t> {1};
         });
         x[EvUserTaskBegin] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "UserTaskBegin"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "task"_s, "parent_task"_s, "name_string"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {4};
-            x.StringIDs = gocpp::slice<int> {3};
+            x.StackIDs = gocpp::slice<int64_t> {4};
+            x.StringIDs = gocpp::slice<int64_t> {3};
         });
         x[EvUserTaskEnd] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "UserTaskEnd"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "task"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {2};
+            x.StackIDs = gocpp::slice<int64_t> {2};
         });
         x[EvUserRegionBegin] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "UserRegionBegin"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "task"_s, "name_string"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {3};
-            x.StringIDs = gocpp::slice<int> {2};
+            x.StackIDs = gocpp::slice<int64_t> {3};
+            x.StringIDs = gocpp::slice<int64_t> {2};
         });
         x[EvUserRegionEnd] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "UserRegionEnd"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "task"_s, "name_string"_s, "stack"_s};
             x.StartEv = EvUserRegionBegin;
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {3};
-            x.StringIDs = gocpp::slice<int> {2};
+            x.StackIDs = gocpp::slice<int64_t> {3};
+            x.StringIDs = gocpp::slice<int64_t> {2};
         });
         x[EvUserLog] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "UserLog"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "task"_s, "key_string"_s, "value_string"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {4};
-            x.StringIDs = gocpp::slice<int> {2, 3};
+            x.StackIDs = gocpp::slice<int64_t> {4};
+            x.StringIDs = gocpp::slice<int64_t> {2, 3};
         });
         x[EvGoSwitch] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "GoSwitch"_s;
@@ -309,13 +309,13 @@ namespace golang::internal::trace::tracev2
             x.Name = "GoCreateBlocked"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "new_g"_s, "new_stack"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {3, 2};
+            x.StackIDs = gocpp::slice<int64_t> {3, 2};
         });
         x[EvGoStatusStack] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "GoStatusStack"_s;
             x.Args = gocpp::slice<gocpp::string> {"dt"_s, "g"_s, "m"_s, "gstatus"_s, "stack"_s};
             x.IsTimedEvent = true;
-            x.StackIDs = gocpp::slice<int> {4};
+            x.StackIDs = gocpp::slice<int64_t> {4};
         });
         x[EvClockSnapshot] = gocpp::Init<tracev2::EventSpec>([](auto& x) {
             x.Name = "ClockSnapshot"_s;

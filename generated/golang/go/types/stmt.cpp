@@ -84,7 +84,7 @@ namespace golang::go::types
 
             // save/restore current environment and set up function environment
             // (and use 0 indentation at function start)
-            defer.push_back([=]{ [=](environment env, int indent) mutable -> void
+            defer.push_back([=]{ [=](environment env, int64_t indent) mutable -> void
             {
                 check->environment = env;
                 check->indent = indent;
@@ -135,7 +135,7 @@ namespace golang::go::types
                 unused = append(unused, v);
             }
         }
-        slices::SortFunc(unused, [=](Var* a, Var* b) mutable -> int
+        slices::SortFunc(unused, [=](Var* a, Var* b) mutable -> int64_t
         {
             return cmpPos(a->object.pos, b->object.pos);
         });
@@ -518,7 +518,7 @@ namespace golang::go::types
                 if(T == nullptr && t == nullptr || T != nullptr && t != nullptr && Identical(T, t))
                 {
                     // talk about "case" rather than "type" because of nil case
-                    auto Ts = "nil"_s;
+                    gocpp::string Ts = "nil"_s;
                     if(T != nullptr)
                     {
                         Ts = TypeString(T, [&](auto y){ return rec::qualifier(check, y); });
@@ -591,7 +591,7 @@ namespace golang::go::types
             if(auto other = seen.get(hash); other != nullptr)
             {
                 // talk about "case" rather than "type" because of nil case
-                auto Ts = "nil"_s;
+                gocpp::string Ts = "nil"_s;
                 if(T != nullptr)
                 {
                     Ts = TypeString(T, [&](auto y){ return rec::qualifier(check, y); });
@@ -1258,7 +1258,7 @@ namespace golang::go::types
                             }
 
                             // clause.Comm must be a SendStmt, RecvStmt, or default case
-                            auto valid = false;
+                            bool valid = false;
                             // rhs of RecvStmt, or nil
                             ast::Expr rhs = {};
                             //Go type switch emulation

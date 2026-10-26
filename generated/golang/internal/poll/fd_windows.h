@@ -18,8 +18,10 @@ namespace golang::internal::poll
     // It is called from the net package at init time to avoid
     // loading ws2_32.dll when net is not used.
     extern std::function<void (void)> InitWSA;
+    struct GoTag_fileKind { };
+    using fileKind = gocpp::defined<unsigned char, GoTag_fileKind>;
     gocpp::slice<go_any> pinPtrsFromBuf(gocpp::slice<unsigned char> buf);
-    std::tuple<int, gocpp::string, gocpp::error> DupCloseOnExec(int fd);
+    std::tuple<int64_t, gocpp::string, gocpp::error> DupCloseOnExec(int64_t fd);
 }
 #include "golang/internal/syscall/windows/net_windows.fwd.h"
 #include "golang/internal/syscall/windows/symlink_windows.fwd.h"
@@ -124,7 +126,7 @@ namespace golang::internal::poll
         gocpp::slice<unsigned char> lastbits{}; // first few bytes of the last incomplete rune in last write
         gocpp::slice<uint16_t> readuint16{}; // buffer to hold uint16s obtained with ReadConsole
         gocpp::slice<unsigned char> readbyte{}; // buffer to hold decoding of readuint16 from utf16 to utf8
-        int readbyteOffset{}; // readbyte[readOffset:] is yet to be consumed with file.Read
+        int64_t readbyteOffset{}; // readbyte[readOffset:] is yet to be consumed with file.Read
         // Semaphore signaled when file is closed.
         uint32_t csema{};
         // Don't wait from completion port notifications for successful
@@ -167,7 +169,7 @@ namespace golang::internal::poll
     void rawToSockaddrInet4(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
     void rawToSockaddrInet6(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
     std::tuple<int32_t, gocpp::error> sockaddrToRaw(syscall::RawSockaddrAny* rsa, syscall::Sockaddr sa);
-    windows::WSAMsg* newWSAMsg(gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, wsaRsa* rsa);
+    windows::WSAMsg* newWSAMsg(gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int64_t flags, wsaRsa* rsa);
     wsaRsa* newWSARsa();
 }
 
@@ -182,54 +184,54 @@ namespace golang::internal::poll
         void setOffset(operation* o, int64_t off);
         syscall::Overlapped* overlapped(FD* fd, operation* o);
         gocpp::error waitIO(FD* fd, operation* o);
-        std::tuple<int, gocpp::error> execIO(FD* fd, int mode, std::function<std::tuple<uint32_t, gocpp::error> (operation* o)> submit, gocpp::slice<go_any> pinPtrs);
+        std::tuple<int64_t, gocpp::error> execIO(FD* fd, int64_t mode, std::function<std::tuple<uint32_t, gocpp::error> (operation* o)> submit, gocpp::slice<go_any> pinPtrs);
         
         template<typename... Args>
-        std::tuple<int, gocpp::error> execIO(FD* fd, int mode, std::function<std::tuple<uint32_t, gocpp::error> (operation* o)> submit, Args... pinPtrs)
+        std::tuple<int64_t, gocpp::error> execIO(FD* fd, int64_t mode, std::function<std::tuple<uint32_t, gocpp::error> (operation* o)> submit, Args... pinPtrs)
         {
             return execIO(fd, mode, submit, gocpp::ToSlice<go_any>(pinPtrs...));
         }
         
         template<typename... Args>
-        std::tuple<int, gocpp::error> execIO(FD* fd, int mode, std::function<std::tuple<uint32_t, gocpp::error> (operation* o)> submit, go_any value, Args... pinPtrs)
+        std::tuple<int64_t, gocpp::error> execIO(FD* fd, int64_t mode, std::function<std::tuple<uint32_t, gocpp::error> (operation* o)> submit, go_any value, Args... pinPtrs)
         {
             return execIO(fd, mode, submit, gocpp::ToSlice<go_any>(value, pinPtrs...));
         }
         void setOffset(FD* fd, int64_t off);
-        void addOffset(FD* fd, int off);
+        void addOffset(FD* fd, int64_t off);
         gocpp::error Init(FD* fd, gocpp::string net, bool pollable);
         gocpp::error DisassociateIOCP(FD* fd);
         gocpp::error destroy(FD* fd);
         gocpp::error Close(FD* fd);
-        std::tuple<int, gocpp::error> Read(FD* fd, gocpp::slice<unsigned char> buf);
-        std::tuple<int, gocpp::error> readConsole(FD* fd, gocpp::slice<unsigned char> b);
-        std::tuple<int, gocpp::error> Pread(FD* fd, gocpp::slice<unsigned char> buf, int64_t off);
-        std::tuple<int, syscall::Sockaddr, gocpp::error> ReadFrom(FD* fd, gocpp::slice<unsigned char> buf);
-        std::tuple<int, gocpp::error> ReadFromInet4(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4);
-        std::tuple<int, gocpp::error> ReadFromInet6(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6);
-        std::tuple<int, gocpp::error> Write(FD* fd, gocpp::slice<unsigned char> buf);
-        std::tuple<int, gocpp::error> writeConsole(FD* fd, gocpp::slice<unsigned char> b);
-        std::tuple<int, gocpp::error> Pwrite(FD* fd, gocpp::slice<unsigned char> buf, int64_t off);
+        std::tuple<int64_t, gocpp::error> Read(FD* fd, gocpp::slice<unsigned char> buf);
+        std::tuple<int64_t, gocpp::error> readConsole(FD* fd, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> Pread(FD* fd, gocpp::slice<unsigned char> buf, int64_t off);
+        std::tuple<int64_t, syscall::Sockaddr, gocpp::error> ReadFrom(FD* fd, gocpp::slice<unsigned char> buf);
+        std::tuple<int64_t, gocpp::error> ReadFromInet4(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4);
+        std::tuple<int64_t, gocpp::error> ReadFromInet6(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6);
+        std::tuple<int64_t, gocpp::error> Write(FD* fd, gocpp::slice<unsigned char> buf);
+        std::tuple<int64_t, gocpp::error> writeConsole(FD* fd, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> Pwrite(FD* fd, gocpp::slice<unsigned char> buf, int64_t off);
         std::tuple<int64_t, gocpp::error> Writev(FD* fd, gocpp::slice<gocpp::slice<unsigned char>>* buf);
-        std::tuple<int, gocpp::error> WriteTo(FD* fd, gocpp::slice<unsigned char> buf, syscall::Sockaddr sa);
-        std::tuple<int, gocpp::error> WriteToInet4(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4);
-        std::tuple<int, gocpp::error> WriteToInet6(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6);
+        std::tuple<int64_t, gocpp::error> WriteTo(FD* fd, gocpp::slice<unsigned char> buf, syscall::Sockaddr sa);
+        std::tuple<int64_t, gocpp::error> WriteToInet4(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4);
+        std::tuple<int64_t, gocpp::error> WriteToInet6(FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6);
         gocpp::error ConnectEx(FD* fd, syscall::Sockaddr ra);
         std::tuple<gocpp::string, gocpp::error> acceptOne(FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa);
         std::tuple<syscall::Handle, gocpp::slice<syscall::RawSockaddrAny>, uint32_t, gocpp::string, gocpp::error> Accept(FD* fd, std::function<std::tuple<syscall::Handle, gocpp::error> ()> sysSocket);
-        std::tuple<int64_t, gocpp::error> Seek(FD* fd, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> Seek(FD* fd, int64_t offset, int64_t whence);
         gocpp::error Fchmod(FD* fd, uint32_t mode);
         gocpp::error Fchdir(FD* fd);
         std::tuple<uint32_t, gocpp::error> GetFileType(FD* fd);
         gocpp::error GetFileInformationByHandle(FD* fd, syscall::ByHandleFileInformation* data);
         gocpp::error RawRead(FD* fd, std::function<bool (uintptr_t _1)> f);
         gocpp::error RawWrite(FD* fd, std::function<bool (uintptr_t _1)> f);
-        std::tuple<int, int, int, syscall::Sockaddr, gocpp::error> ReadMsg(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags);
-        std::tuple<int, int, int, gocpp::error> ReadMsgInet4(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, syscall::SockaddrInet4* sa4);
-        std::tuple<int, int, int, gocpp::error> ReadMsgInet6(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, syscall::SockaddrInet6* sa6);
-        std::tuple<int, int, gocpp::error> WriteMsg(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::Sockaddr sa);
-        std::tuple<int, int, gocpp::error> WriteMsgInet4(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet4* sa);
-        std::tuple<int, int, gocpp::error> WriteMsgInet6(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet6* sa);
+        std::tuple<int64_t, int64_t, int64_t, syscall::Sockaddr, gocpp::error> ReadMsg(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int64_t flags);
+        std::tuple<int64_t, int64_t, int64_t, gocpp::error> ReadMsgInet4(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int64_t flags, syscall::SockaddrInet4* sa4);
+        std::tuple<int64_t, int64_t, int64_t, gocpp::error> ReadMsgInet6(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int64_t flags, syscall::SockaddrInet6* sa6);
+        std::tuple<int64_t, int64_t, gocpp::error> WriteMsg(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::Sockaddr sa);
+        std::tuple<int64_t, int64_t, gocpp::error> WriteMsgInet4(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet4* sa);
+        std::tuple<int64_t, int64_t, gocpp::error> WriteMsgInet6(FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet6* sa);
     }
 }
 

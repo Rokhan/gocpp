@@ -82,12 +82,12 @@ namespace golang::math
         gocpp::panic("not implemented"_s);
     }
 
-    std::tuple<double, int> archFrexp(double x)
+    std::tuple<double, int64_t> archFrexp(double x)
     {
         gocpp::panic("not implemented"_s);
     }
 
-    double archLdexp(double frac, int exp)
+    double archLdexp(double frac, int64_t exp)
     {
         gocpp::panic("not implemented"_s);
     }

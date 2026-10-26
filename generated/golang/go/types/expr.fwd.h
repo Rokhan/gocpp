@@ -7,11 +7,12 @@
 namespace golang::go::types
 {
     struct GoTag_opPredicates;
-    using exprKind = int;
+    struct GoTag_exprKind;
+    using exprKind = gocpp::defined<int64_t, GoTag_exprKind>;
     struct target;
-    const exprKind conversion = 0;
-    const exprKind expression = 1;
-    const exprKind statement = 2;
+    inline constexpr exprKind conversion = 0;
+    inline constexpr exprKind expression = 1;
+    inline constexpr exprKind statement = 2;
 }
 #include "golang/go/token/position.fwd.h"
 #include "golang/go/token/token.fwd.h"

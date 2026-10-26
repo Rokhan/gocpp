@@ -29,6 +29,8 @@ namespace golang::internal::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct LUID& value);
+    struct GoTag_TokenType { };
+    using TokenType = gocpp::defined<uint32_t, GoTag_TokenType>;
     struct LocalGroupUserInfo0
     {
         uint16_t* Name{};
@@ -195,7 +197,7 @@ namespace golang::internal::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct UserInfo4& value);
-    std::tuple<gocpp::unsafe_pointer, gocpp::error> getTokenInfo(syscall::Token t, uint32_t go_class, int initSize);
+    std::tuple<gocpp::unsafe_pointer, gocpp::error> getTokenInfo(syscall::Token t, uint32_t go_class, int64_t initSize);
     SID_IDENTIFIER_AUTHORITY GetSidIdentifierAuthority(syscall::SID* sid);
     uint32_t GetSidSubAuthority(syscall::SID* sid, uint32_t subAuthorityIdx);
     uint8_t GetSidSubAuthorityCount(syscall::SID* sid);

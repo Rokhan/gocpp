@@ -20,6 +20,8 @@ namespace golang::runtime
     void cgounimpl();
     extern uint64_t racecgosync;
     void cgoCheckPointer(go_any ptr, go_any arg);
+    struct GoTag_cgoErrorMsg { };
+    using cgoErrorMsg = gocpp::defined<int64_t, GoTag_cgoErrorMsg>;
     void cgoCheckResult(go_any val);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }

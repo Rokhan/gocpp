@@ -712,7 +712,7 @@ namespace golang::image::color
 
     // Index returns the index of the palette color closest to c in Euclidean
     // R,G,B,A space.
-    int rec::Index(Palette p, Color c)
+    int64_t rec::Index(Palette p, Color c)
     {
         // A batch version of this computation is in image/draw/draw.go.
         auto [cr, cg, cb, ca] = rec::RGBA(gocpp::recv(c));

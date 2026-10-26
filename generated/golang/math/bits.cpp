@@ -22,7 +22,7 @@ namespace golang::math
     }
 
     // Inf returns positive infinity if sign >= 0, negative infinity if sign < 0.
-    double Inf(int sign)
+    double Inf(int64_t sign)
     {
         uint64_t v = {};
         if(sign >= 0)
@@ -57,7 +57,7 @@ namespace golang::math
     // If sign > 0, IsInf reports whether f is positive infinity.
     // If sign < 0, IsInf reports whether f is negative infinity.
     // If sign == 0, IsInf reports whether f is either infinity.
-    bool IsInf(double f, int sign)
+    bool IsInf(double f, int64_t sign)
     {
         // Test for infinity by comparing against maximum float.
         // To avoid the floating-point hardware, could use:
@@ -77,10 +77,10 @@ namespace golang::math
 
     // normalize returns a normal number y and exponent exp
     // satisfying x == y × 2**exp. It assumes x is finite and non-zero.
-    std::tuple<double, int> normalize(double x)
+    std::tuple<double, int64_t> normalize(double x)
     {
         double y;
-        int exp;
+        int64_t exp;
         // 2**-1022
         auto SmallestNormal = 2.2250738585072014e-308;
         if(Abs(x) < SmallestNormal)

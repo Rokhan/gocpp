@@ -72,10 +72,10 @@ namespace golang::os::exec
     bool interfaceEqual(go_any a, go_any b);
     struct prefixSuffixSaver
     {
-        int N{}; // max size of prefix or suffix
+        int64_t N{}; // max size of prefix or suffix
         gocpp::slice<unsigned char> prefix{};
         gocpp::slice<unsigned char> suffix{}; // ring buffer once len(suffix) == N
-        int suffixOff{}; // offset to write into suffix
+        int64_t suffixOff{}; // offset to write into suffix
         int64_t skipped{};
 
         using isGoStruct = void;
@@ -181,12 +181,12 @@ namespace golang::os::exec
 
     namespace rec
     {
-        int ExitCode(const gocpp::PtrRecv<struct ExitError, false>& self);
-        int ExitCode(const gocpp::ObjRecv<struct ExitError>& self);
+        int64_t ExitCode(const gocpp::PtrRecv<struct ExitError, false>& self);
+        int64_t ExitCode(const gocpp::ObjRecv<struct ExitError>& self);
         bool Exited(const gocpp::PtrRecv<struct ExitError, false>& self);
         bool Exited(const gocpp::ObjRecv<struct ExitError>& self);
-        int Pid(const gocpp::PtrRecv<struct ExitError, false>& self);
-        int Pid(const gocpp::ObjRecv<struct ExitError>& self);
+        int64_t Pid(const gocpp::PtrRecv<struct ExitError, false>& self);
+        int64_t Pid(const gocpp::ObjRecv<struct ExitError>& self);
         gocpp::string String(const gocpp::PtrRecv<struct ExitError, false>& self);
         gocpp::string String(const gocpp::ObjRecv<struct ExitError>& self);
         bool Success(const gocpp::PtrRecv<struct ExitError, false>& self);
@@ -474,7 +474,7 @@ namespace golang::os::exec
         std::tuple<io::WriteCloser, gocpp::error> StdinPipe(Cmd* c);
         std::tuple<io::ReadCloser, gocpp::error> StdoutPipe(Cmd* c);
         std::tuple<io::ReadCloser, gocpp::error> StderrPipe(Cmd* c);
-        std::tuple<int, gocpp::error> Write(prefixSuffixSaver* w, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(prefixSuffixSaver* w, gocpp::slice<unsigned char> p);
         gocpp::slice<unsigned char> fill(prefixSuffixSaver* w, gocpp::slice<unsigned char>* dst, gocpp::slice<unsigned char> p);
         gocpp::slice<unsigned char> Bytes(prefixSuffixSaver* w);
         std::tuple<gocpp::slice<gocpp::string>, gocpp::error> environ(Cmd* c);

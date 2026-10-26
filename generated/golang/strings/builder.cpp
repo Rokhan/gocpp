@@ -91,7 +91,7 @@ namespace golang::strings
     }
 
     // Len returns the number of accumulated bytes; b.Len() == len(b.String()).
-    int rec::Len(Builder* b)
+    int64_t rec::Len(Builder* b)
     {
         return len(b->buf);
     }
@@ -99,7 +99,7 @@ namespace golang::strings
     // Cap returns the capacity of the builder's underlying byte slice. It is the
     // total space allocated for the string being built and includes any bytes
     // already written.
-    int rec::Cap(Builder* b)
+    int64_t rec::Cap(Builder* b)
     {
         return cap(b->buf);
     }
@@ -113,7 +113,7 @@ namespace golang::strings
 
     // grow copies the buffer to a new, larger buffer so that there are at least n
     // bytes of capacity beyond len(b.buf).
-    void rec::grow(Builder* b, int n)
+    void rec::grow(Builder* b, int64_t n)
     {
         auto buf = bytealg::MakeNoZero(2 * cap(b->buf) + n).make_slice(0, len(b->buf));
         copy(buf, b->buf);
@@ -123,7 +123,7 @@ namespace golang::strings
     // Grow grows b's capacity, if necessary, to guarantee space for
     // another n bytes. After Grow(n), at least n bytes can be written to b
     // without another allocation. If n is negative, Grow panics.
-    void rec::Grow(Builder* b, int n)
+    void rec::Grow(Builder* b, int64_t n)
     {
         rec::copyCheck(gocpp::recv(b));
         if(n < 0)
@@ -138,7 +138,7 @@ namespace golang::strings
 
     // Write appends the contents of p to b's buffer.
     // Write always returns len(p), nil.
-    std::tuple<int, gocpp::error> rec::Write(Builder* b, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Write(Builder* b, gocpp::slice<unsigned char> p)
     {
         rec::copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, p);
@@ -156,7 +156,7 @@ namespace golang::strings
 
     // WriteRune appends the UTF-8 encoding of Unicode code point r to b's buffer.
     // It returns the number of bytes written and a nil error.
-    std::tuple<int, gocpp::error> rec::WriteRune(Builder* b, gocpp::rune r)
+    std::tuple<int64_t, gocpp::error> rec::WriteRune(Builder* b, gocpp::rune r)
     {
         rec::copyCheck(gocpp::recv(b));
         auto n = len(b->buf);
@@ -166,7 +166,7 @@ namespace golang::strings
 
     // WriteString appends the contents of s to b's buffer.
     // It returns the length of s and a nil error.
-    std::tuple<int, gocpp::error> rec::WriteString(Builder* b, gocpp::string s)
+    std::tuple<int64_t, gocpp::error> rec::WriteString(Builder* b, gocpp::string s)
     {
         rec::copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, s);

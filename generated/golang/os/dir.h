@@ -12,6 +12,8 @@
 
 namespace golang::os
 {
+    struct GoTag_readdirMode { };
+    using readdirMode = gocpp::defined<int64_t, GoTag_readdirMode>;
     std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(gocpp::string name);
 }
 #include "golang/io/fs/fs.fwd.h"
@@ -36,9 +38,9 @@ namespace golang::os
 
     namespace rec
     {
-        std::tuple<gocpp::slice<FileInfo>, gocpp::error> Readdir(File* f, int n);
-        std::tuple<gocpp::slice<gocpp::string>, gocpp::error> Readdirnames(File* f, int n);
-        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(File* f, int n);
+        std::tuple<gocpp::slice<FileInfo>, gocpp::error> Readdir(File* f, int64_t n);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::error> Readdirnames(File* f, int64_t n);
+        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(File* f, int64_t n);
     }
 }
 

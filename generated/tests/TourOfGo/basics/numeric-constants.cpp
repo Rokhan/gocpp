@@ -20,7 +20,7 @@ namespace golang::main
     {
     }
 
-    int needInt(int x)
+    int64_t needInt(int64_t x)
     {
         return x * 10 + 1;
     }

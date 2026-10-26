@@ -178,7 +178,7 @@ namespace golang::golang_org::x::mod::semver
     //
     // An invalid semantic version string is considered less than a valid one.
     // All invalid semantic version strings compare equal to each other.
-    int Compare(gocpp::string v, gocpp::string w)
+    int64_t Compare(gocpp::string v, gocpp::string w)
     {
         auto [pv, ok1] = parse(v);
         auto [pw, ok2] = parse(w);
@@ -226,17 +226,17 @@ namespace golang::golang_org::x::mod::semver
     }
 
     // ByVersion implements [sort.Interface] for sorting semantic version strings.
-    int rec::Len(ByVersion vs)
+    int64_t rec::Len(ByVersion vs)
     {
         return len(vs);
     }
 
-    void rec::Swap(ByVersion vs, int i, int j)
+    void rec::Swap(ByVersion vs, int64_t i, int64_t j)
     {
         std::tie(vs[i], vs[j]) = std::tuple{vs[j], vs[i]};
     }
 
-    bool rec::Less(ByVersion vs, int i, int j)
+    bool rec::Less(ByVersion vs, int64_t i, int64_t j)
     {
         return compareVersion(vs[i], vs[j]) < 0;
     }
@@ -248,7 +248,7 @@ namespace golang::golang_org::x::mod::semver
         slices::SortFunc(list, compareVersion);
     }
 
-    int compareVersion(gocpp::string a, gocpp::string b)
+    int64_t compareVersion(gocpp::string a, gocpp::string b)
     {
         auto cmp = Compare(a, b);
         if(cmp != 0)
@@ -342,7 +342,7 @@ namespace golang::golang_org::x::mod::semver
         {
             return {t, rest, ok};
         }
-        auto i = 1;
+        int64_t i = 1;
         for(; i < len(v) && '0' <= v[i] && v[i] <= '9'; )
         {
             i++;
@@ -367,8 +367,8 @@ namespace golang::golang_org::x::mod::semver
         {
             return {t, rest, ok};
         }
-        auto i = 1;
-        auto start = 1;
+        int64_t i = 1;
+        int64_t start = 1;
         for(; i < len(v) && v[i] != '+'; )
         {
             if(! isIdentChar(v[i]) && v[i] != '.')
@@ -401,8 +401,8 @@ namespace golang::golang_org::x::mod::semver
         {
             return {t, rest, ok};
         }
-        auto i = 1;
-        auto start = 1;
+        int64_t i = 1;
+        int64_t start = 1;
         for(; i < len(v); )
         {
             if(! isIdentChar(v[i]) && v[i] != '.')
@@ -433,7 +433,7 @@ namespace golang::golang_org::x::mod::semver
 
     bool isBadNum(gocpp::string v)
     {
-        auto i = 0;
+        int64_t i = 0;
         for(; i < len(v) && '0' <= v[i] && v[i] <= '9'; )
         {
             i++;
@@ -443,7 +443,7 @@ namespace golang::golang_org::x::mod::semver
 
     bool isNum(gocpp::string v)
     {
-        auto i = 0;
+        int64_t i = 0;
         for(; i < len(v) && '0' <= v[i] && v[i] <= '9'; )
         {
             i++;
@@ -451,7 +451,7 @@ namespace golang::golang_org::x::mod::semver
         return i == len(v);
     }
 
-    int compareInt(gocpp::string x, gocpp::string y)
+    int64_t compareInt(gocpp::string x, gocpp::string y)
     {
         if(x == y)
         {
@@ -475,7 +475,7 @@ namespace golang::golang_org::x::mod::semver
         }
     }
 
-    int comparePrerelease(gocpp::string x, gocpp::string y)
+    int64_t comparePrerelease(gocpp::string x, gocpp::string y)
     {
         // "When major, minor, and patch are equal, a pre-release version has
         // lower precedence than a normal version.
@@ -563,7 +563,7 @@ namespace golang::golang_org::x::mod::semver
     {
         gocpp::string dx;
         gocpp::string rest;
-        auto i = 0;
+        int64_t i = 0;
         for(; i < len(x) && x[i] != '.'; )
         {
             i++;

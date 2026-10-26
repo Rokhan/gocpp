@@ -255,7 +255,7 @@ namespace golang::go::types
                                 rec::recordDef(gocpp::recv(check), s->Label, lbl);
                             }
                             // resolve matching forward jumps and remove them from fwdJumps
-                            auto i = 0;
+                            int64_t i = 0;
                             for(auto [gocpp_ignored, jmp] : fwdJumps)
                             {
                                 if(jmp->Label->Name == name)
@@ -307,7 +307,7 @@ namespace golang::go::types
                                     // spec: "If there is a label, it must be that of an enclosing
                                     // "for", "switch", or "select" statement, and that is the one
                                     // whose execution terminates."
-                                    auto valid = false;
+                                    bool valid = false;
                                     if(auto t = rec::enclosingTarget(gocpp::recv(b), name); t != nullptr)
                                     {
                                         //Go type switch emulation
@@ -345,7 +345,7 @@ namespace golang::go::types
                                 {
                                     // spec: "If there is a label, it must be that of an enclosing
                                     // "for" statement, and that is the one whose execution advances."
-                                    auto valid = false;
+                                    bool valid = false;
                                     if(auto t = rec::enclosingTarget(gocpp::recv(b), name); t != nullptr)
                                     {
                                         //Go type switch emulation

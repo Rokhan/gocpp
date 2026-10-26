@@ -12,13 +12,30 @@
 
 namespace golang::time
 {
-    absDays dateToAbsDays(int64_t year, golang::time::Month month, int day);
-    std::tuple<int, uint64_t> fmtFrac(gocpp::slice<unsigned char> buf, uint64_t v, int prec);
-    int fmtInt(gocpp::slice<unsigned char> buf, uint64_t v);
-    bool lessThanHalf(Duration x, Duration y);
-    Duration subMono(int64_t t, int64_t u);
-    int daysBefore(golang::time::Month m);
-    int daysIn(golang::time::Month m, int year);
+    struct GoTag_Month { };
+    using Month = gocpp::defined<int64_t, GoTag_Month>;
+    struct GoTag_Weekday { };
+    using Weekday = gocpp::defined<int64_t, GoTag_Weekday>;
+    struct GoTag_absSeconds { };
+    using absSeconds = gocpp::defined<uint64_t, GoTag_absSeconds>;
+    struct GoTag_absDays { };
+    using absDays = gocpp::defined<uint64_t, GoTag_absDays>;
+    struct GoTag_absCentury { };
+    using absCentury = gocpp::defined<uint64_t, GoTag_absCentury>;
+    struct GoTag_absCyear { };
+    using absCyear = gocpp::defined<int64_t, GoTag_absCyear>;
+    struct GoTag_absYday { };
+    using absYday = gocpp::defined<int64_t, GoTag_absYday>;
+    struct GoTag_absMonth { };
+    using absMonth = gocpp::defined<int64_t, GoTag_absMonth>;
+    struct GoTag_absLeap { };
+    using absLeap = gocpp::defined<int64_t, GoTag_absLeap>;
+    struct GoTag_absJanFeb { };
+    using absJanFeb = gocpp::defined<int64_t, GoTag_absJanFeb>;
+    struct GoTag_Duration { };
+    using Duration = gocpp::defined<int64_t, GoTag_Duration>;
+    std::tuple<int64_t, uint64_t> fmtFrac(gocpp::slice<unsigned char> buf, uint64_t v, int64_t prec);
+    int64_t fmtInt(gocpp::slice<unsigned char> buf, uint64_t v);
     std::tuple<int64_t, int32_t, int64_t> now();
     std::tuple<int64_t, int32_t, int64_t> runtimeNow();
     int64_t runtimeNano();
@@ -30,10 +47,15 @@ namespace golang::time
     // we avoid ever reporting a monotonic time of 0.
     // (Callers may want to use 0 as "time not set".)
     extern int64_t startNano;
-    bool isLeap(int year);
-    std::tuple<int, int> norm(int hi, int lo, int base);
-    std::tuple<int, int, int> legacyAbsClock(uint64_t abs);
-    std::tuple<int, golang::time::Month, int, int> legacyAbsDate(uint64_t abs, bool full);
+    bool isLeap(int64_t year);
+    std::tuple<int64_t, int64_t> norm(int64_t hi, int64_t lo, int64_t base);
+    std::tuple<int64_t, int64_t, int64_t> legacyAbsClock(uint64_t abs);
+    absDays dateToAbsDays(int64_t year, golang::time::Month month, int64_t day);
+    bool lessThanHalf(Duration x, Duration y);
+    Duration subMono(int64_t t, int64_t u);
+    int64_t daysBefore(golang::time::Month m);
+    int64_t daysIn(golang::time::Month m, int64_t year);
+    std::tuple<int64_t, golang::time::Month, int64_t, int64_t> legacyAbsDate(uint64_t abs, bool full);
 }
 #include "golang/time/zoneinfo.fwd.h"
 
@@ -79,8 +101,8 @@ namespace golang::time
     Time Unix(int64_t sec, int64_t nsec);
     Time UnixMilli(int64_t msec);
     Time UnixMicro(int64_t usec);
-    Time Date(int year, golang::time::Month month, int day, int hour, int min, int sec, int nsec, golang::time::Location* loc);
-    std::tuple<int, Duration> div(Time t, Duration d);
+    Time Date(int64_t year, golang::time::Month month, int64_t day, int64_t hour, int64_t min, int64_t sec, int64_t nsec, golang::time::Location* loc);
+    std::tuple<int64_t, Duration> div(Time t, Duration d);
     uint64_t legacyTimeTimeAbs(Time t);
 }
 
@@ -102,38 +124,38 @@ namespace golang::time
         bool IsZero(Time t);
         bool After(Time t, Time u);
         bool Before(Time t, Time u);
-        int Compare(Time t, Time u);
+        int64_t Compare(Time t, Time u);
         bool Equal(Time t, Time u);
         gocpp::string String(golang::time::Month m);
         gocpp::string String(golang::time::Weekday d);
         absDays days(absSeconds abs);
         std::tuple<absCentury, absCyear, absYday> split(absDays days);
-        std::tuple<absMonth, int> split(absYday ayday);
+        std::tuple<absMonth, int64_t> split(absYday ayday);
         absJanFeb janFeb(absYday ayday);
         golang::time::Month month(absMonth m, absJanFeb janFeb);
         absLeap leap(absCentury century, absCyear cyear);
-        int year(absCentury century, absCyear cyear, absJanFeb janFeb);
-        int yday(absYday ayday, absJanFeb janFeb, absLeap leap);
-        std::tuple<int, golang::time::Month, int> date(absDays days);
-        std::tuple<int, int> yearYday(absDays days);
+        int64_t year(absCentury century, absCyear cyear, absJanFeb janFeb);
+        int64_t yday(absYday ayday, absJanFeb janFeb, absLeap leap);
+        std::tuple<int64_t, golang::time::Month, int64_t> date(absDays days);
+        std::tuple<int64_t, int64_t> yearYday(absDays days);
         absSeconds absSec(Time t);
-        std::tuple<gocpp::string, int, absSeconds> locabs(Time t);
-        std::tuple<int, golang::time::Month, int> Date(Time t);
-        int Year(Time t);
+        std::tuple<gocpp::string, int64_t, absSeconds> locabs(Time t);
+        std::tuple<int64_t, golang::time::Month, int64_t> Date(Time t);
+        int64_t Year(Time t);
         golang::time::Month Month(Time t);
-        int Day(Time t);
+        int64_t Day(Time t);
         golang::time::Weekday Weekday(Time t);
         golang::time::Weekday weekday(absDays days);
-        std::tuple<int, int> ISOWeek(Time t);
-        std::tuple<int, int, int> Clock(Time t);
-        std::tuple<int, int, int> clock(absSeconds abs);
-        int Hour(Time t);
-        int Minute(Time t);
-        int Second(Time t);
-        int Nanosecond(Time t);
-        int YearDay(Time t);
+        std::tuple<int64_t, int64_t> ISOWeek(Time t);
+        std::tuple<int64_t, int64_t, int64_t> Clock(Time t);
+        std::tuple<int64_t, int64_t, int64_t> clock(absSeconds abs);
+        int64_t Hour(Time t);
+        int64_t Minute(Time t);
+        int64_t Second(Time t);
+        int64_t Nanosecond(Time t);
+        int64_t YearDay(Time t);
         gocpp::string String(Duration d);
-        int format(Duration d, gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf);
+        int64_t format(Duration d, gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf);
         int64_t Nanoseconds(Duration d);
         int64_t Microseconds(Duration d);
         int64_t Milliseconds(Duration d);
@@ -145,12 +167,12 @@ namespace golang::time
         Duration Abs(Duration d);
         Time Add(Time t, Duration d);
         Duration Sub(Time t, Time u);
-        Time AddDate(Time t, int years, int months, int days);
+        Time AddDate(Time t, int64_t years, int64_t months, int64_t days);
         Time UTC(Time t);
         Time Local(Time t);
         Time In(Time t, golang::time::Location* loc);
         golang::time::Location* Location(Time t);
-        std::tuple<gocpp::string, int> Zone(Time t);
+        std::tuple<gocpp::string, int64_t> Zone(Time t);
         std::tuple<Time, Time> ZoneBounds(Time t);
         int64_t Unix(Time t);
         int64_t UnixMilli(Time t);

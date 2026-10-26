@@ -473,9 +473,9 @@ namespace golang::runtime
     // On ARM64, runtime.callbackasm is a series of mov and branch instructions.
     // R12 is loaded with the callback index. Each entry is two instructions,
     // hence 8 bytes.
-    uintptr_t callbackasmAddr(int i)
+    uintptr_t callbackasmAddr(int64_t i)
     {
-        int entrySize = {};
+        int64_t entrySize = {};
         //Go switch emulation
         {
             auto condition = GOARCH;
@@ -590,7 +590,7 @@ namespace golang::runtime
         // Register the callback.
         if(cbs.index == nullptr)
         {
-            cbs.index = gocpp::make(gocpp::Tag<gocpp::map<winCallbackKey, int>>());
+            cbs.index = gocpp::make(gocpp::Tag<gocpp::map<winCallbackKey, int64_t>>());
         }
         auto n = cbs.n;
         if(n >= len(cbs.ctxt))
@@ -700,7 +700,7 @@ namespace golang::runtime
         }
         else
         {
-            int zero = {};
+            int64_t zero = {};
             // On architectures with no registers, Ints[0] would be a compile error,
             // so we use a dynamic index. These architectures will never take this
             // branch, so this won't cause a runtime panic.

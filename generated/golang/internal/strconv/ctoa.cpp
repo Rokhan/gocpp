@@ -26,7 +26,7 @@ namespace golang::internal::strconv
     // The format fmt and precision prec have the same meaning as in [FormatFloat].
     // It rounds the result assuming that the original was obtained from a complex
     // value of bitSize bits, which must be 64 for complex64 and 128 for complex128.
-    gocpp::string FormatComplex(struct gocpp::complex128 c, unsigned char fmt, int prec, int bitSize)
+    gocpp::string FormatComplex(struct gocpp::complex128 c, unsigned char fmt, int64_t prec, int64_t bitSize)
     {
         gocpp::array<unsigned char, 64> buf = {};
         return gocpp::string(AppendComplex(buf.make_slice(0, 0), c, fmt, prec, bitSize));
@@ -35,7 +35,7 @@ namespace golang::internal::strconv
     // AppendComplex appends the result of FormatComplex to dst.
     // It is here for the runtime.
     // There is no public strconv.AppendComplex.
-    gocpp::slice<unsigned char> AppendComplex(gocpp::slice<unsigned char> dst, struct gocpp::complex128 c, unsigned char fmt, int prec, int bitSize)
+    gocpp::slice<unsigned char> AppendComplex(gocpp::slice<unsigned char> dst, struct gocpp::complex128 c, unsigned char fmt, int64_t prec, int64_t bitSize)
     {
         if(bitSize != 64 && bitSize != 128)
         {

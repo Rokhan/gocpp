@@ -169,22 +169,22 @@ namespace golang::time
     // pseudoUnix returns the pseudo-Unix time (seconds since Jan 1 1970 *LOCAL TIME*)
     // denoted by the system date+time d in the given year.
     // It is up to the caller to convert this local time into a UTC-based time.
-    int64_t pseudoUnix(int year, syscall::Systemtime* d)
+    int64_t pseudoUnix(int64_t year, syscall::Systemtime* d)
     {
         // Windows specifies daylight savings information in "day in month" format:
         // d.Month is month number (1-12)
         // d.DayOfWeek is appropriate weekday (Sunday=0 to Saturday=6)
         // d.Day is week within the month (1 to 5, where 5 is last week of the month)
         // d.Hour, d.Minute and d.Second are absolute time
-        auto day = 1;
-        auto t = Date(year, Month(d->Month), day, int(d->Hour), int(d->Minute), int(d->Second), 0, time::UTC);
-        auto i = int(d->DayOfWeek) - int(rec::Weekday(gocpp::recv(t)));
+        int64_t day = 1;
+        auto t = Date(year, Month(d->Month), day, int64_t(d->Hour), int64_t(d->Minute), int64_t(d->Second), 0, time::UTC);
+        auto i = int64_t(d->DayOfWeek) - int64_t(rec::Weekday(gocpp::recv(t)));
         if(i < 0)
         {
             i += 7;
         }
         day += i;
-        if(auto week = int(d->Day) - 1; week < 4)
+        if(auto week = int64_t(d->Day) - 1; week < 4)
         {
             day += week * 7;
         }
@@ -206,7 +206,7 @@ namespace golang::time
 
         l->name = "Local"_s;
 
-        auto nzone = 1;
+        int64_t nzone = 1;
         if(i->StandardDate.Month > 0)
         {
             nzone++;
@@ -220,7 +220,7 @@ namespace golang::time
         if(nzone == 1)
         {
             // No daylight savings.
-            std->offset = - int(i->Bias) * 60;
+            std->offset = - int64_t(i->Bias) * 60;
             l->cacheStart = alpha;
             l->cacheEnd = omega;
             l->cacheZone = std;
@@ -233,19 +233,19 @@ namespace golang::time
         // StandardBias must be ignored if StandardDate is not set,
         // so this computation is delayed until after the nzone==1
         // return above.
-        std->offset = - int(i->Bias + i->StandardBias) * 60;
+        std->offset = - int64_t(i->Bias + i->StandardBias) * 60;
 
         auto dst = & l->zone[1];
         dst->name = dstname;
-        dst->offset = - int(i->Bias + i->DaylightBias) * 60;
+        dst->offset = - int64_t(i->Bias + i->DaylightBias) * 60;
         dst->isDST = true;
 
         // Arrange so that d0 is first transition date, d1 second,
         // i0 is index of zone after first transition, i1 second.
         auto d0 = & i->StandardDate;
         auto d1 = & i->DaylightDate;
-        auto i0 = 0;
-        auto i1 = 1;
+        int64_t i0 = 0;
+        int64_t i1 = 1;
         if(d0->Month > d1->Month)
         {
             std::tie(d0, d1) = std::tuple{d1, d0};
@@ -257,7 +257,7 @@ namespace golang::time
 
         auto t = rec::UTC(gocpp::recv(Now()));
         auto year = rec::Year(gocpp::recv(t));
-        auto txi = 0;
+        int64_t txi = 0;
         for(auto y = year - 100; y < year + 100; y++)
         {
             auto tx = & l->tx[txi];

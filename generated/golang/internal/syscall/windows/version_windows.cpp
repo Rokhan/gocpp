@@ -144,7 +144,7 @@ namespace golang::internal::syscall::windows
                 return;
             }
             defer.push_back([=]{ syscall::Closesocket(s); });
-            auto optSupported = [=](int opt) mutable -> bool
+            auto optSupported = [=](int64_t opt) mutable -> bool
             {
                 auto err = syscall::SetsockoptInt(s, syscall::IPPROTO_TCP, opt, 1);
                 return ! errors::Is(err, syscall::WSAENOPROTOOPT);
@@ -209,7 +209,7 @@ namespace golang::internal::syscall::windows
         {
             return false;
         }
-        for(auto i = int32_t(0); i < n; i++)
+        for(int32_t i = int32_t(0); i < n; i++)
         {
             if(buf[i].AddressFamily == syscall::AF_UNIX)
             {

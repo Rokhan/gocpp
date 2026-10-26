@@ -256,7 +256,7 @@ namespace golang::golang_org::x::sync::errgroup
     // goroutine without exceeding the configured limit.
     //
     // The limit must not be modified while any goroutines in the group are active.
-    void rec::SetLimit(Group* g, int n)
+    void rec::SetLimit(Group* g, int64_t n)
     {
         if(n < 0)
         {

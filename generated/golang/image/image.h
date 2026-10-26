@@ -13,14 +13,14 @@
 
 namespace golang::image
 {
-    int pixelBufferLength(int bytesPerPixel, Rectangle r, gocpp::string imageTypeName);
+    int64_t pixelBufferLength(int64_t bytesPerPixel, Rectangle r, gocpp::string imageTypeName);
     struct RGBA
     {
         // Pix holds the image's pixels, in R, G, B, A order. The pixel at
         // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
         gocpp::slice<uint8_t> Pix{};
         // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride{};
+        int64_t Stride{};
         // Rect is the image's bounds.
         Rectangle Rect{};
 
@@ -42,7 +42,7 @@ namespace golang::image
         // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*8].
         gocpp::slice<uint8_t> Pix{};
         // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride{};
+        int64_t Stride{};
         // Rect is the image's bounds.
         Rectangle Rect{};
 
@@ -64,7 +64,7 @@ namespace golang::image
         // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
         gocpp::slice<uint8_t> Pix{};
         // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride{};
+        int64_t Stride{};
         // Rect is the image's bounds.
         Rectangle Rect{};
 
@@ -86,7 +86,7 @@ namespace golang::image
         // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*8].
         gocpp::slice<uint8_t> Pix{};
         // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride{};
+        int64_t Stride{};
         // Rect is the image's bounds.
         Rectangle Rect{};
 
@@ -108,7 +108,7 @@ namespace golang::image
         // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
         gocpp::slice<uint8_t> Pix{};
         // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride{};
+        int64_t Stride{};
         // Rect is the image's bounds.
         Rectangle Rect{};
 
@@ -130,7 +130,7 @@ namespace golang::image
         // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*2].
         gocpp::slice<uint8_t> Pix{};
         // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride{};
+        int64_t Stride{};
         // Rect is the image's bounds.
         Rectangle Rect{};
 
@@ -152,7 +152,7 @@ namespace golang::image
         // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
         gocpp::slice<uint8_t> Pix{};
         // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride{};
+        int64_t Stride{};
         // Rect is the image's bounds.
         Rectangle Rect{};
 
@@ -174,7 +174,7 @@ namespace golang::image
         // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*2].
         gocpp::slice<uint8_t> Pix{};
         // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride{};
+        int64_t Stride{};
         // Rect is the image's bounds.
         Rectangle Rect{};
 
@@ -196,7 +196,7 @@ namespace golang::image
         // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
         gocpp::slice<uint8_t> Pix{};
         // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride{};
+        int64_t Stride{};
         // Rect is the image's bounds.
         Rectangle Rect{};
 
@@ -236,8 +236,8 @@ namespace golang::image
     struct Config
     {
         color::Model ColorModel{};
-        int Width{};
-        int Height{};
+        int64_t Width{};
+        int64_t Height{};
 
         using isGoStruct = void;
 
@@ -288,7 +288,7 @@ namespace golang::image
             // At returns the color of the pixel at (x, y).
             // At(Bounds().Min.X, Bounds().Min.Y) returns the upper-left pixel of the grid.
             // At(Bounds().Max.X-1, Bounds().Max.Y-1) returns the lower-right one.
-            virtual color::Color vAt(int x, int y) = 0;
+            virtual color::Color vAt(int64_t x, int64_t y) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -304,7 +304,7 @@ namespace golang::image
 
             Rectangle vBounds() override;
 
-            color::Color vAt(int x, int y) override;
+            color::Color vAt(int64_t x, int64_t y) override;
 
             void* getPtr() override
             {
@@ -327,8 +327,8 @@ namespace golang::image
         Rectangle Bounds(const gocpp::PtrRecv<struct Image, false>& self);
         Rectangle Bounds(const gocpp::ObjRecv<struct Image>& self);
 
-        color::Color At(const gocpp::PtrRecv<struct Image, false>& self, int x, int y);
-        color::Color At(const gocpp::ObjRecv<struct Image>& self, int x, int y);
+        color::Color At(const gocpp::PtrRecv<struct Image, false>& self, int64_t x, int64_t y);
+        color::Color At(const gocpp::ObjRecv<struct Image>& self, int64_t x, int64_t y);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Image& value);
@@ -338,7 +338,7 @@ namespace golang::image
         // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
         gocpp::slice<uint8_t> Pix{};
         // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride{};
+        int64_t Stride{};
         // Rect is the image's bounds.
         Rectangle Rect{};
         // Palette is the image's palette.
@@ -389,7 +389,7 @@ namespace golang::image
             // equivalent to calling At(x, y).RGBA() and converting the resulting
             // 32-bit return values to a color.RGBA64, but it can avoid allocations
             // from converting concrete color types to the color.Color interface type.
-            virtual color::RGBA64 vRGBA64At(int x, int y) = 0;
+            virtual color::RGBA64 vRGBA64At(int64_t x, int64_t y) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -401,7 +401,7 @@ namespace golang::image
                 value.reset(ptr);
             }
 
-            color::RGBA64 vRGBA64At(int x, int y) override;
+            color::RGBA64 vRGBA64At(int64_t x, int64_t y) override;
 
             void* getPtr() override
             {
@@ -418,11 +418,11 @@ namespace golang::image
 
     namespace rec
     {
-        color::RGBA64 RGBA64At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int x, int y);
-        color::RGBA64 RGBA64At(const gocpp::ObjRecv<struct RGBA64Image>& self, int x, int y);
+        color::RGBA64 RGBA64At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int64_t x, int64_t y);
+        color::RGBA64 RGBA64At(const gocpp::ObjRecv<struct RGBA64Image>& self, int64_t x, int64_t y);
 
-        color::Color At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int x, int y);
-        color::Color At(const gocpp::ObjRecv<struct RGBA64Image>& self, int x, int y);
+        color::Color At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int64_t x, int64_t y);
+        color::Color At(const gocpp::ObjRecv<struct RGBA64Image>& self, int64_t x, int64_t y);
 
         Rectangle Bounds(const gocpp::PtrRecv<struct RGBA64Image, false>& self);
         Rectangle Bounds(const gocpp::ObjRecv<struct RGBA64Image>& self);
@@ -462,7 +462,7 @@ namespace golang::image
         struct IPalettedImage: virtual Image::IImage
         {
             // ColorIndexAt returns the palette index of the pixel at (x, y).
-            virtual uint8_t vColorIndexAt(int x, int y) = 0;
+            virtual uint8_t vColorIndexAt(int64_t x, int64_t y) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -474,7 +474,7 @@ namespace golang::image
                 value.reset(ptr);
             }
 
-            uint8_t vColorIndexAt(int x, int y) override;
+            uint8_t vColorIndexAt(int64_t x, int64_t y) override;
 
             void* getPtr() override
             {
@@ -491,11 +491,11 @@ namespace golang::image
 
     namespace rec
     {
-        uint8_t ColorIndexAt(const gocpp::PtrRecv<struct PalettedImage, false>& self, int x, int y);
-        uint8_t ColorIndexAt(const gocpp::ObjRecv<struct PalettedImage>& self, int x, int y);
+        uint8_t ColorIndexAt(const gocpp::PtrRecv<struct PalettedImage, false>& self, int64_t x, int64_t y);
+        uint8_t ColorIndexAt(const gocpp::ObjRecv<struct PalettedImage>& self, int64_t x, int64_t y);
 
-        color::Color At(const gocpp::PtrRecv<struct PalettedImage, false>& self, int x, int y);
-        color::Color At(const gocpp::ObjRecv<struct PalettedImage>& self, int x, int y);
+        color::Color At(const gocpp::PtrRecv<struct PalettedImage, false>& self, int64_t x, int64_t y);
+        color::Color At(const gocpp::ObjRecv<struct PalettedImage>& self, int64_t x, int64_t y);
 
         Rectangle Bounds(const gocpp::PtrRecv<struct PalettedImage, false>& self);
         Rectangle Bounds(const gocpp::ObjRecv<struct PalettedImage>& self);
@@ -519,110 +519,110 @@ namespace golang::image
     {
         color::Model ColorModel(golang::image::RGBA* p);
         Rectangle Bounds(golang::image::RGBA* p);
-        color::Color At(golang::image::RGBA* p, int x, int y);
-        color::RGBA64 RGBA64At(golang::image::RGBA* p, int x, int y);
-        color::RGBA RGBAAt(golang::image::RGBA* p, int x, int y);
-        int PixOffset(golang::image::RGBA* p, int x, int y);
-        void Set(golang::image::RGBA* p, int x, int y, color::Color c);
-        void SetRGBA64(golang::image::RGBA* p, int x, int y, color::RGBA64 c);
-        void SetRGBA(golang::image::RGBA* p, int x, int y, color::RGBA c);
+        color::Color At(golang::image::RGBA* p, int64_t x, int64_t y);
+        color::RGBA64 RGBA64At(golang::image::RGBA* p, int64_t x, int64_t y);
+        color::RGBA RGBAAt(golang::image::RGBA* p, int64_t x, int64_t y);
+        int64_t PixOffset(golang::image::RGBA* p, int64_t x, int64_t y);
+        void Set(golang::image::RGBA* p, int64_t x, int64_t y, color::Color c);
+        void SetRGBA64(golang::image::RGBA* p, int64_t x, int64_t y, color::RGBA64 c);
+        void SetRGBA(golang::image::RGBA* p, int64_t x, int64_t y, color::RGBA c);
         Image SubImage(golang::image::RGBA* p, Rectangle r);
         bool Opaque(golang::image::RGBA* p);
         color::Model ColorModel(RGBA64* p);
         Rectangle Bounds(RGBA64* p);
-        color::Color At(RGBA64* p, int x, int y);
-        color::RGBA64 RGBA64At(RGBA64* p, int x, int y);
-        int PixOffset(RGBA64* p, int x, int y);
-        void Set(RGBA64* p, int x, int y, color::Color c);
-        void SetRGBA64(RGBA64* p, int x, int y, color::RGBA64 c);
+        color::Color At(RGBA64* p, int64_t x, int64_t y);
+        color::RGBA64 RGBA64At(RGBA64* p, int64_t x, int64_t y);
+        int64_t PixOffset(RGBA64* p, int64_t x, int64_t y);
+        void Set(RGBA64* p, int64_t x, int64_t y, color::Color c);
+        void SetRGBA64(RGBA64* p, int64_t x, int64_t y, color::RGBA64 c);
         Image SubImage(RGBA64* p, Rectangle r);
         bool Opaque(RGBA64* p);
         color::Model ColorModel(NRGBA* p);
         Rectangle Bounds(NRGBA* p);
-        color::Color At(NRGBA* p, int x, int y);
-        color::RGBA64 RGBA64At(NRGBA* p, int x, int y);
-        color::NRGBA NRGBAAt(NRGBA* p, int x, int y);
-        int PixOffset(NRGBA* p, int x, int y);
-        void Set(NRGBA* p, int x, int y, color::Color c);
-        void SetRGBA64(NRGBA* p, int x, int y, color::RGBA64 c);
-        void SetNRGBA(NRGBA* p, int x, int y, color::NRGBA c);
+        color::Color At(NRGBA* p, int64_t x, int64_t y);
+        color::RGBA64 RGBA64At(NRGBA* p, int64_t x, int64_t y);
+        color::NRGBA NRGBAAt(NRGBA* p, int64_t x, int64_t y);
+        int64_t PixOffset(NRGBA* p, int64_t x, int64_t y);
+        void Set(NRGBA* p, int64_t x, int64_t y, color::Color c);
+        void SetRGBA64(NRGBA* p, int64_t x, int64_t y, color::RGBA64 c);
+        void SetNRGBA(NRGBA* p, int64_t x, int64_t y, color::NRGBA c);
         Image SubImage(NRGBA* p, Rectangle r);
         bool Opaque(NRGBA* p);
         color::Model ColorModel(NRGBA64* p);
         Rectangle Bounds(NRGBA64* p);
-        color::Color At(NRGBA64* p, int x, int y);
-        color::RGBA64 RGBA64At(NRGBA64* p, int x, int y);
-        color::NRGBA64 NRGBA64At(NRGBA64* p, int x, int y);
-        int PixOffset(NRGBA64* p, int x, int y);
-        void Set(NRGBA64* p, int x, int y, color::Color c);
-        void SetRGBA64(NRGBA64* p, int x, int y, color::RGBA64 c);
-        void SetNRGBA64(NRGBA64* p, int x, int y, color::NRGBA64 c);
+        color::Color At(NRGBA64* p, int64_t x, int64_t y);
+        color::RGBA64 RGBA64At(NRGBA64* p, int64_t x, int64_t y);
+        color::NRGBA64 NRGBA64At(NRGBA64* p, int64_t x, int64_t y);
+        int64_t PixOffset(NRGBA64* p, int64_t x, int64_t y);
+        void Set(NRGBA64* p, int64_t x, int64_t y, color::Color c);
+        void SetRGBA64(NRGBA64* p, int64_t x, int64_t y, color::RGBA64 c);
+        void SetNRGBA64(NRGBA64* p, int64_t x, int64_t y, color::NRGBA64 c);
         Image SubImage(NRGBA64* p, Rectangle r);
         bool Opaque(NRGBA64* p);
         color::Model ColorModel(Alpha* p);
         Rectangle Bounds(Alpha* p);
-        color::Color At(Alpha* p, int x, int y);
-        color::RGBA64 RGBA64At(Alpha* p, int x, int y);
-        color::Alpha AlphaAt(Alpha* p, int x, int y);
-        int PixOffset(Alpha* p, int x, int y);
-        void Set(Alpha* p, int x, int y, color::Color c);
-        void SetRGBA64(Alpha* p, int x, int y, color::RGBA64 c);
-        void SetAlpha(Alpha* p, int x, int y, color::Alpha c);
+        color::Color At(Alpha* p, int64_t x, int64_t y);
+        color::RGBA64 RGBA64At(Alpha* p, int64_t x, int64_t y);
+        color::Alpha AlphaAt(Alpha* p, int64_t x, int64_t y);
+        int64_t PixOffset(Alpha* p, int64_t x, int64_t y);
+        void Set(Alpha* p, int64_t x, int64_t y, color::Color c);
+        void SetRGBA64(Alpha* p, int64_t x, int64_t y, color::RGBA64 c);
+        void SetAlpha(Alpha* p, int64_t x, int64_t y, color::Alpha c);
         Image SubImage(Alpha* p, Rectangle r);
         bool Opaque(Alpha* p);
         color::Model ColorModel(Alpha16* p);
         Rectangle Bounds(Alpha16* p);
-        color::Color At(Alpha16* p, int x, int y);
-        color::RGBA64 RGBA64At(Alpha16* p, int x, int y);
-        color::Alpha16 Alpha16At(Alpha16* p, int x, int y);
-        int PixOffset(Alpha16* p, int x, int y);
-        void Set(Alpha16* p, int x, int y, color::Color c);
-        void SetRGBA64(Alpha16* p, int x, int y, color::RGBA64 c);
-        void SetAlpha16(Alpha16* p, int x, int y, color::Alpha16 c);
+        color::Color At(Alpha16* p, int64_t x, int64_t y);
+        color::RGBA64 RGBA64At(Alpha16* p, int64_t x, int64_t y);
+        color::Alpha16 Alpha16At(Alpha16* p, int64_t x, int64_t y);
+        int64_t PixOffset(Alpha16* p, int64_t x, int64_t y);
+        void Set(Alpha16* p, int64_t x, int64_t y, color::Color c);
+        void SetRGBA64(Alpha16* p, int64_t x, int64_t y, color::RGBA64 c);
+        void SetAlpha16(Alpha16* p, int64_t x, int64_t y, color::Alpha16 c);
         Image SubImage(Alpha16* p, Rectangle r);
         bool Opaque(Alpha16* p);
         color::Model ColorModel(Gray* p);
         Rectangle Bounds(Gray* p);
-        color::Color At(Gray* p, int x, int y);
-        color::RGBA64 RGBA64At(Gray* p, int x, int y);
-        color::Gray GrayAt(Gray* p, int x, int y);
-        int PixOffset(Gray* p, int x, int y);
-        void Set(Gray* p, int x, int y, color::Color c);
-        void SetRGBA64(Gray* p, int x, int y, color::RGBA64 c);
-        void SetGray(Gray* p, int x, int y, color::Gray c);
+        color::Color At(Gray* p, int64_t x, int64_t y);
+        color::RGBA64 RGBA64At(Gray* p, int64_t x, int64_t y);
+        color::Gray GrayAt(Gray* p, int64_t x, int64_t y);
+        int64_t PixOffset(Gray* p, int64_t x, int64_t y);
+        void Set(Gray* p, int64_t x, int64_t y, color::Color c);
+        void SetRGBA64(Gray* p, int64_t x, int64_t y, color::RGBA64 c);
+        void SetGray(Gray* p, int64_t x, int64_t y, color::Gray c);
         Image SubImage(Gray* p, Rectangle r);
         bool Opaque(Gray* p);
         color::Model ColorModel(Gray16* p);
         Rectangle Bounds(Gray16* p);
-        color::Color At(Gray16* p, int x, int y);
-        color::RGBA64 RGBA64At(Gray16* p, int x, int y);
-        color::Gray16 Gray16At(Gray16* p, int x, int y);
-        int PixOffset(Gray16* p, int x, int y);
-        void Set(Gray16* p, int x, int y, color::Color c);
-        void SetRGBA64(Gray16* p, int x, int y, color::RGBA64 c);
-        void SetGray16(Gray16* p, int x, int y, color::Gray16 c);
+        color::Color At(Gray16* p, int64_t x, int64_t y);
+        color::RGBA64 RGBA64At(Gray16* p, int64_t x, int64_t y);
+        color::Gray16 Gray16At(Gray16* p, int64_t x, int64_t y);
+        int64_t PixOffset(Gray16* p, int64_t x, int64_t y);
+        void Set(Gray16* p, int64_t x, int64_t y, color::Color c);
+        void SetRGBA64(Gray16* p, int64_t x, int64_t y, color::RGBA64 c);
+        void SetGray16(Gray16* p, int64_t x, int64_t y, color::Gray16 c);
         Image SubImage(Gray16* p, Rectangle r);
         bool Opaque(Gray16* p);
         color::Model ColorModel(CMYK* p);
         Rectangle Bounds(CMYK* p);
-        color::Color At(CMYK* p, int x, int y);
-        color::RGBA64 RGBA64At(CMYK* p, int x, int y);
-        color::CMYK CMYKAt(CMYK* p, int x, int y);
-        int PixOffset(CMYK* p, int x, int y);
-        void Set(CMYK* p, int x, int y, color::Color c);
-        void SetRGBA64(CMYK* p, int x, int y, color::RGBA64 c);
-        void SetCMYK(CMYK* p, int x, int y, color::CMYK c);
+        color::Color At(CMYK* p, int64_t x, int64_t y);
+        color::RGBA64 RGBA64At(CMYK* p, int64_t x, int64_t y);
+        color::CMYK CMYKAt(CMYK* p, int64_t x, int64_t y);
+        int64_t PixOffset(CMYK* p, int64_t x, int64_t y);
+        void Set(CMYK* p, int64_t x, int64_t y, color::Color c);
+        void SetRGBA64(CMYK* p, int64_t x, int64_t y, color::RGBA64 c);
+        void SetCMYK(CMYK* p, int64_t x, int64_t y, color::CMYK c);
         Image SubImage(CMYK* p, Rectangle r);
         bool Opaque(CMYK* p);
         color::Model ColorModel(Paletted* p);
         Rectangle Bounds(Paletted* p);
-        color::Color At(Paletted* p, int x, int y);
-        color::RGBA64 RGBA64At(Paletted* p, int x, int y);
-        int PixOffset(Paletted* p, int x, int y);
-        void Set(Paletted* p, int x, int y, color::Color c);
-        void SetRGBA64(Paletted* p, int x, int y, color::RGBA64 c);
-        uint8_t ColorIndexAt(Paletted* p, int x, int y);
-        void SetColorIndex(Paletted* p, int x, int y, uint8_t index);
+        color::Color At(Paletted* p, int64_t x, int64_t y);
+        color::RGBA64 RGBA64At(Paletted* p, int64_t x, int64_t y);
+        int64_t PixOffset(Paletted* p, int64_t x, int64_t y);
+        void Set(Paletted* p, int64_t x, int64_t y, color::Color c);
+        void SetRGBA64(Paletted* p, int64_t x, int64_t y, color::RGBA64 c);
+        uint8_t ColorIndexAt(Paletted* p, int64_t x, int64_t y);
+        void SetColorIndex(Paletted* p, int64_t x, int64_t y, uint8_t index);
         Image SubImage(Paletted* p, Rectangle r);
         bool Opaque(Paletted* p);
     }

@@ -39,28 +39,28 @@ namespace golang::golang_org::x::mod::semver
     gocpp::string MajorMinor(gocpp::string v);
     gocpp::string Prerelease(gocpp::string v);
     gocpp::string Build(gocpp::string v);
-    int Compare(gocpp::string v, gocpp::string w);
+    int64_t Compare(gocpp::string v, gocpp::string w);
     gocpp::string Max(gocpp::string v, gocpp::string w);
     struct GoTag_ByVersion { };
     using ByVersion = gocpp::defined<gocpp::slice<gocpp::string>, GoTag_ByVersion>;
     void Sort(gocpp::slice<gocpp::string> list);
-    int compareVersion(gocpp::string a, gocpp::string b);
+    int64_t compareVersion(gocpp::string a, gocpp::string b);
     std::tuple<gocpp::string, gocpp::string, bool> parseInt(gocpp::string v);
     std::tuple<gocpp::string, gocpp::string, bool> parsePrerelease(gocpp::string v);
     std::tuple<gocpp::string, gocpp::string, bool> parseBuild(gocpp::string v);
     bool isIdentChar(unsigned char c);
     bool isBadNum(gocpp::string v);
     bool isNum(gocpp::string v);
-    int compareInt(gocpp::string x, gocpp::string y);
-    int comparePrerelease(gocpp::string x, gocpp::string y);
+    int64_t compareInt(gocpp::string x, gocpp::string y);
+    int64_t comparePrerelease(gocpp::string x, gocpp::string y);
     std::tuple<gocpp::string, gocpp::string> nextIdent(gocpp::string x);
     std::tuple<parsed, bool> parse(gocpp::string v);
 
     namespace rec
     {
-        int Len(ByVersion vs);
-        void Swap(ByVersion vs, int i, int j);
-        bool Less(ByVersion vs, int i, int j);
+        int64_t Len(ByVersion vs);
+        void Swap(ByVersion vs, int64_t i, int64_t j);
+        bool Less(ByVersion vs, int64_t i, int64_t j);
     }
 }
 

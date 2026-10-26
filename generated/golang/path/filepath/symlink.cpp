@@ -41,7 +41,7 @@ namespace golang::path::filepath
     std::tuple<gocpp::string, gocpp::error> walkSymlinks(gocpp::string path)
     {
         auto volLen = filepathlite::VolumeNameLen(path);
-        auto pathSeparator = gocpp::string(os::PathSeparator);
+        gocpp::string pathSeparator = gocpp::string(os::PathSeparator);
 
         if(volLen < len(path) && os::IsPathSeparator(path[volLen]))
         {
@@ -49,7 +49,7 @@ namespace golang::path::filepath
         }
         auto vol = path.make_slice(0, volLen);
         auto dest = vol;
-        auto linksWalked = 0;
+        int64_t linksWalked = 0;
         for(auto [start, end] = std::tuple{volLen, volLen}; start < len(path); start = end)
         {
             for(; start < len(path) && os::IsPathSeparator(path[start]); )
@@ -86,7 +86,7 @@ namespace golang::path::filepath
                 // Note that volLen includes any leading slash.
                 // Set r to the index of the last slash in dest,
                 // after the volume.
-                int r = {};
+                int64_t r = {};
                 for(r = len(dest) - 1; r >= volLen; r--)
                 {
                     if(os::IsPathSeparator(dest[r]))
@@ -186,7 +186,7 @@ namespace golang::path::filepath
             {
                 // Symlink to relative path; replace last
                 // path component in dest.
-                int r = {};
+                int64_t r = {};
                 for(r = len(dest) - 1; r >= volLen; r--)
                 {
                     if(os::IsPathSeparator(dest[r]))

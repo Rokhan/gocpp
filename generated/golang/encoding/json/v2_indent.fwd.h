@@ -12,5 +12,5 @@ namespace golang::encoding::json
     // Specify a growth factor slightly larger than what is observed
     // to reduce probability of allocation in appendIndent.
     // A factor no higher than 2 ensures that wasted space never exceeds 50%.
-    const long indentGrowthFactor = 2;
+    inline constexpr long indentGrowthFactor = 2;
 }

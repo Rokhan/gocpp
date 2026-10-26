@@ -456,7 +456,7 @@ namespace golang::runtime
             }
 
             // Add entry to defer stack in case of panic.
-            auto restore = true;
+            bool restore = true;
             defer.push_back([=]{ unwindm(& restore); });
 
             bool ditStateM = {};
@@ -581,7 +581,7 @@ namespace golang::runtime
         auto ep = efaceOf(& ptr);
         auto t = ep->_type;
 
-        auto top = true;
+        bool top = true;
         if(arg != nullptr && (rec::Kind(gocpp::recv(t)) == abi::Pointer || rec::Kind(gocpp::recv(t)) == abi::UnsafePointer))
         {
             auto p = ep->data;
@@ -698,7 +698,7 @@ namespace golang::runtime
                         cgoCheckArg(at->Elem, p, ! rec::IsDirectIface(gocpp::recv(at->Elem)), top, msg);
                         return;
                     }
-                    for(auto i = uintptr_t(0); i < at->Len; i++)
+                    for(uintptr_t i = uintptr_t(0); i < at->Len; i++)
                     {
                         cgoCheckArg(at->Elem, p, true, top, msg);
                         p = add(p, at->Elem->Size_);
@@ -766,7 +766,7 @@ namespace golang::runtime
                     {
                         return;
                     }
-                    for(auto i = 0; i < s->cap; i++)
+                    for(int64_t i = 0; i < s->cap; i++)
                     {
                         cgoCheckArg(st->Elem, p, true, false, msg);
                         p = add(p, st->Elem->Size_);
@@ -944,7 +944,7 @@ namespace golang::runtime
         gocpp::string msg = {};
         gocpp::string kindname = {};
         gocpp::string cgoFunction = "unknown"_s;
-        int offset = {};
+        int64_t offset = {};
         gocpp::array<unsigned char, 20> buf = {};
 
         // We expect one of these abi.Kind from cgoCheckArg

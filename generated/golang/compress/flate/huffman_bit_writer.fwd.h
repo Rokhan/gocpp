@@ -7,25 +7,25 @@
 namespace golang::compress::flate
 {
     // The largest offset code.
-    const long offsetCodeCount = 30;
+    inline constexpr long offsetCodeCount = 30;
     // The special code used to mark the end of a block.
-    const long endBlockMarker = 256;
+    inline constexpr long endBlockMarker = 256;
     // The first length code.
-    const long lengthCodesStart = 257;
+    inline constexpr long lengthCodesStart = 257;
     // The number of codegen codes.
-    const long codegenCodeCount = 19;
-    const long badCode = 255;
+    inline constexpr long codegenCodeCount = 19;
+    inline constexpr long badCode = 255;
     // maxPredefinedTokens is the maximum number of tokens
     // where we check if fixed size is smaller.
-    const long maxPredefinedTokens = 250;
+    inline constexpr long maxPredefinedTokens = 250;
     // bufferFlushSize indicates the buffer size
     // after which bytes are flushed to the writer.
     // Should preferably be a multiple of 6, since
     // we accumulate 6 bytes between writes to the buffer.
-    const long bufferFlushSize = 246;
+    inline constexpr long bufferFlushSize = 246;
     // lengthExtraBitsMinCode is the minimum length code that emits extra bits.
-    const long lengthExtraBitsMinCode = 8;
+    inline constexpr long lengthExtraBitsMinCode = 8;
     // offsetExtraBitsMinCode is the minimum offset code that emits extra bits.
-    const long offsetExtraBitsMinCode = 4;
+    inline constexpr long offsetExtraBitsMinCode = 4;
     struct huffmanBitWriter;
 }

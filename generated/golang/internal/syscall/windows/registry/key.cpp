@@ -93,7 +93,7 @@ namespace golang::internal::syscall::windows::registry
             // plus extra room for terminating zero byte
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 256);
             loopItems:
-            for(auto i = uint32_t(0); ; i++)
+            for(uint32_t i = uint32_t(0); ; i++)
             {
                 if(false) {
                 loopItems_continue:

@@ -29,31 +29,31 @@ namespace golang::math::bits
     }
 
     // LeadingZeros returns the number of leading zero bits in x; the result is [UintSize] for x == 0.
-    int LeadingZeros(unsigned int x)
+    int64_t LeadingZeros(uint64_t x)
     {
         return UintSize - Len(x);
     }
 
     // LeadingZeros8 returns the number of leading zero bits in x; the result is 8 for x == 0.
-    int LeadingZeros8(uint8_t x)
+    int64_t LeadingZeros8(uint8_t x)
     {
         return 8 - Len8(x);
     }
 
     // LeadingZeros16 returns the number of leading zero bits in x; the result is 16 for x == 0.
-    int LeadingZeros16(uint16_t x)
+    int64_t LeadingZeros16(uint16_t x)
     {
         return 16 - Len16(x);
     }
 
     // LeadingZeros32 returns the number of leading zero bits in x; the result is 32 for x == 0.
-    int LeadingZeros32(uint32_t x)
+    int64_t LeadingZeros32(uint32_t x)
     {
         return 32 - Len32(x);
     }
 
     // LeadingZeros64 returns the number of leading zero bits in x; the result is 64 for x == 0.
-    int LeadingZeros64(uint64_t x)
+    int64_t LeadingZeros64(uint64_t x)
     {
         return 64 - Len64(x);
     }
@@ -69,7 +69,7 @@ namespace golang::math::bits
         54, 26, 40, 15, 34, 20, 31, 10, 25, 14, 19, 9, 13, 8, 7, 6
     };
     // TrailingZeros returns the number of trailing zero bits in x; the result is [UintSize] for x == 0.
-    int TrailingZeros(unsigned int x)
+    int64_t TrailingZeros(uint64_t x)
     {
         if(UintSize == 32)
         {
@@ -79,35 +79,35 @@ namespace golang::math::bits
     }
 
     // TrailingZeros8 returns the number of trailing zero bits in x; the result is 8 for x == 0.
-    int TrailingZeros8(uint8_t x)
+    int64_t TrailingZeros8(uint8_t x)
     {
-        return int(ntz8tab[x]);
+        return int64_t(ntz8tab[x]);
     }
 
     // TrailingZeros16 returns the number of trailing zero bits in x; the result is 16 for x == 0.
-    int TrailingZeros16(uint16_t x)
+    int64_t TrailingZeros16(uint16_t x)
     {
         if(x == 0)
         {
             return 16;
         }
         // see comment in TrailingZeros64
-        return int(deBruijn32tab[uint32_t(x & - x) * deBruijn32 >> (32 - 5)]);
+        return int64_t(deBruijn32tab[uint32_t(x & - x) * deBruijn32 >> (32 - 5)]);
     }
 
     // TrailingZeros32 returns the number of trailing zero bits in x; the result is 32 for x == 0.
-    int TrailingZeros32(uint32_t x)
+    int64_t TrailingZeros32(uint32_t x)
     {
         if(x == 0)
         {
             return 32;
         }
         // see comment in TrailingZeros64
-        return int(deBruijn32tab[(x & - x) * deBruijn32 >> (32 - 5)]);
+        return int64_t(deBruijn32tab[(x & - x) * deBruijn32 >> (32 - 5)]);
     }
 
     // TrailingZeros64 returns the number of trailing zero bits in x; the result is 64 for x == 0.
-    int TrailingZeros64(uint64_t x)
+    int64_t TrailingZeros64(uint64_t x)
     {
         if(x == 0)
         {
@@ -123,11 +123,11 @@ namespace golang::math::bits
         // find by how many bits it was shifted by looking at which six bit
         // substring ended up at the top of the word.
         // (Knuth, volume 4, section 7.3.1)
-        return int(deBruijn64tab[(x & - x) * deBruijn64 >> (64 - 6)]);
+        return int64_t(deBruijn64tab[(x & - x) * deBruijn64 >> (64 - 6)]);
     }
 
     // OnesCount returns the number of one bits ("population count") in x.
-    int OnesCount(unsigned int x)
+    int64_t OnesCount(uint64_t x)
     {
         if(UintSize == 32)
         {
@@ -137,25 +137,25 @@ namespace golang::math::bits
     }
 
     // OnesCount8 returns the number of one bits ("population count") in x.
-    int OnesCount8(uint8_t x)
+    int64_t OnesCount8(uint8_t x)
     {
-        return int(pop8tab[x]);
+        return int64_t(pop8tab[x]);
     }
 
     // OnesCount16 returns the number of one bits ("population count") in x.
-    int OnesCount16(uint16_t x)
+    int64_t OnesCount16(uint16_t x)
     {
-        return int(pop8tab[x >> 8] + pop8tab[x & 0xff]);
+        return int64_t(pop8tab[x >> 8] + pop8tab[x & 0xff]);
     }
 
     // OnesCount32 returns the number of one bits ("population count") in x.
-    int OnesCount32(uint32_t x)
+    int64_t OnesCount32(uint32_t x)
     {
-        return int(pop8tab[x >> 24] + pop8tab[(x >> 16) & 0xff] + pop8tab[(x >> 8) & 0xff] + pop8tab[x & 0xff]);
+        return int64_t(pop8tab[x >> 24] + pop8tab[(x >> 16) & 0xff] + pop8tab[(x >> 8) & 0xff] + pop8tab[x & 0xff]);
     }
 
     // OnesCount64 returns the number of one bits ("population count") in x.
-    int OnesCount64(uint64_t x)
+    int64_t OnesCount64(uint64_t x)
     {
         // Implementation: Parallel summing of adjacent bits.
         // See "Hacker's Delight", Chap. 5: Counting Bits.
@@ -181,30 +181,30 @@ namespace golang::math::bits
         x += x >> 8;
         x += x >> 16;
         x += x >> 32;
-        return int(x) & ((1 << 7) - 1);
+        return int64_t(x) & ((1 << 7) - 1);
     }
 
     // RotateLeft returns the value of x rotated left by (k mod [UintSize]) bits.
     // To rotate x right by k bits, call RotateLeft(x, -k).
     //
     // This function's execution time does not depend on the inputs.
-    unsigned int RotateLeft(unsigned int x, int k)
+    uint64_t RotateLeft(uint64_t x, int64_t k)
     {
         if(UintSize == 32)
         {
-            return (unsigned int)(RotateLeft32(uint32_t(x), k));
+            return (uint64_t)(RotateLeft32(uint32_t(x), k));
         }
-        return (unsigned int)(RotateLeft64(uint64_t(x), k));
+        return (uint64_t)(RotateLeft64(uint64_t(x), k));
     }
 
     // RotateLeft8 returns the value of x rotated left by (k mod 8) bits.
     // To rotate x right by k bits, call RotateLeft8(x, -k).
     //
     // This function's execution time does not depend on the inputs.
-    uint8_t RotateLeft8(uint8_t x, int k)
+    uint8_t RotateLeft8(uint8_t x, int64_t k)
     {
         auto n = 8;
-        auto s = (unsigned int)(k) & (n - 1);
+        auto s = (uint64_t)(k) & (n - 1);
         return (x << s) | (x >> (n - s));
     }
 
@@ -212,10 +212,10 @@ namespace golang::math::bits
     // To rotate x right by k bits, call RotateLeft16(x, -k).
     //
     // This function's execution time does not depend on the inputs.
-    uint16_t RotateLeft16(uint16_t x, int k)
+    uint16_t RotateLeft16(uint16_t x, int64_t k)
     {
         auto n = 16;
-        auto s = (unsigned int)(k) & (n - 1);
+        auto s = (uint64_t)(k) & (n - 1);
         return (x << s) | (x >> (n - s));
     }
 
@@ -223,10 +223,10 @@ namespace golang::math::bits
     // To rotate x right by k bits, call RotateLeft32(x, -k).
     //
     // This function's execution time does not depend on the inputs.
-    uint32_t RotateLeft32(uint32_t x, int k)
+    uint32_t RotateLeft32(uint32_t x, int64_t k)
     {
         auto n = 32;
-        auto s = (unsigned int)(k) & (n - 1);
+        auto s = (uint64_t)(k) & (n - 1);
         return (x << s) | (x >> (n - s));
     }
 
@@ -234,21 +234,21 @@ namespace golang::math::bits
     // To rotate x right by k bits, call RotateLeft64(x, -k).
     //
     // This function's execution time does not depend on the inputs.
-    uint64_t RotateLeft64(uint64_t x, int k)
+    uint64_t RotateLeft64(uint64_t x, int64_t k)
     {
         auto n = 64;
-        auto s = (unsigned int)(k) & (n - 1);
+        auto s = (uint64_t)(k) & (n - 1);
         return (x << s) | (x >> (n - s));
     }
 
     // Reverse returns the value of x with its bits in reversed order.
-    unsigned int Reverse(unsigned int x)
+    uint64_t Reverse(uint64_t x)
     {
         if(UintSize == 32)
         {
-            return (unsigned int)(Reverse32(uint32_t(x)));
+            return (uint64_t)(Reverse32(uint32_t(x)));
         }
-        return (unsigned int)(Reverse64(uint64_t(x)));
+        return (uint64_t)(Reverse64(uint64_t(x)));
     }
 
     // Reverse8 returns the value of x with its bits in reversed order.
@@ -286,13 +286,13 @@ namespace golang::math::bits
     // ReverseBytes returns the value of x with its bytes in reversed order.
     //
     // This function's execution time does not depend on the inputs.
-    unsigned int ReverseBytes(unsigned int x)
+    uint64_t ReverseBytes(uint64_t x)
     {
         if(UintSize == 32)
         {
-            return (unsigned int)(ReverseBytes32(uint32_t(x)));
+            return (uint64_t)(ReverseBytes32(uint32_t(x)));
         }
-        return (unsigned int)(ReverseBytes64(uint64_t(x)));
+        return (uint64_t)(ReverseBytes64(uint64_t(x)));
     }
 
     // ReverseBytes16 returns the value of x with its bytes in reversed order.
@@ -325,7 +325,7 @@ namespace golang::math::bits
     }
 
     // Len returns the minimum number of bits required to represent x; the result is 0 for x == 0.
-    int Len(unsigned int x)
+    int64_t Len(uint64_t x)
     {
         if(UintSize == 32)
         {
@@ -335,27 +335,27 @@ namespace golang::math::bits
     }
 
     // Len8 returns the minimum number of bits required to represent x; the result is 0 for x == 0.
-    int Len8(uint8_t x)
+    int64_t Len8(uint8_t x)
     {
-        return int(len8tab[x]);
+        return int64_t(len8tab[x]);
     }
 
     // Len16 returns the minimum number of bits required to represent x; the result is 0 for x == 0.
-    int Len16(uint16_t x)
+    int64_t Len16(uint16_t x)
     {
-        int n;
+        int64_t n;
         if(x >= (1 << 8))
         {
             x >>= 8;
             n = 8;
         }
-        return n + int(len8tab[uint8_t(x)]);
+        return n + int64_t(len8tab[uint8_t(x)]);
     }
 
     // Len32 returns the minimum number of bits required to represent x; the result is 0 for x == 0.
-    int Len32(uint32_t x)
+    int64_t Len32(uint32_t x)
     {
-        int n;
+        int64_t n;
         if(x >= (1 << 16))
         {
             x >>= 16;
@@ -366,13 +366,13 @@ namespace golang::math::bits
             x >>= 8;
             n += 8;
         }
-        return n + int(len8tab[uint8_t(x)]);
+        return n + int64_t(len8tab[uint8_t(x)]);
     }
 
     // Len64 returns the minimum number of bits required to represent x; the result is 0 for x == 0.
-    int Len64(uint64_t x)
+    int64_t Len64(uint64_t x)
     {
-        int n;
+        int64_t n;
         if(x >= (1 << 32))
         {
             x >>= 32;
@@ -388,7 +388,7 @@ namespace golang::math::bits
             x >>= 8;
             n += 8;
         }
-        return n + int(len8tab[uint8_t(x)]);
+        return n + int64_t(len8tab[uint8_t(x)]);
     }
 
     // Add returns the sum with carry of x, y and carry: sum = x + y + carry.
@@ -396,17 +396,17 @@ namespace golang::math::bits
     // The carryOut output is guaranteed to be 0 or 1.
     //
     // This function's execution time does not depend on the inputs.
-    std::tuple<unsigned int, unsigned int> Add(unsigned int x, unsigned int y, unsigned int carry)
+    std::tuple<uint64_t, uint64_t> Add(uint64_t x, uint64_t y, uint64_t carry)
     {
-        unsigned int sum;
-        unsigned int carryOut;
+        uint64_t sum;
+        uint64_t carryOut;
         if(UintSize == 32)
         {
             auto [s32, c32] = Add32(uint32_t(x), uint32_t(y), uint32_t(carry));
-            return {(unsigned int)(s32), (unsigned int)(c32)};
+            return {(uint64_t)(s32), (uint64_t)(c32)};
         }
         auto [s64, c64] = Add64(uint64_t(x), uint64_t(y), uint64_t(carry));
-        return {(unsigned int)(s64), (unsigned int)(c64)};
+        return {(uint64_t)(s64), (uint64_t)(c64)};
     }
 
     // Add32 returns the sum with carry of x, y and carry: sum = x + y + carry.
@@ -446,17 +446,17 @@ namespace golang::math::bits
     // The borrowOut output is guaranteed to be 0 or 1.
     //
     // This function's execution time does not depend on the inputs.
-    std::tuple<unsigned int, unsigned int> Sub(unsigned int x, unsigned int y, unsigned int borrow)
+    std::tuple<uint64_t, uint64_t> Sub(uint64_t x, uint64_t y, uint64_t borrow)
     {
-        unsigned int diff;
-        unsigned int borrowOut;
+        uint64_t diff;
+        uint64_t borrowOut;
         if(UintSize == 32)
         {
             auto [d32, b32] = Sub32(uint32_t(x), uint32_t(y), uint32_t(borrow));
-            return {(unsigned int)(d32), (unsigned int)(b32)};
+            return {(uint64_t)(d32), (uint64_t)(b32)};
         }
         auto [d64, b64] = Sub64(uint64_t(x), uint64_t(y), uint64_t(borrow));
-        return {(unsigned int)(d64), (unsigned int)(b64)};
+        return {(uint64_t)(d64), (uint64_t)(b64)};
     }
 
     // Sub32 returns the difference of x, y and borrow, diff = x - y - borrow.
@@ -497,17 +497,17 @@ namespace golang::math::bits
     // half returned in lo.
     //
     // This function's execution time does not depend on the inputs.
-    std::tuple<unsigned int, unsigned int> Mul(unsigned int x, unsigned int y)
+    std::tuple<uint64_t, uint64_t> Mul(uint64_t x, uint64_t y)
     {
-        unsigned int hi;
-        unsigned int lo;
+        uint64_t hi;
+        uint64_t lo;
         if(UintSize == 32)
         {
             auto [h, l] = Mul32(uint32_t(x), uint32_t(y));
-            return {(unsigned int)(h), (unsigned int)(l)};
+            return {(uint64_t)(h), (uint64_t)(l)};
         }
         auto [h, l] = Mul64(uint64_t(x), uint64_t(y));
-        return {(unsigned int)(h), (unsigned int)(l)};
+        return {(uint64_t)(h), (uint64_t)(l)};
     }
 
     // Mul32 returns the 64-bit product of x and y: (hi, lo) = x * y
@@ -552,17 +552,17 @@ namespace golang::math::bits
     // quo = (hi, lo)/y, rem = (hi, lo)%y with the dividend bits' upper
     // half in parameter hi and the lower half in parameter lo.
     // Div panics for y == 0 (division by zero) or y <= hi (quotient overflow).
-    std::tuple<unsigned int, unsigned int> Div(unsigned int hi, unsigned int lo, unsigned int y)
+    std::tuple<uint64_t, uint64_t> Div(uint64_t hi, uint64_t lo, uint64_t y)
     {
-        unsigned int quo;
-        unsigned int rem;
+        uint64_t quo;
+        uint64_t rem;
         if(UintSize == 32)
         {
             auto [q, r] = Div32(uint32_t(hi), uint32_t(lo), uint32_t(y));
-            return {(unsigned int)(q), (unsigned int)(r)};
+            return {(uint64_t)(q), (uint64_t)(r)};
         }
         auto [q, r] = Div64(uint64_t(hi), uint64_t(lo), uint64_t(y));
-        return {(unsigned int)(q), (unsigned int)(r)};
+        return {(uint64_t)(q), (uint64_t)(r)};
     }
 
     // Div32 returns the quotient and remainder of (hi, lo) divided by y:
@@ -605,7 +605,7 @@ namespace golang::math::bits
             return {lo / y, lo % y};
         }
 
-        auto s = (unsigned int)(LeadingZeros64(y));
+        auto s = (uint64_t)(LeadingZeros64(y));
         y <<= s;
 
         auto two32 = 1 << 32;
@@ -649,13 +649,13 @@ namespace golang::math::bits
     // Rem returns the remainder of (hi, lo) divided by y. Rem panics for
     // y == 0 (division by zero) but, unlike Div, it doesn't panic on a
     // quotient overflow.
-    unsigned int Rem(unsigned int hi, unsigned int lo, unsigned int y)
+    uint64_t Rem(uint64_t hi, uint64_t lo, uint64_t y)
     {
         if(UintSize == 32)
         {
-            return (unsigned int)(Rem32(uint32_t(hi), uint32_t(lo), uint32_t(y)));
+            return (uint64_t)(Rem32(uint32_t(hi), uint32_t(lo), uint32_t(y)));
         }
-        return (unsigned int)(Rem64(uint64_t(hi), uint64_t(lo), uint64_t(y)));
+        return (uint64_t)(Rem64(uint64_t(hi), uint64_t(lo), uint64_t(y)));
     }
 
     // Rem32 returns the remainder of (hi, lo) divided by y. Rem32 panics

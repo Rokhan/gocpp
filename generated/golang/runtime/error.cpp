@@ -151,7 +151,7 @@ namespace golang::runtime
 
     gocpp::string rec::Error(TypeAssertionError* e)
     {
-        auto inter = "interface"_s;
+        gocpp::string inter = "interface"_s;
         if(e->_interface != nullptr)
         {
             inter = rec::string(gocpp::recv(toRType(e->_interface)));
@@ -368,7 +368,7 @@ namespace golang::runtime
         // x can be at most 20 characters. y can be at most 19.
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 100);
         b = append(b, "runtime error: "_s);
-        for(auto i = 0; i < len(fmt); i++)
+        for(int64_t i = 0; i < len(fmt); i++)
         {
             auto c = fmt[i];
             if(c != '%')
@@ -468,12 +468,12 @@ namespace golang::runtime
             int conditionId = -1;
             if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
             else if(gocpp_id_0 == typeid(bool)) { conditionId = 1; }
-            else if(gocpp_id_0 == typeid(int)) { conditionId = 2; }
+            else if(gocpp_id_0 == typeid(int64_t)) { conditionId = 2; }
             else if(gocpp_id_0 == typeid(int8_t)) { conditionId = 3; }
             else if(gocpp_id_0 == typeid(int16_t)) { conditionId = 4; }
             else if(gocpp_id_0 == typeid(int32_t)) { conditionId = 5; }
             else if(gocpp_id_0 == typeid(int64_t)) { conditionId = 6; }
-            else if(gocpp_id_0 == typeid(unsigned int)) { conditionId = 7; }
+            else if(gocpp_id_0 == typeid(uint64_t)) { conditionId = 7; }
             else if(gocpp_id_0 == typeid(uint8_t)) { conditionId = 8; }
             else if(gocpp_id_0 == typeid(uint16_t)) { conditionId = 9; }
             else if(gocpp_id_0 == typeid(uint32_t)) { conditionId = 10; }
@@ -500,7 +500,7 @@ namespace golang::runtime
                 }
                 case 2:
                 {
-                    int v = gocpp::any_cast<int>(v_ref);
+                    int64_t v = gocpp::any_cast<int64_t>(v_ref);
                     print(v);
                     break;
                 }
@@ -530,7 +530,7 @@ namespace golang::runtime
                 }
                 case 7:
                 {
-                    unsigned int v = gocpp::any_cast<unsigned int>(v_ref);
+                    uint64_t v = gocpp::any_cast<uint64_t>(v_ref);
                     print(v);
                     break;
                 }
@@ -642,7 +642,7 @@ namespace golang::runtime
                     print(typestring, "("_s, *(bool*)(eface->data), ")"_s);
                     break;
                 case 2:
-                    print(typestring, "("_s, *(int*)(eface->data), ")"_s);
+                    print(typestring, "("_s, *(int64_t*)(eface->data), ")"_s);
                     break;
                 case 3:
                     print(typestring, "("_s, *(int8_t*)(eface->data), ")"_s);
@@ -657,7 +657,7 @@ namespace golang::runtime
                     print(typestring, "("_s, *(int64_t*)(eface->data), ")"_s);
                     break;
                 case 7:
-                    print(typestring, "("_s, *(unsigned int*)(eface->data), ")"_s);
+                    print(typestring, "("_s, *(uint64_t*)(eface->data), ")"_s);
                     break;
                 case 8:
                     print(typestring, "("_s, *(uint8_t*)(eface->data), ")"_s);

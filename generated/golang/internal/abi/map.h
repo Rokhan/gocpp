@@ -56,23 +56,23 @@ namespace golang::internal::abi
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct MapType, false>& self);
+        int64_t Align(const gocpp::PtrRecv<struct MapType, false>& self);
         abi::ArrayType* ArrayType(const gocpp::PtrRecv<struct MapType, false>& self);
         abi::ChanDir ChanDir(const gocpp::PtrRecv<struct MapType, false>& self);
         abi::ChanType* ChanType(const gocpp::PtrRecv<struct MapType, false>& self);
         abi::Type* Common(const gocpp::PtrRecv<struct MapType, false>& self);
-        int DescriptorSize(const gocpp::PtrRecv<struct MapType, false>& self);
+        int64_t DescriptorSize(const gocpp::PtrRecv<struct MapType, false>& self);
         gocpp::slice<abi::Method> ExportedMethods(const gocpp::PtrRecv<struct MapType, false>& self);
-        int FieldAlign(const gocpp::PtrRecv<struct MapType, false>& self);
+        int64_t FieldAlign(const gocpp::PtrRecv<struct MapType, false>& self);
         abi::FuncType* FuncType(const gocpp::PtrRecv<struct MapType, false>& self);
         gocpp::slice<unsigned char> GcSlice(const gocpp::PtrRecv<struct MapType, false>& self, uintptr_t begin, uintptr_t end);
         bool HasName(const gocpp::PtrRecv<struct MapType, false>& self);
         abi::InterfaceType* InterfaceType(const gocpp::PtrRecv<struct MapType, false>& self);
         bool IsDirectIface(const gocpp::PtrRecv<struct MapType, false>& self);
         abi::Kind Kind(const gocpp::PtrRecv<struct MapType, false>& self);
-        int Len(const gocpp::PtrRecv<struct MapType, false>& self);
+        int64_t Len(const gocpp::PtrRecv<struct MapType, false>& self);
         abi::MapType* MapType(const gocpp::PtrRecv<struct MapType, false>& self);
-        int NumMethod(const gocpp::PtrRecv<struct MapType, false>& self);
+        int64_t NumMethod(const gocpp::PtrRecv<struct MapType, false>& self);
         abi::PtrType* PointerType(const gocpp::PtrRecv<struct MapType, false>& self);
         bool Pointers(const gocpp::PtrRecv<struct MapType, false>& self);
         uintptr_t Size(const gocpp::PtrRecv<struct MapType, false>& self);

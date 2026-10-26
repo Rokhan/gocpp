@@ -12,7 +12,7 @@ namespace golang::internal::runtime::maps
     // latency.
     // TODO: This should likely be based on byte size, as copying costs will
     // dominate grow latency for large objects.
-    const long maxTableCapacity = 1024;
+    inline constexpr long maxTableCapacity = 1024;
     struct table;
     struct Iter;
     struct probeSeq;

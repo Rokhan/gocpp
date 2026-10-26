@@ -23,7 +23,7 @@ namespace golang::runtime
     struct workbufhdr
     {
         lfnode node{}; // must be first
-        int nobj{};
+        int64_t nobj{};
 
         using isGoStruct = void;
 

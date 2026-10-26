@@ -59,9 +59,9 @@ namespace golang::go::scanner
         gocpp::string Error(golang::go::scanner::Error e);
         void Add(ErrorList* p, token::Position pos, gocpp::string msg);
         void Reset(ErrorList* p);
-        int Len(ErrorList p);
-        void Swap(ErrorList p, int i, int j);
-        bool Less(ErrorList p, int i, int j);
+        int64_t Len(ErrorList p);
+        void Swap(ErrorList p, int64_t i, int64_t j);
+        bool Less(ErrorList p, int64_t i, int64_t j);
         void Sort(ErrorList p);
         void RemoveMultiples(ErrorList* p);
         gocpp::string Error(ErrorList p);

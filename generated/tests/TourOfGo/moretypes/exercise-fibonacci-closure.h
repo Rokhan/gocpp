@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    std::function<int ()> fibonacci();
+    std::function<int64_t ()> fibonacci();
     void main();
 
     namespace rec

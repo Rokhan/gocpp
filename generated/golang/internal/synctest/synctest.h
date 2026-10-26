@@ -14,9 +14,8 @@ namespace golang::internal::synctest
 {
     void Wait();
     bool IsInBubble();
-
-    template<typename T>
-    Association Associate(T* p);
+    struct GoTag_Association { };
+    using Association = gocpp::defined<int64_t, GoTag_Association>;
 
     template<typename T>
     void Disassociate(T* p);
@@ -42,10 +41,13 @@ namespace golang::internal::synctest
 
     std::ostream& operator<<(std::ostream& os, const struct Bubble& value);
     void Run(std::function<void ()> f);
+
+    template<typename T>
+    Association Associate(T* p);
     void inBubble(go_any, std::function<void ()>);
     Bubble* Acquire();
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    int associate(gocpp::unsafe_pointer p);
+    int64_t associate(gocpp::unsafe_pointer p);
     void disassociate(gocpp::unsafe_pointer b);
     bool isAssociated(gocpp::unsafe_pointer p);
 

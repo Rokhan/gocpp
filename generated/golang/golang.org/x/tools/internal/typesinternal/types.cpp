@@ -126,7 +126,7 @@ namespace golang::golang_org::x::tools::internal::typesinternal
         token::Pos start;
         token::Pos end;
         bool ok;
-        gocpp::array<int, 3> data = {};
+        gocpp::array<int64_t, 3> data = {};
         // By coincidence all of these fields are ints, which simplifies things.
         auto v = reflect::ValueOf(err);
         for(auto [i, name] : gocpp::slice<gocpp::string> {"go116code"_s, "go116start"_s, "go116end"_s})
@@ -136,7 +136,7 @@ namespace golang::golang_org::x::tools::internal::typesinternal
             {
                 return {0, 0, 0, false};
             }
-            data[i] = int(rec::Int(gocpp::recv(f)));
+            data[i] = int64_t(rec::Int(gocpp::recv(f)));
         }
         return {ErrorCode(data[0]), token::Pos(data[1]), token::Pos(data[2]), true};
     }

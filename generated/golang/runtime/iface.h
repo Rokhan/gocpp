@@ -14,6 +14,12 @@ namespace golang::runtime
 {
     extern itabTableType* itabTable;
     void itabsinit();
+    struct GoTag_uint16InterfacePtr { };
+    using uint16InterfacePtr = gocpp::defined<uint16_t, GoTag_uint16InterfacePtr>;
+    struct GoTag_uint32InterfacePtr { };
+    using uint32InterfacePtr = gocpp::defined<uint32_t, GoTag_uint32InterfacePtr>;
+    struct GoTag_uint64InterfacePtr { };
+    using uint64InterfacePtr = gocpp::defined<uint64_t, GoTag_uint64InterfacePtr>;
     struct GoTag_sliceInterfacePtr { };
     using sliceInterfacePtr = gocpp::defined<gocpp::slice<unsigned char>, GoTag_sliceInterfacePtr>;
     extern go_any uint16Eface;
@@ -98,8 +104,8 @@ namespace golang::runtime
     // Empty type assert cache. Contains one entry with a nil Typ (which
     // causes a cache lookup to fail immediately.)
     extern abi::TypeAssertCache emptyTypeAssertCache;
-    std::tuple<int, itab*> interfaceSwitch(abi::InterfaceSwitch* s, _type* t);
-    abi::InterfaceSwitchCache* buildInterfaceSwitchCache(abi::InterfaceSwitchCache* oldC, _type* typ, int case_, itab* tab);
+    std::tuple<int64_t, itab*> interfaceSwitch(abi::InterfaceSwitch* s, _type* t);
+    abi::InterfaceSwitchCache* buildInterfaceSwitchCache(abi::InterfaceSwitchCache* oldC, _type* typ, int64_t case_, itab* tab);
     // Empty interface switch cache. Contains one entry with a nil Typ (which
     // causes a cache lookup to fail immediately.)
     extern abi::InterfaceSwitchCache emptyInterfaceSwitchCache;

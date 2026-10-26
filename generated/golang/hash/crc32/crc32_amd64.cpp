@@ -66,9 +66,9 @@ namespace golang::hash::crc32
         // t[3][i] = CRC(000i, O)
         // where O is a sequence of K zeros.
         gocpp::array<unsigned char, castagnoliK2> tmp = {};
-        for(auto b = 0; b < 4; b++)
+        for(int64_t b = 0; b < 4; b++)
         {
-            for(auto i = 0; i < 256; i++)
+            for(int64_t i = 0; i < 256; i++)
             {
                 auto val = uint32_t(i) << uint32_t(b * 8);
                 castagnoliSSE42TableK1[b][i] = castagnoliSSE42(val, tmp.make_slice(0, castagnoliK1));
@@ -146,7 +146,7 @@ namespace golang::hash::crc32
         // bytes to align the buffer to an 8 byte boundary (if necessary).
         if(len(p) >= castagnoliK1 * 3)
         {
-            auto delta = int(uintptr_t(gocpp::unsafe_pointer(& p[0])) & 7);
+            auto delta = int64_t(uintptr_t(gocpp::unsafe_pointer(& p[0])) & 7);
             if(delta != 0)
             {
                 delta = 8 - delta;

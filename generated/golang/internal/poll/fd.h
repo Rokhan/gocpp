@@ -57,7 +57,7 @@ namespace golang::internal::poll
     extern gocpp::error ErrNotPollable;
     void consume(gocpp::slice<gocpp::slice<unsigned char>>* v, int64_t n);
     // TestHookDidWritev is a hook for testing writev.
-    extern std::function<void (int)> TestHookDidWritev;
+    extern std::function<void (int64_t)> TestHookDidWritev;
     // ErrNetClosing is returned when a network descriptor is used after
     // it has been closed.
     extern errNetClosing ErrNetClosing;

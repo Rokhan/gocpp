@@ -9,13 +9,14 @@ namespace golang::internal::poll
     struct operation;
     struct wsaRsa;
     struct FD;
-    using fileKind = unsigned char;
+    struct GoTag_fileKind;
+    using fileKind = gocpp::defined<unsigned char, GoTag_fileKind>;
     // Windows ReadFile and WSARecv use DWORD (uint32) parameter to pass buffer length.
     // This prevents us reading blocks larger than 4GB.
     // See golang.org/issue/26923.
-    const int maxRW = 1 << 30;
-    const fileKind kindNet = 0;
-    const fileKind kindFile = 1;
-    const fileKind kindConsole = 2;
-    const fileKind kindPipe = 3;
+    inline constexpr int64_t maxRW = 1 << 30;
+    inline constexpr fileKind kindNet = 0;
+    inline constexpr fileKind kindFile = 1;
+    inline constexpr fileKind kindConsole = 2;
+    inline constexpr fileKind kindPipe = 3;
 }

@@ -6,5 +6,5 @@
 
 namespace golang::internal::bytealg
 {
-    const long MaxBruteForce = 64;
+    inline constexpr long MaxBruteForce = 64;
 }

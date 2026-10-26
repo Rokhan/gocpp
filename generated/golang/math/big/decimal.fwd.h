@@ -14,5 +14,5 @@ namespace golang::math::big
 {
     // Maximum shift amount that can be done in one pass without overflow.
     // A Word has _W bits and (1<<maxShift - 1)*10 + 9 must fit into Word.
-    const int maxShift = _W - 4;
+    inline constexpr int64_t maxShift = _W - 4;
 }

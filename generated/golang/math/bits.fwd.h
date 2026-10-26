@@ -6,13 +6,13 @@
 
 namespace golang::math
 {
-    const long uvnan = 0x7FF8000000000001;
-    const long uvinf = 0x7FF0000000000000;
-    const long uvneginf = 0xFFF0000000000000;
-    const long uvone = 0x3FF0000000000000;
-    const long mask = 0x7FF;
-    const int shift = 64 - 11 - 1;
-    const long bias = 1023;
-    const int signMask = 1 << 63;
-    const int fracMask = (1 << shift) - 1;
+    inline constexpr long uvnan = 0x7FF8000000000001LL;
+    inline constexpr long uvinf = 0x7FF0000000000000LL;
+    inline constexpr uint64_t uvneginf = uint64_t(0xFFF0000000000000_bi);
+    inline constexpr long uvone = 0x3FF0000000000000LL;
+    inline constexpr long mask = 0x7FF;
+    inline constexpr int64_t shift = 64 - 11 - 1;
+    inline constexpr long bias = 1023;
+    inline constexpr uint64_t signMask = uint64_t(1_bi << 63);
+    inline constexpr int64_t fracMask = (1LL << shift) - 1LL;
 }

@@ -58,13 +58,13 @@ namespace golang::go::types
 
     // Len returns the number of type parameters in the list.
     // It is safe to call on a nil receiver.
-    int rec::Len(TypeParamList* l)
+    int64_t rec::Len(TypeParamList* l)
     {
         return len(rec::list(gocpp::recv(l)));
     }
 
     // At returns the i'th type parameter in the list.
-    TypeParam* rec::At(TypeParamList* l, int i)
+    TypeParam* rec::At(TypeParamList* l, int64_t i)
     {
         return l->tparams[i];
     }
@@ -139,13 +139,13 @@ namespace golang::go::types
 
     // Len returns the number of types in the list.
     // It is safe to call on a nil receiver.
-    int rec::Len(TypeList* l)
+    int64_t rec::Len(TypeList* l)
     {
         return len(rec::list(gocpp::recv(l)));
     }
 
     // At returns the i'th type in the list.
-    golang::go::types::Type rec::At(TypeList* l, int i)
+    golang::go::types::Type rec::At(TypeList* l, int64_t i)
     {
         return l->types[i];
     }

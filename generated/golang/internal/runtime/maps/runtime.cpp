@@ -64,7 +64,7 @@ namespace golang::internal::runtime::maps
     /* convertBlockStmt, nil block */;
 
     //go:linkname newarray
-    gocpp::unsafe_pointer newarray(abi::Type* typ, int n)
+    gocpp::unsafe_pointer newarray(abi::Type* typ, int64_t n)
     /* convertBlockStmt, nil block */;
 
     //go:linkname newobject

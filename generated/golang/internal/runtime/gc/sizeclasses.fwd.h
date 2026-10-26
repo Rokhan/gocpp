@@ -6,15 +6,15 @@
 
 namespace golang::internal::runtime::gc
 {
-    const long MinHeapAlign = 8;
-    const long MaxSmallSize = 32768;
-    const long SmallSizeDiv = 8;
-    const long SmallSizeMax = 1024;
-    const long LargeSizeDiv = 128;
-    const long NumSizeClasses = 68;
-    const long PageShift = 13;
-    const long MaxObjsPerSpan = 1024;
-    const long MaxSizeClassNPages = 10;
-    const long TinySize = 16;
-    const long TinySizeClass = 2;
+    inline constexpr long MinHeapAlign = 8;
+    inline constexpr long MaxSmallSize = 32768;
+    inline constexpr long SmallSizeDiv = 8;
+    inline constexpr long SmallSizeMax = 1024;
+    inline constexpr long LargeSizeDiv = 128;
+    inline constexpr long NumSizeClasses = 68;
+    inline constexpr long PageShift = 13;
+    inline constexpr long MaxObjsPerSpan = 1024;
+    inline constexpr long MaxSizeClassNPages = 10;
+    inline constexpr long TinySize = 16;
+    inline constexpr long TinySizeClass = 2;
 }

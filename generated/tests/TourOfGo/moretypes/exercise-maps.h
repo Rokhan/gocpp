@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    gocpp::map<gocpp::string, int> WordCount(gocpp::string s);
+    gocpp::map<gocpp::string, int64_t> WordCount(gocpp::string s);
     void testWordCount();
     void main();
 

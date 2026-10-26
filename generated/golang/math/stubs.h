@@ -25,8 +25,8 @@ namespace golang::math
     double archErf(double x);
     double archErfc(double x);
     double archExpm1(double x);
-    std::tuple<double, int> archFrexp(double x);
-    double archLdexp(double frac, int exp);
+    std::tuple<double, int64_t> archFrexp(double x);
+    double archLdexp(double frac, int64_t exp);
     double archLog10(double x);
     double archLog2(double x);
     double archLog1p(double x);

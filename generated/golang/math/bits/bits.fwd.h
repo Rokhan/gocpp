@@ -6,15 +6,15 @@
 
 namespace golang::math::bits
 {
-    const int uintSize = 32 << (~ (unsigned int)(0) >> 63);
+    inline constexpr int64_t uintSize = 32 << (~ (uint64_t)(0) >> 63);
     // See http://keithandkatie.com/keith/papers/debruijn.html
-    const long deBruijn32 = 0x077CB531;
-    const long deBruijn64 = 0x03f79d71b4ca8b09;
-    const long m0 = 0x5555555555555555;
-    const long m1 = 0x3333333333333333;
-    const long m2 = 0x0f0f0f0f0f0f0f0f;
-    const long m3 = 0x00ff00ff00ff00ff;
-    const long m4 = 0x0000ffff0000ffff;
+    inline constexpr long deBruijn32 = 0x077CB531;
+    inline constexpr long deBruijn64 = 0x03f79d71b4ca8b09LL;
+    inline constexpr long m0 = 0x5555555555555555LL;
+    inline constexpr long m1 = 0x3333333333333333LL;
+    inline constexpr long m2 = 0x0f0f0f0f0f0f0f0fLL;
+    inline constexpr long m3 = 0x00ff00ff00ff00ffLL;
+    inline constexpr long m4 = 0x0000ffff0000ffffLL;
     // UintSize is the size of a uint in bits.
-    const int UintSize = uintSize;
+    inline constexpr int64_t UintSize = uintSize;
 }

@@ -66,7 +66,7 @@ namespace golang::go::types
     }
 
     // Len returns the number variables of tuple t.
-    int rec::Len(Tuple* t)
+    int64_t rec::Len(Tuple* t)
     {
         if(t != nullptr)
         {
@@ -76,7 +76,7 @@ namespace golang::go::types
     }
 
     // At returns the i'th variable of tuple t.
-    Var* rec::At(Tuple* t, int i)
+    Var* rec::At(Tuple* t, int64_t i)
     {
         return t->vars[i];
     }

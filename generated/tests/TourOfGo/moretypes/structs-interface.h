@@ -41,7 +41,7 @@ namespace golang::main
 
         struct IReader
         {
-            virtual int vRead() = 0;
+            virtual int64_t vRead() = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -53,7 +53,7 @@ namespace golang::main
                 value.reset(ptr);
             }
 
-            int vRead() override;
+            int64_t vRead() override;
 
             void* getPtr() override
             {
@@ -70,8 +70,8 @@ namespace golang::main
 
     namespace rec
     {
-        int Read(const gocpp::PtrRecv<struct Reader, false>& self);
-        int Read(const gocpp::ObjRecv<struct Reader>& self);
+        int64_t Read(const gocpp::PtrRecv<struct Reader, false>& self);
+        int64_t Read(const gocpp::ObjRecv<struct Reader>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
@@ -104,7 +104,7 @@ namespace golang::main
 
         struct IWriterTo
         {
-            virtual int vWriteTo() = 0;
+            virtual int64_t vWriteTo() = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -116,7 +116,7 @@ namespace golang::main
                 value.reset(ptr);
             }
 
-            int vWriteTo() override;
+            int64_t vWriteTo() override;
 
             void* getPtr() override
             {
@@ -133,8 +133,8 @@ namespace golang::main
 
     namespace rec
     {
-        int WriteTo(const gocpp::PtrRecv<struct WriterTo, false>& self);
-        int WriteTo(const gocpp::ObjRecv<struct WriterTo>& self);
+        int64_t WriteTo(const gocpp::PtrRecv<struct WriterTo, false>& self);
+        int64_t WriteTo(const gocpp::ObjRecv<struct WriterTo>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct WriterTo& value);
@@ -203,7 +203,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Closer& value);
     struct myReader
     {
-        int val{};
+        int64_t val{};
 
         using isGoStruct = void;
 
@@ -219,7 +219,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct myReader& value);
     struct myReaderWriterTo
     {
-        int val{};
+        int64_t val{};
 
         using isGoStruct = void;
 
@@ -290,8 +290,8 @@ namespace golang::main
 
     namespace rec
     {
-        int Read(const gocpp::PtrRecv<struct ReadCloser, false>& self);
-        int Read(const gocpp::ObjRecv<struct ReadCloser>& self);
+        int64_t Read(const gocpp::PtrRecv<struct ReadCloser, false>& self);
+        int64_t Read(const gocpp::ObjRecv<struct ReadCloser>& self);
 
         gocpp::string Close(const gocpp::PtrRecv<struct ReadCloser, false>& self);
         gocpp::string Close(const gocpp::ObjRecv<struct ReadCloser>& self);
@@ -315,8 +315,8 @@ namespace golang::main
 
     namespace rec
     {
-        int Read(const gocpp::PtrRecv<struct nopCloser, false>& self);
-        int Read(const gocpp::ObjRecv<struct nopCloser>& self);
+        int64_t Read(const gocpp::PtrRecv<struct nopCloser, false>& self);
+        int64_t Read(const gocpp::ObjRecv<struct nopCloser>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct nopCloser& value);
@@ -337,8 +337,8 @@ namespace golang::main
 
     namespace rec
     {
-        int Read(const gocpp::PtrRecv<struct nopCloserWriterTo, false>& self);
-        int Read(const gocpp::ObjRecv<struct nopCloserWriterTo>& self);
+        int64_t Read(const gocpp::PtrRecv<struct nopCloserWriterTo, false>& self);
+        int64_t Read(const gocpp::ObjRecv<struct nopCloserWriterTo>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct nopCloserWriterTo& value);
@@ -348,10 +348,10 @@ namespace golang::main
     {
         gocpp::string Close(nopCloser);
         gocpp::string Close(nopCloserWriterTo);
-        int WriteTo(nopCloserWriterTo c);
-        int Read(myReader r);
-        int Read(myReaderWriterTo r);
-        int WriteTo(myReaderWriterTo r);
+        int64_t WriteTo(nopCloserWriterTo c);
+        int64_t Read(myReader r);
+        int64_t Read(myReaderWriterTo r);
+        int64_t WriteTo(myReaderWriterTo r);
     }
 }
 

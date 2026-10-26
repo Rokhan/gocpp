@@ -14,7 +14,7 @@ namespace golang::go::version
 {
     gocpp::string stripGo(gocpp::string v);
     gocpp::string Lang(gocpp::string x);
-    int Compare(gocpp::string x, gocpp::string y);
+    int64_t Compare(gocpp::string x, gocpp::string y);
     bool IsValid(gocpp::string x);
 
     namespace rec

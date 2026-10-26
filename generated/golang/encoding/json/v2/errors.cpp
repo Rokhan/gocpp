@@ -429,7 +429,7 @@ namespace golang::encoding::json::v2
         }
 
         template<typename T, typename TStore, typename TInterface>
-        gocpp::slice<unsigned char> gocpp_id_4::gocpp_id_4Impl<T, TStore, TInterface>::vAppendStackPointer(gocpp::slice<unsigned char> _1, int _2)
+        gocpp::slice<unsigned char> gocpp_id_4::gocpp_id_4Impl<T, TStore, TInterface>::vAppendStackPointer(gocpp::slice<unsigned char> _1, int64_t _2)
         {
             return rec::AppendStackPointer(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
         }
@@ -442,12 +442,12 @@ namespace golang::encoding::json::v2
 
         namespace rec
         {
-            gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_id_4, false>& self, gocpp::slice<unsigned char> _1, int _2)
+            gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_id_4, false>& self, gocpp::slice<unsigned char> _1, int64_t _2)
             {
                 return self.ptr->value()->vAppendStackPointer(_1, _2);
             }
 
-            gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_id_4>& self, gocpp::slice<unsigned char> _1, int _2)
+            gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_id_4>& self, gocpp::slice<unsigned char> _1, int64_t _2)
             {
                 return self.obj.value()->vAppendStackPointer(_1, _2);
             }
@@ -473,7 +473,7 @@ namespace golang::encoding::json::v2
     //
     // This is used to annotate errors returned by user-provided
     // v2 MarshalJSON or UnmarshalJSON methods or functions.
-    gocpp::error newSemanticErrorWithPosition(coder c, reflect::Type t, int prevDepth, int64_t prevLength, gocpp::error err)
+    gocpp::error newSemanticErrorWithPosition(coder c, reflect::Type t, int64_t prevDepth, int64_t prevLength, gocpp::error err)
     {
         auto [serr, gocpp_id_3] = gocpp::getValue<SemanticError*>(err);
         if(serr == nullptr)
@@ -483,7 +483,7 @@ namespace golang::encoding::json::v2
             });
         }
         serr->Err = toUnexpectedEOF(serr->Err);
-        int currDepth = {};
+        int64_t currDepth = {};
         int64_t currLength = {};
         gocpp_id_4 coderState = {};
         int64_t offset = {};
@@ -529,7 +529,7 @@ namespace golang::encoding::json::v2
         if(serr->JSONPointer == ""_s)
         {
             // default to ambiguous positioning
-            auto where = 0;
+            int64_t where = 0;
             //Go switch emulation
             {
                 int conditionId = -1;

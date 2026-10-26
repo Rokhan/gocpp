@@ -10,7 +10,7 @@ namespace golang::os
 {
     namespace syscall = golang::syscall;
     using syscallErrorType = syscall::Errno;
-    const syscall::Errno errENOSYS = syscall::go_ENOSYS;
-    const syscall::Errno errERANGE = syscall::go_ERANGE;
-    const syscall::Errno errENOMEM = syscall::go_ENOMEM;
+    inline constexpr syscall::Errno errENOSYS = syscall::go_ENOSYS;
+    inline constexpr syscall::Errno errERANGE = syscall::go_ERANGE;
+    inline constexpr syscall::Errno errENOMEM = syscall::go_ENOMEM;
 }

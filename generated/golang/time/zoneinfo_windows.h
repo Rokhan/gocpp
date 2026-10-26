@@ -34,7 +34,7 @@ namespace golang::time
     namespace syscall = golang::syscall;
     std::tuple<bool, gocpp::error> matchZoneKey(registry::Key zones, gocpp::string kname, gocpp::string stdname, gocpp::string dstname);
     std::tuple<gocpp::string, gocpp::string> abbrev(syscall::Timezoneinformation* z);
-    int64_t pseudoUnix(int year, syscall::Systemtime* d);
+    int64_t pseudoUnix(int64_t year, syscall::Systemtime* d);
     void initLocalFromTZI(syscall::Timezoneinformation* i);
     extern syscall::Timezoneinformation usPacific;
     extern syscall::Timezoneinformation aus;

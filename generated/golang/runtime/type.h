@@ -135,8 +135,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<struct rtype, false>& self);
-        int Align(const gocpp::ObjRecv<struct rtype>& self);
+        int64_t Align(const gocpp::PtrRecv<struct rtype, false>& self);
+        int64_t Align(const gocpp::ObjRecv<struct rtype>& self);
         abi::ArrayType* ArrayType(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::ArrayType* ArrayType(const gocpp::ObjRecv<struct rtype>& self);
         abi::ChanDir ChanDir(const gocpp::PtrRecv<struct rtype, false>& self);
@@ -145,14 +145,14 @@ namespace golang::runtime
         abi::ChanType* ChanType(const gocpp::ObjRecv<struct rtype>& self);
         abi::Type* Common(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::Type* Common(const gocpp::ObjRecv<struct rtype>& self);
-        int DescriptorSize(const gocpp::PtrRecv<struct rtype, false>& self);
-        int DescriptorSize(const gocpp::ObjRecv<struct rtype>& self);
+        int64_t DescriptorSize(const gocpp::PtrRecv<struct rtype, false>& self);
+        int64_t DescriptorSize(const gocpp::ObjRecv<struct rtype>& self);
         abi::Type* Elem(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::Type* Elem(const gocpp::ObjRecv<struct rtype>& self);
         gocpp::slice<abi::Method> ExportedMethods(const gocpp::PtrRecv<struct rtype, false>& self);
         gocpp::slice<abi::Method> ExportedMethods(const gocpp::ObjRecv<struct rtype>& self);
-        int FieldAlign(const gocpp::PtrRecv<struct rtype, false>& self);
-        int FieldAlign(const gocpp::ObjRecv<struct rtype>& self);
+        int64_t FieldAlign(const gocpp::PtrRecv<struct rtype, false>& self);
+        int64_t FieldAlign(const gocpp::ObjRecv<struct rtype>& self);
         abi::FuncType* FuncType(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::FuncType* FuncType(const gocpp::ObjRecv<struct rtype>& self);
         gocpp::slice<unsigned char> GcSlice(const gocpp::PtrRecv<struct rtype, false>& self, uintptr_t begin, uintptr_t end);
@@ -167,12 +167,12 @@ namespace golang::runtime
         abi::Type* Key(const gocpp::ObjRecv<struct rtype>& self);
         abi::Kind Kind(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::Kind Kind(const gocpp::ObjRecv<struct rtype>& self);
-        int Len(const gocpp::PtrRecv<struct rtype, false>& self);
-        int Len(const gocpp::ObjRecv<struct rtype>& self);
+        int64_t Len(const gocpp::PtrRecv<struct rtype, false>& self);
+        int64_t Len(const gocpp::ObjRecv<struct rtype>& self);
         abi::MapType* MapType(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::MapType* MapType(const gocpp::ObjRecv<struct rtype>& self);
-        int NumMethod(const gocpp::PtrRecv<struct rtype, false>& self);
-        int NumMethod(const gocpp::ObjRecv<struct rtype>& self);
+        int64_t NumMethod(const gocpp::PtrRecv<struct rtype, false>& self);
+        int64_t NumMethod(const gocpp::ObjRecv<struct rtype>& self);
         abi::PtrType* PointerType(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::PtrType* PointerType(const gocpp::ObjRecv<struct rtype>& self);
         bool Pointers(const gocpp::PtrRecv<struct rtype, false>& self);

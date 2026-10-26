@@ -64,10 +64,10 @@ namespace golang::internal::strconv
     // commonPrefixLenIgnoreCase returns the length of the common
     // prefix of s and prefix, with the character case of s ignored.
     // The prefix argument must be all lower-case.
-    int commonPrefixLenIgnoreCase(gocpp::string s, gocpp::string prefix)
+    int64_t commonPrefixLenIgnoreCase(gocpp::string s, gocpp::string prefix)
     {
         auto n = gocpp::min(len(prefix), len(s));
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             auto c = s[i];
             if('A' <= c && c <= 'Z')
@@ -87,17 +87,17 @@ namespace golang::internal::strconv
     // and NaN. The result is ok if a prefix of s contains one
     // of these representations and n is the length of that prefix.
     // The character case is ignored.
-    std::tuple<double, int, bool> special(gocpp::string s)
+    std::tuple<double, int64_t, bool> special(gocpp::string s)
     {
         double f;
-        int n;
+        int64_t n;
         bool ok;
         if(len(s) == 0)
         {
             return {0, 0, false};
         }
-        auto sign = 1;
-        auto nsign = 0;
+        int64_t sign = 1;
+        int64_t nsign = 0;
         //Go switch emulation
         {
             auto condition = s[0];
@@ -149,7 +149,7 @@ namespace golang::internal::strconv
     bool rec::set(decimal* b, gocpp::string s)
     {
         bool ok;
-        auto i = 0;
+        int64_t i = 0;
         b->neg = false;
         b->trunc = false;
 
@@ -177,8 +177,8 @@ namespace golang::internal::strconv
         }
 
         // digits
-        auto sawdot = false;
-        auto sawdigits = false;
+        bool sawdot = false;
+        bool sawdigits = false;
         for(; i < len(s); i++)
         {
             //Go switch emulation
@@ -248,7 +248,7 @@ namespace golang::internal::strconv
             {
                 return ok;
             }
-            auto esign = 1;
+            int64_t esign = 1;
             //Go switch emulation
             {
                 auto condition = s[i];
@@ -270,7 +270,7 @@ namespace golang::internal::strconv
             {
                 return ok;
             }
-            auto e = 0;
+            int64_t e = 0;
             for(; i < len(s) && ('0' <= s[i] && s[i] <= '9' || s[i] == '_'); i++)
             {
                 if(s[i] == '_')
@@ -280,7 +280,7 @@ namespace golang::internal::strconv
                 }
                 if(e < 10000)
                 {
-                    e = e * 10 + int(s[i]) - '0';
+                    e = e * 10 + int64_t(s[i]) - '0';
                 }
             }
             b->dp += e * esign;
@@ -299,16 +299,16 @@ namespace golang::internal::strconv
     // string representation in s; the number may be followed by other characters.
     // readFloat reports the number of bytes consumed (i), and whether the number
     // is valid (ok).
-    std::tuple<uint64_t, int, bool, bool, bool, int, bool> readFloat(gocpp::string s)
+    std::tuple<uint64_t, int64_t, bool, bool, bool, int64_t, bool> readFloat(gocpp::string s)
     {
         uint64_t mantissa;
-        int exp;
+        int64_t exp;
         bool neg;
         bool trunc;
         bool hex;
-        int i;
+        int64_t i;
         bool ok;
-        auto underscores = false;
+        bool underscores = false;
 
         // optional sign
         if(i >= len(s))
@@ -334,10 +334,10 @@ namespace golang::internal::strconv
         }
 
         // digits
-        auto base = uint64_t(10);
+        uint64_t base = uint64_t(10);
         // 10^19 fits in uint64
-        auto maxMantDigits = 19;
-        auto expChar = (unsigned char)('e');
+        int64_t maxMantDigits = 19;
+        unsigned char expChar = (unsigned char)('e');
         if(i + 2 < len(s) && s[i] == '0' && lower(s[i + 1]) == 'x')
         {
             base = 16;
@@ -347,11 +347,11 @@ namespace golang::internal::strconv
             expChar = 'p';
             hex = true;
         }
-        auto sawdot = false;
-        auto sawdigits = false;
-        auto nd = 0;
-        auto ndMant = 0;
-        auto dp = 0;
+        bool sawdot = false;
+        bool sawdigits = false;
+        int64_t nd = 0;
+        int64_t ndMant = 0;
+        int64_t dp = 0;
         loop:
         for(; i < len(s); i++)
         {
@@ -456,7 +456,7 @@ namespace golang::internal::strconv
             {
                 return {mantissa, exp, neg, trunc, hex, i, ok};
             }
-            auto esign = 1;
+            int64_t esign = 1;
             //Go switch emulation
             {
                 auto condition = s[i];
@@ -478,7 +478,7 @@ namespace golang::internal::strconv
             {
                 return {mantissa, exp, neg, trunc, hex, i, ok};
             }
-            auto e = 0;
+            int64_t e = 0;
             for(; i < len(s) && ('0' <= s[i] && s[i] <= '9' || s[i] == '_'); i++)
             {
                 if(s[i] == '_')
@@ -488,7 +488,7 @@ namespace golang::internal::strconv
                 }
                 if(e < 10000)
                 {
-                    e = e * 10 + int(s[i]) - '0';
+                    e = e * 10 + int64_t(s[i]) - '0';
                 }
             }
             dp += e * esign;
@@ -515,12 +515,12 @@ namespace golang::internal::strconv
     }
 
     // decimal power of ten to binary power of two.
-    gocpp::slice<int> powtab = gocpp::slice<int> {1, 3, 6, 9, 13, 16, 19, 23, 26};
+    gocpp::slice<int64_t> powtab = gocpp::slice<int64_t> {1, 3, 6, 9, 13, 16, 19, 23, 26};
     std::tuple<uint64_t, bool> rec::floatBits(decimal* d, floatInfo* flt)
     {
         uint64_t b;
         bool overflow;
-        int exp = {};
+        int64_t exp = {};
         uint64_t mant = {};
 
         // Zero is always a special case.
@@ -550,7 +550,7 @@ namespace golang::internal::strconv
         exp = 0;
         for(; d->dp > 0; )
         {
-            int n = {};
+            int64_t n = {};
             if(d->dp >= len(powtab))
             {
                 n = 27;
@@ -564,7 +564,7 @@ namespace golang::internal::strconv
         }
         for(; d->dp < 0 || d->dp == 0 && d->d[0] < '5'; )
         {
-            int n = {};
+            int64_t n = {};
             if(- d->dp >= len(powtab))
             {
                 n = 27;
@@ -596,7 +596,7 @@ namespace golang::internal::strconv
         }
 
         // Extract 1+flt.mantbits bits.
-        rec::Shift(gocpp::recv(d), int(1 + flt->mantbits));
+        rec::Shift(gocpp::recv(d), int64_t(1 + flt->mantbits));
         mant = rec::RoundedInteger(gocpp::recv(d));
 
         // Rounding might have added a bit; shift down.
@@ -650,7 +650,7 @@ namespace golang::internal::strconv
     //	value is exact integer / exact power of ten
     //
     // These all produce potentially inexact but correctly rounded answers.
-    std::tuple<double, bool> atof64exact(uint64_t mantissa, int exp, bool neg)
+    std::tuple<double, bool> atof64exact(uint64_t mantissa, int64_t exp, bool neg)
     {
         double f;
         bool ok;
@@ -702,7 +702,7 @@ namespace golang::internal::strconv
 
     // If possible to compute mantissa*10^exp to 32-bit float f exactly,
     // entirely in floating-point math, do so, avoiding the machinery above.
-    std::tuple<double, bool> atof32exact(uint64_t mantissa, int exp, bool neg)
+    std::tuple<double, bool> atof32exact(uint64_t mantissa, int64_t exp, bool neg)
     {
         double f;
         bool ok;
@@ -756,12 +756,12 @@ namespace golang::internal::strconv
     // and returns it as a float64.
     // The string s has already been parsed into a mantissa, exponent, and sign (neg==true for negative).
     // If trunc is true, trailing non-zero bits have been omitted from the mantissa.
-    std::tuple<double, gocpp::error> atofHex(gocpp::string s, floatInfo* flt, uint64_t mantissa, int exp, bool neg, bool trunc)
+    std::tuple<double, gocpp::error> atofHex(gocpp::string s, floatInfo* flt, uint64_t mantissa, int64_t exp, bool neg, bool trunc)
     {
         auto maxExp = (1 << flt->expbits) + flt->bias - 2;
         auto minExp = flt->bias + 1;
         // mantissa now implicitly divided by 2^mantbits.
-        exp += int(flt->mantbits);
+        exp += int64_t(flt->mantbits);
 
         // Shift mantissa and exponent to bring representation into float range.
         // Eventually we want a mantissa with a leading 1-bit followed by mantbits other bits.
@@ -836,10 +836,10 @@ namespace golang::internal::strconv
         return {float64frombits(bits), err};
     }
 
-    std::tuple<double, int, gocpp::error> atof32(gocpp::string s)
+    std::tuple<double, int64_t, gocpp::error> atof32(gocpp::string s)
     {
         double f;
-        int n;
+        int64_t n;
         gocpp::error err;
         if(auto [val, n, ok] = special(s); ok)
         {
@@ -847,7 +847,7 @@ namespace golang::internal::strconv
         }
 
         uint64_t d;
-        int p;
+        int64_t p;
         bool neg;
         bool trunc;
         bool hex;
@@ -921,10 +921,10 @@ namespace golang::internal::strconv
         return {f, n, err};
     }
 
-    std::tuple<double, int, gocpp::error> atof64(gocpp::string s)
+    std::tuple<double, int64_t, gocpp::error> atof64(gocpp::string s)
     {
         double f;
-        int n;
+        int64_t n;
         gocpp::error err;
         if(auto [val, n, ok] = special(s); ok)
         {
@@ -932,7 +932,7 @@ namespace golang::internal::strconv
         }
 
         uint64_t d;
-        int p;
+        int64_t p;
         bool neg;
         bool trunc;
         bool hex;
@@ -1031,7 +1031,7 @@ namespace golang::internal::strconv
     // as their respective special floating point values. It ignores case when matching.
     //
     // [floating-point literals]: https://go.dev/ref/spec#Floating-point_literals
-    std::tuple<double, gocpp::error> ParseFloat(gocpp::string s, int bitSize)
+    std::tuple<double, gocpp::error> ParseFloat(gocpp::string s, int64_t bitSize)
     {
         auto [f, n, err] = parseFloatPrefix(s, bitSize);
         if(n != len(s))
@@ -1041,7 +1041,7 @@ namespace golang::internal::strconv
         return {f, err};
     }
 
-    std::tuple<double, int, gocpp::error> parseFloatPrefix(gocpp::string s, int bitSize)
+    std::tuple<double, int64_t, gocpp::error> parseFloatPrefix(gocpp::string s, int64_t bitSize)
     {
         if(bitSize == 32)
         {

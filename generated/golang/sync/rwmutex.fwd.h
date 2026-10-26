@@ -7,7 +7,7 @@
 namespace golang::sync
 {
     struct RWMutex;
-    const int rwmutexMaxReaders = 1 << 30;
+    inline constexpr int64_t rwmutexMaxReaders = 1 << 30;
     struct GoTag_rlocker;
     using rlocker = gocpp::defined<RWMutex, GoTag_rlocker>;
 }

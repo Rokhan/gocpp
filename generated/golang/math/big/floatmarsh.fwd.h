@@ -7,5 +7,5 @@
 namespace golang::math::big
 {
     // Gob codec version. Permits backward-compatible changes to the encoding.
-    const unsigned char floatGobVersion = 1;
+    inline constexpr unsigned char floatGobVersion = 1;
 }

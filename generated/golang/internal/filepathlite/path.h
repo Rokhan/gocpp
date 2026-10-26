@@ -17,9 +17,9 @@ namespace golang::internal::filepathlite
     {
         gocpp::string path{};
         gocpp::slice<unsigned char> buf{};
-        int w{};
+        int64_t w{};
         gocpp::string volAndPath{};
-        int volLen{};
+        int64_t volLen{};
 
         using isGoStruct = void;
 
@@ -45,11 +45,11 @@ namespace golang::internal::filepathlite
     gocpp::string Base(gocpp::string path);
     gocpp::string Dir(gocpp::string path);
     gocpp::string VolumeName(gocpp::string path);
-    int VolumeNameLen(gocpp::string path);
+    int64_t VolumeNameLen(gocpp::string path);
 
     namespace rec
     {
-        unsigned char index(lazybuf* b, int i);
+        unsigned char index(lazybuf* b, int64_t i);
         void append(lazybuf* b, unsigned char c);
         void prepend(lazybuf* b, gocpp::slice<unsigned char> prefix);
         

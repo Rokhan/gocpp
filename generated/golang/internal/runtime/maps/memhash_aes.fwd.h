@@ -6,5 +6,5 @@
 
 namespace golang::internal::runtime::maps
 {
-    const bool memHashAESImplemented = true;
+    inline constexpr bool memHashAESImplemented = true;
 }

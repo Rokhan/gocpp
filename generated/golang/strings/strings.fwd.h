@@ -6,23 +6,23 @@
 
 namespace golang::strings
 {
-    const int maxInt = int(~ (unsigned int)(0) >> 1);
+    inline constexpr int64_t maxInt = int64_t(~ (uint64_t)(0LL) >> 1);
     // According to static analysis, spaces, dashes, zeros, equals, and tabs
     // are the most commonly repeated string literal,
     // often used for display on fixed-width terminal windows.
     // Pre-declare constants for these for O(1) repetition in the common-case.
-    const gocpp::string repeatedSpaces = ""_s +
+    inline const gocpp::string repeatedSpaces = ""_s +
             "                                                                "_s +
             "                                                                "_s;
-    const gocpp::string repeatedDashes = ""_s +
+    inline const gocpp::string repeatedDashes = ""_s +
             "----------------------------------------------------------------"_s +
             "----------------------------------------------------------------"_s;
-    const gocpp::string repeatedZeroes = ""_s +
+    inline const gocpp::string repeatedZeroes = ""_s +
             "0000000000000000000000000000000000000000000000000000000000000000"_s;
-    const gocpp::string repeatedEquals = ""_s +
+    inline const gocpp::string repeatedEquals = ""_s +
             "================================================================"_s +
             "================================================================"_s;
-    const gocpp::string repeatedTabs = ""_s +
+    inline const gocpp::string repeatedTabs = ""_s +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"_s +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"_s;
     struct GoTag_asciiSet;

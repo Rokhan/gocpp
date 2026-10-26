@@ -6,10 +6,10 @@
 
 namespace golang::internal::syscall::windows
 {
-    const long SO_TYPE = 0x1008;
-    const long SO_PROTOCOL_INFOW = 0x2005;
-    const uint16_t TCP_INITIAL_RTO_UNSPECIFIED_RTT = ~ uint16_t(0);
-    const uint8_t TCP_INITIAL_RTO_NO_SYN_RETRANSMISSIONS = ~ uint8_t(1);
+    inline constexpr long SO_TYPE = 0x1008;
+    inline constexpr long SO_PROTOCOL_INFOW = 0x2005;
+    inline constexpr uint16_t TCP_INITIAL_RTO_UNSPECIFIED_RTT = ~ uint16_t(0);
+    inline constexpr uint8_t TCP_INITIAL_RTO_NO_SYN_RETRANSMISSIONS = ~ uint8_t(1);
     struct TCP_INITIAL_RTO_PARAMETERS;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
@@ -18,5 +18,5 @@ namespace golang::internal::syscall::windows
 namespace golang::internal::syscall::windows
 {
     namespace syscall = golang::syscall;
-    const int SIO_TCP_INITIAL_RTO = syscall::IOC_IN | syscall::IOC_VENDOR | 17;
+    inline constexpr int64_t SIO_TCP_INITIAL_RTO = syscall::IOC_IN | syscall::IOC_VENDOR | 17LL;
 }

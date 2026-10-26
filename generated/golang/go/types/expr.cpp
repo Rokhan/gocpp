@@ -149,7 +149,7 @@ namespace golang::go::types
                 case 0:
                 {
                     ast::BinaryExpr* e = gocpp::any_cast<ast::BinaryExpr*>(e_ref);
-                    if(int(e->Op) < len(op2str2))
+                    if(int64_t(e->Op) < len(op2str2))
                     {
                         return op2str2[e->Op];
                     }
@@ -158,7 +158,7 @@ namespace golang::go::types
                 case 1:
                 {
                     ast::UnaryExpr* e = gocpp::any_cast<ast::UnaryExpr*>(e_ref);
-                    if(int(e->Op) < len(op2str1))
+                    if(int64_t(e->Op) < len(op2str1))
                     {
                         return op2str1[e->Op];
                     }
@@ -255,10 +255,10 @@ namespace golang::go::types
                 // nothing to do (and don't cause an error below in the overflow check)
                 return;
             }
-            unsigned int prec = {};
+            uint64_t prec = {};
             if(isUnsigned(rec::typ(gocpp::recv(x))))
             {
-                prec = (unsigned int)(rec::go_sizeof(gocpp::recv(check->conf), rec::typ(gocpp::recv(x))) * 8);
+                prec = (uint64_t)(rec::go_sizeof(gocpp::recv(check->conf), rec::typ(gocpp::recv(x))) * 8);
             }
             x->val = constant::UnaryOp(op, x->val, prec);
             x->expr = e;
@@ -761,11 +761,11 @@ namespace golang::go::types
         // operand for which error is reported, if any
         auto errOp = x;
         // specific error cause, if any
-        auto cause = ""_s;
+        gocpp::string cause = ""_s;
 
         // spec: "In any comparison, the first operand must be assignable
         // to the type of the second operand, or vice versa."
-        auto code = MismatchedTypes;
+        errors::Code code = MismatchedTypes;
         auto [ok, gocpp_id_8] = rec::assignableTo(gocpp::recv(x), check, rec::typ(gocpp::recv(y)), nullptr);
         if(! ok)
         {
@@ -1082,7 +1082,7 @@ namespace golang::go::types
                     x->typ_ = Typ[UntypedInt];
                 }
                 // x is a constant so xval != nil and it must be of Int kind.
-                x->val = constant::Shift(xval, op, (unsigned int)(s));
+                x->val = constant::Shift(xval, op, (uint64_t)(s));
                 x->expr = e;
                 rec::overflow(gocpp::recv(check), x, opPos(x->expr));
                 return;
@@ -1982,7 +1982,7 @@ namespace golang::go::types
 
     // nth returns a string of the form "nth " + what, where nth
     // stands for 1st, 2nd, 3rd, 4th, etc. depending on n.
-    gocpp::string nth(int n, gocpp::string what)
+    gocpp::string nth(int64_t n, gocpp::string what)
     {
         gocpp::string ext = {};
         //Go switch emulation
@@ -2025,7 +2025,7 @@ namespace golang::go::types
 
     // exclude reports an error if x.mode is in modeset and sets x.mode to invalid.
     // The modeset may contain any of 1<<novalue, 1<<builtin, 1<<typexpr.
-    void rec::exclude(Checker* check, operand* x, unsigned int modeset)
+    void rec::exclude(Checker* check, operand* x, uint64_t modeset)
     {
         if(modeset & (1 << rec::mode(gocpp::recv(x))) != 0)
         {

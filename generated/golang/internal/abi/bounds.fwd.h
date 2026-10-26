@@ -6,17 +6,18 @@
 
 namespace golang::internal::abi
 {
-    using BoundsErrorCode = uint8_t;
-    const long BoundsMaxReg = 15;
-    const long BoundsMaxConst = 31;
-    const BoundsErrorCode BoundsIndex = 0;
-    const BoundsErrorCode BoundsSliceAlen = 1;
-    const BoundsErrorCode BoundsSliceAcap = 2;
-    const BoundsErrorCode BoundsSliceB = 3;
-    const BoundsErrorCode BoundsSlice3Alen = 4;
-    const BoundsErrorCode BoundsSlice3Acap = 5;
-    const BoundsErrorCode BoundsSlice3B = 6;
-    const BoundsErrorCode BoundsSlice3C = 7;
-    const BoundsErrorCode BoundsConvert = 8;
-    const BoundsErrorCode numBoundsCodes = 9;
+    struct GoTag_BoundsErrorCode;
+    using BoundsErrorCode = gocpp::defined<uint8_t, GoTag_BoundsErrorCode>;
+    inline constexpr long BoundsMaxReg = 15;
+    inline constexpr long BoundsMaxConst = 31;
+    inline constexpr BoundsErrorCode BoundsIndex = 0;
+    inline constexpr BoundsErrorCode BoundsSliceAlen = 1;
+    inline constexpr BoundsErrorCode BoundsSliceAcap = 2;
+    inline constexpr BoundsErrorCode BoundsSliceB = 3;
+    inline constexpr BoundsErrorCode BoundsSlice3Alen = 4;
+    inline constexpr BoundsErrorCode BoundsSlice3Acap = 5;
+    inline constexpr BoundsErrorCode BoundsSlice3B = 6;
+    inline constexpr BoundsErrorCode BoundsSlice3C = 7;
+    inline constexpr BoundsErrorCode BoundsConvert = 8;
+    inline constexpr BoundsErrorCode numBoundsCodes = 9;
 }

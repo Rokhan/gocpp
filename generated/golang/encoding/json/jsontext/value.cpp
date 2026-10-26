@@ -58,7 +58,7 @@ namespace golang::encoding::json::jsontext
     // are 64-bit floating-point numbers. As such, prefer using 64 bits
     // of precision unless the recipient can know from other context
     // that the encoded number uses 32 bits of precision.
-    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double src, int bits)
+    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double src, int64_t bits)
     {
         if(bits != 32 && bits != 64)
         {
@@ -365,7 +365,7 @@ namespace golang::encoding::json::jsontext
         return value.PrintTo(os);
     }
 
-    int rec::Compare(objectMember x, objectMember y)
+    int64_t rec::Compare(objectMember x, objectMember y)
     {
         if(auto c = jsonwire::CompareUTF16(x.name, y.name); c != 0)
         {
@@ -458,7 +458,7 @@ namespace golang::encoding::json::jsontext
                         auto members = getObjectMembers();
                         defer.push_back([=]{ putObjectMembers(members); });
                         objectMember prevMember = {};
-                        auto isSorted = true;
+                        bool isSorted = true;
                         // offset after '{'
                         auto beforeBody = rec::InputOffset(gocpp::recv(d));
                         for(; rec::PeekKind(gocpp::recv(d)) != '}'; )
@@ -528,7 +528,7 @@ namespace golang::encoding::json::jsontext
                                 }
                             }
                         }
-                        if(int(afterBody - beforeBody) != len(sorted))
+                        if(int64_t(afterBody - beforeBody) != len(sorted))
                         {
                             gocpp::panic("BUG: length invariant violated"_s);
                         }

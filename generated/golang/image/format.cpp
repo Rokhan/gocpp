@@ -118,7 +118,7 @@ namespace golang::image
     }
 
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> reader::readerImpl<T, TStore, TInterface>::vPeek(int _1)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> reader::readerImpl<T, TStore, TInterface>::vPeek(int64_t _1)
     {
         return rec::Peek(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
@@ -131,22 +131,22 @@ namespace golang::image
 
     namespace rec
     {
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct reader, false>& self, int _1)
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct reader, false>& self, int64_t _1)
         {
             return self.ptr->value()->vPeek(_1);
         }
 
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int _1)
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int64_t _1)
         {
             return self.obj.value()->vPeek(_1);
         }
 
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct reader, false>& self, gocpp::slice<unsigned char> p)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct reader, false>& self, gocpp::slice<unsigned char> p)
         {
             return self.ptr->value()->vRead(p);
         }
 
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct reader>& self, gocpp::slice<unsigned char> p)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct reader>& self, gocpp::slice<unsigned char> p)
         {
             return self.obj.value()->vRead(p);
         }

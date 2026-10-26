@@ -133,7 +133,7 @@ namespace golang::image
         return rec::Bounds(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    color::Color Image::ImageImpl<T, TStore, TInterface>::vAt(int x, int y)
+    color::Color Image::ImageImpl<T, TStore, TInterface>::vAt(int64_t x, int64_t y)
     {
         return rec::At(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
@@ -166,12 +166,12 @@ namespace golang::image
             return self.obj.value()->vBounds();
         }
 
-        color::Color At(const gocpp::PtrRecv<struct Image, false>& self, int x, int y)
+        color::Color At(const gocpp::PtrRecv<struct Image, false>& self, int64_t x, int64_t y)
         {
             return self.ptr->value()->vAt(x, y);
         }
 
-        color::Color At(const gocpp::ObjRecv<struct Image>& self, int x, int y)
+        color::Color At(const gocpp::ObjRecv<struct Image>& self, int64_t x, int64_t y)
         {
             return self.obj.value()->vAt(x, y);
         }
@@ -209,7 +209,7 @@ namespace golang::image
     }
 
     template<typename T, typename TStore, typename TInterface>
-    color::RGBA64 RGBA64Image::RGBA64ImageImpl<T, TStore, TInterface>::vRGBA64At(int x, int y)
+    color::RGBA64 RGBA64Image::RGBA64ImageImpl<T, TStore, TInterface>::vRGBA64At(int64_t x, int64_t y)
     {
         return rec::RGBA64At(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
@@ -222,22 +222,22 @@ namespace golang::image
 
     namespace rec
     {
-        color::RGBA64 RGBA64At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int x, int y)
+        color::RGBA64 RGBA64At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int64_t x, int64_t y)
         {
             return self.ptr->value()->vRGBA64At(x, y);
         }
 
-        color::RGBA64 RGBA64At(const gocpp::ObjRecv<struct RGBA64Image>& self, int x, int y)
+        color::RGBA64 RGBA64At(const gocpp::ObjRecv<struct RGBA64Image>& self, int64_t x, int64_t y)
         {
             return self.obj.value()->vRGBA64At(x, y);
         }
 
-        color::Color At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int x, int y)
+        color::Color At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int64_t x, int64_t y)
         {
             return self.ptr->value()->vAt(x, y);
         }
 
-        color::Color At(const gocpp::ObjRecv<struct RGBA64Image>& self, int x, int y)
+        color::Color At(const gocpp::ObjRecv<struct RGBA64Image>& self, int64_t x, int64_t y)
         {
             return self.obj.value()->vAt(x, y);
         }
@@ -298,7 +298,7 @@ namespace golang::image
     }
 
     template<typename T, typename TStore, typename TInterface>
-    uint8_t PalettedImage::PalettedImageImpl<T, TStore, TInterface>::vColorIndexAt(int x, int y)
+    uint8_t PalettedImage::PalettedImageImpl<T, TStore, TInterface>::vColorIndexAt(int64_t x, int64_t y)
     {
         return rec::ColorIndexAt(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
@@ -311,22 +311,22 @@ namespace golang::image
 
     namespace rec
     {
-        uint8_t ColorIndexAt(const gocpp::PtrRecv<struct PalettedImage, false>& self, int x, int y)
+        uint8_t ColorIndexAt(const gocpp::PtrRecv<struct PalettedImage, false>& self, int64_t x, int64_t y)
         {
             return self.ptr->value()->vColorIndexAt(x, y);
         }
 
-        uint8_t ColorIndexAt(const gocpp::ObjRecv<struct PalettedImage>& self, int x, int y)
+        uint8_t ColorIndexAt(const gocpp::ObjRecv<struct PalettedImage>& self, int64_t x, int64_t y)
         {
             return self.obj.value()->vColorIndexAt(x, y);
         }
 
-        color::Color At(const gocpp::PtrRecv<struct PalettedImage, false>& self, int x, int y)
+        color::Color At(const gocpp::PtrRecv<struct PalettedImage, false>& self, int64_t x, int64_t y)
         {
             return self.ptr->value()->vAt(x, y);
         }
 
-        color::Color At(const gocpp::ObjRecv<struct PalettedImage>& self, int x, int y)
+        color::Color At(const gocpp::ObjRecv<struct PalettedImage>& self, int64_t x, int64_t y)
         {
             return self.obj.value()->vAt(x, y);
         }
@@ -364,7 +364,7 @@ namespace golang::image
     //
     // This panics instead of returning an error because of backwards
     // compatibility. The NewXxx functions do not return an error.
-    int pixelBufferLength(int bytesPerPixel, Rectangle r, gocpp::string imageTypeName)
+    int64_t pixelBufferLength(int64_t bytesPerPixel, Rectangle r, gocpp::string imageTypeName)
     {
         auto totalLength = mul3NonNeg(bytesPerPixel, rec::Dx(gocpp::recv(r)), rec::Dy(gocpp::recv(r)));
         if(totalLength < 0)
@@ -420,12 +420,12 @@ namespace golang::image
         return p->Rect;
     }
 
-    color::Color rec::At(golang::image::RGBA* p, int x, int y)
+    color::Color rec::At(golang::image::RGBA* p, int64_t x, int64_t y)
     {
         return rec::RGBAAt(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 rec::RGBA64At(golang::image::RGBA* p, int x, int y)
+    color::RGBA64 rec::RGBA64At(golang::image::RGBA* p, int64_t x, int64_t y)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -446,7 +446,7 @@ namespace golang::image
         };
     }
 
-    color::RGBA rec::RGBAAt(golang::image::RGBA* p, int x, int y)
+    color::RGBA rec::RGBAAt(golang::image::RGBA* p, int64_t x, int64_t y)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -460,12 +460,12 @@ namespace golang::image
 
     // PixOffset returns the index of the first element of Pix that corresponds to
     // the pixel at (x, y).
-    int rec::PixOffset(golang::image::RGBA* p, int x, int y)
+    int64_t rec::PixOffset(golang::image::RGBA* p, int64_t x, int64_t y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 4;
     }
 
-    void rec::Set(golang::image::RGBA* p, int x, int y, color::Color c)
+    void rec::Set(golang::image::RGBA* p, int64_t x, int64_t y, color::Color c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -481,7 +481,7 @@ namespace golang::image
         s[3] = c1.A;
     }
 
-    void rec::SetRGBA64(golang::image::RGBA* p, int x, int y, color::RGBA64 c)
+    void rec::SetRGBA64(golang::image::RGBA* p, int64_t x, int64_t y, color::RGBA64 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -496,7 +496,7 @@ namespace golang::image
         s[3] = uint8_t(c.A >> 8);
     }
 
-    void rec::SetRGBA(golang::image::RGBA* p, int x, int y, color::RGBA c)
+    void rec::SetRGBA(golang::image::RGBA* p, int64_t x, int64_t y, color::RGBA c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -610,12 +610,12 @@ namespace golang::image
         return p->Rect;
     }
 
-    color::Color rec::At(RGBA64* p, int x, int y)
+    color::Color rec::At(RGBA64* p, int64_t x, int64_t y)
     {
         return rec::RGBA64At(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 rec::RGBA64At(RGBA64* p, int x, int y)
+    color::RGBA64 rec::RGBA64At(RGBA64* p, int64_t x, int64_t y)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -634,12 +634,12 @@ namespace golang::image
 
     // PixOffset returns the index of the first element of Pix that corresponds to
     // the pixel at (x, y).
-    int rec::PixOffset(RGBA64* p, int x, int y)
+    int64_t rec::PixOffset(RGBA64* p, int64_t x, int64_t y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 8;
     }
 
-    void rec::Set(RGBA64* p, int x, int y, color::Color c)
+    void rec::Set(RGBA64* p, int64_t x, int64_t y, color::Color c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -659,7 +659,7 @@ namespace golang::image
         s[7] = uint8_t(c1.A);
     }
 
-    void rec::SetRGBA64(RGBA64* p, int x, int y, color::RGBA64 c)
+    void rec::SetRGBA64(RGBA64* p, int64_t x, int64_t y, color::RGBA64 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -777,18 +777,18 @@ namespace golang::image
         return p->Rect;
     }
 
-    color::Color rec::At(NRGBA* p, int x, int y)
+    color::Color rec::At(NRGBA* p, int64_t x, int64_t y)
     {
         return rec::NRGBAAt(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 rec::RGBA64At(NRGBA* p, int x, int y)
+    color::RGBA64 rec::RGBA64At(NRGBA* p, int64_t x, int64_t y)
     {
         auto [r, g, b, a] = rec::RGBA(gocpp::recv(rec::NRGBAAt(gocpp::recv(p), x, y)));
         return color::RGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
     }
 
-    color::NRGBA rec::NRGBAAt(NRGBA* p, int x, int y)
+    color::NRGBA rec::NRGBAAt(NRGBA* p, int64_t x, int64_t y)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -802,12 +802,12 @@ namespace golang::image
 
     // PixOffset returns the index of the first element of Pix that corresponds to
     // the pixel at (x, y).
-    int rec::PixOffset(NRGBA* p, int x, int y)
+    int64_t rec::PixOffset(NRGBA* p, int64_t x, int64_t y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 4;
     }
 
-    void rec::Set(NRGBA* p, int x, int y, color::Color c)
+    void rec::Set(NRGBA* p, int64_t x, int64_t y, color::Color c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -823,7 +823,7 @@ namespace golang::image
         s[3] = c1.A;
     }
 
-    void rec::SetRGBA64(NRGBA* p, int x, int y, color::RGBA64 c)
+    void rec::SetRGBA64(NRGBA* p, int64_t x, int64_t y, color::RGBA64 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -845,7 +845,7 @@ namespace golang::image
         s[3] = uint8_t(a >> 8);
     }
 
-    void rec::SetNRGBA(NRGBA* p, int x, int y, color::NRGBA c)
+    void rec::SetNRGBA(NRGBA* p, int64_t x, int64_t y, color::NRGBA c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -959,18 +959,18 @@ namespace golang::image
         return p->Rect;
     }
 
-    color::Color rec::At(NRGBA64* p, int x, int y)
+    color::Color rec::At(NRGBA64* p, int64_t x, int64_t y)
     {
         return rec::NRGBA64At(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 rec::RGBA64At(NRGBA64* p, int x, int y)
+    color::RGBA64 rec::RGBA64At(NRGBA64* p, int64_t x, int64_t y)
     {
         auto [r, g, b, a] = rec::RGBA(gocpp::recv(rec::NRGBA64At(gocpp::recv(p), x, y)));
         return color::RGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
     }
 
-    color::NRGBA64 rec::NRGBA64At(NRGBA64* p, int x, int y)
+    color::NRGBA64 rec::NRGBA64At(NRGBA64* p, int64_t x, int64_t y)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -989,12 +989,12 @@ namespace golang::image
 
     // PixOffset returns the index of the first element of Pix that corresponds to
     // the pixel at (x, y).
-    int rec::PixOffset(NRGBA64* p, int x, int y)
+    int64_t rec::PixOffset(NRGBA64* p, int64_t x, int64_t y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 8;
     }
 
-    void rec::Set(NRGBA64* p, int x, int y, color::Color c)
+    void rec::Set(NRGBA64* p, int64_t x, int64_t y, color::Color c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1014,7 +1014,7 @@ namespace golang::image
         s[7] = uint8_t(c1.A);
     }
 
-    void rec::SetRGBA64(NRGBA64* p, int x, int y, color::RGBA64 c)
+    void rec::SetRGBA64(NRGBA64* p, int64_t x, int64_t y, color::RGBA64 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1040,7 +1040,7 @@ namespace golang::image
         s[7] = uint8_t(a);
     }
 
-    void rec::SetNRGBA64(NRGBA64* p, int x, int y, color::NRGBA64 c)
+    void rec::SetNRGBA64(NRGBA64* p, int64_t x, int64_t y, color::NRGBA64 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1158,19 +1158,19 @@ namespace golang::image
         return p->Rect;
     }
 
-    color::Color rec::At(Alpha* p, int x, int y)
+    color::Color rec::At(Alpha* p, int64_t x, int64_t y)
     {
         return rec::AlphaAt(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 rec::RGBA64At(Alpha* p, int x, int y)
+    color::RGBA64 rec::RGBA64At(Alpha* p, int64_t x, int64_t y)
     {
         auto a = uint16_t(rec::AlphaAt(gocpp::recv(p), x, y).A);
         a |= a << 8;
         return color::RGBA64 {a, a, a, a};
     }
 
-    color::Alpha rec::AlphaAt(Alpha* p, int x, int y)
+    color::Alpha rec::AlphaAt(Alpha* p, int64_t x, int64_t y)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1182,12 +1182,12 @@ namespace golang::image
 
     // PixOffset returns the index of the first element of Pix that corresponds to
     // the pixel at (x, y).
-    int rec::PixOffset(Alpha* p, int x, int y)
+    int64_t rec::PixOffset(Alpha* p, int64_t x, int64_t y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 1;
     }
 
-    void rec::Set(Alpha* p, int x, int y, color::Color c)
+    void rec::Set(Alpha* p, int64_t x, int64_t y, color::Color c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1197,7 +1197,7 @@ namespace golang::image
         p->Pix[i] = gocpp::getValue<color::Alpha>(rec::Convert(gocpp::recv(color::AlphaModel), c)).A;
     }
 
-    void rec::SetRGBA64(Alpha* p, int x, int y, color::RGBA64 c)
+    void rec::SetRGBA64(Alpha* p, int64_t x, int64_t y, color::RGBA64 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1207,7 +1207,7 @@ namespace golang::image
         p->Pix[i] = uint8_t(c.A >> 8);
     }
 
-    void rec::SetAlpha(Alpha* p, int x, int y, color::Alpha c)
+    void rec::SetAlpha(Alpha* p, int64_t x, int64_t y, color::Alpha c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1316,18 +1316,18 @@ namespace golang::image
         return p->Rect;
     }
 
-    color::Color rec::At(Alpha16* p, int x, int y)
+    color::Color rec::At(Alpha16* p, int64_t x, int64_t y)
     {
         return rec::Alpha16At(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 rec::RGBA64At(Alpha16* p, int x, int y)
+    color::RGBA64 rec::RGBA64At(Alpha16* p, int64_t x, int64_t y)
     {
         auto a = rec::Alpha16At(gocpp::recv(p), x, y).A;
         return color::RGBA64 {a, a, a, a};
     }
 
-    color::Alpha16 rec::Alpha16At(Alpha16* p, int x, int y)
+    color::Alpha16 rec::Alpha16At(Alpha16* p, int64_t x, int64_t y)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1339,12 +1339,12 @@ namespace golang::image
 
     // PixOffset returns the index of the first element of Pix that corresponds to
     // the pixel at (x, y).
-    int rec::PixOffset(Alpha16* p, int x, int y)
+    int64_t rec::PixOffset(Alpha16* p, int64_t x, int64_t y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 2;
     }
 
-    void rec::Set(Alpha16* p, int x, int y, color::Color c)
+    void rec::Set(Alpha16* p, int64_t x, int64_t y, color::Color c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1356,7 +1356,7 @@ namespace golang::image
         p->Pix[i + 1] = uint8_t(c1.A);
     }
 
-    void rec::SetRGBA64(Alpha16* p, int x, int y, color::RGBA64 c)
+    void rec::SetRGBA64(Alpha16* p, int64_t x, int64_t y, color::RGBA64 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1367,7 +1367,7 @@ namespace golang::image
         p->Pix[i + 1] = uint8_t(c.A);
     }
 
-    void rec::SetAlpha16(Alpha16* p, int x, int y, color::Alpha16 c)
+    void rec::SetAlpha16(Alpha16* p, int64_t x, int64_t y, color::Alpha16 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1477,19 +1477,19 @@ namespace golang::image
         return p->Rect;
     }
 
-    color::Color rec::At(Gray* p, int x, int y)
+    color::Color rec::At(Gray* p, int64_t x, int64_t y)
     {
         return rec::GrayAt(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 rec::RGBA64At(Gray* p, int x, int y)
+    color::RGBA64 rec::RGBA64At(Gray* p, int64_t x, int64_t y)
     {
         auto gray = uint16_t(rec::GrayAt(gocpp::recv(p), x, y).Y);
         gray |= gray << 8;
         return color::RGBA64 {gray, gray, gray, 0xffff};
     }
 
-    color::Gray rec::GrayAt(Gray* p, int x, int y)
+    color::Gray rec::GrayAt(Gray* p, int64_t x, int64_t y)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1501,12 +1501,12 @@ namespace golang::image
 
     // PixOffset returns the index of the first element of Pix that corresponds to
     // the pixel at (x, y).
-    int rec::PixOffset(Gray* p, int x, int y)
+    int64_t rec::PixOffset(Gray* p, int64_t x, int64_t y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 1;
     }
 
-    void rec::Set(Gray* p, int x, int y, color::Color c)
+    void rec::Set(Gray* p, int64_t x, int64_t y, color::Color c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1516,7 +1516,7 @@ namespace golang::image
         p->Pix[i] = gocpp::getValue<color::Gray>(rec::Convert(gocpp::recv(color::GrayModel), c)).Y;
     }
 
-    void rec::SetRGBA64(Gray* p, int x, int y, color::RGBA64 c)
+    void rec::SetRGBA64(Gray* p, int64_t x, int64_t y, color::RGBA64 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1528,7 +1528,7 @@ namespace golang::image
         p->Pix[i] = uint8_t(gray);
     }
 
-    void rec::SetGray(Gray* p, int x, int y, color::Gray c)
+    void rec::SetGray(Gray* p, int64_t x, int64_t y, color::Gray c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1620,18 +1620,18 @@ namespace golang::image
         return p->Rect;
     }
 
-    color::Color rec::At(Gray16* p, int x, int y)
+    color::Color rec::At(Gray16* p, int64_t x, int64_t y)
     {
         return rec::Gray16At(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 rec::RGBA64At(Gray16* p, int x, int y)
+    color::RGBA64 rec::RGBA64At(Gray16* p, int64_t x, int64_t y)
     {
         auto gray = rec::Gray16At(gocpp::recv(p), x, y).Y;
         return color::RGBA64 {gray, gray, gray, 0xffff};
     }
 
-    color::Gray16 rec::Gray16At(Gray16* p, int x, int y)
+    color::Gray16 rec::Gray16At(Gray16* p, int64_t x, int64_t y)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1643,12 +1643,12 @@ namespace golang::image
 
     // PixOffset returns the index of the first element of Pix that corresponds to
     // the pixel at (x, y).
-    int rec::PixOffset(Gray16* p, int x, int y)
+    int64_t rec::PixOffset(Gray16* p, int64_t x, int64_t y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 2;
     }
 
-    void rec::Set(Gray16* p, int x, int y, color::Color c)
+    void rec::Set(Gray16* p, int64_t x, int64_t y, color::Color c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1660,7 +1660,7 @@ namespace golang::image
         p->Pix[i + 1] = uint8_t(c1.Y);
     }
 
-    void rec::SetRGBA64(Gray16* p, int x, int y, color::RGBA64 c)
+    void rec::SetRGBA64(Gray16* p, int64_t x, int64_t y, color::RGBA64 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1673,7 +1673,7 @@ namespace golang::image
         p->Pix[i + 1] = uint8_t(gray);
     }
 
-    void rec::SetGray16(Gray16* p, int x, int y, color::Gray16 c)
+    void rec::SetGray16(Gray16* p, int64_t x, int64_t y, color::Gray16 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1766,18 +1766,18 @@ namespace golang::image
         return p->Rect;
     }
 
-    color::Color rec::At(CMYK* p, int x, int y)
+    color::Color rec::At(CMYK* p, int64_t x, int64_t y)
     {
         return rec::CMYKAt(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 rec::RGBA64At(CMYK* p, int x, int y)
+    color::RGBA64 rec::RGBA64At(CMYK* p, int64_t x, int64_t y)
     {
         auto [r, g, b, a] = rec::RGBA(gocpp::recv(rec::CMYKAt(gocpp::recv(p), x, y)));
         return color::RGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
     }
 
-    color::CMYK rec::CMYKAt(CMYK* p, int x, int y)
+    color::CMYK rec::CMYKAt(CMYK* p, int64_t x, int64_t y)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1791,12 +1791,12 @@ namespace golang::image
 
     // PixOffset returns the index of the first element of Pix that corresponds to
     // the pixel at (x, y).
-    int rec::PixOffset(CMYK* p, int x, int y)
+    int64_t rec::PixOffset(CMYK* p, int64_t x, int64_t y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 4;
     }
 
-    void rec::Set(CMYK* p, int x, int y, color::Color c)
+    void rec::Set(CMYK* p, int64_t x, int64_t y, color::Color c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1812,7 +1812,7 @@ namespace golang::image
         s[3] = c1.K;
     }
 
-    void rec::SetRGBA64(CMYK* p, int x, int y, color::RGBA64 c)
+    void rec::SetRGBA64(CMYK* p, int64_t x, int64_t y, color::RGBA64 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1828,7 +1828,7 @@ namespace golang::image
         s[3] = kk;
     }
 
-    void rec::SetCMYK(CMYK* p, int x, int y, color::CMYK c)
+    void rec::SetCMYK(CMYK* p, int64_t x, int64_t y, color::CMYK c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1928,7 +1928,7 @@ namespace golang::image
         return p->Rect;
     }
 
-    color::Color rec::At(Paletted* p, int x, int y)
+    color::Color rec::At(Paletted* p, int64_t x, int64_t y)
     {
         if(len(p->Palette) == 0)
         {
@@ -1942,7 +1942,7 @@ namespace golang::image
         return p->Palette[p->Pix[i]];
     }
 
-    color::RGBA64 rec::RGBA64At(Paletted* p, int x, int y)
+    color::RGBA64 rec::RGBA64At(Paletted* p, int64_t x, int64_t y)
     {
         if(len(p->Palette) == 0)
         {
@@ -1969,12 +1969,12 @@ namespace golang::image
 
     // PixOffset returns the index of the first element of Pix that corresponds to
     // the pixel at (x, y).
-    int rec::PixOffset(Paletted* p, int x, int y)
+    int64_t rec::PixOffset(Paletted* p, int64_t x, int64_t y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 1;
     }
 
-    void rec::Set(Paletted* p, int x, int y, color::Color c)
+    void rec::Set(Paletted* p, int64_t x, int64_t y, color::Color c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1984,7 +1984,7 @@ namespace golang::image
         p->Pix[i] = uint8_t(rec::Index(gocpp::recv(p->Palette), c));
     }
 
-    void rec::SetRGBA64(Paletted* p, int x, int y, color::RGBA64 c)
+    void rec::SetRGBA64(Paletted* p, int64_t x, int64_t y, color::RGBA64 c)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1994,7 +1994,7 @@ namespace golang::image
         p->Pix[i] = uint8_t(rec::Index(gocpp::recv(p->Palette), c));
     }
 
-    uint8_t rec::ColorIndexAt(Paletted* p, int x, int y)
+    uint8_t rec::ColorIndexAt(Paletted* p, int64_t x, int64_t y)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -2004,7 +2004,7 @@ namespace golang::image
         return p->Pix[i];
     }
 
-    void rec::SetColorIndex(Paletted* p, int x, int y, uint8_t index)
+    void rec::SetColorIndex(Paletted* p, int64_t x, int64_t y, uint8_t index)
     {
         if(! (rec::In(gocpp::recv(Point {x, y}), p->Rect)))
         {

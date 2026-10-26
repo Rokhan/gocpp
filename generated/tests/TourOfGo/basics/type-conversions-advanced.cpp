@@ -26,7 +26,7 @@ namespace golang::main
     {
     }
 
-    int totoInt()
+    int64_t totoInt()
     {
         return 0;
     }
@@ -149,16 +149,16 @@ namespace golang::main
 
     void main()
     {
-        int x = 3;
-        int y = 4;
+        int64_t x = 3;
+        int64_t y = 4;
         double f = std::sqrt(double(x * x + y * y));
-        unsigned int z1 = (unsigned int)(f);
+        uint64_t z1 = (uint64_t)(f);
         mocklib::Println(x, y, z1);
 
-        unsigned int z2 = (unsigned int)(f);
+        uint64_t z2 = (uint64_t)(f);
         mocklib::Println("z2:"_s, z2);
 
-        unsigned int z3 = (unsigned int)(z2);
+        uint64_t z3 = (uint64_t)(z2);
         mocklib::Println("z2:"_s, z3);
 
         // type any = interface{}
@@ -172,7 +172,7 @@ namespace golang::main
         auto m2 = gocpp::make((gocpp::Tag<gocpp::map<gocpp::string, Vertex>>()));
         auto m3 = gocpp::make((gocpp::Tag<gocpp::map<gocpp::string, Vertex>>()));
 
-        int i = {};
+        int64_t i = {};
         mocklib::Println(m1, m2, m3, i);
     }
 

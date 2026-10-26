@@ -27,7 +27,7 @@ namespace golang::runtime
 {
     uintptr_t packNetpollKey(uint8_t source, pollDesc* pd);
     int32_t netpollopen(uintptr_t fd, pollDesc* pd);
-    void netpollarm(pollDesc* pd, int mode);
+    void netpollarm(pollDesc* pd, int64_t mode);
     std::tuple<gList, int32_t> netpoll(int64_t delay);
 }
 #include "golang/internal/runtime/atomic/types.fwd.h"

@@ -13,23 +13,23 @@
 
 namespace golang::sort
 {
-    void insertionSort(Interface data, int a, int b);
-    void siftDown(Interface data, int lo, int hi, int first);
-    void heapSort(Interface data, int a, int b);
-    void pdqsort(Interface data, int a, int b, int limit);
-    std::tuple<int, bool> partition(Interface data, int a, int b, int pivot);
-    int partitionEqual(Interface data, int a, int b, int pivot);
-    bool partialInsertionSort(Interface data, int a, int b);
-    void breakPatterns(Interface data, int a, int b);
-    std::tuple<int, sortedHint> choosePivot(Interface data, int a, int b);
-    std::tuple<int, int> order2(Interface data, int a, int b, int* swaps);
-    int median(Interface data, int a, int b, int c, int* swaps);
-    int medianAdjacent(Interface data, int a, int* swaps);
-    void reverseRange(Interface data, int a, int b);
-    void swapRange(Interface data, int a, int b, int n);
-    void stable(Interface data, int n);
-    void symMerge(Interface data, int a, int m, int b);
-    void rotate(Interface data, int a, int m, int b);
+    void insertionSort(Interface data, int64_t a, int64_t b);
+    void siftDown(Interface data, int64_t lo, int64_t hi, int64_t first);
+    void heapSort(Interface data, int64_t a, int64_t b);
+    void pdqsort(Interface data, int64_t a, int64_t b, int64_t limit);
+    std::tuple<int64_t, bool> partition(Interface data, int64_t a, int64_t b, int64_t pivot);
+    int64_t partitionEqual(Interface data, int64_t a, int64_t b, int64_t pivot);
+    bool partialInsertionSort(Interface data, int64_t a, int64_t b);
+    void breakPatterns(Interface data, int64_t a, int64_t b);
+    std::tuple<int64_t, sortedHint> choosePivot(Interface data, int64_t a, int64_t b);
+    std::tuple<int64_t, int64_t> order2(Interface data, int64_t a, int64_t b, int64_t* swaps);
+    int64_t median(Interface data, int64_t a, int64_t b, int64_t c, int64_t* swaps);
+    int64_t medianAdjacent(Interface data, int64_t a, int64_t* swaps);
+    void reverseRange(Interface data, int64_t a, int64_t b);
+    void swapRange(Interface data, int64_t a, int64_t b, int64_t n);
+    void stable(Interface data, int64_t n);
+    void symMerge(Interface data, int64_t a, int64_t m, int64_t b);
+    void rotate(Interface data, int64_t a, int64_t m, int64_t b);
 
     namespace rec
     {

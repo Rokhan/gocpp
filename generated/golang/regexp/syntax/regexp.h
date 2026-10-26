@@ -9,6 +9,14 @@
 #include "golang/regexp/syntax/regexp.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::regexp::syntax
+{
+    struct GoTag_Op { };
+    using Op = gocpp::defined<uint8_t, GoTag_Op>;
+    struct GoTag_printFlags { };
+    using printFlags = gocpp::defined<uint8_t, GoTag_printFlags>;
+}
 #include "golang/regexp/syntax/parse.h"
 
 namespace golang::regexp::syntax
@@ -21,9 +29,9 @@ namespace golang::regexp::syntax
         gocpp::array<Regexp*, 1> Sub0{}; // storage for short Sub
         gocpp::slice<gocpp::rune> Rune{}; // matched runes, for OpLiteral, OpCharClass
         gocpp::array<gocpp::rune, 2> Rune0{}; // storage for short Rune
-        int Min{}; // min, max for OpRepeat
-        int Max{};
-        int Cap{}; // capturing index, for OpCapture
+        int64_t Min{}; // min, max for OpRepeat
+        int64_t Max{};
+        int64_t Cap{}; // capturing index, for OpCapture
         gocpp::string Name{}; // capturing name, for OpCapture
 
         using isGoStruct = void;
@@ -54,7 +62,7 @@ namespace golang::regexp::syntax
     {
         bool Equal(Regexp* x, Regexp* y);
         gocpp::string String(Regexp* re);
-        int MaxCap(Regexp* re);
+        int64_t MaxCap(Regexp* re);
         gocpp::slice<gocpp::string> CapNames(Regexp* re);
         void capNames(Regexp* re, gocpp::slice<gocpp::string> names);
     }

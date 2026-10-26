@@ -65,13 +65,13 @@ namespace golang::strings
 
     // Len returns the number of bytes of the unread portion of the
     // string.
-    int rec::Len(Reader* r)
+    int64_t rec::Len(Reader* r)
     {
         if(r->i >= int64_t(len(r->s)))
         {
             return 0;
         }
-        return int(int64_t(len(r->s)) - r->i);
+        return int64_t(int64_t(len(r->s)) - r->i);
     }
 
     // Size returns the original length of the underlying string.
@@ -84,9 +84,9 @@ namespace golang::strings
     }
 
     // Read implements the [io.Reader] interface.
-    std::tuple<int, gocpp::error> rec::Read(Reader* r, gocpp::slice<unsigned char> b)
+    std::tuple<int64_t, gocpp::error> rec::Read(Reader* r, gocpp::slice<unsigned char> b)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         if(r->i >= int64_t(len(r->s)))
         {
@@ -99,9 +99,9 @@ namespace golang::strings
     }
 
     // ReadAt implements the [io.ReaderAt] interface.
-    std::tuple<int, gocpp::error> rec::ReadAt(Reader* r, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int64_t, gocpp::error> rec::ReadAt(Reader* r, gocpp::slice<unsigned char> b, int64_t off)
     {
-        int n;
+        int64_t n;
         gocpp::error err;
         // cannot modify state - see io.ReaderAt
         if(off < 0)
@@ -146,17 +146,17 @@ namespace golang::strings
     }
 
     // ReadRune implements the [io.RuneReader] interface.
-    std::tuple<gocpp::rune, int, gocpp::error> rec::ReadRune(Reader* r)
+    std::tuple<gocpp::rune, int64_t, gocpp::error> rec::ReadRune(Reader* r)
     {
         gocpp::rune ch;
-        int size;
+        int64_t size;
         gocpp::error err;
         if(r->i >= int64_t(len(r->s)))
         {
             r->prevRune = - 1;
             return {0, 0, io::go_EOF};
         }
-        r->prevRune = int(r->i);
+        r->prevRune = int64_t(r->i);
         std::tie(ch, size) = utf8::DecodeRuneInString(r->s.make_slice(r->i));
         r->i += int64_t(size);
         return {ch, size, err};
@@ -179,7 +179,7 @@ namespace golang::strings
     }
 
     // Seek implements the [io.Seeker] interface.
-    std::tuple<int64_t, gocpp::error> rec::Seek(Reader* r, int64_t offset, int whence)
+    std::tuple<int64_t, gocpp::error> rec::Seek(Reader* r, int64_t offset, int64_t whence)
     {
         r->prevRune = - 1;
         int64_t abs = {};
@@ -225,7 +225,7 @@ namespace golang::strings
             return {0, nullptr};
         }
         auto s = r->s.make_slice(r->i);
-        int m;
+        int64_t m;
         std::tie(m, err) = io::WriteString(w, s);
         if(m > len(s))
         {

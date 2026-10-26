@@ -7,5 +7,5 @@
 namespace golang::internal::strconv
 {
     struct floatInfo;
-    const gocpp::string fnParseFloat = "ParseFloat"_s;
+    inline const gocpp::string fnParseFloat = "ParseFloat"_s;
 }

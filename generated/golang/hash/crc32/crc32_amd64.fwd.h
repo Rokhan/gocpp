@@ -6,8 +6,8 @@
 
 namespace golang::hash::crc32
 {
-    const long castagnoliK1 = 168;
-    const long castagnoliK2 = 1344;
+    inline constexpr long castagnoliK1 = 168;
+    inline constexpr long castagnoliK2 = 1344;
     struct GoTag_sse42Table;
 }
 #include "golang/hash/crc32/crc32.fwd.h"

@@ -22,7 +22,7 @@ namespace golang::main
 
     void main()
     {
-        gocpp::slice<int> s = {};
+        gocpp::slice<int64_t> s = {};
         mocklib::Println(s, len(s), cap(s));
         if(s == nullptr)
         {

@@ -20,5 +20,5 @@ namespace golang::strconv
 {
     namespace strconv = golang::internal::strconv;
     // IntSize is the size in bits of an int or uint value.
-    const int IntSize = strconv::IntSize;
+    inline constexpr int64_t IntSize = strconv::IntSize;
 }

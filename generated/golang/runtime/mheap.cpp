@@ -655,7 +655,7 @@ namespace golang::runtime
 
         if(len(h->allspans) >= cap(h->allspans))
         {
-            auto n = 64 * 1024 / goarch::PtrSize;
+            int64_t n = 64 * 1024 / goarch::PtrSize;
             if(n < cap(h->allspans) * 3 / 2)
             {
                 n = cap(h->allspans) * 3 / 2;
@@ -737,7 +737,7 @@ namespace golang::runtime
     // functions.
     //
     //go:nosplit
-    unsigned int rec::l1(arenaIdx i)
+    uint64_t rec::l1(arenaIdx i)
     {
         if(arenaL1Bits == 0)
         {
@@ -747,7 +747,7 @@ namespace golang::runtime
         }
         else
         {
-            return (unsigned int)(i) >> arenaL1Shift;
+            return (uint64_t)(i) >> arenaL1Shift;
         }
     }
 
@@ -757,15 +757,15 @@ namespace golang::runtime
     // functions.
     //
     //go:nosplit
-    unsigned int rec::l2(arenaIdx i)
+    uint64_t rec::l2(arenaIdx i)
     {
         if(arenaL1Bits == 0)
         {
-            return (unsigned int)(i);
+            return (uint64_t)(i);
         }
         else
         {
-            return (unsigned int)(i) & ((1 << arenaL2Bits) - 1);
+            return (uint64_t)(i) & ((1 << arenaL2Bits) - 1);
         }
     }
 
@@ -833,7 +833,7 @@ namespace golang::runtime
         if(arenaL1Bits == 0)
         {
             // If there's no L1, then ri.l1() can't be out of bounds but ri.l2() can.
-            if(rec::l2(gocpp::recv(ri)) >= (unsigned int)(len(mheap_.arenas[0])))
+            if(rec::l2(gocpp::recv(ri)) >= (uint64_t)(len(mheap_.arenas[0])))
             {
                 return nullptr;
             }
@@ -841,7 +841,7 @@ namespace golang::runtime
         else
         {
             // If there's an L1, then ri.l1() can be out of bounds but ri.l2() can't.
-            if(rec::l1(gocpp::recv(ri)) >= (unsigned int)(len(mheap_.arenas)))
+            if(rec::l1(gocpp::recv(ri)) >= (uint64_t)(len(mheap_.arenas)))
             {
                 return nullptr;
             }
@@ -914,7 +914,7 @@ namespace golang::runtime
         if(arenaL1Bits == 0)
         {
             // If there's no L1, then ri.l1() can't be out of bounds but ri.l2() can.
-            if(rec::l2(gocpp::recv(ri)) >= (unsigned int)(len(mheap_.arenas[0])))
+            if(rec::l2(gocpp::recv(ri)) >= (uint64_t)(len(mheap_.arenas[0])))
             {
                 return nullptr;
             }
@@ -922,7 +922,7 @@ namespace golang::runtime
         else
         {
             // If there's an L1, then ri.l1() can be out of bounds but ri.l2() can't.
-            if(rec::l1(gocpp::recv(ri)) >= (unsigned int)(len(mheap_.arenas)))
+            if(rec::l1(gocpp::recv(ri)) >= (uint64_t)(len(mheap_.arenas)))
             {
                 return nullptr;
             }
@@ -1007,7 +1007,7 @@ namespace golang::runtime
         }
 
         auto arenas = h->sweepArenas;
-        auto locked = false;
+        bool locked = false;
         for(; npage > 0; )
         {
             // Pull from accumulated credit first.
@@ -1097,7 +1097,7 @@ namespace golang::runtime
             auto ha = h->arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
 
             // Get a chunk of the bitmap to work on.
-            auto arenaPage = (unsigned int)(pageIdx % pagesPerArena);
+            auto arenaPage = (uint64_t)(pageIdx % pagesPerArena);
             auto inUse = ha->pageInUse.make_slice(arenaPage / 8);
             auto marked = ha->pageMarks.make_slice(arenaPage / 8);
             if(uintptr_t(len(inUse)) > n / 8)
@@ -1116,11 +1116,11 @@ namespace golang::runtime
                     continue;
                 }
 
-                for(auto j = (unsigned int)(0); j < 8; j++)
+                for(uint64_t j = (uint64_t)(0); j < 8; j++)
                 {
                     if(inUseUnmarked & (1 << j) != 0)
                     {
-                        auto s = ha->spans[arenaPage + (unsigned int)(i) * 8 + j];
+                        auto s = ha->spans[arenaPage + (uint64_t)(i) * 8 + j];
                         {
                             auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
                             if(auto& s = s_tmp; ok)
@@ -1229,7 +1229,7 @@ namespace golang::runtime
         auto p = base / pageSize;
         auto ai = arenaIndex(base);
         auto ha = h->arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
-        for(auto n = uintptr_t(0); n < npage; n++)
+        for(uintptr_t n = uintptr_t(0); n < npage; n++)
         {
             auto i = (p + n) % pagesPerArena;
             if(i == 0)
@@ -1365,7 +1365,7 @@ namespace golang::runtime
         if(pp->mspancache.len == 0)
         {
             auto refillCount = len(pp->mspancache.buf) / 2;
-            for(auto i = 0; i < refillCount; i++)
+            for(int64_t i = 0; i < refillCount; i++)
             {
                 pp->mspancache.buf[i] = (mspan*)(rec::alloc(gocpp::recv(h->spanalloc)));
             }
@@ -1427,7 +1427,7 @@ namespace golang::runtime
         // Function-global state.
         auto gp = getg();
         auto [base, scav] = std::tuple{uintptr_t(0), uintptr_t(0)};
-        auto growth = uintptr_t(0);
+        uintptr_t growth = uintptr_t(0);
 
         // On some platforms we need to provide physical page aligned stack
         // allocations. Where the page size is less than the physical page
@@ -1538,8 +1538,8 @@ namespace golang::runtime
         // It's fine to do this after allocating because we expect any scavenged
         // pages not to get touched until we return. Simultaneously, it's important
         // to do this before calling sysUsed because that may commit address space.
-        auto bytesToScavenge = uintptr_t(0);
-        auto forceScavenge = false;
+        uintptr_t bytesToScavenge = uintptr_t(0);
+        bool forceScavenge = false;
         if(auto limit = rec::Load(gocpp::recv(gcController.memoryLimit)); ! rec::limiting(gocpp::recv(gcCPULimiter)))
         {
             // Assist with scavenging to maintain the memory limit by the amount
@@ -1817,7 +1817,7 @@ namespace golang::runtime
         // won't be calling it too much.
         auto ask = alignUp(npage, pallocChunkPages) * pageSize;
 
-        auto totalGrowth = uintptr_t(0);
+        uintptr_t totalGrowth = uintptr_t(0);
         // This may overflow because ask could be very large
         // and is otherwise unrelated to h.curArena.base.
         auto end = h->curArena.base + ask;
@@ -1871,7 +1871,7 @@ namespace golang::runtime
                     // want to randomize the next
                     // logHeapArenaBytes-log2(pallocChunkBytes) bits, making sure
                     // h.curArena.base is aligned to pallocChunkBytes.
-                    auto bits = logHeapArenaBytes - logPallocChunkBytes;
+                    int64_t bits = logHeapArenaBytes - logPallocChunkBytes;
                     auto offset = nextHeapRandBits(bits);
                     h->curArena.base = alignDown(h->curArena.base | (offset << logPallocChunkBytes), pallocChunkBytes);
                 }
@@ -2452,7 +2452,7 @@ namespace golang::runtime
     {
         // Find splice point, check for existing record.
         auto iter = & span->specials;
-        auto found = false;
+        bool found = false;
         for(; ; )
         {
             auto s = *iter;

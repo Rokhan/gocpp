@@ -13,23 +13,23 @@
 
 namespace golang::sort
 {
-    void insertionSort_func(lessSwap data, int a, int b);
-    void siftDown_func(lessSwap data, int lo, int hi, int first);
-    void heapSort_func(lessSwap data, int a, int b);
-    void pdqsort_func(lessSwap data, int a, int b, int limit);
-    std::tuple<int, bool> partition_func(lessSwap data, int a, int b, int pivot);
-    int partitionEqual_func(lessSwap data, int a, int b, int pivot);
-    bool partialInsertionSort_func(lessSwap data, int a, int b);
-    void breakPatterns_func(lessSwap data, int a, int b);
-    std::tuple<int, sortedHint> choosePivot_func(lessSwap data, int a, int b);
-    std::tuple<int, int> order2_func(lessSwap data, int a, int b, int* swaps);
-    int median_func(lessSwap data, int a, int b, int c, int* swaps);
-    int medianAdjacent_func(lessSwap data, int a, int* swaps);
-    void reverseRange_func(lessSwap data, int a, int b);
-    void swapRange_func(lessSwap data, int a, int b, int n);
-    void stable_func(lessSwap data, int n);
-    void symMerge_func(lessSwap data, int a, int m, int b);
-    void rotate_func(lessSwap data, int a, int m, int b);
+    void insertionSort_func(lessSwap data, int64_t a, int64_t b);
+    void siftDown_func(lessSwap data, int64_t lo, int64_t hi, int64_t first);
+    void heapSort_func(lessSwap data, int64_t a, int64_t b);
+    void pdqsort_func(lessSwap data, int64_t a, int64_t b, int64_t limit);
+    std::tuple<int64_t, bool> partition_func(lessSwap data, int64_t a, int64_t b, int64_t pivot);
+    int64_t partitionEqual_func(lessSwap data, int64_t a, int64_t b, int64_t pivot);
+    bool partialInsertionSort_func(lessSwap data, int64_t a, int64_t b);
+    void breakPatterns_func(lessSwap data, int64_t a, int64_t b);
+    std::tuple<int64_t, sortedHint> choosePivot_func(lessSwap data, int64_t a, int64_t b);
+    std::tuple<int64_t, int64_t> order2_func(lessSwap data, int64_t a, int64_t b, int64_t* swaps);
+    int64_t median_func(lessSwap data, int64_t a, int64_t b, int64_t c, int64_t* swaps);
+    int64_t medianAdjacent_func(lessSwap data, int64_t a, int64_t* swaps);
+    void reverseRange_func(lessSwap data, int64_t a, int64_t b);
+    void swapRange_func(lessSwap data, int64_t a, int64_t b, int64_t n);
+    void stable_func(lessSwap data, int64_t n);
+    void symMerge_func(lessSwap data, int64_t a, int64_t m, int64_t b);
+    void rotate_func(lessSwap data, int64_t a, int64_t m, int64_t b);
 
     namespace rec
     {

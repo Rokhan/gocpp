@@ -9,21 +9,21 @@ namespace golang::internal::abi
     // Map constants common to several packages
     // runtime/runtime-gdb.py:MapTypePrinter contains its own copy
     // Number of bits in the group.slot count.
-    const long MapGroupSlotsBits = 3;
+    inline constexpr long MapGroupSlotsBits = 3;
     // Maximum key or elem size to keep inline (instead of mallocing per element).
     // Must fit in a uint8.
-    const long MapMaxKeyBytes = 128;
-    const long MapMaxElemBytes = 128;
-    const long ctrlEmpty = 0b10000000;
-    const long bitsetLSB = 0x0101010101010101;
+    inline constexpr long MapMaxKeyBytes = 128;
+    inline constexpr long MapMaxElemBytes = 128;
+    inline constexpr long ctrlEmpty = 0b10000000;
+    inline constexpr long bitsetLSB = 0x0101010101010101LL;
     struct MapType;
     // Flag values
-    const int MapNeedKeyUpdate = 1 << 0;
-    const int MapHashMightPanic = 1 << 1;
-    const int MapIndirectKey = 1 << 2;
-    const int MapIndirectElem = 1 << 3;
+    inline constexpr int64_t MapNeedKeyUpdate = 1 << 0;
+    inline constexpr int64_t MapHashMightPanic = 1 << 1;
+    inline constexpr int64_t MapIndirectKey = 1 << 2;
+    inline constexpr int64_t MapIndirectElem = 1 << 3;
     // Number of slots in a group.
-    const int MapGroupSlots = 1 << MapGroupSlotsBits;
+    inline constexpr int64_t MapGroupSlots = 1 << MapGroupSlotsBits;
     // Value of control word with all empty slots.
-    const uint64_t MapCtrlEmpty = bitsetLSB * uint64_t(ctrlEmpty);
+    inline constexpr uint64_t MapCtrlEmpty = int64_t(bitsetLSB) * uint64_t(int64_t(ctrlEmpty));
 }

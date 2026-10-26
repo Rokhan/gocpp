@@ -31,10 +31,10 @@ namespace golang::math
     //	Frexp(±0) = ±0, 0
     //	Frexp(±Inf) = ±Inf, 0
     //	Frexp(NaN) = NaN, 0
-    std::tuple<double, int> Frexp(double f)
+    std::tuple<double, int64_t> Frexp(double f)
     {
         double frac;
-        int exp;
+        int64_t exp;
         if(haveArchFrexp)
         {
             return archFrexp(f);
@@ -42,10 +42,10 @@ namespace golang::math
         return frexp(f);
     }
 
-    std::tuple<double, int> frexp(double f)
+    std::tuple<double, int64_t> frexp(double f)
     {
         double frac;
-        int exp;
+        int64_t exp;
         // special cases
         //Go switch emulation
         {
@@ -65,7 +65,7 @@ namespace golang::math
         }
         std::tie(f, exp) = normalize(f);
         auto x = Float64bits(f);
-        exp += int((x >> shift) & mask) - bias + 1;
+        exp += int64_t((x >> shift) & mask) - bias + 1;
         x &^= mask << shift;
         x |= (- 1 + bias) << shift;
         frac = Float64frombits(x);

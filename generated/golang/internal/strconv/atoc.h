@@ -12,7 +12,7 @@
 
 namespace golang::internal::strconv
 {
-    std::tuple<struct gocpp::complex128, gocpp::error> ParseComplex(gocpp::string s, int bitSize);
+    std::tuple<struct gocpp::complex128, gocpp::error> ParseComplex(gocpp::string s, int64_t bitSize);
 
     namespace rec
     {

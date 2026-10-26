@@ -39,7 +39,7 @@ namespace golang::math::big
     uint64_t low64(golang::math::big::nat x);
     golang::math::big::Int* NewInt(int64_t x);
     std::tuple<golang::math::big::Int*, golang::math::big::Int*, golang::math::big::Int*, golang::math::big::Int*, golang::math::big::Int*> euclidUpdate(golang::math::big::Int* A, golang::math::big::Int* B, golang::math::big::Int* Ua, golang::math::big::Int* Ub, golang::math::big::Int* q, golang::math::big::Int* r, bool extended);
-    int Jacobi(golang::math::big::Int* x, golang::math::big::Int* y);
+    int64_t Jacobi(golang::math::big::Int* x, golang::math::big::Int* y);
 }
 #include "golang/math/big/arith.h"
 
@@ -63,7 +63,7 @@ namespace golang::math::big
 
     namespace rec
     {
-        int Sign(golang::math::big::Int* x);
+        int64_t Sign(golang::math::big::Int* x);
         golang::math::big::Int* SetInt64(golang::math::big::Int* z, int64_t x);
         golang::math::big::Int* SetUint64(golang::math::big::Int* z, uint64_t x);
         golang::math::big::Int* Set(golang::math::big::Int* z, golang::math::big::Int* x);
@@ -84,20 +84,20 @@ namespace golang::math::big
         golang::math::big::Int* Mod(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y);
         std::tuple<golang::math::big::Int*, golang::math::big::Int*> DivMod(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* m);
         std::tuple<golang::math::big::Int*, golang::math::big::Int*> Divide(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* r, RoundingMode mode);
-        int Cmp(golang::math::big::Int* x, golang::math::big::Int* y);
-        int CmpAbs(golang::math::big::Int* x, golang::math::big::Int* y);
+        int64_t Cmp(golang::math::big::Int* x, golang::math::big::Int* y);
+        int64_t CmpAbs(golang::math::big::Int* x, golang::math::big::Int* y);
         int64_t Int64(golang::math::big::Int* x);
         uint64_t Uint64(golang::math::big::Int* x);
         bool IsInt64(golang::math::big::Int* x);
         bool IsUint64(golang::math::big::Int* x);
         std::tuple<double, Accuracy> Float64(golang::math::big::Int* x);
-        std::tuple<golang::math::big::Int*, bool> SetString(golang::math::big::Int* z, gocpp::string s, int base);
-        std::tuple<golang::math::big::Int*, bool> setFromScanner(golang::math::big::Int* z, io::ByteScanner r, int base);
+        std::tuple<golang::math::big::Int*, bool> SetString(golang::math::big::Int* z, gocpp::string s, int64_t base);
+        std::tuple<golang::math::big::Int*, bool> setFromScanner(golang::math::big::Int* z, io::ByteScanner r, int64_t base);
         golang::math::big::Int* SetBytes(golang::math::big::Int* z, gocpp::slice<unsigned char> buf);
         gocpp::slice<unsigned char> Bytes(golang::math::big::Int* x);
         gocpp::slice<unsigned char> FillBytes(golang::math::big::Int* x, gocpp::slice<unsigned char> buf);
-        int BitLen(golang::math::big::Int* x);
-        unsigned int TrailingZeroBits(golang::math::big::Int* x);
+        int64_t BitLen(golang::math::big::Int* x);
+        uint64_t TrailingZeroBits(golang::math::big::Int* x);
         golang::math::big::Int* Exp(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* m);
         golang::math::big::Int* expSlow(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* m);
         golang::math::big::Int* exp(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y, golang::math::big::Int* m, bool slow);
@@ -110,10 +110,10 @@ namespace golang::math::big
         golang::math::big::Int* modSqrt5Mod8Prime(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* p);
         golang::math::big::Int* modSqrtTonelliShanks(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* p);
         golang::math::big::Int* ModSqrt(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* p);
-        golang::math::big::Int* Lsh(golang::math::big::Int* z, golang::math::big::Int* x, unsigned int n);
-        golang::math::big::Int* Rsh(golang::math::big::Int* z, golang::math::big::Int* x, unsigned int n);
-        unsigned int Bit(golang::math::big::Int* x, int i);
-        golang::math::big::Int* SetBit(golang::math::big::Int* z, golang::math::big::Int* x, int i, unsigned int b);
+        golang::math::big::Int* Lsh(golang::math::big::Int* z, golang::math::big::Int* x, uint64_t n);
+        golang::math::big::Int* Rsh(golang::math::big::Int* z, golang::math::big::Int* x, uint64_t n);
+        uint64_t Bit(golang::math::big::Int* x, int64_t i);
+        golang::math::big::Int* SetBit(golang::math::big::Int* z, golang::math::big::Int* x, int64_t i, uint64_t b);
         golang::math::big::Int* And(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y);
         golang::math::big::Int* AndNot(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y);
         golang::math::big::Int* Or(golang::math::big::Int* z, golang::math::big::Int* x, golang::math::big::Int* y);

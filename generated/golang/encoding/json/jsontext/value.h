@@ -12,7 +12,7 @@
 
 namespace golang::encoding::json::jsontext
 {
-    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double src, int bits);
+    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double src, int64_t bits);
     struct GoTag_Value { };
     using Value = gocpp::defined<gocpp::slice<unsigned char>, GoTag_Value>;
     struct objectMember
@@ -154,7 +154,7 @@ namespace golang::encoding::json::jsontext
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(Value v);
         gocpp::error UnmarshalJSON(Value* v, gocpp::slice<unsigned char> b);
         golang::encoding::json::jsontext::Kind Kind(Value v);
-        int Compare(objectMember x, objectMember y);
+        int64_t Compare(objectMember x, objectMember y);
     }
 }
 

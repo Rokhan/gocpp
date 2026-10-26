@@ -6,5 +6,5 @@
 
 namespace golang::math
 {
-    const bool haveArchLog = true;
+    inline constexpr bool haveArchLog = true;
 }

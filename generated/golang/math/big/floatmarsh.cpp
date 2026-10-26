@@ -41,14 +41,14 @@ namespace golang::math::big
 
         // determine max. space (bytes) required for encoding
         // version + mode|acc|form|neg (3+2+2+1bit) + prec
-        auto sz = 1 + 1 + 4;
+        int64_t sz = 1 + 1 + 4;
         // number of mantissa words
-        auto n = 0;
+        int64_t n = 0;
         if(x->form == finite)
         {
             // add space for mantissa and exponent
             // required mantissa length in words for given precision
-            n = int((x->prec + (_W - 1)) / _W);
+            n = int64_t((x->prec + (_W - 1)) / _W);
             // actual mantissa slice could be shorter (trailing 0's) or longer (unused bits):
             // - if shorter, only encode the words present
             // - if longer, cut off unused words when encoding in bytes
@@ -128,7 +128,7 @@ namespace golang::math::big
         if(oldPrec != 0)
         {
             z->mode = oldMode;
-            rec::SetPrec(gocpp::recv(z), (unsigned int)(oldPrec));
+            rec::SetPrec(gocpp::recv(z), (uint64_t)(oldPrec));
         }
 
         if(auto msg = rec::validate0(gocpp::recv(z)); msg != ""_s)

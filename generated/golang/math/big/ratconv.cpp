@@ -135,9 +135,9 @@ namespace golang::math::big
             }
 
             // mantissa
-            int base = {};
+            int64_t base = {};
             // fractional digit count; valid if <= 0
-            int fcount = {};
+            int64_t fcount = {};
             std::tie(z->a.abs, base, fcount, err) = rec::scan(gocpp::recv(z->a.abs), r, 0, true);
             if(err != nullptr)
             {
@@ -146,7 +146,7 @@ namespace golang::math::big
 
             // exponent
             int64_t exp = {};
-            int ebase = {};
+            int64_t ebase = {};
             std::tie(exp, ebase, err) = scanExponent(r, true, true);
             if(err != nullptr)
             {
@@ -289,12 +289,12 @@ namespace golang::math::big
             }
             if(exp2 > 0)
             {
-                z->a.abs = rec::lsh(gocpp::recv(z->a.abs), z->a.abs, (unsigned int)(exp2));
+                z->a.abs = rec::lsh(gocpp::recv(z->a.abs), z->a.abs, (uint64_t)(exp2));
             }
             else
             if(exp2 < 0)
             {
-                z->b.abs = rec::lsh(gocpp::recv(z->b.abs), z->b.abs, (unsigned int)(- exp2));
+                z->b.abs = rec::lsh(gocpp::recv(z->b.abs), z->b.abs, (uint64_t)(- exp2));
             }
 
             // 0 has no sign
@@ -324,10 +324,10 @@ namespace golang::math::big
     //	digit    = "0" ... "9" .
     //
     // A base 2 exponent is only permitted if base2ok is set.
-    std::tuple<int64_t, int, gocpp::error> scanExponent(io::ByteScanner r, bool base2ok, bool sepOk)
+    std::tuple<int64_t, int64_t, gocpp::error> scanExponent(io::ByteScanner r, bool base2ok, bool sepOk)
     {
         int64_t exp;
-        int base;
+        int64_t base;
         gocpp::error err;
         // one char look-ahead
         unsigned char ch;
@@ -388,11 +388,11 @@ namespace golang::math::big
         // prev encodes the previously seen char: it is one
         // of '_', '0' (a digit), or '.' (anything else). A
         // valid separator '_' may only occur after a digit.
-        auto prev = '.';
-        auto invalSep = false;
+        gocpp::rune prev = '.';
+        bool invalSep = false;
 
         // exponent value
-        auto hasDigits = false;
+        bool hasDigits = false;
         for(; err == nullptr; )
         {
             if('0' <= ch && ch <= '9')
@@ -478,7 +478,7 @@ namespace golang::math::big
     // FloatString returns a string representation of x in decimal form with prec
     // digits of precision after the radix point. The last digit is rounded to
     // nearest, with halves rounded away from zero.
-    gocpp::string rec::FloatString(golang::math::big::Rat* x, int prec)
+    gocpp::string rec::FloatString(golang::math::big::Rat* x, int64_t prec)
     {
         gocpp::Defer defer;
         try
@@ -567,9 +567,9 @@ namespace golang::math::big
     //	1/3    0    false    0       (0.333... rounded)
     //	1/4    2    true     0.25
     //	1/6    1    false    0.2     (0.166... rounded)
-    std::tuple<int, bool> rec::FloatPrec(golang::math::big::Rat* x)
+    std::tuple<int64_t, bool> rec::FloatPrec(golang::math::big::Rat* x)
     {
-        int n;
+        int64_t n;
         bool exact;
         gocpp::Defer defer;
         try
@@ -626,7 +626,7 @@ namespace golang::math::big
             // because f·f is the next higher table entry, contradicting
             // how f was chosen in the first place.
             // The same reasoning applies to the subsequent factors.
-            unsigned int p5 = {};
+            uint64_t p5 = {};
             for(auto i = len(tab) - 1; i >= 0; i--)
             {
                 if(std::tie(t, r) = rec::div(gocpp::recv(t), stk, r, q, tab[i]); len(r) == 0)
@@ -648,7 +648,7 @@ namespace golang::math::big
                 q = rec::set(gocpp::recv(q), t);
             }
 
-            return {int(gocpp::max(p2, p5)), rec::cmp(gocpp::recv(q), natOne) == 0};
+            return {int64_t(gocpp::max(p2, p5)), rec::cmp(gocpp::recv(q), natOne) == 0};
         }
         catch(gocpp::GoPanic& gp)
         {

@@ -142,7 +142,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void cgoCheckSliceCopy(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, int n)
+    void cgoCheckSliceCopy(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, int64_t n)
     {
         if(! rec::Pointers(gocpp::recv(typ)))
         {
@@ -157,7 +157,7 @@ namespace golang::runtime
             return;
         }
         auto p = src;
-        for(auto i = 0; i < n; i++)
+        for(int64_t i = 0; i < n; i++)
         {
             cgoCheckTypedBlock(typ, p, 0, typ->Size_);
             p = add(p, typ->Size_);
@@ -200,7 +200,7 @@ namespace golang::runtime
         off -= skipBytes;
         size += off;
         uint32_t bits = {};
-        for(auto i = uintptr_t(0); i < size; i += goarch::PtrSize)
+        for(uintptr_t i = uintptr_t(0); i < size; i += goarch::PtrSize)
         {
             if(i & (goarch::PtrSize * 8 - 1) == 0)
             {

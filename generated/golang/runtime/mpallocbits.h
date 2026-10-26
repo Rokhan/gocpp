@@ -14,7 +14,7 @@ namespace golang::runtime
 {
     struct GoTag_pageBits { };
     struct GoTag_pallocBits { };
-    unsigned int findBitRange64(uint64_t c, unsigned int n);
+    uint64_t findBitRange64(uint64_t c, uint64_t n);
 }
 #include "golang/runtime/mpagealloc.fwd.h"
 
@@ -46,16 +46,16 @@ namespace golang::runtime
     namespace rec
     {
         void allocAll(const gocpp::PtrRecv<struct pallocData, false>& self);
-        void allocPages64(const gocpp::PtrRecv<struct pallocData, false>& self, unsigned int i, uint64_t alloc);
-        void allocRange(const gocpp::PtrRecv<struct pallocData, false>& self, unsigned int i, unsigned int n);
-        std::tuple<unsigned int, unsigned int> find(const gocpp::PtrRecv<struct pallocData, false>& self, uintptr_t npages, unsigned int searchIdx);
-        unsigned int find1(const gocpp::PtrRecv<struct pallocData, false>& self, unsigned int searchIdx);
-        std::tuple<unsigned int, unsigned int> findLargeN(const gocpp::PtrRecv<struct pallocData, false>& self, uintptr_t npages, unsigned int searchIdx);
-        std::tuple<unsigned int, unsigned int> findSmallN(const gocpp::PtrRecv<struct pallocData, false>& self, uintptr_t npages, unsigned int searchIdx);
-        void free(const gocpp::PtrRecv<struct pallocData, false>& self, unsigned int i, unsigned int n);
-        void free1(const gocpp::PtrRecv<struct pallocData, false>& self, unsigned int i);
+        void allocPages64(const gocpp::PtrRecv<struct pallocData, false>& self, uint64_t i, uint64_t alloc);
+        void allocRange(const gocpp::PtrRecv<struct pallocData, false>& self, uint64_t i, uint64_t n);
+        std::tuple<uint64_t, uint64_t> find(const gocpp::PtrRecv<struct pallocData, false>& self, uintptr_t npages, uint64_t searchIdx);
+        uint64_t find1(const gocpp::PtrRecv<struct pallocData, false>& self, uint64_t searchIdx);
+        std::tuple<uint64_t, uint64_t> findLargeN(const gocpp::PtrRecv<struct pallocData, false>& self, uintptr_t npages, uint64_t searchIdx);
+        std::tuple<uint64_t, uint64_t> findSmallN(const gocpp::PtrRecv<struct pallocData, false>& self, uintptr_t npages, uint64_t searchIdx);
+        void free(const gocpp::PtrRecv<struct pallocData, false>& self, uint64_t i, uint64_t n);
+        void free1(const gocpp::PtrRecv<struct pallocData, false>& self, uint64_t i);
         void freeAll(const gocpp::PtrRecv<struct pallocData, false>& self);
-        uint64_t pages64(const gocpp::PtrRecv<struct pallocData, false>& self, unsigned int i);
+        uint64_t pages64(const gocpp::PtrRecv<struct pallocData, false>& self, uint64_t i);
         pallocSum summarize(const gocpp::PtrRecv<struct pallocData, false>& self);
     }
 
@@ -69,30 +69,30 @@ namespace golang::runtime
 
     namespace rec
     {
-        unsigned int get(gocpp::array_ptr<pageBits> b, unsigned int i);
-        uint64_t block64(gocpp::array_ptr<pageBits> b, unsigned int i);
-        void set(gocpp::array_ptr<pageBits> b, unsigned int i);
-        void setRange(gocpp::array_ptr<pageBits> b, unsigned int i, unsigned int n);
+        uint64_t get(gocpp::array_ptr<pageBits> b, uint64_t i);
+        uint64_t block64(gocpp::array_ptr<pageBits> b, uint64_t i);
+        void set(gocpp::array_ptr<pageBits> b, uint64_t i);
+        void setRange(gocpp::array_ptr<pageBits> b, uint64_t i, uint64_t n);
         void setAll(gocpp::array_ptr<pageBits> b);
-        void setBlock64(gocpp::array_ptr<pageBits> b, unsigned int i, uint64_t v);
-        void clear(gocpp::array_ptr<pageBits> b, unsigned int i);
-        void clearRange(gocpp::array_ptr<pageBits> b, unsigned int i, unsigned int n);
+        void setBlock64(gocpp::array_ptr<pageBits> b, uint64_t i, uint64_t v);
+        void clear(gocpp::array_ptr<pageBits> b, uint64_t i);
+        void clearRange(gocpp::array_ptr<pageBits> b, uint64_t i, uint64_t n);
         void clearAll(gocpp::array_ptr<pageBits> b);
-        void clearBlock64(gocpp::array_ptr<pageBits> b, unsigned int i, uint64_t v);
-        unsigned int popcntRange(gocpp::array_ptr<pageBits> b, unsigned int i, unsigned int n);
+        void clearBlock64(gocpp::array_ptr<pageBits> b, uint64_t i, uint64_t v);
+        uint64_t popcntRange(gocpp::array_ptr<pageBits> b, uint64_t i, uint64_t n);
         pallocSum summarize(gocpp::array_ptr<pallocBits> b);
-        std::tuple<unsigned int, unsigned int> find(gocpp::array_ptr<pallocBits> b, uintptr_t npages, unsigned int searchIdx);
-        unsigned int find1(gocpp::array_ptr<pallocBits> b, unsigned int searchIdx);
-        std::tuple<unsigned int, unsigned int> findSmallN(gocpp::array_ptr<pallocBits> b, uintptr_t npages, unsigned int searchIdx);
-        std::tuple<unsigned int, unsigned int> findLargeN(gocpp::array_ptr<pallocBits> b, uintptr_t npages, unsigned int searchIdx);
-        void allocRange(gocpp::array_ptr<pallocBits> b, unsigned int i, unsigned int n);
+        std::tuple<uint64_t, uint64_t> find(gocpp::array_ptr<pallocBits> b, uintptr_t npages, uint64_t searchIdx);
+        uint64_t find1(gocpp::array_ptr<pallocBits> b, uint64_t searchIdx);
+        std::tuple<uint64_t, uint64_t> findSmallN(gocpp::array_ptr<pallocBits> b, uintptr_t npages, uint64_t searchIdx);
+        std::tuple<uint64_t, uint64_t> findLargeN(gocpp::array_ptr<pallocBits> b, uintptr_t npages, uint64_t searchIdx);
+        void allocRange(gocpp::array_ptr<pallocBits> b, uint64_t i, uint64_t n);
         void allocAll(gocpp::array_ptr<pallocBits> b);
-        void free1(gocpp::array_ptr<pallocBits> b, unsigned int i);
-        void free(gocpp::array_ptr<pallocBits> b, unsigned int i, unsigned int n);
+        void free1(gocpp::array_ptr<pallocBits> b, uint64_t i);
+        void free(gocpp::array_ptr<pallocBits> b, uint64_t i, uint64_t n);
         void freeAll(gocpp::array_ptr<pallocBits> b);
-        uint64_t pages64(gocpp::array_ptr<pallocBits> b, unsigned int i);
-        void allocPages64(gocpp::array_ptr<pallocBits> b, unsigned int i, uint64_t alloc);
-        void allocRange(pallocData* m, unsigned int i, unsigned int n);
+        uint64_t pages64(gocpp::array_ptr<pallocBits> b, uint64_t i);
+        void allocPages64(gocpp::array_ptr<pallocBits> b, uint64_t i, uint64_t alloc);
+        void allocRange(pallocData* m, uint64_t i, uint64_t n);
         void allocAll(pallocData* m);
     }
 }

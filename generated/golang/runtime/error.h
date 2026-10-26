@@ -216,7 +216,7 @@ namespace golang::runtime
     struct boundsError
     {
         int64_t x{};
-        int y{};
+        int64_t y{};
         // Values in an index or slice expression can be signed or unsigned.
         // That means we'd need 65 bits to encode all possible indexes, from -2^63 to 2^64-1.
         // Instead, we keep track of whether x should be interpreted as signed or unsigned.

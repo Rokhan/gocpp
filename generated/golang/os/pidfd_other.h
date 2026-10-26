@@ -12,7 +12,7 @@
 
 namespace golang::os
 {
-    std::tuple<uintptr_t, gocpp::error> pidfdFind(int _1);
+    std::tuple<uintptr_t, gocpp::error> pidfdFind(int64_t _1);
 }
 #include "golang/syscall/exec_windows.fwd.h"
 #include "golang/syscall/syscall_windows.fwd.h"

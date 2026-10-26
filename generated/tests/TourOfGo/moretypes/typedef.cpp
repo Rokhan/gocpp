@@ -85,8 +85,8 @@ namespace golang::main
 
     void main()
     {
-        auto vstr1 = str1("hello"_s);
-        auto vstr2 = str2("hello"_s);
+        str1 vstr1 = str1("hello"_s);
+        str2 vstr2 = str2("hello"_s);
         mocklib::Println("str1:"_s, vstr1, ", str2:"_s, vstr2);
 
         mocklib::Println(Vertex {1, 2});

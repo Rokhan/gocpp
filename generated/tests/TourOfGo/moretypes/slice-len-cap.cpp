@@ -22,7 +22,7 @@ namespace golang::main
 
     void main()
     {
-        auto s = gocpp::slice<int> {2, 3, 5, 7, 11, 13};
+        auto s = gocpp::slice<int64_t> {2, 3, 5, 7, 11, 13};
         printSlice(s);
 
         // Slice the slice to give it zero length.
@@ -38,7 +38,7 @@ namespace golang::main
         printSlice(s);
     }
 
-    void printSlice(gocpp::slice<int> s)
+    void printSlice(gocpp::slice<int64_t> s)
     {
         // fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
         mocklib::Printf("len=%v cap=%v %v\n"_s, len(s), cap(s), s);

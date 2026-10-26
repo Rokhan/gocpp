@@ -17,21 +17,23 @@ namespace golang::runtime
     // summaryL0Bits + (summaryLevels-1)*summaryLevelBits + logPallocChunkBytes = heapAddrBits
     //
     // summaryLevels is an architecture-dependent value defined in mpagealloc_*.go.
-    const long summaryLevelBits = 3;
-    const gocpp::string vmaNamePageAllocIndex = "page alloc index"_s;
-    using chunkIdx = unsigned int;
+    inline constexpr long summaryLevelBits = 3;
+    inline const gocpp::string vmaNamePageAllocIndex = "page alloc index"_s;
+    struct GoTag_chunkIdx;
+    using chunkIdx = gocpp::defined<uint64_t, GoTag_chunkIdx>;
     struct pageAlloc;
     struct gocpp_id_1;
-    using pallocSum = uint64_t;
+    struct GoTag_pallocSum;
+    using pallocSum = gocpp::defined<uint64_t, GoTag_pallocSum>;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    /*const uintptr_t pallocSumBytes = gocpp::Sizeof<pallocSum>() [known mising deps] */;
+    /*inline constexpr uintptr_t pallocSumBytes = gocpp::Sizeof<pallocSum>() [known mising deps] */;
 }
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 
 namespace golang::runtime
 {
     namespace goarch = golang::internal::goarch;
-    const int logPallocChunkPages = 9 * (1 - goarch::IsWasm) + 6 * goarch::IsWasm;
+    inline constexpr int64_t logPallocChunkPages = 9 * (1 - goarch::IsWasm) + 6 * goarch::IsWasm;
 }
 #include "golang/internal/runtime/gc/sizeclasses.fwd.h"
 
@@ -41,33 +43,33 @@ namespace golang::runtime
     // in the bitmap at once. It is 4MB on most platforms, except on Wasm it is 512KB.
     // We use a smaller chuck size on Wasm for the same reason as the smaller arena
     // size (see heapArenaBytes).
-    const int pallocChunkPages = 1 << logPallocChunkPages;
+    inline constexpr int64_t pallocChunkPages = 1 << logPallocChunkPages;
     namespace gc = golang::internal::runtime::gc;
 }
 #include "golang/runtime/mpagealloc_64bit.fwd.h"
 
 namespace golang::runtime
 {
-    const int logPallocChunkBytes = logPallocChunkPages + gc::PageShift;
-    const int logMaxPackedValue = logPallocChunkPages + (summaryLevels - 1) * summaryLevelBits;
+    inline constexpr int64_t logPallocChunkBytes = logPallocChunkPages + gc::PageShift;
+    inline constexpr int64_t logMaxPackedValue = logPallocChunkPages + (summaryLevels - 1) * summaryLevelBits;
     // maxPackedValue is the maximum value that any of the three fields in
     // the pallocSum may take on.
-    const int maxPackedValue = 1 << logMaxPackedValue;
-    const pallocSum freeChunkSum = pallocSum(uint64_t(pallocChunkPages) |
-            uint64_t(pallocChunkPages << logMaxPackedValue) |
-            uint64_t(pallocChunkPages << (2 * logMaxPackedValue)));
+    inline constexpr int64_t maxPackedValue = 1 << logMaxPackedValue;
+    inline constexpr pallocSum freeChunkSum = pallocSum(uint64_t(int64_t(pallocChunkPages)) |
+            uint64_t(int64_t(pallocChunkPages) << logMaxPackedValue) |
+            uint64_t(int64_t(pallocChunkPages) << (2 * logMaxPackedValue)));
 }
 #include "golang/runtime/malloc.fwd.h"
 
 namespace golang::runtime
 {
-    const int pallocChunkBytes = pallocChunkPages * pageSize;
-    const int summaryL0Bits = heapAddrBits - logPallocChunkBytes - (summaryLevels - 1) * summaryLevelBits;
+    inline constexpr int64_t pallocChunkBytes = pallocChunkPages * pageSize;
+    inline constexpr int64_t summaryL0Bits = heapAddrBits - logPallocChunkBytes - (summaryLevels - 1) * summaryLevelBits;
     // pallocChunksL2Bits is the number of bits of the chunk index number
     // covered by the second level of the chunks map.
     //
     // See (*pageAlloc).chunks for more details. Update the documentation
     // there should this change.
-    const int pallocChunksL2Bits = heapAddrBits - logPallocChunkBytes - pallocChunksL1Bits;
-    const int pallocChunksL1Shift = pallocChunksL2Bits;
+    inline constexpr int64_t pallocChunksL2Bits = heapAddrBits - logPallocChunkBytes - pallocChunksL1Bits;
+    inline constexpr int64_t pallocChunksL1Shift = pallocChunksL2Bits;
 }

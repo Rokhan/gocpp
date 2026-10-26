@@ -12,15 +12,17 @@
 
 namespace golang::encoding::hex
 {
-    int EncodedLen(int n);
-    int Encode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
+    int64_t EncodedLen(int64_t n);
+    int64_t Encode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     gocpp::slice<unsigned char> AppendEncode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     // ErrLength reports an attempt to decode an odd-length input
     // using [Decode] or [DecodeString].
     // The stream-based Decoder returns [io.ErrUnexpectedEOF] instead of ErrLength.
     extern gocpp::error ErrLength;
-    int DecodedLen(int x);
-    std::tuple<int, gocpp::error> Decode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
+    struct GoTag_InvalidByteError { };
+    using InvalidByteError = gocpp::defined<unsigned char, GoTag_InvalidByteError>;
+    int64_t DecodedLen(int64_t x);
+    std::tuple<int64_t, gocpp::error> Decode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendDecode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     gocpp::string EncodeToString(gocpp::slice<unsigned char> src);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> DecodeString(gocpp::string s);
@@ -78,8 +80,8 @@ namespace golang::encoding::hex
         io::Writer w{};
         gocpp::array<unsigned char, 18> rightChars{};
         gocpp::array<unsigned char, 14> buf{};
-        int used{}; // number of bytes in the current line
-        unsigned int n{}; // number of bytes, total
+        int64_t used{}; // number of bytes in the current line
+        uint64_t n{}; // number of bytes, total
         bool closed{};
 
         using isGoStruct = void;
@@ -98,9 +100,9 @@ namespace golang::encoding::hex
     namespace rec
     {
         gocpp::string Error(InvalidByteError e);
-        std::tuple<int, gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> Write(dumper* h, gocpp::slice<unsigned char> data);
+        std::tuple<int64_t, gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(dumper* h, gocpp::slice<unsigned char> data);
         gocpp::error Close(dumper* h);
     }
 }

@@ -6,6 +6,6 @@
 
 namespace golang::internal::goexperiment
 {
-    const bool RuntimeFreegc = false;
-    const long RuntimeFreegcInt = 0;
+    inline constexpr bool RuntimeFreegc = false;
+    inline constexpr long RuntimeFreegcInt = 0;
 }

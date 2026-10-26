@@ -9,6 +9,12 @@
 #include "golang/encoding/json/v2_stream.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::encoding::json
+{
+    struct GoTag_Delim { };
+    using Delim = gocpp::defined<gocpp::rune, GoTag_Delim>;
+}
 #include "golang/bytes/buffer.fwd.h"
 #include "golang/bytes/bytes.fwd.h"
 #include "golang/bytes/reader.fwd.h"
@@ -18,11 +24,15 @@
 #include "golang/encoding/json/v2/arshal.fwd.h"
 #include "golang/encoding/json/v2/options.fwd.h"
 #include "golang/io/io.fwd.h"
-#include "golang/bytes/buffer.h"
 
 namespace golang::encoding::json
 {
     namespace jsontext = golang::encoding::json::jsontext;
+}
+#include "golang/bytes/buffer.h"
+
+namespace golang::encoding::json
+{
     namespace jsonv2 = golang::encoding::json::v2;
     namespace io = golang::io;
     namespace bytes = golang::bytes;

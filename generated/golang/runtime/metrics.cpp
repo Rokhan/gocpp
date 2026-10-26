@@ -128,7 +128,7 @@ namespace golang::runtime
         // the last bucket, not the first).
         // The smallest allocation is 1 byte in size.
         sizeClassBuckets[0] = 1;
-        for(auto i = 1; i < gc::NumSizeClasses; i++)
+        for(int64_t i = 1; i < gc::NumSizeClasses; i++)
         {
             // Size classes have an inclusive upper-bound
             // and exclusive lower bound (e.g. 48-byte size class is
@@ -1306,7 +1306,7 @@ namespace golang::runtime
         {
             return;
         }
-        for(auto i = statDep(0); i < numStatsDeps; i++)
+        for(statDep i = statDep(0); i < numStatsDeps; i++)
         {
             if(! rec::has(gocpp::recv(missing), i))
             {
@@ -1543,7 +1543,7 @@ namespace golang::runtime
     // readMetrics is the implementation of runtime/metrics.Read.
     //
     //go:linkname readMetrics runtime/metrics.runtime_readMetrics
-    void readMetrics(gocpp::unsafe_pointer samplesp, int len, int cap)
+    void readMetrics(gocpp::unsafe_pointer samplesp, int64_t len, int64_t cap)
     {
         metricsLock();
 
@@ -1559,7 +1559,7 @@ namespace golang::runtime
     //
     // Broken out for more robust testing. metricsLock must be held and
     // initMetrics must have been called already.
-    void readMetricsLocked(gocpp::unsafe_pointer samplesp, int len, int cap)
+    void readMetricsLocked(gocpp::unsafe_pointer samplesp, int64_t len, int64_t cap)
     {
         // Construct a slice from the args.
         auto sl = golang::runtime::slice {samplesp, len, cap};

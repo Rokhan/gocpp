@@ -209,7 +209,7 @@ namespace golang::encoding::json
             // is difficult. As a heuristic, if the last path token looks like
             // an index into a JSON array (e.g., ".foo.bar.0"),
             // avoid the phrase "Go struct field ".
-            auto intoWhat = "Go struct field "_s;
+            gocpp::string intoWhat = "Go struct field "_s;
             auto i = strings::LastIndexByte(e->Field, '.') + len("."_s);
             if(len(e->Field.make_slice(i)) > 0 && strings::TrimRight(e->Field.make_slice(i), "0123456789"_s) == ""_s)
             {

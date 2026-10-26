@@ -9,20 +9,22 @@ namespace golang::runtime
     struct gcCPULimiterState;
     // gcCPULimiterUpdatePeriod dictates the maximum amount of wall-clock time
     // we can go before updating the limiter.
-    const double gcCPULimiterUpdatePeriod = 10e6;
+    inline constexpr double gcCPULimiterUpdatePeriod = 10e6;
     // capacityPerProc is the limiter's bucket capacity for each P in GOMAXPROCS.
-    const double capacityPerProc = 1e9;
-    using limiterEventType = uint8_t;
-    const long limiterEventBits = 3;
-    using limiterEventStamp = uint64_t;
+    inline constexpr double capacityPerProc = 1e9;
+    struct GoTag_limiterEventType;
+    using limiterEventType = gocpp::defined<uint8_t, GoTag_limiterEventType>;
+    inline constexpr long limiterEventBits = 3;
+    struct GoTag_limiterEventStamp;
+    using limiterEventStamp = gocpp::defined<uint64_t, GoTag_limiterEventStamp>;
     struct limiterEvent;
-    const limiterEventType limiterEventNone = 0;
-    const limiterEventType limiterEventIdleMarkWork = 1;
-    const limiterEventType limiterEventMarkAssist = 2;
-    const limiterEventType limiterEventScavengeAssist = 3;
-    const limiterEventType limiterEventIdle = 4;
+    inline constexpr limiterEventType limiterEventNone = 0;
+    inline constexpr limiterEventType limiterEventIdleMarkWork = 1;
+    inline constexpr limiterEventType limiterEventMarkAssist = 2;
+    inline constexpr limiterEventType limiterEventScavengeAssist = 3;
+    inline constexpr limiterEventType limiterEventIdle = 4;
     // limiterEventTypeMask is a mask for the bits in p.limiterEventStart that represent
     // the event type. The rest of the bits of that field represent a timestamp.
-    const uint64_t limiterEventTypeMask = uint64_t((1 << limiterEventBits) - 1) << (64 - limiterEventBits);
-    const limiterEventStamp limiterEventStampNone = limiterEventStamp(0);
+    inline constexpr uint64_t limiterEventTypeMask = uint64_t((1 << limiterEventBits) - 1) << (64 - limiterEventBits);
+    inline constexpr limiterEventStamp limiterEventStampNone = limiterEventStamp(0);
 }

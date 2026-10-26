@@ -89,7 +89,7 @@ namespace golang::image
 
         struct Ireader: virtual io::Reader::IReader
         {
-            virtual std::tuple<gocpp::slice<unsigned char>, gocpp::error> vPeek(int _1) = 0;
+            virtual std::tuple<gocpp::slice<unsigned char>, gocpp::error> vPeek(int64_t _1) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -101,7 +101,7 @@ namespace golang::image
                 value.reset(ptr);
             }
 
-            std::tuple<gocpp::slice<unsigned char>, gocpp::error> vPeek(int _1) override;
+            std::tuple<gocpp::slice<unsigned char>, gocpp::error> vPeek(int64_t _1) override;
 
             void* getPtr() override
             {
@@ -118,11 +118,11 @@ namespace golang::image
 
     namespace rec
     {
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct reader, false>& self, int _1);
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int _1);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct reader, false>& self, int64_t _1);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int64_t _1);
 
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct reader, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct reader>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct reader, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct reader>& self, gocpp::slice<unsigned char> p);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);

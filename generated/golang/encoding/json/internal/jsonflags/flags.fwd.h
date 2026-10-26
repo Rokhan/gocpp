@@ -6,59 +6,60 @@
 
 namespace golang::encoding::json::internal::jsonflags
 {
-    using Bools = uint64_t;
+    struct GoTag_Bools;
+    using Bools = gocpp::defined<uint64_t, GoTag_Bools>;
     // bitsUsed is the number of bits used in the 64-bit boolean flags
-    const long bitsUsed = 43;
+    inline constexpr long bitsUsed = 43;
     struct Flags;
     // Encoder and decoder flags.
-    const Bools initFlag = 1 << 0;
-    const Bools AllowDuplicateNames = 1 << 1;
-    const Bools AllowInvalidUTF8 = 1 << 2;
-    const Bools WithinArshalCall = 1 << 3;
-    const Bools OmitTopLevelNewline = 1 << 4;
-    const Bools PreserveRawStrings = 1 << 5;
-    const Bools CanonicalizeRawInts = 1 << 6;
-    const Bools CanonicalizeRawFloats = 1 << 7;
-    const Bools ReorderRawObjects = 1 << 8;
-    const Bools EscapeForHTML = 1 << 9;
-    const Bools EscapeForJS = 1 << 10;
-    const Bools Multiline = 1 << 11;
-    const Bools SpaceAfterColon = 1 << 12;
-    const Bools SpaceAfterComma = 1 << 13;
-    const Bools Indent = 1 << 14;
-    const Bools IndentPrefix = 1 << 15;
-    const Bools ByteLimit = 1 << 16;
-    const Bools DepthLimit = 1 << 17;
-    const Bools maxCoderFlag = 1 << 18;
+    inline constexpr Bools initFlag = 1 << 0;
+    inline constexpr Bools AllowDuplicateNames = 1 << 1;
+    inline constexpr Bools AllowInvalidUTF8 = 1 << 2;
+    inline constexpr Bools WithinArshalCall = 1 << 3;
+    inline constexpr Bools OmitTopLevelNewline = 1 << 4;
+    inline constexpr Bools PreserveRawStrings = 1 << 5;
+    inline constexpr Bools CanonicalizeRawInts = 1 << 6;
+    inline constexpr Bools CanonicalizeRawFloats = 1 << 7;
+    inline constexpr Bools ReorderRawObjects = 1 << 8;
+    inline constexpr Bools EscapeForHTML = 1 << 9;
+    inline constexpr Bools EscapeForJS = 1 << 10;
+    inline constexpr Bools Multiline = 1 << 11;
+    inline constexpr Bools SpaceAfterColon = 1 << 12;
+    inline constexpr Bools SpaceAfterComma = 1 << 13;
+    inline constexpr Bools Indent = 1 << 14;
+    inline constexpr Bools IndentPrefix = 1 << 15;
+    inline constexpr Bools ByteLimit = 1 << 16;
+    inline constexpr Bools DepthLimit = 1 << 17;
+    inline constexpr Bools maxCoderFlag = 1 << 18;
     // AllCoderFlags is the set of all encoder/decoder flags.
-    const jsonflags::Bools AllCoderFlags = (maxCoderFlag - 1) - initFlag;
+    inline constexpr jsonflags::Bools AllCoderFlags = (maxCoderFlag - 1) - initFlag;
     // AnyWhitespace reports whether the encoded output might have any whitespace.
-    const jsonflags::Bools AnyWhitespace = Multiline | SpaceAfterColon | SpaceAfterComma;
+    inline constexpr jsonflags::Bools AnyWhitespace = Multiline | SpaceAfterColon | SpaceAfterComma;
     // AnyEscape is the set of flags related to escaping in a JSON string.
-    const jsonflags::Bools AnyEscape = EscapeForHTML | EscapeForJS;
+    inline constexpr jsonflags::Bools AnyEscape = EscapeForHTML | EscapeForJS;
     // CanonicalizeNumbers is the set of flags related to raw number canonicalization.
-    const jsonflags::Bools CanonicalizeNumbers = CanonicalizeRawInts | CanonicalizeRawFloats;
+    inline constexpr jsonflags::Bools CanonicalizeNumbers = CanonicalizeRawInts | CanonicalizeRawFloats;
     // Marshal and Unmarshal flags (for v2).
-    const Bools _ = (maxCoderFlag >> 1) << 0;
-    const Bools StringifyNumbers = (maxCoderFlag >> 1) << 1;
-    const Bools Deterministic = (maxCoderFlag >> 1) << 2;
-    const Bools FormatNilMapAsNull = (maxCoderFlag >> 1) << 3;
-    const Bools FormatNilSliceAsNull = (maxCoderFlag >> 1) << 4;
-    const Bools OmitZeroStructFields = (maxCoderFlag >> 1) << 5;
-    const Bools MatchCaseInsensitiveNames = (maxCoderFlag >> 1) << 6;
-    const Bools RejectUnknownMembers = (maxCoderFlag >> 1) << 7;
-    const Bools Marshalers = (maxCoderFlag >> 1) << 8;
-    const Bools Unmarshalers = (maxCoderFlag >> 1) << 9;
-    const Bools StringTag = (maxCoderFlag >> 1) << 10;
-    const Bools FormatTag = (maxCoderFlag >> 1) << 11;
-    const Bools FormatTagSupported = (maxCoderFlag >> 1) << 12;
-    const Bools maxArshalV2Flag = (maxCoderFlag >> 1) << 13;
+    inline constexpr Bools _ = (maxCoderFlag >> 1) << 0;
+    inline constexpr Bools StringifyNumbers = (maxCoderFlag >> 1) << 1;
+    inline constexpr Bools Deterministic = (maxCoderFlag >> 1) << 2;
+    inline constexpr Bools FormatNilMapAsNull = (maxCoderFlag >> 1) << 3;
+    inline constexpr Bools FormatNilSliceAsNull = (maxCoderFlag >> 1) << 4;
+    inline constexpr Bools OmitZeroStructFields = (maxCoderFlag >> 1) << 5;
+    inline constexpr Bools MatchCaseInsensitiveNames = (maxCoderFlag >> 1) << 6;
+    inline constexpr Bools RejectUnknownMembers = (maxCoderFlag >> 1) << 7;
+    inline constexpr Bools Marshalers = (maxCoderFlag >> 1) << 8;
+    inline constexpr Bools Unmarshalers = (maxCoderFlag >> 1) << 9;
+    inline constexpr Bools StringTag = (maxCoderFlag >> 1) << 10;
+    inline constexpr Bools FormatTag = (maxCoderFlag >> 1) << 11;
+    inline constexpr Bools FormatTagSupported = (maxCoderFlag >> 1) << 12;
+    inline constexpr Bools maxArshalV2Flag = (maxCoderFlag >> 1) << 13;
     // AllArshalV2Flags is the set of all v2 marshal/unmarshal flags.
-    const jsonflags::Bools AllArshalV2Flags = (maxArshalV2Flag - 1) - (maxCoderFlag - 1);
+    inline constexpr jsonflags::Bools AllArshalV2Flags = (maxArshalV2Flag - 1) - (maxCoderFlag - 1);
     // NonBooleanFlags is the set of non-boolean flags,
     // where the value is some other concrete Go type.
     // The value of the flag is stored within jsonopts.Struct.
-    const jsonflags::Bools NonBooleanFlags = 0 |
+    inline constexpr jsonflags::Bools NonBooleanFlags = 0 |
             Indent |
             IndentPrefix |
             ByteLimit |
@@ -69,54 +70,54 @@ namespace golang::encoding::json::internal::jsonflags
     // WhitespaceFlags is the set of flags related to whitespace formatting.
     // In contrast to AnyWhitespace, this includes Indent and IndentPrefix
     // as those settings take no effect if Multiline is false.
-    const jsonflags::Bools WhitespaceFlags = AnyWhitespace | Indent | IndentPrefix;
+    inline constexpr jsonflags::Bools WhitespaceFlags = AnyWhitespace | Indent | IndentPrefix;
     // TagFlags is the set of flags related to the presence of struct field tags.
     // Tags have non-recursive effects, where the tag only applies to
     // the top-level of the field value itself.
     // Whenever descending into a JSON object or array, these flags are cleared.
-    const jsonflags::Bools TagFlags = StringTag | FormatTag;
+    inline constexpr jsonflags::Bools TagFlags = StringTag | FormatTag;
     // Marshal and Unmarshal flags (for v1).
-    const Bools _ = (maxArshalV2Flag >> 1) << 0;
-    const Bools CallMethodsWithLegacySemantics = (maxArshalV2Flag >> 1) << 1;
-    const Bools FormatByteArrayAsArray = (maxArshalV2Flag >> 1) << 2;
-    const Bools FormatBytesWithLegacySemantics = (maxArshalV2Flag >> 1) << 3;
-    const Bools FormatDurationAsNano = (maxArshalV2Flag >> 1) << 4;
-    const Bools MatchCaseSensitiveDelimiter = (maxArshalV2Flag >> 1) << 5;
-    const Bools MergeWithLegacySemantics = (maxArshalV2Flag >> 1) << 6;
-    const Bools OmitEmptyWithLegacySemantics = (maxArshalV2Flag >> 1) << 7;
-    const Bools ParseBytesWithLooseRFC4648 = (maxArshalV2Flag >> 1) << 8;
-    const Bools ParseTimeWithLooseRFC3339 = (maxArshalV2Flag >> 1) << 9;
-    const Bools ReportErrorsWithLegacySemantics = (maxArshalV2Flag >> 1) << 10;
-    const Bools StringifyWithLegacySemantics = (maxArshalV2Flag >> 1) << 11;
-    const Bools UnmarshalAnyWithRawNumber = (maxArshalV2Flag >> 1) << 12;
-    const Bools UnmarshalArrayFromAnyLength = (maxArshalV2Flag >> 1) << 13;
-    const Bools maxArshalV1Flag = (maxArshalV2Flag >> 1) << 14;
+    inline constexpr Bools _ = (int64_t(maxArshalV2Flag) >> 1) << 0;
+    inline constexpr Bools CallMethodsWithLegacySemantics = (int64_t(maxArshalV2Flag) >> 1) << 1;
+    inline constexpr Bools FormatByteArrayAsArray = (int64_t(maxArshalV2Flag) >> 1) << 2;
+    inline constexpr Bools FormatBytesWithLegacySemantics = (int64_t(maxArshalV2Flag) >> 1) << 3;
+    inline constexpr Bools FormatDurationAsNano = (int64_t(maxArshalV2Flag) >> 1) << 4;
+    inline constexpr Bools MatchCaseSensitiveDelimiter = (int64_t(maxArshalV2Flag) >> 1) << 5;
+    inline constexpr Bools MergeWithLegacySemantics = (int64_t(maxArshalV2Flag) >> 1) << 6;
+    inline constexpr Bools OmitEmptyWithLegacySemantics = (int64_t(maxArshalV2Flag) >> 1) << 7;
+    inline constexpr Bools ParseBytesWithLooseRFC4648 = (int64_t(maxArshalV2Flag) >> 1) << 8;
+    inline constexpr Bools ParseTimeWithLooseRFC3339 = (int64_t(maxArshalV2Flag) >> 1) << 9;
+    inline constexpr Bools ReportErrorsWithLegacySemantics = (int64_t(maxArshalV2Flag) >> 1) << 10;
+    inline constexpr Bools StringifyWithLegacySemantics = (int64_t(maxArshalV2Flag) >> 1) << 11;
+    inline constexpr Bools UnmarshalAnyWithRawNumber = (int64_t(maxArshalV2Flag) >> 1) << 12;
+    inline constexpr Bools UnmarshalArrayFromAnyLength = (int64_t(maxArshalV2Flag) >> 1) << 13;
+    inline constexpr Bools maxArshalV1Flag = (int64_t(maxArshalV2Flag) >> 1) << 14;
     // AllArshalV1Flags is the set of all v1 marshal/unmarshal flags.
-    const jsonflags::Bools AllArshalV1Flags = (maxArshalV1Flag - 1) - (maxArshalV2Flag - 1);
+    inline constexpr jsonflags::Bools AllArshalV1Flags = (int64_t(maxArshalV1Flag) - 1LL) - (int64_t(maxArshalV2Flag) - 1LL);
     // DefaultV1Flags is the set of boolean flags that default to true under
     // v1 semantics. None of the non-boolean flags differ between v1 and v2.
-    const jsonflags::Bools DefaultV1Flags = 0 |
-            AllowDuplicateNames |
-            AllowInvalidUTF8 |
-            EscapeForHTML |
-            EscapeForJS |
-            PreserveRawStrings |
-            Deterministic |
-            FormatNilMapAsNull |
-            FormatNilSliceAsNull |
-            MatchCaseInsensitiveNames |
-            CallMethodsWithLegacySemantics |
-            FormatByteArrayAsArray |
-            FormatBytesWithLegacySemantics |
-            FormatDurationAsNano |
-            MatchCaseSensitiveDelimiter |
-            MergeWithLegacySemantics |
-            OmitEmptyWithLegacySemantics |
-            ParseBytesWithLooseRFC4648 |
-            ParseTimeWithLooseRFC3339 |
-            ReportErrorsWithLegacySemantics |
-            StringifyWithLegacySemantics |
-            UnmarshalArrayFromAnyLength;
+    inline constexpr jsonflags::Bools DefaultV1Flags = 0LL |
+            int64_t(AllowDuplicateNames) |
+            int64_t(AllowInvalidUTF8) |
+            int64_t(EscapeForHTML) |
+            int64_t(EscapeForJS) |
+            int64_t(PreserveRawStrings) |
+            int64_t(Deterministic) |
+            int64_t(FormatNilMapAsNull) |
+            int64_t(FormatNilSliceAsNull) |
+            int64_t(MatchCaseInsensitiveNames) |
+            int64_t(CallMethodsWithLegacySemantics) |
+            int64_t(FormatByteArrayAsArray) |
+            int64_t(FormatBytesWithLegacySemantics) |
+            int64_t(FormatDurationAsNano) |
+            int64_t(MatchCaseSensitiveDelimiter) |
+            int64_t(MergeWithLegacySemantics) |
+            int64_t(OmitEmptyWithLegacySemantics) |
+            int64_t(ParseBytesWithLooseRFC4648) |
+            int64_t(ParseTimeWithLooseRFC3339) |
+            int64_t(ReportErrorsWithLegacySemantics) |
+            int64_t(StringifyWithLegacySemantics) |
+            int64_t(UnmarshalArrayFromAnyLength);
     // AllFlags is the set of all flags.
-    const jsonflags::Bools AllFlags = AllCoderFlags | AllArshalV2Flags | AllArshalV1Flags;
+    inline constexpr jsonflags::Bools AllFlags = int64_t(AllCoderFlags) | int64_t(AllArshalV2Flags) | int64_t(AllArshalV1Flags);
 }

@@ -488,7 +488,7 @@ namespace golang::go::types
     }
 
     // NumMethods returns the number of explicit methods defined for t.
-    int rec::NumMethods(Named* t)
+    int64_t rec::NumMethods(Named* t)
     {
         return len(rec::unpack(gocpp::recv(rec::Origin(gocpp::recv(t))))->methods);
     }
@@ -508,7 +508,7 @@ namespace golang::go::types
     // calls, the mapping from method index to corresponding method remains the same.
     // But the specific ordering is not specified and must not be relied on as it may
     // change in the future.
-    Func* rec::Method(Named* t, int i)
+    Func* rec::Method(Named* t, int64_t i)
     {
         gocpp::Defer defer;
         try
@@ -561,7 +561,7 @@ namespace golang::go::types
     // expandMethod substitutes type arguments in the i'th method for an
     // instantiated receiver. A returned Func's Signature never has
     // receiver type parameters.
-    Func* rec::expandMethod(Named* t, int i)
+    Func* rec::expandMethod(Named* t, int64_t i)
     {
         // t.orig.methods is not lazy. orig is the declared function on t, which
         // must have receiver type parameters (since t is generic).
@@ -676,7 +676,7 @@ namespace golang::go::types
     // methodIndex returns the index of the method with the given name.
     // If foldCase is set, capitalization in the name is ignored.
     // The result is negative if no such method exists.
-    int rec::methodIndex(Named* t, gocpp::string name, bool foldCase)
+    int64_t rec::methodIndex(Named* t, gocpp::string name, bool foldCase)
     {
         if(name == "_"_s)
         {
@@ -852,7 +852,7 @@ namespace golang::go::types
         }
     }
 
-    std::tuple<int, Func*> rec::lookupMethod(Named* n, Package* pkg, gocpp::string name, bool foldCase)
+    std::tuple<int64_t, Func*> rec::lookupMethod(Named* n, Package* pkg, gocpp::string name, bool foldCase)
     {
         rec::unpack(gocpp::recv(n));
         if(samePkg(n->obj->object.pkg, pkg) || isExported(name) || foldCase)

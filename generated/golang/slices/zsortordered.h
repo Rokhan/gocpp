@@ -14,52 +14,52 @@ namespace golang::slices
 {
 
     template<typename E>
-    void insertionSortOrdered(gocpp::slice<E> data, int a, int b);
+    void insertionSortOrdered(gocpp::slice<E> data, int64_t a, int64_t b);
 
     template<typename E>
-    void siftDownOrdered(gocpp::slice<E> data, int lo, int hi, int first);
+    void siftDownOrdered(gocpp::slice<E> data, int64_t lo, int64_t hi, int64_t first);
 
     template<typename E>
-    void heapSortOrdered(gocpp::slice<E> data, int a, int b);
+    void heapSortOrdered(gocpp::slice<E> data, int64_t a, int64_t b);
 
     template<typename E>
-    void pdqsortOrdered(gocpp::slice<E> data, int a, int b, int limit);
+    void pdqsortOrdered(gocpp::slice<E> data, int64_t a, int64_t b, int64_t limit);
 
     template<typename E>
-    std::tuple<int, bool> partitionOrdered(gocpp::slice<E> data, int a, int b, int pivot);
+    std::tuple<int64_t, bool> partitionOrdered(gocpp::slice<E> data, int64_t a, int64_t b, int64_t pivot);
 
     template<typename E>
-    int partitionEqualOrdered(gocpp::slice<E> data, int a, int b, int pivot);
+    int64_t partitionEqualOrdered(gocpp::slice<E> data, int64_t a, int64_t b, int64_t pivot);
 
     template<typename E>
-    bool partialInsertionSortOrdered(gocpp::slice<E> data, int a, int b);
+    bool partialInsertionSortOrdered(gocpp::slice<E> data, int64_t a, int64_t b);
 
     template<typename E>
-    void breakPatternsOrdered(gocpp::slice<E> data, int a, int b);
+    void breakPatternsOrdered(gocpp::slice<E> data, int64_t a, int64_t b);
 
     template<typename E>
-    std::tuple<int, int> order2Ordered(gocpp::slice<E> data, int a, int b, int* swaps);
+    std::tuple<int64_t, int64_t> order2Ordered(gocpp::slice<E> data, int64_t a, int64_t b, int64_t* swaps);
 
     template<typename E>
-    int medianOrdered(gocpp::slice<E> data, int a, int b, int c, int* swaps);
+    int64_t medianOrdered(gocpp::slice<E> data, int64_t a, int64_t b, int64_t c, int64_t* swaps);
 
     template<typename E>
-    int medianAdjacentOrdered(gocpp::slice<E> data, int a, int* swaps);
+    int64_t medianAdjacentOrdered(gocpp::slice<E> data, int64_t a, int64_t* swaps);
 
     template<typename E>
-    void reverseRangeOrdered(gocpp::slice<E> data, int a, int b);
+    void reverseRangeOrdered(gocpp::slice<E> data, int64_t a, int64_t b);
 
     template<typename E>
-    void swapRangeOrdered(gocpp::slice<E> data, int a, int b, int n);
+    void swapRangeOrdered(gocpp::slice<E> data, int64_t a, int64_t b, int64_t n);
 
     template<typename E>
-    void stableOrdered(gocpp::slice<E> data, int n);
+    void stableOrdered(gocpp::slice<E> data, int64_t n);
 
     template<typename E>
-    void symMergeOrdered(gocpp::slice<E> data, int a, int m, int b);
+    void symMergeOrdered(gocpp::slice<E> data, int64_t a, int64_t m, int64_t b);
 
     template<typename E>
-    void rotateOrdered(gocpp::slice<E> data, int a, int m, int b);
+    void rotateOrdered(gocpp::slice<E> data, int64_t a, int64_t m, int64_t b);
 }
 #include "golang/slices/sort.h"
 
@@ -67,7 +67,7 @@ namespace golang::slices
 {
 
     template<typename E>
-    std::tuple<int, sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b);
+    std::tuple<int64_t, sortedHint> choosePivotOrdered(gocpp::slice<E> data, int64_t a, int64_t b);
 
     namespace rec
     {

@@ -78,7 +78,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         // go.dev/issue/52104.
         gocpp::slice<std::function<void ()>> laterFns{};
         // laterFors is used in case of 'type A B' to ensure that B is processed before A.
-        gocpp::map<types::Type, int> laterFors{};
+        gocpp::map<types::Type, int64_t> laterFors{};
         // ifaces holds a list of constructed Interfaces, which need to have
         // Complete called after importing is done.
         gocpp::slice<types::Interface*> ifaces{};
@@ -96,12 +96,12 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     namespace rec
     {
-        int AbsIdx(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx);
+        int64_t AbsIdx(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx);
         gocpp::string DataIdx(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx);
         gocpp::array<unsigned char, 8> Fingerprint(const gocpp::PtrRecv<struct pkgReader, false>& self);
         pkgbits::Decoder NewDecoder(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx, pkgbits::SyncMarker marker);
         pkgbits::Decoder NewDecoderRaw(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx);
-        int NumElems(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k);
+        int64_t NumElems(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k);
         std::tuple<gocpp::string, gocpp::string, pkgbits::CodeObj> PeekObj(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::Index idx);
         gocpp::string PeekPkgPath(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::Index idx);
         gocpp::string PkgPath(const gocpp::PtrRecv<struct pkgReader, false>& self);
@@ -110,7 +110,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         bool SyncMarkers(const gocpp::PtrRecv<struct pkgReader, false>& self);
         pkgbits::Decoder TempDecoder(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx, pkgbits::SyncMarker marker);
         pkgbits::Decoder TempDecoderRaw(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx);
-        int TotalElems(const gocpp::PtrRecv<struct pkgReader, false>& self);
+        int64_t TotalElems(const gocpp::PtrRecv<struct pkgReader, false>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct pkgReader& value);
@@ -147,7 +147,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     };
 
     std::ostream& operator<<(std::ostream& os, const struct typeInfo& value);
-    std::tuple<int, types::Package*, gocpp::error> UImportData(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::slice<unsigned char> data, gocpp::string path);
+    std::tuple<int64_t, types::Package*, gocpp::error> UImportData(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::slice<unsigned char> data, gocpp::string path);
     types::Package* readUnifiedPackage(token::FileSet* fset, types::Context* ctxt, gocpp::map<gocpp::string, types::Package*> imports, pkgbits::PkgDecoder input);
     struct reader
     {
@@ -169,22 +169,22 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     namespace rec
     {
         bool Bool(const gocpp::PtrRecv<struct reader, false>& self);
-        int Code(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::SyncMarker mark);
-        int Int(const gocpp::PtrRecv<struct reader, false>& self);
+        int64_t Code(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::SyncMarker mark);
+        int64_t Int(const gocpp::PtrRecv<struct reader, false>& self);
         int64_t Int64(const gocpp::PtrRecv<struct reader, false>& self);
-        int Len(const gocpp::PtrRecv<struct reader, false>& self);
+        int64_t Len(const gocpp::PtrRecv<struct reader, false>& self);
         pkgbits::Index Reloc(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::RelocKind k);
         gocpp::string String(const gocpp::PtrRecv<struct reader, false>& self);
         gocpp::slice<gocpp::string> Strings(const gocpp::PtrRecv<struct reader, false>& self);
         void Sync(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::SyncMarker mWant);
-        unsigned int Uint(const gocpp::PtrRecv<struct reader, false>& self);
+        uint64_t Uint(const gocpp::PtrRecv<struct reader, false>& self);
         uint64_t Uint64(const gocpp::PtrRecv<struct reader, false>& self);
         constant::Value Value(const gocpp::PtrRecv<struct reader, false>& self);
         pkgbits::Version Version(const gocpp::PtrRecv<struct reader, false>& self);
         big::Float* bigFloat(const gocpp::PtrRecv<struct reader, false>& self);
         big::Int* bigInt(const gocpp::PtrRecv<struct reader, false>& self);
         void checkErr(const gocpp::PtrRecv<struct reader, false>& self, gocpp::error err);
-        pkgbits::Index rawReloc(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::RelocKind k, int idx);
+        pkgbits::Index rawReloc(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::RelocKind k, int64_t idx);
         uint64_t rawUvarint(const gocpp::PtrRecv<struct reader, false>& self);
         int64_t rawVarint(const gocpp::PtrRecv<struct reader, false>& self);
         constant::Value scalar(const gocpp::PtrRecv<struct reader, false>& self);

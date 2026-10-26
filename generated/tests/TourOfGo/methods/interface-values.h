@@ -91,6 +91,8 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct T& value);
+    struct GoTag_F { };
+    using F = gocpp::defined<double, GoTag_F>;
     void main();
     void describe(I i);
 

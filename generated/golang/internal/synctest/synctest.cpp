@@ -50,7 +50,7 @@ namespace golang::internal::synctest
     }
 
     //go:linkname associate
-    int associate(gocpp::unsafe_pointer p)
+    int64_t associate(gocpp::unsafe_pointer p)
     /* convertBlockStmt, nil block */;
 
     // Disassociate disassociates p from any bubble.

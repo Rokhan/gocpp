@@ -34,7 +34,7 @@ namespace golang::internal::runtime::exithook
     extern std::function<void ()> Gosched;
     extern std::function<uint64_t ()> Goid;
     extern std::function<void (gocpp::string _1)> Throw;
-    void Run(int code);
+    void Run(int64_t code);
     extern gocpp::slice<Hook> hooks;
     void Add(Hook h);
 }

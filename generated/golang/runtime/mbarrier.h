@@ -24,13 +24,13 @@ namespace golang::runtime
     void reflect_typedmemmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
     void reflectlite_typedmemmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
     void maps_typedmemmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
-    int typedslicecopy(_type* typ, gocpp::unsafe_pointer dstPtr, int dstLen, gocpp::unsafe_pointer srcPtr, int srcLen);
-    int reflect_typedslicecopy(_type* elemType, golang::runtime::slice dst, golang::runtime::slice src);
+    int64_t typedslicecopy(_type* typ, gocpp::unsafe_pointer dstPtr, int64_t dstLen, gocpp::unsafe_pointer srcPtr, int64_t srcLen);
+    int64_t reflect_typedslicecopy(_type* elemType, golang::runtime::slice dst, golang::runtime::slice src);
     void typedmemclr(_type* typ, gocpp::unsafe_pointer ptr);
     void reflect_typedmemclr(_type* typ, gocpp::unsafe_pointer ptr);
     void maps_typedmemclr(_type* typ, gocpp::unsafe_pointer ptr);
     void reflect_typedmemclrpartial(_type* typ, gocpp::unsafe_pointer ptr, uintptr_t off, uintptr_t size);
-    void reflect_typedarrayclear(_type* typ, gocpp::unsafe_pointer ptr, int len);
+    void reflect_typedarrayclear(_type* typ, gocpp::unsafe_pointer ptr, int64_t len);
     void memclrHasPointers(gocpp::unsafe_pointer ptr, uintptr_t n);
 }
 #include "golang/internal/abi/abi.fwd.h"

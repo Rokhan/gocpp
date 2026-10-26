@@ -7,6 +7,6 @@
 namespace golang::runtime
 {
     // Batch type values for the alloc/free experiment.
-    const int traceAllocFreeTypesBatch = 0;
-    const int traceAllocFreeInfoBatch = 1;
+    inline constexpr int64_t traceAllocFreeTypesBatch = 0;
+    inline constexpr int64_t traceAllocFreeInfoBatch = 1;
 }

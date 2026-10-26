@@ -12,6 +12,8 @@
 
 namespace golang::runtime
 {
+    struct GoTag_gclinkptr { };
+    using gclinkptr = gocpp::defined<uintptr_t, GoTag_gclinkptr>;
     struct gclink
     {
         gclinkptr next{};
@@ -74,7 +76,7 @@ namespace golang::runtime
         // The following members are accessed on every malloc,
         // so they are grouped here for better caching.
         int64_t nextSample{}; // trigger heap sample after allocating this many bytes
-        int memProfRate{}; // cached mem profile rate, used to detect changes
+        int64_t memProfRate{}; // cached mem profile rate, used to detect changes
         uintptr_t scanAlloc{}; // bytes of scannable heap allocated
         // tiny points to the beginning of the current tiny block, or
         // nil if there is no current tiny block.

@@ -7,9 +7,9 @@
 namespace golang::go::types
 {
     // debugging/development support
-    const bool debug = false;
+    inline constexpr bool debug = false;
     // position tracing for panics during type checking
-    const bool tracePos = true;
+    inline constexpr bool tracePos = true;
     struct exprInfo;
     struct environment;
     struct importKey;

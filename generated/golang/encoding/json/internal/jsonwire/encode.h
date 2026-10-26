@@ -19,7 +19,7 @@ namespace golang::encoding::json::internal::jsonwire
     gocpp::slice<unsigned char> appendEscapedASCII(gocpp::slice<unsigned char> dst, unsigned char c);
     gocpp::slice<unsigned char> appendEscapedUnicode(gocpp::slice<unsigned char> dst, gocpp::rune r);
     gocpp::slice<unsigned char> appendEscapedUTF16(gocpp::slice<unsigned char> dst, uint16_t x);
-    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double src, int bits);
+    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double src, int64_t bits);
 }
 #include "golang/encoding/json/internal/jsonflags/flags.fwd.h"
 
@@ -27,8 +27,8 @@ namespace golang::encoding::json::internal::jsonwire
 {
     namespace jsonflags = golang::encoding::json::internal::jsonflags;
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendQuote(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, jsonflags::Flags* flags);
-    std::tuple<gocpp::slice<unsigned char>, int, gocpp::error> ReformatString(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, jsonflags::Flags* flags);
-    std::tuple<gocpp::slice<unsigned char>, int, gocpp::error> ReformatNumber(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, jsonflags::Flags* flags);
+    std::tuple<gocpp::slice<unsigned char>, int64_t, gocpp::error> ReformatString(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, jsonflags::Flags* flags);
+    std::tuple<gocpp::slice<unsigned char>, int64_t, gocpp::error> ReformatNumber(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, jsonflags::Flags* flags);
 
     namespace rec
     {

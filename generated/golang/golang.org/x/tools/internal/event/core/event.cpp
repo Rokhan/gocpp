@@ -87,12 +87,12 @@ namespace golang::golang_org::x::tools::internal::event::core
         }
     }
 
-    bool rec::Valid(Event ev, int index)
+    bool rec::Valid(Event ev, int64_t index)
     {
         return index >= 0 && index < len(ev.go_static) + len(ev.dynamic);
     }
 
-    label::Label rec::Label(Event ev, int index)
+    label::Label rec::Label(Event ev, int64_t index)
     {
         if(index < len(ev.go_static))
         {

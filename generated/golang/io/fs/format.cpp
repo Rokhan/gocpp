@@ -48,7 +48,7 @@ namespace golang::io::fs
             usize = uint64_t(- size);
         }
         gocpp::array<unsigned char, 20> buf = {};
-        auto i = len(buf) - 1;
+        int64_t i = len(buf) - 1;
         for(; usize >= 10; )
         {
             auto q = usize / 10;

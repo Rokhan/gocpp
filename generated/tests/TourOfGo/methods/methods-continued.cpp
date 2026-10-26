@@ -33,7 +33,7 @@ namespace golang::main
 
     void main()
     {
-        auto f = MyFloat(- mocklib::Sqrt2);
+        MyFloat f = MyFloat(- mocklib::Sqrt2);
         mocklib::Println(rec::Abs(gocpp::recv(f)));
     }
 

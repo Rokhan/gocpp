@@ -19,7 +19,7 @@ namespace golang::main
 namespace golang::main
 {
     namespace tree = golang::golang_org::x::tour::tree;
-    void Walk(tree::Tree* t, gocpp::channel<int> ch);
+    void Walk(tree::Tree* t, gocpp::channel<int64_t> ch);
     bool Same(tree::Tree* t1, tree::Tree* t2);
 
     namespace rec

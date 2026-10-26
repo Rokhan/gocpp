@@ -22,7 +22,7 @@ namespace golang::main
     {
     }
 
-    void testFallThrough(int n)
+    void testFallThrough(int64_t n)
     {
         //Go switch emulation
         {
@@ -51,7 +51,7 @@ namespace golang::main
         mocklib::Print("Go runs on "_s);
         //Go switch emulation
         {
-            auto os = mocklib::GOOS;
+            gocpp::string os = mocklib::GOOS;
             auto condition = os;
             int conditionId = -1;
             if(condition == "darwin"_s) { conditionId = 0; }
@@ -76,7 +76,7 @@ namespace golang::main
         mocklib::Print("\nGo runs on "_s);
         //Go switch emulation
         {
-            auto os = mocklib::GOOS;
+            gocpp::string os = mocklib::GOOS;
             auto condition = os;
             int conditionId = -1;
             if(condition == "darwin"_s) { conditionId = 0; }
@@ -103,7 +103,7 @@ namespace golang::main
         mocklib::Print("\nGo runs on "_s);
         //Go switch emulation
         {
-            auto os = mocklib::GOOS;
+            gocpp::string os = mocklib::GOOS;
             auto condition = os;
             int conditionId = -1;
             if(condition == "linux"_s) { conditionId = 0; }

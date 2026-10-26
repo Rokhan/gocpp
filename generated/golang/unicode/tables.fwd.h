@@ -7,5 +7,5 @@
 namespace golang::unicode
 {
     // Version is the Unicode edition from which the tables are derived.
-    const gocpp::string Version = "17.0.0"_s;
+    inline const gocpp::string Version = "17.0.0"_s;
 }

@@ -12,7 +12,7 @@
 
 namespace golang::runtime
 {
-    void SetCPUProfileRate(int hz);
+    void SetCPUProfileRate(int64_t hz);
     gocpp::slice<unsigned char> CPUProfile();
     int64_t pprof_cyclesPerSecond();
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
@@ -39,7 +39,7 @@ namespace golang::runtime
         // Hopefully a normal Go thread will get the profiling
         // signal at least once every few seconds.
         gocpp::array<uintptr_t, 1000> extra{};
-        int numExtra{};
+        int64_t numExtra{};
         uint64_t lostExtra{}; // count of frames lost because extra is full
         uint64_t lostAtomic{}; // count of frames lost because of being in atomic64 on mips/arm; updated racily
 

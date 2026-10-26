@@ -12,7 +12,7 @@
 
 namespace golang::strings
 {
-    int Compare(gocpp::string a, gocpp::string b);
+    int64_t Compare(gocpp::string a, gocpp::string b);
 
     namespace rec
     {

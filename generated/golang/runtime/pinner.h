@@ -62,7 +62,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    const uintptr_t pinnerRefStoreSize = (pinnerSize - gocpp::Sizeof<gocpp::slice<gocpp::unsafe_pointer>>()) / gocpp::Sizeof<unsafe::Pointer>();
+    inline constexpr uintptr_t pinnerRefStoreSize = (pinnerSize - gocpp::Sizeof<gocpp::slice<gocpp::unsafe_pointer>>()) / gocpp::Sizeof<unsafe::Pointer>();
     struct pinner
     {
         gocpp::slice<gocpp::unsafe_pointer> refs{};

@@ -73,13 +73,13 @@ namespace golang::runtime
 
     // chunkPageIndex computes the index of the page that contains p,
     // relative to the chunk which contains p.
-    unsigned int chunkPageIndex(uintptr_t p)
+    uint64_t chunkPageIndex(uintptr_t p)
     {
-        return (unsigned int)(p % pallocChunkBytes / pageSize);
+        return (uint64_t)(p % pallocChunkBytes / pageSize);
     }
 
     // l1 returns the index into the first level of (*pageAlloc).chunks.
-    unsigned int rec::l1(chunkIdx i)
+    uint64_t rec::l1(chunkIdx i)
     {
         if(pallocChunksL1Bits == 0)
         {
@@ -89,33 +89,33 @@ namespace golang::runtime
         }
         else
         {
-            return (unsigned int)(i) >> pallocChunksL1Shift;
+            return (uint64_t)(i) >> pallocChunksL1Shift;
         }
     }
 
     // l2 returns the index into the second level of (*pageAlloc).chunks.
-    unsigned int rec::l2(chunkIdx i)
+    uint64_t rec::l2(chunkIdx i)
     {
         if(pallocChunksL1Bits == 0)
         {
-            return (unsigned int)(i);
+            return (uint64_t)(i);
         }
         else
         {
-            return (unsigned int)(i) & ((1 << pallocChunksL2Bits) - 1);
+            return (uint64_t)(i) & ((1 << pallocChunksL2Bits) - 1);
         }
     }
 
     // offAddrToLevelIndex converts an address in the offset address space
     // to the index into summary[level] containing addr.
-    int offAddrToLevelIndex(int level, offAddr addr)
+    int64_t offAddrToLevelIndex(int64_t level, offAddr addr)
     {
-        return int((addr.a - arenaBaseOffset) >> levelShift[level]);
+        return int64_t((addr.a - arenaBaseOffset) >> levelShift[level]);
     }
 
     // levelIndexToOffAddr converts an index into summary[level] into
     // the corresponding address in the offset address space.
-    offAddr levelIndexToOffAddr(int level, int idx)
+    offAddr levelIndexToOffAddr(int64_t level, int64_t idx)
     {
         return offAddr {(uintptr_t(idx) << levelShift[level]) + arenaBaseOffset};
     }
@@ -125,10 +125,10 @@ namespace golang::runtime
     //
     // The returned range is inclusive on the lower bound and exclusive on
     // the upper bound.
-    std::tuple<int, int> addrsToSummaryRange(int level, uintptr_t base, uintptr_t limit)
+    std::tuple<int64_t, int64_t> addrsToSummaryRange(int64_t level, uintptr_t base, uintptr_t limit)
     {
-        int lo;
-        int hi;
+        int64_t lo;
+        int64_t hi;
         // This is slightly more nuanced than just a shift for the exclusive
         // upper-bound. Note that the exclusive upper bound may be within a
         // summary at this level, meaning if we just do the obvious computation
@@ -137,18 +137,18 @@ namespace golang::runtime
         // of a summary's max page count boundary for this level
         // (1 << levelLogPages[level]). So, make limit an inclusive upper bound
         // then shift, then add 1, so we get an exclusive upper bound at the end.
-        lo = int((base - arenaBaseOffset) >> levelShift[level]);
-        hi = int(((limit - 1) - arenaBaseOffset) >> levelShift[level]) + 1;
+        lo = int64_t((base - arenaBaseOffset) >> levelShift[level]);
+        hi = int64_t(((limit - 1) - arenaBaseOffset) >> levelShift[level]) + 1;
         return {lo, hi};
     }
 
     // blockAlignSummaryRange aligns indices into the given level to that
     // level's block width (1 << levelBits[level]). It assumes lo is inclusive
     // and hi is exclusive, and so aligns them down and up respectively.
-    std::tuple<int, int> blockAlignSummaryRange(int level, int lo, int hi)
+    std::tuple<int64_t, int64_t> blockAlignSummaryRange(int64_t level, int64_t lo, int64_t hi)
     {
         auto e = uintptr_t(1) << levelBits[level];
-        return {int(alignDown(uintptr_t(lo), e)), int(alignUp(uintptr_t(hi), e))};
+        return {int64_t(alignDown(uintptr_t(lo), e)), int64_t(alignUp(uintptr_t(hi), e))};
     }
 
     
@@ -509,8 +509,8 @@ namespace golang::runtime
         }
 
         // Walk up the radix tree and update the summaries appropriately.
-        auto changed = true;
-        for(auto l = len(p->summary) - 2; l >= 0 && changed; l--)
+        bool changed = true;
+        for(int64_t l = len(p->summary) - 2; l >= 0 && changed; l--)
         {
             // Update summaries at level l from summaries at level l+1.
             changed = false;
@@ -554,7 +554,7 @@ namespace golang::runtime
         auto [sc, ec] = std::tuple{chunkIndex(base), chunkIndex(limit)};
         auto [si, ei] = std::tuple{chunkPageIndex(base), chunkPageIndex(limit)};
 
-        auto scav = (unsigned int)(0);
+        uint64_t scav = (uint64_t)(0);
         if(sc == ec)
         {
             // The range doesn't cross any chunk boundaries.
@@ -699,7 +699,7 @@ namespace golang::runtime
         // this case in any way.
         // i is the beginning of the block of entries we're searching at the
         // current level.
-        auto i = 0;
+        int64_t i = 0;
 
         // firstFree is the region of address space that we are certain to
         // find the first free page in the heap. base and bound are the inclusive
@@ -749,10 +749,10 @@ namespace golang::runtime
         // case of a catastrophic failure.
         // lastSumIdx is that summary's index in the previous level.
         auto lastSum = packPallocSum(0, 0, 0);
-        auto lastSumIdx = - 1;
+        int64_t lastSumIdx = - 1;
 
         nextLevel:
-        for(auto l = 0; l < len(p->summary); l++)
+        for(int64_t l = 0; l < len(p->summary); l++)
         {
             if(false) {
             nextLevel_continue:
@@ -775,7 +775,7 @@ namespace golang::runtime
             // The searchAddr may help us eliminate iterations if we followed the
             // searchAddr on the previous level or we're on the root level, in which
             // case the searchAddr should be the same as i after levelShift.
-            auto j0 = 0;
+            int64_t j0 = 0;
             if(auto searchIdx = offAddrToLevelIndex(l, p->searchAddr); searchIdx &^ (entriesPerBlock - 1) == i)
             {
                 j0 = searchIdx & (entriesPerBlock - 1);
@@ -789,8 +789,8 @@ namespace golang::runtime
             // considered run of consecutive pages.
             // size contains the size of the currently considered
             // run of consecutive pages.
-            unsigned int base = {};
-            unsigned int size = {};
+            uint64_t base = {};
+            uint64_t size = {};
             for(auto j = j0; j < len(entries); j++)
             {
                 auto sum = entries[j];
@@ -807,20 +807,20 @@ namespace golang::runtime
                 foundFree(levelIndexToOffAddr(l, i + j), (uintptr_t(1) << logMaxPages) * pageSize);
 
                 auto s = rec::start(gocpp::recv(sum));
-                if(size + s >= (unsigned int)(npages))
+                if(size + s >= (uint64_t)(npages))
                 {
                     // If size == 0 we don't have a run yet,
                     // which means base isn't valid. So, set
                     // base to the first page in this block.
                     if(size == 0)
                     {
-                        base = (unsigned int)(j) << logMaxPages;
+                        base = (uint64_t)(j) << logMaxPages;
                     }
                     // We hit npages; we're done!
                     size += s;
                     break;
                 }
-                if(rec::max(gocpp::recv(sum)) >= (unsigned int)(npages))
+                if(rec::max(gocpp::recv(sum)) >= (uint64_t)(npages))
                 {
                     // The entry itself contains npages contiguous
                     // free pages, so continue on the next level
@@ -837,13 +837,13 @@ namespace golang::runtime
                     // one), so try to begin a new run by setting size and base
                     // based on sum.end.
                     size = rec::end(gocpp::recv(sum));
-                    base = ((unsigned int)(j + 1) << logMaxPages) - size;
+                    base = ((uint64_t)(j + 1) << logMaxPages) - size;
                     continue;
                 }
                 // The entry is completely free, so continue the run.
                 size += 1 << logMaxPages;
             }
-            if(size >= (unsigned int)(npages))
+            if(size >= (uint64_t)(npages))
             {
                 // We found a sufficiently large run of free pages straddling
                 // some boundary, so compute the address and return it.
@@ -863,7 +863,7 @@ namespace golang::runtime
             print("runtime: level = "_s, l, ", npages = "_s, npages, ", j0 = "_s, j0, "\n"_s);
             print("runtime: p.searchAddr = "_s, hex(rec::addr(gocpp::recv(p->searchAddr))), ", i = "_s, i, "\n"_s);
             print("runtime: levelShift[level] = "_s, levelShift[l], ", levelBits[level] = "_s, levelBits[l], "\n"_s);
-            for(auto j = 0; j < len(entries); j++)
+            for(int64_t j = 0; j < len(entries); j++)
             {
                 auto sum = entries[j];
                 print("runtime: summary["_s, l, "]["_s, i + j, "] = ("_s, rec::start(gocpp::recv(sum)), ", "_s, rec::max(gocpp::recv(sum)), ", "_s, rec::end(gocpp::recv(sum)), ")\n"_s);
@@ -879,7 +879,7 @@ namespace golang::runtime
         // is what the final level represents.
         auto ci = chunkIdx(i);
         auto [j, searchIdx] = rec::find(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)), npages, 0);
-        if(j == ~ (unsigned int)(0))
+        if(j == ~ (uint64_t)(0))
         {
             // We couldn't find any space in this chunk despite the summaries telling
             // us it should be there. There's likely a bug, so dump some state and throw.
@@ -927,14 +927,14 @@ namespace golang::runtime
         // If npages has a chance of fitting in the chunk where the searchAddr is,
         // search it directly.
         auto searchAddr = minOffAddr;
-        if(pallocChunkPages - chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))) >= (unsigned int)(npages))
+        if(pallocChunkPages - chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))) >= (uint64_t)(npages))
         {
             // npages is guaranteed to be no greater than pallocChunkPages here.
             auto i = chunkIndex(rec::addr(gocpp::recv(p->searchAddr)));
-            if(auto max = rec::max(gocpp::recv(p->summary[len(p->summary) - 1][i])); max >= (unsigned int)(npages))
+            if(auto max = rec::max(gocpp::recv(p->summary[len(p->summary) - 1][i])); max >= (uint64_t)(npages))
             {
                 auto [j, searchIdx] = rec::find(gocpp::recv(rec::chunkOf(gocpp::recv(p), i)), npages, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))));
-                if(j == ~ (unsigned int)(0))
+                if(j == ~ (uint64_t)(0))
                 {
                     print("runtime: max = "_s, max, ", npages = "_s, npages, "\n"_s);
                     print("runtime: searchIdx = "_s, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))), ", p.searchAddr = "_s, hex(rec::addr(gocpp::recv(p->searchAddr))), "\n"_s);
@@ -1080,7 +1080,7 @@ namespace golang::runtime
     // 2^21 - 1, or all three may be equal to 2^21. The latter case is represented
     // by just setting the 64th bit.
     // packPallocSum takes a start, max, and end value and produces a pallocSum.
-    pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end)
+    pallocSum packPallocSum(uint64_t start, uint64_t max, uint64_t end)
     {
         if(max == maxPackedValue)
         {
@@ -1092,54 +1092,54 @@ namespace golang::runtime
     }
 
     // start extracts the start value from a packed sum.
-    unsigned int rec::start(pallocSum p)
+    uint64_t rec::start(pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
             return maxPackedValue;
         }
-        return (unsigned int)(uint64_t(p) & (maxPackedValue - 1));
+        return (uint64_t)(uint64_t(p) & (maxPackedValue - 1));
     }
 
     // max extracts the max value from a packed sum.
-    unsigned int rec::max(pallocSum p)
+    uint64_t rec::max(pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
             return maxPackedValue;
         }
-        return (unsigned int)((uint64_t(p) >> logMaxPackedValue) & (maxPackedValue - 1));
+        return (uint64_t)((uint64_t(p) >> logMaxPackedValue) & (maxPackedValue - 1));
     }
 
     // end extracts the end value from a packed sum.
-    unsigned int rec::end(pallocSum p)
+    uint64_t rec::end(pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
             return maxPackedValue;
         }
-        return (unsigned int)((uint64_t(p) >> (2 * logMaxPackedValue)) & (maxPackedValue - 1));
+        return (uint64_t)((uint64_t(p) >> (2 * logMaxPackedValue)) & (maxPackedValue - 1));
     }
 
     // unpack unpacks all three values from the summary.
-    std::tuple<unsigned int, unsigned int, unsigned int> rec::unpack(pallocSum p)
+    std::tuple<uint64_t, uint64_t, uint64_t> rec::unpack(pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
             return {maxPackedValue, maxPackedValue, maxPackedValue};
         }
-        return {(unsigned int)(uint64_t(p) & (maxPackedValue - 1)), (unsigned int)((uint64_t(p) >> logMaxPackedValue) & (maxPackedValue - 1)), (unsigned int)((uint64_t(p) >> (2 * logMaxPackedValue)) & (maxPackedValue - 1))};
+        return {(uint64_t)(uint64_t(p) & (maxPackedValue - 1)), (uint64_t)((uint64_t(p) >> logMaxPackedValue) & (maxPackedValue - 1)), (uint64_t)((uint64_t(p) >> (2 * logMaxPackedValue)) & (maxPackedValue - 1))};
     }
 
     // mergeSummaries merges consecutive summaries which may each represent at
     // most 1 << logMaxPagesPerSum pages each together into one.
-    pallocSum mergeSummaries(gocpp::slice<pallocSum> sums, unsigned int logMaxPagesPerSum)
+    pallocSum mergeSummaries(gocpp::slice<pallocSum> sums, uint64_t logMaxPagesPerSum)
     {
         // Merge the summaries in sums into one.
         // We do this by keeping a running summary representing the merged
         // summaries of sums[:i] in start, most, and end.
         auto [start, most, end] = rec::unpack(gocpp::recv(sums[0]));
-        for(auto i = 1; i < len(sums); i++)
+        for(int64_t i = 1; i < len(sums); i++)
         {
             // Merge in sums[i].
             auto [si, mi, ei] = rec::unpack(gocpp::recv(sums[i]));
@@ -1147,7 +1147,7 @@ namespace golang::runtime
             // Merge in sums[i].start only if the running summary is
             // completely free, otherwise this summary's start
             // plays no role in the combined sum.
-            if(start == ((unsigned int)(i) << logMaxPagesPerSum))
+            if(start == ((uint64_t)(i) << logMaxPagesPerSum))
             {
                 start += si;
             }

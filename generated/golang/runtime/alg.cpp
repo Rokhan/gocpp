@@ -343,7 +343,7 @@ namespace golang::runtime
                 case 6:
                 {
                     auto a = (arraytype*)(gocpp::unsafe_pointer(t));
-                    for(auto i = uintptr_t(0); i < a->Len; i++)
+                    for(uintptr_t i = uintptr_t(0); i < a->Len; i++)
                     {
                         h = typehash(a->Elem, add(p, i * a->Elem->Size_), h);
                     }

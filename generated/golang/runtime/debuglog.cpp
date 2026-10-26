@@ -281,13 +281,13 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    dloggerFake rec::i(dloggerFake l, int x)
+    dloggerFake rec::i(dloggerFake l, int64_t x)
     {
         return l;
     }
 
     //go:nosplit
-    dloggerImpl* rec::i(dloggerImpl* l, int x)
+    dloggerImpl* rec::i(dloggerImpl* l, int64_t x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
@@ -343,13 +343,13 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    dloggerFake rec::u(dloggerFake l, unsigned int x)
+    dloggerFake rec::u(dloggerFake l, uint64_t x)
     {
         return l;
     }
 
     //go:nosplit
-    dloggerImpl* rec::u(dloggerImpl* l, unsigned int x)
+    dloggerImpl* rec::u(dloggerImpl* l, uint64_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
@@ -530,7 +530,7 @@ namespace golang::runtime
         gocpp::slice<unsigned char> b = {};
         auto bb = (golang::runtime::slice*)(gocpp::unsafe_pointer(& b));
         bb->array = gocpp::unsafe_pointer(p);
-        std::tie(bb->len, bb->cap) = std::tuple{int(bytes), int(bytes)};
+        std::tie(bb->len, bb->cap) = std::tuple{int64_t(bytes), int64_t(bytes)};
         if(len(b) > debugLogStringLimit)
         {
             b = b.make_slice(0, debugLogStringLimit);
@@ -763,7 +763,7 @@ namespace golang::runtime
     //go:nosplit
     void rec::uvarint(debugLogWriter* l, uint64_t u)
     {
-        auto i = 0;
+        int64_t i = 0;
         for(; u >= 0x80; )
         {
             l->buf[i] = (unsigned char)(u) | 0x80;
@@ -863,7 +863,7 @@ namespace golang::runtime
     {
         uint64_t tick;
         // Consume any sync records.
-        auto size = uint64_t(0);
+        uint64_t size = uint64_t(0);
         for(; size == 0; )
         {
             if(r->begin + debugLogHeaderSize > r->end)
@@ -892,7 +892,7 @@ namespace golang::runtime
         }
         auto pos = r->begin + debugLogHeaderSize;
         uint64_t u = {};
-        for(auto i = (unsigned int)(0); ; i += 7)
+        for(uint64_t i = (uint64_t)(0); ; i += 7)
         {
             auto b = r->data->b[pos % uint64_t(len(r->data->b))];
             pos++;
@@ -909,12 +909,12 @@ namespace golang::runtime
         return r->tick + u;
     }
 
-    std::tuple<uint64_t, uint64_t, uint64_t, int> rec::header(debugLogReader* r)
+    std::tuple<uint64_t, uint64_t, uint64_t, int64_t> rec::header(debugLogReader* r)
     {
         uint64_t end;
         uint64_t tick;
         uint64_t nano;
-        int p;
+        int64_t p;
         // Read size. We've already skipped sync packets and checked
         // bounds in peek.
         auto size = uint64_t(rec::readUint16LEAt(gocpp::recv(r), r->begin));
@@ -924,7 +924,7 @@ namespace golang::runtime
         // Read tick, nano, and p.
         tick = rec::uvarint(gocpp::recv(r)) + r->tick;
         nano = rec::uvarint(gocpp::recv(r)) + r->nano;
-        p = int(rec::varint(gocpp::recv(r)));
+        p = int64_t(rec::varint(gocpp::recv(r)));
 
         return {end, tick, nano, p};
     }
@@ -932,7 +932,7 @@ namespace golang::runtime
     uint64_t rec::uvarint(debugLogReader* r)
     {
         uint64_t u = {};
-        for(auto i = (unsigned int)(0); ; i += 7)
+        for(uint64_t i = (uint64_t)(0); ; i += 7)
         {
             auto b = r->data->b[r->begin % uint64_t(len(r->data->b))];
             r->begin++;
@@ -1039,7 +1039,7 @@ namespace golang::runtime
 
                 case 8:
                 {
-                    auto [len, ptr] = std::tuple{int(rec::uvarint(gocpp::recv(r))), uintptr_t(rec::uvarint(gocpp::recv(r)))};
+                    auto [len, ptr] = std::tuple{int64_t(rec::uvarint(gocpp::recv(r))), uintptr_t(rec::uvarint(gocpp::recv(r)))};
                     ptr += firstmoduledata.etext;
                     // We can't use unsafe.String as it may panic, which isn't safe
                     // in this (potentially) nowritebarrier context.
@@ -1093,8 +1093,8 @@ namespace golang::runtime
 
                 case 12:
                 {
-                    auto n = int(rec::uvarint(gocpp::recv(r)));
-                    for(auto i = 0; i < n; i++)
+                    auto n = int64_t(rec::uvarint(gocpp::recv(r)));
+                    for(int64_t i = 0; i < n; i++)
                     {
                         print("\n\t"_s);
                         // gentraceback PCs are always return PCs.
@@ -1122,7 +1122,7 @@ namespace golang::runtime
     struct gocpp_id_0
             {
                 uint64_t tick{};
-                int i{};
+                int64_t i{};
 
                 using isGoStruct = void;
 
@@ -1170,7 +1170,7 @@ namespace golang::runtime
         auto all = (dloggerImpl*)(gocpp::unsafe_pointer(atomic::Loaduintptr(allp)));
 
         // Count the logs.
-        auto n = 0;
+        int64_t n = 0;
         for(auto l = all; l != nullptr; l = l->allLink)
         {
             n++;
@@ -1273,7 +1273,7 @@ namespace golang::runtime
             print(slicebytetostringtmp((unsigned char*)(noescape(gocpp::unsafe_pointer(& pnanoBytes[0]))), len(pnanoBytes)));
             print(" P "_s, p, "] "_s);
 
-            for(auto i = 0; s->debugLogReader.begin < s->debugLogReader.end; i++)
+            for(int64_t i = 0; s->debugLogReader.begin < s->debugLogReader.end; i++)
             {
                 if(i > 0)
                 {

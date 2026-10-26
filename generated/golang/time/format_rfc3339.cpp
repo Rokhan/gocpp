@@ -31,7 +31,7 @@ namespace golang::time
         auto [year, month, day] = rec::date(gocpp::recv(rec::days(gocpp::recv(abs))));
         b = appendInt(b, year, 4);
         b = append(b, '-');
-        b = appendInt(b, int(month), 2);
+        b = appendInt(b, int64_t(month), 2);
         b = append(b, '-');
         b = appendInt(b, day, 2);
 
@@ -117,10 +117,10 @@ namespace golang::time
         // verifies that it is within some range.
         // If it is invalid or out-of-range,
         // it sets ok to false and returns the min value.
-        auto ok = true;
-        auto parseUint = [=](bytes s, int min, int max) mutable -> int
+        bool ok = true;
+        auto parseUint = [=](bytes s, int64_t min, int64_t max) mutable -> int64_t
         {
-            int x;
+            int64_t x;
             for(auto [gocpp_ignored, c] : gocpp::slice<unsigned char>(s))
             {
                 if(c < '0' || '9' < c)
@@ -128,7 +128,7 @@ namespace golang::time
                     ok = false;
                     return min;
                 }
-                x = x * 10 + int(c) - '0';
+                x = x * 10 + int64_t(c) - '0';
             }
             if(x < min || max < x)
             {
@@ -162,10 +162,10 @@ namespace golang::time
         s = s.make_slice(19);
 
         // Parse the fractional second.
-        int nsec = {};
+        int64_t nsec = {};
         if(len(s) >= 2 && s[0] == '.' && isDigit(s, 1))
         {
-            auto n = 2;
+            int64_t n = 2;
             for(; n < len(s) && isDigit(s, n); n++)
             {
             }

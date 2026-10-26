@@ -286,7 +286,7 @@ namespace golang::syscall
     gocpp::error GetProcessTimes(golang::syscall::Handle handle, Filetime* creationTime, Filetime* exitTime, Filetime* kernelTime, Filetime* userTime);
     gocpp::error getQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t* qty, uintptr_t* key, Overlapped** overlapped, uint32_t timeout);
     void getStartupInfo(StartupInfo* startupInfo);
-    std::tuple<golang::syscall::Handle, gocpp::error> GetStdHandle(int stdhandle);
+    std::tuple<golang::syscall::Handle, gocpp::error> GetStdHandle(int64_t stdhandle);
     void GetSystemTimeAsFileTime(Filetime* time);
     std::tuple<uint32_t, gocpp::error> GetTimeZoneInformation(Timezoneinformation* tzi);
     gocpp::error initializeProcThreadAttributeList(_PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t attrcount, uint32_t flags, uintptr_t* size);

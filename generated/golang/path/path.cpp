@@ -66,7 +66,7 @@ namespace golang::path
         return value.PrintTo(os);
     }
 
-    unsigned char rec::index(lazybuf* b, int i)
+    unsigned char rec::index(lazybuf* b, int64_t i)
     {
         if(b->buf != nullptr)
         {
@@ -239,7 +239,7 @@ namespace golang::path
     // an empty string.
     gocpp::string Join(gocpp::slice<gocpp::string> elem)
     {
-        auto size = 0;
+        int64_t size = 0;
         for(auto [gocpp_ignored, e] : elem)
         {
             size += len(e);

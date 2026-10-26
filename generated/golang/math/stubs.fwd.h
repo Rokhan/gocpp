@@ -6,29 +6,29 @@
 
 namespace golang::math
 {
-    const bool haveArchAcos = false;
-    const bool haveArchAcosh = false;
-    const bool haveArchAsin = false;
-    const bool haveArchAsinh = false;
-    const bool haveArchAtan = false;
-    const bool haveArchAtan2 = false;
-    const bool haveArchAtanh = false;
-    const bool haveArchCbrt = false;
-    const bool haveArchCos = false;
-    const bool haveArchCosh = false;
-    const bool haveArchErf = false;
-    const bool haveArchErfc = false;
-    const bool haveArchExpm1 = false;
-    const bool haveArchFrexp = false;
-    const bool haveArchLdexp = false;
-    const bool haveArchLog10 = false;
-    const bool haveArchLog2 = false;
-    const bool haveArchLog1p = false;
-    const bool haveArchMod = false;
-    const bool haveArchPow = false;
-    const bool haveArchRemainder = false;
-    const bool haveArchSin = false;
-    const bool haveArchSinh = false;
-    const bool haveArchTan = false;
-    const bool haveArchTanh = false;
+    inline constexpr bool haveArchAcos = false;
+    inline constexpr bool haveArchAcosh = false;
+    inline constexpr bool haveArchAsin = false;
+    inline constexpr bool haveArchAsinh = false;
+    inline constexpr bool haveArchAtan = false;
+    inline constexpr bool haveArchAtan2 = false;
+    inline constexpr bool haveArchAtanh = false;
+    inline constexpr bool haveArchCbrt = false;
+    inline constexpr bool haveArchCos = false;
+    inline constexpr bool haveArchCosh = false;
+    inline constexpr bool haveArchErf = false;
+    inline constexpr bool haveArchErfc = false;
+    inline constexpr bool haveArchExpm1 = false;
+    inline constexpr bool haveArchFrexp = false;
+    inline constexpr bool haveArchLdexp = false;
+    inline constexpr bool haveArchLog10 = false;
+    inline constexpr bool haveArchLog2 = false;
+    inline constexpr bool haveArchLog1p = false;
+    inline constexpr bool haveArchMod = false;
+    inline constexpr bool haveArchPow = false;
+    inline constexpr bool haveArchRemainder = false;
+    inline constexpr bool haveArchSin = false;
+    inline constexpr bool haveArchSinh = false;
+    inline constexpr bool haveArchTan = false;
+    inline constexpr bool haveArchTanh = false;
 }

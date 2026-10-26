@@ -207,8 +207,8 @@ namespace golang::math
         }
 
         // ans = a1 * 2**ae (= 1 for now).
-        auto a1 = 1.0;
-        auto ae = 0;
+        double a1 = 1.0;
+        int64_t ae = 0;
 
         // ans *= x**yf
         if(yf != 0)

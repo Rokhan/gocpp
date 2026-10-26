@@ -10,20 +10,20 @@ namespace golang::fmt
     struct Scanner;
     using stringReader = gocpp::string;
     struct scanError;
-    const long eof = - 1;
+    inline constexpr long eof = - 1;
     struct ss;
     struct ssave;
     struct readRune;
     // Numerical elements
-    const gocpp::string binaryDigits = "01"_s;
-    const gocpp::string octalDigits = "01234567"_s;
-    const gocpp::string decimalDigits = "0123456789"_s;
-    const gocpp::string hexadecimalDigits = "0123456789aAbBcCdDeEfF"_s;
-    const gocpp::string sign = "+-"_s;
-    const gocpp::string period = "."_s;
-    const gocpp::string exponent = "eEpP"_s;
-    const gocpp::string floatVerbs = "beEfFgGv"_s;
-    const int hugeWid = 1 << 30;
-    const int intBits = 32 << (~ (unsigned int)(0) >> 63);
-    const int uintptrBits = 32 << (~ uintptr_t(0) >> 63);
+    inline const gocpp::string binaryDigits = "01"_s;
+    inline const gocpp::string octalDigits = "01234567"_s;
+    inline const gocpp::string decimalDigits = "0123456789"_s;
+    inline const gocpp::string hexadecimalDigits = "0123456789aAbBcCdDeEfF"_s;
+    inline const gocpp::string sign = "+-"_s;
+    inline const gocpp::string period = "."_s;
+    inline const gocpp::string exponent = "eEpP"_s;
+    inline const gocpp::string floatVerbs = "beEfFgGv"_s;
+    inline constexpr int64_t hugeWid = 1 << 30;
+    inline constexpr int64_t intBits = 32 << (~ (uint64_t)(0) >> 63);
+    inline constexpr int64_t uintptrBits = 32 << (~ uintptr_t(0) >> 63);
 }

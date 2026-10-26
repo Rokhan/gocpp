@@ -6,12 +6,13 @@
 
 namespace golang::runtime
 {
-    const bool debugSelect = false;
+    inline constexpr bool debugSelect = false;
     struct scase;
     struct runtimeSelect;
-    using selectDir = int;
-    const selectDir _ = 0;
-    const selectDir selectSend = 1;
-    const selectDir selectRecv = 2;
-    const selectDir selectDefault = 3;
+    struct GoTag_selectDir;
+    using selectDir = gocpp::defined<int64_t, GoTag_selectDir>;
+    inline constexpr selectDir _ = 0;
+    inline constexpr selectDir selectSend = 1;
+    inline constexpr selectDir selectRecv = 2;
+    inline constexpr selectDir selectDefault = 3;
 }

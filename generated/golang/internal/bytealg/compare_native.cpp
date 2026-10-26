@@ -18,16 +18,16 @@ namespace golang::internal::bytealg
     }
 
     //go:noescape
-    int Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
+    int64_t Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     /* convertBlockStmt, nil block */;
 
-    int CompareString(gocpp::string a, gocpp::string b)
+    int64_t CompareString(gocpp::string a, gocpp::string b)
     {
         return abigen_runtime_cmpstring(a, b);
     }
 
     //go:linkname abigen_runtime_cmpstring runtime.cmpstring
-    int abigen_runtime_cmpstring(gocpp::string a, gocpp::string b)
+    int64_t abigen_runtime_cmpstring(gocpp::string a, gocpp::string b)
     /* convertBlockStmt, nil block */;
 
 }

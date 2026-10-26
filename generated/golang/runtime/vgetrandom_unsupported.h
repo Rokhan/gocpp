@@ -12,7 +12,7 @@
 
 namespace golang::runtime
 {
-    std::tuple<int, bool> vgetrandom(gocpp::slice<unsigned char> p, uint32_t flags);
+    std::tuple<int64_t, bool> vgetrandom(gocpp::slice<unsigned char> p, uint32_t flags);
     void vgetrandomInit();
 }
 #include "golang/runtime/runtime2.fwd.h"

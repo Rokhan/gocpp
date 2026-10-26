@@ -7,15 +7,17 @@
 namespace golang::internal::trace::tracev2
 {
     // MaxTimedEventArgs is the maximum number of arguments for timed events.
-    const long MaxTimedEventArgs = 5;
-    using GoStatus = uint8_t;
-    using ProcStatus = uint8_t;
+    inline constexpr long MaxTimedEventArgs = 5;
+    struct GoTag_GoStatus;
+    using GoStatus = gocpp::defined<uint8_t, GoTag_GoStatus>;
+    struct GoTag_ProcStatus;
+    using ProcStatus = gocpp::defined<uint8_t, GoTag_ProcStatus>;
     // MaxBatchSize sets the maximum size that a batch can be.
     //
     // Directly controls the trace batch size in the runtime.
     //
     // NOTE: If this number decreases, the trace format version must change.
-    const int MaxBatchSize = 64 << 10;
+    inline constexpr int64_t MaxBatchSize = 64 << 10;
     // Maximum number of PCs in a single stack trace.
     //
     // Since events contain only stack ID rather than whole stack trace,
@@ -25,7 +27,7 @@ namespace golang::internal::trace::tracev2
     // in the runtime.
     //
     // NOTE: If this number decreases, the trace format version must change.
-    const long MaxFramesPerStack = 128;
+    inline constexpr long MaxFramesPerStack = 128;
     // MaxEventTrailerDataSize controls the amount of trailer data that
     // an event can have in bytes. Must be smaller than MaxBatchSize.
     // Controls the maximum string size in the trace.
@@ -33,16 +35,16 @@ namespace golang::internal::trace::tracev2
     // Directly controls the maximum such value in the runtime.
     //
     // NOTE: If this number decreases, the trace format version must change.
-    const int MaxEventTrailerDataSize = 1 << 10;
-    const GoStatus GoBad = 0;
-    const GoStatus GoRunnable = 1;
-    const GoStatus GoRunning = 2;
-    const GoStatus GoSyscall = 3;
-    const GoStatus GoWaiting = 4;
-    const ProcStatus ProcBad = 0;
-    const ProcStatus ProcRunning = 1;
-    const ProcStatus ProcIdle = 2;
-    const ProcStatus ProcSyscall = 3;
+    inline constexpr int64_t MaxEventTrailerDataSize = 1 << 10;
+    inline constexpr GoStatus GoBad = 0;
+    inline constexpr GoStatus GoRunnable = 1;
+    inline constexpr GoStatus GoRunning = 2;
+    inline constexpr GoStatus GoSyscall = 3;
+    inline constexpr GoStatus GoWaiting = 4;
+    inline constexpr ProcStatus ProcBad = 0;
+    inline constexpr ProcStatus ProcRunning = 1;
+    inline constexpr ProcStatus ProcIdle = 2;
+    inline constexpr ProcStatus ProcSyscall = 3;
     // ProcSyscallAbandoned is a special case of
     // ProcSyscall. It's used in the very specific case
     // where the first a P is mentioned in a generation is
@@ -52,7 +54,7 @@ namespace golang::internal::trace::tracev2
     // special state indicates this to the parser, so it
     // doesn't try to find a GoSyscallEndBlocked that
     // corresponds with the ProcSteal.
-    const ProcStatus ProcSyscallAbandoned = 4;
+    inline constexpr ProcStatus ProcSyscallAbandoned = 4;
 }
 #include "golang/internal/trace/tracev2/spec.fwd.h"
 
@@ -67,90 +69,90 @@ namespace golang::internal::trace::tracev2
     //
     // NOTE: If you add an event type, make sure you also update all
     // tables in this file!
-    const EventType EvNone = 0;
+    inline constexpr EventType EvNone = 0;
     // Structural events.
-    const EventType EvEventBatch = 1;
-    const EventType EvStacks = 2;
-    const EventType EvStack = 3;
-    const EventType EvStrings = 4;
-    const EventType EvString = 5;
-    const EventType EvCPUSamples = 6;
-    const EventType EvCPUSample = 7;
-    const EventType EvFrequency = 8;
+    inline constexpr EventType EvEventBatch = 1;
+    inline constexpr EventType EvStacks = 2;
+    inline constexpr EventType EvStack = 3;
+    inline constexpr EventType EvStrings = 4;
+    inline constexpr EventType EvString = 5;
+    inline constexpr EventType EvCPUSamples = 6;
+    inline constexpr EventType EvCPUSample = 7;
+    inline constexpr EventType EvFrequency = 8;
     // Procs.
-    const EventType EvProcsChange = 9;
-    const EventType EvProcStart = 10;
-    const EventType EvProcStop = 11;
-    const EventType EvProcSteal = 12;
-    const EventType EvProcStatus = 13;
+    inline constexpr EventType EvProcsChange = 9;
+    inline constexpr EventType EvProcStart = 10;
+    inline constexpr EventType EvProcStop = 11;
+    inline constexpr EventType EvProcSteal = 12;
+    inline constexpr EventType EvProcStatus = 13;
     // Goroutines.
-    const EventType EvGoCreate = 14;
-    const EventType EvGoCreateSyscall = 15;
-    const EventType EvGoStart = 16;
-    const EventType EvGoDestroy = 17;
-    const EventType EvGoDestroySyscall = 18;
-    const EventType EvGoStop = 19;
-    const EventType EvGoBlock = 20;
-    const EventType EvGoUnblock = 21;
-    const EventType EvGoSyscallBegin = 22;
-    const EventType EvGoSyscallEnd = 23;
-    const EventType EvGoSyscallEndBlocked = 24;
-    const EventType EvGoStatus = 25;
+    inline constexpr EventType EvGoCreate = 14;
+    inline constexpr EventType EvGoCreateSyscall = 15;
+    inline constexpr EventType EvGoStart = 16;
+    inline constexpr EventType EvGoDestroy = 17;
+    inline constexpr EventType EvGoDestroySyscall = 18;
+    inline constexpr EventType EvGoStop = 19;
+    inline constexpr EventType EvGoBlock = 20;
+    inline constexpr EventType EvGoUnblock = 21;
+    inline constexpr EventType EvGoSyscallBegin = 22;
+    inline constexpr EventType EvGoSyscallEnd = 23;
+    inline constexpr EventType EvGoSyscallEndBlocked = 24;
+    inline constexpr EventType EvGoStatus = 25;
     // STW.
-    const EventType EvSTWBegin = 26;
-    const EventType EvSTWEnd = 27;
+    inline constexpr EventType EvSTWBegin = 26;
+    inline constexpr EventType EvSTWEnd = 27;
     // GC events.
-    const EventType EvGCActive = 28;
-    const EventType EvGCBegin = 29;
-    const EventType EvGCEnd = 30;
-    const EventType EvGCSweepActive = 31;
-    const EventType EvGCSweepBegin = 32;
-    const EventType EvGCSweepEnd = 33;
-    const EventType EvGCMarkAssistActive = 34;
-    const EventType EvGCMarkAssistBegin = 35;
-    const EventType EvGCMarkAssistEnd = 36;
-    const EventType EvHeapAlloc = 37;
-    const EventType EvHeapGoal = 38;
+    inline constexpr EventType EvGCActive = 28;
+    inline constexpr EventType EvGCBegin = 29;
+    inline constexpr EventType EvGCEnd = 30;
+    inline constexpr EventType EvGCSweepActive = 31;
+    inline constexpr EventType EvGCSweepBegin = 32;
+    inline constexpr EventType EvGCSweepEnd = 33;
+    inline constexpr EventType EvGCMarkAssistActive = 34;
+    inline constexpr EventType EvGCMarkAssistBegin = 35;
+    inline constexpr EventType EvGCMarkAssistEnd = 36;
+    inline constexpr EventType EvHeapAlloc = 37;
+    inline constexpr EventType EvHeapGoal = 38;
     // Annotations.
-    const EventType EvGoLabel = 39;
-    const EventType EvUserTaskBegin = 40;
-    const EventType EvUserTaskEnd = 41;
-    const EventType EvUserRegionBegin = 42;
-    const EventType EvUserRegionEnd = 43;
-    const EventType EvUserLog = 44;
+    inline constexpr EventType EvGoLabel = 39;
+    inline constexpr EventType EvUserTaskBegin = 40;
+    inline constexpr EventType EvUserTaskEnd = 41;
+    inline constexpr EventType EvUserRegionBegin = 42;
+    inline constexpr EventType EvUserRegionEnd = 43;
+    inline constexpr EventType EvUserLog = 44;
     // Coroutines. Added in Go 1.23.
-    const EventType EvGoSwitch = 45;
-    const EventType EvGoSwitchDestroy = 46;
-    const EventType EvGoCreateBlocked = 47;
+    inline constexpr EventType EvGoSwitch = 45;
+    inline constexpr EventType EvGoSwitchDestroy = 46;
+    inline constexpr EventType EvGoCreateBlocked = 47;
     // GoStatus with stack. Added in Go 1.23.
-    const EventType EvGoStatusStack = 48;
+    inline constexpr EventType EvGoStatusStack = 48;
     // Batch event for an experimental batch with a custom format. Added in Go 1.23.
-    const EventType EvExperimentalBatch = 49;
+    inline constexpr EventType EvExperimentalBatch = 49;
     // Sync batch. Added in Go 1.25. Previously a lone EvFrequency event.
-    const EventType EvSync = 50;
-    const EventType EvClockSnapshot = 51;
+    inline constexpr EventType EvSync = 50;
+    inline constexpr EventType EvClockSnapshot = 51;
     // In-band end-of-generation signal. Added in Go 1.26.
     // Used in Go 1.25 only internally.
-    const EventType EvEndOfGeneration = 52;
-    const EventType NumEvents = 53;
+    inline constexpr EventType EvEndOfGeneration = 52;
+    inline constexpr EventType NumEvents = 53;
     // Experiments.
     // AllocFree is the alloc-free events experiment.
-    const Experiment AllocFree = 1 + 0;
-    const Experiment NumExperiments = 1 + 1;
+    inline constexpr Experiment AllocFree = 1 + 0;
+    inline constexpr Experiment NumExperiments = 1 + 1;
     // Experimental events.
-    const EventType MaxEvent = 127 + 0;
+    inline constexpr EventType MaxEvent = 127 + 0;
     // Experimental heap span events. Added in Go 1.23.
-    const EventType EvSpan = 127 + 1;
-    const EventType EvSpanAlloc = 127 + 2;
-    const EventType EvSpanFree = 127 + 3;
+    inline constexpr EventType EvSpan = 127 + 1;
+    inline constexpr EventType EvSpanAlloc = 127 + 2;
+    inline constexpr EventType EvSpanFree = 127 + 3;
     // Experimental heap object events. Added in Go 1.23.
-    const EventType EvHeapObject = 127 + 4;
-    const EventType EvHeapObjectAlloc = 127 + 5;
-    const EventType EvHeapObjectFree = 127 + 6;
+    inline constexpr EventType EvHeapObject = 127 + 4;
+    inline constexpr EventType EvHeapObjectAlloc = 127 + 5;
+    inline constexpr EventType EvHeapObjectFree = 127 + 6;
     // Experimental goroutine stack events. Added in Go 1.23.
-    const EventType EvGoroutineStack = 127 + 7;
-    const EventType EvGoroutineStackAlloc = 127 + 8;
-    const EventType EvGoroutineStackFree = 127 + 9;
-    const EventType MaxExperimentalEvent = 127 + 10;
-    const tracev2::EventType NumExperimentalEvents = MaxExperimentalEvent - MaxEvent;
+    inline constexpr EventType EvGoroutineStack = 127 + 7;
+    inline constexpr EventType EvGoroutineStackAlloc = 127 + 8;
+    inline constexpr EventType EvGoroutineStackFree = 127 + 9;
+    inline constexpr EventType MaxExperimentalEvent = 127 + 10;
+    inline constexpr tracev2::EventType NumExperimentalEvents = MaxExperimentalEvent - MaxEvent;
 }

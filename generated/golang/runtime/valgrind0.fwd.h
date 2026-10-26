@@ -6,5 +6,5 @@
 
 namespace golang::runtime
 {
-    const bool valgrindenabled = false;
+    inline constexpr bool valgrindenabled = false;
 }

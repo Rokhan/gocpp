@@ -47,7 +47,7 @@ namespace golang::encoding::json
         auto hex = "0123456789abcdef"_s;
         // The characters can only appear in string literals,
         // so just scan the string one byte at a time.
-        auto start = 0;
+        int64_t start = 0;
         for(auto [i, c] : src)
         {
             if(c == '<' || c == '>' || c == '&')

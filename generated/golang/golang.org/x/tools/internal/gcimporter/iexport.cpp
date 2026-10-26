@@ -253,7 +253,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         return iexportCommon(out, fset, bundle, shallow, iexportVersion, pkgs, nullptr);
     }
 
-    gocpp::error iexportCommon(io::Writer out, token::FileSet* fset, bool bundle, bool shallow, int version, gocpp::slice<types::Package*> pkgs, ReportFunc reportf)
+    gocpp::error iexportCommon(io::Writer out, token::FileSet* fset, bool bundle, bool shallow, int64_t version, gocpp::slice<types::Package*> pkgs, ReportFunc reportf)
     {
         gocpp::error err;
         gocpp::Defer defer;
@@ -433,7 +433,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         // we save only a sparse list of (index, offset) pairs for
         // the start of each line that contains a needed position.
         // (index, offset) pairs
-        gocpp::slice<gocpp::array<int, 2>> sparse = {};
+        gocpp::slice<gocpp::array<int64_t, 2>> sparse = {};
         outer:
         for(auto [i, lineStart] : lines)
         {
@@ -451,7 +451,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             // Does this line contains a needed offset?
             if(needed[0] < lineEnd)
             {
-                sparse = append(sparse, gocpp::array<int, 2> {i, lineStart});
+                sparse = append(sparse, gocpp::array<int64_t, 2> {i, lineStart});
                 for(; needed[0] < lineEnd; )
                 {
                     needed = needed.make_slice(1);
@@ -465,7 +465,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
         // Delta-encode the columns.
         rec::uint64(gocpp::recv(w), uint64_t(len(sparse)));
-        gocpp::array<int, 2> prev = {};
+        gocpp::array<int64_t, 2> prev = {};
         for(auto [gocpp_ignored, pair] : sparse)
         {
             rec::uint64(gocpp::recv(w), uint64_t(pair[0] - prev[0]));
@@ -522,13 +522,13 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         {
             pkgs = append(pkgs, pkg);
 
-            sort::Slice(objs, [=](int i, int j) mutable -> bool
+            sort::Slice(objs, [=](int64_t i, int64_t j) mutable -> bool
             {
                 return objs[i].name < objs[j].name;
             });
         }
 
-        sort::Slice(pkgs, [=](int i, int j) mutable -> bool
+        sort::Slice(pkgs, [=](int64_t i, int64_t j) mutable -> bool
         {
             return rec::exportPath(gocpp::recv(w), pkgs[i]) < rec::exportPath(gocpp::recv(w), pkgs[j]);
         });
@@ -906,7 +906,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                             auto constraint = rec::Constraint(gocpp::recv(tparam));
                             if(p->version >= iexportVersionGo1_18)
                             {
-                                auto implicit = false;
+                                bool implicit = false;
                                 if(auto [iface, gocpp_id_3] = gocpp::getValue<types::Interface*>(types::Unalias(constraint)); iface != nullptr)
                                 {
                                     implicit = rec::IsImplicit(gocpp::recv(iface));
@@ -1420,7 +1420,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                         rec::pkg(gocpp::recv(w), pkg);
                         auto n = rec::NumEmbeddeds(gocpp::recv(t));
                         rec::uint64(gocpp::recv(w), uint64_t(n));
-                        for(auto i = 0; i < n; i++)
+                        for(int64_t i = 0; i < n; i++)
                         {
                             auto ft = rec::EmbeddedType(gocpp::recv(t), i);
                             if(auto [named, gocpp_id_6] = gocpp::getValue<types::Named*>(types::Unalias(ft)); named != nullptr)
@@ -1438,7 +1438,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                         // for interface methods that are promoted from other packages.
                         n = rec::NumExplicitMethods(gocpp::recv(t));
                         rec::uint64(gocpp::recv(w), uint64_t(n));
-                        for(auto i = 0; i < n; i++)
+                        for(int64_t i = 0; i < n; i++)
                         {
                             auto m = rec::ExplicitMethod(gocpp::recv(t), i);
                             if(w->p->shallow)
@@ -1735,7 +1735,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         // Convert little-endian to big-endian.
         // I can't believe this is necessary.
         auto bytes = constant::Bytes(x);
-        for(auto i = 0; i < len(bytes) / 2; i++)
+        for(int64_t i = 0; i < len(bytes) / 2; i++)
         {
             std::tie(bytes[i], bytes[len(bytes) - 1 - i]) = std::tuple{bytes[len(bytes) - 1 - i], bytes[i]};
         }
@@ -1783,7 +1783,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         {
             gocpp::panic(internalErrorf("leading zeros"_s));
         }
-        if((unsigned int)(len(b)) > maxBytes)
+        if((uint64_t)(len(b)) > maxBytes)
         {
             gocpp::panic(internalErrorf("bad mpint length: %d > %d (type %v, value %v)"_s, len(b), maxBytes, typ, x));
         }
@@ -1801,10 +1801,10 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         // Check if x can use small value encoding.
         if(len(b) <= 1)
         {
-            unsigned int ux = {};
+            uint64_t ux = {};
             if(len(b) == 1)
             {
-                ux = (unsigned int)(b[0]);
+                ux = (uint64_t)(b[0]);
             }
             if(go_signed)
             {
@@ -1821,10 +1821,10 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             }
         }
 
-        auto n = 256 - (unsigned int)(len(b));
+        auto n = 256 - (uint64_t)(len(b));
         if(go_signed)
         {
-            n = 256 - 2 * (unsigned int)(len(b));
+            n = 256 - 2 * (uint64_t)(len(b));
             if(negative)
             {
                 n |= 1;
@@ -1858,7 +1858,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
         // Scale so that mant is an integer.
         auto prec = rec::MinPrec(gocpp::recv(mant));
-        rec::SetMantExp(gocpp::recv(mant), & mant, int(prec));
+        rec::SetMantExp(gocpp::recv(mant), & mant, int64_t(prec));
         exp -= int64_t(prec);
 
         auto [manti, acc] = rec::Int(gocpp::recv(mant), nullptr);
@@ -1944,7 +1944,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     namespace rec
     {
-        int Available(const gocpp::PtrRecv<struct intWriter, false>& self)
+        int64_t Available(const gocpp::PtrRecv<struct intWriter, false>& self)
         {
             return bytes::rec::Available(gocpp::recv(self.ptr->Buffer));
         }
@@ -1959,32 +1959,32 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return bytes::rec::Bytes(gocpp::recv(self.ptr->Buffer));
         }
 
-        int Cap(const gocpp::PtrRecv<struct intWriter, false>& self)
+        int64_t Cap(const gocpp::PtrRecv<struct intWriter, false>& self)
         {
             return bytes::rec::Cap(gocpp::recv(self.ptr->Buffer));
         }
 
-        void Grow(const gocpp::PtrRecv<struct intWriter, false>& self, int n)
+        void Grow(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n)
         {
             return bytes::rec::Grow(gocpp::recv(self.ptr->Buffer), n);
         }
 
-        int Len(const gocpp::PtrRecv<struct intWriter, false>& self)
+        int64_t Len(const gocpp::PtrRecv<struct intWriter, false>& self)
         {
             return bytes::rec::Len(gocpp::recv(self.ptr->Buffer));
         }
 
-        gocpp::slice<unsigned char> Next(const gocpp::PtrRecv<struct intWriter, false>& self, int n)
+        gocpp::slice<unsigned char> Next(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n)
         {
             return bytes::rec::Next(gocpp::recv(self.ptr->Buffer), n);
         }
 
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct intWriter, false>& self, int n)
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n)
         {
             return bytes::rec::Peek(gocpp::recv(self.ptr->Buffer), n);
         }
 
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::slice<unsigned char> p)
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::slice<unsigned char> p)
         {
             return bytes::rec::Read(gocpp::recv(self.ptr->Buffer), p);
         }
@@ -2004,7 +2004,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return bytes::rec::ReadFrom(gocpp::recv(self.ptr->Buffer), r);
         }
 
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct intWriter, false>& self)
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::PtrRecv<struct intWriter, false>& self)
         {
             return bytes::rec::ReadRune(gocpp::recv(self.ptr->Buffer));
         }
@@ -2024,7 +2024,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return bytes::rec::String(gocpp::recv(self.ptr->Buffer));
         }
 
-        void Truncate(const gocpp::PtrRecv<struct intWriter, false>& self, int n)
+        void Truncate(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n)
         {
             return bytes::rec::Truncate(gocpp::recv(self.ptr->Buffer), n);
         }
@@ -2039,7 +2039,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return bytes::rec::UnreadRune(gocpp::recv(self.ptr->Buffer));
         }
 
-        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::slice<unsigned char> p)
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::slice<unsigned char> p)
         {
             return bytes::rec::Write(gocpp::recv(self.ptr->Buffer), p);
         }
@@ -2049,12 +2049,12 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return bytes::rec::WriteByte(gocpp::recv(self.ptr->Buffer), c);
         }
 
-        std::tuple<int, gocpp::error> WriteRune(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::rune r)
+        std::tuple<int64_t, gocpp::error> WriteRune(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::rune r)
         {
             return bytes::rec::WriteRune(gocpp::recv(self.ptr->Buffer), r);
         }
 
-        std::tuple<int, gocpp::error> WriteString(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::string s)
+        std::tuple<int64_t, gocpp::error> WriteString(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::string s)
         {
             return bytes::rec::WriteString(gocpp::recv(self.ptr->Buffer), s);
         }
@@ -2069,7 +2069,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return bytes::rec::empty(gocpp::recv(self.ptr->Buffer));
         }
 
-        int grow(const gocpp::PtrRecv<struct intWriter, false>& self, int n)
+        int64_t grow(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n)
         {
             return bytes::rec::grow(gocpp::recv(self.ptr->Buffer), n);
         }
@@ -2079,7 +2079,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             return bytes::rec::readSlice(gocpp::recv(self.ptr->Buffer), delim);
         }
 
-        std::tuple<int, bool> tryGrowByReslice(const gocpp::PtrRecv<struct intWriter, false>& self, int n)
+        std::tuple<int64_t, bool> tryGrowByReslice(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n)
         {
             return bytes::rec::tryGrowByReslice(gocpp::recv(self.ptr->Buffer), n);
         }

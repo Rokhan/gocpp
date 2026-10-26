@@ -7,11 +7,13 @@
 namespace golang::main
 {
     // PrimeRK is the prime base used in Rabin-Karp algorithm.
-    const long PrimeRK = 16777619;
+    inline constexpr long PrimeRK = 16777619;
     template<typename T> struct Wrapper;
     template<typename T> struct Pointer;
     struct entry;
-    template<typename T> using Boxed = int;
+    template<typename T> struct GoTag_Boxed;
+    template<typename T> using Boxed = gocpp::defined<int64_t, GoTag_Boxed<T>>;
     template<typename K, typename V> struct Pair;
-    template<typename K, typename V> using BoxedPair = int;
+    template<typename K, typename V> struct GoTag_BoxedPair;
+    template<typename K, typename V> using BoxedPair = gocpp::defined<int64_t, GoTag_BoxedPair<K ,V>>;
 }

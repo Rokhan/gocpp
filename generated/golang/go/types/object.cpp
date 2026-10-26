@@ -349,7 +349,7 @@ namespace golang::go::types
         // as that may change the order of methods between a setup
         // inside a package and outside a package - which breaks some
         // tests)
-        auto path = "_"_s;
+        gocpp::string path = "_"_s;
         // pkg is nil for objects in Universe scope and possibly types
         // introduced via Eval (see also comment in object.sameId)
         if(pkg != nullptr && pkg->path != ""_s)
@@ -523,7 +523,7 @@ namespace golang::go::types
     // Objects are ordered nil before non-nil, exported before
     // non-exported, then by name, and finally (for non-exported
     // functions) by package path.
-    int rec::cmp(object* a, object* b)
+    int64_t rec::cmp(object* a, object* b)
     {
         if(a == b)
         {
@@ -636,7 +636,7 @@ namespace golang::go::types
             return rec::Type(gocpp::recv(self.ptr->object));
         }
 
-        int cmp(const gocpp::PtrRecv<struct PkgName, false>& self, types::object* b)
+        int64_t cmp(const gocpp::PtrRecv<struct PkgName, false>& self, types::object* b)
         {
             return rec::cmp(gocpp::recv(self.ptr->object), b);
         }
@@ -766,7 +766,7 @@ namespace golang::go::types
             return rec::Type(gocpp::recv(self.ptr->object));
         }
 
-        int cmp(const gocpp::PtrRecv<struct Const, false>& self, types::object* b)
+        int64_t cmp(const gocpp::PtrRecv<struct Const, false>& self, types::object* b)
         {
             return rec::cmp(gocpp::recv(self.ptr->object), b);
         }
@@ -900,7 +900,7 @@ namespace golang::go::types
             return rec::Type(gocpp::recv(self.ptr->object));
         }
 
-        int cmp(const gocpp::PtrRecv<struct TypeName, false>& self, types::object* b)
+        int64_t cmp(const gocpp::PtrRecv<struct TypeName, false>& self, types::object* b)
         {
             return rec::cmp(gocpp::recv(self.ptr->object), b);
         }
@@ -1104,7 +1104,7 @@ namespace golang::go::types
             return rec::Type(gocpp::recv(self.ptr->object));
         }
 
-        int cmp(const gocpp::PtrRecv<struct Var, false>& self, types::object* b)
+        int64_t cmp(const gocpp::PtrRecv<struct Var, false>& self, types::object* b)
         {
             return rec::cmp(gocpp::recv(self.ptr->object), b);
         }
@@ -1162,7 +1162,7 @@ namespace golang::go::types
     });
     gocpp::string rec::String(VarKind kind)
     {
-        if(0 <= kind && int(kind) < len(varKindNames))
+        if(0 <= kind && int64_t(kind) < len(varKindNames))
         {
             return varKindNames[kind];
         }
@@ -1338,7 +1338,7 @@ namespace golang::go::types
             return rec::Type(gocpp::recv(self.ptr->object));
         }
 
-        int cmp(const gocpp::PtrRecv<struct Func, false>& self, types::object* b)
+        int64_t cmp(const gocpp::PtrRecv<struct Func, false>& self, types::object* b)
         {
             return rec::cmp(gocpp::recv(self.ptr->object), b);
         }
@@ -1560,7 +1560,7 @@ namespace golang::go::types
             return rec::Type(gocpp::recv(self.ptr->object));
         }
 
-        int cmp(const gocpp::PtrRecv<struct Label, false>& self, types::object* b)
+        int64_t cmp(const gocpp::PtrRecv<struct Label, false>& self, types::object* b)
         {
             return rec::cmp(gocpp::recv(self.ptr->object), b);
         }
@@ -1688,7 +1688,7 @@ namespace golang::go::types
             return rec::Type(gocpp::recv(self.ptr->object));
         }
 
-        int cmp(const gocpp::PtrRecv<struct Builtin, false>& self, types::object* b)
+        int64_t cmp(const gocpp::PtrRecv<struct Builtin, false>& self, types::object* b)
         {
             return rec::cmp(gocpp::recv(self.ptr->object), b);
         }
@@ -1809,7 +1809,7 @@ namespace golang::go::types
             return rec::Type(gocpp::recv(self.ptr->object));
         }
 
-        int cmp(const gocpp::PtrRecv<struct Nil, false>& self, types::object* b)
+        int64_t cmp(const gocpp::PtrRecv<struct Nil, false>& self, types::object* b)
         {
             return rec::cmp(gocpp::recv(self.ptr->object), b);
         }

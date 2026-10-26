@@ -40,7 +40,7 @@ namespace golang::main
         auto dump = hex::Dump(src);
         mocklib::Println(dump);
 
-        auto s = "48656c6c6f"_s;
+        gocpp::string s = "48656c6c6f"_s;
         gocpp::slice<unsigned char> data;
         std::tie(data, err) = hex::DecodeString(s);
         if(err != nullptr)

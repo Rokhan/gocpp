@@ -74,7 +74,7 @@ namespace golang::main
         auto t = golang::main::toto {};
         mocklib::Println("toto.Pi:"_s, rec::Pi(gocpp::recv(t)));
 
-        auto go_new = "new"_s;
+        gocpp::string go_new = "new"_s;
         mocklib::Println("new:"_s, go_new);
 
         newFunction();

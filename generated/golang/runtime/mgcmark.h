@@ -20,6 +20,8 @@ namespace golang::runtime
     void gcWakeAllAssists();
     bool gcParkAssist();
     void gcFlushBgCredit(int64_t scanWork);
+    struct GoTag_gcDrainFlags { };
+    using gcDrainFlags = gocpp::defined<int64_t, GoTag_gcDrainFlags>;
     std::tuple<uint32_t, bool> gcNextMarkRoot();
     void shade(uintptr_t b);
     void gcDumpObject(gocpp::string label, uintptr_t obj, uintptr_t off);
@@ -42,11 +44,11 @@ namespace golang::runtime
     //
     // Must be a multiple of the pageInUse bitmap element size and
     // must also evenly divide pagesPerArena.
-    const int pagesPerSpanRoot = gocpp::min(512, pagesPerArena);
-    std::tuple<gocpp::slice<g*>, int> allGsSnapshotSortedForGC();
+    inline constexpr int64_t pagesPerSpanRoot = gocpp::min(512, pagesPerArena);
+    std::tuple<gocpp::slice<g*>, int64_t> allGsSnapshotSortedForGC();
     int64_t markroot(gcWork* gcw, uint32_t i, bool flushBgCredit);
-    int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, gcWork* gcw, int shard);
-    void markrootSpans(gcWork* gcw, int shard);
+    int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, gcWork* gcw, int64_t shard);
+    void markrootSpans(gcWork* gcw, int64_t shard);
     void gcScanFinalizer(specialfinalizer* spf, mspan* s, gcWork* gcw);
     void gcScanCleanup(specialCleanup* spc, gcWork* gcw);
     void gcAssistAlloc(g* gp);

@@ -302,7 +302,7 @@ namespace golang::go::build
     void rec::readKeyword(importReader* r, gocpp::string kw)
     {
         rec::peekByte(gocpp::recv(r), true);
-        for(auto i = 0; i < len(kw); i++)
+        for(int64_t i = 0; i < len(kw); i++)
         {
             if(rec::nextByte(gocpp::recv(r), false) != kw[i])
             {
@@ -488,7 +488,7 @@ namespace golang::go::build
             return nullptr;
         }
 
-        auto hasEmbed = false;
+        bool hasEmbed = false;
         for(auto [gocpp_ignored, decl] : info->parsed->Decls)
         {
             auto [d, ok] = gocpp::getValue<ast::GenDecl*>(decl);

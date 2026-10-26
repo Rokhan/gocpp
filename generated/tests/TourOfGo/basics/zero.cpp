@@ -22,7 +22,7 @@ namespace golang::main
 
     void main()
     {
-        int i = {};
+        int64_t i = {};
         double f = {};
         bool b = {};
         gocpp::string s = {};

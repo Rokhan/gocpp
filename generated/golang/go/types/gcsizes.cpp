@@ -112,7 +112,7 @@ namespace golang::go::types
                         // spec: "For a variable x of struct type: unsafe.Alignof(x)
                         // is the largest of the values unsafe.Alignof(x.f) for each
                         // field f of x, but at least 1."
-                        auto max = int64_t(1);
+                        int64_t max = int64_t(1);
                         for(auto [gocpp_ignored, f] : t->fields)
                         {
                             if(auto a = rec::Alignof(gocpp::recv(s), f->object.typ); a > max)
@@ -230,7 +230,7 @@ namespace golang::go::types
                     types::Basic* t = gocpp::any_cast<types::Basic*>(rec::Underlying(gocpp::recv(T)));
                     assert(isTyped(T));
                     auto k = t->kind;
-                    if(int(k) < len(basicSizes))
+                    if(int64_t(k) < len(basicSizes))
                     {
                         if(auto s = basicSizes[k]; s > 0)
                         {

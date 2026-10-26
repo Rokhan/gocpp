@@ -18,11 +18,11 @@ namespace golang::internal::bytealg
     }
 
     //go:noescape
-    int IndexByte(gocpp::slice<unsigned char> b, unsigned char c)
+    int64_t IndexByte(gocpp::slice<unsigned char> b, unsigned char c)
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    int IndexByteString(gocpp::string s, unsigned char c)
+    int64_t IndexByteString(gocpp::string s, unsigned char c)
     /* convertBlockStmt, nil block */;
 
 }

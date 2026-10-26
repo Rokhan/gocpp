@@ -78,7 +78,7 @@ namespace golang::internal::gover
     // The versions x and y must not begin with a "go" prefix: just "1.21" not "go1.21".
     // Malformed versions compare less than well-formed versions and equal to each other.
     // The language version "1.21" compares less than the release candidate and eventual releases "1.21rc1" and "1.21.0".
-    int Compare(gocpp::string x, gocpp::string y)
+    int64_t Compare(gocpp::string x, gocpp::string y)
     {
         auto vx = Parse(x);
         auto vy = Parse(y);
@@ -213,7 +213,7 @@ namespace golang::internal::gover
         }
 
         // Parse prerelease.
-        auto i = 0;
+        int64_t i = 0;
         for(; i < len(x) && (x[i] < '0' || '9' < x[i]); )
         {
             if(x[i] < 'a' || 'z' < x[i])
@@ -247,7 +247,7 @@ namespace golang::internal::gover
         gocpp::string n;
         gocpp::string rest;
         bool ok;
-        auto i = 0;
+        int64_t i = 0;
         for(; i < len(x) && '0' <= x[i] && x[i] <= '9'; )
         {
             i++;
@@ -262,7 +262,7 @@ namespace golang::internal::gover
 
     // CmpInt returns cmp.Compare(x, y) interpreting x and y as decimal numbers.
     // (Copied from golang.org/x/mod/semver's compareInt.)
-    int CmpInt(gocpp::string x, gocpp::string y)
+    int64_t CmpInt(gocpp::string x, gocpp::string y)
     {
         if(x == y)
         {

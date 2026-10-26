@@ -6,8 +6,10 @@
 
 namespace golang::main
 {
-    using ArbitraryType = int;
-    using IntegerType = int;
+    struct GoTag_ArbitraryType;
+    using ArbitraryType = gocpp::defined<int64_t, GoTag_ArbitraryType>;
+    struct GoTag_IntegerType;
+    using IntegerType = gocpp::defined<int64_t, GoTag_IntegerType>;
     struct Vertex;
     struct GoTag_VertexAlias;
     struct GoTag_vvvv2;

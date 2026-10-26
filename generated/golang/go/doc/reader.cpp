@@ -144,7 +144,7 @@ namespace golang::go::doc
             return;
         }
         // function doesn't exist or has no documentation; use f
-        auto recv = ""_s;
+        gocpp::string recv = ""_s;
         if(f->Recv != nullptr)
         {
             ast::Expr typ = {};
@@ -479,10 +479,10 @@ namespace golang::go::doc
         // Heuristic: For each typed entry, determine the type name, if any.
         // If there is exactly one type name that is sufficiently
         // frequent, associate the decl with the respective type.
-        auto domName = ""_s;
-        auto domFreq = 0;
-        auto prev = ""_s;
-        auto n = 0;
+        gocpp::string domName = ""_s;
+        int64_t domFreq = 0;
+        gocpp::string prev = ""_s;
+        int64_t n = 0;
         for(auto [gocpp_ignored, spec] : decl->Specs)
         {
             auto [s, ok] = gocpp::getValue<ast::ValueSpec*>(spec);
@@ -491,7 +491,7 @@ namespace golang::go::doc
                 // should not happen, but be conservative
                 continue;
             }
-            auto name = ""_s;
+            gocpp::string name = ""_s;
             //Go switch emulation
             {
                 int conditionId = -1;
@@ -539,7 +539,7 @@ namespace golang::go::doc
         // determine values list with which to associate the Value for this decl
         auto values = & r->values;
         auto threshold = 0.75;
-        if(domName != ""_s && rec::isVisible(gocpp::recv(r), domName) && domFreq >= int(double(len(decl->Specs)) * threshold))
+        if(domName != ""_s && rec::isVisible(gocpp::recv(r), domName) && domFreq >= int64_t(double(len(decl->Specs)) * threshold))
         {
             // typed entries are sufficiently frequent
             if(auto typ = rec::lookupType(gocpp::recv(r), domName); typ != nullptr)
@@ -697,7 +697,7 @@ namespace golang::go::doc
         {
             // type to associate the function with
             namedType* typ = {};
-            auto numResultTypes = 0;
+            int64_t numResultTypes = 0;
             for(auto [gocpp_ignored, res] : fun->Type->Results->List)
             {
                 auto factoryType = res->Type;
@@ -768,8 +768,8 @@ namespace golang::go::doc
     gocpp::string clean(gocpp::string s)
     {
         gocpp::slice<unsigned char> b = {};
-        auto p = (unsigned char)(' ');
-        for(auto i = 0; i < len(s); i++)
+        unsigned char p = (unsigned char)(' ');
+        for(int64_t i = 0; i < len(s); i++)
         {
             auto q = s[i];
             if(q == '\r' || q == '\t')
@@ -826,7 +826,7 @@ namespace golang::go::doc
         for(auto [gocpp_ignored, group] : comments)
         {
             // comment index of most recent note start, valid if >= 0
-            auto i = - 1;
+            int64_t i = - 1;
             auto list = group->List;
             for(auto [j, c] : list)
             {
@@ -982,7 +982,7 @@ namespace golang::go::doc
     {
         // initialize reader
         r->filenames = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), len(pkg->Files));
-        r->imports = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+        r->imports = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int64_t>>());
         r->mode = mode;
         r->types = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, namedType*>>());
         r->funcs = gocpp::make(gocpp::Tag<methodSet>());
@@ -991,7 +991,7 @@ namespace golang::go::doc
 
         // sort package files before reading them so that the
         // result does not depend on map iteration order
-        auto i = 0;
+        int64_t i = 0;
         for(auto [filename, gocpp_ignored] : pkg->Files)
         {
             r->filenames[i] = filename;
@@ -1031,7 +1031,7 @@ namespace golang::go::doc
         }
     }
 
-    Func* customizeRecv(Func* f, gocpp::string recvTypeName, bool embeddedIsPtr, int level)
+    Func* customizeRecv(Func* f, gocpp::string recvTypeName, bool embeddedIsPtr, int64_t level)
     {
         if(f == nullptr || f->Decl == nullptr || f->Decl->Recv == nullptr || len(f->Decl->Recv->List) != 1)
         {
@@ -1078,7 +1078,7 @@ namespace golang::go::doc
     }
 
     // collectEmbeddedMethods collects the embedded methods of typ in mset.
-    void rec::collectEmbeddedMethods(reader* r, methodSet mset, namedType* typ, gocpp::string recvTypeName, bool embeddedIsPtr, int level, embeddedSet visited)
+    void rec::collectEmbeddedMethods(reader* r, methodSet mset, namedType* typ, gocpp::string recvTypeName, bool embeddedIsPtr, int64_t level, embeddedSet visited)
     {
         visited.ref(typ) = true;
         for(auto [embedded, isPtr] : typ->embedded)
@@ -1181,10 +1181,10 @@ namespace golang::go::doc
         }
     }
 
-    gocpp::slice<gocpp::string> sortedKeys(gocpp::map<gocpp::string, int> m)
+    gocpp::slice<gocpp::string> sortedKeys(gocpp::map<gocpp::string, int64_t> m)
     {
         auto list = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), len(m));
-        auto i = 0;
+        int64_t i = 0;
         for(auto [key, gocpp_ignored] : m)
         {
             list[i] = key;
@@ -1211,7 +1211,7 @@ namespace golang::go::doc
     {
         // big enough in any case
         auto list = gocpp::make(gocpp::Tag<gocpp::slice<Value*>>(), len(m));
-        auto i = 0;
+        int64_t i = 0;
         for(auto [gocpp_ignored, val] : m)
         {
             if(val->Decl->Tok == tok)
@@ -1222,7 +1222,7 @@ namespace golang::go::doc
         }
         list = list.make_slice(0, i);
 
-        slices::SortFunc(list, [=](Value* a, Value* b) mutable -> int
+        slices::SortFunc(list, [=](Value* a, Value* b) mutable -> int64_t
         {
             auto r = strings::Compare(sortingName(a->Decl), sortingName(b->Decl));
             if(r != 0)
@@ -1238,7 +1238,7 @@ namespace golang::go::doc
     gocpp::slice<Type*> sortedTypes(gocpp::map<gocpp::string, namedType*> m, bool allMethods)
     {
         auto list = gocpp::make(gocpp::Tag<gocpp::slice<Type*>>(), len(m));
-        auto i = 0;
+        int64_t i = 0;
         for(auto [gocpp_ignored, t] : m)
         {
             list[i] = gocpp::InitPtr<Type>([=](auto& x) {
@@ -1253,7 +1253,7 @@ namespace golang::go::doc
             i++;
         }
 
-        slices::SortFunc(list, [=](Type* a, Type* b) mutable -> int
+        slices::SortFunc(list, [=](Type* a, Type* b) mutable -> int64_t
         {
             return strings::Compare(a->Name, b->Name);
         });
@@ -1273,7 +1273,7 @@ namespace golang::go::doc
     gocpp::slice<Func*> sortedFuncs(methodSet m, bool allMethods)
     {
         auto list = gocpp::make(gocpp::Tag<gocpp::slice<Func*>>(), len(m));
-        auto i = 0;
+        int64_t i = 0;
         for(auto [gocpp_ignored, m] : m)
         {
             // determine which methods to include
@@ -1301,7 +1301,7 @@ namespace golang::go::doc
             }
         }
         list = list.make_slice(0, i);
-        slices::SortFunc(list, [=](Func* a, Func* b) mutable -> int
+        slices::SortFunc(list, [=](Func* a, Func* b) mutable -> int64_t
         {
             return strings::Compare(a->Name, b->Name);
         });

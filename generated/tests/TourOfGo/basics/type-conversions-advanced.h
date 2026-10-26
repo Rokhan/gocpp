@@ -13,7 +13,7 @@
 namespace golang::main
 {
     void toto();
-    int totoInt();
+    int64_t totoInt();
     struct III : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;

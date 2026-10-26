@@ -37,7 +37,7 @@ namespace golang::internal::syscall::windows::registry
 
     namespace rec
     {
-        std::tuple<int, uint32_t, gocpp::error> GetValue(Key k, gocpp::string name, gocpp::slice<unsigned char> buf);
+        std::tuple<int64_t, uint32_t, gocpp::error> GetValue(Key k, gocpp::string name, gocpp::slice<unsigned char> buf);
         std::tuple<gocpp::slice<unsigned char>, uint32_t, gocpp::error> getValue(Key k, gocpp::string name, gocpp::slice<unsigned char> buf);
         std::tuple<gocpp::string, uint32_t, gocpp::error> GetStringValue(Key k, gocpp::string name);
         std::tuple<gocpp::string, gocpp::error> GetMUIStringValue(Key k, gocpp::string name);

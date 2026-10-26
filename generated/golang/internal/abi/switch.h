@@ -17,7 +17,7 @@ namespace golang::internal::abi
         // type of source value (a *Type)
         uintptr_t Typ{};
         // case # to dispatch to
-        int Case{};
+        int64_t Case{};
         // itab to use for resulting case variable (a *runtime.itab)
         uintptr_t Itab{};
 
@@ -95,7 +95,7 @@ namespace golang::internal::abi
     struct InterfaceSwitch
     {
         InterfaceSwitchCache* Cache{};
-        int NCases{};
+        int64_t NCases{};
         // Array of NCases elements.
         // Each case must be a non-empty interface type.
         gocpp::array<golang::internal::abi::InterfaceType*, 1> Cases{};

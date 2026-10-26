@@ -114,7 +114,7 @@ namespace golang::go::types
     }
 
     // Len returns the number of scope elements.
-    int rec::Len(golang::go::types::Scope* s)
+    int64_t rec::Len(golang::go::types::Scope* s)
     {
         return len(s->elems);
     }
@@ -123,7 +123,7 @@ namespace golang::go::types
     gocpp::slice<gocpp::string> rec::Names(golang::go::types::Scope* s)
     {
         auto names = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), len(s->elems));
-        auto i = 0;
+        int64_t i = 0;
         for(auto [name, gocpp_ignored] : s->elems)
         {
             names[i] = name;
@@ -134,13 +134,13 @@ namespace golang::go::types
     }
 
     // NumChildren returns the number of scopes nested in s.
-    int rec::NumChildren(golang::go::types::Scope* s)
+    int64_t rec::NumChildren(golang::go::types::Scope* s)
     {
         return len(s->children);
     }
 
     // Child returns the i'th child scope for 0 <= i < NumChildren().
-    golang::go::types::Scope* rec::Child(golang::go::types::Scope* s, int i)
+    golang::go::types::Scope* rec::Child(golang::go::types::Scope* s, int64_t i)
     {
         return s->children[i];
     }
@@ -227,7 +227,7 @@ namespace golang::go::types
     // The level of indentation is controlled by n >= 0, with
     // n == 0 for no indentation.
     // If recurse is set, it also writes nested (children) scopes.
-    void rec::WriteTo(golang::go::types::Scope* s, io::Writer w, int n, bool recurse)
+    void rec::WriteTo(golang::go::types::Scope* s, io::Writer w, int64_t n, bool recurse)
     {
         auto ind = ".  "_s;
         auto indn = strings::Repeat(ind, n);

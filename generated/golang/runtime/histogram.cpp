@@ -91,8 +91,8 @@ namespace golang::runtime
         // bucket is the bucket index, which is the bucketBit minus the
         // highest bit of the minimum, plus one to leave room for the catch-all
         // bucket for samples lower than the minimum.
-        unsigned int bucketBit = {};
-        unsigned int bucket = {};
+        uint64_t bucketBit = {};
+        uint64_t bucket = {};
         if(auto l = sys::Len64(uint64_t(duration)); l < timeHistMinBucketBits)
         {
             bucketBit = timeHistMinBucketBits;
@@ -101,7 +101,7 @@ namespace golang::runtime
         }
         else
         {
-            bucketBit = (unsigned int)(l);
+            bucketBit = (uint64_t)(l);
             bucket = bucketBit - timeHistMinBucketBits + 1;
         }
         // If the bucket we computed is greater than the number of buckets,
@@ -112,7 +112,7 @@ namespace golang::runtime
             return;
         }
         // The sub-bucket index is just next timeHistSubBucketBits after the bucketBit.
-        auto subBucket = (unsigned int)(duration >> (bucketBit - 1 - timeHistSubBucketBits)) % timeHistNumSubBuckets;
+        auto subBucket = (uint64_t)(duration >> (bucketBit - 1 - timeHistSubBucketBits)) % timeHistNumSubBuckets;
         rec::Add(gocpp::recv(h->counts[bucket * timeHistNumSubBuckets + subBucket]), 1);
     }
 
@@ -133,13 +133,13 @@ namespace golang::runtime
 
     double float64Inf()
     {
-        auto inf = uint64_t(fInf);
+        uint64_t inf = uint64_t(fInf);
         return *(double*)(gocpp::unsafe_pointer(& inf));
     }
 
     double float64NegInf()
     {
-        auto inf = uint64_t(fNegInf);
+        uint64_t inf = uint64_t(fNegInf);
         return *(double*)(gocpp::unsafe_pointer(& inf));
     }
 
@@ -152,7 +152,7 @@ namespace golang::runtime
         // Underflow bucket.
         b[0] = float64NegInf();
 
-        for(auto j = 0; j < timeHistNumSubBuckets; j++)
+        for(int64_t j = 0; j < timeHistNumSubBuckets; j++)
         {
             // No bucket bit for the first few buckets. Just sub-bucket bits after the
             // min bucket bit.
@@ -163,9 +163,9 @@ namespace golang::runtime
         }
         // Generate the rest of the buckets. It's easier to reason
         // about if we cut out the 0'th bucket.
-        for(auto i = timeHistMinBucketBits; i < timeHistMaxBucketBits; i++)
+        for(int64_t i = timeHistMinBucketBits; i < timeHistMaxBucketBits; i++)
         {
-            for(auto j = 0; j < timeHistNumSubBuckets; j++)
+            for(int64_t j = 0; j < timeHistNumSubBuckets; j++)
             {
                 // Set the bucket bit.
                 auto bucketNanos = uint64_t(1) << (i - 1);

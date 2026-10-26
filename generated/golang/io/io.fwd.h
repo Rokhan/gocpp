@@ -7,9 +7,9 @@
 namespace golang::io
 {
     // Seek whence values.
-    const long SeekStart = 0;
-    const long SeekCurrent = 1;
-    const long SeekEnd = 2;
+    inline constexpr long SeekStart = 0;
+    inline constexpr long SeekCurrent = 1;
+    inline constexpr long SeekEnd = 2;
     struct Reader;
     struct Writer;
     struct Closer;

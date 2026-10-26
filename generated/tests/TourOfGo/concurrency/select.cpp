@@ -20,7 +20,7 @@ namespace golang::main
     {
     }
 
-    void fibonacci(gocpp::channel<int> c, gocpp::channel<int> quit)
+    void fibonacci(gocpp::channel<int64_t> c, gocpp::channel<int64_t> quit)
     {
         auto [x, y] = std::tuple{0, 1};
         for(; ; )
@@ -45,15 +45,15 @@ namespace golang::main
         }
     }
 
-    void sum(gocpp::channel<int> input, gocpp::channel<int> quit)
+    void sum(gocpp::channel<int64_t> input, gocpp::channel<int64_t> quit)
     {
-        auto result = 0;
+        int64_t result = 0;
         for(; ; )
         {
             //Go select emulation
             {
                 int conditionId = -1;
-                int elt;
+                int64_t elt;
                 if(input.tryRecv(elt)) { conditionId = 0; }
                 else if(auto [gocpp_ignored , ok] = quit.tryRecv(); ok) { conditionId = 1; }
                 switch(conditionId)
@@ -93,11 +93,11 @@ namespace golang::main
 
     void main()
     {
-        auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>());
-        auto quit = gocpp::make(gocpp::Tag<gocpp::channel<int>>());
+        auto c = gocpp::make(gocpp::Tag<gocpp::channel<int64_t>>());
+        auto quit = gocpp::make(gocpp::Tag<gocpp::channel<int64_t>>());
         gocpp::go([&]{ [=]() mutable -> void
         {
-            for(auto i = 0; i < 10; i++)
+            for(int64_t i = 0; i < 10; i++)
             {
                 mocklib::Println(c.recv());
             }
@@ -105,10 +105,10 @@ namespace golang::main
         }(); });
         fibonacci(c, quit);
 
-        auto inputs = gocpp::make(gocpp::Tag<gocpp::channel<int>>());
+        auto inputs = gocpp::make(gocpp::Tag<gocpp::channel<int64_t>>());
         gocpp::go([&]{ [=]() mutable -> void
         {
-            for(auto i = 0; i < 10; i++)
+            for(int64_t i = 0; i < 10; i++)
             {
                 inputs.send(i);
             }

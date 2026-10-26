@@ -7,25 +7,27 @@
 namespace golang::regexp::syntax
 {
     struct Prog;
-    using InstOp = uint8_t;
-    using EmptyOp = uint8_t;
+    struct GoTag_InstOp;
+    using InstOp = gocpp::defined<uint8_t, GoTag_InstOp>;
+    struct GoTag_EmptyOp;
+    using EmptyOp = gocpp::defined<uint8_t, GoTag_EmptyOp>;
     struct Inst;
-    const long noMatch = - 1;
-    const InstOp InstAlt = 0;
-    const InstOp InstAltMatch = 1;
-    const InstOp InstCapture = 2;
-    const InstOp InstEmptyWidth = 3;
-    const InstOp InstMatch = 4;
-    const InstOp InstFail = 5;
-    const InstOp InstNop = 6;
-    const InstOp InstRune = 7;
-    const InstOp InstRune1 = 8;
-    const InstOp InstRuneAny = 9;
-    const InstOp InstRuneAnyNotNL = 10;
-    const EmptyOp EmptyBeginLine = 1 << 0;
-    const EmptyOp EmptyEndLine = 1 << 1;
-    const EmptyOp EmptyBeginText = 1 << 2;
-    const EmptyOp EmptyEndText = 1 << 3;
-    const EmptyOp EmptyWordBoundary = 1 << 4;
-    const EmptyOp EmptyNoWordBoundary = 1 << 5;
+    inline constexpr long noMatch = - 1;
+    inline constexpr InstOp InstAlt = 0;
+    inline constexpr InstOp InstAltMatch = 1;
+    inline constexpr InstOp InstCapture = 2;
+    inline constexpr InstOp InstEmptyWidth = 3;
+    inline constexpr InstOp InstMatch = 4;
+    inline constexpr InstOp InstFail = 5;
+    inline constexpr InstOp InstNop = 6;
+    inline constexpr InstOp InstRune = 7;
+    inline constexpr InstOp InstRune1 = 8;
+    inline constexpr InstOp InstRuneAny = 9;
+    inline constexpr InstOp InstRuneAnyNotNL = 10;
+    inline constexpr EmptyOp EmptyBeginLine = 1 << 0;
+    inline constexpr EmptyOp EmptyEndLine = 1 << 1;
+    inline constexpr EmptyOp EmptyBeginText = 1 << 2;
+    inline constexpr EmptyOp EmptyEndText = 1 << 3;
+    inline constexpr EmptyOp EmptyWordBoundary = 1 << 4;
+    inline constexpr EmptyOp EmptyNoWordBoundary = 1 << 5;
 }

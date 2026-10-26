@@ -6,13 +6,14 @@
 
 namespace golang::go::parser
 {
-    using Mode = unsigned int;
-    const Mode PackageClauseOnly = 1 << 0;
-    const Mode ImportsOnly = 1 << 1;
-    const Mode ParseComments = 1 << 2;
-    const Mode Trace = 1 << 3;
-    const Mode DeclarationErrors = 1 << 4;
-    const Mode SpuriousErrors = 1 << 5;
-    const Mode SkipObjectResolution = 1 << 6;
-    const parser::Mode AllErrors = SpuriousErrors;
+    struct GoTag_Mode;
+    using Mode = gocpp::defined<uint64_t, GoTag_Mode>;
+    inline constexpr Mode PackageClauseOnly = 1 << 0;
+    inline constexpr Mode ImportsOnly = 1 << 1;
+    inline constexpr Mode ParseComments = 1 << 2;
+    inline constexpr Mode Trace = 1 << 3;
+    inline constexpr Mode DeclarationErrors = 1 << 4;
+    inline constexpr Mode SpuriousErrors = 1 << 5;
+    inline constexpr Mode SkipObjectResolution = 1 << 6;
+    inline constexpr parser::Mode AllErrors = SpuriousErrors;
 }

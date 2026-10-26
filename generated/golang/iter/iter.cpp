@@ -278,7 +278,7 @@ namespace golang::iter
             bool done{};
             bool yieldNext{};
             bool seqDone{}; // to detect Goexit
-            int racer{};
+            int64_t racer{};
             go_any panicValue{};
 
             using isGoStruct = void;
@@ -487,7 +487,7 @@ namespace golang::iter
             bool done{};
             bool yieldNext{};
             bool seqDone{};
-            int racer{};
+            int64_t racer{};
             go_any panicValue{};
 
             using isGoStruct = void;
@@ -695,6 +695,6 @@ namespace golang::iter
 
     // goexitPanicValue is a sentinel value indicating that an iterator
     // exited via runtime.Goexit.
-    go_any goexitPanicValue = new int{};
+    go_any goexitPanicValue = new int64_t{};
 }
 

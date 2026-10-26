@@ -29,7 +29,7 @@ namespace golang::runtime
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     maps::Map* makemap64(abi::MapType* t, int64_t hint, maps::Map* m);
     maps::Map* makemap_small();
-    maps::Map* makemap(abi::MapType* t, int hint, maps::Map* m);
+    maps::Map* makemap(abi::MapType* t, int64_t hint, maps::Map* m);
     gocpp::unsafe_pointer mapaccess1(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key);
     std::tuple<gocpp::unsafe_pointer, bool> mapaccess2(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key);
     gocpp::unsafe_pointer mapaccess1_fat(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key, gocpp::unsafe_pointer zero);
@@ -39,16 +39,16 @@ namespace golang::runtime
     void mapIterStart(abi::MapType* t, maps::Map* m, maps::Iter* it);
     void mapIterNext(maps::Iter* it);
     void mapclear(abi::MapType* t, maps::Map* m);
-    maps::Map* reflect_makemap(abi::MapType* t, int cap);
+    maps::Map* reflect_makemap(abi::MapType* t, int64_t cap);
     gocpp::unsafe_pointer reflect_mapaccess(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key);
     gocpp::unsafe_pointer reflect_mapaccess_faststr(abi::MapType* t, maps::Map* m, gocpp::string key);
     void reflect_mapassign(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key, gocpp::unsafe_pointer elem);
     void reflect_mapassign_faststr(abi::MapType* t, maps::Map* m, gocpp::string key, gocpp::unsafe_pointer elem);
     void reflect_mapdelete(abi::MapType* t, maps::Map* m, gocpp::unsafe_pointer key);
     void reflect_mapdelete_faststr(abi::MapType* t, maps::Map* m, gocpp::string key);
-    int reflect_maplen(maps::Map* m);
+    int64_t reflect_maplen(maps::Map* m);
     void reflect_mapclear(abi::MapType* t, maps::Map* m);
-    int reflectlite_maplen(maps::Map* m);
+    int64_t reflectlite_maplen(maps::Map* m);
 
     namespace rec
     {

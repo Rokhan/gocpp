@@ -247,7 +247,7 @@ namespace golang::runtime
         }
 
         auto f = frame->fn;
-        auto pcdata = int32_t(- 1);
+        int32_t pcdata = int32_t(- 1);
         if(targetpc != rec::entry(gocpp::recv(f)))
         {
             // Back up to the CALL. If we're at the function entry
@@ -367,7 +367,7 @@ namespace golang::runtime
                 // frame".  That leak propagates up to getgcmask, then
                 // GCMask, then verifyGCInfo, which converts the stack
                 // gcinfo tests into heap gcinfo tests :(
-                objs = unsafe::Slice(r0, int(n));
+                objs = unsafe::Slice(r0, int64_t(n));
             }
         }
 

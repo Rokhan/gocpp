@@ -89,7 +89,7 @@ namespace golang::math::big
     //   - -1 if x < 0;
     //   - 0 if x == 0;
     //   - +1 if x > 0.
-    int rec::Sign(golang::math::big::Int* x)
+    int64_t rec::Sign(golang::math::big::Int* x)
     {
         // This function is used in cryptographic operations. It must not leak
         // anything but the Int's sign and bit size through side-channels. Any
@@ -108,7 +108,7 @@ namespace golang::math::big
     // SetInt64 sets z to x and returns z.
     golang::math::big::Int* rec::SetInt64(golang::math::big::Int* z, int64_t x)
     {
-        auto neg = false;
+        bool neg = false;
         if(x < 0)
         {
             neg = true;
@@ -319,7 +319,7 @@ namespace golang::math::big
         }
 
 
-        auto neg = false;
+        bool neg = false;
         if(a < 0)
         {
             neg = (b - a) & 1 == 0;
@@ -624,9 +624,9 @@ namespace golang::math::big
     //   - -1 if x < y;
     //   - 0 if x == y;
     //   - +1 if x > y.
-    int rec::Cmp(golang::math::big::Int* x, golang::math::big::Int* y)
+    int64_t rec::Cmp(golang::math::big::Int* x, golang::math::big::Int* y)
     {
-        int r;
+        int64_t r;
         // x cmp y == x cmp y
         // x cmp (-y) == x
         // (-x) cmp y == y
@@ -664,7 +664,7 @@ namespace golang::math::big
     //   - -1 if |x| < |y|;
     //   - 0 if |x| == |y|;
     //   - +1 if |x| > |y|.
-    int rec::CmpAbs(golang::math::big::Int* x, golang::math::big::Int* y)
+    int64_t rec::CmpAbs(golang::math::big::Int* x, golang::math::big::Int* y)
     {
         return rec::cmp(gocpp::recv(x->abs), y->abs);
     }
@@ -742,7 +742,7 @@ namespace golang::math::big
         }
 
         // Fast path: no more than 53 significant bits.
-        if(n <= 53 || n < 64 && n - int(rec::trailingZeroBits(gocpp::recv(x->abs))) <= 53)
+        if(n <= 53 || n < 64 && n - int64_t(rec::trailingZeroBits(gocpp::recv(x->abs))) <= 53)
         {
             auto f = double(low64(x->abs));
             if(x->neg)
@@ -777,14 +777,14 @@ namespace golang::math::big
     // Incorrect placement of underscores is reported as an error if there
     // are no other errors. If base != 0, underscores are not recognized
     // and act like any other character that is not a valid digit.
-    std::tuple<golang::math::big::Int*, bool> rec::SetString(golang::math::big::Int* z, gocpp::string s, int base)
+    std::tuple<golang::math::big::Int*, bool> rec::SetString(golang::math::big::Int* z, gocpp::string s, int64_t base)
     {
         return rec::setFromScanner(gocpp::recv(z), strings::NewReader(s), base);
     }
 
     // setFromScanner implements SetString given an io.ByteScanner.
     // For documentation see comments of SetString.
-    std::tuple<golang::math::big::Int*, bool> rec::setFromScanner(golang::math::big::Int* z, io::ByteScanner r, int base)
+    std::tuple<golang::math::big::Int*, bool> rec::setFromScanner(golang::math::big::Int* z, io::ByteScanner r, int64_t base)
     {
         if(auto [gocpp_id_0, gocpp_id_1, err] = rec::scan(gocpp::recv(z), r, base); err != nullptr)
         {
@@ -834,7 +834,7 @@ namespace golang::math::big
 
     // BitLen returns the length of the absolute value of x in bits.
     // The bit length of 0 is 0.
-    int rec::BitLen(golang::math::big::Int* x)
+    int64_t rec::BitLen(golang::math::big::Int* x)
     {
         // This function is used in cryptographic operations. It must not leak
         // anything but the Int's sign and bit size through side-channels. Any
@@ -844,7 +844,7 @@ namespace golang::math::big
 
     // TrailingZeroBits returns the number of consecutive least significant zero
     // bits of |x|.
-    unsigned int rec::TrailingZeroBits(golang::math::big::Int* x)
+    uint64_t rec::TrailingZeroBits(golang::math::big::Int* x)
     {
         return rec::trailingZeroBits(gocpp::recv(x->abs));
     }
@@ -1182,7 +1182,7 @@ namespace golang::math::big
                     Word vb = {};
                     std::tie(ua, ub) = std::tuple{1, 0};
                     std::tie(va, vb) = std::tuple{0, 1};
-                    auto even = true;
+                    bool even = true;
                     for(; bWord != 0; )
                     {
                         auto [q, r] = std::tuple{aWord / bWord, aWord % bWord};
@@ -1315,7 +1315,7 @@ namespace golang::math::big
 
     // Jacobi returns the Jacobi symbol (x/y), either +1, -1, or 0.
     // The y argument must be an odd integer.
-    int Jacobi(golang::math::big::Int* x, golang::math::big::Int* y)
+    int64_t Jacobi(golang::math::big::Int* x, golang::math::big::Int* y)
     {
         if(len(y->abs) == 0 || y->abs[0] & 1 == 0)
         {
@@ -1330,7 +1330,7 @@ namespace golang::math::big
         golang::math::big::Int c = {};
         rec::Set(gocpp::recv(a), x);
         rec::Set(gocpp::recv(b), y);
-        auto j = 1;
+        int64_t j = 1;
 
         if(b.neg)
         {
@@ -1468,7 +1468,7 @@ namespace golang::math::big
         for(; ; )
         {
             // find the least m such that ord_p(b) = 2^m
-            unsigned int m = {};
+            uint64_t m = {};
             rec::Set(gocpp::recv(t), & b);
             for(; rec::Cmp(gocpp::recv(t), intOne) != 0; )
             {
@@ -1481,7 +1481,7 @@ namespace golang::math::big
                 return rec::Set(gocpp::recv(z), & y);
             }
 
-            rec::Exp(gocpp::recv(rec::SetBit(gocpp::recv(rec::SetInt64(gocpp::recv(t), 0)), & t, int(r - m - 1), 1)), & g, & t, p);
+            rec::Exp(gocpp::recv(rec::SetBit(gocpp::recv(rec::SetInt64(gocpp::recv(t), 0)), & t, int64_t(r - m - 1), 1)), & g, & t, p);
             // t = g^(2^(r-m-1)) mod p
             // g = g^(2^(r-m)) mod p
             rec::Mod(gocpp::recv(rec::Mul(gocpp::recv(g), & t, & t)), & g, p);
@@ -1549,7 +1549,7 @@ namespace golang::math::big
     }
 
     // Lsh sets z = x << n and returns z.
-    golang::math::big::Int* rec::Lsh(golang::math::big::Int* z, golang::math::big::Int* x, unsigned int n)
+    golang::math::big::Int* rec::Lsh(golang::math::big::Int* z, golang::math::big::Int* x, uint64_t n)
     {
         z->abs = rec::lsh(gocpp::recv(z->abs), x->abs, n);
         z->neg = x->neg;
@@ -1557,7 +1557,7 @@ namespace golang::math::big
     }
 
     // Rsh sets z = x >> n and returns z.
-    golang::math::big::Int* rec::Rsh(golang::math::big::Int* z, golang::math::big::Int* x, unsigned int n)
+    golang::math::big::Int* rec::Rsh(golang::math::big::Int* z, golang::math::big::Int* x, uint64_t n)
     {
         if(x->neg)
         {
@@ -1578,7 +1578,7 @@ namespace golang::math::big
 
     // Bit returns the value of the i'th bit of x. That is, it
     // returns (x>>i)&1. The bit index i must be >= 0.
-    unsigned int rec::Bit(golang::math::big::Int* x, int i)
+    uint64_t rec::Bit(golang::math::big::Int* x, int64_t i)
     {
         if(i == 0)
         {
@@ -1586,7 +1586,7 @@ namespace golang::math::big
             if(len(x->abs) > 0)
             {
                 // bit 0 is same for -x
-                return (unsigned int)(x->abs[0] & 1);
+                return (uint64_t)(x->abs[0] & 1);
             }
             return 0;
         }
@@ -1597,10 +1597,10 @@ namespace golang::math::big
         if(x->neg)
         {
             auto t = rec::sub(gocpp::recv(nat(nullptr)), x->abs, natOne);
-            return rec::bit(gocpp::recv(t), (unsigned int)(i)) ^ 1;
+            return rec::bit(gocpp::recv(t), (uint64_t)(i)) ^ 1;
         }
 
-        return rec::bit(gocpp::recv(x->abs), (unsigned int)(i));
+        return rec::bit(gocpp::recv(x->abs), (uint64_t)(i));
     }
 
     // SetBit sets z to x, with x's i'th bit set to b (0 or 1).
@@ -1608,7 +1608,7 @@ namespace golang::math::big
     //   - if b is 1, SetBit sets z = x | (1 << i);
     //   - if b is 0, SetBit sets z = x &^ (1 << i);
     //   - if b is not 0 or 1, SetBit will panic.
-    golang::math::big::Int* rec::SetBit(golang::math::big::Int* z, golang::math::big::Int* x, int i, unsigned int b)
+    golang::math::big::Int* rec::SetBit(golang::math::big::Int* z, golang::math::big::Int* x, int64_t i, uint64_t b)
     {
         if(i < 0)
         {
@@ -1617,12 +1617,12 @@ namespace golang::math::big
         if(x->neg)
         {
             auto t = rec::sub(gocpp::recv(z->abs), x->abs, natOne);
-            t = rec::setBit(gocpp::recv(t), t, (unsigned int)(i), b ^ 1);
+            t = rec::setBit(gocpp::recv(t), t, (uint64_t)(i), b ^ 1);
             z->abs = rec::add(gocpp::recv(t), t, natOne);
             z->neg = len(z->abs) > 0;
             return z;
         }
-        z->abs = rec::setBit(gocpp::recv(z->abs), x->abs, (unsigned int)(i), b);
+        z->abs = rec::setBit(gocpp::recv(z->abs), x->abs, (uint64_t)(i), b);
         z->neg = false;
         return z;
     }

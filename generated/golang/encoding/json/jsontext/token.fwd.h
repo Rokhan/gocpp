@@ -6,21 +6,22 @@
 
 namespace golang::encoding::json::jsontext
 {
-    const long minUint64 = 0;
-    const gocpp::string invalidTokenPanic = "invalid jsontext.Token; it has been voided by a subsequent json.Decoder call"_s;
+    inline constexpr long minUint64 = 0;
+    inline const gocpp::string invalidTokenPanic = "invalid jsontext.Token; it has been voided by a subsequent json.Decoder call"_s;
     struct Token;
-    using Kind = unsigned char;
-    const golang::encoding::json::jsontext::Kind KindInvalid = 0;
-    const golang::encoding::json::jsontext::Kind KindNull = 'n';
-    const golang::encoding::json::jsontext::Kind KindFalse = 'f';
-    const golang::encoding::json::jsontext::Kind KindTrue = 't';
-    const golang::encoding::json::jsontext::Kind KindString = '"';
-    const golang::encoding::json::jsontext::Kind KindNumber = '0';
-    const golang::encoding::json::jsontext::Kind KindBeginObject = '{';
-    const golang::encoding::json::jsontext::Kind KindEndObject = '}';
-    const golang::encoding::json::jsontext::Kind KindBeginArray = '[';
-    const golang::encoding::json::jsontext::Kind KindEndArray = ']';
-    const golang::encoding::json::jsontext::Kind invalidKind = 0;
+    struct GoTag_Kind;
+    using Kind = gocpp::defined<unsigned char, GoTag_Kind>;
+    inline constexpr golang::encoding::json::jsontext::Kind KindInvalid = 0;
+    inline constexpr golang::encoding::json::jsontext::Kind KindNull = 'n';
+    inline constexpr golang::encoding::json::jsontext::Kind KindFalse = 'f';
+    inline constexpr golang::encoding::json::jsontext::Kind KindTrue = 't';
+    inline constexpr golang::encoding::json::jsontext::Kind KindString = '"';
+    inline constexpr golang::encoding::json::jsontext::Kind KindNumber = '0';
+    inline constexpr golang::encoding::json::jsontext::Kind KindBeginObject = '{';
+    inline constexpr golang::encoding::json::jsontext::Kind KindEndObject = '}';
+    inline constexpr golang::encoding::json::jsontext::Kind KindBeginArray = '[';
+    inline constexpr golang::encoding::json::jsontext::Kind KindEndArray = ']';
+    inline constexpr golang::encoding::json::jsontext::Kind invalidKind = 0;
 }
 #include "golang/math/bits.fwd.h"
 #include "golang/math/const.fwd.h"
@@ -31,7 +32,7 @@ namespace golang::encoding::json::jsontext
 namespace golang::encoding::json::jsontext
 {
     namespace math = golang::math;
-    const int maxInt64 = math::MaxInt64;
-    const int minInt64 = math::MinInt64;
-    const int maxUint64 = math::MaxUint64;
+    inline constexpr int64_t maxInt64 = math::MaxInt64;
+    inline constexpr int64_t minInt64 = math::MinInt64;
+    inline constexpr uint64_t maxUint64 = uint64_t(math::MaxUint64);
 }

@@ -12,6 +12,8 @@
 
 namespace golang::main
 {
+    struct GoTag_titi { };
+    using titi = gocpp::defined<double, GoTag_titi>;
     struct toto
     {
 

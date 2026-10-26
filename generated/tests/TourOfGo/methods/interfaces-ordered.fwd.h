@@ -8,5 +8,6 @@ namespace golang::main
 {
     struct Abser;
     struct Vertex;
-    using MyFloat = double;
+    struct GoTag_MyFloat;
+    using MyFloat = gocpp::defined<double, GoTag_MyFloat>;
 }

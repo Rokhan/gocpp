@@ -62,7 +62,7 @@ namespace golang::os
     // and a non-nil error.
     //
     // Most clients are better served by the more efficient ReadDir method.
-    std::tuple<gocpp::slice<FileInfo>, gocpp::error> rec::Readdir(File* f, int n)
+    std::tuple<gocpp::slice<FileInfo>, gocpp::error> rec::Readdir(File* f, int64_t n)
     {
         if(f == nullptr)
         {
@@ -94,7 +94,7 @@ namespace golang::os
     // nil error. If it encounters an error before the end of the
     // directory, Readdirnames returns the names read until that point and
     // a non-nil error.
-    std::tuple<gocpp::slice<gocpp::string>, gocpp::error> rec::Readdirnames(File* f, int n)
+    std::tuple<gocpp::slice<gocpp::string>, gocpp::error> rec::Readdirnames(File* f, int64_t n)
     {
         gocpp::slice<gocpp::string> names;
         gocpp::error err;
@@ -125,7 +125,7 @@ namespace golang::os
     //
     // If n <= 0, ReadDir returns all the DirEntry records remaining in the directory.
     // When it succeeds, it returns a nil error (not io.EOF).
-    std::tuple<gocpp::slice<DirEntry>, gocpp::error> rec::ReadDir(File* f, int n)
+    std::tuple<gocpp::slice<DirEntry>, gocpp::error> rec::ReadDir(File* f, int64_t n)
     {
         if(f == nullptr)
         {
@@ -159,7 +159,7 @@ namespace golang::os
 
             gocpp::slice<DirEntry> dirs;
             std::tie(dirs, err) = rec::ReadDir(gocpp::recv(f), - 1);
-            slices::SortFunc(dirs, [=](DirEntry a, DirEntry b) mutable -> int
+            slices::SortFunc(dirs, [=](DirEntry a, DirEntry b) mutable -> int64_t
             {
                 return bytealg::CompareString(rec::Name(gocpp::recv(a)), rec::Name(gocpp::recv(b)));
             });

@@ -29,11 +29,13 @@ namespace golang::regexp::syntax
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Error& value);
+    struct GoTag_Flags { };
+    using Flags = gocpp::defined<uint16_t, GoTag_Flags>;
     gocpp::rune minFoldRune(gocpp::rune r);
     bool isValidCaptureName(gocpp::string name);
     struct charGroup
     {
-        int sign{};
+        int64_t sign{};
         gocpp::slice<gocpp::rune> go_class{};
 
         using isGoStruct = void;
@@ -52,7 +54,6 @@ namespace golang::regexp::syntax
     gocpp::string canonicalName(gocpp::string name);
     gocpp::slice<gocpp::rune> cleanClass(gocpp::slice<gocpp::rune>* rp);
     bool inCharClass(gocpp::rune r, gocpp::slice<gocpp::rune> go_class);
-    gocpp::slice<gocpp::rune> appendLiteral(gocpp::slice<gocpp::rune> r, gocpp::rune x, Flags flags);
     gocpp::slice<gocpp::rune> appendRange(gocpp::slice<gocpp::rune> r, gocpp::rune lo, gocpp::rune hi);
     gocpp::slice<gocpp::rune> appendFoldedRange(gocpp::slice<gocpp::rune> r, gocpp::rune lo, gocpp::rune hi);
     gocpp::slice<gocpp::rune> appendClass(gocpp::slice<gocpp::rune> r, gocpp::slice<gocpp::rune> x);
@@ -79,6 +80,7 @@ namespace golang::regexp::syntax
     std::tuple<gocpp::rune, gocpp::string, gocpp::error> nextRune(gocpp::string s);
     bool isalnum(gocpp::rune c);
     gocpp::rune unhex(gocpp::rune c);
+    gocpp::slice<gocpp::rune> appendLiteral(gocpp::slice<gocpp::rune> r, gocpp::rune x, Flags flags);
 }
 #include "golang/regexp/syntax/regexp.fwd.h"
 
@@ -89,13 +91,13 @@ namespace golang::regexp::syntax
         Flags flags{}; // parse mode flags
         gocpp::slice<Regexp*> stack{}; // stack of parsed expressions
         Regexp* free{};
-        int numCap{}; // number of capturing groups seen
+        int64_t numCap{}; // number of capturing groups seen
         gocpp::string wholeRegexp{};
         gocpp::slice<gocpp::rune> tmpClass{}; // temporary char class work space
-        int numRegexp{}; // number of regexps allocated
-        int numRunes{}; // number of runes in char classes
+        int64_t numRegexp{}; // number of regexps allocated
+        int64_t numRunes{}; // number of runes in char classes
         int64_t repeats{}; // product of all repetitions seen
-        gocpp::map<Regexp*, int> height{}; // regexp height, for height limit check
+        gocpp::map<Regexp*, int64_t> height{}; // regexp height, for height limit check
         gocpp::map<Regexp*, int64_t> size{}; // regexp compiled size, for size limit check
 
         using isGoStruct = void;
@@ -110,7 +112,7 @@ namespace golang::regexp::syntax
     };
 
     std::ostream& operator<<(std::ostream& os, const struct parser& value);
-    bool repeatIsValid(Regexp* re, int n);
+    bool repeatIsValid(Regexp* re, int64_t n);
     void cleanAlt(Regexp* re);
     Regexp* literalRegexp(gocpp::string s, Flags flags);
     std::tuple<Regexp*, gocpp::error> Parse(gocpp::string s, Flags flags);
@@ -149,7 +151,7 @@ namespace golang::regexp::syntax
     };
 
     std::ostream& operator<<(std::ostream& os, const struct aliasesStruct& value);
-    std::tuple<unicode::RangeTable*, unicode::RangeTable*, int> unicodeTable(gocpp::string name);
+    std::tuple<unicode::RangeTable*, unicode::RangeTable*, int64_t> unicodeTable(gocpp::string name);
     gocpp::slice<gocpp::rune> appendTable(gocpp::slice<gocpp::rune> r, unicode::RangeTable* x);
     gocpp::slice<gocpp::rune> appendNegatedTable(gocpp::slice<gocpp::rune> r, unicode::RangeTable* x);
     // aliases is a lazily constructed copy of unicode.CategoryAliases and unicode.Scripts
@@ -172,23 +174,23 @@ namespace golang::regexp::syntax
         void checkSize(parser* p, Regexp* re);
         int64_t calcSize(parser* p, Regexp* re, bool force);
         void checkHeight(parser* p, Regexp* re);
-        int calcHeight(parser* p, Regexp* re, bool force);
+        int64_t calcHeight(parser* p, Regexp* re, bool force);
         Regexp* push(parser* p, Regexp* re);
         bool maybeConcat(parser* p, gocpp::rune r, Flags flags);
         void literal(parser* p, gocpp::rune r);
         Regexp* op(parser* p, Op op);
-        std::tuple<gocpp::string, gocpp::error> repeat(parser* p, Op op, int min, int max, gocpp::string before, gocpp::string after, gocpp::string lastRepeat);
+        std::tuple<gocpp::string, gocpp::error> repeat(parser* p, Op op, int64_t min, int64_t max, gocpp::string before, gocpp::string after, gocpp::string lastRepeat);
         Regexp* concat(parser* p);
         Regexp* alternate(parser* p);
         Regexp* collapse(parser* p, gocpp::slice<Regexp*> subs, Op op);
         gocpp::slice<Regexp*> factor(parser* p, gocpp::slice<Regexp*> sub);
         std::tuple<gocpp::slice<gocpp::rune>, Flags> leadingString(parser* p, Regexp* re);
-        Regexp* removeLeadingString(parser* p, Regexp* re, int n);
+        Regexp* removeLeadingString(parser* p, Regexp* re, int64_t n);
         Regexp* leadingRegexp(parser* p, Regexp* re);
         Regexp* removeLeadingRegexp(parser* p, Regexp* re, bool reuse);
-        std::tuple<int, int, gocpp::string, bool> parseRepeat(parser* p, gocpp::string s);
+        std::tuple<int64_t, int64_t, gocpp::string, bool> parseRepeat(parser* p, gocpp::string s);
         std::tuple<gocpp::string, gocpp::error> parsePerlFlags(parser* p, gocpp::string s);
-        std::tuple<int, gocpp::string, bool> parseInt(parser* p, gocpp::string s);
+        std::tuple<int64_t, gocpp::string, bool> parseInt(parser* p, gocpp::string s);
         void parseVerticalBar(parser* p);
         bool swapVerticalBar(parser* p);
         gocpp::error parseRightParen(parser* p);
@@ -199,9 +201,9 @@ namespace golang::regexp::syntax
         gocpp::slice<gocpp::rune> appendGroup(parser* p, gocpp::slice<gocpp::rune> r, charGroup g);
         std::tuple<gocpp::slice<gocpp::rune>, gocpp::string, gocpp::error> parseUnicodeClass(parser* p, gocpp::string s, gocpp::slice<gocpp::rune> r);
         std::tuple<gocpp::string, gocpp::error> parseClass(parser* p, gocpp::string s);
-        bool Less(ranges ra, int i, int j);
-        int Len(ranges ra);
-        void Swap(ranges ra, int i, int j);
+        bool Less(ranges ra, int64_t i, int64_t j);
+        int64_t Len(ranges ra);
+        void Swap(ranges ra, int64_t i, int64_t j);
     }
 }
 

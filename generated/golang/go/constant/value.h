@@ -12,6 +12,8 @@
 
 namespace golang::go::constant
 {
+    struct GoTag_Kind { };
+    using Kind = gocpp::defined<int64_t, GoTag_Kind>;
     struct Value : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -116,6 +118,10 @@ namespace golang::go::constant
     };
 
     std::ostream& operator<<(std::ostream& os, const struct unknownVal& value);
+    struct GoTag_boolVal { };
+    using boolVal = gocpp::defined<bool, GoTag_boolVal>;
+    struct GoTag_int64Val { };
+    using int64Val = gocpp::defined<int64_t, GoTag_int64Val>;
     gocpp::slice<gocpp::string> reverse(gocpp::slice<gocpp::string> x);
     bool smallFloat64(double x);
     bool is32bit(int64_t x);
@@ -154,8 +160,8 @@ namespace golang::go::constant
     go_any Val(Value x);
     int64_t StringLen(Value x);
     Value Make(go_any x);
-    int BitLen(Value x);
-    int Sign(Value x);
+    int64_t BitLen(Value x);
+    int64_t Sign(Value x);
     gocpp::slice<unsigned char> Bytes(Value x);
     Value MakeFromBytes(gocpp::slice<unsigned char> bytes);
     Value Num(Value x);
@@ -166,7 +172,7 @@ namespace golang::go::constant
     Value ToInt(Value x);
     Value ToFloat(Value x);
     Value ToComplex(Value x);
-    int ord(Value x);
+    int64_t ord(Value x);
     std::tuple<Value, Value> match(Value x, Value y);
     std::tuple<Value, Value> match0(Value x, Value y);
     Value add(Value x, Value y);
@@ -185,9 +191,13 @@ namespace golang::go::constant
 namespace golang::go::constant
 {
     namespace sync = golang::sync;
-    namespace big = golang::math::big;
 }
 #include "golang/go/token/token.h"
+
+namespace golang::go::constant
+{
+    namespace big = golang::math::big;
+}
 #include "golang/math/big/arith.h"
 #include "golang/sync/mutex.h"
 
@@ -270,13 +280,13 @@ namespace golang::go::constant
     Value makeFloat(big::Float* x);
     bool smallInt(big::Int* x);
     bool smallFloat(big::Float* x);
-    Value MakeFromLiteral(gocpp::string lit, token::Token tok, unsigned int zero);
+    Value MakeFromLiteral(gocpp::string lit, token::Token tok, uint64_t zero);
     // Compute the size of a Word in bytes.
-    const big::Word _m = ~ big::Word(0);
-    Value UnaryOp(token::Token op, Value y, unsigned int prec);
+    inline constexpr big::Word _m = ~ big::Word(0);
+    Value UnaryOp(token::Token op, Value y, uint64_t prec);
     Value BinaryOp(Value x_, token::Token op, Value y_);
-    Value Shift(Value x, token::Token op, unsigned int s);
-    bool cmpZero(int x, token::Token op);
+    Value Shift(Value x, token::Token op, uint64_t s);
+    bool cmpZero(int64_t x, token::Token op);
     bool Compare(Value x_, token::Token op, Value y_);
     intVal i64toi(int64Val x);
     ratVal i64tor(int64Val x);

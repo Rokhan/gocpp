@@ -42,13 +42,13 @@ namespace golang::fmt
         struct IState
         {
             // Write is the function to call to emit formatted output to be printed.
-            virtual std::tuple<int, gocpp::error> vWrite(gocpp::slice<unsigned char> b) = 0;
+            virtual std::tuple<int64_t, gocpp::error> vWrite(gocpp::slice<unsigned char> b) = 0;
             // Width returns the value of the width option and whether it has been set.
-            virtual std::tuple<int, bool> vWidth() = 0;
+            virtual std::tuple<int64_t, bool> vWidth() = 0;
             // Precision returns the value of the precision option and whether it has been set.
-            virtual std::tuple<int, bool> vPrecision() = 0;
+            virtual std::tuple<int64_t, bool> vPrecision() = 0;
             // Flag reports whether the flag c, a character, has been set.
-            virtual bool vFlag(int c) = 0;
+            virtual bool vFlag(int64_t c) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -60,13 +60,13 @@ namespace golang::fmt
                 value.reset(ptr);
             }
 
-            std::tuple<int, gocpp::error> vWrite(gocpp::slice<unsigned char> b) override;
+            std::tuple<int64_t, gocpp::error> vWrite(gocpp::slice<unsigned char> b) override;
 
-            std::tuple<int, bool> vWidth() override;
+            std::tuple<int64_t, bool> vWidth() override;
 
-            std::tuple<int, bool> vPrecision() override;
+            std::tuple<int64_t, bool> vPrecision() override;
 
-            bool vFlag(int c) override;
+            bool vFlag(int64_t c) override;
 
             void* getPtr() override
             {
@@ -83,17 +83,17 @@ namespace golang::fmt
 
     namespace rec
     {
-        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct State, false>& self, gocpp::slice<unsigned char> b);
-        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct State>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct State, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::ObjRecv<struct State>& self, gocpp::slice<unsigned char> b);
 
-        std::tuple<int, bool> Width(const gocpp::PtrRecv<struct State, false>& self);
-        std::tuple<int, bool> Width(const gocpp::ObjRecv<struct State>& self);
+        std::tuple<int64_t, bool> Width(const gocpp::PtrRecv<struct State, false>& self);
+        std::tuple<int64_t, bool> Width(const gocpp::ObjRecv<struct State>& self);
 
-        std::tuple<int, bool> Precision(const gocpp::PtrRecv<struct State, false>& self);
-        std::tuple<int, bool> Precision(const gocpp::ObjRecv<struct State>& self);
+        std::tuple<int64_t, bool> Precision(const gocpp::PtrRecv<struct State, false>& self);
+        std::tuple<int64_t, bool> Precision(const gocpp::ObjRecv<struct State>& self);
 
-        bool Flag(const gocpp::PtrRecv<struct State, false>& self, int c);
-        bool Flag(const gocpp::ObjRecv<struct State>& self, int c);
+        bool Flag(const gocpp::PtrRecv<struct State, false>& self, int64_t c);
+        bool Flag(const gocpp::ObjRecv<struct State>& self, int64_t c);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct State& value);
@@ -288,16 +288,16 @@ namespace golang::fmt
     std::ostream& operator<<(std::ostream& os, const struct GoStringer& value);
     struct GoTag_buffer { };
     using buffer = gocpp::defined<gocpp::slice<unsigned char>, GoTag_buffer>;
-    std::tuple<int, gocpp::error> Printf(gocpp::string format, gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Printf(gocpp::string format, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Printf(gocpp::string format, Args... a)
+    std::tuple<int64_t, gocpp::error> Printf(gocpp::string format, Args... a)
     {
         return Printf(format, gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Printf(gocpp::string format, go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Printf(gocpp::string format, go_any value, Args... a)
     {
         return Printf(format, gocpp::ToSlice<go_any>(value, a...));
     }
@@ -327,16 +327,16 @@ namespace golang::fmt
     {
         return Appendf(b, format, gocpp::ToSlice<go_any>(value, a...));
     }
-    std::tuple<int, gocpp::error> Print(gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Print(gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Print(Args... a)
+    std::tuple<int64_t, gocpp::error> Print(Args... a)
     {
         return Print(gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Print(go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Print(go_any value, Args... a)
     {
         return Print(gocpp::ToSlice<go_any>(value, a...));
     }
@@ -366,16 +366,16 @@ namespace golang::fmt
     {
         return Append(b, gocpp::ToSlice<go_any>(value, a...));
     }
-    std::tuple<int, gocpp::error> Println(gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Println(gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Println(Args... a)
+    std::tuple<int64_t, gocpp::error> Println(Args... a)
     {
         return Println(gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Println(go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Println(go_any value, Args... a)
     {
         return Println(gocpp::ToSlice<go_any>(value, a...));
     }
@@ -405,10 +405,10 @@ namespace golang::fmt
     {
         return Appendln(b, gocpp::ToSlice<go_any>(value, a...));
     }
-    bool tooLarge(int x);
-    std::tuple<int, bool, int> parsenum(gocpp::string s, int start, int end);
-    std::tuple<int, bool, int> intFromArg(gocpp::slice<go_any> a, int argNum);
-    std::tuple<int, int, bool> parseArgNumber(gocpp::string format);
+    bool tooLarge(int64_t x);
+    std::tuple<int64_t, bool, int64_t> parsenum(gocpp::string s, int64_t start, int64_t end);
+    std::tuple<int64_t, bool, int64_t> intFromArg(gocpp::slice<go_any> a, int64_t argNum);
+    std::tuple<int64_t, int64_t, bool> parseArgNumber(gocpp::string format);
     gocpp::string FormatString(State state, gocpp::rune verb);
 }
 #include "golang/fmt/format.h"
@@ -431,7 +431,7 @@ namespace golang::fmt
         // wrapErrs is set when the format string may contain a %w verb.
         bool wrapErrs{};
         // wrappedErrs records the targets of the %w verb.
-        gocpp::slice<int> wrappedErrs{};
+        gocpp::slice<int64_t> wrappedErrs{};
 
         using isGoStruct = void;
 
@@ -469,46 +469,46 @@ namespace golang::fmt
 {
     namespace reflect = golang::reflect;
     extern sync::Pool ppFree;
-    std::tuple<int, gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Fprintf(io::Writer w, gocpp::string format, Args... a)
+    std::tuple<int64_t, gocpp::error> Fprintf(io::Writer w, gocpp::string format, Args... a)
     {
         return Fprintf(w, format, gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Fprintf(io::Writer w, gocpp::string format, go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Fprintf(io::Writer w, gocpp::string format, go_any value, Args... a)
     {
         return Fprintf(w, format, gocpp::ToSlice<go_any>(value, a...));
     }
-    std::tuple<int, gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Fprint(io::Writer w, Args... a)
+    std::tuple<int64_t, gocpp::error> Fprint(io::Writer w, Args... a)
     {
         return Fprint(w, gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Fprint(io::Writer w, go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Fprint(io::Writer w, go_any value, Args... a)
     {
         return Fprint(w, gocpp::ToSlice<go_any>(value, a...));
     }
-    std::tuple<int, gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a);
+    std::tuple<int64_t, gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Fprintln(io::Writer w, Args... a)
+    std::tuple<int64_t, gocpp::error> Fprintln(io::Writer w, Args... a)
     {
         return Fprintln(w, gocpp::ToSlice<go_any>(a...));
     }
 
     template<typename... Args>
-    std::tuple<int, gocpp::error> Fprintln(io::Writer w, go_any value, Args... a)
+    std::tuple<int64_t, gocpp::error> Fprintln(io::Writer w, go_any value, Args... a)
     {
         return Fprintln(w, gocpp::ToSlice<go_any>(value, a...));
     }
-    reflect::Value getField(reflect::Value v, int i);
+    reflect::Value getField(reflect::Value v, int64_t i);
 }
 
 #include "golang/reflect/value.h"
@@ -523,26 +523,26 @@ namespace golang::fmt
         void writeByte(buffer* b, unsigned char c);
         void writeRune(buffer* b, gocpp::rune r);
         void free(pp* p);
-        std::tuple<int, bool> Width(pp* p);
-        std::tuple<int, bool> Precision(pp* p);
-        bool Flag(pp* p, int b);
-        std::tuple<int, gocpp::error> Write(pp* p, gocpp::slice<unsigned char> b);
-        std::tuple<int, gocpp::error> WriteString(pp* p, gocpp::string s);
+        std::tuple<int64_t, bool> Width(pp* p);
+        std::tuple<int64_t, bool> Precision(pp* p);
+        bool Flag(pp* p, int64_t b);
+        std::tuple<int64_t, gocpp::error> Write(pp* p, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> WriteString(pp* p, gocpp::string s);
         void unknownType(pp* p, reflect::Value v);
         void badVerb(pp* p, go_any arg, reflect::Value value, gocpp::rune verb);
         void fmtBool(pp* p, go_any arg, reflect::Value value, bool v, gocpp::rune verb);
         void fmt0x64(pp* p, uint64_t v, bool leading0x);
         void fmtInteger(pp* p, go_any arg, reflect::Value value, uint64_t v, bool isSigned, gocpp::rune verb);
-        void fmtFloat(pp* p, go_any arg, reflect::Value value, double v, int size, gocpp::rune verb);
-        void fmtComplex(pp* p, go_any arg, reflect::Value value, struct gocpp::complex128 v, int size, gocpp::rune verb);
+        void fmtFloat(pp* p, go_any arg, reflect::Value value, double v, int64_t size, gocpp::rune verb);
+        void fmtComplex(pp* p, go_any arg, reflect::Value value, struct gocpp::complex128 v, int64_t size, gocpp::rune verb);
         void fmtString(pp* p, go_any arg, reflect::Value value, gocpp::string v, gocpp::rune verb);
         void fmtBytes(pp* p, gocpp::slice<unsigned char> v, gocpp::rune verb, gocpp::string typeString);
         void fmtPointer(pp* p, go_any arg, reflect::Value value, gocpp::rune verb);
         void catchPanic(pp* p, go_any arg, gocpp::rune verb, gocpp::string method);
         bool handleMethods(pp* p, go_any arg, reflect::Value value, gocpp::rune verb);
         void printArg(pp* p, go_any arg, gocpp::rune verb);
-        void printValue(pp* p, reflect::Value value, gocpp::rune verb, int depth);
-        std::tuple<int, int, bool> argNumber(pp* p, int argNum, gocpp::string format, int i, int numArgs);
+        void printValue(pp* p, reflect::Value value, gocpp::rune verb, int64_t depth);
+        std::tuple<int64_t, int64_t, bool> argNumber(pp* p, int64_t argNum, gocpp::string format, int64_t i, int64_t numArgs);
         void badArgNum(pp* p, gocpp::rune verb);
         void missingArg(pp* p, gocpp::rune verb);
         void doPrintf(pp* p, gocpp::string format, gocpp::slice<go_any> a);

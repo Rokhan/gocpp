@@ -153,7 +153,7 @@ namespace golang::runtime
         }
 
         auto x = float64bits(f);
-        auto e = (unsigned int)(x >> float64Shift) & float64Mask - float64Bias;
+        auto e = (uint64_t)(x >> float64Shift) & float64Mask - float64Bias;
 
         // Keep the top 12+e bits, the integer part; clear the rest.
         if(e < 64 - 12)

@@ -285,9 +285,9 @@ namespace golang::runtime
     namespace rec
     {
         void init(gcControllerState* c, int32_t gcPercent, int64_t memoryLimit);
-        void startCycle(gcControllerState* c, int64_t markStartTime, int procs, gcTrigger trigger);
+        void startCycle(gcControllerState* c, int64_t markStartTime, int64_t procs, gcTrigger trigger);
         void revise(gcControllerState* c);
-        void endCycle(gcControllerState* c, int64_t now, int procs);
+        void endCycle(gcControllerState* c, int64_t now, int64_t procs);
         void enlistWorker(gcControllerState* c);
         std::tuple<bool, int64_t> assignWaitingGCWorker(gcControllerState* c, golang::runtime::p* pp, int64_t now);
         std::tuple<g*, int64_t> findRunnableGCWorker(gcControllerState* c, golang::runtime::p* pp, int64_t now);

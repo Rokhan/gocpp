@@ -12,6 +12,8 @@
 
 namespace golang::runtime
 {
+    struct GoTag_pollInfo { };
+    using pollInfo = gocpp::defined<uint32_t, GoTag_pollInfo>;
     void poll_runtime_pollServerInit();
     void netpollGenericInit();
     bool netpollinited();
@@ -48,7 +50,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct pollCache& value);
     extern mutex netpollInitLock;
     bool netpollblockcommit(g* gp, gocpp::unsafe_pointer gpp);
-    void netpollgoready(g* gp, int traceskip);
+    void netpollgoready(g* gp, int64_t traceskip);
     extern _type* pdType;
 }
 #include "golang/internal/runtime/atomic/stubs.fwd.h"
@@ -120,14 +122,14 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct pollDesc& value);
     extern atomic::Uint32 netpollInited;
     extern atomic::Uint32 netpollWaiters;
-    std::tuple<pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd);
+    std::tuple<pollDesc*, int64_t> poll_runtime_pollOpen(uintptr_t fd);
     void poll_runtime_pollClose(pollDesc* pd);
-    int poll_runtime_pollReset(pollDesc* pd, int mode);
-    int poll_runtime_pollWait(pollDesc* pd, int mode);
-    void poll_runtime_pollWaitCanceled(pollDesc* pd, int mode);
-    void poll_runtime_pollSetDeadline(pollDesc* pd, int64_t d, int mode);
+    int64_t poll_runtime_pollReset(pollDesc* pd, int64_t mode);
+    int64_t poll_runtime_pollWait(pollDesc* pd, int64_t mode);
+    void poll_runtime_pollWaitCanceled(pollDesc* pd, int64_t mode);
+    void poll_runtime_pollSetDeadline(pollDesc* pd, int64_t d, int64_t mode);
     void poll_runtime_pollUnblock(pollDesc* pd);
-    int netpollcheckerr(pollDesc* pd, int32_t mode);
+    int64_t netpollcheckerr(pollDesc* pd, int32_t mode);
     bool netpollblock(pollDesc* pd, int32_t mode, bool waitio);
     g* netpollunblock(pollDesc* pd, int32_t mode, bool ioready, int32_t* delta);
     void netpolldeadlineimpl(pollDesc* pd, uintptr_t seq, bool read, bool write);

@@ -14,9 +14,9 @@ namespace golang::runtime
 {
     void panicmakeslicelen();
     void panicmakeslicecap();
-    int nextslicecap(int newLen, int oldCap);
+    int64_t nextslicecap(int64_t newLen, int64_t oldCap);
     bool isPowerOfTwo(uintptr_t x);
-    gocpp::slice<unsigned char> bytealg_MakeNoZero(int len);
+    gocpp::slice<unsigned char> bytealg_MakeNoZero(int64_t len);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/malloc.fwd.h"
@@ -27,8 +27,8 @@ namespace golang::runtime
     struct slice
     {
         gocpp::unsafe_pointer array{};
-        int len{};
-        int cap{};
+        int64_t len{};
+        int64_t cap{};
 
         using isGoStruct = void;
 
@@ -45,8 +45,8 @@ namespace golang::runtime
     struct notInHeapSlice
     {
         notInHeap* array{};
-        int len{};
-        int cap{};
+        int64_t len{};
+        int64_t cap{};
 
         using isGoStruct = void;
 
@@ -60,19 +60,19 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct notInHeapSlice& value);
-    gocpp::unsafe_pointer makeslicecopy(_type* et, int tolen, int fromlen, gocpp::unsafe_pointer from);
-    gocpp::unsafe_pointer makeslice(_type* et, int len, int cap);
+    gocpp::unsafe_pointer makeslicecopy(_type* et, int64_t tolen, int64_t fromlen, gocpp::unsafe_pointer from);
+    gocpp::unsafe_pointer makeslice(_type* et, int64_t len, int64_t cap);
     gocpp::unsafe_pointer makeslice64(_type* et, int64_t len64, int64_t cap64);
-    int slicecopy(gocpp::unsafe_pointer toPtr, int toLen, gocpp::unsafe_pointer fromPtr, int fromLen, uintptr_t width);
-    std::tuple<gocpp::unsafe_pointer, int, int> moveSlice(_type* et, gocpp::unsafe_pointer old, int len, int cap);
-    std::tuple<gocpp::unsafe_pointer, int, int> moveSliceNoScan(uintptr_t elemSize, gocpp::unsafe_pointer old, int len, int cap);
-    std::tuple<gocpp::unsafe_pointer, int, int> moveSliceNoCap(_type* et, gocpp::unsafe_pointer old, int len);
-    std::tuple<gocpp::unsafe_pointer, int, int> moveSliceNoCapNoScan(uintptr_t elemSize, gocpp::unsafe_pointer old, int len);
-    golang::runtime::slice growslice(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et);
-    golang::runtime::slice growsliceNoAlias(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et);
-    golang::runtime::slice reflect_growslice(_type* et, golang::runtime::slice old, int num);
-    golang::runtime::slice growsliceBuf(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et, gocpp::unsafe_pointer bufPtr, int bufLen);
-    golang::runtime::slice growsliceBufNoAlias(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et, gocpp::unsafe_pointer bufPtr, int bufLen);
+    int64_t slicecopy(gocpp::unsafe_pointer toPtr, int64_t toLen, gocpp::unsafe_pointer fromPtr, int64_t fromLen, uintptr_t width);
+    std::tuple<gocpp::unsafe_pointer, int64_t, int64_t> moveSlice(_type* et, gocpp::unsafe_pointer old, int64_t len, int64_t cap);
+    std::tuple<gocpp::unsafe_pointer, int64_t, int64_t> moveSliceNoScan(uintptr_t elemSize, gocpp::unsafe_pointer old, int64_t len, int64_t cap);
+    std::tuple<gocpp::unsafe_pointer, int64_t, int64_t> moveSliceNoCap(_type* et, gocpp::unsafe_pointer old, int64_t len);
+    std::tuple<gocpp::unsafe_pointer, int64_t, int64_t> moveSliceNoCapNoScan(uintptr_t elemSize, gocpp::unsafe_pointer old, int64_t len);
+    golang::runtime::slice growslice(gocpp::unsafe_pointer oldPtr, int64_t newLen, int64_t oldCap, int64_t num, _type* et);
+    golang::runtime::slice growsliceNoAlias(gocpp::unsafe_pointer oldPtr, int64_t newLen, int64_t oldCap, int64_t num, _type* et);
+    golang::runtime::slice reflect_growslice(_type* et, golang::runtime::slice old, int64_t num);
+    golang::runtime::slice growsliceBuf(gocpp::unsafe_pointer oldPtr, int64_t newLen, int64_t oldCap, int64_t num, _type* et, gocpp::unsafe_pointer bufPtr, int64_t bufLen);
+    golang::runtime::slice growsliceBufNoAlias(gocpp::unsafe_pointer oldPtr, int64_t newLen, int64_t oldCap, int64_t num, _type* et, gocpp::unsafe_pointer bufPtr, int64_t bufLen);
 
     namespace rec
     {

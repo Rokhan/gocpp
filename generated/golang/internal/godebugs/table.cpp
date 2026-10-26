@@ -453,11 +453,11 @@ namespace golang::internal::godebugs
     Info* Lookup(gocpp::string name)
     {
         // binary search, avoiding import of sort.
-        auto lo = 0;
+        int64_t lo = 0;
         auto hi = len(All);
         for(; lo < hi; )
         {
-            auto m = int((unsigned int)(lo + hi) >> 1);
+            auto m = int64_t((uint64_t)(lo + hi) >> 1);
             auto mid = All[m].Name;
             if(name == mid)
             {

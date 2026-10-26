@@ -120,12 +120,12 @@ namespace golang::go::doc::comment
             return rec::headingID(gocpp::recv(self.obj.Printer), h);
         }
 
-        int headingLevel(const gocpp::PtrRecv<struct htmlPrinter, false>& self)
+        int64_t headingLevel(const gocpp::PtrRecv<struct htmlPrinter, false>& self)
         {
             return rec::headingLevel(gocpp::recv(self.ptr->Printer));
         }
 
-        int headingLevel(const gocpp::ObjRecv<struct htmlPrinter>& self)
+        int64_t headingLevel(const gocpp::ObjRecv<struct htmlPrinter>& self)
         {
             return rec::headingLevel(gocpp::recv(self.obj.Printer));
         }
@@ -216,14 +216,14 @@ namespace golang::go::doc::comment
                 case 3:
                 {
                     comment::List* x = gocpp::any_cast<comment::List*>(x_ref);
-                    auto kind = "ol>\n"_s;
+                    gocpp::string kind = "ol>\n"_s;
                     if(x->Items[0]->Number == ""_s)
                     {
                         kind = "ul>\n"_s;
                     }
                     rec::WriteString(gocpp::recv(out), "<"_s);
                     rec::WriteString(gocpp::recv(out), kind);
-                    auto next = "1"_s;
+                    gocpp::string next = "1"_s;
                     for(auto [gocpp_ignored, item] : x->Items)
                     {
                         rec::WriteString(gocpp::recv(out), "<li"_s);
@@ -338,8 +338,8 @@ namespace golang::go::doc::comment
     // in larger HTML constructs.
     void rec::escape(htmlPrinter* p, bytes::Buffer* out, gocpp::string s)
     {
-        auto start = 0;
-        for(auto i = 0; i < len(s); i++)
+        int64_t start = 0;
+        for(int64_t i = 0; i < len(s); i++)
         {
             //Go switch emulation
             {

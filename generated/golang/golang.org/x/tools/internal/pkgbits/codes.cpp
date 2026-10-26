@@ -53,7 +53,7 @@ namespace golang::golang_org::x::tools::internal::pkgbits
         return rec::Marker(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    int Code::CodeImpl<T, TStore, TInterface>::vValue()
+    int64_t Code::CodeImpl<T, TStore, TInterface>::vValue()
     {
         return rec::Value(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -76,12 +76,12 @@ namespace golang::golang_org::x::tools::internal::pkgbits
             return self.obj.value()->vMarker();
         }
 
-        int Value(const gocpp::PtrRecv<struct Code, false>& self)
+        int64_t Value(const gocpp::PtrRecv<struct Code, false>& self)
         {
             return self.ptr->value()->vValue();
         }
 
-        int Value(const gocpp::ObjRecv<struct Code>& self)
+        int64_t Value(const gocpp::ObjRecv<struct Code>& self)
         {
             return self.obj.value()->vValue();
         }
@@ -98,9 +98,9 @@ namespace golang::golang_org::x::tools::internal::pkgbits
         return SyncVal;
     }
 
-    int rec::Value(CodeVal c)
+    int64_t rec::Value(CodeVal c)
     {
-        return int(c);
+        return int64_t(c);
     }
 
     // A CodeType distinguishes among go/types.Type encodings.
@@ -109,9 +109,9 @@ namespace golang::golang_org::x::tools::internal::pkgbits
         return SyncType;
     }
 
-    int rec::Value(CodeType c)
+    int64_t rec::Value(CodeType c)
     {
-        return int(c);
+        return int64_t(c);
     }
 
     // A CodeObj distinguishes among go/types.Object encodings.
@@ -120,9 +120,9 @@ namespace golang::golang_org::x::tools::internal::pkgbits
         return SyncCodeObj;
     }
 
-    int rec::Value(CodeObj c)
+    int64_t rec::Value(CodeObj c)
     {
-        return int(c);
+        return int64_t(c);
     }
 
 }

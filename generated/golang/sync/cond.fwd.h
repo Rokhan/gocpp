@@ -7,6 +7,7 @@
 namespace golang::sync
 {
     struct Cond;
-    using copyChecker = uintptr_t;
+    struct GoTag_copyChecker;
+    using copyChecker = gocpp::defined<uintptr_t, GoTag_copyChecker>;
     struct noCopy;
 }

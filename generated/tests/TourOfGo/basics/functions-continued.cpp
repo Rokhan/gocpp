@@ -21,20 +21,20 @@ namespace golang::main
     {
     }
 
-    int add(int x, int y)
+    int64_t add(int64_t x, int64_t y)
     {
         return x + y;
     }
 
     // Small non-regression test for name scoping.
     // Check that the "Pointer" declaration doesn't create confusion with the "Pointer" type.
-    gocpp::unsafe_pointer toto1(int x, int y)
+    gocpp::unsafe_pointer toto1(int64_t x, int64_t y)
     {
         return nullptr;
     }
 
-    int* Pointer = nullptr;
-    gocpp::unsafe_pointer toto2(int x, int y)
+    int64_t* Pointer = nullptr;
+    gocpp::unsafe_pointer toto2(int64_t x, int64_t y)
     {
         return gocpp::unsafe_pointer(Pointer);
     }

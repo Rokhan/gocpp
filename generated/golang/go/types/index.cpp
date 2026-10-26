@@ -149,9 +149,9 @@ namespace golang::go::types
         }
 
         // ordinary index expression
-        auto valid = false;
+        bool valid = false;
         // valid if >= 0
-        auto length = int64_t(- 1);
+        int64_t length = int64_t(- 1);
         //Go type switch emulation
         {
             const auto& gocpp_id_2 = gocpp::type_info(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))));
@@ -254,12 +254,12 @@ namespace golang::go::types
                     golang::go::types::Type key = {};
                     golang::go::types::Type elem = {};
                     // non-maps result mode
-                    auto mode = variable;
+                    types::operandMode mode = variable;
                     // TODO(gri) factor out closure and use it for non-typeparam cases as well
                     if(underIs(rec::typ(gocpp::recv(x)), [=](golang::go::types::Type u) mutable -> bool
                     {
                         // valid if >= 0
-                        auto l = int64_t(- 1);
+                        int64_t l = int64_t(- 1);
                         // k is only set for maps
                         golang::go::types::Type k = {};
                         golang::go::types::Type e = {};
@@ -479,9 +479,9 @@ namespace golang::go::types
             return;
         }
 
-        auto valid = false;
+        bool valid = false;
         // valid if >= 0
-        auto length = int64_t(- 1);
+        int64_t length = int64_t(- 1);
         //Go type switch emulation
         {
             const auto& gocpp_id_6 = gocpp::type_info(cu);
@@ -599,7 +599,7 @@ namespace golang::go::types
         gocpp::array<int64_t, 3> ind = {};
         for(auto [i, expr] : gocpp::slice<ast::Expr> {e->Low, e->High, e->Max})
         {
-            auto x = int64_t(- 1);
+            int64_t x = int64_t(- 1);
             //Go switch emulation
             {
                 int conditionId = -1;
@@ -613,7 +613,7 @@ namespace golang::go::types
                         // The "capacity" is only known statically for strings, arrays,
                         // and pointers to arrays, and it is the same as the length for
                         // those types.
-                        auto max = int64_t(- 1);
+                        int64_t max = int64_t(- 1);
                         if(length >= 0)
                         {
                             max = length + 1;

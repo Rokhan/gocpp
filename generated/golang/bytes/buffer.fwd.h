@@ -7,21 +7,22 @@
 namespace golang::bytes
 {
     // smallBufferSize is an initial allocation minimal capacity.
-    const long smallBufferSize = 64;
+    inline constexpr long smallBufferSize = 64;
     struct Buffer;
-    using readOp = int8_t;
-    const int maxInt = int(~ (unsigned int)(0) >> 1);
+    struct GoTag_readOp;
+    using readOp = gocpp::defined<int8_t, GoTag_readOp>;
+    inline constexpr int64_t maxInt = int64_t(~ (uint64_t)(0LL) >> 1);
     // MinRead is the minimum slice size passed to a [Buffer.Read] call by
     // [Buffer.ReadFrom]. As long as the [Buffer] has at least MinRead bytes beyond
     // what is required to hold the contents of r, [Buffer.ReadFrom] will not grow the
     // underlying buffer.
-    const long MinRead = 512;
+    inline constexpr long MinRead = 512;
     // Don't use iota for these, as the values need to correspond with the
     // names and comments, which is easier to see when being explicit.
-    const readOp opRead = - 1;
-    const readOp opInvalid = 0;
-    const readOp opReadRune1 = 1;
-    const readOp opReadRune2 = 2;
-    const readOp opReadRune3 = 3;
-    const readOp opReadRune4 = 4;
+    inline constexpr readOp opRead = - 1;
+    inline constexpr readOp opInvalid = 0;
+    inline constexpr readOp opReadRune1 = 1;
+    inline constexpr readOp opReadRune2 = 2;
+    inline constexpr readOp opReadRune3 = 3;
+    inline constexpr readOp opReadRune4 = 4;
 }

@@ -89,7 +89,7 @@ namespace golang::internal::runtime::maps
         return value.PrintTo(os);
     }
 
-    table* newTable(abi::MapType* typ, uint64_t capacity, int index, uint8_t localDepth)
+    table* newTable(abi::MapType* typ, uint64_t capacity, int64_t index, uint8_t localDepth)
     {
         if(capacity < abi::MapGroupSlots)
         {
@@ -129,7 +129,7 @@ namespace golang::internal::runtime::maps
         t->capacity = capacity;
         t->growthLeft = rec::maxGrowthLeft(gocpp::recv(t));
 
-        for(auto i = uint64_t(0); i <= t->groups.lengthMask; i++)
+        for(uint64_t i = uint64_t(0); i <= t->groups.lengthMask; i++)
         {
             auto g = rec::group(gocpp::recv(t->groups), typ, i);
             rec::setEmpty(gocpp::recv(rec::ctrls(gocpp::recv(g))));
@@ -670,7 +670,7 @@ namespace golang::internal::runtime::maps
         gocpp::array<uint32_t, (maxTableCapacity / abi::MapGroupSlots + 31) / 32> needed = {};
 
         // Trace the probe sequence of every full entry.
-        for(auto i = uint64_t(0); i <= t->groups.lengthMask; i++)
+        for(uint64_t i = uint64_t(0); i <= t->groups.lengthMask; i++)
         {
             auto g = rec::group(gocpp::recv(t->groups), typ, i);
             auto match = rec::matchFull(gocpp::recv(rec::ctrls(gocpp::recv(g))));
@@ -721,8 +721,8 @@ namespace golang::internal::runtime::maps
         // First, see if we can remove enough tombstones to restore capacity.
         // This function is O(n), so only remove tombstones if we can remove
         // enough of them to justify the O(n) cost.
-        auto cnt = 0;
-        for(auto i = uint64_t(0); i <= t->groups.lengthMask; i++)
+        int64_t cnt = 0;
+        for(uint64_t i = uint64_t(0); i <= t->groups.lengthMask; i++)
         {
             if((needed[i / 32] >> (i % 32)) & 1 != 0)
             {
@@ -733,7 +733,7 @@ namespace golang::internal::runtime::maps
             auto m = rec::matchEmptyOrDeleted(gocpp::recv(rec::ctrls(gocpp::recv(g))));
             cnt += rec::count(gocpp::recv(m));
         }
-        if(cnt * 10 < int(t->capacity))
+        if(cnt * 10 < int64_t(t->capacity))
         {
             // Can we restore 10% of capacity?
             // don't bother removing tombstones. Caller will grow instead.
@@ -741,7 +741,7 @@ namespace golang::internal::runtime::maps
         }
 
         // Prune unneeded tombstones.
-        for(auto i = uint64_t(0); i <= t->groups.lengthMask; i++)
+        for(uint64_t i = uint64_t(0); i <= t->groups.lengthMask; i++)
         {
             if((needed[i / 32] >> (i % 32)) & 1 != 0)
             {
@@ -812,7 +812,7 @@ namespace golang::internal::runtime::maps
         }
         if(fullTest)
         {
-            for(auto i = uint64_t(0); i <= t->groups.lengthMask; i++)
+            for(uint64_t i = uint64_t(0); i <= t->groups.lengthMask; i++)
             {
                 auto g = rec::group(gocpp::recv(t->groups), typ, i);
                 if(rec::anyFull(gocpp::recv(rec::ctrls(gocpp::recv(g)))))
@@ -824,7 +824,7 @@ namespace golang::internal::runtime::maps
         }
         else
         {
-            for(auto i = uint64_t(0); i <= t->groups.lengthMask; i++)
+            for(uint64_t i = uint64_t(0); i <= t->groups.lengthMask; i++)
             {
                 auto g = rec::group(gocpp::recv(t->groups), typ, i);
                 typedmemclr(typ->Group, g.data);
@@ -907,7 +907,7 @@ namespace golang::internal::runtime::maps
             return;
         }
 
-        auto dirIdx = 0;
+        int64_t dirIdx = 0;
         groupReference groupSmall = {};
         if(m->dirLen <= 0)
         {
@@ -1159,7 +1159,7 @@ namespace golang::internal::runtime::maps
             // Resolve the table.
             if(it->tab == nullptr)
             {
-                auto dirIdx = int((uint64_t(it->dirIdx) + it->dirOffset) & uint64_t(it->m->dirLen - 1));
+                auto dirIdx = int64_t((uint64_t(it->dirIdx) + it->dirOffset) & uint64_t(it->m->dirLen - 1));
                 auto newTab = rec::directoryAt(gocpp::recv(it->m), uintptr_t(dirIdx));
                 if(newTab->index != dirIdx)
                 {
@@ -1448,10 +1448,10 @@ namespace golang::internal::runtime::maps
         // Split in half at the localDepth bit from the top.
         auto mask = localDepthMask(localDepth);
 
-        for(auto i = uint64_t(0); i <= t->groups.lengthMask; i++)
+        for(uint64_t i = uint64_t(0); i <= t->groups.lengthMask; i++)
         {
             auto g = rec::group(gocpp::recv(t->groups), typ, i);
-            for(auto j = uintptr_t(0); j < abi::MapGroupSlots; j++)
+            for(uintptr_t j = uintptr_t(0); j < abi::MapGroupSlots; j++)
             {
                 if((rec::get(gocpp::recv(rec::ctrls(gocpp::recv(g))), j) & ctrlEmpty) == ctrlEmpty)
                 {
@@ -1500,10 +1500,10 @@ namespace golang::internal::runtime::maps
 
         if(t->capacity > 0)
         {
-            for(auto i = uint64_t(0); i <= t->groups.lengthMask; i++)
+            for(uint64_t i = uint64_t(0); i <= t->groups.lengthMask; i++)
             {
                 auto g = rec::group(gocpp::recv(t->groups), typ, i);
-                for(auto j = uintptr_t(0); j < abi::MapGroupSlots; j++)
+                for(uintptr_t j = uintptr_t(0); j < abi::MapGroupSlots; j++)
                 {
                     if((rec::get(gocpp::recv(rec::ctrls(gocpp::recv(g))), j) & ctrlEmpty) == ctrlEmpty)
                     {
@@ -1610,7 +1610,7 @@ namespace golang::internal::runtime::maps
         auto oldGroups = t->groups;
         auto newGroups_tmp = newGroups(typ, oldGroups.lengthMask + 1);
         auto& newGroups = newGroups_tmp;
-        for(auto i = uint64_t(0); i <= oldGroups.lengthMask; i++)
+        for(uint64_t i = uint64_t(0); i <= oldGroups.lengthMask; i++)
         {
             auto oldGroup = rec::group(gocpp::recv(oldGroups), typ, i);
             auto newGroup = rec::group(gocpp::recv(newGroups), typ, i);

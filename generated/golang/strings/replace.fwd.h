@@ -23,7 +23,7 @@ namespace golang::strings
     // For strings, with a lower ratio we use simple loop, because of Count overhead.
     // countCutOff is an empirically determined overhead multiplier.
     // TODO(tocarip) revisit once we have register-based abi/mid-stack inlining.
-    const long countCutOff = 8;
+    inline constexpr long countCutOff = 8;
 }
 #include "golang/io/io.fwd.h"
 

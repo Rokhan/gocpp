@@ -10,11 +10,12 @@ namespace golang::image::png
     struct EncoderBufferPool;
     struct GoTag_EncoderBuffer;
     struct encoder;
-    using CompressionLevel = int;
+    struct GoTag_CompressionLevel;
+    using CompressionLevel = gocpp::defined<int64_t, GoTag_CompressionLevel>;
     struct opaquer;
     using EncoderBuffer = gocpp::defined<encoder, GoTag_EncoderBuffer>;
-    const CompressionLevel DefaultCompression = 0;
-    const CompressionLevel NoCompression = - 1;
-    const CompressionLevel BestSpeed = - 2;
-    const CompressionLevel BestCompression = - 3;
+    inline constexpr CompressionLevel DefaultCompression = 0;
+    inline constexpr CompressionLevel NoCompression = - 1;
+    inline constexpr CompressionLevel BestSpeed = - 2;
+    inline constexpr CompressionLevel BestCompression = - 3;
 }

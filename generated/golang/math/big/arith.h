@@ -12,17 +12,19 @@
 
 namespace golang::math::big
 {
+    struct GoTag_Word { };
+    using Word = gocpp::defined<uint64_t, GoTag_Word>;
     std::tuple<Word, Word> mulWW(Word x, Word y);
     std::tuple<Word, Word> mulAddWWW_g(Word x, Word y, Word c);
-    unsigned int nlz(Word x);
+    uint64_t nlz(Word x);
     Word addVV_g(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y);
     Word subVV_g(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y);
     Word addVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
     Word addVW_ref(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
     Word subVW(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
     Word subVW_ref(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y);
-    Word lshVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
-    Word rshVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, unsigned int s);
+    Word lshVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, uint64_t s);
+    Word rshVU_g(gocpp::slice<Word> z, gocpp::slice<Word> x, uint64_t s);
     Word mulAddVWW_g(gocpp::slice<Word> z, gocpp::slice<Word> x, Word y, Word r);
     Word addMulVVWW_g(gocpp::slice<Word> z, gocpp::slice<Word> x, gocpp::slice<Word> y, Word m, Word a);
     std::tuple<Word, Word> divWW(Word x1, Word x0, Word y, Word m);

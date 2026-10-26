@@ -590,7 +590,7 @@ namespace golang::context
         rec::propagateCancel(gocpp::recv(a->cancelCtx), ctx, a);
         return [=]() mutable -> bool
         {
-            auto stopped = false;
+            bool stopped = false;
             rec::Do(gocpp::recv(a->once), [=]() mutable -> void
             {
                 stopped = true;
@@ -829,7 +829,7 @@ namespace golang::context
     // goroutines counts the number of goroutines ever created; for testing.
     atomic::Int32 goroutines;
     // &cancelCtxKey is the key that a cancelCtx returns itself for.
-    int cancelCtxKey;
+    int64_t cancelCtxKey;
     // parentCancelCtx returns the underlying *cancelCtx for parent.
     // It does this by looking up parent.Value(&cancelCtxKey) to find
     // the innermost enclosing *cancelCtx and then checking whether

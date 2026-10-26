@@ -269,7 +269,7 @@ namespace golang::go::types
         }
     }
 
-    void rec::recordSelection(Checker* check, ast::SelectorExpr* x, SelectionKind kind, golang::go::types::Type recv, Object obj, gocpp::slice<int> index, bool indirect)
+    void rec::recordSelection(Checker* check, ast::SelectorExpr* x, SelectionKind kind, golang::go::types::Type recv, Object obj, gocpp::slice<int64_t> index, bool indirect)
     {
         assert(obj != nullptr && (recv == nullptr || len(index) > 0));
         rec::recordUse(gocpp::recv(check), x->Sel, obj);

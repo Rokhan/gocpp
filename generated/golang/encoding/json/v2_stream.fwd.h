@@ -10,7 +10,8 @@ namespace golang::encoding::json
     struct gocpp_id_1;
     struct Encoder;
     using Token = go_any;
-    using Delim = gocpp::rune;
+    struct GoTag_Delim;
+    using Delim = gocpp::defined<gocpp::rune, GoTag_Delim>;
 }
 #include "golang/encoding/json/jsontext/decode.fwd.h"
 #include "golang/encoding/json/jsontext/options.fwd.h"

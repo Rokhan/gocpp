@@ -10,10 +10,10 @@ namespace golang::os
     // Flags for doInRoot.
     // doInRootNoHandleTerminalSlash prevents doInRoot from applying special handling
     // for paths which end in one or more slashes.
-    const int doInRootNoHandleTerminalSlash = 1 << 0;
+    inline constexpr int64_t doInRootNoHandleTerminalSlash = 1 << 0;
     // doInRootCreatingDirectory indicates that the operation is creating a directory.
     // When a path ends in /, the last path component may name a file which does not exist.
-    const int doInRootCreatingDirectory = 1 << 1;
+    inline constexpr int64_t doInRootCreatingDirectory = 1 << 1;
     // doInRootAlwaysResolveTerminalSlash causes doInRoot to resolve symlinks in the last
     // path component when a path ends in /, even on Windows. For example, this causes
     // doInRoot to resolve "symlink/" as the link target of "symlink".
@@ -21,6 +21,6 @@ namespace golang::os
     // POSIX path operations resolve symlinks in this case.
     // Most Windows operations do not.
     // This flag enforces the POSIX behavior.
-    const int doInRootAlwaysResolveTerminalSlash = 1 << 2;
+    inline constexpr int64_t doInRootAlwaysResolveTerminalSlash = 1 << 2;
     using errSymlink = gocpp::string;
 }

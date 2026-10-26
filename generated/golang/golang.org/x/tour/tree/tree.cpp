@@ -59,7 +59,7 @@ namespace golang::golang_org::x::tour::tree
     }
 
     // New returns a new, random binary tree holding the values k, 2k, ..., 10k.
-    Tree* New(int k)
+    Tree* New(int64_t k)
     {
         Tree* t = {};
         for(auto [gocpp_ignored, v] : rand::Perm(10))
@@ -69,7 +69,7 @@ namespace golang::golang_org::x::tour::tree
         return t;
     }
 
-    Tree* insert(Tree* t, int v)
+    Tree* insert(Tree* t, int64_t v)
     {
         if(t == nullptr)
         {
@@ -92,7 +92,7 @@ namespace golang::golang_org::x::tour::tree
         {
             return "()"_s;
         }
-        auto s = ""_s;
+        gocpp::string s = ""_s;
         if(t->Left != nullptr)
         {
             s += rec::String(gocpp::recv(t->Left)) + " "_s;

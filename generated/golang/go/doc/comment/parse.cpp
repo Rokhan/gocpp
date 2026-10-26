@@ -832,8 +832,8 @@ namespace golang::go::doc::comment
         // quiet infinite loop.
         auto watchdog = 2 * len(lines);
 
-        auto i = 0;
-        auto forceIndent = 0;
+        int64_t i = 0;
+        int64_t forceIndent = 0;
         Spans:
         for(; ; )
         {
@@ -1060,7 +1060,7 @@ namespace golang::go::doc::comment
     // commonPrefix returns the longest common prefix of a and b.
     gocpp::string commonPrefix(gocpp::string a, gocpp::string b)
     {
-        auto i = 0;
+        int64_t i = 0;
         for(; i < len(a) && i < len(b) && a[i] == b[i]; )
         {
             i++;
@@ -1071,7 +1071,7 @@ namespace golang::go::doc::comment
     // leadingSpace returns the longest prefix of s consisting of spaces and tabs.
     gocpp::string leadingSpace(gocpp::string s)
     {
-        auto i = 0;
+        int64_t i = 0;
         for(; i < len(s) && (s[i] == ' ' || s[i] == '\t'); )
         {
             i++;
@@ -1081,7 +1081,7 @@ namespace golang::go::doc::comment
 
     // isOldHeading reports whether line is an old-style section heading.
     // line is all[off].
-    bool isOldHeading(gocpp::string line, gocpp::slice<gocpp::string> all, int off)
+    bool isOldHeading(gocpp::string line, gocpp::slice<gocpp::string> all, int64_t off)
     {
         if(off <= 0 || all[off - 1] != ""_s || off + 2 >= len(all) || all[off + 1] != ""_s || leadingSpace(all[off + 2]) != ""_s)
         {
@@ -1319,7 +1319,7 @@ namespace golang::go::doc::comment
         else
         if('0' <= line[0] && line[0] <= '9')
         {
-            auto n = 1;
+            int64_t n = 1;
             for(; n < len(line) && '0' <= line[n] && line[n] <= '9'; )
             {
                 n++;
@@ -1365,8 +1365,8 @@ namespace golang::go::doc::comment
     gocpp::slice<golang::go::doc::comment::Text> rec::parseLinkedText(parseDoc* d, gocpp::string text)
     {
         gocpp::slice<golang::go::doc::comment::Text> out = {};
-        auto wrote = 0;
-        auto flush = [=](int i) mutable -> void
+        int64_t wrote = 0;
+        auto flush = [=](int64_t i) mutable -> void
         {
             if(wrote < i)
             {
@@ -1375,9 +1375,9 @@ namespace golang::go::doc::comment
             }
         };
 
-        auto start = - 1;
+        int64_t start = - 1;
         gocpp::slice<unsigned char> buf = {};
-        for(auto i = 0; i < len(text); i++)
+        for(int64_t i = 0; i < len(text); i++)
         {
             auto c = text[i];
             if(c == '\n' || c == '\t')
@@ -1519,13 +1519,13 @@ namespace golang::go::doc::comment
     gocpp::slice<golang::go::doc::comment::Text> rec::parseText(parseDoc* d, gocpp::slice<golang::go::doc::comment::Text> out, gocpp::string s, bool autoLink)
     {
         strings::Builder w = {};
-        auto wrote = 0;
-        auto writeUntil = [=](int i) mutable -> void
+        int64_t wrote = 0;
+        auto writeUntil = [=](int64_t i) mutable -> void
         {
             rec::WriteString(gocpp::recv(w), s.make_slice(wrote, i));
             wrote = i;
         };
-        auto flush = [=](int i) mutable -> void
+        auto flush = [=](int64_t i) mutable -> void
         {
             writeUntil(i);
             if(rec::Len(gocpp::recv(w)) > 0)
@@ -1534,7 +1534,7 @@ namespace golang::go::doc::comment
                 rec::Reset(gocpp::recv(w));
             }
         };
-        for(auto i = 0; i < len(s); )
+        for(int64_t i = 0; i < len(s); )
         {
             auto t = s.make_slice(i);
             if(autoLink)
@@ -1633,7 +1633,7 @@ namespace golang::go::doc::comment
         // Find the ://. Fast path to pick off non-URL,
         // since we call this at every position in the string.
         // The shortest possible URL is ftp://x, 7 bytes.
-        int i = {};
+        int64_t i = {};
         //Go switch emulation
         {
             int conditionId = -1;
@@ -1894,7 +1894,7 @@ namespace golang::go::doc::comment
         gocpp::string id;
         bool ok;
         // Scan [\pL_][\pL_0-9]*
-        auto n = 0;
+        int64_t n = 0;
         for(; n < len(s); )
         {
             if(auto c = s[n]; c < utf8::RuneSelf)
@@ -1958,7 +1958,7 @@ namespace golang::go::doc::comment
         {
             return false;
         }
-        auto elemStart = 0;
+        int64_t elemStart = 0;
         for(auto [i, r] : path)
         {
             if(r == '/')
@@ -1979,7 +1979,7 @@ namespace golang::go::doc::comment
         {
             return false;
         }
-        for(auto i = 0; i < len(elem); i++)
+        for(int64_t i = 0; i < len(elem); i++)
         {
             if(! importPathOK(elem[i]))
             {

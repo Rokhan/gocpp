@@ -12,15 +12,15 @@
 
 namespace golang::go::build::constraint
 {
-    int andVersion(int x, int y);
-    int orVersion(int x, int y);
+    int64_t andVersion(int64_t x, int64_t y);
+    int64_t orVersion(int64_t x, int64_t y);
 }
 #include "golang/go/build/constraint/expr.h"
 
 namespace golang::go::build::constraint
 {
     gocpp::string GoVersion(Expr x);
-    int minVersion(Expr z, int sign);
+    int64_t minVersion(Expr z, int64_t sign);
 
     namespace rec
     {

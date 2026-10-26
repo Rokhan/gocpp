@@ -36,7 +36,7 @@ namespace golang::runtime
     // structure.
     //
     // The sum of all the entries of levelBits should equal heapAddrBits.
-    gocpp::array<unsigned int, summaryLevels> levelBits = gocpp::array<unsigned int, summaryLevels> {
+    gocpp::array<uint64_t, summaryLevels> levelBits = gocpp::array<uint64_t, summaryLevels> {
         summaryL0Bits,
         summaryLevelBits,
         summaryLevelBits,
@@ -50,7 +50,7 @@ namespace golang::runtime
     // pointer p by doing:
     //
     //	p >> levelShift[l]
-    gocpp::array<unsigned int, summaryLevels> levelShift = gocpp::array<unsigned int, summaryLevels> {
+    gocpp::array<uint64_t, summaryLevels> levelShift = gocpp::array<uint64_t, summaryLevels> {
         heapAddrBits - summaryL0Bits,
         heapAddrBits - summaryL0Bits - 1 * summaryLevelBits,
         heapAddrBits - summaryL0Bits - 2 * summaryLevelBits,
@@ -61,7 +61,7 @@ namespace golang::runtime
     // a summary in the given level represents.
     //
     // The leaf level always represents exactly log2 of 1 chunk's worth of pages.
-    gocpp::array<unsigned int, summaryLevels> levelLogPages = gocpp::array<unsigned int, summaryLevels> {
+    gocpp::array<uint64_t, summaryLevels> levelLogPages = gocpp::array<uint64_t, summaryLevels> {
         logPallocChunkPages + 4 * summaryLevelBits,
         logPallocChunkPages + 3 * summaryLevelBits,
         logPallocChunkPages + 2 * summaryLevelBits,
@@ -114,7 +114,7 @@ namespace golang::runtime
         // addrRangeToSummaryRange converts a range of addresses into a range
         // of summary indices which must be mapped to support those addresses
         // in the summary range.
-        auto addrRangeToSummaryRange = [=](int level, addrRange r) mutable -> std::tuple<int, int>
+        auto addrRangeToSummaryRange = [=](int64_t level, addrRange r) mutable -> std::tuple<int64_t, int64_t>
         {
             auto [sumIdxBase, sumIdxLimit] = addrsToSummaryRange(level, rec::addr(gocpp::recv(r.base)), rec::addr(gocpp::recv(r.limit)));
             return blockAlignSummaryRange(level, sumIdxBase, sumIdxLimit);
@@ -123,7 +123,7 @@ namespace golang::runtime
         // summaryRangeToSumAddrRange converts a range of indices in any
         // level of p.summary into page-aligned addresses which cover that
         // range of indices.
-        auto summaryRangeToSumAddrRange = [=](int level, int sumIdxBase, int sumIdxLimit) mutable -> addrRange
+        auto summaryRangeToSumAddrRange = [=](int64_t level, int64_t sumIdxBase, int64_t sumIdxLimit) mutable -> addrRange
         {
             auto baseOffset = alignDown(uintptr_t(sumIdxBase) * pallocSumBytes, physPageSize);
             auto limitOffset = alignUp(uintptr_t(sumIdxLimit) * pallocSumBytes, physPageSize);
@@ -137,7 +137,7 @@ namespace golang::runtime
         // addrRangeToSumAddrRange is a convenience function that converts
         // an address range r to the address range of the given summary level
         // that stores the summaries for r.
-        auto addrRangeToSumAddrRange = [=](int level, addrRange r) mutable -> addrRange
+        auto addrRangeToSumAddrRange = [=](int64_t level, addrRange r) mutable -> addrRange
         {
             auto [sumIdxBase, sumIdxLimit] = addrRangeToSummaryRange(level, r);
             return summaryRangeToSumAddrRange(level, sumIdxBase, sumIdxLimit);
@@ -205,7 +205,7 @@ namespace golang::runtime
             print("runtime: base = "_s, hex(base), ", limit = "_s, hex(limit), "\n"_s);
             go_throw("sysGrow bounds not aligned to pallocChunkBytes"_s);
         }
-        auto scSize = gocpp::Sizeof<atomicScavChunkData>();
+        uintptr_t scSize = gocpp::Sizeof<atomicScavChunkData>();
         // Map and commit the pieces of chunks that we need.
         // We always map the full range of the minimum heap address to the
         // maximum heap address. We don't do this for the summary structure
@@ -262,10 +262,10 @@ namespace golang::runtime
     // Returns the amount of memory added to sysStat.
     uintptr_t rec::sysInit(scavengeIndex* s, bool test, sysMemStat* sysStat)
     {
-        auto n = uintptr_t(1 << heapAddrBits) / pallocChunkBytes;
+        uintptr_t n = uintptr_t(1 << heapAddrBits) / pallocChunkBytes;
         auto nbytes = n * gocpp::Sizeof<atomicScavChunkData>();
         auto r = sysReserve(nullptr, nbytes, "scavenge index"_s);
-        auto sl = notInHeapSlice {(notInHeap*)(r), int(n), int(n)};
+        auto sl = notInHeapSlice {(notInHeap*)(r), int64_t(n), int64_t(n)};
         s->chunks = *(gocpp::slice<atomicScavChunkData>*)(gocpp::unsafe_pointer(& sl));
         // All memory above is mapped Reserved.
         return 0;

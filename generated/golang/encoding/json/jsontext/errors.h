@@ -77,8 +77,8 @@ namespace golang::encoding::json::jsontext
         struct Igocpp_id_0
         {
             virtual jsonopts::Struct* voptions() = 0;
-            virtual int64_t voffsetAt(int pos) = 0;
-            virtual gocpp::slice<unsigned char> vAppendStackPointer(gocpp::slice<unsigned char> b, int where) = 0;
+            virtual int64_t voffsetAt(int64_t pos) = 0;
+            virtual gocpp::slice<unsigned char> vAppendStackPointer(gocpp::slice<unsigned char> b, int64_t where) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -92,9 +92,9 @@ namespace golang::encoding::json::jsontext
 
             jsonopts::Struct* voptions() override;
 
-            int64_t voffsetAt(int pos) override;
+            int64_t voffsetAt(int64_t pos) override;
 
-            gocpp::slice<unsigned char> vAppendStackPointer(gocpp::slice<unsigned char> b, int where) override;
+            gocpp::slice<unsigned char> vAppendStackPointer(gocpp::slice<unsigned char> b, int64_t where) override;
 
             void* getPtr() override
             {
@@ -114,11 +114,11 @@ namespace golang::encoding::json::jsontext
         jsonopts::Struct* options(const gocpp::PtrRecv<struct gocpp_id_0, false>& self);
         jsonopts::Struct* options(const gocpp::ObjRecv<struct gocpp_id_0>& self);
 
-        int64_t offsetAt(const gocpp::PtrRecv<struct gocpp_id_0, false>& self, int pos);
-        int64_t offsetAt(const gocpp::ObjRecv<struct gocpp_id_0>& self, int pos);
+        int64_t offsetAt(const gocpp::PtrRecv<struct gocpp_id_0, false>& self, int64_t pos);
+        int64_t offsetAt(const gocpp::ObjRecv<struct gocpp_id_0>& self, int64_t pos);
 
-        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_id_0, false>& self, gocpp::slice<unsigned char> b, int where);
-        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_id_0>& self, gocpp::slice<unsigned char> b, int where);
+        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_id_0, false>& self, gocpp::slice<unsigned char> b, int64_t where);
+        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_id_0>& self, gocpp::slice<unsigned char> b, int64_t where);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
@@ -184,7 +184,7 @@ namespace golang::encoding::json::jsontext
 namespace golang::encoding::json::jsontext
 {
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
-    gocpp::error wrapSyntacticError(gocpp_id_0 state, gocpp::error err, int pos, int where);
+    gocpp::error wrapSyntacticError(gocpp_id_0 state, gocpp::error err, int64_t pos, int64_t where);
 
     namespace rec
     {

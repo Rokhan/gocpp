@@ -41,6 +41,8 @@ namespace golang::runtime
     // gcphase == _GCmark.
     extern uint32_t gcBlackenEnabled;
     void setGCPhase(uint32_t x);
+    struct GoTag_gcMarkWorkerMode { };
+    using gcMarkWorkerMode = gocpp::defined<int64_t, GoTag_gcMarkWorkerMode>;
     // gcMarkWorkerModeStrings are the strings labels of gcMarkWorkerModes
     // to use in execution traces.
     extern gocpp::array<gocpp::string, 4> gcMarkWorkerModeStrings;
@@ -48,24 +50,10 @@ namespace golang::runtime
     void GC();
     void goroutineLeakGC();
     void gcWaitOnMark(uint32_t n);
-    struct gcTrigger
-    {
-        gcTriggerKind kind{};
-        int64_t now{}; // gcTriggerTime: current time
-        uint32_t n{}; // gcTriggerCycle: cycle number to start
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gcTrigger& value);
+    struct GoTag_gcMode { };
+    using gcMode = gocpp::defined<int64_t, GoTag_gcMode>;
+    struct GoTag_gcTriggerKind { };
+    using gcTriggerKind = gocpp::defined<int64_t, GoTag_gcTriggerKind>;
     // gcMarkDoneFlushed counts the number of P's with flushed work.
     //
     // Ideally this would be a captured local in gcMarkDone, but forEachP
@@ -85,10 +73,9 @@ namespace golang::runtime
     void gcBeginWork();
     bool gcEndWork();
     void gcMark(int64_t startTime);
-    bool gcSweep(gcMode mode);
     void gcResetMarkState();
     void clearpools();
-    gocpp::slice<unsigned char> itoaDiv(gocpp::slice<unsigned char> buf, uint64_t val, int dec);
+    gocpp::slice<unsigned char> itoaDiv(gocpp::slice<unsigned char> buf, uint64_t val, int64_t dec);
     gocpp::slice<unsigned char> fmtNSAsMS(gocpp::slice<unsigned char> buf, uint64_t ns);
     void gcTestMoveStackOnNextCall();
     // The compiler knows about this variable.
@@ -106,7 +93,25 @@ namespace golang::runtime
     //
     //go:linkname writeBarrier
     extern writeBarrierStruct writeBarrier;
-    void gcStart(gcTrigger trigger);
+    struct gcTrigger
+    {
+        gcTriggerKind kind{};
+        int64_t now{}; // gcTriggerTime: current time
+        uint32_t n{}; // gcTriggerCycle: cycle number to start
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gcTrigger& value);
+    bool gcSweep(gcMode mode);
     extern std::function<void ()> poolcleanup;
     void sync_runtime_registerPoolCleanup(std::function<void ()> f);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
@@ -218,6 +223,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
+    void gcStart(gcTrigger trigger);
     void gcMarkTermination(worldStop stw);
     struct gcBgMarkWorkerNode
     {
@@ -288,7 +294,7 @@ namespace golang::runtime
         bool done{};
         // The number of leaked goroutines during the last leak detection GC cycle.
         // Write-protected by STW in findGoroutineLeaks.
-        int count{};
+        int64_t count{};
 
         using isGoStruct = void;
 
@@ -401,11 +407,11 @@ namespace golang::runtime
         // during goroutine leak detection, nMaybeRunnableStackRoots is the number of stackRoots
         // scheduled for marking.
         // In both variants, nStackRoots == len(stackRoots).
-        int nDataRoots{};
-        int nBSSRoots{};
-        int nSpanRoots{};
-        int nStackRoots{};
-        int nMaybeRunnableStackRoots{};
+        int64_t nDataRoots{};
+        int64_t nBSSRoots{};
+        int64_t nSpanRoots{};
+        int64_t nStackRoots{};
+        int64_t nMaybeRunnableStackRoots{};
         // The following fields monitor the GC phase of the current cycle during
         // goroutine leak detection.
         gocpp_id_2 goroutineLeak{};

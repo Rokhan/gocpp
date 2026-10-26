@@ -31,7 +31,7 @@ namespace golang::main
 
     namespace rec
     {
-        std::tuple<int, gocpp::error> Read(MyReader, gocpp::slice<unsigned char> buffer);
+        std::tuple<int64_t, gocpp::error> Read(MyReader, gocpp::slice<unsigned char> buffer);
     }
 }
 

@@ -134,11 +134,11 @@ namespace golang::encoding::json
 
             namespace rec
             {
-                std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, gocpp::slice<unsigned char> p)
+                std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, gocpp::slice<unsigned char> p)
                 {
                     return io::rec::Read(gocpp::recv(self.ptr->Reader), p);
                 }
-                std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct gocpp_id_1>& self, gocpp::slice<unsigned char> p)
+                std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct gocpp_id_1>& self, gocpp::slice<unsigned char> p)
                 {
                     return io::rec::Read(gocpp::recv(self.obj.Reader), p);
                 }

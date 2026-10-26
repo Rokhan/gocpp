@@ -31,9 +31,9 @@ namespace golang::internal::poll
 
     namespace rec
     {
-        gocpp::error eofError(FD* fd, int n, gocpp::error err);
-        gocpp::error Shutdown(FD* fd, int how);
-        gocpp::error Fchown(FD* fd, int uid, int gid);
+        gocpp::error eofError(FD* fd, int64_t n, gocpp::error err);
+        gocpp::error Shutdown(FD* fd, int64_t how);
+        gocpp::error Fchown(FD* fd, int64_t uid, int64_t gid);
         gocpp::error Ftruncate(FD* fd, int64_t size);
         gocpp::error RawControl(FD* fd, std::function<void (uintptr_t _1)> f);
     }

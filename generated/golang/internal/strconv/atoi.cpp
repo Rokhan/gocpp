@@ -58,7 +58,7 @@ namespace golang::internal::strconv
     // ParseUint is like [ParseInt] but for unsigned numbers.
     //
     // A sign prefix is not permitted.
-    std::tuple<uint64_t, gocpp::error> ParseUint(gocpp::string s, int base, int bitSize)
+    std::tuple<uint64_t, gocpp::error> ParseUint(gocpp::string s, int64_t base, int64_t bitSize)
     {
         auto fnParseUint = "ParseUint"_s;
 
@@ -154,9 +154,9 @@ namespace golang::internal::strconv
             }
         }
 
-        auto maxVal = (uint64_t(1) << (unsigned int)(bitSize)) - 1;
+        auto maxVal = (uint64_t(1) << (uint64_t)(bitSize)) - 1;
 
-        auto underscores = false;
+        bool underscores = false;
         uint64_t n = {};
         for(auto [gocpp_ignored, c] : gocpp::slice<unsigned char>(s))
         {
@@ -239,7 +239,7 @@ namespace golang::internal::strconv
     // appropriate bitSize and sign.
     //
     // [integer literals]: https://go.dev/ref/spec#Integer_literals
-    std::tuple<int64_t, gocpp::error> ParseInt(gocpp::string s, int base, int bitSize)
+    std::tuple<int64_t, gocpp::error> ParseInt(gocpp::string s, int64_t base, int64_t bitSize)
     {
         int64_t i;
         gocpp::error err;
@@ -251,7 +251,7 @@ namespace golang::internal::strconv
         }
 
         // Pick off leading sign.
-        auto neg = false;
+        bool neg = false;
         //Go switch emulation
         {
             auto condition = s[0];
@@ -283,7 +283,7 @@ namespace golang::internal::strconv
             bitSize = IntSize;
         }
 
-        auto cutoff = uint64_t(1 << (unsigned int)(bitSize - 1));
+        auto cutoff = uint64_t(1 << (uint64_t)(bitSize - 1));
         if(! neg && un >= cutoff)
         {
             return {int64_t(cutoff - 1), gocpp::error(ErrRange)};
@@ -301,7 +301,7 @@ namespace golang::internal::strconv
     }
 
     // Atoi is equivalent to ParseInt(s, 10, 0), converted to type int.
-    std::tuple<int, gocpp::error> Atoi(gocpp::string s)
+    std::tuple<int64_t, gocpp::error> Atoi(gocpp::string s)
     {
         auto fnAtoi = "Atoi"_s;
 
@@ -320,7 +320,7 @@ namespace golang::internal::strconv
                 }
             }
 
-            auto n = 0;
+            int64_t n = 0;
             for(auto [gocpp_ignored, ch] : gocpp::slice<unsigned char>(s))
             {
                 ch -= '0';
@@ -328,7 +328,7 @@ namespace golang::internal::strconv
                 {
                     return {0, gocpp::error(ErrSyntax)};
                 }
-                n = n * 10 + int(ch);
+                n = n * 10 + int64_t(ch);
             }
             if(s0[0] == '-')
             {
@@ -339,7 +339,7 @@ namespace golang::internal::strconv
 
         // Slow path for invalid, big, or underscored integers.
         auto [i64, err] = ParseInt(s, 10, 0);
-        return {int(i64), err};
+        return {int64_t(i64), err};
     }
 
     // underscoreOK reports whether the underscores in s are allowed.
@@ -352,8 +352,8 @@ namespace golang::internal::strconv
         // 0 for a digit or base prefix,
         // _ for an underscore,
         // ! for none of the above.
-        auto saw = '^';
-        auto i = 0;
+        gocpp::rune saw = '^';
+        int64_t i = 0;
 
         // Optional sign.
         if(len(s) >= 1 && (s[0] == '-' || s[0] == '+'))
@@ -362,7 +362,7 @@ namespace golang::internal::strconv
         }
 
         // Optional base prefix.
-        auto hex = false;
+        bool hex = false;
         if(len(s) >= 2 && s[0] == '0' && (lower(s[1]) == 'b' || lower(s[1]) == 'o' || lower(s[1]) == 'x'))
         {
             i = 2;

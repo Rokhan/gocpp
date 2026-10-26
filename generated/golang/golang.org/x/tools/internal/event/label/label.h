@@ -185,9 +185,9 @@ namespace golang::golang_org::x::tools::internal::event::label
         {
             // Valid returns true if the index is within range for the list.
             // It does not imply the label at that index will itself be valid.
-            virtual bool vValid(int index) = 0;
+            virtual bool vValid(int64_t index) = 0;
             // Label returns the label at the given index.
-            virtual golang::golang_org::x::tools::internal::event::label::Label vLabel(int index) = 0;
+            virtual golang::golang_org::x::tools::internal::event::label::Label vLabel(int64_t index) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -199,9 +199,9 @@ namespace golang::golang_org::x::tools::internal::event::label
                 value.reset(ptr);
             }
 
-            bool vValid(int index) override;
+            bool vValid(int64_t index) override;
 
-            golang::golang_org::x::tools::internal::event::label::Label vLabel(int index) override;
+            golang::golang_org::x::tools::internal::event::label::Label vLabel(int64_t index) override;
 
             void* getPtr() override
             {
@@ -218,11 +218,11 @@ namespace golang::golang_org::x::tools::internal::event::label
 
     namespace rec
     {
-        bool Valid(const gocpp::PtrRecv<struct List, false>& self, int index);
-        bool Valid(const gocpp::ObjRecv<struct List>& self, int index);
+        bool Valid(const gocpp::PtrRecv<struct List, false>& self, int64_t index);
+        bool Valid(const gocpp::ObjRecv<struct List>& self, int64_t index);
 
-        golang::golang_org::x::tools::internal::event::label::Label Label(const gocpp::PtrRecv<struct List, false>& self, int index);
-        golang::golang_org::x::tools::internal::event::label::Label Label(const gocpp::ObjRecv<struct List>& self, int index);
+        golang::golang_org::x::tools::internal::event::label::Label Label(const gocpp::PtrRecv<struct List, false>& self, int64_t index);
+        golang::golang_org::x::tools::internal::event::label::Label Label(const gocpp::ObjRecv<struct List>& self, int64_t index);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct List& value);
@@ -381,10 +381,10 @@ namespace golang::golang_org::x::tools::internal::event::label
         bool Valid(golang::golang_org::x::tools::internal::event::label::Label t);
         golang::golang_org::x::tools::internal::event::label::Key Key(golang::golang_org::x::tools::internal::event::label::Label t);
         void Format(golang::golang_org::x::tools::internal::event::label::Label t, fmt::State f, gocpp::rune r);
-        bool Valid(list* l, int index);
-        golang::golang_org::x::tools::internal::event::label::Label Label(list* l, int index);
-        bool Valid(filter* f, int index);
-        golang::golang_org::x::tools::internal::event::label::Label Label(filter* f, int index);
+        bool Valid(list* l, int64_t index);
+        golang::golang_org::x::tools::internal::event::label::Label Label(list* l, int64_t index);
+        bool Valid(filter* f, int64_t index);
+        golang::golang_org::x::tools::internal::event::label::Label Label(filter* f, int64_t index);
         golang::golang_org::x::tools::internal::event::label::Label Find(listMap lm, golang::golang_org::x::tools::internal::event::label::Key key);
         golang::golang_org::x::tools::internal::event::label::Label Find(mapChain c, golang::golang_org::x::tools::internal::event::label::Key key);
     }

@@ -9,6 +9,12 @@
 #include "golang/go/doc/doc.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::go::doc
+{
+    struct GoTag_Mode { };
+    using Mode = gocpp::defined<int64_t, GoTag_Mode>;
+}
 #include "golang/go/doc/example.fwd.h"
 
 namespace golang::go::doc
@@ -67,7 +73,7 @@ namespace golang::go::doc
         gocpp::string Doc{};
         gocpp::slice<gocpp::string> Names{}; // var or const names in declaration order
         ast::GenDecl* Decl{};
-        int order{};
+        int64_t order{};
 
         using isGoStruct = void;
 
@@ -117,7 +123,7 @@ namespace golang::go::doc
         // (for functions, these fields have the respective zero value)
         gocpp::string Recv{}; // actual   receiver "T" or "*T" possibly followed by type parameters [P1, ..., Pn]
         gocpp::string Orig{}; // original receiver "T" or "*T"
-        int Level{}; // embedding level; 0 means not embedded
+        int64_t Level{}; // embedding level; 0 means not embedded
         // Examples is a sorted list of examples associated with this
         // function or method. Examples are extracted from _test.go files
         // provided to NewFromFiles.

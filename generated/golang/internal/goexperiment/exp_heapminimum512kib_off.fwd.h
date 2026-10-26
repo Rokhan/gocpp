@@ -6,6 +6,6 @@
 
 namespace golang::internal::goexperiment
 {
-    const bool HeapMinimum512KiB = false;
-    const long HeapMinimum512KiBInt = 0;
+    inline constexpr bool HeapMinimum512KiB = false;
+    inline constexpr long HeapMinimum512KiBInt = 0;
 }

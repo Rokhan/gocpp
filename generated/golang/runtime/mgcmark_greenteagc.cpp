@@ -251,7 +251,7 @@ namespace golang::runtime
         auto bytes = divRoundUp(uintptr_t(s->nelems), 8);
         auto imb = rec::inlineMarkBits(gocpp::recv(s));
         auto imbMarks = (gocpp::array_ptr<gc::ObjMask>)(gocpp::unsafe_pointer(gocpp::make_array_ptr(imb->marks)));
-        for(auto i = uintptr_t(0); i < bytes; i += goarch::PtrSize)
+        for(uintptr_t i = uintptr_t(0); i < bytes; i += goarch::PtrSize)
         {
             auto marks = bswapIfBigEndian(imbMarks[i / goarch::PtrSize]);
             if(i / goarch::PtrSize == uintptr_t(len(imb->marks) + 1) / goarch::PtrSize - 1)
@@ -660,7 +660,7 @@ namespace golang::runtime
         auto rn = t - h;
         if(rn + n <= r->cap)
         {
-            for(auto i = uint32_t(0); i < n; i++)
+            for(uint32_t i = uint32_t(0); i < n; i++)
             {
                 *rec::slot(gocpp::recv(r), t + i) = q->ring[(q->head + i) % uint32_t(len(q->ring))];
             }
@@ -764,7 +764,7 @@ namespace golang::runtime
                 continue;
             }
             n = gocpp::min(n, uint32_t(len(q->ring) / 2));
-            for(auto i = uint32_t(0); i < n; i++)
+            for(uint32_t i = uint32_t(0); i < n; i++)
             {
                 q->ring[i] = *rec::slot(gocpp::recv(r), h + i);
             }
@@ -1082,7 +1082,7 @@ namespace golang::runtime
 
         // Compute nelems.
         auto divMagic = uint64_t(gc::SizeClassToDivMagic[rec::sizeclass(gocpp::recv(spanclass))]);
-        auto usableSpanSize = uint64_t(gc::PageSize - gocpp::Sizeof<spanInlineMarkBits>());
+        uint64_t usableSpanSize = uint64_t(gc::PageSize - gocpp::Sizeof<spanInlineMarkBits>());
         if(! rec::noscan(gocpp::recv(spanclass)))
         {
             usableSpanSize -= gc::PageSize / goarch::PtrSize / 8;
@@ -1101,7 +1101,7 @@ namespace golang::runtime
         // Check if we have enough density to make a dartboard scan
         // worthwhile. If not, just do what scanobject does, but
         // localized to the span, using the dartboard.
-        if(! scan::HasFastScanSpanPacked() || objsMarked < int(nelems / 8))
+        if(! scan::HasFastScanSpanPacked() || objsMarked < int64_t(nelems / 8))
         {
             if(debug.gctrace > 1)
             {
@@ -1144,7 +1144,7 @@ namespace golang::runtime
     // toScan is populated with bits indicating whether a particular mark bit was set.
     //
     // Returns the number of objects marked, which could be zero.
-    int spanSetScans(uintptr_t spanBase, uint16_t nelems, spanInlineMarkBits* imb, gocpp::array_ptr<gc::ObjMask> toScan)
+    int64_t spanSetScans(uintptr_t spanBase, uint16_t nelems, spanInlineMarkBits* imb, gocpp::array_ptr<gc::ObjMask> toScan)
     {
         auto [arena, pageIdx, pageMask] = pageIndexOf(spanBase);
         if(arena->pageMarks[pageIdx] & pageMask == 0)
@@ -1153,7 +1153,7 @@ namespace golang::runtime
         }
 
         auto bytes = divRoundUp(uintptr_t(nelems), 8);
-        auto objsMarked = 0;
+        int64_t objsMarked = 0;
 
         // Careful: these two structures alias since ObjMask is much bigger
         // than marks or scans. We do these unsafe shenanigans so that we can
@@ -1164,7 +1164,7 @@ namespace golang::runtime
         // Iterate over one uintptr-sized chunks at a time, computing both
         // the union and intersection of marks and scans. Store the union
         // into scans, and the intersection into toScan.
-        for(auto i = uintptr_t(0); i < bytes; i += goarch::PtrSize)
+        for(uintptr_t i = uintptr_t(0); i < bytes; i += goarch::PtrSize)
         {
             auto scans = atomic::Loaduintptr(& imbScans[i / goarch::PtrSize]);
             auto marks = imbMarks[i / goarch::PtrSize];
@@ -1204,7 +1204,7 @@ namespace golang::runtime
         auto hbits = (unsigned char*)(gocpp::unsafe_pointer(hbitsBase));
         auto ptrBits = extractHeapBitsSmall(hbits, spanBase, b, objSize);
         gcw->heapScanWork += int64_t(sys::Len64(uint64_t(ptrBits)) * goarch::PtrSize);
-        auto nptrs = 0;
+        int64_t nptrs = 0;
         auto n = sys::OnesCount64(uint64_t(ptrBits));
         for(int i = 0; i < n; ++i)
         {
@@ -1241,10 +1241,10 @@ namespace golang::runtime
 
     void scanObjectsSmall(uintptr_t base, uintptr_t objSize, uint16_t elems, gcWork* gcw, gocpp::array_ptr<gc::ObjMask> scans)
     {
-        auto nptrs = 0;
+        int64_t nptrs = 0;
         for(auto [i, bits] : scans)
         {
-            if(i * (goarch::PtrSize * 8) > int(elems))
+            if(i * (goarch::PtrSize * 8) > int64_t(elems))
             {
                 break;
             }

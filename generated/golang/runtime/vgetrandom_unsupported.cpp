@@ -20,9 +20,9 @@ namespace golang::runtime
     }
 
     //go:linkname vgetrandom
-    std::tuple<int, bool> vgetrandom(gocpp::slice<unsigned char> p, uint32_t flags)
+    std::tuple<int64_t, bool> vgetrandom(gocpp::slice<unsigned char> p, uint32_t flags)
     {
-        int ret;
+        int64_t ret;
         bool supported;
         return {- 1, false};
     }

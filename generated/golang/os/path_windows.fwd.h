@@ -6,6 +6,6 @@
 
 namespace golang::os
 {
-    const char PathSeparator = '\\';
-    const char PathListSeparator = ';';
+    inline constexpr char PathSeparator = '\\';
+    inline constexpr char PathListSeparator = ';';
 }

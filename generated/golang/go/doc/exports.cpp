@@ -33,7 +33,7 @@ namespace golang::go::doc
     // and returns the resulting list.
     gocpp::slice<ast::Ident*> filterIdentList(gocpp::slice<ast::Ident*> list)
     {
-        auto j = 0;
+        int64_t j = 0;
         for(auto [gocpp_ignored, x] : list)
         {
             if(token::IsExported(x->Name))
@@ -58,7 +58,7 @@ namespace golang::go::doc
 
     gocpp::slice<ast::Expr> filterExprList(gocpp::slice<ast::Expr> list, golang::go::doc::Filter filter, bool export)
     {
-        auto j = 0;
+        int64_t j = 0;
         for(auto [gocpp_ignored, exp] : list)
         {
             //Go type switch emulation
@@ -139,10 +139,10 @@ namespace golang::go::doc
     {
         // we know that ityp.Methods != nil
         auto list = ityp->Methods->List;
-        auto j = 0;
+        int64_t j = 0;
         for(auto [gocpp_ignored, field] : list)
         {
-            auto keepField = true;
+            bool keepField = true;
             if(auto n = len(field->Names); n == 0)
             {
                 // anonymous field
@@ -176,10 +176,10 @@ namespace golang::go::doc
             return removedFields;
         }
         auto list = fields->List;
-        auto j = 0;
+        int64_t j = 0;
         for(auto [gocpp_ignored, field] : list)
         {
-            auto keepField = false;
+            bool keepField = false;
             if(auto n = len(field->Names); n == 0)
             {
                 // anonymous field or embedded type or union element
@@ -503,7 +503,7 @@ namespace golang::go::doc
             }
         }
 
-        auto j = 0;
+        int64_t j = 0;
         for(auto [gocpp_ignored, s] : list)
         {
             if(rec::filterSpec(gocpp::recv(r), s))
@@ -550,7 +550,7 @@ namespace golang::go::doc
     // fileExports removes unexported declarations from src in place.
     void rec::fileExports(reader* r, ast::File* src)
     {
-        auto j = 0;
+        int64_t j = 0;
         for(auto [gocpp_ignored, d] : src->Decls)
         {
             if(rec::filterDecl(gocpp::recv(r), d))

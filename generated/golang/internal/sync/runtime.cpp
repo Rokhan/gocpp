@@ -27,7 +27,7 @@ namespace golang::internal::sync
     // Otherwise they're functionally identical.
     //
     //go:linkname runtime_SemacquireMutex
-    void runtime_SemacquireMutex(uint32_t* s, bool lifo, int skipframes)
+    void runtime_SemacquireMutex(uint32_t* s, bool lifo, int64_t skipframes)
     /* convertBlockStmt, nil block */;
 
     // Semrelease atomically increments *s and notifies a waiting goroutine
@@ -39,14 +39,14 @@ namespace golang::internal::sync
     // runtime_Semrelease's caller.
     //
     //go:linkname runtime_Semrelease
-    void runtime_Semrelease(uint32_t* s, bool handoff, int skipframes)
+    void runtime_Semrelease(uint32_t* s, bool handoff, int64_t skipframes)
     /* convertBlockStmt, nil block */;
 
     // Active spinning runtime support.
     // runtime_canSpin reports whether spinning makes sense at the moment.
     //
     //go:linkname runtime_canSpin
-    bool runtime_canSpin(int i)
+    bool runtime_canSpin(int64_t i)
     /* convertBlockStmt, nil block */;
 
     // runtime_doSpin does active spinning.

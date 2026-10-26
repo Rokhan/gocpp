@@ -11,15 +11,16 @@ namespace golang::go::doc
     struct Type;
     struct Func;
     struct Note;
-    using Mode = int;
+    struct GoTag_Mode;
+    using Mode = gocpp::defined<int64_t, GoTag_Mode>;
     // AllDecls says to extract documentation for all package-level
     // declarations, not just exported ones.
-    const Mode AllDecls = 1 << 0;
+    inline constexpr Mode AllDecls = 1 << 0;
     // AllMethods says to show all embedded methods, not just the ones of
     // invisible (unexported) anonymous fields.
-    const Mode AllMethods = 1 << 1;
+    inline constexpr Mode AllMethods = 1 << 1;
     // PreserveAST says to leave the AST unmodified. Originally, pieces of
     // the AST such as function bodies were nil-ed out to save memory in
     // godoc, but not all programs want that behavior.
-    const Mode PreserveAST = 1 << 2;
+    inline constexpr Mode PreserveAST = 1 << 2;
 }

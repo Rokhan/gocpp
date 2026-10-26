@@ -12,13 +12,15 @@
 
 namespace golang::runtime
 {
+    struct GoTag_headTailIndex { };
+    using headTailIndex = gocpp::defined<uint64_t, GoTag_headTailIndex>;
     headTailIndex makeHeadTailIndex(uint32_t head, uint32_t tail);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/lfstack.h"
 
 namespace golang::runtime
 {
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct spanSetSpinePointer
     {
         gocpp::unsafe_pointer p{};

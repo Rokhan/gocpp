@@ -24,7 +24,7 @@ namespace golang::math::big
 namespace golang::math::big
 {
     extern Float floatZero;
-    std::tuple<Float*, int, gocpp::error> ParseFloat(gocpp::string s, int base, unsigned int prec, RoundingMode mode);
+    std::tuple<Float*, int64_t, gocpp::error> ParseFloat(gocpp::string s, int64_t base, uint64_t prec, RoundingMode mode);
 }
 #include "golang/fmt/errors.fwd.h"
 #include "golang/fmt/scan.fwd.h"
@@ -51,9 +51,9 @@ namespace golang::math::big
     namespace rec
     {
         std::tuple<Float*, bool> SetString(Float* z, gocpp::string s);
-        std::tuple<Float*, int, gocpp::error> scan(Float* z, io::ByteScanner r, int base);
+        std::tuple<Float*, int64_t, gocpp::error> scan(Float* z, io::ByteScanner r, int64_t base);
         Float* pow5(Float* z, uint64_t n);
-        std::tuple<Float*, int, gocpp::error> Parse(Float* z, gocpp::string s, int base);
+        std::tuple<Float*, int64_t, gocpp::error> Parse(Float* z, gocpp::string s, int64_t base);
         gocpp::error Scan(Float* z, fmt::ScanState s, gocpp::rune ch);
     }
 }

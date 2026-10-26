@@ -212,7 +212,7 @@ namespace golang::runtime
         bool full(cleanupBlock* b);
         bool empty(cleanupBlock* b);
         void take(cleanupBlock* a, cleanupBlock* b);
-        void addWork(cleanupQueue* q, int n);
+        void addWork(cleanupQueue* q, int64_t n);
         bool tryTakeWork(cleanupQueue* q);
         void enqueue(cleanupQueue* q, cleanupFn c);
         cleanupBlock* dequeue(cleanupQueue* q);

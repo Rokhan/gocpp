@@ -445,7 +445,7 @@ namespace golang::go::types
                         }
                         if(rec::mode(gocpp::recv(x)) == constant_)
                         {
-                            auto duplicate = false;
+                            bool duplicate = false;
                             auto xkey = keyVal(x->val);
                             if(keyIsInterface)
                             {
@@ -530,7 +530,7 @@ namespace golang::go::types
         for(auto [gocpp_ignored, e] : elts)
         {
             // determine and check index
-            auto validIndex = false;
+            bool validIndex = false;
             auto eval = e;
             if(auto [kv, gocpp_id_13] = gocpp::getValue<ast::KeyValueExpr*>(e); kv != nullptr)
             {

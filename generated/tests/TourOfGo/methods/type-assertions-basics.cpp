@@ -32,7 +32,7 @@ namespace golang::main
         mocklib::Println(f);
 
         value = 65;
-        auto i = gocpp::getValue<int>(value);
+        auto i = gocpp::getValue<int64_t>(value);
         mocklib::Println(i);
 
         value = true;

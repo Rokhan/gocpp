@@ -29,7 +29,7 @@ namespace golang::sync::atomic
 
     std::ostream& operator<<(std::ostream& os, const struct Value& value);
     extern unsigned char firstStoreInProgress;
-    int runtime_procPin();
+    int64_t runtime_procPin();
     void runtime_procUnpin();
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct efaceWords

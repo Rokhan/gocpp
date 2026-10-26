@@ -38,7 +38,7 @@ namespace golang::internal::runtime::maps
         // the group. Note that small maps never have deleted slots (as there
         // is no probe sequence to maintain).
         gocpp::unsafe_pointer dirPtr{};
-        int dirLen{};
+        int64_t dirLen{};
         // The number of bits to use in table directory lookups.
         uint8_t globalDepth{};
         // The number of bits to shift out of the hash for directory lookups.

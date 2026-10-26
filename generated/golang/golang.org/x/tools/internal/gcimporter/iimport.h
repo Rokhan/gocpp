@@ -12,6 +12,8 @@
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    struct GoTag_itag { };
+    using itag = gocpp::defined<uint64_t, GoTag_itag>;
     struct GoTag_byPath { };
 }
 #include "golang/bytes/reader.fwd.h"
@@ -73,20 +75,20 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     namespace rec
     {
-        int Len(const gocpp::PtrRecv<struct intReader, false>& self);
-        int Len(const gocpp::ObjRecv<struct intReader>& self);
-        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct intReader, false>& self, gocpp::slice<unsigned char> b);
-        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct intReader>& self, gocpp::slice<unsigned char> b);
-        std::tuple<int, gocpp::error> ReadAt(const gocpp::PtrRecv<struct intReader, false>& self, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<int, gocpp::error> ReadAt(const gocpp::ObjRecv<struct intReader>& self, gocpp::slice<unsigned char> b, int64_t off);
+        int64_t Len(const gocpp::PtrRecv<struct intReader, false>& self);
+        int64_t Len(const gocpp::ObjRecv<struct intReader>& self);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct intReader, false>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct intReader>& self, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> ReadAt(const gocpp::PtrRecv<struct intReader, false>& self, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int64_t, gocpp::error> ReadAt(const gocpp::ObjRecv<struct intReader>& self, gocpp::slice<unsigned char> b, int64_t off);
         std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct intReader, false>& self);
         std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<struct intReader>& self);
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct intReader, false>& self);
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::ObjRecv<struct intReader>& self);
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::PtrRecv<struct intReader, false>& self);
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::ObjRecv<struct intReader>& self);
         void Reset(const gocpp::PtrRecv<struct intReader, false>& self, gocpp::slice<unsigned char> b);
         void Reset(const gocpp::ObjRecv<struct intReader>& self, gocpp::slice<unsigned char> b);
-        std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct intReader, false>& self, int64_t offset, int whence);
-        std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct intReader>& self, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct intReader, false>& self, int64_t offset, int64_t whence);
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct intReader>& self, int64_t offset, int64_t whence);
         int64_t Size(const gocpp::PtrRecv<struct intReader, false>& self);
         int64_t Size(const gocpp::ObjRecv<struct intReader>& self);
         gocpp::error UnreadByte(const gocpp::PtrRecv<struct intReader, false>& self);
@@ -115,7 +117,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ident& value);
-    std::tuple<int, types::Package*, gocpp::error> IImportData(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::slice<unsigned char> data, gocpp::string path);
+    std::tuple<int64_t, types::Package*, gocpp::error> IImportData(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::slice<unsigned char> data, gocpp::string path);
     std::tuple<gocpp::slice<types::Package*>, gocpp::error> IImportBundle(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::slice<unsigned char> data);
     struct GetPackagesItem
     {
@@ -185,7 +187,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     // hole through the type, when compiling with Go 1.23. (The bug has been fixed
     // for 1.24, but the fix was not worth back-porting).
     extern std::function<void (types::TypeName*)> markBlack;
-    std::tuple<bool, unsigned int> intSize(types::Basic* b);
+    std::tuple<bool, uint64_t> intSize(types::Basic* b);
     bool isInterface(types::Type t);
     using byPath = gocpp::defined<gocpp::slice<types::Package*>, GoTag_byPath>;
 }
@@ -195,7 +197,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 {
     struct iimporter
     {
-        int version{};
+        int64_t version{};
         gocpp::string ipath{};
         bool shallow{};
         ReportFunc reportf{}; // if non-nil, used to report bugs
@@ -218,7 +220,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         gocpp::slice<types::Type> instanceList{}; // instances for later completion (see golang/go#61561)
         // Arguments for calls to SetConstraint that are deferred due to recursive types
         gocpp::slice<setConstraintArgs> later{};
-        int indent{}; // for tracing support
+        int64_t indent{}; // for tracing support
 
         using isGoStruct = void;
 
@@ -299,9 +301,9 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         int64_t int64(importReader* r);
         uint64_t uint64(importReader* r);
         unsigned char byte(importReader* r);
-        int Len(byPath a);
-        void Swap(byPath a, int i, int j);
-        bool Less(byPath a, int i, int j);
+        int64_t Len(byPath a);
+        void Swap(byPath a, int64_t i, int64_t j);
+        bool Less(byPath a, int64_t i, int64_t j);
     }
 }
 

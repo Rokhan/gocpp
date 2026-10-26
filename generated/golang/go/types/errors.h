@@ -189,7 +189,7 @@ namespace golang::go::types
         positioner posn(error_* err);
         gocpp::string msg(error_* err);
         void report(error_* err);
-        void handleError(Checker* check, int index, positioner posn, errors::Code code, gocpp::string msg, bool soft);
+        void handleError(Checker* check, int64_t index, positioner posn, errors::Code code, gocpp::string msg, bool soft);
         void error(Checker* check, positioner at, errors::Code code, gocpp::string msg);
         void errorf(Checker* check, positioner at, errors::Code code, gocpp::string format, gocpp::slice<go_any> args);
         

@@ -48,6 +48,8 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct FuncLit& value);
+    struct GoTag_ChanDir { };
+    using ChanDir = gocpp::defined<int64_t, GoTag_ChanDir>;
     bool IsExported(gocpp::string name);
     struct FuncDecl
     {
@@ -1442,7 +1444,7 @@ namespace golang::go::ast
         token::Pos End(Field* f);
         token::Pos Pos(FieldList* f);
         token::Pos End(FieldList* f);
-        int NumFields(FieldList* f);
+        int64_t NumFields(FieldList* f);
         token::Pos Pos(BadExpr* x);
         token::Pos Pos(Ident* x);
         token::Pos Pos(Ellipsis* x);

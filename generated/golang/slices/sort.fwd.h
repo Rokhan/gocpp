@@ -6,9 +6,11 @@
 
 namespace golang::slices
 {
-    using sortedHint = int;
-    using xorshift = uint64_t;
-    const sortedHint unknownHint = 0;
-    const sortedHint increasingHint = 1;
-    const sortedHint decreasingHint = 2;
+    struct GoTag_sortedHint;
+    using sortedHint = gocpp::defined<int64_t, GoTag_sortedHint>;
+    struct GoTag_xorshift;
+    using xorshift = gocpp::defined<uint64_t, GoTag_xorshift>;
+    inline constexpr sortedHint unknownHint = 0;
+    inline constexpr sortedHint increasingHint = 1;
+    inline constexpr sortedHint decreasingHint = 2;
 }

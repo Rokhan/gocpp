@@ -319,7 +319,7 @@ namespace golang::regexp::syntax
         }
         if(p->height == nullptr)
         {
-            p->height = gocpp::make(gocpp::Tag<gocpp::map<Regexp*, int>>());
+            p->height = gocpp::make(gocpp::Tag<gocpp::map<Regexp*, int64_t>>());
             for(auto [gocpp_ignored, re] : p->stack)
             {
                 rec::checkHeight(gocpp::recv(p), re);
@@ -331,7 +331,7 @@ namespace golang::regexp::syntax
         }
     }
 
-    int rec::calcHeight(parser* p, Regexp* re, bool force)
+    int64_t rec::calcHeight(parser* p, Regexp* re, bool force)
     {
         if(! force)
         {
@@ -340,7 +340,7 @@ namespace golang::regexp::syntax
                 return h;
             }
         }
-        auto h = 1;
+        int64_t h = 1;
         for(auto [gocpp_ignored, sub] : re->Sub)
         {
             auto hsub = rec::calcHeight(gocpp::recv(p), sub, false);
@@ -485,7 +485,7 @@ namespace golang::regexp::syntax
     // before is the regexp suffix starting at the repetition operator.
     // after is the regexp suffix following after the repetition operator.
     // repeat returns an updated 'after' and an error, if any.
-    std::tuple<gocpp::string, gocpp::error> rec::repeat(parser* p, Op op, int min, int max, gocpp::string before, gocpp::string after, gocpp::string lastRepeat)
+    std::tuple<gocpp::string, gocpp::error> rec::repeat(parser* p, Op op, int64_t min, int64_t max, gocpp::string before, gocpp::string after, gocpp::string lastRepeat)
     {
         auto flags = p->flags;
         if(p->flags & PerlX != 0)
@@ -540,7 +540,7 @@ namespace golang::regexp::syntax
     // We avoid this by only calling repeatIsValid when min or max >= 2.
     // In that case the depth of any >= 2 nesting can only get to 9 without
     // triggering a parse error, so each subtree can only be rewalked 9 times.
-    bool repeatIsValid(Regexp* re, int n)
+    bool repeatIsValid(Regexp* re, int64_t n)
     {
         if(re->Op == OpRepeat)
         {
@@ -722,9 +722,9 @@ namespace golang::regexp::syntax
         // Round 1: Factor out common literal prefixes.
         gocpp::slice<gocpp::rune> str = {};
         Flags strflags = {};
-        auto start = 0;
+        int64_t start = 0;
         auto out = sub.make_slice(0, 0);
-        for(auto i = 0; i <= len(sub); i++)
+        for(int64_t i = 0; i <= len(sub); i++)
         {
             // Invariant: the Regexps that were in sub[0:start] have been
             // used or marked for reuse, and the slice space has been reused
@@ -738,7 +738,7 @@ namespace golang::regexp::syntax
                 std::tie(istr, iflags) = rec::leadingString(gocpp::recv(p), sub[i]);
                 if(iflags == strflags)
                 {
-                    auto same = 0;
+                    int64_t same = 0;
                     for(; same < len(str) && same < len(istr) && str[same] == istr[same]; )
                     {
                         same++;
@@ -804,7 +804,7 @@ namespace golang::regexp::syntax
         start = 0;
         out = sub.make_slice(0, 0);
         Regexp* first = {};
-        for(auto i = 0; i <= len(sub); i++)
+        for(int64_t i = 0; i <= len(sub); i++)
         {
             // Invariant: the Regexps that were in sub[0:start] have been
             // used or marked for reuse, and the slice space has been reused
@@ -862,7 +862,7 @@ namespace golang::regexp::syntax
         // Round 3: Collapse runs of single literals into character classes.
         start = 0;
         out = sub.make_slice(0, 0);
-        for(auto i = 0; i <= len(sub); i++)
+        for(int64_t i = 0; i <= len(sub); i++)
         {
             // Invariant: the Regexps that were in sub[0:start] have been
             // used or marked for reuse, and the slice space has been reused
@@ -950,7 +950,7 @@ namespace golang::regexp::syntax
 
     // removeLeadingString removes the first n leading runes
     // from the beginning of re. It returns the replacement for re.
-    Regexp* rec::removeLeadingString(parser* p, Regexp* re, int n)
+    Regexp* rec::removeLeadingString(parser* p, Regexp* re, int64_t n)
     {
         if(re->Op == OpConcat && len(re->Sub) > 0)
         {
@@ -1157,7 +1157,7 @@ namespace golang::regexp::syntax
             auto t = s;
             for(; t != ""_s; )
             {
-                auto repeat = ""_s;
+                gocpp::string repeat = ""_s;
                 BigSwitch:
                 //Go switch emulation
                 {
@@ -1327,8 +1327,8 @@ namespace golang::regexp::syntax
                             }
                             op = OpRepeat;
                             auto before = t;
-                            int min;
-                            int max;
+                            int64_t min;
+                            int64_t max;
                             bool ok;
                             std::tie(min, max, after, ok) = rec::parseRepeat(gocpp::recv(p), t);
                             if(! ok)
@@ -1479,10 +1479,10 @@ namespace golang::regexp::syntax
     // parseRepeat parses {min} (max=min) or {min,} (max=-1) or {min,max}.
     // If s is not of that form, it returns ok == false.
     // If s has the right form but the values are too big, it returns min == -1, ok == true.
-    std::tuple<int, int, gocpp::string, bool> rec::parseRepeat(parser* p, gocpp::string s)
+    std::tuple<int64_t, int64_t, gocpp::string, bool> rec::parseRepeat(parser* p, gocpp::string s)
     {
-        int min;
-        int max;
+        int64_t min;
+        int64_t max;
         gocpp::string rest;
         bool ok;
         if(s == ""_s || s[0] != '{')
@@ -1562,7 +1562,7 @@ namespace golang::regexp::syntax
         if(startsWithP || startsWithName)
         {
             // position of expr start
-            auto exprStartPos = 4;
+            int64_t exprStartPos = 4;
             if(startsWithName)
             {
                 exprStartPos = 3;
@@ -1605,8 +1605,8 @@ namespace golang::regexp::syntax
         // skip (?
         t = t.make_slice(2);
         auto flags = p->flags;
-        auto sign = + 1;
-        auto sawFlag = false;
+        int64_t sign = + 1;
+        bool sawFlag = false;
         Loop:
         for(; t != ""_s; )
         {
@@ -1716,9 +1716,9 @@ namespace golang::regexp::syntax
     }
 
     // parseInt parses a decimal integer.
-    std::tuple<int, gocpp::string, bool> rec::parseInt(parser* p, gocpp::string s)
+    std::tuple<int64_t, gocpp::string, bool> rec::parseInt(parser* p, gocpp::string s)
     {
-        int n;
+        int64_t n;
         gocpp::string rest;
         bool ok;
         if(s == ""_s || s[0] < '0' || '9' < s[0])
@@ -1739,7 +1739,7 @@ namespace golang::regexp::syntax
         ok = true;
         // Have digits, compute value.
         t = t.make_slice(0, len(t) - len(s));
-        for(auto i = 0; i < len(t); i++)
+        for(int64_t i = 0; i < len(t); i++)
         {
             // Avoid overflow.
             if(n >= 1e8)
@@ -1747,7 +1747,7 @@ namespace golang::regexp::syntax
                 n = - 1;
                 break;
             }
-            n = n * 10 + int(t[i]) - '0';
+            n = n * 10 + int64_t(t[i]) - '0';
         }
         return {n, rest, ok};
     }
@@ -1779,7 +1779,7 @@ namespace golang::regexp::syntax
                     return len(re->Rune) == 1 && re->Rune[0] == r;
                     break;
                 case 1:
-                    for(auto i = 0; i < len(re->Rune); i += 2)
+                    for(int64_t i = 0; i < len(re->Rune); i += 2)
                     {
                         if(re->Rune[i] <= r && r <= re->Rune[i + 1])
                         {
@@ -2028,7 +2028,7 @@ namespace golang::regexp::syntax
                     }
                     // Consume up to three octal digits; already have one.
                     r = c - '0';
-                    for(auto i = 1; i < 3; i++)
+                    for(int64_t i = 1; i < 3; i++)
                     {
                         if(t == ""_s || t[0] < '0' || t[0] > '7')
                         {
@@ -2061,7 +2061,7 @@ namespace golang::regexp::syntax
                         // Perl accepts any text at all; it ignores all text
                         // after the first non-hex digit. We require only hex digits,
                         // and at least one.
-                        auto nhex = 0;
+                        int64_t nhex = 0;
                         r = 0;
                         for(; ; )
                         {
@@ -2399,7 +2399,7 @@ namespace golang::regexp::syntax
     gocpp::string canonicalName(gocpp::string name)
     {
         gocpp::slice<unsigned char> b = {};
-        auto first = true;
+        bool first = true;
         for(int i = 0; i < len(name); ++i)
         {
             auto c = name[i];
@@ -2454,11 +2454,11 @@ namespace golang::regexp::syntax
     // unicodeTable returns the unicode.RangeTable identified by name
     // and the table of additional fold-equivalent code points.
     // If sign < 0, the result should be inverted.
-    std::tuple<unicode::RangeTable*, unicode::RangeTable*, int> unicodeTable(gocpp::string name)
+    std::tuple<unicode::RangeTable*, unicode::RangeTable*, int64_t> unicodeTable(gocpp::string name)
     {
         unicode::RangeTable* tab;
         unicode::RangeTable* fold;
-        int sign;
+        int64_t sign;
         name = canonicalName(name);
 
         // Special cases: Any, Assigned, and ASCII.
@@ -2528,7 +2528,7 @@ namespace golang::regexp::syntax
         }
 
         // Committed to parse or return error.
-        auto sign = + 1;
+        int64_t sign = + 1;
         if(s[1] == 'P')
         {
             sign = - 1;
@@ -2630,7 +2630,7 @@ namespace golang::regexp::syntax
         re->Flags = p->flags;
         re->Rune = re->Rune0.make_slice(0, 0);
 
-        auto sign = + 1;
+        int64_t sign = + 1;
         if(t != ""_s && t[0] == '^')
         {
             sign = - 1;
@@ -2646,7 +2646,7 @@ namespace golang::regexp::syntax
 
         auto go_class = re->Rune;
         // ] and - are okay as first char in class
-        auto first = true;
+        bool first = true;
         for(; t == ""_s || t[0] != ']' || first; )
         {
             // POSIX: - is only okay unescaped as first or last in class.
@@ -2760,8 +2760,8 @@ namespace golang::regexp::syntax
 
         // Merge abutting, overlapping.
         // write index
-        auto w = 2;
-        for(auto i = 2; i < len(r); i += 2)
+        int64_t w = 2;
+        for(int64_t i = 2; i < len(r); i += 2)
         {
             auto [lo, hi] = std::tuple{r[i], r[i + 1]};
             if(lo <= r[w - 1] + 1)
@@ -2786,7 +2786,7 @@ namespace golang::regexp::syntax
     // It assumes the class has been cleaned by cleanClass.
     bool inCharClass(gocpp::rune r, gocpp::slice<gocpp::rune> go_class)
     {
-        auto [gocpp_id_1, ok] = sort::Find(len(go_class) / 2, [=](int i) mutable -> int
+        auto [gocpp_id_1, ok] = sort::Find(len(go_class) / 2, [=](int64_t i) mutable -> int64_t
         {
             auto [lo, hi] = std::tuple{go_class[2 * i], go_class[2 * i + 1]};
             if(r > hi)
@@ -2820,7 +2820,7 @@ namespace golang::regexp::syntax
         // alphabets, so that one range can be expanding A-Z and the
         // other expanding a-z.
         auto n = len(r);
-        for(auto i = 2; i <= 4; i += 2)
+        for(int64_t i = 2; i <= 4; i += 2)
         {
             // twice, using i=2, i=4
             if(n >= i)
@@ -2890,7 +2890,7 @@ namespace golang::regexp::syntax
     // It assume x is clean.
     gocpp::slice<gocpp::rune> appendClass(gocpp::slice<gocpp::rune> r, gocpp::slice<gocpp::rune> x)
     {
-        for(auto i = 0; i < len(x); i += 2)
+        for(int64_t i = 0; i < len(x); i += 2)
         {
             r = appendRange(r, x[i], x[i + 1]);
         }
@@ -2900,7 +2900,7 @@ namespace golang::regexp::syntax
     // appendFoldedClass returns the result of appending the case folding of the class x to the class r.
     gocpp::slice<gocpp::rune> appendFoldedClass(gocpp::slice<gocpp::rune> r, gocpp::slice<gocpp::rune> x)
     {
-        for(auto i = 0; i < len(x); i += 2)
+        for(int64_t i = 0; i < len(x); i += 2)
         {
             r = appendFoldedRange(r, x[i], x[i + 1]);
         }
@@ -2911,8 +2911,8 @@ namespace golang::regexp::syntax
     // It assumes x is clean.
     gocpp::slice<gocpp::rune> appendNegatedClass(gocpp::slice<gocpp::rune> r, gocpp::slice<gocpp::rune> x)
     {
-        auto nextLo = '\u0000';
-        for(auto i = 0; i < len(x); i += 2)
+        gocpp::rune nextLo = '\u0000';
+        for(int64_t i = 0; i < len(x); i += 2)
         {
             auto [lo, hi] = std::tuple{x[i], x[i + 1]};
             if(nextLo <= lo - 1)
@@ -2964,7 +2964,7 @@ namespace golang::regexp::syntax
     gocpp::slice<gocpp::rune> appendNegatedTable(gocpp::slice<gocpp::rune> r, unicode::RangeTable* x)
     {
         // lo end of next class to add
-        auto nextLo = '\u0000';
+        gocpp::rune nextLo = '\u0000';
         for(auto [gocpp_ignored, xr] : x->R16)
         {
             auto [lo, hi, stride] = std::tuple{gocpp::rune(xr.Lo), gocpp::rune(xr.Hi), gocpp::rune(xr.Stride)};
@@ -3019,10 +3019,10 @@ namespace golang::regexp::syntax
     gocpp::slice<gocpp::rune> negateClass(gocpp::slice<gocpp::rune> r)
     {
         // lo end of next class to add
-        auto nextLo = '\u0000';
+        gocpp::rune nextLo = '\u0000';
         // write index
-        auto w = 0;
-        for(auto i = 0; i < len(r); i += 2)
+        int64_t w = 0;
+        for(int64_t i = 0; i < len(r); i += 2)
         {
             auto [lo, hi] = std::tuple{r[i], r[i + 1]};
             if(nextLo <= lo - 1)
@@ -3076,7 +3076,7 @@ namespace golang::regexp::syntax
         return value.PrintTo(os);
     }
 
-    bool rec::Less(ranges ra, int i, int j)
+    bool rec::Less(ranges ra, int64_t i, int64_t j)
     {
         auto p = *ra.p;
         i *= 2;
@@ -3084,12 +3084,12 @@ namespace golang::regexp::syntax
         return p[i] < p[j] || p[i] == p[j] && p[i + 1] > p[j + 1];
     }
 
-    int rec::Len(ranges ra)
+    int64_t rec::Len(ranges ra)
     {
         return len(*ra.p) / 2;
     }
 
-    void rec::Swap(ranges ra, int i, int j)
+    void rec::Swap(ranges ra, int64_t i, int64_t j)
     {
         auto p = *ra.p;
         i *= 2;
@@ -3119,7 +3119,7 @@ namespace golang::regexp::syntax
         gocpp::rune c;
         gocpp::string t;
         gocpp::error err;
-        int size;
+        int64_t size;
         std::tie(c, size) = utf8::DecodeRuneInString(s);
         if(c == utf8::RuneError && size == 1)
         {

@@ -1103,7 +1103,7 @@ namespace golang::golang_org::x::tools::go::packages
         {
             response->Packages = append(response->Packages, pkg);
         }
-        sort::Slice(response->Packages, [=](int i, int j) mutable -> bool
+        sort::Slice(response->Packages, [=](int64_t i, int64_t j) mutable -> bool
         {
             return response->Packages[i]->ID < response->Packages[j]->ID;
         });
@@ -1139,7 +1139,7 @@ namespace golang::golang_org::x::tools::go::packages
     }
 
     // getGoVersion returns the effective minor version of the go command.
-    std::tuple<int, gocpp::error> rec::getGoVersion(golistState* state)
+    std::tuple<int64_t, gocpp::error> rec::getGoVersion(golistState* state)
     {
         rec::Do(gocpp::recv(state->goVersionOnce), [=]() mutable -> void
         {
@@ -1209,7 +1209,7 @@ namespace golang::golang_org::x::tools::go::packages
         return res;
     }
 
-    gocpp::string jsonFlag(Config* cfg, int goVersion)
+    gocpp::string jsonFlag(Config* cfg, int64_t goVersion)
     {
         if(goVersion < 19)
         {
@@ -1296,7 +1296,7 @@ namespace golang::golang_org::x::tools::go::packages
         return "-json="_s + mocklib::StringsJoin(fields, ","_s);
     }
 
-    gocpp::slice<gocpp::string> golistargs(Config* cfg, gocpp::slice<gocpp::string> words, int goVersion)
+    gocpp::slice<gocpp::string> golistargs(Config* cfg, gocpp::slice<gocpp::string> words, int64_t goVersion)
     {
         auto findFlags = NeedImports | NeedTypes | NeedSyntax | NeedTypesInfo;
         auto fullargs = gocpp::slice<gocpp::string> {

@@ -186,7 +186,7 @@ namespace golang::math::big
     // cannot be represented in prec bits without loss of precision.
     // SetPrec(0) maps all finite values to ±0; infinite values remain unchanged.
     // If prec > [MaxPrec], it is set to [MaxPrec].
-    Float* rec::SetPrec(Float* z, unsigned int prec)
+    Float* rec::SetPrec(Float* z, uint64_t prec)
     {
         // optimistically assume no rounding is needed
         z->acc = Exact;
@@ -239,21 +239,21 @@ namespace golang::math::big
 
     // Prec returns the mantissa precision of x in bits.
     // The result may be 0 for |x| == 0 and |x| == Inf.
-    unsigned int rec::Prec(Float* x)
+    uint64_t rec::Prec(Float* x)
     {
-        return (unsigned int)(x->prec);
+        return (uint64_t)(x->prec);
     }
 
     // MinPrec returns the minimum precision required to represent x exactly
     // (i.e., the smallest prec before x.SetPrec(prec) would start rounding x).
     // The result is 0 for |x| == 0 and |x| == Inf.
-    unsigned int rec::MinPrec(Float* x)
+    uint64_t rec::MinPrec(Float* x)
     {
         if(x->form != finite)
         {
             return 0;
         }
-        return (unsigned int)(len(x->mant)) * _W - rec::trailingZeroBits(gocpp::recv(x->mant));
+        return (uint64_t)(len(x->mant)) * _W - rec::trailingZeroBits(gocpp::recv(x->mant));
     }
 
     // Mode returns the rounding mode of x.
@@ -274,7 +274,7 @@ namespace golang::math::big
     //   - -1 if x < 0;
     //   - 0 if x is ±0;
     //   - +1 if x > 0.
-    int rec::Sign(Float* x)
+    int64_t rec::Sign(Float* x)
     {
         if(debugFloat)
         {
@@ -306,16 +306,16 @@ namespace golang::math::big
     //
     // x and mant may be the same in which case x is set to its
     // mantissa value.
-    int rec::MantExp(Float* x, Float* mant)
+    int64_t rec::MantExp(Float* x, Float* mant)
     {
-        int exp;
+        int64_t exp;
         if(debugFloat)
         {
             rec::validate(gocpp::recv(x));
         }
         if(x->form == finite)
         {
-            exp = int(x->exp);
+            exp = int64_t(x->exp);
         }
         if(mant != nullptr)
         {
@@ -328,7 +328,7 @@ namespace golang::math::big
         return exp;
     }
 
-    void rec::setExpAndRound(Float* z, int64_t exp, unsigned int sbit)
+    void rec::setExpAndRound(Float* z, int64_t exp, uint64_t sbit)
     {
         if(exp < MinExp)
         {
@@ -368,7 +368,7 @@ namespace golang::math::big
     //
     // z and mant may be the same in which case z's exponent
     // is set to exp.
-    Float* rec::SetMantExp(Float* z, Float* mant, int exp)
+    Float* rec::SetMantExp(Float* z, Float* mant, int64_t exp)
     {
         if(debugFloat)
         {
@@ -417,7 +417,7 @@ namespace golang::math::big
         }
         // x.exp > 0
         // not enough bits for fractional mantissa
-        return x->prec <= uint32_t(x->exp) || rec::MinPrec(gocpp::recv(x)) <= (unsigned int)(x->exp);
+        return x->prec <= uint32_t(x->exp) || rec::MinPrec(gocpp::recv(x)) <= (uint64_t)(x->exp);
     }
 
     // debugging support
@@ -465,7 +465,7 @@ namespace golang::math::big
     // CAUTION: The rounding modes [ToNegativeInf], [ToPositiveInf] are affected by the
     // sign of z. For correct rounding, the sign of z must be set correctly before
     // calling round.
-    void rec::round(Float* z, unsigned int sbit)
+    void rec::round(Float* z, uint64_t sbit)
     {
         if(debugFloat)
         {
@@ -506,7 +506,7 @@ namespace golang::math::big
         // 1     1        >  0.5, < 1.0
         // bits > z.prec: mantissa too large => round
         // rounding bit position; r >= 0
-        auto r = (unsigned int)(bits - z->prec - 1);
+        auto r = (uint64_t)(bits - z->prec - 1);
         // rounding bit; be safe and ensure it's a single bit
         auto rbit = rec::bit(gocpp::recv(z->mant), r) & 1;
         // The sticky bit is only needed for rounding ToNearestEven
@@ -539,7 +539,7 @@ namespace golang::math::big
             // Make rounding decision: The result mantissa is truncated ("rounded down")
             // by default. Decide if we need to increment, or "round up", the (unsigned)
             // mantissa.
-            auto inc = false;
+            bool inc = false;
             //Go switch emulation
             {
                 auto condition = z->mode;
@@ -628,7 +628,7 @@ namespace golang::math::big
         // x != 0
         z->form = finite;
         auto s = bits::LeadingZeros64(x);
-        z->mant = rec::setUint64(gocpp::recv(z->mant), x << (unsigned int)(s));
+        z->mant = rec::setUint64(gocpp::recv(z->mant), x << (uint64_t)(s));
         // always fits
         z->exp = int32_t(64 - s);
         if(z->prec < 64)
@@ -1014,7 +1014,7 @@ namespace golang::math::big
                         {
                             i = - i;
                         }
-                        if(rec::MinPrec(gocpp::recv(x)) <= (unsigned int)(x->exp))
+                        if(rec::MinPrec(gocpp::recv(x)) <= (uint64_t)(x->exp))
                         {
                             return {i, Exact};
                         }
@@ -1090,12 +1090,12 @@ namespace golang::math::big
                     // rounding and fewer than p mantissa bits of precision available
                     // (the exponent remains fixed but the mantissa gets shifted right).
                     // precision of normal float
-                    auto p = mbits + 1;
+                    int64_t p = mbits + 1;
                     // p > 0
                     if(e < emin)
                     {
                         // recompute precision
-                        p = mbits + 1 - emin + int(e);
+                        p = mbits + 1 - emin + int64_t(e);
                         // If p == 0, the mantissa of x is shifted so much to the right
                         // that its msb falls immediately to the right of the float32
                         // mantissa space. In other words, if the smallest denormal is
@@ -1103,7 +1103,7 @@ namespace golang::math::big
                         // If m > 0.5, it is rounded up to 1.0; i.e., the smallest denormal.
                         // If m == 0.5, it is rounded down to even, i.e., 0.0.
                         // If p < 0, the mantissa value m is <= "0.25" which is never rounded up.
-                        if(p < 0 || p == 0 && rec::sticky(gocpp::recv(x->mant), (unsigned int)(len(x->mant)) * _W - 1) == 0)
+                        if(p < 0 || p == 0 && rec::sticky(gocpp::recv(x->mant), (uint64_t)(len(x->mant)) * _W - 1) == 0)
                         {
                             // underflow to ±0
                             if(x->neg)
@@ -1159,8 +1159,8 @@ namespace golang::math::big
                         // Since rounding may have at best increased precision
                         // and we have eliminated p <= 0 early, we know p > 0.
                         // bexp == 0 for denormals
-                        p = mbits + 1 - emin + int(e);
-                        mant = msb32(r.mant) >> (unsigned int)(fbits - p);
+                        p = mbits + 1 - emin + int64_t(e);
+                        mant = msb32(r.mant) >> (uint64_t)(fbits - p);
                     }
                     else
                     {
@@ -1233,12 +1233,12 @@ namespace golang::math::big
                     // rounding and fewer than p mantissa bits of precision available
                     // (the exponent remains fixed but the mantissa gets shifted right).
                     // precision of normal float
-                    auto p = mbits + 1;
+                    int64_t p = mbits + 1;
                     // p > 0
                     if(e < emin)
                     {
                         // recompute precision
-                        p = mbits + 1 - emin + int(e);
+                        p = mbits + 1 - emin + int64_t(e);
                         // If p == 0, the mantissa of x is shifted so much to the right
                         // that its msb falls immediately to the right of the float64
                         // mantissa space. In other words, if the smallest denormal is
@@ -1246,7 +1246,7 @@ namespace golang::math::big
                         // If m > 0.5, it is rounded up to 1.0; i.e., the smallest denormal.
                         // If m == 0.5, it is rounded down to even, i.e., 0.0.
                         // If p < 0, the mantissa value m is <= "0.25" which is never rounded up.
-                        if(p < 0 || p == 0 && rec::sticky(gocpp::recv(x->mant), (unsigned int)(len(x->mant)) * _W - 1) == 0)
+                        if(p < 0 || p == 0 && rec::sticky(gocpp::recv(x->mant), (uint64_t)(len(x->mant)) * _W - 1) == 0)
                         {
                             // underflow to ±0
                             if(x->neg)
@@ -1302,8 +1302,8 @@ namespace golang::math::big
                         // Since rounding may have at best increased precision
                         // and we have eliminated p <= 0 early, we know p > 0.
                         // bexp == 0 for denormals
-                        p = mbits + 1 - emin + int(e);
-                        mant = msb64(r.mant) >> (unsigned int)(fbits - p);
+                        p = mbits + 1 - emin + int64_t(e);
+                        mant = msb64(r.mant) >> (uint64_t)(fbits - p);
                     }
                     else
                     {
@@ -1377,8 +1377,8 @@ namespace golang::math::big
                     }
                     // 1 <= |x| < +Inf
                     // determine minimum required precision for x
-                    auto allBits = (unsigned int)(len(x->mant)) * _W;
-                    auto exp = (unsigned int)(x->exp);
+                    auto allBits = (uint64_t)(len(x->mant)) * _W;
+                    auto exp = (uint64_t)(x->exp);
                     if(rec::MinPrec(gocpp::recv(x)) <= exp)
                     {
                         acc = Exact;
@@ -1465,7 +1465,7 @@ namespace golang::math::big
                         {
                             // == 1 (see Rat)
                             case 0:
-                                z->a.abs = rec::lsh(gocpp::recv(z->a.abs), x->mant, (unsigned int)(x->exp - allBits));
+                                z->a.abs = rec::lsh(gocpp::recv(z->a.abs), x->mant, (uint64_t)(x->exp - allBits));
                                 z->b.abs = z->b.abs.make_slice(0, 0);
                                 break;
                             // z already in normal form
@@ -1479,7 +1479,7 @@ namespace golang::math::big
                             {
                                 z->a.abs = rec::set(gocpp::recv(z->a.abs), x->mant);
                                 auto t = rec::setUint64(gocpp::recv(z->b.abs), 1);
-                                z->b.abs = rec::lsh(gocpp::recv(t), t, (unsigned int)(allBits - x->exp));
+                                z->b.abs = rec::lsh(gocpp::recv(t), t, (uint64_t)(allBits - x->exp));
                                 rec::norm(gocpp::recv(z));
                                 break;
                             }
@@ -1575,12 +1575,12 @@ namespace golang::math::big
                 case 0:
                     if(al)
                     {
-                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), y->mant, (unsigned int)(ey - ex));
+                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), y->mant, (uint64_t)(ey - ex));
                         z->mant = rec::add(gocpp::recv(z->mant), x->mant, t);
                     }
                     else
                     {
-                        z->mant = rec::lsh(gocpp::recv(z->mant), y->mant, (unsigned int)(ey - ex));
+                        z->mant = rec::lsh(gocpp::recv(z->mant), y->mant, (uint64_t)(ey - ex));
                         z->mant = rec::add(gocpp::recv(z->mant), x->mant, z->mant);
                     }
                     break;
@@ -1591,12 +1591,12 @@ namespace golang::math::big
                 case 1:
                     if(al)
                     {
-                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), x->mant, (unsigned int)(ex - ey));
+                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), x->mant, (uint64_t)(ex - ey));
                         z->mant = rec::add(gocpp::recv(z->mant), t, y->mant);
                     }
                     else
                     {
-                        z->mant = rec::lsh(gocpp::recv(z->mant), x->mant, (unsigned int)(ex - ey));
+                        z->mant = rec::lsh(gocpp::recv(z->mant), x->mant, (uint64_t)(ex - ey));
                         z->mant = rec::add(gocpp::recv(z->mant), z->mant, y->mant);
                     }
                     ex = ey;
@@ -1637,12 +1637,12 @@ namespace golang::math::big
                 case 0:
                     if(al)
                     {
-                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), y->mant, (unsigned int)(ey - ex));
+                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), y->mant, (uint64_t)(ey - ex));
                         z->mant = rec::sub(gocpp::recv(t), x->mant, t);
                     }
                     else
                     {
-                        z->mant = rec::lsh(gocpp::recv(z->mant), y->mant, (unsigned int)(ey - ex));
+                        z->mant = rec::lsh(gocpp::recv(z->mant), y->mant, (uint64_t)(ey - ex));
                         z->mant = rec::sub(gocpp::recv(z->mant), x->mant, z->mant);
                     }
                     break;
@@ -1653,12 +1653,12 @@ namespace golang::math::big
                 case 1:
                     if(al)
                     {
-                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), x->mant, (unsigned int)(ex - ey));
+                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), x->mant, (uint64_t)(ex - ey));
                         z->mant = rec::sub(gocpp::recv(t), t, y->mant);
                     }
                     else
                     {
-                        z->mant = rec::lsh(gocpp::recv(z->mant), x->mant, (unsigned int)(ex - ey));
+                        z->mant = rec::lsh(gocpp::recv(z->mant), x->mant, (uint64_t)(ex - ey));
                         z->mant = rec::sub(gocpp::recv(z->mant), z->mant, y->mant);
                     }
                     ex = ey;
@@ -1723,7 +1723,7 @@ namespace golang::math::big
             // mantissa length in words for desired result precision + 1
             // (at least one extra bit so we get the rounding bit after
             // the division)
-            auto n = int(z->prec / _W) + 1;
+            auto n = int64_t(z->prec / _W) + 1;
 
             // compute adjusted x.mant such that we get enough result precision
             auto xadj = x->mant;
@@ -1755,7 +1755,7 @@ namespace golang::math::big
             // If there's a non-zero remainder, the corresponding fractional part
             // (if it were computed), would have a non-zero sticky bit (if it were
             // zero, it couldn't have a non-zero remainder).
-            unsigned int sbit = {};
+            uint64_t sbit = {};
             if(len(r) > 0)
             {
                 sbit = 1;
@@ -1772,7 +1772,7 @@ namespace golang::math::big
     // ucmp returns -1, 0, or +1, depending on whether
     // |x| < |y|, |x| == |y|, or |x| > |y|.
     // x and y must have a non-empty mantissa and valid exponent.
-    int rec::ucmp(Float* x, Float* y)
+    int64_t rec::ucmp(Float* x, Float* y)
     {
         if(debugFloat)
         {
@@ -2112,7 +2112,7 @@ namespace golang::math::big
     //   - -1 if x < y;
     //   - 0 if x == y (incl. -0 == 0, -Inf == -Inf, and +Inf == +Inf);
     //   - +1 if x > y.
-    int rec::Cmp(Float* x, Float* y)
+    int64_t rec::Cmp(Float* x, Float* y)
     {
         if(debugFloat)
         {
@@ -2168,9 +2168,9 @@ namespace golang::math::big
     //	 0 if x == 0 (signed or unsigned)
     //	+1 if 0 < x < +Inf
     //	+2 if x == +Inf
-    int rec::ord(Float* x)
+    int64_t rec::ord(Float* x)
     {
-        int m = {};
+        int64_t m = {};
         //Go switch emulation
         {
             auto condition = x->form;

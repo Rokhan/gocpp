@@ -25,20 +25,20 @@ namespace golang::runtime
     // On s390x, virtual addresses are 64-bit. There's not much we
     // can do about this, so we just hope that the kernel doesn't
     // get to really high addresses and panic if it does.
-    const int defaultAddrBits = 48 + 1;
+    inline constexpr int64_t defaultAddrBits = 48 + 1;
     // On AIX, 64-bit addresses are split into 36-bit segment number and 28-bit
     // offset in segment.  Segment numbers in the range 0x0A0000000-0x0AFFFFFFF(LSA)
     // are available for mmap.
     // We assume all tagged addresses are from memory allocated with mmap.
     // We use one bit to distinguish between the two ranges.
-    const long aixAddrBits = 57;
+    inline constexpr long aixAddrBits = 57;
     // Later versions of FreeBSD enable amd64's la57 by default.
-    const long freebsdAmd64AddrBits = 57;
+    inline constexpr long freebsdAmd64AddrBits = 57;
     // riscv64 SV57 mode gives 56 bits of userspace VA.
     // tagged pointer code supports it,
     // but broader support for SV57 mode is incomplete,
     // and there may be other issues (see #54104).
-    const long riscv64AddrBits = 56;
+    inline constexpr long riscv64AddrBits = 56;
 }
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 #include "golang/internal/goos/zgoos_windows.fwd.h"
@@ -47,7 +47,7 @@ namespace golang::runtime
 {
     namespace goos = golang::internal::goos;
     namespace goarch = golang::internal::goarch;
-    const int addrBits = goos::IsAix * aixAddrBits + goarch::IsRiscv64 * riscv64AddrBits + goos::IsFreebsd * goarch::IsAmd64 * freebsdAmd64AddrBits + (1 - goos::IsAix) * (1 - goarch::IsRiscv64) * (1 - goos::IsFreebsd * goarch::IsAmd64) * defaultAddrBits;
+    inline constexpr int64_t addrBits = goos::IsAix * aixAddrBits + goarch::IsRiscv64 * riscv64AddrBits + goos::IsFreebsd * goarch::IsAmd64 * freebsdAmd64AddrBits + (1 - goos::IsAix) * (1 - goarch::IsRiscv64) * (1 - goos::IsFreebsd * goarch::IsAmd64) * defaultAddrBits;
 }
 #include "golang/runtime/tagptr.fwd.h"
 
@@ -56,5 +56,5 @@ namespace golang::runtime
     // In addition to the 16 bits (or other, depending on arch/os) taken from the top,
     // we can take 9 from the bottom, because we require pointers to be well-aligned
     // (see tagptr.go:tagAlignBits). That gives us a total of 25 bits for the tag.
-    const int tagBits = 64 - addrBits + tagAlignBits;
+    inline constexpr int64_t tagBits = 64 - addrBits + tagAlignBits;
 }

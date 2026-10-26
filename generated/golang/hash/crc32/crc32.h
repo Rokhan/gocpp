@@ -82,14 +82,14 @@ namespace golang::hash::crc32
 
     namespace rec
     {
-        int Size(digest* d);
-        int BlockSize(digest* d);
+        int64_t Size(digest* d);
+        int64_t BlockSize(digest* d);
         void Reset(digest* d);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendBinary(digest* d, gocpp::slice<unsigned char> b);
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(digest* d);
         gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b);
         std::tuple<hash::Cloner, gocpp::error> Clone(digest* d);
-        std::tuple<int, gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p);
         uint32_t Sum32(digest* d);
         gocpp::slice<unsigned char> Sum(digest* d, gocpp::slice<unsigned char> in);
     }

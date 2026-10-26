@@ -15,8 +15,8 @@
 namespace golang::math::big
 {
     void roundShortest(decimal* d, Float* x);
-    gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> buf, unsigned char fmt, int prec, decimal d);
-    gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> buf, int prec, decimal d);
+    gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> buf, unsigned char fmt, int64_t prec, decimal d);
+    gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> buf, int64_t prec, decimal d);
 }
 #include "golang/fmt/print.fwd.h"
 #include "golang/fmt/print.h"
@@ -35,11 +35,11 @@ namespace golang::math::big
 
     namespace rec
     {
-        gocpp::string Text(Float* x, unsigned char format, int prec);
+        gocpp::string Text(Float* x, unsigned char format, int64_t prec);
         gocpp::string String(Float* x);
-        gocpp::slice<unsigned char> Append(Float* x, gocpp::slice<unsigned char> buf, unsigned char fmt, int prec);
+        gocpp::slice<unsigned char> Append(Float* x, gocpp::slice<unsigned char> buf, unsigned char fmt, int64_t prec);
         gocpp::slice<unsigned char> fmtB(Float* x, gocpp::slice<unsigned char> buf);
-        gocpp::slice<unsigned char> fmtX(Float* x, gocpp::slice<unsigned char> buf, int prec);
+        gocpp::slice<unsigned char> fmtX(Float* x, gocpp::slice<unsigned char> buf, int64_t prec);
         gocpp::slice<unsigned char> fmtP(Float* x, gocpp::slice<unsigned char> buf);
         void Format(Float* x, fmt::State s, gocpp::rune format);
     }

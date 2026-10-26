@@ -52,12 +52,12 @@ namespace golang::hash::adler32
         return d;
     }
 
-    int rec::Size(digest* d)
+    int64_t rec::Size(digest* d)
     {
         return adler32::Size;
     }
 
-    int rec::BlockSize(digest* d)
+    int64_t rec::BlockSize(digest* d)
     {
         return 4;
     }
@@ -129,9 +129,9 @@ namespace golang::hash::adler32
         return digest((s2 << 16) | s1);
     }
 
-    std::tuple<int, gocpp::error> rec::Write(digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int64_t, gocpp::error> rec::Write(digest* d, gocpp::slice<unsigned char> p)
     {
-        int nn;
+        int64_t nn;
         gocpp::error err;
         *d = update(*d, p);
         return {len(p), nullptr};

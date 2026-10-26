@@ -6,5 +6,5 @@
 
 namespace golang::golang_org::x::tools::internal::pkgbits
 {
-    const int flagSyncMarkers = 1 << 0;
+    inline constexpr int64_t flagSyncMarkers = 1 << 0;
 }

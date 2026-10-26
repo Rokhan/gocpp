@@ -321,8 +321,8 @@ namespace golang::main
 
         struct span
         {
-            int start{};
-            int end{};
+            int64_t start{};
+            int64_t end{};
 
             using isGoStruct = void;
 
@@ -369,8 +369,8 @@ namespace golang::main
 
     struct gocpp_id_3
         {
-            int i{};
-            int j{};
+            int64_t i{};
+            int64_t j{};
 
             using isGoStruct = void;
 
@@ -409,8 +409,8 @@ namespace golang::main
 
     struct gocpp_id_4
         {
-            int i{};
-            int j{};
+            int64_t i{};
+            int64_t j{};
 
             using isGoStruct = void;
 
@@ -449,8 +449,8 @@ namespace golang::main
 
     struct gocpp_id_5
         {
-            int i{};
-            int j{};
+            int64_t i{};
+            int64_t j{};
 
             using isGoStruct = void;
 
@@ -489,7 +489,7 @@ namespace golang::main
 
     struct gocpp_id_6
         {
-            int a{};
+            int64_t a{};
 
             using isGoStruct = void;
 
@@ -557,8 +557,8 @@ namespace golang::main
         emptyStructs();
 
         auto vv = Vertex {3, 4};
-        auto offsetX = gocpp::Offsetof<Vertex>(&Vertex::X);
-        auto offsetY = gocpp::Offsetof<Vertex>(&Vertex::Y);
+        uintptr_t offsetX = gocpp::Offsetof<Vertex>(&Vertex::X);
+        uintptr_t offsetY = gocpp::Offsetof<Vertex>(&Vertex::Y);
         mocklib::Println("Offset of X in Vertex:"_s, offsetX);
         mocklib::Println("Offset of Y in Vertex:"_s, offsetY);
         mocklib::Println("Size of Vertex:"_s, gocpp::Sizeof<Vertex>());

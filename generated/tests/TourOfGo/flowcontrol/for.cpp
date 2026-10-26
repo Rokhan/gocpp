@@ -22,8 +22,8 @@ namespace golang::main
 
     void main()
     {
-        auto sum = 0;
-        for(auto i = 0; i < 10; i++)
+        int64_t sum = 0;
+        for(int64_t i = 0; i < 10; i++)
         {
             sum += i;
         }

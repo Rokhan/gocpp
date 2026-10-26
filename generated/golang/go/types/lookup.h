@@ -12,7 +12,7 @@
 
 namespace golang::go::types
 {
-    gocpp::slice<int> concat(gocpp::slice<int> list, int i);
+    gocpp::slice<int64_t> concat(gocpp::slice<int64_t> list, int64_t i);
 }
 #include "golang/go/types/object.h"
 #include "golang/go/types/selection.h"
@@ -25,13 +25,13 @@ namespace golang::go::types
 namespace golang::go::types
 {
     std::tuple<Selection, bool> LookupSelection(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name);
-    std::tuple<Object, gocpp::slice<int>, bool> LookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name);
-    std::tuple<Object, gocpp::slice<int>, bool> lookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase);
-    std::tuple<Object, gocpp::slice<int>, bool> lookupFieldOrMethodImpl(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase);
+    std::tuple<Object, gocpp::slice<int64_t>, bool> LookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name);
+    std::tuple<Object, gocpp::slice<int64_t>, bool> lookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase);
+    std::tuple<Object, gocpp::slice<int64_t>, bool> lookupFieldOrMethodImpl(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase);
     struct embeddedType
     {
         golang::go::types::Type typ{};
-        gocpp::slice<int> index{}; // embedded field indices, starting with index at depth 0
+        gocpp::slice<int64_t> index{}; // embedded field indices, starting with index at depth 0
         bool indirect{}; // if set, there was a pointer indirection on the path to this field
         bool multiples{}; // if set, typ appears multiple times at this depth
 
@@ -47,7 +47,7 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct embeddedType& value);
-    std::tuple<int, bool> lookupType(gocpp::map<golang::go::types::Type, int> m, golang::go::types::Type typ);
+    std::tuple<int64_t, bool> lookupType(gocpp::map<golang::go::types::Type, int64_t> m, golang::go::types::Type typ);
     struct instanceLookup
     {
         // buf is used to avoid allocating the map m in the common case of a small
@@ -72,8 +72,8 @@ namespace golang::go::types
     bool isInterfacePtr(golang::go::types::Type T);
     std::tuple<golang::go::types::Type, bool> deref(golang::go::types::Type typ);
     golang::go::types::Type derefStructPtr(golang::go::types::Type typ);
-    std::tuple<int, Func*> methodIndex(gocpp::slice<Func*> methods, Package* pkg, gocpp::string name, bool foldCase);
-    gocpp::string fieldPath(golang::go::types::Type typ, gocpp::slice<int> index);
+    std::tuple<int64_t, Func*> methodIndex(gocpp::slice<Func*> methods, Package* pkg, gocpp::string name, bool foldCase);
+    gocpp::string fieldPath(golang::go::types::Type typ, gocpp::slice<int64_t> index);
     gocpp::slice<embeddedType> consolidateMultiples(gocpp::slice<embeddedType> list);
 }
 

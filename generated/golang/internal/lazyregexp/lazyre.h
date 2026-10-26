@@ -58,11 +58,11 @@ namespace golang::internal::lazyregexp
         void build(Regexp* r);
         gocpp::slice<gocpp::slice<unsigned char>> FindSubmatch(Regexp* r, gocpp::slice<unsigned char> s);
         gocpp::slice<gocpp::string> FindStringSubmatch(Regexp* r, gocpp::string s);
-        gocpp::slice<int> FindStringSubmatchIndex(Regexp* r, gocpp::string s);
+        gocpp::slice<int64_t> FindStringSubmatchIndex(Regexp* r, gocpp::string s);
         gocpp::slice<unsigned char> ReplaceAll(Regexp* r, gocpp::slice<unsigned char> src, gocpp::slice<unsigned char> repl);
         gocpp::string ReplaceAllString(Regexp* r, gocpp::string src, gocpp::string repl);
         gocpp::string FindString(Regexp* r, gocpp::string s);
-        gocpp::slice<gocpp::string> FindAllString(Regexp* r, gocpp::string s, int n);
+        gocpp::slice<gocpp::string> FindAllString(Regexp* r, gocpp::string s, int64_t n);
         bool MatchString(Regexp* r, gocpp::string s);
         gocpp::slice<gocpp::string> SubexpNames(Regexp* r);
     }

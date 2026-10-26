@@ -46,9 +46,9 @@ namespace golang::internal::syscall::windows::registry
     //
     // GetValue is a low level function. If value's type is known, use the appropriate
     // Get*Value function instead.
-    std::tuple<int, uint32_t, gocpp::error> rec::GetValue(Key k, gocpp::string name, gocpp::slice<unsigned char> buf)
+    std::tuple<int64_t, uint32_t, gocpp::error> rec::GetValue(Key k, gocpp::string name, gocpp::slice<unsigned char> buf)
     {
-        int n;
+        int64_t n;
         uint32_t valtype;
         gocpp::error err;
         uint16_t* pname;
@@ -66,9 +66,9 @@ namespace golang::internal::syscall::windows::registry
         err = syscall::RegQueryValueEx(syscall::Handle(k), pname, nullptr, & valtype, pbuf, & l);
         if(err != nullptr)
         {
-            return {int(l), valtype, err};
+            return {int64_t(l), valtype, err};
         }
-        return {int(l), valtype, nullptr};
+        return {int64_t(l), valtype, nullptr};
     }
 
     std::tuple<gocpp::slice<unsigned char>, uint32_t, gocpp::error> rec::getValue(Key k, gocpp::string name, gocpp::slice<unsigned char> buf)
@@ -266,7 +266,7 @@ namespace golang::internal::syscall::windows::registry
             p = p.make_slice(0, len(p) - 1);
         }
         val = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0, 5);
-        auto from = 0;
+        int64_t from = 0;
         for(auto [i, c] : p)
         {
             if(c == 0)
@@ -402,10 +402,10 @@ namespace golang::internal::syscall::windows::registry
     // must not contain a zero byte.
     gocpp::error rec::SetStringsValue(Key k, gocpp::string name, gocpp::slice<gocpp::string> value)
     {
-        auto ss = ""_s;
+        gocpp::string ss = ""_s;
         for(auto [gocpp_ignored, s] : value)
         {
-            for(auto i = 0; i < len(s); i++)
+            for(int64_t i = 0; i < len(s); i++)
             {
                 if(s[i] == 0)
                 {
@@ -449,7 +449,7 @@ namespace golang::internal::syscall::windows::registry
         // extra room for terminating null character
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), ki->MaxValueNameLen + 1);
         loopItems:
-        for(auto i = uint32_t(0); ; i++)
+        for(uint32_t i = uint32_t(0); ; i++)
         {
             if(false) {
             loopItems_continue:

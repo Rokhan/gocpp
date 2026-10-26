@@ -24,10 +24,10 @@ namespace golang::main
 
     void main()
     {
-        int x = 3;
-        int y = 4;
+        int64_t x = 3;
+        int64_t y = 4;
         double f = std::sqrt(double(x * x + y * y));
-        unsigned int z = (unsigned int)(f);
+        uint64_t z = (uint64_t)(f);
         mocklib::Println(x, y, z);
 
         auto r = gocpp::rune('$');

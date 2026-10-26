@@ -247,7 +247,7 @@ namespace golang::runtime
                 x.Func = f;
                 x.Function = funcNameForPrint(rec::name(gocpp::recv(sf)));
                 x.Entry = entry;
-                x.startLine = int(sf.startLine);
+                x.startLine = int64_t(sf.startLine);
                 x.funcInfo = funcInfo;
             }));
         }
@@ -288,7 +288,7 @@ namespace golang::runtime
             // as it can be expensive. This avoids computing file/line
             // for the Frame we find but don't return. See issue 32093.
             auto [file, line] = funcline1(frame.funcInfo, frame.PC, false);
-            std::tie(frame.File, frame.Line) = std::tuple{file, int(line)};
+            std::tie(frame.File, frame.Line) = std::tuple{file, int64_t(line)};
         }
         return {frame, more};
     }
@@ -304,7 +304,7 @@ namespace golang::runtime
     // See go.dev/issue/67401.
     //
     //go:linkname runtime_FrameStartLine runtime/pprof.runtime_FrameStartLine
-    int runtime_FrameStartLine(Frame* f)
+    int64_t runtime_FrameStartLine(Frame* f)
     {
         return f->startLine;
     }
@@ -374,7 +374,7 @@ namespace golang::runtime
         // Treat the previous func as normal. We haven't actually checked, but
         // since this pc was included in the stack, we know it shouldn't be
         // elided.
-        auto calleeID = abi::FuncIDNormal;
+        abi::FuncID calleeID = abi::FuncIDNormal;
 
         // Remove pc from stk; we'll re-add it below.
         stk = stk.make_slice(0, len(stk) - 1);
@@ -423,7 +423,7 @@ namespace golang::runtime
                 x.Func = nullptr;
                 x.Function = gostring(arg.funcName);
                 x.File = gostring(arg.file);
-                x.Line = int(arg.lineno);
+                x.Line = int64_t(arg.lineno);
                 x.Entry = arg.entry;
             }));
             if(arg.more == 0)
@@ -1040,20 +1040,20 @@ namespace golang::runtime
 
         // ftab is lookup table for function by program counter.
         auto nftab = len(datap->ftab) - 1;
-        for(auto i = 0; i < nftab; i++)
+        for(int64_t i = 0; i < nftab; i++)
         {
             // NOTE: ftab[nftab].entry is legal; it is the address beyond the final function.
             if(datap->ftab[i].entryoff > datap->ftab[i + 1].entryoff)
             {
                 auto f1 = golang::runtime::funcInfo {(_func*)(gocpp::unsafe_pointer(& datap->pclntable[datap->ftab[i].funcoff])), datap};
                 auto f2 = golang::runtime::funcInfo {(_func*)(gocpp::unsafe_pointer(& datap->pclntable[datap->ftab[i + 1].funcoff])), datap};
-                auto f2name = "end"_s;
+                gocpp::string f2name = "end"_s;
                 if(i + 1 < nftab)
                 {
                     f2name = funcname(f2);
                 }
                 println("function symbol table not sorted by PC offset:"_s, hex(datap->ftab[i].entryoff), funcname(f1), ">"_s, hex(datap->ftab[i + 1].entryoff), f2name, ", plugin:"_s, datap->pluginpath);
-                for(auto j = 0; j <= i; j++)
+                for(int64_t j = 0; j <= i; j++)
                 {
                     println("\t"_s, hex(datap->ftab[j].entryoff), funcname(golang::runtime::funcInfo {(_func*)(gocpp::unsafe_pointer(& datap->pclntable[datap->ftab[j].funcoff])), datap}));
                 }
@@ -1265,22 +1265,22 @@ namespace golang::runtime
     // source code corresponding to the program counter pc.
     // The result will not be accurate if pc is not a program
     // counter within f.
-    std::tuple<gocpp::string, int> rec::FileLine(Func* f, uintptr_t pc)
+    std::tuple<gocpp::string, int64_t> rec::FileLine(Func* f, uintptr_t pc)
     {
         gocpp::string file;
-        int line;
+        int64_t line;
         auto fn = rec::raw(gocpp::recv(f));
         if(rec::isInlined(gocpp::recv(fn)))
         {
             // inlined version
             auto fi = (funcinl*)(gocpp::unsafe_pointer(fn));
-            return {fi->file, int(fi->line)};
+            return {fi->file, int64_t(fi->line)};
         }
         // Pass strict=false here, because anyone can call this function,
         // and they might just be wrong about targetpc belonging to f.
         int32_t line32;
         std::tie(file, line32) = funcline1(rec::funcInfo(gocpp::recv(f)), pc, false);
-        return {file, int(line32)};
+        return {file, int64_t(line32)};
     }
 
     // startLine returns the starting line number of the function. i.e., the line
@@ -1689,7 +1689,7 @@ namespace golang::runtime
         auto p = datap->pctab.make_slice(off);
         auto pc = rec::entry(gocpp::recv(f));
         auto prevpc = pc;
-        auto val = int32_t(- 1);
+        int32_t val = int32_t(- 1);
         for(; ; )
         {
             bool ok = {};
@@ -1833,7 +1833,7 @@ namespace golang::runtime
         }
         auto [fileno, gocpp_id_0] = pcvalue(f, f._func.pcfile, targetpc, strict);
         std::tie(line, std::ignore) = pcvalue(f, f._func.pcln, targetpc, strict);
-        if(fileno == - 1 || line == - 1 || int(fileno) >= len(datap->filetab))
+        if(fileno == - 1 || line == - 1 || int64_t(fileno) >= len(datap->filetab))
         {
             // print("looking for ", hex(targetpc), " in ", funcname(f), " got file=", fileno, " line=", lineno, "\n")
             return {"?"_s, 0};
@@ -1866,8 +1866,8 @@ namespace golang::runtime
         auto datap = f.datap;
         auto p = datap->pctab.make_slice(f._func.pcsp);
         auto pc = rec::entry(gocpp::recv(f));
-        auto val = int32_t(- 1);
-        auto most = int32_t(0);
+        int32_t val = int32_t(- 1);
+        int32_t most = int32_t(0);
         for(; ; )
         {
             bool ok = {};
@@ -1951,7 +1951,7 @@ namespace golang::runtime
         {
             return {nullptr, false};
         }
-        auto n = uint32_t(1);
+        uint32_t n = uint32_t(1);
         if(uvdelta & 0x80 != 0)
         {
             std::tie(n, uvdelta) = readvarint(p);

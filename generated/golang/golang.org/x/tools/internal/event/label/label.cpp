@@ -233,12 +233,12 @@ namespace golang::golang_org::x::tools::internal::event::label
     }
 
     template<typename T, typename TStore, typename TInterface>
-    bool List::ListImpl<T, TStore, TInterface>::vValid(int index)
+    bool List::ListImpl<T, TStore, TInterface>::vValid(int64_t index)
     {
         return rec::Valid(gocpp::PtrRecv<T, false>(value.get()), index);
     }
     template<typename T, typename TStore, typename TInterface>
-    golang::golang_org::x::tools::internal::event::label::Label List::ListImpl<T, TStore, TInterface>::vLabel(int index)
+    golang::golang_org::x::tools::internal::event::label::Label List::ListImpl<T, TStore, TInterface>::vLabel(int64_t index)
     {
         return rec::Label(gocpp::PtrRecv<T, false>(value.get()), index);
     }
@@ -251,22 +251,22 @@ namespace golang::golang_org::x::tools::internal::event::label
 
     namespace rec
     {
-        bool Valid(const gocpp::PtrRecv<struct List, false>& self, int index)
+        bool Valid(const gocpp::PtrRecv<struct List, false>& self, int64_t index)
         {
             return self.ptr->value()->vValid(index);
         }
 
-        bool Valid(const gocpp::ObjRecv<struct List>& self, int index)
+        bool Valid(const gocpp::ObjRecv<struct List>& self, int64_t index)
         {
             return self.obj.value()->vValid(index);
         }
 
-        golang::golang_org::x::tools::internal::event::label::Label Label(const gocpp::PtrRecv<struct List, false>& self, int index)
+        golang::golang_org::x::tools::internal::event::label::Label Label(const gocpp::PtrRecv<struct List, false>& self, int64_t index)
         {
             return self.ptr->value()->vLabel(index);
         }
 
-        golang::golang_org::x::tools::internal::event::label::Label Label(const gocpp::ObjRecv<struct List>& self, int index)
+        golang::golang_org::x::tools::internal::event::label::Label Label(const gocpp::ObjRecv<struct List>& self, int64_t index)
         {
             return self.obj.value()->vLabel(index);
         }
@@ -459,7 +459,7 @@ namespace golang::golang_org::x::tools::internal::event::label
     // access should be done with the From method of the key.
     gocpp::string rec::UnpackString(golang::golang_org::x::tools::internal::event::label::Label t)
     {
-        return unsafe::String((unsigned char*)(gocpp::getValue<stringptr>(t.untyped)), int(t.packed));
+        return unsafe::String((unsigned char*)(gocpp::getValue<stringptr>(t.untyped)), int64_t(t.packed));
     }
 
     // Valid returns true if the Label is a valid one (it has a key).
@@ -488,22 +488,22 @@ namespace golang::golang_org::x::tools::internal::event::label
         rec::Write(gocpp::recv(f), rec::Append(gocpp::recv(rec::Key(gocpp::recv(t))), nullptr, t));
     }
 
-    bool rec::Valid(list* l, int index)
+    bool rec::Valid(list* l, int64_t index)
     {
         return index >= 0 && index < len(l->labels);
     }
 
-    golang::golang_org::x::tools::internal::event::label::Label rec::Label(list* l, int index)
+    golang::golang_org::x::tools::internal::event::label::Label rec::Label(list* l, int64_t index)
     {
         return l->labels[index];
     }
 
-    bool rec::Valid(filter* f, int index)
+    bool rec::Valid(filter* f, int64_t index)
     {
         return rec::Valid(gocpp::recv(f->underlying), index);
     }
 
-    golang::golang_org::x::tools::internal::event::label::Label rec::Label(filter* f, int index)
+    golang::golang_org::x::tools::internal::event::label::Label rec::Label(filter* f, int64_t index)
     {
         auto l = rec::Label(gocpp::recv(f->underlying), index);
         if(slices::Contains(f->keys, rec::Key(gocpp::recv(l))))

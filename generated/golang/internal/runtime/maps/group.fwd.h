@@ -11,16 +11,19 @@ namespace golang::internal::runtime::maps
     // 7/8 is the same load factor used by Abseil, but Abseil defaults to
     // 16 slots per group, so they get two empty slots vs our one empty
     // slot. We may want to reevaluate if this is best for us.
-    const long maxAvgGroupLoad = 7;
-    const long bitsetLSB = 0x0101010101010101;
-    const long bitsetMSB = 0x8080808080808080;
-    const long bitsetL7B = 0x7f7f7f7f7f7f7f7f;
-    using bitset = uint64_t;
-    using ctrl = uint8_t;
-    using ctrlGroup = uint64_t;
+    inline constexpr long maxAvgGroupLoad = 7;
+    inline constexpr long bitsetLSB = 0x0101010101010101LL;
+    inline constexpr uint64_t bitsetMSB = uint64_t(0x8080808080808080_bi);
+    inline constexpr long bitsetL7B = 0x7f7f7f7f7f7f7f7fLL;
+    struct GoTag_bitset;
+    using bitset = gocpp::defined<uint64_t, GoTag_bitset>;
+    struct GoTag_ctrl;
+    using ctrl = gocpp::defined<uint8_t, GoTag_ctrl>;
+    struct GoTag_ctrlGroup;
+    using ctrlGroup = gocpp::defined<uint64_t, GoTag_ctrlGroup>;
     struct groupReference;
     struct groupsReference;
-    const ctrl ctrlEmpty = 0b10000000;
-    const ctrl ctrlDeleted = 0b11111110;
-    const uint64_t bitsetEmpty = bitsetLSB * uint64_t(ctrlEmpty);
+    inline constexpr ctrl ctrlEmpty = 0b10000000;
+    inline constexpr ctrl ctrlDeleted = 0b11111110;
+    inline constexpr uint64_t bitsetEmpty = int64_t(bitsetLSB) * uint64_t(int64_t(ctrlEmpty));
 }

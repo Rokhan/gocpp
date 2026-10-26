@@ -26,11 +26,11 @@ namespace golang::encoding::json::jsontext
 {
     struct decodeBuffer
     {
-        int peekPos{}; // non-zero if valid offset into buf for start of next token
+        int64_t peekPos{}; // non-zero if valid offset into buf for start of next token
         gocpp::error peekErr{}; // implies peekPos is -1
         gocpp::slice<unsigned char> buf{}; // may alias rd if it is a bytes.Buffer
-        int prevStart{};
-        int prevEnd{};
+        int64_t prevStart{};
+        int64_t prevEnd{};
         // baseOffset is added to prevStart and prevEnd to obtain
         // the absolute offset relative to the start of io.Reader stream.
         int64_t baseOffset{};
@@ -85,12 +85,12 @@ namespace golang::encoding::json::jsontext
         void JSONOptions(const gocpp::PtrRecv<struct decoderState, false>& self, internal::NotForPublicUse arg0);
         void Join(const gocpp::PtrRecv<struct decoderState, false>& self, gocpp::slice<jsonopts::Options> srcs);
         gocpp::slice<unsigned char> PreviousTokenOrValue(const gocpp::PtrRecv<struct decoderState, false>& self);
-        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct decoderState, false>& self, gocpp::slice<unsigned char> b, int where);
-        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct decoderState>& self, gocpp::slice<unsigned char> b, int where);
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct decoderState, false>& self, gocpp::slice<unsigned char> b, int64_t where);
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct decoderState>& self, gocpp::slice<unsigned char> b, int64_t where);
         void invalidatePreviousRead(const gocpp::PtrRecv<struct decoderState, false>& self);
-        bool needMore(const gocpp::PtrRecv<struct decoderState, false>& self, int pos);
+        bool needMore(const gocpp::PtrRecv<struct decoderState, false>& self, int64_t pos);
         bool needObjectValue(const gocpp::PtrRecv<struct decoderState, false>& self);
-        int64_t offsetAt(const gocpp::PtrRecv<struct decoderState, false>& self, int pos);
+        int64_t offsetAt(const gocpp::PtrRecv<struct decoderState, false>& self, int64_t pos);
         gocpp::slice<unsigned char> previousBuffer(const gocpp::PtrRecv<struct decoderState, false>& self);
         int64_t previousOffsetEnd(const gocpp::PtrRecv<struct decoderState, false>& self);
         int64_t previousOffsetStart(const gocpp::PtrRecv<struct decoderState, false>& self);
@@ -179,8 +179,8 @@ namespace golang::encoding::json::jsontext
         jsonopts::Struct* options(decoderState* d);
         gocpp::error fetch(decoderState* d);
         void invalidatePreviousRead(decodeBuffer* d);
-        bool needMore(decodeBuffer* d, int pos);
-        int64_t offsetAt(decodeBuffer* d, int pos);
+        bool needMore(decodeBuffer* d, int64_t pos);
+        int64_t offsetAt(decodeBuffer* d, int64_t pos);
         int64_t previousOffsetStart(decodeBuffer* d);
         int64_t previousOffsetEnd(decodeBuffer* d);
         gocpp::slice<unsigned char> previousBuffer(decodeBuffer* d);
@@ -189,12 +189,12 @@ namespace golang::encoding::json::jsontext
         golang::encoding::json::jsontext::Kind PeekKind(golang::encoding::json::jsontext::Decoder* d);
         golang::encoding::json::jsontext::Kind PeekKind(decoderState* d);
         gocpp::error checkDelimBeforeIOError(decoderState* d, unsigned char delim, gocpp::error err);
-        int CountNextDelimWhitespace(decoderState* d);
+        int64_t CountNextDelimWhitespace(decoderState* d);
         gocpp::error checkDelim(decoderState* d, unsigned char delim, golang::encoding::json::jsontext::Kind next);
         gocpp::error SkipValue(golang::encoding::json::jsontext::Decoder* d);
         gocpp::error SkipValue(decoderState* d);
         gocpp::error SkipValueRemainder(decoderState* d);
-        gocpp::error SkipUntil(decoderState* d, int depth, int64_t length);
+        gocpp::error SkipUntil(decoderState* d, int64_t depth, int64_t length);
         std::tuple<Token, gocpp::error> ReadToken(golang::encoding::json::jsontext::Decoder* d);
         std::tuple<Token, gocpp::error> ReadToken(decoderState* d);
         std::tuple<Value, gocpp::error> ReadValue(golang::encoding::json::jsontext::Decoder* d);
@@ -202,20 +202,20 @@ namespace golang::encoding::json::jsontext
         gocpp::error CheckNextValue(decoderState* d, bool last);
         bool AtEOF(decoderState* d);
         gocpp::error CheckEOF(decoderState* d);
-        gocpp::error checkEOF(decoderState* d, int pos);
-        std::tuple<int, gocpp::error> consumeWhitespace(decoderState* d, int pos);
-        std::tuple<int, gocpp::error> consumeValue(decoderState* d, jsonwire::ValueFlags* flags, int pos, int depth);
-        std::tuple<int, gocpp::error> consumeLiteral(decoderState* d, int pos, gocpp::string lit);
-        std::tuple<int, gocpp::error> consumeString(decoderState* d, jsonwire::ValueFlags* flags, int pos);
-        std::tuple<int, gocpp::error> consumeNumber(decoderState* d, int pos);
-        std::tuple<int, gocpp::error> consumeObject(decoderState* d, jsonwire::ValueFlags* flags, int pos, int depth);
-        std::tuple<int, gocpp::error> consumeArray(decoderState* d, jsonwire::ValueFlags* flags, int pos, int depth);
+        gocpp::error checkEOF(decoderState* d, int64_t pos);
+        std::tuple<int64_t, gocpp::error> consumeWhitespace(decoderState* d, int64_t pos);
+        std::tuple<int64_t, gocpp::error> consumeValue(decoderState* d, jsonwire::ValueFlags* flags, int64_t pos, int64_t depth);
+        std::tuple<int64_t, gocpp::error> consumeLiteral(decoderState* d, int64_t pos, gocpp::string lit);
+        std::tuple<int64_t, gocpp::error> consumeString(decoderState* d, jsonwire::ValueFlags* flags, int64_t pos);
+        std::tuple<int64_t, gocpp::error> consumeNumber(decoderState* d, int64_t pos);
+        std::tuple<int64_t, gocpp::error> consumeObject(decoderState* d, jsonwire::ValueFlags* flags, int64_t pos, int64_t depth);
+        std::tuple<int64_t, gocpp::error> consumeArray(decoderState* d, jsonwire::ValueFlags* flags, int64_t pos, int64_t depth);
         int64_t InputOffset(golang::encoding::json::jsontext::Decoder* d);
         gocpp::slice<unsigned char> UnreadBuffer(golang::encoding::json::jsontext::Decoder* d);
-        int StackDepth(golang::encoding::json::jsontext::Decoder* d);
-        std::tuple<golang::encoding::json::jsontext::Kind, int64_t> StackIndex(golang::encoding::json::jsontext::Decoder* d, int i);
+        int64_t StackDepth(golang::encoding::json::jsontext::Decoder* d);
+        std::tuple<golang::encoding::json::jsontext::Kind, int64_t> StackIndex(golang::encoding::json::jsontext::Decoder* d, int64_t i);
         Pointer StackPointer(golang::encoding::json::jsontext::Decoder* d);
-        gocpp::slice<unsigned char> AppendStackPointer(decoderState* d, gocpp::slice<unsigned char> b, int where);
+        gocpp::slice<unsigned char> AppendStackPointer(decoderState* d, gocpp::slice<unsigned char> b, int64_t where);
     }
 }
 

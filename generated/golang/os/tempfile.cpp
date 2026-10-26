@@ -71,7 +71,7 @@ namespace golang::os
         }
         prefix = joinPath(dir, prefix);
 
-        auto go_try = 0;
+        int64_t go_try = 0;
         for(; ; )
         {
             auto name = prefix + nextRandom() + suffix;
@@ -100,7 +100,7 @@ namespace golang::os
         gocpp::string prefix;
         gocpp::string suffix;
         gocpp::error err;
-        for(auto i = 0; i < len(pattern); i++)
+        for(int64_t i = 0; i < len(pattern); i++)
         {
             if(IsPathSeparator(pattern[i]))
             {
@@ -144,7 +144,7 @@ namespace golang::os
         }
         prefix = joinPath(dir, prefix);
 
-        auto go_try = 0;
+        int64_t go_try = 0;
         for(; ; )
         {
             auto name = prefix + nextRandom() + suffix;

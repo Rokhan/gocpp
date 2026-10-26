@@ -280,7 +280,7 @@ namespace golang::sync::atomic
     }
 
     // Disable/enable preemption, implemented in runtime.
-    int runtime_procPin()
+    int64_t runtime_procPin()
     /* convertBlockStmt, nil block */;
 
     void runtime_procUnpin()

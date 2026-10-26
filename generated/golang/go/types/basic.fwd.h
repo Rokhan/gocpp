@@ -6,49 +6,51 @@
 
 namespace golang::go::types
 {
-    using BasicKind = int;
-    using BasicInfo = int;
+    struct GoTag_BasicKind;
+    using BasicKind = gocpp::defined<int64_t, GoTag_BasicKind>;
+    struct GoTag_BasicInfo;
+    using BasicInfo = gocpp::defined<int64_t, GoTag_BasicInfo>;
     struct Basic;
-    const BasicKind Invalid = 0;
+    inline constexpr BasicKind Invalid = 0;
     // predeclared types
-    const BasicKind Bool = 1;
-    const BasicKind Int = 2;
-    const BasicKind Int8 = 3;
-    const BasicKind Int16 = 4;
-    const BasicKind Int32 = 5;
-    const BasicKind Int64 = 6;
-    const BasicKind Uint = 7;
-    const BasicKind Uint8 = 8;
-    const BasicKind Uint16 = 9;
-    const BasicKind Uint32 = 10;
-    const BasicKind Uint64 = 11;
-    const BasicKind Uintptr = 12;
-    const BasicKind Float32 = 13;
-    const BasicKind Float64 = 14;
-    const BasicKind Complex64 = 15;
-    const BasicKind Complex128 = 16;
-    const BasicKind String = 17;
-    const BasicKind UnsafePointer = 18;
+    inline constexpr BasicKind Bool = 1;
+    inline constexpr BasicKind Int = 2;
+    inline constexpr BasicKind Int8 = 3;
+    inline constexpr BasicKind Int16 = 4;
+    inline constexpr BasicKind Int32 = 5;
+    inline constexpr BasicKind Int64 = 6;
+    inline constexpr BasicKind Uint = 7;
+    inline constexpr BasicKind Uint8 = 8;
+    inline constexpr BasicKind Uint16 = 9;
+    inline constexpr BasicKind Uint32 = 10;
+    inline constexpr BasicKind Uint64 = 11;
+    inline constexpr BasicKind Uintptr = 12;
+    inline constexpr BasicKind Float32 = 13;
+    inline constexpr BasicKind Float64 = 14;
+    inline constexpr BasicKind Complex64 = 15;
+    inline constexpr BasicKind Complex128 = 16;
+    inline constexpr BasicKind String = 17;
+    inline constexpr BasicKind UnsafePointer = 18;
     // types for untyped values
-    const BasicKind UntypedBool = 19;
-    const BasicKind UntypedInt = 20;
-    const BasicKind UntypedRune = 21;
-    const BasicKind UntypedFloat = 22;
-    const BasicKind UntypedComplex = 23;
-    const BasicKind UntypedString = 24;
-    const BasicKind UntypedNil = 25;
+    inline constexpr BasicKind UntypedBool = 19;
+    inline constexpr BasicKind UntypedInt = 20;
+    inline constexpr BasicKind UntypedRune = 21;
+    inline constexpr BasicKind UntypedFloat = 22;
+    inline constexpr BasicKind UntypedComplex = 23;
+    inline constexpr BasicKind UntypedString = 24;
+    inline constexpr BasicKind UntypedNil = 25;
     // Properties of basic types.
-    const BasicInfo IsBoolean = 1 << 0;
-    const BasicInfo IsInteger = 1 << 1;
-    const BasicInfo IsUnsigned = 1 << 2;
-    const BasicInfo IsFloat = 1 << 3;
-    const BasicInfo IsComplex = 1 << 4;
-    const BasicInfo IsString = 1 << 5;
-    const BasicInfo IsUntyped = 1 << 6;
+    inline constexpr BasicInfo IsBoolean = 1 << 0;
+    inline constexpr BasicInfo IsInteger = 1 << 1;
+    inline constexpr BasicInfo IsUnsigned = 1 << 2;
+    inline constexpr BasicInfo IsFloat = 1 << 3;
+    inline constexpr BasicInfo IsComplex = 1 << 4;
+    inline constexpr BasicInfo IsString = 1 << 5;
+    inline constexpr BasicInfo IsUntyped = 1 << 6;
     // aliases
-    const types::BasicKind Byte = Uint8;
-    const types::BasicKind Rune = Int32;
-    const types::BasicInfo IsOrdered = IsInteger | IsFloat | IsString;
-    const types::BasicInfo IsNumeric = IsInteger | IsFloat | IsComplex;
-    const types::BasicInfo IsConstType = IsBoolean | IsNumeric | IsString;
+    inline constexpr types::BasicKind Byte = Uint8;
+    inline constexpr types::BasicKind Rune = Int32;
+    inline constexpr types::BasicInfo IsOrdered = IsInteger | IsFloat | IsString;
+    inline constexpr types::BasicInfo IsNumeric = IsInteger | IsFloat | IsComplex;
+    inline constexpr types::BasicInfo IsConstType = IsBoolean | IsNumeric | IsString;
 }

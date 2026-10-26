@@ -1836,6 +1836,12 @@ func (cv *cppConverter) convertAssignRight(nLhs int, exprs []ast.Expr) cppExpr {
 	return cv.convertAssignRightExprs(exprs)
 }
 
+// isConstExpr reports whether go/types folded e to a constant.
+func (cv *cppConverter) isConstExpr(e ast.Expr) bool {
+	tv, ok := cv.typeInfo.Types[e]
+	return ok && tv.Value != nil
+}
+
 func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []cppExpr {
 	switch stmt.Tok {
 	case token.DEFINE:
@@ -1846,15 +1852,21 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 			varName := cv.convertExpr(stmt.Lhs[0])
 			*env.varNames = append(*env.varNames, varName.str)
 
+			declType := cppExpr{str: "auto"}
+			if cv.isConstExpr(stmt.Rhs[0]) {			
+				// auto would deduce the C++ literal type that doesn't match the go type.
+				declType = cv.convertExprCppType(stmt.Lhs[0]).cppExpr
+			}
+
 			if isIdentifierUsed(varName.str, stmt.Rhs[0]) {
 				cv.declareVar(varName.str+"_tmp", false)
 				return []cppExpr{
-					ExprPrintf("auto %s_tmp = %s", varName, cv.convertAssignRightExprs(stmt.Rhs)),
+					ExprPrintf("%s %s_tmp = %s", declType, varName, cv.convertAssignRightExprs(stmt.Rhs)),
 					ExprPrintf("auto& %s = %s_tmp", varName, varName),
 				}
 			} else {
 				cv.declareVar(varName.str, false)
-				return []cppExpr{ExprPrintf("auto %s = %s", varName, cv.convertAssignRightExprs(stmt.Rhs))}
+				return []cppExpr{ExprPrintf("%s %s = %s", declType, varName, cv.convertAssignRightExprs(stmt.Rhs))}
 			}
 		default:
 			var decl []cppExpr

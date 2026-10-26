@@ -5074,11 +5074,23 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			case *types.TypeName:
 				return ExprPrintf("gocpp::Tag<%s>()", n.Name)
 			case *types.Const, *types.Var:
+				var id cppExpr
 				if cv.isNameUsebyFunction(n.Name, FuncKindAny) && isTopLevel(obj) {
-					return mkCppExpr(GetCppName(cv.namespace + "::" + n.Name)).addDbg(dbg)
+					id = mkCppExpr(GetCppName(cv.namespace + "::" + n.Name)).addDbg(dbg)
 				} else {
-					return mkCppExpr(GetCppName(n.Name)).addDbg(dbg)
+					id = mkCppExpr(GetCppName(n.Name)).addDbg(dbg)
 				}
+
+				// Constant identifiers inside a widened constant expression must be widened
+				if _, isConst := obj.(*types.Const); isConst && cv.isConstLeaf(n) {
+					switch cv.constWidth {
+					case fitsInt64:
+						return ExprPrintf("int64_t(%s)", id)
+					case needsBig:
+						return ExprPrintf("gocpp::bigint(%s)", id)
+					}
+				}
+				return id
 			default:
 				return mkCppExpr(GetCppName(n.Name)).addDbg(dbg)
 			}

@@ -3039,6 +3039,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 	}
 
 	templateDec := ""
+	templateTypes := ""
 	templatePrms := typeParams{}
 	if node.TypeParams != nil {
 		order := 0
@@ -3051,6 +3052,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		}
 
 		templateDec = mkTemplateDec(templatePrms) + " "
+		templateTypes = "<" + strings.Join(templatePrms.OrderedNames(), " ,") + ">"
 	}
 
 	switch n := node.Type.(type) {
@@ -3075,10 +3077,10 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		} else {
 			if canBeDefined(node.Type, definitionType) && node.Assign == token.NoPos {
 				tagName := fmt.Sprintf("GoTag_%s", name)
-				fwdDefineDec = fmt.Sprintf("%susing %s = gocpp::defined<%s, %s>%s", templateDec, name, cppType.str, tagName, end)
+				fwdDefineDec = fmt.Sprintf("%susing %s = gocpp::defined<%s, %s%s>%s", templateDec, name, cppType.str, tagName, templateTypes, end)
 				fwdTagDefineDec = fmt.Sprintf("%sstruct %s%s", templateDec, tagName, end)
 				tagDefineDec = fmt.Sprintf("%sstruct %s { }%s", templateDec, tagName, end)
-				usingDec = fmt.Sprintf("%susing %s = gocpp::defined<%s, %s>%s", templateDec, name, cppType.str, tagName, end)
+				usingDec = fmt.Sprintf("%susing %s = gocpp::defined<%s, %s%s>%s", templateDec, name, cppType.str, tagName, templateTypes, end)
 				isDefine = true
 			} else {
 				usingDec = fmt.Sprintf("%susing %s = %s%s", templateDec, name, cppType.str, end)

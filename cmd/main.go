@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"go/ast"
+	"go/constant"
 	"go/importer"
 	"go/parser"
 	"go/token"
@@ -72,12 +73,13 @@ type cppConverter struct {
 	typedefs set[types.Type]
 
 	// Parsing and codegen parameters
+	constWidth      constWidth
 	currentSwitchId *list.List
-	labelSwitchId   map[string]int
 	idCount         int
+	iota_value      int
+	labelSwitchId   map[string]int
 	recNames        set[string]
 	scopes          *list.List
-	iota_value      int
 
 	// Makefile parameters
 	genMakeFile bool
@@ -2706,8 +2708,15 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 			if isNamespace {
 				if s.Type == nil && len(values) == len(s.Names) {
 					for i, nameId := range s.Names {
-						expr := cv.convertExpr(values[i])
 						exprType := cv.convertExprCppType(values[i])
+						nameObj := cv.typeInfo.Defs[nameId]
+						switch {
+						case constNeedsBigint(nameObj):
+							exprType = mkCppType("gocpp::bigint", nil)
+						case constFitsOnlyUint64(nameObj):
+							exprType = mkCppType("uint64_t", nil)
+						}
+						expr := cv.convertInitExpr(values[i], tok, exprType)
 						exprType.comments = append(exprType.comments, comments...)
 						name := GetCppName(nameId.Name)
 						cstPrefix := cv.constQualifier(cv.typeInfo.Defs[nameId], values[i])
@@ -2775,8 +2784,16 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 							result = append(result, headerStrf(typeOnlySpec(s), "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 							result = append(result, inlineStrf(s, "%s %s%s", exprType, name, end)...)
 						} else {
-							expr := cv.convertExpr(values[i])
+							nameObj := cv.typeInfo.Defs[nameId]
+							switch {
+							case constNeedsBigint(nameObj):
+								exprType = mkCppType("gocpp::bigint", nil)
+							case constFitsOnlyUint64(nameObj):
+								exprType = mkCppType("uint64_t", nil)
+							}
+							expr := cv.convertInitExpr(values[i], tok, exprType)
 							cstPrefix := cv.constQualifier(cv.typeInfo.Defs[nameId], values[i])
+
 							if tok == token.CONST && exprType.canFwd {
 								if cv.ignoreKnownError(name, knownMissingDeps) {
 									exprType = exprType.inComment()
@@ -2926,6 +2943,40 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 	return result
 }
 
+// constNeedsBigint reports whether obj is an untyped integer constant whose value
+// is outside int64, so no C++ integer type can hold it (see gocpp::bigint).
+// Typed constants are bounded by their own type and never qualify.
+func constNeedsBigint(obj types.Object) bool {
+	c, ok := obj.(*types.Const)
+	if !ok {
+		return false
+	}
+	b, ok := c.Type().(*types.Basic)
+	if !ok || b.Kind() != types.UntypedInt {
+		return false
+	}
+	v := c.Val()
+	return v.Kind() == constant.Int &&
+		(constant.Compare(v, token.LSS, int64Min) || constant.Compare(v, token.GTR, uint64Max))
+}
+
+// constFitsOnlyUint64 reports whether obj is an untyped integer constant whose value
+// is above int64 but still fits uint64, so uint64_t can hold it and bigint is not needed
+func constFitsOnlyUint64(obj types.Object) bool {
+	c, ok := obj.(*types.Const)
+	if !ok {
+		return false
+	}
+	b, ok := c.Type().(*types.Basic)
+	if !ok || b.Kind() != types.UntypedInt {
+		return false
+	}
+	v := c.Val()
+	return v.Kind() == constant.Int &&
+		constant.Compare(v, token.GTR, int64Max) &&
+		constant.Compare(v, token.LEQ, uint64Max)
+}
+
 // usesNonConstexpr reports whether a constant initializer calls a listed builtin,
 // or refers to a constant that was itself emitted without constexpr.
 func (cv *cppConverter) usesNonConstexpr(expr ast.Expr) bool {
@@ -2949,8 +3000,24 @@ func (cv *cppConverter) usesNonConstexpr(expr ast.Expr) bool {
 	return found
 }
 
+// const declaration prefix for a Go constant.
+//
+//	-> constexpr for arithmetic-like types, const for others
+//	-> const for strings and complex
 func (cv *cppConverter) constQualifier(obj types.Object, init ast.Expr) string {
-	q := constQualifierForType(obj) // the type-based function we already have
+	// the type-based function we already have
+	q := "inline const"
+	if obj != nil {
+		if b, ok := types.Unalias(obj.Type()).Underlying().(*types.Basic); ok && isWrappableBasic(b) {
+			q = "inline constexpr"
+		}
+	}
+
+	if constNeedsBigint(obj) {
+		return "inline constexpr"
+	}
+
+	// fallback to const if expr contains call which are known to not be elligible to constexpr
 	if q == "inline constexpr" && init != nil && cv.usesNonConstexpr(init) {
 		q = "inline const"
 	}
@@ -2958,20 +3025,6 @@ func (cv *cppConverter) constQualifier(obj types.Object, init ast.Expr) string {
 		cv.shared.nonConstexprConsts[obj] = true // so dependents are downgraded too
 	}
 	return q
-}
-
-// const declaration prefix for a Go constant.
-//
-//	-> constexpr for arithmetic-like types, const for others
-//	-> const for strings and complex
-func constQualifierForType(obj types.Object) string {
-	if obj == nil {
-		return "inline const"
-	}
-	if b, ok := types.Unalias(obj.Type()).Underlying().(*types.Basic); ok && isWrappableBasic(b) {
-		return "inline constexpr"
-	}
-	return "inline const"
 }
 
 func typeOnlySpec(s *ast.ValueSpec) *ast.ValueSpec {
@@ -4611,6 +4664,88 @@ func (cv *cppConverter) WritterExprPrintf(buff *cppExprWritter[*bufio.Writer], f
 	return fmt.Fprintf(buff.buff, format, params...)
 }
 
+type constWidth int
+
+const (
+	fitsInt32 constWidth = iota // plain C++ int is enough: emit as today
+	fitsInt64                   // widen the leaves
+	needsBig                    // use the big integer type
+)
+
+func (cv *cppConverter) constExprWidth(root ast.Expr) constWidth {
+	w := fitsInt32
+	ast.Inspect(root, func(n ast.Node) bool {
+		e, ok := n.(ast.Expr)
+		if !ok {
+			return true
+		}
+		tv, ok := cv.typeInfo.Types[e]
+		if !ok || tv.Value == nil || tv.Value.Kind() != constant.Int {
+			return true
+		}
+		if b, ok := types.Unalias(tv.Type).Underlying().(*types.Basic); ok &&
+			b.Info()&types.IsInteger != 0 && b.Info()&types.IsUntyped == 0 && fitsOwnType(tv.Value, b) {
+			// Typed and representable in its own type: never needs bigint, but the C++
+			// literals building it are plain int, so they must be widened when the value
+			// is beyond int32 (e.g. '-1 << 63' for a Duration).
+			if constant.Compare(tv.Value, token.LSS, int32Min) || constant.Compare(tv.Value, token.GTR, int32Max) {
+				if constant.Compare(tv.Value, token.GEQ, int64Min) && constant.Compare(tv.Value, token.LEQ, int64Max) {
+					w = max(w, fitsInt64)
+				}
+				// beyond int64 (e.g. ^uint(0)): its typed conversion already produces the right C++ type
+			}
+			return true
+		}
+		switch {
+		case constant.Compare(tv.Value, token.GEQ, int32Min) && constant.Compare(tv.Value, token.LEQ, int32Max):
+		case constant.Compare(tv.Value, token.GEQ, int64Min) && constant.Compare(tv.Value, token.LEQ, int64Max):
+			w = max(w, fitsInt64)
+		default:
+			w = max(w, needsBig)
+		}
+		return true
+	})
+	return w
+}
+
+// Reports whether integer constant v is representable in basic type b (64-bit platform).
+func fitsOwnType(v constant.Value, b *types.Basic) bool {
+	bits := uint(types.SizesFor("gc", "amd64").Sizeof(b) * 8)
+	if b.Info()&types.IsUnsigned != 0 {
+		return constant.Sign(v) >= 0 && constant.BitLen(v) <= int(bits)
+	}
+	min := constant.Shift(constant.MakeInt64(-1), token.SHL, bits-1)
+	max := constant.BinaryOp(constant.Shift(constant.MakeInt64(1), token.SHL, bits-1), token.SUB, constant.MakeInt64(1))
+	return constant.Compare(v, token.GEQ, min) && constant.Compare(v, token.LEQ, max)
+}
+
+// -> converts the initializer of a Go constant, widening its untyped
+// integer nodes when intermediate values exceed C++ int.
+// -> declType is the C++ type of the declaration, or "" when it should not be wrapped.
+// -> For constants it widens untyped integer leaves when intermediate values exceed
+// C++ int. If the arbitrary-precision result is a gocpp::bigint but the declared
+// C++ type is not, the whole expression is wrapped in an explicit conversion:
+//
+//	inline constexpr Duration maxDuration = Duration((1_bi << 63) - 1_bi);
+//
+// -> TODO: we don't need token, we can just check type for "Types[expr].Value != nil"
+// and do this directly in convertExpr
+func (cv *cppConverter) convertInitExpr(expr ast.Expr, tok token.Token, declType cppType) cppExpr {
+	if tok != token.CONST {
+		return cv.convertExpr(expr)
+	}
+	width := cv.constExprWidth(expr)
+	prev := cv.constWidth
+	cv.constWidth = width
+
+	result := cv.convertExpr(expr)
+	if width == needsBig && declType.str != "" && declType.str != "gocpp::bigint" {
+		result = ExprPrintf("%s(%s)", declType, result)
+	}
+	cv.constWidth = prev
+	return result
+}
+
 // TODO: return typeDefs
 func (cv *cppConverter) convertExpr(node ast.Expr) cppExpr {
 	return cv.convertExprCtx(node, exprCtx{})
@@ -4658,10 +4793,14 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			return mkCppExpr("gocpp::complex128(0, " + strings.Replace(n.Value, "i", "", -1) + ")")
 		case token.INT, token.FLOAT:
 			lit := strings.ReplaceAll(n.Value, "_", "")
-			if n.Kind == token.INT && cv.isUntypedInt(n) {
-				// Go untyped ints are arbitrary precision,
-				// int is potentially too narrow for intermediates
-				lit += "LL"
+			if n.Kind == token.INT && cv.isConstLeaf(n) {
+				// Go untyped ints are arbitrary precision, need ensure we have wide enough type
+				switch cv.constWidth {
+				case fitsInt64:
+					lit += "LL"
+				case needsBig:
+					lit += "_bi"
+				}
 			}
 			return mkCppExpr(lit)
 		default:
@@ -4724,21 +4863,33 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 
 	case *ast.BinaryExpr:
 		xEnd := cv.EndPosition(n.X)
-		token := cv.TokenPosition(n.OpPos)
+		tokPos := cv.TokenPosition(n.OpPos)
 		yStart := cv.Position(n.Y)
 		leftSpace := " "
 		rightSpace := " "
-		if xEnd.Line < token.Line {
-			leftSpace = "\n" + cv.cpp.Indent() + strings.Repeat(baseIndent, max(token.Column-1, 1))
+		if xEnd.Line < tokPos.Line {
+			leftSpace = "\n" + cv.cpp.Indent() + strings.Repeat(baseIndent, max(tokPos.Column-1, 1))
 		}
-		if token.Line < yStart.Line {
+		if tokPos.Line < yStart.Line {
 			rightSpace = "\n" + cv.cpp.Indent() + strings.Repeat(baseIndent, max(yStart.Column-1, 1))
 		}
 
-		if needPriority(n.Op) && ctx.isSubExpr {
-			return ExprPrintf("(%s%s%s%s%s)", cv.convertSubExpr(n.X), leftSpace, convertToken(n.Op), rightSpace, cv.convertSubExpr(n.Y))
+		left := cv.convertSubExpr(n.X)
+		var right cppExpr
+		if n.Op == token.SHL || n.Op == token.SHR {
+			prev := cv.constWidth
+			// the shift count keeps its own plain type
+			cv.constWidth = fitsInt32
+			right = cv.convertSubExpr(n.Y)
+			cv.constWidth = prev
 		} else {
-			return ExprPrintf("%s%s%s%s%s", cv.convertSubExpr(n.X), leftSpace, convertToken(n.Op), rightSpace, cv.convertSubExpr(n.Y))
+			right = cv.convertSubExpr(n.Y)
+		}
+
+		if needPriority(n.Op) && ctx.isSubExpr {
+			return ExprPrintf("(%s%s%s%s%s)", left, leftSpace, convertToken(n.Op), rightSpace, right)
+		} else {
+			return ExprPrintf("%s%s%s%s%s", left, leftSpace, convertToken(n.Op), rightSpace, right)
 		}
 		// import "go/type"
 		//xType := types.ExprString(n.X)
@@ -5054,9 +5205,9 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 	panic("convertExprImpl, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) isUntypedInt(e ast.Expr) bool {
-	b, ok := cv.typeInfo.Types[e].Type.(*types.Basic)
-	return ok && b.Kind() == types.UntypedInt
+func (cv *cppConverter) isConstLeaf(e ast.Expr) bool {
+	tv, ok := cv.typeInfo.Types[e]
+	return ok && tv.Value != nil && tv.Value.Kind() == constant.Int
 }
 
 func (cv *cppConverter) buildPkgDepInfo(obj *types.PkgName, selector *ast.Ident) depInfo {

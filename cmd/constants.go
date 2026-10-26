@@ -1,5 +1,10 @@
 package main
 
+import (
+	"go/constant"
+	"math"
+)
+
 var baseIndent string = "    "
 
 // global namespace for all generated code
@@ -7,6 +12,12 @@ var goNs = "golang"
 
 // receiver namespace
 var recNs = "rec"
+
+var int32Min = constant.MakeInt64(math.MinInt32)
+var int32Max = constant.MakeInt64(math.MaxInt32)
+var int64Min = constant.MakeInt64(math.MinInt64)
+var int64Max = constant.MakeInt64(math.MaxInt64)
+var uint64Max = constant.MakeUint64(math.MaxUint64)
 
 var mocklibReceiverElts = map[string]string{
 	"Error":              "mocklib::rec::Error",
@@ -34,14 +45,14 @@ var stdTypeMapping = map[string]string{
 	"float":      "double",
 	"float32":    "float",
 	"float64":    "double",
-	"int":        "int",
+	"int":        "int64_t",
 	"int8":       "int8_t",
 	"int16":      "int16_t",
 	"int32":      "int32_t",
 	"int64":      "int64_t",
 	"rune":       "gocpp::rune",
 	"string":     cpp_string_type,
-	"uint":       "unsigned int",
+	"uint":       "uint64_t",
 	"uint8":      "uint8_t",
 	"uint16":     "uint16_t",
 	"uint32":     "uint32_t",
@@ -51,7 +62,7 @@ var stdTypeMapping = map[string]string{
 	"untyped bool":    "bool",
 	"untyped complex": cpp_cplx128_type,
 	"untyped float":   "double",
-	"untyped int":     "int",
+	"untyped int":     "int64_t",
 	"untyped rune":    "gocpp::rune",
 	"untyped string":  cpp_string_type,
 
@@ -367,13 +378,14 @@ var stdFuncMapping = map[string]string{
 	"float":      "double",
 	"float32":    "float",
 	"float64":    "double",
+	"int":        "int64_t",
 	"int8":       "int8_t",
 	"int16":      "int16_t",
 	"int32":      "int32_t",
 	"int64":      "int64_t",
 	"rune":       "gocpp::rune",
 	"string":     cpp_string_type,
-	"uint":       "(unsigned int)",
+	"uint":       "(uint64_t)",
 	"uint8":      "uint8_t",
 	"uint16":     "uint16_t",
 	"uint32":     "uint32_t",

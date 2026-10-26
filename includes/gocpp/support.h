@@ -826,6 +826,11 @@ namespace gocpp
         throw GoPanic(Error(error));
     }
 
+    [[noreturn]] inline void bigint_error(const char* m)
+    {
+        panic(m);
+    }
+
     inline go_any recover()
     {
         try
@@ -1312,7 +1317,7 @@ namespace gocpp
 
     template <GoInterface TInterface, typename TSource>
         requires std::convertible_to<TSource, TInterface>
-                 && GoStruct<TSource>
+    && GoStruct<TSource>
         result_or_error<TInterface, ErrInvalidValueCast<TInterface>> getValue(const TSource& src) {
         return std::make_pair(TInterface(src), true);
     }
@@ -1325,7 +1330,7 @@ namespace gocpp
             return std::make_pair(std::any_cast<T>(value), true);
         }
 
-        return std::make_pair(T{}, false);
+        return std::make_pair(T { }, false);
     }
     
     template<>
@@ -1335,13 +1340,29 @@ namespace gocpp
         {
             return std::make_pair(std::any_cast<std::string>(value), true);
         }
-        
-        if(value.type() == typeid(const char * const))
+
+        if(value.type() == typeid(const char* const))
         {
-            return std::make_pair(std::string(std::any_cast<const char * const>(value)), true);
+            return std::make_pair(std::string(std::any_cast<const char* const>(value)), true);
         }
 
-        return std::make_pair(std::string{}, false);
+        return std::make_pair(std::string { }, false);
+    }
+
+    template<>
+    result_or_error<int64_t, ErrInvalidValueCast<int64_t>> getValue(gocpp::go_any value)
+    {
+        if(value.type() == typeid(int64_t))
+        {
+            return std::make_pair(std::any_cast<int64_t>(value), true);
+        }
+
+        if(value.type() == typeid(int))
+        {
+            return std::pair<int64_t, bool>{std::any_cast<int>(value), true };
+        }
+
+        return std::make_pair<int64_t, bool>(0, false);
     }
 }
 
@@ -1831,18 +1852,56 @@ namespace mocklib
         return "<std::any>";
     }
 
+    namespace details
+    {
+        // Prints value if it holds a T. Returns true on success.
+        template<typename T>
+        bool try_print_any(const gocpp::go_any& value, std::string& out)
+        {
+            if(value.type() != typeid(T)) { return false; }
+            const T& v = *std::any_cast<T>(&value);
+            if constexpr(std::is_same_v<T, bool>)
+            {
+                out = v ? "true" : "false";
+            }
+            else if constexpr(std::is_same_v<T, char> || std::is_same_v<T, signed char> || std::is_same_v<T, unsigned char>)
+            {
+                // Go byte/int8 print as numbers
+                out = std::to_string(static_cast<int>(v));
+            }
+            else if constexpr(std::is_floating_point_v<T>)
+            {
+                out = to_go_string(static_cast<double>(v));
+            }
+            else
+            {
+                out = std::to_string(v);
+            }
+            return true;
+        }
+
+        template<typename... Ts>
+        bool try_print_any_of(const gocpp::go_any& value, std::string& out)
+        {
+            return (try_print_any<Ts>(value, out) || ...);
+        }
+    }
+
     inline std::string Sprint(const gocpp::go_any& value)
     {
-        if (value.type() == typeid(int)) {
-            std::stringstream sstr;
-            sstr << std::any_cast<int>(value);
-            return sstr.str();
-        }        
-        if (value.type() == typeid(nullptr)) {
+        if(value.type() == typeid(nullptr)) {
             return "<nil>";
         }
-        if (value.type() == typeid(const char*)) {
+        if(value.type() == typeid(const char*)) {
             return std::any_cast<const char*>(value);
+        }
+
+        std::string out;
+        if(details::try_print_any_of<bool, char, signed char, unsigned char, short,
+            unsigned short, int, unsigned int, long, unsigned long, long long,
+            unsigned long long, float, double>(value, out))
+        {
+            return out;
         }
         return "<gocpp::go_any>[" + std::string(value.type().name()) + "]";
     }

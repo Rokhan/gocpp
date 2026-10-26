@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gocpp/defined.fwd.h"
+#include "gocpp/bigint.fwd.h"
 
 #include <cstdint>
 

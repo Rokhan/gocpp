@@ -47,6 +47,11 @@ namespace gocpp
         template<BasicValue U> requires (!std::same_as<U, T>)
         constexpr explicit defined(U v) : value(static_cast<T>(v)) {}
 
+        // Explicit conversion from a non-arithmetic type that converts to T, typically
+        // gocpp::bigint that is used for constant evaluations.
+        template<typename U> requires (!BasicValue<U> && std::is_convertible_v<U, T>)
+        constexpr explicit defined(U v) : value(static_cast<T>(v)) {}
+
         // arr[k], double(k), case labels...
         constexpr operator T() const { return value; }
 

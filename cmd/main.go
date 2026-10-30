@@ -1955,6 +1955,9 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 			case 0:
 				panic("convertAssignStmt, len(exprs) == 0")
 			case 1:
+				if stmt.Tok == token.AND_NOT_ASSIGN {
+					return []cppExpr{ExprPrintf("%s &= ~(%s)", cv.convertWriteExpr(stmt.Lhs[0]), cv.convertAssignRightExprs(stmt.Rhs))}
+				}
 				return []cppExpr{ExprPrintf("%s %s %s", cv.convertWriteExpr(stmt.Lhs[0]), stmt.Tok, cv.convertAssignRightExprs(stmt.Rhs))}
 			default:
 				panic("convertAssignStmt, len(exprs) != 1")
@@ -4899,6 +4902,10 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			cv.constWidth = prev
 		} else {
 			right = cv.convertSubExpr(n.Y)
+		}
+
+		if n.Op == token.AND_NOT {
+			return ExprPrintf("(%s & ~(%s))", left, right)
 		}
 
 		if needPriority(n.Op) && ctx.isSubExpr {

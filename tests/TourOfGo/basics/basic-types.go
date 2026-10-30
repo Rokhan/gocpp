@@ -98,6 +98,13 @@ func testIotaKinds() {
 	fmt.Println(temps[Hot], temps[Warm] == "", len(temps))
 }
 
+func andNotOperator() {
+	a, b := 3, 5
+	fmt.Println("a =", a, ", b= ", b, ", a &^ b = ", a&^b)
+	a &^= b
+	fmt.Println("a &^= b ==> a = ", a)
+}
+
 // Needs the constant to be usable in a constant expression (constexpr).
 func testConstLength() {
 	var grid [Size]int

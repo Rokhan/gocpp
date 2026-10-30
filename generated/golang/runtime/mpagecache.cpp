@@ -95,9 +95,9 @@ namespace golang::runtime
             auto i = uintptr_t(sys::TrailingZeros64(c->cache));
             auto scav = (c->scav >> i) & 1;
             // set bit to mark in-use
-            c->cache &^= 1 << i;
+            c->cache &= ~(1 << i);
             // clear bit to mark unscavenged
-            c->scav &^= 1 << i;
+            c->scav &= ~(1 << i);
             return {c->base + i * pageSize, uintptr_t(scav) * pageSize};
         }
         return rec::allocN(gocpp::recv(c), npages);
@@ -119,9 +119,9 @@ namespace golang::runtime
         auto mask = ((uint64_t(1) << npages) - 1) << i;
         auto scav = sys::OnesCount64(c->scav & mask);
         // mark in-use bits
-        c->cache &^= mask;
+        c->cache &= ~(mask);
         // clear scavenged bits
-        c->scav &^= mask;
+        c->scav &= ~(mask);
         return {c->base + uintptr_t(i * pageSize), uintptr_t(scav) * pageSize};
     }
 

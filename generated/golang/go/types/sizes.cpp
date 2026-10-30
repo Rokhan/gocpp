@@ -604,7 +604,7 @@ namespace golang::go::types
     int64_t align(int64_t x, int64_t a)
     {
         assert(x >= 0 && 1 <= a && a <= 8 && a & (a - 1) == 0);
-        return (x + a - 1) &^ (a - 1);
+        return ((x + a - 1) & ~((a - 1)));
     }
 
 }

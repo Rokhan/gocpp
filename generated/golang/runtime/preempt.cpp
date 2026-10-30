@@ -318,7 +318,7 @@ namespace golang::runtime
                 case 1:
                 case 2:
                 case 3:
-                    casfrom_Gscanstatus(gp, s, s &^ _Gscan);
+                    casfrom_Gscanstatus(gp, s, (s & ~(_Gscan)));
                     break;
             }
         }
@@ -337,7 +337,7 @@ namespace golang::runtime
     //go:nosplit
     bool canPreemptM(m* mp)
     {
-        return mp->locks == 0 && mp->mallocing == 0 && mp->preemptoff == ""_s && rec::ptr(gocpp::recv(mp->p))->status == _Prunning && mp->curg != nullptr && readgstatus(mp->curg) &^ _Gscan != _Gsyscall;
+        return mp->locks == 0 && mp->mallocing == 0 && mp->preemptoff == ""_s && rec::ptr(gocpp::recv(mp->p))->status == _Prunning && mp->curg != nullptr && (readgstatus(mp->curg) & ~(_Gscan)) != _Gsyscall;
     }
 
     // asyncPreempt saves all user registers and calls asyncPreempt2.
@@ -423,7 +423,7 @@ namespace golang::runtime
     bool wantAsyncPreempt(g* gp)
     {
         // Check both the G and the P.
-        return (gp->preempt || gp->m->p != 0 && rec::ptr(gocpp::recv(gp->m->p))->preempt) && readgstatus(gp) &^ _Gscan == _Grunning;
+        return (gp->preempt || gp->m->p != 0 && rec::ptr(gocpp::recv(gp->m->p))->preempt) && (readgstatus(gp) & ~(_Gscan)) == _Grunning;
     }
 
     // isAsyncSafePoint reports whether gp at instruction PC is an

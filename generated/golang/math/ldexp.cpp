@@ -85,7 +85,7 @@ namespace golang::math
             // 2**-53
             m = 1.0 / (1 << 53);
         }
-        x &^= mask << shift;
+        x &= ~(mask << shift);
         x |= uint64_t(exp + bias) << shift;
         return m * Float64frombits(x);
     }

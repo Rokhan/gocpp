@@ -50,7 +50,7 @@ namespace golang::internal::strconv
         {
             return {float64frombits(m & (1 << 63) | (0x7ff << 52)), gocpp::error(ErrRange)};
         }
-        return {float64frombits(m &^ (1 << 52) | (uint64_t(1075 + e) << 52)), nullptr};
+        return {float64frombits((m & ~((1 << 52))) | (uint64_t(1075 + e) << 52)), nullptr};
     }
 
     // pack32 takes m, e and returns f = m * 2**e.
@@ -66,7 +66,7 @@ namespace golang::internal::strconv
         {
             return {float32frombits(m & (1 << 31) | (0xff << 23)), gocpp::error(ErrRange)};
         }
-        return {float32frombits(m &^ (1 << 23) | (uint32_t(150 + e) << 23)), nullptr};
+        return {float32frombits((m & ~((1 << 23))) | (uint32_t(150 + e) << 23)), nullptr};
     }
 
     // An unrounded represents an unrounded value.

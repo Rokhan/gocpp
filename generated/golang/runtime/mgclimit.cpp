@@ -455,7 +455,7 @@ namespace golang::runtime
     // makeLimiterEventStamp creates a new stamp from the event type and the current timestamp.
     limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now)
     {
-        return limiterEventStamp((uint64_t(typ) << (64 - limiterEventBits)) | (uint64_t(now) &^ limiterEventTypeMask));
+        return limiterEventStamp((uint64_t(typ) << (64 - limiterEventBits)) | ((uint64_t(now) & ~(limiterEventTypeMask))));
     }
 
     // duration computes the difference between now and the start time stored in the stamp.
@@ -466,7 +466,7 @@ namespace golang::runtime
     {
         // The top limiterEventBits bits of the timestamp are derived from the current time
         // when computing a duration.
-        auto start = int64_t((uint64_t(now) & limiterEventTypeMask) | (uint64_t(s) &^ limiterEventTypeMask));
+        auto start = int64_t((uint64_t(now) & limiterEventTypeMask) | ((uint64_t(s) & ~(limiterEventTypeMask))));
         if(now < start)
         {
             return 0;

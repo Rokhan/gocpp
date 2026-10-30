@@ -736,7 +736,7 @@ namespace golang::runtime
         statDepSet c = {};
         for(auto [i, gocpp_ignored] : s)
         {
-            c[i] = s[i] &^ b[i];
+            c[i] = (s[i] & ~(b[i]));
         }
         return c;
     }

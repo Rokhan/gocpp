@@ -109,7 +109,7 @@ namespace golang::math
         // Keep the top 12+e bits, the integer part; clear the rest.
         if(e < 64 - 12)
         {
-            b &^= (1 << (64 - 12 - e)) - 1;
+            b &= ~((1 << (64 - 12 - e)) - 1);
         }
         return Float64frombits(b);
     }
@@ -153,7 +153,7 @@ namespace golang::math
             auto half = 1 << (shift - 1);
             e -= bias;
             bits += half >> e;
-            bits &^= fracMask >> e;
+            bits &= ~(fracMask >> e);
         }
         return Float64frombits(bits);
     }
@@ -187,7 +187,7 @@ namespace golang::math
             auto halfMinusULP = (1 << (shift - 1)) - 1;
             e -= bias;
             bits += (halfMinusULP + (bits >> (shift - e)) & 1) >> e;
-            bits &^= fracMask >> e;
+            bits &= ~(fracMask >> e);
         }
         else
         if(e == bias - 1 && bits & fracMask != 0)

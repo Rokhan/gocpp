@@ -182,7 +182,7 @@ namespace golang::go::types
     void rec::stmtList(Checker* check, stmtContext ctxt, gocpp::slice<ast::Stmt> list)
     {
         auto ok = ctxt & fallthroughOk != 0;
-        auto inner = ctxt &^ fallthroughOk;
+        auto inner = (ctxt & ~(fallthroughOk));
         // trailing empty statements are "invisible" to fallthrough analysis
         list = trimTrailingEmptyStmts(list);
         for(auto [i, s] : list)
@@ -648,7 +648,7 @@ namespace golang::go::types
             defer.push_back([=]{ rec::processDelayed(gocpp::recv(check), len(check->delayed)); });
 
             // reset context for statements of inner blocks
-            auto inner = ctxt &^ (fallthroughOk | finalSwitchCase | inTypeSwitch);
+            auto inner = (ctxt & ~((fallthroughOk | finalSwitchCase | inTypeSwitch)));
 
             //Go type switch emulation
             {

@@ -185,7 +185,7 @@ namespace golang::unicode::utf8
             // approach prevents an additional branch.
             // Create 0x0000 or 0xFFFF.
             auto mask = (gocpp::rune(x) << 31) >> 31;
-            return {gocpp::rune(p[0]) &^ mask | RuneError & mask, 1};
+            return {(gocpp::rune(p[0]) & ~(mask)) | RuneError & mask, 1};
         }
         auto sz = int64_t(x & 7);
         auto accept = acceptRanges[x >> 4];
@@ -262,7 +262,7 @@ namespace golang::unicode::utf8
             // approach prevents an additional branch.
             // Create 0x0000 or 0xFFFF.
             auto mask = (gocpp::rune(x) << 31) >> 31;
-            return {gocpp::rune(s[0]) &^ mask | RuneError & mask, 1};
+            return {(gocpp::rune(s[0]) & ~(mask)) | RuneError & mask, 1};
         }
         auto sz = int64_t(x & 7);
         auto accept = acceptRanges[x >> 4];

@@ -4988,7 +4988,7 @@ namespace golang::reflect
                         typ->StructType.Type.TFlag |= abi::TFlagDirectIface;
                         break;
                     default:
-                        typ->StructType.Type.TFlag &^= abi::TFlagDirectIface;
+                        typ->StructType.Type.TFlag &= ~(abi::TFlagDirectIface);
                         break;
                 }
             }
@@ -5174,7 +5174,7 @@ namespace golang::reflect
                     // Create pointer mask by repeating the element bitmask Len times.
                     auto n = (array.Type.PtrBytes / goarch::PtrSize + 7) / 8;
                     // Runtime needs pointer masks to be a multiple of uintptr in size.
-                    n = (n + goarch::PtrSize - 1) &^ (goarch::PtrSize - 1);
+                    n = ((n + goarch::PtrSize - 1) & ~((goarch::PtrSize - 1)));
                     auto mask = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
                     emitGCMask(mask, 0, typ, array.Len);
                     array.Type.GCData = & mask[0];
@@ -5225,7 +5225,7 @@ namespace golang::reflect
                     array.Type.TFlag |= abi::TFlagDirectIface;
                     break;
                 default:
-                    array.Type.TFlag &^= abi::TFlagDirectIface;
+                    array.Type.TFlag &= ~(abi::TFlagDirectIface);
                     break;
             }
         }

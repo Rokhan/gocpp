@@ -475,7 +475,7 @@ namespace golang::regexp::syntax
         if(len(r) != 1 || unicode::SimpleFold(r[0]) == r[0])
         {
             // and sometimes not even that
-            flags &^= FoldCase;
+            flags &= ~(FoldCase);
         }
         i->Arg = uint32_t(flags);
         f.out = makePatchList(f.i << 1);

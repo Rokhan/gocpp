@@ -896,7 +896,7 @@ namespace golang::runtime
         {
             auto b = r->data->b[pos % uint64_t(len(r->data->b))];
             pos++;
-            u |= uint64_t(b &^ 0x80) << i;
+            u |= uint64_t((b & ~(0x80))) << i;
             if(b & 0x80 == 0)
             {
                 break;
@@ -936,7 +936,7 @@ namespace golang::runtime
         {
             auto b = r->data->b[r->begin % uint64_t(len(r->data->b))];
             r->begin++;
-            u |= uint64_t(b &^ 0x80) << i;
+            u |= uint64_t((b & ~(0x80))) << i;
             if(b & 0x80 == 0)
             {
                 break;

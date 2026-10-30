@@ -586,7 +586,7 @@ namespace golang::runtime
             n -= 8;
             p = addb(p, 1);
         }
-        *p &^= (1 << n) - 1;
+        *p &= ~((1 << n) - 1);
         *p |= (unsigned char)(buf);
     }
 

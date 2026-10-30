@@ -244,7 +244,7 @@ namespace golang::runtime
         for(; ; )
         {
             auto state = rec::Load(gocpp::recv(a->state));
-            if((state &^ sweepDrainedMask) - 1 >= sweepDrainedMask)
+            if(((state & ~(sweepDrainedMask))) - 1 >= sweepDrainedMask)
             {
                 go_throw("mismatched begin/end of activeSweep"_s);
             }
@@ -292,7 +292,7 @@ namespace golang::runtime
     // sweepers returns the current number of active sweepers.
     uint32_t rec::sweepers(activeSweep* a)
     {
-        return rec::Load(gocpp::recv(a->state)) &^ sweepDrainedMask;
+        return (rec::Load(gocpp::recv(a->state)) & ~(sweepDrainedMask));
     }
 
     // isDone returns true if all sweep work has been drained and no more
@@ -1266,14 +1266,14 @@ namespace golang::runtime
             // Check the first bitmap byte, where we have to be
             // careful with freeindex.
             auto obj = uintptr_t(s->freeindex);
-            if(((*rec::bytep(gocpp::recv(s->gcmarkBits), obj / 8) &^ *rec::bytep(gocpp::recv(s->allocBits), obj / 8)) >> (obj % 8)) != 0)
+            if((((*rec::bytep(gocpp::recv(s->gcmarkBits), obj / 8) & ~(*rec::bytep(gocpp::recv(s->allocBits), obj / 8)))) >> (obj % 8)) != 0)
             {
                 rec::reportZombies(gocpp::recv(s));
             }
             // Check remaining bytes.
             for(auto i = obj / 8 + 1; i < divRoundUp(uintptr_t(s->nelems), 8); i++)
             {
-                if(*rec::bytep(gocpp::recv(s->gcmarkBits), i) &^ *rec::bytep(gocpp::recv(s->allocBits), i) != 0)
+                if((*rec::bytep(gocpp::recv(s->gcmarkBits), i) & ~(*rec::bytep(gocpp::recv(s->allocBits), i))) != 0)
                 {
                     rec::reportZombies(gocpp::recv(s));
                 }

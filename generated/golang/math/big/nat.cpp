@@ -454,7 +454,7 @@ namespace golang::math::big
     golang::math::big::nat rec::nat(stackInner* s, int64_t n)
     {
         // round up to multiple of 4
-        auto nr = (n + 3) &^ 3;
+        auto nr = ((n + 3) & ~(3));
         auto off = len(s->w);
         s->w = slices::Grow(s->w, nr);
         s->w = s->w.make_slice(0, off + nr);
@@ -723,7 +723,7 @@ namespace golang::math::big
                         // no need to grow
                         return z;
                     }
-                    z[j] &^= m;
+                    z[j] &= ~(m);
                     return rec::norm(gocpp::recv(z));
                     break;
                 case 1:
@@ -837,7 +837,7 @@ namespace golang::math::big
         z = rec::make(gocpp::recv(z), m);
         for(int64_t i = 0; i < n; i++)
         {
-            z[i] = x[i] &^ y[i];
+            z[i] = (x[i] & ~(y[i]));
         }
         copy(z.make_slice(n, m), x.make_slice(n, m));
 

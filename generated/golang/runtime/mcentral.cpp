@@ -240,7 +240,7 @@ namespace golang::runtime
         {
             go_throw("span has no free objects"_s);
         }
-        auto freeByteBase = s->freeindex &^ (64 - 1);
+        auto freeByteBase = (s->freeindex & ~((64 - 1)));
         auto whichByte = freeByteBase / 8;
         // Init alloc bits cache.
         rec::refillAllocCache(gocpp::recv(s), whichByte);

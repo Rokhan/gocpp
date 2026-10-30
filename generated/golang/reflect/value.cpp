@@ -1385,7 +1385,7 @@ namespace golang::reflect
     // n must be a power of two.
     uintptr_t align(uintptr_t x, uintptr_t n)
     {
-        return (x + n - 1) &^ (n - 1);
+        return ((x + n - 1) & ~((n - 1)));
     }
 
     // callMethod is the call implementation used by a function returned
@@ -5447,7 +5447,7 @@ namespace golang::reflect
     {
         auto ret = rec::Elem(gocpp::recv(New(t)));
         rec::SetString(gocpp::recv(ret), v);
-        ret.flag = ret.flag &^ flagAddr | f;
+        ret.flag = (ret.flag & ~(flagAddr)) | f;
         return ret;
     }
 
@@ -5455,7 +5455,7 @@ namespace golang::reflect
     {
         auto ret = rec::Elem(gocpp::recv(New(t)));
         rec::SetBytes(gocpp::recv(ret), v);
-        ret.flag = ret.flag &^ flagAddr | f;
+        ret.flag = (ret.flag & ~(flagAddr)) | f;
         return ret;
     }
 
@@ -5463,7 +5463,7 @@ namespace golang::reflect
     {
         auto ret = rec::Elem(gocpp::recv(New(t)));
         rec::setRunes(gocpp::recv(ret), v);
-        ret.flag = ret.flag &^ flagAddr | f;
+        ret.flag = (ret.flag & ~(flagAddr)) | f;
         return ret;
     }
 
@@ -5577,7 +5577,7 @@ namespace golang::reflect
             gocpp::panic("reflect: cannot convert slice with length "_s + strconv::Itoa(rec::Len(gocpp::recv(v))) + " to pointer to array with length "_s + strconv::Itoa(n));
         }
         auto h = (unsafeheader::Slice*)(v.ptr);
-        return golang::reflect::Value {rec::common(gocpp::recv(t)), h->Data, v.flag &^ (flagIndir | flagAddr | flagKindMask) | flag(reflect::Pointer)};
+        return golang::reflect::Value {rec::common(gocpp::recv(t)), h->Data, (v.flag & ~((flagIndir | flagAddr | flagKindMask))) | flag(reflect::Pointer)};
     }
 
     // convertOp: []T -> [N]T
@@ -5595,7 +5595,7 @@ namespace golang::reflect
         typedmemmove(typ, c, ptr);
         ptr = c;
 
-        return golang::reflect::Value {typ, ptr, v.flag &^ (flagAddr | flagKindMask) | flag(Array)};
+        return golang::reflect::Value {typ, ptr, (v.flag & ~((flagAddr | flagKindMask))) | flag(Array)};
     }
 
     // convertOp: direct copy
@@ -5610,7 +5610,7 @@ namespace golang::reflect
             auto c = unsafe_New(t);
             typedmemmove(t, c, ptr);
             ptr = c;
-            f &^= flagAddr;
+            f &= ~(flagAddr);
         }
         // v.flag.ro()|f == f?
         return golang::reflect::Value {t, ptr, rec::ro(gocpp::recv(v.flag)) | f};

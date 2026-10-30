@@ -101,7 +101,7 @@ namespace golang::internal::poll
                 gocpp::panic(overflowMsg);
             }
             // Remove all read and write waiters.
-            go_new &^= mutexRMask | mutexWMask;
+            go_new &= ~(mutexRMask | mutexWMask);
             if(atomic::CompareAndSwapUint64(& mu->state, old, go_new))
             {
                 // Wake all read and write waiters,
@@ -235,7 +235,7 @@ namespace golang::internal::poll
                 gocpp::panic("inconsistent poll.fdMutex"_s);
             }
             // Drop lock, drop reference and wake read waiter if present.
-            auto go_new = (old &^ mutexBit) - mutexRef;
+            auto go_new = ((old & ~(mutexBit))) - mutexRef;
             if(old & mutexMask != 0)
             {
                 go_new -= mutexWait;

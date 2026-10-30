@@ -1499,7 +1499,7 @@ namespace golang::runtime
         // We're only calling isShrinkStackSafe if we took ownership of the
         // G with the _Gscan bit. This prevents the goroutine from transitioning,
         // which prevents gp.waitreason from changing.
-        if(readgstatus(gp) &^ _Gscan == _Gwaiting && rec::isWaitingForSuspendG(gocpp::recv(gp->waitreason)))
+        if((readgstatus(gp) & ~(_Gscan)) == _Gwaiting && rec::isWaitingForSuspendG(gocpp::recv(gp->waitreason)))
         {
             return false;
         }

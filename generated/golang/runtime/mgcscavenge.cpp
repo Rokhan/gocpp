@@ -116,7 +116,7 @@ namespace golang::runtime
         gcPercentGoal += gcPercentGoal / (1.0 / (retainExtraPercent / 100.0));
         // Align it to a physical page boundary to make the following calculations
         // a bit more exact.
-        gcPercentGoal = (gcPercentGoal + uint64_t(physPageSize) - 1) &^ (uint64_t(physPageSize) - 1);
+        gcPercentGoal = ((gcPercentGoal + uint64_t(physPageSize) - 1) & ~((uint64_t(physPageSize) - 1)));
 
         // Represents where we are now in the heap's contribution to RSS in bytes.
         // Guaranteed to always be a multiple of physPageSize on systems where
@@ -1326,7 +1326,7 @@ namespace golang::runtime
     // setEmpty clears the hasFree flag.
     void rec::setEmpty(scavChunkFlags* sc)
     {
-        *sc &^= scavChunkHasFree;
+        *sc &= ~(scavChunkHasFree);
     }
 
     // setNonEmpty sets the hasFree flag.

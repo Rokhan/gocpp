@@ -386,7 +386,7 @@ namespace golang::os
                 else
                 if(a & syscall::FILE_ATTRIBUTE_READONLY != 0)
                 {
-                    if(e1 = syscall::SetFileAttributes(p, a &^ syscall::FILE_ATTRIBUTE_READONLY); e1 == nullptr)
+                    if(e1 = syscall::SetFileAttributes(p, (a & ~(syscall::FILE_ATTRIBUTE_READONLY))); e1 == nullptr)
                     {
                         if(e = syscall::DeleteFile(p); e == nullptr)
                         {
@@ -557,7 +557,7 @@ namespace golang::os
         {
             // the unprivileged create flag is unsupported
             // below Windows 10 (1703, v10.0.14972). retry without it.
-            flags &^= windows::SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
+            flags &= ~(windows::SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE);
             err = syscall::CreateSymbolicLink(n, o, flags);
             if(err != nullptr)
             {

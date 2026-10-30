@@ -437,7 +437,7 @@ namespace golang::math::bits
         // The sum will overflow if both top bits are set (x & y) or if one of them
         // is (x | y), and a carry from the lower place happened. If such a carry
         // happens, the top bit will be 1 + 0 + 1 = 0 (&^ sum).
-        carryOut = ((x & y) | ((x | y) &^ sum)) >> 63;
+        carryOut = ((x & y) | (((x | y) & ~(sum)))) >> 63;
         return {sum, carryOut};
     }
 

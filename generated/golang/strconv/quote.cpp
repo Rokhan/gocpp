@@ -799,7 +799,7 @@ namespace golang::strconv
         {
             auto [rr, isPrint, isNotPrint] = std::tuple{uint16_t(r), isPrint16, isNotPrint16};
             auto [i, gocpp_id_1] = bsearch(isPrint, rr);
-            if(i >= len(isPrint) || rr < isPrint[i &^ 1] || isPrint[i | 1] < rr)
+            if(i >= len(isPrint) || rr < isPrint[(i & ~(1))] || isPrint[i | 1] < rr)
             {
                 return false;
             }
@@ -809,7 +809,7 @@ namespace golang::strconv
 
         auto [rr, isPrint, isNotPrint] = std::tuple{uint32_t(r), isPrint32, isNotPrint32};
         auto [i, gocpp_id_3] = bsearch(isPrint, rr);
-        if(i >= len(isPrint) || rr < isPrint[i &^ 1] || isPrint[i | 1] < rr)
+        if(i >= len(isPrint) || rr < isPrint[(i & ~(1))] || isPrint[i | 1] < rr)
         {
             return false;
         }

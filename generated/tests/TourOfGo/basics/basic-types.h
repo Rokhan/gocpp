@@ -31,6 +31,7 @@ namespace golang::main
     void testWraparound();
     void testFloat();
     void testIotaKinds();
+    void andNotOperator();
     void testConstLength();
     void main();
 

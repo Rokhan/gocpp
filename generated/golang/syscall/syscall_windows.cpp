@@ -383,7 +383,7 @@ namespace golang::syscall
             // starts appending at the beginning of the file rather than at the end.
             if(flag & O_TRUNC == 0)
             {
-                access &^= GENERIC_WRITE;
+                access &= ~(GENERIC_WRITE);
             }
             // Set all access rights granted by GENERIC_WRITE except for FILE_WRITE_DATA.
             access |= FILE_APPEND_DATA | FILE_WRITE_ATTRIBUTES | _FILE_WRITE_EA | STANDARD_RIGHTS_WRITE | SYNCHRONIZE;
@@ -403,7 +403,7 @@ namespace golang::syscall
         // This bit range can be used by the caller to specify the file flags
         // passed to CreateFile. It is an error to use if the bits can't be
         // mapped to the supported FILE_FLAG_* constants.
-        if(auto fileFlags = uint32_t(flag) & fileFlagsMask; fileFlags &^ validFileFlagsMask == 0)
+        if(auto fileFlags = uint32_t(flag) & fileFlagsMask; (fileFlags & ~(validFileFlagsMask)) == 0)
         {
             attrs |= fileFlags;
         }
@@ -921,7 +921,7 @@ namespace golang::syscall
         }
         if(mode & S_IWRITE != 0)
         {
-            attrs &^= FILE_ATTRIBUTE_READONLY;
+            attrs &= ~(FILE_ATTRIBUTE_READONLY);
         }
         else
         {

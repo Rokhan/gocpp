@@ -353,7 +353,7 @@ namespace golang::internal::bisect
                             return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
                         }
                         bits <<= 4;
-                        bits |= uint64_t(c &^ 0x20 - 'A' + 10);
+                        bits |= uint64_t((c & ~(0x20)) - 'A' + 10);
                         break;
                     case 22:
                         if(i + 1 < len(p) && (p[i + 1] == '0' || p[i + 1] == '1'))

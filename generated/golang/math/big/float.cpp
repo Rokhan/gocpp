@@ -604,7 +604,7 @@ namespace golang::math::big
         }
 
         // zero out trailing bits in least-significant word
-        z->mant[0] &^= lsb - 1;
+        z->mant[0] &= ~(lsb - 1);
 
         if(debugFloat)
         {

@@ -1049,7 +1049,7 @@ namespace golang::runtime
 
         //Go switch emulation
         {
-            auto condition = readgstatus(gp) &^ _Gscan;
+            auto condition = (readgstatus(gp) & ~(_Gscan));
             int conditionId = -1;
             if(condition == _Gdead) { conditionId = 0; }
             else if(condition == _Gdeadextra) { conditionId = 1; }

@@ -360,13 +360,13 @@ namespace golang::regexp::syntax
         if(re->Op == OpCharClass && len(re->Rune) == 2 && re->Rune[0] == re->Rune[1])
         {
             // Single rune.
-            if(rec::maybeConcat(gocpp::recv(p), re->Rune[0], p->flags &^ FoldCase))
+            if(rec::maybeConcat(gocpp::recv(p), re->Rune[0], (p->flags & ~(FoldCase))))
             {
                 return nullptr;
             }
             re->Op = OpLiteral;
             re->Rune = re->Rune.make_slice(0, 1);
-            re->Flags = p->flags &^ FoldCase;
+            re->Flags = (p->flags & ~(FoldCase));
         }
         else
         if(re->Op == OpCharClass && len(re->Rune) == 4 &&
@@ -1643,7 +1643,7 @@ namespace golang::regexp::syntax
                         sawFlag = true;
                         break;
                     case 1:
-                        flags &^= OneLine;
+                        flags &= ~(OneLine);
                         sawFlag = true;
                         break;
                     case 2:

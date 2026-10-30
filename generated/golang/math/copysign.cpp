@@ -24,7 +24,7 @@ namespace golang::math
     // and the sign of sign.
     double Copysign(double f, double sign)
     {
-        return Float64frombits(Float64bits(f) &^ signMask | Float64bits(sign) & signMask);
+        return Float64frombits((Float64bits(f) & ~(signMask)) | Float64bits(sign) & signMask);
     }
 
 }

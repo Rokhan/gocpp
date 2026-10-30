@@ -228,7 +228,7 @@ namespace golang::runtime
 
         // The first line may need to skip some fields to get to alignment.
         // Round down the starting address.
-        auto nAddr = h->addr &^ uintptr_t(bytesPerLine - 1);
+        auto nAddr = (h->addr & ~(uintptr_t(bytesPerLine - 1)));
         // Skip bytes to get to alignment.
         h->dataPos = uint8_t(h->addr - nAddr);
         h->dataSkip = uint8_t(h->addr - nAddr);

@@ -1826,7 +1826,7 @@ namespace golang::internal::poll
             auto attrs = d.FileAttributes;
             if(mode & syscall::S_IWRITE != 0)
             {
-                attrs &^= syscall::FILE_ATTRIBUTE_READONLY;
+                attrs &= ~(syscall::FILE_ATTRIBUTE_READONLY);
             }
             else
             {

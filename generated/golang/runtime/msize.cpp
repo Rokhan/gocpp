@@ -51,7 +51,7 @@ namespace golang::runtime
         {
             return size;
         }
-        return reqSize &^ (pageSize - 1);
+        return (reqSize & ~((pageSize - 1)));
     }
 
 }

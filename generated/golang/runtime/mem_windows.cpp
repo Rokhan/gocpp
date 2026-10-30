@@ -54,7 +54,7 @@ namespace golang::runtime
             for(; small >= 4096 && stdcall(_VirtualFree, uintptr_t(v), small, _MEM_DECOMMIT) == 0; )
             {
                 small /= 2;
-                small &^= 4096 - 1;
+                small &= ~(4096 - 1);
             }
             if(small < 4096)
             {
@@ -84,7 +84,7 @@ namespace golang::runtime
             for(; small >= 4096 && stdcall(_VirtualAlloc, uintptr_t(v), small, _MEM_COMMIT, _PAGE_READWRITE) == 0; )
             {
                 small /= 2;
-                small &^= 4096 - 1;
+                small &= ~(4096 - 1);
             }
             if(small < 4096)
             {

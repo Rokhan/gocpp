@@ -396,7 +396,7 @@ namespace golang::runtime
         if(t->state & timerZombie != 0)
         {
             // Take timer out of heap.
-            t->state &^= timerHeaped | timerZombie | timerModified;
+            t->state &= ~(timerHeaped | timerZombie | timerModified);
             rec::Add(gocpp::recv(ts->zombies), - 1);
             rec::deleteMin(gocpp::recv(ts));
             return true;
@@ -405,7 +405,7 @@ namespace golang::runtime
         if(t->state & timerModified != 0)
         {
             // Update ts.heap[0].when and move within heap.
-            t->state &^= timerModified;
+            t->state &= ~(timerModified);
             ts->heap[0].when = t->when;
             rec::siftDown(gocpp::recv(ts), 0);
             rec::updateMinWhenHeap(gocpp::recv(ts));
@@ -806,7 +806,7 @@ namespace golang::runtime
                 // In the heap but marked for removal (by a Stop).
                 // Unmark it, since it has been Reset and will be running again.
                 rec::Add(gocpp::recv(t->ts->zombies), - 1);
-                t->state &^= timerZombie;
+                t->state &= ~(timerZombie);
             }
             // The corresponding heap[i].when is updated later.
             // See comment in type timer above and in timers.adjust below.
@@ -1024,7 +1024,7 @@ namespace golang::runtime
                 rec::lock(gocpp::recv(t));
                 if(t->state & timerZombie != 0)
                 {
-                    t->state &^= timerHeaped | timerZombie | timerModified;
+                    t->state &= ~(timerHeaped | timerZombie | timerModified);
                     t->ts = nullptr;
                     rec::Add(gocpp::recv(ts->zombies), - 1);
                     ts->heap[n - 1] = timerWhen {};
@@ -1077,11 +1077,11 @@ namespace golang::runtime
                 t->ts = nullptr;
                 if(t->state & timerZombie != 0)
                 {
-                    t->state &^= timerHeaped | timerZombie | timerModified;
+                    t->state &= ~(timerHeaped | timerZombie | timerModified);
                 }
                 else
                 {
-                    t->state &^= timerModified;
+                    t->state &= ~(timerModified);
                     rec::addHeap(gocpp::recv(ts), t);
                 }
             }
@@ -1197,7 +1197,7 @@ namespace golang::runtime
                     case 1:
                     {
                         rec::Add(gocpp::recv(ts->zombies), - 1);
-                        t->state &^= timerHeaped | timerZombie | timerModified;
+                        t->state &= ~(timerHeaped | timerZombie | timerModified);
                         auto n = len(ts->heap);
                         ts->heap[i] = ts->heap[n - 1];
                         ts->heap[n - 1] = timerWhen {};
@@ -1210,7 +1210,7 @@ namespace golang::runtime
 
                     case 2:
                         tw->when = t->when;
-                        t->state &^= timerModified;
+                        t->state &= ~(timerModified);
                         changed = true;
                         break;
                 }
@@ -1821,7 +1821,7 @@ namespace golang::runtime
         // Unmark it in this case, if the timer is still pending.
         if(t->state & timerHeaped != 0 && t->state & timerZombie != 0 && t->when > 0)
         {
-            t->state &^= timerZombie;
+            t->state &= ~(timerZombie);
             rec::Add(gocpp::recv(t->ts->zombies), - 1);
         }
 

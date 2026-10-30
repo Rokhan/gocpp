@@ -80,7 +80,7 @@ namespace golang::internal::runtime::maps
     {
         // Clear all bits below slot i's byte.
         auto mask = (uint64_t(1) << (8 * uint64_t(i))) - 1;
-        return b &^ bitset(mask);
+        return (b & ~(bitset(mask)));
     }
 
     // lowestSet returns true if the bit is set for the lowest index in the bitset.
@@ -186,7 +186,7 @@ namespace golang::internal::runtime::maps
         // just a rare inefficiency. Note that they only occur if there is a real
         // match and never occur on ctrlEmpty, or ctrlDeleted. The subsequent key
         // comparisons ensure that there is no correctness issue.
-        return bitset(((v - bitsetLSB) &^ v) & bitsetMSB);
+        return bitset((((v - bitsetLSB) & ~(v))) & bitsetMSB);
     }
 
     // matchEmpty returns the set of slots in the group that are empty.
@@ -207,7 +207,7 @@ namespace golang::internal::runtime::maps
         // A slot is empty iff bit 7 is set and bit 1 is not. We could select any
         // of the other bits here (e.g. v << 1 would also work).
         auto v = uint64_t(g);
-        return bitset((v &^ (v << 6)) & bitsetMSB);
+        return bitset(((v & ~((v << 6)))) & bitsetMSB);
     }
 
     // matchEmptyOrDeleted returns the set of slots in the group that are empty or
@@ -295,7 +295,7 @@ namespace golang::internal::runtime::maps
     // alignUp rounds n up to a multiple of a. a must be a power of 2.
     uintptr_t alignUp(uintptr_t n, uintptr_t a)
     {
-        return (n + a - 1) &^ (a - 1);
+        return ((n + a - 1) & ~((a - 1)));
     }
 
     // alignUpPow2 rounds n up to the next power of 2.

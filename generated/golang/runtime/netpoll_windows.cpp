@@ -113,7 +113,7 @@ namespace golang::runtime
         bool keyMatch = {};
         if(goarch::PtrSize == 4)
         {
-            keyMatch = e->key &^ sourceMasks == (uintptr_t(gocpp::unsafe_pointer(op->pd)) << sourceBits);
+            keyMatch = (e->key & ~(sourceMasks)) == (uintptr_t(gocpp::unsafe_pointer(op->pd)) << sourceBits);
         }
         else
         {

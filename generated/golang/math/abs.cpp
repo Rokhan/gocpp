@@ -28,7 +28,7 @@ namespace golang::math
     //	Abs(NaN) = NaN
     double Abs(double x)
     {
-        return Float64frombits(Float64bits(x) &^ signMask);
+        return Float64frombits((Float64bits(x) & ~(signMask)));
     }
 
 }

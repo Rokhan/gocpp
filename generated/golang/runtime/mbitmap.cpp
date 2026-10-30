@@ -320,7 +320,7 @@ namespace golang::runtime
             if(tp.addr + goarch::PtrSize * ptrBits > limit)
             {
                 auto bits = (tp.addr + goarch::PtrSize * ptrBits - limit) / goarch::PtrSize;
-                tp.mask &^= ((1 << (bits)) - 1) << (ptrBits - bits);
+                tp.mask &= ~(((1 << (bits)) - 1) << (ptrBits - bits));
             }
         }
     }
@@ -344,12 +344,12 @@ namespace golang::runtime
         {
             // Handle small objects.
             // Clear any bits before the target address.
-            tp.mask &^= (1 << ((target - tp.addr) / goarch::PtrSize)) - 1;
+            tp.mask &= ~((1 << ((target - tp.addr) / goarch::PtrSize)) - 1);
             // Clear any bits past the limit.
             if(tp.addr + goarch::PtrSize * ptrBits > limit)
             {
                 auto bits = (tp.addr + goarch::PtrSize * ptrBits - limit) / goarch::PtrSize;
-                tp.mask &^= ((1 << (bits)) - 1) << (ptrBits - bits);
+                tp.mask &= ~(((1 << (bits)) - 1) << (ptrBits - bits));
             }
             return tp;
         }
@@ -388,12 +388,12 @@ namespace golang::runtime
             // Grab the mask, but then clear any bits before the target address and any
             // bits over the limit.
             tp.mask = readUintptr(addb(getGCMask(tp.typ), (tp.addr - tp.elem) / goarch::PtrSize / 8));
-            tp.mask &^= (1 << ((target - tp.addr) / goarch::PtrSize)) - 1;
+            tp.mask &= ~((1 << ((target - tp.addr) / goarch::PtrSize)) - 1);
         }
         if(tp.addr + goarch::PtrSize * ptrBits > limit)
         {
             auto bits = (tp.addr + goarch::PtrSize * ptrBits - limit) / goarch::PtrSize;
-            tp.mask &^= ((1 << (bits)) - 1) << (ptrBits - bits);
+            tp.mask &= ~(((1 << (bits)) - 1) << (ptrBits - bits));
         }
         return tp;
     }
@@ -788,14 +788,14 @@ namespace golang::runtime
             auto dst0 = (uintptr_t*)(runtime::add(dst, (i + 0) * goarch::PtrSize));
             auto dst1 = (uintptr_t*)(runtime::add(dst, (i + 1) * goarch::PtrSize));
             *dst0 = (*dst0) & (~ uintptr_t(0) >> bits0) | (src << j);
-            *dst1 = (*dst1) &^ ((1 << bits1) - 1) | (src >> bits0);
+            *dst1 = ((*dst1) & ~(((1 << bits1) - 1))) | (src >> bits0);
         }
         else
         {
             // One write.
             auto dst_tmp = (uintptr_t*)(runtime::add(dst, i * goarch::PtrSize));
             auto& dst = dst_tmp;
-            *dst = (*dst) &^ (((1 << bits) - 1) << j) | (src << j);
+            *dst = ((*dst) & ~((((1 << bits) - 1) << j))) | (src << j);
         }
 
         auto doubleCheck = false;
@@ -1323,7 +1323,7 @@ namespace golang::runtime
         for(; bitIndex == 64; )
         {
             // Move index to start of next cached bits.
-            sfreeindex = (sfreeindex + 64) &^ (64 - 1);
+            sfreeindex = ((sfreeindex + 64) & ~((64 - 1)));
             if(sfreeindex >= snelems)
             {
                 s->freeindex = snelems;
@@ -2084,7 +2084,7 @@ namespace golang::runtime
             }
             else
             {
-                auto nbit = int64_t(x &^ 0x80);
+                auto nbit = int64_t((x & ~(0x80)));
                 if(nbit == 0)
                 {
                     for(uint64_t nb = (uint64_t)(0); ; nb += 7)

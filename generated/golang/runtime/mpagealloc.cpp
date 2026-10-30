@@ -776,7 +776,7 @@ namespace golang::runtime
             // searchAddr on the previous level or we're on the root level, in which
             // case the searchAddr should be the same as i after levelShift.
             int64_t j0 = 0;
-            if(auto searchIdx = offAddrToLevelIndex(l, p->searchAddr); searchIdx &^ (entriesPerBlock - 1) == i)
+            if(auto searchIdx = offAddrToLevelIndex(l, p->searchAddr); (searchIdx & ~((entriesPerBlock - 1))) == i)
             {
                 j0 = searchIdx & (entriesPerBlock - 1);
             }

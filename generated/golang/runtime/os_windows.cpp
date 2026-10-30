@@ -1413,7 +1413,7 @@ namespace golang::runtime
         // Align Context to 16 bytes.
         windows::Context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<windows::Context>() + 15> cbuf = {};
-        c = (windows::Context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
+        c = (windows::Context*)(gocpp::unsafe_pointer(((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) & ~(15))));
 
         c->ContextFlags = windows::CONTEXT_CONTROL;
         stdcall(_GetThreadContext, thread, uintptr_t(gocpp::unsafe_pointer(c)));
@@ -1571,7 +1571,7 @@ namespace golang::runtime
         // Prepare thread context buffer. This must be aligned to 16 bytes.
         windows::Context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<windows::Context>() + 15> cbuf = {};
-        c = (windows::Context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
+        c = (windows::Context*)(gocpp::unsafe_pointer(((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) & ~(15))));
         c->ContextFlags = windows::CONTEXT_CONTROL;
 
         // Serialize thread suspension. SuspendThread is asynchronous,

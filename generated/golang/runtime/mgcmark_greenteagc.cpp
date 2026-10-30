@@ -136,7 +136,7 @@ namespace golang::runtime
         // would be implemented exactly as it is here, and since Or8 is
         // exclusively used in the runtime and a hot function, we want to keep
         // using its no-result version elsewhere for performance.
-        auto o32 = (uint32_t*)(gocpp::unsafe_pointer(uintptr_t(gocpp::unsafe_pointer(o)) &^ 0b11));
+        auto o32 = (uint32_t*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(o)) & ~(0b11))));
         auto off = (uintptr_t(gocpp::unsafe_pointer(o)) & 0b11) * 8;
         if(goarch::BigEndian)
         {
@@ -257,7 +257,7 @@ namespace golang::runtime
             if(i / goarch::PtrSize == uintptr_t(len(imb->marks) + 1) / goarch::PtrSize - 1)
             {
                 // mask out class
-                marks &^= 0xff << ((goarch::PtrSize - 1) * 8);
+                marks &= ~(0xff << ((goarch::PtrSize - 1) * 8));
             }
             *(uintptr_t*)(gocpp::unsafe_pointer(rec::bytep(gocpp::recv(dst), i))) |= bswapIfBigEndian(marks);
         }
@@ -1036,7 +1036,7 @@ namespace golang::runtime
 
     uintptr_t rec::spanBase(objptr p)
     {
-        return uintptr_t(p) &^ ((1 << gc::PageShift) - 1);
+        return (uintptr_t(p) & ~(((1 << gc::PageShift) - 1)));
     }
 
     uint16_t rec::objIndex(objptr p)
@@ -1173,11 +1173,11 @@ namespace golang::runtime
             if(i / goarch::PtrSize == uintptr_t(len(imb->marks) + 1) / goarch::PtrSize - 1)
             {
                 // mask out owned
-                scans &^= 0xff << ((goarch::PtrSize - 1) * 8);
+                scans &= ~(0xff << ((goarch::PtrSize - 1) * 8));
                 // mask out class
-                marks &^= 0xff << ((goarch::PtrSize - 1) * 8);
+                marks &= ~(0xff << ((goarch::PtrSize - 1) * 8));
             }
-            auto toGrey = marks &^ scans;
+            auto toGrey = (marks & ~(scans));
             toScan[i / goarch::PtrSize] = toGrey;
 
             // If there's anything left to grey, do it.
@@ -1209,7 +1209,7 @@ namespace golang::runtime
         for(int i = 0; i < n; ++i)
         {
             auto k = sys::TrailingZeros64(uint64_t(ptrBits));
-            ptrBits &^= 1 << k;
+            ptrBits &= ~(1 << k);
             auto addr = b + uintptr_t(k) * goarch::PtrSize;
 
             // Prefetch addr since we're about to use it. This point for prefetching
@@ -1254,7 +1254,7 @@ namespace golang::runtime
             for(int i = 0; i < n; ++i)
             {
                 auto j = sys::TrailingZeros64(uint64_t(bits));
-                bits &^= 1 << j;
+                bits &= ~(1 << j);
 
                 auto b = base + uintptr_t(i * (goarch::PtrSize * 8) + j) * objSize;
                 auto ptrBits = extractHeapBitsSmall(hbits, base, b, objSize);
@@ -1264,7 +1264,7 @@ namespace golang::runtime
                 for(int i = 0; i < n; ++i)
                 {
                     auto k = sys::TrailingZeros64(uint64_t(ptrBits));
-                    ptrBits &^= 1 << k;
+                    ptrBits &= ~(1 << k);
                     auto addr = b + uintptr_t(k) * goarch::PtrSize;
 
                     // Prefetch addr since we're about to use it. This point for prefetching

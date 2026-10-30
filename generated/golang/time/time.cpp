@@ -569,7 +569,7 @@ namespace golang::time
     int64_t rec::yday(absYday ayday, absJanFeb janFeb, absLeap leap)
     {
         // See “Computations on Times” comment above.
-        return int64_t(ayday) + (1 + 31 + 28) + int64_t(leap) &^ int64_t(janFeb) - 365 * int64_t(janFeb);
+        return int64_t(ayday) + (1 + 31 + 28) + (int64_t(leap) & ~(int64_t(janFeb))) - 365 * int64_t(janFeb);
     }
 
     // date converts days into standard year, month, day.
@@ -1093,7 +1093,7 @@ namespace golang::time
             nsec += 1e9;
         }
         // update nsec
-        t.wall = t.wall &^ nsecMask | uint64_t(nsec);
+        t.wall = (t.wall & ~(nsecMask)) | uint64_t(nsec);
         rec::addSec(gocpp::recv(t), dsec);
         if(t.wall & hasMonotonic != 0)
         {

@@ -1110,7 +1110,7 @@ namespace golang::runtime
             // but have no marked objects on them.
             for(auto [i, gocpp_ignored] : inUse)
             {
-                auto inUseUnmarked = atomic::Load8(& inUse[i]) &^ marked[i];
+                auto inUseUnmarked = (atomic::Load8(& inUse[i]) & ~(marked[i]));
                 if(inUseUnmarked == 0)
                 {
                     continue;
@@ -1136,7 +1136,7 @@ namespace golang::runtime
                                 // spans were freed when we dropped the
                                 // lock and we don't want to get stale
                                 // pointers from the spans array.
-                                inUseUnmarked = atomic::Load8(& inUse[i]) &^ marked[i];
+                                inUseUnmarked = (atomic::Load8(& inUse[i]) & ~(marked[i]));
                             }
                         }
                     }

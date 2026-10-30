@@ -198,7 +198,7 @@ namespace golang::runtime
             {
                 if(sig.recv[i / 32] & (1 << (i & 31)) != 0)
                 {
-                    sig.recv[i / 32] &^= 1 << (i & 31);
+                    sig.recv[i / 32] &= ~(1 << (i & 31));
                     return i;
                 }
             }
@@ -315,7 +315,7 @@ namespace golang::runtime
         atomic::Store(& sig.wanted[s / 32], w);
 
         auto i = sig.ignored[s / 32];
-        i &^= 1 << (s & 31);
+        i &= ~(1 << (s & 31));
         atomic::Store(& sig.ignored[s / 32], i);
 
         sigenable(s);
@@ -333,7 +333,7 @@ namespace golang::runtime
         sigdisable(s);
 
         auto w = sig.wanted[s / 32];
-        w &^= 1 << (s & 31);
+        w &= ~(1 << (s & 31));
         atomic::Store(& sig.wanted[s / 32], w);
     }
 
@@ -349,7 +349,7 @@ namespace golang::runtime
         sigignore(s);
 
         auto w = sig.wanted[s / 32];
-        w &^= 1 << (s & 31);
+        w &= ~(1 << (s & 31));
         atomic::Store(& sig.wanted[s / 32], w);
 
         auto i = sig.ignored[s / 32];

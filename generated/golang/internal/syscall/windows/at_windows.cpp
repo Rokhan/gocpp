@@ -51,7 +51,7 @@ namespace golang::internal::syscall::windows
         uint32_t options = {};
         // Map Win32 file flags to NT create options.
         auto fileFlags = uint32_t(flag) & FileFlagsMask;
-        if(fileFlags &^ ValidFileFlagsMask != 0)
+        if((fileFlags & ~(ValidFileFlagsMask)) != 0)
         {
             return {syscall::InvalidHandle, oserror::ErrInvalid};
         }
@@ -115,7 +115,7 @@ namespace golang::internal::syscall::windows
         if(fileFlags & O_FILE_FLAG_NO_BUFFERING != 0)
         {
             // Disable buffering implies no implicit append access.
-            access &^= FILE_APPEND_DATA;
+            access &= ~(FILE_APPEND_DATA);
         }
         if(flag & syscall::O_APPEND != 0)
         {
@@ -124,7 +124,7 @@ namespace golang::internal::syscall::windows
             // in which case we need it to truncate the file.
             if(flag & syscall::O_TRUNC == 0)
             {
-                access &^= FILE_WRITE_DATA;
+                access &= ~(FILE_WRITE_DATA);
             }
         }
         if(flag & O_DIRECTORY != 0)
@@ -390,7 +390,7 @@ namespace golang::internal::syscall::windows
                 return err;
             }
             err = SetFileInformationByHandle(wh, FileBasicInfo, gocpp::unsafe_pointer(gocpp::InitPtr<FILE_BASIC_INFO>([=](auto& x) {
-                x.FileAttributes = data.FileAttributes &^ FILE_ATTRIBUTE_READONLY;
+                x.FileAttributes = (data.FileAttributes & ~(FILE_ATTRIBUTE_READONLY));
             })), uint32_t(gocpp::Sizeof<FILE_BASIC_INFO>()));
             syscall::CloseHandle(wh);
             if(err != nullptr)

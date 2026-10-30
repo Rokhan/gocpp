@@ -87,7 +87,7 @@ namespace golang::runtime
     // clear clears bit i of pageBits.
     void rec::clear(gocpp::array_ptr<pageBits> b, uint64_t i)
     {
-        b[i / 64] &^= 1 << (i % 64);
+        b[i / 64] &= ~(1 << (i % 64));
     }
 
     // clearRange clears bits in the range [i, i+n).
@@ -104,15 +104,15 @@ namespace golang::runtime
         auto j = i + n - 1;
         if(i / 64 == j / 64)
         {
-            b[i / 64] &^= ((uint64_t(1) << n) - 1) << (i % 64);
+            b[i / 64] &= ~(((uint64_t(1) << n) - 1) << (i % 64));
             return;
         }
         _ = b[j / 64];
         // Clear leading bits.
-        b[i / 64] &^= ~ uint64_t(0) << (i % 64);
+        b[i / 64] &= ~(~ uint64_t(0) << (i % 64));
         clear(b.make_slice(i / 64 + 1, j / 64));
         // Clear trailing bits.
-        b[j / 64] &^= (uint64_t(1) << (j % 64 + 1)) - 1;
+        b[j / 64] &= ~((uint64_t(1) << (j % 64 + 1)) - 1);
     }
 
     // clearAll frees all the bits of b.
@@ -125,7 +125,7 @@ namespace golang::runtime
     // are set in v.
     void rec::clearBlock64(gocpp::array_ptr<pageBits> b, uint64_t i, uint64_t v)
     {
-        b[i / 64] &^= v;
+        b[i / 64] &= ~(v);
     }
 
     // popcntRange counts the number of set bits in the

@@ -131,6 +131,14 @@ namespace golang::main
         mocklib::Println(temps.get(Hot), temps.get(Warm) == ""_s, len(temps));
     }
 
+    void andNotOperator()
+    {
+        auto [a, b] = std::tuple{3, 5};
+        mocklib::Println("a ="_s, a, ", b= "_s, b, ", a &^ b = "_s, (a & ~(b)));
+        a &= ~(b);
+        mocklib::Println("a &^= b ==> a = "_s, a);
+    }
+
     // Needs the constant to be usable in a constant expression (constexpr).
     void testConstLength()
     {

@@ -175,13 +175,13 @@ namespace golang::runtime
                 auto dst0 = (uintptr_t*)(add(dst, (i + 0) * goarch::PtrSize));
                 auto dst1 = (uintptr_t*)(add(dst, (i + 1) * goarch::PtrSize));
                 *dst0 = (*dst0) & (~ uintptr_t(0) >> bits0) | (src << j);
-                *dst1 = (*dst1) &^ ((1 << bits1) - 1) | (src >> bits0);
+                *dst1 = ((*dst1) & ~(((1 << bits1) - 1))) | (src >> bits0);
             }
             else
             {
                 auto dst_tmp = (uintptr_t*)(add(dst, i * goarch::PtrSize));
                 auto& dst = dst_tmp;
-                *dst = (*dst) &^ (((1 << (gocpp::min(bits, ptrBits))) - 1) << j) | (src << j);
+                *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
             auto doubleCheck = false;
@@ -351,13 +351,13 @@ namespace golang::runtime
                 auto dst0 = (uintptr_t*)(add(dst, (i + 0) * goarch::PtrSize));
                 auto dst1 = (uintptr_t*)(add(dst, (i + 1) * goarch::PtrSize));
                 *dst0 = (*dst0) & (~ uintptr_t(0) >> bits0) | (src << j);
-                *dst1 = (*dst1) &^ ((1 << bits1) - 1) | (src >> bits0);
+                *dst1 = ((*dst1) & ~(((1 << bits1) - 1))) | (src >> bits0);
             }
             else
             {
                 auto dst_tmp = (uintptr_t*)(add(dst, i * goarch::PtrSize));
                 auto& dst = dst_tmp;
-                *dst = (*dst) &^ (((1 << (gocpp::min(bits, ptrBits))) - 1) << j) | (src << j);
+                *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
             auto doubleCheck = false;
@@ -527,13 +527,13 @@ namespace golang::runtime
                 auto dst0 = (uintptr_t*)(add(dst, (i + 0) * goarch::PtrSize));
                 auto dst1 = (uintptr_t*)(add(dst, (i + 1) * goarch::PtrSize));
                 *dst0 = (*dst0) & (~ uintptr_t(0) >> bits0) | (src << j);
-                *dst1 = (*dst1) &^ ((1 << bits1) - 1) | (src >> bits0);
+                *dst1 = ((*dst1) & ~(((1 << bits1) - 1))) | (src >> bits0);
             }
             else
             {
                 auto dst_tmp = (uintptr_t*)(add(dst, i * goarch::PtrSize));
                 auto& dst = dst_tmp;
-                *dst = (*dst) &^ (((1 << (gocpp::min(bits, ptrBits))) - 1) << j) | (src << j);
+                *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
             auto doubleCheck = false;
@@ -703,13 +703,13 @@ namespace golang::runtime
                 auto dst0 = (uintptr_t*)(add(dst, (i + 0) * goarch::PtrSize));
                 auto dst1 = (uintptr_t*)(add(dst, (i + 1) * goarch::PtrSize));
                 *dst0 = (*dst0) & (~ uintptr_t(0) >> bits0) | (src << j);
-                *dst1 = (*dst1) &^ ((1 << bits1) - 1) | (src >> bits0);
+                *dst1 = ((*dst1) & ~(((1 << bits1) - 1))) | (src >> bits0);
             }
             else
             {
                 auto dst_tmp = (uintptr_t*)(add(dst, i * goarch::PtrSize));
                 auto& dst = dst_tmp;
-                *dst = (*dst) &^ (((1 << (gocpp::min(bits, ptrBits))) - 1) << j) | (src << j);
+                *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
             auto doubleCheck = false;
@@ -879,13 +879,13 @@ namespace golang::runtime
                 auto dst0 = (uintptr_t*)(add(dst, (i + 0) * goarch::PtrSize));
                 auto dst1 = (uintptr_t*)(add(dst, (i + 1) * goarch::PtrSize));
                 *dst0 = (*dst0) & (~ uintptr_t(0) >> bits0) | (src << j);
-                *dst1 = (*dst1) &^ ((1 << bits1) - 1) | (src >> bits0);
+                *dst1 = ((*dst1) & ~(((1 << bits1) - 1))) | (src >> bits0);
             }
             else
             {
                 auto dst_tmp = (uintptr_t*)(add(dst, i * goarch::PtrSize));
                 auto& dst = dst_tmp;
-                *dst = (*dst) &^ (((1 << (gocpp::min(bits, ptrBits))) - 1) << j) | (src << j);
+                *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
             auto doubleCheck = false;
@@ -1055,13 +1055,13 @@ namespace golang::runtime
                 auto dst0 = (uintptr_t*)(add(dst, (i + 0) * goarch::PtrSize));
                 auto dst1 = (uintptr_t*)(add(dst, (i + 1) * goarch::PtrSize));
                 *dst0 = (*dst0) & (~ uintptr_t(0) >> bits0) | (src << j);
-                *dst1 = (*dst1) &^ ((1 << bits1) - 1) | (src >> bits0);
+                *dst1 = ((*dst1) & ~(((1 << bits1) - 1))) | (src >> bits0);
             }
             else
             {
                 auto dst_tmp = (uintptr_t*)(add(dst, i * goarch::PtrSize));
                 auto& dst = dst_tmp;
-                *dst = (*dst) &^ (((1 << (gocpp::min(bits, ptrBits))) - 1) << j) | (src << j);
+                *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
             auto doubleCheck = false;
@@ -1231,13 +1231,13 @@ namespace golang::runtime
                 auto dst0 = (uintptr_t*)(add(dst, (i + 0) * goarch::PtrSize));
                 auto dst1 = (uintptr_t*)(add(dst, (i + 1) * goarch::PtrSize));
                 *dst0 = (*dst0) & (~ uintptr_t(0) >> bits0) | (src << j);
-                *dst1 = (*dst1) &^ ((1 << bits1) - 1) | (src >> bits0);
+                *dst1 = ((*dst1) & ~(((1 << bits1) - 1))) | (src >> bits0);
             }
             else
             {
                 auto dst_tmp = (uintptr_t*)(add(dst, i * goarch::PtrSize));
                 auto& dst = dst_tmp;
-                *dst = (*dst) &^ (((1 << (gocpp::min(bits, ptrBits))) - 1) << j) | (src << j);
+                *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
             auto doubleCheck = false;
@@ -2375,13 +2375,13 @@ namespace golang::runtime
                 auto dst0 = (uintptr_t*)(add(dst, (i + 0) * goarch::PtrSize));
                 auto dst1 = (uintptr_t*)(add(dst, (i + 1) * goarch::PtrSize));
                 *dst0 = (*dst0) & (~ uintptr_t(0) >> bits0) | (src << j);
-                *dst1 = (*dst1) &^ ((1 << bits1) - 1) | (src >> bits0);
+                *dst1 = ((*dst1) & ~(((1 << bits1) - 1))) | (src >> bits0);
             }
             else
             {
                 auto dst_tmp = (uintptr_t*)(add(dst, i * goarch::PtrSize));
                 auto& dst = dst_tmp;
-                *dst = (*dst) &^ (((1 << (gocpp::min(bits, ptrBits))) - 1) << j) | (src << j);
+                *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
             auto doubleCheck = false;

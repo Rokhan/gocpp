@@ -536,7 +536,7 @@ namespace golang::runtime
             // if it was sleeping and we don't want double wakeups in case
             // we, for example, attempt to write into a full buffer multiple
             // times before the reader wakes up.
-            go_new &^= profReaderSleeping;
+            go_new &= ~(profReaderSleeping);
             if(! rec::cas(gocpp::recv(b->w), old, go_new))
             {
                 continue;
@@ -618,7 +618,7 @@ namespace golang::runtime
                 // Attempt to clear notification and then check again.
                 // If we fail to clear the notification it means b.w changed,
                 // so we still need to check again.
-                rec::cas(gocpp::recv(b->w), bw, bw &^ profWriteExtra);
+                rec::cas(gocpp::recv(b->w), bw, (bw & ~(profWriteExtra)));
                 goto Read;
             }
 

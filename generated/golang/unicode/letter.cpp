@@ -381,7 +381,7 @@ namespace golang::unicode
             // bit in the sequence offset.
             // The constants UpperCase and TitleCase are even while LowerCase
             // is odd so we take the low bit from _case.
-            return gocpp::rune(cr->Lo) + ((r - gocpp::rune(cr->Lo)) &^ 1 | gocpp::rune(_case & 1));
+            return gocpp::rune(cr->Lo) + (((r - gocpp::rune(cr->Lo)) & ~(1)) | gocpp::rune(_case & 1));
         }
         return r + delta;
     }

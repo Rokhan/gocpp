@@ -219,7 +219,7 @@ namespace golang::runtime
                     {
                         // argMap.n includes the results, but
                         // those aren't valid, so drop them.
-                        auto n = int32_t((mv->argLen &^ (goarch::PtrSize - 1)) / goarch::PtrSize);
+                        auto n = int32_t(((mv->argLen & ~((goarch::PtrSize - 1)))) / goarch::PtrSize);
                         if(n < argMap.n)
                         {
                             argMap.n = n;

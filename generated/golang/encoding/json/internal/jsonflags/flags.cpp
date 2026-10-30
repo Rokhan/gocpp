@@ -99,7 +99,7 @@ namespace golang::encoding::json::internal::jsonflags
         // e.g., fs := Flags{Presence: 0b_0101_0010, Values: 0b_0001_0010}
         // e.g., f := 0b_1001_0001
         // e.g., 0b_1001_0001 & 0b_1111_1110 -> 0b_1001_0000
-        auto id = uint64_t(f) &^ uint64_t(1);
+        auto id = (uint64_t(f) & ~(uint64_t(1)));
         // e.g., 0b_0101_0010 | 0b_1001_0000 -> 0b_1101_0010
         fs->Presence |= id;
         // e.g., 0b_0001_0010 & 0b_0110_1111 -> 0b_0000_0010

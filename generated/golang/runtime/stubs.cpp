@@ -506,7 +506,7 @@ namespace golang::runtime
     //go:nosplit
     uintptr_t alignUp(uintptr_t n, uintptr_t a)
     {
-        return (n + a - 1) &^ (a - 1);
+        return ((n + a - 1) & ~((a - 1)));
     }
 
     // alignDown rounds n down to a multiple of a. a must be a power of 2.
@@ -514,7 +514,7 @@ namespace golang::runtime
     //go:nosplit
     uintptr_t alignDown(uintptr_t n, uintptr_t a)
     {
-        return n &^ (a - 1);
+        return (n & ~((a - 1)));
     }
 
     // divRoundUp returns ceil(n / a).

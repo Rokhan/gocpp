@@ -108,7 +108,7 @@ namespace golang::runtime
                     // check if the goroutine is in a syscall. This used to be just a small problematic
                     // window, but this is now the default since _Psyscall no longer exists. See #64318
                     // for the history on why it was needed while _Psyscall still existed.
-                    if(rec::ptr(gocpp::recv(w.traceLocker.mp->p)) == pp && w.traceLocker.mp->curg != nullptr && readgstatus(w.traceLocker.mp->curg) &^ _Gscan == _Gsyscall)
+                    if(rec::ptr(gocpp::recv(w.traceLocker.mp->p)) == pp && w.traceLocker.mp->curg != nullptr && (readgstatus(w.traceLocker.mp->curg) & ~(_Gscan)) == _Gsyscall)
                     {
                         status = tracev2::ProcSyscall;
                     }
@@ -165,7 +165,7 @@ namespace golang::runtime
         tracev2::GoStatus tgs = {};
         //Go switch emulation
         {
-            auto condition = status &^ _Gscan;
+            auto condition = (status & ~(_Gscan));
             int conditionId = -1;
             if(condition == _Grunnable) { conditionId = 0; }
             else if(condition == _Grunning) { conditionId = 1; }

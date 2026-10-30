@@ -2653,7 +2653,7 @@ namespace golang::go::constant
                                 c = a ^ b;
                                 break;
                             case 9:
-                                c = a &^ b;
+                                c = (a & ~(b));
                                 break;
                             default:
                                 goto Error;

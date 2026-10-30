@@ -291,14 +291,14 @@ namespace golang::runtime
             // but it carefully arranges that during the transition BOTH stacks
             // have cgocallback frame valid for unwinding through.
             // So we don't need to exclude it with the other SP-writing functions.
-            flag &^= abi::FuncFlagSPWrite;
+            flag &= ~(abi::FuncFlagSPWrite);
         }
         if(isSyscall)
         {
             // Some Syscall functions write to SP, but they do so only after
             // saving the entry PC/SP using entersyscall.
             // Since we are using the entry PC/SP, the later SP write doesn't matter.
-            flag &^= abi::FuncFlagSPWrite;
+            flag &= ~(abi::FuncFlagSPWrite);
         }
 
         // Found an actual function.
@@ -348,14 +348,14 @@ namespace golang::runtime
                                 // systemstack doesn't have an SP delta (the CALL
                                 // instruction opens the frame), therefore no way
                                 // to check.
-                                flag &^= abi::FuncFlagSPWrite;
+                                flag &= ~(abi::FuncFlagSPWrite);
                                 break;
                             }
                             gp = gp->m->curg;
                             rec::set(gocpp::recv(u->g), gp);
                             frame->sp = gp->sched.sp;
                             u->cgoCtxt = len(gp->cgoCtxt) - 1;
-                            flag &^= abi::FuncFlagSPWrite;
+                            flag &= ~(abi::FuncFlagSPWrite);
                             break;
                     }
                 }
@@ -562,7 +562,7 @@ namespace golang::runtime
         }
         else
         {
-            u->flags &^= unwindTrap;
+            u->flags &= ~(unwindTrap);
         }
 
         // Unwind to next frame.
@@ -1064,12 +1064,12 @@ namespace golang::runtime
             printCgoTraceback(gocpp::make_array_ptr(cgoCallers));
         }
 
-        if(readgstatus(gp) &^ _Gscan == _Gsyscall)
+        if((readgstatus(gp) & ~(_Gscan)) == _Gsyscall)
         {
             // Override registers if blocked in system call.
             pc = gp->syscallpc;
             sp = gp->syscallsp;
-            flags &^= unwindTrap;
+            flags &= ~(unwindTrap);
         }
         if(gp->m != nullptr && gp->m->vdsoSP != 0)
         {
@@ -1077,7 +1077,7 @@ namespace golang::runtime
             // _Gsyscall check to cover VDSO calls after entersyscall.
             pc = gp->m->vdsoPC;
             sp = gp->m->vdsoSP;
-            flags &^= unwindTrap;
+            flags &= ~(unwindTrap);
         }
 
         // Print traceback.
@@ -1502,7 +1502,7 @@ namespace golang::runtime
 
         auto isScan = gpstatus & _Gscan != 0;
         // drop the scan bit
-        gpstatus &^= _Gscan;
+        gpstatus &= ~(_Gscan);
 
         // Basic string status
         gocpp::string status = {};
@@ -1678,7 +1678,7 @@ namespace golang::runtime
             // is stopped or frozen. This is also why it's safe to check syscallsp here,
             // and safe to take the goroutine's stack trace. The syscall path mutates
             // syscallsp only just before exiting the syscall.
-            if(gp->m != getg()->m && readgstatus(gp) &^ _Gscan == _Grunning && gp->syscallsp == 0)
+            if(gp->m != getg()->m && (readgstatus(gp) & ~(_Gscan)) == _Grunning && gp->syscallsp == 0)
             {
                 print("\tgoroutine running on other thread; stack unavailable\n"_s);
                 printcreatedby(gp);

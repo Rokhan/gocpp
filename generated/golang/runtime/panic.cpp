@@ -1267,7 +1267,7 @@ namespace golang::runtime
                 auto i = 7 - uintptr_t(sys::LeadingZeros8(bits));
 
                 // Clear bit and store it back.
-                bits &^= 1 << i;
+                bits &= ~(1 << i);
                 *p->deferBitsPtr = bits;
 
                 return {*(std::function<void ()>*)(runtime::add(p->slotsPtr, i * goarch::PtrSize)), true};
@@ -2072,7 +2072,7 @@ namespace golang::runtime
             return false;
         }
         auto status = readgstatus(gp);
-        if(status &^ _Gscan != _Grunning || gp->syscallsp != 0)
+        if((status & ~(_Gscan)) != _Grunning || gp->syscallsp != 0)
         {
             releasem(mp);
             return false;

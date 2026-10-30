@@ -1327,7 +1327,7 @@ namespace golang::runtime
         // Mark runnable.
         // disable preemption because it can be holding p in a local var
         auto mp = acquirem();
-        if(status &^ _Gscan != _Gwaiting)
+        if((status & ~(_Gscan)) != _Gwaiting)
         {
             dumpgstatus(gp);
             go_throw("bad g->status in ready"_s);
@@ -1446,7 +1446,7 @@ namespace golang::runtime
                 case 4:
                 case 5:
                 case 6:
-                    if(newval == oldval &^ _Gscan)
+                    if(newval == (oldval & ~(_Gscan)))
                     {
                         success = rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), oldval, newval);
                     }
@@ -3808,7 +3808,7 @@ namespace golang::runtime
         // Wait until another thread schedules lockedg again.
         mPark();
         auto status = readgstatus(rec::ptr(gocpp::recv(gp->m->lockedg)));
-        if(status &^ _Gscan != _Grunnable)
+        if((status & ~(_Gscan)) != _Grunnable)
         {
             print("runtime:stoplockedm: lockedg (atomicstatus="_s, status, ") is not Grunnable or Gscanrunnable\n"_s);
             dumpgstatus(rec::ptr(gocpp::recv(gp->m->lockedg)));
@@ -5008,7 +5008,7 @@ namespace golang::runtime
         auto pp = rec::ptr(gocpp::recv(gp->m->p));
         auto trace = traceAcquire();
         auto status = readgstatus(gp);
-        if(status &^ _Gscan != _Grunning)
+        if((status & ~(_Gscan)) != _Grunning)
         {
             dumpgstatus(gp);
             go_throw("bad g status"_s);
@@ -5083,7 +5083,7 @@ namespace golang::runtime
     void preemptPark(g* gp)
     {
         auto status = readgstatus(gp);
-        if(status &^ _Gscan != _Grunning)
+        if((status & ~(_Gscan)) != _Grunning)
         {
             dumpgstatus(gp);
             go_throw("bad g status"_s);
@@ -7504,7 +7504,7 @@ namespace golang::runtime
             auto s = readgstatus(gp);
             //Go switch emulation
             {
-                auto condition = s &^ _Gscan;
+                auto condition = (s & ~(_Gscan));
                 int conditionId = -1;
                 if(condition == _Gwaiting) { conditionId = 0; }
                 else if(condition == _Gpreempted) { conditionId = 1; }
@@ -7981,7 +7981,7 @@ namespace golang::runtime
             // Nothing to do.
             return {syscallingThread {}, false};
         }
-        auto status = readgstatus(gp) &^ _Gscan;
+        auto status = (readgstatus(gp) & ~(_Gscan));
 
         // A goroutine is considered in a syscall, and may have a corresponding
         // P, if it's in _Gsyscall *or* _Gdeadextra. In the latter case, it's an
@@ -8097,7 +8097,7 @@ namespace golang::runtime
         {
             return false;
         }
-        if(readgstatus(gp) &^ _Gscan == _Gsyscall)
+        if((readgstatus(gp) & ~(_Gscan)) == _Gsyscall)
         {
             // Don't bother trying to preempt a goroutine in a syscall.
             return false;
@@ -9050,7 +9050,7 @@ namespace golang::runtime
                         {
                             if(auto mp = rec::ptr(gocpp::recv(pp->m)); mp != nullptr)
                             {
-                                if(auto gp = mp->curg; gp == nullptr || readgstatus(gp) &^ _Gscan != _Gsyscall)
+                                if(auto gp = mp->curg; gp == nullptr || (readgstatus(gp) & ~(_Gscan)) != _Gsyscall)
                                 {
                                     // Sleep to ensure that pp isn't about to run the g
                                     // we are about to steal.

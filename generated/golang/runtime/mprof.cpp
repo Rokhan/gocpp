@@ -1846,7 +1846,7 @@ namespace golang::runtime
         int64_t offset = {};
         forEachGRace([=](g* gp1) mutable -> void
         {
-            if(readgstatus(gp1) &^ _Gscan == _Gleaked)
+            if((readgstatus(gp1) & ~(_Gscan)) == _Gleaked)
             {
                 systemstack([=]() mutable -> void
                 {

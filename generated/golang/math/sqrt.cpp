@@ -66,7 +66,7 @@ namespace golang::math
         }
         // unbias exponent
         exp -= bias;
-        ix &^= mask << shift;
+        ix &= ~(mask << shift);
         ix |= 1 << shift;
         if(exp & 1 == 1)
         {

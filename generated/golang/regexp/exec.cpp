@@ -324,7 +324,7 @@ namespace golang::regexp
             {
                 return false;
             }
-            op &^= syntax::EmptyBeginLine;
+            op &= ~(syntax::EmptyBeginLine);
         }
         if(op & syntax::EmptyBeginText != 0)
         {
@@ -332,7 +332,7 @@ namespace golang::regexp
             {
                 return false;
             }
-            op &^= syntax::EmptyBeginText;
+            op &= ~(syntax::EmptyBeginText);
         }
         if(op == 0)
         {
@@ -345,7 +345,7 @@ namespace golang::regexp
             {
                 return false;
             }
-            op &^= syntax::EmptyEndLine;
+            op &= ~(syntax::EmptyEndLine);
         }
         if(op & syntax::EmptyEndText != 0)
         {
@@ -353,7 +353,7 @@ namespace golang::regexp
             {
                 return false;
             }
-            op &^= syntax::EmptyEndText;
+            op &= ~(syntax::EmptyEndText);
         }
         if(op == 0)
         {
@@ -361,11 +361,11 @@ namespace golang::regexp
         }
         if(syntax::IsWordChar(r1) != syntax::IsWordChar(r2))
         {
-            op &^= syntax::EmptyWordBoundary;
+            op &= ~(syntax::EmptyWordBoundary);
         }
         else
         {
-            op &^= syntax::EmptyNoWordBoundary;
+            op &= ~(syntax::EmptyNoWordBoundary);
         }
         return op == 0;
     }

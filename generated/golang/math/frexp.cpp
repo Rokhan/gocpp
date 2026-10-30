@@ -66,7 +66,7 @@ namespace golang::math
         std::tie(f, exp) = normalize(f);
         auto x = Float64bits(f);
         exp += int64_t((x >> shift) & mask) - bias + 1;
-        x &^= mask << shift;
+        x &= ~(mask << shift);
         x |= (- 1 + bias) << shift;
         frac = Float64frombits(x);
         return {frac, exp};

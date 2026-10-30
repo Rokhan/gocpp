@@ -429,7 +429,7 @@ namespace golang::runtime
                     {
                         ug.mid = int64_t(s.g->m->procid);
                     }
-                    ug.status = readgstatus(s.g) &^ _Gscan;
+                    ug.status = (readgstatus(s.g) & ~(_Gscan));
                     ug.waitreason = s.g->waitreason;
                     ug.inMarkAssist = s.g->inMarkAssist;
                     ug.stackID = traceStack(0, gp, & runtime::trace.stackTab[gen % 2]);

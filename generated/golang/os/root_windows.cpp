@@ -442,7 +442,7 @@ namespace golang::os
 
             if(mode & syscall::S_IWRITE != 0)
             {
-                attrs &^= syscall::FILE_ATTRIBUTE_READONLY;
+                attrs &= ~(syscall::FILE_ATTRIBUTE_READONLY);
             }
             else
             {

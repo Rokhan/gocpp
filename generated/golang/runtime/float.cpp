@@ -48,7 +48,7 @@ namespace golang::runtime
     double abs(double x)
     {
         auto sign = 1 << 63;
-        return float64frombits(float64bits(x) &^ sign);
+        return float64frombits((float64bits(x) & ~(sign)));
     }
 
     // copysign returns a value with the magnitude
@@ -56,7 +56,7 @@ namespace golang::runtime
     double copysign(double x, double y)
     {
         auto sign = 1 << 63;
-        return float64frombits(float64bits(x) &^ sign | float64bits(y) & sign);
+        return float64frombits((float64bits(x) & ~(sign)) | float64bits(y) & sign);
     }
 
     // float64bits returns the IEEE 754 binary representation of f.
@@ -158,7 +158,7 @@ namespace golang::runtime
         // Keep the top 12+e bits, the integer part; clear the rest.
         if(e < 64 - 12)
         {
-            x &^= (1 << (64 - 12 - e)) - 1;
+            x &= ~((1 << (64 - 12 - e)) - 1);
         }
         int = float64frombits(x);
         frac = f - int;

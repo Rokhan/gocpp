@@ -1269,7 +1269,7 @@ namespace golang::runtime
             auto idx = h.offset / (ptrBits * goarch::PtrSize);
             if(zeros < ptrBits)
             {
-                bitmap[idx] = bswapIfBigEndian(bswapIfBigEndian(bitmap[idx]) &^ ((uintptr_t(1) << zeros) - 1));
+                bitmap[idx] = bswapIfBigEndian((bswapIfBigEndian(bitmap[idx]) & ~(((uintptr_t(1) << zeros) - 1))));
                 break;
             }
             else

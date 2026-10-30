@@ -343,12 +343,12 @@ namespace golang::regexp::syntax
         try
         {
             f |= flags.get(re);
-            if(f & flagPrec != 0 && f &^ (flagOff | flagPrec) != 0 && f & flagOff != 0)
+            if(f & flagPrec != 0 && (f & ~((flagOff | flagPrec))) != 0 && f & flagOff != 0)
             {
                 // flagPrec is redundant with other flags being added and terminated
-                f &^= flagPrec;
+                f &= ~(flagPrec);
             }
-            if(f &^ (flagOff | flagPrec) != 0)
+            if((f & ~((flagOff | flagPrec))) != 0)
             {
                 rec::WriteString(gocpp::recv(b), "(?"_s);
                 if(f & flagI != 0)
@@ -609,7 +609,7 @@ namespace golang::regexp::syntax
         strings::Builder b = {};
         gocpp::map<Regexp*, printFlags> flags = {};
         auto [must, cant] = calcFlags(re, & flags);
-        must |= (cant &^ flagI) << negShift;
+        must |= ((cant & ~(flagI))) << negShift;
         if(must != 0)
         {
             must |= flagOff;

@@ -57,7 +57,7 @@ namespace golang::encoding::json
                 start = i + 1;
             }
             // Convert U+2028 and U+2029 (E2 80 A8 and E2 80 A9).
-            if(c == 0xE2 && i + 2 < len(src) && src[i + 1] == 0x80 && src[i + 2] &^ 1 == 0xA8)
+            if(c == 0xE2 && i + 2 < len(src) && src[i + 1] == 0x80 && (src[i + 2] & ~(1)) == 0xA8)
             {
                 dst = append(dst, src.make_slice(start, i));
                 dst = append(dst, '\\', 'u', '2', '0', '2', hex[src[i + 2] & 0xF]);

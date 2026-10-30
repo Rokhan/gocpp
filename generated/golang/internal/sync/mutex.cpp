@@ -159,7 +159,7 @@ namespace golang::internal::sync
                 {
                     go_throw("sync: inconsistent mutex state"_s);
                 }
-                go_new &^= mutexWoken;
+                go_new &= ~(mutexWoken);
             }
             if(atomic::CompareAndSwapInt32(& m->state, old, go_new))
             {

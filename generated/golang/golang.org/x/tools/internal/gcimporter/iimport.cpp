@@ -1376,7 +1376,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         auto v = - n;
         if(go_signed)
         {
-            v = - (n &^ 1) >> 1;
+            v = - ((n & ~(1))) >> 1;
         }
         if(v < 1 || (uint64_t)(v) > maxBytes)
         {

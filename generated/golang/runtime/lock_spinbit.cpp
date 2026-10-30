@@ -109,12 +109,12 @@ namespace golang::runtime
     //go:nosplit
     muintptr mutexWaitListHead(uintptr_t v)
     {
-        if(auto highBits = v &^ mutexMMask; highBits == 0)
+        if(auto highBits = (v & ~(mutexMMask)); highBits == 0)
         {
             return 0;
         }
         else
-        if(auto m0bits = muintptr(gocpp::unsafe_pointer(& m0)); highBits == uintptr_t(m0bits) &^ mutexMMask)
+        if(auto m0bits = muintptr(gocpp::unsafe_pointer(& m0)); highBits == (uintptr_t(m0bits) & ~(mutexMMask)))
         {
             return m0bits;
         }
@@ -162,7 +162,7 @@ namespace golang::runtime
 
     bool mutexContended(mutex* l)
     {
-        return atomic::Loaduintptr(& l->key) &^ mutexMMask != 0;
+        return (atomic::Loaduintptr(& l->key) & ~(mutexMMask)) != 0;
     }
 
     void lock(mutex* l)
@@ -219,12 +219,12 @@ namespace golang::runtime
             {
                 if(weSpin)
                 {
-                    auto next = (v &^ mutexSpinning) | mutexSleeping | mutexLocked;
-                    if(next &^ mutexMMask == 0)
+                    auto next = ((v & ~(mutexSpinning))) | mutexSleeping | mutexLocked;
+                    if((next & ~(mutexMMask)) == 0)
                     {
                         // The fast-path Xchg8 may have cleared mutexSleeping. Fix
                         // the hint so unlock2 knows when to use its slow path.
-                        next = next &^ mutexSleeping;
+                        next = (next & ~(mutexSleeping));
                     }
                     if(atomic::Casuintptr(& l->key, v, next))
                     {
@@ -287,11 +287,11 @@ namespace golang::runtime
             gp->m->mWaitList.next = mutexWaitListHead(v);
 
             // Pack a (partial) pointer to this M with the current lock state bits
-            auto next = (uintptr_t(gocpp::unsafe_pointer(gp->m)) &^ mutexMMask) | v & mutexMMask | mutexSleeping;
+            auto next = ((uintptr_t(gocpp::unsafe_pointer(gp->m)) & ~(mutexMMask))) | v & mutexMMask | mutexSleeping;
             if(weSpin)
             {
                 // If we were spinning, prepare to retire
-                next = next &^ mutexSpinning;
+                next = (next & ~(mutexSpinning));
             }
 
             if(atomic::Casuintptr(& l->key, v, next))
@@ -337,7 +337,7 @@ namespace golang::runtime
             auto v = atomic::Loaduintptr(& l->key);
             for(; ; )
             {
-                if(v &^ mutexMMask == 0 || v & mutexStackLocked != 0)
+                if((v & ~(mutexMMask)) == 0 || v & mutexStackLocked != 0)
                 {
                     // No contention, or (stack lock unavailable) no way to calculate it
                     prev8 = atomic::Xchg8(key8(& l->key), 0);
@@ -354,7 +354,7 @@ namespace golang::runtime
                     // their lock calls.
                     endTicks = cputicks();
                 }
-                auto next = (v | mutexStackLocked) &^ (mutexLocked | mutexSleeping);
+                auto next = ((v | mutexStackLocked) & ~((mutexLocked | mutexSleeping)));
                 if(atomic::Casuintptr(& l->key, v, next))
                 {
                     haveStackLock = true;
@@ -424,7 +424,7 @@ namespace golang::runtime
 
         for(; ; )
         {
-            if(v &^ mutexMMask == 0 || v & mutexStackLocked != 0)
+            if((v & ~(mutexMMask)) == 0 || v & mutexStackLocked != 0)
             {
                 // No waiting Ms means nothing to do.
                 // If the stack lock is unavailable, its owner would make the same
@@ -483,9 +483,9 @@ namespace golang::runtime
         m* committed = {};
         for(; ; )
         {
-            auto headM = v &^ mutexMMask;
+            auto headM = (v & ~(mutexMMask));
             // preserve low bits, but release stack lock
-            auto flags = v & (mutexMMask &^ mutexStackLocked);
+            auto flags = v & ((mutexMMask & ~(mutexStackLocked)));
 
             auto mp = rec::ptr(gocpp::recv(mutexWaitListHead(v)));
             auto wakem = committed;
@@ -526,7 +526,7 @@ namespace golang::runtime
 
             if(wakem == mp)
             {
-                headM = uintptr_t(mp->mWaitList.next) &^ mutexMMask;
+                headM = (uintptr_t(mp->mWaitList.next) & ~(mutexMMask));
             }
 
             auto next = headM | flags;

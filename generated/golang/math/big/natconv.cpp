@@ -502,7 +502,7 @@ namespace golang::math::big
                 auto table = divisors(stk, len(x), b, ndigits, bb);
 
                 // preserve x, create local copy for use by convertWords
-                auto q = rec::set(gocpp::recv(nat(nullptr)), x);
+                auto q = rec::set(gocpp::recv(big::nat(nullptr)), x);
 
                 // convert q to string s in base b
                 rec::convertWords(gocpp::recv(q), stk, s, b, ndigits, bb, table);
@@ -728,7 +728,7 @@ namespace golang::math::big
     // expWW computes x**y
     golang::math::big::nat rec::expWW(golang::math::big::nat z, stack* stk, Word x, Word y)
     {
-        return rec::expNN(gocpp::recv(z), stk, rec::setWord(gocpp::recv(nat(nullptr)), x), rec::setWord(gocpp::recv(nat(nullptr)), y), nullptr, false);
+        return rec::expNN(gocpp::recv(z), stk, rec::setWord(gocpp::recv(big::nat(nullptr)), x), rec::setWord(gocpp::recv(big::nat(nullptr)), y), nullptr, false);
     }
 
     // construct table of powers of bb*leafSize to use in subdivisions.

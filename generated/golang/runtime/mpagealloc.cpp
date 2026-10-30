@@ -861,7 +861,7 @@ namespace golang::runtime
             // lied to us. In either case, dump some useful state and throw.
             print("runtime: summary["_s, l - 1, "]["_s, lastSumIdx, "] = "_s, rec::start(gocpp::recv(lastSum)), ", "_s, rec::max(gocpp::recv(lastSum)), ", "_s, rec::end(gocpp::recv(lastSum)), "\n"_s);
             print("runtime: level = "_s, l, ", npages = "_s, npages, ", j0 = "_s, j0, "\n"_s);
-            print("runtime: p.searchAddr = "_s, hex(rec::addr(gocpp::recv(p->searchAddr))), ", i = "_s, i, "\n"_s);
+            print("runtime: p.searchAddr = "_s, runtime::hex(rec::addr(gocpp::recv(p->searchAddr))), ", i = "_s, i, "\n"_s);
             print("runtime: levelShift[level] = "_s, levelShift[l], ", levelBits[level] = "_s, levelBits[l], "\n"_s);
             for(int64_t j = 0; j < len(entries); j++)
             {
@@ -937,7 +937,7 @@ namespace golang::runtime
                 if(j == ~ (uint64_t)(0))
                 {
                     print("runtime: max = "_s, max, ", npages = "_s, npages, "\n"_s);
-                    print("runtime: searchIdx = "_s, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))), ", p.searchAddr = "_s, hex(rec::addr(gocpp::recv(p->searchAddr))), "\n"_s);
+                    print("runtime: searchIdx = "_s, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))), ", p.searchAddr = "_s, runtime::hex(rec::addr(gocpp::recv(p->searchAddr))), "\n"_s);
                     go_throw("bad summary data"_s);
                 }
                 addr = chunkBase(i) + uintptr_t(j) * pageSize;

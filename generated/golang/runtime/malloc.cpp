@@ -631,7 +631,7 @@ namespace golang::runtime
             {
                 // This should be impossible on most architectures,
                 // but it would be really confusing to debug.
-                print("runtime: memory allocated by OS ["_s, hex(p), ", "_s, hex(p + size), ") not in usable address space: "_s, bad, "\n"_s);
+                print("runtime: memory allocated by OS ["_s, runtime::hex(p), ", "_s, runtime::hex(p + size), ") not in usable address space: "_s, bad, "\n"_s);
                 go_throw("memory reservation exceeds address space limit"_s);
             }
         }
@@ -2013,7 +2013,7 @@ namespace golang::runtime
 
         if(debugReusableLog)
         {
-            println("reusing from ptr free list:"_s, hex(v), "sweepgen:"_s, mheap_.sweepgen, "writeBarrier.enabled:"_s, writeBarrier.enabled);
+            println("reusing from ptr free list:"_s, runtime::hex(v), "sweepgen:"_s, mheap_.sweepgen, "writeBarrier.enabled:"_s, writeBarrier.enabled);
         }
         if(doubleCheckReusable)
         {

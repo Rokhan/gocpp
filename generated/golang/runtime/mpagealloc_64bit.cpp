@@ -107,7 +107,7 @@ namespace golang::runtime
     {
         if(base % pallocChunkBytes != 0 || limit % pallocChunkBytes != 0)
         {
-            print("runtime: base = "_s, hex(base), ", limit = "_s, hex(limit), "\n"_s);
+            print("runtime: base = "_s, runtime::hex(base), ", limit = "_s, runtime::hex(limit), "\n"_s);
             go_throw("sysGrow bounds not aligned to pallocChunkBytes"_s);
         }
 
@@ -202,7 +202,7 @@ namespace golang::runtime
     {
         if(base % pallocChunkBytes != 0 || limit % pallocChunkBytes != 0)
         {
-            print("runtime: base = "_s, hex(base), ", limit = "_s, hex(limit), "\n"_s);
+            print("runtime: base = "_s, runtime::hex(base), ", limit = "_s, runtime::hex(limit), "\n"_s);
             go_throw("sysGrow bounds not aligned to pallocChunkBytes"_s);
         }
         uintptr_t scSize = gocpp::Sizeof<atomicScavChunkData>();

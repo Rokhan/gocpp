@@ -1874,7 +1874,7 @@ namespace golang::reflect
 
     golang::reflect::Kind rec::Kind(rtype* t)
     {
-        return Kind(rec::Kind(gocpp::recv(t->t)));
+        return reflect::Kind(rec::Kind(gocpp::recv(t->t)));
     }
 
     gocpp::slice<abi::Method> rec::exportedMethods(rtype* t)
@@ -2045,7 +2045,7 @@ namespace golang::reflect
             gocpp::panic("reflect: ChanDir of non-chan type "_s + rec::String(gocpp::recv(t)));
         }
         auto tt = (abi::ChanType*)(gocpp::unsafe_pointer(t));
-        return ChanDir(tt->Dir);
+        return reflect::ChanDir(tt->Dir);
     }
 
     rtype* toRType(abi::Type* t)

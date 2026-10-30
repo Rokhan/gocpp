@@ -92,14 +92,14 @@ namespace golang::math::big
                 // shift at most ntz bits
                 s = ntz;
             }
-            m = rec::rsh(gocpp::recv(nat(nullptr)), m, s);
+            m = rec::rsh(gocpp::recv(big::nat(nullptr)), m, s);
             shift += int64_t(s);
         }
 
         // Do any shift left in binary representation.
         if(shift > 0)
         {
-            m = rec::lsh(gocpp::recv(nat(nullptr)), m, (uint64_t)(shift));
+            m = rec::lsh(gocpp::recv(big::nat(nullptr)), m, (uint64_t)(shift));
             shift = 0;
         }
 

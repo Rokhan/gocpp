@@ -2440,7 +2440,7 @@ namespace golang::syscall
     void rec::go_delete(procThreadAttributeListContainer* al)
     {
         deleteProcThreadAttributeList(al->data);
-        LocalFree(Handle(gocpp::unsafe_pointer(al->data)));
+        LocalFree(syscall::Handle(gocpp::unsafe_pointer(al->data)));
         al->data = nullptr;
         al->pointers = nullptr;
     }

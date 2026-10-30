@@ -265,7 +265,7 @@ namespace golang::math::big
                     return {nullptr, false};
                 }
                 // use underlying array of z.b.abs
-                auto pow5 = rec::expNN(gocpp::recv(z->b.abs), stk, natFive, rec::setWord(gocpp::recv(nat(nullptr)), Word(n)), nullptr, false);
+                auto pow5 = rec::expNN(gocpp::recv(z->b.abs), stk, natFive, rec::setWord(gocpp::recv(big::nat(nullptr)), Word(n)), nullptr, false);
                 if(exp5 > 0)
                 {
                     z->a.abs = rec::mul(gocpp::recv(z->a.abs), stk, z->a.abs, pow5);
@@ -503,17 +503,17 @@ namespace golang::math::big
 
             auto stk = getStack();
             defer.push_back([=]{ rec::free(gocpp::recv(stk)); });
-            auto [q, r] = rec::div(gocpp::recv(nat(nullptr)), stk, nat(nullptr), x->a.abs, x->b.abs);
+            auto [q, r] = rec::div(gocpp::recv(big::nat(nullptr)), stk, big::nat(nullptr), x->a.abs, x->b.abs);
 
             auto p = natOne;
             if(prec > 0)
             {
-                p = rec::expNN(gocpp::recv(nat(nullptr)), stk, natTen, rec::setUint64(gocpp::recv(nat(nullptr)), uint64_t(prec)), nullptr, false);
+                p = rec::expNN(gocpp::recv(big::nat(nullptr)), stk, natTen, rec::setUint64(gocpp::recv(big::nat(nullptr)), uint64_t(prec)), nullptr, false);
             }
 
             r = rec::mul(gocpp::recv(r), stk, r, p);
             big::nat r2;
-            std::tie(r, r2) = rec::div(gocpp::recv(r), stk, nat(nullptr), r, x->b.abs);
+            std::tie(r, r2) = rec::div(gocpp::recv(r), stk, big::nat(nullptr), r, x->b.abs);
 
             // see if we need to round up
             r2 = rec::add(gocpp::recv(r2), r2, r2);
@@ -522,8 +522,8 @@ namespace golang::math::big
                 r = rec::add(gocpp::recv(r), r, natOne);
                 if(rec::cmp(gocpp::recv(r), p) >= 0)
                 {
-                    q = rec::add(gocpp::recv(nat(nullptr)), q, natOne);
-                    r = rec::sub(gocpp::recv(nat(nullptr)), r, p);
+                    q = rec::add(gocpp::recv(big::nat(nullptr)), q, natOne);
+                    r = rec::sub(gocpp::recv(big::nat(nullptr)), r, p);
                 }
             }
 
@@ -616,7 +616,7 @@ namespace golang::math::big
                 }
                 tab = append(tab, f);
                 // nat(nil) to ensure a new f for each table entry
-                f = rec::sqr(gocpp::recv(nat(nullptr)), stk, f);
+                f = rec::sqr(gocpp::recv(big::nat(nullptr)), stk, f);
             }
 
             // Factor q using the table entries, if any.

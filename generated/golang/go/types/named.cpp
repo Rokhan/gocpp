@@ -773,7 +773,7 @@ namespace golang::go::types
 
         gocpp::slice<Named*> path = {};
         golang::go::types::Type u = {};
-        for(auto rhs = Type(n); u == nullptr; )
+        for(auto rhs = types::Type(n); u == nullptr; )
         {
             //Go type switch emulation
             {

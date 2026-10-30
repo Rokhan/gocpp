@@ -357,7 +357,7 @@ namespace golang::math::big
                         return rec::setUint64(gocpp::recv(z), a);
                         break;
                     case 3:
-                        return rec::mul(gocpp::recv(z), stk, rec::setUint64(gocpp::recv(nat(nullptr)), a), rec::setUint64(gocpp::recv(nat(nullptr)), b));
+                        return rec::mul(gocpp::recv(z), stk, rec::setUint64(gocpp::recv(big::nat(nullptr)), a), rec::setUint64(gocpp::recv(big::nat(nullptr)), b));
                         break;
                 }
             }
@@ -370,7 +370,7 @@ namespace golang::math::big
 
             // avoid overflow
             auto m = a + (b - a) / 2;
-            return rec::mul(gocpp::recv(z), stk, rec::mulRange(gocpp::recv(nat(nullptr)), stk, a, m), rec::mulRange(gocpp::recv(nat(nullptr)), stk, m + 1, b));
+            return rec::mul(gocpp::recv(z), stk, rec::mulRange(gocpp::recv(big::nat(nullptr)), stk, a, m), rec::mulRange(gocpp::recv(big::nat(nullptr)), stk, m + 1, b));
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -546,7 +546,7 @@ namespace golang::math::big
                 // For small allocations, just ask the allocator.
                 // It isn't worth pooling these allocations.
                 // See issue 73999.
-                auto r = slices::Grow(nat(nullptr), n);
+                auto r = slices::Grow(big::nat(nullptr), n);
                 r = r.make_slice(0, n);
                 if(n > 0)
                 {
@@ -1114,8 +1114,8 @@ namespace golang::math::big
     {
         // Split m = m₁ × m₂ where m₁ = 2ⁿ
         auto n = rec::trailingZeroBits(gocpp::recv(m));
-        auto m1 = rec::lsh(gocpp::recv(nat(nullptr)), natOne, n);
-        auto m2 = rec::rsh(gocpp::recv(nat(nullptr)), m, n);
+        auto m1 = rec::lsh(gocpp::recv(big::nat(nullptr)), natOne, n);
+        auto m2 = rec::rsh(gocpp::recv(big::nat(nullptr)), m, n);
 
         // We want z = x**y mod m.
         // z₁ = x**y mod m1 = (x**y mod m) mod m1 = z mod m1
@@ -1123,8 +1123,8 @@ namespace golang::math::big
         // (We are using the math/big convention for names here,
         // where the computation is z = x**y mod m, so its parts are z1 and z2.
         // The paper is computing x = a**e mod n; it refers to these as x2 and z1.)
-        auto z1 = rec::expNN(gocpp::recv(nat(nullptr)), stk, x, y, m1, false);
-        auto z2 = rec::expNN(gocpp::recv(nat(nullptr)), stk, x, y, m2, false);
+        auto z1 = rec::expNN(gocpp::recv(big::nat(nullptr)), stk, x, y, m1, false);
+        auto z2 = rec::expNN(gocpp::recv(big::nat(nullptr)), stk, x, y, m2, false);
 
         // Reconstruct z from z₁, z₂ using CRT, using algorithm from paper,
         // which uses only a single modInverse (and an easy one at that).
@@ -1142,7 +1142,7 @@ namespace golang::math::big
         z1 = rec::subMod2N(gocpp::recv(z1), z1, z2, n);
 
         // Reuse z2 for p = (z₁ - z₂) [in z1] * m2⁻¹ (mod m₁ [= 2ⁿ]).
-        auto m2inv = rec::modInverse(gocpp::recv(nat(nullptr)), m2, m1);
+        auto m2inv = rec::modInverse(gocpp::recv(big::nat(nullptr)), m2, m1);
         z2 = rec::mul(gocpp::recv(z2), stk, z1, m2inv);
         z2 = rec::trunc(gocpp::recv(z2), z2, n);
 
@@ -1277,7 +1277,7 @@ namespace golang::math::big
         if(len(x) > numWords)
         {
             // Note: now len(x) <= numWords, not guaranteed ==.
-            std::tie(std::ignore, x) = rec::div(gocpp::recv(nat(nullptr)), stk, nullptr, x, m);
+            std::tie(std::ignore, x) = rec::div(gocpp::recv(big::nat(nullptr)), stk, nullptr, x, m);
         }
         if(len(x) < numWords)
         {
@@ -1299,9 +1299,9 @@ namespace golang::math::big
         k0 = - k0;
 
         // RR = 2**(2*_W*len(m)) mod m
-        auto RR = rec::setWord(gocpp::recv(nat(nullptr)), 1);
-        auto zz = rec::lsh(gocpp::recv(nat(nullptr)), RR, (uint64_t)(2 * numWords * _W));
-        std::tie(std::ignore, RR) = rec::div(gocpp::recv(nat(nullptr)), stk, RR, zz, m);
+        auto RR = rec::setWord(gocpp::recv(big::nat(nullptr)), 1);
+        auto zz = rec::lsh(gocpp::recv(big::nat(nullptr)), RR, (uint64_t)(2 * numWords * _W));
+        std::tie(std::ignore, RR) = rec::div(gocpp::recv(big::nat(nullptr)), stk, RR, zz, m);
         if(len(RR) < numWords)
         {
             zz = rec::make(gocpp::recv(zz), numWords);
@@ -1363,7 +1363,7 @@ namespace golang::math::big
             zz = rec::sub(gocpp::recv(zz), zz, m);
             if(rec::cmp(gocpp::recv(zz), m) >= 0)
             {
-                std::tie(std::ignore, zz) = rec::div(gocpp::recv(nat(nullptr)), stk, nullptr, zz, m);
+                std::tie(std::ignore, zz) = rec::div(gocpp::recv(big::nat(nullptr)), stk, nullptr, zz, m);
             }
         }
 
@@ -1516,7 +1516,7 @@ namespace golang::math::big
             }
             else
             {
-                x = rec::trunc(gocpp::recv(nat(nullptr)), x, n);
+                x = rec::trunc(gocpp::recv(big::nat(nullptr)), x, n);
             }
         }
         if((uint64_t)(rec::bitLen(gocpp::recv(y))) > n)
@@ -1528,7 +1528,7 @@ namespace golang::math::big
             }
             else
             {
-                y = rec::trunc(gocpp::recv(nat(nullptr)), y, n);
+                y = rec::trunc(gocpp::recv(big::nat(nullptr)), y, n);
             }
         }
         if(rec::cmp(gocpp::recv(x), y) >= 0)

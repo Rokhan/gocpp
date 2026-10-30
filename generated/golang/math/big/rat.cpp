@@ -436,7 +436,7 @@ namespace golang::math::big
         if(& z->a == b || alias(z->a.abs, babs))
         {
             // make a copy
-            babs = rec::set(gocpp::recv(nat(nullptr)), babs);
+            babs = rec::set(gocpp::recv(big::nat(nullptr)), babs);
         }
         z->a.abs = rec::set(gocpp::recv(z->a.abs), a->abs);
         z->b.abs = rec::set(gocpp::recv(z->b.abs), babs);

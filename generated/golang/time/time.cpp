@@ -533,7 +533,7 @@ namespace golang::time
     golang::time::Month rec::month(absMonth m, absJanFeb janFeb)
     {
         // See “Computations on Times” comment above.
-        return Month(m) - Month(janFeb) * 12;
+        return time::Month(m) - time::Month(janFeb) * 12;
     }
 
     // leap returns 1 if (century, cyear) is a leap year, 0 otherwise.
@@ -705,7 +705,7 @@ namespace golang::time
     golang::time::Weekday rec::weekday(absDays days)
     {
         // March 1 of the absolute year, like March 1 of 2000, was a Wednesday.
-        return Weekday((uint64_t(days) + uint64_t(Wednesday)) % 7);
+        return time::Weekday((uint64_t(days) + uint64_t(Wednesday)) % 7);
     }
 
     // ISOWeek returns the ISO 8601 year and week number in which t occurs.
@@ -1207,7 +1207,7 @@ namespace golang::time
     {
         auto [year, month, day] = rec::Date(gocpp::recv(t));
         auto [hour, min, sec] = rec::Clock(gocpp::recv(t));
-        return time::Date(year + years, month + Month(months), day + days, hour, min, sec, int64_t(rec::nsec(gocpp::recv(t))), rec::Location(gocpp::recv(t)));
+        return time::Date(year + years, month + time::Month(months), day + days, hour, min, sec, int64_t(rec::nsec(gocpp::recv(t))), rec::Location(gocpp::recv(t)));
     }
 
     // daysBefore returns the number of days in a non-leap year before month m.

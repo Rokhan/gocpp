@@ -1575,7 +1575,7 @@ namespace golang::math::big
                 case 0:
                     if(al)
                     {
-                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), y->mant, (uint64_t)(ey - ex));
+                        auto t = rec::lsh(gocpp::recv(big::nat(nullptr)), y->mant, (uint64_t)(ey - ex));
                         z->mant = rec::add(gocpp::recv(z->mant), x->mant, t);
                     }
                     else
@@ -1591,7 +1591,7 @@ namespace golang::math::big
                 case 1:
                     if(al)
                     {
-                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), x->mant, (uint64_t)(ex - ey));
+                        auto t = rec::lsh(gocpp::recv(big::nat(nullptr)), x->mant, (uint64_t)(ex - ey));
                         z->mant = rec::add(gocpp::recv(z->mant), t, y->mant);
                     }
                     else
@@ -1637,7 +1637,7 @@ namespace golang::math::big
                 case 0:
                     if(al)
                     {
-                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), y->mant, (uint64_t)(ey - ex));
+                        auto t = rec::lsh(gocpp::recv(big::nat(nullptr)), y->mant, (uint64_t)(ey - ex));
                         z->mant = rec::sub(gocpp::recv(t), x->mant, t);
                     }
                     else
@@ -1653,7 +1653,7 @@ namespace golang::math::big
                 case 1:
                     if(al)
                     {
-                        auto t = rec::lsh(gocpp::recv(nat(nullptr)), x->mant, (uint64_t)(ex - ey));
+                        auto t = rec::lsh(gocpp::recv(big::nat(nullptr)), x->mant, (uint64_t)(ex - ey));
                         z->mant = rec::sub(gocpp::recv(t), t, y->mant);
                     }
                     else

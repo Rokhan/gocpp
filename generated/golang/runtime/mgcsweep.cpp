@@ -1492,7 +1492,7 @@ namespace golang::runtime
         for(uintptr_t i = uintptr_t(0); i < uintptr_t(s->nelems); i++)
         {
             auto addr = rec::base(gocpp::recv(s)) + i * s->elemsize;
-            print(hex(addr));
+            print(runtime::hex(addr));
             auto alloc = i < uintptr_t(s->freeindex) || rec::isMarked(gocpp::recv(abits));
             if(alloc)
             {

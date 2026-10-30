@@ -218,7 +218,7 @@ namespace golang::runtime
         {
             if(flags & unwindSilentErrors == 0)
             {
-                print("runtime: g "_s, gp->goid, " gp="_s, gp, ": unknown pc "_s, hex(frame.pc), "\n"_s);
+                print("runtime: g "_s, gp->goid, " gp="_s, gp, ": unknown pc "_s, runtime::hex(frame.pc), "\n"_s);
                 tracebackHexdump(gp->stack, & frame, 0);
             }
             if(flags & (unwindPrintErrors | unwindSilentErrors) == 0)
@@ -535,7 +535,7 @@ namespace golang::runtime
             }
             if(fail || doPrint)
             {
-                print("runtime: g "_s, gp->goid, ": unexpected return pc for "_s, funcname(f), " called from "_s, hex(frame->lr), "\n"_s);
+                print("runtime: g "_s, gp->goid, ": unexpected return pc for "_s, funcname(f), " called from "_s, runtime::hex(frame->lr), "\n"_s);
                 tracebackHexdump(gp->stack, frame, 0);
             }
             if(fail)
@@ -550,7 +550,7 @@ namespace golang::runtime
         if(frame->pc == frame->lr && frame->sp == frame->fp)
         {
             // If the next frame is identical to the current frame, we cannot make progress.
-            print("runtime: traceback stuck. pc="_s, hex(frame->pc), " sp="_s, hex(frame->sp), "\n"_s);
+            print("runtime: traceback stuck. pc="_s, runtime::hex(frame->pc), " sp="_s, runtime::hex(frame->sp), "\n"_s);
             tracebackHexdump(gp->stack, frame, frame->sp);
             go_throw("traceback stuck"_s);
         }
@@ -642,8 +642,8 @@ namespace golang::runtime
         auto gp = rec::ptr(gocpp::recv(u->g));
         if(u->flags & (unwindPrintErrors | unwindSilentErrors) == 0 && u->frame.sp != gp->stktopsp)
         {
-            print("runtime: g"_s, gp->goid, ": frame.sp="_s, hex(u->frame.sp), " top="_s, hex(gp->stktopsp), "\n"_s);
-            print("\tstack=["_s, hex(gp->stack.lo), "-"_s, hex(gp->stack.hi), "\n"_s);
+            print("runtime: g"_s, gp->goid, ": frame.sp="_s, runtime::hex(u->frame.sp), " top="_s, runtime::hex(gp->stktopsp), "\n"_s);
+            print("\tstack=["_s, runtime::hex(gp->stack.lo), "-"_s, runtime::hex(gp->stack.hi), "\n"_s);
             go_throw("traceback did not unwind completely"_s);
         }
     }

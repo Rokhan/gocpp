@@ -577,7 +577,7 @@ namespace golang::encoding::json::jsontext
         // Check whether we have a cached peek result.
         if(d->decodeBuffer.peekPos > 0)
         {
-            return rec::normalize(gocpp::recv(Kind(d->decodeBuffer.buf[d->decodeBuffer.peekPos])));
+            return rec::normalize(gocpp::recv(jsontext::Kind(d->decodeBuffer.buf[d->decodeBuffer.peekPos])));
         }
 
         gocpp::error err = {};
@@ -617,7 +617,7 @@ namespace golang::encoding::json::jsontext
                 }
             }
         }
-        auto next = rec::normalize(gocpp::recv(Kind(d->decodeBuffer.buf[pos])));
+        auto next = rec::normalize(gocpp::recv(jsontext::Kind(d->decodeBuffer.buf[pos])));
         if(rec::needDelim(gocpp::recv(d->state.Tokens), next) != delim)
         {
             std::tie(d->decodeBuffer.peekPos, d->decodeBuffer.peekErr) = std::tuple{- 1, rec::checkDelim(gocpp::recv(d), delim, next)};
@@ -641,7 +641,7 @@ namespace golang::encoding::json::jsontext
         // whether the current delim is at least potentially valid.
         // Since a JSON string is always valid as the next token,
         // conservatively assume that is the next kind for validation.
-        auto next = Kind('"');
+        auto next = jsontext::Kind('"');
         if(rec::needDelim(gocpp::recv(d->state.Tokens), next) != delim)
         {
             err = rec::checkDelim(gocpp::recv(d), delim, next);
@@ -802,7 +802,7 @@ namespace golang::encoding::json::jsontext
                 std::tie(d->decodeBuffer.peekPos, d->decodeBuffer.peekErr) = std::tuple{0, nullptr};
                 return {Token {}, err};
             }
-            next = rec::normalize(gocpp::recv(Kind(d->decodeBuffer.buf[pos])));
+            next = rec::normalize(gocpp::recv(jsontext::Kind(d->decodeBuffer.buf[pos])));
             // reset cache
             d->decodeBuffer.peekPos = 0;
         }
@@ -842,7 +842,7 @@ namespace golang::encoding::json::jsontext
                     }
                 }
             }
-            next = rec::normalize(gocpp::recv(Kind(d->decodeBuffer.buf[pos])));
+            next = rec::normalize(gocpp::recv(jsontext::Kind(d->decodeBuffer.buf[pos])));
             if(rec::needDelim(gocpp::recv(d->state.Tokens), next) != delim)
             {
                 return {Token {}, rec::checkDelim(gocpp::recv(d), delim, next)};
@@ -1104,7 +1104,7 @@ namespace golang::encoding::json::jsontext
                 std::tie(d->decodeBuffer.peekPos, d->decodeBuffer.peekErr) = std::tuple{0, nullptr};
                 return {nullptr, err};
             }
-            next = rec::normalize(gocpp::recv(Kind(d->decodeBuffer.buf[pos])));
+            next = rec::normalize(gocpp::recv(jsontext::Kind(d->decodeBuffer.buf[pos])));
             // reset cache
             d->decodeBuffer.peekPos = 0;
         }
@@ -1144,7 +1144,7 @@ namespace golang::encoding::json::jsontext
                     }
                 }
             }
-            next = rec::normalize(gocpp::recv(Kind(d->decodeBuffer.buf[pos])));
+            next = rec::normalize(gocpp::recv(jsontext::Kind(d->decodeBuffer.buf[pos])));
             if(rec::needDelim(gocpp::recv(d->state.Tokens), next) != delim)
             {
                 return {nullptr, rec::checkDelim(gocpp::recv(d), delim, next)};
@@ -1357,7 +1357,7 @@ namespace golang::encoding::json::jsontext
             gocpp::error err = {};
             //Go switch emulation
             {
-                auto next = rec::normalize(gocpp::recv(Kind(d->decodeBuffer.buf[pos])));
+                auto next = rec::normalize(gocpp::recv(jsontext::Kind(d->decodeBuffer.buf[pos])));
                 auto condition = next;
                 int conditionId = -1;
                 if(condition == 'n') { conditionId = 0; }

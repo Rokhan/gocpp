@@ -1128,7 +1128,7 @@ namespace golang::runtime
             if(res > md->etext && GOARCH != "wasm"_s)
             {
                 // on wasm, functions do not live in the same address space as the linear memory
-                println("runtime: textAddr"_s, hex(res), "out of range"_s, hex(md->text), "-"_s, hex(md->etext));
+                println("runtime: textAddr"_s, runtime::hex(res), "out of range"_s, runtime::hex(md->text), "-"_s, runtime::hex(md->etext));
                 go_throw("runtime: text offset out of range"_s);
             }
         }

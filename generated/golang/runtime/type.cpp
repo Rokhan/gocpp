@@ -881,10 +881,10 @@ namespace golang::runtime
             reflectOffsUnlock();
             if(res == nullptr)
             {
-                println("runtime: textOff"_s, hex(off), "base"_s, hex(base), "not in ranges:"_s);
+                println("runtime: textOff"_s, runtime::hex(off), "base"_s, runtime::hex(base), "not in ranges:"_s);
                 for(auto next = & firstmoduledata; next != nullptr; next = next->next)
                 {
-                    println("\ttypes"_s, hex(next->types), "etypes"_s, hex(next->etypes));
+                    println("\ttypes"_s, runtime::hex(next->types), "etypes"_s, runtime::hex(next->etypes));
                 }
                 go_throw("runtime: text offset base pointer out of range"_s);
             }

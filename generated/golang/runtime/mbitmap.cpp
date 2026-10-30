@@ -804,9 +804,9 @@ namespace golang::runtime
             auto srcRead = rec::heapBitsSmallForAddr(gocpp::recv(span), x);
             if(srcRead != src)
             {
-                print("runtime: x="_s, hex(x), " i="_s, i, " j="_s, j, " bits="_s, bits, "\n"_s);
+                print("runtime: x="_s, runtime::hex(x), " i="_s, i, " j="_s, j, " bits="_s, bits, "\n"_s);
                 print("runtime: dataSize="_s, dataSize, " typ.Size_="_s, typ->Size_, " typ.PtrBytes="_s, typ->PtrBytes, "\n"_s);
-                print("runtime: src0="_s, hex(src0), " src="_s, hex(src), " srcRead="_s, hex(srcRead), "\n"_s);
+                print("runtime: src0="_s, runtime::hex(src0), " src="_s, runtime::hex(src), " srcRead="_s, runtime::hex(srcRead), "\n"_s);
                 go_throw("bad pointer bits written for small object"_s);
             }
         }

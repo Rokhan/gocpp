@@ -985,7 +985,7 @@ namespace golang::runtime
             switch(conditionId)
             {
                 default:
-                    print("<unknown field type "_s, hex(typ), " pos "_s, r->begin - 1, " end "_s, r->end, ">\n"_s);
+                    print("<unknown field type "_s, runtime::hex(typ), " pos "_s, r->begin - 1, " end "_s, r->end, ">\n"_s);
                     return false;
                     break;
 
@@ -1011,7 +1011,7 @@ namespace golang::runtime
 
                 case 5:
                 case 6:
-                    print(hex(rec::uvarint(gocpp::recv(r))));
+                    print(runtime::hex(rec::uvarint(gocpp::recv(r))));
                     break;
 
                 case 7:

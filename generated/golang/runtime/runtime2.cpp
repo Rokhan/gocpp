@@ -234,7 +234,7 @@ namespace golang::runtime
     //go:nosplit
     void rec::set(golang::runtime::guintptr* gp, g* g)
     {
-        *gp = guintptr(gocpp::unsafe_pointer(g));
+        *gp = runtime::guintptr(gocpp::unsafe_pointer(g));
     }
 
     //go:nosplit
@@ -246,7 +246,7 @@ namespace golang::runtime
     //go:nosplit
     golang::runtime::guintptr rec::guintptr(g* gp)
     {
-        return guintptr(gocpp::unsafe_pointer(gp));
+        return runtime::guintptr(gocpp::unsafe_pointer(gp));
     }
 
     // setGNoWB performs *gp = new without a write barrier.

@@ -278,7 +278,7 @@ namespace golang::reflect
     {
         //Go switch emulation
         {
-            auto condition = Kind(rec::Kind(gocpp::recv(t)));
+            auto condition = reflect::Kind(rec::Kind(gocpp::recv(t)));
             int conditionId = -1;
             if(condition == reflect::UnsafePointer) { conditionId = 0; }
             else if(condition == reflect::Pointer) { conditionId = 1; }

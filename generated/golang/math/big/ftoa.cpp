@@ -493,10 +493,10 @@ namespace golang::math::big
             switch(conditionId)
             {
                 case 0:
-                    m = rec::lsh(gocpp::recv(nat(nullptr)), m, (uint64_t)(x->prec - w));
+                    m = rec::lsh(gocpp::recv(big::nat(nullptr)), m, (uint64_t)(x->prec - w));
                     break;
                 case 1:
-                    m = rec::rsh(gocpp::recv(nat(nullptr)), m, (uint64_t)(w - x->prec));
+                    m = rec::rsh(gocpp::recv(big::nat(nullptr)), m, (uint64_t)(w - x->prec));
                     break;
             }
         }
@@ -564,10 +564,10 @@ namespace golang::math::big
             switch(conditionId)
             {
                 case 0:
-                    m = rec::lsh(gocpp::recv(nat(nullptr)), m, n - w);
+                    m = rec::lsh(gocpp::recv(big::nat(nullptr)), m, n - w);
                     break;
                 case 1:
-                    m = rec::rsh(gocpp::recv(nat(nullptr)), m, w - n);
+                    m = rec::rsh(gocpp::recv(big::nat(nullptr)), m, w - n);
                     break;
             }
         }

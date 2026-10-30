@@ -515,7 +515,7 @@ namespace golang::runtime
         // by a, but passing a zero-sized range is almost always a bug.
         if(rec::size(gocpp::recv(r)) == 0)
         {
-            print("runtime: range = {"_s, hex(rec::addr(gocpp::recv(r.base))), ", "_s, hex(rec::addr(gocpp::recv(r.limit))), "}\n"_s);
+            print("runtime: range = {"_s, runtime::hex(rec::addr(gocpp::recv(r.base))), ", "_s, runtime::hex(rec::addr(gocpp::recv(r.limit))), "}\n"_s);
             go_throw("attempted to add zero-sized address range"_s);
         }
         // Because we assume r is not currently represented in a,

@@ -394,7 +394,7 @@ namespace golang::syscall
     // Close releases access to access token.
     gocpp::error rec::Close(Token t)
     {
-        return CloseHandle(Handle(t));
+        return CloseHandle(syscall::Handle(t));
     }
 
     // getInfo retrieves a specified type of information about an access token.

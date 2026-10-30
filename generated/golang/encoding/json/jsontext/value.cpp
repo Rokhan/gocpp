@@ -327,7 +327,7 @@ namespace golang::encoding::json::jsontext
             auto v_tmp = v.make_slice(jsonwire::ConsumeWhitespace(v));
             if(auto& v = v_tmp; len(v) > 0)
             {
-                return rec::normalize(gocpp::recv(Kind(v[0])));
+                return rec::normalize(gocpp::recv(jsontext::Kind(v[0])));
             }
         }
         return invalidKind;

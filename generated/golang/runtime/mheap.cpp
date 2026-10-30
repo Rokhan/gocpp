@@ -2027,7 +2027,7 @@ namespace golang::runtime
                     }
                     if(s->allocCount != 0 || s->sweepgen != h->sweepgen)
                     {
-                        print("mheap.freeSpanLocked - span "_s, s, " ptr "_s, hex(rec::base(gocpp::recv(s))), " allocCount "_s, s->allocCount, " sweepgen "_s, s->sweepgen, "/"_s, h->sweepgen, "\n"_s);
+                        print("mheap.freeSpanLocked - span "_s, s, " ptr "_s, runtime::hex(rec::base(gocpp::recv(s))), " allocCount "_s, s->allocCount, " sweepgen "_s, s->sweepgen, "/"_s, h->sweepgen, "\n"_s);
                         go_throw("mheap.freeSpanLocked - invalid free"_s);
                     }
                     rec::Add(gocpp::recv(h->pagesInUse), - s->npages);

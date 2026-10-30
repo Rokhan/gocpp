@@ -1010,7 +1010,7 @@ namespace golang::encoding::json::jsontext
     {
         int64_t n;
         // arbitrary kind as next JSON value
-        auto next = Kind('"');
+        auto next = jsontext::Kind('"');
         auto delim = rec::needDelim(gocpp::recv(e->state.Tokens), next);
         if(delim > 0)
         {
@@ -1093,7 +1093,7 @@ namespace golang::encoding::json::jsontext
         }
         //Go switch emulation
         {
-            auto k = rec::normalize(gocpp::recv(Kind(src[0])));
+            auto k = rec::normalize(gocpp::recv(jsontext::Kind(src[0])));
             auto condition = k;
             int conditionId = -1;
             if(condition == 'n') { conditionId = 0; }

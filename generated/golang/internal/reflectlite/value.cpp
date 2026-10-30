@@ -139,7 +139,7 @@ namespace golang::internal::reflectlite
 
     golang::internal::reflectlite::Kind rec::kind(flag f)
     {
-        return Kind(f & flagKindMask);
+        return reflectlite::Kind(f & flagKindMask);
     }
 
     flag rec::ro(flag f)

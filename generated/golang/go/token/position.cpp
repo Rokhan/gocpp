@@ -221,7 +221,7 @@ namespace golang::go::token
     // End returns the end position of file f as registered with AddFile.
     golang::go::token::Pos rec::End(golang::go::token::File* f)
     {
-        return Pos(f->base + f->size);
+        return token::Pos(f->base + f->size);
     }
 
     // LineCount returns the number of lines in file f.
@@ -359,7 +359,7 @@ namespace golang::go::token
             {
                 gocpp::panic(mocklib::Sprintf("invalid line number %d (should be < %d)"_s, line, len(f->lines)));
             }
-            return Pos(f->base + f->lines[line - 1]);
+            return token::Pos(f->base + f->lines[line - 1]);
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -454,7 +454,7 @@ namespace golang::go::token
     // f.Pos(f.Offset(p)) == p.
     golang::go::token::Pos rec::Pos(golang::go::token::File* f, int64_t offset)
     {
-        return Pos(f->base + rec::fixOffset(gocpp::recv(f), offset));
+        return token::Pos(f->base + rec::fixOffset(gocpp::recv(f), offset));
     }
 
     // Offset returns the offset for the given file position p.

@@ -197,7 +197,7 @@ namespace golang::runtime
                         // empty.
                         if(frame->pc != rec::entry(gocpp::recv(f)))
                         {
-                            print("runtime: confused by "_s, funcname(f), ": no frame (sp="_s, hex(frame->sp), " fp="_s, hex(frame->fp), ") at entry+"_s, hex(frame->pc - rec::entry(gocpp::recv(f))), "\n"_s);
+                            print("runtime: confused by "_s, funcname(f), ": no frame (sp="_s, runtime::hex(frame->sp), " fp="_s, runtime::hex(frame->fp), ") at entry+"_s, runtime::hex(frame->pc - rec::entry(gocpp::recv(f))), "\n"_s);
                             go_throw("reflect mismatch"_s);
                         }
                         // No locals, so also no stack objects
@@ -289,7 +289,7 @@ namespace golang::runtime
             auto stkmap = (stackmap*)(funcdata(f, abi::FUNCDATA_LocalsPointerMaps));
             if(stkmap == nullptr || stkmap->n <= 0)
             {
-                print("runtime: frame "_s, funcname(f), " untyped locals "_s, hex(frame->varp - size), "+"_s, hex(size), "\n"_s);
+                print("runtime: frame "_s, funcname(f), " untyped locals "_s, runtime::hex(frame->varp - size), "+"_s, runtime::hex(size), "\n"_s);
                 go_throw("missing stackmap"_s);
             }
             // If nbit == 0, there's no work to do.
@@ -298,7 +298,7 @@ namespace golang::runtime
                 if(stackid < 0 || stackid >= stkmap->n)
                 {
                     // don't know where we are
-                    print("runtime: pcdata is "_s, stackid, " and "_s, stkmap->n, " locals stack map entries for "_s, funcname(f), " (targetpc="_s, hex(targetpc), ")\n"_s);
+                    print("runtime: pcdata is "_s, stackid, " and "_s, stkmap->n, " locals stack map entries for "_s, funcname(f), " (targetpc="_s, runtime::hex(targetpc), ")\n"_s);
                     go_throw("bad symbol table"_s);
                 }
                 locals = stackmapdata(stkmap, stackid);
@@ -325,13 +325,13 @@ namespace golang::runtime
             auto& stackmap = stackmap_tmp;
             if(stackmap == nullptr || stackmap->n <= 0)
             {
-                print("runtime: frame "_s, funcname(f), " untyped args "_s, hex(frame->argp), "+"_s, hex(args.n * goarch::PtrSize), "\n"_s);
+                print("runtime: frame "_s, funcname(f), " untyped args "_s, runtime::hex(frame->argp), "+"_s, runtime::hex(args.n * goarch::PtrSize), "\n"_s);
                 go_throw("missing stackmap"_s);
             }
             if(pcdata < 0 || pcdata >= stackmap->n)
             {
                 // don't know where we are
-                print("runtime: pcdata is "_s, pcdata, " and "_s, stackmap->n, " args stack map entries for "_s, funcname(f), " (targetpc="_s, hex(targetpc), ")\n"_s);
+                print("runtime: pcdata is "_s, pcdata, " and "_s, stackmap->n, " args stack map entries for "_s, funcname(f), " (targetpc="_s, runtime::hex(targetpc), ")\n"_s);
                 go_throw("bad symbol table"_s);
             }
             if(stackmap->nbit == 0)

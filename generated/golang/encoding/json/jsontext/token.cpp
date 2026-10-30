@@ -338,7 +338,7 @@ namespace golang::encoding::json::jsontext
         {
             // Handle raw string value.
             auto buf = rec::previousBuffer(gocpp::recv(raw));
-            if(Kind(buf[0]) == '"')
+            if(jsontext::Kind(buf[0]) == '"')
             {
                 if(jsonwire::ConsumeSimpleString(buf) == len(buf))
                 {
@@ -436,7 +436,7 @@ namespace golang::encoding::json::jsontext
         {
             // Handle raw number value.
             auto buf = rec::previousBuffer(gocpp::recv(raw));
-            if(rec::normalize(gocpp::recv(Kind(buf[0]))) == '0')
+            if(rec::normalize(gocpp::recv(jsontext::Kind(buf[0]))) == '0')
             {
                 auto [dst_tmp, gocpp_id_1, err] = jsonwire::ReformatNumber(dst, buf, flags);
                 auto& dst = dst_tmp;
@@ -530,7 +530,7 @@ namespace golang::encoding::json::jsontext
                 gocpp::panic(invalidTokenPanic);
             }
             auto buf = rec::previousBuffer(gocpp::recv(raw));
-            if(rec::normalize(gocpp::recv(Kind(buf[0]))) == '0')
+            if(rec::normalize(gocpp::recv(jsontext::Kind(buf[0]))) == '0')
             {
                 auto [fv, err] = strconv::ParseFloat(gocpp::string(buf), bits);
                 if(err != nullptr)
@@ -689,7 +689,7 @@ namespace golang::encoding::json::jsontext
                 }
             }
             // This is not a signed integer, which implies ErrSyntax.
-            if(rec::normalize(gocpp::recv(Kind(buf[0]))) == '0')
+            if(rec::normalize(gocpp::recv(jsontext::Kind(buf[0]))) == '0')
             {
                 auto [f64, gocpp_id_2] = strconv::ParseFloat(gocpp::string(buf), 64);
                 return {f64toi64(f64), gocpp::error(gocpp::InitPtr<numError>([=](auto& x) {
@@ -849,7 +849,7 @@ namespace golang::encoding::json::jsontext
                 }
             }
             // This is not an unsigned integer, which implies ErrSyntax.
-            if(rec::normalize(gocpp::recv(Kind(buf[0]))) == '0')
+            if(rec::normalize(gocpp::recv(jsontext::Kind(buf[0]))) == '0')
             {
                 auto [f64, gocpp_id_3] = strconv::ParseFloat(gocpp::string(buf), 64);
                 return {f64tou64(f64), gocpp::error(gocpp::InitPtr<numError>([=](auto& x) {
@@ -980,7 +980,7 @@ namespace golang::encoding::json::jsontext
                     {
                         gocpp::panic(invalidTokenPanic);
                     }
-                    return rec::normalize(gocpp::recv(Kind(t.raw->buf[raw->prevStart])));
+                    return rec::normalize(gocpp::recv(jsontext::Kind(t.raw->buf[raw->prevStart])));
                     break;
                 }
                 case 1:

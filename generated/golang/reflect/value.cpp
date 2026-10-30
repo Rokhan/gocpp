@@ -210,7 +210,7 @@ namespace golang::reflect
 
     golang::reflect::Kind rec::kind(flag f)
     {
-        return Kind(f & flagKindMask);
+        return reflect::Kind(f & flagKindMask);
     }
 
     flag rec::ro(flag f)
@@ -429,7 +429,7 @@ namespace golang::reflect
     void rec::mustBe(flag f, golang::reflect::Kind expected)
     {
         // TODO(mvdan): use f.kind() again once mid-stack inlining gets better
-        if(Kind(f & flagKindMask) != expected)
+        if(reflect::Kind(f & flagKindMask) != expected)
         {
             gocpp::panic(new ValueError {valueMethodName(), rec::kind(gocpp::recv(f))});
         }
@@ -1717,7 +1717,7 @@ namespace golang::reflect
         rec::mustBe(gocpp::recv(v), Chan);
         rec::mustBeExported(gocpp::recv(v));
         auto tt = (chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
-        if(ChanDir(tt->Dir) & SendDir == 0)
+        if(reflect::ChanDir(tt->Dir) & SendDir == 0)
         {
             gocpp::panic("reflect: close of receive-only channel"_s);
         }
@@ -3165,7 +3165,7 @@ namespace golang::reflect
         golang::reflect::Value val;
         bool ok;
         auto tt = (chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
-        if(ChanDir(tt->Dir) & RecvDir == 0)
+        if(reflect::ChanDir(tt->Dir) & RecvDir == 0)
         {
             gocpp::panic("reflect: recv on send-only channel"_s);
         }
@@ -3207,7 +3207,7 @@ namespace golang::reflect
     {
         bool selected;
         auto tt = (chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
-        if(ChanDir(tt->Dir) & SendDir == 0)
+        if(reflect::ChanDir(tt->Dir) & SendDir == 0)
         {
             gocpp::panic("reflect: send on recv-only channel"_s);
         }

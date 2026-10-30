@@ -1363,6 +1363,7 @@ func (cv *cppConverter) recRefName(recvType types.Type, method string) (string, 
 }
 
 func (cv *cppConverter) recNamespaceNames() set[string] {
+	// TODO: check if we need to invalidate recNames each time cv.typeInfo.Defs is updated.
 	if cv.recNames != nil {
 		return cv.recNames
 	}
@@ -1372,7 +1373,7 @@ func (cv *cppConverter) recNamespaceNames() set[string] {
 	}
 	for _, obj := range cv.typeInfo.Defs {
 		tn, ok := obj.(*types.TypeName)
-		if !ok || tn.Pkg() != cv.pkg || tn.Parent() != cv.pkg.Scope() {
+		if !ok || !cv.isCurrentPkgTopLevel(tn) {
 			continue
 		}
 		for _, sel := range promotedSelections(tn.Type()) {
@@ -1853,7 +1854,7 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 			*env.varNames = append(*env.varNames, varName.str)
 
 			declType := cppExpr{str: "auto"}
-			if cv.isConstExpr(stmt.Rhs[0]) {			
+			if cv.isConstExpr(stmt.Rhs[0]) {
 				// auto would deduce the C++ literal type that doesn't match the go type.
 				declType = cv.convertExprCppType(stmt.Lhs[0]).cppExpr
 			}
@@ -5008,6 +5009,10 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 						if pkgName == cv.namespace && cv.IsInMethod(fun) && slices.Contains(methods, fun.Name) {
 							needNamespace = true
 						}
+					case *types.TypeName:
+						if cv.isShadowedByRec(obj) && cv.IsInMethod(fun) {
+							needNamespace = true
+						}
 					}
 				}
 
@@ -5155,10 +5160,10 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 
 			if hasReceiv {
 				varListStr := strings.Join(lambdaVarNames, ", ")
-				return ExprPrintf("[&](%s){ return %srec::%s(%s); }%s", declLisStr, ns, selector, varListStr, debugStr)
+				return ExprPrintf("[&](%s){ return %s%s::%s(%s); }%s", declLisStr, ns, recNs, selector, varListStr, debugStr)
 			} else {
 				varListStr := JoinWithPrefix(lambdaVarNames, ", ")
-				return ExprPrintf("[&](%s){ return %srec::%s(%s%s); }%s", declLisStr, ns, selector, name, varListStr, debugStr)
+				return ExprPrintf("[&](%s){ return %s%s::%s(%s%s); }%s", declLisStr, ns, recNs, selector, name, varListStr, debugStr)
 			}
 		} else {
 			var fieldPath string

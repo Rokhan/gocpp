@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"go/types"
 	"strings"
 )
 
@@ -116,4 +117,14 @@ func (cv *parsingContext) funcParamOverload(af appendFunc, name string, params t
 	af(&out, "    return %s(%s);\n", name, strings.Join(args, ", "))
 	af(&out, "}\n")
 	return out
+}
+
+func (cv *parsingInfos) isCurrentPkgTopLevel(obj types.Object) bool {
+	return obj != nil && obj.Pkg() != nil && obj.Pkg() == cv.pkg && isTopLevel(obj)
+}
+
+// Tell whether obj is a package-level object whose name is also used
+// by a function in the rec:: namespace.
+func (cv *cppConverter) isShadowedByRec(obj types.Object) bool {
+	return cv.isCurrentPkgTopLevel(obj) && cv.recNamespaceNames().has(obj.Name())
 }

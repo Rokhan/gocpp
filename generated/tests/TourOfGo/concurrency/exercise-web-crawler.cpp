@@ -10,6 +10,7 @@
 
 #include "tests/TourOfGo/concurrency/exercise-web-crawler.h"
 #include "gocpp/support.h"
+#include "gocpp/crash.h"
 
 #include "golang/fmt/errors.h"
 #include "golang/fmt/print.h"
@@ -184,15 +185,22 @@ namespace golang::main
 
 int main()
 {
+    gocpp::install_crash_handler();
     try
     {
         std::cout << std::boolalpha << std::setprecision(5) << std::fixed;
         golang::main::main();
-        return 0;
+        std::cout << std::flush;
+        std::quick_exit(0);
     }
     catch(const gocpp::GoPanic& ex)
     {
         std::cout << "Panic: " << ex.what() << std::endl;
-        return -1;
+        std::quick_exit(-1);
+    }
+    catch(const std::exception& ex)
+    {
+        std::cout << "C++ exception: " << ex.what() << std::endl;
+        return -2;
     }
 }

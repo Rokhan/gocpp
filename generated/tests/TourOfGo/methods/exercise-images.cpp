@@ -10,6 +10,7 @@
 
 #include "tests/TourOfGo/methods/exercise-images.h"
 #include "gocpp/support.h"
+#include "gocpp/crash.h"
 
 #include "golang/golang.org/x/tour/pic/pic.h"
 #include "golang/image/color/color.h"
@@ -76,15 +77,22 @@ namespace golang::main
 
 int main()
 {
+    gocpp::install_crash_handler();
     try
     {
         std::cout << std::boolalpha << std::setprecision(5) << std::fixed;
         golang::main::main();
-        return 0;
+        std::cout << std::flush;
+        std::quick_exit(0);
     }
     catch(const gocpp::GoPanic& ex)
     {
         std::cout << "Panic: " << ex.what() << std::endl;
-        return -1;
+        std::quick_exit(-1);
+    }
+    catch(const std::exception& ex)
+    {
+        std::cout << "C++ exception: " << ex.what() << std::endl;
+        return -2;
     }
 }

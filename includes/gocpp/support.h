@@ -785,6 +785,10 @@ namespace gocpp
 
     inline std::ostream& operator<<(std::ostream& os, const std::type_identity_t<error>& err)
     {
+        if(!err.has_value() && !err.mValue)
+        {
+            return os << "<nil>";
+        }
         os << Error(err);
         return os;
     }
@@ -1084,7 +1088,7 @@ namespace gocpp
             {
                 return std::string();
             }
-            return std::string(this->mArray->begin(), this->mArray->end());
+            return std::string(this->mArray->begin() + mStart, this->mArray->begin() + mEnd);
         }
 
         typename store_type::const_reference operator[](size_t i) const

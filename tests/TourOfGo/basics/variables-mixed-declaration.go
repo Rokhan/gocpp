@@ -44,4 +44,26 @@ func main() {
 
 	s2, i2, a2 := f2()
 	fmt.Println(s2, i2, a2)
+
+	b, err := reuseParam([]byte("a"))
+	fmt.Println(string(b), err)                    // ax <nil>
+	fmt.Println(string(nestedShadow([]byte("a")))) // a
+}
+
+func appendIt(b []byte) ([]byte, error) {
+	return append(b, 'x'), nil
+}
+
+func reuseParam(b []byte) ([]byte, error) {
+	b, err := appendIt(b) // reuses the parameter b, declares only err
+	return b, err
+}
+
+func nestedShadow(b []byte) []byte {
+	{
+		b, err := appendIt(b) // new b in the nested block, shadows the parameter
+		_ = err
+		b = append(b, 'y')
+	}
+	return b // still the original b
 }

@@ -1715,8 +1715,12 @@ func (cv *cppConverter) convertBlockStmtOpt(block *ast.BlockStmt, env blockEnv, 
 			fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), convertComment(cg, cv.cpp.Indent()))
 		}
 	}
+
 	cv.startScope(ScopeBlock)
-	env.startVarScope()
+	if !env.isFunc {
+		env.startVarScope()
+	}
+
 	fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
 	cv.cpp.indent++
 

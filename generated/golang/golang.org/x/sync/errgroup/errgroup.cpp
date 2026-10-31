@@ -122,8 +122,8 @@ namespace golang::golang_org::x::sync::errgroup
     // first.
     std::tuple<Group*, context::Context> WithContext(context::Context ctx)
     {
-        auto [ctx_tmp, cancel] = context::WithCancelCause(ctx);
-        auto& ctx = ctx_tmp;
+        context::CancelCauseFunc cancel;
+        std::tie(ctx, cancel) = context::WithCancelCause(ctx);
         return {gocpp::InitPtr<Group>([=](auto& x) {
             x.cancel = cancel;
         }), ctx};

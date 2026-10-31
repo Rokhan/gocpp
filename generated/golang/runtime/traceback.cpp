@@ -1443,8 +1443,8 @@ namespace golang::runtime
     bool isExportedRuntime(gocpp::string name)
     {
         // Check and remove package qualifier.
-        auto [name_tmp, found] = stringslite::CutPrefix(name, "runtime."_s);
-        auto& name = name_tmp;
+        bool found;
+        std::tie(name, found) = stringslite::CutPrefix(name, "runtime."_s);
         if(! found)
         {
             return false;

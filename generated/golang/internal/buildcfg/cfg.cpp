@@ -146,8 +146,8 @@ namespace golang::internal::buildcfg
     // of the form v1.Y.Z or v1.Y.Z-hhhhhhhh or v1.Y.Z-rcN.
     bool isFIPSVersion(gocpp::string v)
     {
-        auto [v_tmp, ok] = strings::CutPrefix(v, "v1."_s);
-        auto& v = v_tmp;
+        bool ok;
+        std::tie(v, ok) = strings::CutPrefix(v, "v1."_s);
         if(! ok)
         {
             return false;

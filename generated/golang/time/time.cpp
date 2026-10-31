@@ -1594,8 +1594,8 @@ namespace golang::time
 
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::appendTo(Time t, gocpp::slice<unsigned char> b, gocpp::string errPrefix)
     {
-        auto [b_tmp, err] = rec::appendStrictRFC3339(gocpp::recv(t), b);
-        auto& b = b_tmp;
+        gocpp::error err;
+        std::tie(b, err) = rec::appendStrictRFC3339(gocpp::recv(t), b);
         if(err != nullptr)
         {
             return {nullptr, errors::New(errPrefix + rec::Error(gocpp::recv(err)))};

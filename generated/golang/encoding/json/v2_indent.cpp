@@ -136,8 +136,8 @@ namespace golang::encoding::json
                 }(); });
             }
 
-            auto [dst_tmp, err] = jsontext::AppendFormat(dst, src, ReportErrorsWithLegacySemantics(true), jsontext::AllowDuplicateNames(true), jsontext::AllowInvalidUTF8(true), jsontext::PreserveRawStrings(true), jsontext::Multiline(true), jsontext::WithIndentPrefix(prefix), jsontext::WithIndent(indent));
-            auto& dst = dst_tmp;
+            gocpp::error err;
+            std::tie(dst, err) = jsontext::AppendFormat(dst, src, ReportErrorsWithLegacySemantics(true), jsontext::AllowDuplicateNames(true), jsontext::AllowInvalidUTF8(true), jsontext::PreserveRawStrings(true), jsontext::Multiline(true), jsontext::WithIndentPrefix(prefix), jsontext::WithIndent(indent));
             if(err != nullptr)
             {
                 return {dst.make_slice(0, dstLen), transformSyntacticError(err)};

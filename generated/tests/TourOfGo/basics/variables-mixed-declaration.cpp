@@ -74,6 +74,38 @@ namespace golang::main
         gocpp::array<gocpp::string, 3> a2;
         std::tie(s2, i2, a2) = f2();
         mocklib::Println(s2, i2, a2);
+
+        auto [b, err] = reuseParam(gocpp::slice<unsigned char>("a"_s));
+        // ax <nil>
+        mocklib::Println(gocpp::string(b), err);
+        // a
+        mocklib::Println(gocpp::string(nestedShadow(gocpp::slice<unsigned char>("a"_s))));
+    }
+
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> appendIt(gocpp::slice<unsigned char> b)
+    {
+        return {append(b, 'x'), nullptr};
+    }
+
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> reuseParam(gocpp::slice<unsigned char> b)
+    {
+        // reuses the parameter b, declares only err
+        gocpp::error err;
+        std::tie(b, err) = appendIt(b);
+        return {b, err};
+    }
+
+    gocpp::slice<unsigned char> nestedShadow(gocpp::slice<unsigned char> b)
+    {
+        {
+            // new b in the nested block, shadows the parameter
+            auto [b_tmp, err] = appendIt(b);
+            auto& b = b_tmp;
+            _ = err;
+            b = append(b, 'y');
+        }
+        // still the original b
+        return b;
     }
 
 }

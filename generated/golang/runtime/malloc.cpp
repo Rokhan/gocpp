@@ -1353,8 +1353,8 @@ namespace golang::runtime
     {
         // TODO(thepudds): could nextFreeFast, nextFree and nextReusable return unsafe.Pointer?
         // Maybe doesn't matter. gclinkptr might be for historical reasons.
-        auto [v, span_tmp] = rec::nextReusableNoScan(gocpp::recv(c), span, spc);
-        auto& span = span_tmp;
+        gclinkptr v;
+        std::tie(v, span) = rec::nextReusableNoScan(gocpp::recv(c), span, spc);
         auto x = gocpp::unsafe_pointer(v);
 
         // Compensate for the GC assist credit deducted in mallocgc (before calling us and

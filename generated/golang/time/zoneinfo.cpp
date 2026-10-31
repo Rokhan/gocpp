@@ -773,8 +773,7 @@ namespace golang::time
         }
 
         int64_t offset;
-        std::tie(offset, s_tmp, ok) = tzsetOffset(s.make_slice(1));
-        auto& s = s_tmp;
+        std::tie(offset, s, ok) = tzsetOffset(s.make_slice(1));
         if(! ok)
         {
             return {rule {}, ""_s, false};

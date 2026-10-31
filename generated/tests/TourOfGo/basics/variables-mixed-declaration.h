@@ -15,6 +15,9 @@ namespace golang::main
     std::tuple<gocpp::string, int64_t, gocpp::slice<gocpp::string>> f1();
     std::tuple<gocpp::string, int64_t, gocpp::array<gocpp::string, 3>> f2();
     void main();
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> appendIt(gocpp::slice<unsigned char> b);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> reuseParam(gocpp::slice<unsigned char> b);
+    gocpp::slice<unsigned char> nestedShadow(gocpp::slice<unsigned char> b);
 
     namespace rec
     {

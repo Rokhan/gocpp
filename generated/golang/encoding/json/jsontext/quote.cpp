@@ -33,8 +33,8 @@ namespace golang::encoding::json::jsontext
     template<typename Bytes>
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendQuote(gocpp::slice<unsigned char> dst, Bytes src)
     {
-        auto [dst_tmp, err] = jsonwire::AppendQuote(dst, gocpp::slice<unsigned char>(src), new jsonflags::Flags {});
-        auto& dst = dst_tmp;
+        gocpp::error err;
+        std::tie(dst, err) = jsonwire::AppendQuote(dst, gocpp::slice<unsigned char>(src), new jsonflags::Flags {});
         if(err != nullptr)
         {
             err = gocpp::InitPtr<SyntacticError>([=](auto& x) {
@@ -54,8 +54,8 @@ namespace golang::encoding::json::jsontext
     template<typename Bytes>
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendUnquote(gocpp::slice<unsigned char> dst, Bytes src)
     {
-        auto [dst_tmp, err] = jsonwire::AppendUnquote(dst, gocpp::slice<unsigned char>(src));
-        auto& dst = dst_tmp;
+        gocpp::error err;
+        std::tie(dst, err) = jsonwire::AppendUnquote(dst, gocpp::slice<unsigned char>(src));
         if(err != nullptr)
         {
             err = gocpp::InitPtr<SyntacticError>([=](auto& x) {

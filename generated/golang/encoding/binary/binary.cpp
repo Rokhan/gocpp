@@ -1000,8 +1000,8 @@ namespace golang::encoding::binary
             return {nullptr, errors::New("binary.Append: some values are not fixed-sized in type "_s + rec::String(gocpp::recv(reflect::TypeOf(data))))};
         }
 
-        auto [buf_tmp, pos] = ensure(buf, size);
-        auto& buf = buf_tmp;
+        gocpp::slice<unsigned char> pos;
+        std::tie(buf, pos) = ensure(buf, size);
         auto e = gocpp::InitPtr<encoder>([=](auto& x) {
             x.order = order;
             x.buf = pos;

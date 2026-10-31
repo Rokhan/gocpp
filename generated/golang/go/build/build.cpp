@@ -1877,8 +1877,8 @@ namespace golang::go::build
         gocpp::string s;
         int64_t line;
         // expect keyword package
-        auto [word, data_tmp] = parseWord(data);
-        auto& data = data_tmp;
+        gocpp::slice<unsigned char> word;
+        std::tie(word, data) = parseWord(data);
         if(gocpp::string(word) != "package"_s)
         {
             return {""_s, 0};
@@ -2320,8 +2320,7 @@ namespace golang::go::build
         // Also identify any //go:build comments.
         gocpp::slice<unsigned char> goBuild;
         bool sawBinaryOnly;
-        std::tie(content_tmp, goBuild, sawBinaryOnly, err) = parseFileHeader(content);
-        auto& content = content_tmp;
+        std::tie(content, goBuild, sawBinaryOnly, err) = parseFileHeader(content);
         if(err != nullptr)
         {
             return {false, false, err};

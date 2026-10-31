@@ -102,8 +102,8 @@ namespace golang::os
         }
         s = gocpp::string(buf);
 
-        auto [s_tmp, err] = syscall::FullPath(s);
-        auto& s = s_tmp;
+        gocpp::error err;
+        std::tie(s, err) = syscall::FullPath(s);
         if(err != nullptr)
         {
             return {""_s, err};

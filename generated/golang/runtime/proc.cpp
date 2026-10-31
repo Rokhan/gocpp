@@ -10,6 +10,7 @@
 
 #include "golang/runtime/proc.h"
 #include "gocpp/support.h"
+#include "gocpp/crash.h"
 
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/symtab.h"
@@ -8764,8 +8765,8 @@ namespace golang::runtime
     {
         assertLockHeld(& sched.lock);
 
-        auto [pp, now_tmp] = pidleget(now);
-        auto& now = now_tmp;
+        p* pp;
+        std::tie(pp, now) = pidleget(now);
         if(pp == nullptr)
         {
             // See "Delicate dance" comment in findRunnable. We found work
@@ -9756,15 +9757,22 @@ namespace golang::runtime
 
 int main()
 {
+    gocpp::install_crash_handler();
     try
     {
         std::cout << std::boolalpha << std::setprecision(5) << std::fixed;
         golang::runtime::main();
-        return 0;
+        std::cout << std::flush;
+        std::quick_exit(0);
     }
     catch(const gocpp::GoPanic& ex)
     {
         std::cout << "Panic: " << ex.what() << std::endl;
-        return -1;
+        std::quick_exit(-1);
+    }
+    catch(const std::exception& ex)
+    {
+        std::cout << "C++ exception: " << ex.what() << std::endl;
+        return -2;
     }
 }

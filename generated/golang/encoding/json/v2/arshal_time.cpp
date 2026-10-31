@@ -807,8 +807,8 @@ namespace golang::encoding::json::v2
     gocpp::slice<unsigned char> appendDurationBase10(gocpp::slice<unsigned char> b, time::Duration d, uint64_t pow10)
     {
         // append sign
-        auto [b_tmp, n] = mayAppendDurationSign(b, d);
-        auto& b = b_tmp;
+        uint64_t n;
+        std::tie(b, n) = mayAppendDurationSign(b, d);
         // compute whole and frac fields
         auto [whole, frac] = bits::Div64(0, n, uint64_t(pow10));
         // append whole field
@@ -865,8 +865,8 @@ namespace golang::encoding::json::v2
         {
             return append(b, "PT0S"_s);
         }
-        auto [b_tmp, n] = mayAppendDurationSign(b, d);
-        auto& b = b_tmp;
+        uint64_t n;
+        std::tie(b, n) = mayAppendDurationSign(b, d);
         b = append(b, "PT"_s);
         // compute nsec field
         uint64_t nsec;

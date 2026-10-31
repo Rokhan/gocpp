@@ -151,8 +151,8 @@ namespace golang::golang_org::x::tools::internal::gocommand
         gocpp::Defer defer;
         try
         {
-            auto [ctx_tmp, done] = event::Start(ctx, "gocommand.Runner.Run"_s, invLabels(inv));
-            auto& ctx = ctx_tmp;
+            std::function<void (void)> done;
+            std::tie(ctx, done) = event::Start(ctx, "gocommand.Runner.Run"_s, invLabels(inv));
             defer.push_back([=]{ done(); });
 
             auto [go_stdout, gocpp_id_0, friendly, gocpp_id_1] = rec::RunRaw(gocpp::recv(runner), ctx, inv);
@@ -171,8 +171,8 @@ namespace golang::golang_org::x::tools::internal::gocommand
         gocpp::Defer defer;
         try
         {
-            auto [ctx_tmp, done] = event::Start(ctx, "gocommand.Runner.RunPiped"_s, invLabels(inv));
-            auto& ctx = ctx_tmp;
+            std::function<void (void)> done;
+            std::tie(ctx, done) = event::Start(ctx, "gocommand.Runner.RunPiped"_s, invLabels(inv));
             defer.push_back([=]{ done(); });
 
             auto [gocpp_id_2, err] = rec::runPiped(gocpp::recv(runner), ctx, inv, go_stdout, go_stderr);
@@ -192,8 +192,8 @@ namespace golang::golang_org::x::tools::internal::gocommand
         gocpp::Defer defer;
         try
         {
-            auto [ctx_tmp, done] = event::Start(ctx, "gocommand.Runner.RunRaw"_s, invLabels(inv));
-            auto& ctx = ctx_tmp;
+            std::function<void (void)> done;
+            std::tie(ctx, done) = event::Start(ctx, "gocommand.Runner.RunRaw"_s, invLabels(inv));
             defer.push_back([=]{ done(); });
             // Make sure the runner is always initialized.
             rec::initialize(gocpp::recv(runner));

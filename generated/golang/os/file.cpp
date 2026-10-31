@@ -2049,8 +2049,8 @@ namespace golang::os
         {
             return {""_s, errors::New("os: DirFS with empty root"_s)};
         }
-        auto [name_tmp, err] = filepathlite::Localize(name);
-        auto& name = name_tmp;
+        gocpp::error err;
+        std::tie(name, err) = filepathlite::Localize(name);
         if(err != nullptr)
         {
             return {""_s, ErrInvalid};

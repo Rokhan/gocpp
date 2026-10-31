@@ -200,7 +200,8 @@ namespace golang::os
                     return err;
                 }
 
-                auto [fpath, err] = filepathlite::Localize(path);
+                gocpp::string fpath;
+                std::tie(fpath, err) = filepathlite::Localize(path);
                 if(err != nullptr)
                 {
                     return err;

@@ -2258,8 +2258,8 @@ namespace golang::regexp::syntax
             return {out, rest, err};
         }
         i += 2;
-        auto [name, s_tmp] = std::tuple{s.make_slice(0, i + 2), s.make_slice(i + 2)};
-        auto& s = s_tmp;
+        gocpp::string name;
+        std::tie(name, s) = std::tuple{s.make_slice(0, i + 2), s.make_slice(i + 2)};
         auto g = posixGroup.get(name);
         if(g.sign == 0)
         {

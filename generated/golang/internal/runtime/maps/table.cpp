@@ -108,8 +108,8 @@ namespace golang::internal::runtime::maps
 
         // N.B. group count must be a power of two for probeSeq to visit every
         // group.
-        auto [capacity_tmp, overflow] = alignUpPow2(capacity);
-        auto& capacity = capacity_tmp;
+        bool overflow;
+        std::tie(capacity, overflow) = alignUpPow2(capacity);
         if(overflow)
         {
             gocpp::panic("rounded-up capacity overflows uint64"_s);

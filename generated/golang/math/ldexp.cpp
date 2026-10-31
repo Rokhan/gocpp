@@ -58,8 +58,8 @@ namespace golang::math
                     break;
             }
         }
-        auto [frac_tmp, e] = normalize(frac);
-        auto& frac = frac_tmp;
+        int64_t e;
+        std::tie(frac, e) = normalize(frac);
         exp += e;
         auto x = Float64bits(frac);
         exp += int64_t(x >> shift) & mask - bias;

@@ -704,10 +704,10 @@ namespace golang::go::types
             }
 
             // Continue with unaliased types but don't lose original alias names, if any (go.dev/issue/67628).
-            auto [xorig, x_tmp] = std::tuple{x, Unalias(x)};
-            auto& x = x_tmp;
-            auto [yorig, y_tmp] = std::tuple{y, Unalias(y)};
-            auto& y = y_tmp;
+            types::Type xorig;
+            std::tie(xorig, x) = std::tuple{x, Unalias(x)};
+            types::Type yorig;
+            std::tie(yorig, y) = std::tuple{y, Unalias(y)};
 
             //Go type switch emulation
             {

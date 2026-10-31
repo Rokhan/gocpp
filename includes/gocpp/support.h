@@ -677,15 +677,20 @@ namespace gocpp
 
         inline error() : optional(std::nullopt) {}
         inline error(std::nullptr_t) : optional(std::nullopt) {}
-        inline error(const gocpp::string& msg) : optional(msg) {}
-        
-        template<typename T>
+        inline error(const gocpp::string& msg) : optional(msg) { }
+
+        error(const error&) = default;
+        error(error&&) = default;
+        error& operator=(const error&) = default;
+        error& operator=(error&&) = default;
+
+        template<typename T> requires (!std::same_as<std::remove_cvref_t<T>, error>)
         error(T& ref)
         {
             mValue.reset(new errorImpl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
-        template<typename T>
+        template<typename T> requires (!std::same_as<std::remove_cvref_t<T>, error>)
         error(const T& ref)
         {
             mValue.reset(new errorImpl<T, std::unique_ptr<T>>(new T(ref)));
@@ -765,6 +770,9 @@ namespace gocpp
             return rhs == nullptr;
         }
     };
+
+    static_assert(std::is_copy_constructible_v<error>);
+    static_assert(!std::is_constructible_v<error, error&> || std::is_same_v<decltype(error(std::declval<error&>())), error>);
 
     inline std::string Error(const std::type_identity_t<error>& e)
     {

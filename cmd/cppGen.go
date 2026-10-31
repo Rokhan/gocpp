@@ -25,6 +25,9 @@ func printCppIntro(cv *cppConverter, pkgInfos []*pkgInfo, receiversElts set[stri
 	fmt.Fprintf(out, "\n")
 	fmt.Fprintf(out, "#include \"%s.h\"\n", cv.baseName)
 	fmt.Fprintf(out, "#include \"%s.h\"\n", cv.shared.supportHeader)
+	if cv.hasMain {
+		fmt.Fprintf(out, "#include \"gocpp/crash.h\"\n")
+	}
 	fmt.Fprintf(out, "\n")
 
 	if pkgInfos != nil {
@@ -65,16 +68,23 @@ func printCppOutro(cv *cppConverter) {
 		// TODO: manage main parameters
 		fmt.Fprintf(out, "int main()\n")
 		fmt.Fprintf(out, "{\n")
+		fmt.Fprintf(out, "    gocpp::install_crash_handler();\n")
 		fmt.Fprintf(out, "    try\n")
 		fmt.Fprintf(out, "    {\n")
 		fmt.Fprintf(out, "        std::cout << std::boolalpha << std::setprecision(5) << std::fixed;\n")
 		fmt.Fprintf(out, "        %s::%v::main();\n", goNs, cv.fullNamespace)
-		fmt.Fprintf(out, "        return 0;\n")
+		fmt.Fprintf(out, "        std::cout << std::flush;\n")
+		fmt.Fprintf(out, "        std::quick_exit(0);\n")
 		fmt.Fprintf(out, "    }\n")
 		fmt.Fprintf(out, "    catch(const gocpp::GoPanic& ex)\n")
 		fmt.Fprintf(out, "    {\n")
 		fmt.Fprintf(out, "        std::cout << \"Panic: \" << ex.what() << std::endl;\n")
-		fmt.Fprintf(out, "        return -1;\n")
+		fmt.Fprintf(out, "        std::quick_exit(-1);\n")
+		fmt.Fprintf(out, "    }\n")
+		fmt.Fprintf(out, "    catch(const std::exception& ex)\n")
+		fmt.Fprintf(out, "    {\n")
+		fmt.Fprintf(out, "        std::cout << \"C++ exception: \" << ex.what() << std::endl;\n")
+		fmt.Fprintf(out, "        return -2;\n")
 		fmt.Fprintf(out, "    }\n")
 		fmt.Fprintf(out, "}\n")
 	}

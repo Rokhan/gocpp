@@ -116,10 +116,34 @@ namespace gocpp
         return pool;
     }
     
-    template <typename Function, typename... Args>
-    inline void go(Function &&func, Args &&...args)
+    // Wraps a goroutine body: an exception escaping it ends the whole process,
+    // as an unrecovered panic does in Go. Without it, thread_pool swallows it.
+    template <typename F>
+    auto abort_on_panic(F&& func)
     {
-        global_pool().enqueue_detach(func, args...);
+        return [f = std::forward<F>(func)](auto&&... args) mutable -> void
+        {
+            try
+            {
+                std::invoke(f, std::forward<decltype(args)>(args)...);
+            }
+            catch(const GoPanic& p)
+            {
+                std::cout << "Panic: " << p.what() << std::endl;   // endl flushes
+                std::quick_exit(2);
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << "C++ exception in goroutine: " << e.what() << std::endl;
+                std::quick_exit(3);
+            }
+        };
+    }
+
+    template <typename Function, typename... Args>
+    inline void go(Function&& func, Args &&...args)
+    {
+        global_pool().enqueue_detach(abort_on_panic(func), args...);
     }
 
     struct GoPanic : std::runtime_error 

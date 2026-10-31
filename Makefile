@@ -46,6 +46,10 @@ GOCPP_PARAMETERS += -cppOutDir=$(OUTDIR)
 ON_DIFF_ERROR = false
 ON_GCC_ERROR = false
 
+GOCPP_SANITIZE ?=
+# usage: make GOCPP_SANITIZE=address ...
+CXX_SANITIZE = $(if $(GOCPP_SANITIZE),-fsanitize=$(GOCPP_SANITIZE) -g,)
+
 export SHOW_DEBUG_LOG = false
 
 ifeq ($(SHOW_DEBUG_LOG),true)
@@ -160,7 +164,7 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) gocpp.exe
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 
-	(cd $(OUTDIR) && $(CCACHE) g++ -w -c -std=c++20 -I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.o && g++ ../$(LOGDIR)/$*.o -o ../$(LOGDIR)/$*.exe) \
+	(cd $(OUTDIR) && $(CCACHE) g++ -w -c -std=c++20 $(CXX_SANITIZE) -I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.o && g++ $(CXX_SANITIZE) ../$(LOGDIR)/$*.o -o ../$(LOGDIR)/$*.exe) \
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 
@@ -193,7 +197,7 @@ go-stdlib: $(GENERATED_GOLANG_LIB_OBJ_FILES)
 
 GOLANG_LIB_COMPILE = \
 	(cd $(OUTDIR) && \
-	timeout $(GCC_TIMEOUT) $(CCACHE) g++ -w -c -std=c++20 \
+	timeout $(GCC_TIMEOUT) $(CCACHE) g++ -w -c -std=c++20 $(CXX_SANITIZE) \
 		-I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes \
 		$(1).cpp \
 		-o ../$(LOGDIR)/$(1).o)

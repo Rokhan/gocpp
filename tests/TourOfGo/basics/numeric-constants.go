@@ -18,8 +18,16 @@ func needFloat(x float64) float64 {
 	return x * 0.1
 }
 
+func testFloatLitAsInt() {
+	var msec int64 = 1234567
+	fmt.Println(msec/1e3, (msec%1e3)*1e6, msec*1e9)
+	var f float64 = 5
+	fmt.Println(f * 1e3)
+}
+
 func main() {
 	fmt.Println(needInt(Small))
 	fmt.Println(needFloat(Small))
 	fmt.Println(needFloat(Big))
+	testFloatLitAsInt()
 }

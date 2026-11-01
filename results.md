@@ -466,9 +466,9 @@
 | $(ImportDir)/internal/strconv/decimal.go | ✔️ ([cpp](generated/golang/internal/strconv/decimal.cpp), [h](generated/golang/internal/strconv/decimal.h))| ✔️ |
 | $(ImportDir)/internal/strconv/deps.go | ✔️ ([cpp](generated/golang/internal/strconv/deps.cpp), [h](generated/golang/internal/strconv/deps.h))| ✔️ |
 | $(ImportDir)/internal/strconv/ftoa.go | ✔️ ([cpp](generated/golang/internal/strconv/ftoa.cpp), [h](generated/golang/internal/strconv/ftoa.h))| ❌ |
-| $(ImportDir)/internal/strconv/itoa.go | ✔️ ([cpp](generated/golang/internal/strconv/itoa.cpp), [h](generated/golang/internal/strconv/itoa.h))| ❌ |
+| $(ImportDir)/internal/strconv/itoa.go | ✔️ ([cpp](generated/golang/internal/strconv/itoa.cpp), [h](generated/golang/internal/strconv/itoa.h))| ✔️ |
 | $(ImportDir)/internal/strconv/pow10tab.go | ✔️ ([cpp](generated/golang/internal/strconv/pow10tab.cpp), [h](generated/golang/internal/strconv/pow10tab.h))| ✔️ |
-| $(ImportDir)/internal/strconv/uscale.go | ✔️ ([cpp](generated/golang/internal/strconv/uscale.cpp), [h](generated/golang/internal/strconv/uscale.h))| ❌ |
+| $(ImportDir)/internal/strconv/uscale.go | ✔️ ([cpp](generated/golang/internal/strconv/uscale.cpp), [h](generated/golang/internal/strconv/uscale.h))| ✔️ |
 | $(ImportDir)/internal/stringslite/strings.go | ✔️ ([cpp](generated/golang/internal/stringslite/strings.cpp), [h](generated/golang/internal/stringslite/strings.h))| ❌ |
 | $(ImportDir)/internal/sync/hashtriemap.go | ✔️ ([cpp](generated/golang/internal/sync/hashtriemap.cpp), [h](generated/golang/internal/sync/hashtriemap.h))| ❌ |
 | $(ImportDir)/internal/sync/mutex.go | ✔️ ([cpp](generated/golang/internal/sync/mutex.cpp), [h](generated/golang/internal/sync/mutex.h))| ✔️ |
@@ -801,7 +801,7 @@
 | $(ImportDir)/syscall/security_windows.go | ✔️ ([cpp](generated/golang/syscall/security_windows.cpp), [h](generated/golang/syscall/security_windows.h))| ✔️ |
 | $(ImportDir)/syscall/syscall.go | ✔️ ([cpp](generated/golang/syscall/syscall.cpp), [h](generated/golang/syscall/syscall.h))| ✔️ |
 | $(ImportDir)/syscall/syscall_windows.go | ✔️ ([cpp](generated/golang/syscall/syscall_windows.cpp), [h](generated/golang/syscall/syscall_windows.h))| ❌ |
-| $(ImportDir)/syscall/types_windows.go | ✔️ ([cpp](generated/golang/syscall/types_windows.cpp), [h](generated/golang/syscall/types_windows.h))| ❌ |
+| $(ImportDir)/syscall/types_windows.go | ✔️ ([cpp](generated/golang/syscall/types_windows.cpp), [h](generated/golang/syscall/types_windows.h))| ✔️ |
 | $(ImportDir)/syscall/types_windows_amd64.go | ✔️ ([cpp](generated/golang/syscall/types_windows_amd64.cpp), [h](generated/golang/syscall/types_windows_amd64.h))| ✔️ |
 | $(ImportDir)/syscall/wtf8_windows.go | ✔️ ([cpp](generated/golang/syscall/wtf8_windows.cpp), [h](generated/golang/syscall/wtf8_windows.h))| ✔️ |
 | $(ImportDir)/syscall/zerrors_windows.go | ✔️ ([cpp](generated/golang/syscall/zerrors_windows.cpp), [h](generated/golang/syscall/zerrors_windows.h))| ✔️ |
@@ -811,7 +811,7 @@
 | $(ImportDir)/time/sleep.go | ✔️ ([cpp](generated/golang/time/sleep.cpp), [h](generated/golang/time/sleep.h))| ❌ |
 | $(ImportDir)/time/sys_windows.go | ✔️ ([cpp](generated/golang/time/sys_windows.cpp), [h](generated/golang/time/sys_windows.h))| ✔️ |
 | $(ImportDir)/time/tick.go | ✔️ ([cpp](generated/golang/time/tick.cpp), [h](generated/golang/time/tick.h))| ❌ |
-| $(ImportDir)/time/time.go | ✔️ ([cpp](generated/golang/time/time.cpp), [h](generated/golang/time/time.h))| ❌ |
+| $(ImportDir)/time/time.go | ✔️ ([cpp](generated/golang/time/time.cpp), [h](generated/golang/time/time.h))| ✔️ |
 | $(ImportDir)/time/zoneinfo.go | ✔️ ([cpp](generated/golang/time/zoneinfo.cpp), [h](generated/golang/time/zoneinfo.h))| ✔️ |
 | $(ImportDir)/time/zoneinfo_abbrs_windows.go | ✔️ ([cpp](generated/golang/time/zoneinfo_abbrs_windows.cpp), [h](generated/golang/time/zoneinfo_abbrs_windows.h))| ✔️ |
 | $(ImportDir)/time/zoneinfo_goroot.go | ✔️ ([cpp](generated/golang/time/zoneinfo_goroot.cpp), [h](generated/golang/time/zoneinfo_goroot.h))| ✔️ |

@@ -543,6 +543,29 @@ func Last[EltType any](elts []EltType) (EltType, bool) {
 	return elts[len(elts)-1], true
 }
 
+// Inserts C++ digit separators every 3 digits: 1000000 -> 1'000'000.
+// Numbers of 4 digits or fewer are left alone (1000 stays 1000).
+func groupDigits(s string) string {
+	sign := ""
+	if strings.HasPrefix(s, "-") {
+		sign, s = "-", s[1:]
+	}
+	if len(s) <= 4 {
+		return sign + s
+	}
+	var b strings.Builder
+	first := len(s) % 3
+	if first == 0 {
+		first = 3
+	}
+	b.WriteString(s[:first])
+	for i := first; i < len(s); i += 3 {
+		b.WriteByte('\'')
+		b.WriteString(s[i : i+3])
+	}
+	return sign + b.String()
+}
+
 func deduplicate[T comparable](items []T) []T {
 	seen := map[T]bool{}
 	var result []T

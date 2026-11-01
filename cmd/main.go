@@ -4815,6 +4815,13 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			return mkCppExpr("gocpp::complex128(0, " + strings.Replace(n.Value, "i", "", -1) + ")")
 		case token.INT, token.FLOAT:
 			lit := strings.ReplaceAll(n.Value, "_", "")
+			if n.Kind == token.FLOAT {
+				// in go, the literal '1e3' is a float in the ast, but an integer for the type system.
+				if intLit, ok := cv.floatLitAsInt(n); ok {
+					lit = intLit
+				}
+			}
+
 			if n.Kind == token.INT && cv.isConstLeaf(n) {
 				// Go untyped ints are arbitrary precision, need ensure we have wide enough type
 				switch cv.constWidth {
@@ -5250,6 +5257,34 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 func (cv *cppConverter) isConstLeaf(e ast.Expr) bool {
 	tv, ok := cv.typeInfo.Types[e]
 	return ok && tv.Value != nil && tv.Value.Kind() == constant.Int
+}
+
+// Handles float literals such as `1e3` that are seen as an integer by the type system.
+// Returns the C++ integer literal and true/false if integer/float
+func (cv *cppConverter) floatLitAsInt(lit *ast.BasicLit) (string, bool) {
+	tv, ok := cv.typeInfo.Types[lit]
+	if !ok || tv.Value == nil {
+		return "", false
+	}
+	b, ok := types.Unalias(tv.Type).Underlying().(*types.Basic)
+	if !ok || b.Info()&types.IsInteger == 0 || b.Info()&types.IsUntyped != 0 {
+		return "", false
+	}
+	v := constant.ToInt(tv.Value)
+	if v.Kind() != constant.Int {
+		return "", false
+	}
+
+	str := groupDigits(v.ExactString())
+	switch {
+	case constant.Compare(v, token.GEQ, int32Min) && constant.Compare(v, token.LEQ, int32Max):
+		return str, true
+	case constant.Compare(v, token.GEQ, int64Min) && constant.Compare(v, token.LEQ, int64Max):
+		return str + "LL", true
+	case constant.Compare(v, token.GTR, int64Max) && constant.Compare(v, token.LEQ, uint64Max):
+		return str + "ULL", true
+	}
+	return "", false
 }
 
 func (cv *cppConverter) buildPkgDepInfo(obj *types.PkgName, selector *ast.Ident) depInfo {

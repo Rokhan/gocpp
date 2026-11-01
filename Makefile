@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 
 GO_TEST_DIRS:=$(wildcard ./tests ./tests/*/*/)
 GO_TEST_DIRS:=$(filter-out ./tests/TourOfGo/img/, $(GO_TEST_DIRS))
@@ -11,6 +12,7 @@ _=$(shell mkdir -p $(OUTDIR)/golang)
 
 GENERATED_GOLANG_LIB_CPP_FILES=$(shell find $(OUTDIR)/golang -name '*.cpp')
 GENERATED_GOLANG_LIB_OBJ_FILES=$(patsubst  $(OUTDIR)/%, $(LOGDIR)/%, $(GENERATED_GOLANG_LIB_CPP_FILES:.cpp=.o))
+GENERATED_GOLANG_LIB_LINK_MD_FILES=$(patsubst $(OUTDIR)/%, $(LOGDIR)/%, $(GENERATED_GOLANG_LIB_CPP_FILES:.cpp=.link.md))
 GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES=$(GENERATED_GOLANG_LIB_OBJ_FILES:.o=.full.md)
 
 CPP_TEST_FILES=$(GO_TEST_FILES:.go=.cpp)
@@ -28,6 +30,7 @@ OUT_MD_TEST_FILES=$(addprefix $(LOGDIR)/,$(MD_TEST_FILES))
 CCACHE := $(shell which ccache 2> /dev/null)
 
 GCC_TIMEOUT ?= 30s
+LINK_TIMEOUT ?= 60s
 
 GOCPP_ALWAYS_REGENERATE = false
 GOCPP_STRICT_MODE = false
@@ -93,8 +96,8 @@ doc:
 	echo "" >> results.md
 	echo "" >> results.md
 	echo "# Conversion of imported packages" >> results.md
-	echo "| file | cpp generate | cpp compile |" >> results.md
-	echo "| ---- | -------------| ----------- |" >> results.md
+	echo "| file | cpp generate | cpp compile | link |" >> results.md
+	echo "| ---- | -------------| ----------- | ---- |" >> results.md
 	make -j4 md-stdlib
 	cat $$(find log/golang -type f -name "*.full.md" | sort) >> results.md
 	dos2unix results.md
@@ -141,7 +144,11 @@ custom-build: gocpp.exe
 # usage example: 'make custom-stdlib-build GOCPP_IGNORE_DEPENDENCIES=true CUSTOM_BUILD_INPUT="compress/flate/huffman_bit_writer.go"'
 custom-stdlib-build: gocpp.exe
 	./gocpp.exe $(GOCPP_PARAMETERS) -input $$(go env GOROOT)/src/$(CUSTOM_BUILD_INPUT) > $(LOGDIR)/gocpp-stdlib.log
-	make $(LOGDIR)/golang/$(CUSTOM_BUILD_INPUT:.go=.o)
+	$(MAKE) $(LOGDIR)/golang/$(CUSTOM_BUILD_INPUT:.go=.o)
+	rm -f $(LOGDIR)/golang/$(CUSTOM_BUILD_INPUT:.go=.link.md)
+	$(MAKE) $(LOGDIR)/golang/$(CUSTOM_BUILD_INPUT:.go=.link.md)
+	cat $(LOGDIR)/golang/$(CUSTOM_BUILD_INPUT:.go=.link.md); echo
+	grep -o "undefined reference to .*" $(LOGDIR)/golang/$(CUSTOM_BUILD_INPUT:.go=.link.log) | sort | uniq -c | sort -rn | head -20 || true
 
 $(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go $(SUPPORT_FILES) gocpp.exe
 	$(call DEBUG_LOG, " => $<")
@@ -190,7 +197,8 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) gocpp.exe
 	fi
 
 go-stdlib-all: allexe
-	make go-stdlib
+	-$(MAKE) -k go-stdlib
+	$(MAKE) -k go-stdlib-link
 
 go-stdlib: $(GENERATED_GOLANG_LIB_OBJ_FILES)
 #	$(call DEBUG_LOG, $(GENERATED_GOLANG_LIB_OBJ_FILES))
@@ -199,6 +207,7 @@ GOLANG_LIB_COMPILE = \
 	(cd $(OUTDIR) && \
 	timeout $(GCC_TIMEOUT) $(CCACHE) g++ -w -c -std=c++20 $(CXX_SANITIZE) \
 		-I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes \
+		-ffunction-sections -fdata-sections \
 		$(1).cpp \
 		-o ../$(LOGDIR)/$(1).o)
 
@@ -213,14 +222,51 @@ $(GENERATED_GOLANG_LIB_OBJ_FILES): $(LOGDIR)/%.o : $(OUTDIR)/%.cpp $(SUPPORT_FIL
 		&&  echo -n " ✔️ |" > $(LOGDIR)/$*.obj.md \
 		|| (echo    " ❌ |" > $(LOGDIR)/$*.obj.md && $(ON_GCC_ERROR))
 
+
+go-stdlib-link: $(GENERATED_GOLANG_LIB_LINK_MD_FILES)
+
+GOLANG_LIB_ARCHIVE=$(LOGDIR)/golang/libgolang.a
+
+.SECONDEXPANSION:
+
+# Rebuilt in a temp file and replaced only if the member list changed,
+# so its mtime (and therefore every link result) is stable when nothing was added or removed.
+$(GOLANG_LIB_ARCHIVE): FORCE
+	find $(CURDIR)/$(LOGDIR)/golang -name '*.o' | sort > $@.list
+	rm -f $@.tmp
+	xargs ar qcsT $@.tmp < $@.list
+	if cmp -s $@.tmp $@; then rm -f $@.tmp; else mv $@.tmp $@; fi
+
+FORCE:
+
+# Linking test for go std lib files
+# * '-nostartfiles': library files have no main, we only want to see missing/duplicate symbols.
+# * No prerequisite on the .o file on purpose, compilation failure gives ❌ status
+$(GENERATED_GOLANG_LIB_LINK_MD_FILES): $(LOGDIR)/%.link.md : $(OUTDIR)/%.cpp $$(wildcard $(LOGDIR)/$$*.o) $(STDLIB_ARCHIVE)
+	mkdir -p $$(dirname $@) || true
+	if [ ! -f $(LOGDIR)/$*.o ]; then \
+		echo -n " ❌ |" > $@; \
+	else \
+		roots=$$(nm --defined-only $(LOGDIR)/$*.o | awk '$$2 ~ /^[TDBRVWSG]$$/ { print "-Wl,-u," $$3 }'); \
+		if timeout $(LINK_TIMEOUT) g++ -nostartfiles -pthread $(CXX_SANITIZE) \
+				-Wl,--gc-sections $$roots $(LOGDIR)/$*.o $(STDLIB_ARCHIVE) \
+				-o $(LOGDIR)/$*.link.out > $(LOGDIR)/$*.link.log 2>&1; \
+		then echo -n " ✔️ |" > $@; \
+		else echo -n " ❌ |" > $@; fi; \
+	fi
+
+# Most frequent undefined symbols, to see what to implement next.
+link-undefined:
+	cat $$(find $(LOGDIR)/golang -name '*.link.log') | grep -o "undefined reference to .*" | sort | uniq -c | sort -rn | head -50
+
 md-stdlib: $(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES)
 #	$(call DEBUG_LOG, $(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES))
 
-$(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES): $(LOGDIR)/%.full.md : $(LOGDIR)/%.obj.md $(LOGDIR)/%.status.md
+$(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES): $(LOGDIR)/%.full.md : $(LOGDIR)/%.obj.md $(LOGDIR)/%.status.md $(LOGDIR)/%.link.md
 	$(call DEBUG_LOG, " => $<")
 	$(call DEBUG_LOG, " => $@")
 	$(call DEBUG_LOG, " => $*")
-	cat $(LOGDIR)/$*.status.md $(LOGDIR)/$*.obj.md | (tr -d "\n" && echo) > $@
+	cat $(LOGDIR)/$*.{status,obj,link}.md | (tr -d "\n" && echo) > $@
 
 clean-full-md:
 	rm $$(find $(LOGDIR) -name '*.full.md')
@@ -232,6 +278,10 @@ clean-exe-obj:
 clean:
 	rm -rf $(LOGDIR) $(OUTDIR)
 	rm -f results.md
+
+relink:
+	rm -f $$(find $(LOGDIR)/golang -name '*.link.md')
+	$(MAKE) -k go-stdlib-link
 
 soft-clean:
 	touch cmd/main.go

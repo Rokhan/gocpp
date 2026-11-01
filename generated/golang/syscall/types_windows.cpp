@@ -81,14 +81,14 @@ namespace golang::syscall
 
     int64_t rec::Nanoseconds(Timeval* tv)
     {
-        return (int64_t(tv->Sec) * 1e6 + int64_t(tv->Usec)) * 1e3;
+        return (int64_t(tv->Sec) * 1'000'000 + int64_t(tv->Usec)) * 1000;
     }
 
     Timeval NsecToTimeval(int64_t nsec)
     {
         Timeval tv;
-        tv.Sec = int32_t(nsec / 1e9);
-        tv.Usec = int32_t(nsec % 1e9 / 1e3);
+        tv.Sec = int32_t(nsec / 1'000'000'000);
+        tv.Usec = int32_t(nsec % 1'000'000'000 / 1000);
         return tv;
     }
 

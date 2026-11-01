@@ -360,15 +360,15 @@ namespace golang::time
         //Go switch emulation
         {
             int conditionId = -1;
-            if(width == 2 && u < 1e2) { conditionId = 0; }
-            else if(width == 4 && u < 1e4) { conditionId = 1; }
+            if(width == 2 && u < 100) { conditionId = 0; }
+            else if(width == 4 && u < 10'000) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
-                    return append(b, utod(u / 1e1), utod(u % 1e1));
+                    return append(b, utod(u / 10), utod(u % 10));
                     break;
                 case 1:
-                    return append(b, utod(u / 1e3), utod(u / 1e2 % 1e1), utod(u / 1e1 % 1e1), utod(u % 1e1));
+                    return append(b, utod(u / 1000), utod(u / 100 % 10), utod(u / 10 % 10), utod(u % 10));
                     break;
             }
         }
@@ -526,9 +526,9 @@ namespace golang::time
                 m2 = - m2;
             }
             uint64_t m1;
-            std::tie(m1, m2) = std::tuple{m2 / 1e9, m2 % 1e9};
+            std::tie(m1, m2) = std::tuple{m2 / 1'000'000'000, m2 % 1'000'000'000};
             uint64_t m0;
-            std::tie(m0, m1) = std::tuple{m1 / 1e9, m1 % 1e9};
+            std::tie(m0, m1) = std::tuple{m1 / 1'000'000'000, m1 % 1'000'000'000};
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 24);
             buf = append(buf, " m="_s);
             buf = append(buf, sign);

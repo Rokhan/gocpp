@@ -31,11 +31,20 @@ namespace golang::main
         return x * 0.1;
     }
 
+    void testFloatLitAsInt()
+    {
+        int64_t msec = 1234567;
+        mocklib::Println(msec / 1000, (msec % 1000) * 1'000'000, msec * 1'000'000'000);
+        double f = 5;
+        mocklib::Println(f * 1e3);
+    }
+
     void main()
     {
         mocklib::Println(needInt(Small));
         mocklib::Println(needFloat(Small));
         mocklib::Println(needFloat(Big));
+        testFloatLitAsInt();
     }
 
 }

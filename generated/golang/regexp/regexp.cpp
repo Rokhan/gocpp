@@ -1834,7 +1834,7 @@ namespace golang::regexp
         num = 0;
         for(int64_t i = 0; i < len(name); i++)
         {
-            if(name[i] < '0' || '9' < name[i] || num >= 1e8)
+            if(name[i] < '0' || '9' < name[i] || num >= 100'000'000)
             {
                 num = - 1;
                 break;

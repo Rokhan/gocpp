@@ -57,7 +57,7 @@ namespace golang::main
     {
         auto v = Vertex {1, 2};
         auto p = & v;
-        p->X = 1e9;
+        p->X = 1'000'000'000;
         mocklib::Println(v);
     }
 

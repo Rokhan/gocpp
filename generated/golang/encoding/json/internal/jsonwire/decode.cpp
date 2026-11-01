@@ -939,7 +939,7 @@ namespace golang::encoding::json::internal::jsonwire
         {
             int conditionId = -1;
             if(n == 0 || len(b) != n || (b[0] == '0' && gocpp::string(b) != "0"_s)) { conditionId = 0; }
-            else if(n >= unsafeWidth && (b[0] != '1' || v < 1e19 || n > unsafeWidth)) { conditionId = 1; }
+            else if(n >= unsafeWidth && (b[0] != '1' || v < 10'000'000'000'000'000'000ULL || n > unsafeWidth)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:

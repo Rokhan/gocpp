@@ -1825,14 +1825,14 @@ namespace golang::syscall
 
     int64_t TimespecToNsec(Timespec ts)
     {
-        return int64_t(ts.Sec) * 1e9 + int64_t(ts.Nsec);
+        return int64_t(ts.Sec) * 1'000'000'000 + int64_t(ts.Nsec);
     }
 
     Timespec NsecToTimespec(int64_t nsec)
     {
         Timespec ts;
-        ts.Sec = nsec / 1e9;
-        ts.Nsec = nsec % 1e9;
+        ts.Sec = nsec / 1'000'000'000;
+        ts.Nsec = nsec % 1'000'000'000;
         return ts;
     }
 

@@ -44,7 +44,7 @@ namespace golang::math::cmplx
         else
         if(math::IsInf(imag(x), 0))
         {
-            return gocpp::complex128(math::Inf(1.0), imag(x));
+            return gocpp::complex128(math::Inf(1), imag(x));
         }
         if(real(x) == 0)
         {

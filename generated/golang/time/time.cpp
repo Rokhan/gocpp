@@ -961,13 +961,13 @@ namespace golang::time
     // Microseconds returns the duration as an integer microsecond count.
     int64_t rec::Microseconds(Duration d)
     {
-        return int64_t(d) / 1e3;
+        return int64_t(d) / 1000;
     }
 
     // Milliseconds returns the duration as an integer millisecond count.
     int64_t rec::Milliseconds(Duration d)
     {
-        return int64_t(d) / 1e6;
+        return int64_t(d) / 1'000'000;
     }
 
     // Seconds returns the duration as a floating point number of seconds.
@@ -1079,18 +1079,18 @@ namespace golang::time
     // Add returns the time t+d.
     Time rec::Add(Time t, Duration d)
     {
-        auto dsec = int64_t(d / 1e9);
-        auto nsec = rec::nsec(gocpp::recv(t)) + int32_t(d % 1e9);
-        if(nsec >= 1e9)
+        auto dsec = int64_t(d / 1'000'000'000);
+        auto nsec = rec::nsec(gocpp::recv(t)) + int32_t(d % 1'000'000'000);
+        if(nsec >= 1'000'000'000)
         {
             dsec++;
-            nsec -= 1e9;
+            nsec -= 1'000'000'000;
         }
         else
         if(nsec < 0)
         {
             dsec--;
-            nsec += 1e9;
+            nsec += 1'000'000'000;
         }
         // update nsec
         t.wall = (t.wall & ~(nsecMask)) | uint64_t(nsec);
@@ -1409,7 +1409,7 @@ namespace golang::time
     // location associated with t.
     int64_t rec::UnixMilli(Time t)
     {
-        return rec::unixSec(gocpp::recv(t)) * 1e3 + int64_t(rec::nsec(gocpp::recv(t))) / 1e6;
+        return rec::unixSec(gocpp::recv(t)) * 1000 + int64_t(rec::nsec(gocpp::recv(t))) / 1'000'000;
     }
 
     // UnixMicro returns t as a Unix time, the number of microseconds elapsed since
@@ -1419,7 +1419,7 @@ namespace golang::time
     // with t.
     int64_t rec::UnixMicro(Time t)
     {
-        return rec::unixSec(gocpp::recv(t)) * 1e6 + int64_t(rec::nsec(gocpp::recv(t))) / 1e3;
+        return rec::unixSec(gocpp::recv(t)) * 1'000'000 + int64_t(rec::nsec(gocpp::recv(t))) / 1000;
     }
 
     // UnixNano returns t as a Unix time, the number of nanoseconds elapsed
@@ -1430,7 +1430,7 @@ namespace golang::time
     // location associated with t.
     int64_t rec::UnixNano(Time t)
     {
-        return (rec::unixSec(gocpp::recv(t))) * 1e9 + int64_t(rec::nsec(gocpp::recv(t)));
+        return (rec::unixSec(gocpp::recv(t))) * 1'000'000'000 + int64_t(rec::nsec(gocpp::recv(t)));
     }
 
     // AppendBinary implements the [encoding.BinaryAppender] interface.
@@ -1637,14 +1637,14 @@ namespace golang::time
     // value is 1<<63-1 (the largest int64 value).
     Time Unix(int64_t sec, int64_t nsec)
     {
-        if(nsec < 0 || nsec >= 1e9)
+        if(nsec < 0 || nsec >= 1'000'000'000)
         {
-            auto n = nsec / 1e9;
+            auto n = nsec / 1'000'000'000;
             sec += n;
-            nsec -= n * 1e9;
+            nsec -= n * 1'000'000'000;
             if(nsec < 0)
             {
-                nsec += 1e9;
+                nsec += 1'000'000'000;
                 sec--;
             }
         }
@@ -1655,14 +1655,14 @@ namespace golang::time
     // msec milliseconds since January 1, 1970 UTC.
     Time UnixMilli(int64_t msec)
     {
-        return Unix(msec / 1e3, (msec % 1e3) * 1e6);
+        return Unix(msec / 1000, (msec % 1000) * 1'000'000);
     }
 
     // UnixMicro returns the local Time corresponding to the given Unix time,
     // usec microseconds since January 1, 1970 UTC.
     Time UnixMicro(int64_t usec)
     {
-        return Unix(usec / 1e6, (usec % 1e6) * 1e3);
+        return Unix(usec / 1'000'000, (usec % 1'000'000) * 1000);
     }
 
     // IsDST reports whether the time in the configured location is in Daylight Savings Time.
@@ -1740,7 +1740,7 @@ namespace golang::time
         month = Month(m) + 1;
 
         // Normalize nsec, sec, min, hour, overflowing into day.
-        std::tie(sec, nsec) = norm(sec, nsec, 1e9);
+        std::tie(sec, nsec) = norm(sec, nsec, 1'000'000'000);
         std::tie(min, sec) = norm(min, sec, 60);
         std::tie(hour, min) = norm(hour, min, 60);
         std::tie(day, hour) = norm(day, hour, 24);
@@ -1831,7 +1831,7 @@ namespace golang::time
             nsec = - nsec;
             if(nsec < 0)
             {
-                nsec += 1e9;
+                nsec += 1'000'000'000;
                 // sec >= 1 before the -- so safe
                 sec--;
             }
@@ -1868,10 +1868,10 @@ namespace golang::time
                     // Compute nanoseconds as 128-bit number.
                     auto sec_tmp = uint64_t(sec);
                     auto& sec = sec_tmp;
-                    auto tmp = (sec >> 32) * 1e9;
+                    auto tmp = (sec >> 32) * 1'000'000'000;
                     auto u1 = tmp >> 32;
                     auto u0 = tmp << 32;
-                    tmp = (sec & 0xFFFFFFFF) * 1e9;
+                    tmp = (sec & 0xFFFFFFFF) * 1'000'000'000;
                     uint64_t u0x;
                     std::tie(u0x, u0) = std::tuple{u0, u0 + tmp};
                     if(u0 < u0x)

@@ -227,9 +227,9 @@ namespace golang::internal::strconv
         for(; nd >= 8; )
         {
             // Format last 8 digits (4 pairs).
-            auto x3210 = uint32_t(u % 1e8);
-            u /= 1e8;
-            auto [x32, x10] = std::tuple{x3210 / 1e4, x3210 % 1e4};
+            auto x3210 = uint32_t(u % 100'000'000);
+            u /= 100'000'000;
+            auto [x32, x10] = std::tuple{x3210 / 10'000, x3210 % 10'000};
             auto [x1, x0] = std::tuple{(x10 / 100) * 2, (x10 % 100) * 2};
             auto [x3, x2] = std::tuple{(x32 / 100) * 2, (x32 % 100) * 2};
             std::tie(a[nd - 1], a[nd - 2]) = std::tuple{smalls[x0 + 1], smalls[x0]};
@@ -243,8 +243,8 @@ namespace golang::internal::strconv
         if(nd >= 4)
         {
             // Format last 4 digits (2 pairs).
-            auto x10 = x % 1e4;
-            x /= 1e4;
+            auto x10 = x % 10'000;
+            x /= 10'000;
             auto [x1, x0] = std::tuple{(x10 / 100) * 2, (x10 % 100) * 2};
             std::tie(a[nd - 1], a[nd - 2]) = std::tuple{smalls[x0 + 1], smalls[x0]};
             std::tie(a[nd - 3], a[nd - 4]) = std::tuple{smalls[x1 + 1], smalls[x1]};
@@ -253,8 +253,8 @@ namespace golang::internal::strconv
         if(nd >= 2)
         {
             // Format last 2 digits.
-            auto x0 = (x % 1e2) * 2;
-            x /= 1e2;
+            auto x0 = (x % 100) * 2;
+            x /= 100;
             std::tie(a[nd - 1], a[nd - 2]) = std::tuple{smalls[x0 + 1], smalls[x0]};
             nd -= 2;
         }

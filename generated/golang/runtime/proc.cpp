@@ -7715,7 +7715,7 @@ namespace golang::runtime
                 }
             }
             // Check if we need to update GOMAXPROCS at most once per second.
-            if(debug.updatemaxprocs != 0 && lastgomaxprocs + 1e9 <= now)
+            if(debug.updatemaxprocs != 0 && lastgomaxprocs + 1'000'000'000 <= now)
             {
                 sysmonUpdateGOMAXPROCS();
                 lastgomaxprocs = now;
@@ -8132,7 +8132,7 @@ namespace golang::runtime
         }
 
         lock(& sched.lock);
-        print("SCHED "_s, (now - starttime) / 1e6, "ms: gomaxprocs="_s, gomaxprocs, " idleprocs="_s, rec::Load(gocpp::recv(sched.npidle)), " threads="_s, mcount(), " spinningthreads="_s, rec::Load(gocpp::recv(sched.nmspinning)), " needspinning="_s, rec::Load(gocpp::recv(sched.needspinning)), " idlethreads="_s, sched.nmidle, " runqueue="_s, sched.runq.size);
+        print("SCHED "_s, (now - starttime) / 1'000'000, "ms: gomaxprocs="_s, gomaxprocs, " idleprocs="_s, rec::Load(gocpp::recv(sched.npidle)), " threads="_s, mcount(), " spinningthreads="_s, rec::Load(gocpp::recv(sched.nmspinning)), " needspinning="_s, rec::Load(gocpp::recv(sched.needspinning)), " idlethreads="_s, sched.nmidle, " runqueue="_s, sched.runq.size);
         if(detailed)
         {
             print(" gcwaiting="_s, rec::Load(gocpp::recv(sched.gcwaiting)), " nmidlelocked="_s, sched.nmidlelocked, " stopwait="_s, sched.stopwait, " sysmonwait="_s, rec::Load(gocpp::recv(sched.sysmonwait)), "\n"_s);

@@ -474,7 +474,7 @@ namespace golang::runtime
             // sleeping a fixed, conservative amount.
             s->sleepRatio = startingScavSleepRatio;
             // 5 seconds.
-            s->controllerCooldown = 5e9;
+            s->controllerCooldown = 5'000'000'000LL;
 
             // Signal the scav trace printer to output this.
             rec::controllerFailed(gocpp::recv(s));

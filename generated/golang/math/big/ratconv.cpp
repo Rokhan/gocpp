@@ -259,7 +259,7 @@ namespace golang::math::big
                         return {nullptr, false};
                     }
                 }
-                if(n > 1e6)
+                if(n > 1'000'000)
                 {
                     // avoid excessively large exponents
                     return {nullptr, false};
@@ -282,7 +282,7 @@ namespace golang::math::big
             }
 
             // apply exp2 contributions
-            if(exp2 < - 1e7 || exp2 > 1e7)
+            if(exp2 < - 1e7 || exp2 > 10'000'000)
             {
                 // avoid excessively large exponents
                 return {nullptr, false};

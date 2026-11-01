@@ -705,7 +705,7 @@ namespace golang::fmt
     // too large to be used as a formatting width or precision.
     bool tooLarge(int64_t x)
     {
-        int64_t max = 1e6;
+        int64_t max = 1'000'000;
         return x > max || x < - max;
     }
 

@@ -14,6 +14,7 @@ namespace golang::main
 {
     int64_t needInt(int64_t x);
     double needFloat(double x);
+    void testFloatLitAsInt();
     void main();
 
     namespace rec

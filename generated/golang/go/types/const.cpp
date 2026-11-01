@@ -82,7 +82,7 @@ namespace golang::go::types
 
         // String values must not become arbitrarily long (go.dev/issue/78346).
         // cmd/internal/obj.MaxSymSize
-        auto maxLen = int64_t(2e9);
+        auto maxLen = int64_t(2'000'000'000);
         if(rec::Kind(gocpp::recv(x->val)) == constant::String)
         {
             auto len = constant::StringLen(x->val);

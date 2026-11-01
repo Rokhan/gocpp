@@ -318,7 +318,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
         }
         // This estimate is based on the net/http package.
         // impose some reasonable maximum (1M)
-        auto capacity = gocpp::min(extent * 33 / 100, 1e6);
+        auto capacity = gocpp::min(extent * 33 / 100, 1'000'000);
 
         auto v = gocpp::InitPtr<visitor>([=](auto& x) {
             x.events = gocpp::make(gocpp::Tag<gocpp::slice<event>>(), 0, capacity);

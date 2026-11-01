@@ -152,9 +152,9 @@ namespace golang::runtime
         {
             // Registered. Sleep.
             gp->m->blocked = true;
-            if(*cgo_yield != nullptr && ns > 10e6)
+            if(*cgo_yield != nullptr && ns > 10'000'000)
             {
-                ns = 10e6;
+                ns = 10'000'000;
             }
             if(semasleep(ns) >= 0)
             {

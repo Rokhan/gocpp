@@ -8,7 +8,7 @@ namespace golang::go::parser
 {
     struct parser;
     // maxNestLev is the deepest we're willing to recurse during parsing
-    inline constexpr int64_t maxNestLev = 1e5;
+    inline constexpr int64_t maxNestLev = 100'000;
     struct bailout;
     struct field;
     // Parsing modes for parseSimpleStmt.

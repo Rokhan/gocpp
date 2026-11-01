@@ -240,11 +240,11 @@ namespace golang::runtime
         gList toRun = {};
         auto mp = getg()->m;
 
-        if(delay >= 1e15)
+        if(delay >= 1'000'000'000'000'000LL)
         {
             // An arbitrary cap on how long to wait for a timer.
             // 1e15 ns == ~11.5 days.
-            delay = 1e15;
+            delay = 1'000'000'000'000'000LL;
         }
 
         if(delay > 0 && mp->mOS.waitIocpHandle != 0)
@@ -273,13 +273,13 @@ namespace golang::runtime
             wait = 0;
         }
         else
-        if(delay < 1e6)
+        if(delay < 1'000'000)
         {
             wait = 1;
         }
         else
         {
-            wait = uint32_t(delay / 1e6);
+            wait = uint32_t(delay / 1'000'000);
         }
         auto n = len(entries) / int64_t(gomaxprocs);
         if(n < 8)

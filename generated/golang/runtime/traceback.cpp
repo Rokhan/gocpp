@@ -1525,7 +1525,7 @@ namespace golang::runtime
         int64_t waitfor = {};
         if((gpstatus == _Gwaiting || gpstatus == _Gsyscall) && gp->waitsince != 0)
         {
-            waitfor = (nanotime() - gp->waitsince) / 60e9;
+            waitfor = (nanotime() - gp->waitsince) / 60'000'000'000LL;
         }
         print("goroutine "_s, gp->goid);
         if(gp->m != nullptr && gp->m->throwing >= throwTypeRuntime && gp == gp->m->curg || level >= 2)

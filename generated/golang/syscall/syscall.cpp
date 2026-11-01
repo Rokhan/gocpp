@@ -118,13 +118,13 @@ namespace golang::syscall
     // Nano returns the time stored in ts as nanoseconds.
     int64_t rec::Nano(Timespec* ts)
     {
-        return int64_t(ts->Sec) * 1e9 + int64_t(ts->Nsec);
+        return int64_t(ts->Sec) * 1'000'000'000 + int64_t(ts->Nsec);
     }
 
     // Nano returns the time stored in tv as nanoseconds.
     int64_t rec::Nano(Timeval* tv)
     {
-        return int64_t(tv->Sec) * 1e9 + int64_t(tv->Usec) * 1000;
+        return int64_t(tv->Sec) * 1'000'000'000 + int64_t(tv->Usec) * 1000;
     }
 
     int64_t Getpagesize()

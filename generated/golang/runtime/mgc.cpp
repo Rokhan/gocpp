@@ -1705,7 +1705,7 @@ namespace golang::runtime
         // Update timing memstats
         auto now = nanotime();
         auto [sec, nsec, gocpp_id_7] = time_now();
-        auto unixNow = sec * 1e9 + int64_t(nsec);
+        auto unixNow = sec * 1'000'000'000 + int64_t(nsec);
         work.pauseNS += now - stw.startedStopping;
         work.tEnd = now;
         // must be Unix time to make sense to user
@@ -1871,7 +1871,7 @@ namespace golang::runtime
 
             gocpp::array<unsigned char, 24> sbuf = {};
             printlock();
-            print("gc "_s, memstats.numgc, " @"_s, gocpp::string(itoaDiv(sbuf.make_slice(0), uint64_t(work.tSweepTerm - runtimeInitTime) / 1e6, 3)), "s "_s, util, "%"_s);
+            print("gc "_s, memstats.numgc, " @"_s, gocpp::string(itoaDiv(sbuf.make_slice(0), uint64_t(work.tSweepTerm - runtimeInitTime) / 1'000'000, 3)), "s "_s, util, "%"_s);
             if(goroutineLeakDone)
             {
                 print(" (checking for goroutine leaks)"_s);
@@ -2651,13 +2651,13 @@ namespace golang::runtime
     // fmtNSAsMS nicely formats ns nanoseconds as milliseconds.
     gocpp::slice<unsigned char> fmtNSAsMS(gocpp::slice<unsigned char> buf, uint64_t ns)
     {
-        if(ns >= 10e6)
+        if(ns >= 10'000'000)
         {
             // Format as whole milliseconds.
-            return itoaDiv(buf, ns / 1e6, 0);
+            return itoaDiv(buf, ns / 1'000'000, 0);
         }
         // Format two digits of precision, with at most three decimal places.
-        auto x = ns / 1e3;
+        auto x = ns / 1000;
         if(x == 0)
         {
             buf[0] = '0';

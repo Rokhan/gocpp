@@ -1742,7 +1742,7 @@ namespace golang::regexp::syntax
         for(int64_t i = 0; i < len(t); i++)
         {
             // Avoid overflow.
-            if(n >= 1e8)
+            if(n >= 100'000'000)
             {
                 n = - 1;
                 break;

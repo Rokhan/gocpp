@@ -416,16 +416,16 @@ namespace golang::encoding::json::v2
                     a->base = 0;
                     break;
                 case 1:
-                    a->base = 1e9;
+                    a->base = 1'000'000'000;
                     break;
                 case 2:
-                    a->base = 1e6;
+                    a->base = 1'000'000;
                     break;
                 case 3:
-                    a->base = 1e3;
+                    a->base = 1000;
                     break;
                 case 4:
-                    a->base = 1e0;
+                    a->base = 1;
                     break;
                 case 5:
                     a->base = 8601;
@@ -629,16 +629,16 @@ namespace golang::encoding::json::v2
                     a->format = time::TimeOnly;
                     break;
                 case 18:
-                    a->base = 1e0;
+                    a->base = 1;
                     break;
                 case 19:
-                    a->base = 1e3;
+                    a->base = 1000;
                     break;
                 case 20:
-                    a->base = 1e6;
+                    a->base = 1'000'000;
                     break;
                 case 21:
-                    a->base = 1e9;
+                    a->base = 1'000'000'000;
                     break;
                 default:
                     // Reject any Go identifier in case new constants are supported.
@@ -870,7 +870,7 @@ namespace golang::encoding::json::v2
         b = append(b, "PT"_s);
         // compute nsec field
         uint64_t nsec;
-        std::tie(n, nsec) = bits::Div64(0, n, 1e9);
+        std::tie(n, nsec) = bits::Div64(0, n, 1'000'000'000);
         // compute sec field
         uint64_t sec;
         std::tie(n, sec) = bits::Div64(0, n, 60);
@@ -886,7 +886,7 @@ namespace golang::encoding::json::v2
         }
         if(sec > 0 || nsec > 0)
         {
-            b = append(appendFracBase10(strconv::AppendUint(b, sec, 10), nsec, 1e9), 'S');
+            b = append(appendFracBase10(strconv::AppendUint(b, sec, 10), nsec, 1'000'000'000), 'S');
         }
         return b;
     }
@@ -1037,7 +1037,7 @@ namespace golang::encoding::json::v2
             // accurate portion of the duration
             durTime = mayParseUnit(durTime, 'H', 'h', time::Duration(60 * 60 * 1e9));
             durTime = mayParseUnit(durTime, 'M', 'm', time::Duration(60 * 1e9));
-            durTime = mayParseUnit(durTime, 'S', 's', time::Duration(1e9));
+            durTime = mayParseUnit(durTime, 'S', 's', time::Duration(1'000'000'000));
             // unknown elements
             invalid = invalid || len(durTime) > 0;
         }
@@ -1106,23 +1106,23 @@ namespace golang::encoding::json::v2
         //Go switch emulation
         {
             int conditionId = -1;
-            if(pow10 == 1e0) { conditionId = 0; }
-            else if(uint64_t(sec) < 1e9) { conditionId = 1; }
+            if(pow10 == 1) { conditionId = 0; }
+            else if(uint64_t(sec) < 1'000'000'000) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
                     b = strconv::AppendUint(b, uint64_t(sec), 10);
-                    return appendFracBase10(b, uint64_t(nsec), 1e9);
+                    return appendFracBase10(b, uint64_t(nsec), 1'000'000'000);
                     break;
                 case 1:
-                    b = strconv::AppendUint(b, uint64_t(sec) * uint64_t(pow10) + uint64_t(uint64_t(nsec) / (1e9 / pow10)), 10);
-                    return appendFracBase10(b, (uint64_t(nsec) * pow10) % 1e9, 1e9);
+                    b = strconv::AppendUint(b, uint64_t(sec) * uint64_t(pow10) + uint64_t(uint64_t(nsec) / (1'000'000'000 / pow10)), 10);
+                    return appendFracBase10(b, (uint64_t(nsec) * pow10) % 1'000'000'000, 1'000'000'000);
                     break;
                 default:
                     // slow case where units is not seconds and overflow would occur
                     b = strconv::AppendUint(b, uint64_t(sec), 10);
-                    b = appendPaddedBase10(b, uint64_t(nsec) / (1e9 / pow10), pow10);
-                    return appendFracBase10(b, (uint64_t(nsec) * pow10) % 1e9, 1e9);
+                    b = appendPaddedBase10(b, uint64_t(nsec) / (1'000'000'000 / pow10), pow10);
+                    return appendFracBase10(b, (uint64_t(nsec) * pow10) % 1'000'000'000, 1'000'000'000);
                     break;
             }
         }
@@ -1139,13 +1139,13 @@ namespace golang::encoding::json::v2
         // parse whole field; may overflow
         auto [whole, okWhole] = jsonwire::ParseUint(wholeBytes);
         // parse frac field
-        auto [frac, okFrac] = parseFracBase10(fracBytes, 1e9 / pow10);
+        auto [frac, okFrac] = parseFracBase10(fracBytes, 1'000'000'000 / pow10);
         int64_t sec = {};
         int64_t nsec = {};
         //Go switch emulation
         {
             int conditionId = -1;
-            if(pow10 == 1e0) { conditionId = 0; }
+            if(pow10 == 1) { conditionId = 0; }
             else if(okWhole) { conditionId = 1; }
             else if(! okWhole && whole == math::MaxUint64) { conditionId = 2; }
             switch(conditionId)
@@ -1160,7 +1160,7 @@ namespace golang::encoding::json::v2
                 case 1:
                     // check overflow later after negation
                     sec = int64_t(whole / pow10);
-                    nsec = int64_t((whole % pow10) * (1e9 / pow10) + frac);
+                    nsec = int64_t((whole % pow10) * (1'000'000'000 / pow10) + frac);
                     break;
                 // cannot overflow
                 case 2:
@@ -1173,7 +1173,7 @@ namespace golang::encoding::json::v2
                     auto [mid, gocpp_id_2] = parsePaddedBase10(wholeBytes.make_slice(len(wholeBytes) - width), pow10);
                     // check overflow later after negation
                     sec = int64_t(whole);
-                    nsec = int64_t(mid * (1e9 / pow10) + frac);
+                    nsec = int64_t(mid * (1'000'000'000 / pow10) + frac);
                     break;
                 }
             }
@@ -1209,11 +1209,11 @@ namespace golang::encoding::json::v2
         // twos-complement negation (i.e., -1*sec + 1)
         sec = ~ sec;
         // negate nsec and add 1e9 (which is the extra +1 from sec negation)
-        nsec = - nsec + 1e9;
+        nsec = - nsec + 1'000'000'000;
         // handle possible overflow of nsec if it started as zero
-        sec += int64_t(nsec / 1e9);
+        sec += int64_t(nsec / 1'000'000'000);
         // ensure nsec stays within [0, 1e9)
-        nsec %= 1e9;
+        nsec %= 1'000'000'000;
         return {sec, nsec};
     }
 

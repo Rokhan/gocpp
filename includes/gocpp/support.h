@@ -506,6 +506,16 @@ namespace gocpp
             return lhs.mImpl.get() == rhs.mImpl.get();
         }
 
+        bool is_nil() const
+        {
+            return mImpl == nullptr;
+        }
+
+        const void* address() const
+        {
+            return mImpl.get();
+        }
+
         struct channel_iterator
         {
             channel<T> chan;
@@ -609,6 +619,16 @@ namespace gocpp
             return mImpl.use_count();
         }
     };
+
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, const gocpp::channel<T>& chan)
+    {
+        if(chan.is_nil())
+        {
+            return os << "<nil>";
+        }
+        return os << chan.address();
+    }
 
     struct Defer : std::vector<std::function<void()>>
     {

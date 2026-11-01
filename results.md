@@ -810,7 +810,7 @@
 | $(ImportDir)/time/format_rfc3339.go | ✔️ ([cpp](generated/golang/time/format_rfc3339.cpp), [h](generated/golang/time/format_rfc3339.h))| ✔️ | ❌ |
 | $(ImportDir)/time/sleep.go | ✔️ ([cpp](generated/golang/time/sleep.cpp), [h](generated/golang/time/sleep.h))| ❌ | ❌ |
 | $(ImportDir)/time/sys_windows.go | ✔️ ([cpp](generated/golang/time/sys_windows.cpp), [h](generated/golang/time/sys_windows.h))| ✔️ | ❌ |
-| $(ImportDir)/time/tick.go | ✔️ ([cpp](generated/golang/time/tick.cpp), [h](generated/golang/time/tick.h))| ❌ | ❌ |
+| $(ImportDir)/time/tick.go | ✔️ ([cpp](generated/golang/time/tick.cpp), [h](generated/golang/time/tick.h))| ✔️ | ❌ |
 | $(ImportDir)/time/time.go | ✔️ ([cpp](generated/golang/time/time.cpp), [h](generated/golang/time/time.h))| ✔️ | ❌ |
 | $(ImportDir)/time/zoneinfo.go | ✔️ ([cpp](generated/golang/time/zoneinfo.cpp), [h](generated/golang/time/zoneinfo.h))| ✔️ | ❌ |
 | $(ImportDir)/time/zoneinfo_abbrs_windows.go | ✔️ ([cpp](generated/golang/time/zoneinfo_abbrs_windows.cpp), [h](generated/golang/time/zoneinfo_abbrs_windows.h))| ✔️ | ✔️ |

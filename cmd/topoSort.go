@@ -150,7 +150,7 @@ func topoSort(cv Logger, headerElts []*place, getter func(place) []string, logPr
 		}
 	}
 
-	// Add intermedite space netween existing ranks
+	// Add intermedite space between existing ranks
 	splitElts := map[int]map[*place]bool{}
 	for i, rankElts := range elts {
 		for elt := range rankElts {
@@ -189,7 +189,7 @@ func topoSort(cv Logger, headerElts []*place, getter func(place) []string, logPr
 			}
 		}
 
-		// Push defintion as soon as possible
+		// Push definitions as soon as possible
 		for i := maxIndex; i > 0; i-- {
 			for elt1 := range elts[i] {
 				if elt1.depInfo.decPkg != "" || elt1.namespace != nil {

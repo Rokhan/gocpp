@@ -70,6 +70,14 @@ func getArrayLen(goType types.Type, position token.Position) int64 {
 	return 0
 }
 
+func underlying(tv types.Type) types.Type {
+	var underlying types.Type
+	if tv != nil {
+		underlying = tv.Underlying()
+	}
+	return underlying
+}
+
 // posFilePath return the path computed via the shared FileSet.
 func (cv *parsingInfos) posFilePath(t token.Pos) string {
 	tf := cv.pcShared.fileSet.File(t)

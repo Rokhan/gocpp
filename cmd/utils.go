@@ -1231,6 +1231,17 @@ const (
 	FwdInclude includeType = 2
 )
 
+func (incType includeType) String() string {
+	switch incType {
+	case HdrInclude:
+		return "Hdr"
+	case FwdInclude:
+		return "Fwd"
+	default:
+		return ""
+	}
+}
+
 func getIncludeSuffix(incTyp includeType) string {
 	switch incTyp {
 	case HdrInclude:
@@ -1238,7 +1249,7 @@ func getIncludeSuffix(incTyp includeType) string {
 	case FwdInclude:
 		return ".fwd.h"
 	default:
-		panic("unmanaged extencion type")
+		panic("unmanaged include type")
 	}
 }
 

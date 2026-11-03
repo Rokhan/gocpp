@@ -55,12 +55,12 @@ func ComparePlace(cv Logger, x *place, y *place, getter func(place) []string, lo
 	var incType includeType
 	incType, ok = x.depInfo.depPkgs[y.depInfo.decPkg]
 	if ok && incType == y.includeType {
-		cv.Logf("%s sort pkg:  '%v' use pkg '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decPkg, y.depInfo.rank)
+		cv.Logf("%s sort pkg:  '%v[%v]' use pkg '%v[%v]', rank: %v\n", logPrefix, xstr, incType, y.depInfo.decPkg, y.includeType, y.depInfo.rank)
 		return 1
 	}
 	incType, ok = y.depInfo.depPkgs[x.depInfo.decPkg]
 	if ok && incType == x.includeType {
-		cv.Logf("%s sort pkg:  '%v' use pkg '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decPkg, x.depInfo.rank)
+		cv.Logf("%s sort pkg:  '%v[%v]' use pkg '%v[%v]', rank: %v\n", logPrefix, ystr, incType, x.depInfo.decPkg, x.includeType, x.depInfo.rank)
 		return -1
 	}
 

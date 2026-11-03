@@ -745,7 +745,8 @@ func logPlace(logger Logger, place *place, prefixFmt string, params ...any) {
 	}
 	pid := getPlaceLogId(place)
 	prefix := fmt.Sprintf(prefixFmt, params...)
-	logger.Logf("%s pid:%3d -- info[%v, %v]: type='%v', deps=%v, vars=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v, ns=%s, depNs:%v\n", prefix, pid, di.rank, di.initialOrder, di.decType, di.dependencies, di.depVars, di.decPkg, di.depPkgs, di.decIdent, di.depIdents, ns, di.depNss)
+	logger.Logf("%s pid:%3d -- info[%v, %v]: type='%v', deps=%v, vars=%v, inc=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v, ns=%s, depNs:%v\n",
+		prefix, pid, di.rank, di.initialOrder, di.decType, di.dependencies, di.depVars, place.includeType, di.decPkg, di.depPkgs, di.decIdent, di.depIdents, ns, di.depNss)
 }
 
 func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(place) []string, dm depMode, outFile outFile, inNamespace bool) (set[string], bool) {
@@ -3366,7 +3367,7 @@ func (cv *cppConverter) checkStructType(expr ast.Expr, cppType *cppType) {
 	}
 
 	if cv.shared.verbose {
-		cv.Logf("checkStructType, %v => %v, %T, %T\n", types.ExprString(expr), cppType.isStruct, tv, tv.Underlying())
+		cv.Logf("checkStructType, %v => %v, %T, %T\n", types.ExprString(expr), cppType.isStruct, tv, underlying(tv))
 	}
 }
 

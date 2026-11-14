@@ -396,28 +396,6 @@ var stdFuncMapping = map[string]string{
 }
 
 var knownCompilationErrors = []*errorFilter{}
-
 var knownNameConflicts = []*errorFilter{}
-
-var knownMissingDeps = []*errorFilter{
-	{"mProfCycleWrap", "runtime/mprof"}, // constant using incomplete type
-
-	{"pallocSumBytes", "runtime/mpagealloc"}, // constant using incomplete type
-
-	{"gcBitsHeaderBytes", "runtime/mheap"}, // constant unsafe::Sizeof and incomplete type
-
-	{"pageCachePages", "runtime/mpagecache"}, // constant unsafe::Sizeof and incomplete type
-
-	{"hchanSize", "runtime/chan"}, // constant unsafe::Sizeof and incomplete type
-}
-
-var knownIncomplete = []*errorFilter{
-	{"gcBitsArena::bits", "runtime/mheap"}, // type declaration ignored in header becuase of other error
-
-	{"stackWorkBuf::obj", "runtime/mgcstack"}, // Declaration order + Need special case to manage unsafe::Sizeof
-
-	{"workbuf::obj", "runtime/mgcwork"}, // Need special case to manage unsafe::Sizeof
-
-	{"Method::Func", "reflect/type"},          // Multi header Declaration order problem
-	{"methodValue::rcvr", "reflect/makefunc"}, // Multi header Declaration order problem
-}
+var knownMissingDeps = []*errorFilter{}
+var knownIncomplete = []*errorFilter{}

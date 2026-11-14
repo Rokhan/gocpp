@@ -4023,55 +4023,21 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 	// //}
 
 	goType := cv.typeInfo.Types[node].Type
-	promoted := cv.promotedMethods(goType)
-	for _, pm := range promoted {
-		places = append(places, pm.defs...)
-	}
-
 	fullStructName := param.name + templatePrmList
 
-	if param.streamOp == with && len(promoted) != 0 {
-		fmt.Fprintf(buf, "\n%snamespace %s\n", data.out.Indent(), recNs)
-		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
-		data.out.indent++
-		var first = true
-
+	if param.streamOp == with {
+		promoted := cv.promotedMethods(goType)
 		for _, pm := range promoted {
-			endParams, endArgs := "", ""
-			if len(pm.params) != 0 {
-				endParams = ", " + pm.params.String()
-				endArgs = ", " + pm.params.NamesStr()
-			}
-
-			if !first && param.output == implem {
-				fmt.Fprintf(buf, "\n")
-			}
-
-			PrintTemplatePrefix(buf, data, templatePrms)
-			fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<struct %s, false>& self%s)%s\n", data.out.Indent(), pm.result, pm.name, fullStructName, endParams, data.declEnd)
-			if data.needBody {
-				fmt.Fprintf(buf, "%s{\n", data.out.Indent())
-				fmt.Fprintf(buf, "%s    return %s(gocpp::recv(%s)%s);\n", data.out.Indent(), pm.callee, accessPath("self.ptr", true, pm.steps), endArgs)
-				fmt.Fprintf(buf, "%s}\n", data.out.Indent())
-			}
-
-			if pm.onValue { // pointer-receiver methods must not be callable on a value
-				if param.output == implem {
-					fmt.Fprintf(buf, "\n")
-				}
-				PrintTemplatePrefix(buf, data, templatePrms)
-				fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<struct %s>& self%s)%s\n", data.out.Indent(), pm.result, pm.name, fullStructName, endParams, data.declEnd)
-				if data.needBody {
-					fmt.Fprintf(buf, "%s{\n", data.out.Indent())
-					fmt.Fprintf(buf, "%s    return %s(gocpp::recv(%s)%s);\n", data.out.Indent(), pm.callee, accessPath("self.obj", false, pm.steps), endArgs)
-					fmt.Fprintf(buf, "%s}\n", data.out.Indent())
-				}
-			}
-
-			first = false
+			places = append(places, pm.defs...) // namespace aliases
 		}
-		data.out.indent--
-		fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+		switch {
+		case param.output == decl:
+			// Forwarder declarations go to the end of the header, outside the
+			// struct's block, so they don't constrain its position in topoSort.
+			places = append(places, promotedDeclPlaces(promoted, templatePrms, fullStructName)...)
+		case len(promoted) != 0:
+			writePromotedImpl(buf, data, param, promoted, templatePrms, fullStructName)
+		}
 	}
 
 	if param.streamOp == with {
@@ -4090,6 +4056,77 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 		}
 	}
 	return buf.String(), places
+}
+
+// Declarations of the forwarders of promoted methods, as headerEnd places.
+// The only dependency they need is the namespace aliases used by the types in
+// their signatures. The callee (pkg::rec::M) only appears in the .cpp body.
+func promotedDeclPlaces(promoted []promotedMethod, templatePrms typeParams, fullStructName string) (places []place) {
+	tmpl := ""
+	if len(templatePrms) != 0 {
+		tmpl = mkTemplateDec(templatePrms) + " "
+	}
+
+	for _, pm := range promoted {
+		di := depInfo{depNss: map[string]bool{}}
+		for _, def := range pm.defs {
+			if def.namespace != nil {
+				di.depNss[def.namespace.ns] = true
+			}
+		}
+
+		endParams := ""
+		if len(pm.params) != 0 {
+			endParams = ", " + pm.params.String()
+		}
+
+		ptrDecl := fmt.Sprintf("%s%s %s(const gocpp::PtrRecv<struct %s, false>& self%s);\n", tmpl, pm.result, pm.name, fullStructName, endParams)
+		places = append(places, headerEndStrDeps(ptrDecl, di))
+		if pm.onValue { // pointer-receiver methods must not be callable on a value
+			objDecl := fmt.Sprintf("%s%s %s(const gocpp::ObjRecv<struct %s>& self%s);\n", tmpl, pm.result, pm.name, fullStructName, endParams)
+			places = append(places, headerEndStrDeps(objDecl, di))
+		}
+	}
+	return
+}
+
+// Definitions of the forwarders, in the .cpp file (implem and all outputs only).
+func writePromotedImpl(buf *bytes.Buffer, data genStructData, param genStructParam, promoted []promotedMethod, templatePrms typeParams, fullStructName string) {
+	fmt.Fprintf(buf, "\n%snamespace %s\n", data.out.Indent(), recNs)
+	fmt.Fprintf(buf, "%s{\n", data.out.Indent())
+	data.out.indent++
+
+	for i, pm := range promoted {
+		endParams, endArgs := "", ""
+		if len(pm.params) != 0 {
+			endParams = ", " + pm.params.String()
+			endArgs = ", " + pm.params.NamesStr()
+		}
+
+		if i > 0 && param.output == implem {
+			fmt.Fprintf(buf, "\n")
+		}
+
+		PrintTemplatePrefix(buf, data, templatePrms)
+		fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<struct %s, false>& self%s)\n", data.out.Indent(), pm.result, pm.name, fullStructName, endParams)
+		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s    return %s(gocpp::recv(%s)%s);\n", data.out.Indent(), pm.callee, accessPath("self.ptr", true, pm.steps), endArgs)
+		fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+
+		if pm.onValue {
+			if param.output == implem {
+				fmt.Fprintf(buf, "\n")
+			}
+			PrintTemplatePrefix(buf, data, templatePrms)
+			fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<struct %s>& self%s)\n", data.out.Indent(), pm.result, pm.name, fullStructName, endParams)
+			fmt.Fprintf(buf, "%s{\n", data.out.Indent())
+			fmt.Fprintf(buf, "%s    return %s(gocpp::recv(%s)%s);\n", data.out.Indent(), pm.callee, accessPath("self.obj", false, pm.steps), endArgs)
+			fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+		}
+	}
+
+	data.out.indent--
+	fmt.Fprintf(buf, "%s}\n", data.out.Indent())
 }
 
 func PrintTemplatePrefix(buf *bytes.Buffer, data genStructData, templatePrms typeParams) {

@@ -856,10 +856,6 @@ func ComputeDeps(toDo map[string]types.Type, dm depMode) map[string]types.Type {
 						fieldType := t.Field(i).Type()
 						toDo[fieldType.String()] = fieldType
 					}
-					// Forwarders for promoted methods use these types in their signatures.
-					for _, sigType := range promotedSigTypes(t) {
-						toDo[sigType.String()] = sigType
-					}
 				}
 
 			case *types.Interface:
@@ -1046,10 +1042,6 @@ func ComputePackages(deps map[string]types.Type, pc parsingContext) (includes ma
 			for i := 0; i < t.NumFields(); i++ {
 				push(t.Field(i).Type(), HdrInclude)
 				addResult(t.Field(i), HdrInclude)
-			}
-			// forwarders for promoted methods (see promotedSigTypes)
-			for _, sigType := range promotedSigTypes(t) {
-				push(sigType, HdrInclude)
 			}
 
 		case *types.Interface:
@@ -1343,6 +1335,10 @@ func headerStrs(strs []string, node ast.Node) place {
 
 func headerEndStr(str string) place {
 	return place{nil, nil, nil, &str, nil, NotInclude, depInfo{}, nil, nil, nil, nil}
+}
+
+func headerEndStrDeps(str string, di depInfo) place {
+	return place{headerEnd: &str, depInfo: di}
 }
 
 func fwdHeaderStr(str string, node ast.Node, depInfo depInfo) place {

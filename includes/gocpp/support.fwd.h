@@ -9,27 +9,6 @@
 #include <string>
 #include <functional>
 
-// Temporary definitions to mock broken include files
-namespace golang
-{
-    namespace runtime
-    {
-        struct g;
-        struct sudog;
-
-        struct funcval;
-        struct gobuf;
-        struct mcache;
-        struct adjustinfo;
-        struct funcInfo;
-        struct eface;
-        struct iface;
-        struct _defer;
-        struct _panic;
-        struct godebugInc;
-    }
-}
-
 namespace gocpp
 {
     template<typename T, typename DefTag> struct defined;

@@ -27,20 +27,6 @@ namespace golang
 {
     constexpr gocpp::string operator""_s(const char* src, std::size_t);
 
-    // Temporary definitions to mock broken include files
-    namespace runtime
-    {
-        struct g {};
-        struct p {};
-        struct m {};
-
-        struct sudog{};
-        struct funcInfo{};
-        struct metricValue{};
-        struct traceMap{};
-        struct Frame{};
-    }
-
     namespace golang_org::x::tour::tree
     {
         struct Tree;

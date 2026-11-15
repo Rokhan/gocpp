@@ -1099,6 +1099,16 @@ namespace gocpp
         }
     };
 
+    // Manage Golong "x.(T)" syntax in single-value context, panics on failure
+    template <typename T, typename S>
+    T assertValue(const S& src)
+    {
+        auto r = getValue<T>(src);
+        if(!r.second)
+            panic(ErrInvalidValueCast<T>::error_message());
+        return r.first;
+    }
+
     template <GoInterface TInterface, typename TSource>
         requires std::convertible_to<TSource, TInterface>
     && GoStruct<TSource>

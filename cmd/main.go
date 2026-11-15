@@ -1832,11 +1832,16 @@ func (cv *cppConverter) convertAssignRightExprs(exprs []ast.Expr) cppExpr {
 }
 
 // convertAssignRight converts the right side of an assignment with nLhs names on the left.
-// `v, ok := m[k]` needs the comma-ok form of the map access.
+// "v, ok := m[k]" needs the comma-ok form of the map access.
 func (cv *cppConverter) convertAssignRight(nLhs int, exprs []ast.Expr) cppExpr {
 	if nLhs == 2 && len(exprs) == 1 {
-		if idx, ok := ast.Unparen(exprs[0]).(*ast.IndexExpr); ok && cv.IsExprMap(idx.X) {
-			return cv.convertExprCtx(idx, exprCtx{commaOk: true})
+		switch e := ast.Unparen(exprs[0]).(type) {
+		case *ast.IndexExpr:
+			if cv.IsExprMap(e.X) {
+				return cv.convertExprCtx(e, exprCtx{commaOk: true})
+			}
+		case *ast.TypeAssertExpr:
+			return cv.convertExprCtx(e, exprCtx{commaOk: true})
 		}
 	}
 	return cv.convertAssignRightExprs(exprs)
@@ -5284,7 +5289,11 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 
 	case *ast.TypeAssertExpr:
 		// maybe we should try to get from context the number of required output
-		return ExprPrintf("gocpp::getValue<%s>(%s)", cv.convertTypeExpr(n.Type, ctContext{}), cv.convertExpr(n.X))
+		fn := "assertValue"
+		if ctx.commaOk {
+			fn = "getValue"
+		}
+		return ExprPrintf("gocpp::%s<%s>(%s)", fn, cv.convertTypeExpr(n.Type, ctContext{}), cv.convertExpr(n.X))
 
 	default:
 		cv.Panicf("convertExprImpl, type %v, expr '%v', position %v", reflect.TypeOf(node), types.ExprString(n), cv.Position(n))

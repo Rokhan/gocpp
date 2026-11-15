@@ -472,7 +472,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<color::RGBA>(rec::Convert(gocpp::recv(color::RGBAModel), c));
+        auto c1 = gocpp::assertValue<color::RGBA>(rec::Convert(gocpp::recv(color::RGBAModel), c));
         // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = c1.R;
@@ -646,7 +646,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<color::RGBA64>(rec::Convert(gocpp::recv(color::RGBA64Model), c));
+        auto c1 = gocpp::assertValue<color::RGBA64>(rec::Convert(gocpp::recv(color::RGBA64Model), c));
         // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
         s[0] = uint8_t(c1.R >> 8);
@@ -814,7 +814,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<color::NRGBA>(rec::Convert(gocpp::recv(color::NRGBAModel), c));
+        auto c1 = gocpp::assertValue<color::NRGBA>(rec::Convert(gocpp::recv(color::NRGBAModel), c));
         // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = c1.R;
@@ -1001,7 +1001,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<color::NRGBA64>(rec::Convert(gocpp::recv(color::NRGBA64Model), c));
+        auto c1 = gocpp::assertValue<color::NRGBA64>(rec::Convert(gocpp::recv(color::NRGBA64Model), c));
         // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
         s[0] = uint8_t(c1.R >> 8);
@@ -1194,7 +1194,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        p->Pix[i] = gocpp::getValue<color::Alpha>(rec::Convert(gocpp::recv(color::AlphaModel), c)).A;
+        p->Pix[i] = gocpp::assertValue<color::Alpha>(rec::Convert(gocpp::recv(color::AlphaModel), c)).A;
     }
 
     void rec::SetRGBA64(Alpha* p, int64_t x, int64_t y, color::RGBA64 c)
@@ -1351,7 +1351,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<color::Alpha16>(rec::Convert(gocpp::recv(color::Alpha16Model), c));
+        auto c1 = gocpp::assertValue<color::Alpha16>(rec::Convert(gocpp::recv(color::Alpha16Model), c));
         p->Pix[i + 0] = uint8_t(c1.A >> 8);
         p->Pix[i + 1] = uint8_t(c1.A);
     }
@@ -1513,7 +1513,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        p->Pix[i] = gocpp::getValue<color::Gray>(rec::Convert(gocpp::recv(color::GrayModel), c)).Y;
+        p->Pix[i] = gocpp::assertValue<color::Gray>(rec::Convert(gocpp::recv(color::GrayModel), c)).Y;
     }
 
     void rec::SetRGBA64(Gray* p, int64_t x, int64_t y, color::RGBA64 c)
@@ -1655,7 +1655,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<color::Gray16>(rec::Convert(gocpp::recv(color::Gray16Model), c));
+        auto c1 = gocpp::assertValue<color::Gray16>(rec::Convert(gocpp::recv(color::Gray16Model), c));
         p->Pix[i + 0] = uint8_t(c1.Y >> 8);
         p->Pix[i + 1] = uint8_t(c1.Y);
     }
@@ -1803,7 +1803,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<color::CMYK>(rec::Convert(gocpp::recv(color::CMYKModel), c));
+        auto c1 = gocpp::assertValue<color::CMYK>(rec::Convert(gocpp::recv(color::CMYKModel), c));
         // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = c1.C;

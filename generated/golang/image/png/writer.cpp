@@ -433,7 +433,7 @@ namespace golang::image::png
         int64_t last = - 1;
         for(auto [i, c] : p)
         {
-            auto c1 = gocpp::getValue<color::NRGBA>(rec::Convert(gocpp::recv(color::NRGBAModel), c));
+            auto c1 = gocpp::assertValue<color::NRGBA>(rec::Convert(gocpp::recv(color::NRGBAModel), c));
             e->tmp[3 * i + 0] = c1.R;
             e->tmp[3 * i + 1] = c1.G;
             e->tmp[3 * i + 2] = c1.B;
@@ -714,7 +714,7 @@ namespace golang::image::png
                             {
                                 for(auto x = b.Min.X; x < b.Max.X; x++)
                                 {
-                                    auto c = gocpp::getValue<color::Gray>(rec::Convert(gocpp::recv(color::GrayModel), rec::At(gocpp::recv(m), x, y)));
+                                    auto c = gocpp::assertValue<color::Gray>(rec::Convert(gocpp::recv(color::GrayModel), rec::At(gocpp::recv(m), x, y)));
                                     cr[0][i] = c.Y;
                                     i++;
                                 }
@@ -767,7 +767,7 @@ namespace golang::image::png
                             }
                             else
                             {
-                                auto pi = gocpp::getValue<image::PalettedImage>(m);
+                                auto pi = gocpp::assertValue<image::PalettedImage>(m);
                                 for(auto x = b.Min.X; x < b.Max.X; x++)
                                 {
                                     cr[0][i] = rec::ColorIndexAt(gocpp::recv(pi), x, y);
@@ -780,7 +780,7 @@ namespace golang::image::png
                         case 4:
                         case 5:
                         {
-                            auto pi = gocpp::getValue<image::PalettedImage>(m);
+                            auto pi = gocpp::assertValue<image::PalettedImage>(m);
                             uint8_t a = {};
                             int64_t c = {};
                             auto pixelsPerByte = 8 / bitsPerPixel;
@@ -858,7 +858,7 @@ namespace golang::image::png
                                 // Convert from image.Image (which is alpha-premultiplied) to PNG's non-alpha-premultiplied.
                                 for(auto x = b.Min.X; x < b.Max.X; x++)
                                 {
-                                    auto c = gocpp::getValue<color::NRGBA>(rec::Convert(gocpp::recv(color::NRGBAModel), rec::At(gocpp::recv(m), x, y)));
+                                    auto c = gocpp::assertValue<color::NRGBA>(rec::Convert(gocpp::recv(color::NRGBAModel), rec::At(gocpp::recv(m), x, y)));
                                     cr[0][i + 0] = c.R;
                                     cr[0][i + 1] = c.G;
                                     cr[0][i + 2] = c.B;
@@ -870,7 +870,7 @@ namespace golang::image::png
                         case 7:
                             for(auto x = b.Min.X; x < b.Max.X; x++)
                             {
-                                auto c = gocpp::getValue<color::Gray16>(rec::Convert(gocpp::recv(color::Gray16Model), rec::At(gocpp::recv(m), x, y)));
+                                auto c = gocpp::assertValue<color::Gray16>(rec::Convert(gocpp::recv(color::Gray16Model), rec::At(gocpp::recv(m), x, y)));
                                 cr[0][i + 0] = uint8_t(c.Y >> 8);
                                 cr[0][i + 1] = uint8_t(c.Y);
                                 i += 2;
@@ -894,7 +894,7 @@ namespace golang::image::png
                             // Convert from image.Image (which is alpha-premultiplied) to PNG's non-alpha-premultiplied.
                             for(auto x = b.Min.X; x < b.Max.X; x++)
                             {
-                                auto c = gocpp::getValue<color::NRGBA64>(rec::Convert(gocpp::recv(color::NRGBA64Model), rec::At(gocpp::recv(m), x, y)));
+                                auto c = gocpp::assertValue<color::NRGBA64>(rec::Convert(gocpp::recv(color::NRGBA64Model), rec::At(gocpp::recv(m), x, y)));
                                 cr[0][i + 0] = uint8_t(c.R >> 8);
                                 cr[0][i + 1] = uint8_t(c.R);
                                 cr[0][i + 2] = uint8_t(c.G >> 8);

@@ -294,7 +294,7 @@ namespace golang::internal::godebug
     {
         if(auto [v, ok] = rec::Load(gocpp::recv(cache), name); ok)
         {
-            return gocpp::getValue<setting*>(v);
+            return gocpp::assertValue<setting*>(v);
         }
         auto s = new godebug::setting{};
         s->info = godebugs::Lookup(name);
@@ -302,7 +302,7 @@ namespace golang::internal::godebug
         if(auto [v, loaded] = rec::LoadOrStore(gocpp::recv(cache), name, s); loaded)
         {
             // Lost race: someone else created it. Use theirs.
-            return gocpp::getValue<setting*>(v);
+            return gocpp::assertValue<setting*>(v);
         }
 
         return s;
@@ -373,9 +373,9 @@ namespace golang::internal::godebug
             auto did = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>());
             rec::Range(gocpp::recv(cache), [=](go_any name, go_any s) mutable -> bool
             {
-                if(auto info = gocpp::getValue<setting*>(s)->info; info != nullptr && info->Immutable)
+                if(auto info = gocpp::assertValue<setting*>(s)->info; info != nullptr && info->Immutable)
                 {
-                    did.ref(gocpp::getValue<gocpp::string>(name)) = true;
+                    did.ref(gocpp::assertValue<gocpp::string>(name)) = true;
                 }
                 return true;
             });
@@ -385,9 +385,9 @@ namespace golang::internal::godebug
             // Clear any cached values that are no longer present.
             rec::Range(gocpp::recv(cache), [=](go_any name, go_any s) mutable -> bool
             {
-                if(! did.get(gocpp::getValue<gocpp::string>(name)))
+                if(! did.get(gocpp::assertValue<gocpp::string>(name)))
                 {
-                    rec::Store<godebug::value>(gocpp::recv(gocpp::getValue<setting*>(s)->value), & empty);
+                    rec::Store<godebug::value>(gocpp::recv(gocpp::assertValue<setting*>(s)->value), & empty);
                 }
                 return true;
             });

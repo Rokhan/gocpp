@@ -752,7 +752,7 @@ namespace golang::reflect
         {
             if(nout == 0)
             {
-                stackArgs = gocpp::getValue<gocpp::unsafe_pointer>(rec::Get(gocpp::recv(framePool)));
+                stackArgs = gocpp::assertValue<gocpp::unsafe_pointer>(rec::Get(gocpp::recv(framePool)));
             }
             else
             {
@@ -1424,7 +1424,7 @@ namespace golang::reflect
 
         // Make a new frame that is one word bigger so we can store the receiver.
         // This space is used for both arguments and return values.
-        auto methodFrame = gocpp::getValue<gocpp::unsafe_pointer>(rec::Get(gocpp::recv(methodFramePool)));
+        auto methodFrame = gocpp::assertValue<gocpp::unsafe_pointer>(rec::Get(gocpp::recv(methodFramePool)));
         abi::RegArgs methodRegs = {};
 
         // Deal with the receiver. It's guaranteed to only be one word in size.
@@ -4591,11 +4591,11 @@ namespace golang::reflect
         }
 
         auto s = gocpp::Init<unsafeheader::Slice>([=](auto& x) {
-            x.Data = unsafe_NewArray(& (gocpp::getValue<rtype*>(rec::Elem(gocpp::recv(typ)))->t), cap);
+            x.Data = unsafe_NewArray(& (gocpp::assertValue<rtype*>(rec::Elem(gocpp::recv(typ)))->t), cap);
             x.Len = len;
             x.Cap = cap;
         });
-        return golang::reflect::Value {& gocpp::getValue<rtype*>(typ)->t, gocpp::unsafe_pointer(& s), flagIndir | flag(reflect::Slice)};
+        return golang::reflect::Value {& gocpp::assertValue<rtype*>(typ)->t, gocpp::unsafe_pointer(& s), flagIndir | flag(reflect::Slice)};
     }
 
     // SliceAt returns a [Value] representing a slice whose underlying
@@ -4688,7 +4688,7 @@ namespace golang::reflect
         {
             gocpp::panic("reflect: Zero(nil)"_s);
         }
-        auto t = & gocpp::getValue<rtype*>(typ)->t;
+        auto t = & gocpp::assertValue<rtype*>(typ)->t;
         auto fl = flag(rec::Kind(gocpp::recv(t)));
         if(! rec::IsDirectIface(gocpp::recv(t)))
         {
@@ -4716,7 +4716,7 @@ namespace golang::reflect
         {
             gocpp::panic("reflect: New(nil)"_s);
         }
-        auto t = & gocpp::getValue<rtype*>(typ)->t;
+        auto t = & gocpp::assertValue<rtype*>(typ)->t;
         auto pt = ptrTo(t);
         if(! rec::IsDirectIface(gocpp::recv(pt)))
         {
@@ -4733,7 +4733,7 @@ namespace golang::reflect
     golang::reflect::Value NewAt(golang::reflect::Type typ, gocpp::unsafe_pointer p)
     {
         flag fl = flag(reflect::Pointer);
-        auto t = gocpp::getValue<rtype*>(typ);
+        auto t = gocpp::assertValue<rtype*>(typ);
         return golang::reflect::Value {rec::ptrTo(gocpp::recv(t)), p, fl};
     }
 

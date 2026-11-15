@@ -154,7 +154,7 @@ namespace golang::os
             FileInfo fi;
             std::tie(fi, err) = statHandle(name, h);
             syscall::CloseHandle(h);
-            if(err == nullptr && followSurrogates && rec::isReparseTagNameSurrogate(gocpp::recv(gocpp::getValue<fileStat*>(fi))))
+            if(err == nullptr && followSurrogates && rec::isReparseTagNameSurrogate(gocpp::recv(gocpp::assertValue<fileStat*>(fi))))
             {
                 // To obtain information about the link target, we reopen the file without
                 // FILE_FLAG_OPEN_REPARSE_POINT and examine the resulting handle.

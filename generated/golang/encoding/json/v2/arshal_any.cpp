@@ -140,7 +140,7 @@ namespace golang::encoding::json::v2
         auto marshal = lookupArshaler(rec::Type(gocpp::recv(v)))->marshal;
         if(mo->ArshalValues.Marshalers != nullptr)
         {
-            std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, rec::Type(gocpp::recv(v)));
+            std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, rec::Type(gocpp::recv(v)));
         }
         return marshal(enc, v, mo);
     }

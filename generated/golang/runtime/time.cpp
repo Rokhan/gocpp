@@ -649,7 +649,7 @@ namespace golang::runtime
     // Ready the goroutine arg.
     void goroutineReady(go_any arg, uintptr_t _1, int64_t _2)
     {
-        goready(gocpp::getValue<g*>(arg), 0);
+        goready(gocpp::assertValue<g*>(arg), 0);
     }
 
     // addHeap adds t to the timers heap.

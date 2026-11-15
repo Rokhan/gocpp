@@ -1477,7 +1477,7 @@ namespace golang::os::exec
         {
             if(auto [ee, ok] = gocpp::getValue<ExitError*>(err); ok)
             {
-                ee->Stderr = rec::Bytes(gocpp::recv(gocpp::getValue<prefixSuffixSaver*>(c->Stderr)));
+                ee->Stderr = rec::Bytes(gocpp::recv(gocpp::assertValue<prefixSuffixSaver*>(c->Stderr)));
             }
         }
         return {rec::Bytes(gocpp::recv(go_stdout)), err};

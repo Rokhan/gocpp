@@ -267,7 +267,7 @@ namespace golang::encoding::json::v2
     // to ensure that the value is fully consumed.
     gocpp::error newInvalidFormatError(coder c, reflect::Type t)
     {
-        auto err = mocklib::Errorf("invalid format flag %q"_s, gocpp::getValue<jsonopts::Struct*>(rec::Options(gocpp::recv(c)))->ArshalValues.Format);
+        auto err = mocklib::Errorf("invalid format flag %q"_s, gocpp::assertValue<jsonopts::Struct*>(rec::Options(gocpp::recv(c)))->ArshalValues.Format);
         //Go type switch emulation
         {
             const auto& gocpp_id_2 = gocpp::type_info(c);
@@ -380,7 +380,7 @@ namespace golang::encoding::json::v2
     // It also stores a copy of the last JSON value if it is a string or number.
     gocpp::error newUnmarshalErrorAfterWithValue(jsontext::Decoder* d, reflect::Type t, gocpp::error err)
     {
-        auto serr = gocpp::getValue<SemanticError*>(newUnmarshalErrorAfter(d, t, err));
+        auto serr = gocpp::assertValue<SemanticError*>(newUnmarshalErrorAfter(d, t, err));
         if(serr->JSONKind == '"' || serr->JSONKind == '0')
         {
             serr->JSONValue = rec::Clone(gocpp::recv(jsontext::Value(rec::PreviousTokenOrValue(gocpp::recv(rec::Decoder(gocpp::recv(export), d))))));

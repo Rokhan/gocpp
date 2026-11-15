@@ -1914,7 +1914,7 @@ namespace golang::os
             // while the name argument here is always slash separated.
             // dir.join will have mixed the two; undo that for
             // error reporting.
-            gocpp::getValue<PathError*>(err)->Path = name;
+            gocpp::assertValue<PathError*>(err)->Path = name;
             return {nullptr, err};
         }
         return {f, nullptr};
@@ -1992,7 +1992,7 @@ namespace golang::os
         if(err != nullptr)
         {
             // See comment in dirFS.Open.
-            gocpp::getValue<PathError*>(err)->Path = name;
+            gocpp::assertValue<PathError*>(err)->Path = name;
             return {nullptr, err};
         }
         return {f, nullptr};
@@ -2014,7 +2014,7 @@ namespace golang::os
         if(err != nullptr)
         {
             // See comment in dirFS.Open.
-            gocpp::getValue<PathError*>(err)->Path = name;
+            gocpp::assertValue<PathError*>(err)->Path = name;
             return {nullptr, err};
         }
         return {f, nullptr};
@@ -2036,7 +2036,7 @@ namespace golang::os
         if(err != nullptr)
         {
             // See comment in dirFS.Open.
-            gocpp::getValue<PathError*>(err)->Path = name;
+            gocpp::assertValue<PathError*>(err)->Path = name;
             return {""_s, err};
         }
         return {f, nullptr};

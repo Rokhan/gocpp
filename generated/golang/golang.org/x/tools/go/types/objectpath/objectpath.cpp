@@ -785,7 +785,7 @@ namespace golang::golang_org::x::tools::go::types::objectpath
                             return self.obj.value()->vElem();
                         }
                     }
-                    rec::typ(gocpp::recv(tr), path, offset, opElem, - 1, rec::Elem(gocpp::recv(gocpp::getValue<hasElem>(T))));
+                    rec::typ(gocpp::recv(tr), path, offset, opElem, - 1, rec::Elem(gocpp::recv(gocpp::assertValue<hasElem>(T))));
                     break;
                 }
 

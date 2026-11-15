@@ -1141,7 +1141,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                                 rparams = gocpp::make(gocpp::Tag<gocpp::slice<types::TypeParam*>>(), rec::Len(gocpp::recv(targs)));
                                 for(auto [i, gocpp_ignored] : rparams)
                                 {
-                                    rparams[i] = gocpp::getValue<types::TypeParam*>(types::Unalias(rec::At(gocpp::recv(targs), i)));
+                                    rparams[i] = gocpp::assertValue<types::TypeParam*>(types::Unalias(rec::At(gocpp::recv(targs), i)));
                                 }
                             }
                             auto msig = rec::signature(gocpp::recv(r), pkg, recv, rparams, tpars);
@@ -1227,7 +1227,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
         //Go switch emulation
         {
-            auto b = gocpp::getValue<types::Basic*>(rec::Underlying(gocpp::recv(typ)));
+            auto b = gocpp::assertValue<types::Basic*>(rec::Underlying(gocpp::recv(typ)));
             auto condition = rec::Info(gocpp::recv(b)) & types::IsConstType;
             int conditionId = -1;
             if(condition == types::IsBoolean) { conditionId = 0; }
@@ -1551,7 +1551,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                     {
                         auto [pkg, name] = rec::qualifiedIdent(gocpp::recv(r));
                         rec::doDecl(gocpp::recv(r->p), pkg, name);
-                        return rec::Type(gocpp::recv(gocpp::getValue<types::TypeName*>(rec::Lookup(gocpp::recv(rec::Scope(gocpp::recv(pkg))), name))));
+                        return rec::Type(gocpp::recv(gocpp::assertValue<types::TypeName*>(rec::Lookup(gocpp::recv(rec::Scope(gocpp::recv(pkg))), name))));
                         break;
                     }
                     case 2:
@@ -1779,7 +1779,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         {
             // Note: the standard library importer is tolerant of nil types here,
             // though would panic in SetTypeParams.
-            xs[i] = gocpp::getValue<types::TypeParam*>(types::Unalias(rec::typ(gocpp::recv(r))));
+            xs[i] = gocpp::assertValue<types::TypeParam*>(types::Unalias(rec::typ(gocpp::recv(r))));
         }
         return xs;
     }

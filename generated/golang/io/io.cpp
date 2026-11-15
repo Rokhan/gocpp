@@ -2102,7 +2102,7 @@ namespace golang::io
     {
         int64_t n;
         gocpp::error err;
-        auto bufp = gocpp::getValue<gocpp::slice<unsigned char>*>(rec::Get(gocpp::recv(blackHolePool)));
+        auto bufp = gocpp::assertValue<gocpp::slice<unsigned char>*>(rec::Get(gocpp::recv(blackHolePool)));
         int64_t readSize = 0;
         for(; ; )
         {
@@ -2231,7 +2231,7 @@ namespace golang::io
     {
         int64_t n;
         gocpp::error err;
-        return rec::WriteTo(gocpp::recv(gocpp::getValue<WriterTo>(c.Reader)), w);
+        return rec::WriteTo(gocpp::recv(gocpp::assertValue<WriterTo>(c.Reader)), w);
     }
 
     // ReadAll reads from r until an error or EOF and returns the data it read.

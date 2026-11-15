@@ -1642,7 +1642,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
         //Go switch emulation
         {
-            auto b = gocpp::getValue<types::Basic*>(rec::Underlying(gocpp::recv(typ)));
+            auto b = gocpp::assertValue<types::Basic*>(rec::Underlying(gocpp::recv(typ)));
             auto condition = rec::Info(gocpp::recv(b)) & types::IsConstType;
             int conditionId = -1;
             if(condition == types::IsBoolean) { conditionId = 0; }

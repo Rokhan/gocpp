@@ -78,7 +78,7 @@ namespace golang::reflect
         auto ckey = cacheKey {Map, ktyp, etyp, 0};
         if(auto [mt, ok] = rec::Load(gocpp::recv(lookupCache), ckey); ok)
         {
-            return gocpp::getValue<golang::reflect::Type>(mt);
+            return gocpp::assertValue<golang::reflect::Type>(mt);
         }
 
         // Look in known types.
@@ -89,7 +89,7 @@ namespace golang::reflect
             if(mt->Key == ktyp && mt->Elem == etyp)
             {
                 auto [ti, gocpp_id_0] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
-                return gocpp::getValue<golang::reflect::Type>(ti);
+                return gocpp::assertValue<golang::reflect::Type>(ti);
             }
         }
 
@@ -153,7 +153,7 @@ namespace golang::reflect
         mt.Type.PtrToThis = 0;
 
         auto [ti, gocpp_id_1] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& mt.Type));
-        return gocpp::getValue<golang::reflect::Type>(ti);
+        return gocpp::assertValue<golang::reflect::Type>(ti);
     }
 
     golang::reflect::Type groupOf(golang::reflect::Type ktyp, golang::reflect::Type etyp)

@@ -76,7 +76,7 @@ namespace golang::go::types
         {
             // delay type and value recording until we know the type
             // or until the end of type checking
-            rec::rememberUntyped(gocpp::recv(check), x->expr, false, rec::mode(gocpp::recv(x)), gocpp::getValue<Basic*>(typ), val);
+            rec::rememberUntyped(gocpp::recv(check), x->expr, false, rec::mode(gocpp::recv(x)), gocpp::assertValue<Basic*>(typ), val);
         }
         else
         {

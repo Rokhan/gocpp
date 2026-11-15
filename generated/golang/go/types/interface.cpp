@@ -130,7 +130,7 @@ namespace golang::go::types
         auto typ = rec::newInterface(gocpp::recv((Checker*)(nullptr)));
         for(auto [gocpp_ignored, m] : methods)
         {
-            if(auto sig = gocpp::getValue<golang::go::types::Signature*>(m->object.typ); sig->recv == nullptr)
+            if(auto sig = gocpp::assertValue<golang::go::types::Signature*>(m->object.typ); sig->recv == nullptr)
             {
                 sig->recv = newVar(RecvVar, m->object.pos, m->object.pkg, ""_s, typ);
             }

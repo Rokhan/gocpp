@@ -1164,7 +1164,7 @@ namespace golang::runtime
         s->timer = new timer{};
         auto f = [=](go_any s, uintptr_t _1, int64_t _2) mutable -> void
         {
-            rec::wake(gocpp::recv(gocpp::getValue<wakeableSleep*>(s)));
+            rec::wake(gocpp::recv(gocpp::assertValue<wakeableSleep*>(s)));
         };
         rec::init(gocpp::recv(s->timer), f, s);
         return s;

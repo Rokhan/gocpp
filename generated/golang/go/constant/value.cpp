@@ -2570,7 +2570,7 @@ namespace golang::go::constant
                 case 1:
                 {
                     constant::boolVal x = gocpp::any_cast<constant::boolVal>(x_ref);
-                    auto y_tmp = gocpp::getValue<boolVal>(y);
+                    auto y_tmp = gocpp::assertValue<boolVal>(y);
                     auto& y = y_tmp;
                     //Go switch emulation
                     {
@@ -2595,7 +2595,7 @@ namespace golang::go::constant
                 {
                     constant::int64Val x = gocpp::any_cast<constant::int64Val>(x_ref);
                     auto a = int64_t(x);
-                    auto b = int64_t(gocpp::getValue<int64Val>(y));
+                    auto b = int64_t(gocpp::assertValue<int64Val>(y));
                     int64_t c = {};
                     //Go switch emulation
                     {
@@ -2668,7 +2668,7 @@ namespace golang::go::constant
                 {
                     constant::intVal x = gocpp::any_cast<constant::intVal>(x_ref);
                     auto a = x.val;
-                    auto b = gocpp::getValue<intVal>(y).val;
+                    auto b = gocpp::assertValue<intVal>(y).val;
                     auto c = newInt();
                     //Go switch emulation
                     {
@@ -2729,7 +2729,7 @@ namespace golang::go::constant
                 {
                     constant::ratVal x = gocpp::any_cast<constant::ratVal>(x_ref);
                     auto a = x.val;
-                    auto b = gocpp::getValue<ratVal>(y).val;
+                    auto b = gocpp::assertValue<ratVal>(y).val;
                     auto c = newRat();
                     //Go switch emulation
                     {
@@ -2766,7 +2766,7 @@ namespace golang::go::constant
                 {
                     constant::floatVal x = gocpp::any_cast<constant::floatVal>(x_ref);
                     auto a = x.val;
-                    auto b = gocpp::getValue<floatVal>(y).val;
+                    auto b = gocpp::assertValue<floatVal>(y).val;
                     auto c = newFloat();
                     //Go switch emulation
                     {
@@ -2802,7 +2802,7 @@ namespace golang::go::constant
                 case 6:
                 {
                     constant::complexVal x = gocpp::any_cast<constant::complexVal>(x_ref);
-                    auto y_tmp = gocpp::getValue<complexVal>(y);
+                    auto y_tmp = gocpp::assertValue<complexVal>(y);
                     auto& y = y_tmp;
                     std::tie(a, b) = std::tuple{x.re, x.im};
                     constant::Value d;
@@ -2872,7 +2872,7 @@ namespace golang::go::constant
                     {
                         return gocpp::InitPtr<stringVal>([=](auto& z) {
                             z.l = x;
-                            z.r = gocpp::getValue<stringVal*>(y);
+                            z.r = gocpp::assertValue<stringVal*>(y);
                         });
                     }
                     break;
@@ -3057,7 +3057,7 @@ namespace golang::go::constant
                 case 1:
                 {
                     constant::boolVal x = gocpp::any_cast<constant::boolVal>(x_ref);
-                    auto y_tmp = gocpp::getValue<boolVal>(y);
+                    auto y_tmp = gocpp::assertValue<boolVal>(y);
                     auto& y = y_tmp;
                     //Go switch emulation
                     {
@@ -3081,7 +3081,7 @@ namespace golang::go::constant
                 case 2:
                 {
                     constant::int64Val x = gocpp::any_cast<constant::int64Val>(x_ref);
-                    auto y_tmp = gocpp::getValue<int64Val>(y);
+                    auto y_tmp = gocpp::assertValue<int64Val>(y);
                     auto& y = y_tmp;
                     //Go switch emulation
                     {
@@ -3121,28 +3121,28 @@ namespace golang::go::constant
                 case 3:
                 {
                     constant::intVal x = gocpp::any_cast<constant::intVal>(x_ref);
-                    return cmpZero(rec::Cmp(gocpp::recv(x.val), gocpp::getValue<intVal>(y).val), op);
+                    return cmpZero(rec::Cmp(gocpp::recv(x.val), gocpp::assertValue<intVal>(y).val), op);
                     break;
                 }
 
                 case 4:
                 {
                     constant::ratVal x = gocpp::any_cast<constant::ratVal>(x_ref);
-                    return cmpZero(rec::Cmp(gocpp::recv(x.val), gocpp::getValue<ratVal>(y).val), op);
+                    return cmpZero(rec::Cmp(gocpp::recv(x.val), gocpp::assertValue<ratVal>(y).val), op);
                     break;
                 }
 
                 case 5:
                 {
                     constant::floatVal x = gocpp::any_cast<constant::floatVal>(x_ref);
-                    return cmpZero(rec::Cmp(gocpp::recv(x.val), gocpp::getValue<floatVal>(y).val), op);
+                    return cmpZero(rec::Cmp(gocpp::recv(x.val), gocpp::assertValue<floatVal>(y).val), op);
                     break;
                 }
 
                 case 6:
                 {
                     constant::complexVal x = gocpp::any_cast<constant::complexVal>(x_ref);
-                    auto y_tmp = gocpp::getValue<complexVal>(y);
+                    auto y_tmp = gocpp::assertValue<complexVal>(y);
                     auto& y = y_tmp;
                     auto re = Compare(x.re, token::EQL, y.re);
                     auto im = Compare(x.im, token::EQL, y.im);
@@ -3169,7 +3169,7 @@ namespace golang::go::constant
                 {
                     constant::stringVal* x = gocpp::any_cast<constant::stringVal*>(x_ref);
                     auto xs = rec::string(gocpp::recv(x));
-                    auto ys = rec::string(gocpp::recv(gocpp::getValue<stringVal*>(y)));
+                    auto ys = rec::string(gocpp::recv(gocpp::assertValue<stringVal*>(y)));
                     //Go switch emulation
                     {
                         auto condition = op;

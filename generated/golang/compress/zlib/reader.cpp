@@ -305,7 +305,7 @@ namespace golang::compress::zlib
         }
         else
         {
-            rec::Reset(gocpp::recv(gocpp::getValue<flate::Resetter>(z->decompressor)), z->r, dict);
+            rec::Reset(gocpp::recv(gocpp::assertValue<flate::Resetter>(z->decompressor)), z->r, dict);
         }
         z->digest = adler32::New();
         return nullptr;

@@ -300,7 +300,7 @@ namespace golang::go::types
 
         if(u != nullptr)
         {
-            return gocpp::getValue<Chan*>(u)->elem;
+            return gocpp::assertValue<Chan*>(u)->elem;
         }
 
         auto cause = rec::format(gocpp::recv(err), check);
@@ -522,7 +522,7 @@ namespace golang::go::types
         // update the recorded type.
         if(! final && isUntyped(typ))
         {
-            old.typ = gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(typ)));
+            old.typ = gocpp::assertValue<Basic*>(rec::Underlying(gocpp::recv(typ)));
             check->untyped.ref(x) = old;
             return;
         }
@@ -626,7 +626,7 @@ namespace golang::go::types
                     // the value nil.
                     //Go switch emulation
                     {
-                        auto condition = gocpp::getValue<Basic*>(rec::typ(gocpp::recv(x)))->kind;
+                        auto condition = gocpp::assertValue<Basic*>(rec::typ(gocpp::recv(x)))->kind;
                         int conditionId = -1;
                         if(condition == UntypedBool) { conditionId = 0; }
                         else if(condition == UntypedInt) { conditionId = 1; }

@@ -424,7 +424,7 @@ namespace golang::go::types
                                 }
                                 first = false;
                                 rec::string(gocpp::recv(w), m->object.name);
-                                rec::signature(gocpp::recv(w), gocpp::getValue<golang::go::types::Signature*>(m->object.typ));
+                                rec::signature(gocpp::recv(w), gocpp::assertValue<golang::go::types::Signature*>(m->object.typ));
                             }
                             for(auto [gocpp_ignored, typ] : t->embeddeds)
                             {
@@ -624,7 +624,7 @@ namespace golang::go::types
             }
             first = false;
             rec::string(gocpp::recv(w), m->object.name);
-            rec::signature(gocpp::recv(w), gocpp::getValue<golang::go::types::Signature*>(m->object.typ));
+            rec::signature(gocpp::recv(w), gocpp::assertValue<golang::go::types::Signature*>(m->object.typ));
         }
         //Go switch emulation
         {

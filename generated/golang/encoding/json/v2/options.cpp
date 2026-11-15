@@ -339,7 +339,7 @@ namespace golang::encoding::json::v2
                         {
                             return {(Marshalers*)(nullptr), false};
                         }
-                        return {gocpp::getValue<Marshalers*>(src.ArshalValues.Marshalers), true};
+                        return {gocpp::assertValue<Marshalers*>(src.ArshalValues.Marshalers), true};
                         break;
                     }
                     case 1:
@@ -348,7 +348,7 @@ namespace golang::encoding::json::v2
                         {
                             return {(Unmarshalers*)(nullptr), false};
                         }
-                        return {gocpp::getValue<Unmarshalers*>(src.ArshalValues.Unmarshalers), true};
+                        return {gocpp::assertValue<Unmarshalers*>(src.ArshalValues.Unmarshalers), true};
                         break;
                     }
                     default:

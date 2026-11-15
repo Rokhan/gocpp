@@ -96,7 +96,7 @@ namespace golang::encoding::json::jsontext
 
     golang::encoding::json::jsontext::Encoder* getBufferedEncoder(gocpp::slice<golang::encoding::json::jsontext::Options> opts)
     {
-        auto e = gocpp::getValue<golang::encoding::json::jsontext::Encoder*>(rec::Get(gocpp::recv(bufferedEncoderPool)));
+        auto e = gocpp::assertValue<golang::encoding::json::jsontext::Encoder*>(rec::Get(gocpp::recv(bufferedEncoderPool)));
         if(e->s.encodeBuffer.Buf == nullptr)
         {
             // Round up to nearest 2ⁿ to make best use of malloc size classes.
@@ -161,14 +161,14 @@ namespace golang::encoding::json::jsontext
     {
         if(auto [gocpp_id_0, ok] = gocpp::getValue<bytes::Buffer*>(w); ok)
         {
-            auto e = gocpp::getValue<golang::encoding::json::jsontext::Encoder*>(rec::Get(gocpp::recv(bytesBufferEncoderPool)));
+            auto e = gocpp::assertValue<golang::encoding::json::jsontext::Encoder*>(rec::Get(gocpp::recv(bytesBufferEncoderPool)));
             // buffer taken from bytes.Buffer
             rec::reset(gocpp::recv(e->s), nullptr, w, opts);
             return e;
         }
         else
         {
-            auto e = gocpp::getValue<golang::encoding::json::jsontext::Encoder*>(rec::Get(gocpp::recv(streamingEncoderPool)));
+            auto e = gocpp::assertValue<golang::encoding::json::jsontext::Encoder*>(rec::Get(gocpp::recv(streamingEncoderPool)));
             // preserve existing buffer
             rec::reset(gocpp::recv(e->s), e->s.encodeBuffer.Buf.make_slice(0, 0), w, opts);
             return e;
@@ -223,7 +223,7 @@ namespace golang::encoding::json::jsontext
     sync::Pool* bytesBufferDecoderPool = bufferedDecoderPool;
     golang::encoding::json::jsontext::Decoder* getBufferedDecoder(gocpp::slice<unsigned char> b, gocpp::slice<golang::encoding::json::jsontext::Options> opts)
     {
-        auto d = gocpp::getValue<golang::encoding::json::jsontext::Decoder*>(rec::Get(gocpp::recv(bufferedDecoderPool)));
+        auto d = gocpp::assertValue<golang::encoding::json::jsontext::Decoder*>(rec::Get(gocpp::recv(bufferedDecoderPool)));
         rec::reset(gocpp::recv(d->s), b, nullptr, opts);
         return d;
     }
@@ -239,14 +239,14 @@ namespace golang::encoding::json::jsontext
     {
         if(auto [gocpp_id_2, ok] = gocpp::getValue<bytes::Buffer*>(r); ok)
         {
-            auto d = gocpp::getValue<golang::encoding::json::jsontext::Decoder*>(rec::Get(gocpp::recv(bytesBufferDecoderPool)));
+            auto d = gocpp::assertValue<golang::encoding::json::jsontext::Decoder*>(rec::Get(gocpp::recv(bytesBufferDecoderPool)));
             // buffer taken from bytes.Buffer
             rec::reset(gocpp::recv(d->s), nullptr, r, opts);
             return d;
         }
         else
         {
-            auto d = gocpp::getValue<golang::encoding::json::jsontext::Decoder*>(rec::Get(gocpp::recv(streamingDecoderPool)));
+            auto d = gocpp::assertValue<golang::encoding::json::jsontext::Decoder*>(rec::Get(gocpp::recv(streamingDecoderPool)));
             // preserve existing buffer
             rec::reset(gocpp::recv(d->s), d->s.decodeBuffer.buf.make_slice(0, 0), r, opts);
             return d;

@@ -354,7 +354,7 @@ namespace golang::go::types
         // fix Obj link for named types
         if(auto typ = asNamed(rec::Type(gocpp::recv(obj))); typ != nullptr)
         {
-            typ->obj = gocpp::getValue<TypeName*>(obj);
+            typ->obj = gocpp::assertValue<TypeName*>(obj);
         }
         // exported identifiers go into package unsafe
         auto scope = Universe;

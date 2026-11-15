@@ -514,7 +514,7 @@ namespace golang::runtime
     //go:linkname synctest_release internal/synctest.release
     void synctest_release(go_any bubble)
     {
-        rec::decActive(gocpp::recv(gocpp::getValue<synctestBubble*>(bubble)));
+        rec::decActive(gocpp::recv(gocpp::assertValue<synctestBubble*>(bubble)));
     }
 
     //go:linkname synctest_inBubble internal/synctest.inBubble
@@ -528,7 +528,7 @@ namespace golang::runtime
             {
                 gocpp::panic("goroutine is already bubbled"_s);
             }
-            gp->bubble = gocpp::getValue<synctestBubble*>(bubble);
+            gp->bubble = gocpp::assertValue<synctestBubble*>(bubble);
             defer.push_back([=]{ [=]() mutable -> void
             {
                 gp->bubble = nullptr;

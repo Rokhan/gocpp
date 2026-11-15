@@ -1931,7 +1931,7 @@ namespace golang::reflect
         m.Type = mt;
         auto tfn = rec::textOff(gocpp::recv(t), p.Tfn);
         auto fn = gocpp::unsafe_pointer(& tfn);
-        m.Func = golang::reflect::Value {& gocpp::getValue<rtype*>(mt)->t, fn, fl};
+        m.Func = golang::reflect::Value {& gocpp::assertValue<rtype*>(mt)->t, fn, fl};
 
         m.Index = i;
         return m;
@@ -3011,7 +3011,7 @@ namespace golang::reflect
     // For example, if t represents type Foo, PointerTo(t) represents *Foo.
     golang::reflect::Type PointerTo(golang::reflect::Type t)
     {
-        return toRType(rec::ptrTo(gocpp::recv(gocpp::getValue<rtype*>(t))));
+        return toRType(rec::ptrTo(gocpp::recv(gocpp::assertValue<rtype*>(t))));
     }
 
     abi::Type* rec::ptrTo(rtype* t)
@@ -3025,7 +3025,7 @@ namespace golang::reflect
         // Check the cache.
         if(auto [pi, ok] = rec::Load(gocpp::recv(ptrMap), t); ok)
         {
-            return & gocpp::getValue<ptrType*>(pi)->PtrType.Type;
+            return & gocpp::assertValue<ptrType*>(pi)->PtrType.Type;
         }
 
         // Look in known types.
@@ -3038,7 +3038,7 @@ namespace golang::reflect
                 continue;
             }
             auto [pi, gocpp_id_1] = rec::LoadOrStore(gocpp::recv(ptrMap), t, p);
-            return & gocpp::getValue<ptrType*>(pi)->PtrType.Type;
+            return & gocpp::assertValue<ptrType*>(pi)->PtrType.Type;
         }
 
         // Create a new ptrType starting with the description
@@ -3060,7 +3060,7 @@ namespace golang::reflect
         pp.PtrType.Elem = at;
 
         auto [pi, gocpp_id_2] = rec::LoadOrStore(gocpp::recv(ptrMap), t, & pp);
-        return & gocpp::getValue<ptrType*>(pi)->PtrType.Type;
+        return & gocpp::assertValue<ptrType*>(pi)->PtrType.Type;
     }
 
     abi::Type* ptrTo(abi::Type* t)
@@ -3622,7 +3622,7 @@ namespace golang::reflect
         auto ckey = cacheKey {Chan, typ, nullptr, uintptr_t(dir)};
         if(auto [ch, ok] = rec::Load(gocpp::recv(lookupCache), ckey); ok)
         {
-            return gocpp::getValue<rtype*>(ch);
+            return gocpp::assertValue<rtype*>(ch);
         }
 
         // This restriction is imposed by the gc compiler and the runtime.
@@ -3676,7 +3676,7 @@ namespace golang::reflect
             if(ch->Elem == typ && ch->Dir == abi::ChanDir(dir))
             {
                 auto [ti, gocpp_id_3] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
-                return gocpp::getValue<golang::reflect::Type>(ti);
+                return gocpp::assertValue<golang::reflect::Type>(ti);
             }
         }
 
@@ -3691,7 +3691,7 @@ namespace golang::reflect
         ch.Elem = typ;
 
         auto [ti, gocpp_id_4] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& ch.Type));
-        return gocpp::getValue<golang::reflect::Type>(ti);
+        return gocpp::assertValue<golang::reflect::Type>(ti);
     }
 
     gocpp::slice<golang::reflect::Type> funcTypes;
@@ -3768,7 +3768,7 @@ namespace golang::reflect
             uint32_t hash = {};
             for(auto [gocpp_ignored, in] : in)
             {
-                auto t = gocpp::getValue<rtype*>(in);
+                auto t = gocpp::assertValue<rtype*>(in);
                 args = append(args, t);
                 hash = fnv1(hash, (unsigned char)(t->t.Hash >> 24), (unsigned char)(t->t.Hash >> 16), (unsigned char)(t->t.Hash >> 8), (unsigned char)(t->t.Hash));
             }
@@ -3779,7 +3779,7 @@ namespace golang::reflect
             hash = fnv1(hash, '.');
             for(auto [gocpp_ignored, out] : out)
             {
-                auto t = gocpp::getValue<rtype*>(out);
+                auto t = gocpp::assertValue<rtype*>(out);
                 args = append(args, t);
                 hash = fnv1(hash, (unsigned char)(t->t.Hash >> 24), (unsigned char)(t->t.Hash >> 16), (unsigned char)(t->t.Hash >> 8), (unsigned char)(t->t.Hash));
             }
@@ -3796,7 +3796,7 @@ namespace golang::reflect
             // Look in cache.
             if(auto [ts, ok] = rec::Load(gocpp::recv(funcLookupCache.m), hash); ok)
             {
-                for(auto [gocpp_ignored, t] : gocpp::getValue<gocpp::slice<abi::Type*>>(ts))
+                for(auto [gocpp_ignored, t] : gocpp::assertValue<gocpp::slice<abi::Type*>>(ts))
                 {
                     if(haveIdenticalUnderlyingType(& ft->Type, t, true))
                     {
@@ -3810,7 +3810,7 @@ namespace golang::reflect
             defer.push_back([=]{ rec::Unlock(gocpp::recv(funcLookupCache)); });
             if(auto [ts, ok] = rec::Load(gocpp::recv(funcLookupCache.m), hash); ok)
             {
-                for(auto [gocpp_ignored, t] : gocpp::getValue<gocpp::slice<abi::Type*>>(ts))
+                for(auto [gocpp_ignored, t] : gocpp::assertValue<gocpp::slice<abi::Type*>>(ts))
                 {
                     if(haveIdenticalUnderlyingType(& ft->Type, t, true))
                     {
@@ -3824,7 +3824,7 @@ namespace golang::reflect
                 gocpp::slice<abi::Type*> rts = {};
                 if(auto [rti, ok] = rec::Load(gocpp::recv(funcLookupCache.m), hash); ok)
                 {
-                    rts = gocpp::getValue<gocpp::slice<abi::Type*>>(rti);
+                    rts = gocpp::assertValue<gocpp::slice<abi::Type*>>(rti);
                 }
                 rec::Store(gocpp::recv(funcLookupCache.m), hash, append(rts, tt));
                 return toType(tt);
@@ -4148,7 +4148,7 @@ namespace golang::reflect
         auto ckey = cacheKey {reflect::Slice, typ, nullptr, 0};
         if(auto [slice, ok] = rec::Load(gocpp::recv(lookupCache), ckey); ok)
         {
-            return gocpp::getValue<golang::reflect::Type>(slice);
+            return gocpp::assertValue<golang::reflect::Type>(slice);
         }
 
         // Look in known types.
@@ -4159,7 +4159,7 @@ namespace golang::reflect
             if(slice->SliceType.Elem == typ)
             {
                 auto [ti, gocpp_id_5] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
-                return gocpp::getValue<golang::reflect::Type>(ti);
+                return gocpp::assertValue<golang::reflect::Type>(ti);
             }
         }
 
@@ -4174,7 +4174,7 @@ namespace golang::reflect
         slice.SliceType.Type.PtrToThis = 0;
 
         auto [ti, gocpp_id_6] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& slice.SliceType.Type));
-        return gocpp::getValue<golang::reflect::Type>(ti);
+        return gocpp::assertValue<golang::reflect::Type>(ti);
     }
 
     
@@ -4830,7 +4830,7 @@ namespace golang::reflect
                 typ = (structType*)(rec::UnsafePointer(gocpp::recv(rec::Addr(gocpp::recv(rec::Field(gocpp::recv(rec::Elem(gocpp::recv(tt))), 0))))));
                 ut = (uncommonType*)(rec::UnsafePointer(gocpp::recv(rec::Addr(gocpp::recv(rec::Field(gocpp::recv(rec::Elem(gocpp::recv(tt))), 1))))));
 
-                copy(gocpp::getValue<gocpp::slice<abi::Method>>(rec::Interface(gocpp::recv(rec::Slice(gocpp::recv(rec::Field(gocpp::recv(rec::Elem(gocpp::recv(tt))), 2)), 0, len(methods))))), methods);
+                copy(gocpp::assertValue<gocpp::slice<abi::Method>>(rec::Interface(gocpp::recv(rec::Slice(gocpp::recv(rec::Field(gocpp::recv(rec::Elem(gocpp::recv(tt))), 2)), 0, len(methods))))), methods);
             }
             // TODO(sbinet): Once we allow embedding multiple types,
             // methods will need to be sorted like the compiler does.
@@ -4869,7 +4869,7 @@ namespace golang::reflect
             // Look in cache.
             if(auto [ts, ok] = rec::Load(gocpp::recv(structLookupCache.m), hash); ok)
             {
-                for(auto [gocpp_ignored, st] : gocpp::getValue<gocpp::slice<golang::reflect::Type>>(ts))
+                for(auto [gocpp_ignored, st] : gocpp::assertValue<gocpp::slice<golang::reflect::Type>>(ts))
                 {
                     auto t = rec::common(gocpp::recv(st));
                     if(haveIdenticalUnderlyingType(& typ->StructType.Type, t, true))
@@ -4884,7 +4884,7 @@ namespace golang::reflect
             defer.push_back([=]{ rec::Unlock(gocpp::recv(structLookupCache)); });
             if(auto [ts, ok] = rec::Load(gocpp::recv(structLookupCache.m), hash); ok)
             {
-                for(auto [gocpp_ignored, st] : gocpp::getValue<gocpp::slice<golang::reflect::Type>>(ts))
+                for(auto [gocpp_ignored, st] : gocpp::assertValue<gocpp::slice<golang::reflect::Type>>(ts))
                 {
                     auto t = rec::common(gocpp::recv(st));
                     if(haveIdenticalUnderlyingType(& typ->StructType.Type, t, true))
@@ -4899,7 +4899,7 @@ namespace golang::reflect
                 gocpp::slice<golang::reflect::Type> ts = {};
                 if(auto [ti, ok] = rec::Load(gocpp::recv(structLookupCache.m), hash); ok)
                 {
-                    ts = gocpp::getValue<gocpp::slice<golang::reflect::Type>>(ti);
+                    ts = gocpp::assertValue<gocpp::slice<golang::reflect::Type>>(ti);
                 }
                 rec::Store(gocpp::recv(structLookupCache.m), hash, append(ts, t));
                 return t;
@@ -5098,7 +5098,7 @@ namespace golang::reflect
         auto ckey = cacheKey {Array, typ, nullptr, uintptr_t(length)};
         if(auto [array, ok] = rec::Load(gocpp::recv(lookupCache), ckey); ok)
         {
-            return gocpp::getValue<golang::reflect::Type>(array);
+            return gocpp::assertValue<golang::reflect::Type>(array);
         }
 
         // Look in known types.
@@ -5109,7 +5109,7 @@ namespace golang::reflect
             if(array->Elem == typ)
             {
                 auto [ti, gocpp_id_8] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
-                return gocpp::getValue<golang::reflect::Type>(ti);
+                return gocpp::assertValue<golang::reflect::Type>(ti);
             }
         }
 
@@ -5147,7 +5147,7 @@ namespace golang::reflect
         array.Type.Align_ = typ->Align_;
         array.Type.FieldAlign_ = typ->FieldAlign_;
         array.Len = uintptr_t(length);
-        array.Slice = & (gocpp::getValue<rtype*>(SliceOf(elem))->t);
+        array.Slice = & (gocpp::assertValue<rtype*>(SliceOf(elem))->t);
 
         //Go switch emulation
         {
@@ -5231,7 +5231,7 @@ namespace golang::reflect
         }
 
         auto [ti, gocpp_id_9] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& array.Type));
-        return gocpp::getValue<golang::reflect::Type>(ti);
+        return gocpp::assertValue<golang::reflect::Type>(ti);
     }
 
     // adjustAIXGCData adjusts the GCData field pointer for AIX.
@@ -5391,7 +5391,7 @@ namespace golang::reflect
         auto k = layoutKey {t, rcvr};
         if(auto [lti, ok] = rec::Load(gocpp::recv(layoutCache), k); ok)
         {
-            auto lt = gocpp::getValue<layoutType>(lti);
+            auto lt = gocpp::assertValue<layoutType>(lti);
             return {lt.t, lt.framePool, lt.abid};
         }
 
@@ -5432,7 +5432,7 @@ namespace golang::reflect
             y.framePool = framePool;
             y.abid = abid;
         }));
-        auto lt = gocpp::getValue<layoutType>(lti);
+        auto lt = gocpp::assertValue<layoutType>(lti);
         return {lt.t, lt.framePool, lt.abid};
     }
 

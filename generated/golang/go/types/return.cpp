@@ -151,7 +151,7 @@ namespace golang::go::types
                     ast::SelectStmt* s = gocpp::any_cast<ast::SelectStmt*>(s_ref);
                     for(auto [gocpp_ignored, s] : s->Body->List)
                     {
-                        auto cc = gocpp::getValue<ast::CommClause*>(s);
+                        auto cc = gocpp::assertValue<ast::CommClause*>(s);
                         if(! rec::isTerminatingList(gocpp::recv(check), cc->Body, ""_s) || hasBreakList(cc->Body, label, true))
                         {
                             return false;
@@ -195,7 +195,7 @@ namespace golang::go::types
         bool hasDefault = false;
         for(auto [gocpp_ignored, s] : body->List)
         {
-            auto cc = gocpp::getValue<ast::CaseClause*>(s);
+            auto cc = gocpp::assertValue<ast::CaseClause*>(s);
             if(cc->List == nullptr)
             {
                 hasDefault = true;

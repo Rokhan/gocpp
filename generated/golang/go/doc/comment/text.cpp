@@ -312,7 +312,7 @@ namespace golang::go::doc::comment
                                 rec::WriteString(gocpp::recv(out), p->prefix);
                                 rec::WriteString(gocpp::recv(out), fourSpace);
                             }
-                            rec::text(gocpp::recv(p), out, fourSpace, gocpp::getValue<Paragraph*>(blk)->Text);
+                            rec::text(gocpp::recv(p), out, fourSpace, gocpp::assertValue<Paragraph*>(blk)->Text);
                         }
                     }
                     break;

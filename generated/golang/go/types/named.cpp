@@ -575,7 +575,7 @@ namespace golang::go::types
             rec::objDecl(gocpp::recv(check), orig);
         }
 
-        auto oldSig = gocpp::getValue<golang::go::types::Signature*>(orig->object.typ);
+        auto oldSig = gocpp::assertValue<golang::go::types::Signature*>(orig->object.typ);
         auto rtpars = rec::list(gocpp::recv(oldSig->rparams));
         auto rtargs = rec::list(gocpp::recv(t->inst->targs));
 
@@ -598,7 +598,7 @@ namespace golang::go::types
             {
                 ctxt = rec::context(gocpp::recv(check));
             }
-            newSig = gocpp::getValue<golang::go::types::Signature*>(rec::subst(gocpp::recv(check), orig->object.pos, oldSig, smap, t, ctxt));
+            newSig = gocpp::assertValue<golang::go::types::Signature*>(rec::subst(gocpp::recv(check), orig->object.pos, oldSig, smap, t, ctxt));
         }
 
         if(newSig == oldSig)

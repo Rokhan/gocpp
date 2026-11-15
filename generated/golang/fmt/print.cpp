@@ -450,7 +450,7 @@ namespace golang::fmt
     // newPrinter allocates a new pp struct or grabs a cached one.
     pp* newPrinter()
     {
-        auto p = gocpp::getValue<pp*>(rec::Get(gocpp::recv(ppFree)));
+        auto p = gocpp::assertValue<pp*>(rec::Get(gocpp::recv(ppFree)));
         p->panicking = false;
         p->erroring = false;
         p->wrapErrs = false;

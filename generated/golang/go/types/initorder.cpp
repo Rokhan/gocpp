@@ -104,7 +104,7 @@ namespace golang::go::types
         for(; len(pq) > 0; )
         {
             // get the next node
-            auto n = gocpp::getValue<graphNode*>(heap::Pop(& pq));
+            auto n = gocpp::assertValue<graphNode*>(heap::Pop(& pq));
 
             if(debug)
             {

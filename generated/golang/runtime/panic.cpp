@@ -650,7 +650,7 @@ namespace golang::runtime
     // See the doc comment for deferrangefunc for details.
     void deferprocat(std::function<void ()> fn, go_any frame)
     {
-        auto head = gocpp::getValue<atomic::Pointer<_defer>*>(frame);
+        auto head = gocpp::assertValue<atomic::Pointer<_defer>*>(frame);
         if(raceenabled)
         {
             racewritepc(gocpp::unsafe_pointer(head), sys::GetCallerPC(), abi::FuncPCABIInternal(deferprocat));

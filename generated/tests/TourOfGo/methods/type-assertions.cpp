@@ -25,7 +25,7 @@ namespace golang::main
     {
         gocpp::go_any i = "hello"_s;
 
-        auto s = gocpp::getValue<gocpp::string>(i);
+        auto s = gocpp::assertValue<gocpp::string>(i);
         mocklib::Println(s);
 
         bool ok;
@@ -37,7 +37,7 @@ namespace golang::main
         mocklib::Println(f, ok);
 
         // panic
-        f = gocpp::getValue<double>(i);
+        f = gocpp::assertValue<double>(i);
         mocklib::Println(f);
     }
 

@@ -802,7 +802,7 @@ namespace golang::fmt
     {
         ss* s;
         ssave old;
-        s = gocpp::getValue<ss*>(rec::Get(gocpp::recv(ssFree)));
+        s = gocpp::assertValue<ss*>(rec::Get(gocpp::recv(ssFree)));
         if(auto [rs, ok] = gocpp::getValue<io::RuneScanner>(r); ok)
         {
             s->rs = rs;

@@ -464,7 +464,7 @@ namespace golang::go::doc
         for(auto [gocpp_ignored, s] : specs)
         {
             // s guaranteed to be an *ast.ValueSpec by readValue
-            for(auto [gocpp_ignored, ident] : gocpp::getValue<ast::ValueSpec*>(s)->Names)
+            for(auto [gocpp_ignored, ident] : gocpp::assertValue<ast::ValueSpec*>(s)->Names)
             {
                 names = append(names, ident->Name);
             }

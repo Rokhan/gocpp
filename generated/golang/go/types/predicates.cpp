@@ -734,8 +734,8 @@ namespace golang::go::types
                             }
                         }
 
-                        yparams = gocpp::getValue<Tuple*>(rec::subst(gocpp::recv(check), nopos, y->params, smap, nullptr, ctxt));
-                        yresults = gocpp::getValue<Tuple*>(rec::subst(gocpp::recv(check), nopos, y->results, smap, nullptr, ctxt));
+                        yparams = gocpp::assertValue<Tuple*>(rec::subst(gocpp::recv(check), nopos, y->params, smap, nullptr, ctxt));
+                        yresults = gocpp::assertValue<Tuple*>(rec::subst(gocpp::recv(check), nopos, y->results, smap, nullptr, ctxt));
                     }
                     return x->variadic == y->variadic &&
                                 rec::identical(gocpp::recv(c), x->params, yparams, p) &&
@@ -1005,7 +1005,7 @@ namespace golang::go::types
         if(isUntypedNumeric(x) && isUntypedNumeric(y))
         {
             // untyped types are basic types
-            if(gocpp::getValue<Basic*>(x)->kind > gocpp::getValue<Basic*>(y)->kind)
+            if(gocpp::assertValue<Basic*>(x)->kind > gocpp::assertValue<Basic*>(y)->kind)
             {
                 return x;
             }

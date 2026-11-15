@@ -156,7 +156,7 @@ namespace golang::go::types
             if(rec::Len(gocpp::recv(params)) > 0)
             {
                 auto smap = makeSubstMap(tparams, targs);
-                params = gocpp::getValue<Tuple*>(rec::subst(gocpp::recv(check), nopos, params, smap, nullptr, rec::context(gocpp::recv(check))));
+                params = gocpp::assertValue<Tuple*>(rec::subst(gocpp::recv(check), nopos, params, smap, nullptr, rec::context(gocpp::recv(check))));
             }
 
             // Unify parameter and argument types for generic parameters with typed arguments
@@ -426,7 +426,7 @@ namespace golang::go::types
             for(auto [gocpp_ignored, index] : untyped)
             {
                 // is type parameter (no alias) by construction of untyped
-                auto tpar = gocpp::getValue<TypeParam*>(rec::At(gocpp::recv(params), index)->object.typ);
+                auto tpar = gocpp::assertValue<TypeParam*>(rec::At(gocpp::recv(params), index)->object.typ);
                 if(rec::at(gocpp::recv(u), tpar) == nullptr)
                 {
                     // arg corresponding to tpar

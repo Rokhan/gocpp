@@ -758,7 +758,7 @@ namespace golang::go::doc::comment
                     case 0:
                     {
                         comment::Paragraph* b = gocpp::any_cast<comment::Paragraph*>(b_ref);
-                        b->Text = rec::parseLinkedText(gocpp::recv(d), gocpp::string(gocpp::getValue<Plain>(b->Text[0])));
+                        b->Text = rec::parseLinkedText(gocpp::recv(d), gocpp::string(gocpp::assertValue<Plain>(b->Text[0])));
                         break;
                     }
                     case 1:
@@ -768,8 +768,8 @@ namespace golang::go::doc::comment
                         {
                             for(auto [gocpp_ignored, c] : i->Content)
                             {
-                                auto p = gocpp::getValue<Paragraph*>(c);
-                                p->Text = rec::parseLinkedText(gocpp::recv(d), gocpp::string(gocpp::getValue<Plain>(p->Text[0])));
+                                auto p = gocpp::assertValue<Paragraph*>(c);
+                                p->Text = rec::parseLinkedText(gocpp::recv(d), gocpp::string(gocpp::assertValue<Plain>(p->Text[0])));
                             }
                         }
                         break;

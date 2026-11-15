@@ -1409,7 +1409,7 @@ namespace golang::go::types
         if(obj->object.typ != nullptr)
         {
             // normal case
-            return gocpp::getValue<golang::go::types::Signature*>(obj->object.typ);
+            return gocpp::assertValue<golang::go::types::Signature*>(obj->object.typ);
         }
         // No signature: Signature was called either:
         // - within go/types, before a FuncDecl's initially
@@ -1436,7 +1436,7 @@ namespace golang::go::types
     // (but there is also no mechanism to get to an instantiated function).
     golang::go::types::Scope* rec::Scope(Func* obj)
     {
-        return gocpp::getValue<golang::go::types::Signature*>(obj->object.typ)->scope;
+        return gocpp::assertValue<golang::go::types::Signature*>(obj->object.typ)->scope;
     }
 
     // Origin returns the canonical Func for its receiver, i.e. the Func object
@@ -1927,7 +1927,7 @@ namespace golang::go::types
                     writeFuncName(buf, obj, qf);
                     if(typ != nullptr)
                     {
-                        WriteSignature(buf, gocpp::getValue<golang::go::types::Signature*>(typ), qf);
+                        WriteSignature(buf, gocpp::assertValue<golang::go::types::Signature*>(typ), qf);
                     }
                     return;
                     break;
@@ -2120,7 +2120,7 @@ namespace golang::go::types
     {
         if(f->object.typ != nullptr)
         {
-            auto sig = gocpp::getValue<golang::go::types::Signature*>(f->object.typ);
+            auto sig = gocpp::assertValue<golang::go::types::Signature*>(f->object.typ);
             if(auto recv = rec::Recv(gocpp::recv(sig)); recv != nullptr)
             {
                 rec::WriteByte(gocpp::recv(buf), '(');

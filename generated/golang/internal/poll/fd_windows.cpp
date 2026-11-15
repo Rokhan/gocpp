@@ -188,7 +188,7 @@ namespace golang::internal::poll
     });
     gocpp::slice<syscall::WSABuf>* newWSABufs(gocpp::slice<gocpp::slice<unsigned char>>* buf)
     {
-        auto bufsPtr = gocpp::getValue<gocpp::slice<syscall::WSABuf>*>(rec::Get(gocpp::recv(wsaBufsPool)));
+        auto bufsPtr = gocpp::assertValue<gocpp::slice<syscall::WSABuf>*>(rec::Get(gocpp::recv(wsaBufsPool)));
         *bufsPtr = (*bufsPtr).make_slice(0, 0);
         for(auto [gocpp_ignored, b] : *buf)
         {
@@ -254,7 +254,7 @@ namespace golang::internal::poll
         // by Windows in between several system calls. If the stack frame is moved while that happens,
         // then Windows may access invalid memory.
         // Use a pool to reuse allocations.
-        auto msg = gocpp::getValue<windows::WSAMsg*>(rec::Get(gocpp::recv(wsaMsgPool)));
+        auto msg = gocpp::assertValue<windows::WSAMsg*>(rec::Get(gocpp::recv(wsaMsgPool)));
         msg->Buffers->Len = uint32_t(len(p));
         msg->Buffers->Buf = unsafe::SliceData(p);
         if(len(oob) > 0)
@@ -329,7 +329,7 @@ namespace golang::internal::poll
     });
     wsaRsa* newWSARsa()
     {
-        auto rsa = gocpp::getValue<wsaRsa*>(rec::Get(gocpp::recv(wsaRsaPool)));
+        auto rsa = gocpp::assertValue<wsaRsa*>(rec::Get(gocpp::recv(wsaRsaPool)));
         rsa->name = syscall::RawSockaddrAny {};
         rsa->namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
         return rsa;
@@ -405,7 +405,7 @@ namespace golang::internal::poll
             {
                 return {0, err};
             }
-            auto o = gocpp::getValue<operation*>(rec::Get(gocpp::recv(operationPool)));
+            auto o = gocpp::assertValue<operation*>(rec::Get(gocpp::recv(operationPool)));
             defer.push_back([=]{ rec::Put(gocpp::recv(operationPool), o); });
             *o = gocpp::Init<operation>([=](auto& x) {
                 x.runtimeCtx = fd->pd.runtimeCtx;

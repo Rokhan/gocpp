@@ -295,7 +295,7 @@ namespace golang::go::types
                     {
                         if(isUntyped(rec::typ(gocpp::recv(x))))
                         {
-                            rec::WriteString(gocpp::recv(buf), gocpp::getValue<Basic*>(rec::typ(gocpp::recv(x)))->name);
+                            rec::WriteString(gocpp::recv(buf), gocpp::assertValue<Basic*>(rec::typ(gocpp::recv(x)))->name);
                             rec::WriteByte(gocpp::recv(buf), ' ');
                             break;
                         }
@@ -352,7 +352,7 @@ namespace golang::go::types
                                 if(what == ""_s)
                                 {
                                     // x.typ must be basic type
-                                    what = gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))))->name;
+                                    what = gocpp::assertValue<Basic*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x)))))->name;
                                 }
                                 desc += what + " "_s;
                                 break;

@@ -1380,8 +1380,8 @@ namespace golang::encoding::json::v2
                     if(mo->ArshalValues.Marshalers != nullptr)
                     {
                         bool ok = {};
-                        std::tie(marshalKey, ok) = rec::lookup(gocpp::recv(gocpp::getValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshalKey, rec::Key(gocpp::recv(t)));
-                        std::tie(marshalVal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshalVal, rec::Elem(gocpp::recv(t)));
+                        std::tie(marshalKey, ok) = rec::lookup(gocpp::recv(gocpp::assertValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshalKey, rec::Key(gocpp::recv(t)));
+                        std::tie(marshalVal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshalVal, rec::Elem(gocpp::recv(t)));
                         nonDefaultKey = nonDefaultKey || ok;
                     }
                     auto k = newAddressableValue(rec::Key(gocpp::recv(t)));
@@ -1602,8 +1602,8 @@ namespace golang::encoding::json::v2
                         if(uo->ArshalValues.Unmarshalers != nullptr)
                         {
                             bool ok = {};
-                            std::tie(unmarshalKey, ok) = rec::lookup(gocpp::recv(gocpp::getValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshalKey, rec::Key(gocpp::recv(t)));
-                            std::tie(unmarshalVal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshalVal, rec::Elem(gocpp::recv(t)));
+                            std::tie(unmarshalKey, ok) = rec::lookup(gocpp::recv(gocpp::assertValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshalKey, rec::Key(gocpp::recv(t)));
+                            std::tie(unmarshalVal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshalVal, rec::Elem(gocpp::recv(t)));
                             nonDefaultKey = nonDefaultKey || ok;
                         }
                         auto k = newAddressableValue(rec::Key(gocpp::recv(t)));
@@ -1849,7 +1849,7 @@ namespace golang::encoding::json::v2
                 if(mo->ArshalValues.Marshalers != nullptr)
                 {
                     bool ok = {};
-                    std::tie(marshal, ok) = rec::lookup(gocpp::recv(gocpp::getValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, f->typ);
+                    std::tie(marshal, ok) = rec::lookup(gocpp::recv(gocpp::assertValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, f->typ);
                     nonDefault = nonDefault || ok;
                 }
 
@@ -2123,7 +2123,7 @@ namespace golang::encoding::json::v2
                             auto unmarshal = f->fncs->unmarshal;
                             if(uo->ArshalValues.Unmarshalers != nullptr)
                             {
-                                std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, f->typ);
+                                std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, f->typ);
                             }
                             auto flagsOriginal = uo->Flags;
                             if(f->fieldOptions.string)
@@ -2364,7 +2364,7 @@ namespace golang::encoding::json::v2
                 auto marshal = valFncs->marshal;
                 if(mo->ArshalValues.Marshalers != nullptr)
                 {
-                    std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, rec::Elem(gocpp::recv(t)));
+                    std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, rec::Elem(gocpp::recv(t)));
                 }
                 for(int i = 0; i < n; ++i)
                 {
@@ -2440,7 +2440,7 @@ namespace golang::encoding::json::v2
                         auto unmarshal = valFncs->unmarshal;
                         if(uo->ArshalValues.Unmarshalers != nullptr)
                         {
-                            std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, rec::Elem(gocpp::recv(t)));
+                            std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, rec::Elem(gocpp::recv(t)));
                         }
                         // we do not know the cleanliness of unused capacity
                         bool mustZero = true;
@@ -2533,7 +2533,7 @@ namespace golang::encoding::json::v2
             auto marshal = valFncs->marshal;
             if(mo->ArshalValues.Marshalers != nullptr)
             {
-                std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, rec::Elem(gocpp::recv(t)));
+                std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, rec::Elem(gocpp::recv(t)));
             }
             for(int i = 0; i < n; ++i)
             {
@@ -2590,7 +2590,7 @@ namespace golang::encoding::json::v2
                         auto unmarshal = valFncs->unmarshal;
                         if(uo->ArshalValues.Unmarshalers != nullptr)
                         {
-                            std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, rec::Elem(gocpp::recv(t)));
+                            std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, rec::Elem(gocpp::recv(t)));
                         }
                         int64_t i = {};
                         gocpp::error errUnmarshal = {};
@@ -2687,7 +2687,7 @@ namespace golang::encoding::json::v2
                 auto marshal = valFncs->marshal;
                 if(mo->ArshalValues.Marshalers != nullptr)
                 {
-                    std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, rec::Elem(gocpp::recv(t)));
+                    std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, rec::Elem(gocpp::recv(t)));
                 }
                 // dereferenced pointer is always addressable
                 auto v = addressableValue {rec::Elem(gocpp::recv(va)), false};
@@ -2723,7 +2723,7 @@ namespace golang::encoding::json::v2
             auto unmarshal = valFncs->unmarshal;
             if(uo->ArshalValues.Unmarshalers != nullptr)
             {
-                std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, rec::Elem(gocpp::recv(t)));
+                std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, rec::Elem(gocpp::recv(t)));
             }
             if(rec::IsNil(gocpp::recv(va)))
             {
@@ -3004,16 +3004,16 @@ namespace golang::encoding::json::v2
                         switch(conditionId)
                         {
                             case 0:
-                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_id_6 {gocpp::getValue<MarshalerTo>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
+                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_id_6 {gocpp::assertValue<MarshalerTo>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
                                 break;
                             case 1:
-                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_id_7 {gocpp::getValue<Marshaler>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
+                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_id_7 {gocpp::assertValue<Marshaler>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
                                 break;
                             case 2:
-                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_id_8 {gocpp::getValue<encoding::TextAppender>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
+                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_id_8 {gocpp::assertValue<encoding::TextAppender>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
                                 break;
                             case 3:
-                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_id_9 {gocpp::getValue<encoding::TextMarshaler>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
+                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_id_9 {gocpp::assertValue<encoding::TextMarshaler>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
                                 break;
                         }
                     }
@@ -3025,12 +3025,12 @@ namespace golang::encoding::json::v2
             auto marshal = lookupArshaler(rec::Type(gocpp::recv(v)))->marshal;
             if(mo->ArshalValues.Marshalers != nullptr)
             {
-                std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, rec::Type(gocpp::recv(v)));
+                std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, rec::Type(gocpp::recv(v)));
             }
             // Optimize for the any type if there are no special options.
             if(optimizeCommon &&
                         t == anyType && ! rec::Get(gocpp::recv(mo->Flags), jsonflags::StringifyNumbers | jsonflags::TagFlags) &&
-                        (mo->ArshalValues.Marshalers == nullptr || ! gocpp::getValue<Marshalers*>(mo->ArshalValues.Marshalers)->fromAny))
+                        (mo->ArshalValues.Marshalers == nullptr || ! gocpp::assertValue<Marshalers*>(mo->ArshalValues.Marshalers)->fromAny))
             {
                 return marshalValueAny(enc, rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))), mo);
             }
@@ -3101,7 +3101,7 @@ namespace golang::encoding::json::v2
                 // does not implement merge semantics.
                 if(optimizeCommon &&
                                 t == anyType && ! rec::Get(gocpp::recv(uo->Flags), jsonflags::AllowDuplicateNames | jsonflags::FormatTag) &&
-                                (uo->ArshalValues.Unmarshalers == nullptr || ! gocpp::getValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)->fromAny))
+                                (uo->ArshalValues.Unmarshalers == nullptr || ! gocpp::assertValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)->fromAny))
                 {
                     auto [v, err] = unmarshalValueAny(dec, uo);
                     // We must check for nil interface values up front.
@@ -3177,7 +3177,7 @@ namespace golang::encoding::json::v2
             auto unmarshal = lookupArshaler(rec::Type(gocpp::recv(v)))->unmarshal;
             if(uo->ArshalValues.Unmarshalers != nullptr)
             {
-                std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, rec::Type(gocpp::recv(v)));
+                std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, rec::Type(gocpp::recv(v)));
             }
             auto err = unmarshal(dec, v, uo);
             rec::Set(gocpp::recv(va), v.Value);

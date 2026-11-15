@@ -197,7 +197,7 @@ namespace golang::os
             defer.push_back([=]{ rec::Unlock(gocpp::recv(d->mu)); });
             if(d->buf == nullptr)
             {
-                d->buf = gocpp::getValue<gocpp::slice<unsigned char>*>(rec::Get(gocpp::recv(dirBufPool)));
+                d->buf = gocpp::assertValue<gocpp::slice<unsigned char>*>(rec::Get(gocpp::recv(dirBufPool)));
             }
 
             auto wantAll = n <= 0;

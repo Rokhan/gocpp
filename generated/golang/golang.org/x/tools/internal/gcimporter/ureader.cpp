@@ -861,7 +861,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                 case 1:
                 {
                     auto [obj, targs] = rec::obj(gocpp::recv(r));
-                    auto name = gocpp::getValue<types::TypeName*>(obj);
+                    auto name = gocpp::assertValue<types::TypeName*>(obj);
                     if(len(targs) != 0)
                     {
                         auto [t, gocpp_id_0] = types::Instantiate(r->p->ctxt, rec::Type(gocpp::recv(name)), targs, false);
@@ -1161,7 +1161,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                                 for(auto [i, gocpp_ignored] : methods)
                                 {
                                     auto fn = rec::ExplicitMethod(gocpp::recv(iface), i);
-                                    auto sig = gocpp::getValue<types::Signature*>(rec::Type(gocpp::recv(fn)));
+                                    auto sig = gocpp::assertValue<types::Signature*>(rec::Type(gocpp::recv(fn)));
 
                                     auto recv = types::NewVar(rec::Pos(gocpp::recv(fn)), rec::Pkg(gocpp::recv(fn)), ""_s, named);
                                     typesinternal::SetVarKind(recv, typesinternal::RecvVar);

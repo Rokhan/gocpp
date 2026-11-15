@@ -213,7 +213,7 @@ namespace golang::syscall
                 case 1:
                     if(auto [cached, ok] = rec::Load(gocpp::recv(errnoErrorCache), e); ok)
                     {
-                        return gocpp::getValue<gocpp::string>(cached);
+                        return gocpp::assertValue<gocpp::string>(cached);
                     }
                     cache = true;
                     break;

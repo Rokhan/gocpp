@@ -561,7 +561,7 @@ namespace golang::os
     // For testing.
     mocklib::Date atime(FileInfo fi)
     {
-        return time::Unix(0, rec::Nanoseconds(gocpp::recv(gocpp::getValue<syscall::Win32FileAttributeData*>(rec::Sys(gocpp::recv(fi)))->LastAccessTime)));
+        return time::Unix(0, rec::Nanoseconds(gocpp::recv(gocpp::assertValue<syscall::Win32FileAttributeData*>(rec::Sys(gocpp::recv(fi)))->LastAccessTime)));
     }
 
 }

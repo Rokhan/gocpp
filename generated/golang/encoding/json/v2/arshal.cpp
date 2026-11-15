@@ -356,7 +356,7 @@ namespace golang::encoding::json::v2
         auto marshal = lookupArshaler(t)->marshal;
         if(mo->ArshalValues.Marshalers != nullptr)
         {
-            std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, t);
+            std::tie(marshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Marshalers*>(mo->ArshalValues.Marshalers)), marshal, t);
         }
         if(auto err = marshal(out, va, mo); err != nullptr)
         {
@@ -639,7 +639,7 @@ namespace golang::encoding::json::v2
         auto unmarshal = lookupArshaler(t)->unmarshal;
         if(uo->ArshalValues.Unmarshalers != nullptr)
         {
-            std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::getValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, t);
+            std::tie(unmarshal, std::ignore) = rec::lookup(gocpp::recv(gocpp::assertValue<Unmarshalers*>(uo->ArshalValues.Unmarshalers)), unmarshal, t);
         }
         if(auto err = unmarshal(in, va, uo); err != nullptr)
         {
@@ -1806,7 +1806,7 @@ namespace golang::encoding::json::v2
     {
         if(auto [v, ok] = rec::Load(gocpp::recv(lookupArshalerCache), t); ok)
         {
-            return gocpp::getValue<arshaler*>(v);
+            return gocpp::assertValue<arshaler*>(v);
         }
 
         auto fncs = makeDefaultArshaler(t);
@@ -1815,7 +1815,7 @@ namespace golang::encoding::json::v2
 
         // Use the last stored so that duplicate arshalers can be garbage collected.
         auto [v, gocpp_id_0] = rec::LoadOrStore(gocpp::recv(lookupArshalerCache), t, fncs);
-        return gocpp::getValue<arshaler*>(v);
+        return gocpp::assertValue<arshaler*>(v);
     }
 
     sync::Pool* stringsPools = gocpp::InitPtr<sync::Pool>([](auto& x) {
@@ -1827,7 +1827,7 @@ namespace golang::encoding::json::v2
     // getStrings returns a non-nil pointer to a slice with length n.
     stringSlice* getStrings(int64_t n)
     {
-        auto s = gocpp::getValue<stringSlice*>(rec::Get(gocpp::recv(stringsPools)));
+        auto s = gocpp::assertValue<stringSlice*>(rec::Get(gocpp::recv(stringsPools)));
         if(cap(*s) < n)
         {
             *s = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), n);

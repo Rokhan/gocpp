@@ -362,7 +362,7 @@ namespace golang::go::types
                             {
                                 auto err = rec::newError(gocpp::recv(check), DuplicateDecl);
                                 rec::addf(gocpp::recv(err), atPos(pos), "duplicate method %s"_s, m->object.name);
-                                rec::addf(gocpp::recv(err), atPos(mpos.get(gocpp::getValue<Func*>(other))), "other declaration of method %s"_s, m->object.name);
+                                rec::addf(gocpp::recv(err), atPos(mpos.get(gocpp::assertValue<Func*>(other))), "other declaration of method %s"_s, m->object.name);
                                 rec::report(gocpp::recv(err));
                             }
                             break;
@@ -380,7 +380,7 @@ namespace golang::go::types
                                     {
                                         auto err = rec::newError(gocpp::recv(check), DuplicateDecl);
                                         rec::addf(gocpp::recv(err), atPos(pos), "duplicate method %s"_s, m->object.name);
-                                        rec::addf(gocpp::recv(err), atPos(mpos.get(gocpp::getValue<Func*>(other))), "other declaration of method %s"_s, m->object.name);
+                                        rec::addf(gocpp::recv(err), atPos(mpos.get(gocpp::assertValue<Func*>(other))), "other declaration of method %s"_s, m->object.name);
                                         rec::report(gocpp::recv(err));
                                     }
                                 })), atPos(pos), "duplicate method check for %s"_s, m->object.name);

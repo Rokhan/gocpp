@@ -757,7 +757,7 @@ namespace golang::go::types
             {
                 gocpp::panic("unexpected generic signature"_s);
             }
-            auto gtyp = gocpp::getValue<golang::go::types::genericType>(typ);
+            auto gtyp = gocpp::assertValue<golang::go::types::genericType>(typ);
 
             // evaluate arguments
             auto targs = rec::typeList(gocpp::recv(check), ix->indices);
@@ -785,7 +785,7 @@ namespace golang::go::types
                 // errors.
                 rec::recordInstance(gocpp::recv(check), ix->orig, targs, inst);
 
-                auto name = rec::Obj(gocpp::recv(gocpp::getValue<gocpp_id_8>(inst)))->object.name;
+                auto name = rec::Obj(gocpp::recv(gocpp::assertValue<gocpp_id_8>(inst)))->object.name;
                 auto tparams = rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(inst))));
                 if(rec::validateTArgLen(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), name, len(tparams), len(targs)))
                 {

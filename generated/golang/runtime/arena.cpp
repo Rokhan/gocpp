@@ -165,7 +165,7 @@ namespace golang::runtime
             {
                 case 0:
                 {
-                    auto s1 = gocpp::getValue<gocpp::string>(s);
+                    auto s1 = gocpp::assertValue<gocpp::string>(s);
                     auto [s2, b] = rawstring(len(s1));
                     copy(b, s1);
                     x = s2;

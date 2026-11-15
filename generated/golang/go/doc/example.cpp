@@ -431,7 +431,7 @@ namespace golang::go::doc
         gocpp::slice<ast::CommentGroup*> comments = {};
         for(auto [gocpp_ignored, s] : blankImports)
         {
-            if(auto c = gocpp::getValue<ast::ImportSpec*>(s)->Doc; c != nullptr)
+            if(auto c = gocpp::assertValue<ast::ImportSpec*>(s)->Doc; c != nullptr)
             {
                 comments = append(comments, c);
             }

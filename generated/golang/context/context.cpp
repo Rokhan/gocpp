@@ -1061,7 +1061,7 @@ namespace golang::context
             auto d = rec::Load(gocpp::recv(c->done));
             if(d != nullptr)
             {
-                return gocpp::getValue<gocpp::channel<gocpp::empty_struct>>(d);
+                return gocpp::assertValue<gocpp::channel<gocpp::empty_struct>>(d);
             }
             rec::Lock(gocpp::recv(c->mu));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(c->mu)); });
@@ -1071,7 +1071,7 @@ namespace golang::context
                 d = gocpp::make(gocpp::Tag<gocpp::channel<gocpp::empty_struct>>());
                 rec::Store(gocpp::recv(c->done), d);
             }
-            return gocpp::getValue<gocpp::channel<gocpp::empty_struct>>(d);
+            return gocpp::assertValue<gocpp::channel<gocpp::empty_struct>>(d);
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1086,7 +1086,7 @@ namespace golang::context
         {
             // Ensure the done channel has been closed before returning a non-nil error.
             rec::Done(gocpp::recv(c)).recv();
-            return gocpp::getValue<gocpp::error>(err);
+            return gocpp::assertValue<gocpp::error>(err);
         }
         return nullptr;
     }
@@ -1128,7 +1128,7 @@ namespace golang::context
             if(auto err = rec::Load(gocpp::recv(p->err)); err != nullptr)
             {
                 // parent has already been canceled
-                rec::cancel(gocpp::recv(child), false, gocpp::getValue<gocpp::error>(err), p->cause);
+                rec::cancel(gocpp::recv(child), false, gocpp::assertValue<gocpp::error>(err), p->cause);
             }
             else
             {

@@ -576,7 +576,7 @@ namespace golang::go::types
         Func* method;
         bool wrongType;
         // T must be an interface
-        auto methods = rec::typeSet(gocpp::recv(gocpp::getValue<Interface*>(rec::Underlying(gocpp::recv(T)))))->methods;
+        auto methods = rec::typeSet(gocpp::recv(gocpp::assertValue<Interface*>(rec::Underlying(gocpp::recv(T)))))->methods;
         if(len(methods) == 0)
         {
             return {nullptr, false};
@@ -870,7 +870,7 @@ namespace golang::go::types
         auto w = newTypeWriter(buf, qf);
         w->pkgInfo = pkgInfo;
         w->paramNames = false;
-        rec::signature(gocpp::recv(w), gocpp::getValue<golang::go::types::Signature*>(f->object.typ));
+        rec::signature(gocpp::recv(w), gocpp::assertValue<golang::go::types::Signature*>(f->object.typ));
         return rec::String(gocpp::recv(buf));
     }
 

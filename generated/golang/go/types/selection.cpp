@@ -159,7 +159,7 @@ namespace golang::go::types
                     // TODO(mark) Align this with call.go if possible.
                     // The type of x.f is a method with its receiver type set
                     // to the type of x.
-                    auto sig = *gocpp::getValue<golang::go::types::Signature*>(gocpp::getValue<Func*>(s->obj)->object.typ);
+                    auto sig = *gocpp::assertValue<golang::go::types::Signature*>(gocpp::assertValue<Func*>(s->obj)->object.typ);
                     auto recv = *sig.recv;
                     recv.object.typ = s->recv;
                     sig.recv = & recv;
@@ -173,7 +173,7 @@ namespace golang::go::types
                     // and an additional first argument with the same type as x.
                     // TODO(gri) Similar code is already in call.go - factor!
                     // TODO(gri) Compute this eagerly to avoid allocations.
-                    auto sig = *gocpp::getValue<golang::go::types::Signature*>(gocpp::getValue<Func*>(s->obj)->object.typ);
+                    auto sig = *gocpp::assertValue<golang::go::types::Signature*>(gocpp::assertValue<Func*>(s->obj)->object.typ);
                     auto arg0 = *sig.recv;
                     // stash receiver (for consistency with call.go)
                     sig.recvold = sig.recv;
@@ -274,7 +274,7 @@ namespace golang::go::types
         }
         else
         {
-            WriteSignature(& buf, gocpp::getValue<golang::go::types::Signature*>(T), qf);
+            WriteSignature(& buf, gocpp::assertValue<golang::go::types::Signature*>(T), qf);
         }
         return rec::String(gocpp::recv(buf));
     }

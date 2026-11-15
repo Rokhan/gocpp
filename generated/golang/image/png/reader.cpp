@@ -537,7 +537,7 @@ namespace golang::image::png
                     }
                     for(int64_t i = 0; i < n; i++)
                     {
-                        auto rgba = gocpp::getValue<color::RGBA>(d->palette[i]);
+                        auto rgba = gocpp::assertValue<color::RGBA>(d->palette[i]);
                         d->palette[i] = color::NRGBA {rgba.R, rgba.G, rgba.B, d->tmp[i]};
                     }
                     break;
@@ -1245,7 +1245,7 @@ namespace golang::image::png
                 case 0:
                 {
                     image::Alpha* target = gocpp::any_cast<image::Alpha*>(dst);
-                    srcPix = gocpp::getValue<image::Alpha*>(src)->Pix;
+                    srcPix = gocpp::assertValue<image::Alpha*>(src)->Pix;
                     std::tie(dstPix, stride, rect) = std::tuple{target->Pix, target->Stride, target->Rect};
                     bytesPerPixel = 1;
                     break;
@@ -1253,7 +1253,7 @@ namespace golang::image::png
                 case 1:
                 {
                     image::Alpha16* target = gocpp::any_cast<image::Alpha16*>(dst);
-                    srcPix = gocpp::getValue<image::Alpha16*>(src)->Pix;
+                    srcPix = gocpp::assertValue<image::Alpha16*>(src)->Pix;
                     std::tie(dstPix, stride, rect) = std::tuple{target->Pix, target->Stride, target->Rect};
                     bytesPerPixel = 2;
                     break;
@@ -1261,7 +1261,7 @@ namespace golang::image::png
                 case 2:
                 {
                     image::Gray* target = gocpp::any_cast<image::Gray*>(dst);
-                    srcPix = gocpp::getValue<image::Gray*>(src)->Pix;
+                    srcPix = gocpp::assertValue<image::Gray*>(src)->Pix;
                     std::tie(dstPix, stride, rect) = std::tuple{target->Pix, target->Stride, target->Rect};
                     bytesPerPixel = 1;
                     break;
@@ -1269,7 +1269,7 @@ namespace golang::image::png
                 case 3:
                 {
                     image::Gray16* target = gocpp::any_cast<image::Gray16*>(dst);
-                    srcPix = gocpp::getValue<image::Gray16*>(src)->Pix;
+                    srcPix = gocpp::assertValue<image::Gray16*>(src)->Pix;
                     std::tie(dstPix, stride, rect) = std::tuple{target->Pix, target->Stride, target->Rect};
                     bytesPerPixel = 2;
                     break;
@@ -1277,7 +1277,7 @@ namespace golang::image::png
                 case 4:
                 {
                     image::NRGBA* target = gocpp::any_cast<image::NRGBA*>(dst);
-                    srcPix = gocpp::getValue<image::NRGBA*>(src)->Pix;
+                    srcPix = gocpp::assertValue<image::NRGBA*>(src)->Pix;
                     std::tie(dstPix, stride, rect) = std::tuple{target->Pix, target->Stride, target->Rect};
                     bytesPerPixel = 4;
                     break;
@@ -1285,7 +1285,7 @@ namespace golang::image::png
                 case 5:
                 {
                     image::NRGBA64* target = gocpp::any_cast<image::NRGBA64*>(dst);
-                    srcPix = gocpp::getValue<image::NRGBA64*>(src)->Pix;
+                    srcPix = gocpp::assertValue<image::NRGBA64*>(src)->Pix;
                     std::tie(dstPix, stride, rect) = std::tuple{target->Pix, target->Stride, target->Rect};
                     bytesPerPixel = 8;
                     break;
@@ -1293,7 +1293,7 @@ namespace golang::image::png
                 case 6:
                 {
                     image::Paletted* target = gocpp::any_cast<image::Paletted*>(dst);
-                    auto source = gocpp::getValue<image::Paletted*>(src);
+                    auto source = gocpp::assertValue<image::Paletted*>(src);
                     srcPix = source->Pix;
                     std::tie(dstPix, stride, rect) = std::tuple{target->Pix, target->Stride, target->Rect};
                     bytesPerPixel = 1;
@@ -1310,7 +1310,7 @@ namespace golang::image::png
                 case 7:
                 {
                     image::RGBA* target = gocpp::any_cast<image::RGBA*>(dst);
-                    srcPix = gocpp::getValue<image::RGBA*>(src)->Pix;
+                    srcPix = gocpp::assertValue<image::RGBA*>(src)->Pix;
                     std::tie(dstPix, stride, rect) = std::tuple{target->Pix, target->Stride, target->Rect};
                     bytesPerPixel = 4;
                     break;
@@ -1318,7 +1318,7 @@ namespace golang::image::png
                 case 8:
                 {
                     image::RGBA64* target = gocpp::any_cast<image::RGBA64*>(dst);
-                    srcPix = gocpp::getValue<image::RGBA64*>(src)->Pix;
+                    srcPix = gocpp::assertValue<image::RGBA64*>(src)->Pix;
                     std::tie(dstPix, stride, rect) = std::tuple{target->Pix, target->Stride, target->Rect};
                     bytesPerPixel = 8;
                     break;

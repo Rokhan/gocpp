@@ -317,7 +317,7 @@ namespace golang::go::types
                         // nothing to do (minor optimization)
                         return orig;
                     }
-                    auto sig = gocpp::getValue<golang::go::types::Signature*>(rec::subst(gocpp::recv(check), pos, orig, makeSubstMap(rec::list(gocpp::recv(tparams)), targs), nullptr, ctxt));
+                    auto sig = gocpp::assertValue<golang::go::types::Signature*>(rec::subst(gocpp::recv(check), pos, orig, makeSubstMap(rec::list(gocpp::recv(tparams)), targs), nullptr, ctxt));
                     // If the signature doesn't use its type parameters, subst
                     // will not make a copy. In that case, make a copy now (so
                     // we can set tparams to nil w/o causing side-effects).

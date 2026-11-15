@@ -319,7 +319,7 @@ namespace golang::os
                 {
                     return {nullptr, err};
                 }
-                if(! lstat && rec::isReparseTagNameSurrogate(gocpp::recv(gocpp::getValue<fileStat*>(fi))))
+                if(! lstat && rec::isReparseTagNameSurrogate(gocpp::recv(gocpp::assertValue<fileStat*>(fi))))
                 {
                     auto [link, err] = readReparseLinkHandle(fd);
                     if(err != nullptr)

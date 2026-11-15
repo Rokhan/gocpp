@@ -132,7 +132,7 @@ namespace golang::go::parser
             else
             if(debugResolve)
             {
-                auto pos = rec::Pos(gocpp::recv(gocpp::getValue<gocpp_id_0>(ident->Obj->Decl)));
+                auto pos = rec::Pos(gocpp::recv(gocpp::assertValue<gocpp_id_0>(ident->Obj->Decl)));
                 rec::trace(gocpp::recv(r), "resolved %s@%v to package object %v"_s, ident->Name, rec::Pos(gocpp::recv(ident)), pos);
             }
         }
@@ -785,7 +785,7 @@ namespace golang::go::parser
                                 case 1:
                                     for(auto [i, spec] : n->Specs)
                                     {
-                                        auto spec_tmp = gocpp::getValue<ast::ValueSpec*>(spec);
+                                        auto spec_tmp = gocpp::assertValue<ast::ValueSpec*>(spec);
                                         auto& spec = spec_tmp;
                                         ast::ObjKind kind = ast::Con;
                                         if(n->Tok == token::VAR)
@@ -803,7 +803,7 @@ namespace golang::go::parser
                                 case 2:
                                     for(auto [gocpp_ignored, spec] : n->Specs)
                                     {
-                                        auto spec_tmp = gocpp::getValue<ast::TypeSpec*>(spec);
+                                        auto spec_tmp = gocpp::assertValue<ast::TypeSpec*>(spec);
                                         auto& spec = spec_tmp;
                                         // Go spec: The scope of a type identifier declared inside a function begins
                                         // at the identifier in the TypeSpec and ends at the end of the innermost

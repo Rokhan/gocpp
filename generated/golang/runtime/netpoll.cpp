@@ -811,17 +811,17 @@ namespace golang::runtime
 
     void netpollDeadline(go_any arg, uintptr_t seq, int64_t delta)
     {
-        netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, true, true);
+        netpolldeadlineimpl(gocpp::assertValue<pollDesc*>(arg), seq, true, true);
     }
 
     void netpollReadDeadline(go_any arg, uintptr_t seq, int64_t delta)
     {
-        netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, true, false);
+        netpolldeadlineimpl(gocpp::assertValue<pollDesc*>(arg), seq, true, false);
     }
 
     void netpollWriteDeadline(go_any arg, uintptr_t seq, int64_t delta)
     {
-        netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, false, true);
+        netpolldeadlineimpl(gocpp::assertValue<pollDesc*>(arg), seq, false, true);
     }
 
     // netpollAnyWaiters reports whether any goroutines are waiting for I/O.

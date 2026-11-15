@@ -384,7 +384,7 @@ namespace golang::encoding::json::jsontext
     });
     gocpp::slice<objectMember>* getObjectMembers()
     {
-        auto ns = gocpp::getValue<gocpp::slice<objectMember>*>(rec::Get(gocpp::recv(objectMemberPool)));
+        auto ns = gocpp::assertValue<gocpp::slice<objectMember>*>(rec::Get(gocpp::recv(objectMemberPool)));
         *ns = (*ns).make_slice(0, 0);
         return ns;
     }

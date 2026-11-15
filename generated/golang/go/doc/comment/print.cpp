@@ -451,7 +451,7 @@ namespace golang::go::doc::comment
                             {
                                 rec::WriteString(gocpp::recv(out), "\n"_s + fourSpace);
                             }
-                            rec::text(gocpp::recv(p), out, fourSpace, gocpp::getValue<Paragraph*>(blk)->Text);
+                            rec::text(gocpp::recv(p), out, fourSpace, gocpp::assertValue<Paragraph*>(blk)->Text);
                             rec::WriteString(gocpp::recv(out), "\n"_s);
                         }
                     }

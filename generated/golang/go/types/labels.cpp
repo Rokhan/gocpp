@@ -60,7 +60,7 @@ namespace golang::go::types
                 msg = "goto %s jumps into block"_s;
                 code = JumpIntoBlock;
                 // avoid another error
-                gocpp::getValue<Label*>(alt)->used = true;
+                gocpp::assertValue<Label*>(alt)->used = true;
             }
             else
             {
@@ -74,7 +74,7 @@ namespace golang::go::types
         for(auto [name, obj] : all->elems)
         {
             obj = resolve(name, obj);
-            if(auto lbl = gocpp::getValue<Label*>(obj); ! lbl->used)
+            if(auto lbl = gocpp::assertValue<Label*>(obj); ! lbl->used)
             {
                 rec::softErrorf(gocpp::recv(check), lbl, UnusedLabel, "label %s declared and not used"_s, lbl->object.name);
             }
@@ -390,7 +390,7 @@ namespace golang::go::types
                         }
                         // record label use
                         auto obj = rec::Lookup(gocpp::recv(all), name);
-                        gocpp::getValue<Label*>(obj)->used = true;
+                        gocpp::assertValue<Label*>(obj)->used = true;
                         rec::recordUse(gocpp::recv(check), s->Label, obj);
                         break;
                     }

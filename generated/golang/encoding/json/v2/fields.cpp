@@ -470,26 +470,26 @@ namespace golang::encoding::json::v2
                                 {
                                     // Avoid panics calling IsZero on a nil interface or
                                     // non-nil interface with nil pointer.
-                                    return rec::IsNil(gocpp::recv(va)) || (rec::Kind(gocpp::recv(rec::Elem(gocpp::recv(va)))) == reflect::Pointer && rec::IsNil(gocpp::recv(rec::Elem(gocpp::recv(va))))) || rec::IsZero(gocpp::recv(gocpp::getValue<isZeroer>(rec::Interface(gocpp::recv(va)))));
+                                    return rec::IsNil(gocpp::recv(va)) || (rec::Kind(gocpp::recv(rec::Elem(gocpp::recv(va)))) == reflect::Pointer && rec::IsNil(gocpp::recv(rec::Elem(gocpp::recv(va))))) || rec::IsZero(gocpp::recv(gocpp::assertValue<isZeroer>(rec::Interface(gocpp::recv(va)))));
                                 };
                                 break;
                             case 1:
                                 f.isZero = [=](addressableValue va) mutable -> bool
                                 {
                                     // Avoid panics calling IsZero on nil pointer.
-                                    return rec::IsNil(gocpp::recv(va)) || rec::IsZero(gocpp::recv(gocpp::getValue<isZeroer>(rec::Interface(gocpp::recv(va)))));
+                                    return rec::IsNil(gocpp::recv(va)) || rec::IsZero(gocpp::recv(gocpp::assertValue<isZeroer>(rec::Interface(gocpp::recv(va)))));
                                 };
                                 break;
                             case 2:
                                 f.isZero = [=](addressableValue va) mutable -> bool
                                 {
-                                    return rec::IsZero(gocpp::recv(gocpp::getValue<isZeroer>(rec::Interface(gocpp::recv(va)))));
+                                    return rec::IsZero(gocpp::recv(gocpp::assertValue<isZeroer>(rec::Interface(gocpp::recv(va)))));
                                 };
                                 break;
                             case 3:
                                 f.isZero = [=](addressableValue va) mutable -> bool
                                 {
-                                    return rec::IsZero(gocpp::recv(gocpp::getValue<isZeroer>(rec::Interface(gocpp::recv(rec::Addr(gocpp::recv(va)))))));
+                                    return rec::IsZero(gocpp::recv(gocpp::assertValue<isZeroer>(rec::Interface(gocpp::recv(rec::Addr(gocpp::recv(va)))))));
                                 };
                                 break;
                         }

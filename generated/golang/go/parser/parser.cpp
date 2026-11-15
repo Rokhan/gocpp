@@ -4144,7 +4144,7 @@ namespace golang::go::parser
 
             if(isRange)
             {
-                auto as = gocpp::getValue<ast::AssignStmt*>(s2);
+                auto as = gocpp::assertValue<ast::AssignStmt*>(s2);
                 // check lhs
                 ast::Expr key = {};
                 ast::Expr value = {};
@@ -4177,7 +4177,7 @@ namespace golang::go::parser
                 }
                 // parseSimpleStmt returned a right-hand side that
                 // is a single unary expression of the form "range x"
-                auto x = gocpp::getValue<ast::UnaryExpr*>(as->Rhs[0])->X;
+                auto x = gocpp::assertValue<ast::UnaryExpr*>(as->Rhs[0])->X;
                 return gocpp::InitPtr<ast::RangeStmt>([=](auto& y) {
                     y.For = pos;
                     y.Key = key;

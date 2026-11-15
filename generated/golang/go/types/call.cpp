@@ -123,7 +123,7 @@ namespace golang::go::types
         // Check the number of type arguments (got) vs number of type parameters (want).
         // Note that x is a function value, not a type expression, so we don't need to
         // call Underlying below.
-        auto sig = gocpp::getValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(x)));
+        auto sig = gocpp::assertValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(x)));
         auto [got, want] = std::tuple{len(targs), rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig))))};
         if(got > want)
         {
@@ -183,7 +183,7 @@ namespace golang::go::types
             auto [tparams, params2] = rec::renameTParams(gocpp::recv(check), pos, rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))), NewTuple(params));
 
             auto err = rec::newError(gocpp::recv(check), CannotInferTypeArgs);
-            targs = rec::infer(gocpp::recv(check), atPos(pos), tparams, targs, gocpp::getValue<Tuple*>(params2), args, reverse, err);
+            targs = rec::infer(gocpp::recv(check), atPos(pos), tparams, targs, gocpp::assertValue<Tuple*>(params2), args, reverse, err);
             if(targs == nullptr)
             {
                 if(! rec::empty(gocpp::recv(err)))
@@ -227,7 +227,7 @@ namespace golang::go::types
             // For signatures, Checker.instance will always succeed because the type argument
             // count is correct at this point (see assertion above); hence the type assertion
             // to *Signature will always succeed.
-            auto inst = gocpp::getValue<golang::go::types::Signature*>(rec::instance(gocpp::recv(check), pos, typ, targs, nullptr, rec::context(gocpp::recv(check))));
+            auto inst = gocpp::assertValue<golang::go::types::Signature*>(rec::instance(gocpp::recv(check), pos, typ, targs, nullptr, rec::context(gocpp::recv(check))));
             // signature is not generic anymore
             assert(rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(inst)))) == 0);
             rec::recordInstance(gocpp::recv(check), expr, targs, inst);
@@ -407,7 +407,7 @@ namespace golang::go::types
             return statement;
         }
         // u must be a signature per the commonUnder condition
-        auto sig = gocpp::getValue<golang::go::types::Signature*>(u);
+        auto sig = gocpp::assertValue<golang::go::types::Signature*>(u);
 
         // Capture wasGeneric before sig is potentially instantiated below.
         auto wasGeneric = rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))) > 0;
@@ -568,7 +568,7 @@ namespace golang::go::types
                             if(auto n = len(targsList[i]); n > 0)
                             {
                                 // x must be a partially instantiated function
-                                assert(n < rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(gocpp::getValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(x))))))));
+                                assert(n < rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(gocpp::assertValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(x))))))));
                             }
                         }
                     }
@@ -735,7 +735,7 @@ namespace golang::go::types
                     auto vars = gocpp::make(gocpp::Tag<gocpp::slice<Var*>>(), npars - 1);
                     copy(vars, sig->params->vars);
                     auto last = sig->params->vars[npars - 1];
-                    auto typ = gocpp::getValue<Slice*>(last->object.typ)->elem;
+                    auto typ = gocpp::assertValue<Slice*>(last->object.typ)->elem;
                     for(; len(vars) < nargs; )
                     {
                         vars = append(vars, NewParam(last->object.pos, last->object.pkg, last->object.name, typ));
@@ -829,7 +829,7 @@ namespace golang::go::types
             // rename type parameters to avoid problems with recursive calls
             golang::go::types::Type tmp = {};
             std::tie(tparams, tmp) = rec::renameTParams(gocpp::recv(check), rec::Pos(gocpp::recv(call)), rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(sig)))), sigParams);
-            sigParams = gocpp::getValue<Tuple*>(tmp);
+            sigParams = gocpp::assertValue<Tuple*>(tmp);
             // make sure targs and tparams have the same length
             for(; len(targs) < len(tparams); )
             {
@@ -860,7 +860,7 @@ namespace golang::go::types
                     // TODO(gri) Consider only doing this if a function argument appears
                     // multiple times, which is rare (possible optimization).
                     auto [atparams, tmp] = rec::renameTParams(gocpp::recv(check), rec::Pos(gocpp::recv(call)), rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(asig)))), asig);
-                    asig = gocpp::getValue<golang::go::types::Signature*>(tmp);
+                    asig = gocpp::assertValue<golang::go::types::Signature*>(tmp);
                     // renameTParams doesn't touch associated type parameters
                     asig->tparams = new TypeParamList {atparams};
                     // new type identity for the function argument
@@ -915,7 +915,7 @@ namespace golang::go::types
                 // list.
                 if(adjusted)
                 {
-                    sigParams = gocpp::getValue<Tuple*>(rec::subst(gocpp::recv(check), rec::Pos(gocpp::recv(call)), sigParams, makeSubstMap(tparams.make_slice(0, n), targs.make_slice(0, n)), nullptr, rec::context(gocpp::recv(check))));
+                    sigParams = gocpp::assertValue<Tuple*>(rec::subst(gocpp::recv(check), rec::Pos(gocpp::recv(call)), sigParams, makeSubstMap(tparams.make_slice(0, n), targs.make_slice(0, n)), nullptr, rec::context(gocpp::recv(check))));
                 }
                 else
                 {
@@ -928,7 +928,7 @@ namespace golang::go::types
             for(auto [gocpp_ignored, i] : genericArgs)
             {
                 auto arg = args[i];
-                auto asig = gocpp::getValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(arg)));
+                auto asig = gocpp::assertValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(arg)));
                 auto k = j + rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(asig))));
                 // targs[j:k] are the inferred type arguments for asig
                 // TODO(gri) provide xlist if possible (partial instantiations)
@@ -1086,7 +1086,7 @@ namespace golang::go::types
                             x->typ_ = exp->object.typ;
                             if(pkg->cgo && strings::HasPrefix(exp->object.name, "_Cvar_"_s))
                             {
-                                x->typ_ = gocpp::getValue<Pointer*>(rec::typ(gocpp::recv(x)))->base;
+                                x->typ_ = gocpp::assertValue<Pointer*>(rec::typ(gocpp::recv(x)))->base;
                             }
                             break;
                         }
@@ -1098,7 +1098,7 @@ namespace golang::go::types
                             if(pkg->cgo && strings::HasPrefix(exp->object.name, "_Cmacro_"_s))
                             {
                                 x->mode_ = value;
-                                x->typ_ = gocpp::getValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(x)))->results->vars[0]->object.typ;
+                                x->typ_ = gocpp::assertValue<golang::go::types::Signature*>(rec::typ(gocpp::recv(x)))->results->vars[0]->object.typ;
                             }
                             break;
                         }
@@ -1258,7 +1258,7 @@ namespace golang::go::types
                         // method expression
                         rec::recordSelection(gocpp::recv(check), e, MethodExpr, rec::typ(gocpp::recv(x)), obj, index, indirect);
 
-                        auto sig = gocpp::getValue<golang::go::types::Signature*>(obj->object.typ);
+                        auto sig = gocpp::assertValue<golang::go::types::Signature*>(obj->object.typ);
                         if(sig->recv == nullptr)
                         {
                             rec::error(gocpp::recv(check), e, InvalidDeclCycle, "illegal cycle in method declaration"_s);
@@ -1359,7 +1359,7 @@ namespace golang::go::types
                         x->mode_ = value;
 
                         // remove/stash receiver
-                        auto sig = *gocpp::getValue<golang::go::types::Signature*>(obj->object.typ);
+                        auto sig = *gocpp::assertValue<golang::go::types::Signature*>(obj->object.typ);
                         sig.recvold = sig.recv;
                         sig.recv = nullptr;
                         x->typ_ = & sig;

@@ -64,7 +64,7 @@ namespace golang::os
         {
             if(auto [gocpp_id_0, err] = Stat(attr->Dir); err != nullptr)
             {
-                auto pe = gocpp::getValue<PathError*>(err);
+                auto pe = gocpp::assertValue<PathError*>(err);
                 pe->Op = "chdir"_s;
                 return {nullptr, gocpp::error(pe)};
             }
@@ -228,7 +228,7 @@ namespace golang::os
         {
             return "<nil>"_s;
         }
-        auto status = gocpp::getValue<syscall::WaitStatus>(rec::Sys(gocpp::recv(p)));
+        auto status = gocpp::assertValue<syscall::WaitStatus>(rec::Sys(gocpp::recv(p)));
         gocpp::string res = ""_s;
         //Go switch emulation
         {

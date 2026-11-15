@@ -554,7 +554,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             });
         }
 
-        return gocpp::getValue<std::function<std::tuple<gocpp::string, gocpp::error> ()>>(f)();
+        return gocpp::assertValue<std::function<std::tuple<gocpp::string, gocpp::error> ()>>(f)();
     }
 
 }

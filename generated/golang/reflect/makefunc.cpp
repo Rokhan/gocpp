@@ -190,7 +190,7 @@ namespace golang::reflect
         auto rcvr = golang::reflect::Value {rec::typ(gocpp::recv(v)), v.ptr, fl};
 
         // v.Type returns the actual type of the method value.
-        auto ftyp = (funcType*)(gocpp::unsafe_pointer(gocpp::getValue<rtype*>(rec::Type(gocpp::recv(v)))));
+        auto ftyp = (funcType*)(gocpp::unsafe_pointer(gocpp::assertValue<rtype*>(rec::Type(gocpp::recv(v)))));
 
         auto code = methodValueCallCodePtr();
 

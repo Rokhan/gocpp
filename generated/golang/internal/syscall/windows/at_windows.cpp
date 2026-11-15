@@ -360,7 +360,7 @@ namespace golang::internal::syscall::windows
                         return deleteatFallback(h);
                         break;
                     default:
-                        return gocpp::error(rec::Errno(gocpp::recv(gocpp::getValue<NTStatus>(err))));
+                        return gocpp::error(rec::Errno(gocpp::recv(gocpp::assertValue<NTStatus>(err))));
                         break;
                 }
             }

@@ -475,7 +475,7 @@ namespace golang::go::types
                         {
                             // If we don't have a number, omit the "untyped" qualifier
                             // for compactness.
-                            s = strings::ReplaceAll(gocpp::getValue<Basic*>(t)->name, "untyped "_s, ""_s);
+                            s = strings::ReplaceAll(gocpp::assertValue<Basic*>(t)->name, "untyped "_s, ""_s);
                         }
                         break;
                     default:

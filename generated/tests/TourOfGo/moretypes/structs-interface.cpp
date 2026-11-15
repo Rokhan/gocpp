@@ -352,7 +352,7 @@ namespace golang::main
 
     int64_t rec::WriteTo(nopCloserWriterTo c)
     {
-        return rec::WriteTo(gocpp::recv(gocpp::getValue<WriterTo>(c.Reader)));
+        return rec::WriteTo(gocpp::recv(gocpp::assertValue<WriterTo>(c.Reader)));
     }
 
     // myReader implements only Reader.

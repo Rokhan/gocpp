@@ -1379,7 +1379,7 @@ namespace golang::go::types
                     {
                         // Struct fields should already be unique, so we should only
                         // encounter an alternate via collision with a method name.
-                        _ = gocpp::getValue<Func*>(alt);
+                        _ = gocpp::assertValue<Func*>(alt);
 
                         // For historical consistency, we report the primary error on the
                         // method, and the alt decl on the field.

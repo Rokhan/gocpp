@@ -236,7 +236,7 @@ namespace golang::encoding::json::v2
             {
                 return {fnc, false};
             }
-            return {gocpp::getValue<std::function<gocpp::error (Coder* _1, addressableValue _2, jsonopts::Struct* _3)>>(v), true};
+            return {gocpp::assertValue<std::function<gocpp::error (Coder* _1, addressableValue _2, jsonopts::Struct* _3)>>(v), true};
         }
 
         // Collect a list of arshalers that can be called for this type.
@@ -280,7 +280,7 @@ namespace golang::encoding::json::v2
 
         // Use the first stored so duplicate work can be garbage collected.
         auto [v, gocpp_id_0] = rec::LoadOrStore(gocpp::recv(a->fncCache), t, fnc);
-        return {gocpp::getValue<std::function<gocpp::error (Coder* _1, addressableValue _2, jsonopts::Struct* _3)>>(v), true};
+        return {gocpp::assertValue<std::function<gocpp::error (Coder* _1, addressableValue _2, jsonopts::Struct* _3)>>(v), true};
     }
 
     // MarshalFunc constructs a type-specific marshaler that

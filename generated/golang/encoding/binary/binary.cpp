@@ -1592,7 +1592,7 @@ namespace golang::encoding::binary
                     auto t = rec::Elem(gocpp::recv(rec::Type(gocpp::recv(v))));
                     if(auto [size, ok] = rec::Load(gocpp::recv(structSize), t); ok)
                     {
-                        return gocpp::getValue<int64_t>(size) * rec::Len(gocpp::recv(v));
+                        return gocpp::assertValue<int64_t>(size) * rec::Len(gocpp::recv(v));
                     }
                     auto size = go_sizeof(t);
                     if(size >= 0)
@@ -1611,7 +1611,7 @@ namespace golang::encoding::binary
                     auto t = rec::Type(gocpp::recv(v));
                     if(auto [size, ok] = rec::Load(gocpp::recv(structSize), t); ok)
                     {
-                        return gocpp::getValue<int64_t>(size);
+                        return gocpp::assertValue<int64_t>(size);
                     }
                     auto size = go_sizeof(t);
                     rec::Store(gocpp::recv(structSize), t, size);

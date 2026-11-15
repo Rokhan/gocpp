@@ -570,7 +570,7 @@ namespace golang::go::types
         int64_t offs = {};
         for(auto [gocpp_ignored, i] : index)
         {
-            auto s = gocpp::getValue<Struct*>(rec::Underlying(gocpp::recv(T)));
+            auto s = gocpp::assertValue<Struct*>(rec::Underlying(gocpp::recv(T)));
             auto d = rec::offsetsof(gocpp::recv(conf), s)[i];
             if(d < 0)
             {

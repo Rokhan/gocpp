@@ -484,7 +484,7 @@ namespace golang::go::doc
             ast::Expr prevType = {};
             for(auto [gocpp_ignored, spec] : list)
             {
-                auto spec_tmp = gocpp::getValue<ast::ValueSpec*>(spec);
+                auto spec_tmp = gocpp::assertValue<ast::ValueSpec*>(spec);
                 auto& spec = spec_tmp;
                 if(spec->Type == nullptr && len(spec->Values) == 0 && prevType != nullptr)
                 {

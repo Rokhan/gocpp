@@ -25,19 +25,19 @@ namespace golang::main
     {
         gocpp::go_any value = "hello"_s;
 
-        auto s = gocpp::getValue<gocpp::string>(value);
+        auto s = gocpp::assertValue<gocpp::string>(value);
         mocklib::Println(s);
 
         value = 6.54321;
-        auto f = gocpp::getValue<double>(value);
+        auto f = gocpp::assertValue<double>(value);
         mocklib::Println(f);
 
         value = 65;
-        auto i = gocpp::getValue<int64_t>(value);
+        auto i = gocpp::assertValue<int64_t>(value);
         mocklib::Println(i);
 
         value = true;
-        auto b = gocpp::getValue<bool>(value);
+        auto b = gocpp::assertValue<bool>(value);
         mocklib::Println(b);
     }
 

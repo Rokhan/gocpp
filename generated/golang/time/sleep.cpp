@@ -200,7 +200,7 @@ namespace golang::time
         //Go select emulation
         {
             int conditionId = -1;
-            if(gocpp::getValue<gocpp::channel<Time>>(c).trySend(rec::Add(gocpp::recv(Now()), Duration(- delta)))) { conditionId = 0; }
+            if(gocpp::assertValue<gocpp::channel<Time>>(c).trySend(rec::Add(gocpp::recv(Now()), Duration(- delta)))) { conditionId = 0; }
             switch(conditionId)
             {
                 case 0:
@@ -238,7 +238,7 @@ namespace golang::time
 
     void goFunc(go_any arg, uintptr_t seq, int64_t delta)
     {
-        gocpp::go([&]{ gocpp::getValue<std::function<void ()>>(arg)(); });
+        gocpp::go([&]{ gocpp::assertValue<std::function<void ()>>(arg)(); });
     }
 
 }

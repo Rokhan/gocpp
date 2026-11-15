@@ -61,7 +61,7 @@ namespace golang::go::types
         // parameters cannot be constant types).
         if(isTyped(rec::typ(gocpp::recv(x))))
         {
-            rec::representable(gocpp::recv(check), x, gocpp::getValue<Basic*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))));
+            rec::representable(gocpp::recv(check), x, gocpp::assertValue<Basic*>(rec::Underlying(gocpp::recv(rec::typ(gocpp::recv(x))))));
             return;
         }
 

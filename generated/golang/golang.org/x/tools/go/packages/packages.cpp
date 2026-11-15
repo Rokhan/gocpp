@@ -612,7 +612,7 @@ namespace golang::golang_org::x::tools::go::packages
     {
         packagesinternal::GetDepsErrors = [=](go_any p) mutable -> gocpp::slice<packagesinternal::PackageError*>
         {
-            return gocpp::getValue<Package*>(p)->depsErrors;
+            return gocpp::assertValue<Package*>(p)->depsErrors;
         };
         packagesinternal::TypecheckCgo = int64_t(typecheckCgo);
         packagesinternal::DepsErrors = int64_t(needInternalDepsErrors);

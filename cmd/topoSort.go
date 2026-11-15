@@ -1,7 +1,6 @@
 package main
 
 import (
-	"container/heap"
 	"fmt"
 	"slices"
 	"strings"
@@ -218,7 +217,7 @@ func topoSort(cv Logger, headerElts []*place, getter func(place) []string, logPr
 
 	pending := make([]int, n)
 	users := make([][]int, n)
-	h := &placeHeap{order: order}
+	var ready []int
 	nbDefs := 0
 	for d := 0; d < n; d++ {
 		if isImp[d] {
@@ -230,13 +229,40 @@ func topoSort(cv Logger, headerElts []*place, getter func(place) []string, logPr
 			users[e] = append(users[e], d)
 		}
 		if pending[d] == 0 {
-			heap.Push(h, d)
+			ready = append(ready, d)
 		}
 	}
 
+	// Number of imports that would have to be emitted before d.
+	newImportCount := func(d int) int {
+		count := 0
+		for _, imp := range closures[d].imps {
+			if state[imp] != 2 {
+				count++
+			}
+		}
+		return count
+	}
+
+	// Best ready definition: fewest new imports first, then smallest initialOrder.
+	pickReady := func() int {
+		best, bestCount := -1, 0
+		for k, d := range ready {
+			count := newImportCount(d)
+			if best == -1 ||
+				count < bestCount ||
+				(count == bestCount && byOrder(d, ready[best]) < 0) {
+				best, bestCount = k, count
+			}
+		}
+		d := ready[best]
+		ready = slices.Delete(ready, best, best+1)
+		return d
+	}
+
 	emittedDefs := 0
-	for h.Len() > 0 {
-		d := heap.Pop(h).(int)
+	for len(ready) > 0 {
+		d := pickReady()
 		for _, imp := range closures[d].imps {
 			emitImport(imp)
 		}
@@ -245,7 +271,7 @@ func topoSort(cv Logger, headerElts []*place, getter func(place) []string, logPr
 		emittedDefs++
 		for _, u := range users[d] {
 			if pending[u]--; pending[u] == 0 {
-				heap.Push(h, u)
+				ready = append(ready, u)
 			}
 		}
 	}

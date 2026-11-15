@@ -233,26 +233,70 @@ func topoSort(cv Logger, headerElts []*place, getter func(place) []string, logPr
 		}
 	}
 
-	// Number of imports that would have to be emitted before d.
-	newImportCount := func(d int) int {
-		count := 0
-		for _, imp := range closures[d].imps {
-			if state[imp] != 2 {
-				count++
-			}
+	// Full-include nodes grouped by package, to know when a forward include is already covered.
+	hdrByPkg := map[string][]int{}
+	for i := 0; i < n; i++ {
+		if isImp[i] && headerElts[i].includeType == HdrInclude {
+			pkg := headerElts[i].depInfo.decPkg
+			hdrByPkg[pkg] = append(hdrByPkg[pkg], i)
 		}
-		return count
 	}
 
-	// Best ready definition: fewest new imports first, then smallest initialOrder.
+	// An import is "done" if emitted, or if it is a forward include
+	// whose package full header is already emitted (generateSortedHeader skips it then).
+	importDone := func(i int) bool {
+		if state[i] == 2 {
+			return true
+		}
+		if headerElts[i].includeType == FwdInclude {
+			for _, h := range hdrByPkg[headerElts[i].depInfo.decPkg] {
+				if state[h] == 2 {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	type importCost struct{ full, fwd int }
+
+	// Imports that would have to be emitted before d.
+	// Full includes are counted apart; forward includes and `using` namespaces count as "fwd".
+	newImportCost := func(d int) importCost {
+		var c importCost
+		for _, imp := range closures[d].imps {
+			if importDone(imp) {
+				continue
+			}
+			if headerElts[imp].includeType == HdrInclude {
+				c.full++
+			} else {
+				c.fwd++
+			}
+		}
+		return c
+	}
+
+	// Order: fewest full includes, then fewest forward includes, then initialOrder.
+	lessCost := func(a, b importCost) int {
+		if a.full != b.full {
+			return a.full - b.full
+		}
+		return a.fwd - b.fwd
+	}
+
 	pickReady := func() int {
-		best, bestCount := -1, 0
+		best := -1
+		var bestCost importCost
 		for k, d := range ready {
-			count := newImportCount(d)
-			if best == -1 ||
-				count < bestCount ||
-				(count == bestCount && byOrder(d, ready[best]) < 0) {
-				best, bestCount = k, count
+			c := newImportCost(d)
+			if best == -1 {
+				best, bestCost = k, c
+				continue
+			}
+			cmp := lessCost(c, bestCost)
+			if cmp < 0 || (cmp == 0 && byOrder(d, ready[best]) < 0) {
+				best, bestCost = k, c
 			}
 		}
 		d := ready[best]

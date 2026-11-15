@@ -22,7 +22,6 @@ namespace golang
         struct mcache;
         struct adjustinfo;
         struct funcInfo;
-        struct itab;
         struct eface;
         struct iface;
         struct _defer;

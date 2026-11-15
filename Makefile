@@ -98,7 +98,7 @@ doc:
 	echo "# Conversion of imported packages" >> results.md
 	echo "| file | cpp generate | cpp compile | link |" >> results.md
 	echo "| ---- | -------------| ----------- | ---- |" >> results.md
-	make -j4 md-stdlib
+	$(MAKE) -j4 md-stdlib ON_GCC_ERROR=true
 	cat $$(find log/golang -type f -name "*.full.md" | sort) >> results.md
 	dos2unix results.md
 
@@ -220,7 +220,7 @@ $(GENERATED_GOLANG_LIB_OBJ_FILES): $(LOGDIR)/%.o : $(OUTDIR)/%.cpp $(SUPPORT_FIL
 
 	($(call compute-time,$<,$(call GOLANG_LIB_COMPILE,$*),$(LOGDIR)/$*.time)) \
 		&&  echo -n " ✔️ |" > $(LOGDIR)/$*.obj.md \
-		|| (echo    " ❌ |" > $(LOGDIR)/$*.obj.md && $(ON_GCC_ERROR))
+		|| (echo    " ❌ |" > $(LOGDIR)/$*.obj.md  && rm -f $@ && $(ON_GCC_ERROR))
 
 
 go-stdlib-link: $(GENERATED_GOLANG_LIB_LINK_MD_FILES)
